@@ -4,8 +4,8 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
   try {
     const { id } = await params;
     
-    // API 기본 URL 설정 - 환경 변수가 없을 경우 기본값 사용
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    // 환경변수에서 API URL 가져오기
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || '';
     
     // 모든 API 요청을 서버에서 병렬로 실행
     const [teamRes, matchesRes, standingsRes, squadRes] = await Promise.all([

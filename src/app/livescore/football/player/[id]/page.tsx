@@ -5,8 +5,8 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
   try {
     const { id } = await params;
     
-    // API 기본 URL 설정 - 환경 변수가 없을 경우 기본값 사용
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    // 환경변수에서 API URL 가져오기
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || '';
     
     // 현재 연도 계산
     const currentYear = new Date().getFullYear();
