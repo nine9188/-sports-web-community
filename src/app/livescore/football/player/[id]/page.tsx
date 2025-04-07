@@ -1,3 +1,4 @@
+import { headers } from 'next/headers';
 import PlayerHeader from '../components/PlayerHeader';
 import PlayerTabs from '../components/PlayerTabs';
 
@@ -5,8 +6,11 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
   try {
     const { id } = await params;
     
-    // 환경변수에서 API URL 가져오기
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+    // 동적으로 호스트와 프로토콜 가져오기
+    const headersList = await headers();
+    const host = headersList.get('host');
+    const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
+    const baseUrl = `${protocol}://${host}`;
     
     // 현재 연도 계산
     const currentYear = new Date().getFullYear();
@@ -22,13 +26,13 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
       statsRes,
       fixturesRes
     ] = await Promise.all([
-      fetch(`${apiBaseUrl}/api/livescore/football/players/${id}`, { cache: 'no-store' }),
-      fetch(`${apiBaseUrl}/api/livescore/football/players/${id}/trophies`, { cache: 'no-store' }),
-      fetch(`${apiBaseUrl}/api/livescore/football/players/${id}/transfers`, { cache: 'no-store' }),
-      fetch(`${apiBaseUrl}/api/livescore/football/players/${id}/injuries`, { cache: 'no-store' }),
-      fetch(`${apiBaseUrl}/api/livescore/football/players/${id}/seasons`, { cache: 'no-store' }),
-      fetch(`${apiBaseUrl}/api/livescore/football/players/${id}/stats?season=${defaultSeason}`, { cache: 'no-store' }),
-      fetch(`${apiBaseUrl}/api/livescore/football/players/${id}/fixtures?season=${defaultSeason}`, { cache: 'no-store' })
+      fetch(`${baseUrl}/api/livescore/football/players/${id}`, { cache: 'no-store' }),
+      fetch(`${baseUrl}/api/livescore/football/players/${id}/trophies`, { cache: 'no-store' }),
+      fetch(`${baseUrl}/api/livescore/football/players/${id}/transfers`, { cache: 'no-store' }),
+      fetch(`${baseUrl}/api/livescore/football/players/${id}/injuries`, { cache: 'no-store' }),
+      fetch(`${baseUrl}/api/livescore/football/players/${id}/seasons`, { cache: 'no-store' }),
+      fetch(`${baseUrl}/api/livescore/football/players/${id}/stats?season=${defaultSeason}`, { cache: 'no-store' }),
+      fetch(`${baseUrl}/api/livescore/football/players/${id}/fixtures?season=${defaultSeason}`, { cache: 'no-store' })
     ]);
 
     // 응답 확인
@@ -48,7 +52,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
     
     if (currentLeagueId) {
       try {
-        const rankingsRes = await fetch(`${apiBaseUrl}/api/livescore/football/players/${id}/rankings?league=${currentLeagueId}`, { cache: 'no-store' });
+        const rankingsRes = await fetch(`${baseUrl}/api/livescore/football/players/${id}/rankings?league=${currentLeagueId}`, { cache: 'no-store' });
         
         // rankings 데이터 파싱
         if (rankingsRes.ok) {

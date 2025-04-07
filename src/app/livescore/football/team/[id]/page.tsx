@@ -1,18 +1,22 @@
+import { headers } from 'next/headers';
 import TeamClient from './TeamClient';
 
 export default async function TeamDetailPage({ params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     
-    // 환경변수에서 API URL 가져오기
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+    // 동적으로 호스트와 프로토콜 가져오기
+    const headersList = await headers();
+    const host = headersList.get('host');
+    const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
+    const baseUrl = `${protocol}://${host}`;
     
     // 모든 API 요청을 서버에서 병렬로 실행
     const [teamRes, matchesRes, standingsRes, squadRes] = await Promise.all([
-      fetch(`${apiBaseUrl}/api/livescore/football/teams/${id}`, { cache: 'no-store' }),
-      fetch(`${apiBaseUrl}/api/livescore/football/teams/${id}/matches`, { cache: 'no-store' }),
-      fetch(`${apiBaseUrl}/api/livescore/football/teams/${id}/standings`, { cache: 'no-store' }),
-      fetch(`${apiBaseUrl}/api/livescore/football/teams/${id}/squad`, { cache: 'no-store' })
+      fetch(`${baseUrl}/api/livescore/football/teams/${id}`, { cache: 'no-store' }),
+      fetch(`${baseUrl}/api/livescore/football/teams/${id}/matches`, { cache: 'no-store' }),
+      fetch(`${baseUrl}/api/livescore/football/teams/${id}/standings`, { cache: 'no-store' }),
+      fetch(`${baseUrl}/api/livescore/football/teams/${id}/squad`, { cache: 'no-store' })
     ]);
 
     // 응답 확인

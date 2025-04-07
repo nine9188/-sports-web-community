@@ -46,10 +46,12 @@ interface Trophy {
   place?: string;
 }
 
-export async function GET(request: Request) {
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const { pathname } = new URL(request.url);
-    const id = pathname.split('/').pop();
+    const { id } = await params;
     const currentSeason = 2024;  // 현재 시즌으로 수정
 
     // 1. 기본 선수 정보 가져오기
