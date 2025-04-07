@@ -25,7 +25,7 @@ export function ThemeToggle() {
         ) : (
           <Moon className="h-4 w-4 text-blue-500 mr-2" />
         )}
-        <span className="mr-3">{theme === 'light' ? '라이트모드' : '다크모드'}</span>
+        <span className="pr-0 md:pr-2">{theme === 'light' ? '라이트모드' : '다크모드'}</span>
       </div>
       <label className="relative inline-flex items-center cursor-pointer">
         <input
