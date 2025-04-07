@@ -17,7 +17,7 @@ import { createClient } from '@/app/lib/supabase-browser';
 import BoardHeaderNavigation from './header/BoardHeaderNavigation';
 import { getUserIconInfo } from '@/app/utils/level-icons';
 
-export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
+export default function Header({ onMenuClick, isSidebarOpen }: { onMenuClick: () => void; isSidebarOpen: boolean }) {
   const router = useRouter();
   const { user, refreshUserData } = useAuth();
   const [mounted, setMounted] = useState(false);
@@ -249,8 +249,11 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-white shadow-sm">
-      <div className="container mx-auto">
+    <header className={`sticky top-0 z-50 border-b shadow-sm bg-white`}>
+      {isSidebarOpen && (
+        <div className="absolute inset-0 bg-black/70 z-10 lg:hidden" />
+      )}
+      <div className="container mx-auto relative z-20">
         <div className="flex h-16 items-center px-4">
           <Button variant="ghost" size="icon" className="lg:hidden mr-2" onClick={onMenuClick}>
             <Menu className="h-5 w-5" />
@@ -291,7 +294,7 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
             </div>
           </div>
         </div>
-        <nav className="flex items-center h-12 px-4 overflow-x-auto border-t bg-white relative z-40">
+        <nav className={`flex items-center h-12 px-4 overflow-x-auto border-t relative`}>
           <BoardHeaderNavigation />
         </nav>
       </div>

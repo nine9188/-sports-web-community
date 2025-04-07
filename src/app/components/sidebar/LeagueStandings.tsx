@@ -60,12 +60,36 @@ export default function LeagueStandings() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const [isMobile, setIsMobile] = useState(false);
   
   // 데이터 캐싱을 위한 ref 사용
   const cachedData = useRef<LeagueCache>({});
 
+  // 모바일 환경 체크
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    // 초기 체크
+    checkMobile();
+    
+    // 리사이즈 이벤트 리스너
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
+
   // 선택된 리그의 순위 데이터 가져오기
   useEffect(() => {
+    // 모바일에서는 API 호출 안함
+    if (isMobile) {
+      setLoading(false);
+      return;
+    }
+    
     const fetchStandings = async () => {
       try {
         // 이미 캐시된 데이터가 있으면 재사용
@@ -98,7 +122,7 @@ export default function LeagueStandings() {
     };
     
     fetchStandings();
-  }, [activeLeague]);
+  }, [activeLeague, isMobile]);
 
   // 팀 이름 짧게 표시 (최대 8자)
   const shortenTeamName = (name: string) => {
@@ -106,8 +130,13 @@ export default function LeagueStandings() {
     return name.substring(0, 8);
   };
 
+  // 모바일에서는 렌더링하지 않음
+  if (isMobile) {
+    return null;
+  }
+
   return (
-    <div className="border rounded-md overflow-hidden">
+    <div className="border rounded-md overflow-hidden hidden md:block">
       <div className="bg-slate-800 text-white py-2 px-3 text-sm font-medium">
         축구 팀순위
       </div>
