@@ -33,7 +33,7 @@ export default function PostActions({
         const { data } = await supabase.auth.getSession();
         
         if (!data.session) {
-          return;
+          return null;
         }
         
         const userId = data.session.user.id;
@@ -48,12 +48,12 @@ export default function PostActions({
         
         if (likeError) {
           console.error('좋아요 확인 중 오류:', likeError);
-          return;
+          return null;
         }
         
         if (existingLike && existingLike.length > 0) {
           setUserAction('like');
-          return;
+          return null;
         }
         
         // 싫어요 확인
@@ -66,12 +66,12 @@ export default function PostActions({
         
         if (dislikeError) {
           console.error('싫어요 확인 중 오류:', dislikeError);
-          return;
+          return null;
         }
         
         if (existingDislike && existingDislike.length > 0) {
           setUserAction('dislike');
-          return;
+          return null;
         }
         
         setUserAction(null);
@@ -85,7 +85,7 @@ export default function PostActions({
   
   // 좋아요 처리 함수
   const handleLike = async () => {
-    if (isLiking || isDisliking) return;
+    if (isLiking || isDisliking) return null;
     
     setIsLiking(true);
     
@@ -96,7 +96,7 @@ export default function PostActions({
       if (!data?.session?.user) {
         alert('로그인이 필요합니다.');
         router.push('/login');
-        return;
+        return null;
       }
       
       const userId = data.session.user.id;
@@ -110,7 +110,7 @@ export default function PostActions({
         
       if (fetchError) {
         console.error('게시글 정보 조회 오류:', fetchError);
-        return;
+        return null;
       }
       
       // 이미 좋아요를 눌렀는지 확인
@@ -123,7 +123,7 @@ export default function PostActions({
       
       if (likeError) {
         console.error('좋아요 기록 확인 중 오류:', likeError);
-        return;
+        return null;
       }
       
       const alreadyLiked = likeRecord && likeRecord.length > 0;
@@ -139,7 +139,7 @@ export default function PostActions({
         
         if (deleteError) {
           console.error('좋아요 취소 중 오류:', deleteError);
-          return;
+          return null;
         }
         
         // 게시글 좋아요 수 감소
@@ -150,7 +150,7 @@ export default function PostActions({
         
         if (updateError) {
           console.error('좋아요 수 감소 중 오류:', updateError);
-          return;
+          return null;
         }
         
         setLikes(prev => Math.max(0, prev - 1));
@@ -203,7 +203,7 @@ export default function PostActions({
         
         if (insertError) {
           console.error('좋아요 추가 중 오류:', insertError);
-          return;
+          return null;
         }
         
         // 게시글 좋아요 수 증가
@@ -214,7 +214,7 @@ export default function PostActions({
         
         if (updateError) {
           console.error('좋아요 수 증가 중 오류:', updateError);
-          return;
+          return null;
         }
         
         setLikes(prev => prev + 1);
@@ -229,7 +229,7 @@ export default function PostActions({
   
   // 싫어요 처리 함수
   const handleDislike = async () => {
-    if (isLiking || isDisliking) return;
+    if (isLiking || isDisliking) return null;
     
     setIsDisliking(true);
     
@@ -240,7 +240,7 @@ export default function PostActions({
       if (!data?.session?.user) {
         alert('로그인이 필요합니다.');
         router.push('/login');
-        return;
+        return null;
       }
       
       const userId = data.session.user.id;
@@ -254,7 +254,7 @@ export default function PostActions({
         
       if (fetchError) {
         console.error('게시글 정보 조회 오류:', fetchError);
-        return;
+        return null;
       }
       
       // 이미 싫어요를 눌렀는지 확인
@@ -267,7 +267,7 @@ export default function PostActions({
       
       if (dislikeError) {
         console.error('싫어요 기록 확인 중 오류:', dislikeError);
-        return;
+        return null;
       }
       
       const alreadyDisliked = dislikeRecord && dislikeRecord.length > 0;
@@ -283,7 +283,7 @@ export default function PostActions({
         
         if (deleteError) {
           console.error('싫어요 취소 중 오류:', deleteError);
-          return;
+          return null;
         }
         
         // 게시글 싫어요 수 감소
@@ -294,7 +294,7 @@ export default function PostActions({
         
         if (updateError) {
           console.error('싫어요 수 감소 중 오류:', updateError);
-          return;
+          return null;
         }
         
         setDislikes(prev => Math.max(0, prev - 1));
@@ -347,7 +347,7 @@ export default function PostActions({
         
         if (insertError) {
           console.error('싫어요 추가 중 오류:', insertError);
-          return;
+          return null;
         }
         
         // 게시글 싫어요 수 증가
@@ -358,7 +358,7 @@ export default function PostActions({
         
         if (updateError) {
           console.error('싫어요 수 증가 중 오류:', updateError);
-          return;
+          return null;
         }
         
         setDislikes(prev => prev + 1);

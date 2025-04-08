@@ -14,6 +14,7 @@ interface CommentSectionProps {
   initialComments: CommentType[];
   boardSlug?: string;
   postNumber?: string;
+  postOwnerId?: string;
 }
 
 export default function CommentSection({ postId, initialComments }: CommentSectionProps) {
@@ -37,9 +38,10 @@ export default function CommentSection({ postId, initialComments }: CommentSecti
     getCurrentUser();
   }, [supabase]);
   
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // 내용이 비어있으면 제출하지 않음
     if (!content.trim()) return;
     
     setIsSubmitting(true);
@@ -179,7 +181,7 @@ export default function CommentSection({ postId, initialComments }: CommentSecti
       
       {/* 댓글 작성 폼 */}
       <div className="px-6 py-4 border-t bg-gray-50">
-        <form className="space-y-3" onSubmit={handleSubmit}>
+        <form className="space-y-3" onSubmit={handleCommentSubmit}>
           <textarea 
             className="w-full px-3 py-2 border rounded-md"
             rows={3}
