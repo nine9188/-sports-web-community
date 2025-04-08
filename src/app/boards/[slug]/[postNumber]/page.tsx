@@ -84,6 +84,10 @@ export default async function PostDetailPage({
     
     const supabase = await createClient();
     
+    // 로그인 상태 확인
+    const { data: { user } } = await supabase.auth.getUser();
+    const isLoggedIn = !!user;
+    
     // 1. 게시판 정보 가져오기
     const board = await getBoardBySlug(slug);
     
@@ -143,8 +147,7 @@ export default async function PostDetailPage({
     );
     
     // 16. 사용자 세션 확인 (글 작성자인지 확인용)
-    const { data: userData } = await supabase.auth.getUser();
-    const isAuthor = userData?.user?.id === post.user_id;
+    const isAuthor = user?.id === post.user_id;
     
     // 17. 댓글 가져오기
     const comments = await getCommentsForPost(post.id);
@@ -170,17 +173,19 @@ export default async function PostDetailPage({
         {/* 게시판 경로 - BoardBreadcrumbs 컴포넌트 사용 */}
         <BoardBreadcrumbs breadcrumbs={breadcrumbs as Breadcrumb[]} />
         
-        {/* 모바일 화면에서 우측 하단에 고정된 글쓰기 버튼 */}
-        <div className="sm:hidden fixed bottom-4 right-4 z-30">
-          <Link href={`/boards/${slug}/write`}>
-            <button className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-white rounded-full font-medium py-2 px-4 shadow-md border border-slate-700 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              <span>글쓰기</span>
-            </button>
-          </Link>
-        </div>
+        {/* 모바일 화면에서 우측 하단에 고정된 글쓰기 버튼 (로그인 시에만) */}
+        {isLoggedIn && (
+          <div className="sm:hidden fixed bottom-4 right-4 z-30">
+            <Link href={`/boards/${slug}/create`}>
+              <button className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-white rounded-full font-medium py-2 px-4 shadow-md border border-slate-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <span>글쓰기</span>
+              </button>
+            </Link>
+          </div>
+        )}
         
         {/* 게시글 상세 정보 */}
         <div className="bg-white rounded-lg border shadow-sm overflow-hidden mb-6">
@@ -245,6 +250,7 @@ export default async function PostDetailPage({
           boardSlug={slug}
           postNumber={postNumber}
           isAuthor={isAuthor}
+          isLoggedIn={isLoggedIn}
         />
         
         {/* 댓글 섹션 */}
@@ -261,6 +267,7 @@ export default async function PostDetailPage({
           boardSlug={slug}
           prevPost={prevPost ? { ...prevPost, post_number: prevPost.post_number } : null}
           nextPost={nextPost ? { ...nextPost, post_number: nextPost.post_number } : null} 
+          isLoggedIn={isLoggedIn}
         />
         
         {/* 게시글 목록 컴포넌트 */}
@@ -291,6 +298,7 @@ export default async function PostDetailPage({
             boardSlug={slug}
             postNumber={postNumber}
             isAuthor={isAuthor}
+            isLoggedIn={isLoggedIn}
           />
           
           {/* 페이지네이션 */}

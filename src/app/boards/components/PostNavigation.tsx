@@ -6,9 +6,10 @@ interface PostNavigationProps {
   boardSlug: string;
   prevPost: { id: string; title: string; post_number: number } | null;
   nextPost: { id: string; title: string; post_number: number } | null;
+  isLoggedIn?: boolean;
 }
 
-export default function PostNavigation({ boardSlug, prevPost, nextPost }: PostNavigationProps) {
+export default function PostNavigation({ boardSlug, prevPost, nextPost, isLoggedIn = false }: PostNavigationProps) {
   return (
     <div className="bg-white rounded-lg border shadow-sm mb-6">
       <div className="flex flex-row items-center justify-between px-2 py-2">
@@ -65,15 +66,19 @@ export default function PostNavigation({ boardSlug, prevPost, nextPost }: PostNa
           )}
         </div>
 
-        {/* 글쓰기 버튼 (모바일에서는 숨김) */}
+        {/* 글쓰기 버튼 (모바일에서는 숨김, 로그인 시에만 보임) */}
         <div className="hidden md:block flex-1 text-center">
-          <Link 
-            href={`/boards/${boardSlug}/write`}
-            className="inline-flex items-center justify-center py-2 px-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-          >
-            <PenLine className="h-4 w-4 mr-1" />
-            <span>글쓰기</span>
-          </Link>
+          {isLoggedIn ? (
+            <Link 
+              href={`/boards/${boardSlug}/create`}
+              className="inline-flex items-center justify-center py-2 px-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+            >
+              <PenLine className="h-4 w-4 mr-1" />
+              <span>글쓰기</span>
+            </Link>
+          ) : (
+            <div></div>
+          )}
         </div>
       </div>
     </div>

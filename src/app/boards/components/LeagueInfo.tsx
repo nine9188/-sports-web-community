@@ -16,21 +16,24 @@ interface LeagueInfoProps {
   leagueData: LeagueData | null;
   boardId: string;
   boardSlug?: string;
+  isLoggedIn?: boolean;
 }
 
-export default function LeagueInfo({ leagueData, boardId, boardSlug }: LeagueInfoProps) {
+export default function LeagueInfo({ leagueData, boardId, boardSlug, isLoggedIn = false }: LeagueInfoProps) {
   // 데이터가 없으면 기본 UI 반환
   if (!leagueData) {
     return (
       <div className="bg-white border rounded-md shadow-sm p-4">
         <div className="flex justify-between items-center">
           <p className="text-gray-500">리그 정보를 불러올 수 없습니다.</p>
-          <Link href={`/boards/${boardSlug || boardId}/create`}>
-            <button className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-white py-2 px-3 rounded-md text-sm font-medium border border-slate-700 transition-colors">
-              <PenLine className="h-4 w-4" />
-              <span>글쓰기</span>
-            </button>
-          </Link>
+          {isLoggedIn && (
+            <Link href={`/boards/${boardSlug || boardId}/create`}>
+              <button className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-white py-2 px-3 rounded-md text-sm font-medium border border-slate-700 transition-colors">
+                <PenLine className="h-4 w-4" />
+                <span>글쓰기</span>
+              </button>
+            </Link>
+          )}
         </div>
       </div>
     );
@@ -64,12 +67,14 @@ export default function LeagueInfo({ leagueData, boardId, boardSlug }: LeagueInf
                 <p className="text-gray-600 text-sm">형태: {leagueData.type}</p>
               )}
             </div>
-            <Link href={`/boards/${boardSlug || boardId}/create`}>
-              <button className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-white py-2 px-3 rounded-md text-sm font-medium border border-slate-700 transition-colors">
-                <PenLine className="h-4 w-4" />
-                <span>글쓰기</span>
-              </button>
-            </Link>
+            {isLoggedIn && (
+              <Link href={`/boards/${boardSlug || boardId}/create`}>
+                <button className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-white py-2 px-3 rounded-md text-sm font-medium border border-slate-700 transition-colors">
+                  <PenLine className="h-4 w-4" />
+                  <span>글쓰기</span>
+                </button>
+              </Link>
+            )}
           </div>
         </div>
       </div>

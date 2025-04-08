@@ -200,6 +200,10 @@ export default async function BoardDetailPage({
     
     const supabase = await createClient();
     
+    // 사용자 인증 확인 (로그인 상태)
+    const { data: userData } = await supabase.auth.getUser();
+    const isLoggedIn = !!userData?.user;
+    
     // 1. 현재 slug로 게시판 정보 조회
     const { data: boardData, error: boardError } = await supabase
       .from('boards')
@@ -431,6 +435,7 @@ export default async function BoardDetailPage({
               teamData={teamData}
               boardId={boardData.id}
               boardSlug={slug}
+              isLoggedIn={isLoggedIn}
             />
           </div>
         )}
@@ -441,6 +446,7 @@ export default async function BoardDetailPage({
               leagueData={leagueData}
               boardId={boardData.id}
               boardSlug={slug}
+              isLoggedIn={isLoggedIn}
             />
           </div>
         )}
@@ -458,15 +464,17 @@ export default async function BoardDetailPage({
         </div>
         
         <div className="mb-4 relative">
-          {/* 글쓰기 버튼 - 모바일에서 고정 위치 */}
-          <div className="sm:hidden fixed bottom-4 right-4 z-30">
-            <Link href={`/boards/${slug}/write`}>
-              <button className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-white rounded-full font-medium py-2 px-4 shadow-md border border-slate-700 transition-colors">
-                <PenLine className="h-4 w-4" />
-                <span>글쓰기</span>
-              </button>
-            </Link>
-          </div>
+          {/* 글쓰기 버튼 - 모바일에서 고정 위치 (로그인 시에만) */}
+          {isLoggedIn && (
+            <div className="sm:hidden fixed bottom-4 right-4 z-30">
+              <Link href={`/boards/${slug}/create`}>
+                <button className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-white rounded-full font-medium py-2 px-4 shadow-md border border-slate-700 transition-colors">
+                  <PenLine className="h-4 w-4" />
+                  <span>글쓰기</span>
+                </button>
+              </Link>
+            </div>
+          )}
           
           <ScrollArea className="h-full">
             <PostList 
@@ -488,15 +496,17 @@ export default async function BoardDetailPage({
             </div>
             
             <div className="flex-1 flex justify-end">
-              {/* 데스크톱용 글쓰기 버튼 */}
-              <div className="hidden sm:block">
-                <Link href={`/boards/${slug}/write`}>
-                  <button className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-white py-2 px-3 rounded-md text-sm font-medium border border-slate-700 transition-colors">
-                    <PenLine className="h-4 w-4" />
-                    <span>글쓰기</span>
-                  </button>
-                </Link>
-              </div>
+              {/* 데스크톱용 글쓰기 버튼 (로그인 시에만) */}
+              {isLoggedIn && (
+                <div className="hidden sm:block">
+                  <Link href={`/boards/${slug}/create`}>
+                    <button className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-white py-2 px-3 rounded-md text-sm font-medium border border-slate-700 transition-colors">
+                      <PenLine className="h-4 w-4" />
+                      <span>글쓰기</span>
+                    </button>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>

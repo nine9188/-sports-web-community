@@ -38,6 +38,22 @@ export default function PostActions({
         
         const userId = data.session.user.id;
         
+        // 현재 게시글의 좋아요/싫어요 상태 가져오기
+        const { data: postData, error: postError } = await supabase
+          .from('posts')
+          .select('likes, dislikes')
+          .eq('id', postId)
+          .single();
+          
+        if (postError) {
+          console.error('게시글 정보 가져오기 오류:', postError);
+          return null;
+        }
+        
+        // 상태 동기화
+        setLikes(postData.likes || 0);
+        setDislikes(postData.dislikes || 0);
+        
         // 좋아요 확인
         const { data: existingLike, error: likeError } = await supabase
           .from('post_likes')
@@ -153,7 +169,7 @@ export default function PostActions({
           return null;
         }
         
-        setLikes(prev => Math.max(0, prev - 1));
+        setLikes(Math.max(0, currentPost.likes - 1));
         setUserAction(null);
       } else {
         // 기존 싫어요가 있으면 제거
@@ -164,9 +180,9 @@ export default function PostActions({
           .eq('user_id', userId)
           .eq('type', 'dislike');
         
-        if (dislikeCheckError) {
-          console.error('싫어요 기록 확인 중 오류:', dislikeCheckError);
-        } else if (dislikeRecord && dislikeRecord.length > 0) {
+        let newDislikeCount = currentPost.dislikes;
+        
+        if (!dislikeCheckError && dislikeRecord && dislikeRecord.length > 0) {
           // 싫어요 제거
           const { error: deleteDislikeError } = await supabase
             .from('post_likes')
@@ -175,19 +191,16 @@ export default function PostActions({
             .eq('user_id', userId)
             .eq('type', 'dislike');
           
-          if (deleteDislikeError) {
-            console.error('싫어요 취소 중 오류:', deleteDislikeError);
-          } else {
+          if (!deleteDislikeError) {
             // 게시글 싫어요 수 감소
+            newDislikeCount = Math.max(0, currentPost.dislikes - 1);
             const { error: updateDislikeError } = await supabase
               .from('posts')
-              .update({ dislikes: Math.max(0, currentPost.dislikes - 1) })
+              .update({ dislikes: newDislikeCount })
               .eq('id', postId);
             
-            if (updateDislikeError) {
-              console.error('싫어요 수 감소 중 오류:', updateDislikeError);
-            } else {
-              setDislikes(prev => Math.max(0, prev - 1));
+            if (!updateDislikeError) {
+              setDislikes(newDislikeCount);
             }
           }
         }
@@ -209,7 +222,10 @@ export default function PostActions({
         // 게시글 좋아요 수 증가
         const { error: updateError } = await supabase
           .from('posts')
-          .update({ likes: currentPost.likes + 1 })
+          .update({ 
+            likes: currentPost.likes + 1,
+            dislikes: newDislikeCount // 싫어요가 제거되었다면 그 값도 업데이트
+          })
           .eq('id', postId);
         
         if (updateError) {
@@ -217,7 +233,7 @@ export default function PostActions({
           return null;
         }
         
-        setLikes(prev => prev + 1);
+        setLikes(currentPost.likes + 1);
         setUserAction('like');
       }
     } catch (error) {
@@ -297,7 +313,7 @@ export default function PostActions({
           return null;
         }
         
-        setDislikes(prev => Math.max(0, prev - 1));
+        setDislikes(Math.max(0, currentPost.dislikes - 1));
         setUserAction(null);
       } else {
         // 기존 좋아요가 있으면 제거
@@ -308,9 +324,9 @@ export default function PostActions({
           .eq('user_id', userId)
           .eq('type', 'like');
         
-        if (likeCheckError) {
-          console.error('좋아요 기록 확인 중 오류:', likeCheckError);
-        } else if (likeRecord && likeRecord.length > 0) {
+        let newLikeCount = currentPost.likes;
+        
+        if (!likeCheckError && likeRecord && likeRecord.length > 0) {
           // 좋아요 제거
           const { error: deleteLikeError } = await supabase
             .from('post_likes')
@@ -319,19 +335,16 @@ export default function PostActions({
             .eq('user_id', userId)
             .eq('type', 'like');
           
-          if (deleteLikeError) {
-            console.error('좋아요 취소 중 오류:', deleteLikeError);
-          } else {
+          if (!deleteLikeError) {
             // 게시글 좋아요 수 감소
+            newLikeCount = Math.max(0, currentPost.likes - 1);
             const { error: updateLikeError } = await supabase
               .from('posts')
-              .update({ likes: Math.max(0, currentPost.likes - 1) })
+              .update({ likes: newLikeCount })
               .eq('id', postId);
             
-            if (updateLikeError) {
-              console.error('좋아요 수 감소 중 오류:', updateLikeError);
-            } else {
-              setLikes(prev => Math.max(0, prev - 1));
+            if (!updateLikeError) {
+              setLikes(newLikeCount);
             }
           }
         }
@@ -353,7 +366,10 @@ export default function PostActions({
         // 게시글 싫어요 수 증가
         const { error: updateError } = await supabase
           .from('posts')
-          .update({ dislikes: currentPost.dislikes + 1 })
+          .update({ 
+            dislikes: currentPost.dislikes + 1,
+            likes: newLikeCount // 좋아요가 제거되었다면 그 값도 업데이트
+          })
           .eq('id', postId);
         
         if (updateError) {
@@ -361,7 +377,7 @@ export default function PostActions({
           return null;
         }
         
-        setDislikes(prev => prev + 1);
+        setDislikes(currentPost.dislikes + 1);
         setUserAction('dislike');
       }
     } catch (error) {
