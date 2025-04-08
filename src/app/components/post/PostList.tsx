@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ScrollArea } from '@/app/ui/scroll-area';
-import { Image as ImageIcon, Link as LinkIcon, Video as VideoIcon, Youtube as YoutubeIcon } from 'lucide-react';
+import { Image as ImageIcon, Link as LinkIcon, Video as VideoIcon, Youtube as YoutubeIcon, User as UserIcon } from 'lucide-react';
 import { getUserIconInfo } from '@/app/utils/level-icons';
 
 interface Post {
@@ -41,6 +41,12 @@ interface PostListProps {
   boardNameMaxWidth?: string;
 }
 
+interface AuthorIconInfo {
+  url: string | null;
+  name: string | null;
+  level?: number;
+}
+
 export default function PostList({
   posts,
   loading = false,
@@ -54,8 +60,8 @@ export default function PostList({
   currentBoardId,
   boardNameMaxWidth = "100px"
 }: PostListProps) {
-  const [authorIcons, setAuthorIcons] = useState<Record<string, {url: string | null, name: string | null}>>({});
-  const iconCache = useRef<Record<string, {url: string, name: string}>>({});
+  const [authorIcons, setAuthorIcons] = useState<Record<string, AuthorIconInfo>>({});
+  const iconCache = useRef<Record<string, AuthorIconInfo>>({});
   
   // 게시글 내용에 특정 요소가 포함되어 있는지 확인하는 함수
   const checkContentType = (content: string) => {
@@ -142,7 +148,7 @@ export default function PostList({
     if (uniqueAuthorIds.length === 0) return;
     
     const fetchIcons = async () => {
-      const newIconsMap: Record<string, {url: string | null, name: string | null}> = {};
+      const newIconsMap: Record<string, AuthorIconInfo> = {};
       
       // 각 사용자의 아이콘 정보 비동기로 가져오기
       await Promise.all(
@@ -157,11 +163,12 @@ export default function PostList({
             // getUserIconInfo를 사용하여 아이콘 정보 가져오기
             const iconInfo = await getUserIconInfo(authorId);
             
-            if (iconInfo && iconInfo.currentIconUrl) {
+            if (iconInfo) {
               // 결과 저장
-              const result = {
-                url: iconInfo.currentIconUrl,
-                name: iconInfo.currentIconName || '사용자 아이콘'
+              const result: AuthorIconInfo = {
+                url: iconInfo.currentIconUrl || null,
+                name: iconInfo.currentIconName || '사용자 아이콘',
+                level: iconInfo.level || 1
               };
               
               // 캐시 및 결과맵에 저장
@@ -202,7 +209,7 @@ export default function PostList({
     const { hasImage, hasVideo, hasYoutube, hasLink } = checkContentType(post.content);
     
     return (
-      <div className="flex items-center ml-1 space-x-1">
+      <div className="inline-flex items-center space-x-1 ml-1">
         {hasImage && <ImageIcon className="h-3 w-3 text-gray-400" />}
         {hasVideo && <VideoIcon className="h-3 w-3 text-gray-400" />}
         {hasYoutube && <YoutubeIcon className="h-3 w-3 text-red-400" />}
@@ -215,6 +222,60 @@ export default function PostList({
   };
 
   const scrollAreaClass = maxHeight ? `max-h-[${maxHeight}]` : "h-full";
+
+  // 모바일 뷰에서 사용할 간결한 게시글 목록 렌더링
+  const renderMobilePostList = () => {
+    return (
+      <div className="block sm:hidden">
+        <div className="divide-y">
+          {posts.map((post) => (
+            <div 
+              key={post.id} 
+              className={`py-2 px-3 ${post.id === currentPostId ? 'bg-blue-50' : ''}`}
+            >
+              <Link href={`/boards/${post.board_slug}/${post.post_number}?from=${currentBoardId}`}>
+                <div className="space-y-1">
+                  {/* 제목 + 내용 타입 아이콘 */}
+                  <div>
+                    <div className="flex flex-wrap items-center">
+                      <span className={`text-sm ${post.id === currentPostId ? 'text-blue-600 font-medium' : ''}`}>
+                        {post.title}
+                      </span>
+                      {renderContentTypeIcons(post)}
+                    </div>
+                  </div>
+                  
+                  {/* 하단 정보 영역 - 그리드 레이아웃 적용 */}
+                  <div className="flex text-[11px] text-gray-500">
+                    <div className="w-full grid grid-cols-[1fr_auto] gap-2">
+                      <div className="flex items-center overflow-hidden whitespace-nowrap">
+                        {/* 왼쪽: 게시판이름 | 아이콘+글쓴이 | 시간 */}
+                        {showBoard && (
+                          <span className="truncate max-w-[100px] inline-block">{post.board_name}</span>
+                        )}
+                        <span className="mx-1 flex-shrink-0">|</span>
+                        <span className="flex-shrink-0 flex items-center">
+                          <UserIcon className="h-3 w-3 mr-0.5 text-gray-400" />
+                          <span>{post.author_nickname || '익명'}</span>
+                        </span>
+                        <span className="mx-1 flex-shrink-0">|</span>
+                        <span className="flex-shrink-0">{formatDate(post.created_at)}</span>
+                      </div>
+                      <div className="flex items-center justify-end space-x-2 flex-shrink-0">
+                        {/* 오른쪽: 조회수 + 추천수 */}
+                        <span>조회 {post.views || 0}</span>
+                        <span>추천 {post.likes || 0}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className={`bg-white border rounded-md shadow-sm ${className}`}>
@@ -236,107 +297,116 @@ export default function PostList({
             <p className="text-gray-500">{emptyMessage}</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-t border-b bg-gray-50">
-                  {showBoard && (
-                    <th className={`py-2 px-3 text-center w-[${boardNameMaxWidth}] text-sm font-medium text-gray-500`}>게시판</th>
-                  )}
-                  <th className="py-2 px-4 text-center text-sm font-medium text-gray-500">제목</th>
-                  <th className={`py-2 px-3 text-center w-[${boardNameMaxWidth}] text-sm font-medium text-gray-500 hidden sm:table-cell`}>글쓴이</th>
-                  <th className="py-2 px-1 text-center w-16 text-sm font-medium text-gray-500 hidden sm:table-cell">날짜</th>
-                  <th className="py-2 px-1 text-center w-12 text-sm font-medium text-gray-500 hidden sm:table-cell">조회</th>
-                  <th className="py-2 px-1 text-center w-12 text-sm font-medium text-gray-500 hidden sm:table-cell">추천</th>
-                </tr>
-              </thead>
-              <tbody>
-                {posts.map((post) => (
-                  <tr 
-                    key={post.id} 
-                    className={`border-b hover:bg-gray-50 ${post.id === currentPostId ? 'bg-blue-50' : ''}`}
-                  >
+          <>
+            {/* 모바일 뷰 */}
+            {renderMobilePostList()}
+            
+            {/* 데스크톱 뷰 */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-t border-b bg-gray-50">
                     {showBoard && (
-                      <td className="py-2 px-3 align-middle">
-                        {(post.team_logo || post.league_logo) ? (
-                          <div className="flex items-center">
-                            <div className="relative w-5 h-5 mr-1">
-                              <Image 
-                                src={post.team_logo || post.league_logo || ''}
-                                alt={post.board_name}
-                                fill
-                                className="object-contain"
-                                sizes="20px"
-                                priority={true}
-                              />
+                      <th className={`py-2 px-3 text-center w-[${boardNameMaxWidth}] text-sm font-medium text-gray-500`}>게시판</th>
+                    )}
+                    <th className="py-2 px-4 text-center text-sm font-medium text-gray-500">제목</th>
+                    <th className={`py-2 px-3 text-center w-[${boardNameMaxWidth}] text-sm font-medium text-gray-500`}>글쓴이</th>
+                    <th className="py-2 px-1 text-center w-16 text-sm font-medium text-gray-500">날짜</th>
+                    <th className="py-2 px-1 text-center w-12 text-sm font-medium text-gray-500">조회</th>
+                    <th className="py-2 px-1 text-center w-12 text-sm font-medium text-gray-500">추천</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {posts.map((post) => (
+                    <tr 
+                      key={post.id} 
+                      className={`border-b hover:bg-gray-50 ${post.id === currentPostId ? 'bg-blue-50' : ''}`}
+                    >
+                      {showBoard && (
+                        <td className="py-2 px-3 align-middle">
+                          {(post.team_logo || post.league_logo) ? (
+                            <div className="flex items-center">
+                              <div className="relative w-5 h-5 mr-1">
+                                <Image 
+                                  src={post.team_logo || post.league_logo || ''}
+                                  alt={post.board_name}
+                                  fill
+                                  className="object-contain"
+                                  sizes="20px"
+                                  priority={true}
+                                />
+                              </div>
+                              <span className="text-xs text-gray-700 truncate" 
+                                    title={post.board_name} 
+                                    style={{maxWidth: '85px'}}>
+                                {post.board_name}
+                              </span>
                             </div>
-                            <span className="text-xs text-gray-700 truncate" 
+                          ) : (
+                            <span className="inline-block text-xs bg-gray-100 px-1.5 py-0.5 rounded-full truncate" 
                                   title={post.board_name} 
-                                  style={{maxWidth: '85px'}}>
+                                  style={{maxWidth: '90px'}}>
                               {post.board_name}
                             </span>
-                          </div>
-                        ) : (
-                          <span className="inline-block text-xs bg-gray-100 px-1.5 py-0.5 rounded-full truncate" 
-                                title={post.board_name} 
-                                style={{maxWidth: '90px'}}>
-                            {post.board_name}
-                          </span>
-                        )}
-                      </td>
-                    )}
-                    <td className="py-2 px-4 align-middle">
-                      <Link 
-                        href={`/boards/${post.board_slug}/${post.post_number}?from=${currentBoardId}`} 
-                        className="block w-full"
-                      >
-                        <div className="flex items-center">
-                          <span className={`text-sm hover:text-blue-600 line-clamp-1 ${post.id === currentPostId ? 'text-blue-600 font-medium' : ''}`}>
-                            {post.title}
-                          </span>
-                          {renderContentTypeIcons(post)}
-                        </div>
-                      </Link>
-                    </td>
-                    <td className="py-2 px-3 text-center text-xs text-gray-500 align-middle hidden sm:table-cell">
-                      <div className="flex items-center justify-center">
-                        <div className="w-5 h-5 mr-1 flex-shrink-0 relative rounded-full overflow-hidden" 
-                             title={post.author_id && authorIcons[post.author_id]?.name || undefined}>
-                          {post.author_id && authorIcons[post.author_id]?.url ? (
-                            <Image 
-                              src={authorIcons[post.author_id].url || ''}
-                              alt={post.author_nickname}
-                              fill
-                              className="object-cover"
-                              sizes="20px"
-                              unoptimized={true}
-                              priority={true}
-                              onError={() => handleImageError(post.author_id || '')}
-                              style={{opacity: 1}}
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-transparent"></div>
                           )}
+                        </td>
+                      )}
+                      <td className="py-2 px-4 align-middle">
+                        <Link 
+                          href={`/boards/${post.board_slug}/${post.post_number}?from=${currentBoardId}`} 
+                          className="block w-full"
+                        >
+                          <div className="flex items-center">
+                            <span className={`text-sm hover:text-blue-600 line-clamp-1 ${post.id === currentPostId ? 'text-blue-600 font-medium' : ''}`}>
+                              {post.title}
+                            </span>
+                            {renderContentTypeIcons(post)}
+                          </div>
+                        </Link>
+                      </td>
+                      <td className="py-2 px-2 text-center text-xs text-gray-500 align-middle">
+                        <div className="flex items-center justify-start">
+                          <div className="flex-shrink-0 w-5 h-5 relative rounded-full overflow-hidden mr-1" 
+                               title={post.author_id && authorIcons[post.author_id]?.name || undefined}>
+                            {post.author_id && authorIcons[post.author_id]?.url ? (
+                              <Image 
+                                src={authorIcons[post.author_id].url || ''}
+                                alt={post.author_nickname}
+                                fill
+                                className="object-cover"
+                                sizes="20px"
+                                unoptimized={true}
+                                priority={true}
+                                onError={() => handleImageError(post.author_id || '')}
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-transparent flex items-center justify-center">
+                                <UserIcon className="h-3 w-3 text-gray-400" />
+                              </div>
+                            )}
+                          </div>
+                          <span className="truncate text-xs text-gray-600" 
+                                title={post.author_nickname || '익명'} 
+                                style={{maxWidth: '100px', textAlign: 'left'}}>
+                            {post.author_nickname || '익명'}
+                          </span>
                         </div>
-                        <span className="truncate text-xs" style={{maxWidth: '85px'}}>
-                          {post.author_nickname || '익명'}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-2 px-1 text-center text-xs text-gray-500 align-middle hidden sm:table-cell">
-                      {formatDate(post.created_at)}
-                    </td>
-                    <td className="py-2 px-1 text-center text-xs text-gray-500 align-middle hidden sm:table-cell">
-                      {post.views || 0}
-                    </td>
-                    <td className="py-2 px-1 text-center text-xs text-gray-500 align-middle hidden sm:table-cell">
-                      {post.likes || 0}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      </td>
+                      <td className="py-2 px-1 text-center text-xs text-gray-500 align-middle">
+                        {formatDate(post.created_at)}
+                      </td>
+                      <td className="py-2 px-1 text-center text-xs text-gray-500 align-middle">
+                        {post.views || 0}
+                      </td>
+                      <td className="py-2 px-1 text-center text-xs text-gray-500 align-middle">
+                        {post.likes || 0}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </ScrollArea>
       

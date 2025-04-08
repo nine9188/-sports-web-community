@@ -18,7 +18,7 @@ export default function Sidebar({
       {/* Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/70 z-[49] lg:hidden"
+          className="fixed inset-0 bg-black/70 z-[999] lg:hidden pointer-events-auto"
           onClick={onClose}
         />
       )}
@@ -26,7 +26,7 @@ export default function Sidebar({
       {/* 사이드바 */}
       <div
         className={`fixed lg:relative top-0 lg:top-0 left-0 h-[100dvh] lg:h-auto w-[280px] 
-          bg-white transform transition-transform duration-300 ease-in-out z-[50] lg:z-30
+          bg-white transform transition-transform duration-300 ease-in-out z-[1000] lg:z-30
           ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
         {/* Mobile Close Button */}

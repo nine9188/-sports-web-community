@@ -251,9 +251,9 @@ export default function Header({ onMenuClick, isSidebarOpen }: { onMenuClick: ()
   return (
     <header className={`sticky top-0 z-50 border-b shadow-sm bg-white`}>
       {isSidebarOpen && (
-        <div className="absolute inset-0 bg-black/70 z-10 lg:hidden" />
+        <div className="absolute inset-0 bg-black/70 z-[998] lg:hidden pointer-events-auto" />
       )}
-      <div className="container mx-auto relative z-20">
+      <div className="container mx-auto relative z-[999]">
         <div className="flex h-16 items-center px-4">
           <Button variant="ghost" size="icon" className="lg:hidden mr-2" onClick={onMenuClick}>
             <Menu className="h-5 w-5" />
