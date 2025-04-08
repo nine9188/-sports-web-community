@@ -246,7 +246,7 @@ export default function BoardHeaderNavigation() {
         {boards.map(board => (
           <div 
             key={board.id} 
-            className="relative shrink-0"
+            className="relative shrink-0 snap-center" 
             ref={(el) => {
               boardRefs.current[board.id] = el;
             }}
@@ -278,7 +278,7 @@ export default function BoardHeaderNavigation() {
         {/* 라이브스코어 링크 추가 */}
         <Link 
           href="/livescore/football" 
-          className="px-2 py-1 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1 shrink-0 whitespace-nowrap"
+          className="px-2 py-1 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1 shrink-0 whitespace-nowrap snap-center"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
             <circle cx="12" cy="12" r="10"></circle>
@@ -290,7 +290,7 @@ export default function BoardHeaderNavigation() {
         {/* 아이콘샵 링크 추가 */}
         <Link 
           href="/shop/profile-icons" 
-          className="px-2 py-1 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1 shrink-0 whitespace-nowrap"
+          className="px-2 py-1 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1 shrink-0 whitespace-nowrap snap-center"
         >
           <ShoppingBag className="h-3.5 w-3.5" />
           아이콘샵
@@ -300,7 +300,7 @@ export default function BoardHeaderNavigation() {
         {isAdmin && (
           <Link 
             href="/admin" 
-            className="ml-auto px-2 py-1 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded shrink-0 whitespace-nowrap"
+            className="ml-auto px-2 py-1 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded shrink-0 whitespace-nowrap snap-center"
           >
             관리자 페이지
           </Link>
@@ -310,7 +310,10 @@ export default function BoardHeaderNavigation() {
   };
 
   return (
-    <div ref={navRef} className="flex items-center gap-1 overflow-x-auto w-full no-scrollbar pb-1">
+    <div 
+      ref={navRef} 
+      className="flex items-center gap-1 overflow-x-auto w-full no-scrollbar pb-1 snap-x snap-mandatory"
+    >
       {loading ? (
         // 로딩 상태
         <div className="px-3 py-1">

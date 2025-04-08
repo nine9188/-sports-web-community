@@ -23,58 +23,46 @@ interface HoverMenuProps {
   childBoardsMap: Record<string, ChildBoard[]>;
   rootBoardId: string;
   activeTabId?: string;
-  currentBoardSlug?: string;
   rootBoardSlug?: string;
+  currentBoardSlug?: string;
 }
 
-export default function HoverMenu({ 
-  currentBoardId, 
-  topBoards, 
-  childBoardsMap, 
+export default function HoverMenu({
+  currentBoardId,
+  topBoards,
+  childBoardsMap,
   rootBoardId,
   activeTabId,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  rootBoardSlug,
   currentBoardSlug,
-  rootBoardSlug
 }: HoverMenuProps) {
   const [hoveredBoard, setHoveredBoard] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState({ left: 0 });
   const menuRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const menuItemsRef = useRef<Record<string, HTMLDivElement | null>>({});
-  
-  // 마우스가 메뉴 아이템과 드롭다운 사이의 간격을 이동할 때 메뉴가 사라지는 것을 방지
-  const [isMouseInDropdown, setIsMouseInDropdown] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleMenuItemMouseEnter = (boardId: string) => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    setHoveredBoard(boardId);
-  };
-
-  const handleMenuItemMouseLeave = () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    timeoutRef.current = setTimeout(() => {
-      if (!isMouseInDropdown) {
-        setHoveredBoard(null);
+  useEffect(() => {
+    if (currentBoardSlug) {
+      if (process.env.NODE_ENV === 'development') {
+        console.debug(`현재 게시판: ${currentBoardSlug}`);
       }
-    }, 100); // 100ms 딜레이 추가
-  };
+    }
+  }, [currentBoardSlug]);
 
-  const handleDropdownMouseEnter = () => {
-    setIsMouseInDropdown(true);
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
+  const handleOutsideClick = (event: MouseEvent) => {
+    if (
+      containerRef.current &&
+      !containerRef.current.contains(event.target as Node)
+    ) {
+      setHoveredBoard(null);
     }
   };
 
-  const handleDropdownMouseLeave = () => {
-    setIsMouseInDropdown(false);
-    setHoveredBoard(null);
-  };
+  useEffect(() => {
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
 
   useEffect(() => {
     if (hoveredBoard && menuItemsRef.current[hoveredBoard]) {
@@ -85,81 +73,83 @@ export default function HoverMenu({
       }
     }
   }, [hoveredBoard]);
-  
-  // display_order 기준으로 상위 게시판 정렬
-  const sortedTopBoards = [...topBoards].sort((a, b) => {
-    // 먼저 display_order로 정렬
-    if (a.display_order !== b.display_order) {
-      return a.display_order - b.display_order;
-    }
-    // 동일한 display_order 값을 가질 경우 이름으로 정렬
-    return a.name.localeCompare(b.name);
-  });
-  
-  // 상위 메뉴가 없으면 빈 메뉴바만 표시
-  if (!sortedTopBoards || sortedTopBoards.length === 0) {
-    return (
-      <div className="relative">
-        <nav className="flex overflow-x-auto border-b">
-          <Link 
-            href={`/boards/${rootBoardSlug}`} 
-            className={`px-4 py-3 text-sm font-medium whitespace-nowrap hover:bg-gray-50 ${
-              currentBoardId === rootBoardId ? 'bg-gray-100 text-blue-600' : ''
-            }`}
-          >
-            <span className="inline-flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-              전체
-            </span>
-          </Link>
-        </nav>
-      </div>
-    );
-  }
-  
+
+  const sortedTopBoards = [...topBoards].sort((a, b) =>
+    a.display_order !== b.display_order
+      ? a.display_order - b.display_order
+      : a.name.localeCompare(b.name)
+  );
+
   return (
-    <div className="relative">
+    <div className="relative" ref={containerRef}>
       {/* 네비게이션 바 */}
-      <nav className="flex overflow-x-auto border-b">
-        {/* 홈/전체 메뉴 - 루트 게시판의 slug 사용 */}
-        <Link 
-          href={`/boards/${rootBoardSlug}`} 
+      <nav className="flex overflow-x-auto border-b bg-white">
+        <Link
+          href={`/boards/${rootBoardSlug}`}
           className={`px-4 py-3 text-sm font-medium whitespace-nowrap hover:bg-gray-50 ${
             currentBoardId === rootBoardId ? 'bg-gray-100 text-blue-600' : ''
           }`}
         >
           <span className="inline-flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 mr-1"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+              />
             </svg>
             전체
           </span>
         </Link>
-        
-        {/* 상위 메뉴 항목들 */}
+
         {sortedTopBoards.map((topBoard) => (
-          <div 
-            key={topBoard.id} 
+          <div
+            key={topBoard.id}
             className="relative"
             ref={(el) => {
               menuItemsRef.current[topBoard.id] = el;
-              return undefined;
             }}
-            onMouseEnter={() => handleMenuItemMouseEnter(topBoard.id)}
-            onMouseLeave={handleMenuItemMouseLeave}
+            onMouseEnter={() => setHoveredBoard(topBoard.id)}
+            onMouseLeave={(e) => {
+              // dropdown 영역으로 진입하지 않으면 닫기
+              if (
+                menuRef.current &&
+                !menuRef.current.contains(e.relatedTarget as Node)
+              ) {
+                setHoveredBoard(null);
+              }
+            }}
           >
-            <Link 
+            <Link
               href={`/boards/${topBoard.slug || topBoard.id}`}
               className={`px-4 py-3 text-sm font-medium whitespace-nowrap hover:bg-gray-50 flex items-center ${
-                topBoard.id === currentBoardId || topBoard.id === activeTabId ? 'bg-gray-100 text-blue-600' : ''
+                topBoard.id === currentBoardId || topBoard.id === activeTabId
+                  ? 'bg-gray-100 text-blue-600'
+                  : ''
               }`}
             >
               {topBoard.name}
-              {childBoardsMap[topBoard.id] && childBoardsMap[topBoard.id].length > 0 && (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              {childBoardsMap[topBoard.id]?.length > 0 && (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-3 w-3 ml-1"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               )}
             </Link>
@@ -168,28 +158,28 @@ export default function HoverMenu({
       </nav>
 
       {/* 드롭다운 메뉴 */}
-      {hoveredBoard && childBoardsMap[hoveredBoard] && childBoardsMap[hoveredBoard].length > 0 && (
-        <div 
+      {hoveredBoard && childBoardsMap[hoveredBoard]?.length > 0 && (
+        <div
           ref={menuRef}
-          onMouseEnter={handleDropdownMouseEnter}
-          onMouseLeave={handleDropdownMouseLeave}
+          onMouseLeave={() => setHoveredBoard(null)}
           className="absolute top-full bg-white shadow-md border rounded z-50 p-2 mt-0.5 overflow-x-auto"
           style={{ left: `${menuPosition.left}px` }}
         >
           <div className="flex flex-nowrap">
-            {[...childBoardsMap[hoveredBoard]]
-              .sort((a, b) => {
-                if (a.display_order !== b.display_order) {
-                  return a.display_order - b.display_order;
-                }
-                return a.name.localeCompare(b.name);
-              })
+            {childBoardsMap[hoveredBoard]
+              .sort((a, b) =>
+                a.display_order !== b.display_order
+                  ? a.display_order - b.display_order
+                  : a.name.localeCompare(b.name)
+              )
               .map((childBoard) => (
-                <Link 
+                <Link
                   href={`/boards/${childBoard.slug || childBoard.id}`}
                   key={childBoard.id}
                   className={`inline-block px-3 py-1.5 text-sm hover:bg-gray-50 rounded whitespace-nowrap mx-1 ${
-                    childBoard.id === currentBoardId ? 'bg-blue-50 text-blue-600' : ''
+                    childBoard.id === currentBoardId
+                      ? 'bg-blue-50 text-blue-600'
+                      : ''
                   }`}
                 >
                   {childBoard.name}
@@ -200,4 +190,4 @@ export default function HoverMenu({
       )}
     </div>
   );
-} 
+}

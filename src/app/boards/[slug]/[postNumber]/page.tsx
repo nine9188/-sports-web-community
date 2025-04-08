@@ -294,12 +294,14 @@ export default async function PostDetailPage({
           />
           
           {/* 하단 버튼 영역 */}
-          <PostFooter 
-            boardSlug={slug}
-            postNumber={postNumber}
-            isAuthor={isAuthor}
-            isLoggedIn={isLoggedIn}
-          />
+          <div className="mt-4">
+            <PostFooter 
+              boardSlug={slug}
+              postNumber={postNumber}
+              isAuthor={isAuthor}
+              isLoggedIn={isLoggedIn}
+            />
+          </div>
           
           {/* 페이지네이션 */}
           <Pagination
