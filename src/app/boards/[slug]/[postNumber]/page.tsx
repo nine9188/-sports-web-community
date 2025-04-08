@@ -200,8 +200,8 @@ export default async function PostDetailPage({
     const breadcrumbs = [
       {
         id: 'boards',
-        name: '게시판',
-        slug: 'boards'
+        name: '해외축구',
+        slug: 'soccer'
       }
     ];
     

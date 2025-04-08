@@ -2,7 +2,6 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Button } from '@/app/ui/button';
 import { PenLine } from 'lucide-react';
 
 interface LeagueData {
@@ -27,10 +26,10 @@ export default function LeagueInfo({ leagueData, boardId, boardSlug }: LeagueInf
         <div className="flex justify-between items-center">
           <p className="text-gray-500">리그 정보를 불러올 수 없습니다.</p>
           <Link href={`/boards/${boardSlug || boardId}/create`}>
-            <Button size="sm" className="flex items-center gap-1">
+            <button className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-white py-2 px-3 rounded-md text-sm font-medium border border-slate-700 transition-colors">
               <PenLine className="h-4 w-4" />
-              <span>글 작성하기</span>
-            </Button>
+              <span>글쓰기</span>
+            </button>
           </Link>
         </div>
       </div>
@@ -66,10 +65,10 @@ export default function LeagueInfo({ leagueData, boardId, boardSlug }: LeagueInf
               )}
             </div>
             <Link href={`/boards/${boardSlug || boardId}/create`}>
-              <Button size="sm" className="flex items-center gap-1">
+              <button className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-white py-2 px-3 rounded-md text-sm font-medium border border-slate-700 transition-colors">
                 <PenLine className="h-4 w-4" />
-                <span>글 작성하기</span>
-              </Button>
+                <span>글쓰기</span>
+              </button>
             </Link>
           </div>
         </div>

@@ -10,7 +10,6 @@ import LeagueInfo from '@/app/boards/components/LeagueInfo';
 import BoardPagination from '@/app/boards/components/BoardPagination';
 import { PenLine } from 'lucide-react';
 import Link from 'next/link';
-import { Button } from '@/app/ui/button';
 
 // 동적 렌더링 강제 설정 추가
 export const dynamic = 'force-dynamic';
@@ -427,7 +426,7 @@ export default async function BoardDetailPage({
         </div>
         
         {teamData && (
-          <div className="mb-4">
+          <div className="mb-4 hidden sm:block">
             <BoardTeamInfo 
               teamData={teamData}
               boardId={boardData.id}
@@ -437,7 +436,7 @@ export default async function BoardDetailPage({
         )}
 
         {leagueData && (
-          <div className="mb-4">
+          <div className="mb-4 hidden sm:block">
             <LeagueInfo 
               leagueData={leagueData}
               boardId={boardData.id}
@@ -458,7 +457,17 @@ export default async function BoardDetailPage({
           />
         </div>
         
-        <div className="mb-4">
+        <div className="mb-4 relative">
+          {/* 글쓰기 버튼 - 모바일에서 고정 위치 */}
+          <div className="sm:hidden fixed bottom-4 right-4 z-30">
+            <Link href={`/boards/${slug}/write`}>
+              <button className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-white rounded-full font-medium py-2 px-4 shadow-md border border-slate-700 transition-colors">
+                <PenLine className="h-4 w-4" />
+                <span>글쓰기</span>
+              </button>
+            </Link>
+          </div>
+          
           <ScrollArea className="h-full">
             <PostList 
               posts={formattedPosts}
@@ -479,12 +488,15 @@ export default async function BoardDetailPage({
             </div>
             
             <div className="flex-1 flex justify-end">
-              <Link href={`/boards/${slug}/write`}>
-                <Button size="sm" className="flex items-center gap-1">
-                  <PenLine className="h-4 w-4" />
-                  <span>글 작성하기</span>
-                </Button>
-              </Link>
+              {/* 데스크톱용 글쓰기 버튼 */}
+              <div className="hidden sm:block">
+                <Link href={`/boards/${slug}/write`}>
+                  <button className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-white py-2 px-3 rounded-md text-sm font-medium border border-slate-700 transition-colors">
+                    <PenLine className="h-4 w-4" />
+                    <span>글쓰기</span>
+                  </button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
