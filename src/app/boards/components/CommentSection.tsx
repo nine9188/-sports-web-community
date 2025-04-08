@@ -6,19 +6,7 @@ import { createClient } from '@/app/lib/supabase-browser';
 import { Button } from '@/app/ui/button';
 import Comment from '@/app/boards/components/Comment';
 import { rewardUserActivity, ActivityType } from '@/app/utils/activity-rewards';
-
-interface CommentType {
-  id: string;
-  content: string;
-  created_at: string;
-  user_id: string;
-  likes: number;
-  dislikes: number;
-  profiles: {
-    nickname: string;
-    icon_id?: number | null;
-  } | null;
-}
+import { CommentType } from '@/app/types/comment';
 
 interface CommentSectionProps {
   postId: string;

@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { ChevronLeft, ChevronRight, ListOrdered, PenLine } from 'lucide-react';
 
 interface PostNavigationProps {
   boardSlug: string;
@@ -10,34 +11,69 @@ interface PostNavigationProps {
 export default function PostNavigation({ boardSlug, prevPost, nextPost }: PostNavigationProps) {
   return (
     <div className="bg-white rounded-lg border shadow-sm mb-6">
-      <div className="border-b">
-        <div className="grid grid-cols-[70px_1fr] items-center py-3 px-4">
-          <span className="text-sm text-gray-500">이전글</span>
+      <div className="flex flex-row items-center justify-between px-2 py-2">
+        {/* 이전글 버튼 */}
+        <div className="flex-1 text-center">
           {prevPost ? (
             <Link 
               href={`/boards/${boardSlug}/${prevPost.post_number}`}
-              className="text-sm hover:underline truncate"
+              className="inline-flex items-center justify-center py-2 px-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
             >
-              {prevPost.title}
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">이전글</span>
             </Link>
           ) : (
-            <span className="text-sm text-gray-400">이전 게시글이 없습니다.</span>
+            <button 
+              disabled
+              className="inline-flex items-center justify-center py-2 px-3 text-sm text-gray-400 cursor-not-allowed"
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">이전글</span>
+            </button>
           )}
         </div>
-      </div>
-      <div>
-        <div className="grid grid-cols-[70px_1fr] items-center py-3 px-4">
-          <span className="text-sm text-gray-500">다음글</span>
+
+        {/* 목록 버튼 */}
+        <div className="flex-1 text-center">
+          <Link 
+            href={`/boards/${boardSlug}`}
+            className="inline-flex items-center justify-center py-2 px-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+          >
+            <ListOrdered className="h-4 w-4 mr-1" />
+            <span className="hidden sm:inline">목록</span>
+          </Link>
+        </div>
+
+        {/* 다음글 버튼 */}
+        <div className="flex-1 text-center">
           {nextPost ? (
             <Link 
               href={`/boards/${boardSlug}/${nextPost.post_number}`}
-              className="text-sm hover:underline truncate"
+              className="inline-flex items-center justify-center py-2 px-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
             >
-              {nextPost.title}
+              <span className="hidden sm:inline">다음글</span>
+              <ChevronRight className="h-4 w-4 ml-1" />
             </Link>
           ) : (
-            <span className="text-sm text-gray-400">다음 게시글이 없습니다.</span>
+            <button 
+              disabled
+              className="inline-flex items-center justify-center py-2 px-3 text-sm text-gray-400 cursor-not-allowed"
+            >
+              <span className="hidden sm:inline">다음글</span>
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </button>
           )}
+        </div>
+
+        {/* 글쓰기 버튼 (모바일에서는 숨김) */}
+        <div className="hidden md:block flex-1 text-center">
+          <Link 
+            href={`/boards/${boardSlug}/write`}
+            className="inline-flex items-center justify-center py-2 px-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+          >
+            <PenLine className="h-4 w-4 mr-1" />
+            <span>글쓰기</span>
+          </Link>
         </div>
       </div>
     </div>

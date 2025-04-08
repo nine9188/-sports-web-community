@@ -12,10 +12,13 @@ interface CommentProps {
     content: string;
     created_at: string;
     user_id: string;
-    likes: number;
-    dislikes: number;
+    likes?: number;
+    dislikes?: number;
     profiles: {
-      nickname: string;
+      nickname: string | null;
+      id?: string;
+      icon_id?: number | null;
+      icon_url?: string | null;
     } | null;
   };
   currentUserId: string | null;

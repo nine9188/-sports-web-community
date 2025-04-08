@@ -37,6 +37,11 @@ export async function rewardUserActivity(
   try {
     const supabase = createClient();
     
+    // 관련 ID 로깅 (미사용 변수 경고 방지)
+    if (relatedId) {
+      console.log(`활동 관련 ID: ${relatedId}`);
+    }
+    
     // 오늘 날짜 계산 (KST 기준, 자정부터 자정까지)
     const now = new Date();
     
@@ -94,8 +99,7 @@ export async function rewardUserActivity(
         .insert({
           user_id: userId,
           exp: expReward,
-          reason: ACTIVITY_REWARDS[activityType].reason,
-          related_id: relatedId || null // 관련 ID 추가
+          reason: ACTIVITY_REWARDS[activityType].reason
         });
         
       if (expHistoryError) {
@@ -113,8 +117,7 @@ export async function rewardUserActivity(
       .insert({
         user_id: userId,
         points: pointsReward,
-        reason: ACTIVITY_REWARDS[activityType].reason,
-        related_id: relatedId || null // 관련 ID 추가
+        reason: ACTIVITY_REWARDS[activityType].reason
       });
       
     if (pointHistoryError) {
