@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 
 // 필요한 인터페이스 정의
 interface League {
@@ -72,15 +72,17 @@ interface FixturesResponse {
 interface PlayerFixturesProps {
   playerId: number;
   seasons: number[];
-  fixturesData: FixturesResponse;
+  fixturesData?: FixturesResponse;
   initialSeason: number;
+  baseUrl?: string;
 }
 
 export default function PlayerFixtures({ 
   playerId, 
-  seasons, 
-  fixturesData: initialFixturesData, 
-  initialSeason 
+  seasons = [], 
+  fixturesData: initialFixturesData = { data: [] }, 
+  initialSeason,
+  baseUrl = '' 
 }: PlayerFixturesProps) {
   const router = useRouter();
   const [selectedSeason, setSelectedSeason] = useState<number>(initialSeason);
@@ -97,44 +99,55 @@ export default function PlayerFixtures({
   // 사용 가능한 시즌 목록
   const availableSeasons = seasons?.sort((a: number, b: number) => b - a) || [];
 
+  // 데이터 가져오기 함수를 useCallback으로 메모이제이션
+  const fetchFixturesData = useCallback(async (season: number) => {
+    // 이미 캐시된 데이터가 있으면 사용
+    if (cachedDataRef.current[season] && cachedDataRef.current[season].data.length > 0) {
+      setFixturesData(cachedDataRef.current[season]);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      setSelectedLeague(''); // 시즌이 변경되면 리그 선택 초기화
+
+      // API 요청 URL 설정 (baseUrl이 있으면 사용, 없으면 상대 경로)
+      const apiUrl = baseUrl 
+        ? `${baseUrl}/api/livescore/football/players/${playerId}/fixtures?season=${season}&per_page=30`
+        : `/api/livescore/football/players/${playerId}/fixtures?season=${season}&per_page=30`;
+
+      const response = await fetch(apiUrl);
+
+      if (!response.ok) {
+        throw new Error('경기 데이터를 가져오는데 실패했습니다.');
+      }
+
+      const data = await response.json();
+      
+      // 데이터를 캐시에 저장
+      cachedDataRef.current[season] = data;
+      setFixturesData(data);
+    } catch (err) {
+      console.error('경기 데이터 로딩 오류:', err);
+      setError('경기 데이터를 가져오는데 실패했습니다.');
+      setFixturesData({ data: [] });
+    } finally {
+      setLoading(false);
+    }
+  }, [playerId, baseUrl]);
+
+  // 컴포넌트 마운트 시 데이터 가져오기 (초기 데이터가 비어있는 경우)
+  useEffect(() => {
+    if (initialFixturesData.data.length === 0) {
+      fetchFixturesData(selectedSeason);
+    }
+  }, [initialFixturesData.data.length, fetchFixturesData, selectedSeason]);
+
   // 시즌이 변경될 때 새 데이터 가져오기
   useEffect(() => {
-    const fetchFixturesData = async () => {
-      // 이미 캐시된 데이터가 있으면 사용
-      if (cachedDataRef.current[selectedSeason]) {
-        setFixturesData(cachedDataRef.current[selectedSeason]);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        setError(null);
-        setSelectedLeague(''); // 시즌이 변경되면 리그 선택 초기화
-
-        const response = await fetch(
-          `/api/livescore/football/players/${playerId}/fixtures?season=${selectedSeason}&per_page=30`
-        );
-
-        if (!response.ok) {
-          throw new Error('경기 데이터를 가져오는데 실패했습니다.');
-        }
-
-        const data = await response.json();
-        
-        // 데이터를 캐시에 저장
-        cachedDataRef.current[selectedSeason] = data;
-        setFixturesData(data);
-      } catch (err) {
-        console.error('경기 데이터 로딩 오류:', err);
-        setError('경기 데이터를 가져오는데 실패했습니다.');
-        setFixturesData({ data: [] });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFixturesData();
-  }, [playerId, selectedSeason]);
+    fetchFixturesData(selectedSeason);
+  }, [selectedSeason, fetchFixturesData]);
 
   // 사용 가능한 리그 목록 (전체 리그 데이터에서 추출)
   const availableLeagues = useMemo(() => {

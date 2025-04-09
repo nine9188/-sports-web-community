@@ -53,45 +53,59 @@ interface RankingsData {
 }
 
 interface PlayerRankingsProps {
+  playerId: number;
   currentLeague: number;
+  baseUrl?: string;
   rankingsData?: RankingsData;
-  playerId?: number;
 }
 
-export default function PlayerRankings({ currentLeague, rankingsData, playerId }: PlayerRankingsProps) {
+export default function PlayerRankings({ 
+  playerId, 
+  currentLeague, 
+  baseUrl = '',
+  rankingsData: initialRankingsData
+}: PlayerRankingsProps) {
   const router = useRouter();
   const [rankingType, setRankingType] = useState('topScorers');
-  const [rankings, setRankings] = useState<RankingsData>(rankingsData || {});
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [rankings, setRankings] = useState<RankingsData>(initialRankingsData || {});
+  const [isLoading, setIsLoading] = useState<boolean>(!initialRankingsData);
 
-  // 컴포넌트 마운트 시 rankingsData 설정
+  // 컴포넌트 마운트 시 랭킹 데이터 가져오기
   useEffect(() => {
-    if (rankingsData) {
-      setRankings(rankingsData);
+    // 이미 데이터가 있으면 가져오지 않음
+    if (initialRankingsData) {
+      setRankings(initialRankingsData);
+      return;
     }
-  }, [rankingsData]);
-
-  // rankingsData가 없고 playerId가 있는 경우에만 API 호출
-  useEffect(() => {
-    if (!rankingsData && playerId && currentLeague) {
-      const fetchRankings = async () => {
-        setIsLoading(true);
-        try {
-          const response = await fetch(`/api/livescore/football/players/${playerId}/rankings?league=${currentLeague}`);
-          if (!response.ok) throw new Error('랭킹 데이터를 불러오는데 실패했습니다.');
-          const data = await response.json();
-          setRankings(data);
-        } catch (error) {
-          console.error('랭킹 데이터 로딩 오류:', error);
-          setRankings({});
-        } finally {
-          setIsLoading(false);
+    
+    const fetchRankings = async () => {
+      setIsLoading(true);
+      try {
+        // API 요청 URL 설정
+        const apiUrl = baseUrl 
+          ? `${baseUrl}/api/livescore/football/players/${playerId}/rankings?league=${currentLeague}` 
+          : `/api/livescore/football/players/${playerId}/rankings?league=${currentLeague}`;
+        
+        const response = await fetch(apiUrl);
+        
+        if (!response.ok) {
+          throw new Error('랭킹 데이터를 불러오는데 실패했습니다.');
         }
-      };
+        
+        const data = await response.json();
+        setRankings(data || {});
+      } catch (error) {
+        console.error('랭킹 데이터 로딩 오류:', error);
+        setRankings({});
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
+    if (currentLeague) {
       fetchRankings();
     }
-  }, [rankingsData, playerId, currentLeague]);
+  }, [initialRankingsData, playerId, currentLeague, baseUrl]);
 
   const rankingTypes = [
     { id: 'topScorers', label: '최다 득점' },
@@ -104,10 +118,16 @@ export default function PlayerRankings({ currentLeague, rankingsData, playerId }
 
   if (isLoading) return <div className="text-center py-8">로딩 중...</div>;
 
+  if (!currentLeague) return <div className="text-center py-8">리그 정보를 찾을 수 없습니다.</div>;
+
+  if (!rankings || Object.keys(rankings).length === 0) {
+    return <div className="text-center py-8">순위 데이터가 없습니다.</div>;
+  }
+
   // 선수 페이지로 이동하는 함수
-  const navigateToPlayer = (playerId: number) => {
-    if (playerId) {
-      router.push(`/livescore/football/player/${playerId}`);
+  const navigateToPlayer = (clickedPlayerId: number) => {
+    if (clickedPlayerId) {
+      router.push(`/livescore/football/player/${clickedPlayerId}`);
     }
   };
 

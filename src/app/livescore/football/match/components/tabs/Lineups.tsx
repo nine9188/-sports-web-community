@@ -117,23 +117,27 @@ interface PlayerStatsData {
 }
 
 interface LineupsProps {
-  homeTeam: {
-    id: number;
-    name: string;
-    logo: string;
+  matchData: {
+    homeTeam: {
+      id: number;
+      name: string;
+      logo: string;
+    };
+    awayTeam: {
+      id: number;
+      name: string;
+      logo: string;
+    };
+    lineups: {
+      response: {
+        home: TeamLineup;
+        away: TeamLineup;
+      } | null;
+    };
+    events?: MatchEvent[];
+    playersStats?: Record<number, PlayerStatsData>;
+    [key: string]: unknown;
   };
-  awayTeam: {
-    id: number;
-    name: string;
-    logo: string;
-  };
-  lineups: {
-    home: TeamLineup;
-    away: TeamLineup;
-  } | null;
-  events?: MatchEvent[];
-  playersStatsData?: Record<number, PlayerStatsData>;
-  matchId?: number;
 }
 
 interface MatchEvent {
@@ -276,14 +280,13 @@ const transformLineupData = (lineup: TeamLineup): TeamLineup => {
   };
 };
 
-export default function Lineups({ 
-  homeTeam, 
-  awayTeam, 
-  lineups, 
-  events = [],
-  playersStatsData = {},
-  matchId
-}: LineupsProps) {
+export default function Lineups({ matchData }: LineupsProps) {
+  const homeTeam = matchData.homeTeam;
+  const awayTeam = matchData.awayTeam;
+  const lineups = matchData.lineups?.response || null;
+  const events = matchData.events || [];
+  const playersStatsData = matchData.playersStats || {};
+  
   // 모달 상태 관리
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<{
@@ -865,7 +868,7 @@ export default function Lineups({
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           playerId={selectedPlayer.id}
-          matchId={matchId?.toString() || ''}
+          matchId={matchData.matchId?.toString() || ''}
           playerInfo={{
             name: selectedPlayer.name,
             number: selectedPlayer.number,

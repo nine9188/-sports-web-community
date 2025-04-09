@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
 interface Injury {
@@ -19,13 +20,53 @@ interface Injury {
 }
 
 interface PlayerInjuriesProps {
-  injuriesData: Injury[];
+  playerId: number;
+  baseUrl?: string;
+  injuriesData?: Injury[];
 }
 
-export default function PlayerInjuries({ injuriesData }: PlayerInjuriesProps) {
-  if (!injuriesData || injuriesData.length === 0) {
-    return <div className="text-center py-8 text-gray-500">부상 기록이 없습니다.</div>;
-  }
+export default function PlayerInjuries({
+  playerId,
+  baseUrl = '',
+  injuriesData: initialInjuriesData = [] 
+}: PlayerInjuriesProps) {
+  const [injuriesData, setInjuriesData] = useState<Injury[]>(initialInjuriesData);
+  const [loading, setLoading] = useState<boolean>(initialInjuriesData.length === 0);
+  const [error, setError] = useState<string | null>(null);
+
+  // 컴포넌트 마운트 시 부상 데이터 가져오기
+  useEffect(() => {
+    // 이미 데이터가 있으면 가져오지 않음
+    if (initialInjuriesData.length > 0) return;
+    
+    const fetchInjuriesData = async () => {
+      try {
+        setLoading(true);
+        
+        // API 요청 URL 설정
+        const apiUrl = baseUrl 
+          ? `${baseUrl}/api/livescore/football/players/${playerId}/injuries` 
+          : `/api/livescore/football/players/${playerId}/injuries`;
+        
+        const response = await fetch(apiUrl, { cache: 'no-store' });
+        
+        if (!response.ok) {
+          throw new Error('부상 정보를 불러오는데 실패했습니다.');
+        }
+        
+        const data = await response.json();
+        setInjuriesData(data || []);
+      } catch (error) {
+        console.error('부상 데이터 로딩 오류:', error);
+        setError('부상 정보를 불러오는데 실패했습니다.');
+        setInjuriesData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchInjuriesData();
+  }, [playerId, baseUrl, initialInjuriesData.length]);
 
   // 날짜 포맷팅 함수
   const formatDate = (dateString: string) => {
@@ -41,6 +82,18 @@ export default function PlayerInjuries({ injuriesData }: PlayerInjuriesProps) {
       return dateString;
     }
   };
+
+  if (loading) {
+    return <div className="text-center py-8">부상 정보를 불러오는 중...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-8 text-red-500">{error}</div>;
+  }
+
+  if (!injuriesData || injuriesData.length === 0) {
+    return <div className="text-center py-8 text-gray-500">부상 기록이 없습니다.</div>;
+  }
 
   return (
     <div className="space-y-4">

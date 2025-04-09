@@ -50,7 +50,21 @@ interface StandingsData {
 }
 
 interface StandingsProps {
-  standings?: StandingsData;
+  matchData: {
+    matchId: string;
+    homeTeam: {
+      id: number;
+      name: string;
+      logo: string;
+    };
+    awayTeam: {
+      id: number;
+      name: string;
+      logo: string;
+    };
+    standings: StandingsData | null;
+    [key: string]: unknown;
+  };
 }
 
 // 팀 로고 컴포넌트
@@ -80,20 +94,18 @@ const TeamLogo = ({ teamName, originalLogo }: { teamName: string; originalLogo: 
 const tableHeaderStyle = "px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider";
 const tableCellStyle = "px-3 py-2 whitespace-nowrap text-sm text-gray-900";
 
-export default function Standings({ standings }: StandingsProps) {
+export default function Standings({ matchData }: StandingsProps) {
   const router = useRouter();
   const [homeTeamId, setHomeTeamId] = useState<number | null>(null);
   const [awayTeamId, setAwayTeamId] = useState<number | null>(null);
+  const standings = matchData.standings;
   
   useEffect(() => {
-    if (standings) {
-      // 직접 home/away 속성이 있는 경우
-      if (standings.home?.id && standings.away?.id) {
-        setHomeTeamId(standings.home.id);
-        setAwayTeamId(standings.away.id);
-      }
+    if (matchData.homeTeam?.id && matchData.awayTeam?.id) {
+      setHomeTeamId(matchData.homeTeam.id);
+      setAwayTeamId(matchData.awayTeam.id);
     }
-  }, [standings]);
+  }, [matchData.homeTeam?.id, matchData.awayTeam?.id]);
 
   const getFormStyle = (result: string) => {
     switch(result) {

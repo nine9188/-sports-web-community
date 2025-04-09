@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { format } from 'date-fns';
 
@@ -21,7 +22,9 @@ interface Transfer {
 }
 
 interface PlayerTransfersProps {
-  transfersData: Transfer[];
+  playerId: number;
+  baseUrl?: string;
+  transfersData?: Transfer[];
 }
 
 // 이적 유형 한글 매핑
@@ -31,7 +34,49 @@ const transferTypeMap: { [key: string]: string } = {
   'N/A': '정보 없음',
 };
 
-export default function PlayerTransfers({ transfersData }: PlayerTransfersProps) {
+export default function PlayerTransfers({
+  playerId,
+  baseUrl = '',
+  transfersData: initialTransfersData = []
+}: PlayerTransfersProps) {
+  const [transfersData, setTransfersData] = useState<Transfer[]>(initialTransfersData);
+  const [loading, setLoading] = useState<boolean>(initialTransfersData.length === 0);
+  const [error, setError] = useState<string | null>(null);
+
+  // 컴포넌트 마운트 시 이적 데이터 가져오기
+  useEffect(() => {
+    // 이미 데이터가 있으면 가져오지 않음
+    if (initialTransfersData.length > 0) return;
+    
+    const fetchTransfersData = async () => {
+      try {
+        setLoading(true);
+        
+        // API 요청 URL 설정
+        const apiUrl = baseUrl 
+          ? `${baseUrl}/api/livescore/football/players/${playerId}/transfers` 
+          : `/api/livescore/football/players/${playerId}/transfers`;
+        
+        const response = await fetch(apiUrl, { cache: 'no-store' });
+        
+        if (!response.ok) {
+          throw new Error('이적 정보를 불러오는데 실패했습니다.');
+        }
+        
+        const data = await response.json();
+        setTransfersData(data || []);
+      } catch (error) {
+        console.error('이적 데이터 로딩 오류:', error);
+        setError('이적 정보를 불러오는데 실패했습니다.');
+        setTransfersData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchTransfersData();
+  }, [playerId, baseUrl, initialTransfersData.length]);
+
   // 이적료 포맷팅 함수
   const formatTransferType = (type: string) => {
     // 이적 유형이 매핑에 있는 경우 한글로 변환
@@ -41,6 +86,14 @@ export default function PlayerTransfers({ transfersData }: PlayerTransfersProps)
     // 그 외의 경우 (이적료가 있는 경우) 금액 표시
     return `${type}`;
   };
+  
+  if (loading) {
+    return <div className="text-center py-8">이적 정보를 불러오는 중...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-8 text-red-500">{error}</div>;
+  }
 
   if (transfersData.length === 0) return <div className="p-4">이적 기록이 없습니다.</div>;
 

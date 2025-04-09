@@ -3,6 +3,9 @@ import TabContent from '../components/TabContent';
 import MatchHeader from '../components/MatchHeader';
 import styles from '../styles/mobile.module.css';
 
+// 동적 렌더링 강제 설정 추가
+export const dynamic = 'force-dynamic';
+
 // 선수 정보 인터페이스
 interface Player {
   id: number;
@@ -263,12 +266,17 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
           events={eventsData.events || []}
         />
         <TabContent 
-          matchData={data} 
-          eventsData={eventsData.events || []}
-          lineupsData={lineupsData}
-          statsData={statsData.response || []}
-          standingsData={standingsData}
-          playersStatsData={playersStatsData}
+          matchId={matchId}
+          homeTeam={formattedData.teams.home}
+          awayTeam={formattedData.teams.away}
+          matchData={{
+            data: data,
+            events: eventsData.events || [],
+            lineups: lineupsData,
+            stats: statsData.response || [],
+            standings: standingsData,
+            playersStats: playersStatsData
+          }}
         />
       </div>
     );

@@ -1,6 +1,9 @@
 import { headers } from 'next/headers';
 import TeamClient from './TeamClient';
 
+// 동적 렌더링 강제 설정 추가
+export const dynamic = 'force-dynamic';
+
 export default async function TeamDetailPage({ params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
@@ -11,35 +14,22 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
     const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
     const baseUrl = `${protocol}://${host}`;
     
-    // 모든 API 요청을 서버에서 병렬로 실행
-    const [teamRes, matchesRes, standingsRes, squadRes] = await Promise.all([
-      fetch(`${baseUrl}/api/livescore/football/teams/${id}`, { cache: 'no-store' }),
-      fetch(`${baseUrl}/api/livescore/football/teams/${id}/matches`, { cache: 'no-store' }),
-      fetch(`${baseUrl}/api/livescore/football/teams/${id}/standings`, { cache: 'no-store' }),
-      fetch(`${baseUrl}/api/livescore/football/teams/${id}/squad`, { cache: 'no-store' })
-    ]);
+    // 팀 기본 정보만 SSR로 가져오기
+    const teamRes = await fetch(`${baseUrl}/api/livescore/football/teams/${id}`, { cache: 'no-store' });
 
     // 응답 확인
-    if (!teamRes.ok || !matchesRes.ok || !standingsRes.ok || !squadRes.ok) {
-      throw new Error('API 요청 중 오류가 발생했습니다.');
+    if (!teamRes.ok) {
+      throw new Error('팀 정보를 불러오는데 실패했습니다.');
     }
 
     // 데이터 파싱
-    const [teamData, matchesData, standingsData, squadData] = await Promise.all([
-      teamRes.json(),
-      matchesRes.json(),
-      standingsRes.json(),
-      squadRes.json()
-    ]);
+    const teamData = await teamRes.json();
 
-    // 클라이언트 컴포넌트에 데이터 전달
+    // 클라이언트 컴포넌트에 기본 데이터 전달
     return (
       <TeamClient 
         teamId={id}
         team={teamData}
-        matches={matchesData}
-        standings={standingsData.data || []}
-        squad={squadData}
         stats={teamData.stats}
       />
     );

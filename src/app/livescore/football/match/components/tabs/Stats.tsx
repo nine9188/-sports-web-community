@@ -3,10 +3,6 @@
 import { useState } from 'react';
 import Image from 'next/image';
 
-interface StatsProps {
-  stats?: TeamStats[];
-}
-
 interface TeamStats {
   team: {
     id: number;
@@ -17,6 +13,23 @@ interface TeamStats {
     type: string;
     value: number | string | null;
   }>;
+}
+
+interface StatsProps {
+  matchData: {
+    stats: TeamStats[];
+    homeTeam: {
+      id: number;
+      name: string;
+      logo: string;
+    };
+    awayTeam: {
+      id: number;
+      name: string;
+      logo: string;
+    };
+    [key: string]: unknown;
+  };
 }
 
 // 팀 로고 컴포넌트 추가
@@ -80,7 +93,9 @@ function StatItem({ homeValue, awayValue, koreanLabel }: { homeValue: string | n
   );
 }
 
-export default function Stats({ stats = [] }: StatsProps) {
+export default function Stats({ matchData }: StatsProps) {
+  const stats = matchData.stats || [];
+
   // 데이터가 없을 경우 메시지 표시
   if (!stats.length) {
     return (

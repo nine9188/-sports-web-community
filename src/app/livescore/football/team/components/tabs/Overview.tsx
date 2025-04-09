@@ -276,13 +276,23 @@ export default function Overview({ team, stats, matches, standings, onTabChange,
 
   // 득점 및 실점 데이터 안전하게 접근하는 함수 추가
   const getSafeGoalValue = (goalObj: GoalStats, type: string): number => {
-    if (!goalObj) return 0;
+    if (!goalObj || !goalObj.total) return 0;
     
-    // API 응답 구조가 다양할 수 있으므로 여러 경로 시도
-    if (goalObj.total && type in goalObj.total) {
-      return goalObj.total[type as keyof typeof goalObj.total] || 0;
+    // goalObj.total이 객체인지 확인
+    if (typeof goalObj.total === 'object' && goalObj.total !== null) {
+      // type이 total 객체에 존재하는지 확인
+      if (type === 'home' && 'home' in goalObj.total) {
+        return goalObj.total.home || 0;
+      }
+      if (type === 'away' && 'away' in goalObj.total) {
+        return goalObj.total.away || 0;
+      }
+      if (type === 'total' && 'total' in goalObj.total) {
+        return goalObj.total.total || 0;
+      }
     }
     
+    // 기본값
     return 0;
   };
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import classNames from 'classnames';
 
@@ -12,10 +13,62 @@ interface Trophy {
 }
 
 interface PlayerTrophiesProps {
-  trophiesData: Trophy[];
+  playerId: number;
+  baseUrl?: string;
+  trophiesData?: Trophy[];
 }
 
-export default function PlayerTrophies({ trophiesData }: PlayerTrophiesProps) {
+export default function PlayerTrophies({ 
+  playerId, 
+  baseUrl = '',
+  trophiesData: initialTrophiesData = [] 
+}: PlayerTrophiesProps) {
+  const [trophiesData, setTrophiesData] = useState<Trophy[]>(initialTrophiesData);
+  const [loading, setLoading] = useState<boolean>(initialTrophiesData.length === 0);
+  const [error, setError] = useState<string | null>(null);
+
+  // 컴포넌트 마운트 시 트로피 데이터 가져오기
+  useEffect(() => {
+    // 이미 데이터가 있으면 가져오지 않음
+    if (initialTrophiesData.length > 0) return;
+    
+    const fetchTrophiesData = async () => {
+      try {
+        setLoading(true);
+        
+        // API 요청 URL 설정
+        const apiUrl = baseUrl 
+          ? `${baseUrl}/api/livescore/football/players/${playerId}/trophies` 
+          : `/api/livescore/football/players/${playerId}/trophies`;
+        
+        const response = await fetch(apiUrl, { cache: 'no-store' });
+        
+        if (!response.ok) {
+          throw new Error('트로피 정보를 불러오는데 실패했습니다.');
+        }
+        
+        const data = await response.json();
+        setTrophiesData(data || []);
+      } catch (error) {
+        console.error('트로피 데이터 로딩 오류:', error);
+        setError('트로피 정보를 불러오는데 실패했습니다.');
+        setTrophiesData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchTrophiesData();
+  }, [playerId, baseUrl, initialTrophiesData.length]);
+
+  if (loading) {
+    return <div className="text-center py-8">트로피 정보를 불러오는 중...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-8 text-red-500">{error}</div>;
+  }
+
   if (!trophiesData || trophiesData.length === 0) {
     return <div className="text-center py-8 text-gray-500">수상 기록이 없습니다.</div>;
   }

@@ -29,10 +29,17 @@ interface Event {
 }
 
 interface EventsProps {
-  events?: Event[];
+  matchData: {
+    events: Event[];
+    data?: Record<string, unknown>;
+    lineups?: Record<string, unknown>;
+    stats?: Record<string, unknown>;
+    standings?: Record<string, unknown>;
+    playersStats?: Record<string, unknown>;
+  };
 }
 
-export default function Events({ events = [] }: EventsProps) {
+export default function Events({ matchData }: EventsProps) {
   const iconClass = "text-xl";
 
   // 이벤트 타입에 따른 아이콘 렌더링
@@ -68,7 +75,7 @@ export default function Events({ events = [] }: EventsProps) {
     );
   };
 
-  if (!events.length) {
+  if (!matchData.events.length) {
     return (
       <div className="flex justify-center items-center py-16">
         <div className="text-center">
@@ -95,7 +102,7 @@ export default function Events({ events = [] }: EventsProps) {
 
   return (
     <div className="space-y-4">
-      {events.map((event, index) => (
+      {matchData.events.map((event, index) => (
         <div 
           key={`${event.time.elapsed}-${index}`}
           className="flex gap-4 p-3 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-colors"

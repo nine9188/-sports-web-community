@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import TeamTabs from '../components/TeamTabs';
 import TeamHeader from '../components/TeamHeader';
@@ -76,7 +76,10 @@ interface Standing {
   league: {
     id: number;
     name: string;
+    country: string;
     logo: string;
+    flag: string;
+    season: number;
   };
   standings: Array<{
     rank: number;
@@ -98,7 +101,7 @@ interface Standing {
     goalsDiff: number;
     points: number;
     form: string;
-  }>;
+  }[]>;
 }
 
 interface Player {
@@ -212,18 +215,12 @@ interface TeamStats {
 interface TeamClientProps {
   teamId: string;
   team: TeamInfo | ApiTeamResponse; // API 응답 형태가 다양할 수 있음
-  matches: Match[];
-  standings: Standing[];
-  squad: Player[];
   stats: TeamStats;
 }
 
 export default function TeamClient({ 
   teamId, 
   team, 
-  matches, 
-  standings, 
-  squad, 
   stats 
 }: TeamClientProps) {
   const searchParams = useSearchParams();
@@ -231,25 +228,116 @@ export default function TeamClient({
   
   // 클라이언트 상태 관리 - URL 변경 없이 상태만 관리
   const [activeTab, setActiveTab] = useState(initialTab);
+  
+  // 데이터 상태 및 로딩 상태 관리
+  const [matches, setMatches] = useState<Match[] | null>(null);
+  const [standings, setStandings] = useState<Standing[]>([]);
+  const [squad, setSquad] = useState<Player[] | null>(null);
+  const [loading, setLoading] = useState({
+    matches: false,
+    standings: false,
+    squad: false
+  });
+  const [error, setError] = useState({
+    matches: false,
+    standings: false,
+    squad: false
+  });
 
   // teamId를 숫자로 변환 (API 응답의 ID와 비교하기 위함)
   const numericTeamId = parseInt(teamId, 10);
+  
+  // 경기 정보 로드
+  const loadMatches = useCallback(async () => {
+    try {
+      setLoading(prev => ({ ...prev, matches: true }));
+      const res = await fetch(`/api/livescore/football/teams/${teamId}/matches`);
+      if (!res.ok) throw new Error('경기 정보를 불러오는데 실패했습니다.');
+      const data = await res.json();
+      setMatches(data);
+      setError(prev => ({ ...prev, matches: false }));
+    } catch (err) {
+      console.error('Matches loading error:', err);
+      setError(prev => ({ ...prev, matches: true }));
+    } finally {
+      setLoading(prev => ({ ...prev, matches: false }));
+    }
+  }, [teamId]);
 
+  // 순위 정보 로드
+  const loadStandings = useCallback(async () => {
+    try {
+      setLoading(prev => ({ ...prev, standings: true }));
+      const res = await fetch(`/api/livescore/football/teams/${teamId}/standings`);
+      if (!res.ok) throw new Error('순위 정보를 불러오는데 실패했습니다.');
+      const data = await res.json();
+      setStandings(data.data || []);
+      setError(prev => ({ ...prev, standings: false }));
+    } catch (err) {
+      console.error('Standings loading error:', err);
+      setError(prev => ({ ...prev, standings: true }));
+    } finally {
+      setLoading(prev => ({ ...prev, standings: false }));
+    }
+  }, [teamId]);
+
+  // 스쿼드 정보 로드
+  const loadSquad = useCallback(async () => {
+    try {
+      setLoading(prev => ({ ...prev, squad: true }));
+      const res = await fetch(`/api/livescore/football/teams/${teamId}/squad`);
+      if (!res.ok) throw new Error('스쿼드 정보를 불러오는데 실패했습니다.');
+      const data = await res.json();
+      setSquad(data);
+      setError(prev => ({ ...prev, squad: false }));
+    } catch (err) {
+      console.error('Squad loading error:', err);
+      setError(prev => ({ ...prev, squad: true }));
+    } finally {
+      setLoading(prev => ({ ...prev, squad: false }));
+    }
+  }, [teamId]);
+  
+  // 탭에 필요한 데이터 로드 함수를 useCallback으로 감싸 의존성 문제 해결
+  const loadTabData = useCallback((tab: string) => {
+    // 이미 로드된 데이터는 다시 로드하지 않음
+    if (tab === 'overview' || tab === 'standings') {
+      if (!matches && !loading.matches) {
+        loadMatches();
+      }
+      if (standings.length === 0 && !loading.standings) {
+        loadStandings();
+      }
+    }
+    
+    if (tab === 'overview' || tab === 'squad') {
+      if (!squad && !loading.squad) {
+        loadSquad();
+      }
+    }
+  }, [matches, standings, squad, loading, loadMatches, loadStandings, loadSquad]);
+  
   // 탭 변경 핸들러 - URL 변경 없이 상태만 업데이트
-  const handleTabChange = (tab: string) => {
+  const handleTabChange = useCallback((tab: string) => {
     setActiveTab(tab);
-  };
+    loadTabData(tab);
+  }, [loadTabData]);
+
+  // 초기 탭에 필요한 데이터 로드
+  useEffect(() => {
+    loadTabData(initialTab);
+  }, [initialTab, loadTabData]);
   
   // success 확인 - API에서 success: true를 포함하는 래퍼 객체로 응답이 오는 경우를 처리
   const teamData = 'success' in team ? team.team : team;
 
   // 에러 처리 (서버에서 전달된 데이터가 없는 경우)
-  if (!teamData || !matches || !standings || !squad) {
+  if (!teamData) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-sm p-6 text-center">
           <h2 className="text-xl font-semibold text-red-600 mb-4">오류 발생</h2>
-          <p className="text-gray-700 mb-4">데이터를 불러오는데 실패했습니다.</p>
+          <p className="text-gray-700 mb-4">팀 데이터를 불러오는데 실패했습니다.</p>
           <p className="text-gray-600 mb-6">
             API 서버에 연결할 수 없거나 요청한 팀 ID({teamId})에 대한 데이터가 존재하지 않습니다.
           </p>
@@ -277,14 +365,16 @@ export default function TeamClient({
       <TeamHeader team={teamData} stats={stats} />
       <div className="mt-6">
         <TeamTabs 
-          team={teamData} 
+          team={teamData.team} 
           matches={matches} 
           standings={standings} 
-          squad={squad} 
+          squad={squad}
           stats={stats}
           activeTab={activeTab}
           onTabChange={handleTabChange}
           teamId={numericTeamId}
+          loading={loading}
+          error={error}
         />
       </div>
     </div>
