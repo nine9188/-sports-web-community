@@ -1,6 +1,6 @@
-import { createClient } from '@/app/lib/supabase-server';
+import { createClient } from '@/app/lib/supabase.server';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { Database } from '@/app/lib/supabase-server';
+import { Database } from '@/app/lib/database.types';
 
 // 로깅을 추가하여 디버깅
 export async function incrementViews(postId: string, supabase: SupabaseClient<Database>) {

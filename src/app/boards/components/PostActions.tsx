@@ -38,22 +38,6 @@ export default function PostActions({
         
         const userId = data.session.user.id;
         
-        // 현재 게시글의 좋아요/싫어요 상태 가져오기
-        const { data: postData, error: postError } = await supabase
-          .from('posts')
-          .select('likes, dislikes')
-          .eq('id', postId)
-          .single();
-          
-        if (postError) {
-          console.error('게시글 정보 가져오기 오류:', postError);
-          return null;
-        }
-        
-        // 상태 동기화
-        setLikes(postData.likes || 0);
-        setDislikes(postData.dislikes || 0);
-        
         // 좋아요 확인
         const { data: existingLike, error: likeError } = await supabase
           .from('post_likes')
@@ -236,6 +220,10 @@ export default function PostActions({
         setLikes(currentPost.likes + 1);
         setUserAction('like');
       }
+      
+      // 클라이언트 측에서 UI 업데이트 후, 백그라운드에서 캐시 무효화
+      router.refresh();
+      
     } catch (error) {
       console.error('좋아요 처리 중 오류:', error);
     } finally {
@@ -388,31 +376,31 @@ export default function PostActions({
   };
 
   return (
-    <div className="flex items-center justify-center space-x-4 my-4">
-      {/* 좋아요 버튼 */}
+    <div className="flex justify-center items-center gap-4 mt-4">
       <button
         onClick={handleLike}
-        className={`inline-flex items-center px-4 py-2 border rounded-md text-sm ${
+        disabled={isLiking || isDisliking}
+        className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm transition-colors ${
           userAction === 'like'
-            ? 'bg-blue-50 text-blue-600 border-blue-200'
-            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+            ? 'bg-blue-100 text-blue-600'
+            : 'hover:bg-gray-100'
         }`}
       >
-        <ThumbsUp className="h-4 w-4 mr-1.5" />
-        <span>좋아요 {likes}</span>
+        <ThumbsUp size={16} />
+        <span>{likes}</span>
       </button>
-
-      {/* 싫어요 버튼 */}
+      
       <button
         onClick={handleDislike}
-        className={`inline-flex items-center px-4 py-2 border rounded-md text-sm ${
+        disabled={isLiking || isDisliking}
+        className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm transition-colors ${
           userAction === 'dislike'
-            ? 'bg-red-50 text-red-600 border-red-200'
-            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+            ? 'bg-red-100 text-red-600'
+            : 'hover:bg-gray-100'
         }`}
       >
-        <ThumbsDown className="h-4 w-4 mr-1.5" />
-        <span>싫어요 {dislikes}</span>
+        <ThumbsDown size={16} />
+        <span>{dislikes}</span>
       </button>
     </div>
   );

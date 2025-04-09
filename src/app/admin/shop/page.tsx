@@ -1,4 +1,4 @@
-import { createClient } from '@/app/lib/supabase-server';
+import { createClient } from '@/app/lib/supabase.server';
 import ShopItemManagement from './components/ShopItemManagement';
 import { notFound, redirect } from 'next/navigation';
 

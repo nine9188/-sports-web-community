@@ -1,4 +1,4 @@
-import { createClient } from '@/app/lib/supabase-server';
+import { createClient } from '@/app/lib/supabase.server';
 import { Board, BoardData, ChildBoard, TopBoard } from '@/app/types/board';
 
 // 최상위까지의 모든 하위 게시판 ID 가져오기 (재귀)

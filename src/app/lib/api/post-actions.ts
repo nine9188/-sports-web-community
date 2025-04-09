@@ -2,7 +2,7 @@
 
 import { createClient } from '@/app/lib/supabase-browser';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { Database } from '@/app/lib/supabase-server';
+import { Database } from '@/app/lib/database.types';
 
 // 클라이언트에서 호출할 조회수 증가 함수
 export async function incrementViewCount(postId: string): Promise<boolean> {

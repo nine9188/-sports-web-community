@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { createClient } from '@/app/lib/supabase-server';
+import { createClient } from '@/app/lib/supabase.server';
 import ShopCategoryCard from './components/ShopCategoryCard';
 
 // 동적 렌더링 강제 설정 추가

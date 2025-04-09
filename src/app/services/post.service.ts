@@ -1,4 +1,4 @@
-import { createClient } from '@/app/lib/supabase-server';
+import { createClient } from '@/app/lib/supabase.server';
 import { FormattedPost, Post } from '@/app/types/post';
 import { BoardData, TeamInfo, LeagueInfo } from '@/app/types/board';
 

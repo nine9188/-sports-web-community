@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import CategoryFilter from './CategoryFilter';
-import { createClient } from '@/app/lib/supabase-server';
+import { createClient } from '@/app/lib/supabase.server';
 import { SupabaseClient } from '@supabase/supabase-js';
 
 // 동적 렌더링 강제 설정 추가

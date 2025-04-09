@@ -1,8 +1,7 @@
 import React from 'react';
-import { createClient } from '@/app/lib/supabase-server';
+import { createClient } from '@/app/lib/supabase.server';
 import { notFound } from 'next/navigation';
 import { ScrollArea } from '@/app/ui/scroll-area';
-import HoverMenu from '@/app/boards/components/HoverMenu';
 import BoardBreadcrumbs from '@/app/boards/components/BoardBreadcrumbs';
 import PostList from '@/app/components/post/PostList';
 import BoardTeamInfo from '@/app/boards/components/BoardTeamInfo';
@@ -10,6 +9,7 @@ import LeagueInfo from '@/app/boards/components/LeagueInfo';
 import BoardPagination from '@/app/boards/components/BoardPagination';
 import { PenLine } from 'lucide-react';
 import Link from 'next/link';
+import ServerHoverMenu from '@/app/boards/components/ServerHoverMenu';
 
 // 동적 렌더링 강제 설정 추가
 export const dynamic = 'force-dynamic';
@@ -25,15 +25,6 @@ interface Board {
   team_id?: number | null;
   league_id?: number | null;
   display_order?: number;
-}
-
-// HoverMenu 컴포넌트에 필요한 인터페이스 정의
-interface TopBoard extends Board {
-  display_order: number;
-}
-
-interface ChildBoard extends Board {
-  display_order: number;
 }
 
 interface BoardMap {
@@ -388,9 +379,6 @@ export default async function BoardDetailPage({
     const rootBoardId = findRootBoard(boardData.id, boardsMap);
     const rootBoardSlug = boardsMap[rootBoardId]?.slug || rootBoardId;
 
-    // 상위 메뉴 항목 결정
-    const topLevelBoards = childBoardsMap[rootBoardId] || [];
-
     // 최종 게시글 데이터 형태로 가공
     const formattedPosts = postsData.map(post => {
       const boardInfo = boardsMap[post.board_id] || {};
@@ -452,12 +440,9 @@ export default async function BoardDetailPage({
         )}
         
         <div className="mb-4 border rounded-md shadow-sm">
-          <HoverMenu
+          <ServerHoverMenu
             currentBoardId={boardData.id}
-            topBoards={topLevelBoards as unknown as TopBoard[]}
-            childBoardsMap={childBoardsMap as unknown as Record<string, ChildBoard[]>}
             rootBoardId={rootBoardId}
-            activeTabId={boardData.parent_id || null}
             currentBoardSlug={slug}
             rootBoardSlug={rootBoardSlug}
           />

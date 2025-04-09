@@ -1,7 +1,7 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { createClient } from '@/app/lib/supabase-server';
+import { createClient } from '@/app/lib/supabase.server';
 import { incrementViewCount } from '@/app/lib/api/posts';
 
 // 재사용 가능한 컴포넌트 임포트

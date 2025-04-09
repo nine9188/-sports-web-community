@@ -1,5 +1,5 @@
 import React from 'react';
-import { createClient } from '@/app/lib/supabase-server';
+import { createClient } from '@/app/lib/supabase.server';
 import { notFound, redirect } from 'next/navigation';
 import PostEditForm from '@/app/boards/components/PostEditForm';
 

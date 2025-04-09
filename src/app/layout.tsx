@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import Header from './components/Header'
-import Sidebar from './components/Sidebar'
+import SidebarWrapper from './components/SidebarWrapper'
 import RightSidebar from './components/RightSidebar'
 import { ThemeProvider } from './components/ThemeProvider'
 import Footer from './components/Footer'
@@ -51,7 +51,7 @@ export default function RootLayout({
                 <div className="flex flex-col min-h-screen w-full">
                   <Header onMenuClick={() => setIsSidebarOpen(true)} isSidebarOpen={isSidebarOpen} />
                   <div className="flex flex-1 w-full md:max-w-screen-2xl md:mx-auto">
-                    <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+                    <SidebarWrapper isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
                     <main className="flex-1 md:p-4 w-full overflow-y-auto box-border">
                       {children}
                     </main>

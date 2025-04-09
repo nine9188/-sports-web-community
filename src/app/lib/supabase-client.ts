@@ -32,10 +32,10 @@ export const createClient = () => {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
-        flowType: 'pkce'  // 추가: PKCE 인증 흐름 사용
+        flowType: 'pkce'
       }
     }
   );
   
   return supabaseClient;
-};
+}; 

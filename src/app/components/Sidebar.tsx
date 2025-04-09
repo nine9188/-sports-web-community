@@ -3,15 +3,17 @@
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '../ui/button';
 import AuthSection from './sidebar/auth-section';
-import BoardNavigation from './sidebar/BoardNavigation';
 import LeagueStandings from './sidebar/LeagueStandings';
+import { ReactNode } from 'react';
 
 export default function Sidebar({
   isOpen,
   onClose,
+  children,
 }: {
   isOpen: boolean;
   onClose: () => void;
+  children?: ReactNode;
 }) {
   return (
     <>
@@ -60,7 +62,8 @@ export default function Sidebar({
               <h3 className="text-sm font-bold">게시판 이동</h3>
             </div>
             <div className="px-3 py-2">
-              <BoardNavigation />
+              {/* 기존 BoardNavigation 대신 children prop을 통해 서버 컴포넌트 전달 */}
+              {children}
             </div>
           </div>
 
