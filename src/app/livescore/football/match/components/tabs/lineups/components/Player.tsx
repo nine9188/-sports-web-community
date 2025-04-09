@@ -187,7 +187,7 @@ const Player = ({ homeTeamData, awayTeamData, isMobile }: PlayerProps) => {
             </clipPath>
           </defs>
           
-          {/* 선수 이미지 */}
+          {/* 선수 이미지 - aria-label 속성 사용하여 접근성 추가 */}
           {player.photo && (
             <image
               href={player.photo}
@@ -197,6 +197,7 @@ const Player = ({ homeTeamData, awayTeamData, isMobile }: PlayerProps) => {
               y="-2.5"
               clipPath={`url(#clip-${teamId}-${playerId})`}
               preserveAspectRatio="xMidYMid slice"
+              aria-label={`${player.name} 선수 사진`}
             />
           )}
           
@@ -251,19 +252,33 @@ const Player = ({ homeTeamData, awayTeamData, isMobile }: PlayerProps) => {
               {player.captain ? " (C)" : ""}
             </text>
           </g>
+          
+          {/* 주장 표시 */}
+          {player.captain && (
+            <text
+              x="3.2"
+              y="-2.5"
+              fill="#FFC107"
+              fontSize="2"
+              textAnchor="middle"
+              fontWeight="bold"
+            >
+              C
+            </text>
+          )}
         </g>
       );
     });
   };
 
+  // SVG 좌표계 설정
+  const viewBox = isMobile ? "0 0 144 100" : "0 0 100 56";
+  
   return (
-    <g 
-      className={styles.playersContainer}
-      transform={isMobile ? 'rotate(-90 50 50)' : ''}
-    >
+    <svg className={styles.formation} viewBox={viewBox} preserveAspectRatio="xMidYMid meet">
       {renderTeam(homeTeamData, true)}
       {renderTeam(awayTeamData, false)}
-    </g>
+    </svg>
   );
 };
 

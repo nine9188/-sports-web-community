@@ -3,44 +3,11 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Image from 'next/image';
+import { Match } from '../../types';
 
-// 경기 정보 인터페이스 정의
-interface MatchData {
-  id: number;
-  status?: {
-    code?: string;
-    elapsed?: number;
-  };
-  time?: {
-    date?: string;
-    extraTime?: number;
-  };
-  teams?: {
-    home?: {
-      name?: string;
-      logo?: string;
-    };
-    away?: {
-      name?: string;
-      logo?: string;
-    };
-  };
-  goals?: {
-    home?: number | null;
-    away?: number | null;
-  };
-  score?: {
-    home?: number | null;
-    away?: number | null;
-    aggregate?: {
-      home?: number | null;
-      away?: number | null;
-    };
-  };
-}
-
+// 매치 카드 props
 interface MatchCardProps {
-  match: MatchData;
+  match: Match;
 }
 
 export default function MatchCard({ match: initialMatch }: MatchCardProps) {
@@ -49,14 +16,16 @@ export default function MatchCard({ match: initialMatch }: MatchCardProps) {
 
   const homeTeam = {
     name: match.teams?.home?.name || '',
-    logo: match.teams?.home?.logo || '',
-    score: match.goals?.home ?? match.score?.home ?? 0
+    // logo 대신 img 속성을 사용
+    logo: match.teams?.home?.img || '',
+    score: match.teams?.home?.score ?? 0
   };
 
   const awayTeam = {
     name: match.teams?.away?.name || '',
-    logo: match.teams?.away?.logo || '',
-    score: match.goals?.away ?? match.score?.away ?? 0
+    // logo 대신 img 속성을 사용
+    logo: match.teams?.away?.img || '',
+    score: match.teams?.away?.score ?? 0
   };
 
   // 모바일용 시간/상태 표시 (왼쪽에 표시될 내용)
@@ -65,9 +34,8 @@ export default function MatchCard({ match: initialMatch }: MatchCardProps) {
     
     // 진행중인 경기
     if (['1H', '2H', 'LIVE', 'IN_PLAY'].includes(code)) {
-      const elapsed = match.status?.elapsed ?? 0;
-      const extraTime = match.time?.extraTime || 0;
-      return extraTime ? `${elapsed}+${extraTime}'` : `${elapsed}'`;
+      const elapsed = 0; // Match 타입에는 elapsed가 없음
+      return `${elapsed}'`;
     }
     
     // 나머지는 모두 경기 시작 시간 표시
@@ -108,26 +76,14 @@ export default function MatchCard({ match: initialMatch }: MatchCardProps) {
     }
   };
 
-  // 종합 스코어 확인
-  const hasAggregateScore = match.score?.aggregate?.home !== undefined && 
-                           match.score?.aggregate?.away !== undefined;
-
   // 스코어 표시 함수 수정
   const getScore = (isHome: boolean) => {
     const code = match.status?.code || '';
     const score = isHome ? homeTeam.score : awayTeam.score;
-    const aggregateScore = isHome ? 
-      match.score?.aggregate?.home : 
-      match.score?.aggregate?.away;
     
     // 경기 예정인 경우 '-' 표시
     if (code === 'NS' || code === 'TBD') {
       return '-';
-    }
-    
-    // 종합 스코어가 있는 경우 (홈&어웨이 2차전)
-    if (hasAggregateScore) {
-      return `${score} (${aggregateScore})`;
     }
     
     // 일반 경기
@@ -168,13 +124,16 @@ export default function MatchCard({ match: initialMatch }: MatchCardProps) {
                 <div className="flex items-center justify-end gap-1 md:w-auto">
                   <span className="truncate font-medium">{homeTeam.name}</span>
                   <div className="relative w-6 h-6 shrink-0">
-                    <Image 
-                      src={homeTeam.logo} 
-                      alt={homeTeam.name}
-                      fill
-                      sizes="24px"
-                      className="object-contain"
-                    />
+                    {/* 빈 문자열 체크 추가 */}
+                    {homeTeam.logo ? (
+                      <Image 
+                        src={homeTeam.logo} 
+                        alt={homeTeam.name}
+                        fill
+                        sizes="24px"
+                        className="object-contain"
+                      />
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -185,24 +144,22 @@ export default function MatchCard({ match: initialMatch }: MatchCardProps) {
               <span className="font-bold">
                 {getScore(true)} - {getScore(false)}
               </span>
-              {hasAggregateScore && (
-                <div className="text-xs text-gray-500 mt-0.5">
-                  종합
-                </div>
-              )}
             </td>
 
             {/* 원정팀 */}
             <td className="py-4 pl-0 pr-1 md:pl-0">
               <div className="flex items-center gap-1 md:w-auto">
                 <div className="relative w-6 h-6 shrink-0">
-                  <Image 
-                    src={awayTeam.logo} 
-                    alt={awayTeam.name}
-                    fill
-                    sizes="24px"
-                    className="object-contain"
-                  />
+                  {/* 빈 문자열 체크 추가 */}
+                  {awayTeam.logo ? (
+                    <Image 
+                      src={awayTeam.logo} 
+                      alt={awayTeam.name}
+                      fill
+                      sizes="24px"
+                      className="object-contain"
+                    />
+                  ) : null}
                 </div>
                 <span className="truncate font-medium">{awayTeam.name}</span>
               </div>

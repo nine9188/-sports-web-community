@@ -551,14 +551,14 @@ export default function Lineups({
                   <div className="w-6 h-6 relative flex-shrink-0 overflow-hidden">
                     <Image
                       src={homeTeam.logo}
-                      alt={homeTeam.name}
+                      alt={`${homeTeam.name} 로고`}
                       width={24}
                       height={24}
                       className="w-full h-full object-contain"
                       unoptimized
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.src = '/placeholder-team.png';
+                        target.style.display = 'none';
                       }}
                     />
                   </div>
@@ -571,14 +571,14 @@ export default function Lineups({
                   <div className="w-6 h-6 relative flex-shrink-0 overflow-hidden">
                     <Image
                       src={awayTeam.logo}
-                      alt={awayTeam.name}
+                      alt={`${awayTeam.name} 로고`}
                       width={24}
                       height={24}
                       className="w-full h-full object-contain"
                       unoptimized
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.src = '/placeholder-team.png';
+                        target.style.display = 'none';
                       }}
                     />
                   </div>
@@ -614,7 +614,7 @@ export default function Lineups({
                           <div className="relative w-10 h-10 overflow-hidden rounded-full border-2 border-gray-200">
                             <Image 
                               src={sortedHomeStartXI[index].player.photo}
-                              alt={sortedHomeStartXI[index].player.name}
+                              alt={`${sortedHomeStartXI[index].player.name} 선수 사진`}
                               width={40}
                               height={40}
                               className="object-cover rounded-full"
@@ -657,7 +657,7 @@ export default function Lineups({
                           <div className="relative w-10 h-10 overflow-hidden rounded-full border-2 border-gray-200">
                             <Image 
                               src={sortedAwayStartXI[index].player.photo}
-                              alt={sortedAwayStartXI[index].player.name}
+                              alt={`${sortedAwayStartXI[index].player.name} 선수 사진`}
                               width={40}
                               height={40}
                               className="object-cover rounded-full"
@@ -713,7 +713,7 @@ export default function Lineups({
                           <div className="relative w-10 h-10 overflow-hidden rounded-full border-2 border-gray-200">
                             <Image 
                               src={homeLineup.substitutes[index].player.photo}
-                              alt={homeLineup.substitutes[index].player.name}
+                              alt={`${homeLineup.substitutes[index].player.name} 선수 사진`}
                               width={40}
                               height={40}
                               className="object-cover rounded-full"
@@ -756,7 +756,7 @@ export default function Lineups({
                           <div className="relative w-10 h-10 overflow-hidden rounded-full border-2 border-gray-200">
                             <Image 
                               src={awayLineup.substitutes[index].player.photo}
-                              alt={awayLineup.substitutes[index].player.name}
+                              alt={`${awayLineup.substitutes[index].player.name} 선수 사진`}
                               width={40}
                               height={40}
                               className="object-cover rounded-full"
@@ -788,7 +788,7 @@ export default function Lineups({
             ))}
             
             {/* 섹션 제목: 감독 - 색상 제거 */}
-            {homeLineup.coach && awayLineup.coach && (
+            {homeLineup.coach && awayLineup.coach && homeLineup.coach.name && awayLineup.coach.name && (
               <>
                 <tr>
                   <td colSpan={2} className="py-2 px-4 bg-gray-100 text-gray-700 font-bold">
@@ -803,7 +803,7 @@ export default function Lineups({
                           <div className="relative w-10 h-10 overflow-hidden rounded-full border-2 border-gray-200">
                             <Image 
                               src={homeLineup.coach.photo}
-                              alt={homeLineup.coach.name}
+                              alt={`${homeLineup.coach.name} 감독 사진`}
                               width={40}
                               height={40}
                               className="object-cover rounded-full"
@@ -812,7 +812,7 @@ export default function Lineups({
                           </div>
                         ) : (
                           <div className="w-10 h-10 flex items-center justify-center text-gray-700 font-bold text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-label="감독 기본 아이콘">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
                           </div>
@@ -831,7 +831,7 @@ export default function Lineups({
                           <div className="relative w-10 h-10 overflow-hidden rounded-full border-2 border-gray-200">
                             <Image 
                               src={awayLineup.coach.photo}
-                              alt={awayLineup.coach.name}
+                              alt={`${awayLineup.coach.name} 감독 사진`}
                               width={40}
                               height={40}
                               className="object-cover rounded-full"
@@ -840,7 +840,7 @@ export default function Lineups({
                           </div>
                         ) : (
                           <div className="w-10 h-10 flex items-center justify-center text-gray-700 font-bold text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-label="감독 기본 아이콘">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
                           </div>
