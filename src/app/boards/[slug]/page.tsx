@@ -3,7 +3,7 @@ import { createClient } from '@/app/lib/supabase.server';
 import { notFound } from 'next/navigation';
 import { ScrollArea } from '@/app/ui/scroll-area';
 import BoardBreadcrumbs from '@/app/boards/components/BoardBreadcrumbs';
-import PostList from '@/app/components/post/PostList';
+import ServerPostList from '@/app/components/post/ServerPostList';
 import BoardTeamInfo from '@/app/boards/components/BoardTeamInfo';
 import LeagueInfo from '@/app/boards/components/LeagueInfo';
 import BoardPagination from '@/app/boards/components/BoardPagination';
@@ -37,38 +37,6 @@ interface ChildBoardsMap {
 
 interface BoardNameMap {
   [key: string]: string;
-}
-
-interface BoardDataMap {
-  [key: string]: {
-    team_id: number | null;
-    league_id: number | null;
-    slug: string;
-  };
-}
-
-interface Team {
-  id: number;
-  name: string;
-  country?: string;
-  founded?: number;
-  logo?: string;
-  venue_name?: string;
-  venue_city?: string;
-  venue_capacity?: number;
-}
-
-interface League {
-  id: number;
-  name: string;
-  country?: string;
-  logo?: string;
-  type?: string;
-}
-
-interface PostProfile {
-  id: string;
-  nickname: string;
 }
 
 // 브레드크럼 생성 함수
@@ -195,21 +163,31 @@ export default async function BoardDetailPage({
     const { data: userData } = await supabase.auth.getUser();
     const isLoggedIn = !!userData?.user;
     
-    // 1. 현재 slug로 게시판 정보 조회
-    const { data: boardData, error: boardError } = await supabase
-      .from('boards')
-      .select('*')
-      .eq('slug', slug)
-      .single();
+    console.time('게시판 데이터 요청');
+    // 병렬로 데이터 요청 처리
+    const [boardResult, allBoardsResult] = await Promise.all([
+      // 1. 현재 slug로 게시판 정보 조회
+      supabase
+        .from('boards')
+        .select('*')
+        .eq('slug', slug)
+        .single(),
+      
+      // 2. 모든 게시판 조회 (계층 구조 파악을 위해)
+      supabase
+        .from('boards')
+        .select('*')
+    ]);
+    console.timeEnd('게시판 데이터 요청');
     
-    if (boardError) {
-      throw new Error('게시판을 찾을 수 없습니다');
+    // 게시판 검증
+    if (boardResult.error) {
+      console.error('게시판을 찾을 수 없습니다:', boardResult.error);
+      return notFound();
     }
     
-    // 2. 모든 게시판 조회 (계층 구조 파악을 위해)
-    const { data: allBoardsData } = await supabase
-      .from('boards')
-      .select('*');
+    const boardData = boardResult.data;
+    const allBoardsData = allBoardsResult.data || [];
     
     // 3. 게시판 계층 구조 설정
     const boardsMap: BoardMap = {};
@@ -217,22 +195,20 @@ export default async function BoardDetailPage({
     const boardNameMap: BoardNameMap = {};
     
     // 모든 게시판 정보 맵핑
-    if (allBoardsData) {
-      allBoardsData.forEach(board => {
-        boardsMap[board.id] = board;
-        boardNameMap[board.id] = board.name;
-        
-        // 부모 ID 기준으로 자식 게시판 맵핑
-        if (board.parent_id) {
-          if (!childBoardsMap[board.parent_id]) {
-            childBoardsMap[board.parent_id] = [];
-          }
-          childBoardsMap[board.parent_id].push(board);
+    allBoardsData.forEach(board => {
+      boardsMap[board.id] = board;
+      boardNameMap[board.id] = board.name;
+      
+      // 부모 ID 기준으로 자식 게시판 맵핑
+      if (board.parent_id) {
+        if (!childBoardsMap[board.parent_id]) {
+          childBoardsMap[board.parent_id] = [];
         }
-      });
-    }
+        childBoardsMap[board.parent_id].push(board);
+      }
+    });
     
-    // 4. 브레드크럼 생성 - 중요!
+    // 4. 브레드크럼 생성
     const breadcrumbs = generateBoardBreadcrumbs(boardData, boardsMap);
     
     // 현재 게시판의 레벨 결정 (최상위, 상위, 하위)
@@ -241,105 +217,37 @@ export default async function BoardDetailPage({
     // 레벨에 따라 필터링할 게시판 ID 결정
     const filteredBoardIds = getFilteredBoardIds(boardData.id, boardLevel, boardsMap, childBoardsMap);
     
-    // 총 게시글 수 가져오기
-    const { count: totalCount } = await supabase
-      .from('posts')
-      .select('*', { count: 'exact', head: true })
-      .in('board_id', filteredBoardIds);
+    // 최상위 게시판의 ID 및 slug 확인
+    const rootBoardId = findRootBoard(boardData.id, boardsMap);
+    const rootBoardSlug = boardsMap[rootBoardId]?.slug || rootBoardId;
     
-    // 페이지당 게시글 수와 총 페이지 수 계산
-    const pageSize = 20;
-    const totalPages = Math.ceil((totalCount || 0) / pageSize);
-    const from = (currentPage - 1) * pageSize;
-    
-    // 5. 게시글 목록 조회 (필터링된 게시판 ID로 조회, 페이지네이션 적용)
-    const { data: postsData, error: postsError } = await supabase
-      .from('posts')
-      .select(`
-        id, 
-        title, 
-        created_at, 
-        board_id,
-        views,
-        likes, 
-        post_number,
-        profiles (
-          id,
-          nickname
-        ),
-        content
-      `)
-      .in('board_id', filteredBoardIds)
-      .order('created_at', { ascending: false })
-      .range(from, from + pageSize - 1); // 페이지네이션 적용
-    
-    if (postsError) {
-      throw new Error('게시글 목록을 가져오는 중 오류가 발생했습니다');
-    }
-    
-    // 6. 댓글 수 조회
-    const postIds = postsData.map(post => post.id);
-    const commentCounts: Record<string, number> = {};
-    
-    if (postIds.length > 0) {
-      await Promise.all(
-        postIds.map(async (postId) => {
-          const { count, error } = await supabase
-            .from('comments')
-            .select('*', { count: 'exact', head: true })
-            .eq('post_id', postId);
-            
-          if (!error) {
-            commentCounts[postId] = count || 0;
-          }
-        })
-      );
-    }
-    
-    // 7. 팀/리그 데이터 처리
-    const { data: teamsData } = await supabase
-      .from('teams')
-      .select('*');
-      
-    const { data: leaguesData } = await supabase
-      .from('leagues')
-      .select('*');
-    
-    // 데이터 가공
-    const teamsMap: Record<number, Team> = {};
-    teamsData?.forEach(team => { teamsMap[team.id] = team; });
-    
-    const leaguesMap: Record<number, League> = {};
-    leaguesData?.forEach(league => { leaguesMap[league.id] = league; });
-
-    // 게시판 정보 가져오기
-    const { data: boardsWithTeamInfo } = await supabase
-      .from('boards')
-      .select('id, team_id, league_id, slug')
-      .in('id', allBoardsData?.map(b => b.id) || []);
-
-    // 게시판 데이터 맵 만들기
-    const boardsData: BoardDataMap = (boardsWithTeamInfo || []).reduce((map: BoardDataMap, board) => {
-      map[board.id] = { 
-        team_id: board.team_id || null, 
-        league_id: board.league_id || null,
-        slug: board.slug || board.id
-      };
-      return map;
-    }, {});
-
-    // 팀/리그 데이터 가져오기
+    // 팀/리그 데이터 병렬 요청
+    console.time('팀/리그 데이터 요청');
     let teamData = null;
     let leagueData = null;
     
-    if (boardData.team_id) {
-      const { data: team } = await supabase
-        .from('teams')
-        .select('*')
-        .eq('id', boardData.team_id)
-        .single();
+    if (boardData.team_id || boardData.league_id) {
+      const [teamResult, leagueResult] = await Promise.all([
+        boardData.team_id 
+          ? supabase
+              .from('teams')
+              .select('*')
+              .eq('id', boardData.team_id)
+              .single()
+          : Promise.resolve({ data: null }),
+          
+        boardData.league_id 
+          ? supabase
+              .from('leagues')
+              .select('*')
+              .eq('id', boardData.league_id)
+              .single()
+          : Promise.resolve({ data: null })
+      ]);
       
-      if (team) {
+      // 팀 데이터 처리
+      if (teamResult.data) {
+        const team = teamResult.data;
         teamData = {
           team: {
             id: team.id,
@@ -355,16 +263,10 @@ export default async function BoardDetailPage({
           }
         };
       }
-    }
-
-    if (boardData.league_id) {
-      const { data: league } = await supabase
-        .from('leagues')
-        .select('*')
-        .eq('id', boardData.league_id)
-        .single();
       
-      if (league) {
+      // 리그 데이터 처리
+      if (leagueResult.data) {
+        const league = leagueResult.data;
         leagueData = {
           id: league.id,
           name: league.name,
@@ -374,42 +276,7 @@ export default async function BoardDetailPage({
         };
       }
     }
-    
-    // 최상위 게시판의 ID 및 slug 확인
-    const rootBoardId = findRootBoard(boardData.id, boardsMap);
-    const rootBoardSlug = boardsMap[rootBoardId]?.slug || rootBoardId;
-
-    // 최종 게시글 데이터 형태로 가공
-    const formattedPosts = postsData.map(post => {
-      const boardInfo = boardsMap[post.board_id] || {};
-      const boardTeamId = boardInfo.team_id;
-      const boardLeagueId = boardInfo.league_id;
-      const teamLogo = boardTeamId && typeof boardTeamId === 'number' ? teamsMap[boardTeamId]?.logo : null;
-      const leagueLogo = boardLeagueId && typeof boardLeagueId === 'number' ? leaguesMap[boardLeagueId]?.logo : null;
-      
-      // post.profiles 처리
-      const profile = post.profiles as unknown as PostProfile;
-
-      return {
-        id: post.id,
-        title: post.title,
-        created_at: post.created_at,
-        board_id: post.board_id,
-        board_name: boardNameMap[post.board_id] || '알 수 없음',
-        board_slug: boardsData[post.board_id]?.slug || post.board_id,
-        post_number: post.post_number,
-        author_nickname: profile?.nickname || '익명',
-        author_id: profile?.id,
-        views: post.views || 0,
-        likes: post.likes || 0,
-        comment_count: commentCounts[post.id] || 0,
-        content: post.content,
-        team_id: boardTeamId,
-        league_id: boardLeagueId,
-        team_logo: teamLogo,
-        league_logo: leagueLogo
-      };
-    });
+    console.timeEnd('팀/리그 데이터 요청');
 
     return (
       <div className="container mx-auto">
@@ -439,7 +306,12 @@ export default async function BoardDetailPage({
           </div>
         )}
         
-        <div className="mb-4 border rounded-md shadow-sm">
+        <div className="mb-4">
+          {/* 게시판 네비게이션 메뉴 
+            - 최상위 게시판 (전체/해외축구): rootBoardId
+            - 상위 게시판 (프리미어리그, 라리가 등): 드롭다운 메뉴를 가진 항목
+            - 하위 게시판: 드롭다운 내부에 표시되는 항목들
+          */}
           <ServerHoverMenu
             currentBoardId={boardData.id}
             rootBoardId={rootBoardId}
@@ -462,8 +334,8 @@ export default async function BoardDetailPage({
           )}
           
           <ScrollArea className="h-full">
-            <PostList 
-              posts={formattedPosts}
+            <ServerPostList 
+              boardIds={filteredBoardIds}
               currentBoardId={boardData.id}
               showBoard={true}
             />
@@ -475,7 +347,7 @@ export default async function BoardDetailPage({
             <div className="flex-1 flex justify-center">
               <BoardPagination
                 currentPage={currentPage}
-                totalPages={totalPages}
+                totalPages={10} /* 무한 스크롤 사용으로 페이지네이션은 표시만 함 */
                 boardSlug={slug}
               />
             </div>

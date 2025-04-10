@@ -2,25 +2,26 @@
 
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
-import { createClient } from '@/app/lib/supabase-browser';
 import { ChevronDown, ChevronRight, ShoppingBag } from 'lucide-react';
 import ReactDOM from 'react-dom';
 import { useAuth } from '@/app/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { useBoards } from '@/app/hooks/useBoards';
 
-interface Board {
+// 타입 정의는 useBoards.ts로 이동하였으므로 여기서는 제거
+// Board 타입은 내부적으로만 사용
+interface BoardWithUIState {
   id: string;
   name: string;
-  parent_id: string | null;
-  display_order: number;
   slug: string;
-  children?: Board[];
+  display_order: number;
+  children?: BoardWithUIState[];
 }
 
 export default function BoardHeaderNavigation() {
-  const [boards, setBoards] = useState<Board[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // React Query를 사용한 데이터 가져오기
+  const { data, isLoading, error, refetch } = useBoards();
+  
   const [hoveredBoard, setHoveredBoard] = useState<string | null>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const navRef = useRef<HTMLDivElement>(null);
@@ -28,8 +29,6 @@ export default function BoardHeaderNavigation() {
   const [mounted, setMounted] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
-  const fetchAttempts = useRef(0);
-  const dataLoaded = useRef(false);
 
   // 관리자 여부 확인
   const isAdmin = user && (user.user_metadata?.is_admin === true);
@@ -37,95 +36,6 @@ export default function BoardHeaderNavigation() {
   // 마운트 상태 관리
   useEffect(() => {
     setMounted(true);
-    return () => setMounted(false);
-  }, []);
-
-  // 게시판 데이터 가져오기
-  useEffect(() => {
-    async function fetchBoards() {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const supabase = createClient();
-        const { data, error } = await supabase
-          .from('boards')
-          .select('id, name, parent_id, display_order, slug')
-          .order('display_order', { ascending: true })
-          .order('name');
-          
-        if (error) {
-          console.error('게시판 불러오기 오류:', error);
-          setError("게시판을 불러오는 데 실패했습니다");
-          return;
-        }
-        
-        if (!data || data.length === 0) {
-          fetchAttempts.current += 1;
-          if (fetchAttempts.current <= 3) {
-            // 최대 3번까지 재시도
-            console.warn(`BoardHeaderNavigation: 게시판 데이터가 없습니다. 재시도 (${fetchAttempts.current}/3)`);
-            setTimeout(fetchBoards, 1000); // 1초 후 재시도
-            return;
-          } else {
-            setError("게시판 데이터를 불러올 수 없습니다");
-            setLoading(false);
-            return;
-          }
-        }
-        
-        try {
-          // 계층 구조로 데이터 변환
-          const boardsMap: Record<string, Board> = {};
-          const rootBoards: Board[] = [];
-          
-          // 모든 게시판을 맵에 추가
-          (data || []).forEach(board => {
-            boardsMap[board.id] = { ...board, children: [] };
-          });
-          
-          // 부모-자식 관계 설정
-          Object.values(boardsMap).forEach(board => {
-            if (board.parent_id && boardsMap[board.parent_id]) {
-              // 부모가 있으면 부모의 children에 추가
-              if (!boardsMap[board.parent_id].children) {
-                boardsMap[board.parent_id].children = [];
-              }
-              boardsMap[board.parent_id].children!.push(board);
-            } else if (!board.parent_id) {
-              // 부모가 없으면 루트 게시판
-              rootBoards.push(board);
-            }
-          });
-          
-          // 최상위 게시판 순서 정렬
-          rootBoards.sort((a, b) => {
-            // 먼저 display_order로 정렬
-            if (a.display_order !== b.display_order) {
-              return a.display_order - b.display_order;
-            }
-            // 동일한 display_order 값을 가질 경우 이름으로 정렬
-            return a.name.localeCompare(b.name);
-          });
-          
-          setBoards(rootBoards);
-          dataLoaded.current = true;
-        } catch (err) {
-          console.error("게시판 데이터 처리 중 오류:", err);
-          setError("게시판 데이터 처리 중 오류가 발생했습니다");
-        }
-      } catch (error) {
-        console.error('게시판 불러오기 중 오류 발생:', error);
-        setError("게시판 데이터 로딩 중 오류가 발생했습니다");
-      } finally {
-        setLoading(false);
-      }
-    }
-    
-    // 브라우저 환경이고 마운트되었으며 아직 데이터가 로드되지 않았으면 데이터 가져오기
-    if (typeof window !== 'undefined' && mounted && !dataLoaded.current) {
-      fetchBoards();
-    }
     
     // 네비게이션 바 외부 클릭 감지
     const handleClickOutside = (event: MouseEvent) => {
@@ -134,17 +44,13 @@ export default function BoardHeaderNavigation() {
       }
     };
     
-    if (mounted) {
-      document.addEventListener('click', handleClickOutside);
-      return () => {
-        document.removeEventListener('click', handleClickOutside);
-        dataLoaded.current = false;
-        fetchAttempts.current = 0;
-      };
-    }
+    document.addEventListener('click', handleClickOutside);
     
-    return undefined;
-  }, [mounted]);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+      setMounted(false);
+    };
+  }, []);
 
   // 호버 시작 처리
   const handleMouseEnter = (boardId: string) => {
@@ -174,7 +80,7 @@ export default function BoardHeaderNavigation() {
   };
 
   // 게시판 렌더링 함수 (재귀적)
-  const renderBoardItems = (board: Board, level: number = 0) => {
+  const renderBoardItems = (board: BoardWithUIState, level: number = 0) => {
     const hasChildren = board.children && board.children.length > 0;
     
     return (
@@ -217,7 +123,7 @@ export default function BoardHeaderNavigation() {
   };
 
   // 드롭다운 메뉴 렌더링
-  const renderDropdownMenu = (board: Board) => {
+  const renderDropdownMenu = (board: BoardWithUIState) => {
     if (!mounted || !boardRefs.current[board.id]) return null;
     
     // 해당 게시판 요소의 위치 정보 가져오기
@@ -278,80 +184,13 @@ export default function BoardHeaderNavigation() {
     );
   };
 
-  // 게시판 데이터 다시 로드 함수
-  const refreshBoardData = () => {
-    dataLoaded.current = false;
-    fetchAttempts.current = 0;
-    setLoading(true);
-    setError(null);
-    
-    async function fetchBoards() {
-      try {
-        const supabase = createClient();
-        const { data, error } = await supabase
-          .from('boards')
-          .select('id, name, parent_id, display_order, slug')
-          .order('display_order', { ascending: true })
-          .order('name');
-          
-        if (error) {
-          console.error('게시판 불러오기 오류:', error);
-          setError("게시판을 불러오는 데 실패했습니다");
-          setLoading(false);
-          return;
-        }
-        
-        // 계층 구조로 데이터 변환
-        const boardsMap: Record<string, Board> = {};
-        const rootBoards: Board[] = [];
-        
-        // 모든 게시판을 맵에 추가
-        (data || []).forEach(board => {
-          boardsMap[board.id] = { ...board, children: [] };
-        });
-        
-        // 부모-자식 관계 설정
-        Object.values(boardsMap).forEach(board => {
-          if (board.parent_id && boardsMap[board.parent_id]) {
-            // 부모가 있으면 부모의 children에 추가
-            if (!boardsMap[board.parent_id].children) {
-              boardsMap[board.parent_id].children = [];
-            }
-            boardsMap[board.parent_id].children!.push(board);
-          } else if (!board.parent_id) {
-            // 부모가 없으면 루트 게시판
-            rootBoards.push(board);
-          }
-        });
-        
-        // 최상위 게시판 순서 정렬
-        rootBoards.sort((a, b) => {
-          // 먼저 display_order로 정렬
-          if (a.display_order !== b.display_order) {
-            return a.display_order - b.display_order;
-          }
-          // 동일한 display_order 값을 가질 경우 이름으로 정렬
-          return a.name.localeCompare(b.name);
-        });
-        
-        setBoards(rootBoards);
-        dataLoaded.current = true;
-      } catch (error) {
-        console.error('게시판 불러오기 중 오류 발생:', error);
-        setError("게시판 데이터 로딩 중 오류가 발생했습니다");
-      } finally {
-        setLoading(false);
-      }
-    }
-    
-    fetchBoards();
-  };
-
   // 최상위 게시판 링크 렌더링
   const renderTopLevelBoards = () => {
+    if (!data || !data.rootBoards) return null;
+    
     return (
       <>
-        {boards.map(board => (
+        {data.rootBoards.map(board => (
           <div 
             key={board.id} 
             className="relative shrink-0 snap-center" 
@@ -422,7 +261,7 @@ export default function BoardHeaderNavigation() {
       ref={navRef} 
       className="flex items-center gap-1 overflow-x-auto w-full no-scrollbar pb-1 snap-x snap-mandatory"
     >
-      {loading ? (
+      {isLoading ? (
         // 로딩 상태
         <div className="px-3 py-1">
           <div className="h-7 bg-gray-100 rounded animate-pulse w-20"></div>
@@ -430,20 +269,20 @@ export default function BoardHeaderNavigation() {
       ) : error ? (
         // 오류 메시지 표시
         <div className="px-3 py-1 text-sm text-red-500 flex items-center">
-          <span>{error}</span>
+          <span>게시판을 불러오는 데 실패했습니다</span>
           <button 
-            onClick={refreshBoardData} 
+            onClick={() => refetch()} 
             className="ml-2 text-blue-500 text-xs underline"
           >
             다시 시도
           </button>
         </div>
-      ) : boards.length === 0 ? (
+      ) : !data || !data.rootBoards || data.rootBoards.length === 0 ? (
         // 게시판이 없을 때
         <div className="px-3 py-1 text-sm text-gray-500 flex items-center">
           <span>게시판이 없습니다</span>
           <button 
-            onClick={refreshBoardData} 
+            onClick={() => refetch()} 
             className="ml-2 text-blue-500 text-xs underline"
           >
             새로고침

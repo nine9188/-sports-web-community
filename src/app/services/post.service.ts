@@ -4,27 +4,48 @@ import { BoardData, TeamInfo, LeagueInfo } from '@/app/types/board';
 
 // 게시글 가져오기
 export async function getPostByNumber(boardId: string, postNumber: number) {
-  const supabase = await createClient();
-  const { data: post, error } = await supabase
-    .from('posts')
-    .select(`
-      *,
-      profiles (
-        id,
-        nickname,
-        icon_id
-      ),
-      board:board_id(name, id, parent_id, team_id, league_id, slug)
-    `)
-    .eq('board_id', boardId)
-    .eq('post_number', postNumber)
-    .single();
+  try {
+    // postNumber가 유효한지 검사 (0보다 커야 함)
+    if (postNumber <= 0) {
+      throw new Error(`유효하지 않은 게시글 번호: ${postNumber}`);
+    }
+
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('posts')
+      .select(`
+        *,
+        profiles (
+          id,
+          nickname,
+          icon_id
+        ),
+        board:board_id(name, id, parent_id, team_id, league_id, slug)
+      `)
+      .eq('board_id', boardId)
+      .eq('post_number', postNumber)
+      .limit(1);
+      
+    if (error) {
+      console.error('게시글 조회 중 오류 발생:', error);
+      throw new Error(error?.message || '게시글 데이터 조회 오류');
+    }
     
-  if (error || !post) {
-    throw new Error(error?.message || '게시글 데이터 없음');
+    if (!data || data.length === 0) {
+      console.error(`게시글을 찾을 수 없습니다. boardId: ${boardId}, postNumber: ${postNumber}`);
+      throw new Error('게시글을 찾을 수 없습니다.');
+    }
+    
+    return data[0];
+  } catch (err) {
+    // 이미 생성된 에러는 그대로 전파
+    if (err instanceof Error) {
+      throw err;
+    }
+    // 그 외 에러는 새 에러로 래핑
+    console.error(`게시글 조회 실패: boardId: ${boardId}, postNumber: ${postNumber}`, err);
+    throw new Error(`게시글 조회 실패: ${String(err)}`);
   }
-  
-  return post;
 }
 
 // 이전글, 다음글 정보 가져오기

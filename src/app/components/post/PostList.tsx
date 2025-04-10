@@ -278,7 +278,7 @@ export default function PostList({
   };
 
   return (
-    <div className={`bg-white border rounded-md shadow-sm ${className}`}>
+    <div className={`bg-white border rounded-lg shadow-sm mb-4 ${className}`}>
       {headerContent && (
         <div className="px-6 py-4 border-b">
           {headerContent}
