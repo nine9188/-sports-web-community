@@ -1,5 +1,7 @@
+'use client'; // 클라이언트 컴포넌트로 명시
+
+import React, { Suspense } from 'react';
 import dynamic from 'next/dynamic';
-import { Suspense } from 'react';
 import TabSelectorWrapper from './TabSelectorWrapper';
 
 // 로딩 스피너 컴포넌트 (LoadingSpinner가 없는 경우)

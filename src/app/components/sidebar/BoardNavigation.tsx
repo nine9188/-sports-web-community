@@ -14,13 +14,9 @@ interface Board {
   children?: Board[];
 }
 
-interface BoardNavigationProps {
-  initialBoards?: Board[];
-}
-
-export default function BoardNavigation({ initialBoards = [] }: BoardNavigationProps) {
+export default function BoardNavigation() {
   const [boards, setBoards] = useState<Board[]>([]);
-  const [loading, setLoading] = useState(!initialBoards.length);
+  const [loading, setLoading] = useState(true);
   const [expandedBoards, setExpandedBoards] = useState<Record<string, boolean>>({});
 
   // 게시판 데이터 처리 함수
@@ -91,16 +87,10 @@ export default function BoardNavigation({ initialBoards = [] }: BoardNavigationP
     }
   }, [processBoards]);
 
-  // 서버에서 전달받은 초기 데이터가 있으면 사용
+  // useEffect에서 항상 데이터 페칭하도록 수정
   useEffect(() => {
-    if (initialBoards.length > 0) {
-      processBoards(initialBoards);
-      setLoading(false);
-    } else {
-      // 서버 데이터가 없는 경우에만 클라이언트에서 가져오기
-      fetchBoards();
-    }
-  }, [initialBoards, fetchBoards, processBoards]);
+    fetchBoards();
+  }, [fetchBoards]);
 
   // 게시판 접기 (펼침 상태가 기본이므로 접기만 가능)
   const toggleCollapse = (e: React.MouseEvent, boardId: string) => {

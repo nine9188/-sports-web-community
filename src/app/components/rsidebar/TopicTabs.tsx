@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { createClient } from '@/app/lib/supabase-browser';
 import { Eye, ThumbsUp, MessageSquare, Image as ImageIcon, Link as LinkIcon, Video as VideoIcon, Youtube as YoutubeIcon } from 'lucide-react';
 
 interface Post {
@@ -25,20 +26,142 @@ interface Post {
 
 type TabType = '조회수' | '추천수' | '댓글수';
 
-// 초기 데이터 타입을 prop으로 받도록 수정
-interface ClientTopicTabsProps {
-  initialData: Record<TabType, Post[]>;
-}
+const postsCache: Record<string, Post[]> = {
+  '조회수': [],
+  '추천수': [],
+  '댓글수': []
+};
 
-export default function ClientTopicTabs({ initialData }: ClientTopicTabsProps) {
-  const [displayPosts, setDisplayPosts] = useState<Post[]>(initialData['조회수']);
+export default function TopicTabs() {
+  const [displayPosts, setDisplayPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('조회수');
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   useEffect(() => {
-    setDisplayPosts(initialData[activeTab]);
-  }, [activeTab, initialData]);
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const supabase = createClient();
+        
+        const { data: postsData, error } = await supabase
+          .from('posts')
+          .select(`
+            id, 
+            title, 
+            created_at, 
+            board_id,
+            views,
+            likes,
+            post_number,
+            content
+          `)
+          .limit(200);
+          
+        if (error) throw error;
+        
+        const validPosts = Array.isArray(postsData) ? postsData : [];
+        const boardIds = [...new Set(validPosts.map(post => post.board_id || ''))];
+        
+        const { data: boardsData, error: boardsError } = await supabase
+          .from('boards')
+          .select('id, name, slug, team_id, league_id')
+          .in('id', boardIds);
+          
+        if (boardsError) throw boardsError;
+        
+        const validBoards = Array.isArray(boardsData) ? boardsData : [];
+        
+        const boardMap: Record<string, { name: string, slug: string, team_id?: number | null, league_id?: number | null }> = {};
+        validBoards.forEach(board => {
+          if (board && board.id) {
+            boardMap[board.id] = { name: board.name || '', slug: board.slug || board.id, team_id: board.team_id, league_id: board.league_id };
+          }
+        });
+        
+        const teamIds = validBoards.filter(b => b.team_id).map(b => b.team_id!).filter(Boolean);
+        const leagueIds = validBoards.filter(b => b.league_id).map(b => b.league_id!).filter(Boolean);
+        
+        const teamLogoMap: Record<string | number, string> = {};
+        if (teamIds.length > 0) {
+          const { data: teamsData } = await supabase.from('teams').select('id, logo').in('id', teamIds);
+          (teamsData || []).forEach(team => { if (team.id) teamLogoMap[team.id] = team.logo || '' });
+        }
+        
+        const leagueLogoMap: Record<string | number, string> = {};
+        if (leagueIds.length > 0) {
+          const { data: leaguesData } = await supabase.from('leagues').select('id, logo').in('id', leagueIds);
+          (leaguesData || []).forEach(league => { if (league.id) leagueLogoMap[league.id] = league.logo || '' });
+        }
+        
+        const postIds = validPosts.map(post => post.id).filter(Boolean);
+        const commentCounts: Record<string, number> = {};
+        if (postIds.length > 0) {
+            const counts = await Promise.all(postIds.map(async postId => {
+                const { count } = await supabase.from('comments').select('id', { count: 'exact', head: true }).eq('post_id', postId);
+                return { postId, count: count || 0 };
+            }));
+            counts.forEach(({ postId, count }) => { commentCounts[postId] = count });
+        }
+        
+        const processedPosts: Post[] = validPosts.map(post => {
+          if (!post || !post.id) { 
+            return {
+              id: '', title: '', created_at: '', board_id: '', board_name: '', board_slug: '', post_number: 0,
+              comment_count: 0, views: 0, likes: 0, content: ''
+            } as Post;
+          } 
+          const boardInfo = post.board_id && boardMap[post.board_id] ? boardMap[post.board_id] : { name: '알 수 없음', slug: post.board_id || '', team_id: null, league_id: null };
+          const teamId = boardInfo.team_id;
+          const leagueId = boardInfo.league_id;
+          
+          const teamLogo = (teamId !== null && teamId !== undefined) ? teamLogoMap[teamId] : null;
+          const leagueLogo = (leagueId !== null && leagueId !== undefined) ? leagueLogoMap[leagueId] : null;
+          
+          return {
+            id: post.id,
+            title: post.title || '',
+            created_at: post.created_at || '',
+            board_id: post.board_id || '',
+            board_name: boardInfo.name,
+            board_slug: boardInfo.slug,
+            post_number: post.post_number || 0,
+            comment_count: commentCounts[post.id] || 0,
+            views: post.views || 0,
+            likes: post.likes || 0,
+            team_id: teamId,
+            league_id: leagueId,
+            team_logo: teamLogo,
+            league_logo: leagueLogo,
+            content: post.content
+          };
+        }).filter((post): post is Post => post.id !== '');
+        
+        postsCache['조회수'] = [...processedPosts].sort((a, b) => b.views - a.views).slice(0, 20);
+        postsCache['추천수'] = [...processedPosts].sort((a, b) => b.likes - a.likes).slice(0, 20);
+        postsCache['댓글수'] = [...processedPosts].sort((a, b) => b.comment_count - a.comment_count).slice(0, 20);
+        
+        setDisplayPosts(postsCache[activeTab]);
+        setInitialLoadComplete(true);
+        
+      } catch (error) {
+        console.error('게시글 로딩 오류:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (!initialLoadComplete || (postsCache[activeTab] && postsCache[activeTab].length === 0)) {
+        fetchData();
+    }
+  }, [activeTab, initialLoadComplete]);
 
-  // 해당 탭에 맞는 수치와 아이콘 표시
+  useEffect(() => {
+    if (initialLoadComplete) {
+      setDisplayPosts(postsCache[activeTab]);
+    }
+  }, [activeTab, initialLoadComplete]);
+
   const renderCount = (post: Post) => {
     if (activeTab === '조회수') {
       return (
@@ -65,39 +188,29 @@ export default function ClientTopicTabs({ initialData }: ClientTopicTabsProps) {
     return null;
   };
 
-  // 게시글 내용에 특정 요소가 포함되어 있는지 확인하는 함수
   const checkContentType = (content?: string) => {
     if (!content) return { hasImage: false, hasVideo: false, hasYoutube: false, hasLink: false };
     
-    // 이미지 및 비디오 감지
     const hasImage = content.includes('<img') || content.includes('data-type="image"');
     const hasVideo = content.includes('<video') || content.includes('data-type="video"');
     
-    // 모든 URL 찾기
     const urlPattern = /https?:\/\/[^\s<>"']+/g;
     const urls = content.match(urlPattern) || [];
     
-    // 각 URL 유형을 확인하기 위한 플래그
     let foundYoutubeUrl = false;
     let foundNonYoutubeUrl = false;
     
-    // 각 URL을 검사하여 유튜브 URL과 일반 URL 구분
     for (const url of urls) {
       if (/youtube\.com|youtu\.be/i.test(url)) {
-        // 유튜브 URL 발견
         foundYoutubeUrl = true;
       } else if (!/\.(jpg|jpeg|png|gif|webp|svg|bmp|mp4|webm|ogg|mov|avi|wmv|flv|mkv)(\?.*)?$/i.test(url)) {
-        // 이미지나 비디오가 아닌 일반 URL 발견
         foundNonYoutubeUrl = true;
       }
       
-      // 둘 다 찾았으면 더 이상 검사할 필요 없음
       if (foundYoutubeUrl && foundNonYoutubeUrl) break;
     }
     
-    // 앵커 태그 검사 (URL 패턴으로 감지되지 않은 경우)
     if (!foundNonYoutubeUrl && content.includes('<a href')) {
-      // 앵커 태그 중 유튜브가 아닌 것이 있는지 확인
       foundNonYoutubeUrl = !(
         content.includes('<a href="https://youtube.com') || 
         content.includes('<a href="https://www.youtube.com') || 
@@ -105,13 +218,11 @@ export default function ClientTopicTabs({ initialData }: ClientTopicTabsProps) {
       );
     }
     
-    // 유튜브 감지 - URL 기반 또는 다른 패턴
     const hasYoutube = foundYoutubeUrl || 
                        content.includes('data-type="youtube"') ||
                        content.includes('youtube-video') ||
                        (content.includes('<iframe') && (content.includes('youtube.com') || content.includes('youtu.be')));
     
-    // 일반 링크 감지 - 유튜브를 제외한 URL 또는 앵커 태그
     const hasLink = foundNonYoutubeUrl;
     
     return { hasImage, hasVideo, hasYoutube, hasLink };
@@ -151,14 +262,19 @@ export default function ClientTopicTabs({ initialData }: ClientTopicTabsProps) {
       </div>
       
       <div>
-        {displayPosts.length === 0 ? (
+        {loading ? (
+          <div className="p-2 space-y-2">
+            {Array(10).fill(0).map((_, i) => (
+              <div key={i} className="h-4 bg-gray-100 rounded animate-pulse"></div>
+            ))}
+          </div>
+        ) : displayPosts.length === 0 ? (
           <div className="p-3 text-center text-gray-500 text-xs">
             게시글이 없습니다.
           </div>
         ) : (
           <ul>
             {displayPosts.map((post, index) => {
-              // 게시글 내용에서 미디어 타입 확인
               const { hasImage, hasVideo, hasYoutube, hasLink } = checkContentType(post.content);
               
               return (
@@ -168,7 +284,6 @@ export default function ClientTopicTabs({ initialData }: ClientTopicTabsProps) {
                     className="block px-3 py-2 hover:bg-gray-50"
                   >
                     <div className="flex items-center text-xs">
-                      {/* 게시판 로고 또는 기본 아이콘 */}
                       {post.team_logo || post.league_logo ? (
                         <div className="relative w-5 h-5 mr-1 flex-shrink-0">
                           <Image 
@@ -186,7 +301,6 @@ export default function ClientTopicTabs({ initialData }: ClientTopicTabsProps) {
                       )}
                       <div className="flex items-center flex-1">
                         <span className="line-clamp-1 mr-1">{post.title}</span>
-                        {/* 미디어 타입 아이콘 */}
                         <div className="flex items-center space-x-1 mr-1">
                           {hasImage && <ImageIcon className="h-3 w-3 text-gray-400" />}
                           {hasVideo && <VideoIcon className="h-3 w-3 text-gray-400" />}
