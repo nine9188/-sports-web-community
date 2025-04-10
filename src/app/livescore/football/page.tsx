@@ -7,14 +7,19 @@ import { Match } from './types';
 const DEFAULT_TEAM_LOGO = 'https://cdn.sportmonks.com/images/soccer/team_placeholder.png';
 
 // 서버 컴포넌트로 변경 - 외부 API를 서버에서 직접 가져옴
-export default async function FootballLiveScorePage({
-  searchParams
-}: {
-  searchParams?: { date?: string }
+// searchParams 타입을 Promise로 감싸도록 수정
+export default async function FootballLiveScorePage({ 
+  searchParams: searchParamsPromise // Promise를 명시적으로 받음
+}: { 
+  searchParams?: Promise<{ date?: string }> // 타입 정의 수정
 }) {
+  // Promise를 await으로 해소
+  const searchParams = await searchParamsPromise;
+
   // 요청된 날짜 파라미터를 사용하거나 현재 날짜를 기본값으로 사용
   const currentDate = new Date();
-  const dateParam = searchParams?.date || format(currentDate, 'yyyy-MM-dd');
+  // 옵셔널 체이닝과 nullish coalescing으로 안전하게 dateParam 추출
+  const dateParam = searchParams?.date ?? format(currentDate, 'yyyy-MM-dd');
   
   try {
     // 서버에서 직접 데이터 가져오기
@@ -29,33 +34,31 @@ export default async function FootballLiveScorePage({
       },
       time: {
         date: match.time.date,
-        time: match.time.timestamp // number | null로 타입 정의되어 있음
+        time: match.time.timestamp
       },
       league: {
         id: match.league.id,
         name: match.league.name,
         country: match.league.country,
-        logo: match.league.logo || '', // string | undefined로 타입 정의되어 있음
-        flag: match.league.flag || '' // string | undefined로 타입 정의되어 있음
+        logo: match.league.logo || '',
+        flag: match.league.flag || ''
       },
       teams: {
         home: {
           id: match.teams.home.id,
           name: match.teams.home.name,
-          // 여기서 logo를 img로 변환 (비어있는 경우 기본 이미지 사용)
           img: match.teams.home.logo || DEFAULT_TEAM_LOGO,
           score: match.goals.home,
-          form: '', // 필수 필드이므로 빈 문자열로 설정
-          formation: undefined // 옵셔널 필드
+          form: '',
+          formation: undefined
         },
         away: {
           id: match.teams.away.id,
           name: match.teams.away.name,
-          // 여기서 logo를 img로 변환 (비어있는 경우 기본 이미지 사용)
           img: match.teams.away.logo || DEFAULT_TEAM_LOGO, 
           score: match.goals.away,
-          form: '', // 필수 필드이므로 빈 문자열로 설정
-          formation: undefined // 옵셔널 필드
+          form: '',
+          formation: undefined
         }
       }
     }));
