@@ -45,6 +45,12 @@ interface LeagueCache {
   [key: string]: StandingsData | null;
 }
 
+// 컴포넌트 이름 변경 및 Props 추가
+interface ClientLeagueStandingsProps {
+  initialLeague: string;
+  initialStandings: StandingsData | null;
+}
+
 // 리그 목록 정의
 const LEAGUES = [
   { id: 'premier', name: 'EPL', fullName: '프리미어리그' },
@@ -54,16 +60,19 @@ const LEAGUES = [
   { id: 'ligue1', name: '리그앙', fullName: '리그 1' },
 ];
 
-export default function LeagueStandings() {
-  const [activeLeague, setActiveLeague] = useState('premier');
-  const [standings, setStandings] = useState<StandingsData | null>(null);
-  const [loading, setLoading] = useState(true);
+export default function ClientLeagueStandings({ 
+  initialLeague = 'premier', 
+  initialStandings 
+}: ClientLeagueStandingsProps) {
+  const [activeLeague, setActiveLeague] = useState(initialLeague);
+  const [standings, setStandings] = useState<StandingsData | null>(initialStandings);
+  const [loading, setLoading] = useState(!initialStandings); // 초기 데이터 없으면 로딩 상태
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const [isMobile, setIsMobile] = useState(false);
   
   // 데이터 캐싱을 위한 ref 사용
-  const cachedData = useRef<LeagueCache>({});
+  const cachedData = useRef<LeagueCache>({ [initialLeague]: initialStandings });
 
   // 모바일 환경 체크
   useEffect(() => {
@@ -121,7 +130,10 @@ export default function LeagueStandings() {
       }
     };
     
-    fetchStandings();
+    // 초기 데이터가 없는 경우 또는 다른 탭으로 변경된 경우에만 페칭
+    if (!cachedData.current[activeLeague]) {
+        fetchStandings();
+    }
   }, [activeLeague, isMobile]);
 
   // 팀 이름 짧게 표시 (최대 8자)
@@ -160,7 +172,7 @@ export default function LeagueStandings() {
       
       {/* 선택된 리그 정보 */}
       <div className="px-3 py-2 border-b">
-        {loading ? (
+        {loading && !standings ? (
           <div className="h-5 w-40 bg-gray-200 animate-pulse rounded"></div>
         ) : (
           <div className="flex items-center gap-2">

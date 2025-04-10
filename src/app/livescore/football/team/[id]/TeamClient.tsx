@@ -373,7 +373,6 @@ export default function TeamClient({
           activeTab={activeTab}
           onTabChange={handleTabChange}
           teamId={numericTeamId}
-          loading={loading}
           error={error}
         />
       </div>

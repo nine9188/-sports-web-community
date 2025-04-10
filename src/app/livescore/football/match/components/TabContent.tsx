@@ -9,18 +9,22 @@ const LoadingSpinner = () => (
   </div>
 );
 
-// 동적 가져오기로 탭 컴포넌트 로드
+// 동적 가져오기로 탭 컴포넌트 로드 (ssr: false 추가)
 const Events = dynamic(() => import('./tabs/Events'), { 
-  loading: () => <LoadingSpinner /> 
+  loading: () => <LoadingSpinner />,
+  ssr: false 
 });
 const Lineups = dynamic(() => import('./tabs/Lineups'), { 
-  loading: () => <LoadingSpinner /> 
+  loading: () => <LoadingSpinner />,
+  ssr: false 
 });
 const Stats = dynamic(() => import('./tabs/Stats'), { 
-  loading: () => <LoadingSpinner /> 
+  loading: () => <LoadingSpinner />,
+  ssr: false 
 });
 const Standings = dynamic(() => import('./tabs/Standings'), { 
-  loading: () => <LoadingSpinner /> 
+  loading: () => <LoadingSpinner />,
+  ssr: false 
 });
 
 // 필요한 타입 정의
@@ -284,18 +288,25 @@ interface TabContentProps {
 }
 
 export default function TabContent({ matchId, homeTeam, awayTeam, matchData }: TabContentProps) {
-  // 각 탭에 필요한 속성들을 전달
+  // 각 탭에 필요한 속성들을 전달 (null-safe 처리 강화)
+  const safeMatchData = matchData || {};
+  const safeLineups = safeMatchData.lineups || { response: null }; // lineups 기본값 설정
+  const safeStats = safeMatchData.stats || []; // stats 기본값 설정
+  const safeStandings = safeMatchData.standings || null; // standings 기본값 설정
+  const safePlayersStats = safeMatchData.playersStats || {}; // playersStats 기본값 설정
+  const safeEvents = safeMatchData.events || []; // events 기본값 설정
+
   const tabComponents: { [key: string]: React.ReactNode } = {
-    events: <Events matchData={{ events: matchData.events }} />,
+    events: <Events matchData={{ events: safeEvents }} />,
     lineups: <Lineups matchData={{ 
       homeTeam, 
       awayTeam, 
-      lineups: { response: matchData.lineups.response || null },
-      events: matchData.events,
-      playersStats: matchData.playersStats
+      lineups: safeLineups, // null-safe lineups 전달
+      events: safeEvents,
+      playersStats: safePlayersStats
     }} />,
     stats: <Stats matchData={{ 
-      stats: matchData.stats,
+      stats: safeStats, // null-safe stats 전달
       homeTeam,
       awayTeam
     }} />,
@@ -303,7 +314,7 @@ export default function TabContent({ matchId, homeTeam, awayTeam, matchData }: T
       matchId, 
       homeTeam, 
       awayTeam, 
-      standings: matchData.standings 
+      standings: safeStandings // null-safe standings 전달
     }} />,
   };
 

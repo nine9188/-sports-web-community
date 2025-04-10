@@ -3,7 +3,8 @@
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '../ui/button';
 import AuthSection from './sidebar/auth-section';
-import LeagueStandings from './sidebar/LeagueStandings';
+// import LeagueStandings from './sidebar/LeagueStandings';
+import ServerLeagueStandings from './sidebar/ServerLeagueStandings';
 import { ReactNode } from 'react';
 
 export default function Sidebar({
@@ -69,7 +70,8 @@ export default function Sidebar({
 
           {/* 축구 리그 순위 위젯 */}
           <div className="mb-4">
-            <LeagueStandings />
+            {/* <LeagueStandings /> */}
+            <ServerLeagueStandings />
           </div>
         </div>
       </div>

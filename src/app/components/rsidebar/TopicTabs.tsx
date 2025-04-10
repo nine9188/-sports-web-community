@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { createClient } from '@/app/lib/supabase-browser';
 import { Eye, ThumbsUp, MessageSquare, Image as ImageIcon, Link as LinkIcon, Video as VideoIcon, Youtube as YoutubeIcon } from 'lucide-react';
 
 interface Post {
@@ -26,203 +25,18 @@ interface Post {
 
 type TabType = '조회수' | '추천수' | '댓글수';
 
-// 모든 데이터를 한 번에 캐싱
-const postsCache: Record<string, Post[]> = {
-  '조회수': [],
-  '추천수': [],
-  '댓글수': []
-};
+// 초기 데이터 타입을 prop으로 받도록 수정
+interface ClientTopicTabsProps {
+  initialData: Record<TabType, Post[]>;
+}
 
-export default function TopicTabs() {
-  const [displayPosts, setDisplayPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function ClientTopicTabs({ initialData }: ClientTopicTabsProps) {
+  const [displayPosts, setDisplayPosts] = useState<Post[]>(initialData['조회수']);
   const [activeTab, setActiveTab] = useState<TabType>('조회수');
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
-  // 초기 데이터 로드 - 컴포넌트 마운트 시 한 번만 실행
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const supabase = createClient();
-        
-        // 1. 게시글 데이터 가져오기
-        const { data: postsData, error } = await supabase
-          .from('posts')
-          .select(`
-            id, 
-            title, 
-            created_at, 
-            board_id,
-            views,
-            likes,
-            post_number,
-            content
-          `)
-          .limit(200);
-          
-        if (error) throw error;
-        
-        // 게시판 정보 가져오기 (team_id, league_id 포함)
-        const validPosts = Array.isArray(postsData) ? postsData : [];
-        const boardIds = [...new Set(validPosts.map(post => post.board_id || ''))];
-        
-        const { data: boardsData, error: boardsError } = await supabase
-          .from('boards')
-          .select('id, name, slug, team_id, league_id')
-          .in('id', boardIds);
-          
-        if (boardsError) throw boardsError;
-        
-        const validBoards = Array.isArray(boardsData) ? boardsData : [];
-        
-        // 게시판 ID로 정보를 찾기 위한 맵 생성
-        const boardMap: Record<string, {
-          name: string, 
-          slug: string, 
-          team_id?: number | null, 
-          league_id?: number | null
-        }> = {};
-        
-        validBoards.forEach(board => {
-          if (board && board.id) {
-            boardMap[board.id] = {
-              name: board.name || '', 
-              slug: board.slug || board.id,
-              team_id: board.team_id,
-              league_id: board.league_id
-            };
-          }
-        });
-        
-        // 팀 ID 및 리그 ID 수집
-        const teamIds = validBoards
-          .filter(board => board && board.team_id)
-          .map(board => board.team_id!)
-          .filter(Boolean);
-          
-        const leagueIds = validBoards
-          .filter(board => board && board.league_id)
-          .map(board => board.league_id!)
-          .filter(Boolean);
-        
-        // 팀 로고 정보 가져오기
-        const teamLogoMap: Record<string | number, string> = {};
-        if (teamIds.length > 0) {
-          const { data: teamsData } = await supabase
-            .from('teams')
-            .select('id, logo')
-            .in('id', teamIds);
-            
-          const validTeams = Array.isArray(teamsData) ? teamsData : [];
-          validTeams.forEach(team => {
-            if (team && team.id) {
-              teamLogoMap[team.id] = team.logo || '';
-            }
-          });
-        }
-        
-        // 리그 로고 정보 가져오기
-        const leagueLogoMap: Record<string | number, string> = {};
-        if (leagueIds.length > 0) {
-          const { data: leaguesData } = await supabase
-            .from('leagues')
-            .select('id, logo')
-            .in('id', leagueIds);
-            
-          const validLeagues = Array.isArray(leaguesData) ? leaguesData : [];
-          validLeagues.forEach(league => {
-            if (league && league.id) {
-              leagueLogoMap[league.id] = league.logo || '';
-            }
-          });
-        }
-        
-        // 댓글 수 가져오기
-        const postIds = validPosts.map(post => post.id).filter(Boolean);
-        const commentCounts: Record<string, number> = {};
-        
-        // 댓글 수 병렬로 가져오기
-        await Promise.all(
-          postIds.map(async (postId) => {
-            const { count, error: countError } = await supabase
-              .from('comments')
-              .select('*', { count: 'exact', head: true })
-              .eq('post_id', postId);
-              
-            if (!countError) {
-              commentCounts[postId] = count || 0;
-            }
-          })
-        );
-        
-        // 데이터 형식 변환 (팀/리그 로고 정보 및 최근 활동 추가)
-        const processedPosts: Post[] = validPosts.map(post => {
-          if (!post || !post.id) return {} as Post;
-          
-          const boardInfo = post.board_id && boardMap[post.board_id] 
-            ? boardMap[post.board_id] 
-            : { name: '알 수 없음', slug: post.board_id || '', team_id: null, league_id: null };
-          
-          const teamId = boardInfo.team_id;
-          const leagueId = boardInfo.league_id;
-          
-          // 로고 URL 결정
-          const teamLogo = teamId && teamLogoMap[teamId] ? teamLogoMap[teamId] : null;
-          const leagueLogo = leagueId && leagueLogoMap[leagueId] ? leagueLogoMap[leagueId] : null;
-          
-          return {
-            id: post.id,
-            title: post.title || '',
-            created_at: post.created_at || '',
-            board_id: post.board_id || '',
-            board_name: boardInfo.name,
-            board_slug: boardInfo.slug,
-            post_number: post.post_number || 0,
-            comment_count: post.id ? (commentCounts[post.id] || 0) : 0,
-            views: post.views || 0,
-            likes: post.likes || 0,
-            team_id: teamId,
-            league_id: leagueId,
-            team_logo: teamLogo,
-            league_logo: leagueLogo,
-            content: post.content
-          };
-        }).filter(post => post.id) as Post[];
-        
-        // 각 탭에 맞게 정렬하여 캐시에 저장
-        postsCache['조회수'] = [...processedPosts]
-          .sort((a, b) => b.views - a.views)
-          .slice(0, 20);
-        
-        postsCache['추천수'] = [...processedPosts]
-          .sort((a, b) => b.likes - a.likes)
-          .slice(0, 20);
-        
-        postsCache['댓글수'] = [...processedPosts]
-          .sort((a, b) => b.comment_count - a.comment_count)
-          .slice(0, 20);
-        
-        // 현재 탭에 맞는 정렬된 데이터 설정
-        setDisplayPosts(postsCache[activeTab]);
-        setInitialLoadComplete(true);
-        
-      } catch (error) {
-        console.error('게시글 로딩 오류:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchData();
-  }, [activeTab]); // activeTab을 의존성 배열에 추가
-
-  // 탭 변경 시 캐시된 데이터 사용
-  useEffect(() => {
-    if (initialLoadComplete) {
-      setDisplayPosts(postsCache[activeTab]);
-    }
-  }, [activeTab, initialLoadComplete]);
+    setDisplayPosts(initialData[activeTab]);
+  }, [activeTab, initialData]);
 
   // 해당 탭에 맞는 수치와 아이콘 표시
   const renderCount = (post: Post) => {
@@ -337,13 +151,7 @@ export default function TopicTabs() {
       </div>
       
       <div>
-        {loading ? (
-          <div className="p-2 space-y-2">
-            {Array(10).fill(0).map((_, i) => (
-              <div key={i} className="h-4 bg-gray-100 rounded animate-pulse"></div>
-            ))}
-          </div>
-        ) : displayPosts.length === 0 ? (
+        {displayPosts.length === 0 ? (
           <div className="p-3 text-center text-gray-500 text-xs">
             게시글이 없습니다.
           </div>

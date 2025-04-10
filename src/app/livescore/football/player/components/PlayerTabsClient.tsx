@@ -97,22 +97,28 @@ interface PlayerTabsClientProps {
 
 // 동적 임포트로 탭 컴포넌트 로드
 const PlayerStats = dynamic(() => import('./player-tabs/PlayerStats'), {
-  loading: () => <TabLoading />
+  loading: () => <TabLoading />,
+  ssr: false
 });
 const PlayerFixtures = dynamic(() => import('./player-tabs/PlayerFixtures'), {
-  loading: () => <TabLoading />
+  loading: () => <TabLoading />,
+  ssr: false
 });
 const PlayerTrophies = dynamic(() => import('./player-tabs/PlayerTrophies'), {
-  loading: () => <TabLoading />
+  loading: () => <TabLoading />,
+  ssr: false
 });
 const PlayerTransfers = dynamic(() => import('./player-tabs/PlayerTransfers'), {
-  loading: () => <TabLoading />
+  loading: () => <TabLoading />,
+  ssr: false
 });
 const PlayerInjuries = dynamic(() => import('./player-tabs/PlayerInjuries'), {
-  loading: () => <TabLoading />
+  loading: () => <TabLoading />,
+  ssr: false
 });
 const PlayerRankings = dynamic(() => import('./player-tabs/PlayerRankings'), {
-  loading: () => <TabLoading />
+  loading: () => <TabLoading />,
+  ssr: false
 });
 
 export default function PlayerTabsClient({ 
