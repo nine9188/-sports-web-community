@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, FC, Suspense } from 'react';
+import { useState, FC, Suspense, useRef, useEffect } from 'react';
 import { Tab } from '@headlessui/react';
 import dynamic from 'next/dynamic';
 
@@ -11,11 +11,13 @@ const LoadingSpinner = () => (
   </div>
 );
 
-// dynamic import로 변경
+// dynamic import로 변경 - 첫번째 탭(Overview)만 SSR 활성화
 const OverviewDynamic = dynamic(() => import('./tabs/Overview'), {
   loading: () => <LoadingSpinner />,
-  ssr: false
+  ssr: true // Overview 탭은 SSR로 렌더링 (첫 화면)
 });
+
+// 나머지 탭은 필요할 때만 로드 (CSR)
 const SquadDynamic = dynamic(() => import('./tabs/Squad'), {
   loading: () => <LoadingSpinner />,
   ssr: false
@@ -491,7 +493,6 @@ interface TeamTabsProps {
   standings: Standing[] | null;
   squad: (Player | Coach)[] | null;
   stats: TeamStats;
-  activeTab: string;
   onTabChange: (tab: string) => void;
   teamId: number;
   error: {
@@ -500,6 +501,9 @@ interface TeamTabsProps {
     squad: boolean;
   };
 }
+
+// 탭 ID 타입 정의
+type TabId = 'overview' | 'squad' | 'stats' | 'standings';
 
 // 타입 변환 어댑터 함수들
 const adaptStandingsForOverview = (standings: Standing[] | null): OverviewStanding[] => {
@@ -724,19 +728,20 @@ const TeamTabs: FC<TeamTabsProps> = ({
   standings,
   squad,
   stats,
-  activeTab,
   onTabChange,
   teamId,
   error,
 }) => {
-  // 현재 활성화된 탭의 인덱스를 결정
-  const getTabIndex = (tab: string): number => {
-    const tabNames = ['overview', 'squad', 'stats', 'standings'];
-    const index = tabNames.indexOf(tab);
-    return index >= 0 ? index : 0;
-  };
-
-  const [selectedTab, setSelectedTab] = useState(getTabIndex(activeTab));
+  // 항상 'overview'를 기본 탭으로 설정
+  const [selectedTab, setSelectedTab] = useState(0);
+  
+  // 이미 로드된 탭을 추적하는 ref
+  const loadedTabs = useRef<Set<string>>(new Set(['overview'])); // overview는 기본적으로 로드
+  
+  // 로컬 스토리지에 'overview'를 기본 탭으로 설정
+  useEffect(() => {
+    localStorage.setItem('activeTeamTab', 'overview');
+  }, []);
 
   // 에러 상태 확인
   const hasError = error.matches || error.standings || error.squad;
@@ -744,53 +749,54 @@ const TeamTabs: FC<TeamTabsProps> = ({
     return <div className="text-red-500">데이터를 불러오는 중 오류가 발생했습니다.</div>;
   }
 
-  // 각 탭 컴포넌트에 필요한 props 구조에 맞게 데이터 전달
-  const tabComponents = [
-    <Suspense fallback={<LoadingSpinner />} key="overview">
-      <OverviewDynamic 
-        team={{ 
-          team: team,
-          venue: team.venue || {
-            name: '정보 없음',
-            address: '정보 없음',
-            city: '정보 없음',
-            capacity: 0,
-            image: '/images/stadium-placeholder.jpg'
-          }
-        }} 
-        matches={matches || []} 
-        standings={adaptStandingsForOverview(standings)}
-        teamId={teamId}
-        stats={adaptStatsForOverview(stats)}
-        onTabChange={onTabChange}
-      />
-    </Suspense>,
-    <Suspense fallback={<LoadingSpinner />} key="squad">
-      <SquadDynamic 
-        squad={adaptSquadForSquadTab(squad)}
-      />
-    </Suspense>,
-    <Suspense fallback={<LoadingSpinner />} key="stats">
-      <StatsDynamic 
-        stats={makeStatsCompatible(adaptStatsForStatsTab(stats))}
-      />
-    </Suspense>,
-    <Suspense fallback={<LoadingSpinner />} key="standings">
-      <StandingsDynamic 
-        standings={adaptStandingsForStandingsTab(standings)}
-        teamId={teamId} 
-      />
-    </Suspense>
-  ];
-
-  const tabNames = ['Overview', 'Squad', 'Stats', 'Standings'];
-
   // 탭 변경 핸들러
   const handleTabChange = (index: number) => {
     setSelectedTab(index);
-    const tabId = ['overview', 'squad', 'stats', 'standings'][index];
+    const tabId = ['overview', 'squad', 'stats', 'standings'][index] as TabId;
+    
+    // 탭이 처음 로드된 경우 로드된 탭 목록에 추가
+    if (!loadedTabs.current.has(tabId)) {
+      loadedTabs.current.add(tabId);
+    }
+    
+    // 상위 컴포넌트에 탭 변경 알림
     onTabChange(tabId);
+    localStorage.setItem('activeTeamTab', tabId);
   };
+
+  // 각 탭에 필요한 props 준비 - null-safe 처리
+  const getOverviewProps = () => ({
+    team: { 
+      team: team,
+      venue: team.venue || {
+        name: '정보 없음',
+        address: '정보 없음',
+        city: '정보 없음',
+        capacity: 0,
+        image: '/images/stadium-placeholder.jpg'
+      }
+    },
+    matches: matches || [],
+    standings: adaptStandingsForOverview(standings),
+    teamId: teamId,
+    stats: adaptStatsForOverview(stats),
+    onTabChange
+  });
+
+  const getSquadProps = () => ({
+    squad: adaptSquadForSquadTab(squad)
+  });
+
+  const getStatsProps = () => ({
+    stats: makeStatsCompatible(adaptStatsForStatsTab(stats))
+  });
+
+  const getStandingsProps = () => ({
+    standings: adaptStandingsForStandingsTab(standings),
+    teamId: teamId
+  });
+
+  const tabNames = ['Overview', 'Squad', 'Stats', 'Standings'];
 
   return (
     <div className="w-full px-4 md:px-8 py-4">
@@ -813,15 +819,53 @@ const TeamTabs: FC<TeamTabsProps> = ({
           ))}
         </Tab.List>
         <Tab.Panels className="mt-4">
-          {tabComponents.map((component, index) => (
-            <Tab.Panel
-              key={index}
-              className="rounded-lg bg-white p-3 ring-white/5 ring-opacity-60 focus:outline-none"
-            >
-              {/* 선택된 탭만 렌더링 (Lazy loading은 dynamic import가 담당) */}
-              {selectedTab === index ? component : null}
-            </Tab.Panel>
-          ))}
+          {/* Overview 탭 */}
+          <Tab.Panel
+            key="overview"
+            className="rounded-lg bg-white p-3 ring-white/5 ring-opacity-60 focus:outline-none"
+          >
+            {selectedTab === 0 && (
+              <Suspense fallback={<LoadingSpinner />}>
+                <OverviewDynamic {...getOverviewProps()} />
+              </Suspense>
+            )}
+          </Tab.Panel>
+          
+          {/* Squad 탭 */}
+          <Tab.Panel
+            key="squad"
+            className="rounded-lg bg-white p-3 ring-white/5 ring-opacity-60 focus:outline-none"
+          >
+            {selectedTab === 1 && (
+              <Suspense fallback={<LoadingSpinner />}>
+                <SquadDynamic {...getSquadProps()} />
+              </Suspense>
+            )}
+          </Tab.Panel>
+          
+          {/* Stats 탭 */}
+          <Tab.Panel
+            key="stats"
+            className="rounded-lg bg-white p-3 ring-white/5 ring-opacity-60 focus:outline-none"
+          >
+            {selectedTab === 2 && (
+              <Suspense fallback={<LoadingSpinner />}>
+                <StatsDynamic {...getStatsProps()} />
+              </Suspense>
+            )}
+          </Tab.Panel>
+          
+          {/* Standings 탭 */}
+          <Tab.Panel
+            key="standings"
+            className="rounded-lg bg-white p-3 ring-white/5 ring-opacity-60 focus:outline-none"
+          >
+            {selectedTab === 3 && (
+              <Suspense fallback={<LoadingSpinner />}>
+                <StandingsDynamic {...getStandingsProps()} />
+              </Suspense>
+            )}
+          </Tab.Panel>
         </Tab.Panels>
       </Tab.Group>
     </div>

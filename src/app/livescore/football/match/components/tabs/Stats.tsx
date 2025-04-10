@@ -1,39 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, memo, useMemo } from 'react';
 import Image from 'next/image';
-
-interface TeamStats {
-  team: {
-    id: number;
-    name: string;
-    logo: string;
-  };
-  statistics: Array<{
-    type: string;
-    value: number | string | null;
-  }>;
-}
+import { TeamStats, Team } from '../../types';
 
 interface StatsProps {
   matchData: {
-    stats: TeamStats[];
-    homeTeam: {
-      id: number;
-      name: string;
-      logo: string;
-    };
-    awayTeam: {
-      id: number;
-      name: string;
-      logo: string;
-    };
+    stats?: TeamStats[];
+    homeTeam: Team;
+    awayTeam: Team;
     [key: string]: unknown;
   };
 }
 
-// 팀 로고 컴포넌트 추가
-const TeamLogo = ({ logo, name }: { logo: string; name: string }) => {
+// 팀 로고 컴포넌트 - 메모이제이션
+const TeamLogo = memo(({ logo, name }: { logo: string; name: string }) => {
   const [imgError, setImgError] = useState(false);
   const logoUrl = imgError ? '/placeholder-team.png' : logo || '/placeholder-team.png';
   
@@ -50,13 +31,19 @@ const TeamLogo = ({ logo, name }: { logo: string; name: string }) => {
       />
     </div>
   );
-};
+});
 
-// 통계 항목 렌더링 함수
-function StatItem({ homeValue, awayValue, koreanLabel }: { homeValue: string | number | null; awayValue: string | number | null; koreanLabel: string }) {
+TeamLogo.displayName = 'TeamLogo';
+
+// 통계 항목 렌더링 함수 - 메모이제이션
+const StatItem = memo(({ homeValue, awayValue, koreanLabel }: { 
+  homeValue: string | number | null; 
+  awayValue: string | number | null; 
+  koreanLabel: string 
+}) => {
   // 숫자 값으로 변환 (퍼센트 기호 제거)
-  const homeNum = parseFloat(String(homeValue).replace('%', '')) || 0;
-  const awayNum = parseFloat(String(awayValue).replace('%', '')) || 0;
+  const homeNum = parseFloat(String(homeValue || '0').replace('%', '')) || 0;
+  const awayNum = parseFloat(String(awayValue || '0').replace('%', '')) || 0;
   
   // 전체 합계 계산 (0으로 나누기 방지)
   const total = homeNum + awayNum || 1;
@@ -91,10 +78,14 @@ function StatItem({ homeValue, awayValue, koreanLabel }: { homeValue: string | n
       </div>
     </div>
   );
-}
+});
 
-export default function Stats({ matchData }: StatsProps) {
-  const stats = matchData.stats || [];
+StatItem.displayName = 'StatItem';
+
+function Stats({ matchData }: StatsProps) {
+  const stats = useMemo(() => matchData.stats || [], [matchData.stats]);
+  const homeTeam = matchData.homeTeam || { id: 0, name: '', logo: '' };
+  const awayTeam = matchData.awayTeam || { id: 0, name: '', logo: '' };
 
   // 데이터가 없을 경우 메시지 표시
   if (!stats.length) {
@@ -117,28 +108,34 @@ export default function Stats({ matchData }: StatsProps) {
           </svg>
           <p className="text-lg font-medium text-gray-600">통계 데이터가 없습니다</p>
           <p className="text-sm text-gray-500 mt-2">현재 이 경기에 대한 통계 정보를 제공할 수 없습니다.</p>
-          <p className="text-sm text-gray-500 mt-1">API에서 통계 데이터를 가져오지 못했습니다. (404 오류)</p>
         </div>
       </div>
     );
   }
 
-  const homeTeam = stats[0];
-  const awayTeam = stats[1];
+  // 안전하게 팀 데이터 가져오기
+  const firstTeam = stats[0] || { team: { id: 0, name: '', logo: '' }, statistics: [] };
+  const secondTeam = stats[1] || { team: { id: 0, name: '', logo: '' }, statistics: [] };
+
+  // 각 팀 확인 (홈팀과 원정팀 매칭)
+  const isFirstTeamHome = firstTeam.team.id === homeTeam.id;
+  const dataHomeTeam = isFirstTeamHome ? firstTeam : secondTeam;
+  const dataAwayTeam = isFirstTeamHome ? secondTeam : firstTeam;
 
   // 특정 통계 항목 찾기 함수
   const findStat = (team: TeamStats, type: string) => {
-    const stat = team.statistics.find(s => s.type === type);
+    const stat = team.statistics?.find(s => s.type === type);
     return stat ? stat.value : null;
   };
 
   // 통계 항목 렌더링 함수
   const renderStat = (type: string, koreanLabel: string) => {
-    const homeValue = findStat(homeTeam, type);
-    const awayValue = findStat(awayTeam, type);
+    const homeValue = findStat(dataHomeTeam, type);
+    const awayValue = findStat(dataAwayTeam, type);
     
     return (
       <StatItem 
+        key={type}
         homeValue={homeValue} 
         awayValue={awayValue} 
         koreanLabel={koreanLabel} 
@@ -150,12 +147,12 @@ export default function Stats({ matchData }: StatsProps) {
     <div>
       <div className="flex justify-between items-center mb-8 pb-4 border-b">
         <div className="flex items-center gap-2">
-          <TeamLogo logo={homeTeam.team.logo} name={homeTeam.team.name} />
-          <span className="font-medium">{homeTeam.team.name}</span>
+          <TeamLogo logo={homeTeam.logo} name={homeTeam.name} />
+          <span className="font-medium">{homeTeam.name || '홈팀'}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="font-medium">{awayTeam.team.name}</span>
-          <TeamLogo logo={awayTeam.team.logo} name={awayTeam.team.name} />
+          <span className="font-medium">{awayTeam.name || '원정팀'}</span>
+          <TeamLogo logo={awayTeam.logo} name={awayTeam.name} />
         </div>
       </div>
 
@@ -189,4 +186,6 @@ export default function Stats({ matchData }: StatsProps) {
       </div>
     </div>
   );
-} 
+}
+
+export default memo(Stats); 

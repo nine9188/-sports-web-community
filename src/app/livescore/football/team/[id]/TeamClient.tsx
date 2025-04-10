@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import TeamTabs from '../components/TeamTabs';
 import TeamHeader from '../components/TeamHeader';
@@ -226,9 +226,6 @@ export default function TeamClient({
   const searchParams = useSearchParams();
   const initialTab = searchParams.get('tab') || 'overview';
   
-  // 클라이언트 상태 관리 - URL 변경 없이 상태만 관리
-  const [activeTab, setActiveTab] = useState(initialTab);
-  
   // 데이터 상태 및 로딩 상태 관리
   const [matches, setMatches] = useState<Match[] | null>(null);
   const [standings, setStandings] = useState<Standing[]>([]);
@@ -244,11 +241,21 @@ export default function TeamClient({
     squad: false
   });
 
+  // 데이터 로딩 상태 추적
+  const dataLoadedRef = useRef({
+    matches: false,
+    standings: false,
+    squad: false
+  });
+
   // teamId를 숫자로 변환 (API 응답의 ID와 비교하기 위함)
   const numericTeamId = parseInt(teamId, 10);
   
   // 경기 정보 로드
   const loadMatches = useCallback(async () => {
+    // 이미 로드된 경우 중복 요청 방지
+    if (dataLoadedRef.current.matches || loading.matches) return;
+    
     try {
       setLoading(prev => ({ ...prev, matches: true }));
       const res = await fetch(`/api/livescore/football/teams/${teamId}/matches`);
@@ -256,16 +263,20 @@ export default function TeamClient({
       const data = await res.json();
       setMatches(data);
       setError(prev => ({ ...prev, matches: false }));
+      dataLoadedRef.current.matches = true;
     } catch (err) {
       console.error('Matches loading error:', err);
       setError(prev => ({ ...prev, matches: true }));
     } finally {
       setLoading(prev => ({ ...prev, matches: false }));
     }
-  }, [teamId]);
+  }, [teamId, loading.matches]);
 
   // 순위 정보 로드
   const loadStandings = useCallback(async () => {
+    // 이미 로드된 경우 중복 요청 방지
+    if (dataLoadedRef.current.standings || loading.standings) return;
+    
     try {
       setLoading(prev => ({ ...prev, standings: true }));
       const res = await fetch(`/api/livescore/football/teams/${teamId}/standings`);
@@ -273,16 +284,20 @@ export default function TeamClient({
       const data = await res.json();
       setStandings(data.data || []);
       setError(prev => ({ ...prev, standings: false }));
+      dataLoadedRef.current.standings = true;
     } catch (err) {
       console.error('Standings loading error:', err);
       setError(prev => ({ ...prev, standings: true }));
     } finally {
       setLoading(prev => ({ ...prev, standings: false }));
     }
-  }, [teamId]);
+  }, [teamId, loading.standings]);
 
   // 스쿼드 정보 로드
   const loadSquad = useCallback(async () => {
+    // 이미 로드된 경우 중복 요청 방지
+    if (dataLoadedRef.current.squad || loading.squad) return;
+    
     try {
       setLoading(prev => ({ ...prev, squad: true }));
       const res = await fetch(`/api/livescore/football/teams/${teamId}/squad`);
@@ -290,42 +305,43 @@ export default function TeamClient({
       const data = await res.json();
       setSquad(data);
       setError(prev => ({ ...prev, squad: false }));
+      dataLoadedRef.current.squad = true;
     } catch (err) {
       console.error('Squad loading error:', err);
       setError(prev => ({ ...prev, squad: true }));
     } finally {
       setLoading(prev => ({ ...prev, squad: false }));
     }
-  }, [teamId]);
+  }, [teamId, loading.squad]);
   
   // 탭에 필요한 데이터 로드 함수를 useCallback으로 감싸 의존성 문제 해결
   const loadTabData = useCallback((tab: string) => {
-    // 이미 로드된 데이터는 다시 로드하지 않음
+    // overview 탭 필요 데이터 - 경기와 순위
     if (tab === 'overview' || tab === 'standings') {
-      if (!matches && !loading.matches) {
-        loadMatches();
-      }
-      if (standings.length === 0 && !loading.standings) {
-        loadStandings();
-      }
+      loadMatches();
+      loadStandings();
     }
     
+    // squad 탭 필요 데이터
     if (tab === 'overview' || tab === 'squad') {
-      if (!squad && !loading.squad) {
-        loadSquad();
-      }
+      loadSquad();
     }
-  }, [matches, standings, squad, loading, loadMatches, loadStandings, loadSquad]);
+  }, [loadMatches, loadStandings, loadSquad]);
   
-  // 탭 변경 핸들러 - URL 변경 없이 상태만 업데이트
+  // 탭 변경 핸들러 - 데이터 로드만 처리
   const handleTabChange = useCallback((tab: string) => {
-    setActiveTab(tab);
     loadTabData(tab);
   }, [loadTabData]);
 
   // 초기 탭에 필요한 데이터 로드
   useEffect(() => {
     loadTabData(initialTab);
+    
+    // 로컬 스토리지에서 활성화된 탭 정보가 있으면 그에 맞는 데이터 로드
+    const savedTab = localStorage.getItem('activeTeamTab');
+    if (savedTab && ['overview', 'squad', 'stats', 'standings'].includes(savedTab)) {
+      loadTabData(savedTab);
+    }
   }, [initialTab, loadTabData]);
   
   // success 확인 - API에서 success: true를 포함하는 래퍼 객체로 응답이 오는 경우를 처리
@@ -370,7 +386,6 @@ export default function TeamClient({
           standings={standings} 
           squad={squad}
           stats={stats}
-          activeTab={activeTab}
           onTabChange={handleTabChange}
           teamId={numericTeamId}
           error={error}

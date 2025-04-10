@@ -1,4 +1,4 @@
-import { PlayerData } from '../../types/player';
+import { PlayerData } from '../types/player';
 import PlayerTabsClient from './PlayerTabsClient';
 
 // 필요한 인터페이스 정의
@@ -13,6 +13,7 @@ interface StatisticsData {
     name: string;
     country: string;
     season?: number;
+    logo?: string;
   };
   games: {
     appearences?: number;
@@ -83,6 +84,7 @@ interface PlayerTabsProps {
   baseUrl: string;
 }
 
+// 탭 정의 - match 폴더의 TabSelector 패턴을 따름
 const tabs: Tab[] = [
   { id: 'stats', label: '통계' },
   { id: 'fixtures', label: '경기별 통계' },
@@ -92,7 +94,7 @@ const tabs: Tab[] = [
   { id: 'rankings', label: '리그 순위' },
 ];
 
-// StatisticsData를 PlayerStatistic으로 변환하는 함수
+// StatisticsData를 완전한 형태로 변환하는 함수
 const convertStatisticsToPlayerStatistic = (stats: StatisticsData[] | undefined) => {
   if (!stats || !Array.isArray(stats)) return [];
   
@@ -100,9 +102,9 @@ const convertStatisticsToPlayerStatistic = (stats: StatisticsData[] | undefined)
     ...stat,
     league: {
       ...stat.league,
-      logo: '', // logo 필드 추가 (없으면 빈 문자열)
+      logo: stat.league.logo || '', // logo 필드 추가 (없으면 빈 문자열)
     },
-    // 누락된 필드가 있을 경우 기본값 추가
+    // 누락된 필드가 있을 경우 기본값 추가 (null-safe 처리)
     dribbles: stat.dribbles || { attempts: 0, success: 0 },
     duels: stat.duels || { total: 0, won: 0 },
     tackles: stat.tackles || { total: 0, blocks: 0, interceptions: 0, clearances: 0 },
@@ -121,11 +123,11 @@ export default function PlayerTabs({
   defaultSeason,
   baseUrl
 }: PlayerTabsProps) {
-  // 기본값 설정
+  // 기본값 설정 (null-safe 처리)
   const safeSeasons = seasons || [];
   const safeStatsData = statsData || [];
   
-  // statsData를 PlayerStatistic 타입으로 변환
+  // statsData를 완전한 타입으로 변환
   const convertedStatsData = convertStatisticsToPlayerStatistic(safeStatsData);
 
   return (

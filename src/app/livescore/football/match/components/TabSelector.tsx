@@ -1,34 +1,36 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { TabType } from '../types';
 
 // 탭 정의
 const tabs = [
-  { id: 'events', label: '이벤트' },
-  { id: 'lineups', label: '라인업' },
-  { id: 'stats', label: '통계' },
-  { id: 'standings', label: '순위' },
+  { id: 'events' as TabType, label: '이벤트' },
+  { id: 'lineups' as TabType, label: '라인업' },
+  { id: 'stats' as TabType, label: '통계' },
+  { id: 'standings' as TabType, label: '순위' },
 ];
 
 interface TabSelectorProps {
-  onTabChange: (tabId: string) => void;
-  initialTab?: string;
+  onTabChange: (tabId: TabType) => void;
+  initialTab?: TabType;
 }
 
 export default function TabSelector({ onTabChange, initialTab = 'events' }: TabSelectorProps) {
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab);
 
   // 로컬 스토리지에서 탭 상태 불러오기
   useEffect(() => {
     const savedTab = localStorage.getItem('activeMatchTab');
-    if (savedTab) {
-      setActiveTab(savedTab);
-      onTabChange(savedTab);
+    if (savedTab && (savedTab === 'events' || savedTab === 'lineups' || 
+                     savedTab === 'stats' || savedTab === 'standings')) {
+      setActiveTab(savedTab as TabType);
+      onTabChange(savedTab as TabType);
     }
   }, [onTabChange]);
 
   // 탭 변경 핸들러
-  const handleTabChange = (tabId: string) => {
+  const handleTabChange = (tabId: TabType) => {
     setActiveTab(tabId);
     localStorage.setItem('activeMatchTab', tabId);
     onTabChange(tabId);

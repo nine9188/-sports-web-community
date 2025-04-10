@@ -48,7 +48,19 @@ interface CacheItem {
   timestamp: number;
 }
 
-// API 응답 형식
+// 메모리 캐싱 강화
+const CACHE: { [key: string]: CacheItem } = {};
+const CACHE_TTL = 3 * 60 * 60 * 1000; // 3시간으로 증가
+
+// 디바운스 메커니즘 추가 (동일 요청 방지)
+const REQUEST_THROTTLE: { [key: string]: number } = {};
+const THROTTLE_WINDOW = 5000; // 5초로 증가
+
+// API 요청 제한 (개별 리그별)
+let lastApiCallTimestamps: { [key: string]: number } = {};
+const API_CALL_COOLDOWN = 60 * 1000; // 1분 쿨다운
+
+// 한 가지 추가 타입 정의 (API 응답 형식에 맞춤)
 interface ApiTeamStanding {
   rank: number;
   team: {
@@ -66,18 +78,6 @@ interface ApiTeamStanding {
     lose: number;
   };
 }
-
-// 메모리 캐싱 강화
-const CACHE: { [key: string]: CacheItem } = {};
-const CACHE_TTL = 3 * 60 * 60 * 1000; // 3시간으로 증가
-
-// 디바운스 메커니즘 추가 (동일 요청 방지)
-const REQUEST_THROTTLE: { [key: string]: number } = {};
-const THROTTLE_WINDOW = 5000; // 5초로 증가
-
-// API 요청 제한 (개별 리그별)
-const lastApiCallTimestamps: { [key: string]: number } = {};
-const API_CALL_COOLDOWN = 60 * 1000; // 1분 쿨다운
 
 export async function GET(request: Request) {
   try {
@@ -207,5 +207,5 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
-}
-
+} 
+} 

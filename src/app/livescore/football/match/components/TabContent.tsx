@@ -1,333 +1,165 @@
 'use client'; // 클라이언트 컴포넌트로 명시
 
-import React, { Suspense } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { TabType, MatchEvent, Team, TeamLineup, TeamStats, PlayerStatsData } from '../types';
 import TabSelectorWrapper from './TabSelectorWrapper';
 
-// 로딩 스피너 컴포넌트 (LoadingSpinner가 없는 경우)
+// 간단한 로딩 스피너 컴포넌트
 const LoadingSpinner = () => (
   <div className="flex justify-center items-center py-10">
     <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
   </div>
 );
 
-// 동적 가져오기로 탭 컴포넌트 로드 (ssr: false 추가)
+// 각 탭 컴포넌트를 동적으로 로드 (SSR은 활성화하여 첫 번째 탭은 미리 렌더링)
 const Events = dynamic(() => import('./tabs/Events'), { 
   loading: () => <LoadingSpinner />,
-  ssr: false 
+  ssr: true // 이벤트 탭은 기본 탭으로 SSR 활성화
 });
+
 const Lineups = dynamic(() => import('./tabs/Lineups'), { 
   loading: () => <LoadingSpinner />,
-  ssr: false 
+  ssr: false // 선택 시에만 로드
 });
+
 const Stats = dynamic(() => import('./tabs/Stats'), { 
   loading: () => <LoadingSpinner />,
-  ssr: false 
+  ssr: false // 선택 시에만 로드
 });
+
 const Standings = dynamic(() => import('./tabs/Standings'), { 
   loading: () => <LoadingSpinner />,
-  ssr: false 
+  ssr: false // 선택 시에만 로드
 });
 
-// 필요한 타입 정의
-interface Team {
-  id: number;
-  name: string;
-  logo: string;
-}
-
-interface MatchData {
-  data: {
-    fixture: {
-      id: number;
-      date: string;
-      status: {
-        long: string;
-        short: string;
-        elapsed: number;
-      };
-    };
+interface StandingsData {
+  standings: {
     league: {
       id: number;
       name: string;
       logo: string;
-    };
-    teams: {
-      home: Team;
-      away: Team;
-    };
-    goals: {
-      home: number;
-      away: number;
+      standings: Array<Array<{
+        rank: number;
+        team: {
+          id: number;
+          name: string;
+          logo: string;
+        };
+        points: number;
+        goalsDiff: number;
+        group: string;
+        form: string;
+        status: string;
+        description: string;
+        all: {
+          played: number;
+          win: number;
+          draw: number;
+          lose: number;
+          goals: {
+            for: number;
+            against: number;
+          };
+        };
+      }>>;
     };
   };
-  events: Array<{
-    time: {
-      elapsed: number;
-      extra: number | null;
-    };
-    team: {
-      id: number;
-      name: string;
-      logo: string;
-    };
-    player: {
-      id: number;
-      name: string;
-    };
-    assist?: {
-      id: number | null;
-      name: string | null;
-    };
-    type: string;
-    detail: string;
-    comments?: string;
-  }>;
-  lineups: {
+}
+
+interface MatchDataCommon {
+  events?: MatchEvent[];
+  lineups?: {
     response: {
-      home: {
-        team: {
-          id: number;
-          name: string;
-          logo: string;
-          colors: {
-            player: {
-              primary: string;
-              number: string;
-              border: string;
-            };
-            goalkeeper: {
-              primary: string;
-              number: string;
-              border: string;
-            };
-          };
-        };
-        formation: string;
-        startXI: Array<{
-          player: {
-            id: number;
-            name: string;
-            number: number;
-            pos: string;
-            grid: string;
-          };
-        }>;
-        substitutes: Array<{
-          player: {
-            id: number;
-            name: string;
-            number: number;
-            pos: string;
-            grid: string;
-          };
-        }>;
-        coach: {
-          id: number;
-          name: string;
-          photo: string;
-        };
-      };
-      away: {
-        team: {
-          id: number;
-          name: string;
-          logo: string;
-          colors: {
-            player: {
-              primary: string;
-              number: string;
-              border: string;
-            };
-            goalkeeper: {
-              primary: string;
-              number: string;
-              border: string;
-            };
-          };
-        };
-        formation: string;
-        startXI: Array<{
-          player: {
-            id: number;
-            name: string;
-            number: number;
-            pos: string;
-            grid: string;
-          };
-        }>;
-        substitutes: Array<{
-          player: {
-            id: number;
-            name: string;
-            number: number;
-            pos: string;
-            grid: string;
-          };
-        }>;
-        coach: {
-          id: number;
-          name: string;
-          photo: string;
-        };
-      };
+      home: TeamLineup;
+      away: TeamLineup;
     } | null;
   };
-  stats: Array<{
-    team: {
-      id: number;
-      name: string;
-      logo: string;
-    };
-    statistics: Array<{
-      type: string;
-      value: number | string | null;
-    }>;
-  }>;
-  standings: {
-    standings: {
-      league: {
-        id: number;
-        name: string;
-        logo: string;
-        standings: Array<Array<{
-          rank: number;
-          team: {
-            id: number;
-            name: string;
-            logo: string;
-          };
-          points: number;
-          goalsDiff: number;
-          group: string;
-          form: string;
-          status: string;
-          description: string;
-          all: {
-            played: number;
-            win: number;
-            draw: number;
-            lose: number;
-            goals: {
-              for: number;
-              against: number;
-            };
-          };
-        }>>;
-      };
-    };
-  } | null;
-  playersStats: Record<number, {
-    response: Array<{
-      player: {
-        id: number;
-        name: string;
-        photo: string;
-      };
-      statistics: Array<{
-        team: {
-          id: number;
-          name: string;
-          logo: string;
-        };
-        games: {
-          rating: string;
-          minutes: number;
-          captain: boolean;
-        };
-        goals: {
-          total: number;
-          assists: number;
-          conceded: number;
-          saves: number;
-        };
-        shots: {
-          total: number;
-          on: number;
-        };
-        passes: {
-          total: number;
-          key: number;
-          accuracy: string;
-        };
-        tackles: {
-          total: number;
-          blocks: number;
-          interceptions: number;
-        };
-        duels: {
-          total: number;
-          won: number;
-        };
-        dribbles: {
-          attempts: number;
-          success: number;
-        };
-        fouls: {
-          drawn: number;
-          committed: number;
-        };
-        cards: {
-          yellow: number;
-          red: number;
-        };
-        penalty: {
-          won: number;
-          scored: number;
-          missed: number;
-          saved: number;
-        };
-      }>;
-    }>;
-  }>;
+  stats?: TeamStats[];
+  standings?: StandingsData | null;
+  playersStats?: Record<number, PlayerStatsData>;
+  [key: string]: unknown;
 }
 
 interface TabContentProps {
   matchId: string;
   homeTeam: Team;
   awayTeam: Team;
-  matchData: MatchData;
+  matchData: MatchDataCommon;
 }
 
 export default function TabContent({ matchId, homeTeam, awayTeam, matchData }: TabContentProps) {
-  // 각 탭에 필요한 속성들을 전달 (null-safe 처리 강화)
-  const safeMatchData = matchData || {};
-  const safeLineups = safeMatchData.lineups || { response: null }; // lineups 기본값 설정
-  const safeStats = safeMatchData.stats || []; // stats 기본값 설정
-  const safeStandings = safeMatchData.standings || null; // standings 기본값 설정
-  const safePlayersStats = safeMatchData.playersStats || {}; // playersStats 기본값 설정
-  const safeEvents = safeMatchData.events || []; // events 기본값 설정
-
-  const tabComponents: { [key: string]: React.ReactNode } = {
-    events: <Events matchData={{ events: safeEvents }} />,
-    lineups: <Lineups matchData={{ 
-      homeTeam, 
-      awayTeam, 
-      lineups: safeLineups, // null-safe lineups 전달
-      events: safeEvents,
-      playersStats: safePlayersStats
-    }} />,
-    stats: <Stats matchData={{ 
-      stats: safeStats, // null-safe stats 전달
-      homeTeam,
-      awayTeam
-    }} />,
-    standings: <Standings matchData={{ 
-      matchId, 
-      homeTeam, 
-      awayTeam, 
-      standings: safeStandings // null-safe standings 전달
-    }} />,
+  // 기본 탭 설정 - 항상 events 탭을 기본값으로 사용
+  const [activeTab, setActiveTab] = useState<TabType>('events');
+  
+  // 로컬스토리지에서 저장된 탭 정보 복원 - 로컬스토리지 값은 무시하고 항상 첫 탭으로
+  useEffect(() => {
+    // 탭 상태 저장
+    localStorage.setItem('activeMatchTab', 'events');
+  }, []);
+  
+  // 각 탭 컴포넌트가 이미 로드되었는지 추적
+  const loadedTabs = useRef<Set<TabType>>(new Set(['events'])); // events는 기본적으로 로드
+  
+  // 탭 변경 핸들러
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    localStorage.setItem('activeMatchTab', tab);
+    
+    // 탭이 처음 로드되었음을 기록
+    loadedTabs.current.add(tab);
   };
 
-  // 클라이언트 컴포넌트에서 상태 관리
+  // 각 탭에 맞게 데이터 준비
+  const eventProps = { 
+    events: matchData.events || [],
+  };
+
+  const lineupProps = {
+    homeTeam: homeTeam || { id: 0, name: '', logo: '' }, 
+    awayTeam: awayTeam || { id: 0, name: '', logo: '' },
+    lineups: matchData.lineups || { response: null },
+    events: matchData.events || [],
+    playersStats: matchData.playersStats || {},
+  };
+
+  const statsProps = {
+    stats: matchData.stats || [],
+    homeTeam: homeTeam || { id: 0, name: '', logo: '' },
+    awayTeam: awayTeam || { id: 0, name: '', logo: '' },
+  };
+
+  const standingsProps = {
+    matchId: matchId || '',
+    homeTeam: homeTeam || { id: 0, name: '', logo: '' },
+    awayTeam: awayTeam || { id: 0, name: '', logo: '' },
+    standings: matchData.standings || null,
+  };
+  
+  // 각 탭 컴포넌트에 키를 추가하여 리렌더링 방지
   return (
-    <div className="mt-4">
-      <Suspense fallback={<LoadingSpinner />}>
-        <TabSelectorWrapper 
-          tabComponents={tabComponents}
-        />
-      </Suspense>
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      <TabSelectorWrapper 
+        activeTab={activeTab} 
+        onTabChange={handleTabChange} 
+      />
+      
+      <div className="p-4">
+        {/* 각 탭은 조건부 렌더링하되, 한번 로드된 후에는 유지합니다 */}
+        {activeTab === 'events' && <Events key="events-tab" matchData={eventProps} />}
+        
+        {activeTab === 'lineups' && (
+          <Lineups key="lineups-tab" matchData={lineupProps} />
+        )}
+        
+        {activeTab === 'stats' && (
+          <Stats key="stats-tab" matchData={statsProps} />
+        )}
+        
+        {activeTab === 'standings' && (
+          <Standings key="standings-tab" matchData={standingsProps} />
+        )}
+      </div>
     </div>
   );
 } 

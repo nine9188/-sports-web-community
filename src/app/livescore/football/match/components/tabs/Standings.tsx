@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo, useMemo } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { Team } from '../../types';
 
 interface Standing {
   rank: number;
@@ -52,30 +53,22 @@ interface StandingsData {
 interface StandingsProps {
   matchData: {
     matchId: string;
-    homeTeam: {
-      id: number;
-      name: string;
-      logo: string;
-    };
-    awayTeam: {
-      id: number;
-      name: string;
-      logo: string;
-    };
+    homeTeam: Team;
+    awayTeam: Team;
     standings: StandingsData | null;
     [key: string]: unknown;
   };
 }
 
-// 팀 로고 컴포넌트
-const TeamLogo = ({ teamName, originalLogo }: { teamName: string; originalLogo: string }) => {
+// 팀 로고 컴포넌트 - 메모이제이션
+const TeamLogo = memo(({ teamName, originalLogo }: { teamName: string; originalLogo: string }) => {
   const [imgError, setImgError] = useState(false);
   const leagueName = teamName || 'Team';
 
   return (
     <div className="w-6 h-6 flex-shrink-0 relative">
       <Image
-        src={imgError ? '/placeholder-team.png' : originalLogo}
+        src={imgError ? '/placeholder-team.png' : originalLogo || '/placeholder-team.png'}
         alt={leagueName}
         fill
         sizes="24px"
@@ -88,24 +81,30 @@ const TeamLogo = ({ teamName, originalLogo }: { teamName: string; originalLogo: 
       />
     </div>
   );
-};
+});
+
+TeamLogo.displayName = 'TeamLogo';
 
 // 테이블 스타일 정의 추가
 const tableHeaderStyle = "px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider";
 const tableCellStyle = "px-3 py-2 whitespace-nowrap text-sm text-gray-900";
 
-export default function Standings({ matchData }: StandingsProps) {
+function Standings({ matchData }: StandingsProps) {
   const router = useRouter();
   const [homeTeamId, setHomeTeamId] = useState<number | null>(null);
   const [awayTeamId, setAwayTeamId] = useState<number | null>(null);
-  const standings = matchData.standings;
+  
+  // 캐싱을 위해 standings 데이터 메모이제이션
+  const standings = useMemo(() => matchData.standings, [matchData.standings]);
+  const homeTeam = matchData.homeTeam || { id: 0, name: '', logo: '' };
+  const awayTeam = matchData.awayTeam || { id: 0, name: '', logo: '' };
   
   useEffect(() => {
-    if (matchData.homeTeam?.id && matchData.awayTeam?.id) {
-      setHomeTeamId(matchData.homeTeam.id);
-      setAwayTeamId(matchData.awayTeam.id);
+    if (homeTeam?.id && awayTeam?.id) {
+      setHomeTeamId(homeTeam.id);
+      setAwayTeamId(awayTeam.id);
     }
-  }, [matchData.homeTeam?.id, matchData.awayTeam?.id]);
+  }, [homeTeam?.id, awayTeam?.id]);
 
   const getFormStyle = (result: string) => {
     switch(result) {
@@ -169,14 +168,14 @@ export default function Standings({ matchData }: StandingsProps) {
         <div className="w-8 h-8 relative flex-shrink-0">
           <Image
             src={leagueData.logo || '/placeholder-league.png'}
-            alt={leagueData.name}
+            alt={leagueData.name || '리그'}
             fill
             sizes="32px"
             className="object-contain"
           />
         </div>
         <div>
-          <h2 className="text-lg font-bold">{leagueData.name}</h2>
+          <h2 className="text-lg font-bold">{leagueData.name || '리그 정보'}</h2>
           <p className="text-sm text-gray-600"></p>
         </div>
       </div>
@@ -237,11 +236,11 @@ export default function Standings({ matchData }: StandingsProps) {
                       <td className={tableCellStyle}>
                         <div className="flex items-center gap-2">
                           <TeamLogo 
-                            teamName={standing.team.name}
-                            originalLogo={standing.team.logo}
+                            teamName={standing.team.name || ''}
+                            originalLogo={standing.team.logo || ''}
                           />
                           <span className="flex items-center">
-                            {standing.team.name}
+                            {standing.team.name || '팀 이름 없음'}
                             {isHomeTeam && (
                               <span className="ml-2 text-xs font-bold px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded">홈</span>
                             )}
@@ -251,14 +250,14 @@ export default function Standings({ matchData }: StandingsProps) {
                           </span>
                         </div>
                       </td>
-                      <td className={`${tableCellStyle} text-center`}>{standing.all.played}</td>
-                      <td className={`${tableCellStyle} text-center`}>{standing.all.win}</td>
-                      <td className={`${tableCellStyle} text-center`}>{standing.all.draw}</td>
-                      <td className={`${tableCellStyle} text-center`}>{standing.all.lose}</td>
-                      <td className={`${tableCellStyle} text-center`}>{standing.all.goals.for}</td>
-                      <td className={`${tableCellStyle} text-center`}>{standing.all.goals.against}</td>
-                      <td className={`${tableCellStyle} text-center`}>{standing.goalsDiff}</td>
-                      <td className={`${tableCellStyle} text-center font-semibold`}>{standing.points}</td>
+                      <td className={`${tableCellStyle} text-center`}>{standing.all?.played || 0}</td>
+                      <td className={`${tableCellStyle} text-center`}>{standing.all?.win || 0}</td>
+                      <td className={`${tableCellStyle} text-center`}>{standing.all?.draw || 0}</td>
+                      <td className={`${tableCellStyle} text-center`}>{standing.all?.lose || 0}</td>
+                      <td className={`${tableCellStyle} text-center`}>{standing.all?.goals?.for || 0}</td>
+                      <td className={`${tableCellStyle} text-center`}>{standing.all?.goals?.against || 0}</td>
+                      <td className={`${tableCellStyle} text-center`}>{standing.goalsDiff || 0}</td>
+                      <td className={`${tableCellStyle} text-center font-semibold`}>{standing.points || 0}</td>
                       <td className={`${tableCellStyle} text-center`}>
                         <div className="flex justify-center gap-1">
                           {standing.form?.split('').map((result, idx) => (
@@ -313,3 +312,5 @@ export default function Standings({ matchData }: StandingsProps) {
     </div>
   );
 }
+
+export default memo(Standings);

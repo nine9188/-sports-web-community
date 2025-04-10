@@ -3,8 +3,10 @@ import TabContent from '../components/TabContent';
 import MatchHeader from '../components/MatchHeader';
 import styles from '../styles/mobile.module.css';
 
-// 동적 렌더링 강제 설정 추가
+// 동적 렌더링 강제 설정 추가 - 실시간 데이터이므로 필요
 export const dynamic = 'force-dynamic';
+export const fetchCache = 'default-no-store'; // 캐싱 방지
+export const revalidate = 0; // 항상 새로운 데이터 요청
 
 // 선수 정보 인터페이스
 interface Player {
@@ -34,14 +36,19 @@ async function fetchMatchData(id: string) {
   const host = headersList.get('host');
   const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
   
-  const response = await fetch(`${protocol}://${host}/api/livescore/football/matches/${id}`, {
-    cache: 'no-store'
-  });
-  
-  if (!response.ok) {
-    throw new Error('데이터를 가져오는데 실패했습니다');
+  try {
+    const response = await fetch(`${protocol}://${host}/api/livescore/football/matches/${id}`, {
+      cache: 'no-store'
+    });
+    
+    if (!response.ok) {
+      throw new Error('데이터를 가져오는데 실패했습니다');
+    }
+    return response.json();
+  } catch (error) {
+    console.error('Match data fetch error:', error);
+    throw error;
   }
-  return response.json();
 }
 
 async function fetchMatchEvents(id: string) {
@@ -177,7 +184,7 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
     // 라인업 데이터 먼저 가져오기 (선수 통계를 위해)
     const lineupsData = await fetchMatchLineups(matchId);
     
-    // 나머지 데이터 병렬로 가져오기
+    // 나머지 데이터 병렬로 가져오기 (비차단적으로 처리)
     const [eventsData, statsData, standingsData, playersStatsData] = await Promise.all([
       fetchMatchEvents(matchId),
       fetchMatchStats(matchId),
@@ -198,51 +205,51 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
       hour12: true
     });
     
-    // 데이터 구조 확인 및 변환
+    // 안전한 데이터 구조 확인 및 변환
     const formattedData = {
       league: {
-        id: data.league.id,
-        name: data.league.name,
-        logo: data.league.logo || '/placeholder-league.png'
+        id: data.league?.id || 0,
+        name: data.league?.name || '',
+        logo: data.league?.logo || '/placeholder-league.png'
       },
       status: {
-        long: data.fixture.status.long,
-        short: data.fixture.status.short,
-        elapsed: data.fixture.status.elapsed,
+        long: data.fixture?.status?.long || '',
+        short: data.fixture?.status?.short || '',
+        elapsed: data.fixture?.status?.elapsed || null,
       },
       fixture: {
-        id: data.fixture.id,
+        id: data.fixture?.id || 0,
         date: formattedDate,
         time: formattedTime,
-        timestamp: data.fixture.timestamp,
+        timestamp: data.fixture?.timestamp || 0,
       },
       teams: {
         home: {
-          id: data.teams.home.id,
-          name: data.teams.home.name,
-          logo: data.teams.home.logo || '/placeholder-team.png',
+          id: data.teams?.home?.id || 0,
+          name: data.teams?.home?.name || '',
+          logo: data.teams?.home?.logo || '/placeholder-team.png',
           formation: data.lineups?.[0]?.formation || '',
         },
         away: {
-          id: data.teams.away.id,
-          name: data.teams.away.name,
-          logo: data.teams.away.logo || '/placeholder-team.png',
+          id: data.teams?.away?.id || 0,
+          name: data.teams?.away?.name || '',
+          logo: data.teams?.away?.logo || '/placeholder-team.png',
           formation: data.lineups?.[1]?.formation || '',
         },
       },
       score: {
         halftime: {
-          home: data.score.halftime.home,
-          away: data.score.halftime.away,
+          home: data.score?.halftime?.home || 0,
+          away: data.score?.halftime?.away || 0,
         },
         fulltime: {
-          home: data.score.fulltime.home,
-          away: data.score.fulltime.away,
+          home: data.score?.fulltime?.home || 0,
+          away: data.score?.fulltime?.away || 0,
         },
       },
       goals: {
-        home: data.goals.home,
-        away: data.goals.away,
+        home: data.goals?.home || 0,
+        away: data.goals?.away || 0,
       },
     };
 
@@ -270,7 +277,6 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
           homeTeam={formattedData.teams.home}
           awayTeam={formattedData.teams.away}
           matchData={{
-            data: data,
             events: eventsData.events || [],
             lineups: lineupsData,
             stats: statsData.response || [],
@@ -280,7 +286,8 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
         />
       </div>
     );
-  } catch {
+  } catch (error) {
+    console.error('Match page error:', error);
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-sm p-6 text-center">

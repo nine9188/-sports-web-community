@@ -3,18 +3,40 @@
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '../ui/button';
 import AuthSection from './sidebar/auth-section';
-// import LeagueStandings from './sidebar/LeagueStandings';
-import ServerLeagueStandings from './sidebar/ServerLeagueStandings';
+import { Suspense } from 'react';
 import { ReactNode } from 'react';
+
+// 로딩 중 표시할 스켈레톤 UI
+function LeagueStandingsSkeleton() {
+  return (
+    <div className="border rounded-md overflow-hidden hidden md:block animate-pulse">
+      <div className="bg-slate-800 text-white py-2 px-3 text-sm font-medium">
+        축구 팀순위
+      </div>
+      <div className="flex border-b">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="flex-1 h-7 bg-gray-200"></div>
+        ))}
+      </div>
+      <div className="p-3 space-y-2">
+        {[...Array(10)].map((_, i) => (
+          <div key={i} className="h-5 w-full bg-gray-200 rounded"></div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function Sidebar({
   isOpen,
   onClose,
   children,
+  leagueStandingsComponent,
 }: {
   isOpen: boolean;
   onClose: () => void;
   children?: ReactNode;
+  leagueStandingsComponent?: ReactNode;
 }) {
   return (
     <>
@@ -68,10 +90,11 @@ export default function Sidebar({
             </div>
           </div>
 
-          {/* 축구 리그 순위 위젯 */}
+          {/* 축구 리그 순위 위젯 - 서버 컴포넌트 사용 */}
           <div className="mb-4">
-            {/* <LeagueStandings /> */}
-            <ServerLeagueStandings />
+            <Suspense fallback={<LeagueStandingsSkeleton />}>
+              {leagueStandingsComponent}
+            </Suspense>
           </div>
         </div>
       </div>

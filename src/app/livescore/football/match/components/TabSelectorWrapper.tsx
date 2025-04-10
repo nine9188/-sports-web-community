@@ -1,20 +1,16 @@
 'use client';
 
-import { useState } from 'react';
 import TabSelector from './TabSelector';
+import { TabType } from '../types';
 
 // 클라이언트 컴포넌트 래퍼
 interface TabSelectorWrapperProps {
-  tabComponents: { [key: string]: React.ReactNode };
+  activeTab: TabType;
+  onTabChange: (tab: TabType) => void;
 }
 
-export default function TabSelectorWrapper({ tabComponents }: TabSelectorWrapperProps) {
-  const [activeTab, setActiveTab] = useState('events');
-
+export default function TabSelectorWrapper({ activeTab, onTabChange }: TabSelectorWrapperProps) {
   return (
-    <>
-      <TabSelector onTabChange={setActiveTab} initialTab="events" />
-      {tabComponents[activeTab]}
-    </>
+    <TabSelector onTabChange={onTabChange} initialTab={activeTab} />
   );
 } 

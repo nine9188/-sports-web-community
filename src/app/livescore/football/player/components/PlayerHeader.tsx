@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { PlayerData } from '../../types/player';
+import { PlayerData } from '../types/player';
 
 // 필요한 타입 정의
 interface TeamData {

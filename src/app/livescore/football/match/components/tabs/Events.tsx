@@ -1,36 +1,15 @@
 'use client';
 
+import { memo } from 'react';
 import Image from 'next/image';
 import { FaFutbol } from 'react-icons/fa';
 import { BsCardText, BsCardHeading } from "react-icons/bs";
 import { IoMdSwap } from 'react-icons/io';
-
-interface Event {
-  time: {
-    elapsed: number;
-    extra?: number | null;
-  };
-  team: {
-    id: number;
-    name: string;
-    logo: string;
-  };
-  player: {
-    id: number;
-    name: string;
-  };
-  assist?: {
-    id: number | null;
-    name: string | null;
-  };
-  type: string;
-  detail: string;
-  comments?: string | null;
-}
+import { MatchEvent } from '../../types';
 
 interface EventsProps {
   matchData: {
-    events: Event[];
+    events?: MatchEvent[];
     data?: Record<string, unknown>;
     lineups?: Record<string, unknown>;
     stats?: Record<string, unknown>;
@@ -39,8 +18,10 @@ interface EventsProps {
   };
 }
 
-export default function Events({ matchData }: EventsProps) {
+// 메모이제이션을 적용하여 불필요한 리렌더링 방지
+function Events({ matchData }: EventsProps) {
   const iconClass = "text-xl";
+  const events = matchData.events || [];
 
   // 이벤트 타입에 따른 아이콘 렌더링
   const renderEventIcon = (type: string, detail: string) => {
@@ -75,7 +56,7 @@ export default function Events({ matchData }: EventsProps) {
     );
   };
 
-  if (!matchData.events.length) {
+  if (!events.length) {
     return (
       <div className="flex justify-center items-center py-16">
         <div className="text-center">
@@ -102,38 +83,38 @@ export default function Events({ matchData }: EventsProps) {
 
   return (
     <div className="space-y-4">
-      {matchData.events.map((event, index) => (
+      {events.map((event, index) => (
         <div 
-          key={`${event.time.elapsed}-${index}`}
+          key={`${event.time?.elapsed || 0}-${index}`}
           className="flex gap-4 p-3 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
         >
           <div className="w-16 text-right text-sm text-gray-600 flex-shrink-0">
             <span>
-              {event.time.elapsed}
-              {event.time.extra && event.time.extra > 0 && `+${event.time.extra}`}′
+              {event.time?.elapsed || 0}
+              {event.time?.extra && event.time.extra > 0 && `+${event.time.extra}`}′
             </span>
           </div>
           
           <div className="flex-1">
             <div className="flex gap-3">
               <div className="mt-1 flex-shrink-0 w-5 h-5 flex items-center justify-center">
-                {renderEventIcon(event.type, event.detail)}
+                {renderEventIcon(event.type || '', event.detail || '')}
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <TeamLogo logo={event.team.logo} name={event.team.name} />
-                  <span className="text-sm text-gray-600">{event.team.name}</span>
+                  <TeamLogo logo={event.team?.logo || ''} name={event.team?.name || ''} />
+                  <span className="text-sm text-gray-600">{event.team?.name || 'Unknown Team'}</span>
                 </div>
                 <p className="font-medium">
-                  {event.player.name}
-                  {event.assist && event.assist.name && (
+                  {event.player?.name || 'Unknown Player'}
+                  {event.assist?.name && (
                     <span className="text-sm text-gray-500 ml-1">
                       (어시스트: {event.assist.name})
                     </span>
                   )}
                 </p>
                 <p className="text-sm text-gray-600">
-                  {event.detail}
+                  {event.detail || ''}
                   {event.comments && ` - ${event.comments}`}
                 </p>
               </div>
@@ -144,3 +125,6 @@ export default function Events({ matchData }: EventsProps) {
     </div>
   );
 }
+
+// 메모이제이션된 컴포넌트 내보내기
+export default memo(Events);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/app/lib/supabase-client';
 import { ChevronRight, ChevronDown } from 'lucide-react';
@@ -17,57 +17,75 @@ interface Board {
 export default function BoardNavigation() {
   const [boards, setBoards] = useState<Board[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [expandedBoards, setExpandedBoards] = useState<Record<string, boolean>>({});
+  const fetchAttempts = useRef(0);
+  const dataLoaded = useRef(false);
 
   // 게시판 데이터 처리 함수
   const processBoards = useCallback((boardsData: Board[]) => {
-    // 계층 구조로 데이터 변환
-    const boardsMap: Record<string, Board> = {};
-    const rootBoards: Board[] = [];
-    
-    // 모든 게시판을 맵에 추가
-    boardsData.forEach(board => {
-      boardsMap[board.id] = { ...board, children: [] };
-    });
-    
-    // 부모-자식 관계 설정
-    Object.values(boardsMap).forEach(board => {
-      if (board.parent_id && boardsMap[board.parent_id]) {
-        // 부모가 있으면 부모의 children에 추가
-        if (!boardsMap[board.parent_id].children) {
-          boardsMap[board.parent_id].children = [];
+    // 빈 배열 체크 추가
+    if (!boardsData || boardsData.length === 0) {
+      console.warn("BoardNavigation: 받은 게시판 데이터가 없습니다.");
+      return;
+    }
+
+    try {
+      // 계층 구조로 데이터 변환
+      const boardsMap: Record<string, Board> = {};
+      const rootBoards: Board[] = [];
+      
+      // 모든 게시판을 맵에 추가
+      boardsData.forEach(board => {
+        boardsMap[board.id] = { ...board, children: [] };
+      });
+      
+      // 부모-자식 관계 설정
+      Object.values(boardsMap).forEach(board => {
+        if (board.parent_id && boardsMap[board.parent_id]) {
+          // 부모가 있으면 부모의 children에 추가
+          if (!boardsMap[board.parent_id].children) {
+            boardsMap[board.parent_id].children = [];
+          }
+          boardsMap[board.parent_id].children!.push(board);
+        } else if (!board.parent_id) {
+          // 부모가 없으면 루트 게시판
+          rootBoards.push(board);
         }
-        boardsMap[board.parent_id].children!.push(board);
-      } else if (!board.parent_id) {
-        // 부모가 없으면 루트 게시판
-        rootBoards.push(board);
-      }
-    });
-    
-    // 최상위 게시판 순서 정렬 - display_order 기준
-    rootBoards.sort((a, b) => {
-      // 먼저 display_order로 정렬
-      if (a.display_order !== b.display_order) {
-        return a.display_order - b.display_order;
-      }
-      // 동일한 display_order 값을 가질 경우 이름으로 정렬
-      return a.name.localeCompare(b.name);
-    });
-    
-    // 기본적으로 모든 게시판 펼치기
-    const initialExpandedState: Record<string, boolean> = {};
-    Object.values(boardsMap).forEach(board => {
-      initialExpandedState[board.id] = true;
-    });
-    
-    setExpandedBoards(initialExpandedState);
-    setBoards(rootBoards);
+      });
+      
+      // 최상위 게시판 순서 정렬 - display_order 기준
+      rootBoards.sort((a, b) => {
+        // 먼저 display_order로 정렬
+        if (a.display_order !== b.display_order) {
+          return a.display_order - b.display_order;
+        }
+        // 동일한 display_order 값을 가질 경우 이름으로 정렬
+        return a.name.localeCompare(b.name);
+      });
+      
+      // 기본적으로 모든 게시판 펼치기
+      const initialExpandedState: Record<string, boolean> = {};
+      Object.values(boardsMap).forEach(board => {
+        initialExpandedState[board.id] = true;
+      });
+      
+      setExpandedBoards(initialExpandedState);
+      setBoards(rootBoards);
+      dataLoaded.current = true;  // 데이터 로드 완료 표시
+    } catch (err) {
+      console.error("게시판 데이터 처리 중 오류:", err);
+      setError("게시판 데이터 처리 중 오류가 발생했습니다");
+    }
   }, []);
 
   // 게시판 데이터 가져오기 함수를 useCallback으로 메모이제이션
   const fetchBoards = useCallback(async () => {
     try {
+      setLoading(true);
+      setError(null);
       const supabase = createClient();
+      
       const { data, error } = await supabase
         .from('boards')
         .select('id, name, parent_id, display_order, slug')
@@ -76,23 +94,46 @@ export default function BoardNavigation() {
         
       if (error) {
         console.error('게시판 불러오기 오류:', error);
+        setError("게시판을 불러오는 데 실패했습니다");
         return;
       }
       
-      processBoards(data || []);
+      if (!data || data.length === 0) {
+        fetchAttempts.current += 1;
+        if (fetchAttempts.current <= 3) {
+          // 최대 3번까지 재시도
+          console.warn(`BoardNavigation: 게시판 데이터가 없습니다. 재시도 (${fetchAttempts.current}/3)`);
+          setTimeout(fetchBoards, 1000); // 1초 후 재시도
+          return;
+        } else {
+          setError("게시판 데이터를 불러올 수 없습니다");
+        }
+      } else {
+        processBoards(data);
+      }
     } catch (error) {
       console.error('게시판 불러오기 중 오류 발생:', error);
+      setError("게시판 데이터 로딩 중 오류가 발생했습니다");
     } finally {
       setLoading(false);
     }
   }, [processBoards]);
 
-  // useEffect에서 항상 데이터 페칭하도록 수정
+  // useEffect에서 마운트시 데이터 페칭
   useEffect(() => {
-    fetchBoards();
+    // 브라우저 환경이고 아직 데이터가 로드되지 않았으면 데이터 가져오기
+    if (typeof window !== 'undefined' && !dataLoaded.current) {
+      fetchBoards();
+    }
+    
+    // 상태 및 ref 초기화 함수 
+    return () => {
+      dataLoaded.current = false;
+      fetchAttempts.current = 0;
+    };
   }, [fetchBoards]);
 
-  // 게시판 접기 (펼침 상태가 기본이므로 접기만 가능)
+  // 게시판 접기/펼치기
   const toggleCollapse = (e: React.MouseEvent, boardId: string) => {
     e.preventDefault();
     e.stopPropagation();
@@ -163,27 +204,6 @@ export default function BoardNavigation() {
     );
   };
 
-  // 모든 게시판 펼치기 버튼
-  // 기능 확장시 사용 예정이므로 주석 처리
-  /*
-  const expandAllBoards = () => {
-    const allExpanded: Record<string, boolean> = {};
-    
-    // 모든 게시판을 순회하며 펼침 상태로 설정
-    const setAllExpanded = (boardList: Board[]) => {
-      boardList.forEach(board => {
-        allExpanded[board.id] = true;
-        if (board.children && board.children.length > 0) {
-          setAllExpanded(board.children);
-        }
-      });
-    };
-    
-    setAllExpanded(boards);
-    setExpandedBoards(allExpanded);
-  };
-  */
-
   return (
     <div className="space-y-4">
       {loading ? (
@@ -193,10 +213,27 @@ export default function BoardNavigation() {
           <div className="h-7 bg-gray-100 animate-pulse rounded mb-1.5"></div>
           <div className="h-7 bg-gray-100 animate-pulse rounded"></div>
         </div>
+      ) : error ? (
+        // 오류 메시지 표시
+        <div className="p-1.5 text-center text-red-500 text-sm">
+          {error}
+          <button 
+            onClick={() => fetchBoards()} 
+            className="block mx-auto mt-2 text-blue-500 text-xs underline"
+          >
+            다시 시도
+          </button>
+        </div>
       ) : boards.length === 0 ? (
         // 게시판이 없을 때
         <div className="p-1.5 text-center text-gray-500 text-sm">
           게시판이 없습니다
+          <button 
+            onClick={() => fetchBoards()} 
+            className="block mx-auto mt-2 text-blue-500 text-xs underline"
+          >
+            새로고침
+          </button>
         </div>
       ) : (
         // 계층형 구조로 게시판 렌더링

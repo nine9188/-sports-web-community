@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo, memo, useEffect } from 'react';
 import Image from 'next/image';
 
 // 필요한 인터페이스 정의
@@ -101,422 +101,470 @@ interface PlayerStatsProps {
   preloadedStats?: PlayerStatistic[];
 }
 
+// 리그 로고 컴포넌트 - 메모이제이션 적용
+const LeagueLogo = memo(({ logo, name }: { logo: string; name: string }) => {
+  const [imgError, setImgError] = useState(false);
+  
+  return (
+    <div className="w-8 h-8 relative flex-shrink-0">
+      <Image
+        src={imgError ? '/placeholder-league.png' : logo || '/placeholder-league.png'}
+        alt={name || '리그'}
+        width={32}
+        height={32}
+        className="object-contain"
+        onError={() => setImgError(true)}
+        unoptimized
+      />
+    </div>
+  );
+});
+
+LeagueLogo.displayName = 'LeagueLogo';
+
+// 팀 로고 컴포넌트 - 메모이제이션 적용
+const TeamLogo = memo(({ logo, name }: { logo: string; name: string }) => {
+  const [imgError, setImgError] = useState(false);
+  
+  return (
+    <div className="w-8 h-8 relative flex-shrink-0">
+      <Image
+        src={imgError ? '/placeholder-team.png' : logo || '/placeholder-team.png'}
+        alt={name || '팀'}
+        width={32}
+        height={32}
+        className="object-contain"
+        onError={() => setImgError(true)}
+        unoptimized
+      />
+    </div>
+  );
+});
+
+TeamLogo.displayName = 'TeamLogo';
+
 export default function PlayerStats({ 
   statistics: initialStatistics, 
   playerId,
   preloadedSeasons,
   preloadedStats
 }: PlayerStatsProps) {
-  // 초기 통계 데이터에서 시즌 정보 추출
-  const initialSeason = initialStatistics && Array.isArray(initialStatistics) && initialStatistics.length > 0 && initialStatistics[0].league
-    ? initialStatistics[0].league.season || 2024
-    : 2024; // 기본값으로 2024 사용
-  
-  const [allStatistics, setAllStatistics] = useState<PlayerStatistic[]>(Array.isArray(initialStatistics) ? initialStatistics : []);
-  const [filteredStatistics, setFilteredStatistics] = useState<PlayerStatistic | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [selectedLeague, setSelectedLeague] = useState<number | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [seasons, setSeasons] = useState<number[]>(preloadedSeasons || []);
+  const [selectedSeason, setSelectedSeason] = useState<number | null>(null);
+  const [statistics, setStatistics] = useState<PlayerStatistic[]>(initialStatistics || []);
   const [error, setError] = useState<string | null>(null);
-  const [selectedSeason, setSelectedSeason] = useState<number>(initialSeason);
-  const [selectedLeague, setSelectedLeague] = useState<string>('');
-  const [availableSeasons, setAvailableSeasons] = useState<number[]>(preloadedSeasons || []);
-  const [availableLeagues, setAvailableLeagues] = useState<{id: number, name: string, logo: string, country: string}[]>([]);
-  const [loadingSeasons, setLoadingSeasons] = useState(true);
   
-  // 선수의 모든 시즌 정보 가져오기
-  useEffect(() => {
-    const fetchPlayerSeasons = async () => {
-      if (!playerId) return;
-      
-      // 이미 preloadedSeasons이 있으면 API 호출 안함
-      if (preloadedSeasons && preloadedSeasons.length > 0) {
-        setAvailableSeasons(preloadedSeasons);
-        setLoadingSeasons(false);
-        return;
-      }
-      
-      try {
-        setLoadingSeasons(true);
-        
-        const response = await fetch(`/api/livescore/football/players/${playerId}/seasons`);
-        
-        if (!response.ok) {
-          throw new Error('시즌 데이터를 가져오는데 실패했습니다.');
-        }
-        
-        const data = await response.json();
-        
-        if (data.seasons && data.seasons.length > 0) {
-          // 내림차순 정렬 (최신 시즌이 먼저 오도록)
-          const sortedSeasons = [...data.seasons].sort((a, b) => b - a);
-          
-          setAvailableSeasons(sortedSeasons);
-          
-          // 초기 통계 데이터의 시즌이 있는지 확인
-          const initialSeasonIndex = sortedSeasons.findIndex(season => season === initialSeason);
-          
-          // 초기 시즌이 있으면 선택, 없으면 가장 최근 시즌 선택
-          if (initialSeasonIndex !== -1) {
-            setSelectedSeason(initialSeason);
-          } else if (sortedSeasons.includes(2024)) {
-            // 2024 시즌이 있으면 선택
-            setSelectedSeason(2024);
-          } else {
-            setSelectedSeason(sortedSeasons[0]);
-          }
-        }
-      } catch (err) {
-        console.error('시즌 데이터 로딩 오류:', err);
-      } finally {
-        setLoadingSeasons(false);
-      }
-    };
+  // 통계 데이터 캐싱을 위한 상태
+  const [loadedStats, setLoadedStats] = useState<Record<string, PlayerStatistic[]>>({});
+  
+  // 리그 목록 메모이제이션
+  const leagues = useMemo(() => {
+    // 빈 경우 처리
+    if (!statistics || statistics.length === 0) return [];
     
-    fetchPlayerSeasons();
-  }, [playerId, initialSeason, preloadedSeasons]);
-
-  // 선택한 시즌에 따라 통계 데이터 가져오기
-  useEffect(() => {
-    const fetchStatistics = async () => {
-      if (!playerId || !selectedSeason) return;
-      
-      // preloadedStats가 있고 현재 선택된 시즌과 일치하면 API 호출 안함
-      if (preloadedStats && preloadedStats.length > 0 && selectedSeason === initialSeason) {
-        setAllStatistics(preloadedStats);
-        
-        // 사용 가능한 리그 목록 추출
-        const leagues = preloadedStats
-          .filter(stat => stat.league && stat.league.id != null)
-          .map(stat => ({
-            id: stat.league.id,
-            name: stat.league.name,
-            country: stat.league.country,
-            logo: stat.league.logo
-          }));
-        
-        // 중복 제거
-        const uniqueLeagues = leagues.filter((league: { id: number, name: string, logo: string, country: string }, index: number, self: { id: number, name: string, logo: string, country: string }[]) => 
-          index === self.findIndex((l: { id: number }) => l.id === league.id)
-        );
-        
-        setAvailableLeagues(uniqueLeagues);
-        
-        // 첫 번째 리그 선택
-        if (uniqueLeagues.length > 0) {
-          setSelectedLeague(uniqueLeagues[0].id.toString());
-          
-          // 첫 번째 리그의 통계 데이터 필터링
-          const firstLeagueStats = preloadedStats.find(
-            stat => stat.league && stat.league.id === uniqueLeagues[0].id
-          );
-          
-          setFilteredStatistics(firstLeagueStats || null);
-        }
-        
-        return;
+    // 중복 제거된 리그 목록
+    return [...new Map(statistics.map(stat => [
+      stat.league.id,
+      {
+        id: stat.league.id,
+        name: stat.league.name,
+        logo: stat.league.logo || '',
+        country: stat.league.country
       }
+    ])).values()];
+  }, [statistics]);
+  
+  // 선택된 리그의 통계 데이터 메모이제이션
+  const filteredStats = useMemo(() => {
+    if (!selectedLeague) return statistics;
+    return statistics.filter(stat => stat.league.id === selectedLeague);
+  }, [statistics, selectedLeague]);
+  
+  // 시즌 목록 가져오기
+  useEffect(() => {
+    if (preloadedSeasons && preloadedSeasons.length > 0) {
+      setSeasons(preloadedSeasons);
+      setSelectedSeason(preloadedSeasons[0]);
+    } else {
+      const fetchPlayerSeasons = async () => {
+        try {
+          setLoading(true);
+          const response = await fetch(`/api/livescore/football/players/${playerId}/seasons`);
+          
+          if (!response.ok) {
+            throw new Error('시즌 정보를 불러오는데 실패했습니다');
+          }
+          
+          const data = await response.json();
+          
+          if (data && Array.isArray(data.seasons)) {
+            // 내림차순 정렬 (최신 시즌 먼저)
+            const sortedSeasons = [...data.seasons].sort((a, b) => b - a);
+            setSeasons(sortedSeasons);
+            
+            // 첫 번째 시즌 자동 선택
+            if (sortedSeasons.length > 0) {
+              setSelectedSeason(sortedSeasons[0]);
+            }
+          }
+        } catch (err) {
+          console.error('시즌 데이터 로딩 오류:', err);
+          setError('시즌 정보를 불러오는데 실패했습니다');
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      fetchPlayerSeasons();
+    }
+  }, [playerId, preloadedSeasons]);
+  
+  // 선택된 시즌에 따른 통계 데이터 가져오기
+  useEffect(() => {
+    if (!selectedSeason) return;
+    
+    // 이미 캐시된 데이터가 있으면 사용
+    const cacheKey = `${playerId}-${selectedSeason}`;
+    if (loadedStats[cacheKey]) {
+      setStatistics(loadedStats[cacheKey]);
+      return;
+    }
+    
+    // 첫 로드시 초기 데이터가 있으면 사용
+    if (preloadedStats && preloadedStats.length > 0 && !Object.keys(loadedStats).length) {
+      setStatistics(preloadedStats);
+      setLoadedStats(prev => ({ ...prev, [cacheKey]: preloadedStats }));
+      return;
+    }
+    
+    const fetchStatistics = async () => {
+      setLoading(true);
+      setError(null);
       
       try {
-        setLoading(true);
-        setError(null);
-        setSelectedLeague(''); // 시즌이 변경되면 리그 선택 초기화
-        
-        const url = `/api/livescore/football/players/${playerId}/stats?season=${selectedSeason}`;
-        const response = await fetch(url);
+        const response = await fetch(`/api/livescore/football/players/${playerId}/stats?season=${selectedSeason}`);
         
         if (!response.ok) {
-          if (response.status === 404) {
-            setAllStatistics([]);
-            setFilteredStatistics(null);
-            setAvailableLeagues([]);
-            setError('해당 시즌에 대한 통계 데이터가 없습니다.');
-          } else {
-            throw new Error('통계 데이터를 가져오는데 실패했습니다.');
-          }
-          return;
+          throw new Error('통계 데이터를 불러오는데 실패했습니다');
         }
         
         const data = await response.json();
         
-        if (!data.statistics || data.statistics.length === 0) {
-          setAllStatistics([]);
-          setFilteredStatistics(null);
-          setAvailableLeagues([]);
-          setError('해당 시즌에 대한 통계 데이터가 없습니다.');
+        if (data && Array.isArray(data.statistics)) {
+          setStatistics(data.statistics);
+          // 캐시에 데이터 저장
+          setLoadedStats(prev => ({ 
+            ...prev, 
+            [cacheKey]: data.statistics 
+          }));
         } else {
-          // 모든 통계 데이터 저장
-          setAllStatistics(data.statistics);
-          
-          // 사용 가능한 리그 목록 추출
-          const leagues = data.statistics
-            .filter((stat: PlayerStatistic) => stat.league && stat.league.id != null)
-            .map((stat: PlayerStatistic) => ({
-              id: stat.league.id,
-              name: stat.league.name,
-              country: stat.league.country,
-              logo: stat.league.logo
-            }));
-          
-          // 중복 제거
-          const uniqueLeagues = leagues.filter((league: { id: number, name: string, logo: string, country: string }, index: number, self: { id: number, name: string, logo: string, country: string }[]) => 
-            index === self.findIndex((l: { id: number }) => l.id === league.id)
-          );
-          
-          setAvailableLeagues(uniqueLeagues);
-          
-          // 첫 번째 리그 선택
-          if (uniqueLeagues.length > 0) {
-            setSelectedLeague(uniqueLeagues[0].id.toString());
-            
-            // 첫 번째 리그의 통계 데이터 필터링
-            const firstLeagueStats = data.statistics.find(
-              (stat: PlayerStatistic) => stat.league && stat.league.id === uniqueLeagues[0].id
-            );
-            
-            setFilteredStatistics(firstLeagueStats || null);
-          }
+          setStatistics([]);
         }
       } catch (err) {
         console.error('통계 데이터 로딩 오류:', err);
-        setError('통계 데이터를 가져오는데 실패했습니다.');
+        setError('통계 데이터를 불러오는데 실패했습니다');
+        setStatistics([]);
       } finally {
         setLoading(false);
       }
     };
     
     fetchStatistics();
-  }, [playerId, selectedSeason, initialSeason, preloadedStats]);
-
-  // 선택한 리그에 따라 통계 데이터 필터링
-  useEffect(() => {
-    if (!selectedLeague || !allStatistics || allStatistics.length === 0) return;
-    
-    const leagueId = parseInt(selectedLeague);
-    const leagueStats = allStatistics.find(
-      stat => stat.league && stat.league.id === leagueId
-    );
-    
-    setFilteredStatistics(leagueStats || null);
-  }, [selectedLeague, allStatistics]);
-
-  if (loadingSeasons) {
+  }, [selectedSeason, playerId, preloadedStats, loadedStats]);
+  
+  // 로딩 중 표시
+  if (loading) {
     return (
       <div className="flex justify-center items-center py-10">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
-
-  if (availableSeasons.length === 0) {
+  
+  // 에러 표시
+  if (error) {
     return (
-      <div className="text-center py-10">
-        <p className="text-gray-500">이 선수에 대한 시즌 데이터가 없습니다.</p>
+      <div className="flex justify-center items-center py-10">
+        <div className="text-center">
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            className="h-12 w-12 mx-auto text-red-500 mb-4" 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+            />
+          </svg>
+          <p className="text-lg font-medium text-red-600 mb-2">{error}</p>
+          <p className="text-gray-600">네트워크 연결을 확인하고 다시 시도해주세요.</p>
+        </div>
       </div>
     );
   }
+  
+  // 데이터가 없는 경우
+  if (!statistics || statistics.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <div className="mb-4">
+          {/* 시즌 선택 드롭다운 */}
+          <div className="max-w-xs mx-auto">
+            <label htmlFor="season-select" className="block text-sm font-medium text-gray-700 mb-1">
+              시즌 선택
+            </label>
+            <select
+              id="season-select"
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              value={selectedSeason || ''}
+              onChange={(e) => setSelectedSeason(Number(e.target.value))}
+            >
+              <option value="">시즌 선택</option>
+              {seasons.map((season) => (
+                <option key={season} value={season}>
+                  {season}/{season + 1}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
 
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          className="h-16 w-16 mx-auto text-gray-400 mb-4"
+          fill="none" 
+          viewBox="0 0 24 24" 
+          stroke="currentColor"
+        >
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth={1.5} 
+            d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+          />
+        </svg>
+        <p className="text-lg font-medium text-gray-600">통계 데이터가 없습니다</p>
+        <p className="text-sm text-gray-500 mt-2">
+          선택한 시즌에 대한 통계 정보를 찾을 수 없습니다.<br />다른 시즌을 선택해 보세요.
+        </p>
+      </div>
+    );
+  }
+  
   return (
     <div className="space-y-6">
-      {/* 필터 컨트롤 - 드롭다운으로 변경 */}
+      {/* 필터 영역 */}
       <div className="flex flex-wrap gap-4 items-center">
         {/* 시즌 선택 드롭다운 */}
-        <div className="relative">
+        <div className="flex-1 min-w-[180px]">
           <label htmlFor="season-select" className="block text-sm font-medium text-gray-700 mb-1">
-            시즌
+            시즌 선택
           </label>
           <select
             id="season-select"
-            value={selectedSeason}
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            value={selectedSeason || ''}
             onChange={(e) => setSelectedSeason(Number(e.target.value))}
-            className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
           >
-            {availableSeasons.map((season) => (
+            <option value="">시즌 선택</option>
+            {seasons.map((season) => (
               <option key={season} value={season}>
-                {season}
+                {season}/{season + 1}
               </option>
             ))}
           </select>
         </div>
-
+        
         {/* 리그 선택 드롭다운 */}
-        <div className="relative">
+        <div className="flex-1 min-w-[180px]">
           <label htmlFor="league-select" className="block text-sm font-medium text-gray-700 mb-1">
-            리그
+            리그 선택
           </label>
           <select
             id="league-select"
-            value={selectedLeague}
-            onChange={(e) => setSelectedLeague(e.target.value)}
-            className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-            disabled={availableLeagues.length === 0}
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            value={selectedLeague || ''}
+            onChange={(e) => setSelectedLeague(e.target.value ? Number(e.target.value) : null)}
           >
-            {availableLeagues.length === 0 ? (
-              <option value="">리그 없음</option>
-            ) : (
-              availableLeagues.map((league) => (
-                <option key={league.id} value={league.id.toString()}>
-                  {league.name}
-                </option>
-              ))
-            )}
+            <option value="">모든 리그</option>
+            {leagues.map((league) => (
+              <option key={league.id} value={league.id}>
+                {league.name} ({league.country})
+              </option>
+            ))}
           </select>
         </div>
       </div>
-
-      {/* 선택된 리그 표시 */}
-      {selectedLeague && availableLeagues.length > 0 && (
-        <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
-          {availableLeagues.find(l => l.id.toString() === selectedLeague)?.logo && (
-            <Image
-              src={availableLeagues.find(l => l.id.toString() === selectedLeague)?.logo || ''}
-              alt="리그 로고"
-              width={24}
-              height={24}
-              className="object-contain"
-              unoptimized
-            />
-          )}
-          <span className="font-medium">
-            {availableLeagues.find(l => l.id.toString() === selectedLeague)?.name}
-          </span>
-        </div>
-      )}
-
-      {loading && (
-        <div className="flex justify-center items-center py-10">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900"></div>
-        </div>
-      )}
-
-      {error && (
-        <div className="text-center py-10">
-          <p className="text-gray-500">{error}</p>
-        </div>
-      )}
-
-      {/* 시즌 요약 통계 */}
-      {filteredStatistics && !loading && !error && (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm table-fixed">
-            <tbody className="divide-y divide-gray-100">
+      
+      {/* 리그별 통계 테이블 */}
+      <div className="space-y-8">
+        {filteredStats.map((stat, index) => (
+          <div key={`${stat.league.id}-${index}`} className="bg-white rounded-lg shadow-sm overflow-hidden">
+            {/* 리그 및 팀 헤더 */}
+            <div className="flex items-center gap-3 p-4 bg-gray-50 border-b">
+              <LeagueLogo logo={stat.league.logo || ''} name={stat.league.name} />
+              <div>
+                <h3 className="font-semibold">{stat.league.name}</h3>
+                <p className="text-sm text-gray-600">{stat.league.country}</p>
+              </div>
+              <div className="flex items-center ml-auto gap-2">
+                <TeamLogo logo={stat.team.logo} name={stat.team.name} />
+                <span className="font-medium">{stat.team.name}</span>
+              </div>
+            </div>
+            
+            {/* 통계 내용 */}
+            <div className="p-4">
               {/* 기본 정보 */}
-              <tr className="bg-gray-50">
-                <td className="px-4 py-3 font-medium w-1/4">출전</td>
-                <td className="px-4 py-3 w-1/4">{filteredStatistics.games?.appearences || 0}경기</td>
-                <td className="px-4 py-3 font-medium w-1/4">출전시간</td>
-                <td className="px-4 py-3 w-1/4">{filteredStatistics.games?.minutes || 0}분</td>
-              </tr>
-              <tr>
-                <td className="px-4 py-3 font-medium w-1/4">선발</td>
-                <td className="px-4 py-3 w-1/4">{filteredStatistics.games?.lineups || 0}</td>
-                <td className="px-4 py-3 font-medium w-1/4">평점</td>
-                <td className="px-4 py-3 w-1/4">{filteredStatistics.games?.rating ? Number(filteredStatistics.games.rating).toFixed(2) : '-'}</td>
-              </tr>
-
-              {/* 공격포인트 */}
-              <tr className="bg-gray-50">
-                <td className="px-4 py-3 font-medium w-1/4">득점</td>
-                <td className="px-4 py-3 w-1/4">{filteredStatistics.goals?.total || 0}</td>
-                <td className="px-4 py-3 font-medium w-1/4">도움</td>
-                <td className="px-4 py-3 w-1/4">{filteredStatistics.goals?.assists || 0}</td>
-              </tr>
-
-              {/* 슈팅 */}
-              <tr>
-                <td className="px-4 py-3 font-medium w-1/4">슈팅</td>
-                <td className="px-4 py-3 w-1/4">{filteredStatistics.shots?.total || 0}</td>
-                <td className="px-4 py-3 font-medium w-1/4">유효슈팅</td>
-                <td className="px-4 py-3 w-1/4">{filteredStatistics.shots?.on || 0}</td>
-              </tr>
-
-              {/* 패스 */}
-              <tr className="bg-gray-50">
-                <td className="px-4 py-3 font-medium w-1/4">총 패스</td>
-                <td className="px-4 py-3 w-1/4">{filteredStatistics.passes?.total || 0}</td>
-                <td className="px-4 py-3 font-medium w-1/4">키패스</td>
-                <td className="px-4 py-3 w-1/4">{filteredStatistics.passes?.key || 0}</td>
-              </tr>
-              <tr>
-                <td className="px-4 py-3 font-medium w-1/4">패스 성공률</td>
-                <td className="px-4 py-3 w-1/4">{filteredStatistics.passes?.accuracy || 0}%</td>
-                <td className="px-4 py-3 font-medium w-1/4">크로스</td>
-                <td className="px-4 py-3 w-1/4">{filteredStatistics.passes?.cross || 0}</td>
-              </tr>
-
-              {/* 드리블 */}
-              <tr className="bg-gray-50">
-                <td className="px-4 py-3 font-medium w-1/4">드리블 시도</td>
-                <td className="px-4 py-3 w-1/4">{filteredStatistics.dribbles?.attempts || 0}</td>
-                <td className="px-4 py-3 font-medium w-1/4">드리블 성공</td>
-                <td className="px-4 py-3 w-1/4">{filteredStatistics.dribbles?.success || 0}</td>
-              </tr>
-
-              {/* 1대1 */}
-              <tr>
-                <td className="px-4 py-3 font-medium w-1/4">1대1 시도</td>
-                <td className="px-4 py-3 w-1/4">{filteredStatistics.duels?.total || 0}</td>
-                <td className="px-4 py-3 font-medium w-1/4">1대1 성공</td>
-                <td className="px-4 py-3 w-1/4">{filteredStatistics.duels?.won || 0}</td>
-              </tr>
-
-              {/* 수비 */}
-              <tr className="bg-gray-50">
-                <td className="px-4 py-3 font-medium w-1/4">태클</td>
-                <td className="px-4 py-3 w-1/4">{filteredStatistics.tackles?.total || 0}</td>
-                <td className="px-4 py-3 font-medium w-1/4">인터셉트</td>
-                <td className="px-4 py-3 w-1/4">{filteredStatistics.tackles?.interceptions || 0}</td>
-              </tr>
-              <tr>
-                <td className="px-4 py-3 font-medium w-1/4">차단</td>
-                <td className="px-4 py-3 w-1/4">{filteredStatistics.tackles?.blocks || 0}</td>
-                <td className="px-4 py-3 font-medium w-1/4">클리어런스</td>
-                <td className="px-4 py-3 w-1/4">{filteredStatistics.tackles?.clearances || 0}</td>
-              </tr>
-
-              {/* 파울 */}
-              <tr className="bg-gray-50">
-                <td className="px-4 py-3 font-medium w-1/4">얻은 파울</td>
-                <td className="px-4 py-3 w-1/4">{filteredStatistics.fouls?.drawn || 0}</td>
-                <td className="px-4 py-3 font-medium w-1/4">범한 파울</td>
-                <td className="px-4 py-3 w-1/4">{filteredStatistics.fouls?.committed || 0}</td>
-              </tr>
-
-              {/* 카드 */}
-              <tr>
-                <td className="px-4 py-3 font-medium w-1/4">옐로카드</td>
-                <td className="px-4 py-3 w-1/4">{filteredStatistics.cards?.yellow || 0}</td>
-                <td className="px-4 py-3 font-medium w-1/4">레드카드</td>
-                <td className="px-4 py-3 w-1/4">{filteredStatistics.cards?.red || 0}</td>
-              </tr>
-
-              {/* 페널티 */}
-              <tr className="bg-gray-50">
-                <td className="px-4 py-3 font-medium w-1/4">페널티 득점</td>
-                <td className="px-4 py-3 w-1/4">{filteredStatistics.penalty?.scored || 0}</td>
-                <td className="px-4 py-3 font-medium w-1/4">페널티 실축</td>
-                <td className="px-4 py-3 w-1/4">{filteredStatistics.penalty?.missed || 0}</td>
-              </tr>
-
-              {/* 골키퍼인 경우에만 표시 */}
-              {filteredStatistics.games?.position === 'G' && (
-                <>
-                  <tr>
-                    <td className="px-4 py-3 font-medium w-1/4">실점</td>
-                    <td className="px-4 py-3 w-1/4">{filteredStatistics.goals?.conceded || 0}</td>
-                    <td className="px-4 py-3 font-medium w-1/4">선방</td>
-                    <td className="px-4 py-3 w-1/4">{filteredStatistics.goals?.saves || 0}</td>
-                  </tr>
-                  <tr className="bg-gray-50">
-                    <td className="px-4 py-3 font-medium w-1/4">무실점</td>
-                    <td className="px-4 py-3 w-1/4">{filteredStatistics.goals?.cleansheets || 0}</td>
-                    <td className="px-4 py-3 font-medium w-1/4">페널티 선방</td>
-                    <td className="px-4 py-3 w-1/4">{filteredStatistics.penalty?.saved || 0}</td>
-                  </tr>
-                </>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <h4 className="text-xs text-gray-500 uppercase">포지션</h4>
+                  <p className="font-semibold text-xl">{stat.games.position || '-'}</p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <h4 className="text-xs text-gray-500 uppercase">경기 출전</h4>
+                  <p className="font-semibold text-xl">{stat.games.appearences || 0}</p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <h4 className="text-xs text-gray-500 uppercase">선발 출전</h4>
+                  <p className="font-semibold text-xl">{stat.games.lineups || 0}</p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <h4 className="text-xs text-gray-500 uppercase">출전 시간</h4>
+                  <p className="font-semibold text-xl">{stat.games.minutes || 0}분</p>
+                </div>
+              </div>
+              
+              {/* 공격 통계 */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-3 border-b pb-2">공격 통계</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  <div className="p-2">
+                    <h4 className="text-xs text-gray-500">득점</h4>
+                    <p className="font-medium">{stat.goals.total || 0}</p>
+                  </div>
+                  <div className="p-2">
+                    <h4 className="text-xs text-gray-500">도움</h4>
+                    <p className="font-medium">{stat.goals.assists || 0}</p>
+                  </div>
+                  <div className="p-2">
+                    <h4 className="text-xs text-gray-500">슈팅</h4>
+                    <p className="font-medium">{stat.shots.total || 0}</p>
+                  </div>
+                  <div className="p-2">
+                    <h4 className="text-xs text-gray-500">유효 슈팅</h4>
+                    <p className="font-medium">{stat.shots.on || 0}</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* 패스 통계 */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-3 border-b pb-2">패스 통계</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  <div className="p-2">
+                    <h4 className="text-xs text-gray-500">총 패스</h4>
+                    <p className="font-medium">{stat.passes.total || 0}</p>
+                  </div>
+                  <div className="p-2">
+                    <h4 className="text-xs text-gray-500">키패스</h4>
+                    <p className="font-medium">{stat.passes.key || 0}</p>
+                  </div>
+                  <div className="p-2">
+                    <h4 className="text-xs text-gray-500">패스 정확도</h4>
+                    <p className="font-medium">{stat.passes.accuracy || '0%'}</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* 수비 통계 */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-3 border-b pb-2">수비 통계</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  <div className="p-2">
+                    <h4 className="text-xs text-gray-500">태클</h4>
+                    <p className="font-medium">{stat.tackles.total || 0}</p>
+                  </div>
+                  <div className="p-2">
+                    <h4 className="text-xs text-gray-500">차단</h4>
+                    <p className="font-medium">{stat.tackles.blocks || 0}</p>
+                  </div>
+                  <div className="p-2">
+                    <h4 className="text-xs text-gray-500">인터셉트</h4>
+                    <p className="font-medium">{stat.tackles.interceptions || 0}</p>
+                  </div>
+                  <div className="p-2">
+                    <h4 className="text-xs text-gray-500">클리어런스</h4>
+                    <p className="font-medium">{stat.tackles.clearances || 0}</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* 카드 및 기타 통계 */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3 border-b pb-2">기타 통계</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  <div className="p-2">
+                    <h4 className="text-xs text-gray-500">옐로카드</h4>
+                    <p className="font-medium">{stat.cards.yellow || 0}</p>
+                  </div>
+                  <div className="p-2">
+                    <h4 className="text-xs text-gray-500">레드카드</h4>
+                    <p className="font-medium">{stat.cards.red || 0}</p>
+                  </div>
+                  <div className="p-2">
+                    <h4 className="text-xs text-gray-500">드리블 시도</h4>
+                    <p className="font-medium">{stat.dribbles.attempts || 0}</p>
+                  </div>
+                  <div className="p-2">
+                    <h4 className="text-xs text-gray-500">드리블 성공</h4>
+                    <p className="font-medium">{stat.dribbles.success || 0}</p>
+                  </div>
+                  <div className="p-2">
+                    <h4 className="text-xs text-gray-500">파울 유도</h4>
+                    <p className="font-medium">{stat.fouls.drawn || 0}</p>
+                  </div>
+                  <div className="p-2">
+                    <h4 className="text-xs text-gray-500">파울 범함</h4>
+                    <p className="font-medium">{stat.fouls.committed || 0}</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* 골키퍼 통계 (포지션이 골키퍼인 경우만 표시) */}
+              {stat.games.position === 'Goalkeeper' && (
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold mb-3 border-b pb-2">골키퍼 통계</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    <div className="p-2">
+                      <h4 className="text-xs text-gray-500">세이브</h4>
+                      <p className="font-medium">{stat.goals.saves || 0}</p>
+                    </div>
+                    <div className="p-2">
+                      <h4 className="text-xs text-gray-500">실점</h4>
+                      <p className="font-medium">{stat.goals.conceded || 0}</p>
+                    </div>
+                    <div className="p-2">
+                      <h4 className="text-xs text-gray-500">무실점 경기</h4>
+                      <p className="font-medium">{stat.goals.cleansheets || 0}</p>
+                    </div>
+                    <div className="p-2">
+                      <h4 className="text-xs text-gray-500">페널티 세이브</h4>
+                      <p className="font-medium">{stat.penalty.saved || 0}</p>
+                    </div>
+                  </div>
+                </div>
               )}
-            </tbody>
-          </table>
-        </div>
-      )}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
