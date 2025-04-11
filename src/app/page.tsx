@@ -22,13 +22,42 @@ interface CombinedPost {
   league_logo?: string | null;
 }
 
+// 안전한 fallback 게시물 데이터 생성 함수
+function createFallbackPost(index: number): CombinedPost {
+  return {
+    id: `fallback-${index}`,
+    title: '게시물을 불러오는 중입니다...',
+    created_at: new Date().toISOString(),
+    board_id: 'fallback',
+    board_name: '로딩 중',
+    board_slug: 'loading',
+    post_number: index,
+    author_nickname: '시스템',
+    author_id: 'system',
+    views: 0,
+    likes: 0,
+    comment_count: 0,
+    content: '게시물 데이터를 불러오는 중 문제가 발생했습니다.',
+    team_id: null,
+    league_id: null,
+    team_logo: null,
+    league_logo: null
+  };
+}
+
 export const revalidate = 60; // 1분마다 데이터 갱신
 export const dynamic = 'force-dynamic'; // 항상 동적으로 렌더링
 
 async function fetchInitialPosts(): Promise<CombinedPost[]> {
-  const supabase = await createClient();
-  
   try {
+    const supabase = await createClient();
+    
+    // Supabase 서버 클라이언트 생성 확인
+    if (!supabase) {
+      console.error("Supabase client creation failed");
+      return Array(5).fill(null).map((_, i) => createFallbackPost(i+1));
+    }
+    
     const { data: postsData, error: postsError } = await supabase
       .from('posts')
       .select(`
@@ -48,21 +77,32 @@ async function fetchInitialPosts(): Promise<CombinedPost[]> {
       .order('created_at', { ascending: false })
       .limit(10);
       
-    if (postsError) throw postsError;
+    if (postsError) {
+      console.error("Error fetching posts:", postsError);
+      return Array(5).fill(null).map((_, i) => createFallbackPost(i+1));
+    }
 
     // postsData가 null인 경우 빈 배열 반환
     const validPosts = postsData || [];
+    if (validPosts.length === 0) {
+      return Array(5).fill(null).map((_, i) => createFallbackPost(i+1));
+    }
 
     // 게시판 정보 가져오기 (null 체크 추가)
     const boardIds = [...new Set(validPosts.map(post => post.board_id).filter(id => id != null))];
     let boardsData: { id: string; name: string; team_id?: string | null; league_id?: string | null; slug: string }[] = [];
+    
     if (boardIds.length > 0) {
       const { data, error: boardsError } = await supabase
         .from('boards')
         .select('id, name, team_id, league_id, slug')
         .in('id', boardIds);
-      if (boardsError) throw boardsError;
-      boardsData = data || [];
+        
+      if (boardsError) {
+        console.error("Error fetching boards:", boardsError);
+      } else {
+        boardsData = data || [];
+      }
     }
 
     const boardMap: Record<string, { name: string; team_id?: string | null; league_id?: string | null; slug: string }> = {};
@@ -77,30 +117,48 @@ async function fetchInitialPosts(): Promise<CombinedPost[]> {
       }
     });
 
-    // 팀/리그 로고 가져오기
+    // 팀/리그 로고 가져오기 - 오류 발생해도 계속 진행
     const teamIds = boardsData.map(b => b.team_id).filter(Boolean);
     const leagueIds = boardsData.map(b => b.league_id).filter(Boolean);
     const teamLogoMap: Record<string, string> = {};
     const leagueLogoMap: Record<string, string> = {};
 
-    if (teamIds.length > 0) {
+    try {
+      if (teamIds.length > 0) {
         const { data: teamsData } = await supabase.from('teams').select('id, logo').in('id', teamIds);
         (teamsData || []).forEach(t => { if (t.id) teamLogoMap[t.id] = t.logo || '' });
+      }
+    } catch (error) {
+      console.error("Error fetching team logos:", error);
     }
-    if (leagueIds.length > 0) {
+    
+    try {
+      if (leagueIds.length > 0) {
         const { data: leaguesData } = await supabase.from('leagues').select('id, logo').in('id', leagueIds);
         (leaguesData || []).forEach(l => { if (l.id) leagueLogoMap[l.id] = l.logo || '' });
+      }
+    } catch (error) {
+      console.error("Error fetching league logos:", error);
     }
 
-    // 댓글 수 가져오기
+    // 댓글 수 가져오기 - 오류 발생해도 계속 진행
     const postIds = validPosts.map(p => p.id).filter(Boolean);
     const commentCounts: Record<string, number> = {};
-    if (postIds.length > 0) {
+    
+    try {
+      if (postIds.length > 0) {
         const counts = await Promise.all(postIds.map(async postId => {
+          try {
             const { count } = await supabase.from('comments').select('id', { count: 'exact', head: true }).eq('post_id', postId);
             return { postId, count: count || 0 };
+          } catch {
+            return { postId, count: 0 };
+          }
         }));
         counts.forEach(({ postId, count }) => { commentCounts[postId] = count });
+      }
+    } catch (error) {
+      console.error("Error fetching comment counts:", error);
     }
 
     // 최종 데이터 형성
@@ -138,16 +196,33 @@ async function fetchInitialPosts(): Promise<CombinedPost[]> {
 
   } catch (error) {
     console.error("Failed to fetch initial posts:", error);
-    return []; // 오류 발생 시 빈 배열 반환
+    // 오류 발생 시 더미 데이터 반환
+    return Array(5).fill(null).map((_, i) => createFallbackPost(i+1));
   }
 }
 
 export default async function HomePage() {
-  const initialPosts = await fetchInitialPosts();
-
-  return (
-    <main>
-      <AllPostsWidget initialPosts={initialPosts} />
-    </main>
-  );
+  try {
+    const initialPosts = await fetchInitialPosts();
+    
+    return (
+      <main>
+        <AllPostsWidget initialPosts={initialPosts} />
+      </main>
+    );
+  } catch (error) {
+    console.error("Error in HomePage render:", error);
+    
+    // 오류 발생 시 폴백 UI 렌더링
+    const fallbackPosts = Array(5).fill(null).map((_, i) => createFallbackPost(i+1));
+    
+    return (
+      <main>
+        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md mb-4">
+          <p className="text-yellow-700">데이터를 불러오는 중 문제가 발생했습니다. 곧 해결될 예정입니다.</p>
+        </div>
+        <AllPostsWidget initialPosts={fallbackPosts} />
+      </main>
+    );
+  }
 }
