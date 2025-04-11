@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useMemo, useCall
 import { createClient } from '@/app/lib/supabase-browser';
 import { Session, User } from '@supabase/supabase-js';
 import { rewardUserActivity, checkConsecutiveLogin, ActivityType } from '@/app/utils/activity-rewards';
-import { refreshSession, logout, updateUserData } from '@/app/actions/auth-actions';
+import { updateUserData } from '@/app/actions/auth-actions';
 
 // 세션 갱신 주기 (15분)
 const SESSION_REFRESH_INTERVAL = 15 * 60 * 1000;
@@ -41,8 +41,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!session?.refresh_token) return;
     
     try {
-      const result = await refreshSession(session.refresh_token);
-      if (result.success && result.session) {
+      // API 라우트를 통해 토큰 갱신
+      const response = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          refresh_token: session.refresh_token,
+        }),
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok && result.success && result.session) {
         setUser(result.session.user);
         setSession(result.session);
         
@@ -64,6 +76,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           refreshTimerRef.current = setTimeout(refreshCurrentSession, nextRefresh);
         }
+      } else if (response.status === 401) {
+        // 인증 만료 또는 실패
+        setUser(null);
+        setSession(null);
+        
+        if (refreshTimerRef.current) {
+          clearTimeout(refreshTimerRef.current);
+          refreshTimerRef.current = null;
+        }
       }
     } catch (error) {
       console.error('세션 갱신 중 오류:', error);
@@ -73,9 +94,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // 로그아웃 함수
   const logoutUser = useCallback(async () => {
     try {
-      // 서버 액션을 통해 로그아웃 처리
-      const result = await logout();
-      if (result.success) {
+      // API 라우트를 통해 로그아웃 처리
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
         setUser(null);
         setSession(null);
         
@@ -199,7 +228,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setSession(sessionData.session);
             setUser(sessionData.session.user);
             
-            // 첫 로드 시 서버 액션으로 세션 갱신
+            // 첫 로드 시 API 라우트로 세션 갱신
             await refreshCurrentSession();
             
             // 세션 유효성 확인
@@ -232,7 +261,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(newSession?.user || null);
             setSession(newSession);
             
-            // 로그인 시 서버 액션으로 세션 갱신
+            // 로그인 시 API 라우트로 세션 갱신
             if (newSession?.refresh_token) {
               await refreshCurrentSession();
             }
@@ -291,12 +320,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // 토큰 갱신 이벤트 처리
             if (newSession) {
               try {
-                // 서버 액션을 통해 쿠키 갱신
-                const result = await refreshSession(newSession.refresh_token);
-                if (result.success && result.session) {
-                  setUser(result.session.user);
-                  setSession(result.session);
-                }
+                // API 라우트를 통해 쿠키 갱신
+                await refreshCurrentSession();
               } catch (error) {
                 console.error('토큰 갱신 중 오류:', error);
               }
