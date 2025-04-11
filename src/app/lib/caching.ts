@@ -1,23 +1,50 @@
-import { createClient } from '@/app/lib/supabase.server';
+import { createClientWithoutCookies } from '@/app/lib/supabase-middleware';
 import { FileData } from '@/app/types/post';
 
 // 캐시 TTL 기본값 (초 단위)
 const DEFAULT_TTL = 5 * 60; // 5분
 
+// 캐시 타입 정의
+type CacheEntry<T> = {
+  data: T;
+  expiry: number;
+};
+
+// 인메모리 캐시 저장소 - unknown 타입으로 대체
+const memoryCache: Map<string, CacheEntry<unknown>> = new Map();
+
 /**
  * 캐싱된 데이터를 가져오거나, 없으면 제공된 함수로 새로 조회해 캐싱하는 함수
+ * 이 함수는 데이터베이스 캐싱과 메모리 캐싱을 모두 지원합니다.
+ * 
+ * @param cacheKey 캐시 키
+ * @param fetchData 데이터를 가져오는 함수
+ * @param ttlSeconds 캐시 유효 시간 (초)
+ * @returns 캐시된 데이터 또는 새로 가져온 데이터
  */
 export async function getCachedData<T>(
   cacheKey: string,
   fetchData: () => Promise<T>,
   ttlSeconds: number = DEFAULT_TTL
 ): Promise<T> {
+  // 1. 먼저 메모리 캐시 확인
+  const now = Date.now();
+  const cachedEntry = memoryCache.get(cacheKey) as CacheEntry<T> | undefined;
+  
+  // 유효한, 만료되지 않은 메모리 캐시가 있으면 반환
+  if (cachedEntry && cachedEntry.expiry > now) {
+    console.log(`메모리 캐시 히트: ${cacheKey}`);
+    return cachedEntry.data;
+  }
+  
+  console.log(`메모리 캐시 미스: ${cacheKey}`);
+  
+  // 2. 메모리 캐시가 없으면 데이터베이스 캐시 확인
   let supabase;
   
   try {
-    supabase = await createClient();
+    supabase = await createClientWithoutCookies();
     
-    // 1. 캐시 테이블에서 데이터 확인
     try {
       const { data: cachedItem, error } = await supabase
         .from('cache')
@@ -25,25 +52,37 @@ export async function getCachedData<T>(
         .eq('key', cacheKey)
         .single();
       
-      // 2. 유효한 캐시가 있으면 반환
+      // 유효한 DB 캐시가 있으면 메모리에도 저장하고 반환
       if (!error && cachedItem && isValidCache(cachedItem.created_at, ttlSeconds)) {
+        // 메모리 캐시 업데이트
+        memoryCache.set(cacheKey, {
+          data: cachedItem.data as T,
+          expiry: now + (ttlSeconds * 1000)
+        });
+        
+        console.log(`DB 캐시 히트: ${cacheKey}`);
         return cachedItem.data as T;
       }
     } catch (cacheReadError) {
       console.error(`캐시 읽기 오류 (${cacheKey}):`, cacheReadError);
-      // 캐시 읽기 오류는 무시하고 원본 데이터를 가져옵니다
     }
     
     // 3. 캐시가 없거나 만료되었으면 새로 데이터 가져오기
     try {
       const data = await fetchData();
       
-      // 4. 캐시 업데이트
+      // 4. 캐시 업데이트 (메모리 + DB)
+      // 메모리 캐시 업데이트
+      memoryCache.set(cacheKey, {
+        data,
+        expiry: now + (ttlSeconds * 1000)
+      });
+      
+      // DB 캐시 비동기 업데이트 (결과 기다리지 않음)
       if (data) {
-        // 비동기로 캐시 업데이트 (결과 기다리지 않음)
         (async () => {
           try {
-            if (!supabase) supabase = await createClient();
+            if (!supabase) supabase = await createClientWithoutCookies();
             
             await supabase
               .from('cache')
@@ -54,7 +93,7 @@ export async function getCachedData<T>(
               });
             
             if (process.env.NODE_ENV === 'development') {
-              console.log(`캐시 업데이트: ${cacheKey}`);
+              console.log(`DB 캐시 업데이트: ${cacheKey}`);
             }
           } catch (updateError) {
             console.error(`캐시 업데이트 오류 (${cacheKey}):`, updateError);
@@ -65,7 +104,7 @@ export async function getCachedData<T>(
       return data;
     } catch (fetchError) {
       console.error(`데이터 가져오기 오류 (${cacheKey}):`, fetchError);
-      throw fetchError; // 다시 던져서 상위 함수에서 처리하게 함
+      throw fetchError;
     }
   } catch (error) {
     console.error(`캐싱 전체 처리 오류 (${cacheKey}):`, error);
@@ -75,7 +114,6 @@ export async function getCachedData<T>(
       return await fetchData();
     } catch (finalError: unknown) {
       console.error(`최종 데이터 가져오기 오류 (${cacheKey}):`, finalError);
-      // 빈 데이터 객체 반환 대신 오류를 던져서 상위 함수에서 처리하게 함
       throw new Error(`캐싱 및 데이터 가져오기 실패: ${finalError instanceof Error ? finalError.message : '알 수 없는 오류'}`);
     }
   }
@@ -88,7 +126,7 @@ export async function getCachedPostDetail(boardSlug: string, postNumber: number)
   console.log("게시글 상세 조회:", boardSlug, postNumber);
   
   try {
-    const supabase = await createClient();
+    const supabase = await createClientWithoutCookies();
     
     // 게시글 기본 정보 가져오기
     const { data: postData, error: postError } = await supabase
@@ -208,7 +246,7 @@ export async function getCachedBoardStructure() {
     return await getCachedData(
       cacheKey,
       async () => {
-        const supabase = await createClient();
+        const supabase = await createClientWithoutCookies();
         const { data, error } = await supabase
           .from('boards')
           .select('*')
@@ -245,7 +283,7 @@ export async function getCachedComments(postId: string) {
     return await getCachedData(
       cacheKey,
       async () => {
-        const supabase = await createClient();
+        const supabase = await createClientWithoutCookies();
         const { data, error } = await supabase
           .from('comments')
           .select(`
@@ -290,9 +328,13 @@ function isValidCache(createdAt: string, ttlSeconds: number): boolean {
  */
 export async function invalidatePostCache(boardSlug: string, postNumber: number) {
   try {
-    const supabase = await createClient();
+    const supabase = await createClientWithoutCookies();
     const cacheKey = `post_detail:${boardSlug}:${postNumber}`;
     
+    // 메모리 캐시 무효화
+    invalidateCache(cacheKey);
+    
+    // DB 캐시 무효화
     await supabase
       .from('cache')
       .delete()
@@ -311,12 +353,50 @@ export async function invalidatePostCache(boardSlug: string, postNumber: number)
     }
     
     if (post) {
+      const commentsKey = `comments:${post.id}`;
+      invalidateCache(commentsKey);
+      
       await supabase
         .from('cache')
         .delete()
-        .eq('key', `comments:${post.id}`);
+        .eq('key', commentsKey);
     }
   } catch (error) {
     console.error(`게시글 캐시 무효화 오류 (${boardSlug}/${postNumber}):`, error);
   }
+}
+
+/**
+ * 특정 키를 가진 캐시를 무효화합니다.
+ * @param key 무효화할 캐시 키
+ */
+export function invalidateCache(key: string): void {
+  memoryCache.delete(key);
+  console.log(`캐시 무효화: ${key}`);
+}
+
+/**
+ * 특정 패턴으로 시작하는 모든 캐시를 무효화합니다.
+ * @param keyPrefix 무효화할 캐시 키 접두사
+ */
+export function invalidateCacheByPrefix(keyPrefix: string): void {
+  let invalidatedCount = 0;
+  
+  memoryCache.forEach((_, key) => {
+    if (key.startsWith(keyPrefix)) {
+      memoryCache.delete(key);
+      invalidatedCount++;
+    }
+  });
+  
+  console.log(`캐시 무효화 (접두사 ${keyPrefix}): ${invalidatedCount}개 항목`);
+}
+
+/**
+ * 모든 캐시를 무효화합니다.
+ */
+export function clearAllCache(): void {
+  const count = memoryCache.size;
+  memoryCache.clear();
+  console.log(`모든 캐시 삭제: ${count}개 항목`);
 } 
