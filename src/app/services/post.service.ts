@@ -10,20 +10,20 @@ export async function getPostByNumber(boardId: string, postNumber: number) {
       throw new Error(`유효하지 않은 게시글 번호: ${postNumber}`);
     }
 
-    const supabase = await createClient();
+  const supabase = await createClient();
     const { data, error } = await supabase
-      .from('posts')
-      .select(`
-        *,
-        profiles (
-          id,
-          nickname,
-          icon_id
-        ),
-        board:board_id(name, id, parent_id, team_id, league_id, slug)
-      `)
-      .eq('board_id', boardId)
-      .eq('post_number', postNumber)
+    .from('posts')
+    .select(`
+      *,
+      profiles (
+        id,
+        nickname,
+        icon_id
+      ),
+      board:board_id(name, id, parent_id, team_id, league_id, slug)
+    `)
+    .eq('board_id', boardId)
+    .eq('post_number', postNumber)
       .limit(1);
       
     if (error) {
@@ -336,59 +336,85 @@ export async function getCommentIconUrls(comments: { profiles?: { icon_id?: numb
 }
 
 // 팀, 리그 정보 가져오기
-export async function getTeamAndLeagueInfo(boardIds: string[]) {
+export async function getTeamAndLeagueInfo(boardIds: string[]): Promise<{
+  teams: Record<number, TeamInfo>;
+  leagues: Record<number, LeagueInfo>;
+}> {
+  if (!boardIds || boardIds.length === 0) {
+    console.log("보드 ID가 없습니다.");
+    return { teams: {}, leagues: {} };
+  }
+
   const supabase = await createClient();
   
-  // 게시판 정보 가져오기 (팀/리그 정보 포함)
-  const { data: boardsWithTeamInfo } = await supabase
-    .from('boards')
-    .select('id, team_id, league_id, slug')
-    .in('id', boardIds);
+  try {
+    // 간단한 접근법: 모든 게시판의 정보를 가져와서 team_id와 league_id만 추출
+    const { data: boardsInfo, error } = await supabase
+      .from('boards')
+      .select('id, team_id, league_id')
+      .in('id', boardIds);
 
-  // 모든 팀 ID와 리그 ID 목록 생성
-  const teamIds = Array.from(
-    new Set(
-      boardsWithTeamInfo?.filter(board => board.team_id).map(board => board.team_id) || []
-    )
-  );
-    
-  const leagueIds = Array.from(
-    new Set(
-      boardsWithTeamInfo?.filter(board => board.league_id).map(board => board.league_id) || []
-    )
-  );
+    if (error) {
+      console.error("보드 정보 가져오기 오류:", error);
+      return { teams: {}, leagues: {} };
+    }
 
-  // 팀 정보 가져오기 (존재하는 경우에만)
-  const teamsData: Record<number, TeamInfo> = {};
-  if (teamIds.length > 0) {
-    const { data: teams } = await supabase
+    // 팀 ID와 리그 ID 수집
+    const teamIds = boardsInfo
+      ?.filter(board => board.team_id !== null && board.team_id !== undefined)
+      .map(board => board.team_id) || [];
+      
+    const leagueIds = boardsInfo
+      ?.filter(board => board.league_id !== null && board.league_id !== undefined)
+      .map(board => board.league_id) || [];
+
+    console.log("추출된 팀 ID:", teamIds);
+    console.log("추출된 리그 ID:", leagueIds);
+
+    // 결과 객체 준비
+    const teams: Record<number, TeamInfo> = {};
+    const leagues: Record<number, LeagueInfo> = {};
+
+    // 1. 모든 팀 정보 가져오기 (ID 필터링 없이)
+    const { data: allTeams } = await supabase
       .from('teams')
-      .select('id, name, logo')
-      .in('id', teamIds);
+      .select('id, name, logo');
       
-    if (teams) {
-      teams.forEach(team => {
-        teamsData[team.id] = { name: team.name, logo: team.logo };
+    console.log("가져온 모든 팀 정보:", allTeams);
+    
+    if (allTeams) {
+      allTeams.forEach(team => {
+        teams[team.id] = {
+          name: team.name || '',
+          logo: team.logo || ''
+        };
       });
     }
-  }
 
-  // 리그 정보 가져오기 (존재하는 경우에만)
-  const leaguesData: Record<number, LeagueInfo> = {};
-  if (leagueIds.length > 0) {
-    const { data: leagues } = await supabase
+    // 2. 모든 리그 정보 가져오기 (ID 필터링 없이)
+    const { data: allLeagues } = await supabase
       .from('leagues')
-      .select('id, name, logo')
-      .in('id', leagueIds);
+      .select('id, name, logo');
       
-    if (leagues) {
-      leagues.forEach(league => {
-        leaguesData[league.id] = { name: league.name, logo: league.logo };
+    console.log("가져온 모든 리그 정보:", allLeagues);
+    
+    if (allLeagues) {
+      allLeagues.forEach(league => {
+        leagues[league.id] = {
+          name: league.name || '',
+          logo: league.logo || ''
+        };
       });
     }
+
+    console.log("최종 팀 데이터:", teams);
+    console.log("최종 리그 데이터:", leagues);
+    
+    return { teams, leagues };
+  } catch (error) {
+    console.error("팀 및 리그 정보 가져오기 오류:", error);
+    return { teams: {}, leagues: {} };
   }
-  
-  return { teamsData, leaguesData };
 }
 
 // 포맷된 게시글 데이터로 변환
@@ -397,20 +423,55 @@ export function formatPosts(
   commentCounts: Record<string, number>,
   boardsData: Record<string, BoardData>,
   boardNameMap: Record<string, string>,
-  teamsData: Record<number, TeamInfo>,
-  leaguesData: Record<number, LeagueInfo>
+  teams: Record<number, TeamInfo>,
+  leagues: Record<number, LeagueInfo>
 ): FormattedPost[] {
+  // 디버깅을 위한 로그 추가
+  console.log("formatPosts 함수 호출됨");
+  console.log("teams:", teams);
+  console.log("leagues:", leagues);
+  
+  // 게시글 ID 로그
+  const postIds = posts.map(post => post.id).join(', ');
+  console.log(`포맷 중인 게시글 ID: ${postIds}`);
+  
   return posts.map(post => {
     const boardId = post.board_id || '';
     const boardData = boardsData[boardId] || {};
-    const teamId = post.board?.team_id || boardData.team_id;
-    const leagueId = post.board?.league_id || boardData.league_id;
+    const boardName = boardNameMap[boardId] || "Unknown";
+    
+    // 팀 ID 추출 로직 - boardData가 있는 경우 우선 사용
+    // 문자열이나 다른 유형의 값을 숫자로 변환
+    const rawTeamId = boardData.team_id ?? null;
+    const rawLeagueId = boardData.league_id ?? null;
+    
+    // 숫자 변환 및 유효성 검사
+    const teamId = typeof rawTeamId === 'string' ? parseInt(rawTeamId, 10) : rawTeamId;
+    const leagueId = typeof rawLeagueId === 'string' ? parseInt(rawLeagueId, 10) : rawLeagueId;
+    
+    console.log(`게시글 ${post.id}의 게시판 데이터:`, boardData);
+    console.log(`게시글 ${post.id}의 팀 ID 변환: ${rawTeamId}(${typeof rawTeamId}) -> ${teamId}(${typeof teamId})`);
+    console.log(`게시글 ${post.id}의 리그 ID 변환: ${rawLeagueId}(${typeof rawLeagueId}) -> ${leagueId}(${typeof leagueId})`);
+    
+    // 팀 로고 디버깅: 숫자 키로 teams 객체에 접근하는지 확인
+    if (teamId !== null) {
+      const hasTeamKey = Object.keys(teams).includes(String(teamId));
+      console.log(`게시글 ${post.id}의 팀 ID: ${teamId}, 키 존재: ${hasTeamKey}, 로고: ${hasTeamKey ? teams[teamId]?.logo : 'null'}`);
+    }
+    
+    // 팀과 리그 데이터를 숫자 ID로 안전하게 접근
+    const validTeamId = teamId !== null && !isNaN(Number(teamId)) ? Number(teamId) : null;
+    const validLeagueId = leagueId !== null && !isNaN(Number(leagueId)) ? Number(leagueId) : null;
+    
+    // 객체에 존재하는지 안전하게 확인 (String 키로 변환하여 확인)
+    const hasTeam = validTeamId !== null && String(validTeamId) in teams;
+    const hasLeague = validLeagueId !== null && String(validLeagueId) in leagues;
     
     return {
       id: post.id,
       title: post.title,
       board_id: boardId,
-      board_name: post.board?.name || boardNameMap[boardId] || '게시판',
+      board_name: boardName,
       board_slug: post.board?.slug || boardData.slug || boardId,
       post_number: post.post_number || 0,
       created_at: post.created_at,
@@ -418,12 +479,12 @@ export function formatPosts(
       likes: post.likes || 0,
       author_nickname: post.profiles?.nickname || '익명',
       author_id: post.profiles?.id,
-      comment_count: commentCounts[post.id] || 0,
+      comment_count: commentCounts[post.id.toString()] || 0,
       content: post.content,
-      team_id: teamId,
-      league_id: leagueId,
-      team_logo: teamId && teamsData[teamId] ? teamsData[teamId].logo : null,
-      league_logo: leagueId && leaguesData[leagueId] ? leaguesData[leagueId].logo : null
+      team_id: validTeamId,
+      league_id: validLeagueId,
+      team_logo: hasTeam ? teams[validTeamId as number]?.logo : null,
+      league_logo: hasLeague ? leagues[validLeagueId as number]?.logo : null
     };
   });
 } 

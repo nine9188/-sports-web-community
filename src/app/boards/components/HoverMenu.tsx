@@ -37,11 +37,11 @@ export default function HoverMenu({
   currentBoardSlug,
 }: HoverMenuProps) {
   const [hoveredBoard, setHoveredBoard] = useState<string | null>(null);
-  const [menuPosition, setMenuPosition] = useState({ left: 0 });
   const menuRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const menuItemsRef = useRef<Record<string, HTMLDivElement | null>>({});
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [menuPosition, setMenuPosition] = useState({ left: 0 });
 
   useEffect(() => {
     if (currentBoardSlug) {
@@ -58,7 +58,7 @@ export default function HoverMenu({
       clearTimeout(closeTimeoutRef.current);
     }
     
-    // 500ms 후에 메뉴 닫기
+    // 250ms 후에 메뉴 닫기
     closeTimeoutRef.current = setTimeout(() => {
       setHoveredBoard(null);
       closeTimeoutRef.current = null;
@@ -110,7 +110,7 @@ export default function HoverMenu({
         {/* 네비게이션 바 */}
         <nav className="flex overflow-x-auto">
           <Link
-            href={`/boards/${rootBoardSlug}`}
+            href={`/boards/${rootBoardSlug || rootBoardId}`}
             className={`px-3 py-2 text-sm font-medium whitespace-nowrap hover:bg-gray-50 rounded-md ${
               currentBoardId === rootBoardId ? 'bg-gray-100 text-blue-600' : 'text-gray-500'
             }`}
@@ -192,7 +192,7 @@ export default function HoverMenu({
             ref={menuRef}
             onMouseEnter={() => handleMenuEnter(hoveredBoard)}
             onMouseLeave={handleMenuClose}
-            className="absolute top-[100%] left-0 right-0 bg-white shadow-md border rounded-b-lg z-50 p-2 -mt-1 overflow-x-auto"
+            className="absolute top-[100%] bg-white shadow-md border rounded-b-lg z-50 p-2 -mt-1 overflow-x-auto"
             style={{ left: `${menuPosition.left}px`, marginTop: '-7px' }}
           >
             <div className="flex flex-nowrap gap-1">
