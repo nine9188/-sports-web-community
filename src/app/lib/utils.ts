@@ -7,7 +7,22 @@ export function cn(...inputs: ClassValue[]) {
 
 // API URL 관련 유틸리티 함수
 export function getAPIURL() {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  // 브라우저 환경일 경우 현재 URL을 사용
+  if (typeof window !== 'undefined') {
+    // 현재 브라우저의 위치를 기반으로 API URL 생성
+    try {
+      const origin = window.location.origin;
+      if (origin && origin !== 'null' && origin !== 'undefined') {
+        return origin;
+      }
+    } catch {
+      console.warn('Browser origin detection failed, using fallback');
+    }
+  }
+  
+  // 서버 측에서는 환경변수 사용
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 
+                 (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
   
   // URL이 유효한 형식인지 확인
   try {
