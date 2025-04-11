@@ -303,8 +303,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // 토큰 갱신 이벤트 처리
             if (newSession) {
               try {
-                // API 라우트를 통해 쿠키 갱신
-                await refreshCurrentSession();
+                // 로컬 상태만 업데이트
+                setSession(newSession);
+                setUser(newSession.user);
+                
+                // 서버 액션을 통한 토큰 갱신
+                if (newSession.refresh_token) {
+                  // 직접 refreshCurrentSession을 호출하면 API 라우트를 호출하게 됨
+                  // 대신 서버 액션을 직접 호출
+                  await refreshSession(newSession.refresh_token);
+                }
               } catch (error) {
                 console.error('토큰 갱신 중 오류:', error);
               }

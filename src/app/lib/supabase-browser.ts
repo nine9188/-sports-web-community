@@ -37,11 +37,11 @@ export const createClient = () => {
     supabaseAnonKey,
     {
       auth: {
-        persistSession: true,
-        autoRefreshToken: false,
-        detectSessionInUrl: true,
+        persistSession: false,        // 브라우저 세션 지속성 비활성화
+        autoRefreshToken: false,      // 자동 토큰 갱신 비활성화
+        detectSessionInUrl: false,    // URL에서 세션 감지 비활성화
         flowType: 'pkce',
-        storageKey: 'supabase_auth_token',
+        // localStorage를 사용하도록 명시적 설정
         storage: {
           getItem: (key) => {
             if (typeof window === 'undefined') return null;
