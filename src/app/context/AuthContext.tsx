@@ -52,12 +52,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ]);
       
       if (metaUpdate.error) {
-        console.error('아이콘 메타데이터 업데이트 실패:', metaUpdate.error);
         return false;
       }
       
       if (profileUpdate.error) {
-        console.error('아이콘 프로필 업데이트 실패:', profileUpdate.error);
         // 메타데이터는 업데이트됐으므로 UI에는 반영 가능
       }
       
@@ -72,8 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }));
       
       return true;
-    } catch (error) {
-      console.error('아이콘 업데이트 중 오류 발생:', error);
+    } catch {
       return false;
     }
   }, [user, supabase]);
@@ -84,18 +81,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     try {
       // 세션 확인 및 새로고침
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      const { data: sessionData } = await supabase.auth.getSession();
       
-      if (sessionError || !sessionData.session) {
-        console.error('세션 확인 오류:', sessionError);
+      if (!sessionData.session) {
         return;
       }
       
       // 최신 사용자 정보 가져오기
-      const { data, error } = await supabase.auth.getUser();
+      const { data } = await supabase.auth.getUser();
       
-      if (error || !data.user) {
-        console.error('사용자 데이터 가져오기 오류:', error);
+      if (!data.user) {
         return;
       }
       
@@ -103,26 +98,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const currentUser = data.user;
       
       // 프로필 테이블에서 최신 정보 확인 (아이콘 ID만 가져오기)
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profileData } = await supabase
         .from('profiles')
         .select('icon_id, nickname')
         .eq('id', currentUser.id)
         .single();
         
-      if (!profileError && profileData) {
+      if (profileData) {
         // 메타데이터와 프로필 테이블 간의 데이터 동기화 (아이콘 ID)
         if (profileData.icon_id && 
             profileData.icon_id !== currentUser.user_metadata?.icon_id) {
           
           // 메타데이터 업데이트
-          const { data: updatedUser, error: updateError } = await supabase.auth.updateUser({
+          const { data: updatedUser } = await supabase.auth.updateUser({
             data: {
               ...currentUser.user_metadata,
               icon_id: profileData.icon_id
             }
           });
           
-          if (!updateError && updatedUser.user) {
+          if (updatedUser.user) {
             setUser(updatedUser.user);
             return;
           }
@@ -132,8 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // 기본 업데이트 (프로필 데이터 없는 경우)
       setUser(currentUser);
       
-    } catch (error) {
-      console.error('사용자 데이터 새로고침 중 오류:', error);
+    } catch {
     }
   }, [user, supabase]);
   
@@ -146,12 +140,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(true);
         
         // 세션 가져오기 - 추가 옵션으로 새로고침 강제
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        const { data: sessionData } = await supabase.auth.getSession();
         
-        console.log('초기 세션 상태:', sessionData, sessionError);
-        
-        if (sessionError) {
-          throw sessionError;
+        if (!sessionData) {
+          throw new Error('세션을 가져오는데 실패했습니다');
         }
         
         // 컴포넌트가 마운트된 상태일 때만 상태 업데이트
@@ -161,9 +153,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(sessionData.session.user);
             
             // 세션 유효성 확인
-            const { data: userData, error: userError } = await supabase.auth.getUser();
-            if (!userError && userData.user) {
-              console.log('사용자 정보 확인됨:', userData.user);
+            const { data: userData } = await supabase.auth.getUser();
+            if (userData?.user) {
+              // 유효한 사용자
             }
           } else {
             setSession(null);
@@ -171,8 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           setIsLoading(false);
         }
-      } catch (error) {
-        console.error('세션 초기화 중 오류:', error);
+      } catch {
         if (mounted) {
           setSession(null);
           setUser(null);
@@ -186,7 +177,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // 인증 상태 변화 이벤트 리스너
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth 상태 변경:', event, session ? '세션 있음' : '세션 없음');
         if (mounted) {
           if (event === 'SIGNED_IN') {
             setUser(session?.user || null);
@@ -199,13 +189,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 const metadata = user.user_metadata || {};
                 
                 // profiles 테이블 확인
-                const { data: profileData, error: profileError } = await supabase
+                const { data: profileData } = await supabase
                   .from('profiles')
                   .select('*')
                   .eq('id', user.id)
                   .single();
                 
-                if (profileError || !profileData) {
+                if (!profileData) {
                   // 프로필 데이터가 없으면 생성
                   const { error: insertError } = await supabase
                     .from('profiles')
@@ -219,13 +209,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     });
                     
                   if (insertError) {
-                    console.error('프로필 생성 오류:', insertError);
                   } else {
-                    console.log('프로필 생성 성공');
                   }
                 }
-              } catch (error) {
-                console.error('프로필 처리 중 오류:', error);
+              } catch {
+                // 프로필 생성 실패 처리
               }
             }
             
@@ -240,8 +228,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 if (reward) {
                   await rewardUserActivity(session.user.id, ActivityType.CONSECUTIVE_LOGIN);
                 }
-              } catch (error) {
-                console.error('로그인 보상 처리 중 오류:', error);
+              } catch {
+                // 보상 처리 실패 무시
               }
             }
           } else if (event === 'TOKEN_REFRESHED') {

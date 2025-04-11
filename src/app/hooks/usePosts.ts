@@ -64,8 +64,6 @@ export const fetchPosts = async (params: PostsQueryParams): Promise<PostsRespons
       requestBody.currentBoardId = currentBoardId;
     }
     
-    console.log('API 요청 데이터:', requestBody);
-    
     // POST 요청 설정
     const requestOptions = {
       method: 'POST',
@@ -84,7 +82,6 @@ export const fetchPosts = async (params: PostsQueryParams): Promise<PostsRespons
       try {
         errorData = JSON.parse(errorText);
       } catch {
-        console.error('API 응답을 파싱할 수 없습니다:', errorText);
         throw new Error('서버 응답 형식이 올바르지 않습니다.');
       }
       
@@ -92,17 +89,14 @@ export const fetchPosts = async (params: PostsQueryParams): Promise<PostsRespons
     }
     
     const responseData = await response.json();
-    console.log('API 응답 데이터:', responseData);
     
     // 응답 데이터 구조 확인
     if (!responseData.data || !Array.isArray(responseData.data)) {
-      console.error('응답 데이터 형식이 잘못되었습니다:', responseData);
       return { data: [] }; // 기본값 반환
     }
     
     return responseData;
   } catch (error) {
-    console.error('게시글 목록 조회 오류:', error);
     throw error;
   }
 };

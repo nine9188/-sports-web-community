@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "cross-env NODE_OPTIONS=--no-warnings next build",
     "start": "next start",
     "lint": "next lint",
     "create:feature": "powershell -File ./scripts/create-feature.ps1",
@@ -75,6 +75,7 @@
     "@types/uuid": "^10.0.0",
     "autoprefixer": "^10.4.21",
     "commitizen": "^4.3.1",
+    "cross-env": "^7.0.3",
     "cz-conventional-changelog": "^3.3.0",
     "cz-customizable": "^7.4.0",
     "eslint": "^9.24.0",

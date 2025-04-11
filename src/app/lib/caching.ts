@@ -33,11 +33,8 @@ export async function getCachedData<T>(
   
   // 유효한, 만료되지 않은 메모리 캐시가 있으면 반환
   if (cachedEntry && cachedEntry.expiry > now) {
-    console.log(`메모리 캐시 히트: ${cacheKey}`);
     return cachedEntry.data;
   }
-  
-  console.log(`메모리 캐시 미스: ${cacheKey}`);
   
   // 2. 메모리 캐시가 없으면 데이터베이스 캐시 확인
   let supabase;
@@ -60,7 +57,6 @@ export async function getCachedData<T>(
           expiry: now + (ttlSeconds * 1000)
         });
         
-        console.log(`DB 캐시 히트: ${cacheKey}`);
         return cachedItem.data as T;
       }
     } catch (cacheReadError) {
@@ -91,10 +87,6 @@ export async function getCachedData<T>(
                 data,
                 created_at: new Date().toISOString()
               });
-            
-            if (process.env.NODE_ENV === 'development') {
-              console.log(`DB 캐시 업데이트: ${cacheKey}`);
-            }
           } catch (updateError) {
             console.error(`캐시 업데이트 오류 (${cacheKey}):`, updateError);
           }
@@ -123,8 +115,6 @@ export async function getCachedData<T>(
  * 게시글 상세 데이터를 캐싱하는 특수 함수
  */
 export async function getCachedPostDetail(boardSlug: string, postNumber: number) {
-  console.log("게시글 상세 조회:", boardSlug, postNumber);
-  
   try {
     const supabase = await createClientWithoutCookies();
     
@@ -140,7 +130,6 @@ export async function getCachedPostDetail(boardSlug: string, postNumber: number)
       .single();
     
     if (postError) {
-      console.error(`게시글 조회 오류 (${boardSlug}/${postNumber}):`, postError);
       throw postError;
     }
     
@@ -153,11 +142,8 @@ export async function getCachedPostDetail(boardSlug: string, postNumber: number)
         .eq('id', postData.board.team_id)
         .single();
       
-      if (teamError) {
-        console.error(`팀 정보 조회 오류 (team_id: ${postData.board.team_id}):`, teamError);
-      } else {
+      if (!teamError) {
         teamData = team;
-        console.log("팀 정보:", teamData);
       }
     }
     
@@ -170,11 +156,8 @@ export async function getCachedPostDetail(boardSlug: string, postNumber: number)
         .eq('id', postData.board.league_id)
         .single();
       
-      if (leagueError) {
-        console.error(`리그 정보 조회 오류 (league_id: ${postData.board.league_id}):`, leagueError);
-      } else {
+      if (!leagueError) {
         leagueData = league;
-        console.log("리그 정보:", leagueData);
       }
     }
     
@@ -188,11 +171,8 @@ export async function getCachedPostDetail(boardSlug: string, postNumber: number)
       
       if (!filesError && filesData) {
         files = filesData as FileData[];
-      } else if (filesError) {
-        console.error(`첨부 파일 조회 오류 (post_id: ${postData.id}):`, filesError);
       }
-    } catch (fileError: unknown) {
-      console.error(`첨부 파일 처리 중 오류 발생 (post_id: ${postData.id}):`, fileError);
+    } catch {
       // 오류가 발생해도 계속 진행
     }
     
@@ -227,11 +207,9 @@ export async function getCachedPostDetail(boardSlug: string, postNumber: number)
       league: leagueData
     };
     
-    console.log("게시글 상세 정보:", result);
     return result;
     
   } catch (error) {
-    console.error(`게시글 캐싱 처리 실패 (${boardSlug}/${postNumber}):`, error);
     throw error;
   }
 }
@@ -253,12 +231,10 @@ export async function getCachedBoardStructure() {
           .order('display_order', { ascending: true });
         
         if (error) {
-          console.error('게시판 구조 데이터 조회 오류:', error);
           throw error;
         }
         
         if (!data || data.length === 0) {
-          console.warn('게시판 데이터가 없습니다.');
           return [];
         }
         
@@ -266,8 +242,7 @@ export async function getCachedBoardStructure() {
       },
       30 * 60 // 게시판 구조는 30분 캐싱
     );
-  } catch (error) {
-    console.error('게시판 구조 캐싱 처리 실패:', error);
+  } catch {
     // 오류 발생 시 빈 배열을 반환하여 애플리케이션이 계속 실행되도록 함
     return [];
   }
@@ -294,7 +269,6 @@ export async function getCachedComments(postId: string) {
           .order('created_at', { ascending: true });
         
         if (error) {
-          console.error(`댓글 데이터 조회 오류 (postId: ${postId}):`, error);
           throw error;
         }
         
@@ -302,8 +276,7 @@ export async function getCachedComments(postId: string) {
       },
       5 * 60 // 댓글은 5분 캐싱
     );
-  } catch (error) {
-    console.error(`댓글 캐싱 처리 실패 (postId: ${postId}):`, error);
+  } catch {
     // 오류 발생 시 빈 배열을 반환하여 애플리케이션이 계속 실행되도록 함
     return [];
   }
@@ -317,8 +290,7 @@ function isValidCache(createdAt: string, ttlSeconds: number): boolean {
     const created = new Date(createdAt).getTime();
     const now = Date.now();
     return (now - created) / 1000 < ttlSeconds;
-  } catch (error) {
-    console.error('캐시 유효성 검사 오류:', error);
+  } catch {
     return false; // 오류 발생 시 캐시를 유효하지 않다고 간주
   }
 }
@@ -331,72 +303,48 @@ export async function invalidatePostCache(boardSlug: string, postNumber: number)
     const supabase = await createClientWithoutCookies();
     const cacheKey = `post_detail:${boardSlug}:${postNumber}`;
     
-    // 메모리 캐시 무효화
-    invalidateCache(cacheKey);
+    // 메모리 캐시 삭제
+    memoryCache.delete(cacheKey);
     
-    // DB 캐시 무효화
+    // DB 캐시 삭제
     await supabase
       .from('cache')
       .delete()
       .eq('key', cacheKey);
     
-    // 댓글 캐시도 함께 무효화 (게시글 ID 필요)
-    const { data: post, error } = await supabase
-      .from('posts')
-      .select('id')
-      .eq('post_number', postNumber)
-      .single();
+    // 게시판 및 인기글 관련 캐시도 같이 무효화
+    invalidateCache(`board_posts:${boardSlug}`);
     
-    if (error) {
-      console.error(`캐시 무효화를 위한 게시글 조회 오류 (${boardSlug}/${postNumber}):`, error);
-      return;
-    }
+    const topicCacheKeys = ['topic_posts:views', 'topic_posts:likes', 'topic_posts:comments'];
+    topicCacheKeys.forEach(key => invalidateCache(key));
     
-    if (post) {
-      const commentsKey = `comments:${post.id}`;
-      invalidateCache(commentsKey);
-      
-      await supabase
-        .from('cache')
-        .delete()
-        .eq('key', commentsKey);
-    }
-  } catch (error) {
-    console.error(`게시글 캐시 무효화 오류 (${boardSlug}/${postNumber}):`, error);
+  } catch {
+    // 오류가 발생해도 계속 진행
   }
 }
 
 /**
- * 특정 키를 가진 캐시를 무효화합니다.
- * @param key 무효화할 캐시 키
+ * 특정 캐시 항목 무효화
  */
 export function invalidateCache(key: string): void {
   memoryCache.delete(key);
-  console.log(`캐시 무효화: ${key}`);
 }
 
 /**
- * 특정 패턴으로 시작하는 모든 캐시를 무효화합니다.
- * @param keyPrefix 무효화할 캐시 키 접두사
+ * 특정 접두사로 시작하는 모든 캐시 항목 무효화
  */
 export function invalidateCacheByPrefix(keyPrefix: string): void {
-  let invalidatedCount = 0;
-  
-  memoryCache.forEach((_, key) => {
+  // 메모리 캐시 제거
+  for (const key of memoryCache.keys()) {
     if (key.startsWith(keyPrefix)) {
       memoryCache.delete(key);
-      invalidatedCount++;
     }
-  });
-  
-  console.log(`캐시 무효화 (접두사 ${keyPrefix}): ${invalidatedCount}개 항목`);
+  }
 }
 
 /**
  * 모든 캐시를 무효화합니다.
  */
 export function clearAllCache(): void {
-  const count = memoryCache.size;
   memoryCache.clear();
-  console.log(`모든 캐시 삭제: ${count}개 항목`);
-} 
+}

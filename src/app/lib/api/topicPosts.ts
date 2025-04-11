@@ -1,6 +1,17 @@
 import { createClientWithoutCookies } from '@/app/lib/supabase-middleware';
 import { getCachedData } from '@/app/lib/caching';
 
+// 로고 정보를 위한 인터페이스
+interface TeamInfo {
+  id: number;
+  logo?: string;
+}
+
+interface LeagueInfo {
+  id: number;
+  logo?: string;
+}
+
 // 인기글 타입 정의
 export interface TopicPost {
   id: string;
@@ -40,7 +51,6 @@ export async function getCachedTopicPosts(type: 'views' | 'likes' | 'comments'):
   return getCachedData(
     cacheKey,
     async () => {
-      console.time('인기글 가져오기');
       const supabase = await createClientWithoutCookies();
       
       // 1. 글 목록 가져오기 (정렬 기준에 따라)
@@ -73,7 +83,6 @@ export async function getCachedTopicPosts(type: 'views' | 'likes' | 'comments'):
       
       // 빈 배열인 경우 빠르게 반환
       if (validPosts.length === 0) {
-        console.timeEnd('인기글 가져오기');
         return [];
       }
       
@@ -120,7 +129,7 @@ export async function getCachedTopicPosts(type: 'views' | 'likes' | 'comments'):
         .filter(Boolean);
         
       // 모든 필요한 정보를 병렬로 가져오기
-      const [teamsResult, leaguesResult, commentsResults] = await Promise.all([
+      const [teamsResult, leaguesResult] = await Promise.all([
         // 팀 로고 가져오기
         teamIds.length > 0
           ? supabase.from('teams').select('id, logo').in('id', teamIds)
@@ -129,42 +138,70 @@ export async function getCachedTopicPosts(type: 'views' | 'likes' | 'comments'):
         // 리그 로고 가져오기
         leagueIds.length > 0
           ? supabase.from('leagues').select('id, logo').in('id', leagueIds)
-          : Promise.resolve({ data: [] }),
-          
-        // 댓글 수 가져오기 (type이 'comments'인 경우만)
-        type === 'comments'
-          ? Promise.all(validPosts.map(post => 
-              supabase
-                .from('comments')
-                .select('id', { count: 'exact', head: true })
-                .eq('post_id', post.id)
-            ))
-          : Promise.resolve([])
+          : Promise.resolve({ data: [] })
       ]);
       
       // 5. 로고 맵핑 구성
       const teamLogoMap: Record<number, string> = {};
-      (teamsResult.data || []).forEach(team => { 
+      (teamsResult.data || []).forEach((team: TeamInfo) => { 
         if (team.id) teamLogoMap[team.id] = team.logo || '';
       });
       
       const leagueLogoMap: Record<number, string> = {};
-      (leaguesResult.data || []).forEach(league => { 
+      (leaguesResult.data || []).forEach((league: LeagueInfo) => { 
         if (league.id) leagueLogoMap[league.id] = league.logo || '';
       });
       
       // 6. 댓글 수 맵핑 구성
-      let commentCounts: Record<string, number> = {};
+      const commentCounts: Record<string, number> = {};
       
       if (type === 'comments') {
-        // commentsResults에서 댓글 수 추출
-        validPosts.forEach((post, index) => {
-          const result = commentsResults[index];
-          commentCounts[post.id] = result?.count || 0;
-        });
+        console.log(`댓글 기준 정렬: ${validPosts.length}개 게시물의 댓글 수를 가져옵니다.`);
+        
+        // 각 게시물의 댓글 수를 개별적으로 가져오기
+        await Promise.all(
+          validPosts.map(async (post) => {
+            const { count } = await supabase
+              .from('comments')
+              .select('*', { count: 'exact', head: true })
+              .eq('post_id', post.id);
+            
+            commentCounts[post.id] = count || 0;
+            console.log(`포스트 ID: ${post.id}, 제목: ${post.title}, 댓글 수: ${count || 0}`);
+          })
+        );
+        
+        console.log('댓글 수 가져오기 완료');
+        
+        // 댓글 수 기준 상위 게시물 로그
+        const topComments = validPosts
+          .map(post => ({
+            id: post.id,
+            title: post.title,
+            commentCount: commentCounts[post.id] || 0
+          }))
+          .sort((a, b) => b.commentCount - a.commentCount)
+          .slice(0, 5);
+        
+        console.log('댓글 수 많은 상위 5개 게시물:', topComments);
       } else {
-        // 댓글 수는 필요 없는 경우 빈 객체
-        commentCounts = {};
+        // 다른 타입일 경우에도 간단히 댓글 수는 가져오기
+        const postIds = validPosts.map(post => post.id);
+        
+        for (let i = 0; i < postIds.length; i += 10) {
+          const batch = postIds.slice(i, i + 10);
+          const promises = batch.map(id => 
+            supabase.from('comments')
+              .select('*', { count: 'exact', head: true })
+              .eq('post_id', id)
+          );
+          
+          const results = await Promise.all(promises);
+          
+          batch.forEach((id, index) => {
+            commentCounts[id] = results[index].count || 0;
+          });
+        }
       }
       
       // 7. 처리된 데이터 생성
@@ -210,12 +247,20 @@ export async function getCachedTopicPosts(type: 'views' | 'likes' | 'comments'):
       } else if (type === 'likes') {
         result = [...processedPosts].sort((a, b) => b.likes - a.likes).slice(0, 20);
       } else { // comments
-        result = [...processedPosts].sort((a, b) => b.comment_count - a.comment_count).slice(0, 20);
+        console.log("댓글 수 기준 정렬 결과: ", 
+          processedPosts
+            .sort((a, b) => b.comment_count - a.comment_count)
+            .slice(0, 5)
+            .map(p => `${p.title}: ${p.comment_count}`)
+        );
+        
+        result = [...processedPosts]
+          .sort((a, b) => b.comment_count - a.comment_count)
+          .slice(0, 20);
       }
       
-      console.timeEnd('인기글 가져오기');
       return result;
     },
-    5 * 60 // 5분 캐싱
+    type === 'comments' ? 60 : 60 // 모든 타입 60초 캐싱
   );
 } 

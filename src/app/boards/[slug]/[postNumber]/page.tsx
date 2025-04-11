@@ -71,13 +71,11 @@ export default async function PostDetailPage({
     const normalizedFromBoardId = fromBoardId === 'undefined' ? undefined : fromBoardId;
     
     if (!slug || !postNumber) {
-      console.error('유효하지 않은 파라미터:', { slug, postNumber });
       return notFound();
     }
     
     const postNum = parseInt(postNumber, 10);
     if (isNaN(postNum) || postNum <= 0) {
-      console.error('유효하지 않은 게시글 번호:', postNumber);
       return notFound();
     }
     
@@ -90,8 +88,7 @@ export default async function PostDetailPage({
     // --- 병렬 데이터 페칭 최적화 ---
     
     // 1. 게시판 정보 가져오기
-    const boardPromise = getBoardBySlug(slug).catch(error => {
-      console.error('게시판 정보 가져오기 오류:', error);
+    const boardPromise = getBoardBySlug(slug).catch(() => {
       return null;
     });
     
@@ -119,7 +116,7 @@ export default async function PostDetailPage({
       boardStructure,
       adjacentPosts
     ] = await Promise.all([
-      // 게시글 상세 정보 가져오기 (올바른 절대 URL 사용)
+      // 게시글 상세 정보 가져오기
       (async () => {
         try {
           // 절대 URL 생성
@@ -136,8 +133,7 @@ export default async function PostDetailPage({
           
           if (!res.ok) throw new Error('게시글을 가져오는데 실패했습니다');
           return res.json();
-        } catch (error) {
-          console.error('게시글 상세 가져오기 오류:', error);
+        } catch {
           return { post: null };
         }
       })(),
@@ -182,39 +178,48 @@ export default async function PostDetailPage({
       comments,
       filteredPostsResult
     ] = await Promise.all([
-      // 댓글 데이터 가져오기 (올바른 절대 URL 사용)
+      // 댓글 데이터 가져오기
       (async () => {
         try {
-          // 절대 URL 생성
-          const apiUrl = new URL('/api/comments', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000');
-          // 경로 세그먼트 추가
-          apiUrl.pathname += `/${post.id}`;
+          // 절대 URL로 구성 (origin 명시적 지정)
+          const origin = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'http://localhost:3000';
+          const apiUrl = new URL(`/api/comments/${post.id}`, origin).toString();
           
-          const res = await fetch(apiUrl.toString(), {
+          console.log(`댓글 데이터 요청 URL: ${apiUrl}, 게시글 ID: ${post.id}`);
+          
+          const response = await fetch(apiUrl, {
             cache: 'no-store',
+            next: { revalidate: 0 },
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
             }
           });
           
-          if (!res.ok) throw new Error('댓글을 가져오는데 실패했습니다');
-          return res.json();
+          if (!response.ok) {
+            console.error(`댓글 조회 응답 오류: ${response.status} ${response.statusText}`);
+            throw new Error('댓글을 가져오는데 실패했습니다');
+          }
+          
+          const data = await response.json();
+          console.log(`댓글 데이터 받음: ${data ? data.length : 0}개, 게시글 ID: ${post.id}`);
+          return Array.isArray(data) ? data : [];
         } catch (error) {
-          console.error('댓글 가져오기 오류:', error);
+          console.error('댓글 조회 오류:', error);
           return [];
         }
       })(),
       
-      // 게시글 필터링 - 함수 인자 수정
+      // 게시글 필터링
       getFilteredPostsByBoardHierarchy(
         board.id, 
         normalizedFromBoardId,
         rootBoardId, 
-        [rootBoardId], // allBoardIds 간소화
+        [rootBoardId],
         currentPage,
-        // 하위 게시판 ID를 문자열 배열로 변환하는 함수 제공
         async (boardId: string) => {
-          // boardId의 하위 게시판 ID들을 문자열 배열로 반환
           return (boardStructure as BoardStructure[])
             .filter(b => b.parent_id === boardId)
             .map(b => b.id);
@@ -226,7 +231,7 @@ export default async function PostDetailPage({
     const filteredPosts = filteredPostsResult.posts || [];
     const totalCount = filteredPostsResult.totalCount || 0;
     
-    // 4. 하위 게시판 ID 찾기 - 직접 구현
+    // 4. 하위 게시판 ID 찾기
     const allSubBoardIds: string[] = [];
     // 하위 게시판 ID를 직접 추출
     (boardStructure as BoardStructure[]).forEach(board => {
@@ -302,8 +307,8 @@ export default async function PostDetailPage({
     ]);
     
     // 조회수 증가는 결과를 기다리지 않고 비동기로 처리
-    incrementViewCount(post.id).catch(error => {
-      console.error('조회수 증가 처리 오류:', error);
+    incrementViewCount(post.id).catch(() => {
+      // 조회수 증가 실패해도, 게시글 보기에는 영향 없음
     });
     
     // 12. 게시글 데이터 포맷팅
@@ -422,8 +427,7 @@ export default async function PostDetailPage({
         <div className="mb-4">
           <CommentSection 
             postId={post.id} 
-            boardId={board.id}
-            initialComments={comments as unknown as CommentType[]} 
+            initialComments={Array.isArray(comments) ? comments as CommentType[] : []} 
             boardSlug={slug}
             postNumber={postNumber}
             postOwnerId={post.user_id}
@@ -478,7 +482,6 @@ export default async function PostDetailPage({
       </div>
     );
   } catch (error) {
-    console.error('게시글 상세 페이지 렌더링 오류:', error);
     // 오류가 NEXT_NOT_FOUND 관련인지 확인
     if (error instanceof Error && error.message?.includes('NEXT_NOT_FOUND')) {
       return notFound();

@@ -11,6 +11,11 @@ const nextConfig = {
     domains: [
       'vnjjfhsuzoxcljqqwwvx.supabase.co',
     ],
+  },
+  // punycode 모듈 경고 무시 설정
+  webpack: (config) => {
+    // 수정된 설정 반환
+    return config;
   }
 }
 

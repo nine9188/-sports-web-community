@@ -72,10 +72,7 @@ export default function UserProfile({ profileData = {} }: UserProfileProps) {
         commentCount: commentCount || 0
       });
       
-      console.log('사용자 통계 로드 완료:', { postCount, commentCount });
-      
-    } catch (error) {
-      console.error('사용자 통계 가져오기 오류:', error);
+    } catch {
     }
   }, [user]);
   
@@ -95,8 +92,7 @@ export default function UserProfile({ profileData = {} }: UserProfileProps) {
         setIconName(iconInfo.currentIconName);
         setIconLoadFailed(false);
       }
-    } catch (error) {
-      console.error('아이콘 정보 가져오기 오류:', error);
+    } catch {
       setIconLoadFailed(true);
     } finally {
       setIsIconLoading(false);

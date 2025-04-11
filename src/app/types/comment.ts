@@ -7,6 +7,7 @@ export interface CommentType {
   post_id: string;
   likes?: number;
   dislikes?: number;
+  userAction?: 'like' | 'dislike' | null;
   profiles: {
     nickname: string | null;
     id?: string;

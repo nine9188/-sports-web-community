@@ -92,7 +92,7 @@ export default function PostHeader({
           ) : (
             <div className="w-5 h-5 mr-1.5 bg-transparent rounded-full flex-shrink-0"></div>
           )}
-          <span>{author.nickname || '알 수 없음'}</span>
+          <span className="font-medium text-sm">{author.nickname || '알 수 없음'}</span>
         </div>
         
         {/* 오른쪽 그룹: 조회/추천/댓글/작성시간 */}
@@ -128,7 +128,7 @@ export default function PostHeader({
             ) : (
               <div className="w-5 h-5 mr-1.5 bg-transparent rounded-full flex-shrink-0"></div>
             )}
-            <span>{author.nickname || '알 수 없음'}</span>
+            <span className="font-medium text-sm">{author.nickname || '알 수 없음'}</span>
           </div>
           
           {/* 작성시간 - 오른쪽 배치 */}

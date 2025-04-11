@@ -5,9 +5,9 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Strapi URL 관련 유틸리티 함수 추가
-export function getStrapiURL() {
-  return process.env.NEXT_PUBLIC_STRAPI_API_URL || 'http://localhost:1337'
+// API URL 관련 유틸리티 함수
+export function getAPIURL() {
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 }
 
 // 토큰 관련 유틸리티 함수 추가

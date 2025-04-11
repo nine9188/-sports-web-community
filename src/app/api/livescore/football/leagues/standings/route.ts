@@ -107,7 +107,6 @@ export async function GET(request: Request) {
     if (REQUEST_THROTTLE[cacheKey] && (now - REQUEST_THROTTLE[cacheKey]) < THROTTLE_WINDOW) {
       // 너무 빠른 중복 요청이면 캐시된 데이터 반환 (있는 경우)
       if (CACHE[cacheKey]) {
-        console.log(`[API] Throttled request for ${leagueParam || 'premier'} - Using cache`);
         return NextResponse.json({ data: CACHE[cacheKey].data });
       }
     }
@@ -117,7 +116,6 @@ export async function GET(request: Request) {
     
     // 캐시된 데이터가 있고 유효하다면 사용
     if (CACHE[cacheKey] && (now - CACHE[cacheKey].timestamp) < CACHE_TTL) {
-      console.log(`[API] Cache HIT for ${leagueParam || 'premier'}`);
       return NextResponse.json({ data: CACHE[cacheKey].data });
     }
     
@@ -125,15 +123,12 @@ export async function GET(request: Request) {
     const lastApiCall = lastApiCallTimestamps[cacheKey] || 0;
     if (!isServerCall && (now - lastApiCall) < API_CALL_COOLDOWN) {
       if (CACHE[cacheKey]) {
-        console.log(`[API] Cooldown active for ${leagueParam || 'premier'} - Using cache`);
         return NextResponse.json({ data: CACHE[cacheKey].data });
       }
     }
     
     // API 호출 시간 기록
     lastApiCallTimestamps[cacheKey] = now;
-    
-    console.log(`[API] Cache MISS for ${leagueParam || 'premier'} - Fetching from external API`);
     
     // 스탠딩 데이터 요청
     const standingsResponse = await fetch(

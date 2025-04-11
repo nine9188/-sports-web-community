@@ -52,10 +52,8 @@ export async function POST(req: NextRequest) {
     let boardIdCondition;
     
     if (boardIds.length === 1 && boardIds[0] === 'all') {
-      console.log("모든 게시판의 게시물을 가져옵니다.");
       boardIdCondition = supabase.from("posts").select("*, profiles:user_id(*)").order("created_at", { ascending: false });
     } else {
-      console.log(`지정된 게시판(${boardIds.join(', ')})의 게시물을 가져옵니다.`);
       boardIdCondition = supabase.from("posts").select("*, profiles:user_id(*)").in("board_id", boardIds).order("created_at", { ascending: false });
     }
 
@@ -76,7 +74,6 @@ export async function POST(req: NextRequest) {
 
     // 게시물 데이터 조회 오류 확인
     if (postsResult.error) {
-      console.error("게시물 조회 중 오류:", postsResult.error);
       return NextResponse.json(
         { error: "게시물을 불러오는 중 오류가 발생했습니다." },
         { status: 500 }
@@ -95,7 +92,6 @@ export async function POST(req: NextRequest) {
 
     // 5. 댓글 수 가져오기
     let commentsCountData: { post_id: string; count: number }[] = [];
-    let commentsError = null;
 
     try {
       // 각 게시물별로 댓글 수 가져오기
@@ -114,19 +110,8 @@ export async function POST(req: NextRequest) {
       });
       
       commentsCountData = await Promise.all(countPromises);
-    } catch (error) {
-      console.error("댓글 수 조회 오류:", error);
-      commentsError = error;
-    }
-
-    // 데이터 조회 오류 확인
-    if (boardsResult.error || teamsResult.error || leaguesResult.error || commentsError) {
-      console.error("데이터 조회 중 오류:", {
-        boardsError: boardsResult.error,
-        teamsError: teamsResult.error,
-        leaguesError: leaguesResult.error,
-        commentsError: commentsError,
-      });
+    } catch {
+      // 데이터 조회 오류 확인
       return NextResponse.json(
         { error: "관련 데이터를 불러오는 중 오류가 발생했습니다." },
         { status: 500 }
@@ -213,8 +198,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ data: formattedPosts });
-  } catch (error) {
-    console.error("게시물 목록 API 오류:", error);
+  } catch {
     return NextResponse.json(
       { error: "서버 오류가 발생했습니다." },
       { status: 500 }

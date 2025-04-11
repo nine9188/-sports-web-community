@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Eye, ThumbsUp, MessageSquare, Image as ImageIcon, Link as LinkIcon, Video as VideoIcon, Youtube as YoutubeIcon } from 'lucide-react';
@@ -9,8 +9,8 @@ import type { TopicPost } from '@/app/lib/api/topicPosts';
 // 탭 타입 정의
 type TabType = 'views' | 'likes' | 'comments';
 
-// 탭별 캐시를 위한 인터페이스
-interface TabsCache {
+// 인기글 데이터 타입
+interface TopicPostsData {
   views: TopicPost[];
   likes: TopicPost[];
   comments: TopicPost[];
@@ -19,51 +19,54 @@ interface TabsCache {
 export default function TopicTabs() {
   // 상태 관리
   const [activeTab, setActiveTab] = useState<TabType>('views');
-  const [posts, setPosts] = useState<TopicPost[]>([]);
+  const [postsData, setPostsData] = useState<TopicPostsData | null>(null);
   const [loading, setLoading] = useState(true);
-  
-  // 탭별 캐시
-  const [postsCache, setPostsCache] = useState<TabsCache>({
-    views: [],
-    likes: [],
-    comments: [],
-  });
+  const isLoadingRef = useRef(false);
 
-  // 처음 마운트될 때와 탭 변경 시 데이터 로드
+  // 처음 마운트될 때 데이터 로드
   useEffect(() => {
-    // 이미 캐시에 데이터가 있으면 캐시 사용
-    if (postsCache[activeTab].length > 0) {
-      setPosts(postsCache[activeTab]);
-      setLoading(false);
-      return;
-    }
+    // 이미 API 요청 중이면 중복 방지
+    if (isLoadingRef.current) return;
     
-    // 없으면 새로 불러오기
+    // 데이터 가져오기
     const fetchData = async () => {
+      if (postsData) {
+        // 이미 데이터가 있으면 다시 로드하지 않음
+        setLoading(false);
+        return;
+      }
+      
       setLoading(true);
+      isLoadingRef.current = true;
+      
       try {
-        const response = await fetch(`/api/topic-posts?type=${activeTab}`);
+        // 모든 탭 데이터를 한 번에 가져오기
+        const timestamp = new Date().getTime(); // 캐시 방지
+        const response = await fetch(`/api/topic-posts?t=${timestamp}`, {
+          cache: 'no-store'
+        });
+        
         if (!response.ok) throw new Error('Failed to fetch posts');
         
         const data = await response.json();
-        
-        // 캐시 및 표시 업데이트
-        setPostsCache(prev => ({
-          ...prev,
-          [activeTab]: data
-        }));
-        setPosts(data);
+        setPostsData(data);
       } catch (error) {
         console.error('인기글 로딩 오류:', error);
-        setPosts([]);
       } finally {
         setLoading(false);
+        isLoadingRef.current = false;
       }
     };
     
     fetchData();
-  }, [activeTab, postsCache]);
-  
+  }, [postsData]);
+
+  // 현재 탭에 맞는 게시글 배열 가져오기
+  const getCurrentPosts = (): TopicPost[] => {
+    if (!postsData) return [];
+    return postsData[activeTab] || [];
+  };
+
   // 게시글 내용에서 특수 항목(이미지, 비디오 등) 감지
   const checkContentType = (content?: string) => {
     if (!content) return { hasImage: false, hasVideo: false, hasYoutube: false, hasLink: false };
@@ -125,12 +128,15 @@ export default function TopicTabs() {
       return (
         <span className="text-gray-500 ml-1 shrink-0 flex items-center">
           <MessageSquare className="h-3 w-3 mr-0.5" />
-          {post.comment_count}
+          {post.comment_count || 0}
         </span>
       );
     }
     return null;
   };
+  
+  // 현재 표시할 게시글
+  const currentPosts = getCurrentPosts();
   
   return (
     <div className="mb-4 bg-white rounded-lg border">
@@ -172,17 +178,17 @@ export default function TopicTabs() {
               <div key={i} className="h-4 bg-gray-100 rounded animate-pulse"></div>
             ))}
           </div>
-        ) : posts.length === 0 ? (
+        ) : currentPosts.length === 0 ? (
           <div className="p-3 text-center text-gray-500 text-xs">
             게시글이 없습니다.
           </div>
         ) : (
           <ul>
-            {posts.map((post, index) => {
+            {currentPosts.map((post, index) => {
               const { hasImage, hasVideo, hasYoutube, hasLink } = checkContentType(post.content);
               
               return (
-                <li key={post.id} className={index < posts.length - 1 ? "border-b" : ""}>
+                <li key={post.id} className={index < currentPosts.length - 1 ? "border-b" : ""}>
                   <Link 
                     href={`/boards/${post.board_slug}/${post.post_number}?from=boards`} 
                     className="block px-3 py-2 hover:bg-gray-50"
@@ -211,9 +217,6 @@ export default function TopicTabs() {
                           {hasVideo && <VideoIcon className="h-3 w-3 text-gray-400" />}
                           {hasYoutube && <YoutubeIcon className="h-3 w-3 text-red-400" />}
                           {hasLink && <LinkIcon className="h-3 w-3 text-blue-400" />}
-                          {post.comment_count > 0 && (
-                            <span className="text-xs text-gray-500 ml-0.5">[{post.comment_count}]</span>
-                          )}
                         </div>
                       </div>
                       {renderCount(post)}

@@ -1,6 +1,8 @@
 import { createClient } from '@/app/lib/supabase.server';
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic'; // 이 API는 항상 동적으로 실행
+
 // 게시판 타입 정의
 interface Board {
   id: string;

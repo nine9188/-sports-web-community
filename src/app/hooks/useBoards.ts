@@ -29,8 +29,6 @@ interface BoardsResponse {
 
 // 게시판 데이터 fetch 함수 (코드 재사용을 위해 분리)
 async function fetchBoards(): Promise<BoardsResponse> {
-  console.time('게시판 목록 가져오기');
-  
   // 캐시 적용된 fetch 요청
   const response = await fetch('/api/boards/list', {
     next: { revalidate: 300 }, // 5분마다 재검증 
@@ -43,7 +41,6 @@ async function fetchBoards(): Promise<BoardsResponse> {
   }
   
   const data = await response.json();
-  console.timeEnd('게시판 목록 가져오기');
   
   return data;
 }

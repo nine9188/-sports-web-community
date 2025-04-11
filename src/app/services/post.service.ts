@@ -27,12 +27,10 @@ export async function getPostByNumber(boardId: string, postNumber: number) {
       .limit(1);
       
     if (error) {
-      console.error('게시글 조회 중 오류 발생:', error);
       throw new Error(error?.message || '게시글 데이터 조회 오류');
     }
     
     if (!data || data.length === 0) {
-      console.error(`게시글을 찾을 수 없습니다. boardId: ${boardId}, postNumber: ${postNumber}`);
       throw new Error('게시글을 찾을 수 없습니다.');
     }
     
@@ -43,7 +41,6 @@ export async function getPostByNumber(boardId: string, postNumber: number) {
       throw err;
     }
     // 그 외 에러는 새 에러로 래핑
-    console.error(`게시글 조회 실패: boardId: ${boardId}, postNumber: ${postNumber}`, err);
     throw new Error(`게시글 조회 실패: ${String(err)}`);
   }
 }
@@ -64,8 +61,8 @@ export async function getAdjacentPosts(boardId: string, postNumber: number) {
       .limit(1);
     
     prevPost = data && data.length > 0 ? data[0] : null;
-  } catch (err) {
-    console.log('이전글 가져오기 오류:', err);
+  } catch {
+    // 에러 처리
   }
     
   // 다음글
@@ -80,8 +77,8 @@ export async function getAdjacentPosts(boardId: string, postNumber: number) {
       .limit(1);
     
     nextPost = data && data.length > 0 ? data[0] : null;
-  } catch (err) {
-    console.log('다음글 가져오기 오류:', err);
+  } catch {
+    // 에러 처리
   }
   
   return { prevPost, nextPost };
@@ -106,7 +103,6 @@ export async function getPostsForBoardIds(boardIds: string[], page: number = 1) 
     .range(from, from + pageSize - 1);
     
   if (error) {
-    console.error('게시글 목록을 가져오는 중 오류가 발생했습니다:', error);
     return [];
   }
   
@@ -201,7 +197,6 @@ export async function getPostsForCurrentBoard(
     .single();
   
   if (!currentBoard) {
-    console.error('현재 게시판 정보를 찾을 수 없습니다:', currentBoardId);
     return [];
   }
   
@@ -230,7 +225,6 @@ export async function getTotalPostCount(boardIds: string[]) {
     .in('board_id', boardIds);
     
   if (error) {
-    console.error('게시글 개수를 가져오는 중 오류가 발생했습니다:', error);
     return 0;
   }
   
@@ -253,7 +247,6 @@ export async function getCommentsForPost(postId: string) {
     .order('created_at', { ascending: true });
     
   if (error) {
-    console.error('댓글을 가져오는 중 오류가 발생했습니다:', error);
     return [];
   }
   
@@ -262,26 +255,90 @@ export async function getCommentsForPost(postId: string) {
 
 // 댓글 수 가져오기
 export async function getCommentCounts(postIds: string[]): Promise<Record<string, number>> {
+  if (!postIds || postIds.length === 0) {
+    return {};
+  }
+  
   const supabase = await createClient();
   const commentCounts: Record<string, number> = {};
   
-  // 댓글 수 병렬로 가져오기
-  if (postIds.length > 0) {
+  try {
+    console.log(`${postIds.length}개 게시물의 댓글 수 조회 시작`);
+    
+    // 포스트 ID 배열을 최대 20개씩 청크로 나누기
+    const chunkSize = 20;
+    const chunks = [];
+    for (let i = 0; i < postIds.length; i += chunkSize) {
+      chunks.push(postIds.slice(i, i + chunkSize));
+    }
+    
+    // 각 청크별로 병렬 처리
     await Promise.all(
-      postIds.map(async (postId) => {
-        const { count, error: countError } = await supabase
+      chunks.map(async (chunk) => {
+        // 청크 내 모든 포스트에 대해 한 번에 쿼리
+        const { data, error } = await supabase
           .from('comments')
-          .select('*', { count: 'exact', head: true })
-          .eq('post_id', postId);
+          .select('post_id, count:id', { count: 'estimated' })
+          .in('post_id', chunk);
           
-        if (!countError) {
-          commentCounts[postId] = count || 0;
+        if (error) {
+          console.error('댓글 수 조회 오류:', error);
+          // 오류 발생 시 개별 쿼리로 대체
+          await Promise.all(
+            chunk.map(async (postId) => {
+              const { count, error: countError } = await supabase
+                .from('comments')
+                .select('*', { count: 'exact', head: true })
+                .eq('post_id', postId);
+                
+              if (!countError) {
+                commentCounts[postId] = count || 0;
+              }
+            })
+          );
+          return;
+        }
+        
+        // 청크 데이터 처리
+        if (data) {
+          // 댓글 없는 게시물 초기화
+          chunk.forEach(postId => {
+            commentCounts[postId] = 0;
+          });
+          
+          // 댓글 수 집계
+          data.forEach(row => {
+            if (row.post_id) {
+              commentCounts[row.post_id] = parseInt(row.count) || 0;
+            }
+          });
         }
       })
     );
+    
+    console.log(`댓글 수 조회 완료: ${Object.keys(commentCounts).length}개`);
+    return commentCounts;
+  } catch (error) {
+    console.error('댓글 수 조회 중 오류:', error);
+    
+    // 오류 발생 시 모든 게시물에 대해 개별적으로 쿼리
+    await Promise.all(
+      postIds.map(async (postId) => {
+        try {
+          const { count } = await supabase
+            .from('comments')
+            .select('*', { count: 'exact', head: true })
+            .eq('post_id', postId);
+            
+          commentCounts[postId] = count || 0;
+        } catch {
+          commentCounts[postId] = 0;
+        }
+      })
+    );
+    
+    return commentCounts;
   }
-  
-  return commentCounts;
 }
 
 // 아이콘 정보 조회
@@ -341,35 +398,21 @@ export async function getTeamAndLeagueInfo(boardIds: string[]): Promise<{
   leagues: Record<number, LeagueInfo>;
 }> {
   if (!boardIds || boardIds.length === 0) {
-    console.log("보드 ID가 없습니다.");
     return { teams: {}, leagues: {} };
   }
 
   const supabase = await createClient();
   
   try {
-    // 간단한 접근법: 모든 게시판의 정보를 가져와서 team_id와 league_id만 추출
-    const { data: boardsInfo, error } = await supabase
+    // 간단한 접근법: 게시판 정보 확인
+    const { error } = await supabase
       .from('boards')
       .select('id, team_id, league_id')
       .in('id', boardIds);
 
     if (error) {
-      console.error("보드 정보 가져오기 오류:", error);
       return { teams: {}, leagues: {} };
     }
-
-    // 팀 ID와 리그 ID 수집
-    const teamIds = boardsInfo
-      ?.filter(board => board.team_id !== null && board.team_id !== undefined)
-      .map(board => board.team_id) || [];
-      
-    const leagueIds = boardsInfo
-      ?.filter(board => board.league_id !== null && board.league_id !== undefined)
-      .map(board => board.league_id) || [];
-
-    console.log("추출된 팀 ID:", teamIds);
-    console.log("추출된 리그 ID:", leagueIds);
 
     // 결과 객체 준비
     const teams: Record<number, TeamInfo> = {};
@@ -379,8 +422,6 @@ export async function getTeamAndLeagueInfo(boardIds: string[]): Promise<{
     const { data: allTeams } = await supabase
       .from('teams')
       .select('id, name, logo');
-      
-    console.log("가져온 모든 팀 정보:", allTeams);
     
     if (allTeams) {
       allTeams.forEach(team => {
@@ -395,8 +436,6 @@ export async function getTeamAndLeagueInfo(boardIds: string[]): Promise<{
     const { data: allLeagues } = await supabase
       .from('leagues')
       .select('id, name, logo');
-      
-    console.log("가져온 모든 리그 정보:", allLeagues);
     
     if (allLeagues) {
       allLeagues.forEach(league => {
@@ -406,13 +445,9 @@ export async function getTeamAndLeagueInfo(boardIds: string[]): Promise<{
         };
       });
     }
-
-    console.log("최종 팀 데이터:", teams);
-    console.log("최종 리그 데이터:", leagues);
     
     return { teams, leagues };
-  } catch (error) {
-    console.error("팀 및 리그 정보 가져오기 오류:", error);
+  } catch {
     return { teams: {}, leagues: {} };
   }
 }
@@ -426,15 +461,6 @@ export function formatPosts(
   teams: Record<number, TeamInfo>,
   leagues: Record<number, LeagueInfo>
 ): FormattedPost[] {
-  // 디버깅을 위한 로그 추가
-  console.log("formatPosts 함수 호출됨");
-  console.log("teams:", teams);
-  console.log("leagues:", leagues);
-  
-  // 게시글 ID 로그
-  const postIds = posts.map(post => post.id).join(', ');
-  console.log(`포맷 중인 게시글 ID: ${postIds}`);
-  
   return posts.map(post => {
     const boardId = post.board_id || '';
     const boardData = boardsData[boardId] || {};
@@ -448,16 +474,6 @@ export function formatPosts(
     // 숫자 변환 및 유효성 검사
     const teamId = typeof rawTeamId === 'string' ? parseInt(rawTeamId, 10) : rawTeamId;
     const leagueId = typeof rawLeagueId === 'string' ? parseInt(rawLeagueId, 10) : rawLeagueId;
-    
-    console.log(`게시글 ${post.id}의 게시판 데이터:`, boardData);
-    console.log(`게시글 ${post.id}의 팀 ID 변환: ${rawTeamId}(${typeof rawTeamId}) -> ${teamId}(${typeof teamId})`);
-    console.log(`게시글 ${post.id}의 리그 ID 변환: ${rawLeagueId}(${typeof rawLeagueId}) -> ${leagueId}(${typeof leagueId})`);
-    
-    // 팀 로고 디버깅: 숫자 키로 teams 객체에 접근하는지 확인
-    if (teamId !== null) {
-      const hasTeamKey = Object.keys(teams).includes(String(teamId));
-      console.log(`게시글 ${post.id}의 팀 ID: ${teamId}, 키 존재: ${hasTeamKey}, 로고: ${hasTeamKey ? teams[teamId]?.logo : 'null'}`);
-    }
     
     // 팀과 리그 데이터를 숫자 ID로 안전하게 접근
     const validTeamId = teamId !== null && !isNaN(Number(teamId)) ? Number(teamId) : null;

@@ -63,20 +63,6 @@ export default function PostList({
   const [authorIcons, setAuthorIcons] = useState<Record<string, AuthorIconInfo>>({});
   const iconCache = useRef<Record<string, AuthorIconInfo>>({});
   
-  // 디버깅을 위한 코드 추가
-  useEffect(() => {
-    console.log("PostList 컴포넌트에 전달된 posts:", posts);
-    // 팀 로고 특별히 검사
-    const postsWithTeamLogo = posts.filter(p => p.team_logo);
-    console.log("팀 로고가 있는 posts:", postsWithTeamLogo.length);
-    console.log("팀 로고 샘플:", postsWithTeamLogo.map(p => ({ id: p.id, team_id: p.team_id, team_logo: p.team_logo })));
-    
-    // 리그 로고 검사 (비교용)
-    const postsWithLeagueLogo = posts.filter(p => p.league_logo);
-    console.log("리그 로고가 있는 posts:", postsWithLeagueLogo.length);
-    console.log("리그 로고 샘플:", postsWithLeagueLogo.map(p => ({ id: p.id, league_id: p.league_id, league_logo: p.league_logo })));
-  }, [posts]);
-  
   // 게시글 내용에 특정 요소가 포함되어 있는지 확인하는 함수
   const checkContentType = (content: string) => {
     if (!content) return { hasImage: false, hasVideo: false, hasYoutube: false, hasLink: false };
@@ -189,8 +175,8 @@ export default function PostList({
               iconCache.current[authorId] = result;
               newIconsMap[authorId] = result;
             }
-          } catch (error) {
-            console.error(`아이콘 정보 가져오기 오류 (${authorId}):`, error);
+          } catch {
+            // 오류 로깅 제거
           }
         })
       );

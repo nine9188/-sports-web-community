@@ -163,7 +163,6 @@ export default async function BoardDetailPage({
     const { data: userData } = await supabase.auth.getUser();
     const isLoggedIn = !!userData?.user;
     
-    console.time('게시판 데이터 요청');
     // 병렬로 데이터 요청 처리
     const [boardResult, allBoardsResult] = await Promise.all([
       // 1. 현재 slug로 게시판 정보 조회
@@ -178,11 +177,9 @@ export default async function BoardDetailPage({
         .from('boards')
         .select('*')
     ]);
-    console.timeEnd('게시판 데이터 요청');
     
     // 게시판 검증
     if (boardResult.error) {
-      console.error('게시판을 찾을 수 없습니다:', boardResult.error);
       return notFound();
     }
     
@@ -222,7 +219,6 @@ export default async function BoardDetailPage({
     const rootBoardSlug = boardsMap[rootBoardId]?.slug || rootBoardId;
     
     // 팀/리그 데이터 병렬 요청
-    console.time('팀/리그 데이터 요청');
     let teamData = null;
     let leagueData = null;
     
@@ -276,7 +272,6 @@ export default async function BoardDetailPage({
         };
       }
     }
-    console.timeEnd('팀/리그 데이터 요청');
 
     return (
       <div className="container mx-auto">
@@ -369,8 +364,7 @@ export default async function BoardDetailPage({
         </div>
       </div>
     );
-  } catch (error) {
-    console.error('게시판 상세 페이지 로딩 중 오류:', error);
+  } catch {
     return notFound();
   }
 } 
