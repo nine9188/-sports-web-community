@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useMemo, useCall
 import { createClient } from '@/app/lib/supabase-browser';
 import { Session, User } from '@supabase/supabase-js';
 import { rewardUserActivity, checkConsecutiveLogin, ActivityType } from '@/app/utils/activity-rewards';
+import { refreshSession, logout, updateUserData } from '@/app/actions/auth-actions';
 
 interface AuthContextType {
   user: User | null;
@@ -11,6 +12,7 @@ interface AuthContextType {
   isLoading: boolean;
   refreshUserData: () => Promise<void>;
   updateIcon: (iconId: number) => Promise<boolean>;
+  logoutUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -19,6 +21,7 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   refreshUserData: async () => {},
   updateIcon: async () => false,
+  logoutUser: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -29,39 +32,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const supabase = createClient();
   
+  // 로그아웃 함수
+  const logoutUser = useCallback(async () => {
+    try {
+      // 서버 액션을 통해 로그아웃 처리
+      const result = await logout();
+      if (result.success) {
+        setUser(null);
+        setSession(null);
+      }
+    } catch (error) {
+      console.error('로그아웃 중 오류:', error);
+    }
+  }, []);
+  
   // 아이콘 업데이트 함수
   const updateIcon = useCallback(async (iconId: number): Promise<boolean> => {
     if (!user) return false;
     
     try {
-      // 프로필 테이블과 메타데이터 동시 업데이트
-      const [metaUpdate, profileUpdate] = await Promise.all([
-        // 1. 사용자 메타데이터 업데이트
-        supabase.auth.updateUser({
-          data: {
-            ...user.user_metadata,
-            icon_id: iconId
-          }
-        }),
-        
-        // 2. 프로필 테이블 업데이트
-        supabase.from('profiles').update({
-          icon_id: iconId,
-          updated_at: new Date().toISOString()
-        }).eq('id', user.id)
-      ]);
+      // 서버 액션을 통해 사용자 데이터 업데이트
+      const result = await updateUserData(user.id, {
+        ...user.user_metadata,
+        icon_id: iconId
+      });
       
-      if (metaUpdate.error) {
+      if (!result.success) {
         return false;
       }
       
-      if (profileUpdate.error) {
-        // 메타데이터는 업데이트됐으므로 UI에는 반영 가능
-      }
-      
       // 업데이트된 사용자 정보로 상태 갱신
-      if (metaUpdate.data.user) {
-        setUser(metaUpdate.data.user);
+      if (result.user) {
+        setUser(result.user);
       }
       
       // 아이콘 업데이트 이벤트 발행
@@ -73,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       return false;
     }
-  }, [user, supabase]);
+  }, [user]);
   
   // 사용자 데이터 새로고침 함수 - 3초 내 중복 호출 방지
   const refreshUserData = useCallback(async () => {
@@ -109,16 +111,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (profileData.icon_id && 
             profileData.icon_id !== currentUser.user_metadata?.icon_id) {
           
-          // 메타데이터 업데이트
-          const { data: updatedUser } = await supabase.auth.updateUser({
-            data: {
-              ...currentUser.user_metadata,
-              icon_id: profileData.icon_id
-            }
+          // 서버 액션을 통해 메타데이터 업데이트
+          const result = await updateUserData(currentUser.id, {
+            ...currentUser.user_metadata,
+            icon_id: profileData.icon_id
           });
           
-          if (updatedUser.user) {
-            setUser(updatedUser.user);
+          if (result.success && result.user) {
+            setUser(result.user);
             return;
           }
         }
@@ -139,7 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         setIsLoading(true);
         
-        // 세션 가져오기 - 추가 옵션으로 새로고침 강제
+        // 세션 가져오기
         const { data: sessionData } = await supabase.auth.getSession();
         
         if (!sessionData) {
@@ -176,16 +176,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     // 인증 상태 변화 이벤트 리스너
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event, newSession) => {
         if (mounted) {
           if (event === 'SIGNED_IN') {
-            setUser(session?.user || null);
-            setSession(session);
+            setUser(newSession?.user || null);
+            setSession(newSession);
             
             // 로그인 성공 시 profiles 테이블 데이터 저장/업데이트 시도
-            if (session?.user) {
+            if (newSession?.user) {
               try {
-                const user = session.user;
+                const user = newSession.user;
                 const metadata = user.user_metadata || {};
                 
                 // profiles 테이블 확인
@@ -217,24 +217,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }
             }
             
-            // 로그인 보상 처리 (기존 코드 유지)
-            if (session?.user?.id) {
+            // 로그인 보상 처리
+            if (newSession?.user?.id) {
               try {
                 // 1. 일일 로그인 보상 지급
-                await rewardUserActivity(session.user.id, ActivityType.DAILY_LOGIN);
+                await rewardUserActivity(newSession.user.id, ActivityType.DAILY_LOGIN);
                 
                 // 2. 연속 로그인 확인 및 보상 지급
-                const { reward } = await checkConsecutiveLogin(session.user.id);
+                const { reward } = await checkConsecutiveLogin(newSession.user.id);
                 if (reward) {
-                  await rewardUserActivity(session.user.id, ActivityType.CONSECUTIVE_LOGIN);
+                  await rewardUserActivity(newSession.user.id, ActivityType.CONSECUTIVE_LOGIN);
                 }
               } catch {
                 // 보상 처리 실패 무시
               }
             }
           } else if (event === 'TOKEN_REFRESHED') {
-            setUser(session?.user || null);
-            setSession(session);
+            // 토큰 갱신 이벤트 처리
+            if (newSession) {
+              try {
+                // 서버 액션을 통해 쿠키 갱신
+                const result = await refreshSession(newSession.refresh_token);
+                if (result.success && result.session) {
+                  setUser(result.session.user);
+                  setSession(result.session);
+                }
+              } catch (error) {
+                console.error('토큰 갱신 중 오류:', error);
+              }
+            }
           } else if (event === 'SIGNED_OUT') {
             setUser(null);
             setSession(null);
@@ -258,8 +269,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoading,
       refreshUserData,
       updateIcon,
+      logoutUser,
     }),
-    [user, session, isLoading, refreshUserData, updateIcon]
+    [user, session, isLoading, refreshUserData, updateIcon, logoutUser]
   );
   
   return (

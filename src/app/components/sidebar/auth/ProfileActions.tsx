@@ -5,16 +5,16 @@ import { LogOut, UserRound } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/app/lib/supabase-browser';
+import { useAuth } from '@/app/context/AuthContext';
 
 export default function ProfileActions() {
   const router = useRouter();
+  const { logoutUser } = useAuth();
   
   // 로그아웃 처리
   async function handleLogout() {
     try {
-      const supabase = createClient();
-      await supabase.auth.signOut();
+      await logoutUser();
       toast.success('로그아웃되었습니다.');
       router.refresh();
     } catch (error) {
