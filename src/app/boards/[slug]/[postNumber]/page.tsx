@@ -2,6 +2,7 @@ import React from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/app/lib/supabase.server';
+import { getAPIURL } from '@/app/lib/utils';
 
 // 재사용 가능한 컴포넌트 임포트
 import CommentSection from '@/app/boards/components/CommentSection';
@@ -120,7 +121,7 @@ export default async function PostDetailPage({
       (async () => {
         try {
           // 절대 URL 생성
-          const apiUrl = new URL('/api/posts', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000');
+          const apiUrl = new URL('/api/posts', getAPIURL());
           // 경로 세그먼트 추가
           apiUrl.pathname += `/${slug}/${postNumber}`;
           
@@ -182,8 +183,7 @@ export default async function PostDetailPage({
       (async () => {
         try {
           // 절대 URL로 구성 (origin 명시적 지정)
-          const origin = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'http://localhost:3000';
-          const apiUrl = new URL(`/api/comments/${post.id}`, origin).toString();
+          const apiUrl = new URL(`/api/comments/${post.id}`, getAPIURL()).toString();
           
           console.log(`댓글 데이터 요청 URL: ${apiUrl}, 게시글 ID: ${post.id}`);
           

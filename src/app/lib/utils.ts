@@ -7,7 +7,57 @@ export function cn(...inputs: ClassValue[]) {
 
 // API URL 관련 유틸리티 함수
 export function getAPIURL() {
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  
+  // URL이 유효한 형식인지 확인
+  try {
+    new URL(baseUrl);
+  } catch {
+    console.error('Invalid API URL format:', baseUrl);
+    return 'http://localhost:3000'; // 오류 시 기본값 반환
+  }
+  
+  // 후행 슬래시 제거하여 일관성 유지
+  return baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+}
+
+/**
+ * API 엔드포인트의 전체 URL을 생성합니다.
+ * @param endpoint API 엔드포인트 경로 (선행 슬래시 포함)
+ * @returns 완전한 API URL
+ */
+export function getFullAPIURL(endpoint: string): string {
+  if (!endpoint.startsWith('/')) {
+    endpoint = `/${endpoint}`;
+  }
+  
+  return `${getAPIURL()}${endpoint}`;
+}
+
+/**
+ * API 요청을 위한 fetch 래퍼 함수
+ * @param endpoint API 엔드포인트 (선행 슬래시 포함)
+ * @param options fetch 옵션
+ * @returns fetch 결과
+ */
+export async function apiFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  const url = getFullAPIURL(endpoint);
+  
+  const defaultOptions: RequestInit = {
+    cache: 'no-store',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    ...options
+  };
+  
+  const response = await fetch(url, defaultOptions);
+  
+  if (!response.ok) {
+    throw new Error(`API 요청 실패: ${response.status} ${response.statusText}`);
+  }
+  
+  return response.json();
 }
 
 // 토큰 관련 유틸리티 함수 추가

@@ -1,5 +1,6 @@
 import PlayerHeader from '../components/PlayerHeader';
 import PlayerTabs from '../components/PlayerTabs';
+import { getAPIURL } from '@/app/lib/utils';
 
 // 동적 렌더링 강제 설정 추가
 export const dynamic = 'force-dynamic';
@@ -63,11 +64,8 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
   try {
     const { id } = await params;
     
-    // 개발 환경에 맞는 baseUrl 설정
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 
-                   (process.env.NODE_ENV === 'development' 
-                     ? 'http://localhost:3000' 
-                     : 'https://yourproductionsite.com');
+    // getAPIURL 함수 사용하여 baseUrl 설정
+    const baseUrl = getAPIURL();
     
     // 현재 연도 계산
     const currentYear = new Date().getFullYear();
