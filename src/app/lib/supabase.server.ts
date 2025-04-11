@@ -37,15 +37,25 @@ export const createClient = async (): Promise<SupabaseClient<Database>> => {
             return cookieStore.get(name)?.value;
           },
           set(name, value, options) {
-            cookieStore.set(name, value, options);
+            try {
+              cookieStore.set(name, value, options);
+            } catch (error) {
+              console.warn('서버 컴포넌트에서 쿠키 설정 시도:', error);
+              // 오류 발생 시 쿠키 설정 무시 (서버 액션에서 처리 예정)
+            }
           },
           remove(name, options) {
-            cookieStore.set(name, '', { ...options, maxAge: 0 });
+            try {
+              cookieStore.set(name, '', { ...options, maxAge: 0 });
+            } catch (error) {
+              console.warn('서버 컴포넌트에서 쿠키 삭제 시도:', error);
+              // 오류 발생 시 쿠키 삭제 무시 (서버 액션에서 처리 예정)
+            }
           }
         },
         auth: {
           persistSession: true,
-          autoRefreshToken: true
+          autoRefreshToken: false
         }
       }
     );
