@@ -30,9 +30,24 @@ export const createClient = () => {
     {
       auth: {
         persistSession: true,
-        autoRefreshToken: true,
+        autoRefreshToken: false,
         detectSessionInUrl: true,
-        flowType: 'pkce'
+        flowType: 'pkce',
+        storageKey: 'supabase_auth_token',
+        storage: {
+          getItem: (key) => {
+            if (typeof window === 'undefined') return null;
+            return JSON.parse(localStorage.getItem(key) || 'null');
+          },
+          setItem: (key, value) => {
+            if (typeof window === 'undefined') return;
+            localStorage.setItem(key, JSON.stringify(value));
+          },
+          removeItem: (key) => {
+            if (typeof window === 'undefined') return;
+            localStorage.removeItem(key);
+          }
+        }
       }
     }
   );

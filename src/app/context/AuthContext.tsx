@@ -1,10 +1,13 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { createClient } from '@/app/lib/supabase-browser';
 import { Session, User } from '@supabase/supabase-js';
 import { rewardUserActivity, checkConsecutiveLogin, ActivityType } from '@/app/utils/activity-rewards';
 import { refreshSession, logout, updateUserData } from '@/app/actions/auth-actions';
+
+// 세션 갱신 주기 (15분)
+const SESSION_REFRESH_INTERVAL = 15 * 60 * 1000;
 
 interface AuthContextType {
   user: User | null;
@@ -30,7 +33,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
   const supabase = createClient();
+  
+  // 세션 갱신 함수
+  const refreshCurrentSession = useCallback(async () => {
+    if (!session?.refresh_token) return;
+    
+    try {
+      const result = await refreshSession(session.refresh_token);
+      if (result.success && result.session) {
+        setUser(result.session.user);
+        setSession(result.session);
+        
+        // 다음 갱신 일정 설정 (세션 만료 5분 전 또는 기본 주기)
+        const expiresAt = result.session.expires_at;
+        if (expiresAt) {
+          const expiresInMs = (expiresAt - Math.floor(Date.now() / 1000)) * 1000;
+          const nextRefresh = Math.max(
+            // 만료 5분 전 또는 기본 주기 중 더 빠른 시간
+            Math.min(expiresInMs - 5 * 60 * 1000, SESSION_REFRESH_INTERVAL),
+            // 최소 1분
+            60 * 1000
+          );
+          
+          // 이전 타이머 정리 후 새 타이머 설정
+          if (refreshTimerRef.current) {
+            clearTimeout(refreshTimerRef.current);
+          }
+          
+          refreshTimerRef.current = setTimeout(refreshCurrentSession, nextRefresh);
+        }
+      }
+    } catch (error) {
+      console.error('세션 갱신 중 오류:', error);
+    }
+  }, [session]);
   
   // 로그아웃 함수
   const logoutUser = useCallback(async () => {
@@ -40,6 +78,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (result.success) {
         setUser(null);
         setSession(null);
+        
+        // 세션 갱신 타이머 정리
+        if (refreshTimerRef.current) {
+          clearTimeout(refreshTimerRef.current);
+          refreshTimerRef.current = null;
+        }
       }
     } catch (error) {
       console.error('로그아웃 중 오류:', error);
@@ -77,7 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user]);
   
-  // 사용자 데이터 새로고침 함수 - 3초 내 중복 호출 방지
+  // 사용자 데이터 새로고침 함수
   const refreshUserData = useCallback(async () => {
     if (!user) return;
     
@@ -99,7 +143,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // 사용자 메타데이터 확인
       const currentUser = data.user;
       
-      // 프로필 테이블에서 최신 정보 확인 (아이콘 ID만 가져오기)
+      // 프로필 테이블에서 최신 정보 확인
       const { data: profileData } = await supabase
         .from('profiles')
         .select('icon_id, nickname')
@@ -107,7 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
         
       if (profileData) {
-        // 메타데이터와 프로필 테이블 간의 데이터 동기화 (아이콘 ID)
+        // 메타데이터와 프로필 테이블 간의 데이터 동기화
         if (profileData.icon_id && 
             profileData.icon_id !== currentUser.user_metadata?.icon_id) {
           
@@ -127,11 +171,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // 기본 업데이트 (프로필 데이터 없는 경우)
       setUser(currentUser);
       
+      // 세션 갱신
+      await refreshCurrentSession();
+      
     } catch {
     }
-  }, [user, supabase]);
+  }, [user, supabase, refreshCurrentSession]);
   
-  // 초기 세션 로드 부분 수정
+  // 초기 세션 로드 
   useEffect(() => {
     let mounted = true;
     
@@ -151,6 +198,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (sessionData?.session) {
             setSession(sessionData.session);
             setUser(sessionData.session.user);
+            
+            // 첫 로드 시 서버 액션으로 세션 갱신
+            await refreshCurrentSession();
             
             // 세션 유효성 확인
             const { data: userData } = await supabase.auth.getUser();
@@ -181,6 +231,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (event === 'SIGNED_IN') {
             setUser(newSession?.user || null);
             setSession(newSession);
+            
+            // 로그인 시 서버 액션으로 세션 갱신
+            if (newSession?.refresh_token) {
+              await refreshCurrentSession();
+            }
             
             // 로그인 성공 시 profiles 테이블 데이터 저장/업데이트 시도
             if (newSession?.user) {
@@ -249,6 +304,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } else if (event === 'SIGNED_OUT') {
             setUser(null);
             setSession(null);
+            
+            // 로그아웃 시 타이머 정리
+            if (refreshTimerRef.current) {
+              clearTimeout(refreshTimerRef.current);
+              refreshTimerRef.current = null;
+            }
           }
         }
       }
@@ -257,9 +318,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // 클린업 함수
     return () => {
       mounted = false;
+      
+      // 타이머 정리
+      if (refreshTimerRef.current) {
+        clearTimeout(refreshTimerRef.current);
+        refreshTimerRef.current = null;
+      }
+      
       authListener.subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, [supabase, refreshCurrentSession]);
   
   // 값을 메모이제이션하여 불필요한 리렌더링 방지
   const value = useMemo(
