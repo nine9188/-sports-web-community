@@ -119,14 +119,28 @@ export default async function PostDetailPage({
       boardStructure,
       adjacentPosts
     ] = await Promise.all([
-      // 게시글 상세 정보 가져오기 (새로운 API 엔드포인트 사용)
-      fetch(new URL(`/api/posts/${slug}/${postNumber}`, process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000')).then(res => {
-        if (!res.ok) throw new Error('게시글을 가져오는데 실패했습니다');
-        return res.json();
-      }).catch(error => {
-        console.error('게시글 상세 가져오기 오류:', error);
-        return { post: null };
-      }),
+      // 게시글 상세 정보 가져오기 (올바른 절대 URL 사용)
+      (async () => {
+        try {
+          // 절대 URL 생성
+          const apiUrl = new URL('/api/posts', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000');
+          // 경로 세그먼트 추가
+          apiUrl.pathname += `/${slug}/${postNumber}`;
+          
+          const res = await fetch(apiUrl.toString(), {
+            cache: 'no-store',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (!res.ok) throw new Error('게시글을 가져오는데 실패했습니다');
+          return res.json();
+        } catch (error) {
+          console.error('게시글 상세 가져오기 오류:', error);
+          return { post: null };
+        }
+      })(),
       
       // 루트 게시판 ID
       getRootBoardId(board).catch(() => board.id),
@@ -168,11 +182,28 @@ export default async function PostDetailPage({
       comments,
       filteredPostsResult
     ] = await Promise.all([
-      // 댓글 데이터 가져오기 (새로운 API 엔드포인트 사용)
-      fetch(new URL(`/api/comments/${post.id}`, process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000')).then(res => {
-        if (!res.ok) throw new Error('댓글을 가져오는데 실패했습니다');
-        return res.json();
-      }).catch(() => []),
+      // 댓글 데이터 가져오기 (올바른 절대 URL 사용)
+      (async () => {
+        try {
+          // 절대 URL 생성
+          const apiUrl = new URL('/api/comments', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000');
+          // 경로 세그먼트 추가
+          apiUrl.pathname += `/${post.id}`;
+          
+          const res = await fetch(apiUrl.toString(), {
+            cache: 'no-store',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (!res.ok) throw new Error('댓글을 가져오는데 실패했습니다');
+          return res.json();
+        } catch (error) {
+          console.error('댓글 가져오기 오류:', error);
+          return [];
+        }
+      })(),
       
       // 게시글 필터링 - 함수 인자 수정
       getFilteredPostsByBoardHierarchy(
