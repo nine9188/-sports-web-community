@@ -40,11 +40,20 @@ interface StandingsData {
   standings: Standing[];
 }
 
+// 로컬 스토리지 캐시 항목 타입
+interface CacheItem {
+  data: StandingsData;
+  timestamp: number;
+}
+
 // 컴포넌트 Props 타입
 interface ClientLeagueStandingsProps {
   initialLeague: string;
   initialStandings: StandingsData | null;
 }
+
+// 캐시 TTL (24시간)
+const CACHE_TTL = 24 * 60 * 60 * 1000;
 
 // 리그 목록 정의
 const LEAGUES = [
@@ -54,6 +63,38 @@ const LEAGUES = [
   { id: 'serieA', name: '세리에A', fullName: '세리에 A' },
   { id: 'ligue1', name: '리그앙', fullName: '리그 1' },
 ];
+
+// 로컬 스토리지에서 캐시된 데이터 가져오기
+const getLocalStorageCache = (leagueId: string): CacheItem | null => {
+  if (typeof window === 'undefined') return null;
+  
+  try {
+    const cachedItem = localStorage.getItem(`league_standings_${leagueId}`);
+    if (!cachedItem) return null;
+    
+    const parsedItem: CacheItem = JSON.parse(cachedItem);
+    return parsedItem;
+  } catch (error) {
+    console.error('로컬 스토리지 읽기 오류:', error);
+    return null;
+  }
+};
+
+// 로컬 스토리지에 데이터 캐싱
+const setLocalStorageCache = (leagueId: string, data: StandingsData) => {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    const cacheItem: CacheItem = {
+      data,
+      timestamp: Date.now()
+    };
+    
+    localStorage.setItem(`league_standings_${leagueId}`, JSON.stringify(cacheItem));
+  } catch (error) {
+    console.error('로컬 스토리지 쓰기 오류:', error);
+  }
+};
 
 export default function ClientLeagueStandings({
   initialLeague,
@@ -77,6 +118,30 @@ export default function ClientLeagueStandings({
   
   // API 요청 취소를 위한 ref
   const fetchController = useRef<AbortController | null>(null);
+
+  // 초기 로컬 스토리지 캐시 불러오기
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    // 초기 로컬 스토리지 캐시 로드
+    LEAGUES.forEach(league => {
+      const cachedItem = getLocalStorageCache(league.id);
+      if (cachedItem && Date.now() - cachedItem.timestamp < CACHE_TTL) {
+        cachedData.current[league.id] = cachedItem.data;
+      }
+    });
+    
+    // 초기 리그에 대해 로컬 스토리지 캐시 확인
+    if (!initialStandings) {
+      const cachedInitialLeague = getLocalStorageCache(initialLeague);
+      if (cachedInitialLeague && Date.now() - cachedInitialLeague.timestamp < CACHE_TTL) {
+        setStandings(cachedInitialLeague.data);
+      }
+    } else {
+      // 초기 데이터를 로컬 스토리지에 저장
+      setLocalStorageCache(initialLeague, initialStandings);
+    }
+  }, [initialLeague, initialStandings]);
 
   // 모바일 환경 체크
   useEffect(() => {
@@ -103,9 +168,17 @@ export default function ClientLeagueStandings({
     // 모바일에서는 렌더링하지 않음
     if (isMobile) return;
     
-    // 이미 캐시에 있는 데이터는 API 호출 없이 사용
+    // 메모리 캐시 확인
     if (cachedData.current[activeLeague]) {
       setStandings(cachedData.current[activeLeague]);
+      return;
+    }
+    
+    // 로컬 스토리지 캐시 확인
+    const localCache = getLocalStorageCache(activeLeague);
+    if (localCache && Date.now() - localCache.timestamp < CACHE_TTL) {
+      setStandings(localCache.data);
+      cachedData.current[activeLeague] = localCache.data;
       return;
     }
     
@@ -139,7 +212,11 @@ export default function ClientLeagueStandings({
           
           // 캐시에 저장
           if (result.data) {
+            // 메모리 캐시에 저장
             cachedData.current[activeLeague] = result.data;
+            
+            // 로컬 스토리지 캐시에 저장
+            setLocalStorageCache(activeLeague, result.data);
             
             // 요청이 취소되지 않았을 때만 상태 업데이트
             if (!signal.aborted) {

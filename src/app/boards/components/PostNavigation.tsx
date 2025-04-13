@@ -11,7 +11,7 @@ interface PostNavigationProps {
 
 export default function PostNavigation({ boardSlug, prevPost, nextPost, isLoggedIn = false }: PostNavigationProps) {
   return (
-    <div className="bg-white rounded-lg border shadow-sm mb-6">
+    <div className="bg-white rounded-lg border shadow-sm mb-4">
       <div className="flex flex-row items-center justify-between px-2 py-2">
         {/* 이전글 버튼 */}
         <div className="flex-1 text-center">

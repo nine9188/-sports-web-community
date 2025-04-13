@@ -275,7 +275,7 @@ export default async function BoardDetailPage({
 
     return (
       <div className="container mx-auto">
-        <div className="mb-4">
+        <div className="mb-4 sm:mt-0 mt-4">
           <BoardBreadcrumbs breadcrumbs={breadcrumbs} />
         </div>
         

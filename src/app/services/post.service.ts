@@ -263,8 +263,6 @@ export async function getCommentCounts(postIds: string[]): Promise<Record<string
   const commentCounts: Record<string, number> = {};
   
   try {
-    console.log(`${postIds.length}개 게시물의 댓글 수 조회 시작`);
-    
     // 포스트 ID 배열을 최대 20개씩 청크로 나누기
     const chunkSize = 20;
     const chunks = [];
@@ -282,7 +280,6 @@ export async function getCommentCounts(postIds: string[]): Promise<Record<string
           .in('post_id', chunk);
           
         if (error) {
-          console.error('댓글 수 조회 오류:', error);
           // 오류 발생 시 개별 쿼리로 대체
           await Promise.all(
             chunk.map(async (postId) => {
@@ -316,11 +313,8 @@ export async function getCommentCounts(postIds: string[]): Promise<Record<string
       })
     );
     
-    console.log(`댓글 수 조회 완료: ${Object.keys(commentCounts).length}개`);
     return commentCounts;
-  } catch (error) {
-    console.error('댓글 수 조회 중 오류:', error);
-    
+  } catch {
     // 오류 발생 시 모든 게시물에 대해 개별적으로 쿼리
     await Promise.all(
       postIds.map(async (postId) => {

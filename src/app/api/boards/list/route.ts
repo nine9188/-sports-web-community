@@ -20,23 +20,17 @@ interface Board {
 export const revalidate = 300; // 5분마다 재검증
 
 export async function GET() {
-  const startTime = Date.now();
-  console.log('게시판 목록 API 요청 시작');
-  
   try {
     const supabase = await createClient();
     
     // 1. 모든 게시판 가져오기 (한 번의 쿼리로)
-    console.time('게시판 데이터 쿼리');
     const { data, error } = await supabase
       .from('boards')
       .select('id, name, parent_id, display_order, slug, team_id, league_id')
       .order('display_order', { ascending: true })
       .order('name');
-    console.timeEnd('게시판 데이터 쿼리');
       
     if (error) {
-      console.error('게시판 데이터 조회 오류:', error);
       return NextResponse.json(
         { error: '게시판 목록을 가져오는데 실패했습니다.' }, 
         { status: 500 }
@@ -52,7 +46,6 @@ export async function GET() {
       .filter(board => board.league_id)
       .map(board => board.league_id);
     
-    console.time('로고 데이터 쿼리');
     const [teamsResult, leaguesResult] = await Promise.all([
       // 팀 로고 가져오기
       teamIds.length > 0
@@ -70,10 +63,8 @@ export async function GET() {
             .in('id', leagueIds)
         : Promise.resolve({ data: [] })
     ]);
-    console.timeEnd('로고 데이터 쿼리');
     
     // 3. 로고 맵 생성
-    console.time('데이터 처리');
     const teamLogoMap: Record<string, string> = {};
     const leagueLogoMap: Record<string, string> = {};
     
@@ -121,7 +112,6 @@ export async function GET() {
       }
       return a.name.localeCompare(b.name);
     });
-    console.timeEnd('데이터 처리');
     
     // 6. 결과 반환
     const result = {
@@ -130,13 +120,8 @@ export async function GET() {
       allBoards: enrichedBoards
     };
     
-    const endTime = Date.now();
-    console.log(`게시판 목록 API 완료: ${endTime - startTime}ms`);
-    
     return NextResponse.json(result);
-    
-  } catch (error) {
-    console.error('게시판 목록 API 오류:', error);
+  } catch {
     return NextResponse.json(
       { error: '게시판 목록을 가져오는데 실패했습니다.' }, 
       { status: 500 }

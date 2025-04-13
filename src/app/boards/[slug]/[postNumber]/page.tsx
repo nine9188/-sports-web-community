@@ -185,8 +185,6 @@ export default async function PostDetailPage({
           // 절대 URL로 구성 (origin 명시적 지정)
           const apiUrl = new URL(`/api/comments/${post.id}`, getAPIURL()).toString();
           
-          console.log(`댓글 데이터 요청 URL: ${apiUrl}, 게시글 ID: ${post.id}`);
-          
           const response = await fetch(apiUrl, {
             cache: 'no-store',
             next: { revalidate: 0 },
@@ -199,15 +197,12 @@ export default async function PostDetailPage({
           });
           
           if (!response.ok) {
-            console.error(`댓글 조회 응답 오류: ${response.status} ${response.statusText}`);
             throw new Error('댓글을 가져오는데 실패했습니다');
           }
           
           const data = await response.json();
-          console.log(`댓글 데이터 받음: ${data ? data.length : 0}개, 게시글 ID: ${post.id}`);
           return Array.isArray(data) ? data : [];
-        } catch (error) {
-          console.error('댓글 조회 오류:', error);
+        } catch {
           return [];
         }
       })(),
@@ -328,9 +323,9 @@ export default async function PostDetailPage({
     const breadcrumbs = createBreadcrumbs(board, post.title, postNumber);
 
     return (
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto">
         {/* 1. 게시판 경로 - BoardBreadcrumbs 컴포넌트 사용 */}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto sm:mt-0 mt-4">
           <BoardBreadcrumbs breadcrumbs={breadcrumbs as Breadcrumb[]} />
         </div>
         
@@ -349,7 +344,7 @@ export default async function PostDetailPage({
         )}
         
         {/* 2. 게시글 본문 (상세 정보) */}
-        <div className="bg-white rounded-lg border shadow-sm overflow-hidden mb-6">
+        <div className="bg-white rounded-lg border shadow-sm overflow-hidden mb-4">
           {/* 게시글 헤더 컴포넌트 */}
           <PostHeader 
             title={post.title}
@@ -407,12 +402,14 @@ export default async function PostDetailPage({
         </div>
         
         {/* 4. 게시글 하단 버튼 영역 */}
-        <PostFooter 
-          boardSlug={slug}
-          postNumber={postNumber}
-          isAuthor={isAuthor}
-          isLoggedIn={isLoggedIn}
-        />
+        <div className="mb-4">
+          <PostFooter 
+            boardSlug={slug}
+            postNumber={postNumber}
+            isAuthor={isAuthor}
+            isLoggedIn={isLoggedIn}
+          />
+        </div>
         
         {/* 5. 포스트 네비게이션 */}
         <div className="mb-4">

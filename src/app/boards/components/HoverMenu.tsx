@@ -37,11 +37,27 @@ export default function HoverMenu({
   currentBoardSlug,
 }: HoverMenuProps) {
   const [hoveredBoard, setHoveredBoard] = useState<string | null>(null);
+  const [clickedMobileMenu, setClickedMobileMenu] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const menuItemsRef = useRef<Record<string, HTMLDivElement | null>>({});
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [menuPosition, setMenuPosition] = useState({ left: 0 });
+  const [isMobile, setIsMobile] = useState(false);
+
+  // 모바일 환경 체크
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
 
   useEffect(() => {
     if (currentBoardSlug) {
@@ -74,12 +90,28 @@ export default function HoverMenu({
     setHoveredBoard(boardId);
   };
 
+  // 모바일에서 메뉴 클릭 처리
+  const handleMobileMenuClick = (boardId: string) => (e: React.MouseEvent) => {
+    if (isMobile && childBoardsMap[boardId]?.length > 0) {
+      e.preventDefault();
+      
+      // 이미 열린 메뉴를 다시 클릭하면 닫기
+      if (clickedMobileMenu === boardId) {
+        setClickedMobileMenu(null);
+        return;
+      }
+      
+      setClickedMobileMenu(boardId);
+    }
+  };
+
   const handleOutsideClick = (event: MouseEvent) => {
     if (
       containerRef.current &&
       !containerRef.current.contains(event.target as Node)
     ) {
       setHoveredBoard(null);
+      setClickedMobileMenu(null);
     }
   };
 
@@ -103,6 +135,44 @@ export default function HoverMenu({
       ? a.display_order - b.display_order
       : a.name.localeCompare(b.name)
   );
+
+  // 하위 메뉴 그리드로 나누기
+  const createGridLayout = (childBoards: ChildBoard[]) => {
+    const ITEMS_PER_ROW = 5; // 한 줄에 5개씩
+    const sortedChildBoards = [...childBoards].sort((a: ChildBoard, b: ChildBoard) =>
+      a.display_order !== b.display_order
+        ? a.display_order - b.display_order
+        : a.name.localeCompare(b.name)
+    );
+
+    // 행 단위로 분할
+    const rows: ChildBoard[][] = [];
+    for (let i = 0; i < sortedChildBoards.length; i += ITEMS_PER_ROW) {
+      rows.push(sortedChildBoards.slice(i, i + ITEMS_PER_ROW));
+    }
+
+    return (
+      <div className="grid gap-2">
+        {rows.map((row, rowIndex) => (
+          <div key={rowIndex} className="flex gap-1">
+            {row.map((childBoard: ChildBoard) => (
+              <Link
+                href={`/boards/${childBoard.slug || childBoard.id}`}
+                key={childBoard.id}
+                className={`inline-block px-3 py-2 text-sm hover:bg-gray-50 rounded-md whitespace-nowrap ${
+                  childBoard.id === currentBoardId
+                    ? 'bg-blue-50 text-blue-600'
+                    : ''
+                }`}
+              >
+                {childBoard.name}
+              </Link>
+            ))}
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="bg-white border rounded-lg shadow-sm mb-4">
@@ -141,8 +211,10 @@ export default function HoverMenu({
               ref={(el) => {
                 menuItemsRef.current[topBoard.id] = el;
               }}
-              onMouseEnter={() => handleMenuEnter(topBoard.id)}
+              onMouseEnter={() => !isMobile && handleMenuEnter(topBoard.id)}
               onMouseLeave={(e) => {
+                if (isMobile) return;
+                
                 // dropdown 영역으로 진입하지 않으면 닫기
                 const relatedTarget = e.relatedTarget as Node;
                 // menuRef나 현재 상태의 hoveredBoard와 관련된 요소로 이동하는 경우에는 닫지 않음
@@ -163,12 +235,15 @@ export default function HoverMenu({
                     ? 'bg-gray-100 text-blue-600'
                     : 'text-gray-500'
                 }`}
+                onClick={handleMobileMenuClick(topBoard.id)}
               >
                 {topBoard.name}
                 {childBoardsMap[topBoard.id]?.length > 0 && (
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-3 w-3 ml-1"
+                    className={`h-3 w-3 ml-1 transition-transform ${
+                      isMobile && clickedMobileMenu === topBoard.id ? 'rotate-180' : ''
+                    }`}
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -185,37 +260,49 @@ export default function HoverMenu({
             </div>
           ))}
         </nav>
+        
+        {/* 모바일 드롭다운 메뉴 - 메뉴 위에 떠있는 형태 */}
+        {isMobile && clickedMobileMenu && childBoardsMap[clickedMobileMenu] && childBoardsMap[clickedMobileMenu].length > 0 && (
+          <div 
+            className="absolute z-50 shadow-lg bg-white rounded-md border w-full left-0"
+            style={{ top: `calc(100% + 5px)` }}
+          >
+            <div className="p-3">
+              <div className="flex flex-col space-y-1">
+                {childBoardsMap[clickedMobileMenu]
+                  .sort((a: ChildBoard, b: ChildBoard) =>
+                    a.display_order !== b.display_order
+                      ? a.display_order - b.display_order
+                      : a.name.localeCompare(b.name)
+                  )
+                  .map((childBoard: ChildBoard) => (
+                    <Link
+                      href={`/boards/${childBoard.slug || childBoard.id}`}
+                      key={childBoard.id}
+                      className={`px-3 py-2 text-sm hover:bg-gray-100 rounded-md ${
+                        childBoard.id === currentBoardId
+                          ? 'bg-blue-50 text-blue-600'
+                          : ''
+                      }`}
+                    >
+                      {childBoard.name}
+                    </Link>
+                  ))}
+              </div>
+            </div>
+          </div>
+        )}
 
-        {/* 드롭다운 메뉴 */}
-        {hoveredBoard && childBoardsMap[hoveredBoard]?.length > 0 && (
+        {/* 데스크톱 호버 메뉴 */}
+        {!isMobile && hoveredBoard && childBoardsMap[hoveredBoard]?.length > 0 && (
           <div
             ref={menuRef}
             onMouseEnter={() => handleMenuEnter(hoveredBoard)}
             onMouseLeave={handleMenuClose}
-            className="absolute top-[100%] bg-white shadow-md border rounded-b-lg z-50 p-2 -mt-1 overflow-x-auto"
+            className="absolute top-[100%] bg-white shadow-md border rounded-b-lg z-50 p-3 -mt-1 max-w-[600px] min-w-[300px]"
             style={{ left: `${menuPosition.left}px`, marginTop: '-7px' }}
           >
-            <div className="flex flex-nowrap gap-1">
-              {childBoardsMap[hoveredBoard]
-                .sort((a, b) =>
-                  a.display_order !== b.display_order
-                    ? a.display_order - b.display_order
-                    : a.name.localeCompare(b.name)
-                )
-                .map((childBoard) => (
-                  <Link
-                    href={`/boards/${childBoard.slug || childBoard.id}`}
-                    key={childBoard.id}
-                    className={`inline-block px-4 py-2 text-sm hover:bg-gray-50 rounded-md whitespace-nowrap mx-1 ${
-                      childBoard.id === currentBoardId
-                        ? 'bg-blue-50 text-blue-600'
-                        : ''
-                    }`}
-                  >
-                    {childBoard.name}
-                  </Link>
-                ))}
-            </div>
+            {createGridLayout(childBoardsMap[hoveredBoard])}
           </div>
         )}
       </div>

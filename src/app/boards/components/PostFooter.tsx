@@ -18,7 +18,7 @@ export default function PostFooter({
   isLoggedIn = false
 }: PostFooterProps) {
   return (
-    <div className="bg-white rounded-lg border shadow-sm mb-6">
+    <div className="bg-white rounded-lg border shadow-sm mb-4">
       <div className="flex flex-row items-center justify-between px-2 py-2">
         {/* 목록 버튼 */}
         <div className="flex-1 text-center">

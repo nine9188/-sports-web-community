@@ -159,10 +159,9 @@ export async function GET() {
       }
     });
     
-  } catch (error) {
-    console.error('인기글 API 오류:', error);
+  } catch {
     return NextResponse.json(
-      { error: 'Failed to fetch topic posts' },
+      { error: '인기 게시물을 가져오는데 실패했습니다.' },
       { status: 500 }
     );
   }

@@ -9,42 +9,49 @@ export async function GET(
   { params }: { params: Promise<{ postId: string }> }
 ) {
   try {
+    // 동적 라우트 파라미터 가져오기
     const { postId } = await params;
-    console.log(`댓글 조회 요청 - 게시글 ID: ${postId}, 요청 URL: ${request.url}`);
     
+    if (!postId) {
+      return NextResponse.json({ error: '게시글 ID가 필요합니다' }, { status: 400 });
+    }
+    
+    // 요청 헤더 확인 (디버깅 목적)
+    
+    // Supabase 클라이언트 생성
     const supabase = await createClient();
     
-    // 현재 사용자 정보 가져오기 (로그인 안 되어 있을 수도 있음)
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id;
-    console.log(`댓글 조회 - 현재 사용자 ID: ${userId || '로그인 안됨'}`);
+    // 현재 로그인한 사용자 정보 가져오기 (없어도 됨)
+    let userId = null;
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        // 로그 제거됨
+      } else if (user) {
+        userId = user.id;
+        // 로그 제거됨
+      }
+    } catch {
+      // 인증 오류가 발생해도 계속 진행 (비로그인 사용자도 댓글 조회 가능)
+    }
     
-    // 먼저 댓글 정보 가져오기
+    // 댓글 데이터 가져오기 (프로필 정보 포함)
     const { data: comments, error } = await supabase
       .from('comments')
       .select(`
-        id,
-        content,
-        created_at,
-        user_id,
-        post_id,
-        likes,
-        dislikes,
-        profiles (
+        *,
+        profiles:user_id (
           id,
-          nickname,
-          icon_id
+          icon_id,
+          nickname
         )
       `)
       .eq('post_id', postId)
       .order('created_at', { ascending: true });
-      
-    if (error) {
-      console.error('댓글 조회 오류:', error);
-      return NextResponse.json({ error: '댓글을 가져오는데 실패했습니다' }, { status: 500 });
-    }
     
-    console.log(`댓글 ${comments?.length || 0}개 조회 결과 (DB에서 직접 가져옴), 게시글 ID: ${postId}`);
+    if (error) {
+      return NextResponse.json({ error: '댓글을 가져오는데 실패했습니다', details: error }, { status: 500 });
+    }
     
     // 로그인 상태라면 사용자 액션(좋아요/싫어요) 정보 가져오기
     if (userId && comments && comments.length > 0) {
@@ -56,47 +63,39 @@ export async function GET(
         .eq('user_id', userId)
         .in('comment_id', commentIds);
         
-      if (!actionError && userActions) {
-        // 사용자 액션을 맵으로 변환
-        const userActionMap: Record<string, string> = userActions.reduce((acc: Record<string, string>, action) => {
-          acc[action.comment_id] = action.type;
-          return acc;
-        }, {});
+      if (actionError) {
+        // 로그 제거됨
+      } else {
+        // 로그 제거됨
         
-        // 댓글 데이터에 사용자 액션 정보 추가
-        const commentsWithUserAction = comments.map(comment => ({
-          ...comment,
-          userAction: userActionMap[comment.id] || null
-        }));
-        
-        console.log(`댓글 ${commentsWithUserAction.length}개 조회 성공 (사용자 액션 포함)`);
-        
-        return new NextResponse(JSON.stringify(commentsWithUserAction), {
-          headers: {
-            'Content-Type': 'application/json',
-            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0',
-            'Surrogate-Control': 'no-store'
-          }
-        });
+        // 각 댓글에 사용자 액션 정보 추가
+        if (userActions && userActions.length > 0) {
+          const actionMap = userActions.reduce((map, action) => {
+            map[action.comment_id] = action.type;
+            return map;
+          }, {} as Record<string, string>);
+          
+          comments.forEach(comment => {
+            comment.userAction = actionMap[comment.id] || null;
+          });
+        }
       }
     }
     
-    console.log(`댓글 ${comments?.length || 0}개 조회 성공 (사용자 액션 없음)`);
+    // 응답 헤더 설정 (캐싱 방지)
+    const headers = {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      'Surrogate-Control': 'no-store'
+    };
     
-    return new NextResponse(JSON.stringify(comments || []), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-        'Surrogate-Control': 'no-store'
-      }
-    });
-  } catch (error) {
-    console.error('댓글 조회 중 오류:', error);
-    return NextResponse.json({ error: '서버 오류가 발생했습니다' }, { status: 500 });
+    return NextResponse.json(comments || [], { headers });
+  } catch {
+    return NextResponse.json(
+      { error: '댓글 조회 중 오류가 발생했습니다' },
+      { status: 500 }
+    );
   }
 }
 
@@ -106,7 +105,6 @@ export async function POST(
 ) {
   try {
     const { postId } = await params;
-    console.log(`댓글 작성 요청 - 게시글 ID: ${postId}`);
     
     const supabase = await createClient();
     
@@ -114,7 +112,7 @@ export async function POST(
     const { content } = await request.json();
     
     if (!content) {
-      return NextResponse.json({ error: '댓글 내용이 누락되었습니다' }, { status: 400 });
+      return NextResponse.json({ error: '내용을 입력해주세요' }, { status: 400 });
     }
     
     // 현재 사용자 정보 가져오기
@@ -122,6 +120,17 @@ export async function POST(
     
     if (userError || !user) {
       return NextResponse.json({ error: '인증되지 않은 사용자입니다' }, { status: 401 });
+    }
+    
+    // 게시글 존재 여부 확인
+    const { data: post, error: postError } = await supabase
+      .from('posts')
+      .select('id')
+      .eq('id', postId)
+      .single();
+      
+    if (postError || !post) {
+      return NextResponse.json({ error: '게시글을 찾을 수 없습니다' }, { status: 404 });
     }
     
     // 댓글 작성
@@ -151,13 +160,14 @@ export async function POST(
       .single();
       
     if (error) {
-      console.error('댓글 작성 오류:', error);
       return NextResponse.json({ error: '댓글 작성에 실패했습니다' }, { status: 500 });
     }
     
     return NextResponse.json(data);
-  } catch (error) {
-    console.error('댓글 작성 중 오류:', error);
-    return NextResponse.json({ error: '서버 오류가 발생했습니다' }, { status: 500 });
+  } catch {
+    return NextResponse.json(
+      { error: '댓글 작성 중 오류가 발생했습니다' },
+      { status: 500 }
+    );
   }
 } 

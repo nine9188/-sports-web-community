@@ -4,7 +4,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/app/ui/button';
 import { toast } from 'react-toastify';
 import { createClient } from '@/app/lib/supabase-browser';
-import { ArrowUp, ArrowDown, ChevronRight, ChevronsRight } from 'lucide-react';
+import { ArrowUp, ArrowDown, ChevronRight, ChevronsRight, RefreshCw } from 'lucide-react';
+import { useBoardsCache } from '@/app/hooks/useBoards';
+
+// Server Action 임포트
+import { invalidateBoardsCache } from '@/app/actions/cache';
 
 interface Board {
   id: string;
@@ -34,7 +38,9 @@ export default function BoardsAdminPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUpdatingOrder, setIsUpdatingOrder] = useState(false);
+  const [isRefreshingCache, setIsRefreshingCache] = useState(false);
   const supabase = createClient();
+  const { refreshBoardsCache } = useBoardsCache();
 
   // 게시판 목록 불러오기 - useCallback 사용
   const fetchBoards = useCallback(async () => {
@@ -238,6 +244,9 @@ export default function BoardsAdminPage() {
       
       // 게시판 목록 다시 불러오기
       fetchBoards();
+      
+      // 캐시 갱신
+      await handleRefreshCache();
     } catch (error: unknown) {
       console.error('게시판 작업 오류:', error);
       const errorMessage = error instanceof Error ? error.message : '게시판 작업 중 오류가 발생했습니다.';
@@ -295,6 +304,9 @@ export default function BoardsAdminPage() {
       
       // 게시판 목록 다시 불러오기
       fetchBoards();
+      
+      // 캐시 갱신
+      await handleRefreshCache();
     } catch (error: unknown) {
       console.error('게시판 삭제 오류:', error);
       const errorMessage = error instanceof Error ? error.message : '게시판 삭제 중 오류가 발생했습니다.';
@@ -361,6 +373,9 @@ export default function BoardsAdminPage() {
       // 게시판 목록 새로고침
       fetchBoards();
       
+      // 캐시 갱신
+      await handleRefreshCache();
+      
     } catch (error) {
       console.error('순서 변경 오류:', error);
       toast.error('순서 변경에 실패했습니다.');
@@ -415,6 +430,30 @@ export default function BoardsAdminPage() {
       setIsUpdatingOrder(false);
     }
   }; */
+
+  // 전체 캐시 갱신 함수
+  const handleRefreshCache = async () => {
+    try {
+      setIsRefreshingCache(true);
+      
+      // 클라이언트 측 캐시 갱신
+      const clientResult = await refreshBoardsCache();
+      
+      // 서버 측 캐시 갱신
+      const serverResult = await invalidateBoardsCache();
+      
+      if (clientResult && serverResult) {
+        toast.success('게시판 메뉴 캐시가 성공적으로 갱신되었습니다.');
+      } else {
+        toast.warning('일부 캐시 갱신에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('캐시 갱신 오류:', error);
+      toast.error('캐시 갱신 중 오류가 발생했습니다.');
+    } finally {
+      setIsRefreshingCache(false);
+    }
+  };
 
   // 계층 표시를 위한 들여쓰기 생성
   const getIndentation = (level: number = 0) => {
@@ -593,13 +632,26 @@ export default function BoardsAdminPage() {
       
       {/* 게시판 목록 */}
       <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-        <div className="px-4 py-5 sm:px-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">
-            게시판 목록
-          </h3>
-          <p className="mt-1 max-w-2xl text-sm text-gray-500">
-            현재 생성된 모든 게시판 목록입니다. 화살표를 클릭하여 순서를 변경할 수 있습니다.
-          </p>
+        <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
+          <div>
+            <h3 className="text-lg leading-6 font-medium text-gray-900">
+              게시판 목록
+            </h3>
+            <p className="mt-1 max-w-2xl text-sm text-gray-500">
+              현재 생성된 모든 게시판 목록입니다. 화살표를 클릭하여 순서를 변경할 수 있습니다.
+            </p>
+          </div>
+          
+          {/* 캐시 갱신 버튼 */}
+          <Button
+            variant="outline"
+            onClick={handleRefreshCache}
+            disabled={isRefreshingCache}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshingCache ? 'animate-spin' : ''}`} />
+            {isRefreshingCache ? '갱신 중...' : '메뉴 캐시 갱신'}
+          </Button>
         </div>
         
         {isLoading ? (

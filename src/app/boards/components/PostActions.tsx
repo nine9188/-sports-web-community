@@ -380,26 +380,26 @@ export default function PostActions({
       <button
         onClick={handleLike}
         disabled={isLiking || isDisliking}
-        className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm transition-colors ${
+        className={`flex items-center gap-1 px-4 py-2 rounded-full text-sm font-medium transition-colors shadow-sm ${
           userAction === 'like'
-            ? 'bg-blue-100 text-blue-600'
-            : 'hover:bg-gray-100'
+            ? 'bg-blue-500 text-white hover:bg-blue-600'
+            : 'bg-gray-50 border border-gray-200 text-gray-700 hover:bg-blue-50 hover:text-blue-500 hover:border-blue-200'
         }`}
       >
-        <ThumbsUp size={16} />
+        <ThumbsUp size={16} className={userAction === 'like' ? 'text-white' : ''} />
         <span>{likes}</span>
       </button>
       
       <button
         onClick={handleDislike}
         disabled={isLiking || isDisliking}
-        className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm transition-colors ${
+        className={`flex items-center gap-1 px-4 py-2 rounded-full text-sm font-medium transition-colors shadow-sm ${
           userAction === 'dislike'
-            ? 'bg-red-100 text-red-600'
-            : 'hover:bg-gray-100'
+            ? 'bg-red-500 text-white hover:bg-red-600'
+            : 'bg-gray-50 border border-gray-200 text-gray-700 hover:bg-red-50 hover:text-red-500 hover:border-red-200'
         }`}
       >
-        <ThumbsDown size={16} />
+        <ThumbsDown size={16} className={userAction === 'dislike' ? 'text-white' : ''} />
         <span>{dislikes}</span>
       </button>
     </div>

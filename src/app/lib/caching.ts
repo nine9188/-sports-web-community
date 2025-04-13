@@ -1,5 +1,7 @@
+'use client';
+
 import { createClientWithoutCookies } from '@/app/lib/supabase-middleware';
-import { FileData } from '@/app/types/post';
+import { FileAttachment } from './database.types';
 
 // 캐시 TTL 기본값 (초 단위)
 const DEFAULT_TTL = 5 * 60; // 5분
@@ -162,7 +164,7 @@ export async function getCachedPostDetail(boardSlug: string, postNumber: number)
     }
     
     // 첨부 파일 정보 가져오기
-    let files: FileData[] = [];
+    let files: FileAttachment[] = [];
     try {
       const { data: filesData, error: filesError } = await supabase
         .from('post_files')
@@ -170,7 +172,7 @@ export async function getCachedPostDetail(boardSlug: string, postNumber: number)
         .eq('post_id', postData.id);
       
       if (!filesError && filesData) {
-        files = filesData as FileData[];
+        files = filesData as FileAttachment[];
       }
     } catch {
       // 오류가 발생해도 계속 진행
@@ -347,4 +349,4 @@ export function invalidateCacheByPrefix(keyPrefix: string): void {
  */
 export function clearAllCache(): void {
   memoryCache.clear();
-}
+} 

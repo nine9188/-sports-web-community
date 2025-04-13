@@ -69,15 +69,18 @@ interface ApiTeamStanding {
 
 // 메모리 캐싱 강화
 const CACHE: { [key: string]: CacheItem } = {};
-const CACHE_TTL = 3 * 60 * 60 * 1000; // 3시간으로 증가
+const CACHE_TTL = 24 * 60 * 60 * 1000; // 24시간으로 증가 (하루에 한 번 정도 갱신)
 
 // 디바운스 메커니즘 추가 (동일 요청 방지)
 const REQUEST_THROTTLE: { [key: string]: number } = {};
-const THROTTLE_WINDOW = 5000; // 5초로 증가
+const THROTTLE_WINDOW = 60 * 1000; // 1분으로 증가
 
 // API 요청 제한 (개별 리그별)
 const lastApiCallTimestamps: { [key: string]: number } = {};
-const API_CALL_COOLDOWN = 60 * 1000; // 1분 쿨다운
+const API_CALL_COOLDOWN = 6 * 60 * 60 * 1000; // 6시간 쿨다운
+
+// 마지막 API 갱신 일자 관리
+const lastApiUpdateDay: { [key: string]: number } = {};
 
 export async function GET(request: Request) {
   try {
@@ -101,13 +104,22 @@ export async function GET(request: Request) {
     // 요청 헤더에서 서버 호출 여부 확인
     const headers = new Headers(request.headers);
     const isServerCall = headers.get('x-from-server') === '1';
+    const forceRefresh = searchParams.get('refresh') === '1';
     const now = Date.now();
+    const today = new Date().getDate();
+    
+    // 당일 이미 API를 호출했는지 확인
+    const alreadyUpdatedToday = lastApiUpdateDay[cacheKey] === today;
     
     // 요청 쓰로틀링 (디바운싱)
-    if (REQUEST_THROTTLE[cacheKey] && (now - REQUEST_THROTTLE[cacheKey]) < THROTTLE_WINDOW) {
+    if (REQUEST_THROTTLE[cacheKey] && (now - REQUEST_THROTTLE[cacheKey]) < THROTTLE_WINDOW && !forceRefresh) {
       // 너무 빠른 중복 요청이면 캐시된 데이터 반환 (있는 경우)
       if (CACHE[cacheKey]) {
-        return NextResponse.json({ data: CACHE[cacheKey].data });
+        return NextResponse.json({ 
+          data: CACHE[cacheKey].data,
+          cached: true,
+          cachedAt: new Date(CACHE[cacheKey].timestamp).toISOString()
+        });
       }
     }
     
@@ -115,20 +127,29 @@ export async function GET(request: Request) {
     REQUEST_THROTTLE[cacheKey] = now;
     
     // 캐시된 데이터가 있고 유효하다면 사용
-    if (CACHE[cacheKey] && (now - CACHE[cacheKey].timestamp) < CACHE_TTL) {
-      return NextResponse.json({ data: CACHE[cacheKey].data });
+    if (CACHE[cacheKey] && (now - CACHE[cacheKey].timestamp) < CACHE_TTL && !forceRefresh) {
+      return NextResponse.json({ 
+        data: CACHE[cacheKey].data,
+        cached: true,
+        cachedAt: new Date(CACHE[cacheKey].timestamp).toISOString()
+      });
     }
     
-    // 외부 API 요청 쿨다운 체크 (1분 내에 동일 리그 요청 방지)
+    // 외부 API 요청 쿨다운 체크 (6시간 내에 동일 리그 요청 방지 및 당일 업데이트 여부 확인)
     const lastApiCall = lastApiCallTimestamps[cacheKey] || 0;
-    if (!isServerCall && (now - lastApiCall) < API_CALL_COOLDOWN) {
+    if (!isServerCall && (now - lastApiCall) < API_CALL_COOLDOWN && alreadyUpdatedToday && !forceRefresh) {
       if (CACHE[cacheKey]) {
-        return NextResponse.json({ data: CACHE[cacheKey].data });
+        return NextResponse.json({ 
+          data: CACHE[cacheKey].data,
+          cached: true,
+          cachedAt: new Date(CACHE[cacheKey].timestamp).toISOString() 
+        });
       }
     }
     
-    // API 호출 시간 기록
+    // API 호출 시간 기록 및 당일 업데이트 기록
     lastApiCallTimestamps[cacheKey] = now;
+    lastApiUpdateDay[cacheKey] = today;
     
     // 스탠딩 데이터 요청
     const standingsResponse = await fetch(
@@ -138,7 +159,7 @@ export async function GET(request: Request) {
           'x-rapidapi-host': 'v3.football.api-sports.io',
           'x-rapidapi-key': process.env.FOOTBALL_API_KEY || '',
         },
-        cache: 'no-store'
+        next: { revalidate: 86400 } // 24시간 캐싱
       }
     );
 
@@ -190,7 +211,11 @@ export async function GET(request: Request) {
       revalidatePath(`/api/livescore/football/leagues/standings?league=${leagueParam || 'premier'}`);
     }
     
-    return NextResponse.json({ data: formattedData });
+    return NextResponse.json({ 
+      data: formattedData,
+      cached: false,
+      updatedAt: new Date().toISOString()
+    });
     
   } catch (error) {
     console.error('Error fetching league standings:', error);

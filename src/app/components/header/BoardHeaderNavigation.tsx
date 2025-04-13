@@ -8,6 +8,12 @@ import { useAuth } from '@/app/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useBoards } from '@/app/hooks/useBoards';
 
+// 헤더 네비게이션의 캐싱 지속 시간 (30분)
+const CACHE_DURATION = 30 * 60 * 1000;
+
+// 로컬 스토리지 캐시 키
+const LS_HEADER_BOARDS_KEY = 'boards_header_cache';
+
 // 타입 정의는 useBoards.ts로 이동하였으므로 여기서는 제거
 // Board 타입은 내부적으로만 사용
 interface BoardWithUIState {
@@ -22,6 +28,16 @@ export default function BoardHeaderNavigation() {
   // React Query를 사용한 데이터 가져오기
   const { data, isLoading, error, refetch } = useBoards();
   
+  // 로컬 캐싱을 위한 상태
+  const [cachedBoards, setCachedBoards] = useState<{
+    rootBoards: BoardWithUIState[] | null;
+    timestamp: number;
+  }>({
+    rootBoards: null,
+    timestamp: 0
+  });
+  const [localLoading, setLocalLoading] = useState(true);
+  
   const [hoveredBoard, setHoveredBoard] = useState<string | null>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const navRef = useRef<HTMLDivElement>(null);
@@ -29,6 +45,68 @@ export default function BoardHeaderNavigation() {
   const [mounted, setMounted] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
+
+  // 로컬 스토리지에서 캐시된 데이터 로드
+  useEffect(() => {
+    const loadCachedData = () => {
+      try {
+        const cachedData = localStorage.getItem(LS_HEADER_BOARDS_KEY);
+        if (cachedData) {
+          const parsed = JSON.parse(cachedData);
+          // 캐시가 유효한지 확인 (30분)
+          if (Date.now() - parsed.timestamp < CACHE_DURATION) {
+            setCachedBoards(parsed);
+            setLocalLoading(false);
+            return true;
+          }
+        }
+        return false;
+      } catch {
+        return false;
+      }
+    };
+    
+    // 캐시된 데이터가 없거나 만료된 경우 새로 불러오기
+    if (!loadCachedData()) {
+      setLocalLoading(true);
+    }
+  }, []);
+  
+  // React Query 데이터가 로드되면 캐시 업데이트
+  useEffect(() => {
+    if (data && data.rootBoards) {
+      // 데이터 형식 변환
+      const formattedData = data.rootBoards.map((board) => ({
+        id: board.id,
+        name: board.name,
+        slug: board.slug,
+        display_order: board.display_order,
+        children: board.children ? board.children.map(child => ({
+          id: child.id,
+          name: child.name,
+          slug: child.slug,
+          display_order: child.display_order,
+          children: child.children || []
+        })) : []
+      }));
+      
+      // 캐시 업데이트
+      const cacheData = {
+        rootBoards: formattedData,
+        timestamp: Date.now()
+      };
+      
+      // 로컬 스토리지에 저장
+      try {
+        localStorage.setItem(LS_HEADER_BOARDS_KEY, JSON.stringify(cacheData));
+      } catch {
+        // 에러 무시
+      }
+      
+      setCachedBoards(cacheData);
+      setLocalLoading(false);
+    }
+  }, [data]);
 
   // 관리자 여부 확인
   const isAdmin = user && (user.user_metadata?.is_admin === true);
@@ -183,14 +261,25 @@ export default function BoardHeaderNavigation() {
       document.body
     );
   };
+  
+  // 로컬 캐시 또는 React Query 데이터 사용
+  const boardsToRender = cachedBoards.rootBoards || (data?.rootBoards?.map(board => ({
+    id: board.id,
+    name: board.name,
+    slug: board.slug,
+    display_order: board.display_order,
+    children: board.children || []
+  })) || []);
+  const isLoadingData = localLoading && isLoading;
+  const hasError = error && !cachedBoards.rootBoards;
 
   // 최상위 게시판 링크 렌더링
   const renderTopLevelBoards = () => {
-    if (!data || !data.rootBoards) return null;
+    if (!boardsToRender || boardsToRender.length === 0) return null;
     
     return (
       <>
-        {data.rootBoards.map(board => (
+        {boardsToRender.map(board => (
           <div 
             key={board.id} 
             className="relative shrink-0 snap-center" 
@@ -261,12 +350,12 @@ export default function BoardHeaderNavigation() {
       ref={navRef} 
       className="flex items-center gap-1 overflow-x-auto w-full no-scrollbar pb-1 snap-x snap-mandatory"
     >
-      {isLoading ? (
+      {isLoadingData ? (
         // 로딩 상태
         <div className="px-3 py-1">
           <div className="h-7 bg-gray-100 rounded animate-pulse w-20"></div>
         </div>
-      ) : error ? (
+      ) : hasError ? (
         // 오류 메시지 표시
         <div className="px-3 py-1 text-sm text-red-500 flex items-center">
           <span>게시판을 불러오는 데 실패했습니다</span>
@@ -277,7 +366,7 @@ export default function BoardHeaderNavigation() {
             다시 시도
           </button>
         </div>
-      ) : !data || !data.rootBoards || data.rootBoards.length === 0 ? (
+      ) : !boardsToRender || boardsToRender.length === 0 ? (
         // 게시판이 없을 때
         <div className="px-3 py-1 text-sm text-gray-500 flex items-center">
           <span>게시판이 없습니다</span>

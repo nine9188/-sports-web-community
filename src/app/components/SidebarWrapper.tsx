@@ -1,22 +1,26 @@
 'use client';
 
 import Sidebar from './Sidebar';
-import BoardNavigation from './sidebar/BoardNavigation';
 import ServerLeagueStandings from './sidebar/ServerLeagueStandings';
 
 export interface SidebarWrapperProps {
   isOpen: boolean;
   onClose: () => void;
+  boardNavigation: React.ReactNode;
 }
 
-export default function SidebarWrapper({ isOpen, onClose }: SidebarWrapperProps) {
+export default function SidebarWrapper({ 
+  isOpen, 
+  onClose, 
+  boardNavigation 
+}: SidebarWrapperProps) {
   return (
     <Sidebar 
       isOpen={isOpen} 
       onClose={onClose}
       leagueStandingsComponent={<ServerLeagueStandings />}
     >
-      <BoardNavigation key="board-navigation" />
+      {boardNavigation}
     </Sidebar>
   );
 } 

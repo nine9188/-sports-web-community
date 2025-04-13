@@ -156,8 +156,6 @@ export async function getCachedTopicPosts(type: 'views' | 'likes' | 'comments'):
       const commentCounts: Record<string, number> = {};
       
       if (type === 'comments') {
-        console.log(`댓글 기준 정렬: ${validPosts.length}개 게시물의 댓글 수를 가져옵니다.`);
-        
         // 각 게시물의 댓글 수를 개별적으로 가져오기
         await Promise.all(
           validPosts.map(async (post) => {
@@ -167,23 +165,8 @@ export async function getCachedTopicPosts(type: 'views' | 'likes' | 'comments'):
               .eq('post_id', post.id);
             
             commentCounts[post.id] = count || 0;
-            console.log(`포스트 ID: ${post.id}, 제목: ${post.title}, 댓글 수: ${count || 0}`);
           })
         );
-        
-        console.log('댓글 수 가져오기 완료');
-        
-        // 댓글 수 기준 상위 게시물 로그
-        const topComments = validPosts
-          .map(post => ({
-            id: post.id,
-            title: post.title,
-            commentCount: commentCounts[post.id] || 0
-          }))
-          .sort((a, b) => b.commentCount - a.commentCount)
-          .slice(0, 5);
-        
-        console.log('댓글 수 많은 상위 5개 게시물:', topComments);
       } else {
         // 다른 타입일 경우에도 간단히 댓글 수는 가져오기
         const postIds = validPosts.map(post => post.id);
@@ -247,13 +230,6 @@ export async function getCachedTopicPosts(type: 'views' | 'likes' | 'comments'):
       } else if (type === 'likes') {
         result = [...processedPosts].sort((a, b) => b.likes - a.likes).slice(0, 20);
       } else { // comments
-        console.log("댓글 수 기준 정렬 결과: ", 
-          processedPosts
-            .sort((a, b) => b.comment_count - a.comment_count)
-            .slice(0, 5)
-            .map(p => `${p.title}: ${p.comment_count}`)
-        );
-        
         result = [...processedPosts]
           .sort((a, b) => b.comment_count - a.comment_count)
           .slice(0, 20);
@@ -261,6 +237,6 @@ export async function getCachedTopicPosts(type: 'views' | 'likes' | 'comments'):
       
       return result;
     },
-    type === 'comments' ? 60 : 60 // 모든 타입 60초 캐싱
+    15 * 60 // 15분 캐싱
   );
 } 

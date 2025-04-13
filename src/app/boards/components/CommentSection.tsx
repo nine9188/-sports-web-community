@@ -35,13 +35,9 @@ export default function CommentSection({
   // 댓글 데이터를 최신으로 다시 가져오기 (useCallback으로 감싸서 안정적인 참조 유지)
   const refreshComments = useCallback(async () => {
     try {
-      console.log(`댓글 새로고침 시도 - 게시글 ID: ${postId}`);
-      
       // 절대 URL 구성
       const baseUrl = window.location.origin;
       const apiUrl = `${baseUrl}/api/comments/${postId}`;
-      
-      console.log(`댓글 새로고침 API 요청: ${apiUrl}`);
       
       const response = await fetch(apiUrl, {
         method: 'GET',
@@ -55,29 +51,33 @@ export default function CommentSection({
       });
       
       if (!response.ok) {
-        console.error(`댓글 새로고침 실패: ${response.status} ${response.statusText}`);
         throw new Error('댓글을 다시 가져오는데 실패했습니다');
       }
       
-      const data = await response.json();
-      console.log(`댓글 ${data?.length || 0}개 새로고침 성공, 게시글 ID: ${postId}`);
-      if (Array.isArray(data)) {
-        setComments(data);
+      const responseText = await response.text();
+      
+      try {
+        const data = JSON.parse(responseText);
+        if (Array.isArray(data) && data.length > 0) {
+          setComments(data);
+        } else if (Array.isArray(data)) {
+          setComments([]);
+        }
+      } catch {
+        // 파싱 실패 시 빈 배열로 설정
+        setComments([]);
       }
-    } catch (error) {
-      console.error('댓글 새로고침 오류:', error);
+    } catch {
+      // 오류 발생 시 처리
     }
   }, [postId]);
   
   // 초기 댓글과 사용자 정보 초기화
   useEffect(() => {
-    console.log(`CommentSection 마운트 - 초기 댓글 ${initialComments?.length || 0}개 받음`);
-    
     // 초기 댓글 설정
     if (Array.isArray(initialComments) && initialComments.length > 0) {
       setComments(initialComments);
     } else {
-      console.log('초기 댓글이 없거나 유효하지 않음 - 새로고침 시도');
       refreshComments();
     }
     
@@ -87,12 +87,9 @@ export default function CommentSection({
         const { data, error } = await supabase.auth.getUser();
         if (!error && data.user) {
           setCurrentUserId(data.user.id);
-          console.log(`현재 로그인 사용자 ID: ${data.user.id}`);
-        } else {
-          console.log('로그인되지 않은 상태');
         }
-      } catch (error) {
-        console.error('사용자 정보 조회 오류:', error);
+      } catch {
+        // 사용자 정보 가져오기 실패
       } finally {
         setIsLoading(false);
       }
@@ -122,7 +119,6 @@ export default function CommentSection({
       }
       
       const userId = userData.user.id;
-      console.log(`댓글 작성 시도 - 사용자 ID: ${userId}, 게시글 ID: ${postId}`);
       
       // 절대 URL 구성
       const baseUrl = window.location.origin;
@@ -146,7 +142,6 @@ export default function CommentSection({
       }
       
       const newComment = await response.json();
-      console.log(`댓글 작성 성공 - 댓글 ID: ${newComment.id}`);
       
       // 댓글 목록 업데이트
       setComments(prevComments => [...prevComments, newComment]);
@@ -186,13 +181,9 @@ export default function CommentSection({
   
   const handleUpdate = useCallback(async (commentId: string, updatedContent: string) => {
     try {
-      console.log(`댓글 수정 시도 - 댓글 ID: ${commentId}, 내용: ${updatedContent}`);
-      
       // API를 통한 수정 요청
       const baseUrl = window.location.origin;
       const apiUrl = `${baseUrl}/api/comments/${postId}/${commentId}`;
-      
-      console.log(`댓글 수정 API 요청: ${apiUrl}`);
       
       const response = await fetch(apiUrl, {
         method: 'PATCH',
@@ -213,7 +204,6 @@ export default function CommentSection({
       
       // 응답에서 업데이트된 댓글 정보 추출
       const updatedComment = await response.json();
-      console.log(`댓글 수정 성공:`, updatedComment);
       
       // 댓글 목록 업데이트
       setComments(prevComments => 
@@ -239,18 +229,9 @@ export default function CommentSection({
     }
     
     try {
-      console.log(`댓글 삭제 시도 - 댓글 ID: ${commentId}, 게시글 ID: ${postId}`);
-      
-      if (!currentUserId) {
-        alert('로그인이 필요합니다.');
-        return;
-      }
-      
       // 서버 API를 통해 삭제 요청
       const baseUrl = window.location.origin;
       const apiUrl = `${baseUrl}/api/comments/${postId}/${commentId}`;
-      
-      console.log(`댓글 삭제 API 요청: ${apiUrl}`);
       
       const response = await fetch(apiUrl, {
         method: 'DELETE',
@@ -268,8 +249,6 @@ export default function CommentSection({
         throw new Error(errorData.error || '댓글 삭제에 실패했습니다');
       }
       
-      console.log(`댓글 삭제 성공 - 댓글 ID: ${commentId}`);
-      
       // 댓글 목록에서 삭제된 댓글 제거
       setComments(prevComments => prevComments.filter(comment => comment.id !== commentId));
       
@@ -282,10 +261,10 @@ export default function CommentSection({
       console.error('댓글 삭제 중 오류:', error);
       alert(error instanceof Error ? error.message : '댓글 삭제 중 오류가 발생했습니다.');
     }
-  }, [currentUserId, postId, router, refreshComments]);
+  }, [postId, router, refreshComments]);
   
   return (
-    <div className="bg-white rounded-lg border shadow-sm overflow-hidden mb-6">
+    <div className="bg-white rounded-lg border shadow-sm overflow-hidden mb-4">
       <div className="px-6 py-4 border-b">
         <h3 className="font-medium">댓글 {comments.length}개</h3>
       </div>
