@@ -105,124 +105,184 @@ export default function MatchHeaderClient({
   }) || [];
 
   return (
-    <div className="w-full bg-white border-b md:max-w-screen-xl md:mx-auto">
+    <div className="w-full md:max-w-screen-xl md:mx-auto">
       {/* 리그 정보 */}
-      <div className="flex items-center gap-2 px-2 py-4 border-b md:px-4">
-        <div className="relative w-10 h-10">
-          {league?.logo && (
-            <Image
-              src={league.logo}
-              alt={league.name || ''}
-              fill
-              className="object-contain"
-              unoptimized={true}
-            />
-          )}
+      <div className="mb-4 bg-white rounded-lg border">
+        <div className="flex items-center gap-2 px-2 py-4 md:px-4">
+          <div className="relative w-10 h-10">
+            {league?.logo && (
+              <Image
+                src={league.logo}
+                alt={league.name || ''}
+                fill
+                className="object-contain"
+                unoptimized={true}
+              />
+            )}
+          </div>
+          <span className="font-bold">{league?.name}</span>
         </div>
-        <span className="font-bold">{league?.name}</span>
       </div>
 
       {/* 경기 상태 및 시간 */}
-      <div className="text-center py-4 border-b px-0 md:px-4">
-        <div className={`font-bold text-lg ${
-          status?.short && ['1H', '2H', 'LIVE', 'INPLAY'].includes(status.short) 
-            ? 'text-green-600' 
-            : status?.short === 'HT' 
-              ? 'text-orange-500'
-              : status?.short && ['FT', 'AET', 'PEN'].includes(status.short)
-                ? 'text-gray-600'
-                : 'text-blue-600'
-        }`}>
-          {getMatchStatus()}
-        </div>
-        <div className="text-gray-600 text-sm mt-1">
-          {fixture?.date ? 
-            new Date(fixture.date).toLocaleString('ko-KR', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: true
-            })
-            : 'Date Not Available'}
+      <div className="mb-4 bg-white rounded-lg border">
+        <div className="text-center py-4 px-0 md:px-4">
+          <div className={`font-bold text-lg ${
+            status?.short && ['1H', '2H', 'LIVE', 'INPLAY'].includes(status.short) 
+              ? 'text-green-600' 
+              : status?.short === 'HT' 
+                ? 'text-orange-500'
+                : status?.short && ['FT', 'AET', 'PEN'].includes(status.short)
+                  ? 'text-gray-600'
+                  : 'text-blue-600'
+          }`}>
+            {getMatchStatus()}
+          </div>
+          <div className="text-gray-600 text-sm mt-1">
+            {fixture?.date ? 
+              new Date(fixture.date).toLocaleString('ko-KR', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+              })
+              : 'Date Not Available'}
+          </div>
         </div>
       </div>
 
       {/* 팀 정보 및 스코어 */}
-      <div className="flex items-start justify-between px-0 py-4 md:px-4">
-        {/* 홈팀 */}
-        <div className="text-center flex-1">
-          <div className="mb-4">
-            <div className="relative w-16 h-16 mx-auto mb-2">
-              <Image 
-                src={teams.home.logo}
-                alt={teams.home.name}
-                fill
-                className="object-contain"
-                unoptimized={true}
-              />
+      <div className="mb-4 bg-white rounded-lg border">
+        <div className="px-2 py-3 md:px-4 md:py-4">
+          {/* 팀 정보 영역 */}
+          <div className="flex items-center justify-between">
+            {/* 홈팀 */}
+            <div className="w-1/3 md:w-5/12 text-center">
+              <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-1 md:mb-2">
+                <Image 
+                  src={teams.home.logo}
+                  alt={teams.home.name}
+                  fill
+                  className="object-contain"
+                  unoptimized={true}
+                />
+              </div>
+              <div className="font-bold text-sm md:text-base">{teams.home.name}</div>
+              <div className="text-xs md:text-sm text-gray-600">{teams.home.formation}</div>
             </div>
-            <div className="font-bold">{teams.home.name}</div>
-            <div className="text-sm text-gray-600">{teams.home.formation}</div>
-          </div>
-          {/* 홈팀 골 정보 */}
-          <div className="space-y-1">
-            {goalEvents
-              .filter(event => event.team.name === teams.home.name)
-              .map((goal, index) => (
-                <div key={`${goal.time.elapsed}-${index}`} className="text-sm text-gray-600">
-                  ⚽ {goal.player.name} {goal.time.elapsed}&apos;
-                  {goal.assist?.name && (
-                    <span className="text-xs text-gray-500">
-                      (A: {goal.assist.name})
-                    </span>
-                  )}
-                </div>
-              ))}
-          </div>
-        </div>
 
-        {/* 스코어 */}
-        <div className="text-center">
-          <div className="text-3xl font-bold mb-2">
-            {goals.home} - {goals.away}
-          </div>
-          <div className="space-y-1 text-sm text-gray-600">
-            <div>HT: {score.halftime.home} - {score.halftime.away}</div>
-            <div>FT: {score.fulltime.home} - {score.fulltime.away}</div>
-          </div>
-        </div>
-
-        {/* 원정팀 */}
-        <div className="text-center flex-1">
-          <div className="mb-4">
-            <div className="relative w-16 h-16 mx-auto mb-2">
-              <Image 
-                src={teams.away.logo}
-                alt={teams.away.name}
-                fill
-                className="object-contain"
-                unoptimized={true}
-              />
+            {/* 스코어 */}
+            <div className="w-1/3 md:w-2/12 text-center self-center whitespace-nowrap">
+              <div className="text-2xl md:text-3xl font-bold mb-1 md:mb-2">
+                {goals.home} - {goals.away}
+              </div>
+              <div className="space-y-0 md:space-y-1 text-xs md:text-sm text-gray-600">
+                <div>HT: {score.halftime.home} - {score.halftime.away}</div>
+                <div>FT: {score.fulltime.home} - {score.fulltime.away}</div>
+              </div>
             </div>
-            <div className="font-bold">{teams.away.name}</div>
-            <div className="text-sm text-gray-600">{teams.away.formation}</div>
+
+            {/* 원정팀 */}
+            <div className="w-1/3 md:w-5/12 text-center">
+              <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-1 md:mb-2">
+                <Image 
+                  src={teams.away.logo}
+                  alt={teams.away.name}
+                  fill
+                  className="object-contain"
+                  unoptimized={true}
+                />
+              </div>
+              <div className="font-bold text-sm md:text-base">{teams.away.name}</div>
+              <div className="text-xs md:text-sm text-gray-600">{teams.away.formation}</div>
+            </div>
           </div>
-          {/* 원정팀 골 정보 */}
-          <div className="space-y-1">
-            {goalEvents
-              .filter(event => event.team.name === teams.away.name)
-              .map((goal, index) => (
-                <div key={`${goal.time.elapsed}-${index}`} className="text-sm text-gray-600">
-                  ⚽ {goal.player.name} {goal.time.elapsed}&apos;
-                  {goal.assist?.name && (
-                    <span className="text-xs text-gray-500">
-                      (A: {goal.assist.name})
-                    </span>
-                  )}
+
+          {/* 득점자 목록 */}
+          <div className="flex flex-col md:flex-row mt-4 md:mt-6">
+            {/* 홈팀 득점자 */}
+            <div className="w-full md:w-5/12 relative pl-2 md:pl-0 md:pr-2 mb-4 md:mb-0">
+              {/* 홈팀 헤더 - 모바일에서만 표시 */}
+              <div className="md:hidden py-1 font-semibold mb-2 text-sm flex items-center">
+                <div className="relative w-4 h-4 mr-2">
+                  <Image 
+                    src={teams.home.logo}
+                    alt={teams.home.name}
+                    fill
+                    className="object-contain"
+                    unoptimized={true}
+                  />
                 </div>
-              ))}
+                {teams.home.name}
+              </div>
+              
+              <div className="space-y-1">
+                {goalEvents
+                  .filter(event => event.team.name === teams.home.name)
+                  .map((goal, index) => (
+                    <div key={`${goal.time.elapsed}-${index}`} className="text-sm text-gray-600 flex items-start">
+                      <div className="w-8 md:w-20 text-left md:text-right flex-shrink-0 md:pr-4 relative">
+                        <span className="md:absolute md:right-0">⚽</span>
+                      </div>
+                      <div>
+                        {goal.player.name} {goal.time.elapsed}&apos;
+                        {goal.assist?.name && (
+                          <span className="text-xs text-gray-500">
+                            (A: {goal.assist.name})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            {/* 중앙 공간 - 모바일에서는 숨김 */}
+            <div className="hidden md:block md:w-2/12"></div>
+
+            {/* 홈/원정팀 구분선 - 모바일에서만 표시 */}
+            {goalEvents.filter(event => event.team.name === teams.home.name).length > 0 && 
+             goalEvents.filter(event => event.team.name === teams.away.name).length > 0 && 
+             <div className="md:hidden w-full border-t border-gray-200 my-3"></div>}
+
+            {/* 원정팀 득점자 */}
+            <div className="w-full md:w-5/12 relative pl-2">
+              {/* 원정팀 헤더 - 모바일에서만 표시 */}
+              <div className="md:hidden py-1 font-semibold mb-2 text-sm flex items-center">
+                <div className="relative w-4 h-4 mr-2">
+                  <Image 
+                    src={teams.away.logo}
+                    alt={teams.away.name}
+                    fill
+                    className="object-contain"
+                    unoptimized={true}
+                  />
+                </div>
+                {teams.away.name}
+              </div>
+              
+              <div className="space-y-1">
+                {goalEvents
+                  .filter(event => event.team.name === teams.away.name)
+                  .map((goal, index) => (
+                    <div key={`${goal.time.elapsed}-${index}`} className="text-sm text-gray-600 flex items-start">
+                      <div className="w-8 md:w-20 text-left md:text-right flex-shrink-0 md:pr-4 relative">
+                        <span className="md:absolute md:right-0">⚽</span>
+                      </div>
+                      <div>
+                        {goal.player.name} {goal.time.elapsed}&apos;
+                        {goal.assist?.name && (
+                          <span className="text-xs text-gray-500">
+                            (A: {goal.assist.name})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -1,14 +1,10 @@
 .mobileContainer {
   width: 100%;
-  padding: 0;
-  margin: 0;
 }
 
 @media (min-width: 768px) {
   .mobileContainer {
     max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1rem;
   }
 }
 

@@ -196,10 +196,37 @@ export async function getIconName(iconId: number): Promise<string | null> {
 }
 
 // 사용자의 현재 아이콘 정보 가져오기
+// 캐싱을 위한 변수
+type UserIconInfo = {
+  level: number;
+  exp: number;
+  iconId: number | null;
+  isUsingLevelIcon: boolean;
+  levelIconUrl: string;
+  purchasedIconUrl: string | null;
+  iconName: string | null;
+  currentIconUrl: string;
+  currentIconName: string;
+};
+
+type IconInfoCache = {
+  data: UserIconInfo;
+  timestamp: number;
+};
+
+const cachedIconInfo: Record<string, IconInfoCache> = {};
+const CACHE_DURATION = 60000; // 캐시 유효 시간 (1분)
+
 export async function getUserIconInfo(userId: string) {
   if (!userId) {
     console.log('사용자 ID가 제공되지 않았습니다. 기본 아이콘 정보를 반환합니다.');
     return getDefaultIconInfo();
+  }
+  
+  // 캐시 확인
+  const now = Date.now();
+  if (cachedIconInfo[userId] && (now - cachedIconInfo[userId].timestamp < CACHE_DURATION)) {
+    return cachedIconInfo[userId].data;
   }
   
   try {
@@ -232,13 +259,18 @@ export async function getUserIconInfo(userId: string) {
         }
       }
       
-      return getDefaultIconInfo();
+      const defaultInfo = getDefaultIconInfo();
+      // 실패한 경우에도 짧은 시간 동안만 캐싱 (10초)
+      cachedIconInfo[userId] = { data: defaultInfo, timestamp: now };
+      return defaultInfo;
     }
     
     // 프로필이 없는 경우 확인
     if (!profile) {
       console.log('프로필이 존재하지 않습니다. 기본 아이콘 정보를 반환합니다.');
-      return getDefaultIconInfo();
+      const defaultInfo = getDefaultIconInfo();
+      cachedIconInfo[userId] = { data: defaultInfo, timestamp: now };
+      return defaultInfo;
     }
     
     // 사용자 레벨, 경험치, 아이콘 ID
@@ -264,7 +296,7 @@ export async function getUserIconInfo(userId: string) {
       }
     }
     
-    return {
+    const iconInfo = {
       level,
       exp,
       iconId,
@@ -275,9 +307,16 @@ export async function getUserIconInfo(userId: string) {
       currentIconUrl: isUsingLevelIcon || !purchasedIconUrl ? levelIconUrl : purchasedIconUrl,
       currentIconName: isUsingLevelIcon || !iconName ? `레벨 ${level} 아이콘` : iconName
     };
+    
+    // 캐시에 저장
+    cachedIconInfo[userId] = { data: iconInfo, timestamp: now };
+    return iconInfo;
   } catch (error) {
     console.error('사용자 아이콘 정보 가져오기 오류:', error);
-    return getDefaultIconInfo();
+    const defaultInfo = getDefaultIconInfo();
+    // 실패한 경우에도 짧은 시간 동안만 캐싱 (10초)
+    cachedIconInfo[userId] = { data: defaultInfo, timestamp: now - CACHE_DURATION + 10000 };
+    return defaultInfo;
   }
 }
 

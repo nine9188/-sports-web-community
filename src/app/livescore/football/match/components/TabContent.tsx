@@ -138,28 +138,32 @@ export default function TabContent({ matchId, homeTeam, awayTeam, matchData }: T
   
   // 각 탭 컴포넌트에 키를 추가하여 리렌더링 방지
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
+    <>
+      {/* 탭 선택기를 별도 컨테이너로 분리 */}
       <TabSelectorWrapper 
         activeTab={activeTab} 
         onTabChange={handleTabChange} 
       />
       
-      <div className="p-4">
-        {/* 각 탭은 조건부 렌더링하되, 한번 로드된 후에는 유지합니다 */}
-        {activeTab === 'events' && <Events key="events-tab" matchData={eventProps} />}
-        
-        {activeTab === 'lineups' && (
-          <Lineups key="lineups-tab" matchData={lineupProps} />
-        )}
-        
-        {activeTab === 'stats' && (
-          <Stats key="stats-tab" matchData={statsProps} />
-        )}
-        
-        {activeTab === 'standings' && (
-          <Standings key="standings-tab" matchData={standingsProps} />
-        )}
+      {/* 탭 내용 영역을 별도 컨테이너로 분리 */}
+      <div className="mb-4 bg-white rounded-lg border overflow-hidden">
+        <div className="p-4">
+          {/* 각 탭은 조건부 렌더링하되, 한번 로드된 후에는 유지합니다 */}
+          {activeTab === 'events' && <Events key="events-tab" matchData={eventProps} />}
+          
+          {activeTab === 'lineups' && (
+            <Lineups key="lineups-tab" matchData={lineupProps} />
+          )}
+          
+          {activeTab === 'stats' && (
+            <Stats key="stats-tab" matchData={statsProps} />
+          )}
+          
+          {activeTab === 'standings' && (
+            <Standings key="standings-tab" matchData={standingsProps} />
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 } 
