@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, FC, Suspense, useRef, useEffect } from 'react';
-import { Tab } from '@headlessui/react';
 import dynamic from 'next/dynamic';
 
 // LoadingSpinner 직접 구현
@@ -796,78 +795,58 @@ const TeamTabs: FC<TeamTabsProps> = ({
     teamId: teamId
   });
 
-  const tabNames = ['Overview', 'Squad', 'Stats', 'Standings'];
+  const tabNames = ['개요', '스쿼드', '통계', '순위'];
 
   return (
-    <div className="w-full px-4 md:px-8 py-4">
-      <Tab.Group
-        selectedIndex={selectedTab}
-        onChange={handleTabChange}
-      >
-        <Tab.List className="flex rounded-lg bg-white p-1">
-          {tabNames.map((name, index) => (
-            <Tab
-              key={`tab-${index}`}
-              className={({ selected }) =>
-                `w-full py-2.5 text-sm font-medium leading-5 rounded-lg focus:outline-none ${
-                  selected ? 'bg-blue-600 text-white shadow' : 'text-gray-700 hover:bg-gray-100'
-                }`
-              }
-            >
-              {name}
-            </Tab>
-          ))}
-        </Tab.List>
-        <Tab.Panels className="mt-4">
-          {/* Overview 탭 */}
-          <Tab.Panel
-            key="overview"
-            className="rounded-lg bg-white p-3 ring-white/5 ring-opacity-60 focus:outline-none"
+    <div className="w-full">
+      <div className="mb-4 bg-white rounded-lg border overflow-hidden flex">
+        {tabNames.map((name, index) => (
+          <button
+            key={`tab-${index}`}
+            className={`px-4 py-3 text-sm font-medium flex-1 ${
+              selectedTab === index
+                ? 'text-blue-600 border-b-3 border-blue-600 font-semibold'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+            onClick={() => handleTabChange(index)}
           >
-            {selectedTab === 0 && (
-              <Suspense fallback={<LoadingSpinner />}>
-                <OverviewDynamic {...getOverviewProps()} />
-              </Suspense>
-            )}
-          </Tab.Panel>
-          
-          {/* Squad 탭 */}
-          <Tab.Panel
-            key="squad"
-            className="rounded-lg bg-white p-3 ring-white/5 ring-opacity-60 focus:outline-none"
-          >
-            {selectedTab === 1 && (
-              <Suspense fallback={<LoadingSpinner />}>
-                <SquadDynamic {...getSquadProps()} />
-              </Suspense>
-            )}
-          </Tab.Panel>
-          
-          {/* Stats 탭 */}
-          <Tab.Panel
-            key="stats"
-            className="rounded-lg bg-white p-3 ring-white/5 ring-opacity-60 focus:outline-none"
-          >
-            {selectedTab === 2 && (
-              <Suspense fallback={<LoadingSpinner />}>
-                <StatsDynamic {...getStatsProps()} />
-              </Suspense>
-            )}
-          </Tab.Panel>
-          
-          {/* Standings 탭 */}
-          <Tab.Panel
-            key="standings"
-            className="rounded-lg bg-white p-3 ring-white/5 ring-opacity-60 focus:outline-none"
-          >
-            {selectedTab === 3 && (
-              <Suspense fallback={<LoadingSpinner />}>
-                <StandingsDynamic {...getStandingsProps()} />
-              </Suspense>
-            )}
-          </Tab.Panel>
-        </Tab.Panels>
-      </Tab.Group>
+            {name}
+          </button>
+        ))}
+      </div>
+
+      {/* 탭 컨텐츠 */}
+      {selectedTab === 0 && (
+        <div className="bg-white rounded-lg">
+          <Suspense fallback={<LoadingSpinner />}>
+            <OverviewDynamic {...getOverviewProps()} />
+          </Suspense>
+        </div>
+      )}
+      
+      {selectedTab === 1 && (
+        <div className="bg-white rounded-lg">
+          <Suspense fallback={<LoadingSpinner />}>
+            <SquadDynamic {...getSquadProps()} />
+          </Suspense>
+        </div>
+      )}
+      
+      {selectedTab === 2 && (
+        <div className="bg-white rounded-lg">
+          <Suspense fallback={<LoadingSpinner />}>
+            <StatsDynamic {...getStatsProps()} />
+          </Suspense>
+        </div>
+      )}
+      
+      {selectedTab === 3 && (
+        <div className="bg-white rounded-lg">
+          <Suspense fallback={<LoadingSpinner />}>
+            <StandingsDynamic {...getStandingsProps()} />
+          </Suspense>
+        </div>
+      )}
     </div>
   );
 };

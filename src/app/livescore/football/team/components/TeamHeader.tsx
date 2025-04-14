@@ -82,82 +82,81 @@ export default function TeamHeader({ team, stats }: TeamHeaderProps) {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6">
-      <div className="flex flex-col md:flex-row items-start gap-6">
+    <div className="mb-4 bg-white rounded-lg border overflow-hidden">
+      <div className="flex flex-col md:flex-row items-start">
         {/* 팀 로고 및 기본 정보 */}
-        <div className="flex items-start gap-6">
-          <div className="relative w-24 h-24 md:w-32 md:h-32 flex-shrink-0">
+        <div className="flex items-center p-2 md:p-4 md:w-96 flex-shrink-0">
+          <div className="relative w-16 h-16 md:w-20 md:h-20 flex-shrink-0 mr-3 md:mr-4">
             {teamInfo.logo ? (
               <Image
                 src={teamInfo.logo}
                 alt={`${teamInfo.name} 로고`}
-                width={128}
-                height={128}
+                width={80}
+                height={80}
                 className="object-contain w-full h-full"
                 unoptimized
               />
             ) : (
-              <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">
+              <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 text-xs">
                 로고 없음
               </div>
             )}
           </div>
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold">{teamInfo.name || '팀명 없음'}</h1>
+          <div className="flex flex-col justify-center">
+            <h1 className="text-lg md:text-xl font-bold">{teamInfo.name || '팀명 없음'}</h1>
             {teamInfo.country && (
-              <p className="text-gray-600 mt-1">{teamInfo.country}</p>
+              <p className="text-gray-600 text-sm">{teamInfo.country}</p>
             )}
-            {teamInfo.founded && teamInfo.founded > 0 && (
-              <p className="text-gray-500 text-sm mt-2">창단: {teamInfo.founded}년</p>
-            )}
-            {teamInfo.code && (
-              <div className="mt-2 inline-block px-2 py-0.5 bg-gray-100 text-gray-700 text-xs font-medium rounded">
-                {teamInfo.code}
-              </div>
-            )}
+            <div className="flex items-center flex-wrap gap-2 mt-1">
+              {teamInfo.founded && teamInfo.founded > 0 && (
+                <p className="text-gray-500 text-xs">창단: {teamInfo.founded}년</p>
+              )}
+              {teamInfo.code && (
+                <div className="inline-block px-1 py-0.5 bg-gray-100 text-gray-700 text-xs font-medium rounded">
+                  {teamInfo.code}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         {/* 홈구장 정보 */}
         {venue && (
-          <div className="flex-1 mt-4 md:mt-0 md:ml-8 border-t md:border-t-0 md:border-l border-gray-200 pt-4 md:pt-0 md:pl-8">
-            <h2 className="text-lg font-semibold mb-2">홈 구장</h2>
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="relative w-full md:w-48 h-32 rounded-lg overflow-hidden flex-shrink-0">
+          <div className="border-t md:border-t-0 md:border-l border-gray-200 p-2 md:p-4 flex-1">
+            <div className="flex gap-3">
+              <div className="relative w-24 h-16 md:w-36 md:h-24 rounded overflow-hidden flex-shrink-0">
                 {venue.image ? (
                   <Image
                     src={venue.image}
                     alt={`${venue.name} 경기장`}
-                    width={192}
-                    height={128}
+                    width={144}
+                    height={96}
                     className="object-cover w-full h-full"
                     unoptimized
                   />
                 ) : (
-                  <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">
+                  <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 text-xs">
                     이미지 없음
                   </div>
                 )}
               </div>
-              <div>
-                <h3 className="font-medium">{venue.name}</h3>
-                {venue.city && (
-                  <p className="text-sm text-gray-600 mt-1">{venue.city}</p>
-                )}
-                {venue.address && (
-                  <p className="text-sm text-gray-600">{venue.address}</p>
-                )}
-                <div className="mt-2 flex flex-col md:flex-row gap-2 md:gap-4">
+              <div className="flex-1">
+                <h3 className="font-medium text-base">{venue.name}</h3>
+                <div className="text-xs text-gray-600">
+                  {venue.city && <span className="block">{venue.city}</span>}
+                  {venue.address && <span className="block">{venue.address}</span>}
+                </div>
+                <div className="mt-1 flex flex-wrap gap-3 text-xs">
                   {venue.capacity > 0 && (
-                    <div>
-                      <p className="text-sm text-gray-500">수용 인원</p>
-                      <p className="font-medium">{venue.capacity.toLocaleString()}명</p>
+                    <div className="whitespace-nowrap">
+                      <span className="text-gray-500">수용 인원: </span>
+                      <span className="font-medium">{venue.capacity.toLocaleString()}명</span>
                     </div>
                   )}
                   {venue.surface && (
-                    <div>
-                      <p className="text-sm text-gray-500">경기장 표면</p>
-                      <p className="font-medium">{venue.surface}</p>
+                    <div className="whitespace-nowrap">
+                      <span className="text-gray-500">표면: </span>
+                      <span className="font-medium">{venue.surface}</span>
                     </div>
                   )}
                 </div>

@@ -148,74 +148,73 @@ export default function Overview({ stats }: Partial<OverviewProps>) {
   const safeCleanSheet = safeStats.clean_sheet || { total: 0, home: 0, away: 0 };
 
   return (
-    <div className="space-y-6">
-      {/* 2. 리그 정보 + 기본 통계 (한 줄에 4개 카드) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* 리그 정보 */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h4 className="text-lg font-semibold mb-4">리그 정보</h4>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-6 h-6 relative flex-shrink-0">
+    <div className="space-y-4">
+      {/* 1. 리그 정보 + 기본 통계 */}
+      <div className="bg-white rounded-lg border overflow-hidden">
+        <div className="grid grid-cols-2 md:grid-cols-4">
+          {/* 리그 정보 카드 */}
+          <div className="col-span-2 md:col-span-1 border-b md:border-b-0 md:border-r border-gray-200">
+            <h4 className="text-base font-semibold p-2 border-b border-gray-100">리그 정보</h4>
+            <div className="flex items-center p-2">
+              <div className="w-6 h-6 relative flex-shrink-0 mr-3">
               <Image
                 src={safeLeague.logo || ''}
                 alt={safeLeague.name || ''}
                 fill
-                sizes="40px"
+                  sizes="24px"
                 className="object-contain"
               />
             </div>
             <div>
-              <p className="font-medium">{safeLeague.name || ''}</p>
-              <p className="text-sm text-gray-600">시즌: {safeLeague.season || ''}</p>
-              <p className="text-sm text-gray-600">국가: {safeLeague.country || ''}</p>
+                <p className="font-medium text-sm">{safeLeague.name || ''}</p>
+                <p className="text-xs text-gray-600">시즌: {safeLeague.season || ''}</p>
+                <p className="text-xs text-gray-600">국가: {safeLeague.country || ''}</p>
             </div>
           </div>
         </div>
 
-        {/* 시즌 통계 요약 */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h4 className="text-lg font-semibold mb-4">시즌 통계</h4>
-          <div className="grid grid-cols-3 gap-4 text-center">
+          {/* 시즌 통계 카드 */}
+          <div className="border-b border-r md:border-b-0 md:border-r border-gray-200">
+            <h4 className="text-base font-semibold p-2 border-b border-gray-100">시즌 통계</h4>
+            <div className="grid grid-cols-3 p-2 text-center">
             <div>
-              <p className="text-2xl font-bold">{safeFixtures.wins.total}</p>
-              <p className="text-sm">승</p>
+                <p className="text-base font-bold">{safeFixtures.wins.total}</p>
+                <p className="text-xs text-gray-500">승</p>
             </div>
             <div>
-              <p className="text-2xl font-bold">{safeFixtures.draws.total}</p>
-              <p className="text-sm">무</p>
+                <p className="text-base font-bold">{safeFixtures.draws.total}</p>
+                <p className="text-xs text-gray-500">무</p>
             </div>
             <div>
-              <p className="text-2xl font-bold">{safeFixtures.loses.total}</p>
-              <p className="text-sm">패</p>
-            </div>
-          </div>
-        </div>
-
-        {/* 득실 통계 */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h4 className="text-lg font-semibold mb-4">득실 통계</h4>
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <p className="text-2xl font-bold">{safeGoals.for.total.total}</p>
-              <p className="text-sm text-gray-600">득점</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{safeGoals.against.total.total}</p>
-              <p className="text-sm text-gray-600">실점</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{safeCleanSheet.total}</p>
-              <p className="text-sm text-gray-600">클린시트</p>
+                <p className="text-base font-bold">{safeFixtures.loses.total}</p>
+                <p className="text-xs text-gray-500">패</p>
             </div>
           </div>
         </div>
 
-        {/* 최근 5경기 & 포메이션 */}
-        <div className="space-y-4">
+          {/* 득실 통계 카드 */}
+          <div className="border-b md:border-b-0 md:border-r border-gray-200">
+            <h4 className="text-base font-semibold p-2 border-b border-gray-100">득실 통계</h4>
+            <div className="grid grid-cols-3 p-2 text-center">
+            <div>
+                <p className="text-base font-bold">{safeGoals.for.total.total}</p>
+                <p className="text-xs text-gray-500">득점</p>
+            </div>
+            <div>
+                <p className="text-base font-bold">{safeGoals.against.total.total}</p>
+                <p className="text-xs text-gray-500">실점</p>
+            </div>
+            <div>
+                <p className="text-base font-bold">{safeCleanSheet.total}</p>
+                <p className="text-xs text-gray-500">클린시트</p>
+            </div>
+          </div>
+        </div>
+
           {/* 최근 5경기 */}
-          <div>
-            <h5 className="text-sm font-semibold mb-2">최근 5경기</h5>
-            <div className="flex gap-1">
+          <div className="col-span-2 md:col-span-1">
+            <h4 className="text-base font-semibold p-2 border-b border-gray-100">최근 5경기</h4>
+            <div className="p-2 flex items-center justify-center">
               {safeStats.form
                 ?.split('')
                 .reverse()
@@ -223,7 +222,7 @@ export default function Overview({ stats }: Partial<OverviewProps>) {
                 .map((result, index) => (
                   <div 
                     key={index}
-                    className={`w-10 h-10 flex items-center justify-center text-sm font-medium rounded ${
+                    className={`w-6 h-6 flex items-center justify-center text-xs font-medium rounded mx-0.5 ${
                       result === 'W' ? 'bg-green-100 text-green-800' : 
                       result === 'D' ? 'bg-yellow-100 text-yellow-800' : 
                       'bg-red-100 text-red-800'
@@ -231,47 +230,19 @@ export default function Overview({ stats }: Partial<OverviewProps>) {
                   >
                     {result}
                   </div>
-                ))}
+                )) || <p className="text-sm text-gray-500">데이터 없음</p>}
             </div>
-          </div>
-
-          {/* 포메이션 */}
-          <div>
-            <div className="flex justify-between items-center mb-2">
-              <h5 className="text-sm font-semibold">주요 포메이션</h5>
-              {safeStats.lineups && safeStats.lineups.length > 2 && (
-                <button 
-                  onClick={() => setShowAllFormations(!showAllFormations)}
-                  className="text-sm text-blue-500 hover:text-blue-600"
-                >
-                  {showAllFormations ? '접기' : '더보기'}
-                </button>
-              )}
-            </div>
-            <table className="w-full">
-              <tbody className="divide-y divide-gray-100">
-                {safeStats.lineups
-                  ?.sort((a, b) => b.played - a.played)
-                  .slice(0, showAllFormations ? undefined : 2)
-                  .map((lineup, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="py-2 text-sm font-medium">{lineup.formation}</td>
-                      <td className="py-2 text-sm text-right">{lineup.played}경기</td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
           </div>
         </div>
       </div>
 
-      {/* 3. 홈/원정 상세 통계 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* 홈/원정 상세 통계 */}
+      <div className="grid grid-cols-2 lg:grid-cols-2 gap-4">
         {/* 홈 통계 */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h4 className="text-lg font-semibold mb-4">홈 경기 통계</h4>
-          <div className="space-y-3">
-            <div className="grid grid-cols-3 gap-4 text-center mb-6">
+        <div className="mb-4 bg-white rounded-lg border overflow-hidden">
+          <h4 className="text-base font-semibold p-2 border-b border-gray-200">홈 경기 통계</h4>
+          <div className="p-4 space-y-3">
+            <div className="grid grid-cols-3 gap-4 text-center mb-4">
               <div>
                 <p className="text-xl font-bold">{safeFixtures.wins.home}</p>
                 <p className="text-sm text-gray-600">승</p>
@@ -303,10 +274,10 @@ export default function Overview({ stats }: Partial<OverviewProps>) {
         </div>
 
         {/* 원정 통계 */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h4 className="text-lg font-semibold mb-4">원정 경기 통계</h4>
-          <div className="space-y-3">
-            <div className="grid grid-cols-3 gap-4 text-center mb-6">
+        <div className="mb-4 bg-white rounded-lg border overflow-hidden">
+          <h4 className="text-base font-semibold p-2 border-b border-gray-200">원정 경기 통계</h4>
+          <div className="p-4 space-y-3">
+            <div className="grid grid-cols-3 gap-4 text-center mb-4">
               <div>
                 <p className="text-xl font-bold">{safeFixtures.wins.away}</p>
                 <p className="text-sm text-gray-600">승</p>
@@ -338,15 +309,15 @@ export default function Overview({ stats }: Partial<OverviewProps>) {
         </div>
       </div>
 
-      {/* 4. 시간대별 득실점 */}
+      {/* 시간대별 득실점 */}
       {safeGoals.for.total.minute && safeGoals.against.total.minute && (
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h4 className="text-lg font-semibold mb-4">시간대별 득실점</h4>
-          <div className="space-y-6">
+        <div className="mb-4 bg-white rounded-lg border overflow-hidden">
+          <h4 className="text-sm font-medium p-2 border-b border-gray-200">시간대별 득실점</h4>
+          <div className="p-4 space-y-6">
             {/* 득점 차트 */}
             <div>
               <p className="text-sm font-medium mb-2">득점 분포</p>
-              <div className="grid grid-cols-6 gap-1">
+              <div className="grid grid-cols-3 md:grid-cols-6 gap-1">
                 {Object.entries(safeGoals.for.total.minute)
                   .filter(([key]) => key !== '106-120' && key !== 'percentage')
                   .map(([time, data]) => (
@@ -367,7 +338,7 @@ export default function Overview({ stats }: Partial<OverviewProps>) {
             {/* 실점 차트 */}
             <div>
               <p className="text-sm font-medium mb-2">실점 분포</p>
-              <div className="grid grid-cols-6 gap-1">
+              <div className="grid grid-cols-3 md:grid-cols-6 gap-1">
                 {Object.entries(safeGoals.against.total.minute)
                   .filter(([key]) => key !== '106-120' && key !== 'percentage')
                   .map(([time, data]) => (
@@ -388,13 +359,13 @@ export default function Overview({ stats }: Partial<OverviewProps>) {
         </div>
       )}
 
-      {/* 5. 시즌 기록 */}
+      {/* 시즌 기록 */}
       {safeStats.biggest && (
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h4 className="text-lg font-semibold mb-4">시즌 기록</h4>
-          <div className="grid grid-cols-3 gap-6">
+        <div className="mb-4 bg-white rounded-lg border overflow-hidden">
+          <h4 className="text-sm font-medium p-2 border-b border-gray-200">시즌 기록</h4>
+          <div className="p-4 grid grid-cols-2 md:grid-cols-3 gap-4">
             {/* 연속 기록 */}
-            <div className="border-r border-gray-100 pr-6">
+            <div className="md:border-r md:border-gray-200 md:pr-4">
               <h5 className="text-sm font-bold mb-3">연속 기록</h5>
               <div className="space-y-2">
                 <div className="flex justify-between">
@@ -413,7 +384,7 @@ export default function Overview({ stats }: Partial<OverviewProps>) {
             </div>
 
             {/* 최다 득점 */}
-            <div className="border-r border-gray-100 pr-6">
+            <div className="md:border-r md:border-gray-200 md:pr-4">
               <h5 className="text-sm font-bold mb-3">최다 득점</h5>
               <div className="space-y-2">
                 <div className="flex justify-between">
@@ -428,7 +399,7 @@ export default function Overview({ stats }: Partial<OverviewProps>) {
             </div>
 
             {/* 최다 실점 */}
-            <div>
+            <div className="col-span-2 md:col-span-1 mt-4 md:mt-0">
               <h5 className="text-sm font-bold mb-3">최다 실점</h5>
               <div className="space-y-2">
                 <div className="flex justify-between">
@@ -445,15 +416,51 @@ export default function Overview({ stats }: Partial<OverviewProps>) {
         </div>
       )}
 
-      {/* 6. 기타 통계 (페널티, 무득점, 카드) */}
-      <div className="grid grid-cols-3 gap-6">
-        {/* 왼쪽 열: 페널티 & 무득점 통계 */}
-        <div className="h-full flex flex-col">
+      {/* 기타 통계 (페널티, 무득점, 카드) */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {/* 왼쪽 열: 포메이션, 페널티 & 무득점 통계 */}
+        <div className="col-span-1 md:col-span-1 space-y-4">
+          {/* 포메이션 정보 */}
+          <div className="bg-white rounded-lg border overflow-hidden">
+            <h4 className="text-sm font-medium p-2 border-b border-gray-200">주요 포메이션</h4>
+            <div className="p-4">
+              {safeStats.lineups && safeStats.lineups.length > 0 ? (
+                <div>
+                  <table className="w-full">
+                    <tbody className="divide-y divide-gray-100">
+                      {safeStats.lineups
+                        ?.sort((a, b) => b.played - a.played)
+                        .slice(0, showAllFormations ? undefined : 5)
+                        .map((lineup, index) => (
+                          <tr key={index} className="hover:bg-gray-50">
+                            <td className="py-2 text-sm font-medium">{lineup.formation}</td>
+                            <td className="py-2 text-sm text-right text-gray-500">{lineup.played}경기</td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                  {safeStats.lineups.length > 5 && (
+                    <div className="mt-2 text-center">
+                      <button 
+                        onClick={() => setShowAllFormations(!showAllFormations)}
+                        className="text-xs text-blue-600 hover:text-blue-800"
+                      >
+                        {showAllFormations ? '접기' : '더보기'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-center text-gray-500">포메이션 데이터가 없습니다.</p>
+              )}
+            </div>
+          </div>
+
           {/* 페널티 통계 */}
           {safeStats.penalty && (
-            <div className="bg-white rounded-lg shadow-sm p-6 flex-1">
-              <h4 className="text-lg font-semibold mb-4">페널티 통계</h4>
-              <div className="space-y-2">
+            <div className="mb-4 bg-white rounded-lg border overflow-hidden">
+              <h4 className="text-sm font-medium p-2 border-b border-gray-200">페널티 통계</h4>
+              <div className="p-4 space-y-2">
                 <div className="flex justify-between">
                   <span>총 페널티</span>
                   <span className="font-medium">{safeStats.penalty.total}개</span>
@@ -469,34 +476,37 @@ export default function Overview({ stats }: Partial<OverviewProps>) {
               </div>
             </div>
           )}
+        </div>
 
+        {/* 무득점 & 카드 통계 */}
+        <div className="col-span-1 md:col-span-2">
           {/* 무득점 경기 */}
           {safeStats.failed_to_score && (
-            <div className="bg-white rounded-lg shadow-sm p-6 flex-1 mt-6">
-              <h4 className="text-lg font-semibold mb-4">무득점 경기</h4>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>홈</span>
-                  <span className="font-medium">{safeStats.failed_to_score.home}경기</span>
+            <div className="mb-4 bg-white rounded-lg border overflow-hidden">
+              <h4 className="text-sm font-medium p-2 border-b border-gray-200">무득점 경기</h4>
+              <div className="p-4">
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <p className="text-lg font-bold">{safeStats.failed_to_score.home}</p>
+                    <p className="text-xs text-gray-600">홈</p>
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold">{safeStats.failed_to_score.away}</p>
+                    <p className="text-xs text-gray-600">원정</p>
                 </div>
-                <div className="flex justify-between">
-                  <span>원정</span>
-                  <span className="font-medium">{safeStats.failed_to_score.away}경기</span>
+                  <div>
+                    <p className="text-lg font-bold">{safeStats.failed_to_score.total}</p>
+                    <p className="text-xs text-gray-600">전체</p>
                 </div>
-                <div className="flex justify-between">
-                  <span>전체</span>
-                  <span className="font-medium">{safeStats.failed_to_score.total}경기</span>
                 </div>
               </div>
             </div>
           )}
-        </div>
 
-        {/* 중앙 & 오른쪽 열: 카드 통계 */}
-        <div className="col-span-2">
-          <div className="bg-white rounded-lg shadow-sm p-6 h-full">
-            <h4 className="text-lg font-semibold mb-4">카드 통계</h4>
-            <div className="grid grid-cols-2 gap-6">
+          {/* 카드 통계 */}
+          <div className="mb-4 bg-white rounded-lg border overflow-hidden">
+            <h4 className="text-sm font-medium p-2 border-b border-gray-200">카드 통계</h4>
+            <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* 경고 카드 */}
               <div>
                 <h5 className="text-sm font-semibold mb-3">경고 카드🟨</h5>

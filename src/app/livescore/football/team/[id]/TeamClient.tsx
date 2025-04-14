@@ -377,9 +377,9 @@ export default function TeamClient({
   }
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="container">
       <TeamHeader team={teamData} stats={stats} />
-      <div className="mt-6">
+      <div className="mt-0">
         <TeamTabs 
           team={teamData.team} 
           matches={matches} 
