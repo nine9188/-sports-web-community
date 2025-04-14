@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/app/context/AuthContext';
 import { createClient } from '@/app/lib/supabase-browser';
 import UserProfile from './auth/UserProfile';
+import Link from 'next/link';
 
 // 프로필 데이터 인터페이스 정의
 interface ProfileData {
@@ -60,18 +61,18 @@ export default function AuthSection() {
     <UserProfile profileData={profileData || undefined} />
   ) : (
     <>
-      <a 
+      <Link 
         href="/signin" 
         className="flex items-center justify-center bg-slate-800 text-white py-2 rounded-md font-medium w-full mb-2 hover:bg-slate-700 transition-colors"
       >
         <span className="font-bold mr-1">SPORTS</span> 로그인
-      </a>
+      </Link>
       <div className="flex justify-center gap-2 text-xs text-gray-500 mt-2">
-        <a href="/help/account-recovery?tab=id" className="hover:underline">아이디 찾기</a>
+        <Link href="/help/account-recovery?tab=id" className="hover:underline">아이디 찾기</Link>
         <span className="text-gray-300">|</span>
-        <a href="/help/account-recovery?tab=password" className="hover:underline">비밀번호 찾기</a>
+        <Link href="/help/account-recovery?tab=password" className="hover:underline">비밀번호 찾기</Link>
         <span className="text-gray-300">|</span>
-        <a href="/signup" className="hover:underline">회원가입</a>
+        <Link href="/signup" className="hover:underline">회원가입</Link>
       </div>
     </>
   );

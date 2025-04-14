@@ -2,6 +2,7 @@ import { Node, mergeAttributes } from '@tiptap/core';
 
 export interface VideoOptions {
   HTMLAttributes: Record<string, string | number | boolean>;
+  responsive: boolean;
 }
 
 export interface VideoAttributes {
@@ -10,6 +11,10 @@ export interface VideoAttributes {
   height?: string;
   controls?: boolean;
   caption?: string;
+  poster?: string;
+  autoplay?: boolean;
+  playsinline?: boolean;
+  preload?: 'auto' | 'metadata' | 'none';
 }
 
 export const Video = Node.create<VideoOptions>({
@@ -30,6 +35,7 @@ export const Video = Node.create<VideoOptions>({
       HTMLAttributes: {
         class: 'video-wrapper',
       },
+      responsive: true,
     };
   },
   
@@ -50,6 +56,18 @@ export const Video = Node.create<VideoOptions>({
       caption: {
         default: null,
       },
+      poster: {
+        default: null,
+      },
+      autoplay: {
+        default: false,
+      },
+      playsinline: {
+        default: true,
+      },
+      preload: {
+        default: 'metadata',
+      },
     };
   },
   
@@ -64,10 +82,20 @@ export const Video = Node.create<VideoOptions>({
   renderHTML({ HTMLAttributes }) {
     const { caption, ...attrs } = HTMLAttributes;
     
+    const videoAttrs = mergeAttributes(attrs, { 
+      controls: 'true',
+      playsinline: 'true',
+      preload: attrs.preload || 'metadata',
+    });
+    
+    const wrapperClass = this.options.responsive 
+      ? `${this.options.HTMLAttributes.class} responsive-video-container` 
+      : this.options.HTMLAttributes.class;
+    
     return [
       'div',
-      { class: this.options.HTMLAttributes.class },
-      ['video', mergeAttributes(attrs, { controls: 'true' })],
+      { class: wrapperClass },
+      ['video', videoAttrs],
       caption ? ['figcaption', {}, caption] : '',
     ];
   },

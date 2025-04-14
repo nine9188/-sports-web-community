@@ -37,9 +37,9 @@ export const createClient = () => {
     supabaseAnonKey,
     {
       auth: {
-        persistSession: false,        // 브라우저 세션 지속성 비활성화
-        autoRefreshToken: false,      // 자동 토큰 갱신 비활성화
-        detectSessionInUrl: false,    // URL에서 세션 감지 비활성화
+        persistSession: true,         // 브라우저 세션 지속성 활성화
+        autoRefreshToken: true,       // 자동 토큰 갱신 활성화
+        detectSessionInUrl: true,     // URL에서 세션 감지 활성화
         flowType: 'pkce',
         // localStorage를 사용하도록 명시적 설정
         storage: {

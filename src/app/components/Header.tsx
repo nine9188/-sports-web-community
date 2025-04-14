@@ -1,13 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, Search, LogOut, Settings, Loader2, LogIn, ChevronDown } from 'lucide-react'
+import { Menu, LogOut, Settings, Loader2, ChevronDown, User } from 'lucide-react'
 import { Button } from '@/app/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from '@/app/ui/dropdown-menu'
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
@@ -16,6 +11,7 @@ import Image from 'next/image';
 import { createClient } from '@/app/lib/supabase-browser';
 import BoardHeaderNavigation from './header/BoardHeaderNavigation';
 import { getUserIconInfo } from '@/app/utils/level-icons';
+import ProfileDropdown from './ProfileDropdown';
 
 export default function Header({ onMenuClick, isSidebarOpen }: { onMenuClick: () => void; isSidebarOpen: boolean }) {
   const router = useRouter();
@@ -181,70 +177,83 @@ export default function Header({ onMenuClick, isSidebarOpen }: { onMenuClick: ()
     if (!user) {
       return (
         <div className="flex space-x-2">
-          <Link href="/signin" className="flex items-center space-x-1 px-3 py-2 rounded hover:bg-gray-100">
-            <LogIn className="h-4 w-4" />
-            <span className="text-xs">로그인</span>
+          {/* PC 버전(md 이상): 기존 링크 유지 */}
+          <Link href="/signin" className="hidden md:flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100">
+            <User className="h-5 w-5" />
           </Link>
+          
+          {/* 모바일 버전: ProfileDropdown 컴포넌트 사용 */}
+          <div className="md:hidden">
+            <ProfileDropdown />
+          </div>
         </div>
       );
     }
 
-    const { nickname } = profileData;
-
+    // 모바일 버전: 항상 ProfileDropdown 컴포넌트 사용
+    // PC 버전: 기존 드롭다운 유지
     return (
-      <div className="relative" ref={profileDropdownRef}>
-        <button
-          onClick={toggleDropdown}
-          className="flex items-center space-x-1 px-3 py-2 rounded hover:bg-gray-100"
-        >
-          <div className="w-6 h-6 relative rounded-full overflow-hidden">
-            {iconUrl ? (
-              <Image 
-                src={iconUrl}
-                alt="프로필 이미지"
-                fill
-                sizes="20px"
-                className="object-cover"
-                unoptimized={true}
-                title={iconName || undefined}
-              />
-            ) : (
-              <div className="w-full h-full bg-slate-300 flex items-center justify-center text-white">
-                {user?.email?.charAt(0).toUpperCase() || '?'}
-              </div>
-            )}
-          </div>
-          <span className="text-sm">{nickname}</span>
-          <ChevronDown className="h-4 w-4" />
-        </button>
+      <>
+        {/* 모바일 버전 */}
+        <div className="md:hidden">
+          <ProfileDropdown />
+        </div>
+        
+        {/* PC 버전 */}
+        <div className="hidden md:block relative" ref={profileDropdownRef}>
+          <button
+            onClick={toggleDropdown}
+            className="flex items-center space-x-1 px-3 py-2 rounded hover:bg-gray-100"
+          >
+            <div className="w-6 h-6 relative rounded-full overflow-hidden">
+              {iconUrl ? (
+                <Image 
+                  src={iconUrl}
+                  alt="프로필 이미지"
+                  fill
+                  sizes="20px"
+                  className="object-cover"
+                  unoptimized={true}
+                  title={iconName || undefined}
+                />
+              ) : (
+                <div className="w-full h-full bg-slate-300 flex items-center justify-center text-white">
+                  {user?.email?.charAt(0).toUpperCase() || '?'}
+                </div>
+              )}
+            </div>
+            <span className="text-sm">{profileData.nickname}</span>
+            <ChevronDown className="h-4 w-4" />
+          </button>
 
-        {/* 드롭다운 메뉴 */}
-        {isDropdownOpen && (
-          <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-[100]">
-            <Link href="/settings/profile" className="block px-4 py-2 hover:bg-gray-100">
-              <div className="flex items-center">
-                <Settings className="h-3.5 w-3.5 mr-2" />
-                <span className="text-sm">프로필 설정</span>
-              </div>
-            </Link>
-            <Link href="/settings/icons" className="block px-4 py-2 hover:bg-gray-100">
-              <div className="flex items-center">
-                <Settings className="h-3.5 w-3.5 mr-2" />
-                <span className="text-sm">아이콘 설정</span>
-              </div>
-            </Link>
-            <button
-              onClick={handleLogout}
-              className="w-full text-left px-4 py-2 hover:bg-gray-100"
-            >
-              <div className="flex items-center">
-                <LogOut className="h-3.5 w-3.5 mr-2" />
-                <span className="text-sm">로그아웃</span>
-              </div>
-            </button>
-          </div>
-        )}
-      </div>
+          {/* 드롭다운 메뉴 */}
+          {isDropdownOpen && (
+            <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-[100]">
+              <Link href="/settings/profile" className="block px-4 py-2 hover:bg-gray-100">
+                <div className="flex items-center">
+                  <Settings className="h-3.5 w-3.5 mr-2" />
+                  <span className="text-sm">프로필 설정</span>
+                </div>
+              </Link>
+              <Link href="/settings/icons" className="block px-4 py-2 hover:bg-gray-100">
+                <div className="flex items-center">
+                  <Settings className="h-3.5 w-3.5 mr-2" />
+                  <span className="text-sm">아이콘 설정</span>
+                </div>
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="w-full text-left px-4 py-2 hover:bg-gray-100"
+              >
+                <div className="flex items-center">
+                  <LogOut className="h-3.5 w-3.5 mr-2" />
+                  <span className="text-sm">로그아웃</span>
+                </div>
+              </button>
+            </div>
+          )}
+        </div>
+      </>
     );
   };
 
@@ -255,42 +264,21 @@ export default function Header({ onMenuClick, isSidebarOpen }: { onMenuClick: ()
       )}
       <div className="container mx-auto relative z-[999]">
         <div className="flex h-16 items-center px-4">
-          <Button variant="ghost" size="icon" className="lg:hidden mr-2" onClick={onMenuClick}>
-            <Menu className="h-5 w-5" />
-          </Button>
           <Link href="/" className="flex items-center space-x-2">
             <span className="font-bold text-2xl text-primary">SPORTS</span>
           </Link>
           <div className="flex flex-1 items-center justify-end space-x-4">
-            <div className="hidden md:flex items-center">
-              <input
-                className="w-[300px] p-2 bg-white border rounded"
-                placeholder="검색..."
-              />
-            </div>
-            <DropdownMenu modal={false}>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
-                  <Search className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[300px] bg-white border border-gray-200">
-                <input
-                  className="w-full p-2 bg-white border rounded"
-                  placeholder="검색..."
-                />
-              </DropdownMenuContent>
-            </DropdownMenu>
-
             <div className="flex items-center space-x-2">
-              <div className="min-w-[100px] h-9">
+              <div className="min-w-[40px] h-9">
                 {!mounted ? (
-                  <Button variant="outline" className="flex items-center gap-2 min-w-[100px]">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span className="text-xs">로딩 중</span>
+                  <Button variant="outline" className="flex items-center justify-center w-9 h-9 rounded-full">
+                    <Loader2 className="h-5 w-5 animate-spin" />
                   </Button>
                 ) : renderAuthState()}
               </div>
+              <Button variant="ghost" size="icon" className="lg:hidden" onClick={onMenuClick}>
+                <Menu className="h-5 w-5" />
+              </Button>
             </div>
           </div>
         </div>

@@ -6,6 +6,12 @@ import RootLayoutClient from './RootLayoutClient';
 // Inter 폰트 정의를 전역 CSS 클래스로 사용
 const inter = Inter({ subsets: ['latin'] });
 
+// 메타데이터 설정
+export const metadata = {
+  title: 'SPORTS 커뮤니티',
+  description: '스포츠 팬들을 위한 커뮤니티 플랫폼',
+};
+
 export default function RootLayout({
   children,
 }: {

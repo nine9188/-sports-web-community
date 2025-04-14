@@ -42,7 +42,6 @@ export default function BoardHeaderNavigation() {
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const navRef = useRef<HTMLDivElement>(null);
   const boardRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const [mounted, setMounted] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
 
@@ -111,11 +110,8 @@ export default function BoardHeaderNavigation() {
   // 관리자 여부 확인
   const isAdmin = user && (user.user_metadata?.is_admin === true);
 
-  // 마운트 상태 관리
+  // 네비게이션 바 외부 클릭 감지
   useEffect(() => {
-    setMounted(true);
-    
-    // 네비게이션 바 외부 클릭 감지
     const handleClickOutside = (event: MouseEvent) => {
       if (navRef.current && !navRef.current.contains(event.target as Node)) {
         setHoveredBoard(null);
@@ -126,7 +122,6 @@ export default function BoardHeaderNavigation() {
     
     return () => {
       document.removeEventListener('click', handleClickOutside);
-      setMounted(false);
     };
   }, []);
 
@@ -202,7 +197,7 @@ export default function BoardHeaderNavigation() {
 
   // 드롭다운 메뉴 렌더링
   const renderDropdownMenu = (board: BoardWithUIState) => {
-    if (!mounted || !boardRefs.current[board.id]) return null;
+    if (!boardRefs.current[board.id]) return null;
     
     // 해당 게시판 요소의 위치 정보 가져오기
     const rect = boardRefs.current[board.id]?.getBoundingClientRect();

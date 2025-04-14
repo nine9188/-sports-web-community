@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/app/ui/button';
 import { createClient } from '@/app/lib/supabase-browser';
+import { AlertCircle, FileVideo } from 'lucide-react';
 
 interface VideoFormProps {
   onCancel: () => void;
@@ -20,6 +21,8 @@ export default function VideoForm({
   const [caption, setCaption] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [fileSize, setFileSize] = useState<string>('');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const supabase = createClient();
@@ -48,6 +51,8 @@ export default function VideoForm({
       setSelectedFileName('');
       setCaption('');
       setUploadProgress(0);
+      setError(null);
+      setFileSize('');
     }
   }, [isOpen]);
 
@@ -55,23 +60,35 @@ export default function VideoForm({
     fileInputRef.current?.click();
   };
 
+  // 파일 크기를 사람이 읽기 쉬운 형태로 변환
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    setError(null);
+    
     if (file) {
       // 비디오 파일 타입 확인
       if (!file.type.startsWith('video/')) {
-        alert('비디오 파일만 업로드할 수 있습니다.');
+        setError('비디오 파일만 업로드할 수 있습니다.');
         return;
       }
 
       // 파일 크기 확인 (100MB 제한)
       if (file.size > 100 * 1024 * 1024) {
-        alert('파일 크기는 100MB를 초과할 수 없습니다.');
+        setError('파일 크기는 100MB를 초과할 수 없습니다.');
         return;
       }
 
       setSelectedFile(file);
       setSelectedFileName(file.name);
+      setFileSize(formatFileSize(file.size));
     }
   };
   
@@ -81,6 +98,7 @@ export default function VideoForm({
     try {
       setIsUploading(true);
       setUploadProgress(10);
+      setError(null);
 
       // 현재 로그인한 사용자 정보 가져오기
       const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -102,8 +120,6 @@ export default function VideoForm({
       
       console.log('비디오 업로드 시도:', fileName);
       
-      // 버킷 생성 시도 제거 (이미 Supabase UI에서 생성했음)
-      
       // Supabase Storage에 업로드
       setUploadProgress(30);
       const { data, error } = await supabase
@@ -111,7 +127,8 @@ export default function VideoForm({
         .from('post-videos')
         .upload(fileName, selectedFile, {
           cacheControl: '3600',
-          upsert: true
+          upsert: true,
+          contentType: selectedFile.type // 콘텐츠 타입 명시
         });
         
       if (error) {
@@ -142,7 +159,8 @@ export default function VideoForm({
       
     } catch (error: unknown) {
       console.error('비디오 업로드 오류:', error);
-      alert(`비디오 업로드 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+      setError(`업로드 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+      setIsUploading(false);
     }
   };
 
@@ -153,7 +171,7 @@ export default function VideoForm({
       ref={dropdownRef}
       className="absolute z-10 bg-white rounded-lg shadow-lg border w-80 p-4 mt-2"
     >
-      <div className="h-[124px]">
+      <div className="h-auto">
         <div className="border-b mb-4">
           <div className="flex">
             <button
@@ -170,9 +188,10 @@ export default function VideoForm({
             <button
               type="button"
               onClick={handleFileButtonClick}
-              className="bg-gray-100 text-gray-700 px-3 py-2 text-xs rounded-md border border-gray-300 hover:bg-gray-200 flex-shrink-0"
+              className="bg-gray-100 text-gray-700 px-3 py-2 text-xs rounded-md border border-gray-300 hover:bg-gray-200 flex-shrink-0 flex items-center"
               disabled={isUploading}
             >
+              <FileVideo className="h-3 w-3 mr-1" />
               파일 선택
             </button>
             <input
@@ -187,18 +206,36 @@ export default function VideoForm({
             </div>
           </div>
           
+          {fileSize && (
+            <div className="text-xs text-gray-600">
+              파일 크기: {fileSize}
+            </div>
+          )}
+          
           <div>
             <input
               type="text"
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
               className="w-full border border-gray-300 rounded-md px-3 py-2 text-xs"
-              placeholder="선택적 파일을 설명하세요."
+              placeholder="동영상 설명을 입력하세요 (선택사항)"
               disabled={isUploading}
             />
           </div>
+          
+          <div className="text-xs text-gray-500">
+            <p>최대 업로드 크기: 100MB</p>
+            <p>지원 형식: MP4, WebM, Ogg 등</p>
+          </div>
         </div>
       </div>
+      
+      {error && (
+        <div className="my-2 text-xs text-red-500 flex items-center">
+          <AlertCircle className="h-3 w-3 mr-1" />
+          {error}
+        </div>
+      )}
       
       {isUploading && (
         <div className="my-2">

@@ -89,7 +89,7 @@ export default function ClientHoverMenu({
   
   // boardsMap에서 하위 게시판 구성
   // 여기서는 상위 게시판(프리미어리그, 라리가)과 그 하위 게시판들의 관계를 매핑합니다
-  Object.values(data.boardsMap).forEach(board => {
+  Object.values(data.boardsMap || {}).forEach(board => {
     if (board.parent_id && board.children && board.children.length > 0) {
       childBoardsMap[board.parent_id] = board.children.map(child => ({
         id: child.id,
