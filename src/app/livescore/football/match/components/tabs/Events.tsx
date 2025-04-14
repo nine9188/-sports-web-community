@@ -58,68 +58,72 @@ function Events({ matchData }: EventsProps) {
 
   if (!events.length) {
     return (
-      <div className="flex justify-center items-center py-8">
-        <div className="text-center">
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            className="h-12 w-12 mx-auto text-gray-400 mb-2" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={1.5} 
-              d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-            />
-          </svg>
-          <p className="text-lg font-medium text-gray-600">이벤트 데이터가 없습니다</p>
-          <p className="text-sm text-gray-500 mt-1">현재 이 경기에 대한 이벤트 정보를 제공할 수 없습니다.</p>
+      <div className="mb-4 bg-white rounded-lg border p-4">
+        <div className="flex justify-center items-center py-8">
+          <div className="text-center">
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              className="h-12 w-12 mx-auto text-gray-400 mb-2" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={1.5} 
+                d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+              />
+            </svg>
+            <p className="text-lg font-medium text-gray-600">이벤트 데이터가 없습니다</p>
+            <p className="text-sm text-gray-500 mt-1">현재 이 경기에 대한 이벤트 정보를 제공할 수 없습니다.</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="-ml-4 md:ml-0 space-y-1 md:space-y-2">
-      {events.map((event, index) => (
-        <div 
-          key={`${event.time?.elapsed || 0}-${index}`}
-          className="flex items-start gap-1 md:gap-2 px-1 md:px-3 py-1 md:py-2 mb-1 md:mb-2 border-b last:border-b-0 last:mb-0"
-        >
-          <div className="w-10 md:w-12 flex items-center justify-end text-sm text-gray-600 flex-shrink-0">
-            <span>
-              {event.time?.elapsed || 0}
-              {event.time?.extra && event.time.extra > 0 && `+${event.time.extra}`}′
-            </span>
-          </div>
-          
-          <div className="flex-1">
-            <div className="flex items-center gap-1 md:gap-2">
-              <div className="flex-shrink-0 w-5 h-5 md:w-6 md:h-6 flex items-center justify-center">
-                {renderEventIcon(event.type || '', event.detail || '')}
+    <div className="mb-4 bg-white rounded-lg border p-4">
+      <div className="-ml-4 md:ml-0 space-y-1 md:space-y-2">
+        {events.map((event, index) => (
+          <div 
+            key={`${event.time?.elapsed || 0}-${index}`}
+            className="flex items-start gap-1 md:gap-2 px-1 md:px-3 py-1 md:py-2 mb-1 md:mb-2 border-b last:border-b-0 last:mb-0"
+          >
+            <div className="w-10 md:w-12 flex items-center justify-end text-sm text-gray-600 flex-shrink-0">
+              <span>
+                {event.time?.elapsed || 0}
+                {event.time?.extra && event.time.extra > 0 && `+${event.time.extra}`}′
+              </span>
+            </div>
+            
+            <div className="flex-1">
+              <div className="flex items-center gap-1 md:gap-2">
+                <div className="flex-shrink-0 w-5 h-5 md:w-6 md:h-6 flex items-center justify-center">
+                  {renderEventIcon(event.type || '', event.detail || '')}
+                </div>
+                <TeamLogo logo={event.team?.logo || ''} name={event.team?.name || ''} />
+                <span className="text-sm text-gray-600">{event.team?.name || 'Unknown Team'}</span>
               </div>
-              <TeamLogo logo={event.team?.logo || ''} name={event.team?.name || ''} />
-              <span className="text-sm text-gray-600">{event.team?.name || 'Unknown Team'}</span>
-            </div>
-            <div className="mt-1.5 ml-5 md:ml-6">
-              <span className="font-medium text-sm">
-                {event.player?.name || 'Unknown Player'}
-              </span>
-              <span className="text-xs text-gray-600 ml-1 md:ml-2">
-                {event.detail || ''}
-                {event.comments && ` - ${event.comments}`}
-              </span>
-              {event.assist?.name && (
-                <span className="text-xs text-gray-500 ml-1 md:ml-2">
-                  (A: {event.assist.name})
+              <div className="mt-1.5 ml-5 md:ml-6">
+                <span className="font-medium text-sm">
+                  {event.player?.name || 'Unknown Player'}
                 </span>
-              )}
+                <span className="text-xs text-gray-600 ml-1 md:ml-2">
+                  {event.detail || ''}
+                  {event.comments && ` - ${event.comments}`}
+                </span>
+                {event.assist?.name && (
+                  <span className="text-xs text-gray-500 ml-1 md:ml-2">
+                    (A: {event.assist.name})
+                  </span>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

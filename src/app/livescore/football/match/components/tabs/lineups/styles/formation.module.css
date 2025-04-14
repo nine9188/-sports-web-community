@@ -5,10 +5,6 @@
   aspect-ratio: 16/9;
 }
 
-.mobileContainer {
-  aspect-ratio: 9/16;
-}
-
 .fieldWrapper {
   position: relative;
   width: 100%;
@@ -16,30 +12,6 @@
   background-color: #000;
   overflow: hidden;
   border-radius: 12px;
-}
-
-/* 모바일 세로 모드 */
-@media (max-width: 768px) and (orientation: portrait) {
-  .fieldWrapper {
-    aspect-ratio: 9/16;
-    margin: 0;
-    padding: 0;
-    border-radius: 12px;
-  }
-
-  .fieldContent {
-    transform: none;  /* 경기장은 회전하지 않음 */
-  }
-
-  .fieldSvg {
-    width: 100%;
-    height: 100%;
-    transform: rotate(90deg) scale(1.78);  /* 경기장 회전 유지 */
-  }
-
-  .playersLayer {
-    transform: none;  /* 선수들도 회전하지 않음 */
-  }
 }
 
 .fieldContent {
@@ -60,6 +32,11 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+.formation {
+  width: 100%;
+  height: 100%;
 }
 
 .playersContainer {
@@ -110,73 +87,9 @@
   padding: 20px;
 }
 
-/* 모바일 가로 모드 대응 */
-@media (max-width: 768px) and (orientation: landscape) {
-  .fieldWrapper {
-    position: relative;
-    width: 100%;
-    height: auto;
-    margin: 20px auto;
-    transform: none;
-    border-radius: 12px;
-  }
-
-  .fieldContent {
-    width: 100%;
-    padding-top: 56.25%;
-    transform: none;
-    border-radius: 12px;
-  }
-
-  .fieldSvg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    transform: none;
-  }
-}
-
-/* 모바일 대응 (가로모드 제외) */
+/* 모바일 세로 모드 스타일 */
 @media (max-width: 768px) and (orientation: portrait) {
-  .fieldWrapper {
-    position: relative;
-    width: 100%;
-    max-width: none;
-    margin: 0;
-    aspect-ratio: 9/16;
-    overflow-y: auto; /* 세로 스크롤 허용 */
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
-    border-radius: 12px;
-  }
-
-  .fieldContent {
-    width: 100%;
-    height: 100%;
-    touch-action: pan-y pinch-zoom; /* 세로 스크롤과 줌 허용 */
-    -webkit-overflow-scrolling: touch;
-    border-radius: 12px;
-  }
-
-  .fieldSvg {
-    transform: rotate(90deg) scale(1.78);
-    width: 100%;
-    height: 100%;
-    pointer-events: auto; /* 터치 이벤트 허용 */
-    user-select: none; /* 텍스트 선택 방지 */
-    -webkit-user-drag: none; /* 드래그 방지 */
-  }
-}
-
-@media (max-width: 768px) {
-  .container {
-    min-height: 400px;
-  }
-  
-  .mobileContainer {
-    min-height: 600px;
+  .playerImage, .playerNameNumber {
+    transform-origin: center center;
   }
 }

@@ -145,24 +145,22 @@ export default function TabContent({ matchId, homeTeam, awayTeam, matchData }: T
         onTabChange={handleTabChange} 
       />
       
-      {/* 탭 내용 영역을 별도 컨테이너로 분리 */}
-      <div className="mb-4 bg-white rounded-lg border overflow-hidden">
-        <div className="p-4">
-          {/* 각 탭은 조건부 렌더링하되, 한번 로드된 후에는 유지합니다 */}
-          {activeTab === 'events' && <Events key="events-tab" matchData={eventProps} />}
-          
-          {activeTab === 'lineups' && (
-            <Lineups key="lineups-tab" matchData={lineupProps} />
-          )}
-          
-          {activeTab === 'stats' && (
-            <Stats key="stats-tab" matchData={statsProps} />
-          )}
-          
-          {activeTab === 'standings' && (
-            <Standings key="standings-tab" matchData={standingsProps} />
-          )}
-        </div>
+      {/* 탭 내용 영역 - 테두리 제거 */}
+      <div>
+        {/* 각 탭은 조건부 렌더링하되, 한번 로드된 후에는 유지합니다 */}
+        {activeTab === 'events' && <Events key="events-tab" matchData={eventProps} />}
+        
+        {activeTab === 'lineups' && (
+          <Lineups key="lineups-tab" matchData={lineupProps} />
+        )}
+        
+        {activeTab === 'stats' && (
+          <Stats key="stats-tab" matchData={statsProps} />
+        )}
+        
+        {activeTab === 'standings' && (
+          <Standings key="standings-tab" matchData={standingsProps} />
+        )}
       </div>
     </>
   );

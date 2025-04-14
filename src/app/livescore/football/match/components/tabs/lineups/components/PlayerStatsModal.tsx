@@ -139,46 +139,50 @@ export default function PlayerStatsModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-xl">
-        {/* 닫기 버튼 */}
-        <div className="flex justify-end p-4">
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="bg-white rounded-xl w-full max-w-md max-h-[80vh] overflow-y-auto shadow-xl">
+        {/* 닫기 버튼 - 크기와 패딩 증가 */}
+        <div className="sticky top-0 flex justify-end p-3 bg-white z-10 border-b">
+          <button 
+            onClick={onClose} 
+            className="text-gray-500 hover:text-gray-700 p-2"
+            aria-label="닫기"
+          >
+            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
         {/* 선수 기본 정보 */}
-        <div className="px-6 pb-6 text-center">
-          <div className="relative w-32 h-32 mx-auto mb-4">
-            <div className="relative w-32 h-32">
+        <div className="px-6 pt-3 pb-6 text-center">
+          <div className="relative w-28 h-28 mx-auto mb-4">
+            <div className="relative w-28 h-28">
               <div className="absolute inset-0 rounded-full border-4 border-white shadow-lg"></div>
               {playerData.photo && (
                 <Image
                   src={playerData.photo}
                   alt={playerInfo.name}
-                  width={128}
-                  height={128}
+                  width={112}
+                  height={112}
                   className="w-full h-full rounded-full object-cover"
                   unoptimized
                 />
               )}
             </div>
             {stats.team?.logo && (
-              <div className="absolute -bottom-2 -right-2 w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center">
+              <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center">
                 <Image
                   src={stats.team.logo}
                   alt={stats.team?.name || '팀 로고'}
-                  width={40}
-                  height={40}
-                  className="w-10 h-10 object-contain"
+                  width={32}
+                  height={32}
+                  className="w-8 h-8 object-contain"
                   unoptimized
                 />
               </div>
             )}
           </div>
-          <h2 className="text-2xl font-bold mb-1">{playerInfo.name}</h2>
+          <h2 className="text-xl font-bold mb-1">{playerInfo.name}</h2>
           <div className="flex items-center justify-center gap-4 text-sm text-gray-600">
             <span>#{playerInfo.number}</span>
             <span>{playerInfo.pos}</span>
@@ -191,7 +195,7 @@ export default function PlayerStatsModal({
         </div>
 
         {/* 통계 테이블 */}
-        <div className="px-6 pb-6">
+        <div className="px-4 pb-8">
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-gray-50">
@@ -345,11 +349,11 @@ export default function PlayerStatsModal({
             )}
           </table>
           
-          {/* 선수 상세 정보 페이지로 이동하는 버튼 - 통계 테이블 아래에 배치 */}
-          <div className="mt-6 text-center">
+          {/* 선수 상세 정보 페이지로 이동하는 버튼 - 버튼 크기와 여백 증가 */}
+          <div className="mt-6 mb-4 text-center px-2">
             <Link 
               href={`/livescore/football/player/${playerId}`}
-              className="inline-block w-full py-3 px-4 bg-gray-800 text-white font-medium rounded-lg shadow hover:bg-gray-700 transition-colors"
+              className="inline-block w-full py-3 px-3 bg-gray-800 text-white font-medium rounded-lg shadow hover:bg-gray-700 transition-colors text-lg"
             >
               선수 정보 더보기
             </Link>

@@ -536,7 +536,7 @@ export default function Lineups({ matchData }: LineupsProps) {
     <div>
       {/* 포메이션 시각화 - 제일 상단에 배치 */}
       {(homeFormationData && awayFormationData) && (
-        <div className="mb-3">
+        <div className="mb-0">
           <Formation 
             homeTeamData={homeFormationData} 
             awayTeamData={awayFormationData} 
@@ -545,7 +545,7 @@ export default function Lineups({ matchData }: LineupsProps) {
       )}
       
       {/* 통합된 테이블 구조 */}
-      <div className="overflow-hidden rounded-lg border border-gray-200">
+      <div className="mb-4 bg-white rounded-lg border overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>

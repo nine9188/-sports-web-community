@@ -5,8 +5,8 @@ import styles from '../styles/formation.module.css';
 const Field = ({ children, isMobile }: { children?: React.ReactNode, isMobile: boolean }) => {
   return (
     <div 
-      className={`${styles.fieldWrapper} ${isMobile ? styles.mobileField : ''}`}
-      style={{ borderRadius: '12px', overflow: 'hidden' }}
+      className={`${styles.fieldWrapper} ${isMobile ? styles.mobileField : ''} mb-4 bg-white rounded-lg border`}
+      style={{ overflow: 'hidden' }}
     >
       <div 
         className={styles.fieldContent}

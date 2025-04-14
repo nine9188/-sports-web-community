@@ -83,7 +83,7 @@ export default function Formation({ homeTeamData, awayTeamData }: FormationProps
   const processedAwayTeam = processTeamData(awayTeamData);
 
   return (
-    <div style={{ borderRadius: '12px', overflow: 'hidden' }}>
+    <div style={{ borderRadius: '12px', overflow: 'hidden', margin: 0 }}>
       <Field isMobile={isMobile}>
         <Player
           homeTeamData={processedHomeTeam}
