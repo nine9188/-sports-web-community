@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import styles from '../styles/formation.module.css';
 
 interface PlayerData {
@@ -133,6 +133,10 @@ const Player = ({ homeTeamData, awayTeamData, isMobile }: PlayerProps) => {
   const textRefs = useRef<{[key: string]: SVGTextElement | null}>({});
   const rectRefs = useRef<{[key: string]: SVGRectElement | null}>({});
   
+  // 이미지 로딩 상태를 관리하는 상태 추가
+  const [loadedImages, setLoadedImages] = useState<{[key: string]: boolean}>({});
+  const [failedImages, setFailedImages] = useState<{[key: string]: boolean}>({});
+  
   // 텍스트 크기에 맞게 배경 조정하는 함수
   useEffect(() => {
     // DOM이 렌더링된 후 실행
@@ -151,7 +155,17 @@ const Player = ({ homeTeamData, awayTeamData, isMobile }: PlayerProps) => {
         rectElement.setAttribute('y', `${bbox.y - heightPadding * 0.5}`); // y 위치 조정
       }
     });
-  }, [homeTeamData, awayTeamData]); // 데이터가 변경될 때마다 실행
+  }, [homeTeamData, awayTeamData, loadedImages]); // 이미지 로딩 상태가 변경될 때도 재실행
+
+  // 이미지 로딩 핸들러
+  const handleImageLoad = (id: string) => {
+    setLoadedImages(prev => ({...prev, [id]: true}));
+  };
+
+  // 이미지 로딩 실패 핸들러
+  const handleImageError = (id: string) => {
+    setFailedImages(prev => ({...prev, [id]: true}));
+  };
 
   const renderTeam = (team: TeamData, isHome: boolean) => {
     return team.startXI.map((player) => {
@@ -165,9 +179,17 @@ const Player = ({ homeTeamData, awayTeamData, isMobile }: PlayerProps) => {
       const uniqueKey = `player-${isHome ? 'home' : 'away'}-${teamId}-${playerId}`;
       const numberKey = `number-${teamId}-${playerId}`;
       const nameKey = `name-${isHome ? 'home' : 'away'}-${teamId}-${playerId}`;
+      const imageId = `image-${teamId}-${playerId}`;
 
       // 모바일 세로 모드일 때 회전 적용 (-90도로 변경)
       const imageRotation = isMobile ? 'rotate(-90)' : '';
+      
+      // 이미지 여부 확인 (URL이 유효하고, 로딩 실패하지 않았을 때)
+      const hasValidImage = player.photo && !failedImages[imageId];
+      
+      // 색상 설정
+      // 이미지가 없거나 로딩 실패한 경우 더 밝은 색상으로 표시
+      const circleOpacity = hasValidImage ? "0.9" : "1";
       
       return (
         <g
@@ -180,7 +202,7 @@ const Player = ({ homeTeamData, awayTeamData, isMobile }: PlayerProps) => {
             fill={`#${colors.primary}`}
             stroke="white"
             strokeWidth="0.15"
-            opacity="0.9"
+            opacity={circleOpacity}
           />
           
           {/* 선수 이미지를 위한 클리핑 패스 */}
@@ -190,10 +212,27 @@ const Player = ({ homeTeamData, awayTeamData, isMobile }: PlayerProps) => {
             </clipPath>
           </defs>
           
-          {/* 선수 이미지 - aria-label 속성 사용하여 접근성 추가 */}
-          {player.photo && (
+          {/* 이미지가 없거나 로딩 실패한 경우 선수 번호 표시 */}
+          {!hasValidImage && (
+            <text
+              x="0"
+              y="0.4"
+              fill={`#${colors.number}`}
+              fontSize="2"
+              fontWeight="bold"
+              textAnchor="middle"
+              dominantBaseline="middle"
+              transform={imageRotation}
+            >
+              {player.number}
+            </text>
+          )}
+          
+          {/* 선수 이미지 - 지연 로딩 적용 및 오류 처리 추가 */}
+          {hasValidImage && (
             <g transform={imageRotation}>
               <image
+                id={imageId}
                 className={styles.playerImage}
                 href={player.photo}
                 width="5"
@@ -203,6 +242,8 @@ const Player = ({ homeTeamData, awayTeamData, isMobile }: PlayerProps) => {
                 clipPath={`url(#clip-${teamId}-${playerId})`}
                 preserveAspectRatio="xMidYMid slice"
                 aria-label={`${player.name} 선수 사진`}
+                onLoad={() => handleImageLoad(imageId)}
+                onError={() => handleImageError(imageId)}
               />
             </g>
           )}

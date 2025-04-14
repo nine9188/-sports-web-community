@@ -113,7 +113,7 @@ function Stats({ matchData }: StatsProps) {
   const awayTeam = matchData.awayTeam || { id: 0, name: '', logo: '' };
 
   // 통계 항목 매핑 (API에서 사용하는 키값 -> 표시 레이블)
-  const statMappings = [
+  const statMappings = useMemo(() => [
     // 슈팅 관련 통계
     { key: 'Shots on Goal', label: '유효슈팅', category: 'shooting' },
     { key: 'Shots off Goal', label: '빗나간 슈팅', category: 'shooting' },
@@ -123,10 +123,10 @@ function Stats({ matchData }: StatsProps) {
     { key: 'Shots outsidebox', label: '박스 밖 슈팅', category: 'shooting' },
     
     // 기본 통계
+    { key: 'Ball Possession', label: '점유율', category: 'basic' },
     { key: 'Fouls', label: '파울', category: 'basic' },
     { key: 'Corner Kicks', label: '코너킥', category: 'basic' },
     { key: 'Offsides', label: '오프사이드', category: 'basic' },
-    { key: 'Ball Possession', label: '점유율', category: 'basic' },
     { key: 'Yellow Cards', label: '옐로카드', category: 'basic' },
     { key: 'Red Cards', label: '레드카드', category: 'basic' },
     { key: 'Goalkeeper Saves', label: '골키퍼 선방', category: 'basic' },
@@ -135,7 +135,7 @@ function Stats({ matchData }: StatsProps) {
     { key: 'Total passes', label: '총 패스', category: 'passing' },
     { key: 'Passes accurate', label: '정확한 패스', category: 'passing' },
     { key: 'Passes %', label: '패스 성공률', category: 'passing' }
-  ];
+  ], []);
 
   // 카테고리별로 통계 그룹화
   const categoryGroups = useMemo(() => {
@@ -152,7 +152,7 @@ function Stats({ matchData }: StatsProps) {
     });
     
     return groups;
-  }, []);
+  }, [statMappings]);
 
   // 데이터가 없을 경우 메시지 표시
   if (!stats.length) {
@@ -244,7 +244,7 @@ function Stats({ matchData }: StatsProps) {
     <div className="p-0">
       <div className="space-y-2">
         {/* 슈팅 통계 */}
-        <div className="bg-white rounded-lg border shadow-sm">
+        <div className="bg-white rounded-lg border">
           {renderCategoryHeader('shooting', true)}
           <div className="p-3">
             {categoryGroups.shooting.map(({ key, label }) => renderStat(key, label))}
@@ -252,7 +252,7 @@ function Stats({ matchData }: StatsProps) {
         </div>
         
         {/* 기본 통계 */}
-        <div className="bg-white rounded-lg border shadow-sm">
+        <div className="bg-white rounded-lg border">
           {renderCategoryHeader('basic')}
           <div className="p-3">
             {categoryGroups.basic.map(({ key, label }) => renderStat(key, label))}
@@ -260,7 +260,7 @@ function Stats({ matchData }: StatsProps) {
         </div>
         
         {/* 패스 통계 */}
-        <div className="bg-white rounded-lg border shadow-sm">
+        <div className="bg-white rounded-lg border">
           {renderCategoryHeader('passing')}
           <div className="p-3">
             {categoryGroups.passing.map(({ key, label }) => renderStat(key, label))}

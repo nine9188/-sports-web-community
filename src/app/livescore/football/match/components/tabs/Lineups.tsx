@@ -241,6 +241,42 @@ const PlayerEvents = ({ player, events }: { player: Player; events: MatchEvent[]
   );
 };
 
+// 선수 이미지 컴포넌트 추가
+const PlayerImage = ({ src, alt, className = "" }: { src: string | undefined; alt: string; className?: string }) => {
+  const [imgSrc, setImgSrc] = useState<string | undefined>(src);
+  const [loading, setLoading] = useState(true);
+  
+  const handleError = () => {
+    setImgSrc('/placeholder-player.png'); // 기본 이미지 경로
+    setLoading(false);
+  };
+  
+  const handleLoad = () => {
+    setLoading(false);
+  };
+  
+  return (
+    <div className={`relative w-10 h-10 overflow-hidden rounded-full border-2 border-gray-200 ${className}`}>
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
+          <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
+      <Image 
+        src={imgSrc || '/placeholder-player.png'}
+        alt={alt}
+        width={40}
+        height={40}
+        className={`object-cover rounded-full ${loading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+        unoptimized
+        onError={handleError}
+        onLoad={handleLoad}
+        loading="lazy"
+      />
+    </div>
+  );
+};
+
 // 데이터 변환 함수 수정
 const transformLineupData = (lineup: TeamLineup): TeamLineup => {
   if (!lineup) return lineup;
@@ -614,18 +650,12 @@ export default function Lineups({ matchData }: LineupsProps) {
                     >
                       <div className="relative">
                         {sortedHomeStartXI[index].player.photo ? (
-                          <div className="relative w-10 h-10 overflow-hidden rounded-full border-2 border-gray-200">
-                            <Image 
-                              src={sortedHomeStartXI[index].player.photo}
-                              alt={`${sortedHomeStartXI[index].player.name} 선수 사진`}
-                              width={40}
-                              height={40}
-                              className="object-cover rounded-full"
-                              unoptimized
-                            />
-                          </div>
+                          <PlayerImage 
+                            src={sortedHomeStartXI[index].player.photo}
+                            alt={`${sortedHomeStartXI[index].player.name} 선수 사진`}
+                          />
                         ) : (
-                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 font-bold text-sm">
+                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 font-bold text-sm bg-gray-100 rounded-full border-2 border-gray-200">
                             {sortedHomeStartXI[index].player.number || '-'}
                           </div>
                         )}
@@ -657,18 +687,12 @@ export default function Lineups({ matchData }: LineupsProps) {
                     >
                       <div className="relative">
                         {sortedAwayStartXI[index].player.photo ? (
-                          <div className="relative w-10 h-10 overflow-hidden rounded-full border-2 border-gray-200">
-                            <Image 
-                              src={sortedAwayStartXI[index].player.photo}
-                              alt={`${sortedAwayStartXI[index].player.name} 선수 사진`}
-                              width={40}
-                              height={40}
-                              className="object-cover rounded-full"
-                              unoptimized
-                            />
-                          </div>
+                          <PlayerImage 
+                            src={sortedAwayStartXI[index].player.photo}
+                            alt={`${sortedAwayStartXI[index].player.name} 선수 사진`}
+                          />
                         ) : (
-                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 font-bold text-sm">
+                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 font-bold text-sm bg-gray-100 rounded-full border-2 border-gray-200">
                             {sortedAwayStartXI[index].player.number || '-'}
                           </div>
                         )}
@@ -698,7 +722,7 @@ export default function Lineups({ matchData }: LineupsProps) {
               </td>
             </tr>
             
-            {/* 교체 선수 행 생성 */}
+            {/* 교체 선수 행 생성 - PlayerImage 컴포넌트 사용 */}
             {Array.from({ length: Math.max(homeLineup.substitutes.length, awayLineup.substitutes.length) }).map((_, index) => (
               <tr key={`subs-${index}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                 <td className="py-2 px-4 border-r border-gray-200">
@@ -713,18 +737,12 @@ export default function Lineups({ matchData }: LineupsProps) {
                     >
                       <div className="relative">
                         {homeLineup.substitutes[index].player.photo ? (
-                          <div className="relative w-10 h-10 overflow-hidden rounded-full border-2 border-gray-200">
-                            <Image 
-                              src={homeLineup.substitutes[index].player.photo}
-                              alt={`${homeLineup.substitutes[index].player.name} 선수 사진`}
-                              width={40}
-                              height={40}
-                              className="object-cover rounded-full"
-                              unoptimized
-                            />
-                          </div>
+                          <PlayerImage 
+                            src={homeLineup.substitutes[index].player.photo}
+                            alt={`${homeLineup.substitutes[index].player.name} 선수 사진`}
+                          />
                         ) : (
-                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 font-bold text-sm">
+                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 font-bold text-sm bg-gray-100 rounded-full border-2 border-gray-200">
                             {homeLineup.substitutes[index].player.number || '-'}
                           </div>
                         )}
@@ -756,18 +774,12 @@ export default function Lineups({ matchData }: LineupsProps) {
                     >
                       <div className="relative">
                         {awayLineup.substitutes[index].player.photo ? (
-                          <div className="relative w-10 h-10 overflow-hidden rounded-full border-2 border-gray-200">
-                            <Image 
-                              src={awayLineup.substitutes[index].player.photo}
-                              alt={`${awayLineup.substitutes[index].player.name} 선수 사진`}
-                              width={40}
-                              height={40}
-                              className="object-cover rounded-full"
-                              unoptimized
-                            />
-                          </div>
+                          <PlayerImage 
+                            src={awayLineup.substitutes[index].player.photo}
+                            alt={`${awayLineup.substitutes[index].player.name} 선수 사진`}
+                          />
                         ) : (
-                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 font-bold text-sm">
+                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 font-bold text-sm bg-gray-100 rounded-full border-2 border-gray-200">
                             {awayLineup.substitutes[index].player.number || '-'}
                           </div>
                         )}
@@ -803,18 +815,12 @@ export default function Lineups({ matchData }: LineupsProps) {
                     <div className="flex items-center gap-3">
                       <div className="relative">
                         {homeLineup.coach?.photo ? (
-                          <div className="relative w-10 h-10 overflow-hidden rounded-full border-2 border-gray-200">
-                            <Image 
-                              src={homeLineup.coach.photo}
-                              alt={`${homeLineup.coach.name} 감독 사진`}
-                              width={40}
-                              height={40}
-                              className="object-cover rounded-full"
-                              unoptimized
-                            />
-                          </div>
+                          <PlayerImage 
+                            src={homeLineup.coach.photo}
+                            alt={`${homeLineup.coach.name} 감독 사진`}
+                          />
                         ) : (
-                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 font-bold text-sm">
+                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 font-bold text-sm bg-gray-100 rounded-full border-2 border-gray-200">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-label="감독 기본 아이콘">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
@@ -831,18 +837,12 @@ export default function Lineups({ matchData }: LineupsProps) {
                     <div className="flex items-center gap-3">
                       <div className="relative">
                         {awayLineup.coach?.photo ? (
-                          <div className="relative w-10 h-10 overflow-hidden rounded-full border-2 border-gray-200">
-                            <Image 
-                              src={awayLineup.coach.photo}
-                              alt={`${awayLineup.coach.name} 감독 사진`}
-                              width={40}
-                              height={40}
-                              className="object-cover rounded-full"
-                              unoptimized
-                            />
-                          </div>
+                          <PlayerImage 
+                            src={awayLineup.coach.photo}
+                            alt={`${awayLineup.coach.name} 감독 사진`}
+                          />
                         ) : (
-                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 font-bold text-sm">
+                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 font-bold text-sm bg-gray-100 rounded-full border-2 border-gray-200">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-label="감독 기본 아이콘">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
