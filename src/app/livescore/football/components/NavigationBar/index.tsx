@@ -23,13 +23,13 @@ export default function NavigationBar({
   };
 
   return (
-    <div className="flex items-center gap-2 md:gap-4 py-2 px-0 border-b">
+    <div className="flex items-center gap-2 md:gap-4">
       <button
         onClick={handleLiveClick}
-        className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded font-medium ${
+        className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg font-medium transition-colors ${
           showLiveOnly
-            ? 'bg-red-500 text-white hover:bg-red-600'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            ? 'border border-red-500 text-red-500 bg-red-50 hover:bg-red-100'
+            : 'border border-gray-200 text-gray-700 hover:bg-gray-50'
         }`}
       >
         <div className="flex items-center gap-2">
@@ -38,7 +38,7 @@ export default function NavigationBar({
           }`} />
           LIVE
           {liveMatchCount > 0 && (
-            <span className={`text-sm ${showLiveOnly ? 'text-white' : 'text-red-500'}`}>
+            <span className="text-sm text-red-500">
               ({liveMatchCount})
             </span>
           )}
@@ -49,7 +49,7 @@ export default function NavigationBar({
         <input
           type="text"
           placeholder="경기 찾기"
-          className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded border border-gray-200"
+          className="w-full px-4 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
           value={searchKeyword}
           onChange={(e) => onSearchChange(e.target.value)}
         />

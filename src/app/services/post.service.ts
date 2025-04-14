@@ -125,8 +125,8 @@ export async function getFilteredPostsByBoardHierarchy(
     fromBoardId = undefined;
   }
   
-  // 출발 게시판 ID가 없거나 'boards'인 경우 모든 게시글 표시
-  if (!fromBoardId || fromBoardId === 'boards' || fromBoardId === 'all') {
+  // 출발 게시판 ID가 없거나 'boards', 'root', 'all'인 경우 모든 게시글 표시
+  if (!fromBoardId || fromBoardId === 'boards' || fromBoardId === 'all' || fromBoardId === 'root') {
     const posts = await getPostsForAllBoards(allBoardIds, page);
     const totalCount = await getTotalPostCount(allBoardIds);
     return { posts, totalCount };

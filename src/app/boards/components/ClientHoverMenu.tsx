@@ -32,6 +32,7 @@ interface ClientHoverMenuProps {
   currentBoardSlug?: string;
   // 서버에서 미리 가져온 데이터 (선택 사항)
   prefetchedData?: PrefetchedData;
+  fromParam?: string;
 }
 
 export default function ClientHoverMenu({
@@ -40,6 +41,7 @@ export default function ClientHoverMenu({
   rootBoardSlug,
   currentBoardSlug,
   prefetchedData,
+  fromParam
 }: ClientHoverMenuProps) {
   // 서버에서 데이터를 미리 가져왔다면 그것을 사용하고, 아니면 useBoards 훅 사용
   const { data, isLoading, error } = useBoards();
@@ -54,6 +56,7 @@ export default function ClientHoverMenu({
         rootBoardId={rootBoardId || ''}
         rootBoardSlug={rootBoardSlug}
         currentBoardSlug={currentBoardSlug}
+        fromParam={fromParam}
       />
     );
   }
@@ -117,6 +120,7 @@ export default function ClientHoverMenu({
       rootBoardId={finalRootBoardId || ''}
       rootBoardSlug={rootBoardSlug}
       currentBoardSlug={currentBoardSlug}
+      fromParam={fromParam}
     />
   );
 } 

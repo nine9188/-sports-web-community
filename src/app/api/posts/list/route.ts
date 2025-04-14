@@ -31,6 +31,21 @@ interface PostProfile {
   avatar_url?: string;
 }
 
+// 게시글 데이터 인터페이스 추가
+interface Post {
+  id: string;
+  title: string;
+  content?: string;
+  views: number;
+  likes: number;
+  created_at: string;
+  updated_at: string;
+  post_number: number;
+  user_id: string;
+  board_id: string;
+  profiles?: PostProfile;
+}
+
 export const revalidate = 60; // 1분마다 재검증
 
 export async function POST(req: NextRequest) {
@@ -46,12 +61,36 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { boardIds, currentBoardId, limit = 10, offset = 0 } = body;
+    const { boardIds, currentBoardId, limit = 10, offset = 0, fromParam } = body;
 
     // 특별한 값 'all'이 들어올 경우 전체 게시판 대상으로 데이터 가져오기
     let boardIdCondition;
     
-    if (boardIds.length === 1 && boardIds[0] === 'all') {
+    // fromParam 처리 로직
+    if (fromParam === 'boards' && currentBoardId) {
+      // from=boards인 경우 현재 게시판만 표시
+      boardIdCondition = supabase.from("posts").select("*, profiles:user_id(*)").eq("board_id", currentBoardId).order("created_at", { ascending: false });
+    } else if (fromParam && fromParam !== 'boards') {
+      // fromParam이 유효한 게시판 ID인 경우 해당 게시판 필터링
+      // 먼저 해당 게시판이 존재하는지 확인
+      const { data: fromBoardData } = await supabase
+        .from("boards")
+        .select("id")
+        .eq("id", fromParam)
+        .single();
+      
+      if (fromBoardData) {
+        // 유효한 게시판 ID인 경우 해당 게시판 필터링
+        boardIdCondition = supabase.from("posts").select("*, profiles:user_id(*)").eq("board_id", fromParam).order("created_at", { ascending: false });
+      } else {
+        // 기본 필터링 적용
+        if (boardIds.length === 1 && boardIds[0] === 'all') {
+          boardIdCondition = supabase.from("posts").select("*, profiles:user_id(*)").order("created_at", { ascending: false });
+        } else {
+          boardIdCondition = supabase.from("posts").select("*, profiles:user_id(*)").in("board_id", boardIds).order("created_at", { ascending: false });
+        }
+      }
+    } else if (boardIds.length === 1 && boardIds[0] === 'all') {
       boardIdCondition = supabase.from("posts").select("*, profiles:user_id(*)").order("created_at", { ascending: false });
     } else {
       boardIdCondition = supabase.from("posts").select("*, profiles:user_id(*)").in("board_id", boardIds).order("created_at", { ascending: false });
@@ -144,8 +183,18 @@ export async function POST(req: NextRequest) {
       return map;
     }, {} as Record<string, number>);
 
+    // 디버깅: 첫 번째 게시글 데이터 확인
+    if (posts.length > 0 && process.env.NODE_ENV === 'development') {
+      console.log('첫 번째 게시글 원본 데이터:', JSON.stringify({
+        id: posts[0].id,
+        title: posts[0].title,
+        views: posts[0].views,
+        likes: posts[0].likes
+      }, null, 2));
+    }
+
     // 포맷된 게시물 데이터 생성
-    const formattedPosts = posts.map((post) => {
+    const formattedPosts = posts.map((post: Post) => {
       const board = boardsMap[post.board_id];
       const profile = post.profiles as PostProfile;
       const teamId = board?.team_id;
@@ -155,8 +204,8 @@ export async function POST(req: NextRequest) {
         id: post.id,
         title: post.title,
         content: post.content,
-        view_count: post.view_count || 0,
-        like_count: post.like_count || 0,
+        view_count: post.views || 0,
+        like_count: post.likes || 0,
         comment_count: commentsCountMap[post.id] || 0,
         created_at: post.created_at,
         updated_at: post.updated_at,

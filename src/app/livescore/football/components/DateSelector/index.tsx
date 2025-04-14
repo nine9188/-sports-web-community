@@ -34,16 +34,25 @@ export default function DateSelector({ selectedDate, onDateChange }: DateSelecto
         <button
           key={date.toISOString()}
           onClick={() => onDateChange(date)}
-          className={`flex-1 py-4 text-center border-b-2 ${
+          className={`flex-1 py-3 text-center border-b-2 ${
             isSelected
               ? 'border-blue-500 bg-gray-50 text-blue-600'
               : 'border-transparent hover:bg-gray-50 text-gray-700'
           }`}
         >
-          <span className="text-xs">
-            {formattedDate}
-            {isToday && <span className="ml-1 text-xs text-blue-500">(오늘)</span>}
-          </span>
+          <div className="flex flex-col items-center">
+            {isToday ? (
+              <>
+                <span className="hidden md:block text-xs">{formattedDate}</span>
+                <span className="text-xs text-blue-500">
+                  <span className="block md:hidden">오늘</span>
+                  <span className="hidden md:inline">(오늘)</span>
+                </span>
+              </>
+            ) : (
+              <span className="text-xs">{formattedDate}</span>
+            )}
+          </div>
         </button>
       ))}
     </div>

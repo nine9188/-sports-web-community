@@ -46,6 +46,32 @@ export default function Header({ onMenuClick, isSidebarOpen }: { onMenuClick: ()
   useEffect(() => {
     if (!user) return;
     
+    // 아이콘 정보 인터페이스 정의
+    interface IconInfo {
+      level: number;
+      exp: number;
+      iconId: number | null;
+      isUsingLevelIcon: boolean;
+      levelIconUrl: string;
+      purchasedIconUrl: string | null;
+      iconName: string | null;
+      currentIconUrl: string;
+      currentIconName: string;
+    }
+    
+    // 기본 아이콘 정보 생성 함수
+    const getDefaultIconInfo = (): IconInfo => ({
+      level: 1,
+      exp: 0,
+      iconId: null,
+      isUsingLevelIcon: true,
+      levelIconUrl: '',
+      purchasedIconUrl: null,
+      iconName: null,
+      currentIconUrl: '',
+      currentIconName: '기본 아이콘'
+    });
+    
     const updateProfileData = async () => {
       try {
         // 유저 메타데이터에서 닉네임 가져오기
@@ -58,21 +84,47 @@ export default function Header({ onMenuClick, isSidebarOpen }: { onMenuClick: ()
           lastUpdated: Date.now()
         }));
         
-        // 아이콘 URL 설정
-        const iconInfo = await getUserIconInfo(user.id);
-        if (iconInfo) {
-          setProfileData(prev => ({
-            ...prev,
-            iconId: iconInfo.iconId,
-            level: iconInfo.level,
-            usingLevelIcon: iconInfo.isUsingLevelIcon,
-            dataLoaded: true,
-            lastUpdated: Date.now()
-          }));
+        try {
+          // 아이콘 URL 설정 - 시간제한 설정
+          const iconPromise = getUserIconInfo(user.id);
           
-          // 아이콘 URL 업데이트
-          setIconUrl(iconInfo.currentIconUrl);
-          setIconName(iconInfo.currentIconName);
+          // 5초 타임아웃 설정
+          const timeoutPromise = new Promise<IconInfo | null>((_, reject) => {
+            setTimeout(() => {
+              reject(new Error('아이콘 정보 로딩 시간 초과'));
+            }, 5000);
+          });
+          
+          // 둘 중 먼저 완료되는 프로미스 실행
+          const iconInfo = await Promise.race([iconPromise, timeoutPromise])
+            .catch(error => {
+              console.warn('아이콘 정보 로딩 실패:', error);
+              return getDefaultIconInfo();
+            });
+          
+          if (iconInfo) {
+            setProfileData(prev => ({
+              ...prev,
+              iconId: iconInfo.iconId,
+              level: iconInfo.level,
+              usingLevelIcon: iconInfo.isUsingLevelIcon,
+              dataLoaded: true,
+              lastUpdated: Date.now()
+            }));
+            
+            // 아이콘 URL 업데이트
+            setIconUrl(iconInfo.currentIconUrl);
+            setIconName(iconInfo.currentIconName);
+          } else {
+            // 기본 아이콘 설정
+            setIconUrl(null);
+            setIconName("기본 아이콘");
+          }
+        } catch (iconError) {
+          // 아이콘 정보 가져오기 실패 시
+          console.error('아이콘 정보 가져오기 오류:', iconError);
+          setIconUrl(null);
+          setIconName("기본 아이콘");
         }
       } catch (error) {
         console.error('프로필 데이터 업데이트 오류:', error);
@@ -84,6 +136,8 @@ export default function Header({ onMenuClick, isSidebarOpen }: { onMenuClick: ()
           dataLoaded: true,
           lastUpdated: Date.now()
         }));
+        setIconUrl(null);
+        setIconName("기본 아이콘");
       }
     };
     
@@ -108,12 +162,50 @@ export default function Header({ onMenuClick, isSidebarOpen }: { onMenuClick: ()
 
   // 아이콘 업데이트 이벤트 리스너
   useEffect(() => {
+    // 상위 스코프에서 정의된 IconInfo 인터페이스와 getDefaultIconInfo 함수 재사용
+    interface IconInfo {
+      level: number;
+      exp: number;
+      iconId: number | null;
+      isUsingLevelIcon: boolean;
+      levelIconUrl: string;
+      purchasedIconUrl: string | null;
+      iconName: string | null;
+      currentIconUrl: string;
+      currentIconName: string;
+    }
+    
+    // 기본 아이콘 정보 생성 함수
+    const getDefaultIconInfo = (): IconInfo => ({
+      level: 1,
+      exp: 0,
+      iconId: null,
+      isUsingLevelIcon: true,
+      levelIconUrl: '',
+      purchasedIconUrl: null,
+      iconName: null,
+      currentIconUrl: '',
+      currentIconName: '기본 아이콘'
+    });
+    
     const handleIconUpdate = async () => {
       if (!user) return;
       
       try {
-        // 유틸리티 함수로 최신 아이콘 정보 가져오기
-        const iconInfo = await getUserIconInfo(user.id);
+        // 5초 타임아웃 설정
+        const iconPromise = getUserIconInfo(user.id);
+        const timeoutPromise = new Promise<IconInfo>((_, reject) => {
+          setTimeout(() => {
+            reject(new Error('아이콘 업데이트 시간 초과'));
+          }, 5000);
+        });
+        
+        // 둘 중 먼저 완료되는 프로미스 실행
+        const iconInfo = await Promise.race<IconInfo>([iconPromise, timeoutPromise])
+          .catch(error => {
+            console.warn('아이콘 업데이트 이벤트 처리 실패:', error);
+            return getDefaultIconInfo();
+          });
         
         if (iconInfo) {
           setProfileData(prev => ({
@@ -126,9 +218,15 @@ export default function Header({ onMenuClick, isSidebarOpen }: { onMenuClick: ()
           // 아이콘 URL 업데이트
           setIconUrl(iconInfo.currentIconUrl);
           setIconName(iconInfo.currentIconName);
+        } else {
+          // 정보를 가져오지 못했을 경우 기본값 설정
+          setIconUrl(null);
+          setIconName("기본 아이콘");
         }
       } catch (error) {
         console.error('아이콘 업데이트 이벤트 처리 오류:', error);
+        setIconUrl(null);
+        setIconName("기본 아이콘");
       }
     };
     

@@ -20,25 +20,23 @@ export default function CalendarButton({ onDateChange }: CalendarButtonProps) {
   };
 
   return (
-    <div className="relative border-l">
-      <DatePicker
-        onChange={handleChange}
-        customInput={
-          <button className="h-full md:px-8 px-4 text-gray-700 flex items-center gap-2">
-            <Calendar className="h-5 w-5 md:h-6 md:w-6" />
-            <span className="hidden md:inline">일정 보기</span>
-          </button>
-        }
-        locale={ko}
-        dateFormat="yyyy년 MM월 dd일"
-        minDate={new Date(2024, 0, 1)}
-        maxDate={new Date(2025, 11, 31)}
-        showMonthDropdown
-        showYearDropdown
-        dropdownMode="select"
-        popperClassName="z-50"
-        popperPlacement="bottom-end"
-      />
-    </div>
+    <DatePicker
+      onChange={handleChange}
+      customInput={
+        <button className="h-full md:px-8 px-4 text-gray-700 flex items-center gap-2 hover:bg-gray-50 transition-colors">
+          <Calendar className="h-5 w-5 md:h-6 md:w-6" />
+          <span className="hidden md:inline">일정 보기</span>
+        </button>
+      }
+      locale={ko}
+      dateFormat="yyyy년 MM월 dd일"
+      minDate={new Date(2024, 0, 1)}
+      maxDate={new Date(2025, 11, 31)}
+      showMonthDropdown
+      showYearDropdown
+      dropdownMode="select"
+      popperClassName="z-50"
+      popperPlacement="bottom-end"
+    />
   );
 } 

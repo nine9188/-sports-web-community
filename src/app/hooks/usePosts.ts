@@ -32,6 +32,7 @@ interface PostsQueryParams {
   currentBoardId?: string;
   limit?: number;
   offset?: number;
+  fromParam?: string;
 }
 
 interface PostsRequestBody {
@@ -39,11 +40,12 @@ interface PostsRequestBody {
   currentBoardId?: string;
   limit: number;
   offset: number;
+  fromParam?: string;
 }
 
 // 게시글 목록 가져오기 함수
 export const fetchPosts = async (params: PostsQueryParams): Promise<PostsResponse> => {
-  const { boardId, boardIds, currentBoardId, limit = 20, offset = 0 } = params;
+  const { boardId, boardIds, currentBoardId, limit = 20, offset = 0, fromParam } = params;
   
   try {
     // 요청 본문 구성
@@ -62,6 +64,11 @@ export const fetchPosts = async (params: PostsQueryParams): Promise<PostsRespons
     
     if (currentBoardId) {
       requestBody.currentBoardId = currentBoardId;
+    }
+    
+    // from 파라미터 추가
+    if (fromParam) {
+      requestBody.fromParam = fromParam;
     }
     
     // POST 요청 설정

@@ -10,7 +10,11 @@ export {};
   const { 
     PREMIER_LEAGUE_TEAMS, 
     LA_LIGA_TEAMS, 
-    LIGUE_1_TEAMS 
+    BUNDESLIGA_TEAMS,
+    LIGUE_1_TEAMS,
+    SERIE_A_TEAMS,
+    EREDIVISIE_TEAMS,
+    K_LEAGUE_TEAMS
   } = require('../teams-data');
 
   dotenv.config({ path: '.env.local' });
@@ -19,7 +23,11 @@ export {};
   const ALL_TEAMS = [
     ...PREMIER_LEAGUE_TEAMS,
     ...LA_LIGA_TEAMS,
-    ...LIGUE_1_TEAMS
+    ...BUNDESLIGA_TEAMS,
+    ...LIGUE_1_TEAMS,
+    ...SERIE_A_TEAMS,
+    ...EREDIVISIE_TEAMS,
+    ...K_LEAGUE_TEAMS
   ];
 
   async function initTeams() {

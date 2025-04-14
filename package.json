@@ -10,6 +10,8 @@
     "create:feature": "powershell -File ./scripts/create-feature.ps1",
     "init-teams": "ts-node --project tsconfig.json scripts/teams/init-teams.ts",
     "init-leagues": "npx ts-node scripts/leagues/init-leagues.ts",
+    "init-timeout-teams": "npx ts-node scripts/teams/init-timeout-teams.ts",
+    "init-ipswich": "npx ts-node scripts/teams/init-ipswich-only.ts",
     "commit": "cz",
     "prepare": "husky install"
   },

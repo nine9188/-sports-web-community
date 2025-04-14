@@ -190,7 +190,7 @@ export default function TopicTabs() {
               return (
                 <li key={post.id} className={index < currentPosts.length - 1 ? "border-b" : ""}>
                   <Link 
-                    href={`/boards/${post.board_slug}/${post.post_number}?from=boards`} 
+                    href={`/boards/${post.board_slug}/${post.post_number}?from=root`} 
                     className="block px-3 py-2 hover:bg-gray-50"
                   >
                     <div className="flex items-center text-xs">

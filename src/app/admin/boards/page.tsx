@@ -13,6 +13,7 @@ import { invalidateBoardsCache } from '@/app/actions/cache';
 interface Board {
   id: string;
   name: string;
+  slug: string | null;
   description: string | null;
   access_level: string;
   parent_id: string | null;
@@ -30,6 +31,7 @@ export default function BoardsAdminPage() {
   const [editingBoard, setEditingBoard] = useState<Board | null>(null);
   const [formData, setFormData] = useState({
     name: '',
+    slug: '',
     description: '',
     access_level: 'public',
     parent_id: '',
@@ -154,6 +156,16 @@ export default function BoardsAdminPage() {
     fetchBoards();
   }, [fetchBoards]); // 이제 fetchBoards가 의존성으로 올바르게 추가됨
 
+  // 슬러그 생성 함수
+  const generateSlug = (name: string): string => {
+    return name
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '') // 특수문자 제거
+      .replace(/\s+/g, '-') // 공백을 하이픈으로 변환
+      .replace(/--+/g, '-') // 중복된 하이픈 제거
+      .trim(); // 앞뒤 공백 제거
+  };
+
   // 게시판 추가 또는 수정
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,6 +173,44 @@ export default function BoardsAdminPage() {
     if (!formData.name) {
       toast.error('게시판 이름은 필수입니다.');
       return;
+    }
+    
+    // 슬러그 자동 생성 (비어있을 경우)
+    let slugToUse = formData.slug;
+    if (!slugToUse) {
+      slugToUse = generateSlug(formData.name);
+      
+      // 중복 슬러그 확인 및 처리
+      let slugSuffix = 1;
+      let candidateSlug = slugToUse;
+      while (boards.some(board => 
+        board.slug === candidateSlug && 
+        (!editingBoard || board.id !== editingBoard.id)
+      )) {
+        candidateSlug = `${slugToUse}-${slugSuffix}`;
+        slugSuffix++;
+      }
+      slugToUse = candidateSlug;
+    }
+    
+    // 슬러그 검증
+    if (slugToUse) {
+      // 슬러그 형식 검증 (영문, 숫자, 하이픈, 언더스코어만 허용)
+      const slugRegex = /^[a-z0-9\-_]+$/;
+      if (!slugRegex.test(slugToUse)) {
+        toast.error('슬러그는 영문 소문자, 숫자, 하이픈(-), 언더스코어(_)만 포함할 수 있습니다.');
+        return;
+      }
+      
+      // 슬러그 중복 검사
+      const slugExists = boards.some(
+        board => board.slug === slugToUse && (!editingBoard || board.id !== editingBoard.id)
+      );
+      
+      if (slugExists) {
+        toast.error('이미 사용 중인 슬러그입니다. 다른 슬러그를 입력해주세요.');
+        return;
+      }
     }
     
     // 순환 참조 검사
@@ -205,6 +255,7 @@ export default function BoardsAdminPage() {
       
       const boardData = {
         name: formData.name,
+        slug: slugToUse, // 자동 생성된 슬러그 또는 사용자 입력 슬러그 사용
         description: formData.description || null,
         access_level: formData.access_level,
         parent_id: formData.parent_id || null,
@@ -234,6 +285,7 @@ export default function BoardsAdminPage() {
       // 폼 초기화
       setFormData({
         name: '',
+        slug: '',
         description: '',
         access_level: 'public',
         parent_id: '',
@@ -261,6 +313,7 @@ export default function BoardsAdminPage() {
     setEditingBoard(board);
     setFormData({
       name: board.name,
+      slug: board.slug || '',
       description: board.description || '',
       access_level: board.access_level || 'public',
       parent_id: board.parent_id || '',
@@ -319,6 +372,7 @@ export default function BoardsAdminPage() {
     setEditingBoard(null);
     setFormData({
       name: '',
+      slug: '',
       description: '',
       access_level: 'public',
       parent_id: '',
@@ -502,11 +556,43 @@ export default function BoardsAdminPage() {
               type="text"
               id="name"
               value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              onChange={(e) => setFormData(prev => {
+                const newName = e.target.value;
+                // 이름이 변경되고 슬러그가 비어있거나 이전에 자동생성된 경우에만 슬러그 자동 생성
+                const shouldUpdateSlug = !prev.slug || prev.slug === generateSlug(prev.name);
+                return { 
+                  ...prev, 
+                  name: newName,
+                  slug: shouldUpdateSlug ? generateSlug(newName) : prev.slug
+                };
+              })}
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2
                          focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               required
             />
+          </div>
+          
+          <div>
+            <label htmlFor="slug" className="block text-sm font-medium text-gray-700">
+              슬러그 (URL)
+            </label>
+            <div className="mt-1 flex rounded-md shadow-sm">
+              <input
+                type="text"
+                id="slug"
+                value={formData.slug}
+                onChange={(e) => setFormData(prev => ({ 
+                  ...prev, 
+                  slug: e.target.value.toLowerCase().replace(/[^a-z0-9\-_]/g, '') 
+                }))}
+                className="block w-full border border-gray-300 rounded-md shadow-sm p-2
+                           focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                placeholder="board-name"
+              />
+            </div>
+            <p className="mt-1 text-xs text-gray-500">
+              영문 소문자, 숫자, 하이픈(-), 언더스코어(_)만 사용 가능합니다. 게시판 이름을 입력하면 자동으로 생성됩니다.
+            </p>
           </div>
           
           <div>
@@ -670,6 +756,9 @@ export default function BoardsAdminPage() {
                     게시판 이름
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    슬러그
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                     권한
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
@@ -739,6 +828,9 @@ export default function BoardsAdminPage() {
                             </span>
                           )}
                         </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-500">
+                        {board.slug || '-'}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-500">
                         {board.access_level === 'public' ? '공개' : 

@@ -142,7 +142,7 @@ export default async function BoardDetailPage({
   searchParams 
 }: { 
   params: Promise<{ slug: string }>,
-  searchParams: Promise<{ page?: string }>
+  searchParams: Promise<{ page?: string; from?: string }>
 }) {
   try {
     // params와 searchParams를 병렬로 처리
@@ -153,6 +153,9 @@ export default async function BoardDetailPage({
     
     // 페이지 파라미터 처리
     const page = resolvedParams?.page ? parseInt(resolvedParams.page, 10) : 1;
+    
+    // from 파라미터 확인 (게시판 내비게이션 출처 확인용)
+    const fromParam = resolvedParams?.from;
     
     // 페이지 값이 유효하지 않으면 기본값 1로 설정
     const currentPage = isNaN(page) || page < 1 ? 1 : page;
@@ -211,8 +214,23 @@ export default async function BoardDetailPage({
     // 현재 게시판의 레벨 결정 (최상위, 상위, 하위)
     const boardLevel = getBoardLevel(boardData.id, boardsMap, childBoardsMap);
     
-    // 레벨에 따라 필터링할 게시판 ID 결정
-    const filteredBoardIds = getFilteredBoardIds(boardData.id, boardLevel, boardsMap, childBoardsMap);
+    // fromParam 처리: 
+    // - from=boards인 경우 현재 게시판만 표시
+    // - fromParam이 유효한 게시판 ID인 경우 해당 게시판 필터링
+    // - 그 외의 경우 기본 필터링 적용
+    let filteredBoardIds: string[] = [];
+    
+    if (fromParam === 'boards') {
+      // 현재 게시판만 표시
+      filteredBoardIds = [boardData.id];
+    } else if (fromParam && boardsMap[fromParam]) {
+      // fromParam이 유효한 게시판 ID인 경우 해당 게시판 관련 게시글 표시
+      const fromBoardLevel = getBoardLevel(fromParam, boardsMap, childBoardsMap);
+      filteredBoardIds = getFilteredBoardIds(fromParam, fromBoardLevel, boardsMap, childBoardsMap);
+    } else {
+      // 기본 필터링 적용
+      filteredBoardIds = getFilteredBoardIds(boardData.id, boardLevel, boardsMap, childBoardsMap);
+    }
     
     // 최상위 게시판의 ID 및 slug 확인
     const rootBoardId = findRootBoard(boardData.id, boardsMap);
@@ -312,6 +330,7 @@ export default async function BoardDetailPage({
             rootBoardId={rootBoardId}
             currentBoardSlug={slug}
             rootBoardSlug={rootBoardSlug}
+            fromParam={fromParam}
           />
         </div>
         
@@ -333,6 +352,7 @@ export default async function BoardDetailPage({
               boardIds={filteredBoardIds}
               currentBoardId={boardData.id}
               showBoard={true}
+              fromParam={fromParam}
             />
           </ScrollArea>
           

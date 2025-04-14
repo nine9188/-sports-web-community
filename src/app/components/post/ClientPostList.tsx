@@ -17,6 +17,7 @@ interface ClientPostListProps {
   currentBoardId: string;
   boardNameMaxWidth?: string;
   showBoard?: boolean;
+  fromParam?: string;
 }
 
 // API 응답 타입 정의
@@ -24,8 +25,8 @@ interface ApiPost {
   id: string;
   title: string;
   content?: string;
-  view_count: number;
-  like_count: number;
+  view_count: number;  // 서버에서 post.views를 view_count로 변환하여 보내줌
+  like_count: number;  // 서버에서 post.likes를 like_count로 변환하여 보내줌
   comment_count: number;
   created_at: string;
   updated_at: string;
@@ -92,6 +93,7 @@ export default function ClientPostList({
   currentBoardId,
   boardNameMaxWidth,
   showBoard = true,
+  fromParam,
 }: ClientPostListProps) {
   // 무한 스크롤을 위한 훅 사용
   const {
@@ -106,6 +108,7 @@ export default function ClientPostList({
     boardId,
     boardIds,
     currentBoardId,
+    fromParam,
     limit: 10 // 한 번에 가져올 게시글 수 제한
   });
   

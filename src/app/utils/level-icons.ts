@@ -197,7 +197,10 @@ export async function getIconName(iconId: number): Promise<string | null> {
 
 // 사용자의 현재 아이콘 정보 가져오기
 export async function getUserIconInfo(userId: string) {
-  if (!userId) return getDefaultIconInfo();
+  if (!userId) {
+    console.log('사용자 ID가 제공되지 않았습니다. 기본 아이콘 정보를 반환합니다.');
+    return getDefaultIconInfo();
+  }
   
   try {
     const supabase = createClient();
@@ -211,13 +214,37 @@ export async function getUserIconInfo(userId: string) {
       
     if (profileError) {
       console.error('프로필 정보 가져오기 오류:', profileError);
+      
+      // 프로필이 존재하지 않는 경우 - 사용자는 있지만 프로필이 없을 수 있음
+      if (profileError.code === 'PGRST116') {
+        console.log('프로필이 존재하지 않습니다. 새 프로필을 생성합니다.');
+        
+        // 프로필 생성 시도 (실패해도 기본 아이콘 정보 반환)
+        try {
+          await supabase.from('profiles').insert({
+            id: userId,
+            level: 1,
+            exp: 0,
+            updated_at: new Date().toISOString()
+          });
+        } catch (insertError) {
+          console.error('새 프로필 생성 실패:', insertError);
+        }
+      }
+      
+      return getDefaultIconInfo();
+    }
+    
+    // 프로필이 없는 경우 확인
+    if (!profile) {
+      console.log('프로필이 존재하지 않습니다. 기본 아이콘 정보를 반환합니다.');
       return getDefaultIconInfo();
     }
     
     // 사용자 레벨, 경험치, 아이콘 ID
-    const level = profile?.level || 1;
-    const exp = profile?.exp || 0;
-    const iconId = profile?.icon_id;
+    const level = profile.level || 1;
+    const exp = profile.exp || 0;
+    const iconId = profile.icon_id;
     const levelIconUrl = getLevelIconUrl(level);
     
     // 사용자가 구매한 아이콘 사용 중인지 확인
@@ -228,8 +255,13 @@ export async function getUserIconInfo(userId: string) {
     
     // 구매한 아이콘 사용 중이라면 해당 아이콘 정보 가져오기
     if (iconId && !isUsingLevelIcon) {
-      purchasedIconUrl = await getPurchasedIconUrl(iconId);
-      iconName = await getIconName(iconId);
+      try {
+        purchasedIconUrl = await getPurchasedIconUrl(iconId);
+        iconName = await getIconName(iconId);
+      } catch (iconError) {
+        console.error('구매한 아이콘 정보 가져오기 실패:', iconError);
+        // 구매 아이콘 정보를 가져오지 못해도 레벨 아이콘은 표시
+      }
     }
     
     return {
@@ -240,8 +272,8 @@ export async function getUserIconInfo(userId: string) {
       levelIconUrl,
       purchasedIconUrl,
       iconName,
-      currentIconUrl: isUsingLevelIcon ? levelIconUrl : purchasedIconUrl,
-      currentIconName: isUsingLevelIcon ? `레벨 ${level} 아이콘` : iconName
+      currentIconUrl: isUsingLevelIcon || !purchasedIconUrl ? levelIconUrl : purchasedIconUrl,
+      currentIconName: isUsingLevelIcon || !iconName ? `레벨 ${level} 아이콘` : iconName
     };
   } catch (error) {
     console.error('사용자 아이콘 정보 가져오기 오류:', error);

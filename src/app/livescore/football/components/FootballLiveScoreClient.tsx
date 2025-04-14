@@ -113,12 +113,16 @@ export default function FootballLiveScoreClient({
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="flex w-full items-center border-b h-[60px] px-0">
-        <div className="flex flex-1">
-          <DateSelector selectedDate={selectedDate} onDateChange={handleDateChange} />
+    <div className="min-h-screen bg-white space-y-4">
+      <div className="rounded-lg border border-gray-200 overflow-hidden mt-4 md:mt-0">
+        <div className="flex w-full items-center h-[60px]">
+          <div className="flex flex-1">
+            <DateSelector selectedDate={selectedDate} onDateChange={handleDateChange} />
+          </div>
+          <div className="border-l border-gray-200">
+            <CalendarButton onDateChange={handleDateChange} />
+          </div>
         </div>
-        <CalendarButton onDateChange={handleDateChange} />
       </div>
 
       <div>
@@ -135,16 +139,16 @@ export default function FootballLiveScoreClient({
           }}
           onDateChange={handleDateChange}
         />
+      </div>
         
-        <div className="px-0 py-4">
-          {loading ? (
-            <div className="flex justify-center items-center min-h-[200px]">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-            </div>
-          ) : (
-            <LeagueMatchList matches={filteredMatches} />
-          )}
-        </div>
+      <div>
+        {loading ? (
+          <div className="flex justify-center items-center min-h-[200px]">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          </div>
+        ) : (
+          <LeagueMatchList matches={filteredMatches} />
+        )}
       </div>
     </div>
   );

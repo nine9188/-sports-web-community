@@ -25,6 +25,7 @@ interface HoverMenuProps {
   activeTabId?: string;
   rootBoardSlug?: string;
   currentBoardSlug?: string;
+  fromParam?: string;
 }
 
 export default function HoverMenu({
@@ -35,6 +36,7 @@ export default function HoverMenu({
   activeTabId,
   rootBoardSlug,
   currentBoardSlug,
+  fromParam
 }: HoverMenuProps) {
   const [hoveredBoard, setHoveredBoard] = useState<string | null>(null);
   const [clickedMobileMenu, setClickedMobileMenu] = useState<string | null>(null);
@@ -180,7 +182,12 @@ export default function HoverMenu({
         {/* 네비게이션 바 */}
         <nav className="flex overflow-x-auto">
           <Link
-            href={`/boards/${rootBoardSlug || rootBoardId}`}
+            href={
+              // from 파라미터가 유효한 게시판 ID인 경우 해당 게시판으로 연결
+              fromParam && fromParam !== 'boards' 
+                ? `/boards/${fromParam === rootBoardId ? rootBoardSlug : fromParam}`
+                : `/boards/${rootBoardSlug || rootBoardId}`
+            }
             className={`px-3 py-2 text-sm font-medium whitespace-nowrap hover:bg-gray-50 rounded-md ${
               currentBoardId === rootBoardId ? 'bg-gray-100 text-blue-600' : 'text-gray-500'
             }`}

@@ -69,7 +69,7 @@ export default async function PostDetailPage({
     const currentPage = isNaN(page) || page < 1 ? 1 : page;
     
     // 특수 케이스 처리: 'undefined'가 문자열로 전달된 경우
-    const normalizedFromBoardId = fromBoardId === 'undefined' ? undefined : fromBoardId;
+    let normalizedFromBoardId = fromBoardId === 'undefined' ? undefined : fromBoardId;
     
     if (!slug || !postNumber) {
       return notFound();
@@ -176,8 +176,7 @@ export default async function PostDetailPage({
     
     // 3. 댓글 가져오기 및 게시판 하위 구조 처리
     const [
-      comments,
-      filteredPostsResult
+      comments
     ] = await Promise.all([
       // 댓글 데이터 가져오기
       (async () => {
@@ -206,25 +205,7 @@ export default async function PostDetailPage({
           return [];
         }
       })(),
-      
-      // 게시글 필터링
-      getFilteredPostsByBoardHierarchy(
-        board.id, 
-        normalizedFromBoardId,
-        rootBoardId, 
-        [rootBoardId],
-        currentPage,
-        async (boardId: string) => {
-          return (boardStructure as BoardStructure[])
-            .filter(b => b.parent_id === boardId)
-            .map(b => b.id);
-        }
-      ).catch(() => ({ posts: [], totalCount: 0 }))
     ]);
-    
-    // 필터링된 게시글 및 총 개수
-    const filteredPosts = filteredPostsResult.posts || [];
-    const totalCount = filteredPostsResult.totalCount || 0;
     
     // 4. 하위 게시판 ID 찾기
     const allSubBoardIds: string[] = [];
@@ -232,10 +213,41 @@ export default async function PostDetailPage({
     (boardStructure as BoardStructure[]).forEach(board => {
       if (board.parent_id === rootBoardId) {
         allSubBoardIds.push(board.id);
+        
+        // 추가: 하위 게시판의 하위 게시판도 찾기 (손자 게시판)
+        (boardStructure as BoardStructure[]).forEach(subBoard => {
+          if (subBoard.parent_id === board.id) {
+            allSubBoardIds.push(subBoard.id);
+          }
+        });
       }
     });
     
     const allBoardIds = [rootBoardId, ...allSubBoardIds];
+    
+    // fromParam이 'boards'인 경우 처리 (최상위 게시판에서 온 경우)
+    if (normalizedFromBoardId === 'boards' || normalizedFromBoardId === 'root') {
+      // boards/root 파라미터로 왔을 때는 rootBoardId로 변환하여 모든 게시판 포함
+      normalizedFromBoardId = rootBoardId;
+    }
+    
+    // 게시글 필터링 (이제 allBoardIds가 정의된 후)
+    const filteredPostsResult = await getFilteredPostsByBoardHierarchy(
+      board.id, 
+      normalizedFromBoardId,
+      rootBoardId, 
+      allBoardIds,
+      currentPage,
+      async (boardId: string) => {
+        return (boardStructure as BoardStructure[])
+          .filter(b => b.parent_id === boardId)
+          .map(b => b.id);
+      }
+    ).catch(() => ({ posts: [], totalCount: 0 }));
+    
+    // 필터링된 게시글 및 총 개수
+    const filteredPosts = filteredPostsResult.posts || [];
+    const totalCount = filteredPostsResult.totalCount || 0;
     
     // 5. 게시판 데이터 맵 구성
     const boardsData = (boardStructure as BoardStructure[]).reduce((acc: Record<string, BoardData>, board: BoardStructure) => {

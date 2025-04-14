@@ -43,7 +43,7 @@ export default function AllPostsWidget({ initialPosts }: AllPostsWidgetProps) {
         headerContent={headerContent}
         showBoard={true}
         maxHeight="500px"
-        currentBoardId="boards" // 또는 적절한 기본값 설정
+        currentBoardId="root" // 또는 적절한 기본값 설정
       />
     </div>
   );

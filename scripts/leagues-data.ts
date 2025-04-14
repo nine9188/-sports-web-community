@@ -6,4 +6,5 @@ export const LEAGUES = [
   { id: 135, name: "Serie A" },          // 이탈리아
   { id: 88, name: "Eredivisie" },        // 네덜란드
   { id: 94, name: "Primeira Liga" },     // 포르투갈
+  { id: 292, name: "K League 1" },       // 한국
 ]; 

@@ -6,6 +6,7 @@ interface ServerHoverMenuProps {
   rootBoardId?: string;
   rootBoardSlug?: string;
   currentBoardSlug?: string;
+  fromParam?: string;
 }
 
 interface Board {
@@ -21,6 +22,7 @@ export default async function ServerHoverMenu({
   rootBoardId,
   rootBoardSlug,
   currentBoardSlug,
+  fromParam
 }: ServerHoverMenuProps) {
   // 서버 컴포넌트에서 직접 데이터 가져오기
   const supabase = await createClient();
@@ -40,6 +42,7 @@ export default async function ServerHoverMenu({
         rootBoardId={rootBoardId}
         rootBoardSlug={rootBoardSlug}
         currentBoardSlug={currentBoardSlug}
+        fromParam={fromParam === 'boards' ? rootBoardId : fromParam}
       />
     );
   }
@@ -85,6 +88,7 @@ export default async function ServerHoverMenu({
         rootBoardId={rootBoardId || ''}
         rootBoardSlug={rootBoardSlug}
         currentBoardSlug={currentBoardSlug}
+        fromParam={fromParam === 'boards' ? rootBoardId : fromParam}
       />
     );
   }
@@ -100,6 +104,9 @@ export default async function ServerHoverMenu({
     slug: board.slug
   }));
   
+  // 특별 처리: fromParam이 'boards'인 경우 rootBoardId로 변환
+  const normalizedFromParam = fromParam === 'boards' ? rootBoard.id : fromParam;
+  
   // 서버에서 직접 가공한 데이터를 클라이언트 컴포넌트로 전달
   return (
     <ClientHoverMenu
@@ -107,6 +114,7 @@ export default async function ServerHoverMenu({
       rootBoardId={rootBoard.id}
       rootBoardSlug={rootBoard.slug || rootBoard.id}
       currentBoardSlug={currentBoardSlug}
+      fromParam={normalizedFromParam}
       // 미리 가공된 데이터 전달
       prefetchedData={{
         topBoards: formattedTopBoards, 

@@ -49,7 +49,7 @@ export default function LeagueMatchList({ matches }: LeagueMatchListProps) {
 
   if (matches.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
+      <div className="text-center text-gray-500 min-h-[200px] flex items-center justify-center">
         경기 일정이 없습니다.
       </div>
     );
@@ -59,7 +59,7 @@ export default function LeagueMatchList({ matches }: LeagueMatchListProps) {
   const DEFAULT_LOGO = '/placeholder-league.png'; // 기본 리그 로고 이미지 경로
 
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
+    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
       <table className="w-full table-fixed border-collapse">
         <colgroup>
           <col className="w-[40px]"/>
