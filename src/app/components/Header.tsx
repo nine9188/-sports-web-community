@@ -85,6 +85,13 @@ export default function Header({ onMenuClick, isSidebarOpen }: { onMenuClick: ()
         }));
         
         try {
+          if (!user || !user.id) {
+            console.error('사용자 정보가 없습니다');
+            setIconUrl(null);
+            setIconName("기본 아이콘");
+            return;
+          }
+          
           // 아이콘 URL 설정 - 시간제한 설정
           const iconPromise = getUserIconInfo(user.id);
           
@@ -98,7 +105,7 @@ export default function Header({ onMenuClick, isSidebarOpen }: { onMenuClick: ()
           // 둘 중 먼저 완료되는 프로미스 실행
           const iconInfo = await Promise.race([iconPromise, timeoutPromise])
             .catch(error => {
-              console.warn('아이콘 정보 로딩 실패:', error);
+              console.warn('아이콘 정보 로딩 실패:', error instanceof Error ? error.message : JSON.stringify(error));
               return getDefaultIconInfo();
             });
           
@@ -189,7 +196,12 @@ export default function Header({ onMenuClick, isSidebarOpen }: { onMenuClick: ()
     });
     
     const handleIconUpdate = async () => {
-      if (!user) return;
+      if (!user || !user.id) {
+        console.error('아이콘 업데이트 실패: 사용자 정보가 없습니다');
+        setIconUrl(null);
+        setIconName("기본 아이콘");
+        return;
+      }
       
       try {
         // 5초 타임아웃 설정
@@ -203,7 +215,7 @@ export default function Header({ onMenuClick, isSidebarOpen }: { onMenuClick: ()
         // 둘 중 먼저 완료되는 프로미스 실행
         const iconInfo = await Promise.race<IconInfo>([iconPromise, timeoutPromise])
           .catch(error => {
-            console.warn('아이콘 업데이트 이벤트 처리 실패:', error);
+            console.warn('아이콘 업데이트 이벤트 처리 실패:', error instanceof Error ? error.message : JSON.stringify(error));
             return getDefaultIconInfo();
           });
         
