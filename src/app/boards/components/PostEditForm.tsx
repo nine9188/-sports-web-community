@@ -8,7 +8,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
-import Youtube from '@tiptap/extension-youtube';
+import { YoutubeExtension } from '@/app/lib/tiptap/YoutubeExtension';
 import { Video } from '@/app/lib/tiptap/VideoExtension';
 import BoardSelector from './createnavigation/BoardSelector';
 import EditorToolbar from './createnavigation/EditorToolbar';
@@ -125,9 +125,16 @@ export default function PostEditForm({
           rel: 'noopener noreferrer',
         }
       }),
-      Youtube.configure({
+      YoutubeExtension.configure({
         controls: true,
-        nocookie: true,
+        nocookie: false,
+        width: 640,
+        height: 360,
+        responsive: true,
+        HTMLAttributes: {
+          class: 'youtube-container',
+        },
+        allowFullscreen: true
       }),
       Video,
       MatchCardExtension,
@@ -351,10 +358,23 @@ export default function PostEditForm({
   };
   
   // 유튜브 추가 함수
-  const handleAddYoutube = (url: string) => {
+  const handleAddYoutube = (url: string, caption?: string) => {
     if (!url || !editor) return;
     
-    editor.commands.setYoutubeVideo({ src: url });
+    try {
+      editor.commands.setYoutubeVideo({
+        src: url,
+        caption: caption || undefined,
+        width: 640,
+        height: 360
+      });
+      
+      console.log('유튜브 영상 삽입 성공!');
+    } catch (error) {
+      console.error('유튜브 삽입 실패:', error);
+      alert('유튜브 영상을 추가하는데 실패했습니다. 다시 시도해주세요.');
+    }
+    
     setShowYoutubeModal(false);
   };
   

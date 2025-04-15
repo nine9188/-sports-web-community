@@ -420,6 +420,8 @@ export default async function PostDetailPage({
             postNumber={postNumber}
             isAuthor={isAuthor}
             isLoggedIn={isLoggedIn}
+            postId={post.id}
+            userId={post.user_id}
           />
         </div>
         
@@ -472,6 +474,8 @@ export default async function PostDetailPage({
             postNumber={postNumber}
             isAuthor={isAuthor}
             isLoggedIn={isLoggedIn}
+            postId={post.id}
+            userId={post.user_id}
           />
         </div>
         

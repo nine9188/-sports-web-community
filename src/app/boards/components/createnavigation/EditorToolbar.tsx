@@ -58,7 +58,7 @@ interface EditorToolbarProps {
   handleFileUpload: (file: File, caption: string) => Promise<void>;
   handleAddImageUrl: (url: string, caption: string) => void;
   handleAddLink: (url: string, text: string) => void;
-  handleAddYoutube: (url: string) => void;
+  handleAddYoutube: (url: string, caption?: string) => void;
   handleAddVideo: (videoUrl: string, caption: string) => void;
   handleAddMatch: (matchId: string, matchData: MatchData) => void;
 }
