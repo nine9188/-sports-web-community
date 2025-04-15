@@ -1,6 +1,5 @@
 'use client';
 
-import { useMediaQuery } from '@/hooks/useMediaQuery';
 import Field from './components/Field';
 import Player from './components/Player';
 
@@ -42,8 +41,6 @@ interface FormationProps {
 }
 
 export default function Formation({ homeTeamData, awayTeamData }: FormationProps) {
-  const isMobile = useMediaQuery('(max-width: 768px) and (orientation: portrait)');
-
   // 기본 팀 색상 설정
   const defaultColors = {
     player: {
@@ -84,11 +81,10 @@ export default function Formation({ homeTeamData, awayTeamData }: FormationProps
 
   return (
     <div style={{ borderRadius: '12px', overflow: 'hidden', margin: 0 }}>
-      <Field isMobile={isMobile}>
+      <Field>
         <Player
           homeTeamData={processedHomeTeam}
           awayTeamData={processedAwayTeam}
-          isMobile={isMobile}
         />
       </Field>
     </div>

@@ -2,6 +2,7 @@
  * 축구 경기 데이터 인터페이스
  */
 interface MatchData {
+  id?: string;
   teams?: {
     home?: {
       name: string;
@@ -45,6 +46,9 @@ export function generateMatchCardHTML(matchData: MatchData, matchId: string | nu
   const homeScore = typeof goals?.home === 'number' ? goals.home : '-';
   const awayScore = typeof goals?.away === 'number' ? goals.away : '-';
   
+  // 매치 ID 결정 - matchData에 id가 있으면 우선 사용
+  const actualMatchId = matchData.id || matchId;
+  
   // 경기 상태 텍스트 설정
   let statusText = '경기 결과';
   let statusClass = '';
@@ -74,12 +78,12 @@ export function generateMatchCardHTML(matchData: MatchData, matchId: string | nu
   // 데이터 속성 설정 (PostEditForm에서 사용)
   const dataAttributes = isEditable 
     ? `` 
-    : `data-type="match-card" data-match-id="${matchId}" data-match="${encodeURIComponent(JSON.stringify(matchData))}"`;
+    : `data-type="match-card" data-match-id="${actualMatchId}" data-match="${encodeURIComponent(JSON.stringify(matchData))}"`;
   
   // 링크 설정 (수정 가능 여부에 따라)
   const wrapperStart = isEditable 
     ? `<div class="cursor-default">` 
-    : `<a href="/livescore/football/match/${matchId}" class="block" style="text-decoration: none; color: inherit;">`;
+    : `<a href="/livescore/football/match/${actualMatchId}" class="block" style="text-decoration: none; color: inherit;">`;
   
   const wrapperEnd = isEditable ? `</div>` : `</a>`;
 
@@ -88,25 +92,27 @@ export function generateMatchCardHTML(matchData: MatchData, matchId: string | nu
     <div ${dataAttributes} style="width: 100%; max-width: 100%;">
       <div class="match-card border rounded-lg overflow-hidden shadow-sm my-3 w-full">
         ${wrapperStart}
-          <!-- 리그 헤더 - 높이 및 로고 크기 증가 -->
+          <!-- 리그 헤더 -->
           <div class="py-3 px-3 bg-gray-50 border-b flex items-center h-10">
-            <img 
-              src="${leagueData.logo}" 
-              alt="${leagueData.name}" 
-              class="w-7 h-7 object-contain mr-2.5"
-              ${isEditable ? 'onError="(e) => { e.currentTarget.src = \'/placeholder.png\'; }"' : 'onerror="this.onerror=null;this.src=\'/placeholder.png\';"'}
-            />
-            <span class="text-sm font-medium text-gray-600 truncate">${leagueData.name}</span>
+            <div class="flex items-center">
+              <img 
+                src="${leagueData.logo}" 
+                alt="${leagueData.name}" 
+                class="w-6 h-6 object-contain mr-2"
+                ${isEditable ? 'onError="(e) => { e.currentTarget.src = \'/placeholder.png\'; }"' : 'onerror="this.onerror=null;this.src=\'/placeholder.png\';"'}
+              />
+              <span class="text-sm font-medium text-gray-600 truncate">${leagueData.name}</span>
+            </div>
           </div>
           
-          <!-- 경기 카드 메인 - 간격 줄임 -->
-          <div class="py-1 px-1 flex items-center justify-between">
-            <!-- 홈팀 - 너비 증가 및 패딩 조정 -->
-            <div class="flex flex-col items-center pr-1 pl-1 w-[50%]">
+          <!-- 경기 카드 메인 -->
+          <div class="py-3 px-3 flex items-center justify-between">
+            <!-- 홈팀 -->
+            <div class="flex flex-col items-center w-[40%]">
               <img 
                 src="${homeTeam.logo}" 
                 alt="${homeTeam.name}" 
-                class="w-14 h-14 object-contain mb-1"
+                class="w-12 h-12 object-contain mb-2"
                 ${isEditable ? 'onError="(e) => { e.currentTarget.src = \'/placeholder.png\'; }"' : 'onerror="this.onerror=null;this.src=\'/placeholder.png\';"'}
               />
               <span class="text-sm font-medium text-center line-clamp-2 ${homeTeam.winner ? 'text-blue-600' : ''}">
@@ -114,9 +120,9 @@ export function generateMatchCardHTML(matchData: MatchData, matchId: string | nu
               </span>
             </div>
             
-            <!-- 스코어 - 너비 감소 -->
-            <div class="text-center flex-shrink-0">
-              <div class="flex items-center justify-center mb-1">
+            <!-- 스코어 -->
+            <div class="text-center flex-shrink-0 w-[20%]">
+              <div class="flex items-center justify-center mb-2">
                 <span class="text-2xl font-bold min-w-[1.5rem] text-center">${homeScore}</span>
                 <span class="text-gray-400 mx-1">-</span>
                 <span class="text-2xl font-bold min-w-[1.5rem] text-center">${awayScore}</span>
@@ -126,12 +132,12 @@ export function generateMatchCardHTML(matchData: MatchData, matchId: string | nu
               </div>
             </div>
             
-            <!-- 원정팀 - 너비 증가 및 패딩 조정 -->
-            <div class="flex flex-col items-center pl-1 pr-1 w-[50%]">
+            <!-- 원정팀 -->
+            <div class="flex flex-col items-center w-[40%]">
               <img 
                 src="${awayTeam.logo}" 
                 alt="${awayTeam.name}" 
-                class="w-14 h-14 object-contain mb-1"
+                class="w-12 h-12 object-contain mb-2"
                 ${isEditable ? 'onError="(e) => { e.currentTarget.src = \'/placeholder.png\'; }"' : 'onerror="this.onerror=null;this.src=\'/placeholder.png\';"'}
               />
               <span class="text-sm font-medium text-center line-clamp-2 ${awayTeam.winner ? 'text-blue-600' : ''}">
@@ -141,7 +147,7 @@ export function generateMatchCardHTML(matchData: MatchData, matchId: string | nu
           </div>
           
           <!-- 푸터 -->
-          <div class="py-2 px-3 bg-gray-50 border-t text-center h-8 flex items-center justify-center">
+          <div class="py-2 px-3 bg-gray-50 border-t text-center flex items-center justify-center">
             <span class="text-xs text-blue-600 hover:underline">
               매치 상세 정보
             </span>

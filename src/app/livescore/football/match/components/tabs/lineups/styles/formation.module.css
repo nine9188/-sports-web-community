@@ -86,10 +86,3 @@
   text-align: center;
   padding: 20px;
 }
-
-/* 모바일 세로 모드 스타일 */
-@media (max-width: 768px) and (orientation: portrait) {
-  .playerImage, .playerNameNumber {
-    transform-origin: center center;
-  }
-}

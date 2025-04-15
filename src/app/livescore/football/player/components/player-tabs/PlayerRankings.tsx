@@ -233,13 +233,16 @@ export default function PlayerRankings({
 
       {/* 4-10위 테이블 - 최소 높이 고정 */}
       <div className="overflow-x-auto min-h-[300px] border rounded-lg">
-        <table className="min-w-full divide-y divide-gray-200">
+        <table className="min-w-full divide-y divide-gray-200 table-fixed">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">순위</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2">선수</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">팀</th>
-              <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24">기록</th>
+              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%] sm:w-[10%] whitespace-nowrap">순위</th>
+              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[45%] sm:w-[40%] whitespace-nowrap">선수</th>
+              <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[30%] sm:w-[35%] whitespace-nowrap">
+                <span className="hidden sm:inline">팀</span>
+                <span className="sm:hidden">소속</span>
+              </th>
+              <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-[15%] whitespace-nowrap">기록</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -250,12 +253,12 @@ export default function PlayerRankings({
                   className={`hover:bg-gray-50 cursor-pointer ${player.player.id === playerId ? 'bg-blue-50' : ''}`}
                   onClick={() => navigateToPlayer(player.player.id)}
                 >
-                  <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <td className="px-2 py-2 text-sm font-medium text-gray-900">
                     {index + 4}
                   </td>
-                  <td className="px-3 py-2 whitespace-nowrap">
+                  <td className="px-2 py-2">
                     <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10 relative">
+                      <div className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10 relative">
                         <Image
                           src={player.player.photo}
                           alt={player.player.name}
@@ -263,16 +266,16 @@ export default function PlayerRankings({
                           className="rounded-full object-cover"
                         />
                       </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
+                      <div className="ml-2 sm:ml-3 overflow-hidden">
+                        <div className="text-xs sm:text-sm font-medium text-gray-900 truncate max-w-full">
                           {player.player.name}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-3 py-2 whitespace-nowrap">
+                  <td className="px-2 py-2">
                     <div className="flex items-center">
-                      <div className="relative w-6 h-6">
+                      <div className="relative w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0">
                         <Image
                           src={player.statistics[0].team.logo}
                           alt={player.statistics[0].team.name}
@@ -280,19 +283,21 @@ export default function PlayerRankings({
                           className="object-contain"
                         />
                       </div>
-                      <div className="ml-2 text-sm text-gray-900">
-                        {player.statistics[0].team.name}
+                      <div className="ml-1 sm:ml-2 overflow-hidden">
+                        <div className="text-xs sm:text-sm text-gray-900 truncate">
+                          {player.statistics[0].team.name}
+                        </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-right text-sm text-gray-500">
+                  <td className="px-2 py-2 text-right text-xs sm:text-sm text-gray-500">
                     {getRankingValue(player, rankingType)}
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={4} className="px-3 py-4 text-center text-gray-500">
+                <td colSpan={4} className="px-2 py-4 text-center text-gray-500">
                   데이터가 없습니다
                 </td>
               </tr>

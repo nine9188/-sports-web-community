@@ -37,58 +37,33 @@ interface TeamData {
 interface PlayerProps {
   homeTeamData: TeamData;
   awayTeamData: TeamData;
-  isMobile: boolean;
 }
 
-const getPositionFromGrid = (grid: string | null, isHome: boolean, formation: string, isMobile: boolean) => {
+const getPositionFromGrid = (grid: string | null, isHome: boolean, formation: string) => {
   if (!grid) return { x: 50, y: 28 };
 
   const [line, position] = grid.split(':').map(Number);
   const formationArray = formation.split('-').map(Number);
   
   const getPosition = (line: number, isHome: boolean) => {
-    // 모바일과 PC에서 다른 위치 값 사용
-    if (isMobile) {
-      // 모바일 환경에서의 위치
-      if (isHome) {
-        switch(line) {
-          case 1: return { x: 5, y: 28 };     // 시작점 - GK
-          case 2: return { x: 15, y: 28 };     // DF
-          case 3: return { x: 25, y: 28 };     // MF
-          case 4: return { x: 35, y: 28 };     // AM
-          case 5: return { x: 45, y: 28 };     // FW
-          default: return { x: 50, y: 28 };
-        }
-      } else {
-        switch(line) {
-          case 1: return { x: 93, y: 28 };     // 끝점 - GK
-          case 2: return { x: 84, y: 28 };     // DF
-          case 3: return { x: 74, y: 28 };     // MF
-          case 4: return { x: 64, y: 28 };     // AM
-          case 5: return { x: 54, y: 28 };     // FW
-          default: return { x: 50, y: 28 };
-        }
+    // 가로 모드 위치만 사용
+    if (isHome) {
+      switch(line) {
+        case 1: return { x: 5, y: 28 };     // 시작점 - GK
+        case 2: return { x: 15, y: 28 };    // 5 + 10 - DF
+        case 3: return { x: 25, y: 28 };    // 5 + 20 - MF
+        case 4: return { x: 35, y: 28 };    // 5 + 30 - AM
+        case 5: return { x: 45, y: 28 };    // 5 + 40 - FW
+        default: return { x: 50, y: 28 };
       }
     } else {
-      // PC 환경에서의 위치 (기존 코드)
-      if (isHome) {
-        switch(line) {
-          case 1: return { x: 5, y: 28 };     // 시작점 - GK
-          case 2: return { x: 15, y: 28 };    // 5 + 10 - DF
-          case 3: return { x: 25, y: 28 };    // 5 + 20 - MF
-          case 4: return { x: 35, y: 28 };    // 5 + 30 - AM
-          case 5: return { x: 45, y: 28 };    // 5 + 40 - FW
-          default: return { x: 50, y: 28 };
-        }
-      } else {
-        switch(line) {
-          case 1: return { x: 95, y: 28 };    // 끝점 - GK
-          case 2: return { x: 85, y: 28 };    // 95 - 10 - DF
-          case 3: return { x: 75, y: 28 };    // 95 - 20 - MF
-          case 4: return { x: 65, y: 28 };    // 95 - 30 - AM
-          case 5: return { x: 55, y: 28 };    // 95 - 40 - FW
-          default: return { x: 50, y: 28 };
-        }
+      switch(line) {
+        case 1: return { x: 95, y: 28 };    // 끝점 - GK
+        case 2: return { x: 85, y: 28 };    // 95 - 10 - DF
+        case 3: return { x: 75, y: 28 };    // 95 - 20 - MF
+        case 4: return { x: 65, y: 28 };    // 95 - 30 - AM
+        case 5: return { x: 55, y: 28 };    // 95 - 40 - FW
+        default: return { x: 50, y: 28 };
       }
     }
   };
@@ -129,7 +104,7 @@ const calculateOffset = (position: number, totalInLine: number) => {
   return offset;  // 중앙 기준으로 offset 반환
 };
 
-const Player = ({ homeTeamData, awayTeamData, isMobile }: PlayerProps) => {
+const Player = ({ homeTeamData, awayTeamData }: PlayerProps) => {
   const textRefs = useRef<{[key: string]: SVGTextElement | null}>({});
   const rectRefs = useRef<{[key: string]: SVGRectElement | null}>({});
   
@@ -169,7 +144,7 @@ const Player = ({ homeTeamData, awayTeamData, isMobile }: PlayerProps) => {
 
   const renderTeam = (team: TeamData, isHome: boolean) => {
     return team.startXI.map((player) => {
-      const position = getPositionFromGrid(player.grid, isHome, team.formation, isMobile);
+      const position = getPositionFromGrid(player.grid, isHome, team.formation);
       const isGoalkeeper = player.pos === 'G';
       const colors = isGoalkeeper ? team.team.colors.goalkeeper : team.team.colors.player;
       
@@ -181,9 +156,6 @@ const Player = ({ homeTeamData, awayTeamData, isMobile }: PlayerProps) => {
       const nameKey = `name-${isHome ? 'home' : 'away'}-${teamId}-${playerId}`;
       const imageId = `image-${teamId}-${playerId}`;
 
-      // 모바일 세로 모드일 때 회전 적용 (-90도로 변경)
-      const imageRotation = isMobile ? 'rotate(-90)' : '';
-      
       // 이미지 여부 확인 (URL이 유효하고, 로딩 실패하지 않았을 때)
       const hasValidImage = player.photo && !failedImages[imageId];
       
@@ -222,7 +194,6 @@ const Player = ({ homeTeamData, awayTeamData, isMobile }: PlayerProps) => {
               fontWeight="bold"
               textAnchor="middle"
               dominantBaseline="middle"
-              transform={imageRotation}
             >
               {player.number}
             </text>
@@ -230,7 +201,7 @@ const Player = ({ homeTeamData, awayTeamData, isMobile }: PlayerProps) => {
           
           {/* 선수 이미지 - 지연 로딩 적용 및 오류 처리 추가 */}
           {hasValidImage && (
-            <g transform={imageRotation}>
+            <g>
               <image
                 id={imageId}
                 className={styles.playerImage}
@@ -249,7 +220,7 @@ const Player = ({ homeTeamData, awayTeamData, isMobile }: PlayerProps) => {
           )}
           
           {/* 선수 번호와 이름 - 간격 조정 */}
-          <g className={styles.playerNameNumber} transform={imageRotation}>
+          <g className={styles.playerNameNumber}>
             {/* 번호 배경 */}
             <rect
               ref={(el) => { rectRefs.current[numberKey] = el; }}

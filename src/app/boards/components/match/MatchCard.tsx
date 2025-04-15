@@ -29,6 +29,7 @@ interface Status {
 }
 
 interface MatchData {
+  id?: string | number;
   teams: {
     home: MatchTeam;
     away: MatchTeam;
@@ -52,6 +53,8 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
       </div>
     );
   }
+
+  const actualMatchId = matchData.id?.toString() || matchId;
 
   const { teams, goals, league, status } = matchData;
   const homeTeam = teams.home;
@@ -86,27 +89,29 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
   const CardContent = () => (
     <>
       <div className="py-3 px-3 bg-gray-50 border-b flex items-center h-10">
-        <Image 
-          src={league.logo || '/placeholder.png'} 
-          alt={league.name} 
-          width={28}
-          height={28}
-          className="w-7 h-7 object-contain mr-2.5"
-          onError={(e) => {
-            e.currentTarget.src = '/placeholder.png';
-          }}
-        />
-        <span className="text-sm font-medium text-gray-600 truncate">{league.name}</span>
+        <div className="flex items-center">
+          <Image 
+            src={league.logo || '/placeholder.png'} 
+            alt={league.name} 
+            width={24}
+            height={24}
+            className="w-6 h-6 object-contain mr-2"
+            onError={(e) => {
+              e.currentTarget.src = '/placeholder.png';
+            }}
+          />
+          <span className="text-sm font-medium text-gray-600 truncate">{league.name}</span>
+        </div>
       </div>
 
-      <div className="py-1 px-1 flex items-center justify-between">
-        <div className="flex flex-col items-center pr-1 pl-1 w-[50%]">
+      <div className="py-3 px-3 flex items-center justify-between">
+        <div className="flex flex-col items-center w-[40%]">
           <Image 
             src={homeTeam.logo || '/placeholder.png'} 
             alt={homeTeam.name} 
-            width={56}
-            height={56}
-            className="w-14 h-14 object-contain mb-1"
+            width={48}
+            height={48}
+            className="w-12 h-12 object-contain mb-2"
             onError={(e) => {
               e.currentTarget.src = '/placeholder.png';
             }}
@@ -116,8 +121,8 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
           </span>
         </div>
 
-        <div className="text-center flex-shrink-0">
-          <div className="flex items-center justify-center mb-1">
+        <div className="text-center flex-shrink-0 w-[20%]">
+          <div className="flex items-center justify-center mb-2">
             <span className="text-2xl font-bold min-w-[1.5rem] text-center">{homeScore}</span>
             <span className="text-gray-400 mx-1">-</span>
             <span className="text-2xl font-bold min-w-[1.5rem] text-center">{awayScore}</span>
@@ -125,13 +130,13 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
           <div className={`text-xs ${statusClass}`}>{statusText}</div>
         </div>
 
-        <div className="flex flex-col items-center pl-1 pr-1 w-[50%]">
+        <div className="flex flex-col items-center w-[40%]">
           <Image 
             src={awayTeam.logo || '/placeholder.png'} 
             alt={awayTeam.name} 
-            width={56}
-            height={56}
-            className="w-14 h-14 object-contain mb-1"
+            width={48}
+            height={48}
+            className="w-12 h-12 object-contain mb-2"
             onError={(e) => {
               e.currentTarget.src = '/placeholder.png';
             }}
@@ -142,7 +147,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
         </div>
       </div>
 
-      <div className="py-2 px-3 bg-gray-50 border-t text-center h-8 flex items-center justify-center">
+      <div className="py-2 px-3 bg-gray-50 border-t text-center flex items-center justify-center">
         <span className="text-xs text-blue-600 hover:underline">
           매치 상세 정보
         </span>
@@ -157,7 +162,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
           <CardContent />
         </div>
       ) : (
-        <Link href={`/livescore/football/match/${matchId}`} className="block">
+        <Link href={`/livescore/football/match/${actualMatchId}`} className="block">
           <CardContent />
         </Link>
       )}

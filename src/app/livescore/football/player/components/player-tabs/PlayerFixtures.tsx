@@ -527,20 +527,20 @@ export default function PlayerFixtures({
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="bg-gray-50 text-gray-600">
-                <th className="px-2 py-3 text-left border-b border-gray-200 whitespace-nowrap">날짜</th>
-                <th className="px-2 py-3 text-center border-b border-gray-200 whitespace-nowrap">리그</th>
-                <th className="px-2 py-3 text-right border-b border-gray-200 whitespace-nowrap">홈팀</th>
-                <th className="px-2 py-3 text-center border-b border-gray-200 whitespace-nowrap">스코어</th>
-                <th className="px-2 py-3 text-left border-b border-gray-200 whitespace-nowrap">원정팀</th>
-                <th className="px-2 py-3 text-center border-b border-gray-200 whitespace-nowrap">결과</th>
-                <th className="px-2 py-3 text-center border-b border-gray-200 whitespace-nowrap">출전</th>
-                <th className="px-2 py-3 text-center border-b border-gray-200 whitespace-nowrap">평점</th>
-                <th className="px-2 py-3 text-center border-b border-gray-200 whitespace-nowrap">골</th>
-                <th className="px-2 py-3 text-center border-b border-gray-200 whitespace-nowrap">도움</th>
-                <th className="px-2 py-3 text-center border-b border-gray-200 whitespace-nowrap">슈팅</th>
-                <th className="px-2 py-3 text-center border-b border-gray-200 whitespace-nowrap">유효</th>
-                <th className="px-2 py-3 text-center border-b border-gray-200 whitespace-nowrap">패스</th>
-                <th className="px-2 py-3 text-center border-b border-gray-200 whitespace-nowrap">키패스</th>
+                <th className="px-2 py-3 text-left border-b border-gray-200 whitespace-nowrap text-xs font-medium text-gray-500 uppercase tracking-wider">날짜</th>
+                <th className="px-2 py-3 text-center border-b border-gray-200 whitespace-nowrap text-xs font-medium text-gray-500 uppercase tracking-wider">리그</th>
+                <th className="px-2 py-3 text-right border-b border-gray-200 whitespace-nowrap text-xs font-medium text-gray-500 uppercase tracking-wider">홈팀</th>
+                <th className="px-2 py-3 text-center border-b border-gray-200 whitespace-nowrap text-xs font-medium text-gray-500 uppercase tracking-wider">스코어</th>
+                <th className="px-2 py-3 text-left border-b border-gray-200 whitespace-nowrap text-xs font-medium text-gray-500 uppercase tracking-wider">원정팀</th>
+                <th className="px-2 py-3 text-center border-b border-gray-200 whitespace-nowrap text-xs font-medium text-gray-500 uppercase tracking-wider">결과</th>
+                <th className="px-2 py-3 text-center border-b border-gray-200 whitespace-nowrap text-xs font-medium text-gray-500 uppercase tracking-wider">출전</th>
+                <th className="px-2 py-3 text-center border-b border-gray-200 whitespace-nowrap text-xs font-medium text-gray-500 uppercase tracking-wider">평점</th>
+                <th className="px-2 py-3 text-center border-b border-gray-200 whitespace-nowrap text-xs font-medium text-gray-500 uppercase tracking-wider">골</th>
+                <th className="px-2 py-3 text-center border-b border-gray-200 whitespace-nowrap text-xs font-medium text-gray-500 uppercase tracking-wider">도움</th>
+                <th className="px-2 py-3 text-center border-b border-gray-200 whitespace-nowrap text-xs font-medium text-gray-500 uppercase tracking-wider">슈팅</th>
+                <th className="px-2 py-3 text-center border-b border-gray-200 whitespace-nowrap text-xs font-medium text-gray-500 uppercase tracking-wider">유효</th>
+                <th className="px-2 py-3 text-center border-b border-gray-200 whitespace-nowrap text-xs font-medium text-gray-500 uppercase tracking-wider">패스</th>
+                <th className="px-2 py-3 text-center border-b border-gray-200 whitespace-nowrap text-xs font-medium text-gray-500 uppercase tracking-wider">키패스</th>
               </tr>
             </thead>
             <tbody>
@@ -648,7 +648,7 @@ export default function PlayerFixtures({
                 {/* 첫 번째 줄: 날짜, 리그, 홈팀, 스코어, 원정팀, 결과 */}
                 <div className="flex items-center py-2 px-2">
                   {/* 날짜 */}
-                  <div className="flex-shrink-0 w-[70px] text-xs text-gray-500">
+                  <div className="flex-shrink-0 w-[70px] text-xs text-gray-500 whitespace-nowrap">
                     {format(new Date(fixture.fixture.date), 'yyyy-MM-dd', { locale: ko })}
                   </div>
                   
