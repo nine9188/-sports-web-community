@@ -3,6 +3,29 @@
 import { useRef, useEffect, useState } from 'react';
 import styles from '../styles/formation.module.css';
 
+// 미디어 쿼리를 사용하기 위한 커스텀 훅
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(query);
+    const updateMatches = () => setMatches(mediaQuery.matches);
+    
+    // 초기값 설정
+    updateMatches();
+    
+    // 리스너 등록
+    mediaQuery.addEventListener('change', updateMatches);
+    
+    // 클린업
+    return () => {
+      mediaQuery.removeEventListener('change', updateMatches);
+    };
+  }, [query]);
+
+  return matches;
+}
+
 interface PlayerData {
   id: number;
   name: string;
@@ -39,78 +62,115 @@ interface PlayerProps {
   awayTeamData: TeamData;
 }
 
-const getPositionFromGrid = (grid: string | null, isHome: boolean, formation: string) => {
-  if (!grid) return { x: 50, y: 28 };
-
-  const [line, position] = grid.split(':').map(Number);
-  const formationArray = formation.split('-').map(Number);
-  
-  const getPosition = (line: number, isHome: boolean) => {
-    // 가로 모드 위치만 사용
-    if (isHome) {
-      switch(line) {
-        case 1: return { x: 5, y: 28 };     // 시작점 - GK
-        case 2: return { x: 15, y: 28 };    // 5 + 10 - DF
-        case 3: return { x: 25, y: 28 };    // 5 + 20 - MF
-        case 4: return { x: 35, y: 28 };    // 5 + 30 - AM
-        case 5: return { x: 45, y: 28 };    // 5 + 40 - FW
-        default: return { x: 50, y: 28 };
-      }
-    } else {
-      switch(line) {
-        case 1: return { x: 95, y: 28 };    // 끝점 - GK
-        case 2: return { x: 85, y: 28 };    // 95 - 10 - DF
-        case 3: return { x: 75, y: 28 };    // 95 - 20 - MF
-        case 4: return { x: 65, y: 28 };    // 95 - 30 - AM
-        case 5: return { x: 55, y: 28 };    // 95 - 40 - FW
-        default: return { x: 50, y: 28 };
-      }
-    }
-  };
-
-  const basePosition = getPosition(line, isHome);
-  
-  // 라인에 따른 선수 수 계산
-  const getLinePlayerCount = (lineNum: number) => {
-    switch(lineNum) {
-      case 2: return formationArray[0];  // DF
-      case 3: return formationArray[1];  // MF/WB
-      case 4: return formationArray[2];  // AM/FW
-      case 5: return formationArray[3] || 0;  // FW
-      default: return 1;  // GK
-    }
-  };
-
-  const totalInLine = getLinePlayerCount(line);
-  const offset = calculateOffset(position, totalInLine);
-
-  // y축으로 offset 적용
-  return {
-    x: basePosition.x,
-    y: basePosition.y + offset
-  };
-};
-
-const calculateOffset = (position: number, totalInLine: number) => {
-  if (totalInLine === 1) return 0;  // 단일 선수는 중앙
-  
-  const totalSpace = 52;  // 전체 사용 가능한 공간
-  const spacing = totalSpace / (totalInLine + 1);  // 선수들 사이의 간격
-  
-  // 중앙을 기준으로 위치 계산
-  const centerPosition = (totalInLine + 1) / 2;
-  const offset = (position - centerPosition) * spacing;
-  
-  return offset;  // 중앙 기준으로 offset 반환
-};
-
 const Player = ({ homeTeamData, awayTeamData }: PlayerProps) => {
   const textRefs = useRef<{[key: string]: SVGTextElement | null}>({});
   const rectRefs = useRef<{[key: string]: SVGRectElement | null}>({});
   
+  // 모바일 여부 확인 (768px 이하면 모바일로 간주)
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  
   // 이미지 로딩 상태를 관리하는 상태 추가
   const [loadedImages, setLoadedImages] = useState<{[key: string]: boolean}>({});
   const [failedImages, setFailedImages] = useState<{[key: string]: boolean}>({});
+  
+  // 뷰박스 설정 - 모바일과 데스크탑에 따라 다르게 설정
+  const viewBox = isMobile ? "0 0 56 100" : "0 0 100 56";
+  
+  // 포지션 계산 함수 - 모바일과 데스크탑에 따라 다르게 계산
+  const getPositionFromGrid = (grid: string | null, isHome: boolean, formation: string) => {
+    if (!grid) return isMobile ? { x: 28, y: 50 } : { x: 50, y: 28 };
+
+    const [line, position] = grid.split(':').map(Number);
+    const formationArray = formation.split('-').map(Number);
+    
+    const getPosition = (line: number, isHome: boolean) => {
+      if (isMobile) {
+        // 모바일(세로형) 환경에서의 위치
+        if (isHome) {
+          switch(line) {
+            case 1: return { x: 28, y: 93 };     // 맨 아래 - GK
+            case 2: return { x: 28, y: 84 };     // 95 - 10 - DF
+            case 3: return { x: 28, y: 74 };     // 95 - 20 - MF
+            case 4: return { x: 28, y: 64 };     // 95 - 30 - AM
+            case 5: return { x: 28, y: 54 };     // 95 - 40 - FW
+            default: return { x: 28, y: 50 };
+          }
+        } else {
+          switch(line) {
+            case 1: return { x: 28, y: 5 };      // 맨 위 - GK
+            case 2: return { x: 28, y: 15 };     // 5 + 10 - DF
+            case 3: return { x: 28, y: 25 };     // 5 + 20 - MF
+            case 4: return { x: 28, y: 35 };     // 5 + 30 - AM
+            case 5: return { x: 28, y: 45 };     // 5 + 40 - FW
+            default: return { x: 28, y: 50 };
+          }
+        }
+      } else {
+        // 데스크탑(가로형) 환경에서의 위치
+        if (isHome) {
+          switch(line) {
+            case 1: return { x: 5, y: 28 };     // 시작점 - GK
+            case 2: return { x: 15, y: 28 };    // DF
+            case 3: return { x: 25, y: 28 };    // MF
+            case 4: return { x: 35, y: 28 };    // AM
+            case 5: return { x: 45, y: 28 };    // FW
+            default: return { x: 50, y: 28 };
+          }
+        } else {
+          switch(line) {
+            case 1: return { x: 95, y: 28 };    // 끝점 - GK
+            case 2: return { x: 85, y: 28 };    // DF
+            case 3: return { x: 75, y: 28 };    // MF
+            case 4: return { x: 65, y: 28 };    // AM
+            case 5: return { x: 55, y: 28 };    // FW
+            default: return { x: 50, y: 28 };
+          }
+        }
+      }
+    };
+
+    const basePosition = getPosition(line, isHome);
+    
+    // 라인에 따른 선수 수 계산
+    const getLinePlayerCount = (lineNum: number) => {
+      switch(lineNum) {
+        case 2: return formationArray[0];  // DF
+        case 3: return formationArray[1];  // MF/WB
+        case 4: return formationArray[2];  // AM/FW
+        case 5: return formationArray[3] || 0;  // FW
+        default: return 1;  // GK
+      }
+    };
+
+    const totalInLine = getLinePlayerCount(line);
+    const offset = calculateOffset(position, totalInLine);
+
+    // 모바일(세로형)에서는 x축으로, 데스크탑(가로형)에서는 y축으로 offset 적용
+    if (isMobile) {
+      return {
+        x: basePosition.x + offset,
+        y: basePosition.y
+      };
+    } else {
+      return {
+        x: basePosition.x,
+        y: basePosition.y + offset
+      };
+    }
+  };
+
+  const calculateOffset = (position: number, totalInLine: number) => {
+    if (totalInLine === 1) return 0;  // 단일 선수는 중앙
+    
+    const totalSpace = 52;  // 전체 사용 가능한 공간
+    const spacing = totalSpace / (totalInLine + 1);  // 선수들 사이의 간격
+    
+    // 중앙을 기준으로 위치 계산
+    const centerPosition = (totalInLine + 1) / 2;
+    const offset = (position - centerPosition) * spacing;
+    
+    return offset;  // 중앙 기준으로 offset 반환
+  };
   
   // 텍스트 크기에 맞게 배경 조정하는 함수
   useEffect(() => {
@@ -130,7 +190,7 @@ const Player = ({ homeTeamData, awayTeamData }: PlayerProps) => {
         rectElement.setAttribute('y', `${bbox.y - heightPadding * 0.5}`); // y 위치 조정
       }
     });
-  }, [homeTeamData, awayTeamData, loadedImages]); // 이미지 로딩 상태가 변경될 때도 재실행
+  }, [homeTeamData, awayTeamData, loadedImages, isMobile]); // isMobile 상태가 변경될 때도 재실행
 
   // 이미지 로딩 핸들러
   const handleImageLoad = (id: string) => {
@@ -274,9 +334,6 @@ const Player = ({ homeTeamData, awayTeamData }: PlayerProps) => {
       );
     });
   };
-
-  // SVG 좌표계 설정
-  const viewBox = "0 0 100 56";
   
   return (
     <svg className={styles.formation} viewBox={viewBox} preserveAspectRatio="xMidYMid meet">
