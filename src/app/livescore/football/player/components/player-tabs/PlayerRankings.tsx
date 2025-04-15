@@ -162,30 +162,37 @@ export default function PlayerRankings({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="mb-4 bg-white rounded-lg">
       {/* 랭킹 타입 선택 */}
-      <div className="flex gap-2 overflow-x-auto pb-4 sticky top-0 bg-white z-10">
-        {rankingTypes.map((type) => (
-          <button
-            key={type.id}
-            onClick={() => setRankingType(type.id)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap min-w-[100px] ${
-              rankingType === type.id
-                ? 'bg-blue-100 text-blue-700'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            {type.label}
-          </button>
-        ))}
+      <div className="mb-4 bg-white rounded-lg border overflow-hidden">
+        <div className="flex overflow-x-auto sticky top-0 bg-white z-10" 
+          style={{ 
+            scrollbarWidth: 'none', 
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch'
+          }}>
+          {rankingTypes.map((type) => (
+            <button
+              key={type.id}
+              onClick={() => setRankingType(type.id)}
+              className={`px-3 py-3 text-sm font-medium flex-1 text-center whitespace-nowrap ${
+                rankingType === type.id
+                  ? 'text-blue-600 border-b-3 border-blue-600 font-semibold'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {type.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* 상위 3위 메달 디스플레이 - 높이 고정 */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-4 my-4">
         {getRankingData().slice(0, 3).map((player: PlayerRanking, index: number) => (
           <div 
             key={player?.player?.id || `empty-${index}`}
-            className={`relative bg-white rounded-lg shadow-md p-3 flex flex-col items-center min-h-[180px] ${
+            className={`relative bg-white rounded-lg border p-3 flex flex-col items-center min-h-[180px] ${
               player?.player?.id ? 'cursor-pointer hover:shadow-lg transition-shadow' : ''
             }`}
             onClick={() => player?.player?.id ? navigateToPlayer(player.player.id) : null}
@@ -231,7 +238,7 @@ export default function PlayerRankings({
       </div>
 
       {/* 4-10위 테이블 - 최소 높이 고정 */}
-      <div className="overflow-x-auto min-h-[300px]">
+      <div className="overflow-x-auto min-h-[300px] border rounded-lg">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
