@@ -68,7 +68,6 @@ export default function PlayerRankings({
   const router = useRouter();
   const [rankingType, setRankingType] = useState('topScorers');
   const [rankings, setRankings] = useState<RankingsData>(initialRankingsData || {});
-  const [isLoading, setIsLoading] = useState<boolean>(!initialRankingsData);
 
   // 컴포넌트 마운트 시 랭킹 데이터 가져오기
   useEffect(() => {
@@ -79,7 +78,6 @@ export default function PlayerRankings({
     }
     
     const fetchRankings = async () => {
-      setIsLoading(true);
       try {
         // API 요청 URL 설정
         const apiUrl = baseUrl 
@@ -97,8 +95,6 @@ export default function PlayerRankings({
       } catch (error) {
         console.error('랭킹 데이터 로딩 오류:', error);
         setRankings({});
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -115,8 +111,6 @@ export default function PlayerRankings({
     { id: 'topRedCards', label: '최다 레드카드' },
     { id: 'topYellowCards', label: '최다 옐로카드' },
   ];
-
-  if (isLoading) return <div className="text-center py-8">로딩 중...</div>;
 
   if (!currentLeague) return <div className="text-center py-8">리그 정보를 찾을 수 없습니다.</div>;
 

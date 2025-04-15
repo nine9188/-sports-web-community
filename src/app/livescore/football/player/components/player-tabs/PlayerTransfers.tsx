@@ -40,7 +40,6 @@ export default function PlayerTransfers({
   transfersData: initialTransfersData = []
 }: PlayerTransfersProps) {
   const [transfersData, setTransfersData] = useState<Transfer[]>(initialTransfersData);
-  const [loading, setLoading] = useState<boolean>(initialTransfersData.length === 0);
   const [error, setError] = useState<string | null>(null);
 
   // 컴포넌트 마운트 시 이적 데이터 가져오기
@@ -50,8 +49,6 @@ export default function PlayerTransfers({
     
     const fetchTransfersData = async () => {
       try {
-        setLoading(true);
-        
         // API 요청 URL 설정
         const apiUrl = baseUrl 
           ? `${baseUrl}/api/livescore/football/players/${playerId}/transfers` 
@@ -69,8 +66,6 @@ export default function PlayerTransfers({
         console.error('이적 데이터 로딩 오류:', error);
         setError('이적 정보를 불러오는데 실패했습니다.');
         setTransfersData([]);
-      } finally {
-        setLoading(false);
       }
     };
     
@@ -87,17 +82,6 @@ export default function PlayerTransfers({
     return `${type}`;
   };
   
-  if (loading) {
-    return (
-      <div className="mb-4 bg-white rounded-lg">
-        <div className="flex flex-col justify-center items-center py-6">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500 mb-3"></div>
-          <p className="text-gray-600 text-sm font-medium">이적 정보를 불러오는 중입니다...</p>
-        </div>
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="mb-4 bg-white rounded-lg">

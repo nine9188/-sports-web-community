@@ -1,16 +1,9 @@
 'use client';
 
-import { useState, useRef, Suspense, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import classNames from 'classnames';
 import dynamic from 'next/dynamic';
 import { PlayerData, StatisticsData, FixtureData, TrophyData, TransferData, InjuryData, RankingsData } from '../types/player';
-
-// 탭 컴포넌트 로딩 상태 표시 컴포넌트
-const TabLoading = () => (
-  <div className="py-10 flex justify-center items-center">
-    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900"></div>
-  </div>
-);
 
 // 필요한 인터페이스 정의
 interface Tab {
@@ -31,29 +24,23 @@ interface PlayerTabsClientProps {
 
 // 동적 임포트로 탭 컴포넌트 로드 (첫 번째 탭만 SSR 활성화)
 const PlayerStats = dynamic(() => import('./player-tabs/PlayerStats'), {
-  loading: () => <TabLoading />,
   ssr: true // 첫 번째 탭은 SSR로 렌더링
 });
 
 // 나머지 탭은 필요시 로드 (CSR)
 const PlayerFixtures = dynamic(() => import('./player-tabs/PlayerFixtures'), {
-  loading: () => <TabLoading />,
   ssr: false
 });
 const PlayerTrophies = dynamic(() => import('./player-tabs/PlayerTrophies'), {
-  loading: () => <TabLoading />,
   ssr: false
 });
 const PlayerTransfers = dynamic(() => import('./player-tabs/PlayerTransfers'), {
-  loading: () => <TabLoading />,
   ssr: false
 });
 const PlayerInjuries = dynamic(() => import('./player-tabs/PlayerInjuries'), {
-  loading: () => <TabLoading />,
   ssr: false
 });
 const PlayerRankings = dynamic(() => import('./player-tabs/PlayerRankings'), {
-  loading: () => <TabLoading />,
   ssr: false
 });
 
@@ -69,13 +56,12 @@ export default function PlayerTabsClient({
 }: PlayerTabsClientProps) {
   // 상태 관리 (항상 최상위에서 Hook 호출)
   const [activeTab, setActiveTab] = useState<string>('stats');
-  const [isLoading, setIsLoading] = useState(false);
   
   // 각 탭의 데이터를 캐시하기 위한 상태
-  const [fixtures, setFixtures] = useState<{ data: FixtureData[] } | undefined>(undefined);
-  const [trophies, setTrophies] = useState<TrophyData[] | undefined>(undefined);
-  const [transfers, setTransfers] = useState<TransferData[] | undefined>(undefined);
-  const [injuries, setInjuries] = useState<InjuryData[] | undefined>(undefined);
+  const [fixtures, setFixtures] = useState<{ data: FixtureData[] }>({ data: [] });
+  const [trophies, setTrophies] = useState<TrophyData[]>([]);
+  const [transfers, setTransfers] = useState<TransferData[]>([]);
+  const [injuries, setInjuries] = useState<InjuryData[]>([]);
   const [rankings, setRankings] = useState<RankingsData | undefined>(undefined);
   
   // 이미 로드된 탭을 추적하는 ref
@@ -83,7 +69,7 @@ export default function PlayerTabsClient({
   
   // 탭 데이터를 가져오는 함수
   const loadTabData = useCallback(async (tabId: string) => {
-    // playerId가 없는 경우의 체크는 함수 내부에서 수행합니다
+    // playerId가 없는 경우 처리 생략
     if (!playerId) return;
     
     // 이미 로드된 탭이면 건너뜀
@@ -91,64 +77,111 @@ export default function PlayerTabsClient({
       return;
     }
     
-    setIsLoading(true);
+    // 현재 날짜 기준으로 시즌 계산 (7월 이후면 새 시즌으로 간주)
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    const currentSeason = currentMonth >= 6 ? currentYear : currentYear - 1;
     
-    try {
-      switch (tabId) {
-        case 'fixtures':
-          if (!fixtures) {
-            const response = await fetch(`${baseUrl}/api/livescore/football/players/${playerId}/fixtures?season=${defaultSeason}&per_page=30`);
-            if (response.ok) {
-              const data = await response.json();
+    // 사용 가능한 시즌 중 현재 시즌과 가장 가까운 시즌 찾기
+    const sortedSeasons = [...(seasons || [])].sort((a, b) => b - a);
+    const calculatedSeason = sortedSeasons.length > 0 
+      ? sortedSeasons.reduce((closest, season) => {
+          const currentDiff = Math.abs(currentSeason - season);
+          const closestDiff = Math.abs(currentSeason - closest);
+          return currentDiff < closestDiff ? season : closest;
+        }, sortedSeasons[0])
+      : defaultSeason;
+      
+    // 계산된 시즌 사용
+    const seasonToUse = calculatedSeason;
+    
+    switch (tabId) {
+      case 'fixtures':
+        try {
+          console.log(`Fetching fixtures for player: ${playerId}, season: ${seasonToUse}`);
+          const response = await fetch(`${baseUrl}/api/livescore/football/players/${playerId}/fixtures?season=${seasonToUse}`);
+          if (response.ok) {
+            const data = await response.json();
+            console.log(`Fixtures data received: ${data?.data?.length || 0} items`);
+            if (data && data.data && data.data.length > 0) {
               setFixtures(data);
+              loadedTabs.current.add(tabId);
+            } else {
+              setFixtures({ data: [] });
             }
+          } else {
+            setFixtures({ data: [] });
           }
-          break;
-        case 'trophies':
-          if (!trophies) {
-            const response = await fetch(`${baseUrl}/api/livescore/football/players/${playerId}/trophies`);
-            if (response.ok) {
-              const data = await response.json();
-              setTrophies(data);
-            }
+        } catch (error) {
+          console.error('Error fetching fixtures data:', error);
+          setFixtures({ data: [] });
+        }
+        break;
+      case 'trophies':
+        try {
+          const response = await fetch(`${baseUrl}/api/livescore/football/players/${playerId}/trophies`);
+          if (response.ok) {
+            const data = await response.json();
+            setTrophies(data || []);
+            loadedTabs.current.add(tabId);
+          } else {
+            setTrophies([]);
           }
-          break;
-        case 'transfers':
-          if (!transfers) {
-            const response = await fetch(`${baseUrl}/api/livescore/football/players/${playerId}/transfers`);
-            if (response.ok) {
-              const data = await response.json();
-              setTransfers(data);
-            }
+        } catch (error) {
+          console.error('Error fetching trophies data:', error);
+          setTrophies([]);
+        }
+        break;
+      case 'transfers':
+        try {
+          const response = await fetch(`${baseUrl}/api/livescore/football/players/${playerId}/transfers`);
+          if (response.ok) {
+            const data = await response.json();
+            setTransfers(data || []);
+            loadedTabs.current.add(tabId);
+          } else {
+            setTransfers([]);
           }
-          break;
-        case 'injuries':
-          if (!injuries) {
-            const response = await fetch(`${baseUrl}/api/livescore/football/players/${playerId}/injuries`);
-            if (response.ok) {
-              const data = await response.json();
-              setInjuries(data);
-            }
+        } catch (error) {
+          console.error('Error fetching transfers data:', error);
+          setTransfers([]);
+        }
+        break;
+      case 'injuries':
+        try {
+          const response = await fetch(`${baseUrl}/api/livescore/football/players/${playerId}/injuries`);
+          if (response.ok) {
+            const data = await response.json();
+            setInjuries(data || []);
+            loadedTabs.current.add(tabId);
+          } else {
+            setInjuries([]);
           }
-          break;
-        case 'rankings':
-          if (!rankings && currentLeagueId) {
+        } catch (error) {
+          console.error('Error fetching injuries data:', error);
+          setInjuries([]);
+        }
+        break;
+      case 'rankings':
+        if (currentLeagueId) {
+          try {
             const response = await fetch(`${baseUrl}/api/livescore/football/players/${playerId}/rankings?league=${currentLeagueId}`);
             if (response.ok) {
               const data = await response.json();
-              setRankings(data);
+              setRankings(data || {});
+              loadedTabs.current.add(tabId);
+            } else {
+              setRankings({});
             }
+          } catch (error) {
+            console.error('Error fetching rankings data:', error);
+            setRankings({});
           }
-          break;
-      }
-      // 로드 완료 후 탭을 로드된 탭 목록에 추가
-      loadedTabs.current.add(tabId);
-    } catch (error) {
-      console.error(`Error loading ${tabId} data:`, error);
-    } finally {
-      setIsLoading(false);
+        }
+        break;
     }
-  }, [playerId, baseUrl, fixtures, trophies, transfers, injuries, rankings, currentLeagueId, defaultSeason]);
+  }, [playerId, baseUrl, currentLeagueId, defaultSeason, seasons]);
   
   // 컴포넌트 마운트 시 로컬 스토리지에서 활성 탭 복원
   useEffect(() => {
@@ -190,6 +223,22 @@ export default function PlayerTabsClient({
   }
 
   // 각 탭별 props 준비
+  // 현재 날짜 기준으로 시즌 계산 (7월 이후면 새 시즌으로 간주)
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  const currentSeason = currentMonth >= 6 ? currentYear : currentYear - 1;
+  
+  // 사용 가능한 시즌 중 현재 시즌과 가장 가까운 시즌 찾기
+  const sortedSeasons = [...(seasons || [])].sort((a, b) => b - a);
+  const calculatedSeason = sortedSeasons.length > 0 
+    ? sortedSeasons.reduce((closest, season) => {
+        const currentDiff = Math.abs(currentSeason - season);
+        const closestDiff = Math.abs(currentSeason - closest);
+        return currentDiff < closestDiff ? season : closest;
+      }, sortedSeasons[0])
+    : defaultSeason;
+
   const statsProps = {
     statistics: statsData, 
     playerId, 
@@ -200,27 +249,27 @@ export default function PlayerTabsClient({
   const fixturesProps = {
     playerId,
     seasons: seasons ? [...seasons].sort((a, b) => b - a) : [],  // 최신 시즌이 먼저 오도록 내림차순 정렬
-    fixturesData: fixtures || { data: [] },
-    initialSeason: defaultSeason,
+    fixturesData: fixtures,
+    initialSeason: calculatedSeason,
     baseUrl
   };
 
   const trophiesProps = {
     playerId,
     baseUrl,
-    trophiesData: trophies || []
+    trophiesData: trophies
   };
 
   const transfersProps = {
     playerId,
     baseUrl,
-    transfersData: transfers || []
+    transfersData: transfers
   };
 
   const injuriesProps = {
     playerId,
     baseUrl,
-    injuriesData: injuries || []
+    injuriesData: injuries
   };
 
   const rankingsProps = {
@@ -264,46 +313,40 @@ export default function PlayerTabsClient({
 
       {/* 탭 컨텐츠 */}
       <div className="relative">
-        {isLoading && (
-          <div className="absolute inset-0 bg-white bg-opacity-50 flex items-center justify-center z-10">
-            <TabLoading />
-          </div>
-        )}
-        
         {activeTab === 'stats' && (
-          <Suspense fallback={<TabLoading />}>
+          <div className="min-h-[300px]">
             <PlayerStats {...statsProps} />
-          </Suspense>
+          </div>
         )}
 
         {activeTab === 'fixtures' && (
-          <Suspense fallback={<TabLoading />}>
+          <div className="min-h-[300px]">
             <PlayerFixtures {...fixturesProps} />
-          </Suspense>
+          </div>
         )}
 
         {activeTab === 'trophies' && (
-          <Suspense fallback={<TabLoading />}>
+          <div className="min-h-[300px]">
             <PlayerTrophies {...trophiesProps} />
-          </Suspense>
+          </div>
         )}
 
         {activeTab === 'transfers' && (
-          <Suspense fallback={<TabLoading />}>
+          <div className="min-h-[300px]">
             <PlayerTransfers {...transfersProps} />
-          </Suspense>
+          </div>
         )}
 
         {activeTab === 'injuries' && (
-          <Suspense fallback={<TabLoading />}>
+          <div className="min-h-[300px]">
             <PlayerInjuries {...injuriesProps} />
-          </Suspense>
+          </div>
         )}
 
         {activeTab === 'rankings' && currentLeagueId && (
-          <Suspense fallback={<TabLoading />}>
+          <div className="min-h-[300px]">
             <PlayerRankings {...rankingsProps} />
-          </Suspense>
+          </div>
         )}
 
         {activeTab === 'rankings' && !currentLeagueId && (

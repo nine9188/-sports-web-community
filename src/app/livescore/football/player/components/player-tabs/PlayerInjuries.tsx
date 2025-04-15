@@ -131,7 +131,6 @@ export default function PlayerInjuries({
   injuriesData: initialInjuriesData = [] 
 }: PlayerInjuriesProps) {
   const [injuriesData, setInjuriesData] = useState<Injury[]>(initialInjuriesData);
-  const [loading, setLoading] = useState<boolean>(initialInjuriesData.length === 0);
   const [error, setError] = useState<string | null>(null);
 
   // 컴포넌트 마운트 시 부상 데이터 가져오기
@@ -141,8 +140,6 @@ export default function PlayerInjuries({
     
     const fetchInjuriesData = async () => {
       try {
-        setLoading(true);
-        
         // API 요청 URL 설정
         const apiUrl = baseUrl 
           ? `${baseUrl}/api/livescore/football/players/${playerId}/injuries` 
@@ -160,8 +157,6 @@ export default function PlayerInjuries({
         console.error('부상 데이터 로딩 오류:', error);
         setError('부상 정보를 불러오는데 실패했습니다.');
         setInjuriesData([]);
-      } finally {
-        setLoading(false);
       }
     };
     
@@ -229,17 +224,6 @@ export default function PlayerInjuries({
     // 매칭되는 것이 없을 경우 원본 반환
     return reason;
   };
-
-  if (loading) {
-    return (
-      <div className="bg-white rounded-lg">
-        <div className="flex flex-col justify-center items-center py-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-1"></div>
-          <p className="text-gray-600 text-sm">부상 정보를 불러오는 중...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (error) {
     return (

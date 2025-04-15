@@ -88,7 +88,7 @@ export default function PlayerFixtures({
   const [selectedSeason, setSelectedSeason] = useState<number>(initialSeason);
   const [selectedLeague, setSelectedLeague] = useState<string>('');
   const [fixturesData, setFixturesData] = useState<{ data: FixtureData[] }>(initialFixturesData);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(!initialFixturesData.data || initialFixturesData.data.length === 0);
   const [error, setError] = useState<string | null>(null);
   
   // 페이지네이션 상태
@@ -192,17 +192,22 @@ export default function PlayerFixtures({
       }
       return;
     }
+
+    // 시즌이 이미 선택되어 있으면 해당 시즌 데이터 로드
+    if (selectedSeason) {
+      console.log(`초기 데이터가 없어 데이터 로드 시도: ${selectedSeason} 시즌`);
+      fetchFixturesData(selectedSeason);
+    }
     
-    fetchFixturesData(selectedSeason);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchFixturesData]);  // 마운트 시 1회만 실행되도록 의존성 최소화
+  }, [fetchFixturesData, selectedSeason]);
 
   // 시즌이 변경될 때 새 데이터 가져오기
   useEffect(() => {
     // 이미 캐시된 데이터가 있으면 사용하고, 없으면 새로 가져오기
-    if (cachedDataRef.current[selectedSeason]?.data?.length > 0) {
+    if (selectedSeason && cachedDataRef.current[selectedSeason]?.data?.length > 0) {
       setFixturesData(cachedDataRef.current[selectedSeason]);
-    } else {
+    } else if (selectedSeason) {
       fetchFixturesData(selectedSeason);
     }
   }, [selectedSeason, fetchFixturesData]);
@@ -400,7 +405,7 @@ export default function PlayerFixtures({
     );
   }
 
-  // 데이터가 없을 때 표시 - 개선된 빈 상태 UI
+  // 데이터가 없을 때 표시 - 개선된 빈 상태 UI와 재시도 버튼
   if (!fixturesData.data || fixturesData.data.length === 0) {
     return (
       <div className="mb-4 bg-white rounded-lg border overflow-hidden p-6">
@@ -420,10 +425,16 @@ export default function PlayerFixtures({
             />
           </svg>
           <p className="text-lg font-medium text-gray-600">경기 기록이 없습니다</p>
-          <p className="text-sm text-gray-500 mt-2">
-            {selectedSeason} 시즌에 대한 경기 기록이 없습니다.<br />
-            다른 시즌을 선택해 보세요.
+          <p className="text-sm text-gray-500 mt-2 mb-4">
+            {selectedSeason} 시즌에 대한 경기 기록을 찾을 수 없습니다.<br />
+            다른 시즌을 선택하거나 아래 버튼을 클릭하여 다시 시도해 보세요.
           </p>
+          <button
+            onClick={() => fetchFixturesData(selectedSeason)}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+          >
+            다시 시도
+          </button>
         </div>
       </div>
     );
@@ -443,7 +454,14 @@ export default function PlayerFixtures({
               <select
                 id="fixture-season-select"
                 value={selectedSeason}
-                onChange={(e) => setSelectedSeason(Number(e.target.value))}
+                onChange={(e) => {
+                  const newSeason = Number(e.target.value);
+                  setSelectedSeason(newSeason);
+                  // 시즌이 변경되면 캐시된 데이터가 있는지 확인하고 없으면 새로 데이터 가져오기
+                  if (!cachedDataRef.current[newSeason] || cachedDataRef.current[newSeason].data.length === 0) {
+                    fetchFixturesData(newSeason);
+                  }
+                }}
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               >
                 {availableSeasons.map((season: number) => (

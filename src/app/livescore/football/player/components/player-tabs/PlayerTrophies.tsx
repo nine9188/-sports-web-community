@@ -24,7 +24,6 @@ export default function PlayerTrophies({
   trophiesData: initialTrophiesData = [] 
 }: PlayerTrophiesProps) {
   const [trophiesData, setTrophiesData] = useState<Trophy[]>(initialTrophiesData);
-  const [loading, setLoading] = useState<boolean>(initialTrophiesData.length === 0);
   const [error, setError] = useState<string | null>(null);
   
   // 트로피 종류별 분류 및 집계
@@ -46,8 +45,6 @@ export default function PlayerTrophies({
     
     const fetchTrophiesData = async () => {
       try {
-        setLoading(true);
-        
         // API 요청 URL 설정
         const apiUrl = baseUrl 
           ? `${baseUrl}/api/livescore/football/players/${playerId}/trophies` 
@@ -65,24 +62,11 @@ export default function PlayerTrophies({
         console.error('트로피 데이터 로딩 오류:', error);
         setError('트로피 정보를 불러오는데 실패했습니다.');
         setTrophiesData([]);
-      } finally {
-        setLoading(false);
       }
     };
     
     fetchTrophiesData();
   }, [playerId, baseUrl, initialTrophiesData.length]);
-
-  if (loading) {
-    return (
-      <div className="mb-4 bg-white rounded-lg border p-4">
-        <div className="flex flex-col justify-center items-center py-6">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500 mb-3"></div>
-          <p className="text-gray-600 text-sm font-medium">트로피 정보를 불러오는 중입니다...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (error) {
     return (

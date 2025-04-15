@@ -185,8 +185,26 @@ export default function PlayerStats({
   // 시즌 목록 가져오기
   useEffect(() => {
     if (preloadedSeasons && preloadedSeasons.length > 0) {
-      setSeasons(preloadedSeasons);
-      setSelectedSeason(preloadedSeasons[0]);
+      // 내림차순 정렬 (최신 시즌 먼저)
+      const sortedSeasons = [...preloadedSeasons].sort((a, b) => b - a);
+      setSeasons(sortedSeasons);
+      
+      // 현재 시즌과 가장 가까운 시즌 선택
+      if (sortedSeasons.length > 0) {
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth();
+        // 7월 이후면 다음 시즌으로 간주 (예: 2024년 7월 이후면 2024/2025 시즌)
+        const adjustedYear = currentMonth >= 6 ? currentYear : currentYear - 1;
+        
+        const closestSeason = sortedSeasons.reduce((closest, season) => {
+          const currentDiff = Math.abs(adjustedYear - season);
+          const closestDiff = Math.abs(adjustedYear - closest);
+          return currentDiff < closestDiff ? season : closest;
+        }, sortedSeasons[0]);
+        
+        setSelectedSeason(closestSeason);
+      }
     } else {
       const fetchPlayerSeasons = async () => {
         try {
@@ -204,9 +222,21 @@ export default function PlayerStats({
             const sortedSeasons = [...data.seasons].sort((a, b) => b - a);
             setSeasons(sortedSeasons);
             
-            // 첫 번째 시즌 자동 선택
+            // 현재 시즌과 가장 가까운 시즌 선택
             if (sortedSeasons.length > 0) {
-              setSelectedSeason(sortedSeasons[0]);
+              const now = new Date();
+              const currentYear = now.getFullYear();
+              const currentMonth = now.getMonth();
+              // 7월 이후면 다음 시즌으로 간주 (예: 2024년 7월 이후면 2024/2025 시즌)
+              const adjustedYear = currentMonth >= 6 ? currentYear : currentYear - 1;
+              
+              const closestSeason = sortedSeasons.reduce((closest, season) => {
+                const currentDiff = Math.abs(adjustedYear - season);
+                const closestDiff = Math.abs(adjustedYear - closest);
+                return currentDiff < closestDiff ? season : closest;
+              }, sortedSeasons[0]);
+              
+              setSelectedSeason(closestSeason);
             }
           }
         } catch (err) {
