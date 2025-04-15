@@ -183,16 +183,6 @@ export async function POST(req: NextRequest) {
       return map;
     }, {} as Record<string, number>);
 
-    // 디버깅: 첫 번째 게시글 데이터 확인
-    if (posts.length > 0 && process.env.NODE_ENV === 'development') {
-      console.log('첫 번째 게시글 원본 데이터:', JSON.stringify({
-        id: posts[0].id,
-        title: posts[0].title,
-        views: posts[0].views,
-        likes: posts[0].likes
-      }, null, 2));
-    }
-
     // 포맷된 게시물 데이터 생성
     const formattedPosts = posts.map((post: Post) => {
       const board = boardsMap[post.board_id];

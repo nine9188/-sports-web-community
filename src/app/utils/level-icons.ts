@@ -250,6 +250,7 @@ export async function getIconName(iconId: number): Promise<string | null> {
 // 사용자의 아이콘 정보 가져오기 (캐싱 적용)
 export async function getUserIconInfo(userId: string): Promise<UserIconInfo> {
   if (!userId) {
+    console.warn('프로필 정보 가져오기 실패: 사용자 ID가 제공되지 않았습니다.');
     return getDefaultIconInfo();
   }
   
@@ -269,50 +270,102 @@ export async function getUserIconInfo(userId: string): Promise<UserIconInfo> {
       .eq('id', userId)
       .single();
     
-    if (profileError || !profileData) {
-      console.error('사용자 프로필 정보 가져오기 오류:', profileError);
+    if (profileError) {
+      console.error('사용자 프로필 정보 가져오기 오류:', profileError.message || profileError);
+      // 캐시에 저장된 값이 있으면 그것을 사용하고, 없으면 기본값 사용
+      return cached ? cached.data : saveToCache(userId, getDefaultIconInfo());
+    }
+    
+    if (!profileData) {
+      console.warn('사용자 프로필 정보가 없습니다. 기본값을 사용합니다.');
       return saveToCache(userId, getDefaultIconInfo());
     }
     
+    // 안전하게 값 추출
     const level = profileData.level || 1;
     const exp = profileData.exp || 0;
     const iconId = profileData.icon_id;
     
-    // 유저 메타데이터 가져오기
-    const { data: userData } = await supabase.auth.getUser();
-    const isUsingLevelIcon = userData.user?.user_metadata?.using_level_icon !== false;
-    
-    // 레벨 아이콘 URL
-    const levelIconUrl = getLevelIconUrl(level);
-    
-    // 구매한 아이콘 URL (레벨 아이콘을 사용하지 않는 경우에만)
-    const purchasedIconUrl = !isUsingLevelIcon && iconId 
-      ? await getPurchasedIconUrl(iconId) 
-      : null;
+    try {
+      // 유저 메타데이터 가져오기
+      const { data: userData, error: userDataError } = await supabase.auth.getUser();
       
-    // 아이콘 이름 (레벨 아이콘을 사용하지 않는 경우에만)
-    const iconName = !isUsingLevelIcon && iconId 
-      ? await getIconName(iconId) 
-      : null;
-    
-    // 최종 사용 아이콘 정보
-    const iconInfo: UserIconInfo = {
-      level,
-      exp,
-      iconId,
-      isUsingLevelIcon,
-      levelIconUrl,
-      purchasedIconUrl,
-      iconName,
-      currentIconUrl: isUsingLevelIcon ? levelIconUrl : (purchasedIconUrl || levelIconUrl),
-      currentIconName: isUsingLevelIcon ? `레벨 ${level}` : (iconName || '기본 아이콘')
-    };
-    
-    // 캐시에 저장 후 반환
-    return saveToCache(userId, iconInfo);
+      if (userDataError) {
+        console.error('사용자 메타데이터 가져오기 오류:', userDataError.message || userDataError);
+        // 프로필 데이터는 있지만 메타데이터 오류 시 기본 레벨 아이콘 사용
+        const levelIconUrl = getLevelIconUrl(level);
+        const iconInfo: UserIconInfo = {
+          level,
+          exp,
+          iconId: null,
+          isUsingLevelIcon: true,
+          levelIconUrl,
+          purchasedIconUrl: null,
+          iconName: null,
+          currentIconUrl: levelIconUrl,
+          currentIconName: `레벨 ${level}`
+        };
+        return saveToCache(userId, iconInfo);
+      }
+      
+      // 메타데이터에서 아이콘 설정 확인 (명시적으로 false가 아니면 기본적으로 레벨 아이콘 사용)
+      const isUsingLevelIcon = userData.user?.user_metadata?.using_level_icon !== false;
+      
+      // 레벨 아이콘 URL
+      const levelIconUrl = getLevelIconUrl(level);
+      
+      // 구매한 아이콘 URL (필요한 경우에만)
+      let purchasedIconUrl = null;
+      let iconName = null;
+      
+      if (!isUsingLevelIcon && iconId) {
+        try {
+          // 구매한 아이콘 URL 가져오기
+          purchasedIconUrl = await getPurchasedIconUrl(iconId);
+          // 아이콘 이름 가져오기
+          iconName = await getIconName(iconId);
+        } catch (iconError) {
+          console.error('아이콘 정보 가져오기 실패:', iconError);
+          // 아이콘 정보 가져오기 실패 시 레벨 아이콘으로 대체
+        }
+      }
+      
+      // 최종 사용 아이콘 정보
+      const iconInfo: UserIconInfo = {
+        level,
+        exp,
+        iconId,
+        isUsingLevelIcon,
+        levelIconUrl,
+        purchasedIconUrl,
+        iconName,
+        currentIconUrl: isUsingLevelIcon ? levelIconUrl : (purchasedIconUrl || levelIconUrl),
+        currentIconName: isUsingLevelIcon ? `레벨 ${level}` : (iconName || '기본 아이콘')
+      };
+      
+      // 캐시에 저장 후 반환
+      return saveToCache(userId, iconInfo);
+    } catch (metaError) {
+      console.error('메타데이터 처리 중 오류:', metaError);
+      // 메타데이터 처리 실패 시 기본 레벨 아이콘 사용
+      const levelIconUrl = getLevelIconUrl(level);
+      const iconInfo: UserIconInfo = {
+        level,
+        exp,
+        iconId: null,
+        isUsingLevelIcon: true,
+        levelIconUrl,
+        purchasedIconUrl: null,
+        iconName: null,
+        currentIconUrl: levelIconUrl,
+        currentIconName: `레벨 ${level}`
+      };
+      return saveToCache(userId, iconInfo);
+    }
   } catch (error) {
-    console.error('사용자 아이콘 정보 가져오기 오류:', error);
-    return saveToCache(userId, getDefaultIconInfo());
+    console.error('사용자 아이콘 정보 가져오기 오류:', error instanceof Error ? error.message : String(error));
+    // 캐시된 데이터가 있으면 사용, 없으면 기본값 반환
+    return cached ? cached.data : saveToCache(userId, getDefaultIconInfo());
   }
 }
 

@@ -50,7 +50,6 @@ export default function FootballLiveScoreClient({
     setLoading(true);
     try {
       const formattedDate = format(date, 'yyyy-MM-dd');
-      console.log('Fetching matches for date:', formattedDate);
       
       const response = await fetch(`/api/livescore/football?date=${formattedDate}`);
       const data = await response.json();
@@ -118,9 +117,6 @@ export default function FootballLiveScoreClient({
 
   // 날짜가 변경될 때 데이터 다시 불러오기 (개선된 버전)
   useEffect(() => {
-    const currentFormattedDate = format(selectedDate, 'yyyy-MM-dd');
-    console.log('Current date:', currentFormattedDate, 'Initial date:', initialDate);
-    
     // 날짜가 변경되었을 때마다 항상 fetchMatches 호출
     fetchMatches(selectedDate);
     

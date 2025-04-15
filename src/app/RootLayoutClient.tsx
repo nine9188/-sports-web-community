@@ -53,8 +53,6 @@ export default function RootLayoutClient({ children, boardNavigation }: RootLayo
   // 페이지 전환 감지 및 스크롤 복원 관리
   useEffect(() => {
     if (prevPathnameRef.current !== pathname) {
-      console.log('페이지 전환 감지:', prevPathnameRef.current, '->', pathname);
-      
       // 사이드바가 열려있다면 닫기 (모바일)
       if (isSidebarOpen) {
         setIsSidebarOpen(false);

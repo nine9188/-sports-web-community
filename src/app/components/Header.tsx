@@ -64,23 +64,38 @@ export default function Header({ onMenuClick, isSidebarOpen }: { onMenuClick: ()
         lastUpdated: Date.now()
       }));
       
-      // 아이콘 정보 가져오기
-      const iconInfo = await getUserIconInfo(user.id);
-      
-      // 상태 업데이트 - 배치로 처리하여 렌더링 최적화
-      setProfileData(prev => ({
-        ...prev,
-        iconId: iconInfo.iconId,
-        level: iconInfo.level,
-        usingLevelIcon: iconInfo.isUsingLevelIcon,
-        dataLoaded: true,
-        lastUpdated: Date.now()
-      }));
-      
-      setIconUrl(iconInfo.currentIconUrl);
-      setIconName(iconInfo.currentIconName);
+      try {
+        // 아이콘 정보 가져오기
+        const iconInfo = await getUserIconInfo(user.id);
+        
+        // 아이콘 정보가 유효하지 않은 경우 예외 처리
+        if (!iconInfo) {
+          console.error('아이콘 정보를 가져올 수 없습니다');
+          setIconUrl(null);
+          setIconName("기본 아이콘");
+          return;
+        }
+        
+        // 상태 업데이트 - 배치로 처리하여 렌더링 최적화
+        setProfileData(prev => ({
+          ...prev,
+          iconId: iconInfo.iconId,
+          level: iconInfo.level,
+          usingLevelIcon: iconInfo.isUsingLevelIcon,
+          dataLoaded: true,
+          lastUpdated: Date.now()
+        }));
+        
+        // 아이콘 URL 업데이트
+        setIconUrl(iconInfo.currentIconUrl || null);
+        setIconName(iconInfo.currentIconName || "기본 아이콘");
+      } catch (iconError) {
+        console.error('아이콘 정보 가져오기 처리 오류:', iconError instanceof Error ? iconError.message : String(iconError));
+        setIconUrl(null);
+        setIconName("기본 아이콘");
+      }
     } catch (error) {
-      console.error('프로필 데이터 업데이트 오류:', error);
+      console.error('프로필 데이터 업데이트 오류:', error instanceof Error ? error.message : String(error));
       // 오류 발생 시 기본값 설정
       setProfileData(prev => ({
         ...prev,

@@ -32,7 +32,6 @@ export default function DateSelector({ selectedDate, onDateChange }: DateSelecto
   });
 
   const handleDateClick = (date: Date) => {
-    console.log('Selected date for API call:', format(date, 'yyyy-MM-dd'));
     onDateChange(date);
   };
 
