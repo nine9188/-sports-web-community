@@ -16,14 +16,12 @@ export default function MatchCard({ match: initialMatch }: MatchCardProps) {
 
   const homeTeam = {
     name: match.teams?.home?.name || '',
-    // logo 대신 img 속성을 사용
     logo: match.teams?.home?.img || '',
     score: match.teams?.home?.score ?? 0
   };
 
   const awayTeam = {
     name: match.teams?.away?.name || '',
-    // logo 대신 img 속성을 사용
     logo: match.teams?.away?.img || '',
     score: match.teams?.away?.score ?? 0
   };

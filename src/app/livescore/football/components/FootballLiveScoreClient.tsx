@@ -50,11 +50,60 @@ export default function FootballLiveScoreClient({
     setLoading(true);
     try {
       const formattedDate = format(date, 'yyyy-MM-dd');
+      console.log('Fetching matches for date:', formattedDate);
+      
       const response = await fetch(`/api/livescore/football?date=${formattedDate}`);
       const data = await response.json();
       
       if (data.success) {
-        const allMatches = data.data;
+        // API 응답 데이터를 Match 타입에 맞게 변환
+        const allMatches = data.data.map((match: {
+          id: number;
+          status: { code: string; name: string };
+          time: { date: string; timestamp: number };
+          league: { id: number; name: string; country: string; logo: string; flag: string };
+          teams: {
+            home: { id: number; name: string; logo: string };
+            away: { id: number; name: string; logo: string };
+          };
+          goals: { home: number; away: number };
+        }) => ({
+          id: match.id,
+          status: {
+            code: match.status.code,
+            name: match.status.name
+          },
+          time: {
+            date: match.time.date,
+            time: match.time.timestamp
+          },
+          league: {
+            id: match.league.id,
+            name: match.league.name,
+            country: match.league.country,
+            logo: match.league.logo,
+            flag: match.league.flag
+          },
+          teams: {
+            home: {
+              id: match.teams.home.id,
+              name: match.teams.home.name,
+              img: match.teams.home.logo || '',
+              score: match.goals.home,
+              form: '',
+              formation: ''
+            },
+            away: {
+              id: match.teams.away.id,
+              name: match.teams.away.name,
+              img: match.teams.away.logo || '',
+              score: match.goals.away,
+              form: '',
+              formation: ''
+            }
+          }
+        }));
+        
         setMatches(allMatches);
         setLiveMatchCount(calculateLiveMatchCount(allMatches));
       }
@@ -67,13 +116,15 @@ export default function FootballLiveScoreClient({
     }
   }, []);
 
-  // 날짜가 변경될 때 데이터 다시 불러오기
+  // 날짜가 변경될 때 데이터 다시 불러오기 (개선된 버전)
   useEffect(() => {
-    // 초기 렌더링이 아닌 경우에만 API 호출
-    if (format(selectedDate, 'yyyy-MM-dd') !== initialDate) {
-      fetchMatches(selectedDate);
-    }
-  }, [fetchMatches, selectedDate, initialDate]);
+    const currentFormattedDate = format(selectedDate, 'yyyy-MM-dd');
+    console.log('Current date:', currentFormattedDate, 'Initial date:', initialDate);
+    
+    // 날짜가 변경되었을 때마다 항상 fetchMatches 호출
+    fetchMatches(selectedDate);
+    
+  }, [selectedDate, fetchMatches]);
 
   // 실시간 경기만 보기 토글 시 현재 날짜로 설정
   useEffect(() => {

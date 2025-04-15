@@ -1,6 +1,6 @@
 'use client';
 
-import { format, addDays, subDays } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
 interface DateSelectorProps {
@@ -9,31 +9,39 @@ interface DateSelectorProps {
 }
 
 export default function DateSelector({ selectedDate, onDateChange }: DateSelectorProps) {
-  const convertToUTC = (date: Date) => {
-    const utcDate = new Date(date);
-    utcDate.setHours(0, 0, 0, 0);
-    utcDate.setHours(utcDate.getHours() + 9);
-    return utcDate;
+  const normalizeDate = (date: Date) => {
+    const normalized = new Date(date);
+    normalized.setHours(0, 0, 0, 0);
+    return normalized;
   };
 
   const dates = Array.from({ length: 5 }, (_, i) => {
-    const date = addDays(subDays(selectedDate, 2), i);
-    const utcDate = convertToUTC(date);
-    const today = new Date();
+    const offsetFromMiddle = i - 2;
+    const date = addDays(selectedDate, offsetFromMiddle);
+    const normalizedDate = normalizeDate(date);
+    
+    const today = normalizeDate(new Date());
+    
     return {
-      date: utcDate,
+      date: date,
+      normalizedDate: normalizedDate,
       formattedDate: format(date, 'M월 d일', { locale: ko }),
-      isSelected: format(date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd'),
-      isToday: format(date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd'),
+      isSelected: normalizedDate.getTime() === normalizeDate(selectedDate).getTime(),
+      isToday: normalizedDate.getTime() === today.getTime()
     };
   });
+
+  const handleDateClick = (date: Date) => {
+    console.log('Selected date for API call:', format(date, 'yyyy-MM-dd'));
+    onDateChange(date);
+  };
 
   return (
     <div className="flex flex-1">
       {dates.map(({ date, formattedDate, isSelected, isToday }) => (
         <button
           key={date.toISOString()}
-          onClick={() => onDateChange(date)}
+          onClick={() => handleDateClick(date)}
           className={`flex-1 py-3 text-center border-b-2 ${
             isSelected
               ? 'border-blue-500 bg-gray-50 text-blue-600'

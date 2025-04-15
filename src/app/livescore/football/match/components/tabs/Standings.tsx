@@ -205,18 +205,18 @@ function Standings({ matchData }: StandingsProps) {
             <div className="overflow-x-auto">
               <table className="min-w-full w-full border-collapse" style={{ tableLayout: 'fixed' }}>
                 <colgroup>
-                  <col className="md:hidden w-8" /> {/* 모바일 순위 */}
-                  <col className="hidden md:table-column w-12" /> {/* 데스크톱 순위 */}
-                  <col className="w-[140px] md:w-[180px]" /> {/* 팀명 - 너비 증가 */}
-                  <col className="hidden md:table-column w-12" /> {/* 경기 */}
-                  <col className="w-8" /> {/* 승 - 너비 감소 */}
-                  <col className="w-8" /> {/* 무 - 너비 감소 */}
-                  <col className="w-8" /> {/* 패 - 너비 감소 */}
-                  <col className="hidden md:table-column w-12" /> {/* 득점 */}
-                  <col className="hidden md:table-column w-12" /> {/* 실점 */}
-                  <col className="hidden md:table-column w-14" /> {/* 득실차 */}
-                  <col className="w-10" /> {/* 승점 - 너비 감소 */}
-                  <col className="hidden md:table-column w-32" /> {/* 최근 5경기 */}
+                  <col className="md:hidden w-8" />
+                  <col className="hidden md:table-column w-12" />
+                  <col className="w-[140px] md:w-[180px]" />
+                  <col className="hidden md:table-column w-12" />
+                  <col className="w-8" />
+                  <col className="w-8" />
+                  <col className="w-8" />
+                  <col className="hidden md:table-column w-12" />
+                  <col className="hidden md:table-column w-12" />
+                  <col className="hidden md:table-column w-14" />
+                  <col className="w-10" />
+                  <col className="hidden md:table-column w-32" />
                 </colgroup>
                 <thead className="bg-gray-50">
                   <tr>
