@@ -3,6 +3,10 @@ import { Inter } from 'next/font/google';
 import BoardNavigation from './components/sidebar/BoardNavigation';
 import RootLayoutClient from './RootLayoutClient';
 
+// 동적 렌더링 설정
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // Inter 폰트 정의를 전역 CSS 클래스로 사용
 const inter = Inter({ subsets: ['latin'] });
 

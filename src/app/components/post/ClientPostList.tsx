@@ -125,7 +125,7 @@ export default function ClientPostList({
   }
   
   // API 응답 데이터 변환
-  const apiPosts: ApiPost[] = data?.data || [];
+  const apiPosts = (data?.data || []) as ApiPost[];
   const posts = formatPostData(apiPosts);
   const totalPages = data?.meta?.totalPages || 1;
   
