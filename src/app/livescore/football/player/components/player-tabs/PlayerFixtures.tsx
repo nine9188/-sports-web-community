@@ -194,8 +194,8 @@ export default function PlayerFixtures({
     }
     
     fetchFixturesData(selectedSeason);
-    // 의존성 배열에서 selectedSeason 제거하여 마운트 시 1회만 실행
-  }, [initialFixturesData.data.length, fetchFixturesData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchFixturesData]);  // 마운트 시 1회만 실행되도록 의존성 최소화
 
   // 시즌이 변경될 때 새 데이터 가져오기
   useEffect(() => {
