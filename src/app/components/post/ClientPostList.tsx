@@ -1,8 +1,7 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
-import { useIntersection } from '@/app/hooks/useIntersection';
-import { useInfinitePosts } from '@/app/hooks/usePosts';
+import { useState } from 'react';
+import { usePosts } from '@/app/hooks/usePosts';
 import PostList from '@/app/components/post/PostList';
 
 interface ClientPostListProps {
@@ -18,6 +17,7 @@ interface ClientPostListProps {
   boardNameMaxWidth?: string;
   showBoard?: boolean;
   fromParam?: string;
+  initialPage?: number;
 }
 
 // API 응답 타입 정의
@@ -94,45 +94,24 @@ export default function ClientPostList({
   boardNameMaxWidth,
   showBoard = true,
   fromParam,
+  initialPage = 1
 }: ClientPostListProps) {
-  // 무한 스크롤을 위한 훅 사용
+  const [page, setPage] = useState(initialPage);
+  
+  // 일반 쿼리 훅 사용 (무한 스크롤 제거)
   const {
     data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
     isLoading,
     isError,
     error
-  } = useInfinitePosts({
+  } = usePosts({
     boardId,
     boardIds,
     currentBoardId,
     fromParam,
-    limit: 10 // 한 번에 가져올 게시글 수 제한
+    page: page,
+    limit: 15 // 한 페이지에 표시할 게시글 수
   });
-  
-  // 무한 스크롤 감지를 위한 요소 참조
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const isIntersecting = useIntersection(bottomRef);
-  
-  // 화면 하단 감지 시 다음 페이지 로드
-  useEffect(() => {
-    if (isIntersecting && hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  }, [isIntersecting, hasNextPage, isFetchingNextPage, fetchNextPage]);
-  
-  // 모든 페이지의 게시글을 하나의 배열로 병합하고 포맷 변환
-  const apiPosts: ApiPost[] = data?.pages.flatMap(page => {
-    // 데이터가 없을 경우 빈 배열 반환
-    if (!page || !page.data) return [];
-    
-    // 데이터 타입 변환
-    return page.data as unknown as ApiPost[];
-  }) || [];
-  
-  const posts = formatPostData(apiPosts);
   
   // 에러 메시지
   if (isError) {
@@ -145,35 +124,78 @@ export default function ClientPostList({
     );
   }
   
-  return (
-    <>
-      <PostList
-        posts={posts}
-        loading={isLoading}
-        currentPostId={currentPostId}
-        emptyMessage={emptyMessage}
-        headerContent={headerContent}
-        footerContent={footerContent}
-        className={className}
-        maxHeight={maxHeight}
-        currentBoardId={currentBoardId}
-        boardNameMaxWidth={boardNameMaxWidth}
-        showBoard={showBoard}
-      />
-      
-      {/* 무한 스크롤 감지 영역 */}
-      {hasNextPage && (
-        <div
-          ref={bottomRef}
-          className="py-4 text-center"
+  // API 응답 데이터 변환
+  const apiPosts: ApiPost[] = data?.data || [];
+  const posts = formatPostData(apiPosts);
+  const totalPages = data?.meta?.totalPages || 1;
+  
+  // 페이지네이션 UI 렌더링
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+    
+    return (
+      <div className="py-3 flex justify-center space-x-2">
+        <button
+          onClick={() => setPage(prev => Math.max(1, prev - 1))}
+          disabled={page === 1}
+          className={`px-3 py-1 rounded-md ${page === 1 ? 'bg-gray-100 text-gray-400' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}
         >
-          {isFetchingNextPage && (
-            <div className="flex justify-center">
-              <div className="h-8 w-8 bg-gray-200 rounded-full animate-pulse"></div>
-            </div>
-          )}
+          이전
+        </button>
+        <div className="flex items-center space-x-1">
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            // 표시할 페이지 번호 계산 (현재 페이지 중심 이동)
+            const pageToShow = Math.min(
+              Math.max(page - 2 + i, i + 1),
+              totalPages
+            );
+            return (
+              <button
+                key={pageToShow}
+                onClick={() => setPage(pageToShow)}
+                className={`w-8 h-8 flex items-center justify-center rounded-md ${
+                  page === pageToShow
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                {pageToShow}
+              </button>
+            );
+          })}
         </div>
-      )}
+        <button
+          onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
+          disabled={page === totalPages}
+          className={`px-3 py-1 rounded-md ${page === totalPages ? 'bg-gray-100 text-gray-400' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}
+        >
+          다음
+        </button>
+      </div>
+    );
+  };
+  
+  // 최종 footerContent 구성
+  const combinedFooterContent = (
+    <>
+      {renderPagination()}
+      {footerContent}
     </>
+  );
+  
+  return (
+    <PostList
+      posts={posts}
+      loading={isLoading}
+      currentPostId={currentPostId}
+      emptyMessage={emptyMessage}
+      headerContent={headerContent}
+      footerContent={combinedFooterContent}
+      className={className || ''}
+      maxHeight={maxHeight}
+      currentBoardId={currentBoardId}
+      boardNameMaxWidth={boardNameMaxWidth}
+      showBoard={showBoard}
+    />
   );
 } 

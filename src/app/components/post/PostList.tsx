@@ -227,11 +227,11 @@ export default function PostList({
   const renderMobilePostList = () => {
     return (
       <div className="block sm:hidden">
-        <div className="divide-y">
-          {posts.map((post) => (
+        <div>
+          {posts.map((post, index) => (
             <div 
               key={post.id} 
-              className={`py-2 px-3 ${post.id === currentPostId ? 'bg-blue-50' : ''}`}
+              className={`py-2 px-3 ${index !== posts.length - 1 ? 'border-b' : ''} ${post.id === currentPostId ? 'bg-blue-50' : ''}`}
             >
               <Link href={`/boards/${post.board_slug}/${post.post_number}?from=${currentBoardId}`}>
                 <div className="space-y-1">
@@ -278,9 +278,9 @@ export default function PostList({
   };
 
   return (
-    <div className={`bg-white border rounded-lg shadow-sm mb-4 ${className}`}>
+    <div className={`mb-4 bg-white rounded-lg border overflow-hidden ${className}`}>
       {headerContent && (
-        <div className="px-6 py-4 border-b">
+        <div className="px-6 py-4">
           {headerContent}
         </div>
       )}
@@ -305,7 +305,7 @@ export default function PostList({
             <div className="hidden sm:block overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="border-t border-b bg-gray-50">
+                  <tr className="border-b bg-gray-50">
                     {showBoard && (
                       <th className={`py-2 px-3 text-center w-[${boardNameMaxWidth}] text-sm font-medium text-gray-500`}>게시판</th>
                     )}
@@ -317,10 +317,10 @@ export default function PostList({
                   </tr>
                 </thead>
                 <tbody>
-                  {posts.map((post) => (
+                  {posts.map((post, index) => (
                     <tr 
                       key={post.id} 
-                      className={`border-b hover:bg-gray-50 ${post.id === currentPostId ? 'bg-blue-50' : ''}`}
+                      className={`${index !== posts.length - 1 ? 'border-b' : ''} hover:bg-gray-50 ${post.id === currentPostId ? 'bg-blue-50' : ''}`}
                     >
                       {showBoard && (
                         <td className="py-2 px-3 align-middle">
@@ -411,7 +411,7 @@ export default function PostList({
       </ScrollArea>
       
       {footerContent && (
-        <div className="px-6 py-4 border-t">
+        <div>
           {footerContent}
         </div>
       )}

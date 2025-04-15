@@ -30,5 +30,5 @@ export default async function ServerBoardList({ parentId }: ServerBoardListProps
   }
   
   // SSR로 가져온 초기 데이터를 클라이언트 컴포넌트에 전달
-  return <ClientBoardList boards={boards || []} />;
+  return <ClientBoardList boards={boards || []} className="overflow-hidden" />;
 } 

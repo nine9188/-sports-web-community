@@ -353,6 +353,8 @@ export default async function BoardDetailPage({
               currentBoardId={boardData.id}
               showBoard={true}
               fromParam={fromParam}
+              className="overflow-hidden"
+              initialPage={currentPage}
             />
           </ScrollArea>
           

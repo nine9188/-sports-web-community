@@ -13,6 +13,7 @@ interface ServerPostListProps {
   boardNameMaxWidth?: string;
   showBoard?: boolean;
   fromParam?: string;
+  initialPage?: number;
 }
 
 export default function ServerPostList({
@@ -22,12 +23,13 @@ export default function ServerPostList({
   emptyMessage,
   headerContent,
   footerContent,
-  className,
+  className = "mb-4",
   maxHeight,
   currentBoardId,
   boardNameMaxWidth,
   showBoard,
   fromParam,
+  initialPage = 1
 }: ServerPostListProps) {
   return (
     <ClientPostList 
@@ -43,6 +45,7 @@ export default function ServerPostList({
       boardNameMaxWidth={boardNameMaxWidth}
       showBoard={showBoard}
       fromParam={fromParam}
+      initialPage={initialPage}
     />
   );
 } 

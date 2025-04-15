@@ -14,13 +14,14 @@ interface Board {
 
 interface ClientBoardListProps {
   boards: Board[];
+  className?: string;
 }
 
-export default function ClientBoardList({ boards }: ClientBoardListProps) {
+export default function ClientBoardList({ boards, className = '' }: ClientBoardListProps) {
   const pathname = usePathname();
   
   return (
-    <div className="space-y-2">
+    <div className={`space-y-2 ${className}`}>
       {boards.length === 0 ? (
         <div className="p-4 text-center text-gray-500">등록된 게시판이 없습니다.</div>
       ) : (

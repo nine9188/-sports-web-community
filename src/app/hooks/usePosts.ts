@@ -22,37 +22,45 @@ export interface Post {
   league_logo?: string | null;
 }
 
-interface PostsResponse {
+export interface PostsResponse {
   data: Post[];
+  total?: number;
+  meta?: {
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    itemsPerPage: number;
+  };
 }
 
-interface PostsQueryParams {
+export interface PostsQueryParams {
   boardId?: string;
   boardIds?: string[];
   currentBoardId?: string;
   limit?: number;
   offset?: number;
+  page?: number;
   fromParam?: string;
 }
 
-interface PostsRequestBody {
+export interface PostsRequestBody {
   boardIds: string[];
-  currentBoardId?: string;
   limit: number;
   offset: number;
+  currentBoardId?: string;
   fromParam?: string;
 }
 
 // 게시글 목록 가져오기 함수
 export const fetchPosts = async (params: PostsQueryParams): Promise<PostsResponse> => {
-  const { boardId, boardIds, currentBoardId, limit = 20, offset = 0, fromParam } = params;
+  const { boardId, boardIds, currentBoardId, limit = 20, offset = 0, page = 1, fromParam } = params;
   
   try {
     // 요청 본문 구성
     const requestBody: PostsRequestBody = {
       boardIds: ['all'], // 기본값으로 'all' 설정
       limit,
-      offset
+      offset: page ? (page - 1) * limit : offset // 페이지 기반 오프셋 계산
     };
     
     // boardIds가 유효한 배열인지 확인
@@ -100,6 +108,17 @@ export const fetchPosts = async (params: PostsQueryParams): Promise<PostsRespons
     // 응답 데이터 구조 확인
     if (!responseData.data || !Array.isArray(responseData.data)) {
       return { data: [] }; // 기본값 반환
+    }
+    
+    // 메타 데이터 추가 (페이지네이션 정보)
+    if (!responseData.meta) {
+      const totalItems = responseData.total || responseData.data.length;
+      responseData.meta = {
+        totalItems: totalItems,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page || 1,
+        itemsPerPage: limit
+      };
     }
     
     return responseData;

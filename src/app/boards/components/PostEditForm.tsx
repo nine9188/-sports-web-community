@@ -558,7 +558,9 @@ export default function PostEditForm({
           {/* 게시판 선택 필드 (생성 모드에서만 표시) */}
           {isCreateMode && setCategoryId && (
             <div className="space-y-2">
-              <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700">게시판 선택</label>
+              <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700">
+                게시판 선택 <span className="text-red-500">*</span>
+              </label>
               <BoardSelector 
                 boards={allBoardsFlat}
                 selectedId={categoryId}
