@@ -590,7 +590,7 @@ export default function Overview({ team, stats, matches, standings, onTabChange,
                         <td className="p-0 md:px-2">
                           <div className="flex items-center justify-between">
                             <div className="flex-1 flex items-center justify-end gap-0 min-w-0">
-                              <span className={`truncate max-w-[100px] md:max-w-[180px] text-right mr-1 ${match.teams.home.id === team.team.id ? 'font-semibold' : ''}`}>
+                              <span className={`truncate max-w-[100px] md:max-w-[180px] text-right mr-1 ${match.teams.home.id === team.team.id ? '' : 'text-xs md:text-sm'}`}>
                                 {match.teams.home.name}
                               </span>
                               <Image
@@ -614,7 +614,7 @@ export default function Overview({ team, stats, matches, standings, onTabChange,
                                 height={20}
                                 className="object-contain w-5 h-5 flex-shrink-0"
                               />
-                              <span className={`truncate max-w-[100px] md:max-w-[180px] text-left ml-1 ${match.teams.away.id === team.team.id ? 'font-semibold' : ''}`}>
+                              <span className={`truncate max-w-[100px] md:max-w-[180px] text-left ml-1 ${match.teams.away.id === team.team.id ? '' : 'text-xs md:text-sm'}`}>
                                 {match.teams.away.name}
                               </span>
                             </div>
@@ -686,7 +686,7 @@ export default function Overview({ team, stats, matches, standings, onTabChange,
                         <td className="p-0 md:px-2">
                           <div className="flex items-center justify-between">
                             <div className="flex-1 flex items-center justify-end gap-0 min-w-0">
-                              <span className={`truncate max-w-[100px] md:max-w-[180px] text-right mr-1 ${match.teams.home.id === team.team.id ? 'font-semibold' : ''}`}>
+                              <span className={`truncate max-w-[100px] md:max-w-[180px] text-right mr-1 ${match.teams.home.id === team.team.id ? '' : 'text-xs md:text-sm'}`}>
                                 {match.teams.home.name}
                               </span>
                               <Image
@@ -710,7 +710,7 @@ export default function Overview({ team, stats, matches, standings, onTabChange,
                                 height={20}
                                 className="object-contain w-5 h-5 flex-shrink-0"
                               />
-                              <span className={`truncate max-w-[100px] md:max-w-[180px] text-left ml-1 ${match.teams.away.id === team.team.id ? 'font-semibold' : ''}`}>
+                              <span className={`truncate max-w-[100px] md:max-w-[180px] text-left ml-1 ${match.teams.away.id === team.team.id ? '' : 'text-xs md:text-sm'}`}>
                                 {match.teams.away.name}
                               </span>
                             </div>
