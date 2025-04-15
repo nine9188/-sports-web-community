@@ -6,252 +6,131 @@ import { Button } from '@/app/ui/button'
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { createClient } from '@/app/lib/supabase-browser';
 import BoardHeaderNavigation from './header/BoardHeaderNavigation';
 import { getUserIconInfo } from '@/app/utils/level-icons';
 import ProfileDropdown from './ProfileDropdown';
 
+// 프로필 데이터 타입 정의
+type ProfileDataType = {
+  nickname?: string;
+  iconId?: number | null;
+  level?: number;
+  isAdmin?: boolean;
+  dataLoaded?: boolean;
+  lastUpdated?: number;
+  usingLevelIcon?: boolean;
+};
+
 export default function Header({ onMenuClick, isSidebarOpen }: { onMenuClick: () => void; isSidebarOpen: boolean }) {
   const router = useRouter();
   const { user, refreshUserData } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [profileData, setProfileData] = useState<{
-    nickname?: string;
-    iconId?: number | null;
-    level?: number;
-    isAdmin?: boolean;
-    dataLoaded?: boolean;
-    lastUpdated?: number;
-    usingLevelIcon?: boolean;
-  }>({ dataLoaded: false, lastUpdated: 0 });
+  const [profileData, setProfileData] = useState<ProfileDataType>({ 
+    dataLoaded: false, 
+    lastUpdated: 0 
+  });
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   
   // 아이콘 URL을 위한 상태
   const [iconUrl, setIconUrl] = useState<string | null>(null);
   const [iconName, setIconName] = useState<string | null>(null);
+  
+  // 아이콘 정보 가져오기 데이터 로딩 플래그
+  const [isLoadingIconInfo, setIsLoadingIconInfo] = useState(false);
 
   // 클라이언트 사이드에서만 실행되는 코드
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setMounted(true);
-    }, 10);
-    
-    return () => clearTimeout(timer);
+    setMounted(true);
+    return () => {};
   }, []);
 
-  // 프로필 데이터 및 아이콘 업데이트 - getUserIconInfo 유틸리티 함수 사용
-  useEffect(() => {
-    if (!user) return;
+  // 프로필 데이터 업데이트 함수 - 메모이제이션으로 불필요한 재생성 방지
+  const updateProfileData = useCallback(async () => {
+    if (!user || !user.id || isLoadingIconInfo) return;
     
-    // 아이콘 정보 인터페이스 정의
-    interface IconInfo {
-      level: number;
-      exp: number;
-      iconId: number | null;
-      isUsingLevelIcon: boolean;
-      levelIconUrl: string;
-      purchasedIconUrl: string | null;
-      iconName: string | null;
-      currentIconUrl: string;
-      currentIconName: string;
+    try {
+      setIsLoadingIconInfo(true);
+      
+      // 유저 메타데이터에서 닉네임 가져오기
+      const nickname = user.user_metadata?.nickname || '사용자';
+      setProfileData(prev => ({
+        ...prev,
+        nickname,
+        dataLoaded: true,
+        lastUpdated: Date.now()
+      }));
+      
+      // 아이콘 정보 가져오기
+      const iconInfo = await getUserIconInfo(user.id);
+      
+      // 상태 업데이트 - 배치로 처리하여 렌더링 최적화
+      setProfileData(prev => ({
+        ...prev,
+        iconId: iconInfo.iconId,
+        level: iconInfo.level,
+        usingLevelIcon: iconInfo.isUsingLevelIcon,
+        dataLoaded: true,
+        lastUpdated: Date.now()
+      }));
+      
+      setIconUrl(iconInfo.currentIconUrl);
+      setIconName(iconInfo.currentIconName);
+    } catch (error) {
+      console.error('프로필 데이터 업데이트 오류:', error);
+      // 오류 발생 시 기본값 설정
+      setProfileData(prev => ({
+        ...prev,
+        nickname: user.user_metadata?.nickname || '사용자',
+        dataLoaded: true,
+        lastUpdated: Date.now()
+      }));
+      setIconUrl(null);
+      setIconName("기본 아이콘");
+    } finally {
+      setIsLoadingIconInfo(false);
     }
-    
-    // 기본 아이콘 정보 생성 함수
-    const getDefaultIconInfo = (): IconInfo => ({
-      level: 1,
-      exp: 0,
-      iconId: null,
-      isUsingLevelIcon: true,
-      levelIconUrl: '',
-      purchasedIconUrl: null,
-      iconName: null,
-      currentIconUrl: '',
-      currentIconName: '기본 아이콘'
-    });
-    
-    const updateProfileData = async () => {
-      try {
-        // 유저 메타데이터에서 닉네임 가져오기
-        const nickname = user.user_metadata?.nickname || '사용자';
-        setProfileData(prev => ({
-          ...prev,
-          nickname: nickname,
-          isAdmin: false,
-          dataLoaded: true,
-          lastUpdated: Date.now()
-        }));
-        
-        try {
-          if (!user || !user.id) {
-            console.error('사용자 정보가 없습니다');
-            setIconUrl(null);
-            setIconName("기본 아이콘");
-            return;
-          }
-          
-          // 아이콘 URL 설정 - 시간제한 설정
-          const iconPromise = getUserIconInfo(user.id);
-          
-          // 5초 타임아웃 설정
-          const timeoutPromise = new Promise<IconInfo | null>((_, reject) => {
-            setTimeout(() => {
-              reject(new Error('아이콘 정보 로딩 시간 초과'));
-            }, 5000);
-          });
-          
-          // 둘 중 먼저 완료되는 프로미스 실행
-          const iconInfo = await Promise.race([iconPromise, timeoutPromise])
-            .catch(error => {
-              console.warn('아이콘 정보 로딩 실패:', error instanceof Error ? error.message : JSON.stringify(error));
-              return getDefaultIconInfo();
-            });
-          
-          if (iconInfo) {
-            setProfileData(prev => ({
-              ...prev,
-              iconId: iconInfo.iconId,
-              level: iconInfo.level,
-              usingLevelIcon: iconInfo.isUsingLevelIcon,
-              dataLoaded: true,
-              lastUpdated: Date.now()
-            }));
-            
-            // 아이콘 URL 업데이트
-            setIconUrl(iconInfo.currentIconUrl);
-            setIconName(iconInfo.currentIconName);
-          } else {
-            // 기본 아이콘 설정
-            setIconUrl(null);
-            setIconName("기본 아이콘");
-          }
-        } catch (iconError) {
-          // 아이콘 정보 가져오기 실패 시
-          console.error('아이콘 정보 가져오기 오류:', iconError);
-          setIconUrl(null);
-          setIconName("기본 아이콘");
-        }
-      } catch (error) {
-        console.error('프로필 데이터 업데이트 오류:', error);
-        // 오류 발생 시 기본값 설정
-        setProfileData(prev => ({
-          ...prev,
-          nickname: user.user_metadata?.nickname || '사용자',
-          isAdmin: false,
-          dataLoaded: true,
-          lastUpdated: Date.now()
-        }));
-        setIconUrl(null);
-        setIconName("기본 아이콘");
-      }
-    };
-    
-    updateProfileData();
-  }, [user]);
+  }, [user, isLoadingIconInfo]);
 
-  // 추가: 페이지 포커스 시 새로고침
+  // 프로필 데이터 및 아이콘 업데이트
+  useEffect(() => {
+    if (user) {
+      updateProfileData();
+    }
+  }, [user, updateProfileData]);
+
+  // 페이지 포커스 시 데이터 갱신
   useEffect(() => {
     const handleFocus = () => {
       refreshUserData();
-      
-      // 마지막 업데이트 시간 초기화하여 다음 효과에서 데이터 갱신
-      setProfileData(prev => ({
-        ...prev,
-        lastUpdated: 0
-      }));
+      // 마지막 업데이트 시간이 5분을 초과했을 때만 데이터 갱신
+      if (Date.now() - (profileData.lastUpdated || 0) > 5 * 60 * 1000) {
+        updateProfileData();
+      }
     };
     
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [refreshUserData]);
+  }, [refreshUserData, updateProfileData, profileData.lastUpdated]);
 
   // 아이콘 업데이트 이벤트 리스너
   useEffect(() => {
-    // 상위 스코프에서 정의된 IconInfo 인터페이스와 getDefaultIconInfo 함수 재사용
-    interface IconInfo {
-      level: number;
-      exp: number;
-      iconId: number | null;
-      isUsingLevelIcon: boolean;
-      levelIconUrl: string;
-      purchasedIconUrl: string | null;
-      iconName: string | null;
-      currentIconUrl: string;
-      currentIconName: string;
-    }
-    
-    // 기본 아이콘 정보 생성 함수
-    const getDefaultIconInfo = (): IconInfo => ({
-      level: 1,
-      exp: 0,
-      iconId: null,
-      isUsingLevelIcon: true,
-      levelIconUrl: '',
-      purchasedIconUrl: null,
-      iconName: null,
-      currentIconUrl: '',
-      currentIconName: '기본 아이콘'
-    });
-    
-    const handleIconUpdate = async () => {
-      if (!user || !user.id) {
-        console.error('아이콘 업데이트 실패: 사용자 정보가 없습니다');
-        setIconUrl(null);
-        setIconName("기본 아이콘");
-        return;
-      }
-      
-      try {
-        // 5초 타임아웃 설정
-        const iconPromise = getUserIconInfo(user.id);
-        const timeoutPromise = new Promise<IconInfo>((_, reject) => {
-          setTimeout(() => {
-            reject(new Error('아이콘 업데이트 시간 초과'));
-          }, 5000);
-        });
-        
-        // 둘 중 먼저 완료되는 프로미스 실행
-        const iconInfo = await Promise.race<IconInfo>([iconPromise, timeoutPromise])
-          .catch(error => {
-            console.warn('아이콘 업데이트 이벤트 처리 실패:', error instanceof Error ? error.message : JSON.stringify(error));
-            return getDefaultIconInfo();
-          });
-        
-        if (iconInfo) {
-          setProfileData(prev => ({
-            ...prev,
-            iconId: iconInfo.iconId,
-            usingLevelIcon: iconInfo.isUsingLevelIcon,
-            lastUpdated: Date.now()
-          }));
-          
-          // 아이콘 URL 업데이트
-          setIconUrl(iconInfo.currentIconUrl);
-          setIconName(iconInfo.currentIconName);
-        } else {
-          // 정보를 가져오지 못했을 경우 기본값 설정
-          setIconUrl(null);
-          setIconName("기본 아이콘");
-        }
-      } catch (error) {
-        console.error('아이콘 업데이트 이벤트 처리 오류:', error);
-        setIconUrl(null);
-        setIconName("기본 아이콘");
+    const handleIconUpdate = () => {
+      if (user && user.id) {
+        updateProfileData();
       }
     };
     
     // 커스텀 이벤트 리스너 등록
     window.addEventListener('icon-updated', handleIconUpdate);
-    
-    return () => {
-      window.removeEventListener('icon-updated', handleIconUpdate);
-    };
-  }, [user]);
+    return () => window.removeEventListener('icon-updated', handleIconUpdate);
+  }, [user, updateProfileData]);
 
   // 로그아웃 처리
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
       const supabase = createClient();
       await supabase.auth.signOut();
@@ -262,13 +141,13 @@ export default function Header({ onMenuClick, isSidebarOpen }: { onMenuClick: ()
       console.error('로그아웃 오류:', error);
       toast.error('로그아웃 중 오류가 발생했습니다.');
     }
-  };
+  }, [router]);
 
   // 프로필 드롭다운 토글
-  const toggleDropdown = (e: React.MouseEvent) => {
+  const toggleDropdown = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     setIsDropdownOpen(!isDropdownOpen);
-  };
+  }, [isDropdownOpen]);
 
   // 드롭다운 메뉴 닫기 (외부 클릭 감지)
   useEffect(() => {
@@ -282,8 +161,8 @@ export default function Header({ onMenuClick, isSidebarOpen }: { onMenuClick: ()
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // 인증 상태 렌더링
-  const renderAuthState = () => {
+  // 인증 상태 렌더링 - 메모이제이션으로 불필요한 재생성 방지
+  const renderAuthState = useMemo(() => {
     if (!user) {
       return (
         <div className="flex space-x-2">
@@ -365,10 +244,10 @@ export default function Header({ onMenuClick, isSidebarOpen }: { onMenuClick: ()
         </div>
       </>
     );
-  };
+  }, [user, iconUrl, iconName, profileData.nickname, isDropdownOpen, toggleDropdown, handleLogout]);
 
   return (
-    <header className={`sticky top-0 z-50 border-b shadow-sm bg-white`}>
+    <header className="sticky top-0 z-50 border-b shadow-sm bg-white">
       {isSidebarOpen && (
         <div className="absolute inset-0 bg-black/70 z-[998] lg:hidden pointer-events-auto" />
       )}
@@ -384,7 +263,7 @@ export default function Header({ onMenuClick, isSidebarOpen }: { onMenuClick: ()
                   <Button variant="outline" className="flex items-center justify-center w-9 h-9 rounded-full">
                     <Loader2 className="h-5 w-5 animate-spin" />
                   </Button>
-                ) : renderAuthState()}
+                ) : renderAuthState}
               </div>
               <Button variant="ghost" size="icon" className="lg:hidden" onClick={onMenuClick}>
                 <Menu className="h-5 w-5" />
@@ -392,7 +271,7 @@ export default function Header({ onMenuClick, isSidebarOpen }: { onMenuClick: ()
             </div>
           </div>
         </div>
-        <nav className={`flex items-center h-12 px-4 overflow-x-auto border-t relative`}>
+        <nav className="flex items-center h-12 px-4 overflow-x-auto border-t relative">
           <BoardHeaderNavigation />
         </nav>
       </div>
