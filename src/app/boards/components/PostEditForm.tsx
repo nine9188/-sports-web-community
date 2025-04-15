@@ -16,29 +16,11 @@ import { generateMatchCardHTML } from '@/app/utils/matchCardRenderer';
 import { MatchCardExtension } from '@/app/lib/tiptap/MatchCardExtension';
 import { rewardUserActivity, ActivityType } from '@/app/utils/activity-rewards';
 
-// 게시판(Board) 타입 정의 - BoardSelector와 호환되도록 수정
-interface Board {
-  id: string;
-  name: string;
-  slug: string;
-  parent_id: string | null;
-  display_order: number;
-  children?: Board[];
-  team_id?: string | number | null;
-  league_id?: string | number | null;
-}
-
-// 매치 데이터 인터페이스 - EditorToolbar와 호환되도록 수정
-interface MatchTeam {
-  id: number | string;
-  name: string;
-  logo: string;
-}
-
-interface MatchDataInput {
+// MatchData 타입 직접 정의
+interface MatchData {
   id?: number | string;
   fixture?: {
-    id: number | string;
+    id: string | number;
     date?: string;
   };
   league?: {
@@ -47,8 +29,16 @@ interface MatchDataInput {
     logo: string;
   };
   teams: {
-    home: MatchTeam;
-    away: MatchTeam;
+    home: {
+      id: number | string;
+      name: string;
+      logo: string;
+    };
+    away: {
+      id: number | string;
+      name: string;
+      logo: string;
+    };
   };
   goals: {
     home: number | null;
@@ -59,6 +49,18 @@ interface MatchDataInput {
     elapsed?: number;
     name?: string;
   };
+}
+
+// 게시판(Board) 타입 정의 - BoardSelector와 호환되도록 수정
+interface Board {
+  id: string;
+  name: string;
+  slug: string;
+  parent_id: string | null;
+  display_order: number;
+  children?: Board[];
+  team_id?: string | number | null;
+  league_id?: string | number | null;
 }
 
 interface PostEditFormProps {
@@ -423,46 +425,73 @@ export default function PostEditForm({
   };
   
   // 경기 카드 추가 함수 수정
-  const handleAddMatch = (matchId: string, matchData: MatchDataInput) => {
-    if (!editor) return;
-    
+  const handleAddMatch = (matchId: string, matchData: MatchData) => {
     try {
-      console.log("전달받은 경기 데이터:", matchData);
+      if (!editor) {
+        console.error("에디터가 초기화되지 않았습니다.");
+        return;
+      }
       
-      // 안전한 데이터 구조 생성
+      // 안전한 데이터 구성 (기본값 제공)
       const safeMatchData = {
         id: matchData.id,
-        fixture: { 
-          id: matchData.fixture?.id || Date.now(),
+        fixture: {
+          id: matchData.fixture?.id || 0,
           date: matchData.fixture?.date
         },
         league: {
           id: matchData.league?.id || 0,
-          name: matchData.league?.name || "알 수 없는 리그",
+          name: matchData.league?.name || "리그 정보 없음",
           logo: matchData.league?.logo || "/placeholder.png"
         },
         teams: {
           home: {
-            id: matchData.teams.home?.id || 0,
-            name: matchData.teams.home?.name || "홈팀",
-            logo: matchData.teams.home?.logo || "/placeholder.png"
+            id: matchData.teams.home.id || 0,
+            name: matchData.teams.home.name || "홈팀",
+            logo: matchData.teams.home.logo || "/placeholder.png"
           },
           away: {
-            id: matchData.teams.away?.id || 0,
-            name: matchData.teams.away?.name || "원정팀",
-            logo: matchData.teams.away?.logo || "/placeholder.png"
+            id: matchData.teams.away.id || 0,
+            name: matchData.teams.away.name || "원정팀",
+            logo: matchData.teams.away.logo || "/placeholder.png"
           }
         },
         goals: {
-          home: matchData.goals?.home ?? 0,
-          away: matchData.goals?.away ?? 0
+          home: matchData.goals.home,
+          away: matchData.goals.away
         },
         status: matchData.status || { code: "FT", elapsed: 90 }
       };
       
       // 공통 유틸리티 함수 사용
       const matchIdToUse = matchId || safeMatchData.fixture.id.toString();
-      const matchCardHTML = generateMatchCardHTML(safeMatchData, matchIdToUse);
+      // safeMatchData를 matchCardRenderer가 기대하는 형식으로 변환
+      const cardData = {
+        id: matchIdToUse,
+        teams: {
+          home: {
+            name: safeMatchData.teams.home.name,
+            logo: safeMatchData.teams.home.logo,
+          },
+          away: {
+            name: safeMatchData.teams.away.name,
+            logo: safeMatchData.teams.away.logo,
+          }
+        },
+        goals: {
+          home: safeMatchData.goals.home !== null ? safeMatchData.goals.home : undefined,
+          away: safeMatchData.goals.away !== null ? safeMatchData.goals.away : undefined,
+        },
+        league: {
+          name: safeMatchData.league?.name || "",
+          logo: safeMatchData.league?.logo || "",
+        },
+        status: {
+          code: safeMatchData.status?.code,
+          elapsed: safeMatchData.status?.elapsed,
+        }
+      };
+      const matchCardHTML = generateMatchCardHTML(cardData, matchIdToUse);
       
       // 에디터에 삽입
       editor.commands.insertContent(matchCardHTML);

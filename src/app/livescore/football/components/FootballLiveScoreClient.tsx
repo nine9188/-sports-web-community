@@ -124,7 +124,7 @@ export default function FootballLiveScoreClient({
     // 날짜가 변경되었을 때마다 항상 fetchMatches 호출
     fetchMatches(selectedDate);
     
-  }, [selectedDate, fetchMatches]);
+  }, [selectedDate, fetchMatches, initialDate]);
 
   // 실시간 경기만 보기 토글 시 현재 날짜로 설정
   useEffect(() => {
