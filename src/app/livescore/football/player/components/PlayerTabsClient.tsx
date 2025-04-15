@@ -193,13 +193,13 @@ export default function PlayerTabsClient({
   const statsProps = {
     statistics: statsData, 
     playerId, 
-    preloadedSeasons: seasons,
+    preloadedSeasons: seasons ? [...seasons].sort((a, b) => b - a) : [],  // 최신 시즌이 먼저 오도록 내림차순 정렬
     preloadedStats: statsData
   };
 
   const fixturesProps = {
     playerId,
-    seasons,
+    seasons: seasons ? [...seasons].sort((a, b) => b - a) : [],  // 최신 시즌이 먼저 오도록 내림차순 정렬
     fixturesData: fixtures || { data: [] },
     initialSeason: defaultSeason,
     baseUrl
@@ -235,29 +235,35 @@ export default function PlayerTabsClient({
       {/* PlayerHeader 컴포넌트를 제거하고 필요한 경우 상위 컴포넌트에서 렌더링하도록 변경 */}
       
       {/* 탭 네비게이션 */}
-      <div className="border-b border-gray-200 mb-4">
-        <nav className="-mb-px flex space-x-8 overflow-x-auto">
+      <div className="mb-4 bg-white rounded-lg border overflow-hidden">
+        <div 
+          className="flex overflow-x-auto" 
+          style={{ 
+            scrollbarWidth: 'none', 
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch'
+          }}
+        >
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => handleTabClick(tab.id)}
               className={classNames(
-                'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm',
+                'px-3 py-3 text-sm font-medium flex-1 min-w-[100px] whitespace-nowrap',
                 {
-                  'border-blue-500 text-blue-600': activeTab === tab.id,
-                  'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300':
-                    activeTab !== tab.id,
+                  'text-blue-600 border-b-3 border-blue-600 font-semibold': activeTab === tab.id,
+                  'text-gray-500 hover:text-gray-700': activeTab !== tab.id,
                 }
               )}
             >
               {tab.label}
             </button>
           ))}
-        </nav>
+        </div>
       </div>
 
       {/* 탭 컨텐츠 */}
-      <div className="mt-4 relative">
+      <div className="relative">
         {isLoading && (
           <div className="absolute inset-0 bg-white bg-opacity-50 flex items-center justify-center z-10">
             <TabLoading />

@@ -67,9 +67,12 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
     // getAPIURL 함수 사용하여 baseUrl 설정
     const baseUrl = getAPIURL();
     
-    // 현재 연도 계산
-    const currentYear = new Date().getFullYear();
-    const defaultSeason = currentYear > 2023 ? 2023 : currentYear;
+    // 현재 시즌 계산 (7월 1일 기준으로 새 시즌 시작)
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1; // JavaScript에서 월은 0부터 시작하므로 +1 
+    // 7월 이후면 현재 연도가 시즌의 시작 연도, 6월 이전이면 이전 연도가 시즌의 시작 연도
+    const defaultSeason = currentMonth >= 7 ? currentYear : currentYear - 1;
     
     // 필수 데이터 먼저 가져오기 (기본 선수 정보)
     const playerData = await fetchPlayerData(id, baseUrl);
@@ -77,12 +80,12 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
     // 선수 데이터가 없으면 오류 화면 표시
     if (!playerData) {
       return (
-        <div className="container mx-auto px-4 py-8">
-          <div className="bg-white rounded-lg shadow-sm p-6 text-center">
-            <h2 className="text-xl font-semibold text-red-600 mb-4">오류 발생</h2>
-            <p className="text-gray-700 mb-4">선수 정보를 불러오는데 실패했습니다.</p>
+        <div className="container">
+          <div className="bg-white rounded-lg text-center p-4">
+            <h2 className="text-xl font-semibold text-red-600">오류 발생</h2>
+            <p className="text-gray-700 my-2">선수 정보를 불러오는데 실패했습니다.</p>
             <p className="text-gray-600">API 서버에 연결할 수 없거나 요청한 데이터가 존재하지 않습니다.</p>
-            <div className="mt-6">
+            <div className="mt-4">
               <a 
                 href="/livescore/football"
                 className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors"
@@ -107,7 +110,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
 
     // 클라이언트 컴포넌트에 데이터 전달
     return (
-      <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+      <div className="container">
         <PlayerHeader player={playerData} />
         <PlayerTabs 
           player={playerData}
@@ -123,12 +126,12 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
   } catch (error) {
     console.error('Player page error:', error);
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-sm p-6 text-center">
-          <h2 className="text-xl font-semibold text-red-600 mb-4">오류 발생</h2>
-          <p className="text-gray-700 mb-4">선수 정보를 불러오는데 실패했습니다.</p>
+      <div className="container">
+        <div className="bg-white rounded-lg text-center p-4">
+          <h2 className="text-xl font-semibold text-red-600">오류 발생</h2>
+          <p className="text-gray-700 my-2">선수 정보를 불러오는데 실패했습니다.</p>
           <p className="text-gray-600">API 서버에 연결할 수 없거나 요청한 데이터가 존재하지 않습니다.</p>
-          <div className="mt-6">
+          <div className="mt-4">
             <a 
               href="/livescore/football"
               className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors"
