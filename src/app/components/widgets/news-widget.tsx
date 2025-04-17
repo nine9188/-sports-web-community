@@ -13,6 +13,7 @@ interface NewsItem {
   source: string;
   publishedAt: string;
   url: string;
+  postNumber?: number;
 }
 
 // API 응답 데이터 인터페이스
@@ -33,6 +34,7 @@ interface PostData {
   url?: string;
   board_id?: string;
   board_name?: string;
+  post_number?: number;
   [key: string]: unknown;
 }
 
@@ -95,6 +97,10 @@ export default function NewsWidget({ initialNews = [], boardSlug = 'sports-news'
           // 출처 결정 (게시판 이름이나 작성자 이름)
           const source = post.board_name || post.author_name || post.author || '게시판';
           
+          // URL 생성 (post_number 사용)
+          const postNumber = post.post_number || 0;
+          const url = `/boards/${boardSlug}/${postNumber}`;
+          
           return {
             id: post.id || `news-${index}`,
             title: post.title || '제목 없음',
@@ -102,7 +108,8 @@ export default function NewsWidget({ initialNews = [], boardSlug = 'sports-news'
             imageUrl: imageUrl,
             source: source,
             publishedAt: publishedAt,
-            url: `/boards/${boardSlug}/${post.id}`
+            url: url,
+            postNumber: postNumber
           };
         });
         
@@ -228,7 +235,11 @@ export default function NewsWidget({ initialNews = [], boardSlug = 'sports-news'
         <div className="md:w-1/2">
           <Link
             href={news[0].url}
-            className="block h-full mb-4 md:mb-0 bg-white rounded-lg border overflow-hidden hover:shadow-md transition-all group"
+            className="block h-full mb-4 md:mb-0 bg-white rounded-lg border overflow-hidden hover:shadow-md transition-all group hover:translate-y-[-2px] hover:border-blue-300 dark:hover:border-blue-500 touch-manipulation active:scale-[0.99]"
+            style={{
+              WebkitTapHighlightColor: 'transparent',
+              transform: 'translate3d(0,0,0)' // 하드웨어 가속 추가
+            }}
           >
             <div className="relative w-full aspect-[4/3] md:aspect-auto md:h-full md:min-h-[450px] transform transition-transform group-hover:scale-[1.02]">
               <Image
@@ -246,7 +257,7 @@ export default function NewsWidget({ initialNews = [], boardSlug = 'sports-news'
                     <span className="text-xs bg-primary px-2 py-1 rounded">{news[0].source}</span>
                     <span className="text-xs">{formatDate(news[0].publishedAt)}</span>
                   </div>
-                  <h2 className="font-bold text-lg md:text-xl text-white mt-2 group-hover:underline">{news[0].title}</h2>
+                  <h2 className="font-bold text-lg md:text-xl text-white mt-2 group-hover:text-blue-300 transition-colors">{news[0].title}</h2>
                 </div>
               </div>
             </div>
@@ -260,7 +271,11 @@ export default function NewsWidget({ initialNews = [], boardSlug = 'sports-news'
               <Link
                 key={item.id}
                 href={item.url}
-                className="bg-white rounded-lg border overflow-hidden hover:shadow-md transition-all h-full group"
+                className="bg-white rounded-lg border overflow-hidden hover:shadow-md transition-all h-full group hover:translate-y-[-2px] hover:border-blue-300 dark:hover:border-blue-500 touch-manipulation active:scale-[0.99]"
+                style={{
+                  WebkitTapHighlightColor: 'transparent',
+                  transform: 'translate3d(0,0,0)' // 하드웨어 가속 추가
+                }}
               >
                 <div className="flex flex-col h-full">
                   <div className="relative w-full aspect-video transform transition-transform group-hover:scale-[1.02]">
@@ -280,7 +295,7 @@ export default function NewsWidget({ initialNews = [], boardSlug = 'sports-news'
                     </div>
                   </div>
                   <div className="p-3 flex-grow">
-                    <h3 className="font-medium text-sm line-clamp-2 group-hover:underline">
+                    <h3 className="font-medium text-sm line-clamp-2 text-gray-800 group-hover:text-blue-600 transition-colors">
                       {item.title}
                     </h3>
                   </div>

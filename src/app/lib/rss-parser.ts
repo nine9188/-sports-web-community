@@ -315,8 +315,22 @@ async function parseRSSFormat(xml: any): Promise<RSSFeed> {
     }
     
     const results = await Promise.all(itemPromises);
-    // null 제거 및 최대 10개만 유지
-    items.push(...results.filter(item => item !== null).slice(0, 10));
+    
+    // null 제거 후 중복 항목 필터링
+    const validItems = results.filter(item => item !== null);
+    
+    // 링크 기준으로 중복 제거
+    const uniqueLinks = new Set<string>();
+    const uniqueItems = validItems.filter(item => {
+      if (item && item.link && !uniqueLinks.has(item.link)) {
+        uniqueLinks.add(item.link);
+        return true;
+      }
+      return false;
+    });
+    
+    // 최대 20개만 유지
+    items.push(...uniqueItems.slice(0, 50));
     
     return {
       title,
@@ -410,8 +424,22 @@ async function parseAtomFormat(xml: any): Promise<RSSFeed> {
     }
     
     const results = await Promise.all(entryPromises);
-    // null 제거 및 최대 10개만 유지
-    items.push(...results.filter(item => item !== null).slice(0, 10));
+    
+    // null 제거 후 중복 항목 필터링
+    const validItems = results.filter(item => item !== null);
+    
+    // 링크 기준으로 중복 제거
+    const uniqueLinks = new Set<string>();
+    const uniqueItems = validItems.filter(item => {
+      if (item && item.link && !uniqueLinks.has(item.link)) {
+        uniqueLinks.add(item.link);
+        return true;
+      }
+      return false;
+    });
+    
+    // 최대 20개만 유지
+    items.push(...uniqueItems.slice(0, 20));
     
     return {
       title,

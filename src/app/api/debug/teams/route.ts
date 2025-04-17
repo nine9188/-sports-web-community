@@ -42,7 +42,6 @@ export async function GET(request: Request) {
     // 모든 리그 데이터를 가져오는 Promise 배열
     const allLeaguePromises = leagueIds.map(leagueId => {
       const apiUrl = `https://v3.football.api-sports.io/teams?league=${leagueId}&season=${season}`;
-      console.log(`API 요청 (리그 ${leagueId}):`, apiUrl);
       
       return fetch(apiUrl, {
         headers: {
@@ -51,13 +50,11 @@ export async function GET(request: Request) {
       })
       .then(res => {
         if (!res.ok) {
-          console.error(`리그 ${leagueId} 응답 오류:`, res.status);
           return { leagueId, success: false, data: [] };
         }
         return res.json().then(data => ({ leagueId, success: true, data }));
       })
-      .catch(err => {
-        console.error(`리그 ${leagueId} 요청 오류:`, err);
+      .catch(() => {
         return { leagueId, success: false, data: [] };
       });
     });
@@ -120,8 +117,7 @@ export async function GET(request: Request) {
       mapping_templates: mappingTemplates
     });
 
-  } catch (error) {
-    console.error('API 처리 오류:', error);
+  } catch {
     return NextResponse.json(
       { success: false, message: '서버 오류가 발생했습니다.' },
       { status: 500 }

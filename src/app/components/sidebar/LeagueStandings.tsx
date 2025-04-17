@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { getTeamById } from '@/app/constants/teams';
 
 // 리그 정보 타입 정의
 interface League {
@@ -251,7 +252,16 @@ export default function ClientLeagueStandings({
   }, [activeLeague, isMobile]); // 최적화: 필요한 의존성만 포함
 
   // 팀 이름 짧게 표시 (최대 8자)
-  const shortenTeamName = (name: string) => {
+  const shortenTeamName = (name: string, teamId: number) => {
+    // 팀 데이터 매핑이 있는지 확인
+    const teamInfo = getTeamById(teamId);
+    
+    // 매핑된 데이터가 있으면 한글 이름 사용
+    if (teamInfo) {
+      return teamInfo.name_ko;
+    }
+    
+    // 매핑 데이터가 없으면 기존 로직 적용
     if (name.length <= 8) return name;
     return name.substring(0, 8);
   };
@@ -302,7 +312,7 @@ export default function ClientLeagueStandings({
                 />
               </div>
             )}
-            <span className="text-sm font-medium">
+            <span className="text-xs font-medium">
               {LEAGUES.find(l => l.id === activeLeague)?.fullName || ''}
             </span>
           </div>
@@ -323,16 +333,32 @@ export default function ClientLeagueStandings({
           </div>
         ) : standings && standings.standings && standings.standings.length > 0 ? (
           <div className="border-b">
-            <table className="w-full text-xs border-collapse">
+            <table className="w-full text-xs border-collapse table-fixed">
+              <colgroup>
+                {/* 순위 */}
+                <col className="w-[30px]" />
+                {/* 팀 (남은 공간 모두 차지) */}
+                <col />
+                {/* 경기 */}
+                <col className="w-[28px]" />
+                {/* 승 */}
+                <col className="w-[20px]" />
+                {/* 무 */}
+                <col className="w-[20px]" />
+                {/* 패 */}
+                <col className="w-[20px]" />
+                {/* 승점 */}
+                <col className="w-[30px]" />
+              </colgroup>
               <thead>
                 <tr className="border-b text-gray-500">
-                  <th className="text-center py-1.5 px-0 text-xs font-medium w-[40px]">순위</th>
-                  <th className="text-left py-1.5 px-1 text-xs font-medium">팀</th>
-                  <th className="text-center py-1.5 px-0 text-xs font-medium w-[40px]">경기</th>
-                  <th className="text-center py-1.5 px-0 text-xs font-medium w-[40px]">승</th>
-                  <th className="text-center py-1.5 px-0 text-xs font-medium w-[40px]">무</th>
-                  <th className="text-center py-1.5 px-0 text-xs font-medium w-[40px]">패</th>
-                  <th className="text-center py-1.5 px-0 text-xs font-medium w-[40px]">승점</th>
+                  <th className="text-center py-1 px-0 text-xs font-medium">순위</th>
+                  <th className="text-left py-1 px-1 text-xs font-medium">팀</th>
+                  <th className="text-center py-1 px-0 text-xs font-medium">경기</th>
+                  <th className="text-center py-1 px-0 text-xs font-medium">승</th>
+                  <th className="text-center py-1 px-0 text-xs font-medium">무</th>
+                  <th className="text-center py-1 px-0 text-xs font-medium">패</th>
+                  <th className="text-center py-1 px-0 text-xs font-medium">승점</th>
                 </tr>
               </thead>
               <tbody>
@@ -354,16 +380,16 @@ export default function ClientLeagueStandings({
                             className="object-contain"
                           />
                         </div>
-                        <span className="truncate max-w-[50px]">
-                          {shortenTeamName(item.team.name)}
+                        <span className="truncate max-w-[100px] font-medium">
+                          {shortenTeamName(item.team.name, item.team.id)}
                         </span>
                       </div>
                     </td>
-                    <td className="text-center py-1.5 px-0">{item.all.played}</td>
-                    <td className="text-center py-1.5 px-0">{item.all.win}</td>
-                    <td className="text-center py-1.5 px-0">{item.all.draw}</td>
-                    <td className="text-center py-1.5 px-0">{item.all.lose}</td>
-                    <td className="text-center py-1.5 px-0 font-medium">{item.points}</td>
+                    <td className="text-center py-1 px-0">{item.all.played}</td>
+                    <td className="text-center py-1 px-0">{item.all.win}</td>
+                    <td className="text-center py-1 px-0">{item.all.draw}</td>
+                    <td className="text-center py-1 px-0">{item.all.lose}</td>
+                    <td className="text-center py-1 px-0 font-medium">{item.points}</td>
                   </tr>
                 ))}
               </tbody>

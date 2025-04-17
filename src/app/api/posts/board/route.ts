@@ -132,10 +132,10 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // 2. 게시글 쿼리 구성 - 간단하게 필요한 정보만 가져옴
+    // 2. 게시글 쿼리 구성 - post_number도 함께 가져오도록 수정
     let query = supabase
       .from("posts")
-      .select("id, title, content, created_at, views, likes")
+      .select("id, title, content, created_at, views, likes, post_number")
       .eq("board_id", boardData.id)
       .range(offset, offset + limit - 1);
 
@@ -173,8 +173,6 @@ export async function GET(req: NextRequest) {
       // 개선된 함수로 썸네일 이미지 추출
       let imageUrl = extractImageFromContent(content);
       
-      console.log(`게시글 ${post.id}의 이미지 URL:`, imageUrl); // 디버깅 로그
-      
       // 이미지가 없으면 백업 이미지 설정
       if (!imageUrl) {
         imageUrl = `/213/news${(index % 4) + 1}.jpg`;
@@ -191,13 +189,13 @@ export async function GET(req: NextRequest) {
         created_at: post.created_at,
         board_id: boardData.id,
         board_name: boardData.name,
-        source: boardData.name
+        source: boardData.name,
+        post_number: post.post_number || 0
       };
     });
 
     return NextResponse.json(formattedPosts);
-  } catch (error) {
-    console.error("게시글 목록 API 오류:", error);
+  } catch {
     return NextResponse.json(
       { error: "서버 오류가 발생했습니다." },
       { status: 500 }

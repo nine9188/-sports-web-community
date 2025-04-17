@@ -65,18 +65,18 @@ const MAJOR_LEAGUE_IDS = getMajorLeagueIds();
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
+    
+    // 날짜 파라미터 처리
     const date = searchParams.get('date');
+    
     // 모든 리그 포함 여부 (기본값: false)
     const includeAllLeagues = searchParams.get('all_leagues') === 'true';
     // 언어 설정 (기본값: ko)
     const language = (searchParams.get('lang') || 'ko') as 'ko' | 'en';
 
-    console.log('API 요청 받음 - 날짜 파라미터:', date, '모든 리그 포함:', includeAllLeagues, '언어:', language);
-
     // API 키 확인
     const apiKey = process.env.NEXT_PUBLIC_RAPIDAPI_KEY;
     if (!apiKey) {
-      console.error('API 키가 설정되지 않았습니다');
       return NextResponse.json(
         { success: false, message: 'API 키가 설정되지 않았습니다.' },
         { status: 500 }
@@ -84,29 +84,29 @@ export async function GET(request: Request) {
     }
 
     // API URL 구성
-    let apiUrl;
-    if (date) {
-      apiUrl = `https://v3.football.api-sports.io/fixtures?date=${date}&timezone=Asia/Seoul`;
-      console.log(`날짜별 경기 요청: ${date}`);
-    } else {
-      apiUrl = `https://v3.football.api-sports.io/fixtures?live=all&timezone=Asia/Seoul`;
-      console.log('라이브 경기 요청');
+    let usedDate = date;
+    
+    if (!date) {
+      // date 파라미터가 없으면 실제 현재 날짜로 설정
+      const realToday = new Date().toISOString().split('T')[0];
+      usedDate = realToday;
     }
-
-    console.log('요청 URL:', apiUrl);
-
-    // API 요청
+    
+    const apiUrl = `https://v3.football.api-sports.io/fixtures?date=${usedDate}&timezone=Asia/Seoul`;
+    
+    // API 요청 (캐싱 방지)
     const response = await fetch(apiUrl, {
       headers: {
-        'x-apisports-key': apiKey
+        'x-apisports-key': apiKey,
+        'Cache-Control': 'no-cache, no-store'
       },
-      next: { revalidate: 30 }
+      cache: 'no-store',
+      next: { revalidate: 0 }
     });
 
     // 응답 상태 확인
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('API 응답 오류:', response.status, errorText);
       return NextResponse.json(
         { success: false, message: `API 응답 오류 (${response.status}): ${errorText}` },
         { status: response.status }
@@ -114,10 +114,8 @@ export async function GET(request: Request) {
     }
 
     const data = await response.json();
-    console.log('API 응답 수신 - 총 경기 수:', data.response?.length || 0);
     
     if (!data.response || !Array.isArray(data.response)) {
-      console.error('API 응답 형식 오류:', data);
       return NextResponse.json(
         { success: false, message: 'API 응답 형식이 올바르지 않습니다.', debug: data },
         { status: 500 }
@@ -131,9 +129,6 @@ export async function GET(request: Request) {
         MAJOR_LEAGUE_IDS.includes(match.league.id)
       );
     }
-    
-    console.log('총 경기 수:', data.response.length);
-    console.log('필터링 후 표시할 경기 수:', filteredMatches.length);
     
     const mappedData = filteredMatches.map((match: MatchData) => {
       // 리그 한국어/영어 이름 처리
@@ -232,8 +227,6 @@ export async function GET(request: Request) {
       const status = match.status.code;
       statusCounts[status] = (statusCounts[status] || 0) + 1;
     });
-    
-    console.log('경기 상태별 통계:', statusCounts);
 
     return NextResponse.json({
       success: true,
@@ -248,8 +241,6 @@ export async function GET(request: Request) {
     });
 
   } catch (error: unknown) {
-    console.error('API 처리 중 오류 발생:', error);
-    
     return NextResponse.json(
       { 
         success: false, 
