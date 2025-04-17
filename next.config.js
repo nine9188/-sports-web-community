@@ -10,7 +10,9 @@ const nextConfig = {
     ],
     domains: [
       'vnjjfhsuzoxcljqqwwvx.supabase.co',
+      'via.placeholder.com',
     ],
+    unoptimized: true,
   },
   // punycode 모듈 경고 무시 설정
   webpack: (config) => {

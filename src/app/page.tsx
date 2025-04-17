@@ -1,5 +1,7 @@
 import { createClient } from './lib/supabase.server';
 import AllPostsWidget from './components/widgets/all-posts-widget'
+import LiveScoreWidget from './components/widgets/live-score-widget';
+import NewsWidget from './components/widgets/news-widget';
 
 // CombinedPost 인터페이스 정의 (all-posts-widget.tsx와 동일하게 유지)
 interface CombinedPost {
@@ -201,13 +203,86 @@ async function fetchInitialPosts(): Promise<CombinedPost[]> {
   }
 }
 
+// 매치 데이터 인터페이스 정의
+interface MatchData {
+  id: number;
+  status: {
+    code: string;
+    name: string;
+    elapsed: number | null;
+  };
+  time: {
+    timestamp: number;
+    date: string;
+    timezone: string;
+  };
+  league: {
+    id: number;
+    name: string;
+    country: string;
+    logo: string;
+    flag: string;
+  };
+  teams: {
+    home: {
+      id: number;
+      name: string;
+      logo: string;
+      winner: boolean | null;
+    };
+    away: {
+      id: number;
+      name: string;
+      logo: string;
+      winner: boolean | null;
+    };
+  };
+  goals: {
+    home: number;
+    away: number;
+  };
+}
+
+// 서버측에서 라이브스코어 데이터를 가져오는 함수
+async function fetchLiveScores(): Promise<MatchData[]> {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/livescore/football`, { 
+      cache: 'no-store'
+    });
+    
+    if (!response.ok) {
+      throw new Error('라이브스코어 데이터를 가져오는데 실패했습니다.');
+    }
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      // 종료된 경기는 필터링 ('FT', 'AET', 'PEN' 등의 상태코드는 제외)
+      return result.data.filter((match: MatchData) => 
+        !['FT', 'AET', 'PEN', 'CANC', 'ABD', 'AWD', 'WO'].includes(match.status.code)
+      );
+    }
+    
+    return [];
+  } catch (error) {
+    console.error("Failed to fetch live scores:", error);
+    return [];
+  }
+}
+
 export default async function HomePage() {
   try {
-    const initialPosts = await fetchInitialPosts();
+    // 병렬로 데이터 가져오기
+    const [initialPosts, initialMatches] = await Promise.all([
+      fetchInitialPosts(),
+      fetchLiveScores()
+    ]);
     
     return (
       <main>
+        <LiveScoreWidget initialMatches={initialMatches} />
         <AllPostsWidget initialPosts={initialPosts} />
+        <NewsWidget />
       </main>
     );
   } catch (error) {
@@ -218,10 +293,12 @@ export default async function HomePage() {
     
     return (
       <main>
-        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md mb-4">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
           <p className="text-yellow-700">데이터를 불러오는 중 문제가 발생했습니다. 곧 해결될 예정입니다.</p>
         </div>
+        <LiveScoreWidget initialMatches={[]} />
         <AllPostsWidget initialPosts={fallbackPosts} />
+        <NewsWidget />
       </main>
     );
   }

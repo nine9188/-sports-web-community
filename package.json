@@ -38,6 +38,7 @@
     "@tiptap/starter-kit": "^2.11.6",
     "@types/react-datepicker": "^6.2.0",
     "@types/socket.io-client": "^1.4.36",
+    "@xmldom/xmldom": "^0.9.8",
     "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
     "class-variance-authority": "^0.7.1",

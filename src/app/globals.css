@@ -444,13 +444,13 @@ iframe[src*="youtu.be/"] {
 } 
 /* globals.css */
 .scrollbar-hide {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-  
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
   
 /* 유튜브 및 비디오 컨테이너 반응형 스타일 */
 .youtube-container,

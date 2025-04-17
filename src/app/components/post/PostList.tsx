@@ -64,48 +64,45 @@ export default function PostList({
   const iconCache = useRef<Record<string, AuthorIconInfo>>({});
   
   // 게시글 내용에 특정 요소가 포함되어 있는지 확인하는 함수
-  const checkContentType = (content: string) => {
+  const checkContentType = (content: string | Record<string, unknown> | null | undefined) => {
     if (!content) return { hasImage: false, hasVideo: false, hasYoutube: false, hasLink: false };
     
-    // 이미지 및 비디오 감지
-    const hasImage = content.includes('<img') || content.includes('data-type="image"');
-    const hasVideo = content.includes('<video') || content.includes('data-type="video"');
-    
-    // 모든 URL 찾기
-    const urlPattern = /https?:\/\/[^\s<>"']+/g;
-    const urls = content.match(urlPattern) || [];
-    
-    // 각 URL 유형을 확인하기 위한 플래그
-    let foundYoutubeUrl = false;
-    let foundNonYoutubeUrl = false;
-    
-    // 각 URL을 검사하여 유튜브 URL과 일반 URL 구분
-    for (const url of urls) {
-      if (/youtube\.com|youtu\.be/i.test(url)) {
-        foundYoutubeUrl = true;
-      } else if (!/\.(jpg|jpeg|png|gif|webp|svg|bmp|mp4|webm|ogg|mov|avi|wmv|flv|mkv)(\?.*)?$/i.test(url)) {
-        foundNonYoutubeUrl = true;
+    // JSON 객체인 경우와 문자열인 경우를 구분하여 처리
+    if (typeof content === 'object') {
+      try {
+        // Tiptap JSON 구조 검사
+        const contentStr = JSON.stringify(content);
+        const hasImage = contentStr.includes('"type":"image"');
+        const hasVideo = contentStr.includes('"type":"video"');
+        const hasYoutube = contentStr.includes('"type":"youtube"') || 
+                         contentStr.includes('youtube.com') || 
+                         contentStr.includes('youtu.be');
+        
+        // 링크 검사
+        const hasLink = contentStr.includes('"type":"link"') || 
+                      contentStr.includes('http://') || 
+                      contentStr.includes('https://');
+        
+        return { hasImage, hasVideo, hasYoutube, hasLink };
+      } catch {
+        // JSON 파싱 오류시 기본값 반환
+        return { hasImage: false, hasVideo: false, hasYoutube: false, hasLink: false };
       }
+    }
+    
+    // 문자열인 경우 (기존 로직)
+    try {
+      // 여기서 content는 string 타입임이 확실함
+      const contentStr = content as string;
+      const hasImage = contentStr.includes('<img') || contentStr.includes('![');
+      const hasVideo = contentStr.includes('<video') || contentStr.includes('mp4');
+      const hasYoutube = contentStr.includes('youtube.com') || contentStr.includes('youtu.be');
+      const hasLink = contentStr.includes('http://') || contentStr.includes('https://');
       
-      if (foundYoutubeUrl && foundNonYoutubeUrl) break;
+      return { hasImage, hasVideo, hasYoutube, hasLink };
+    } catch {
+      return { hasImage: false, hasVideo: false, hasYoutube: false, hasLink: false };
     }
-    
-    if (!foundNonYoutubeUrl && content.includes('<a href')) {
-      foundNonYoutubeUrl = !(
-        content.includes('<a href="https://youtube.com') || 
-        content.includes('<a href="https://www.youtube.com') || 
-        content.includes('<a href="https://youtu.be')
-      );
-    }
-    
-    const hasYoutube = foundYoutubeUrl || 
-                       content.includes('data-type="youtube"') ||
-                       content.includes('youtube-video') ||
-                       (content.includes('<iframe') && (content.includes('youtube.com') || content.includes('youtu.be')));
-    
-    const hasLink = foundNonYoutubeUrl;
-    
-    return { hasImage, hasVideo, hasYoutube, hasLink };
   };
   
   // 날짜 포맷팅

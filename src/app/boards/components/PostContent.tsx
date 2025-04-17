@@ -3,12 +3,155 @@
 import React, { useEffect, useRef } from 'react';
 import { generateMatchCardHTML } from '@/app/utils/matchCardRenderer';
 
+// TipTap 문서 타입 정의
+interface TipTapNode {
+  type: string;
+  content?: TipTapNode[];
+  text?: string;
+  marks?: {
+    type: string;
+    attrs?: {
+      href?: string;
+      target?: string;
+      rel?: string;
+    }
+  }[];
+  attrs?: {
+    src?: string;
+    alt?: string;
+    [key: string]: unknown;
+  };
+}
+
+interface TipTapDoc {
+  type: string;
+  content: TipTapNode[];
+}
+
+// 추가 인터페이스 정의
+interface RssPost {
+  source_url?: string;
+  description?: string;
+  content?: string;
+  imageUrl?: string;
+  image_url?: string;
+  [key: string]: unknown;
+}
+
 interface PostContentProps {
-  content: string;
+  content: string | TipTapDoc | RssPost | Record<string, unknown>;
 }
 
 export default function PostContent({ content }: PostContentProps) {
   const contentRef = useRef<HTMLDivElement>(null);
+  
+  // content가 객체인 경우 HTML로 변환
+  const processContent = () => {
+    if (!content) return '';
+    
+    // 객체인 경우 JSON 구조를 HTML로 변환
+    if (typeof content === 'object') {
+      try {
+        // RSS 게시글인지 확인 (source_url 필드가 있는 경우가 많음)
+        const isRssPost = Boolean(
+          'source_url' in content || 
+          (content as RssPost).source_url
+        );
+        
+        // Tiptap JSON 구조 또는 다른 JSON 구조 처리
+        let htmlContent = '<div class="rss-content">';
+        
+        // RSS 게시글이면 원문 링크와 출처 표시를 먼저 추가
+        if (isRssPost) {
+          const rssPost = content as RssPost;
+          const sourceUrl = rssPost.source_url;
+          
+          if (sourceUrl) {
+            // 이미지 URL 직접 사용 (외부 API 대신)
+            const imageUrl = rssPost.imageUrl || rssPost.image_url;
+            
+            htmlContent += `
+              <div class="mb-6">
+                ${imageUrl ? `
+                <div class="mb-4 relative overflow-hidden rounded-lg">
+                  <img 
+                    src="${imageUrl}" 
+                    alt="기사 이미지" 
+                    class="w-full h-auto"
+                    onerror="this.onerror=null;this.style.display='none';"
+                  />
+                </div>` : ''}
+                <div class="flex justify-between items-center mb-4">
+                  <a href="${sourceUrl}" target="_blank" rel="noopener noreferrer" 
+                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    원문 보기
+                  </a>
+                  <span class="text-xs text-gray-500">출처: 풋볼리스트(FOOTBALLIST)</span>
+                </div>
+              </div>
+            `;
+          }
+        }
+        
+        // JSON 구조가 Tiptap 형식인 경우
+        if ('type' in content && content.type === 'doc' && 'content' in content && Array.isArray((content as TipTapDoc).content)) {
+          const tipTapDoc = content as TipTapDoc;
+          
+          tipTapDoc.content.forEach((node) => {
+            if (node.type === 'paragraph' && Array.isArray(node.content)) {
+              htmlContent += '<p>';
+              node.content.forEach((textNode) => {
+                if (textNode.type === 'text') {
+                  if (textNode.marks && textNode.marks.length > 0) {
+                    // 링크 처리
+                    const linkMark = textNode.marks.find((mark) => mark.type === 'link');
+                    if (linkMark && linkMark.attrs && linkMark.attrs.href) {
+                      htmlContent += `<a href="${linkMark.attrs.href}" target="${linkMark.attrs.target || '_blank'}" rel="${linkMark.attrs.rel || 'noopener noreferrer'}">${textNode.text}</a>`;
+                    } else {
+                      htmlContent += textNode.text;
+                    }
+                  } else {
+                    htmlContent += textNode.text;
+                  }
+                }
+              });
+              htmlContent += '</p>';
+            } else if (node.type === 'image' && node.attrs && node.attrs.src) {
+              htmlContent += `<img src="${node.attrs.src}" alt="${node.attrs.alt || ''}" class="max-w-full mx-auto my-4 rounded-lg" />`;
+            }
+          });
+        } else {
+          // 간단한 내용 추출 시도 (RSS 항목에서 description 필드 추출)
+          const rssPost = content as RssPost;
+          if ('description' in content && typeof rssPost.description === 'string') {
+            htmlContent += `<div class="rss-description my-4">${rssPost.description}</div>`;
+          } else if ('content' in content && typeof (content as RssPost).content === 'string') {
+            // content 필드도 확인 (일부 RSS 피드에서는 content 필드에 본문이 저장됨)
+            htmlContent += `<div class="rss-content-full my-4">${(content as RssPost).content}</div>`;
+          } else {
+            // 다른 형태의 JSON인 경우 - 가독성을 위해 스타일 적용된 형태로 출력
+            htmlContent += `
+              <div class="bg-gray-50 p-4 rounded-md overflow-auto text-sm font-mono">
+                <pre>${JSON.stringify(content, null, 2)}</pre>
+              </div>
+            `;
+          }
+        }
+        
+        htmlContent += '</div>';
+        return htmlContent;
+      } catch (error) {
+        console.error('JSON content 처리 오류:', error);
+        return `<div class="text-red-500">오류: 게시글 내용을 표시할 수 없습니다.</div>`;
+      }
+    }
+    
+    // 이미 문자열인 경우 그대로 반환 (기존 HTML 내용)
+    return content;
+  };
   
   useEffect(() => {
     if (!contentRef.current) return;
@@ -143,7 +286,7 @@ export default function PostContent({ content }: PostContentProps) {
     <div 
       ref={contentRef}
       className="prose prose-sm sm:prose-base lg:prose-lg max-w-none prose-headings:font-bold prose-img:rounded-lg prose-img:mx-auto p-4 sm:p-6"
-      dangerouslySetInnerHTML={{ __html: content }}
+      dangerouslySetInnerHTML={{ __html: processContent() }}
     />
   );
 } 

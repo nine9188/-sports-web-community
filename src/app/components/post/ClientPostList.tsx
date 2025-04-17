@@ -110,7 +110,7 @@ export default function ClientPostList({
     currentBoardId,
     fromParam,
     page: page,
-    limit: 15 // 한 페이지에 표시할 게시글 수
+    limit: 20 // 한 페이지에 표시할 게시글 수
   });
   
   // 에러 메시지

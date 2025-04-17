@@ -137,6 +137,18 @@ function getFilteredBoardIds(boardId: string, boardLevel: string, boardsMap: Boa
   return Array.from(result);
 }
 
+// ErrorComponent 추가
+function ErrorComponent({ message }: { message: string }) {
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border shadow-md p-8 text-center">
+        <h2 className="text-2xl font-semibold mb-4">오류가 발생했습니다</h2>
+        <p className="text-gray-600 dark:text-gray-400 mb-6">{message}</p>
+      </div>
+    </div>
+  );
+}
+
 export default async function BoardDetailPage({ 
   params,
   searchParams 
@@ -145,20 +157,12 @@ export default async function BoardDetailPage({
   searchParams: Promise<{ page?: string; from?: string }>
 }) {
   try {
-    // params와 searchParams를 병렬로 처리
-    const [{ slug }, resolvedParams] = await Promise.all([
-      params, 
-      searchParams
-    ]);
-    
-    // 페이지 파라미터 처리
-    const page = resolvedParams?.page ? parseInt(resolvedParams.page, 10) : 1;
-    
-    // from 파라미터 확인 (게시판 내비게이션 출처 확인용)
-    const fromParam = resolvedParams?.from;
+    // 파라미터 및 쿼리 매개변수 추출
+    const { slug } = await params;
+    const { page = '1', from: fromParam } = await searchParams;
     
     // 페이지 값이 유효하지 않으면 기본값 1로 설정
-    const currentPage = isNaN(page) || page < 1 ? 1 : page;
+    const currentPage = isNaN(parseInt(page, 10)) || parseInt(page, 10) < 1 ? 1 : parseInt(page, 10);
     
     const supabase = await createClient();
     
@@ -386,7 +390,8 @@ export default async function BoardDetailPage({
         </div>
       </div>
     );
-  } catch {
-    return notFound();
+  } catch (error) {
+    console.error("BoardDetailPage Error:", error);
+    return <ErrorComponent message="게시판 정보를 불러오는 중 오류가 발생했습니다." />;
   }
 } 

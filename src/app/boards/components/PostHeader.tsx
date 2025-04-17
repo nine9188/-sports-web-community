@@ -30,6 +30,10 @@ export default function PostHeader({
   const [userIconUrl, setUserIconUrl] = useState<string | null>(author.icon_url || null);
   const [iconName, setIconName] = useState<string | null>(null);
   
+  // 제목 정리 - 클라이언트 측에서만 적용됨 (replace 메서드 사용)
+  const cleanTitle = typeof title === 'string' ? 
+    title.replace(/&quot;|"|"|"/g, '"').replace(/&ldquo;|&rdquo;/g, '"') : title;
+  
   // 사용자 아이콘 가져오기
   useEffect(() => {
     const fetchUserIcon = async () => {
@@ -70,7 +74,7 @@ export default function PostHeader({
 
   return (
     <div className="border-b px-4 py-3">
-      <h1 className="text-lg font-medium mb-2">{title}</h1>
+      <h1 className="text-lg font-medium mb-2">{cleanTitle}</h1>
       
       {/* PC 버전 (md 이상) - 한 줄에 모든 정보 표시 */}
       <div className="hidden md:flex flex-wrap items-center justify-between text-xs text-gray-500">
