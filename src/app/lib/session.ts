@@ -4,7 +4,8 @@ import { Database } from '@/app/lib/database.types';
 import { User } from '@supabase/supabase-js';
 
 /**
- * API 라우트에서 현재 인증된 사용자를 가져오는 함수
+ * 서버 컴포넌트 전용 - API 라우트에서 현재 인증된 사용자를 가져오는 함수
+ * 클라이언트 컴포넌트에서는 절대 직접 호출하지 마세요.
  */
 export async function getCurrentUser(): Promise<User | null> {
   try {

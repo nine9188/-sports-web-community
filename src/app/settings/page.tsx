@@ -1,19 +1,20 @@
-'use client';
+import { redirect } from 'next/navigation';
+import { createClient } from '../lib/supabase.server';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+export const dynamic = 'force-dynamic';
 
-export default function SettingsPage() {
-  const router = useRouter();
+export default async function SettingsPage() {
+  // Supabase 클라이언트 생성
+  const supabase = await createClient();
   
-  useEffect(() => {
-    router.replace('/settings/profile');
-  }, [router]);
+  // 사용자 세션 확인
+  const { data: { session } } = await supabase.auth.getSession();
   
-  return (
-    <div className="flex items-center justify-center h-48">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"></div>
-      <span className="ml-2">리다이렉트 중...</span>
-    </div>
-  );
+  // 로그인되지 않은 경우 로그인 페이지로 리디렉션
+  if (!session) {
+    redirect('/signin?returnUrl=/settings/profile');
+  }
+  
+  // 설정 메인 페이지는 프로필 설정으로 리디렉션
+  redirect('/settings/profile');
 } 

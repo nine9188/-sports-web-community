@@ -46,27 +46,57 @@ export function formatRelativeTime(date: Date): string {
  * @param dateStr ISO 형식의 날짜 문자열
  * @returns YYYY.MM.DD 형식의 문자열
  */
-export function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  
-  return `${year}.${month}.${day}`;
+export function formatDate(dateString: string): string {
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    
+    // 시간 차이 계산 (밀리초)
+    const diffMs = now.getTime() - date.getTime();
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHour = Math.floor(diffMin / 60);
+    const diffDay = Math.floor(diffHour / 24);
+    
+    // 시간 차이에 따른 표시
+    if (diffSec < 60) {
+      return '방금 전';
+    } else if (diffMin < 60) {
+      return `${diffMin}분 전`;
+    } else if (diffHour < 24) {
+      return `${diffHour}시간 전`;
+    } else if (diffDay < 7) {
+      return `${diffDay}일 전`;
+    } else {
+      // YYYY-MM-DD 형식으로 표시
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+  } catch {
+    return dateString || '-';
+  }
 }
 
 /**
- * 날짜와 시간을 YYYY.MM.DD HH:MM 형식으로 변환
- * @param dateStr ISO 형식의 날짜 문자열
- * @returns YYYY.MM.DD HH:MM 형식의 문자열
+ * 상세 날짜와 시간을 포맷팅하는 함수
+ * @param dateString ISO 형식의 날짜 문자열
+ * @returns 포맷팅된 날짜 및 시간 문자열
  */
-export function formatDateTime(dateStr: string): string {
-  const date = new Date(dateStr);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  
-  return `${year}.${month}.${day} ${hours}:${minutes}`;
+export function formatDateTime(dateString: string): string {
+  try {
+    const date = new Date(dateString);
+    
+    // YYYY-MM-DD HH:MM 형식으로 표시
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+  } catch {
+    return dateString || '-';
+  }
 } 

@@ -36,6 +36,16 @@ export default function RootLayoutClient({ children, boardNavigation }: RootLayo
     return pathname === '/signin' || pathname === '/signup';
   }, [pathname]);
   
+  // 쇼츠 페이지 여부 확인
+  const isShortsPage = useMemo(() => {
+    return pathname === '/shorts' || pathname?.startsWith('/shorts/');
+  }, [pathname]);
+  
+  // 독립적인 레이아웃이 필요한 페이지 여부
+  const isIndependentLayout = useMemo(() => {
+    return isAuthPage || isShortsPage;
+  }, [isAuthPage, isShortsPage]);
+  
   // queryClient를 useMemo로 최적화하여 불필요한 재생성 방지
   const queryClient = useMemo(() => new QueryClient({
     defaultOptions: {
@@ -75,8 +85,8 @@ export default function RootLayoutClient({ children, boardNavigation }: RootLayo
           enableSystem={false}
           disableTransitionOnChange
         >
-          {isAuthPage ? (
-            // 인증 페이지일 경우 헤더, 사이드바 없이 직접 children만 렌더링
+          {isIndependentLayout ? (
+            // 인증 페이지나 쇼츠 페이지일 경우 헤더, 사이드바 없이 직접 children만 렌더링
             children
           ) : (
             // 일반 페이지는 기존 레이아웃 사용
@@ -101,8 +111,8 @@ export default function RootLayoutClient({ children, boardNavigation }: RootLayo
             </div>
           )}
           
-          {/* 인증 페이지에서는 토스트 컨테이너가 표시되지 않도록 */}
-          {!isAuthPage && (
+          {/* 인증 페이지나 쇼츠 페이지에서는 토스트 컨테이너가 표시되지 않도록 */}
+          {!isIndependentLayout && (
             <ToastContainer 
               position="top-right"
               autoClose={5000}

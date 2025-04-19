@@ -1,10 +1,10 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { Database } from './database.types';
+import { Database } from '../database.types';
 import { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies';
 
-// 쿠키스토어를 받아서 클라이언트를 생성하는 함수
+// 서버 컴포넌트용 클라이언트 - 읽기 전용 (쿠키스토어 직접 전달)
 export const createClientWithCookies = (cookieStore: ReadonlyRequestCookies): SupabaseClient<Database> => {
   try {
     // 환경변수 검증

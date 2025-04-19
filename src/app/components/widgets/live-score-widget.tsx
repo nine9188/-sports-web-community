@@ -359,7 +359,7 @@ export default function LiveScoreWidget({ initialMatches = [] }: LiveScoreWidget
   };
 
   return (
-    <div className="w-full mb-4">
+    <div className="w-full mb-4 mt-4 md:mt-0">
       {loading ? (
         <div className="flex flex-col justify-center items-center h-40">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100 mb-2"></div>
@@ -404,18 +404,20 @@ export default function LiveScoreWidget({ initialMatches = [] }: LiveScoreWidget
           {/* 가로 스크롤 슬라이더 */}
           <div 
             ref={cardContainerRef}
-            className="overflow-x-auto scrollbar-hide mx-0 mt-0 scroll-smooth"
+            className="overflow-x-auto overflow-y-hidden scrollbar-hide mx-0 mt-0 scroll-smooth h-[140px]"
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
             style={{ 
               WebkitOverflowScrolling: 'touch',
               overflowX: 'auto',
+              overflowY: 'hidden',
               display: 'flex',
-              flexDirection: 'row'
+              flexDirection: 'row',
+              height: '140px'
             }}
           >
-            <div className="flex pl-0 pr-2">
+            <div className="flex pl-0 pr-2 h-[140px]">
               {matches.map((match) => (
                 <Link 
                   key={match.id} 

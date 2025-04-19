@@ -593,7 +593,7 @@ export default async function HomePage() {
     
     return (
       <main>
-        <div className="mb-4">
+        <div className="mb-4 hidden md:block">
           <NavBoardSelector />
         </div>
         <LiveScoreWidget initialMatches={initialMatches} />
@@ -608,10 +608,10 @@ export default async function HomePage() {
     
     return (
       <main>
-        <div className="mb-4">
+        <div className="mb-4 hidden md:block">
           <NavBoardSelector />
         </div>
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg mb-4 p-4">
           <p className="text-yellow-700">데이터를 불러오는 중 문제가 발생했습니다. 곧 해결될 예정입니다.</p>
         </div>
         <LiveScoreWidget initialMatches={[]} />

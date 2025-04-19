@@ -59,6 +59,15 @@ const config: Config = {
           950: "#020617",
         },
       },
+      animation: {
+        progress: 'progress 5s linear forwards',
+      },
+      keyframes: {
+        progress: {
+          '0%': { width: '0%' },
+          '100%': { width: '100%' },
+        },
+      },
     },
   },
   plugins: [

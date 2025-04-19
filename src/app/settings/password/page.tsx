@@ -1,129 +1,44 @@
-'use client';
+import { createClient } from '@/app/lib/supabase.server';
+import { redirect } from 'next/navigation';
+import PasswordForm from './components/PasswordForm';
 
-import { useState } from 'react';
-import { useAuth } from '@/app/context/AuthContext';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { createClient } from '@/app/lib/supabase-browser';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
-export default function PasswordSettings() {
-  const { user } = useAuth();
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+export default async function PasswordSettingsPage() {
+  // Supabase 클라이언트 생성
+  const supabase = await createClient();
   
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    
-    if (!user) return;
-    
-    // 비밀번호 유효성 검사
-    if (newPassword.length < 6) {
-      toast.error('비밀번호는 최소 6자 이상이어야 합니다.');
-      return;
-    }
-    
-    if (newPassword !== confirmPassword) {
-      toast.error('새 비밀번호와 확인이 일치하지 않습니다.');
-      return;
-    }
-    
-    try {
-      setIsLoading(true);
-      
-      const supabase = createClient();
-      
-      // 현재 비밀번호로 로그인 시도하여 검증
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.email!,
-        password: currentPassword,
-      });
-      
-      if (signInError) {
-        toast.error('현재 비밀번호가 올바르지 않습니다.');
-        return;
-      }
-      
-      // 비밀번호 업데이트
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
-      });
-      
-      if (error) throw error;
-      
-      // 입력 필드 초기화
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-      
-      toast.success('비밀번호가 성공적으로 변경되었습니다.');
-    } catch (error: unknown) {
-      console.error('비밀번호 변경 오류:', error);
-      
-      // 에러 객체가 message 속성을 가지고 있는지 확인
-      if (error && typeof error === 'object' && 'message' in error) {
-        toast.error((error as { message: string }).message || '비밀번호 변경 중 오류가 발생했습니다.');
-      } else {
-        toast.error('비밀번호 변경 중 오류가 발생했습니다.');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (!user) {
-    return <div>로딩 중...</div>;
+  // 사용자 인증 정보 확인 (getUser 메서드 사용)
+  const { data: { user }, error } = await supabase.auth.getUser();
+  
+  // 로그인되지 않은 경우 로그인 페이지로 리디렉션
+  if (!user || error) {
+    redirect('/signin?returnUrl=/settings/password');
   }
-
+  
+  // OAuth 계정인 경우 비밀번호 변경 불가
+  const isOAuthAccount = user?.app_metadata?.provider && 
+    user.app_metadata.provider !== 'email';
+  
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4">비밀번호 변경</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-gray-700 mb-1">현재 비밀번호</label>
-          <input
-            type="password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            className="w-full p-2 border rounded bg-white"
-            required
-          />
+    <div className="mb-4 bg-white rounded-lg border overflow-hidden p-4">
+      <h2 className="text-xl font-semibold mb-1">비밀번호 변경</h2>
+      <p className="text-gray-500 text-sm mb-6">
+        계정 보안을 위해 주기적으로 비밀번호를 변경하는 것이 좋습니다.
+      </p>
+      
+      {isOAuthAccount ? (
+        <div className="bg-yellow-50 border border-yellow-200 rounded p-4 text-yellow-800">
+          <p className="text-sm font-medium">소셜 로그인(OAuth) 계정입니다.</p>
+          <p className="text-sm mt-1">
+            소셜 로그인으로 가입한 계정은 이 페이지에서 비밀번호를 변경할 수 없습니다.
+            해당 소셜 계정의 비밀번호를 변경하려면 해당 서비스에서 변경해주세요.
+          </p>
         </div>
-        
-        <div>
-          <label className="block text-gray-700 mb-1">새 비밀번호</label>
-          <input
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full p-2 border rounded bg-white"
-            required
-            minLength={6}
-          />
-          <p className="text-xs text-gray-500 mt-1">비밀번호는 최소 6자 이상이어야 합니다.</p>
-        </div>
-        
-        <div>
-          <label className="block text-gray-700 mb-1">새 비밀번호 확인</label>
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full p-2 border rounded bg-white"
-            required
-          />
-        </div>
-        
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded disabled:opacity-50"
-        >
-          {isLoading ? '변경 중...' : '비밀번호 변경'}
-        </button>
-      </form>
-      <ToastContainer position="top-right" autoClose={2000} />
+      ) : (
+        <PasswordForm />
+      )}
     </div>
   );
 } 
