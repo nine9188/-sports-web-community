@@ -4,6 +4,26 @@ import LiveScoreWidget from './components/widgets/live-score-widget';
 import NewsWidget from './components/widgets/news-widget';
 import YouTubeWidget from './components/widgets/youtube-widget';
 import NavBoardSelector from './components/navigation/NavBoardSelector';
+import { fetchCachedMultiDayMatches, MatchData } from './actions/footballApi';
+
+// API 응답 타입 정의
+interface MultiDayMatchesResult {
+  success: boolean;
+  dates?: {
+    yesterday: string;
+    today: string;
+    tomorrow: string;
+  };
+  meta?: {
+    totalMatches: number;
+  };
+  data?: {
+    yesterday: { matches: MatchData[] };
+    today: { matches: MatchData[] };
+    tomorrow: { matches: MatchData[] };
+  };
+  error?: string;
+}
 
 // CombinedPost 인터페이스 정의 (all-posts-widget.tsx와 동일하게 유지)
 interface CombinedPost {
@@ -200,102 +220,30 @@ async function fetchInitialPosts(): Promise<CombinedPost[]> {
   }
 }
 
-// 매치 데이터 인터페이스 정의
-interface MatchData {
-  id: number;
-  status: {
-    code: string;
-    name: string;
-    elapsed: number | null;
-  };
-  time: {
-    timestamp: number;
-    date: string;
-    timezone: string;
-  };
-  league: {
-    id: number;
-    name: string;
-    country: string;
-    logo: string;
-    flag: string;
-  };
-  teams: {
-    home: {
-      id: number;
-      name: string;
-      logo: string;
-      winner: boolean | null;
-    };
-    away: {
-      id: number;
-      name: string;
-      logo: string;
-      winner: boolean | null;
-    };
-  };
-  goals: {
-    home: number;
-    away: number;
-  };
-  displayDate?: string; // 표시용 날짜 (오늘/내일/어제)
-}
-
-// 서버측에서 라이브스코어 데이터를 가져오는 함수
+// 서버 컴포넌트에서 경기 데이터 가져오기
 async function fetchLiveScores(): Promise<MatchData[]> {
   try {
-    // 다중 날짜 API 엔드포인트 사용
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/livescore/football/multi-date`, { 
-      cache: 'no-store',
-      next: { revalidate: 0 }
-    });
+    // 서버 액션을 사용하여 경기 데이터 가져오기
+    const result = await fetchCachedMultiDayMatches() as MultiDayMatchesResult;
     
-    if (!response.ok) {
-      throw new Error('라이브스코어 데이터를 가져오는데 실패했습니다.');
-    }
-    
-    const result = await response.json();
-    
-    if (result.success) {
-      // 3일치 데이터를 모두 합치기
+    if (result.success && result.data) {
+      // 어제, 오늘, 내일 경기 데이터 모두 합치기
       const allMatches = [
-        ...(result.data.yesterday.matches || []).map((match: MatchData) => ({
+        ...((result.data.yesterday?.matches || []).map((match: MatchData) => ({
           ...match,
           displayDate: '어제'
-        })),
-        ...(result.data.today.matches || []).map((match: MatchData) => ({
+        }))),
+        ...((result.data.today?.matches || []).map((match: MatchData) => ({
           ...match,
           displayDate: '오늘'
-        })),
-        ...(result.data.tomorrow.matches || []).map((match: MatchData) => ({
+        }))),
+        ...((result.data.tomorrow?.matches || []).map((match: MatchData) => ({
           ...match,
           displayDate: '내일'
-        }))
+        })))
       ];
       
       return allMatches;
-    }
-    
-    // 다중 날짜 API가 실패한 경우 기존 API로 폴백
-    console.log('다중 날짜 API 실패, 기존 API로 폴백');
-    const fallbackResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/livescore/football`, { 
-      cache: 'no-store'
-    });
-    
-    if (!fallbackResponse.ok) {
-      return [];
-    }
-    
-    const fallbackResult = await fallbackResponse.json();
-    
-    if (fallbackResult.success) {
-      // 종료된 경기는 필터링 ('FT', 'AET', 'PEN' 등의 상태코드는 제외)
-      return fallbackResult.data.filter((match: MatchData) => 
-        !['FT', 'AET', 'PEN', 'CANC', 'ABD', 'AWD', 'WO'].includes(match.status.code)
-      ).map((match: MatchData) => ({
-        ...match,
-        displayDate: '오늘'
-      }));
     }
     
     return [];
@@ -322,7 +270,10 @@ async function fetchYouTubeVideos(boardSlug: string): Promise<YouTubeVideoData[]
     try {
       const apiUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/youtube/videos?boardSlug=${boardSlug}&limit=5`;
       
-      const response = await fetch(apiUrl, { cache: 'no-store' });
+      const response = await fetch(apiUrl, { 
+        cache: 'no-store',
+        next: { revalidate: 0 }
+      });
       
       if (!response.ok) {
         throw new Error('API 엔드포인트에서 유튜브 데이터를 가져오는데 실패했습니다.');
