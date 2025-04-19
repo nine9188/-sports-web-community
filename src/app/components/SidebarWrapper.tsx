@@ -1,24 +1,26 @@
 'use client';
 
 import Sidebar from './Sidebar';
-import ServerLeagueStandings from './sidebar/ServerLeagueStandings';
+// 서버 컴포넌트는 클라이언트 컴포넌트에서 import 가능
+import LeagueStandings from './sidebar/LeagueStandings';
+import { ReactNode } from 'react';
 
-export interface SidebarWrapperProps {
+interface SidebarWrapperProps {
   isOpen: boolean;
   onClose: () => void;
-  boardNavigation: React.ReactNode;
+  boardNavigation: ReactNode;
 }
 
-export default function SidebarWrapper({ 
-  isOpen, 
-  onClose, 
-  boardNavigation 
+export default function SidebarWrapper({
+  isOpen,
+  onClose,
+  boardNavigation
 }: SidebarWrapperProps) {
   return (
-    <Sidebar 
-      isOpen={isOpen} 
+    <Sidebar
+      isOpen={isOpen}
       onClose={onClose}
-      leagueStandingsComponent={<ServerLeagueStandings />}
+      leagueStandingsComponent={<LeagueStandings initialLeague="premier" />}
     >
       {boardNavigation}
     </Sidebar>

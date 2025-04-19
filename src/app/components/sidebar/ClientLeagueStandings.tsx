@@ -3,10 +3,46 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { fetchStandingsData, StandingsData } from '@/app/actions/footballStandings';
-import { getTeamById } from '@/app/constants/teams';
 
-// 리그 목록 정의
+// 타입 정의
+interface League {
+  id: number;
+  name: string;
+  logo: string;
+  country: string;
+}
+
+interface Team {
+  id: number;
+  name: string;
+  logo: string;
+}
+
+interface Standing {
+  rank: number;
+  team: Team;
+  points: number;
+  goalsDiff: number;
+  form: string;
+  all: {
+    played: number;
+    win: number;
+    draw: number;
+    lose: number;
+  };
+}
+
+interface StandingsData {
+  league: League;
+  standings: Standing[];
+}
+
+interface ClientLeagueStandingsProps {
+  initialLeague: string;
+  initialStandings: StandingsData | null;
+}
+
+// 외부에서 필요한 상수 정의
 const LEAGUES = [
   { id: 'premier', name: 'EPL', fullName: '프리미어리그' },
   { id: 'laliga', name: '라리가', fullName: '라리가' },
@@ -14,21 +50,6 @@ const LEAGUES = [
   { id: 'serieA', name: '세리에A', fullName: '세리에 A' },
   { id: 'ligue1', name: '리그앙', fullName: '리그 1' },
 ];
-
-// 팀 이름 짧게 표시 (최대 8자)
-const shortenTeamName = (name: string, teamId: number) => {
-  // 팀 데이터 매핑이 있는지 확인
-  const teamInfo = getTeamById(teamId);
-  
-  // 매핑된 데이터가 있으면 한글 이름 사용
-  if (teamInfo) {
-    return teamInfo.name_ko;
-  }
-  
-  // 매핑 데이터가 없으면 기존 로직 적용
-  if (name.length <= 8) return name;
-  return name.substring(0, 8);
-};
 
 // 캐시 TTL (24시간)
 const CACHE_TTL = 24 * 60 * 60 * 1000;
@@ -71,15 +92,27 @@ const setLocalStorageCache = (leagueId: string, data: StandingsData) => {
   }
 };
 
-interface LeagueStandingsProps {
-  initialLeague?: string;
-  initialStandings?: StandingsData | null;
-}
+// 팀 이름 짧게 표시 (최대 8자)
+import { getTeamById } from '@/app/constants/teams';
 
-export default function LeagueStandings({
-  initialLeague = 'premier',
-  initialStandings = null,
-}: LeagueStandingsProps) {
+const shortenTeamName = (name: string, teamId: number) => {
+  // 팀 데이터 매핑이 있는지 확인
+  const teamInfo = getTeamById(teamId);
+  
+  // 매핑된 데이터가 있으면 한글 이름 사용
+  if (teamInfo) {
+    return teamInfo.name_ko;
+  }
+  
+  // 매핑 데이터가 없으면 기존 로직 적용
+  if (name.length <= 8) return name;
+  return name.substring(0, 8);
+};
+
+export function ClientLeagueStandings({
+  initialLeague,
+  initialStandings,
+}: ClientLeagueStandingsProps) {
   // 상태 관리
   const [activeLeague, setActiveLeague] = useState(initialLeague);
   const [standings, setStandings] = useState<StandingsData | null>(initialStandings);
@@ -88,8 +121,8 @@ export default function LeagueStandings({
   const router = useRouter();
   const [isMobile, setIsMobile] = useState(false);
   
-  // 초기 데이터 로드 확인 ref
-  const initialLoadRef = useRef(!!initialStandings);
+  // 이미 초기 데이터가 로드됐는지 확인하는 ref (첫 렌더링에서만 사용)
+  const initialLoadRef = useRef(true);
   
   // 데이터 캐싱을 위한 ref
   const cachedData = useRef<{[key: string]: StandingsData | null}>({
@@ -122,23 +155,22 @@ export default function LeagueStandings({
       }
     });
     
-    // 서버에서 받은 초기 데이터가 없는 경우 로컬 스토리지 캐시 확인
+    // 초기 리그에 대해 로컬 스토리지 캐시 확인
     if (!initialStandings) {
       const cachedInitialLeague = getLocalStorageCache(initialLeague);
       if (cachedInitialLeague && Date.now() - cachedInitialLeague.timestamp < CACHE_TTL) {
         setStandings(cachedInitialLeague.data);
-        initialLoadRef.current = true;
       }
     } else {
-      // 서버에서 받은 초기 데이터를 로컬 스토리지에 저장
+      // 초기 데이터를 로컬 스토리지에 저장
       setLocalStorageCache(initialLeague, initialStandings);
     }
   }, [initialLeague, initialStandings]);
 
-  // 리그 변경 시 데이터 가져오기
+  // 리그 변경 시 다른 리그 데이터 가져오기
   useEffect(() => {
-    // 초기 서버 데이터가 있고 첫 렌더링인 경우 API 호출 안함
-    if (initialLoadRef.current && activeLeague === initialLeague) {
+    // 첫 렌더링이면 API 호출 안함 (SSR 데이터 사용)
+    if (initialLoadRef.current) {
       initialLoadRef.current = false;
       return;
     }
@@ -160,35 +192,19 @@ export default function LeagueStandings({
       return;
     }
     
-    // 서버 액션으로 데이터 가져오기
-    const loadStandings = async () => {
-      setLoading(true);
-      setError(null);
-      
-      try {
-        // 서버 액션 호출
-        const data = await fetchStandingsData(activeLeague);
-        
-        if (data) {
-          // 메모리 캐시 및 로컬 스토리지에 저장
-          cachedData.current[activeLeague] = data;
-          setLocalStorageCache(activeLeague, data);
-          setStandings(data);
-        } else {
-          setError('데이터를 불러오는데 실패했습니다.');
-        }
-      } catch (err) {
-        console.error(`순위 데이터 로딩 오류 (${activeLeague}):`, err);
-        setError('순위 데이터를 가져오는데 문제가 발생했습니다.');
-      } finally {
-        setLoading(false);
-      }
-    };
+    // 리그 변경 시 로딩 상태로 변경하고 페이지 새로고침
+    setLoading(true);
+    setError(null); // 오류 상태 초기화
     
-    // 데이터 로드 함수 호출
-    loadStandings();
+    // 리그 변경 시 해당 리그 데이터를 가져오기 위해 페이지 새로고침
+    router.refresh();
     
-  }, [activeLeague, isMobile, initialLeague]);
+    // 1초 후 로딩 상태 해제 (새로고침으로 컴포넌트가 재렌더링됨)
+    setTimeout(() => {
+      setLoading(false);
+    }, 1000);
+    
+  }, [activeLeague, isMobile, router]);
 
   // 모바일에서는 렌더링하지 않음
   if (isMobile) {

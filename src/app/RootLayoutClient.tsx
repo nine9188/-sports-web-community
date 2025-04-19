@@ -1,16 +1,16 @@
 'use client';
 
-import { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Header from './components/Header';
-import SidebarWrapper from './components/SidebarWrapper';
-import { ThemeProvider } from './components/ThemeProvider';
 import Footer from './components/Footer';
+import { ThemeProvider } from './components/ThemeProvider';
 import { AuthProvider } from './context/AuthContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
+import SidebarWrapper from './components/SidebarWrapper';
 
 // DevTools 동적 로드 - 개발 환경에서만 로드
 const ReactQueryDevtools = dynamic(() => 
@@ -26,7 +26,11 @@ interface RootLayoutClientProps {
   rightSidebar: React.ReactNode;
 }
 
-export default function RootLayoutClient({ children, boardNavigation, rightSidebar }: RootLayoutClientProps) {
+export default function RootLayoutClient({ 
+  children, 
+  boardNavigation, 
+  rightSidebar
+}: RootLayoutClientProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const pathname = usePathname();
   const prevPathnameRef = useRef<string | null>(null);
@@ -76,6 +80,16 @@ export default function RootLayoutClient({ children, boardNavigation, rightSideb
     }
   }, [pathname, isSidebarOpen]);
 
+  // 사이드바가 열릴 때 핸들러
+  const handleSidebarOpen = () => {
+    setIsSidebarOpen(true);
+  };
+
+  // 사이드바가 닫힐 때 핸들러
+  const handleSidebarClose = () => {
+    setIsSidebarOpen(false);
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
@@ -92,14 +106,14 @@ export default function RootLayoutClient({ children, boardNavigation, rightSideb
             // 일반 페이지는 기존 레이아웃 사용
             <div className="flex flex-col min-h-screen w-full">
               <Header 
-                onMenuClick={() => setIsSidebarOpen(true)} 
+                onMenuClick={handleSidebarOpen} 
                 isSidebarOpen={isSidebarOpen} 
               />
               <div className="flex flex-1 w-full md:max-w-screen-2xl md:mx-auto">
-                {/* 데스크탑에서는 레이아웃 내에 사이드바 표시 */}
+                {/* 클라이언트 컴포넌트인 SidebarWrapper에 이벤트 핸들러 전달 */}
                 <SidebarWrapper 
-                  isOpen={isSidebarOpen} 
-                  onClose={() => setIsSidebarOpen(false)}
+                  isOpen={isSidebarOpen}
+                  onClose={handleSidebarClose}
                   boardNavigation={boardNavigation}
                 />
                 <main className="flex-1 md:p-4 w-full overflow-y-auto box-border">

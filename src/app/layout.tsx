@@ -22,12 +22,15 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // 서버 컴포넌트에서 BoardNavigation 생성
+  const boardNav = <BoardNavigation />;
+
   return (
     <html lang="ko" className={`w-full h-full ${inter.className}`} suppressHydrationWarning>
       <head />
       <body className="w-full h-full overflow-x-hidden">
         <RootLayoutClient 
-          boardNavigation={<BoardNavigation />}
+          boardNavigation={boardNav}
           rightSidebar={<RightSidebar />}
         >
           {children}
