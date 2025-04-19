@@ -4,7 +4,6 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Header from './components/Header';
 import SidebarWrapper from './components/SidebarWrapper';
-import RightSidebar from './components/RightSidebar';
 import { ThemeProvider } from './components/ThemeProvider';
 import Footer from './components/Footer';
 import { AuthProvider } from './context/AuthContext';
@@ -24,9 +23,10 @@ const ReactQueryDevtools = dynamic(() =>
 interface RootLayoutClientProps {
   children: React.ReactNode;
   boardNavigation: React.ReactNode;
+  rightSidebar: React.ReactNode;
 }
 
-export default function RootLayoutClient({ children, boardNavigation }: RootLayoutClientProps) {
+export default function RootLayoutClient({ children, boardNavigation, rightSidebar }: RootLayoutClientProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const pathname = usePathname();
   const prevPathnameRef = useRef<string | null>(null);
@@ -105,7 +105,7 @@ export default function RootLayoutClient({ children, boardNavigation }: RootLayo
                 <main className="flex-1 md:p-4 w-full overflow-y-auto box-border">
                   {children}
                 </main>
-                <RightSidebar />
+                {rightSidebar}
               </div>
               <Footer />
             </div>

@@ -65,15 +65,10 @@ const MAJOR_LEAGUE_IDS = getMajorLeagueIds();
 /**
  * 단일 날짜에 대한 API 데이터를 가져오는 함수
  */
-async function fetchMatchesForDate(date: string, apiKey: string, includeAllLeagues: boolean = false, debug: boolean = false) {
+async function fetchMatchesForDate(date: string, apiKey: string, includeAllLeagues: boolean = false) {
   try {
-    if (debug) console.log(`[Multi-API] ${date} 날짜 경기 데이터 요청 시작 (${new Date().toISOString()})`);
-    
     const apiUrl = `https://v3.football.api-sports.io/fixtures?date=${date}&timezone=Asia/Seoul`;
     
-    if (debug) console.log(`[Multi-API] ${date} 요청 URL: ${apiUrl}`);
-    
-    const startTime = Date.now();
     const response = await fetch(apiUrl, {
       headers: {
         'x-apisports-key': apiKey,
@@ -82,36 +77,21 @@ async function fetchMatchesForDate(date: string, apiKey: string, includeAllLeagu
       cache: 'no-store',
       next: { revalidate: 0 }
     });
-    const endTime = Date.now();
-
-    if (debug) {
-      console.log(`[Multi-API] ${date} API 요청 완료 (${endTime - startTime}ms):`, {
-        url: apiUrl,
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries())
-      });
-    }
 
     if (!response.ok) {
-      console.error(`[Multi-API] ${date} 응답 오류:`, response.status, response.statusText);
       return { success: false, data: [], date };
     }
 
     const responseText = await response.text();
-    if (debug) console.log(`[Multi-API] ${date} 응답 데이터 길이: ${responseText.length} 바이트`);
     
     let data;
     try {
       data = JSON.parse(responseText);
-    } catch (err) {
-      console.error(`[Multi-API] ${date} JSON 파싱 오류:`, err);
-      console.log(`[Multi-API] ${date} 응답 텍스트 일부:`, responseText.substring(0, 500));
+    } catch {
       return { success: false, data: [], date, error: 'JSON 파싱 오류' };
     }
     
     if (!data.response || !Array.isArray(data.response)) {
-      console.error(`[Multi-API] ${date} 응답 형식 오류`, data);
       return { success: false, data: [], date, error: '응답 형식 오류' };
     }
     
@@ -121,7 +101,6 @@ async function fetchMatchesForDate(date: string, apiKey: string, includeAllLeagu
       filteredMatches = data.response.filter((match: MatchData) => 
         MAJOR_LEAGUE_IDS.includes(match.league.id)
       );
-      if (debug) console.log(`[Multi-API] ${date} 필터링 후 경기 수:`, filteredMatches.length, '/', data.response.length);
     }
     
     return { 
@@ -132,7 +111,6 @@ async function fetchMatchesForDate(date: string, apiKey: string, includeAllLeagu
       filtered: filteredMatches.length
     };
   } catch (error) {
-    console.error(`[Multi-API] ${date} 처리 중 오류:`, error);
     return { success: false, data: [], date, error: String(error) };
   }
 }
@@ -235,15 +213,6 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     
-    // 디버그 모드
-    const debug = searchParams.get('debug') === 'true';
-    
-    // 요청정보 로깅
-    if (debug) {
-      console.log('[Multi-API] 원본 요청 URL:', request.url);
-      console.log('[Multi-API] searchParams:', Object.fromEntries(searchParams.entries()));
-    }
-    
     // 모든 리그 포함 여부 (기본값: false)
     const includeAllLeagues = searchParams.get('all_leagues') === 'true';
     // 언어 설정 (기본값: ko)
@@ -252,7 +221,6 @@ export async function GET(request: Request) {
     // API 키 확인
     const apiKey = process.env.NEXT_PUBLIC_RAPIDAPI_KEY;
     if (!apiKey) {
-      console.error('[Multi-API] API 키가 설정되지 않았습니다.');
       return NextResponse.json(
         { success: false, message: 'API 키가 설정되지 않았습니다.' },
         { status: 500 }
@@ -274,25 +242,12 @@ export async function GET(request: Request) {
     const formattedToday = today.toISOString().split('T')[0];
     const formattedTomorrow = tomorrow.toISOString().split('T')[0];
     
-    if (debug) {
-      console.log('[Multi-API] 조회 날짜:', {
-        yesterday: formattedYesterday,
-        today: formattedToday,
-        tomorrow: formattedTomorrow,
-        client_time: today.toString()
-      });
-    }
-
     // 3개 날짜에 대한 API 데이터를 병렬로 가져오기
-    if (debug) console.log('[Multi-API] API 요청 시작 (3개 날짜)');
-    
     const [yesterdayResult, todayResult, tomorrowResult] = await Promise.all([
-      fetchMatchesForDate(formattedYesterday, apiKey, includeAllLeagues, debug),
-      fetchMatchesForDate(formattedToday, apiKey, includeAllLeagues, debug),
-      fetchMatchesForDate(formattedTomorrow, apiKey, includeAllLeagues, debug)
+      fetchMatchesForDate(formattedYesterday, apiKey, includeAllLeagues),
+      fetchMatchesForDate(formattedToday, apiKey, includeAllLeagues),
+      fetchMatchesForDate(formattedTomorrow, apiKey, includeAllLeagues)
     ]);
-    
-    if (debug) console.log('[Multi-API] 모든 API 요청 완료');
 
     // 각 날짜별 데이터 처리
     const processedYesterday = yesterdayResult.success 
@@ -311,14 +266,6 @@ export async function GET(request: Request) {
       ? (tomorrowResult.data as MatchData[])
           .map(match => processMatchData(match, language))
       : [];
-    
-    // 각 날짜별 데이터 개수 확인
-    console.log('[Multi-API] 최종 데이터 개수:', {
-      yesterday: processedYesterday.length,
-      today: processedToday.length,
-      tomorrow: processedTomorrow.length,
-      total: processedYesterday.length + processedToday.length + processedTomorrow.length
-    });
 
     // 응답 구성
     const response = {
@@ -351,28 +298,13 @@ export async function GET(request: Request) {
       meta: {
         totalMatches: processedYesterday.length + processedToday.length + processedTomorrow.length,
         language,
-        debug,
         timestamp: new Date().toISOString()
       }
     };
     
-    if (debug) {
-      console.log('[Multi-API] 응답 전송:', {
-        success: true,
-        matches: {
-          yesterday: processedYesterday.length,
-          today: processedToday.length,
-          tomorrow: processedTomorrow.length,
-          total: processedYesterday.length + processedToday.length + processedTomorrow.length
-        }
-      });
-    }
-    
     return NextResponse.json(response);
 
   } catch (error: unknown) {
-    console.error('[Multi-API] 전체 처리 중 오류:', error);
-    
     // 상세한 오류 정보를 포함한 응답
     return NextResponse.json(
       { 

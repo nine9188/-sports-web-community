@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Eye, ThumbsUp, MessageSquare, Image as ImageIcon, Link as LinkIcon, Video as VideoIcon, Youtube as YoutubeIcon } from 'lucide-react';
@@ -10,60 +10,22 @@ import type { TopicPost } from '@/app/lib/api/topicPosts';
 type TabType = 'views' | 'likes' | 'comments';
 
 // 인기글 데이터 타입
-interface TopicPostsData {
+export interface TopicPostsData {
   views: TopicPost[];
   likes: TopicPost[];
   comments: TopicPost[];
 }
 
-export default function TopicTabs() {
-  // 상태 관리
-  const [activeTab, setActiveTab] = useState<TabType>('views');
-  const [postsData, setPostsData] = useState<TopicPostsData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const isLoadingRef = useRef(false);
+interface TopicTabsClientProps {
+  postsData: TopicPostsData;
+}
 
-  // 처음 마운트될 때 데이터 로드
-  useEffect(() => {
-    // 이미 API 요청 중이면 중복 방지
-    if (isLoadingRef.current) return;
-    
-    // 데이터 가져오기
-    const fetchData = async () => {
-      if (postsData) {
-        // 이미 데이터가 있으면 다시 로드하지 않음
-        setLoading(false);
-        return;
-      }
-      
-      setLoading(true);
-      isLoadingRef.current = true;
-      
-      try {
-        // 모든 탭 데이터를 한 번에 가져오기
-        const timestamp = new Date().getTime(); // 캐시 방지
-        const response = await fetch(`/api/topic-posts?t=${timestamp}`, {
-          cache: 'no-store'
-        });
-        
-        if (!response.ok) throw new Error('Failed to fetch posts');
-        
-        const data = await response.json();
-        setPostsData(data);
-      } catch (error) {
-        console.error('인기글 로딩 오류:', error);
-      } finally {
-        setLoading(false);
-        isLoadingRef.current = false;
-      }
-    };
-    
-    fetchData();
-  }, [postsData]);
+export function TopicTabsClient({ postsData }: TopicTabsClientProps) {
+  // 현재 활성화된 탭 상태
+  const [activeTab, setActiveTab] = useState<TabType>('views');
 
   // 현재 탭에 맞는 게시글 배열 가져오기
   const getCurrentPosts = (): TopicPost[] => {
-    if (!postsData) return [];
     return postsData[activeTab] || [];
   };
 
@@ -172,13 +134,7 @@ export default function TopicTabs() {
       </div>
       
       <div>
-        {loading ? (
-          <div className="p-2 space-y-2">
-            {Array(10).fill(0).map((_, i) => (
-              <div key={i} className="h-4 bg-gray-100 rounded animate-pulse"></div>
-            ))}
-          </div>
-        ) : currentPosts.length === 0 ? (
+        {currentPosts.length === 0 ? (
           <div className="p-3 text-center text-gray-500 text-xs">
             게시글이 없습니다.
           </div>

@@ -1,6 +1,7 @@
 import './globals.css';
 import { Inter } from 'next/font/google';
 import BoardNavigation from './components/sidebar/BoardNavigation';
+import RightSidebar from './components/RightSidebar';
 import RootLayoutClient from './RootLayoutClient';
 
 // 동적 렌더링 설정
@@ -25,7 +26,10 @@ export default function RootLayout({
     <html lang="ko" className={`w-full h-full ${inter.className}`} suppressHydrationWarning>
       <head />
       <body className="w-full h-full overflow-x-hidden">
-        <RootLayoutClient boardNavigation={<BoardNavigation />}>
+        <RootLayoutClient 
+          boardNavigation={<BoardNavigation />}
+          rightSidebar={<RightSidebar />}
+        >
           {children}
         </RootLayoutClient>
       </body>
