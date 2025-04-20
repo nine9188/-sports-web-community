@@ -1,109 +1,24 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { YouTubeVideo } from './youtube-fetcher';
 
-// 유튜브 비디오 데이터 인터페이스
-interface YouTubeVideo {
-  id: string;
-  title: string;
-  thumbnailUrl: string;
-  channelTitle: string;
-  publishedAt: string;
-  videoId: string;
-  post_number: number;
+interface YouTubeWidgetClientProps {
+  videos: YouTubeVideo[];
+  boardSlug: string;
 }
 
-// API 응답 데이터 인터페이스
-interface VideoData {
-  id: string;
-  title: string;
-  thumbnailUrl?: string;
-  thumbnail_url?: string;
-  channelTitle?: string;
-  channel_title?: string;
-  publishedAt?: string;
-  published_at?: string;
-  videoId?: string;
-  video_id?: string;
-  post_number?: number;
-  [key: string]: unknown;
-}
-
-interface YouTubeWidgetProps {
-  initialVideos?: YouTubeVideo[];
-  boardSlug?: string;
-}
-
-export default function YouTubeWidget({ 
-  initialVideos = [], 
+export default function YouTubeWidgetClient({ 
+  videos = [], 
   boardSlug = 'kbs-sports'
-}: YouTubeWidgetProps) {
-  const [videos, setVideos] = useState<YouTubeVideo[]>(initialVideos);
-  const [loading, setLoading] = useState<boolean>(initialVideos.length === 0);
-  const [error, setError] = useState<string | null>(null);
-  const isDataFetched = useRef<boolean>(false);
-  
+}: YouTubeWidgetClientProps) {
   // 스와이프를 위한 ref
   const touchStartXRef = useRef<number | null>(null);
   const cardContainerRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   
-  useEffect(() => {
-    // 이미 데이터를 가져왔거나 초기 비디오가 있으면 API 호출 스킵
-    if (isDataFetched.current || initialVideos.length > 0) return;
-
-    const fetchYouTubeVideos = async () => {
-      try {
-        setLoading(true);
-        
-        // 유튜브 데이터 가져오기 API
-        const response = await fetch(`/api/youtube/videos?boardSlug=${boardSlug}&limit=5`);
-        
-        if (!response.ok) {
-          throw new Error('유튜브 영상 목록을 불러오는데 실패했습니다.');
-        }
-        
-        const data = await response.json();
-        
-        // 빈 배열인 경우 정상적으로 처리
-        if (!Array.isArray(data)) {
-          setVideos([]);
-          return;
-        }
-        
-        if (data.length === 0) {
-          setVideos([]);
-          return;
-        }
-        
-        // 받은 데이터를 YouTubeVideo 형식으로 변환
-        const formattedVideos: YouTubeVideo[] = data.map((video: VideoData) => {
-          return {
-            id: video.id || `video-${Math.random().toString(36).substring(2, 9)}`,
-            title: video.title || '제목 없음',
-            thumbnailUrl: video.thumbnailUrl || video.thumbnail_url || `/public/sample/youtube-placeholder.jpg`,
-            channelTitle: video.channelTitle || video.channel_title || 'KBS 스포츠',
-            publishedAt: video.publishedAt || video.published_at || new Date().toISOString(),
-            videoId: video.videoId || video.video_id || '',
-            post_number: video.post_number || 0
-          };
-        });
-        
-        setVideos(formattedVideos);
-        isDataFetched.current = true;
-      } catch {
-        setError('유튜브 영상 목록을 불러오는데 실패했습니다.');
-        isDataFetched.current = true; // 에러가 발생해도 중복 호출 방지
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchYouTubeVideos();
-  }, [initialVideos.length, boardSlug]);
-
   // 날짜 포맷팅
   const formatDate = (dateString: string) => {
     try {
@@ -156,37 +71,6 @@ export default function YouTubeWidget({
     
     touchStartXRef.current = null;
   };
-
-  // 로딩 상태
-  if (loading) {
-    return (
-      <div>
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          {Array(5).fill(0).map((_, i) => (
-            <div key={i} className="bg-white rounded-lg border overflow-hidden dark:bg-gray-800 dark:border-gray-700">
-              <div className="w-full aspect-video animate-pulse bg-gray-200 dark:bg-gray-700" />
-              <div className="p-3">
-                <div className="w-full h-4 mb-2 animate-pulse bg-gray-200 dark:bg-gray-700" />
-                <div className="w-3/4 h-4 mb-2 animate-pulse bg-gray-200 dark:bg-gray-700" />
-                <div className="w-1/2 h-4 animate-pulse bg-gray-200 dark:bg-gray-700" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  // 에러 상태
-  if (error && videos.length === 0) {
-    return (
-      <div>
-        <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
-          <p className="text-red-500 dark:text-red-400">{error}</p>
-        </div>
-      </div>
-    );
-  }
 
   // 데이터가 없는 경우
   if (videos.length === 0) {
@@ -250,7 +134,7 @@ export default function YouTubeWidget({
                 </div>
               </div>
               <div className="p-2 md:p-3 bg-white">
-                <h3 className="font-medium text-xs md:text-sm line-clamp-2 text-gray-800 group-hover:text-blue-600 transition-colors">{truncateTitle(video.title)}</h3>
+                <h3 className="font-medium text-xs md:text-xs line-clamp-2 text-gray-800 group-hover:text-blue-600 transition-colors">{truncateTitle(video.title)}</h3>
               </div>
             </Link>
           ))}

@@ -1,11 +1,8 @@
-'use client';
-
-import { useEffect, useState, useRef } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
+import NewsWidgetClient from './news-widget-client';
+import { createClient } from '@/app/lib/supabase.server';
 
 // 뉴스 데이터 인터페이스
-interface NewsItem {
+export interface NewsItem {
   id: string;
   title: string;
   summary?: string;
@@ -16,295 +13,173 @@ interface NewsItem {
   postNumber?: number;
 }
 
-// API 응답 데이터 인터페이스
-interface PostData {
-  id: string;
-  title: string;
-  content?: string | Record<string, unknown>;
-  description?: string;
-  imageUrl?: string;
-  image_url?: string;
-  publishedAt?: string;
-  created_at?: string;
-  pubDate?: string;
-  source?: string;
-  author?: string;
-  author_name?: string;
-  link?: string;
-  url?: string;
-  board_id?: string;
-  board_name?: string;
-  post_number?: number;
-  [key: string]: unknown;
-}
-
 interface NewsWidgetProps {
-  initialNews?: NewsItem[];
   boardSlug?: string;
 }
 
-export default function NewsWidget({ initialNews = [], boardSlug = 'sports-news' }: NewsWidgetProps) {
-  const [news, setNews] = useState<NewsItem[]>(initialNews);
-  const [loading, setLoading] = useState<boolean>(initialNews.length === 0);
-  const [error, setError] = useState<string | null>(null);
-  const isDataFetched = useRef<boolean>(false);
-  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    // 이미 데이터를 가져왔거나 초기 뉴스가 있으면 API 호출 스킵
-    if (isDataFetched.current || initialNews.length > 0) return;
-
-    const fetchLatestPosts = async () => {
+// 게시글 내용에서 이미지 URL을 효과적으로 추출하는 함수
+function extractImageFromContent(content: string): string {
+  // 이미지가 없는 경우
+  if (!content) return '';
+  
+  try {
+    // JSON 형식인지 확인
+    if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
       try {
-        setLoading(true);
+        const contentObj = JSON.parse(content);
         
-        // 게시판 글 가져오기 API
-        const response = await fetch(`/api/posts/board?board=${boardSlug}&limit=5&sort=latest`);
-        
-        if (!response.ok) {
-          throw new Error('게시글 목록을 불러오는데 실패했습니다.');
+        // TipTap 형식 확인
+        if (contentObj.type === 'doc' && Array.isArray(contentObj.content)) {
+          // 이미지 노드 찾기
+          for (const node of contentObj.content) {
+            if (node.type === 'image' && node.attrs && node.attrs.src) {
+              return node.attrs.src;
+            }
+            
+            // 이미지가 있는 문단 확인
+            if (node.type === 'paragraph' && Array.isArray(node.content)) {
+              for (const subNode of node.content) {
+                if (subNode.type === 'image' && subNode.attrs && subNode.attrs.src) {
+                  return subNode.attrs.src;
+                }
+              }
+            }
+          }
         }
         
-        const data = await response.json();
+        // RssPost 형식 확인
+        if ('imageUrl' in contentObj && contentObj.imageUrl) {
+          return contentObj.imageUrl;
+        }
         
-        // 받은 데이터를 NewsItem 형식으로 변환
-        const formattedNews: NewsItem[] = data.map((post: PostData, index: number) => {
-          // 요약(summary) 생성: 콘텐츠에서 HTML 태그 제거하고 일부만 추출
-          let summary = post.description || '';
-          if (!summary && typeof post.content === 'string') {
-            // HTML 태그 제거
-            summary = post.content.replace(/<[^>]*>/g, '');
-          } else if (post.content && typeof post.content === 'object') {
-            // 객체인 경우 description 필드 사용
-            const contentObj = post.content as Record<string, unknown>;
-            summary = (contentObj.description as string) || '';
-          }
-          
-          // 150자로 요약 제한
-          summary = summary.slice(0, 150) + (summary.length > 150 ? '...' : '');
-          
-          // 이미지 URL 결정
-          let imageUrl = post.imageUrl || post.image_url || '';
-          
-          // 이미지가 없으면 백업 이미지 설정
-          if (!imageUrl) {
-            imageUrl = `/213/news${(index % 4) + 1}.jpg`;
-          }
-          
-          // 날짜 확인 및 기본값 설정
-          const publishedAt = post.publishedAt || post.created_at || post.pubDate || new Date().toISOString();
-          
-          // 출처 결정 (게시판 이름이나 작성자 이름)
-          const source = post.board_name || post.author_name || post.author || '게시판';
-          
-          // URL 생성 (post_number 사용)
-          const postNumber = post.post_number || 0;
-          const url = `/boards/${boardSlug}/${postNumber}`;
-          
-          return {
-            id: post.id || `news-${index}`,
-            title: post.title || '제목 없음',
-            summary: summary,
-            imageUrl: imageUrl,
-            source: source,
-            publishedAt: publishedAt,
-            url: url,
-            postNumber: postNumber
-          };
-        });
-        
-        setNews(formattedNews);
-        isDataFetched.current = true;
-      } catch (err) {
-        console.error('게시글 목록 가져오기 오류:', err);
-        setError('게시글 목록을 불러오는데 실패했습니다.');
-        isDataFetched.current = true; // 에러가 발생해도 중복 호출 방지
-      } finally {
-        setLoading(false);
+        if ('image_url' in contentObj && contentObj.image_url) {
+          return contentObj.image_url;
+        }
+      } catch {
+        // JSON 파싱 오류 무시
       }
-    };
-
-    fetchLatestPosts();
-  }, [initialNews.length, boardSlug]);
-
-  // 이미지 로드 에러 처리 함수
-  const handleImageError = (id: string) => {
-    setImageErrors(prev => ({
-      ...prev,
-      [id]: true
-    }));
-  };
-
-  // 날짜 포맷팅
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      const now = new Date();
-      
-      // 날짜가 유효하지 않으면 '방금 전' 반환
-      if (isNaN(date.getTime())) return '방금 전';
-      
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const newsDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-      
-      if (newsDate.getTime() === today.getTime()) {
-        return date.toLocaleTimeString('ko-KR', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false
-        });
-      }
-      
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-      if (newsDate.getTime() === yesterday.getTime()) {
-        return '어제';
-      }
-      
-      return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
-    } catch {
-      return '날짜 정보 없음';
     }
-  };
-
-  // 로딩 상태
-  if (loading) {
-    return (
-      <div className="mb-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* 메인 뉴스 스켈레톤 */}
-          <div className="md:w-1/2">
-            <div className="h-[400px] mb-4 md:mb-0 bg-gray-100 rounded-lg overflow-hidden">
-              <div className="w-full h-full animate-pulse bg-gray-200" />
-            </div>
-          </div>
-          
-          {/* 나머지 뉴스 스켈레톤 */}
-          <div className="md:w-1/2">
-            <div className="grid grid-cols-2 gap-4 h-full">
-              {Array(4).fill(0).map((_, i) => (
-                <div key={i} className="bg-gray-100 rounded-lg overflow-hidden h-full">
-                  <div className="flex flex-col h-full">
-                    <div className="w-full h-32 animate-pulse bg-gray-200" />
-                    <div className="p-3">
-                      <div className="w-full h-4 mb-2 animate-pulse bg-gray-200" />
-                      <div className="w-3/4 h-4 animate-pulse bg-gray-200" />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    
+    // 일반 HTML에서 이미지 태그 찾기 - 첫 번째 방법
+    const imgTagRegex = /<img[^>]+src=["']([^"']+)["'][^>]*>/i;
+    const imgMatch = content.match(imgTagRegex);
+    if (imgMatch && imgMatch[1]) {
+      return imgMatch[1];
+    }
+    
+    // 다른 패턴의 이미지 태그 (예: 속성 순서가 다른 경우)
+    const altImgTagRegex = /<img[^>]*src=["']([^"']+)["'][^>]*>/i;
+    const altImgMatch = content.match(altImgTagRegex);
+    if (altImgMatch && altImgMatch[1]) {
+      return altImgMatch[1];
+    }
+    
+    // 마크다운 이미지 문법 찾기
+    const markdownImgRegex = /!\[[^\]]*\]\(([^)]+)\)/i;
+    const markdownMatch = content.match(markdownImgRegex);
+    if (markdownMatch && markdownMatch[1]) {
+      return markdownMatch[1];
+    }
+    
+    // 모든 URL 패턴 찾기
+    const urlRegex = /(https?:\/\/[^\s"'<>)]+\.(?:jpg|jpeg|png|gif|webp))/i;
+    const urlMatch = content.match(urlRegex);
+    if (urlMatch && urlMatch[1]) {
+      return urlMatch[1];
+    }
+    
+    // og:image 태그 찾기
+    const ogImageRegex = /<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["'][^>]*>/i;
+    const ogImageMatch = content.match(ogImageRegex);
+    if (ogImageMatch && ogImageMatch[1]) {
+      return ogImageMatch[1];
+    }
+    
+    // 트위터 이미지 태그 찾기
+    const twitterImageRegex = /<meta[^>]*name=["']twitter:image["'][^>]*content=["']([^"']+)["'][^>]*>/i;
+    const twitterImageMatch = content.match(twitterImageRegex);
+    if (twitterImageMatch && twitterImageMatch[1]) {
+      return twitterImageMatch[1];
+    }
+  } catch (e) {
+    console.error('이미지 URL 추출 오류:', e);
   }
+  
+  return '';
+}
 
-  // 에러 상태
-  if (error) {
-    return (
-      <div className="mb-4">
-        <div className="flex justify-center items-center h-64 text-red-500 bg-red-50 rounded-lg border border-red-200 p-4">
-          <p>{error}</p>
-        </div>
-      </div>
-    );
+// 서버 컴포넌트에서 게시글 데이터 가져오기
+async function getBoardPosts(boardSlug: string): Promise<NewsItem[]> {
+  try {
+    const supabase = await createClient();
+    
+    // 1. 게시판 정보 가져오기 (slug로 검색)
+    const { data: boardData, error: boardError } = await supabase
+      .from("boards")
+      .select("*")
+      .eq("slug", boardSlug)
+      .single();
+
+    if (boardError) {
+      console.error("게시판 정보 조회 오류:", boardError);
+      return [];
+    }
+
+    // 2. 게시글 쿼리 구성
+    const { data: posts, error: postsError } = await supabase
+      .from("posts")
+      .select("id, title, content, created_at, views, likes, post_number")
+      .eq("board_id", boardData.id)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    if (postsError) {
+      console.error("게시글 목록 조회 오류:", postsError);
+      return [];
+    }
+
+    // 3. 데이터 포맷팅
+    return posts.map((post, index) => {
+      // 콘텐츠 처리 (문자열이 아닐 경우 처리)
+      const content = typeof post.content === 'string' 
+        ? post.content 
+        : (post.content ? JSON.stringify(post.content) : '');
+      
+      // HTML 태그 제거 및 요약 생성
+      const plainText = content.replace(/<[^>]*>/g, '');
+      const summary = plainText.slice(0, 150) + (plainText.length > 150 ? '...' : '');
+      
+      // 개선된 함수로 썸네일 이미지 추출
+      let imageUrl = extractImageFromContent(content);
+      
+      // 이미지가 없으면 백업 이미지 설정
+      if (!imageUrl) {
+        imageUrl = `/213/news${(index % 4) + 1}.jpg`;
+      }
+      
+      // 클라이언트 측에서 표시할 URL 생성
+      const url = `/boards/${boardSlug}/${post.post_number || 0}`;
+      
+      return {
+        id: post.id,
+        title: post.title,
+        summary: summary,
+        imageUrl: imageUrl,
+        source: boardData.name,
+        publishedAt: post.created_at,
+        url: url,
+        postNumber: post.post_number || 0
+      };
+    });
+  } catch (error) {
+    console.error('게시글 가져오기 오류:', error);
+    return [];
   }
+}
 
-  // 뉴스 없음 상태
-  if (!news.length) {
-    return (
-      <div className="mb-4">
-        <div className="flex justify-center items-center h-64 text-muted-foreground bg-gray-50 rounded-lg border p-4">
-          표시할 게시글이 없습니다.
-        </div>
-      </div>
-    );
-  }
-
-  // 백업 이미지 가져오기
-  const getBackupImage = (id: string, index: number) => {
-    return `/213/news${(index % 4) + 1}.jpg`;
-  };
-
-  return (
-    <div className="mb-4">
-      {/* 뉴스 레이아웃 - 메인 뉴스 왼쪽, 작은 뉴스 오른쪽 2x2 그리드 */}
-      <div className="flex flex-col md:flex-row gap-4">
-        {/* 메인 뉴스 (첫 번째 뉴스) - 왼쪽 배치 */}
-        <div className="md:w-1/2">
-          <Link
-            href={news[0].url}
-            className="block h-full mb-4 md:mb-0 bg-white rounded-lg border overflow-hidden hover:shadow-md transition-all group hover:translate-y-[-2px] hover:border-blue-300 dark:hover:border-blue-500 touch-manipulation active:scale-[0.99]"
-            style={{
-              WebkitTapHighlightColor: 'transparent',
-              transform: 'translate3d(0,0,0)' // 하드웨어 가속 추가
-            }}
-          >
-            <div className="relative w-full aspect-[4/3] md:aspect-auto md:h-full md:min-h-[450px] transform transition-transform group-hover:scale-[1.02]">
-              <Image
-                src={imageErrors[news[0].id] ? getBackupImage(news[0].id, 0) : (news[0].imageUrl || getBackupImage(news[0].id, 0))}
-                alt={news[0].title}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 50vw"
-                priority
-                onError={() => handleImageError(news[0].id)}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent">
-                <div className="absolute bottom-0 left-0 w-full p-4">
-                  <div className="flex justify-between text-white">
-                    <span className="text-xs bg-primary px-2 py-1 rounded">{news[0].source}</span>
-                    <span className="text-xs">{formatDate(news[0].publishedAt)}</span>
-                  </div>
-                  <h2 className="font-bold text-lg md:text-xl text-white mt-2 group-hover:text-blue-300 transition-colors">{news[0].title}</h2>
-                </div>
-              </div>
-            </div>
-          </Link>
-        </div>
-        
-        {/* 나머지 뉴스 - 오른쪽 2x2 그리드 */}
-        <div className="md:w-1/2">
-          <div className="grid grid-cols-2 gap-4 h-full">
-            {news.slice(1, 5).map((item, index) => (
-              <Link
-                key={item.id}
-                href={item.url}
-                className="bg-white rounded-lg border overflow-hidden hover:shadow-md transition-all h-full group hover:translate-y-[-2px] hover:border-blue-300 dark:hover:border-blue-500 touch-manipulation active:scale-[0.99]"
-                style={{
-                  WebkitTapHighlightColor: 'transparent',
-                  transform: 'translate3d(0,0,0)' // 하드웨어 가속 추가
-                }}
-              >
-                <div className="flex flex-col h-full">
-                  <div className="relative w-full aspect-video transform transition-transform group-hover:scale-[1.02]">
-                    <Image
-                      src={imageErrors[item.id] ? getBackupImage(item.id, index + 1) : (item.imageUrl || getBackupImage(item.id, index + 1))}
-                      alt={item.title}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, 25vw"
-                      onError={() => handleImageError(item.id)}
-                    />
-                    <div className="absolute top-0 right-0 bg-black/70 text-white px-2 py-1 text-xs">
-                      {formatDate(item.publishedAt)}
-                    </div>
-                    <div className="absolute bottom-0 left-0 bg-primary text-white px-2 py-1 text-xs">
-                      {item.source}
-                    </div>
-                  </div>
-                  <div className="p-3 flex-grow">
-                    <h3 className="font-medium text-sm line-clamp-2 text-gray-800 group-hover:text-blue-600 transition-colors">
-                      {item.title}
-                    </h3>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+export default async function NewsWidget({ boardSlug = 'sports-news' }: NewsWidgetProps) {
+  // 서버에서 데이터 가져오기
+  const news = await getBoardPosts(boardSlug);
+  
+  return <NewsWidgetClient initialNews={news} />;
 } 
