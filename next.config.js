@@ -42,12 +42,11 @@ const nextConfig = {
   serverExternalPackages: ['punycode'],
   // Vercel 배포에서 경로 그룹 처리 개선
   experimental: {
-    serverComponentsExternalPackages: ['punycode'],
     optimizePackageImports: ['react-icons'],
-    serverActions: true
-  },
-  // 출력 내보내기 방식 설정
-  output: 'standalone'
+    serverActions: {
+      allowedOrigins: ['localhost:3000']
+    }
+  }
 }
 
 module.exports = nextConfig
