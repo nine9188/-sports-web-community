@@ -1,5 +1,8 @@
 import { Short } from './types';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // 실제 API 사용 시 구현할 함수
 export async function fetchShorts(): Promise<Short[]> {
   // 실제 유튜브 쇼츠 데이터 사용

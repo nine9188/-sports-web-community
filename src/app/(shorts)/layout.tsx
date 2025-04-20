@@ -2,6 +2,8 @@ import React from 'react';
 import { Metadata } from 'next';
 import '../globals.css';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: '스포츠 쇼츠',
   description: '스포츠 하이라이트 쇼츠 영상',

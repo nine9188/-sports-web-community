@@ -4,6 +4,8 @@ import Image from 'next/image';
 import { fetchShorts } from '@/app/(shorts)/service';
 import { Short } from '@/app/(shorts)/types';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'SPORTS 쇼츠 | 짧은 스포츠 동영상',
   description: '모든 게이머들을 위한 SPORTS 쇼츠 콘텐츠를 확인하세요',

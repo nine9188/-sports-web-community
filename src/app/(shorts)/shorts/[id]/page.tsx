@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation';
 import ShortsViewer from '@/app/(shorts)/ShortsViewer';
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic';
+
 // 페이지 속성 타입 정의
 interface PageProps {
   params: { id: string };

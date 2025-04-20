@@ -14,6 +14,7 @@ const nextConfig = {
     ],
     unoptimized: true,
   },
+  output: 'standalone',
   // punycode 모듈 경고 무시 설정
   webpack: (config) => {
     config.resolve.fallback = {
