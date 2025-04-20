@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { getUserIconInfo } from '@/app/utils/level-icons';
+import { getUserIconInfo } from '@/app/utils/level-icons-client';
 
 interface PostHeaderProps {
   title: string;
