@@ -16,6 +16,17 @@ const nextConfig = {
   },
   // punycode 모듈 경고 무시 설정
   webpack: (config) => {
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      punycode: false,
+    };
+    
+    // 불필요한 경고 필터링
+    config.ignoreWarnings = [
+      { module: /node_modules\/punycode/ },
+      { file: /node_modules\/punycode/ }
+    ];
+    
     // 수정된 설정 반환
     return config;
   },
