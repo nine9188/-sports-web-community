@@ -14,7 +14,7 @@ export const metadata: Metadata = {
  * 기본 RootLayout을 통해 렌더링되지만, 
  * 헤더, 사이드바 등이 표시되지 않는 단순한 레이아웃을 제공합니다.
  */
-export default function ShortsLayout({
+export default async function ShortsLayout({
   children,
 }: {
   children: React.ReactNode;
