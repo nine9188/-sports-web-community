@@ -46,6 +46,16 @@ const nextConfig = {
     serverActions: {
       allowedOrigins: ['localhost:3000']
     }
+  },
+  // 루트 경로에서 shorts로 리다이렉트
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/shorts',
+        permanent: true,
+      }
+    ];
   }
 }
 
