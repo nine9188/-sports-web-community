@@ -39,9 +39,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   // 경로 그룹에 대한 특별 처리 추가
-  experimental: {
-    serverComponentsExternalPackages: ['punycode']
-  }
+  serverExternalPackages: ['punycode']
 }
 
 module.exports = nextConfig
