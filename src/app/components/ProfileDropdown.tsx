@@ -9,7 +9,9 @@ import { createClient } from '@/app/lib/supabase-browser';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import { 
-  getUserIconInfo, 
+  getUserIconInfo
+} from '@/app/utils/level-icons-client';
+import { 
   LEVEL_EXP_REQUIREMENTS, 
   calculateLevelProgress,
   getExpToNextLevel

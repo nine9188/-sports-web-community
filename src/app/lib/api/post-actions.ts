@@ -9,9 +9,9 @@ export async function incrementViewCount(postId: string): Promise<boolean> {
   try {
     const supabase = createClient();
     
-    // 로그인 상태 확인
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return false;
+    // 로그인 상태 확인 (getUser 사용 - 보안 강화)
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) return false;
     
     // 게시글 작성자 확인
     const { data: post, error: postError } = await supabase
@@ -26,7 +26,7 @@ export async function incrementViewCount(postId: string): Promise<boolean> {
     }
       
     // 작성자인 경우 조회수 증가하지 않음
-    if (post?.user_id === session.user.id) return false;
+    if (post?.user_id === user.id) return false;
     
     // 조회수 증가
     const { error: updateError } = await supabase
@@ -51,11 +51,11 @@ export async function getUserLikeStatus(postId: string): Promise<'like' | 'disli
   try {
     const supabase = createClient();
     
-    // 세션 확인
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return null;
+    // 인증 상태 확인 (getUser 사용 - 보안 강화)
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) return null;
     
-    const userId = session.user.id;
+    const userId = user.id;
     
     // 좋아요 확인
     const { data: existingLike, error: likeError } = await supabase

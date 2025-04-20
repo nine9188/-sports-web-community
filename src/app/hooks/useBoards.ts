@@ -1,46 +1,25 @@
 'use client';
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { BoardsResponse } from '../lib/types';
 
-// 게시판 타입 정의
-export interface Board {
-  id: string;
-  name: string;
-  parent_id: string | null;
-  display_order: number;
-  slug: string;
-  team_id?: number | null;
-  league_id?: number | null;
-  team_logo?: string | null;
-  league_logo?: string | null;
-}
-
-// 계층형 게시판 타입
-export interface HierarchicalBoard extends Board {
-  children?: HierarchicalBoard[];
-}
-
-// 게시판 데이터 응답 타입
-export interface BoardsResponse {
-  rootBoards: HierarchicalBoard[];
-  boardsMap?: Record<string, HierarchicalBoard>;
-  allBoards?: Board[];
-}
-
-// 훅 옵션 타입
-interface UseBoardsOptions {
-  initialData?: BoardsResponse;
-}
+// 클라이언트에서 필요한 타입만 다시 export
+export type { HierarchicalBoard, Board, BoardsResponse } from '../lib/types';
 
 // 캐시 키 상수 정의
 export const BOARDS_QUERY_KEY = ['boards'];
 
-// 게시판 데이터 fetch 함수 (코드 재사용을 위해 분리)
-async function fetchBoards(): Promise<BoardsResponse> {
+// 게시판 데이터 훅 옵션 타입
+interface UseBoardsOptions {
+  initialData?: BoardsResponse;
+}
+
+// 클라이언트에서 필요한 경우 API 폴백 구현 (이 함수는 Server Action 실패 시에만 사용됨)
+async function fetchBoardsFromApi(): Promise<BoardsResponse> {
   try {
-    // 캐시 적용된 fetch 요청
+    // API 호출 방식
     const response = await fetch('/api/boards/list', {
-      next: { revalidate: 3600 }, // 1시간으로 재검증 시간 증가
+      next: { revalidate: 3600 }, 
       cache: 'force-cache',
       headers: {
         'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400'
@@ -54,7 +33,7 @@ async function fetchBoards(): Promise<BoardsResponse> {
     
     const data = await response.json();
     
-    // 로컬 스토리지에 백업 저장 (네트워크 오류 대비)
+    // 로컬 스토리지에 백업 저장
     try {
       localStorage.setItem('boards_cache', JSON.stringify({
         data,
@@ -66,31 +45,30 @@ async function fetchBoards(): Promise<BoardsResponse> {
     
     return data;
   } catch (error) {
-    // 네트워크 오류 시 로컬 스토리지에서 복구 시도
+    // 로컬 스토리지에서 복구 시도
     try {
       const cachedData = localStorage.getItem('boards_cache');
       if (cachedData) {
         const { data, timestamp } = JSON.parse(cachedData);
-        // 캐시가 24시간 이내인 경우에만 사용
         if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
           console.log('API 오류로 인해 로컬 캐시에서 게시판 데이터 복구');
           return data;
         }
       }
     } catch {
-      // 로컬 스토리지 읽기 오류도 무시
+      // 무시
     }
     
-    // 로컬 캐시도 없으면 오류 전파
     throw error;
   }
 }
 
-// 게시판 데이터 훅
+// 게시판 데이터 훅 (Server Action이 도입되면서 이 훅은 사용되지 않지만, 
+// 혹시 API 폴백이 필요한 경우를 위해 남겨둠)
 export function useBoards(options?: UseBoardsOptions) {
   return useQuery<BoardsResponse, Error>({
     queryKey: BOARDS_QUERY_KEY,
-    queryFn: fetchBoards,
+    queryFn: fetchBoardsFromApi,
     staleTime: 1000 * 60 * 60, // 1시간 동안 최신 상태로 간주
     gcTime: 1000 * 60 * 60 * 24, // 24시간 동안 캐시 유지
     retry: 3,
@@ -117,12 +95,12 @@ export function useBoardsCache() {
     return true;
   };
   
-  // 캐시 갱신 함수 (새로운 데이터 패치)
+  // 캐시 갱신 함수
   const refreshBoardsCache = async () => {
     try {
       await queryClient.fetchQuery({ 
         queryKey: BOARDS_QUERY_KEY,
-        queryFn: fetchBoards
+        queryFn: fetchBoardsFromApi
       });
       return true;
     } catch (error) {

@@ -28,10 +28,10 @@ export async function deleteAccount(
 
     const supabase = await createClient();
     
-    // 현재 사용자 세션 가져오기
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    // 현재 사용자 정보 가져오기 (getUser 사용 - 보안 강화)
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
     
-    if (sessionError || !session) {
+    if (userError || !user) {
       return {
         success: false,
         message: '로그인이 필요합니다.'
@@ -40,7 +40,7 @@ export async function deleteAccount(
     
     // 비밀번호 확인
     const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: session.user.email || '',
+      email: user.email || '',
       password
     });
     
@@ -56,7 +56,7 @@ export async function deleteAccount(
     const { error: profileDeleteError } = await supabase
       .from('profiles')
       .delete()
-      .eq('id', session.user.id);
+      .eq('id', user.id);
       
     if (profileDeleteError) {
       console.error('프로필 삭제 오류:', profileDeleteError);
@@ -68,7 +68,7 @@ export async function deleteAccount(
     
     // 2. 인증 사용자 삭제 (관리자 권한 필요할 수 있음)
     const { error: authDeleteError } = await supabase.auth.admin.deleteUser(
-      session.user.id
+      user.id
     );
     
     if (authDeleteError) {
@@ -76,7 +76,7 @@ export async function deleteAccount(
       
       // admin API 사용 권한이 없는 경우, 일반 API로 시도
       const { error: userDeleteError } = await supabase.auth.admin.deleteUser(
-        session.user.id
+        user.id
       );
       
       if (userDeleteError) {

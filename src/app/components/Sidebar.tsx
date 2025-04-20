@@ -2,7 +2,6 @@
 
 import { X } from 'lucide-react';
 import { Button } from '../ui/button';
-import AuthSection from './sidebar/auth-section';
 import { Suspense } from 'react';
 import { ReactNode } from 'react';
 
@@ -32,11 +31,13 @@ export default function Sidebar({
   onClose,
   children,
   leagueStandingsComponent,
+  authSection,
 }: {
   isOpen: boolean;
   onClose: () => void;
   children?: ReactNode;
   leagueStandingsComponent?: ReactNode;
+  authSection?: ReactNode;
 }) {
   return (
     <>
@@ -62,7 +63,7 @@ export default function Sidebar({
               <h3 className="text-sm font-bold">계정</h3>
             </div>
             <div className="px-3 py-2">
-              <AuthSection />
+              {authSection}
             </div>
           </div>
           
@@ -106,6 +107,16 @@ export default function Sidebar({
 
         {/* 스크롤 영역 */}
         <div className="h-[calc(100%-56px)] overflow-y-auto bg-white">
+          {/* 사용자 정보 섹션 - 모바일용 */}
+          <div className="mb-4 bg-white">
+            <div className="px-4 py-3 border-b">
+              <h3 className="text-sm font-bold">계정</h3>
+            </div>
+            <div className="px-4 py-2">
+              {authSection}
+            </div>
+          </div>
+          
           {/* 게시판 이동 섹션 */}
           <div className="mb-4 bg-white">
             <div className="px-4 py-3 border-b">

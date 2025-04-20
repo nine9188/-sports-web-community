@@ -11,6 +11,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
 import SidebarWrapper from './components/SidebarWrapper';
+import { HeaderUserData } from './lib/types';
 
 // DevTools 동적 로드 - 개발 환경에서만 로드
 const ReactQueryDevtools = dynamic(() => 
@@ -24,12 +25,16 @@ interface RootLayoutClientProps {
   children: React.ReactNode;
   boardNavigation: React.ReactNode;
   rightSidebar: React.ReactNode;
+  authSection: React.ReactNode;
+  headerUserData: HeaderUserData | null;
 }
 
 export default function RootLayoutClient({ 
   children, 
   boardNavigation, 
-  rightSidebar
+  rightSidebar,
+  authSection,
+  headerUserData
 }: RootLayoutClientProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const pathname = usePathname();
@@ -108,6 +113,7 @@ export default function RootLayoutClient({
               <Header 
                 onMenuClick={handleSidebarOpen} 
                 isSidebarOpen={isSidebarOpen} 
+                userData={headerUserData}
               />
               <div className="flex flex-1 w-full md:max-w-screen-2xl md:mx-auto">
                 {/* 클라이언트 컴포넌트인 SidebarWrapper에 이벤트 핸들러 전달 */}
@@ -115,6 +121,7 @@ export default function RootLayoutClient({
                   isOpen={isSidebarOpen}
                   onClose={handleSidebarClose}
                   boardNavigation={boardNavigation}
+                  authSection={authSection}
                 />
                 <main className="flex-1 md:p-4 w-full overflow-y-auto box-border">
                   {children}

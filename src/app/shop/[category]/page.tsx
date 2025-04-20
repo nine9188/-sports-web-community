@@ -133,10 +133,10 @@ export default async function CategoryPage({ params }: Props) {
       .eq('is_active', true)
       .order('price', { ascending: true });
 
-    // 사용자 정보 가져오기
-    const { data: { session } } = await supabase.auth.getSession();
-    const userPoints = session?.user?.id ? await getUserPoints(supabase, session.user.id) : 0;
-    const userItems = await getUserItems(supabase, session?.user?.id);
+    // 사용자 정보 가져오기 (getUser 사용 - 보안 강화)
+    const { data: { user }, error } = await supabase.auth.getUser();
+    const userPoints = user?.id && !error ? await getUserPoints(supabase, user.id) : 0;
+    const userItems = await getUserItems(supabase, user?.id);
 
     return (
       <div className="container mx-auto py-6 px-4">
@@ -163,7 +163,7 @@ export default async function CategoryPage({ params }: Props) {
           items={items || []}
           userItems={userItems}
           userPoints={userPoints}
-          userId={session?.user?.id}
+          userId={user?.id}
           categories={[currentCategory, ...(currentCategory.subcategories || [])]}
         />
       </div>

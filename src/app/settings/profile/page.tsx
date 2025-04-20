@@ -9,11 +9,11 @@ export default async function ProfileSettingsPage() {
   // Supabase 클라이언트 생성
   const supabase = await createClient();
   
-  // 사용자 세션 확인
-  const { data: { session } } = await supabase.auth.getSession();
+  // 사용자 정보 확인 (getUser 사용 - 보안 강화)
+  const { data: { user }, error } = await supabase.auth.getUser();
   
   // 로그인되지 않은 경우 로그인 페이지로 리디렉션
-  if (!session) {
+  if (!user || error) {
     redirect('/signin?returnUrl=/settings/profile');
   }
   
@@ -21,17 +21,14 @@ export default async function ProfileSettingsPage() {
   const { data: profileData } = await supabase
     .from('profiles')
     .select('*')
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single();
-  
-  // 사용자 인증 메타데이터 가져오기
-  const { data: { user } } = await supabase.auth.getUser();
   
   // 프로필 정보가 없거나 오류가 발생한 경우 기본값 사용
   const userProfile = profileData || {
-    id: session.user.id,
+    id: user.id,
     nickname: '',
-    email: session.user.email,
+    email: user.email,
     full_name: '',
   };
   
@@ -45,7 +42,7 @@ export default async function ProfileSettingsPage() {
       <ProfileForm initialData={{
         id: userProfile.id,
         nickname: userProfile.nickname,
-        email: userProfile.email || session.user.email,
+        email: userProfile.email || user.email,
         full_name: userProfile.full_name,
         created_at: user?.created_at,
         last_sign_in_at: user?.last_sign_in_at,

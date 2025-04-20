@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ChevronRight, ChevronDown } from 'lucide-react';
-import { useBoards, HierarchicalBoard } from '@/app/hooks/useBoards';
+import { HierarchicalBoard } from '@/app/lib/types';
+import { fetchBoardsDirectly } from '@/app/actions/boards';
 
 // BoardNavigation 컴포넌트의 캐싱 지속 시간 (30분)
 const CACHE_DURATION = 30 * 60 * 1000;
@@ -21,8 +22,10 @@ interface BoardNavigationClientProps {
 }
 
 export default function BoardNavigationClient({ initialData }: BoardNavigationClientProps) {
-  // React Query를 사용한 데이터 가져오기 (초기값으로 서버 데이터 사용)
-  const { data, isLoading, error, refetch } = useBoards();
+  // 상태 관리
+  const [data, setData] = useState<BoardsData | null>(initialData);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
   
   // 게시판 데이터와 로딩 상태 관리
   const [cachedBoards, setCachedBoards] = useState<{
@@ -36,6 +39,37 @@ export default function BoardNavigationClient({ initialData }: BoardNavigationCl
   
   // 게시판 확장 상태 관리
   const [expandedBoards, setExpandedBoards] = useState<Record<string, boolean>>({});
+  
+  // 데이터 리로드 함수
+  const refetch = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const freshData = await fetchBoardsDirectly();
+      setData(freshData);
+      
+      // 캐시 업데이트
+      const cacheData = {
+        rootBoards: freshData.rootBoards,
+        timestamp: Date.now()
+      };
+      
+      // 로컬 스토리지에 저장
+      try {
+        localStorage.setItem(LS_BOARDS_KEY, JSON.stringify(cacheData));
+      } catch {
+        // 에러 무시
+      }
+      
+      setCachedBoards(cacheData);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('알 수 없는 에러가 발생했습니다'));
+    } finally {
+      setIsLoading(false);
+      setLocalLoading(false);
+    }
+  };
   
   // 로컬 스토리지에서 캐시된 데이터 로드
   useEffect(() => {
@@ -79,38 +113,9 @@ export default function BoardNavigationClient({ initialData }: BoardNavigationCl
     // 캐시된 데이터가 없거나 만료된 경우 새로 불러오기
     if (!loadCachedData() && !initialData?.rootBoards) {
       setLocalLoading(true);
+      refetch();
     }
   }, [initialData]);
-  
-  // React Query 데이터가 로드되면 캐시 업데이트
-  useEffect(() => {
-    if (data && data.rootBoards) {
-      // 캐시 업데이트
-      const cacheData = {
-        rootBoards: data.rootBoards,
-        timestamp: Date.now()
-      };
-      
-      // 로컬 스토리지에 저장
-      try {
-        localStorage.setItem(LS_BOARDS_KEY, JSON.stringify(cacheData));
-      } catch {
-        // 에러 무시
-      }
-      
-      setCachedBoards(cacheData);
-      setLocalLoading(false);
-      
-      // 확장 상태 초기화 (첫 로드 시에만)
-      if (Object.keys(expandedBoards).length === 0) {
-        const initialExpandedState: Record<string, boolean> = {};
-        data.rootBoards.forEach(board => {
-          initialExpandedState[board.id] = true;
-        });
-        setExpandedBoards(initialExpandedState);
-      }
-    }
-  }, [data, expandedBoards]);
   
   // 확장 상태가 변경될 때 로컬 스토리지에 저장
   useEffect(() => {
@@ -193,8 +198,8 @@ export default function BoardNavigationClient({ initialData }: BoardNavigationCl
     );
   };
 
-  // 로컬 캐시 또는 React Query 데이터 사용
-  const boardsToRender = cachedBoards.rootBoards || (data?.rootBoards || []);
+  // 로컬 캐시 또는 데이터 사용
+  const boardsToRender = data?.rootBoards || cachedBoards.rootBoards || [];
   const isLoadingData = localLoading && isLoading && !boardsToRender;
   const hasError = error && !cachedBoards.rootBoards;
 

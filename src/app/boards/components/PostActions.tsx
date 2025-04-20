@@ -30,13 +30,14 @@ export default function PostActions({
   useEffect(() => {
     async function checkUserAction() {
       try {
-        const { data } = await supabase.auth.getSession();
+        // 인증된 사용자 정보 확인 (getUser 사용 - 보안 강화)
+        const { data: { user }, error } = await supabase.auth.getUser();
         
-        if (!data.session) {
+        if (error || !user) {
           return null;
         }
         
-        const userId = data.session.user.id;
+        const userId = user.id;
         
         // 좋아요 확인
         const { data: existingLike, error: likeError } = await supabase
@@ -90,16 +91,16 @@ export default function PostActions({
     setIsLiking(true);
     
     try {
-      // 세션 확인
-      const { data } = await supabase.auth.getSession();
+      // 인증된 사용자 정보 확인 (getUser 사용 - 보안 강화)
+      const { data: { user }, error } = await supabase.auth.getUser();
       
-      if (!data?.session?.user) {
+      if (error || !user) {
         alert('로그인이 필요합니다.');
         router.push('/login');
         return null;
       }
       
-      const userId = data.session.user.id;
+      const userId = user.id;
       
       // 게시글 최신 정보 조회
       const { data: currentPost, error: fetchError } = await supabase
@@ -238,16 +239,16 @@ export default function PostActions({
     setIsDisliking(true);
     
     try {
-      // 세션 확인
-      const { data } = await supabase.auth.getSession();
+      // 인증된 사용자 정보 확인 (getUser 사용 - 보안 강화)
+      const { data: { user }, error } = await supabase.auth.getUser();
       
-      if (!data?.session?.user) {
+      if (error || !user) {
         alert('로그인이 필요합니다.');
         router.push('/login');
         return null;
       }
       
-      const userId = data.session.user.id;
+      const userId = user.id;
       
       // 게시글 최신 정보 조회
       const { data: currentPost, error: fetchError } = await supabase

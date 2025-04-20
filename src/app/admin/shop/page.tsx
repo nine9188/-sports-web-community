@@ -10,9 +10,10 @@ export default async function ShopAdminPage() {
     // 관리자 인증 체크
     const supabase = await createClient();
 
-    const { data: { session } } = await supabase.auth.getSession();
+    // getUser를 사용하여 보안 강화
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
     
-    if (!session) {
+    if (userError || !user) {
       redirect('/signin');
     }
 
@@ -20,7 +21,7 @@ export default async function ShopAdminPage() {
     const { data: profile } = await supabase
       .from('profiles')
       .select('is_admin')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single();
 
     if (!profile?.is_admin) {

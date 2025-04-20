@@ -163,21 +163,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
     
     try {
-      // 세션 확인 및 새로고침
-      const { data: sessionData } = await supabase.auth.getSession();
+      // 인증된 사용자 정보 가져오기 (getUser 사용 - 보안 강화)
+      const { data, error } = await supabase.auth.getUser();
       
-      if (!sessionData.session) {
+      if (error || !data.user) {
         return;
       }
       
-      // 최신 사용자 정보 가져오기
-      const { data } = await supabase.auth.getUser();
-      
-      if (!data.user) {
-        return;
-      }
-      
-      // 사용자 메타데이터 확인
+      // 최신 사용자 정보 설정
       const currentUser = data.user;
       
       // 프로필 테이블에서 최신 정보 확인
@@ -200,23 +193,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           if (result.success && result.user) {
             setUser(result.user);
-            return;
           }
         }
       }
-      
-      // 기본 업데이트 (프로필 데이터 없는 경우)
-      setUser(currentUser);
-      
-      // 세션 있으면 타이머만 설정 (새로운 갱신 요청은 하지 않음)
-      if (sessionData.session?.expires_at) {
-        setupRefreshTimer(sessionData.session.expires_at);
-      }
-      
     } catch (error) {
       console.error('사용자 데이터 새로고침 중 오류:', error);
     }
-  }, [user, supabase, setupRefreshTimer]);
+  }, [user, supabase]);
   
   // 초기 세션 로드 
   useEffect(() => {
@@ -227,30 +210,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         setIsLoading(true);
         
-        // 세션 가져오기
-        const { data: sessionData } = await supabase.auth.getSession();
-        
-        if (!sessionData) {
-          throw new Error('세션을 가져오는데 실패했습니다');
-        }
+        // 사용자 정보만 가져오기 (세션 없이)
+        // getUser()를 사용하여 사용자 정보 확인
+        const { data } = await supabase.auth.getUser();
         
         // 컴포넌트가 마운트된 상태일 때만 상태 업데이트
         if (mounted) {
-          if (sessionData?.session) {
-            setSession(sessionData.session);
-            setUser(sessionData.session.user);
-            
-            // 첫 로드 시 타이머만 설정 (자동 갱신)
-            if (sessionData.session.expires_at) {
-              setupRefreshTimer(sessionData.session.expires_at);
-            }
-            
-            // 세션 유효성 확인
-            const { data: userData } = await supabase.auth.getUser();
-            if (userData?.user) {
-              // 유효한 사용자
-            }
+          if (data?.user) {
+            // 유효한 사용자 정보가 있을 경우
+            setUser(data.user);
+            setSession(null); // 세션 정보 없이 진행
           } else {
+            // 인증되지 않은 사용자
             setSession(null);
             setUser(null);
           }
@@ -269,7 +240,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     getInitialSession();
     
     // 중복 이벤트 처리를 방지하기 위한 함수
-    const handleAuthStateChange = async (event: string, newSession: Session | null) => {
+    const handleAuthStateChange = async (event: string) => {
       if (mounted) {
         // 이전 디바운스 타이머 취소
         if (signInDebounceTimer) {
@@ -283,73 +254,72 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // 디바운스 타이머 설정
           signInDebounceTimer = setTimeout(async () => {
             console.log('AUTH: SIGNED_IN 이벤트 처리 실행', new Date().toISOString());
-            // 상태 업데이트 (세션 및 사용자 정보)
-            setUser(newSession?.user || null);
-            setSession(newSession);
             
-            // 로그인 시 타이머 설정
-            if (newSession?.expires_at) {
-              setupRefreshTimer(newSession.expires_at);
+            // 인증된 사용자 정보 확인 (getUser 사용 - 보안 강화)
+            const { data: userData, error: userError } = await supabase.auth.getUser();
+            
+            if (!userData?.user || userError) {
+              console.error('인증된 사용자 정보를 가져오는데 실패했습니다:', userError);
+              return;
             }
             
+            // 검증된 사용자 정보 사용
+            setUser(userData.user);
+            setSession(null); // 세션 정보 사용하지 않음
+            
             // API 호출을 최소화하고 필수적인 것만 수행
-            if (newSession?.user) {
-              try {
-                const user = newSession.user;
-                
-                // profiles 테이블 확인 - 없는 경우에만 생성
-                const { data: profileData, error: profileError } = await supabase
+            try {
+              const userId = userData.user.id;
+              
+              // profiles 테이블 확인 - 없는 경우에만 생성
+              const { data: profileData, error: profileError } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('id', userId)
+                .single();
+              
+              if (profileError || !profileData) {
+                // 프로필 데이터가 없으면 생성만 하고 추가 요청은 하지 않음
+                const metadata = userData.user.user_metadata || {};
+                await supabase
                   .from('profiles')
-                  .select('id')
-                  .eq('id', user.id)
-                  .single();
-                
-                if (profileError || !profileData) {
-                  // 프로필 데이터가 없으면 생성만 하고 추가 요청은 하지 않음
-                  const metadata = user.user_metadata || {};
-                  await supabase
-                    .from('profiles')
-                    .upsert({
-                      id: user.id,
-                      username: metadata.username || '',
-                      email: user.email || '',
-                      full_name: metadata.full_name || '',
-                      nickname: metadata.nickname || '',
-                      updated_at: new Date().toISOString()
-                    });
-                }
-                
-                // 로그인 보상 처리는 별도의 지연된 작업으로 실행
-                setTimeout(() => {
-                  try {
-                    // 일일 로그인 보상과 연속 로그인 확인
-                    rewardUserActivity(user.id, ActivityType.DAILY_LOGIN).then(() => {
-                      checkConsecutiveLogin(user.id).then(({ reward }) => {
-                        if (reward) {
-                          rewardUserActivity(user.id, ActivityType.CONSECUTIVE_LOGIN);
-                        }
-                      });
-                    });
-                  } catch (error) {
-                    console.error('보상 처리 오류:', error);
-                  }
-                }, 2000); // 메인 로그인 처리 후 지연 실행
-              } catch (error) {
-                console.error('프로필 처리 오류:', error);
+                  .upsert({
+                    id: userId,
+                    username: metadata.username || '',
+                    email: userData.user.email || '',
+                    full_name: metadata.full_name || '',
+                    nickname: metadata.nickname || '',
+                    updated_at: new Date().toISOString()
+                  });
               }
+              
+              // 로그인 보상 처리는 별도의 지연된 작업으로 실행
+              setTimeout(() => {
+                try {
+                  // 일일 로그인 보상과 연속 로그인 확인
+                  rewardUserActivity(userId, ActivityType.DAILY_LOGIN).then(() => {
+                    checkConsecutiveLogin(userId).then(({ reward }) => {
+                      if (reward) {
+                        rewardUserActivity(userId, ActivityType.CONSECUTIVE_LOGIN);
+                      }
+                    });
+                  });
+                } catch (error) {
+                  console.error('보상 처리 오류:', error);
+                }
+              }, 2000); // 메인 로그인 처리 후 지연 실행
+            } catch (error) {
+              console.error('프로필 처리 오류:', error);
             }
           }, AUTH_EVENT_DEBOUNCE);
         } else if (event === 'TOKEN_REFRESHED') {
-          // 토큰 갱신 이벤트 처리
-          if (newSession) {
-            // 로컬 상태만 업데이트
-            setSession(newSession);
-            setUser(newSession.user);
-            
-            // 타이머 설정 (중복 갱신 요청 방지)
-            if (newSession.expires_at) {
-              setupRefreshTimer(newSession.expires_at);
-            }
+          // 토큰 갱신 시에는 getUser()를 호출하여 최신 사용자 정보만 갱신
+          const { data } = await supabase.auth.getUser();
+          if (data?.user) {
+            // 사용자 정보만 업데이트
+            setUser(data.user);
+            // 세션 정보는 사용하지 않음
+            setSession(null);
           }
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
@@ -405,3 +375,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     </AuthContext.Provider>
   );
 }
+

@@ -37,12 +37,12 @@ export default async function ShopPage() {
     .eq('is_active', true)
     .order('display_order', { ascending: true });
   
-  // 사용자 세션 정보 가져오기
-  const { data: { session } } = await supabase.auth.getSession();
+  // 사용자 정보 가져오기 (getUser 사용 - 보안 강화)
+  const { data: { user }, error } = await supabase.auth.getUser();
   
   let userPoints = 0;
-  if (session?.user?.id) {
-    userPoints = await getUserPoints(session.user.id);
+  if (user && !error) {
+    userPoints = await getUserPoints(user.id);
   }
 
   return (
@@ -50,7 +50,7 @@ export default async function ShopPage() {
       <h1 className="text-3xl font-bold mb-6">상점</h1>
       
       {/* 포인트 표시 */}
-      {session?.user && (
+      {user && !error && (
         <div className="bg-white shadow-sm rounded-lg p-4 mb-6 border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
@@ -86,7 +86,7 @@ export default async function ShopPage() {
       )}
       
       {/* 로그인 안 된 경우 안내 */}
-      {!session?.user && (
+      {(!user || error) && (
         <div className="mt-8 p-4 bg-blue-50 rounded-lg text-center">
           <p className="text-blue-700">
             아이템을 구매하고 사용하려면 로그인이 필요합니다.

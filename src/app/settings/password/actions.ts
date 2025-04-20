@@ -27,17 +27,17 @@ export async function changePassword(
     // Supabase 클라이언트 생성
     const supabase = await createClient();
     
-    // 사용자 세션 확인
-    const { data: { session } } = await supabase.auth.getSession();
+    // 사용자 정보 확인 (getUser 사용 - 보안 강화)
+    const { data: { user }, error } = await supabase.auth.getUser();
     
     // 로그인 상태 확인
-    if (!session) {
+    if (!user || error) {
       return { success: false, error: '로그인이 필요합니다.' };
     }
     
     // 1. 현재 비밀번호 확인 (signInWithPassword로 검증)
     const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: session.user.email as string,
+      email: user.email as string,
       password: currentPassword,
     });
     

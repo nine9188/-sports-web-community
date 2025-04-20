@@ -33,16 +33,16 @@ export async function updateProfile(
     // Supabase 클라이언트 생성
     const supabase = await createClient();
     
-    // 사용자 세션 확인
-    const { data: { session } } = await supabase.auth.getSession();
+    // 사용자 정보 확인 (getUser 사용 - 보안 강화)
+    const { data: { user }, error } = await supabase.auth.getUser();
     
     // 권한 확인
-    if (!session || session.user.id !== userId) {
+    if (!user || error || user.id !== userId) {
       return { success: false, error: '권한이 없습니다.' };
     }
     
     // 프로필 업데이트
-    const { error } = await supabase
+    const { error: updateError } = await supabase
       .from('profiles')
       .update({
         nickname: data.nickname,
@@ -53,8 +53,8 @@ export async function updateProfile(
       })
       .eq('id', userId);
     
-    if (error) {
-      throw error;
+    if (updateError) {
+      throw updateError;
     }
     
     // 페이지 캐시 갱신

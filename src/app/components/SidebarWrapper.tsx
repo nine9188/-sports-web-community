@@ -9,18 +9,21 @@ interface SidebarWrapperProps {
   isOpen: boolean;
   onClose: () => void;
   boardNavigation: ReactNode;
+  authSection: ReactNode;
 }
 
 export default function SidebarWrapper({
   isOpen,
   onClose,
-  boardNavigation
+  boardNavigation,
+  authSection
 }: SidebarWrapperProps) {
   return (
     <Sidebar
       isOpen={isOpen}
       onClose={onClose}
       leagueStandingsComponent={<LeagueStandings initialLeague="premier" />}
+      authSection={authSection}
     >
       {boardNavigation}
     </Sidebar>

@@ -19,11 +19,11 @@ export default async function SettingsLayout({
   // Supabase 클라이언트 생성
   const supabase = await createClient();
   
-  // 사용자 세션 확인
-  const { data: { session } } = await supabase.auth.getSession();
+  // 사용자 정보 확인 (getUser 사용 - 보안 강화)
+  const { data: { user }, error } = await supabase.auth.getUser();
   
   // 로그인되지 않은 경우 로그인 페이지로 리디렉션
-  if (!session) {
+  if (!user || error) {
     redirect('/signin?returnUrl=/settings/profile');
   }
   
