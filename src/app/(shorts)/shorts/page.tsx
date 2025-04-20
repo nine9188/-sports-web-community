@@ -5,6 +5,8 @@ import { fetchShorts } from '@/app/(shorts)/service';
 import { Short } from '@/app/(shorts)/types';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: 'SPORTS 쇼츠 | 짧은 스포츠 동영상',

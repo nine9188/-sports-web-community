@@ -3,6 +3,8 @@ import { Metadata } from 'next';
 import '../globals.css';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: '스포츠 쇼츠',

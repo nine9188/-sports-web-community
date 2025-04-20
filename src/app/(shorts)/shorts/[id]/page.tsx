@@ -4,15 +4,18 @@ import ShortsViewer from '@/app/(shorts)/ShortsViewer';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const revalidate = 0;
 
 // 페이지 속성 타입 정의
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }> | { id: string };
 }
 
 export async function generateMetadata({ params }: PageProps) {
   try {
-    const { id } = params;
+    const id = 'then' in params ? (await params).id : params.id;
+    
     const short = await fetchShortById(id);
     
     if (!short) return { title: '존재하지 않는 쇼츠' };
@@ -32,7 +35,8 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function ShortPage({ params }: PageProps) {
   try {
-    const { id } = params;
+    // params가 Promise인 경우와 객체인 경우 모두 처리
+    const id = 'then' in params ? (await params).id : params.id;
     
     // ID가 없는 경우 404 페이지로 리다이렉트
     if (!id) {

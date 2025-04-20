@@ -39,7 +39,15 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   // 경로 그룹에 대한 특별 처리 추가
-  serverExternalPackages: ['punycode']
+  serverExternalPackages: ['punycode'],
+  // Vercel 배포에서 경로 그룹 처리 개선
+  experimental: {
+    serverComponentsExternalPackages: ['punycode'],
+    optimizePackageImports: ['react-icons'],
+    serverActions: true
+  },
+  // 출력 내보내기 방식 설정
+  output: 'standalone'
 }
 
 module.exports = nextConfig
