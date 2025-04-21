@@ -20,10 +20,24 @@ export async function getCurrentUser(): Promise<User | null> {
             return cookieStore.get(name)?.value;
           },
           set(name, value, options) {
-            cookieStore.set(name, value, options);
+            try {
+              cookieStore.set(name, value, options);
+            } catch {
+              // 서버 컴포넌트에서 쿠키 설정 오류는 무시
+              if (process.env.NODE_ENV === 'development') {
+                console.debug('서버 컴포넌트에서 쿠키 설정 시도 무시:', name);
+              }
+            }
           },
           remove(name, options) {
-            cookieStore.set(name, '', { ...options, maxAge: 0 });
+            try {
+              cookieStore.set(name, '', { ...options, maxAge: 0 });
+            } catch {
+              // 서버 컴포넌트에서 쿠키 삭제 오류는 무시
+              if (process.env.NODE_ENV === 'development') {
+                console.debug('서버 컴포넌트에서 쿠키 삭제 시도 무시:', name);
+              }
+            }
           },
         },
       }

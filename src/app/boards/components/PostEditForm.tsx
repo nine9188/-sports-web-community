@@ -14,7 +14,7 @@ import BoardSelector from './createnavigation/BoardSelector';
 import EditorToolbar from './createnavigation/EditorToolbar';
 import { generateMatchCardHTML } from '@/app/utils/matchCardRenderer';
 import { MatchCardExtension } from '@/app/lib/tiptap/MatchCardExtension';
-import { rewardUserActivity, ActivityType } from '@/app/utils/activity-rewards';
+import { rewardUserActivity, getActivityTypeValues } from '@/app/actions/activity-actions';
 
 // MatchData 타입 직접 정의
 interface MatchData {
@@ -234,7 +234,9 @@ export default function PostEditForm({
         
         // 게시글 작성 후 보상 지급
         if (data && data.length > 0) {
-          await rewardUserActivity(userData.user.id, ActivityType.POST_CREATION, data[0].id);
+          // 활동 유형 가져오기
+          const activityTypes = await getActivityTypeValues();
+          await rewardUserActivity(userData.user.id, activityTypes.POST_CREATION, data[0].id);
         }
         
         // 게시글 작성 성공 후 게시판 페이지로 이동 (새 URL 형식으로)

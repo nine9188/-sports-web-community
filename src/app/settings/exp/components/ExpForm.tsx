@@ -6,7 +6,15 @@ import {
   calculateLevelProgress,
   getExpToNextLevel
 } from '@/app/utils/level-icons';
-import { ACTIVITY_REWARDS, ActivityType } from '@/app/utils/activity-rewards';
+
+// 직접 활동 보상 정보 정의
+const ACTIVITY_REWARDS = {
+  POST_CREATION: { exp: 25, points: 5 },
+  COMMENT_CREATION: { exp: 5, points: 1 },
+  RECEIVED_LIKE: { exp: 5, points: 1 },
+  DAILY_LOGIN: { exp: 30, points: 5 },
+  CONSECUTIVE_LOGIN: { exp: 30, points: 5 }
+};
 
 interface ExpFormProps {
   userId: string;
@@ -77,23 +85,23 @@ export default function ExpForm({
           <ul className="space-y-2 text-sm text-gray-600">
             <li className="flex items-start">
               <span className="mr-2 text-blue-600">•</span>
-              <span>게시글 작성 - {ACTIVITY_REWARDS[ActivityType.POST_CREATION].exp} XP (하루 {ACTIVITY_REWARDS[ActivityType.POST_CREATION].exp * 5}XP 제한)</span>
+              <span>게시글 작성 - {ACTIVITY_REWARDS.POST_CREATION.exp} XP (하루 {ACTIVITY_REWARDS.POST_CREATION.exp * 5}XP 제한)</span>
             </li>
             <li className="flex items-start">
               <span className="mr-2 text-blue-600">•</span>
-              <span>댓글 작성 - {ACTIVITY_REWARDS[ActivityType.COMMENT_CREATION].exp} XP (하루 {ACTIVITY_REWARDS[ActivityType.COMMENT_CREATION].exp * 5}XP 제한)</span>
+              <span>댓글 작성 - {ACTIVITY_REWARDS.COMMENT_CREATION.exp} XP (하루 {ACTIVITY_REWARDS.COMMENT_CREATION.exp * 5}XP 제한)</span>
             </li>
             <li className="flex items-start">
               <span className="mr-2 text-blue-600">•</span>
-              <span>추천 받기 - {ACTIVITY_REWARDS[ActivityType.RECEIVED_LIKE].exp} XP (하루 {ACTIVITY_REWARDS[ActivityType.RECEIVED_LIKE].exp * 10}XP 제한)</span>
+              <span>추천 받기 - {ACTIVITY_REWARDS.RECEIVED_LIKE.exp} XP (하루 {ACTIVITY_REWARDS.RECEIVED_LIKE.exp * 10}XP 제한)</span>
             </li>
             <li className="flex items-start">
               <span className="mr-2 text-blue-600">•</span>
-              <span>하루 최초 로그인 - {ACTIVITY_REWARDS[ActivityType.DAILY_LOGIN].exp} XP</span>
+              <span>하루 최초 로그인 - {ACTIVITY_REWARDS.DAILY_LOGIN.exp} XP</span>
             </li>
             <li className="flex items-start">
               <span className="mr-2 text-blue-600">•</span>
-              <span>연속 출석 보너스 - {ACTIVITY_REWARDS[ActivityType.CONSECUTIVE_LOGIN].exp} XP</span>
+              <span>연속 출석 보너스 - {ACTIVITY_REWARDS.CONSECUTIVE_LOGIN.exp} XP</span>
             </li>
           </ul>
         </div>

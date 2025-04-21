@@ -14,4 +14,7 @@ export interface CommentType {
     icon_id?: number | null;
     icon_url?: string | null;
   };
+  depth?: number;
+  parent_id?: string | null;
+  children?: CommentType[];
 } 

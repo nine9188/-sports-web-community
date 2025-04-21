@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 
 interface ChildBoard {
   id: string;
@@ -24,7 +24,6 @@ interface HoverMenuProps {
   rootBoardId: string;
   activeTabId?: string;
   rootBoardSlug?: string;
-  currentBoardSlug?: string;
   fromParam?: string;
 }
 
@@ -35,7 +34,6 @@ export default function HoverMenu({
   rootBoardId,
   activeTabId,
   rootBoardSlug,
-  currentBoardSlug,
   fromParam
 }: HoverMenuProps) {
   const [hoveredBoard, setHoveredBoard] = useState<string | null>(null);
@@ -47,53 +45,74 @@ export default function HoverMenu({
   const [menuPosition, setMenuPosition] = useState({ left: 0 });
   const [isMobile, setIsMobile] = useState(false);
 
-  // 모바일 환경 체크
+  // 모바일 환경 체크 - 디바운스 적용
   useEffect(() => {
+    let isResizing = false;
+    let rafId: number | null = null;
+    
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
     
+    // 최초 체크
     checkMobile();
-    window.addEventListener('resize', checkMobile);
+    
+    // requestAnimationFrame을 사용한 최적화된 리사이즈 핸들러
+    const optimizedResize = () => {
+      if (!isResizing) {
+        isResizing = true;
+        
+        if (rafId) {
+          cancelAnimationFrame(rafId);
+        }
+        
+        rafId = requestAnimationFrame(() => {
+          checkMobile();
+          isResizing = false;
+          rafId = null;
+        });
+      }
+    };
+    
+    window.addEventListener('resize', optimizedResize, { passive: true });
     
     return () => {
-      window.removeEventListener('resize', checkMobile);
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
+      window.removeEventListener('resize', optimizedResize);
     };
   }, []);
 
-  useEffect(() => {
-    if (currentBoardSlug) {
-      if (process.env.NODE_ENV === 'development') {
-        console.debug(`현재 게시판: ${currentBoardSlug}`);
-      }
-    }
-  }, [currentBoardSlug]);
-
   // 마우스가 메뉴 영역을 벗어날 때 지연 시간 후 닫기
-  const handleMenuClose = () => {
+  const handleMenuClose = useCallback(() => {
     // 이미 타이머가 설정되어 있다면 초기화
     if (closeTimeoutRef.current) {
       clearTimeout(closeTimeoutRef.current);
     }
     
-    // 250ms 후에 메뉴 닫기
-    closeTimeoutRef.current = setTimeout(() => {
-      setHoveredBoard(null);
-      closeTimeoutRef.current = null;
-    }, 250);
-  };
+    // 다음 렌더링 프레임에서 타이머 설정하여 성능 개선
+    requestAnimationFrame(() => {
+      closeTimeoutRef.current = setTimeout(() => {
+        setHoveredBoard(null);
+        closeTimeoutRef.current = null;
+      }, 250);
+    });
+  }, []);
   
   // 마우스가 메뉴 영역으로 들어오면 닫기 타이머 취소
-  const handleMenuEnter = (boardId: string) => {
+  const handleMenuEnter = useCallback((boardId: string) => {
     if (closeTimeoutRef.current) {
       clearTimeout(closeTimeoutRef.current);
       closeTimeoutRef.current = null;
     }
-    setHoveredBoard(boardId);
-  };
+    if (hoveredBoard !== boardId) {
+      setHoveredBoard(boardId);
+    }
+  }, [hoveredBoard]);
 
   // 모바일에서 메뉴 클릭 처리
-  const handleMobileMenuClick = (boardId: string) => (e: React.MouseEvent) => {
+  const handleMobileMenuClick = useCallback((boardId: string) => (e: React.MouseEvent) => {
     if (isMobile && childBoardsMap[boardId]?.length > 0) {
       e.preventDefault();
       
@@ -105,9 +124,9 @@ export default function HoverMenu({
       
       setClickedMobileMenu(boardId);
     }
-  };
+  }, [isMobile, childBoardsMap, clickedMobileMenu]);
 
-  const handleOutsideClick = (event: MouseEvent) => {
+  const handleOutsideClick = useCallback((event: MouseEvent) => {
     if (
       containerRef.current &&
       !containerRef.current.contains(event.target as Node)
@@ -115,31 +134,38 @@ export default function HoverMenu({
       setHoveredBoard(null);
       setClickedMobileMenu(null);
     }
-  };
-
-  useEffect(() => {
-    document.addEventListener('mousedown', handleOutsideClick);
-    return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, []);
 
+  // 문서 클릭 이벤트 핸들러 등록
   useEffect(() => {
-    if (hoveredBoard && menuItemsRef.current[hoveredBoard]) {
+    document.addEventListener('mousedown', handleOutsideClick, { passive: true });
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [handleOutsideClick]);
+
+  // 메뉴 위치 설정 - 호버된 보드가 바뀔 때만 실행
+  useEffect(() => {
+    if (!hoveredBoard || !menuItemsRef.current[hoveredBoard]) return;
+    
+    // DOM 읽기 작업을 requestAnimationFrame으로 최적화
+    requestAnimationFrame(() => {
       const menuItem = menuItemsRef.current[hoveredBoard];
       if (menuItem) {
         const parentLeft = menuItem.offsetLeft;
         setMenuPosition({ left: parentLeft });
       }
-    }
+    });
   }, [hoveredBoard]);
 
-  const sortedTopBoards = [...topBoards].sort((a, b) =>
-    a.display_order !== b.display_order
-      ? a.display_order - b.display_order
-      : a.name.localeCompare(b.name)
-  );
+  // 상위 게시판 정렬 - 불필요한 재계산 방지를 위한 메모이제이션
+  const sortedTopBoards = useMemo(() => 
+    [...topBoards].sort((a, b) =>
+      a.display_order !== b.display_order
+        ? a.display_order - b.display_order
+        : a.name.localeCompare(b.name)
+    ), [topBoards]);
 
   // 하위 메뉴 그리드로 나누기
-  const createGridLayout = (childBoards: ChildBoard[]) => {
+  const createGridLayout = useCallback((childBoards: ChildBoard[]) => {
     const ITEMS_PER_ROW = 5; // 한 줄에 5개씩
     const sortedChildBoards = [...childBoards].sort((a: ChildBoard, b: ChildBoard) =>
       a.display_order !== b.display_order
@@ -174,7 +200,24 @@ export default function HoverMenu({
         ))}
       </div>
     );
-  };
+  }, [currentBoardId]);
+
+  // 정렬된 서브메뉴 미리 계산
+  const sortedChildBoardsMap = useMemo(() => {
+    const result: Record<string, ChildBoard[]> = {};
+    
+    Object.keys(childBoardsMap).forEach(boardId => {
+      if (childBoardsMap[boardId] && childBoardsMap[boardId].length > 0) {
+        result[boardId] = [...childBoardsMap[boardId]].sort((a, b) => 
+          a.display_order !== b.display_order
+            ? a.display_order - b.display_order
+            : a.name.localeCompare(b.name)
+        );
+      }
+    });
+    
+    return result;
+  }, [childBoardsMap]);
 
   return (
     <div className="bg-white border rounded-lg shadow-sm mb-4">
@@ -269,19 +312,14 @@ export default function HoverMenu({
         </nav>
         
         {/* 모바일 드롭다운 메뉴 - 메뉴 위에 떠있는 형태 */}
-        {isMobile && clickedMobileMenu && childBoardsMap[clickedMobileMenu] && childBoardsMap[clickedMobileMenu].length > 0 && (
+        {isMobile && clickedMobileMenu && sortedChildBoardsMap[clickedMobileMenu] && sortedChildBoardsMap[clickedMobileMenu].length > 0 && (
           <div 
             className="absolute z-50 shadow-lg bg-white rounded-md border w-full left-0"
             style={{ top: `calc(100% + 5px)` }}
           >
             <div className="p-3">
               <div className="flex flex-col space-y-1">
-                {childBoardsMap[clickedMobileMenu]
-                  .sort((a: ChildBoard, b: ChildBoard) =>
-                    a.display_order !== b.display_order
-                      ? a.display_order - b.display_order
-                      : a.name.localeCompare(b.name)
-                  )
+                {sortedChildBoardsMap[clickedMobileMenu]
                   .map((childBoard: ChildBoard) => (
                     <Link
                       href={`/boards/${childBoard.slug || childBoard.id}`}

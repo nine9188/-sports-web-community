@@ -36,9 +36,14 @@ export const createClientWithCookies = (cookieStore: ReadonlyRequestCookies): Su
           },
           set(name, value, options) {
             try {
+              // 서버 컴포넌트에서 쿠키를 설정하려고 할 때 오류가 발생하므로
+              // 오류 처리를 개선하고 에러 로그 레벨을 낮춤
               cookieStore.set({ name, value, ...options });
             } catch (error) {
-              console.warn('서버 컴포넌트에서 쿠키 설정 시도:', error);
+              // 개발 환경에서만 디버깅을 위한 로그 출력 (warn -> debug)
+              if (process.env.NODE_ENV === 'development') {
+                console.debug('서버 컴포넌트에서 쿠키 설정 시도:', error);
+              }
               // 오류 발생 시 쿠키 설정 무시 (서버 액션에서 처리 예정)
             }
           },
@@ -46,7 +51,10 @@ export const createClientWithCookies = (cookieStore: ReadonlyRequestCookies): Su
             try {
               cookieStore.set({ name, value: '', ...options, maxAge: 0 });
             } catch (error) {
-              console.warn('서버 컴포넌트에서 쿠키 삭제 시도:', error);
+              // 개발 환경에서만 디버깅을 위한 로그 출력 (warn -> debug)
+              if (process.env.NODE_ENV === 'development') {
+                console.debug('서버 컴포넌트에서 쿠키 삭제 시도:', error);
+              }
               // 오류 발생 시 쿠키 삭제 무시 (서버 액션에서 처리 예정)
             }
           }

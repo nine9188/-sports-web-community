@@ -2,7 +2,7 @@ import React from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/app/lib/supabase.server';
-import { getAPIURL } from '@/app/lib/utils';
+import { getComments } from '@/app/actions/comment-actions'; // Server Action 직접 임포트
 
 // 재사용 가능한 컴포넌트 임포트
 import CommentSection from '@/app/boards/components/CommentSection';
@@ -28,7 +28,8 @@ import {
   getIconUrl,
   getCommentCounts,
   getTeamAndLeagueInfo,
-  formatPosts
+  formatPosts,
+  getPostByNumber
 } from '@/app/services/post.service';
 import { incrementViewCount } from '@/app/lib/api/posts';
 
@@ -112,32 +113,13 @@ export default async function PostDetailPage({
     
     // 2. 여러 데이터를 병렬로 가져오기 최적화
     const [
-      postDetailResponse,
+      post,
       rootBoardId,
       boardStructure,
       adjacentPosts
     ] = await Promise.all([
       // 게시글 상세 정보 가져오기
-      (async () => {
-        try {
-          // 절대 URL 생성
-          const apiUrl = new URL('/api/posts', getAPIURL());
-          // 경로 세그먼트 추가
-          apiUrl.pathname += `/${slug}/${postNumber}`;
-          
-          const res = await fetch(apiUrl.toString(), {
-            cache: 'no-store',
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          });
-          
-          if (!res.ok) throw new Error('게시글을 가져오는데 실패했습니다');
-          return res.json();
-        } catch {
-          return { post: null };
-        }
-      })(),
+      getPostByNumber(board.id, postNum).catch(() => null),
       
       // 루트 게시판 ID
       getRootBoardId(board).catch(() => board.id),
@@ -150,7 +132,7 @@ export default async function PostDetailPage({
     ]);
     
     // 게시글 데이터 검증
-    if (!postDetailResponse || !postDetailResponse.post) {
+    if (!post) {
       return (
         <div className="container mx-auto px-4 py-8">
           <div className="bg-white rounded-lg border shadow-md p-8 text-center">
@@ -171,40 +153,21 @@ export default async function PostDetailPage({
       );
     }
     
-    // post 데이터 설정
-    const post = postDetailResponse.post;
-    
     // 3. 댓글 가져오기 및 게시판 하위 구조 처리
     const [
       comments
     ] = await Promise.all([
-      // 댓글 데이터 가져오기
-      (async () => {
-        try {
-          // 절대 URL로 구성 (origin 명시적 지정)
-          const apiUrl = new URL(`/api/comments/${post.id}`, getAPIURL()).toString();
-          
-          const response = await fetch(apiUrl, {
-            cache: 'no-store',
-            next: { revalidate: 0 },
-            headers: {
-              'Content-Type': 'application/json',
-              'Cache-Control': 'no-cache, no-store, must-revalidate',
-              'Pragma': 'no-cache',
-              'Expires': '0'
-            }
-          });
-          
-          if (!response.ok) {
-            throw new Error('댓글을 가져오는데 실패했습니다');
-          }
-          
-          const data = await response.json();
-          return Array.isArray(data) ? data : [];
-        } catch {
+      // 댓글 데이터 가져오기 - Server Action 직접 호출
+      getComments(post.id).then(result => {
+        if (!result.success || !result.comments) {
+          console.error('댓글 로딩 실패:', result.error);
           return [];
         }
-      })(),
+        return result.comments;
+      }).catch(error => {
+        console.error('댓글 로딩 중 오류:', error);
+        return [];
+      })
     ]);
     
     // 4. 하위 게시판 ID 찾기
@@ -451,7 +414,6 @@ export default async function PostDetailPage({
             currentBoardId={board.id}
             rootBoardId={rootBoardId}
             rootBoardSlug={boardsData[rootBoardId]?.slug}
-            currentBoardSlug={slug}
           />
         </div>
         

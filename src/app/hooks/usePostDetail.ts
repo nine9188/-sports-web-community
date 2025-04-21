@@ -1,6 +1,8 @@
 'use client';
 
 import { useSuspenseQuery } from '@tanstack/react-query';
+import { getComments as getCommentsAction } from '@/app/actions/comment-actions-client';
+import { CommentType } from '../types/comment';
 
 // 게시글 상세 정보 타입
 export interface PostDetail {
@@ -47,25 +49,6 @@ export interface PostDetail {
   };
 }
 
-// 댓글 타입
-export interface Comment {
-  id: string;
-  content: string;
-  created_at: string;
-  user_id: string;
-  post_id: string;
-  parent_id?: string | null;
-  depth: number;
-  profiles?: {
-    nickname: string;
-    icon_id?: number | null;
-    icon_url?: string | null;
-  } | null;
-  children?: Comment[];
-  likes?: number;
-  dislikes?: number;
-}
-
 // 인접 게시글 타입
 interface AdjacentPost {
   id: string;
@@ -96,20 +79,20 @@ const fetchPostDetail = async (slug: string, postNumber: string): Promise<PostDe
 };
 
 // 댓글 가져오기 함수
-const fetchComments = async (postId: string): Promise<Comment[]> => {
-  const response = await fetch(`/api/comments/${postId}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || '댓글을 가져오는데 실패했습니다.');
+const fetchComments = async (postId: string): Promise<CommentType[]> => {
+  try {
+    // API 호출 대신 Server Action 호출
+    const response = await getCommentsAction(postId);
+    if (response.success && response.comments) {
+      return response.comments;
+    }
+    return [];
+  } catch (error) {
+    console.error('댓글 로딩 실패:', error);
+    throw error instanceof Error 
+      ? error 
+      : new Error('댓글을 가져오는데 실패했습니다.');
   }
-
-  return await response.json();
 };
 
 // 인접 게시글(이전글, 다음글) 가져오기 함수
@@ -140,7 +123,7 @@ export function usePostDetail(slug: string, postNumber: string) {
 
 // 댓글 목록 훅 (Suspense 지원)
 export function useComments(postId: string) {
-  return useSuspenseQuery<Comment[], Error>({
+  return useSuspenseQuery<CommentType[], Error>({
     queryKey: ['comments', postId],
     queryFn: () => fetchComments(postId),
     staleTime: 1000 * 60 * 1, // 1분 동안 최신 상태 유지

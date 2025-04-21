@@ -3,14 +3,17 @@
 import React, { createContext, useContext, useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { createClient } from '@/app/lib/supabase-browser';
 import { Session, User } from '@supabase/supabase-js';
-import { rewardUserActivity, checkConsecutiveLogin, ActivityType } from '@/app/utils/activity-rewards';
+import { rewardUserActivity, checkConsecutiveLogin, ActivityTypeValues } from '@/app/utils/activity-rewards-client';
 import { updateUserData, refreshSession, logout } from '@/app/actions/auth-actions';
 
 // 세션 갱신 주기 (15분)
 const SESSION_REFRESH_INTERVAL = 15 * 60 * 1000;
 
-// 이벤트 디바운스를 위한 상수
-const AUTH_EVENT_DEBOUNCE = 1000; // 1초
+// 인증 이벤트 디바운스 타임아웃 (2초)
+const AUTH_SIGNIN_DEBOUNCE = 2000;
+
+// 최근 처리된 이벤트 시간 캐싱 기간 (초)
+const EVENT_CACHE_EXPIRY = 30;
 
 interface AuthContextType {
   user: User | null;
@@ -38,6 +41,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
   const refreshCurrentSessionRef = useRef<(() => Promise<void>) | null>(null);
+  // 이벤트 캐싱을 위한 참조 객체
+  const eventCacheRef = useRef<{[key: string]: number}>({});
   const supabase = createClient();
   
   // 갱신 타이머 설정 함수
@@ -121,6 +126,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           clearTimeout(refreshTimerRef.current);
           refreshTimerRef.current = null;
         }
+        
+        // 이벤트 캐시 정리
+        eventCacheRef.current = {};
       }
     } catch (error) {
       console.error('로그아웃 중 오류:', error);
@@ -201,6 +209,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, supabase]);
   
+  // 이벤트 캐시 검사 및 업데이트 함수
+  const checkAndUpdateEventCache = useCallback((eventType: string, userId?: string): boolean => {
+    const now = Math.floor(Date.now() / 1000);
+    const cacheKey = `${eventType}_${userId || ''}`;
+    
+    // 캐시된 이벤트 확인
+    const lastProcessed = eventCacheRef.current[cacheKey];
+    
+    if (lastProcessed && now - lastProcessed < EVENT_CACHE_EXPIRY) {
+      // 캐시 기간 내에 이미 처리된 이벤트
+      if (process.env.NODE_ENV === 'development') {
+        console.debug(`이벤트 중복 차단: ${cacheKey}, 마지막 처리: ${new Date(lastProcessed * 1000).toISOString()}`);
+      }
+      return false;
+    }
+    
+    // 이벤트 캐시 업데이트
+    eventCacheRef.current[cacheKey] = now;
+    return true;
+  }, []);
+  
   // 초기 세션 로드 
   useEffect(() => {
     let mounted = true;
@@ -220,6 +249,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // 유효한 사용자 정보가 있을 경우
             setUser(data.user);
             setSession(null); // 세션 정보 없이 진행
+            
+            // 초기 로드 시 이벤트 캐시 설정 (과도한 보상 처리 방지)
+            eventCacheRef.current[`SIGNED_IN_${data.user.id}`] = Math.floor(Date.now() / 1000);
           } else {
             // 인증되지 않은 사용자
             setSession(null);
@@ -241,96 +273,176 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     // 중복 이벤트 처리를 방지하기 위한 함수
     const handleAuthStateChange = async (event: string) => {
-      if (mounted) {
-        // 이전 디바운스 타이머 취소
-        if (signInDebounceTimer) {
-          clearTimeout(signInDebounceTimer);
-          signInDebounceTimer = null;
+      if (!mounted) return;
+        
+      // 이전 디바운스 타이머 취소
+      if (signInDebounceTimer) {
+        clearTimeout(signInDebounceTimer);
+        signInDebounceTimer = null;
+      }
+      
+      if (event === 'SIGNED_IN') {
+        // 임시 사용자 정보 확인 (캐시 키 생성용)
+        try {
+          const { data: tempUserData } = await supabase.auth.getUser();
+          const userId = tempUserData?.user?.id;
+          
+          // 사용자 ID가 있고 이벤트가 캐시되어 있지 않은 경우에만 처리
+          if (userId && checkAndUpdateEventCache('SIGNED_IN', userId)) {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('AUTH: SIGNED_IN 이벤트 처리 시작', new Date().toISOString());
+            }
+            
+            // requestAnimationFrame을 사용하여 메인 스레드 블로킹 방지
+            requestAnimationFrame(() => {
+              // 디바운스 타이머 설정 (시간 증가)
+              signInDebounceTimer = setTimeout(async () => {
+                if (process.env.NODE_ENV === 'development') {
+                  console.log('AUTH: SIGNED_IN 이벤트 처리 실행', new Date().toISOString());
+                }
+                
+                try {
+                  // 인증된 사용자 정보 확인 (getUser 사용 - 보안 강화)
+                  const { data: userData, error: userError } = await supabase.auth.getUser();
+                  
+                  if (!userData?.user || userError) {
+                    console.error('인증된 사용자 정보를 가져오는데 실패했습니다:', userError);
+                    return;
+                  }
+                  
+                  // 검증된 사용자 정보 사용
+                  setUser(userData.user);
+                  setSession(null); // 세션 정보 사용하지 않음
+                  
+                  // 프로필 처리 최적화
+                  const userId = userData.user.id;
+                  
+                  // 필수적인 처리만 하고 보상 로직은 별도 처리
+                  // 메인 스레드 블로킹 방지를 위해 약간의 지연 추가
+                  setTimeout(() => {
+                    handleUserRewards(userId);
+                  }, 0);
+                } catch (error) {
+                  console.error('인증 상태 변경 처리 오류:', error);
+                }
+              }, AUTH_SIGNIN_DEBOUNCE); // 디바운스 시간 증가 (2초)
+            });
+          } else {
+            // 중복 이벤트 무시 (로그 없음)
+          }
+        } catch (error) {
+          console.error('임시 사용자 정보 확인 오류:', error);
+        }
+      } else if (event === 'TOKEN_REFRESHED') {
+        // 토큰 갱신 시에는 getUser()를 호출하여 최신 사용자 정보만 갱신
+        const { data } = await supabase.auth.getUser();
+        if (data?.user) {
+          // 사용자 정보만 업데이트
+          setUser(data.user);
+          // 세션 정보는 사용하지 않음
+          setSession(null);
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setSession(null);
+        
+        // 이벤트 캐시 정리
+        eventCacheRef.current = {};
+        
+        // 로그아웃 시 타이머 정리
+        if (refreshTimerRef.current) {
+          clearTimeout(refreshTimerRef.current);
+          refreshTimerRef.current = null;
+        }
+      }
+    };
+    
+    // 별도 함수로 보상 처리 분리
+    const handleUserRewards = async (userId: string) => {
+      // 메모리 사용량 및 계산 최적화를 위한 변수
+      let profileData, profileError, userData;
+      
+      try {
+        // 이미 보상을 받았는지 확인 (먼저 확인하여 불필요한 DB 작업 방지)
+        const supabase = createClient();
+        const today = new Date();
+        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        
+        // 오늘 로그인 보상을 이미 받았는지 확인
+        const { count: rewardCount, error: countError } = await supabase
+          .from('exp_history')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', userId)
+          .eq('reason', '하루 최초 로그인')
+          .gte('created_at', todayStart.toISOString())
+          .lt('created_at', new Date(todayStart.getTime() + 24 * 60 * 60 * 1000).toISOString());
+          
+        if (countError) {
+          console.error('보상 내역 확인 오류:', countError);
+          return;
         }
         
-        if (event === 'SIGNED_IN') {
-          console.log('AUTH: SIGNED_IN 이벤트 처리 시작', new Date().toISOString());
-          
-          // 디바운스 타이머 설정
-          signInDebounceTimer = setTimeout(async () => {
-            console.log('AUTH: SIGNED_IN 이벤트 처리 실행', new Date().toISOString());
-            
-            // 인증된 사용자 정보 확인 (getUser 사용 - 보안 강화)
-            const { data: userData, error: userError } = await supabase.auth.getUser();
-            
-            if (!userData?.user || userError) {
-              console.error('인증된 사용자 정보를 가져오는데 실패했습니다:', userError);
-              return;
-            }
-            
-            // 검증된 사용자 정보 사용
-            setUser(userData.user);
-            setSession(null); // 세션 정보 사용하지 않음
-            
-            // API 호출을 최소화하고 필수적인 것만 수행
-            try {
-              const userId = userData.user.id;
-              
-              // profiles 테이블 확인 - 없는 경우에만 생성
-              const { data: profileData, error: profileError } = await supabase
-                .from('profiles')
-                .select('id')
-                .eq('id', userId)
-                .single();
-              
-              if (profileError || !profileData) {
-                // 프로필 데이터가 없으면 생성만 하고 추가 요청은 하지 않음
-                const metadata = userData.user.user_metadata || {};
-                await supabase
-                  .from('profiles')
-                  .upsert({
-                    id: userId,
-                    username: metadata.username || '',
-                    email: userData.user.email || '',
-                    full_name: metadata.full_name || '',
-                    nickname: metadata.nickname || '',
-                    updated_at: new Date().toISOString()
-                  });
-              }
-              
-              // 로그인 보상 처리는 별도의 지연된 작업으로 실행
-              setTimeout(() => {
-                try {
-                  // 일일 로그인 보상과 연속 로그인 확인
-                  rewardUserActivity(userId, ActivityType.DAILY_LOGIN).then(() => {
-                    checkConsecutiveLogin(userId).then(({ reward }) => {
-                      if (reward) {
-                        rewardUserActivity(userId, ActivityType.CONSECUTIVE_LOGIN);
-                      }
-                    });
-                  });
-                } catch (error) {
-                  console.error('보상 처리 오류:', error);
-                }
-              }, 2000); // 메인 로그인 처리 후 지연 실행
-            } catch (error) {
-              console.error('프로필 처리 오류:', error);
-            }
-          }, AUTH_EVENT_DEBOUNCE);
-        } else if (event === 'TOKEN_REFRESHED') {
-          // 토큰 갱신 시에는 getUser()를 호출하여 최신 사용자 정보만 갱신
-          const { data } = await supabase.auth.getUser();
-          if (data?.user) {
-            // 사용자 정보만 업데이트
-            setUser(data.user);
-            // 세션 정보는 사용하지 않음
-            setSession(null);
+        // 이미 보상을 받은 경우 처리 중단
+        if (rewardCount && rewardCount > 0) {
+          if (process.env.NODE_ENV === 'development') {
+            console.debug(`사용자(${userId})는 이미 오늘의 로그인 보상을 받았습니다.`);
           }
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null);
-          setSession(null);
+          return;
+        }
+        
+        // 프로필 체크 및 필요시 생성 로직은 유지
+        const profileResult = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', userId)
+          .single();
           
-          // 로그아웃 시 타이머 정리
-          if (refreshTimerRef.current) {
-            clearTimeout(refreshTimerRef.current);
-            refreshTimerRef.current = null;
+        profileData = profileResult.data;
+        profileError = profileResult.error;
+        
+        if (profileError || !profileData) {
+          // 프로필 데이터가 없으면 생성만 하고 추가 요청은 하지 않음
+          const userResult = await supabase.auth.getUser();
+          userData = userResult.data;
+          
+          if (userData?.user) {
+            const metadata = userData.user.user_metadata || {};
+            await supabase
+              .from('profiles')
+              .upsert({
+                id: userId,
+                username: metadata.username || '',
+                email: userData.user.email || '',
+                full_name: metadata.full_name || '',
+                nickname: metadata.nickname || '',
+                updated_at: new Date().toISOString()
+              });
           }
         }
+        
+        // 로그인 보상 처리는 별도 실행
+        if (!rewardCount || rewardCount === 0) {
+          // 지연 시간을 더 길게 설정하여 메인 스레드 블로킹 최소화
+          setTimeout(() => {
+            // 성능 최적화: Promise.all을 사용하여 parallel 처리
+            Promise.all([
+              rewardUserActivity(userId, ActivityTypeValues.DAILY_LOGIN),
+              checkConsecutiveLogin(userId)
+            ]).then(([, consecutiveResult]) => { // 첫 번째 결과는 사용하지 않으므로 생략
+              const { reward } = consecutiveResult;
+              if (reward) {
+                // 추가 지연으로 메인 스레드 블로킹 방지
+                setTimeout(() => {
+                  rewardUserActivity(userId, ActivityTypeValues.CONSECUTIVE_LOGIN);
+                }, 500);
+              }
+            }).catch(error => {
+              console.error('보상 처리 오류:', error);
+            });
+          }, 2500);
+        }
+      } catch (error) {
+        console.error('프로필/보상 처리 오류:', error);
       }
     };
     
@@ -354,7 +466,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       authListener.subscription.unsubscribe();
     };
-  }, [supabase, setupRefreshTimer]);
+  }, [supabase, setupRefreshTimer, checkAndUpdateEventCache]);
   
   // 값을 메모이제이션하여 불필요한 리렌더링 방지
   const value = useMemo(

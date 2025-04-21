@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { getUserIconInfo } from '@/app/utils/level-icons-client';
+import { likeComment, dislikeComment } from '@/app/actions/comment-actions-client';
 
 interface CommentProps {
   comment: {
@@ -25,9 +25,10 @@ interface CommentProps {
   currentUserId: string | null;
   onUpdate: (id: string, content: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  isPostOwner?: boolean;
 }
 
-export default function Comment({ comment, currentUserId, onUpdate, onDelete }: CommentProps) {
+export default function Comment({ comment, currentUserId, onUpdate, onDelete, isPostOwner = false }: CommentProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(comment.content);
   const [likes, setLikes] = useState(comment.likes || 0);
@@ -37,8 +38,6 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete }: 
   const [isDisliking, setIsDisliking] = useState(false);
   const [userIconUrl, setUserIconUrl] = useState<string | null>(null);
   const [iconName, setIconName] = useState<string | null>(null);
-  
-  const router = useRouter();
   
   // 사용자 아이콘 가져오기
   useEffect(() => {
@@ -87,40 +86,35 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete }: 
     if (isLiking || isDisliking || !currentUserId) return;
     
     setIsLiking(true);
-    console.log(`좋아요 시도 - 댓글 ID: ${comment.id}, 사용자 ID: ${currentUserId}`);
+    console.log(`좋아요 시도 - 댓글 ID: ${comment.id}`);
     
     try {
-      // API를 통한 좋아요 처리
-      const baseUrl = window.location.origin;
-      const apiUrl = `${baseUrl}/api/comments/${comment.post_id || 'unknown'}/${comment.id}/likes`;
+      // 서버 액션으로 좋아요 처리
+      const result = await likeComment(comment.id);
+      console.log("좋아요 결과:", result);
       
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ actionType: 'like' })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('좋아요 처리 응답 오류:', errorData);
-        throw new Error(errorData.error || '좋아요 처리에 실패했습니다');
+      if (!result.success) {
+        // 로그인 필요 시 처리
+        if (result.error === '로그인이 필요합니다.') {
+          alert('로그인이 필요합니다.');
+          return;
+        }
+        
+        alert(result.error || '좋아요 처리 중 오류가 발생했습니다.');
+        return;
       }
       
-      // 응답에서 새로운 상태 정보 추출
-      const result = await response.json();
-      console.log('좋아요 처리 결과:', result);
-      
-      // 로컬 상태 업데이트
+      // 상태 업데이트
       setLikes(result.likes);
       setDislikes(result.dislikes);
       setUserAction(result.userAction);
       
-      // 브라우저 새로고침
-      router.refresh();
+      // 캐시 무효화 또는 데이터 전파 처리
+      // router.refresh() 대신 필요한 상태만 업데이트
+      
     } catch (error) {
       console.error('좋아요 처리 중 오류:', error);
+      console.log('오류 세부 정보:', JSON.stringify(error, null, 2));
       alert(error instanceof Error ? error.message : '좋아요 처리 중 오류가 발생했습니다.');
     } finally {
       setIsLiking(false);
@@ -131,40 +125,35 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete }: 
     if (isLiking || isDisliking || !currentUserId) return;
     
     setIsDisliking(true);
-    console.log(`싫어요 시도 - 댓글 ID: ${comment.id}, 사용자 ID: ${currentUserId}`);
+    console.log(`싫어요 시도 - 댓글 ID: ${comment.id}`);
     
     try {
-      // API를 통한 싫어요 처리
-      const baseUrl = window.location.origin;
-      const apiUrl = `${baseUrl}/api/comments/${comment.post_id || 'unknown'}/${comment.id}/likes`;
+      // 서버 액션으로 싫어요 처리
+      const result = await dislikeComment(comment.id);
+      console.log("싫어요 결과:", result);
       
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ actionType: 'dislike' })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('싫어요 처리 응답 오류:', errorData);
-        throw new Error(errorData.error || '싫어요 처리에 실패했습니다');
+      if (!result.success) {
+        // 로그인 필요 시 처리
+        if (result.error === '로그인이 필요합니다.') {
+          alert('로그인이 필요합니다.');
+          return;
+        }
+        
+        alert(result.error || '싫어요 처리 중 오류가 발생했습니다.');
+        return;
       }
       
-      // 응답에서 새로운 상태 정보 추출
-      const result = await response.json();
-      console.log('싫어요 처리 결과:', result);
-      
-      // 로컬 상태 업데이트
+      // 상태 업데이트
       setLikes(result.likes);
       setDislikes(result.dislikes);
       setUserAction(result.userAction);
       
-      // 브라우저 새로고침
-      router.refresh();
+      // 캐시 무효화 또는 데이터 전파 처리
+      // router.refresh() 대신 필요한 상태만 업데이트
+      
     } catch (error) {
       console.error('싫어요 처리 중 오류:', error);
+      console.log('오류 세부 정보:', JSON.stringify(error, null, 2));
       alert(error instanceof Error ? error.message : '싫어요 처리 중 오류가 발생했습니다.');
     } finally {
       setIsDisliking(false);
@@ -199,6 +188,9 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete }: 
                 <div className="w-5 h-5 mr-1.5 bg-transparent rounded-full flex-shrink-0"></div>
               )}
               <span className="font-medium text-sm mr-2">{comment.profiles?.nickname || '알 수 없음'}</span>
+              {isPostOwner && currentUserId === comment.user_id && (
+                <span className="text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded mr-2">작성자</span>
+              )}
               <span className="text-xs text-gray-500">{new Date(comment.created_at).toLocaleString('ko-KR')}</span>
             </div>
             

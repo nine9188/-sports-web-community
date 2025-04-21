@@ -1,12 +1,32 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState, useCallback, useMemo } from "react";
+import { 
+  getComments as getCommentsForPost, 
+  addComment as createComment, 
+  updateComment, 
+  deleteComment 
+} from "@/app/actions/comment-actions-client";
+import { CommentType } from "@/app/types/comment";
+import Comment from "./Comment";
+import { Button } from "@/app/ui/button";
 import { createClient } from '@/app/lib/supabase-browser';
-import { Button } from '@/app/ui/button';
-import Comment from '@/app/boards/components/Comment';
-import { rewardUserActivity, ActivityType } from '@/app/utils/activity-rewards';
-import { CommentType } from '@/app/types/comment';
+
+// 내부 디바운스 함수 구현
+function debounce<T extends (...args: unknown[]) => unknown>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout | null = null;
+  
+  return function(...args: Parameters<T>) {
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      func(...args);
+      timeout = null;
+    }, wait);
+  };
+}
 
 interface CommentSectionProps {
   postId: string;
@@ -16,253 +36,197 @@ interface CommentSectionProps {
   postOwnerId?: string;
 }
 
-export default function CommentSection({ 
-  postId, 
-  initialComments, 
-  boardSlug, 
-  postNumber,
-  postOwnerId
-}: CommentSectionProps) {
-  const [comments, setComments] = useState<CommentType[]>([]);
+export default function CommentSection({ postId, initialComments, postOwnerId }: CommentSectionProps) {
+  const [comments, setComments] = useState<CommentType[]>(initialComments || []);
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  const router = useRouter();
-  const supabase = createClient();
-  
-  // 댓글 데이터를 최신으로 다시 가져오기 (useCallback으로 감싸서 안정적인 참조 유지)
-  const refreshComments = useCallback(async () => {
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const supabase = useMemo(() => createClient(), []);
+
+  // 댓글 데이터 업데이트 함수 최적화
+  const updateComments = useCallback(async () => {
     try {
-      // 절대 URL 구성
-      const baseUrl = window.location.origin;
-      const apiUrl = `${baseUrl}/api/comments/${postId}`;
-      
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        },
-        cache: 'no-store'
-      });
-      
-      if (!response.ok) {
-        throw new Error('댓글을 다시 가져오는데 실패했습니다');
+      const response = await getCommentsForPost(postId);
+      if (response.success && response.comments && response.comments.length >= 0) {
+        setComments(response.comments);
       }
-      
-      const responseText = await response.text();
-      
-      try {
-        const data = JSON.parse(responseText);
-        if (Array.isArray(data) && data.length > 0) {
-          setComments(data);
-        } else if (Array.isArray(data)) {
-          setComments([]);
-        }
-      } catch {
-        // 파싱 실패 시 빈 배열로 설정
-        setComments([]);
-      }
-    } catch {
-      // 오류 발생 시 처리
+    } catch (error) {
+      console.error("댓글 실시간 업데이트 중 오류:", error);
     }
   }, [postId]);
-  
-  // 초기 댓글과 사용자 정보 초기화
+
+  // 디바운스된 업데이트 함수
+  const debouncedUpdateComments = useMemo(() => 
+    debounce(updateComments, 300),
+    [updateComments]
+  );
+
+  // 사용자 정보 가져오기
   useEffect(() => {
-    // 초기 댓글 설정
-    if (Array.isArray(initialComments) && initialComments.length > 0) {
-      setComments(initialComments);
-    } else {
-      refreshComments();
-    }
+    let isMounted = true;
     
-    // 사용자 정보 가져오기
-    async function getCurrentUser() {
+    const getCurrentUser = async () => {
       try {
         const { data, error } = await supabase.auth.getUser();
-        if (!error && data.user) {
+        if (!error && data.user && isMounted) {
           setCurrentUserId(data.user.id);
         }
-      } catch {
-        // 사용자 정보 가져오기 실패
-      } finally {
-        setIsLoading(false);
+      } catch (error) {
+        console.error('사용자 정보 가져오기 실패:', error);
       }
-    }
+    };
     
     getCurrentUser();
-  }, [initialComments, postId, refreshComments, supabase.auth]);
-  
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [supabase.auth]);
+
+  // 실시간 댓글 업데이트 구독 - 별도 effect로 분리
+  useEffect(() => {
+    const channel = supabase
+      .channel(`post-comments-${postId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "comments",
+          filter: `post_id=eq.${postId}`,
+        },
+        debouncedUpdateComments
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [postId, supabase, debouncedUpdateComments]);
+
+  // 댓글 제출 핸들러
   const handleCommentSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!content.trim()) return;
     
     setIsSubmitting(true);
+    setErrorMessage(null);
     
     try {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
+      console.log('댓글 작성 시도:', { postId, content: content.trim() });
+      const result = await createComment(postId, content.trim());
+      console.log('댓글 작성 결과:', result);
       
-      if (userError || !userData.user) {
-        alert('댓글을 작성하려면 로그인이 필요합니다.');
-        if (boardSlug && postNumber) {
-          router.push(`/login?redirect=/boards/${boardSlug}/${postNumber}`);
-        } else {
-          router.push('/login');
+      if (!result.success) {
+        if (result.error === '로그인이 필요합니다.') {
+          setErrorMessage('댓글을 작성하려면 로그인이 필요합니다.');
+          alert('댓글을 작성하려면 로그인이 필요합니다.');
+          return;
         }
+        
+        setErrorMessage(result.error || '댓글 작성에 실패했습니다.');
+        alert(result.error || '댓글 작성에 실패했습니다.');
         return;
       }
       
-      const userId = userData.user.id;
-      
-      // 절대 URL 구성
-      const baseUrl = window.location.origin;
-      const apiUrl = `${baseUrl}/api/comments/${postId}`;
-      
-      // API를 통해 댓글 작성
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          content: content.trim()
-        })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error(`댓글 작성 응답 오류: ${response.status}`, errorData);
-        throw new Error(errorData.error || '댓글 작성에 실패했습니다');
+      if (result.data) {
+        setComments(prevComments => [...prevComments, result.data as CommentType]);
+        setContent('');
+        setErrorMessage(null);
       }
       
-      const newComment = await response.json();
-      
-      // 댓글 목록 업데이트
-      setComments(prevComments => [...prevComments, newComment]);
-      setContent('');
-      
-      // 게시글 작성자에게 알림 전송 (본인이 아닌 경우)
-      if (userId !== postOwnerId && postOwnerId) {
-        try {
-          console.log(`게시글 작성자(${postOwnerId})에게 댓글 알림 전송`);
-        } catch (notificationError) {
-          console.error('알림 전송 중 오류:', notificationError);
-        }
-      }
-      
-      // 전체 댓글 목록 갱신
-      await refreshComments();
-      
-      // 서버 상태 갱신
-      router.refresh();
-      
-      // 보상 지급 시도
-      try {
-        const rewardResult = await rewardUserActivity(userId, ActivityType.COMMENT_CREATION, newComment.id);
-        if (!rewardResult.success) {
-          console.warn('댓글 작성 보상 지급 실패:', rewardResult.error);
-        }
-      } catch (rewardError) {
-        console.error('보상 지급 중 예외 발생:', rewardError);
-      }
     } catch (error) {
       console.error('댓글 작성 중 오류:', error);
-      alert(error instanceof Error ? error.message : '댓글 작성 중 오류가 발생했습니다.');
+      const message = error instanceof Error ? error.message : '댓글 작성 중 오류가 발생했습니다.';
+      setErrorMessage(message);
+      alert(message);
     } finally {
       setIsSubmitting(false);
     }
-  }, [content, postId, supabase.auth, boardSlug, postNumber, router, postOwnerId, refreshComments]);
+  }, [postId, content]);
   
+  // 댓글 수정 핸들러
   const handleUpdate = useCallback(async (commentId: string, updatedContent: string) => {
     try {
-      // API를 통한 수정 요청
-      const baseUrl = window.location.origin;
-      const apiUrl = `${baseUrl}/api/comments/${postId}/${commentId}`;
+      console.log('댓글 수정 요청:', { commentId, updatedContent });
       
-      const response = await fetch(apiUrl, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        },
-        body: JSON.stringify({ content: updatedContent })
-      });
+      // API 요청 대신 server action 직접 호출
+      const result = await updateComment(commentId, updatedContent);
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error(`댓글 수정 응답 오류:`, errorData);
-        throw new Error(errorData.error || '댓글 수정에 실패했습니다');
+      if (!result.success) {
+        throw new Error(result.error || '댓글 수정에 실패했습니다.');
       }
       
-      // 응답에서 업데이트된 댓글 정보 추출
-      const updatedComment = await response.json();
-      
       // 댓글 목록 업데이트
-      setComments(prevComments => 
-        prevComments.map(comment => 
-          comment.id === commentId ? updatedComment : comment
-        )
-      );
-      
-      // 전체 댓글 목록 갱신
-      await refreshComments();
-      
-      // 서버 상태 갱신
-      router.refresh();
+      if (result.data) {
+        setComments(prevComments => 
+          prevComments.map(comment => 
+            comment.id === commentId ? result.data as CommentType : comment
+          )
+        );
+      } else {
+        // 데이터가 반환되지 않은 경우 전체 목록 새로고침
+        await updateComments();
+      }
     } catch (error) {
       console.error('댓글 수정 중 오류:', error);
-      alert(error instanceof Error ? error.message : '댓글 수정 중 오류가 발생했습니다.');
+      throw error;
     }
-  }, [postId, router, refreshComments]);
+  }, [updateComments]);
   
+  // 댓글 삭제 핸들러
   const handleDelete = useCallback(async (commentId: string) => {
     if (!confirm('정말 이 댓글을 삭제하시겠습니까?')) {
       return;
     }
-    
+
     try {
-      // 서버 API를 통해 삭제 요청
-      const baseUrl = window.location.origin;
-      const apiUrl = `${baseUrl}/api/comments/${postId}/${commentId}`;
+      console.log('댓글 삭제 요청:', { commentId });
       
-      const response = await fetch(apiUrl, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
-      });
+      // API 요청 대신 server action 직접 호출
+      const result = await deleteComment(commentId);
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('댓글 삭제 HTTP 오류:', response.status, errorData);
-        throw new Error(errorData.error || '댓글 삭제에 실패했습니다');
+      if (!result.success) {
+        throw new Error(result.error || '댓글 삭제에 실패했습니다.');
       }
       
       // 댓글 목록에서 삭제된 댓글 제거
-      setComments(prevComments => prevComments.filter(comment => comment.id !== commentId));
-      
-      // 전체 댓글 목록 갱신
-      await refreshComments();
-      
-      // 서버 상태 갱신
-      router.refresh();
+      setComments(prevComments => 
+        prevComments.filter(comment => comment.id !== commentId)
+      );
     } catch (error) {
       console.error('댓글 삭제 중 오류:', error);
       alert(error instanceof Error ? error.message : '댓글 삭제 중 오류가 발생했습니다.');
     }
-  }, [postId, router, refreshComments]);
-  
+  }, []);
+
+  // 텍스트영역 변경 핸들러
+  const handleTextareaChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setContent(e.target.value);
+  }, []);
+
+  // 댓글 목록 메모이제이션
+  const commentsList = useMemo(() => {
+    return comments.length > 0 ? (
+      comments.map((comment) => (
+        <Comment
+          key={comment.id}
+          comment={comment}
+          currentUserId={currentUserId} 
+          onUpdate={handleUpdate} 
+          onDelete={handleDelete}
+          isPostOwner={currentUserId === postOwnerId}
+        />
+      ))
+    ) : (
+      <div className="px-6 py-4 text-sm text-gray-500">
+        아직 댓글이 없습니다. 첫 댓글을 남겨보세요!
+      </div>
+    );
+  }, [comments, currentUserId, handleUpdate, handleDelete, postOwnerId]);
+
   return (
     <div className="bg-white rounded-lg border shadow-sm overflow-hidden mb-4">
       <div className="px-6 py-4 border-b">
@@ -271,44 +235,28 @@ export default function CommentSection({
       
       {/* 댓글 목록 */}
       <div className="divide-y">
-        {isLoading ? (
-          <div className="px-6 py-4 text-sm text-gray-500 flex items-center justify-center">
-            <svg className="animate-spin h-5 w-5 mr-2 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            댓글을 불러오는 중...
-          </div>
-        ) : comments.length > 0 ? (
-          comments.map((comment) => (
-            <Comment 
-              key={comment.id} 
-              comment={comment} 
-              currentUserId={currentUserId} 
-              onUpdate={handleUpdate} 
-              onDelete={handleDelete} 
-            />
-          ))
-        ) : (
-          <div className="px-6 py-4 text-sm text-gray-500">
-            아직 댓글이 없습니다. 첫 댓글을 남겨보세요!
-          </div>
-        )}
+        {commentsList}
       </div>
-      
+
       {/* 댓글 작성 폼 */}
       <div className="px-6 py-4 border-t bg-gray-50">
+        {errorMessage && (
+          <div className="mb-3 p-2 bg-red-50 text-red-600 rounded text-sm">
+            {errorMessage}
+          </div>
+        )}
         <form className="space-y-3" onSubmit={handleCommentSubmit}>
           <textarea 
             className="w-full px-3 py-2 border rounded-md"
             rows={3}
             placeholder="댓글을 작성해주세요"
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={handleTextareaChange}
             required
+            disabled={isSubmitting}
           ></textarea>
           <div className="flex justify-end">
-            <Button type="submit" disabled={isSubmitting || isLoading}>
+            <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? '작성 중...' : '댓글 작성'}
             </Button>
           </div>
