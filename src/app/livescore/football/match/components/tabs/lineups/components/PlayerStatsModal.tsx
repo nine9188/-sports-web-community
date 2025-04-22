@@ -2,70 +2,8 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useQuery } from '@tanstack/react-query';
-
-interface PlayerStatsData {
-  response: Array<{
-    player: {
-      id: number;
-      name: string;
-      photo?: string;
-    };
-    statistics: Array<{
-      team?: {
-        logo: string;
-        name: string;
-      };
-      games?: {
-        rating: string;
-        minutes: number;
-        captain: boolean;
-      };
-      goals?: {
-        total: number;
-        assists: number;
-        conceded?: number;
-        saves?: number;
-      };
-      shots?: {
-        total: number;
-        on: number;
-      };
-      passes?: {
-        total: number;
-        key: number;
-        accuracy: string;
-      };
-      tackles?: {
-        total: number;
-        blocks: number;
-        interceptions: number;
-      };
-      duels?: {
-        total: number;
-        won: number;
-      };
-      dribbles?: {
-        attempts: number;
-        success: number;
-      };
-      fouls?: {
-        drawn: number;
-        committed: number;
-      };
-      cards?: {
-        yellow: number;
-        red: number;
-      };
-      penalty?: {
-        won: number;
-        scored: number;
-        missed: number;
-        saved: number;
-      };
-    }>;
-  }>;
-}
+import { useState, useEffect } from 'react';
+import { fetchPlayerStats, PlayerStats, PlayerStatsResponse } from '@/app/actions/livescore/matches/playerStats';
 
 interface PlayerStatsModalProps {
   isOpen: boolean;
@@ -81,7 +19,7 @@ interface PlayerStatsModalProps {
       name: string;
     };
   };
-  preloadedStats?: PlayerStatsData;
+  preloadedStats?: { response: PlayerStats[] };
 }
 
 export default function PlayerStatsModal({ 
@@ -92,23 +30,41 @@ export default function PlayerStatsModal({
   playerInfo,
   preloadedStats
 }: PlayerStatsModalProps) {
-  // 미리 가져온 데이터가 있으면 사용하고, 없으면 API 호출
-  const { data: playerStats, isLoading } = useQuery({
-    queryKey: ['playerStats', matchId, playerId],
-    queryFn: async () => {
-      // 미리 가져온 데이터가 있으면 바로 반환
-      if (preloadedStats) {
-        return preloadedStats;
+  const [playerStats, setPlayerStats] = useState<PlayerStatsResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // 컴포넌트가 마운트되거나 isOpen, playerId, matchId가 변경될 때마다 데이터 가져오기
+  useEffect(() => {
+    async function loadPlayerStats() {
+      if (!isOpen || !playerId || !matchId) return;
+      
+      // 미리 가져온 데이터가 있으면 바로 사용
+      if (preloadedStats && preloadedStats.response && preloadedStats.response.length > 0) {
+        setPlayerStats({
+          success: true,
+          response: preloadedStats.response[0],
+          message: '선수 통계 데이터 로드 성공'
+        });
+        return;
       }
       
-      // 없으면 API 호출
-      const response = await fetch(`/api/livescore/football/matches/${matchId}/player-stats?playerId=${playerId}`);
-      if (!response.ok) throw new Error('Failed to fetch player stats');
-      return response.json() as Promise<PlayerStatsData>;
-    },
-    initialData: preloadedStats, // 초기 데이터로 미리 가져온 데이터 설정
-    enabled: isOpen
-  });
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const data = await fetchPlayerStats(matchId, playerId);
+        setPlayerStats(data);
+      } catch (error) {
+        console.error('선수 통계 가져오기 오류:', error);
+        setError('선수 통계를 가져오는 중 오류가 발생했습니다');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    loadPlayerStats();
+  }, [isOpen, playerId, matchId, preloadedStats]);
 
   // 로딩 상태 표시
   if (isLoading) {
@@ -131,11 +87,56 @@ export default function PlayerStatsModal({
     );
   }
 
-  if (!isOpen) return null;
-  if (!playerStats?.response?.[0]) return null;
+  // 오류 상태 표시
+  if (error) {
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl w-full max-w-md p-6 text-center">
+          <div className="flex justify-end">
+            <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="py-8">
+            <div className="text-red-500 mb-4">
+              <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p className="text-gray-700">{error}</p>
+            <button 
+              onClick={() => {
+                setError(null);
+                setPlayerStats(null);
+              }}
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+            >
+              다시 시도
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  const stats = playerStats.response[0].statistics[0] || {};
-  const playerData = playerStats.response[0].player || {};
+  if (!isOpen) return null;
+  if (!playerStats?.response) return null;
+
+  const stats = playerStats.response.statistics[0] || {};
+  const playerData = playerStats.response.player || {};
+
+  // 이미지 URL 처리 로직
+  const getImageUrl = (url: string | undefined, defaultUrl: string) => {
+    if (!url) return defaultUrl;
+    return url.startsWith('http') ? url : defaultUrl;
+  };
+
+  const playerPhotoUrl = getImageUrl(
+    playerData.photo, 
+    `https://media.api-sports.io/football/players/${playerId}.png`
+  );
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -158,16 +159,20 @@ export default function PlayerStatsModal({
           <div className="relative w-28 h-28 mx-auto mb-4">
             <div className="relative w-28 h-28">
               <div className="absolute inset-0 rounded-full border-4 border-white shadow-lg"></div>
-              {playerData.photo && (
-                <Image
-                  src={playerData.photo}
-                  alt={playerInfo.name}
-                  width={112}
-                  height={112}
-                  className="w-full h-full rounded-full object-cover"
-                  unoptimized
-                />
-              )}
+              <Image
+                src={playerPhotoUrl}
+                alt={playerInfo.name}
+                width={112}
+                height={112}
+                className="w-full h-full rounded-full object-cover"
+                unoptimized
+                onError={(e) => {
+                  console.error(`이미지 로드 실패: ${(e.currentTarget as HTMLImageElement).src}`);
+                  // 에러 시에도 동일한 이미지 유지 (API에서 제공하는 기본 이미지가 있음)
+                  // 필요한 경우 아래 주석을 해제하여 로컬 기본 이미지로 변경 가능
+                  // (e.currentTarget as HTMLImageElement).src = '/images/default-player.png';
+                }}
+              />
             </div>
             {stats.team?.logo && (
               <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center">
@@ -178,6 +183,11 @@ export default function PlayerStatsModal({
                   height={32}
                   className="w-8 h-8 object-contain"
                   unoptimized
+                  onError={() => {
+                    // 에러 시에도 동일하게 유지 (API에서 제공하는 기본 이미지 사용)
+                    // 필요시 아래 주석을 해제하여 기본 이미지 설정 가능
+                    // e.currentTarget.src = '/images/default-team.png';
+                  }}
                 />
               </div>
             )}

@@ -40,6 +40,8 @@ export * from './saudi-pro-league';
 export * from './conference-league';
 // UEFA 유로파리그 팀 모듈 내보내기
 export * from './europa-league';
+// UEFA 챔피언스 리그 팀 모듈 내보내기
+export * from './champions-league';
 
 // 모든 팀 데이터에 접근하기 위한 함수
 import { PREMIER_LEAGUE_TEAMS } from './premier-league';
@@ -57,6 +59,7 @@ import { MLS_TEAMS } from './mls';
 import { SAUDI_PRO_LEAGUE_TEAMS } from './saudi-pro-league';
 import { CONFERENCE_LEAGUE_TEAMS } from './conference-league';
 import { EUROPA_LEAGUE_TEAMS } from './europa-league';
+import { CHAMPIONS_LEAGUE_TEAMS } from './champions-league';
 
 // 모든 리그의 모든 팀 통합 배열
 export const ALL_TEAMS: TeamMapping[] = [
@@ -74,7 +77,8 @@ export const ALL_TEAMS: TeamMapping[] = [
   ...MLS_TEAMS,
   ...SAUDI_PRO_LEAGUE_TEAMS,
   ...CONFERENCE_LEAGUE_TEAMS,
-  ...EUROPA_LEAGUE_TEAMS
+  ...EUROPA_LEAGUE_TEAMS,
+  ...CHAMPIONS_LEAGUE_TEAMS
 ];
 
 // 리그 ID와 팀 ID 매핑 정보를 제공하는 객체
@@ -108,7 +112,9 @@ export const LEAGUE_TEAM_MAPPINGS = {
   // UEFA 컨퍼런스 리그 (848)
   848: CONFERENCE_LEAGUE_TEAMS,
   // UEFA 유로파리그 (3)
-  3: EUROPA_LEAGUE_TEAMS
+  3: EUROPA_LEAGUE_TEAMS,
+  // UEFA 챔피언스 리그 (2)
+  2: CHAMPIONS_LEAGUE_TEAMS
 };
 
 // 팀 ID로 팀 정보 가져오기 (모든 리그 대상)

@@ -2,6 +2,8 @@
 
 import { useRef, useEffect, useState } from 'react';
 import styles from '../styles/formation.module.css';
+// 프리미어리그 팀 선수 데이터 import
+import { liverpoolPlayers, NottinghamForestPlayers, Arsenalplayers, NewcastleUnitedplayers, Chelseaplayers, ManchesterCityplayers, AstonVillaplayers, Bournemouthplayers, Fulhamplayers, Brightonplayers } from '@/app/constants/teams/premier-league/premier-teams';
 
 // 미디어 쿼리를 사용하기 위한 커스텀 훅
 function useMediaQuery(query: string) {
@@ -25,6 +27,48 @@ function useMediaQuery(query: string) {
 
   return matches;
 }
+
+// 선수 데이터 타입 정의
+type PremierLeaguePlayer = 
+  | { id: number; name: string; koreanName: string; } 
+  | { id?: number; name: string; role?: string; korean_name: string; } 
+  | { id: number; english_name: string; korean_name: string; }
+  | { id: number; englishName: string; koreanName: string; };
+
+// 선수 이름 매핑 함수
+const getPlayerKoreanName = (playerId: number): string | null => {
+  if (!playerId) return null;
+
+  // ID 기반으로 선수 찾기 및 한국어 이름 반환 로직
+  const findPlayerById = (players: PremierLeaguePlayer[]) => {
+    return players.find(player => 'id' in player && player.id === playerId);
+  };
+
+  // 각 팀별로 찾기 (ID가 확실한 선수들만)
+  const player = 
+    findPlayerById(liverpoolPlayers as PremierLeaguePlayer[]) || 
+    findPlayerById(Arsenalplayers as PremierLeaguePlayer[]) || 
+    findPlayerById(NewcastleUnitedplayers as PremierLeaguePlayer[]) || 
+    findPlayerById(Chelseaplayers as PremierLeaguePlayer[]) || 
+    findPlayerById(ManchesterCityplayers as PremierLeaguePlayer[]) || 
+    findPlayerById(AstonVillaplayers as PremierLeaguePlayer[]) || 
+    findPlayerById(Bournemouthplayers as PremierLeaguePlayer[]) || 
+    findPlayerById(Fulhamplayers as PremierLeaguePlayer[]) || 
+    findPlayerById(Brightonplayers as PremierLeaguePlayer[]) ||
+    findPlayerById(NottinghamForestPlayers as PremierLeaguePlayer[]);
+
+  if (!player) return null;
+
+  // 다양한 형태의 한국어 이름 속성 반환
+  if ('koreanName' in player && player.koreanName) return player.koreanName;
+  if ('korean_name' in player && player.korean_name) return player.korean_name;
+  
+  // 추가 속성 체크 (영어 이름과 함께 있는 경우)
+  if ('english_name' in player && 'korean_name' in player) return player.korean_name;
+  if ('englishName' in player && 'koreanName' in player) return player.koreanName;
+  
+  return null;
+};
 
 interface PlayerData {
   id: number;
@@ -70,7 +114,6 @@ const Player = ({ homeTeamData, awayTeamData }: PlayerProps) => {
   const isMobile = useMediaQuery('(max-width: 768px)');
   
   // 이미지 로딩 상태를 관리하는 상태 추가
-  const [loadedImages, setLoadedImages] = useState<{[key: string]: boolean}>({});
   const [failedImages, setFailedImages] = useState<{[key: string]: boolean}>({});
   
   // 뷰박스 설정 - 모바일과 데스크탑에 따라 다르게 설정
@@ -190,16 +233,21 @@ const Player = ({ homeTeamData, awayTeamData }: PlayerProps) => {
         rectElement.setAttribute('y', `${bbox.y - heightPadding * 0.5}`); // y 위치 조정
       }
     });
-  }, [homeTeamData, awayTeamData, loadedImages, isMobile]); // isMobile 상태가 변경될 때도 재실행
+  }, [homeTeamData, awayTeamData, failedImages, isMobile]); // isMobile 상태가 변경될 때도 재실행
 
-  // 이미지 로딩 핸들러
-  const handleImageLoad = (id: string) => {
-    setLoadedImages(prev => ({...prev, [id]: true}));
-  };
-
-  // 이미지 로딩 실패 핸들러
-  const handleImageError = (id: string) => {
-    setFailedImages(prev => ({...prev, [id]: true}));
+  // 이미지 오류 핸들러
+  const handleImageError = (e: React.SyntheticEvent<SVGImageElement>, playerData: PlayerData) => {
+    // 이미지 로드 실패 시 로그 추가
+    console.error(`선수 이미지 로드 실패: ${(e.currentTarget as SVGImageElement).href.baseVal}`);
+    
+    // 대체 이미지로 다시 시도
+    if (playerData.photo && !playerData.photo.startsWith('http')) {
+      const correctedUrl = `https://media.api-sports.io/football/players/${playerData.id}.png`;
+      (e.currentTarget as SVGImageElement).href.baseVal = correctedUrl;
+    }
+    
+    // 실패한 이미지 기록
+    setFailedImages(prev => ({...prev, [`image-${playerData.id}`]: true}));
   };
 
   const renderTeam = (team: TeamData, isHome: boolean) => {
@@ -216,12 +264,21 @@ const Player = ({ homeTeamData, awayTeamData }: PlayerProps) => {
       const nameKey = `name-${isHome ? 'home' : 'away'}-${teamId}-${playerId}`;
       const imageId = `image-${teamId}-${playerId}`;
 
+      // 이미지 URL 처리
+      let photoUrl = player.photo;
+      if (!photoUrl || !photoUrl.startsWith('http')) {
+        photoUrl = `https://media.api-sports.io/football/players/${player.id}.png`;
+      }
+
       // 이미지 여부 확인 (URL이 유효하고, 로딩 실패하지 않았을 때)
-      const hasValidImage = player.photo && !failedImages[imageId];
+      const hasValidImage = Boolean(photoUrl) && !failedImages[imageId];
       
-      // 색상 설정
-      // 이미지가 없거나 로딩 실패한 경우 더 밝은 색상으로 표시
+      // 색상 설정 - 이미지가 없거나 로딩 실패한 경우 더 밝은 색상으로 표시
       const circleOpacity = hasValidImage ? "0.9" : "1";
+      
+      // 한국어 이름 가져오기
+      const koreanName = getPlayerKoreanName(player.id);
+      const displayName = koreanName || player.name;
       
       return (
         <g
@@ -259,24 +316,17 @@ const Player = ({ homeTeamData, awayTeamData }: PlayerProps) => {
             </text>
           )}
           
-          {/* 선수 이미지 - 지연 로딩 적용 및 오류 처리 추가 */}
+          {/* 선수 이미지 */}
           {hasValidImage && (
-            <g>
-              <image
-                id={imageId}
-                className={styles.playerImage}
-                href={player.photo}
-                width="5"
-                height="5"
-                x="-2.5"
-                y="-2.5"
-                clipPath={`url(#clip-${teamId}-${playerId})`}
-                preserveAspectRatio="xMidYMid slice"
-                aria-label={`${player.name} 선수 사진`}
-                onLoad={() => handleImageLoad(imageId)}
-                onError={() => handleImageError(imageId)}
-              />
-            </g>
+            <image
+              x="-2.5"
+              y="-2.5"
+              width="5"
+              height="5"
+              href={photoUrl}
+              clipPath={`url(#clip-${teamId}-${playerId})`}
+              onError={(e) => handleImageError(e, player)}
+            />
           )}
           
           {/* 선수 번호와 이름 - 간격 조정 */}
@@ -316,7 +366,7 @@ const Player = ({ homeTeamData, awayTeamData }: PlayerProps) => {
               ry="0.55"
               fill="rgba(0, 100, 0, 0.7)"
             />
-            {/* 이름 텍스트 */}
+            {/* 이름 텍스트 - 한국어 이름으로 교체 */}
             <text
               ref={(el) => { textRefs.current[nameKey] = el; }}
               x="0"
@@ -326,7 +376,7 @@ const Player = ({ homeTeamData, awayTeamData }: PlayerProps) => {
               textAnchor="middle"
               dominantBaseline="middle"
             >
-              {player.name.length > 10 ? player.name.substring(0, 10) + '...' : player.name}
+              {displayName.length > 10 ? displayName.substring(0, 10) + '...' : displayName}
               {player.captain ? " (C)" : ""}
             </text>
           </g>

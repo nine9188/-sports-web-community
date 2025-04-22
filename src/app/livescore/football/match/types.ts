@@ -30,6 +30,7 @@ export interface Team {
   id: number;
   name: string;
   logo: string;
+  formation?: string;
 }
 
 // 팀 라인업 타입
@@ -91,70 +92,5 @@ export interface TeamStats {
   statistics: Array<{
     type: string;
     value: number | string | null;
-  }>;
-}
-
-// 선수 통계 타입
-export interface PlayerStatsData {
-  response: Array<{
-    player: {
-      id: number;
-      name: string;
-      photo: string;
-    };
-    statistics: Array<{
-      team?: {
-        id: number;
-        name: string;
-        logo: string;
-      };
-      games?: {
-        rating: string;
-        minutes: number;
-        captain: boolean;
-      };
-      goals?: {
-        total: number;
-        assists: number;
-        conceded?: number;
-        saves?: number;
-      };
-      shots?: {
-        total: number;
-        on: number;
-      };
-      passes?: {
-        total: number;
-        key: number;
-        accuracy: string;
-      };
-      tackles?: {
-        total: number;
-        blocks: number;
-        interceptions: number;
-      };
-      duels?: {
-        total: number;
-        won: number;
-      };
-      dribbles?: {
-        attempts: number;
-        success: number;
-      };
-      fouls?: {
-        drawn: number;
-        committed: number;
-      };
-      cards?: {
-        yellow: number;
-        red: number;
-      };
-      penalty?: {
-        won: number;
-        scored: number;
-        missed: number;
-        saved: number;
-      };
-    }>;
   }>;
 } 

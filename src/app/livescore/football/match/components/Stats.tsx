@@ -2,7 +2,7 @@
 
 import { useState, memo, useMemo } from 'react';
 import Image from 'next/image';
-import { TeamStats, Team } from '../../types';
+import { TeamStats, Team } from '../types';
 
 interface StatsProps {
   matchData: {
@@ -205,7 +205,7 @@ function Stats({ matchData }: StatsProps) {
 
   // 특정 통계 항목 찾기 함수
   const findStat = (team: TeamStats, type: string) => {
-    const stat = team.statistics?.find((s: { type: string; value: number | string | null }) => s.type === type);
+    const stat = team.statistics?.find(s => s.type === type);
     return stat ? stat.value : null;
   };
 

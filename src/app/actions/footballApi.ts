@@ -1,6 +1,7 @@
 'use server';
 
 import { cache } from 'react';
+import { getMajorLeagueIds } from '@/app/constants/league-mappings';
 
 // 매치 데이터 인터페이스
 export interface MatchData {
@@ -202,8 +203,8 @@ export async function fetchMatchesByDate(date: string): Promise<MatchData[]> {
     const data = await fetchFromFootballApi('fixtures', { date });
     
     if (data.response) {
-      // 주요 리그로 필터링 (Premier League, La Liga, Bundesliga, Serie A, Ligue 1)
-      const majorLeagueIds = [39, 140, 78, 135, 61];
+      // 주요 리그로 필터링 - 매핑된 모든 리그 ID 사용
+      const majorLeagueIds = getMajorLeagueIds();
       
       const filteredMatches = data.response
         .filter((match: ApiMatch) => majorLeagueIds.includes(match.league?.id ?? 0))
@@ -247,9 +248,7 @@ export async function fetchMatchesByDate(date: string): Promise<MatchData[]> {
               away: match.goals?.away ?? 0
             }
           };
-        })
-        // 끝난 경기 필터링 (FT, AET, PEN 상태 제외)
-        .filter((match: MatchData) => !['FT', 'AET', 'PEN'].includes(match.status.code));
+        });
       
       return filteredMatches;
     }

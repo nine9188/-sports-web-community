@@ -4,6 +4,7 @@ import { useState, useEffect, memo, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Team } from '../../types';
+import { getTeamById, TeamMapping } from '@/app/constants';
 
 interface Standing {
   rank: number;
@@ -61,15 +62,28 @@ interface StandingsProps {
 }
 
 // 팀 로고 컴포넌트 - 메모이제이션
-const TeamLogo = memo(({ teamName, originalLogo }: { teamName: string; originalLogo: string }) => {
+const TeamLogo = memo(({ teamName, originalLogo, teamId }: { teamName: string; originalLogo: string; teamId?: number }) => {
   const [imgError, setImgError] = useState(false);
-  const leagueName = teamName || 'Team';
+  const [teamInfo, setTeamInfo] = useState<TeamMapping | undefined>(undefined);
+
+  // 팀 ID가 있는 경우 팀 정보를 가져옴
+  useEffect(() => {
+    if (teamId) {
+      const team = getTeamById(teamId);
+      if (team) {
+        setTeamInfo(team);
+      }
+    }
+  }, [teamId]);
+
+  const logoUrl = teamInfo?.logo || (imgError ? '/placeholder-team.png' : originalLogo || '/placeholder-team.png');
+  const displayName = teamInfo?.name_ko || teamName;
 
   return (
     <div className="w-6 h-6 flex-shrink-0 relative transform-gpu">
       <Image
-        src={imgError ? '/placeholder-team.png' : originalLogo || '/placeholder-team.png'}
-        alt={leagueName}
+        src={logoUrl}
+        alt={displayName}
         fill
         sizes="24px"
         className="object-contain"
@@ -100,18 +114,64 @@ function Standings({ matchData }: StandingsProps) {
   const router = useRouter();
   const [homeTeamId, setHomeTeamId] = useState<number | null>(null);
   const [awayTeamId, setAwayTeamId] = useState<number | null>(null);
+  const [teamCache, setTeamCache] = useState<Record<number, TeamMapping>>({});
   
   // 캐싱을 위해 standings 데이터 메모이제이션
   const standings = useMemo(() => matchData.standings, [matchData.standings]);
   const homeTeam = matchData.homeTeam || { id: 0, name: '', logo: '' };
   const awayTeam = matchData.awayTeam || { id: 0, name: '', logo: '' };
   
+  // 팀 정보 캐싱
   useEffect(() => {
+    // 모든 팀 ID를 수집
+    const teamIds = new Set<number>();
+    
+    // 홈, 어웨이 팀 추가
+    if (homeTeam?.id) teamIds.add(homeTeam.id);
+    if (awayTeam?.id) teamIds.add(awayTeam.id);
+    
+    // standings에서 팀 ID 추출
+    if (standings?.standings?.league?.standings) {
+      standings.standings.league.standings.forEach(group => {
+        group.forEach(standing => {
+          if (standing.team?.id) {
+            teamIds.add(standing.team.id);
+          }
+        });
+      });
+    }
+    
+    // 아직 캐시에 없는 팀 정보 추가
+    const newTeamCache = { ...teamCache };
+    let cacheUpdated = false;
+    
+    teamIds.forEach(teamId => {
+      if (!newTeamCache[teamId]) {
+        const teamInfo = getTeamById(teamId);
+        if (teamInfo) {
+          newTeamCache[teamId] = teamInfo;
+          cacheUpdated = true;
+        }
+      }
+    });
+    
+    // 캐시가 업데이트되었을 때만 상태 업데이트
+    if (cacheUpdated) {
+      setTeamCache(newTeamCache);
+    }
+    
+    // 홈/어웨이 팀 ID 설정
     if (homeTeam?.id && awayTeam?.id) {
       setHomeTeamId(homeTeam.id);
       setAwayTeamId(awayTeam.id);
     }
-  }, [homeTeam?.id, awayTeam?.id]);
+  }, [homeTeam?.id, awayTeam?.id, standings, teamCache]);
+
+  // 팀 이름 표시 함수
+  const getTeamDisplayName = useCallback((teamId: number, fallbackName: string): string => {
+    const teamInfo = teamCache[teamId];
+    return teamInfo?.name_ko || fallbackName;
+  }, [teamCache]);
 
   // getStatusColor 함수를 useCallback으로 감싸기
   const getStatusColor = useCallback((description: string) => {
@@ -144,24 +204,26 @@ function Standings({ matchData }: StandingsProps) {
 
   // 빈 상태 렌더링 함수
   const renderEmptyState = () => (
-    <div className="flex justify-center items-center py-16">
-      <div className="text-center">
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          className="h-16 w-16 mx-auto text-gray-400 mb-4" 
-          fill="none" 
-          viewBox="0 0 24 24" 
-          stroke="currentColor"
-        >
-          <path 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            strokeWidth={1.5} 
-            d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-          />
-        </svg>
-        <p className="text-lg font-medium text-gray-600">순위 정보가 없습니다</p>
-        <p className="text-sm text-gray-500 mt-2">현재 이 리그에 대한 순위 정보를 제공할 수 없습니다.</p>
+    <div className="mb-4 bg-white rounded-lg border p-4">
+      <div className="flex justify-center items-center py-8">
+        <div className="text-center">
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            className="h-12 w-12 mx-auto text-gray-400 mb-2" 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={1.5} 
+              d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+            />
+          </svg>
+          <p className="text-lg font-medium text-gray-600">순위 정보가 없습니다</p>
+          <p className="text-sm text-gray-500 mt-1">현재 이 리그에 대한 순위 정보를 제공할 수 없습니다.</p>
+        </div>
       </div>
     </div>
   );
@@ -281,10 +343,11 @@ function Standings({ matchData }: StandingsProps) {
                             <TeamLogo 
                               teamName={standing.team.name || ''}
                               originalLogo={standing.team.logo || ''}
+                              teamId={standing.team.id}
                             />
                             <div className="flex items-center max-w-[calc(100%-30px)]">
                               <span className="block truncate text-ellipsis overflow-hidden max-w-full pr-1">
-                                {standing.team.name || '팀 이름 없음'}
+                                {getTeamDisplayName(standing.team.id, standing.team.name) || '팀 이름 없음'}
                               </span>
                               {(isHomeTeam || isAwayTeam) && (
                                 <span className={`text-[10px] md:text-xs font-bold px-0.5 md:px-1.5 md:py-0.5 ml-0.5 md:ml-2 rounded inline-block flex-shrink-0 ${
@@ -369,18 +432,18 @@ function Standings({ matchData }: StandingsProps) {
               
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-blue-50 border border-blue-200"></div>
-                <span className="text-sm">홈 팀</span>
+                <span className="text-sm">{getTeamDisplayName(homeTeamId || 0, '홈 팀')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-red-50 border border-red-200"></div>
-                <span className="text-sm">원정 팀</span>
+                <span className="text-sm">{getTeamDisplayName(awayTeamId || 0, '원정 팀')}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
     );
-  }, [standings, homeTeamId, awayTeamId, getFormStyle, getStatusColor, handleRowClick]);
+  }, [standings, homeTeamId, awayTeamId, getFormStyle, getStatusColor, handleRowClick, getTeamDisplayName]);
 
   // 간단한 래퍼 반환
   return (
@@ -389,5 +452,5 @@ function Standings({ matchData }: StandingsProps) {
     </div>
   );
 }
-
 export default memo(Standings);
+

@@ -7,6 +7,12 @@ import CalendarButton from './CalendarButton';
 import NavigationBar from './NavigationBar';
 import LeagueMatchList from './LeagueMatchList';
 import { Match } from '../../football/types';
+import { fetchMatchesByDate } from '@/app/actions/footballApi';
+import { getTeamById } from '@/app/constants/teams';
+import { getLeagueMappingById } from '@/app/constants/league-mappings';
+
+// 기본 이미지 URL - 로고가 없을 때 사용
+const DEFAULT_TEAM_LOGO = 'https://cdn.sportmonks.com/images/soccer/team_placeholder.png';
 
 interface FootballLiveScoreClientProps {
   initialMatches: Match[];
@@ -45,28 +51,28 @@ export default function FootballLiveScoreClient({
     setLiveMatchCount(calculateLiveMatchCount(initialMatches));
   }, [initialMatches]);
 
-  // 날짜 변경 시 API 요청
+  // 날짜 변경 시 Server Action 호출
   const fetchMatches = useCallback(async (date: Date) => {
     setLoading(true);
     try {
       const formattedDate = format(date, 'yyyy-MM-dd');
       
-      const response = await fetch(`/api/livescore/football?date=${formattedDate}`);
-      const data = await response.json();
+      // Server Action 직접 호출
+      const matchesData = await fetchMatchesByDate(formattedDate);
       
-      if (data.success) {
-        // API 응답 데이터를 Match 타입에 맞게 변환
-        const allMatches = data.data.map((match: {
-          id: number;
-          status: { code: string; name: string };
-          time: { date: string; timestamp: number };
-          league: { id: number; name: string; country: string; logo: string; flag: string };
-          teams: {
-            home: { id: number; name: string; logo: string };
-            away: { id: number; name: string; logo: string };
-          };
-          goals: { home: number; away: number };
-        }) => ({
+      // MatchData를 클라이언트 Match 타입으로 변환 (+ 팀/리그 정보 매핑)
+      const processedMatches: Match[] = matchesData.map(match => {
+        // 한국어 팀명과 리그명 매핑
+        const leagueInfo = match.league?.id ? getLeagueMappingById(match.league.id) : null;
+        const homeTeamInfo = match.teams?.home?.id ? getTeamById(match.teams.home.id) : null;
+        const awayTeamInfo = match.teams?.away?.id ? getTeamById(match.teams.away.id) : null;
+        
+        // 매핑된 정보 사용 (있는 경우)
+        const homeTeamName = homeTeamInfo?.name_ko || match.teams.home.name;
+        const awayTeamName = awayTeamInfo?.name_ko || match.teams.away.name;
+        const leagueName = leagueInfo?.name_ko || match.league.name;
+        
+        return {
           id: match.id,
           status: {
             code: match.status.code,
@@ -78,34 +84,34 @@ export default function FootballLiveScoreClient({
           },
           league: {
             id: match.league.id,
-            name: match.league.name,
+            name: leagueName, // 매핑된 리그 이름 사용
             country: match.league.country,
-            logo: match.league.logo,
-            flag: match.league.flag
+            logo: match.league.logo || '',
+            flag: match.league.flag || ''
           },
           teams: {
             home: {
               id: match.teams.home.id,
-              name: match.teams.home.name,
-              img: match.teams.home.logo || '',
+              name: homeTeamName, // 매핑된 팀 이름 사용
+              img: match.teams.home.logo || DEFAULT_TEAM_LOGO,
               score: match.goals.home,
               form: '',
               formation: ''
             },
             away: {
               id: match.teams.away.id,
-              name: match.teams.away.name,
-              img: match.teams.away.logo || '',
+              name: awayTeamName, // 매핑된 팀 이름 사용
+              img: match.teams.away.logo || DEFAULT_TEAM_LOGO,
               score: match.goals.away,
               form: '',
               formation: ''
             }
           }
-        }));
-        
-        setMatches(allMatches);
-        setLiveMatchCount(calculateLiveMatchCount(allMatches));
-      }
+        };
+      });
+      
+      setMatches(processedMatches);
+      setLiveMatchCount(calculateLiveMatchCount(processedMatches));
     } catch (error) {
       console.error('경기 데이터 불러오기 오류:', error);
       setMatches([]);

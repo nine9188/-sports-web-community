@@ -3,76 +3,147 @@ import { cookies } from 'next/headers';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from './database.types';
 import { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies';
+import { CookieOptions } from '@supabase/ssr';
+import { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies';
 
-// 쿠키스토어를 받아서 클라이언트를 생성하는 함수
-export const createClientWithCookies = (cookieStore: ReadonlyRequestCookies): SupabaseClient<Database> => {
+// Supabase 공통 설정 유효성 검사 함수
+const validateSupabaseConfig = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!supabaseUrl) {
+    throw new Error('NEXT_PUBLIC_SUPABASE_URL이 설정되지 않았습니다.');
+  }
+  
+  if (!supabaseAnonKey) {
+    throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY가 설정되지 않았습니다.');
+  }
+  
+  // URL 유효성 확인
   try {
-    // 환경변수 검증
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    
-    if (!supabaseUrl) {
-      throw new Error('NEXT_PUBLIC_SUPABASE_URL이 설정되지 않았습니다.');
-    }
-    
-    if (!supabaseAnonKey) {
-      throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY가 설정되지 않았습니다.');
-    }
-    
-    // URL 유효성 확인
-    try {
-      new URL(supabaseUrl);
-    } catch {
-      throw new Error(`NEXT_PUBLIC_SUPABASE_URL이 유효하지 않습니다: ${supabaseUrl}`);
-    }
+    new URL(supabaseUrl);
+  } catch {
+    throw new Error(`NEXT_PUBLIC_SUPABASE_URL이 유효하지 않습니다: ${supabaseUrl}`);
+  }
+  
+  return { supabaseUrl, supabaseAnonKey };
+};
+
+// 1. 읽기 전용 클라이언트: 서버 컴포넌트에서 사용 (쿠키 설정 시도 차단)
+export const createReadOnlyClient = async (): Promise<SupabaseClient<Database>> => {
+  try {
+    const { supabaseUrl, supabaseAnonKey } = validateSupabaseConfig();
+    const cookieStore = await cookies();
     
     return createServerClient<Database>(
       supabaseUrl,
       supabaseAnonKey,
       {
         cookies: {
-          get(name) {
-            return cookieStore.get(name)?.value;
+          getAll() {
+            const cookieList = cookieStore.getAll();
+            return cookieList.map((cookie: ResponseCookie) => ({
+              name: cookie.name,
+              value: cookie.value
+            }));
           },
-          set(name, value, options) {
-            try {
-              // 서버 컴포넌트에서 쿠키를 설정하려고 할 때 오류가 발생하므로
-              // 오류 처리를 개선하고 에러 로그 레벨을 낮춤
-              cookieStore.set({ name, value, ...options });
-            } catch (error) {
-              // 개발 환경에서만 디버깅을 위한 로그 출력 (warn -> debug)
-              if (process.env.NODE_ENV === 'development') {
-                console.debug('서버 컴포넌트에서 쿠키 설정 시도:', error);
-              }
-              // 오류 발생 시 쿠키 설정 무시 (서버 액션에서 처리 예정)
-            }
-          },
-          remove(name, options) {
-            try {
-              cookieStore.set({ name, value: '', ...options, maxAge: 0 });
-            } catch (error) {
-              // 개발 환경에서만 디버깅을 위한 로그 출력 (warn -> debug)
-              if (process.env.NODE_ENV === 'development') {
-                console.debug('서버 컴포넌트에서 쿠키 삭제 시도:', error);
-              }
-              // 오류 발생 시 쿠키 삭제 무시 (서버 액션에서 처리 예정)
-            }
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          setAll(_cookies: { name: string; value: string; options?: CookieOptions }[]) {
+            // 서버 컴포넌트에서는 쿠키 설정을 시도하지 않음 (무시)
           }
         },
         auth: {
-          persistSession: true,
+          persistSession: false, // 세션 유지 시도 없음
           autoRefreshToken: false
         }
       }
     );
   } catch (error) {
-    console.error('Supabase client creation error:', error);
-    throw error; // 원래 오류를 그대로 전달하여 더 구체적인 오류 메시지 제공
+    console.error('Supabase 읽기 전용 클라이언트 생성 오류:', error);
+    throw error;
   }
 };
 
-// 서버 컴포넌트/액션에서 바로 사용할 수 있는 함수
+// 2. 쓰기 가능 클라이언트: 서버 액션/라우트 핸들러에서 사용 (쿠키 설정 가능)
+export const createMutableClient = async (): Promise<SupabaseClient<Database>> => {
+  try {
+    const { supabaseUrl, supabaseAnonKey } = validateSupabaseConfig();
+    const cookieStore = await cookies();
+    
+    return createServerClient<Database>(
+      supabaseUrl,
+      supabaseAnonKey,
+      {
+        cookies: {
+          getAll() {
+            const cookieList = cookieStore.getAll();
+            return cookieList.map((cookie: ResponseCookie) => ({
+              name: cookie.name,
+              value: cookie.value
+            }));
+          },
+          setAll(cookies: { name: string; value: string; options?: CookieOptions }[]) {
+            cookies.forEach(({ name, value, options }) => {
+              try {
+                cookieStore.set({ name, value, ...options });
+              } catch {
+                // 에러 무시 (필요한 경우에만 로깅)
+              }
+            });
+          }
+        },
+        auth: {
+          persistSession: true, // 세션 유지 허용
+          autoRefreshToken: true
+        }
+      }
+    );
+  } catch (error) {
+    console.error('Supabase 변경 가능 클라이언트 생성 오류:', error);
+    throw error;
+  }
+};
+
+// 서버 컴포넌트 또는 서버 액션에서 컨텍스트에 따라 적절한 클라이언트 생성
+export const createSafeClient = (isServerAction = false): Promise<SupabaseClient<Database>> => {
+  return isServerAction ? createMutableClient() : createReadOnlyClient();
+};
+
+// 하위 호환성을 위한 기본 클라이언트 (읽기 전용으로 설정)
 export const createClient = async (): Promise<SupabaseClient<Database>> => {
-  const cookieStore = await cookies();
-  return createClientWithCookies(cookieStore);
+  return createReadOnlyClient();
+};
+
+// 기존 cookieStore 버전 - 하위 호환성 유지
+export const createClientWithCookies = (cookieStore: ReadonlyRequestCookies): SupabaseClient<Database> => {
+  try {
+    const { supabaseUrl, supabaseAnonKey } = validateSupabaseConfig();
+    
+    return createServerClient<Database>(
+      supabaseUrl,
+      supabaseAnonKey,
+      {
+        cookies: {
+          getAll() {
+            const cookieList = cookieStore.getAll();
+            return cookieList.map((cookie: ResponseCookie) => ({
+              name: cookie.name,
+              value: cookie.value
+            }));
+          },
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          setAll(_cookies: { name: string; value: string; options?: CookieOptions }[]) {
+            // 서버 컴포넌트에서는 쿠키 설정을 시도하지 않음 (무시)
+          }
+        },
+        auth: {
+          persistSession: false, // 세션 유지 시도 없음
+          autoRefreshToken: false
+        }
+      }
+    );
+  } catch (error) {
+    console.error('Supabase 클라이언트 생성 오류:', error);
+    throw error;
+  }
 }; 

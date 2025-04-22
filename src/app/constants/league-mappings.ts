@@ -130,12 +130,6 @@ export const LEAGUE_MAPPINGS: LeagueMapping[] = [
     category: LeagueCategory.INTL 
   },
   { 
-    id: 10, 
-    name_ko: '국가대표 친선경기', 
-    name_en: 'International Friendly',
-    category: LeagueCategory.INTL 
-  },
-  { 
     id: 5, 
     name_ko: 'UEFA 네이션스 리그', 
     name_en: 'UEFA Nations League',
@@ -248,6 +242,11 @@ export const LEAGUE_MAPPINGS: LeagueMapping[] = [
 // ID로 리그 매핑 정보 가져오기
 export function getLeagueMappingById(id: number): LeagueMapping | undefined {
   return LEAGUE_MAPPINGS.find(mapping => mapping.id === id);
+}
+
+// ID로 리그 정보 가져오기 (getLeagueMappingById와 동일한 기능)
+export function getLeagueById(id: number): LeagueMapping | undefined {
+  return getLeagueMappingById(id);
 }
 
 // 주요 리그 ID 목록만 가져오기

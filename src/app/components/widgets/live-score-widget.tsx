@@ -38,31 +38,34 @@ interface LiveScoreWidgetProps {
 export default function LiveScoreWidget({ initialMatches = [] }: LiveScoreWidgetProps) {
   // 상태 초기화 시 오늘/내일 구분 적용 (이미 displayDate가 있다면 그대로 사용)
   const [matches, setMatches] = useState<EnhancedMatchData[]>(
-    initialMatches.map(match => {
-      if (!match) return null;  // 유효하지 않은 데이터 무시
-      
-      // 이미 displayDate가 있다면 그대로 사용
-      if (match.displayDate) {
-        return match as EnhancedMatchData;
-      }
-      
-      // 아니면 날짜 확인 로직으로 계산
-      const currentDate = new Date();
-      const matchDate = new Date(match.time.date);
-      
-      // 날짜만 비교하기 위해 시간 정보 제거
-      const currentDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
-      const matchDay = new Date(matchDate.getFullYear(), matchDate.getMonth(), matchDate.getDate());
-      
-      // 날짜 차이 계산 (밀리초 단위)
-      const diffDays = Math.floor((matchDay.getTime() - currentDay.getTime()) / (1000 * 60 * 60 * 24));
-      
-      let displayText = '오늘';
-      if (diffDays < 0) displayText = '어제';
-      else if (diffDays > 0) displayText = '내일';
-      
-      return { ...match, displayDate: displayText };
-    }) as EnhancedMatchData[]
+    initialMatches
+      .filter(match => !['FT', 'AET', 'PEN'].includes(match?.status?.code || '')) // 종료된 경기 필터링
+      .map(match => {
+        if (!match) return null;  // 유효하지 않은 데이터 무시
+        
+        // 이미 displayDate가 있다면 그대로 사용
+        if (match.displayDate) {
+          return match as EnhancedMatchData;
+        }
+        
+        // 아니면 날짜 확인 로직으로 계산
+        const currentDate = new Date();
+        const matchDate = new Date(match.time.date);
+        
+        // 날짜만 비교하기 위해 시간 정보 제거
+        const currentDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+        const matchDay = new Date(matchDate.getFullYear(), matchDate.getMonth(), matchDate.getDate());
+        
+        // 날짜 차이 계산 (밀리초 단위)
+        const diffDays = Math.floor((matchDay.getTime() - currentDay.getTime()) / (1000 * 60 * 60 * 24));
+        
+        let displayText = '오늘';
+        if (diffDays < 0) displayText = '어제';
+        else if (diffDays > 0) displayText = '내일';
+        
+        return { ...match, displayDate: displayText };
+      })
+      .filter(Boolean) as EnhancedMatchData[]  // null 값 제거
   );
   const [loading, setLoading] = useState(initialMatches.length === 0);
   const [error, setError] = useState<string | null>(null);
@@ -84,29 +87,32 @@ export default function LiveScoreWidget({ initialMatches = [] }: LiveScoreWidget
     if (initialMatches.length > 0) {
       setLoading(false);
       
-      // 날짜 표시 로직 재사용 (이미 displayDate가 있다면 그대로 사용)
-      const processedMatches = initialMatches.map(match => {
-        // 이미 displayDate가 있다면 그대로 사용
-        if (match.displayDate) {
-          return match as EnhancedMatchData;
-        }
-        
-        const currentDate = new Date();
-        const matchDate = new Date(match.time.date);
-        
-        // 날짜만 비교하기 위해 시간 정보 제거
-        const currentDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
-        const matchDay = new Date(matchDate.getFullYear(), matchDate.getMonth(), matchDate.getDate());
-        
-        // 날짜 차이 계산 (밀리초 단위)
-        const diffDays = Math.floor((matchDay.getTime() - currentDay.getTime()) / (1000 * 60 * 60 * 24));
-        
-        let displayText = '오늘';
-        if (diffDays < 0) displayText = '어제';
-        else if (diffDays > 0) displayText = '내일';
-        
-        return { ...match, displayDate: displayText };
-      }) as EnhancedMatchData[];
+      // 종료된 경기 필터링 및 날짜 표시 로직 적용
+      const processedMatches = initialMatches
+        .filter(match => !['FT', 'AET', 'PEN'].includes(match?.status?.code || '')) // 종료된 경기 필터링
+        .map(match => {
+          // 이미 displayDate가 있다면 그대로 사용
+          if (match.displayDate) {
+            return match as EnhancedMatchData;
+          }
+          
+          const currentDate = new Date();
+          const matchDate = new Date(match.time.date);
+          
+          // 날짜만 비교하기 위해 시간 정보 제거
+          const currentDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+          const matchDay = new Date(matchDate.getFullYear(), matchDate.getMonth(), matchDate.getDate());
+          
+          // 날짜 차이 계산 (밀리초 단위)
+          const diffDays = Math.floor((matchDay.getTime() - currentDay.getTime()) / (1000 * 60 * 60 * 24));
+          
+          let displayText = '오늘';
+          if (diffDays < 0) displayText = '어제';
+          else if (diffDays > 0) displayText = '내일';
+          
+          return { ...match, displayDate: displayText };
+        })
+        .filter(Boolean) as EnhancedMatchData[];  // null 값 제거
       
       setMatches(processedMatches);
       initializedRef.current = true;
@@ -173,17 +179,23 @@ export default function LiveScoreWidget({ initialMatches = [] }: LiveScoreWidget
             ...processTomorrowMatches
           ] as EnhancedMatchData[];
           
+          // 종료된 경기 필터링 (FT, AET, PEN 상태 제외)
+          const filteredMatches = combinedMatches.filter(match => 
+            !['FT', 'AET', 'PEN'].includes(match.status.code)
+          );
+          
           // 최종 결합된 데이터 확인
           console.log('최종 결합된 경기 데이터:', {
             total: combinedMatches.length,
+            filtered: filteredMatches.length,
             yesterday: processYesterdayMatches.length,
             today: processTodayMatches.length,
             tomorrow: processTomorrowMatches.length
           });
           
-          setMatches(combinedMatches);
+          setMatches(filteredMatches);
           
-          if (combinedMatches.length === 0) {
+          if (filteredMatches.length === 0) {
             setError('예정된/진행 중인 주요 리그 경기가 없습니다.');
           } else {
             setError(null);
@@ -482,7 +494,12 @@ export default function LiveScoreWidget({ initialMatches = [] }: LiveScoreWidget
                       {/* 중앙 (vs 및 시간) */}
                       <div className="flex flex-col items-center justify-center gap-0.5">
                         <span className="font-bold text-base text-center">{match.status?.code !== 'NS' ? `${match.goals?.home ?? 0} - ${match.goals?.away ?? 0}` : 'vs'}</span>
-                        <span className="text-xs font-medium group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{formatMatchTime(match)}</span>
+                        <div className="flex flex-col items-center">
+                          <span className="text-xs font-medium group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{formatMatchTime(match)}</span>
+                          {match.status?.code === 'NS' && match.displayDate && (
+                            <span className="text-[9px] text-gray-500 mt-0.5">{match.displayDate}</span>
+                          )}
+                        </div>
                       </div>
                       
                       {/* 원정팀 */}

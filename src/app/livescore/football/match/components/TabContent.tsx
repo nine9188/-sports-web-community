@@ -2,8 +2,9 @@
 
 import { useState, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { TabType, MatchEvent, Team, TeamLineup, TeamStats, PlayerStatsData } from '../types';
+import { TabType, MatchEvent, Team, TeamLineup, TeamStats } from '../types';
 import TabSelectorWrapper from './TabSelectorWrapper';
+import { MultiplePlayerStatsResponse } from '@/app/actions/livescore/matches/playerStats';
 
 // 간단한 로딩 스피너 컴포넌트
 const LoadingSpinner = () => (
@@ -23,7 +24,7 @@ const Lineups = dynamic(() => import('./tabs/Lineups'), {
   ssr: false // 선택 시에만 로드
 });
 
-const Stats = dynamic(() => import('./tabs/Stats'), { 
+const Stats = dynamic(() => import('./Stats'), { 
   loading: () => <LoadingSpinner />,
   ssr: false // 선택 시에만 로드
 });
@@ -77,7 +78,7 @@ interface MatchDataCommon {
   };
   stats?: TeamStats[];
   standings?: StandingsData | null;
-  playersStats?: Record<number, PlayerStatsData>;
+  playersStats?: MultiplePlayerStatsResponse;
   [key: string]: unknown;
 }
 
@@ -113,9 +114,11 @@ export default function TabContent({ matchId, homeTeam, awayTeam, matchData }: T
   // 각 탭에 맞게 데이터 준비
   const eventProps = { 
     events: matchData.events || [],
+    matchId: matchId,
   };
 
   const lineupProps = {
+    matchId: matchId,
     homeTeam: homeTeam || { id: 0, name: '', logo: '' }, 
     awayTeam: awayTeam || { id: 0, name: '', logo: '' },
     lineups: matchData.lineups || { response: null },
@@ -148,7 +151,7 @@ export default function TabContent({ matchId, homeTeam, awayTeam, matchData }: T
       {/* 탭 내용 영역 - 테두리 제거 */}
       <div>
         {/* 각 탭은 조건부 렌더링하되, 한번 로드된 후에는 유지합니다 */}
-        {activeTab === 'events' && <Events key="events-tab" matchData={eventProps} />}
+        {activeTab === 'events' && <Events key="events-tab" matchData={eventProps} matchId={matchId} />}
         
         {activeTab === 'lineups' && (
           <Lineups key="lineups-tab" matchData={lineupProps} />
