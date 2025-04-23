@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { TabType, MatchEvent, Team, TeamLineup, TeamStats } from '../types';
-import TabSelectorWrapper from './TabSelectorWrapper';
 import { MultiplePlayerStatsResponse } from '@/app/actions/livescore/matches/playerStats';
 
 // 간단한 로딩 스피너 컴포넌트
@@ -24,7 +23,7 @@ const Lineups = dynamic(() => import('./tabs/Lineups'), {
   ssr: false // 선택 시에만 로드
 });
 
-const Stats = dynamic(() => import('./Stats'), { 
+const Stats = dynamic(() => import('./tabs/Stats'), { 
   loading: () => <LoadingSpinner />,
   ssr: false // 선택 시에만 로드
 });
@@ -89,14 +88,20 @@ interface TabContentProps {
   matchData: MatchDataCommon;
 }
 
+// 이 컴포넌트는 더 이상 사용하지 않습니다.
+// 새로운 패러렐 라우트와 TabNavigation으로 대체되었습니다.
+// 만약 아직 참조하는 곳이 있다면 오류를 방지하기 위해 남겨둡니다.
 export default function TabContent({ matchId, homeTeam, awayTeam, matchData }: TabContentProps) {
   // 기본 탭 설정 - 항상 events 탭을 기본값으로 사용
   const [activeTab, setActiveTab] = useState<TabType>('events');
   
-  // 로컬스토리지에서 저장된 탭 정보 복원 - 로컬스토리지 값은 무시하고 항상 첫 탭으로
+  // 로컬스토리지에서 저장된 탭 정보 복원
   useEffect(() => {
-    // 탭 상태 저장
-    localStorage.setItem('activeMatchTab', 'events');
+    const savedTab = localStorage.getItem('activeMatchTab');
+    if (savedTab && (savedTab === 'events' || savedTab === 'lineups' || 
+                    savedTab === 'stats' || savedTab === 'standings')) {
+      setActiveTab(savedTab as TabType);
+    }
   }, []);
   
   // 각 탭 컴포넌트가 이미 로드되었는지 추적
@@ -142,13 +147,52 @@ export default function TabContent({ matchId, homeTeam, awayTeam, matchData }: T
   // 각 탭 컴포넌트에 키를 추가하여 리렌더링 방지
   return (
     <>
-      {/* 탭 선택기를 별도 컨테이너로 분리 */}
-      <TabSelectorWrapper 
-        activeTab={activeTab} 
-        onTabChange={handleTabChange} 
-      />
+      <div className="mb-4">
+        <div className="bg-white rounded-lg border overflow-hidden flex sticky top-0 z-10">
+          <button
+            onClick={() => handleTabChange('events')}
+            className={`px-4 py-3 text-sm font-medium flex-1 ${
+              activeTab === 'events' 
+                ? 'text-blue-600 border-b-2 border-blue-600 font-semibold' 
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            이벤트
+          </button>
+          <button
+            onClick={() => handleTabChange('lineups')}
+            className={`px-4 py-3 text-sm font-medium flex-1 ${
+              activeTab === 'lineups' 
+                ? 'text-blue-600 border-b-2 border-blue-600 font-semibold' 
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            라인업
+          </button>
+          <button
+            onClick={() => handleTabChange('stats')}
+            className={`px-4 py-3 text-sm font-medium flex-1 ${
+              activeTab === 'stats' 
+                ? 'text-blue-600 border-b-2 border-blue-600 font-semibold' 
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            통계
+          </button>
+          <button
+            onClick={() => handleTabChange('standings')}
+            className={`px-4 py-3 text-sm font-medium flex-1 ${
+              activeTab === 'standings' 
+                ? 'text-blue-600 border-b-2 border-blue-600 font-semibold' 
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            순위
+          </button>
+        </div>
+      </div>
       
-      {/* 탭 내용 영역 - 테두리 제거 */}
+      {/* 탭 내용 영역 */}
       <div>
         {/* 각 탭은 조건부 렌더링하되, 한번 로드된 후에는 유지합니다 */}
         {activeTab === 'events' && <Events key="events-tab" matchData={eventProps} matchId={matchId} />}
