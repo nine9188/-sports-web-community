@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
+import { fetchPlayerInjuries } from '@/app/actions/livescore/player/injuries';
 
 interface Injury {
   fixture: {
@@ -21,7 +22,6 @@ interface Injury {
 
 interface PlayerInjuriesProps {
   playerId: number;
-  baseUrl?: string;
   injuriesData?: Injury[];
 }
 
@@ -127,41 +127,48 @@ const reasonMap: { [key: string]: string } = {
 
 export default function PlayerInjuries({
   playerId,
-  baseUrl = '',
   injuriesData: initialInjuriesData = [] 
 }: PlayerInjuriesProps) {
   const [injuriesData, setInjuriesData] = useState<Injury[]>(initialInjuriesData);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  // 데이터 가져오기 함수
+  const fetchInjuriesData = useCallback(async () => {
+    try {
+      setError(null);
+      setLoading(true);
+      
+      console.log(`선수 ${playerId}의 부상 데이터 요청 시작`);
+      const startTime = Date.now();
+      
+      // 서버 액션 직접 호출
+      const data = await fetchPlayerInjuries(playerId);
+      
+      const endTime = Date.now();
+      const loadTime = (endTime - startTime) / 1000;
+      console.log(`선수 ${playerId}의 부상 데이터 요청 완료: ${data?.length || 0}개 항목, 소요시간: ${loadTime}초`);
+      
+      setInjuriesData(data || []);
+    } catch (error) {
+      console.error('부상 데이터 로딩 오류:', error);
+      setError('부상 정보를 불러오는데 실패했습니다.');
+      setInjuriesData([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [playerId]);
 
   // 컴포넌트 마운트 시 부상 데이터 가져오기
   useEffect(() => {
     // 이미 데이터가 있으면 가져오지 않음
-    if (initialInjuriesData.length > 0) return;
-    
-    const fetchInjuriesData = async () => {
-      try {
-        // API 요청 URL 설정
-        const apiUrl = baseUrl 
-          ? `${baseUrl}/api/livescore/football/players/${playerId}/injuries` 
-          : `/api/livescore/football/players/${playerId}/injuries`;
-        
-        const response = await fetch(apiUrl, { cache: 'no-store' });
-        
-        if (!response.ok) {
-          throw new Error('부상 정보를 불러오는데 실패했습니다.');
-        }
-        
-        const data = await response.json();
-        setInjuriesData(data || []);
-      } catch (error) {
-        console.error('부상 데이터 로딩 오류:', error);
-        setError('부상 정보를 불러오는데 실패했습니다.');
-        setInjuriesData([]);
-      }
-    };
+    if (initialInjuriesData.length > 0) {
+      console.log(`선수 ${playerId}의 부상 데이터: 초기 데이터 사용 (${initialInjuriesData.length}개 항목)`);
+      return;
+    }
     
     fetchInjuriesData();
-  }, [playerId, baseUrl, initialInjuriesData.length]);
+  }, [playerId, initialInjuriesData.length, fetchInjuriesData]);
 
   // 날짜 포맷팅 함수
   const formatDate = (dateString: string) => {
@@ -225,70 +232,78 @@ export default function PlayerInjuries({
     return reason;
   };
 
-  if (error) {
-    return (
-      <div className="bg-white rounded-lg">
-        <div className="flex flex-col justify-center items-center py-3">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-500 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <p className="text-gray-600">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
   if (!injuriesData || injuriesData.length === 0) {
     return (
-      <div className="bg-white rounded-lg">
-        <div className="text-center py-3 text-gray-500">부상 기록이 없습니다.</div>
+      <div className="text-center py-6">
+        <p className="text-gray-500">부상 기록이 없습니다.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg">
-      <div>
-        <div className="relative">
-          <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-gray-200"></div>
-          
-          {injuriesData.map((injury, index) => (
-            <div key={index} className="relative pl-6 pb-3">
-              <div className="absolute left-2 top-2 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-white"></div>
-              <div className="bg-white p-2 rounded-lg border border-gray-200">
-                <div className="flex items-center text-xs text-gray-500 mb-1">
-                  <div className="mr-1">{formatDate(injury.fixture.date)}</div>
-                  <div>•</div>
-                  <div className="ml-1">{injury.league.name}</div>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 flex-shrink-0 bg-white rounded-full border border-gray-200 flex items-center justify-center overflow-hidden p-0">
-                    <Image
-                      src={injury.team.logo || '/placeholder-team.png'}
-                      alt={injury.team.name}
-                      width={24}
-                      height={24}
-                      className="w-6 h-6 object-contain"
-                      unoptimized
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = '/placeholder-team.png';
-                      }}
-                    />
+    <div className="mb-4 bg-white rounded-lg border overflow-hidden">
+      {loading && (
+        <div className="p-4 text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-blue-600"></div>
+          <p className="mt-2 text-gray-600">데이터를 불러오는 중...</p>
+        </div>
+      )}
+      
+      {error && (
+        <div className="p-4 text-center bg-red-50 text-red-700">
+          <p className="font-medium">{error}</p>
+          <button
+            onClick={fetchInjuriesData}
+            className="mt-2 px-4 py-1 bg-red-100 hover:bg-red-200 text-red-800 rounded-md text-sm"
+          >
+            다시 시도
+          </button>
+        </div>
+      )}
+      
+      {!loading && !error && (
+        <div>
+          <div className="relative p-4">
+            <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+            
+            {injuriesData.map((injury, index) => (
+              <div key={index} className="relative pl-6 pb-3">
+                <div className="absolute left-2 top-2 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-white"></div>
+                <div className="bg-white p-2 rounded-lg border border-gray-200">
+                  <div className="flex items-center text-xs text-gray-500 mb-1">
+                    <div className="mr-1">{formatDate(injury.fixture.date)}</div>
+                    <div>•</div>
+                    <div className="ml-1">{injury.league.name}</div>
                   </div>
-                  <div className="text-sm font-medium truncate">{injury.team.name}</div>
-                </div>
-                
-                <div className="mt-1.5 p-1.5 bg-red-50 rounded-md text-xs">
-                  <div className="font-medium text-red-800">부상 유형: {translateInjuryType(injury.type)}</div>
-                  <div className="text-red-700 mt-0.5">사유: {translateReason(injury.reason)}</div>
+                  
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 flex-shrink-0 bg-white rounded-full border border-gray-200 flex items-center justify-center overflow-hidden p-0">
+                      <Image
+                        src={injury.team.logo || '/placeholder-team.png'}
+                        alt={injury.team.name}
+                        width={24}
+                        height={24}
+                        className="w-6 h-6 object-contain"
+                        unoptimized
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/placeholder-team.png';
+                        }}
+                      />
+                    </div>
+                    <div className="text-sm font-medium truncate">{injury.team.name}</div>
+                  </div>
+                  
+                  <div className="mt-1.5 p-1.5 bg-red-50 rounded-md text-xs">
+                    <div className="font-medium text-red-800">부상 유형: {translateInjuryType(injury.type)}</div>
+                    <div className="text-red-700 mt-0.5">사유: {translateReason(injury.reason)}</div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 } 

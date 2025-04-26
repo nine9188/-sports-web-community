@@ -4,6 +4,7 @@ import { useRef, useEffect, useState } from 'react';
 import styles from '../styles/formation.module.css';
 // 프리미어리그 팀 선수 데이터 import
 import { liverpoolPlayers, NottinghamForestPlayers, Arsenalplayers, NewcastleUnitedplayers, Chelseaplayers, ManchesterCityplayers, AstonVillaplayers, Bournemouthplayers, Fulhamplayers, Brightonplayers } from '@/app/constants/teams/premier-league/premier-teams';
+import Image from 'next/image';
 
 // 미디어 쿼리를 사용하기 위한 커스텀 훅
 function useMediaQuery(query: string) {
@@ -326,6 +327,8 @@ const Player = ({ homeTeamData, awayTeamData }: PlayerProps) => {
               href={photoUrl}
               clipPath={`url(#clip-${teamId}-${playerId})`}
               onError={(e) => handleImageError(e, player)}
+              role="img"
+              aria-labelledby={`player-name-${teamId}-${playerId}`}
             />
           )}
           
@@ -369,6 +372,7 @@ const Player = ({ homeTeamData, awayTeamData }: PlayerProps) => {
             {/* 이름 텍스트 - 한국어 이름으로 교체 */}
             <text
               ref={(el) => { textRefs.current[nameKey] = el; }}
+              id={`player-name-${teamId}-${playerId}`}
               x="0"
               y="5.2"
               fill="white"
@@ -390,6 +394,54 @@ const Player = ({ homeTeamData, awayTeamData }: PlayerProps) => {
       {renderTeam(homeTeamData, true)}
       {renderTeam(awayTeamData, false)}
     </svg>
+  );
+};
+
+export const PlayerImage = ({ playerId, name, posX, posY, x, y }: { playerId: number; name: string; posX: number; posY: number; x?: number; y?: number }) => {
+  const [imageError, setImageError] = useState(false);
+  const [imageUrl, setImageUrl] = useState(`https://media.api-sports.io/football/players/${playerId}.png`);
+
+  const handleImageError = () => {
+    setImageError(true);
+    // 다른 API 이미지 URL 형식 시도
+    if (imageUrl.includes('media.api-sports.io')) {
+      setImageUrl(`https://media-3.api-sports.io/football/players/${playerId}.png`);
+    } else if (imageUrl.includes('media-3.api-sports.io')) {
+      setImageUrl(`https://media-2.api-sports.io/football/players/${playerId}.png`);
+    } else {
+      // 이미지를 찾을 수 없는 경우 기본 이미지 사용
+      setImageUrl('/images/player-placeholder.png');
+    }
+  };
+
+  return (
+    <div
+      className={`absolute group-hover:bg-header-dark rounded-[50%] overflow-hidden w-[26px] h-[26px] flex items-center justify-center bg-black/30`}
+      style={{
+        transform: x !== undefined && y !== undefined 
+          ? `translate(${x}px, ${y}px)` 
+          : `translate(${posX - 13}px, ${posY - 13}px)`,
+        zIndex: 9,
+      }}
+    >
+      {!imageError || imageUrl.includes('api-sports.io') ? (
+        <Image
+          src={imageUrl}
+          alt={`${name} 선수 이미지`}
+          width={26}
+          height={26}
+          className="object-cover w-full h-full"
+          onError={handleImageError}
+        />
+      ) : (
+        <div 
+          className="flex items-center justify-center w-full h-full text-white text-[10px] font-bold" 
+          aria-label={`${name} 선수 이니셜: ${name.substring(0, 1)}`}
+        >
+          {name.substring(0, 1)}
+        </div>
+      )}
+    </div>
   );
 };
 

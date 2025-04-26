@@ -475,7 +475,7 @@ export default function Overview({ stats }: Partial<OverviewProps>) {
         </div>
       )}
 
-      {/* 기타 통계 (페널티, 무득점, 카드) */}
+      {/* 기타 통계 (카드, 포메이션) */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         {/* 왼쪽 열: 포메이션 */}
         <div className="md:col-span-2">
@@ -520,6 +520,48 @@ export default function Overview({ stats }: Partial<OverviewProps>) {
               ) : (
                 <p className="text-sm text-center text-gray-500">포메이션 데이터가 없습니다.</p>
               )}
+              
+              {/* 패널티 통계 (포메이션 아래로 이동) */}
+              {safeStats.penalty && (
+                <div className="mt-6">
+                  <h5 className="text-sm font-semibold mb-2">페널티</h5>
+                  <div className="grid grid-cols-3 gap-1 text-center">
+                    <div className="bg-gray-50 p-2 rounded">
+                      <p className="text-sm font-bold">{safeStats.penalty.total}</p>
+                      <p className="text-xs text-gray-600">총계</p>
+                    </div>
+                    <div className="bg-green-50 p-2 rounded">
+                      <p className="text-sm font-bold text-green-700">{safeStats.penalty.scored.total}</p>
+                      <p className="text-xs text-gray-600">성공</p>
+                    </div>
+                    <div className="bg-red-50 p-2 rounded">
+                      <p className="text-sm font-bold text-red-700">{safeStats.penalty.missed.total}</p>
+                      <p className="text-xs text-gray-600">실패</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* 무득점 경기 (패널티 아래로 이동) */}
+              {safeStats.failed_to_score && (
+                <div className="mt-4">
+                  <h5 className="text-sm font-semibold mb-2">무득점 경기</h5>
+                  <div className="grid grid-cols-3 gap-1 text-center">
+                    <div className="bg-gray-50 p-2 rounded">
+                      <p className="text-sm font-bold">{safeStats.failed_to_score.home}</p>
+                      <p className="text-xs text-gray-600">홈</p>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded">
+                      <p className="text-sm font-bold">{safeStats.failed_to_score.away}</p>
+                      <p className="text-xs text-gray-600">원정</p>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded">
+                      <p className="text-sm font-bold">{safeStats.failed_to_score.total}</p>
+                      <p className="text-xs text-gray-600">전체</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -530,7 +572,7 @@ export default function Overview({ stats }: Partial<OverviewProps>) {
             <h4 className="text-sm font-medium p-2 border-b border-gray-200">카드 통계</h4>
             <div className="p-3">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 h-full">
-                {/* 왼쪽: 경고 카드 + 페널티 */}
+                {/* 왼쪽: 경고 카드 */}
                 <div className="space-y-3">
                   {/* 경고 카드 */}
                   <div>
@@ -567,30 +609,9 @@ export default function Overview({ stats }: Partial<OverviewProps>) {
                         })}
                     </div>
                   </div>
-                  
-                  {/* 페널티 통계 (간소화된 버전) */}
-                  {safeStats.penalty && (
-                    <div className="mt-4">
-                      <h5 className="text-sm font-semibold mb-1">페널티</h5>
-                      <div className="grid grid-cols-3 gap-1 text-center">
-                        <div className="bg-gray-50 p-1 rounded">
-                          <p className="text-sm font-bold">{safeStats.penalty.total}</p>
-                          <p className="text-xs text-gray-600">총계</p>
-                        </div>
-                        <div className="bg-green-50 p-1 rounded">
-                          <p className="text-sm font-bold text-green-700">{safeStats.penalty.scored.total}</p>
-                          <p className="text-xs text-gray-600">성공</p>
-                        </div>
-                        <div className="bg-red-50 p-1 rounded">
-                          <p className="text-sm font-bold text-red-700">{safeStats.penalty.missed.total}</p>
-                          <p className="text-xs text-gray-600">실패</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
                 
-                {/* 오른쪽: 퇴장 카드 + 무득점 */}
+                {/* 오른쪽: 퇴장 카드 */}
                 <div className="space-y-3">
                   {/* 퇴장 카드 */}
                   <div>
@@ -627,27 +648,6 @@ export default function Overview({ stats }: Partial<OverviewProps>) {
                         })}
                     </div>
                   </div>
-                  
-                  {/* 무득점 경기 (간소화된 버전) */}
-                  {safeStats.failed_to_score && (
-                    <div className="mt-4">
-                      <h5 className="text-sm font-semibold mb-1">무득점 경기</h5>
-                      <div className="grid grid-cols-3 gap-1 text-center">
-                        <div className="bg-gray-50 p-1 rounded">
-                          <p className="text-sm font-bold">{safeStats.failed_to_score.home}</p>
-                          <p className="text-xs text-gray-600">홈</p>
-                        </div>
-                        <div className="bg-gray-50 p-1 rounded">
-                          <p className="text-sm font-bold">{safeStats.failed_to_score.away}</p>
-                          <p className="text-xs text-gray-600">원정</p>
-                        </div>
-                        <div className="bg-gray-50 p-1 rounded">
-                          <p className="text-sm font-bold">{safeStats.failed_to_score.total}</p>
-                          <p className="text-xs text-gray-600">전체</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

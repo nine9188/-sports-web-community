@@ -3,7 +3,7 @@ import { fetchCachedTeamMatches } from '@/app/actions/livescore/teams/matches';
 import { fetchCachedTeamStandings } from '@/app/actions/livescore/teams/standings';
 import Overview from '../../components/tabs/Overview';
 
-export default async function OverviewPage({ params }: { params: { id: string } }) {
+export default async function OverviewPage({ params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { format } from 'date-fns';
+import { fetchPlayerTransfers } from '@/app/actions/livescore/player/transfers';
 
 interface Transfer {
   date: string;
@@ -23,7 +24,6 @@ interface Transfer {
 
 interface PlayerTransfersProps {
   playerId: number;
-  baseUrl?: string;
   transfersData?: Transfer[];
 }
 
@@ -36,41 +36,48 @@ const transferTypeMap: { [key: string]: string } = {
 
 export default function PlayerTransfers({
   playerId,
-  baseUrl = '',
   transfersData: initialTransfersData = []
 }: PlayerTransfersProps) {
   const [transfersData, setTransfersData] = useState<Transfer[]>(initialTransfersData);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  // 데이터 가져오기 함수
+  const fetchTransfersData = useCallback(async () => {
+    try {
+      setError(null);
+      setLoading(true);
+      
+      console.log(`선수 ${playerId}의 이적 데이터 요청 시작`);
+      const startTime = Date.now();
+      
+      // 서버 액션 직접 호출
+      const data = await fetchPlayerTransfers(playerId);
+      
+      const endTime = Date.now();
+      const loadTime = (endTime - startTime) / 1000;
+      console.log(`선수 ${playerId}의 이적 데이터 요청 완료: ${data?.length || 0}개 항목, 소요시간: ${loadTime}초`);
+      
+      setTransfersData(data || []);
+    } catch (error) {
+      console.error('이적 데이터 로딩 오류:', error);
+      setError('이적 정보를 불러오는데 실패했습니다.');
+      setTransfersData([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [playerId]);
 
   // 컴포넌트 마운트 시 이적 데이터 가져오기
   useEffect(() => {
     // 이미 데이터가 있으면 가져오지 않음
-    if (initialTransfersData.length > 0) return;
-    
-    const fetchTransfersData = async () => {
-      try {
-        // API 요청 URL 설정
-        const apiUrl = baseUrl 
-          ? `${baseUrl}/api/livescore/football/players/${playerId}/transfers` 
-          : `/api/livescore/football/players/${playerId}/transfers`;
-        
-        const response = await fetch(apiUrl, { cache: 'no-store' });
-        
-        if (!response.ok) {
-          throw new Error('이적 정보를 불러오는데 실패했습니다.');
-        }
-        
-        const data = await response.json();
-        setTransfersData(data || []);
-      } catch (error) {
-        console.error('이적 데이터 로딩 오류:', error);
-        setError('이적 정보를 불러오는데 실패했습니다.');
-        setTransfersData([]);
-      }
-    };
+    if (initialTransfersData.length > 0) {
+      console.log(`선수 ${playerId}의 이적 데이터: 초기 데이터 사용 (${initialTransfersData.length}개 항목)`);
+      return;
+    }
     
     fetchTransfersData();
-  }, [playerId, baseUrl, initialTransfersData.length]);
+  }, [playerId, initialTransfersData.length, fetchTransfersData]);
 
   // 이적료 포맷팅 함수
   const formatTransferType = (type: string) => {
@@ -82,51 +89,18 @@ export default function PlayerTransfers({
     return `${type}`;
   };
   
+  if (loading) {
+    return null;
+  }
+  
   if (error) {
-    return (
-      <div className="mb-4 bg-white rounded-lg">
-        <div className="flex flex-col justify-center items-center py-6">
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            className="h-14 w-14 mx-auto text-red-500 mb-3" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={1.5} 
-              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-            />
-          </svg>
-          <p className="text-lg font-medium text-gray-600 mb-2">{error}</p>
-          <p className="text-sm text-gray-500">네트워크 연결을 확인하고 다시 시도해주세요.</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (transfersData.length === 0) {
     return (
-      <div className="mb-4 bg-white rounded-lg">
-        <div className="text-center py-6">
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            className="h-16 w-16 mx-auto text-gray-400 mb-4" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={1.5} 
-              d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-            />
-          </svg>
-          <p className="text-lg font-medium text-gray-600">이적 기록이 없습니다</p>
-        </div>
+      <div className="text-center py-6">
+        <p className="text-gray-500">이적 기록이 없습니다.</p>
       </div>
     );
   }

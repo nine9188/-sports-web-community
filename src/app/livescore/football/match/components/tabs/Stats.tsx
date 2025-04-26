@@ -1,15 +1,17 @@
 'use client';
 
-import { useState, memo, useMemo } from 'react';
+import { useState, memo, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { TeamStats, Team } from '../../types';
+import { fetchMatchStats } from '@/app/actions/livescore/matches/stats';
+import { fetchMatchData } from '@/app/actions/livescore/matches/match';
 
 interface StatsProps {
-  matchData: {
+  matchId: string;
+  matchData?: {
     stats?: TeamStats[];
-    homeTeam: Team;
-    awayTeam: Team;
-    [key: string]: unknown;
+    homeTeam?: Team;
+    awayTeam?: Team;
   };
 }
 
@@ -107,11 +109,55 @@ const StatItem = memo(({ homeValue, awayValue, koreanLabel }: {
 
 StatItem.displayName = 'StatItem';
 
-function Stats({ matchData }: StatsProps) {
-  const stats = useMemo(() => matchData.stats || [], [matchData.stats]);
-  const homeTeam = matchData.homeTeam || { id: 0, name: '', logo: '' };
-  const awayTeam = matchData.awayTeam || { id: 0, name: '', logo: '' };
-  const [loading] = useState(false); // 로딩 상태 추가 (setter 제거)
+function Stats({ matchId, matchData }: StatsProps) {
+  const [stats, setStats] = useState<TeamStats[]>(matchData?.stats || []);
+  const [homeTeam, setHomeTeam] = useState<Team | undefined>(matchData?.homeTeam);
+  const [awayTeam, setAwayTeam] = useState<Team | undefined>(matchData?.awayTeam);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // 통계 데이터 가져오기
+  useEffect(() => {
+    // 이미 데이터가 있으면 다시 가져오지 않음
+    if (matchId && (!stats.length || !homeTeam || !awayTeam)) {
+      const fetchData = async () => {
+        setLoading(true);
+        try {
+          // 통계 데이터 가져오기
+          const statsResponse = await fetchMatchStats(matchId);
+          if (statsResponse.success && statsResponse.response.length > 0) {
+            setStats(statsResponse.response);
+          }
+
+          // 필요하면 기본 매치 데이터도 가져와서 홈/어웨이 팀 정보 설정
+          if (!homeTeam || !awayTeam) {
+            const matchResponse = await fetchMatchData(matchId);
+            if (matchResponse.success && matchResponse.data) {
+              setHomeTeam({
+                id: matchResponse.data.teams?.home?.id || 0,
+                name: matchResponse.data.teams?.home?.name || '',
+                logo: matchResponse.data.teams?.home?.logo || '',
+              });
+              setAwayTeam({
+                id: matchResponse.data.teams?.away?.id || 0,
+                name: matchResponse.data.teams?.away?.name || '',
+                logo: matchResponse.data.teams?.away?.logo || '',
+              });
+            }
+          }
+
+          setError(null);
+        } catch (err) {
+          setError('통계 데이터를 가져오는데 실패했습니다.');
+          console.error('통계 데이터 로딩 오류:', err);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchData();
+    }
+  }, [matchId, stats.length, homeTeam, awayTeam]);
 
   // 통계 항목 매핑 (API에서 사용하는 키값 -> 표시 레이블)
   const statMappings = useMemo(() => [
@@ -155,12 +201,71 @@ function Stats({ matchData }: StatsProps) {
     return groups;
   }, [statMappings]);
 
+  // 카테고리별 헤더 렌더링
+  const renderCategoryHeader = (category: string, isFirst = false) => {
+    const titles: Record<string, string> = {
+      'shooting': '슈팅',
+      'basic': '기본 통계',
+      'passing': '패스'
+    };
+    
+    return (
+      <div className="px-3 py-2 border-b">
+        <div className="flex justify-between items-center">
+          <h3 className="text-sm font-bold text-gray-800">{titles[category]}</h3>
+          
+          {isFirst && homeTeam && awayTeam && (
+            <div className="flex items-center gap-4 text-xs">
+              <div className="flex items-center gap-2">
+                <TeamLogo logo={homeTeam.logo} name={homeTeam.name} />
+                <div className="w-3 h-3 bg-blue-500 rounded-sm"></div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-500 rounded-sm"></div>
+                <TeamLogo logo={awayTeam.logo} name={awayTeam.name} />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   // 로딩 상태 표시
   if (loading) {
     return (
       <div className="mb-4 bg-white rounded-lg border p-4">
-        <div className="flex justify-center items-center py-8">
+        <div className="flex flex-col justify-center items-center py-8">
           <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+          <p className="mt-2 text-gray-600">데이터를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 상태 표시
+  if (error) {
+    return (
+      <div className="mb-4 bg-white rounded-lg border p-4">
+        <div className="flex justify-center items-center py-8">
+          <div className="text-center">
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              className="h-12 w-12 mx-auto text-red-500 mb-2" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={1.5} 
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" 
+              />
+            </svg>
+            <p className="text-lg font-medium text-gray-600">오류 발생</p>
+            <p className="text-sm text-gray-500 mt-1">{error}</p>
+          </div>
         </div>
       </div>
     );
@@ -199,7 +304,7 @@ function Stats({ matchData }: StatsProps) {
   const secondTeam = stats[1] || { team: { id: 0, name: '', logo: '' }, statistics: [] };
 
   // 각 팀 확인 (홈팀과 원정팀 매칭)
-  const isFirstTeamHome = firstTeam.team.id === homeTeam.id;
+  const isFirstTeamHome = homeTeam && firstTeam.team.id === homeTeam.id;
   const dataHomeTeam = isFirstTeamHome ? firstTeam : secondTeam;
   const dataAwayTeam = isFirstTeamHome ? secondTeam : firstTeam;
 
@@ -224,38 +329,8 @@ function Stats({ matchData }: StatsProps) {
     );
   };
 
-  // 카테고리별 헤더 렌더링
-  const renderCategoryHeader = (category: string, isFirst = false) => {
-    const titles: Record<string, string> = {
-      'shooting': '슈팅',
-      'basic': '기본 통계',
-      'passing': '패스'
-    };
-    
-    return (
-      <div className="px-3 py-2 border-b">
-        <div className="flex justify-between items-center">
-          <h3 className="text-sm font-bold text-gray-800">{titles[category]}</h3>
-          
-          {isFirst && (
-            <div className="flex items-center gap-4 text-xs">
-              <div className="flex items-center gap-2">
-                <TeamLogo logo={homeTeam.logo} name={homeTeam.name} />
-                <div className="w-3 h-3 bg-blue-500 rounded-sm"></div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-green-500 rounded-sm"></div>
-                <TeamLogo logo={awayTeam.logo} name={awayTeam.name} />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
   return (
-    <div className="p-0">
+    <div className="p-0 min-h-[400px]">
       <div className="space-y-2">
         {/* 슈팅 통계 */}
         <div className="bg-white rounded-lg border">

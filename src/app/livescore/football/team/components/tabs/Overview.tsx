@@ -226,7 +226,7 @@ export default function Overview({ team, stats, matches, standings, onTabChange,
 
   // 팀 페이지로 이동하는 함수 추가
   const handleTeamClick = (teamId: number) => {
-    router.push(`/livescore/football/team/${teamId}`);
+    router.push(`/livescore/football/team/${teamId}/overview`);
   };
 
   // 공통 스타일

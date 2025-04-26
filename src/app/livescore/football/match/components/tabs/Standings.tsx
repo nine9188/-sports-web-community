@@ -5,6 +5,8 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Team } from '../../types';
 import { getTeamById, TeamMapping } from '@/app/constants';
+import { fetchMatchStandings, StandingsData } from '@/app/actions/livescore/matches/standings';
+import { fetchMatchData } from '@/app/actions/livescore/matches/match';
 
 interface Standing {
   rank: number;
@@ -31,33 +33,12 @@ interface Standing {
   };
 }
 
-interface League {
-  name: string;
-  logo: string;
-  standings: Standing[][];
-}
-
-interface StandingsData {
-  standings: {
-    league: League;
-  };
-  home?: {
-    id: number;
-    name?: string;
-  };
-  away?: {
-    id: number;
-    name?: string;
-  };
-}
-
 interface StandingsProps {
-  matchData: {
-    matchId: string;
-    homeTeam: Team;
-    awayTeam: Team;
-    standings: StandingsData | null;
-    [key: string]: unknown;
+  matchId: string;
+  matchData?: {
+    standings?: StandingsData | null;
+    homeTeam?: Team;
+    awayTeam?: Team;
   };
 }
 
@@ -110,16 +91,85 @@ const tableStyles = {
   container: "mb-4 bg-white rounded-lg border overflow-hidden" // will-change 제거
 };
 
-function Standings({ matchData }: StandingsProps) {
+function Standings({ matchId, matchData }: StandingsProps) {
   const router = useRouter();
+  const [standings, setStandings] = useState<StandingsData | null>(matchData?.standings || null);
+  const [homeTeam, setHomeTeam] = useState<Team | undefined>(matchData?.homeTeam);
+  const [awayTeam, setAwayTeam] = useState<Team | undefined>(matchData?.awayTeam);
   const [homeTeamId, setHomeTeamId] = useState<number | null>(null);
   const [awayTeamId, setAwayTeamId] = useState<number | null>(null);
   const [teamCache, setTeamCache] = useState<Record<number, TeamMapping>>({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
-  // 캐싱을 위해 standings 데이터 메모이제이션
-  const standings = useMemo(() => matchData.standings, [matchData.standings]);
-  const homeTeam = matchData.homeTeam || { id: 0, name: '', logo: '' };
-  const awayTeam = matchData.awayTeam || { id: 0, name: '', logo: '' };
+  // 데이터 가져오기
+  useEffect(() => {
+    if (matchId) {
+      const fetchData = async () => {
+        setLoading(true);
+        try {
+          // 팀 데이터 로딩 (홈/어웨이 팀 정보가 없는 경우)
+          if (!homeTeam || !awayTeam) {
+            const matchResponse = await fetchMatchData(matchId);
+            if (matchResponse.success && matchResponse.data) {
+              const home = {
+                id: matchResponse.data.teams?.home?.id || 0,
+                name: matchResponse.data.teams?.home?.name || '',
+                logo: matchResponse.data.teams?.home?.logo || '',
+              };
+              const away = {
+                id: matchResponse.data.teams?.away?.id || 0,
+                name: matchResponse.data.teams?.away?.name || '',
+                logo: matchResponse.data.teams?.away?.logo || '',
+              };
+              
+              setHomeTeam(home);
+              setAwayTeam(away);
+              setHomeTeamId(home.id);
+              setAwayTeamId(away.id);
+              
+              // 리그 ID 가져오기
+              const leagueId = matchResponse.data.league?.id;
+              
+              // 리그 순위 가져오기
+              if (leagueId) {
+                const standingsData = await fetchMatchStandings(String(leagueId), true);
+                if (standingsData) {
+                  setStandings(standingsData);
+                }
+              }
+            }
+          } else {
+            // 이미 팀 정보가 있는 경우 ID 설정
+            if (homeTeam.id) setHomeTeamId(homeTeam.id);
+            if (awayTeam.id) setAwayTeamId(awayTeam.id);
+            
+            // 순위 데이터 가져오기 (없는 경우)
+            if (!standings && homeTeam.id) {
+              // 매치 데이터를 통해 리그 ID 확인
+              const matchResponse = await fetchMatchData(matchId);
+              if (matchResponse.success && matchResponse.data?.league?.id) {
+                const leagueId = matchResponse.data.league.id;
+                const standingsData = await fetchMatchStandings(String(leagueId), true);
+                if (standingsData) {
+                  setStandings(standingsData);
+                }
+              }
+            }
+          }
+          
+          setError(null);
+        } catch (err) {
+          setError('순위 데이터를 가져오는데 실패했습니다.');
+          console.error('순위 데이터 로딩 오류:', err);
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      fetchData();
+    }
+  }, [matchId, homeTeam, awayTeam, standings]);
   
   // 팀 정보 캐싱
   useEffect(() => {
@@ -127,8 +177,8 @@ function Standings({ matchData }: StandingsProps) {
     const teamIds = new Set<number>();
     
     // 홈, 어웨이 팀 추가
-    if (homeTeam?.id) teamIds.add(homeTeam.id);
-    if (awayTeam?.id) teamIds.add(awayTeam.id);
+    if (homeTeamId) teamIds.add(homeTeamId);
+    if (awayTeamId) teamIds.add(awayTeamId);
     
     // standings에서 팀 ID 추출
     if (standings?.standings?.league?.standings) {
@@ -159,13 +209,7 @@ function Standings({ matchData }: StandingsProps) {
     if (cacheUpdated) {
       setTeamCache(newTeamCache);
     }
-    
-    // 홈/어웨이 팀 ID 설정
-    if (homeTeam?.id && awayTeam?.id) {
-      setHomeTeamId(homeTeam.id);
-      setAwayTeamId(awayTeam.id);
-    }
-  }, [homeTeam?.id, awayTeam?.id, standings, teamCache]);
+  }, [homeTeamId, awayTeamId, standings, teamCache]);
 
   // 팀 이름 표시 함수
   const getTeamDisplayName = useCallback((teamId: number, fallbackName: string): string => {
@@ -199,11 +243,11 @@ function Standings({ matchData }: StandingsProps) {
 
   // handleRowClick 함수를 useCallback으로 감싸기
   const handleRowClick = useCallback((teamId: number) => {
-    router.push(`/livescore/football/team/${teamId}`);
+    router.push(`/livescore/football/team/${teamId}/overview`);
   }, [router]);
 
   // 빈 상태 렌더링 함수
-  const renderEmptyState = () => (
+  const renderEmptyState = useCallback(() => (
     <div className="mb-4 bg-white rounded-lg border p-4">
       <div className="flex justify-center items-center py-8">
         <div className="text-center">
@@ -226,11 +270,12 @@ function Standings({ matchData }: StandingsProps) {
         </div>
       </div>
     </div>
-  );
+  ), []);
 
-  // 테이블 렌더링 메모이제이션
+  // 테이블 렌더링 메모이제이션 (조건부 렌더링 수정)
   const standingsTable = useMemo(() => {
-    if (!standings || !standings.standings?.league?.standings || !standings.standings.league.standings.length) {
+    // standings가 없거나 필요한 데이터가 없는 경우
+    if (!standings || !standings?.standings?.league?.standings || !standings.standings.league.standings.length) {
       return renderEmptyState();
     }
 
@@ -443,12 +488,43 @@ function Standings({ matchData }: StandingsProps) {
         </div>
       </div>
     );
-  }, [standings, homeTeamId, awayTeamId, getFormStyle, getStatusColor, handleRowClick, getTeamDisplayName]);
+  }, [standings, homeTeamId, awayTeamId, getFormStyle, getStatusColor, handleRowClick, getTeamDisplayName, renderEmptyState]);
 
-  // 간단한 래퍼 반환
+  // 로딩, 에러, 표준 상태를 통합하여 조건부 렌더링 해결
   return (
     <div className="w-full">
-      {standingsTable}
+      {loading ? (
+        <div className="mb-4 bg-white rounded-lg border p-4">
+          <div className="flex justify-center items-center py-8">
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        </div>
+      ) : error ? (
+        <div className="mb-4 bg-white rounded-lg border p-4">
+          <div className="flex justify-center items-center py-8">
+            <div className="text-center">
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className="h-12 w-12 mx-auto text-red-500 mb-2" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={1.5} 
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" 
+                />
+              </svg>
+              <p className="text-lg font-medium text-gray-600">오류 발생</p>
+              <p className="text-sm text-gray-500 mt-1">{error}</p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        standingsTable
+      )}
     </div>
   );
 }

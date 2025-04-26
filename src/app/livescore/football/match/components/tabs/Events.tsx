@@ -13,15 +13,10 @@ import { mapEventToKoreanText } from '@/app/constants/event-mappings';
 import { liverpoolPlayers, NottinghamForestPlayers, Arsenalplayers, NewcastleUnitedplayers, Chelseaplayers, ManchesterCityplayers, AstonVillaplayers, Bournemouthplayers, Fulhamplayers, Brightonplayers } from '@/app/constants/teams/premier-league/premier-teams';
 
 interface EventsProps {
-  matchData: {
+  matchId: string;
+  matchData?: {
     events?: MatchEvent[];
-    data?: Record<string, unknown>;
-    lineups?: Record<string, unknown>;
-    stats?: Record<string, unknown>;
-    standings?: Record<string, unknown>;
-    playersStats?: Record<string, unknown>;
   };
-  matchId?: string; // 추가: 매치 ID를 props로 받음
 }
 
 // 선수 데이터 타입 정의
@@ -67,7 +62,7 @@ const getPlayerKoreanName = (playerId: number): string | null => {
 };
 
 // 메모이제이션을 적용하여 불필요한 리렌더링 방지
-function Events({ matchData, matchId }: EventsProps) {
+function Events({ matchId, matchData }: EventsProps) {
   const [events, setEvents] = useState<MatchEvent[]>(matchData?.events || []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,8 +72,7 @@ function Events({ matchData, matchId }: EventsProps) {
 
   // 서버 액션을 사용해 이벤트 데이터 가져오기
   useEffect(() => {
-    // 초기 이벤트 데이터가 없고 매치ID가 있는 경우에만 데이터 요청
-    if (matchId && (!events.length || events.length === 0)) {
+    if (matchId) {
       const fetchEvents = async () => {
         setLoading(true);
         setError(null);
@@ -104,7 +98,7 @@ function Events({ matchData, matchId }: EventsProps) {
       // props로 전달받은 초기 이벤트 데이터가 있는 경우 사용
       setEvents(matchData.events);
     }
-  }, [matchId, matchData?.events, events.length]);
+  }, [matchId, matchData?.events]);
 
   // 팀 정보 캐싱을 위한 hook
   useEffect(() => {

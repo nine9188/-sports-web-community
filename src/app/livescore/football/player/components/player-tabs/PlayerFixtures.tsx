@@ -6,6 +6,7 @@ import { ko } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { FixtureData } from '../../types/player';
+import { fetchPlayerFixtures } from '@/app/actions/livescore/player/fixtures';
 
 // 페이지네이션 버튼 컴포넌트
 const PaginationButton = ({ 
@@ -41,23 +42,23 @@ interface PlayerFixturesProps {
   seasons: number[];
   fixturesData?: { data: FixtureData[] };
   initialSeason: number;
-  baseUrl?: string;
 }
 
-// 팀 로고 컴포넌트 - 메모이제이션 적용
+// 팀 로고 컴포넌트
 const TeamLogo = ({ logo, name }: { logo: string; name: string }) => {
-  const [imgError, setImgError] = useState(false);
-  
   return (
-    <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
-      <Image
-        src={imgError ? '/placeholder-team.png' : logo || '/placeholder-team.png'}
+    <div className="relative w-6 h-6 shrink-0 overflow-hidden rounded-full">
+      <Image 
+        src={logo || '/placeholder-team.png'} 
         alt={name}
         width={24}
         height={24}
-        className="w-5 h-5 object-contain"
-        onError={() => setImgError(true)}
+        className="object-contain w-full h-full"
         unoptimized
+        onError={(e) => {
+          const target = e.target as HTMLImageElement;
+          target.src = '/placeholder-team.png';
+        }}
       />
     </div>
   );
@@ -81,8 +82,7 @@ export default function PlayerFixtures({
   playerId, 
   seasons = [], 
   fixturesData: initialFixturesData = { data: [] }, 
-  initialSeason,
-  baseUrl = '' 
+  initialSeason
 }: PlayerFixturesProps) {
   const router = useRouter();
   const [selectedSeason, setSelectedSeason] = useState<number>(initialSeason);
@@ -99,12 +99,15 @@ export default function PlayerFixtures({
   const abortControllerRef = useRef<AbortController | null>(null);
   
   // 시즌별 데이터를 캐싱하기 위한 ref
-  const cachedDataRef = useRef<Record<number, { data: FixtureData[] }>>({
-    [initialSeason]: initialFixturesData
+  const cachedDataRef = useRef<Record<number, { data: FixtureData[], timestamp: number }>>({
+    [initialSeason]: { data: initialFixturesData.data, timestamp: Date.now() }
   });
 
   // 데이터 페치 진행 중인지 추적하는 ref
   const isFetchingRef = useRef<Record<number, boolean>>({});
+  
+  // 캐시 만료 시간: 1시간 (밀리초 단위)
+  const CACHE_EXPIRY = 60 * 60 * 1000;
 
   // 사용 가능한 시즌 목록 - 내림차순 정렬
   const availableSeasons = useMemo(() => {
@@ -113,16 +116,21 @@ export default function PlayerFixtures({
 
   // 데이터 가져오기 함수를 useCallback으로 메모이제이션
   const fetchFixturesData = useCallback(async (season: number) => {
-    // 이미 캐시된 데이터가 있으면 사용
-    if (cachedDataRef.current[season] && cachedDataRef.current[season].data.length > 0) {
-      console.log(`캐시된 데이터 사용: ${season} 시즌, ${cachedDataRef.current[season].data.length}개 경기`);
-      setFixturesData(cachedDataRef.current[season]);
+    // 이미 캐시된 데이터가 있고 만료되지 않은 경우 사용
+    const now = Date.now();
+    if (
+      cachedDataRef.current[season] && 
+      cachedDataRef.current[season].data.length > 0 &&
+      (now - cachedDataRef.current[season].timestamp) < CACHE_EXPIRY
+    ) {
+      console.log(`선수 ${playerId}의 캐시된 데이터 사용: ${season} 시즌, ${cachedDataRef.current[season].data.length}개 경기`);
+      setFixturesData({ data: cachedDataRef.current[season].data });
       return;
     }
     
     // 동일한 시즌 데이터를 이미 요청 중이면 중복 요청 방지
     if (isFetchingRef.current[season]) {
-      console.log(`이미 요청 중인 데이터: ${season} 시즌`);
+      console.log(`선수 ${playerId}의 ${season} 시즌 데이터를 이미 요청 중입니다`);
       return;
     }
 
@@ -140,46 +148,58 @@ export default function PlayerFixtures({
       setError(null);
       setSelectedLeague(''); // 시즌이 변경되면 리그 선택 초기화
 
-      // API 요청 URL 설정 (baseUrl이 있으면 사용, 없으면 상대 경로)
-      const apiUrl = baseUrl 
-        ? `${baseUrl}/api/livescore/football/players/${playerId}/fixtures?season=${season}`
-        : `/api/livescore/football/players/${playerId}/fixtures?season=${season}`;
-
-      console.log(`경기 데이터 요청 시작: ${apiUrl}`);
+      console.log(`선수 ${playerId}의 경기 데이터 요청 시작: 시즌 ${season}`);
+      
+      // 미래 시즌인 경우 현재 가용한 최신 시즌으로 변경
+      const currentYear = new Date().getFullYear();
+      const requestSeason = season > currentYear ? currentYear : season;
+      console.log(`요청 시즌: ${season}${requestSeason !== season ? ` → ${requestSeason}(미래 시즌은 현재 데이터가 없어 ${currentYear}로 조정)` : ''}`);
+      
       const startTime = Date.now();
       
-      const response = await fetch(apiUrl, {
-        signal: abortControllerRef.current.signal,
-        cache: 'default' // 브라우저 캐싱 사용
-      });
-
-      if (!response.ok) {
-        throw new Error(`경기 데이터를 가져오는데 실패했습니다 (HTTP ${response.status})`);
-      }
-
-      const data = await response.json();
-      const endTime = Date.now();
-      console.log(`경기 데이터 요청 완료: ${season} 시즌, ${data.data?.length || 0}개 항목, 소요시간: ${(endTime - startTime) / 1000}초`);
+      // 서버 액션 직접 호출 (최대 20개 경기)
+      const result = await fetchPlayerFixtures(playerId, requestSeason, 20);
       
-      // 데이터를 캐시에 저장
-      cachedDataRef.current[season] = data;
-      setFixturesData(data);
+      const endTime = Date.now();
+      const loadTime = (endTime - startTime) / 1000;
+      
+      // 실제 사용된 시즌 확인 (API가 다른 시즌 데이터를 반환한 경우)
+      const actualSeason = result.seasonUsed || season;
+      if (actualSeason !== season) {
+        console.log(`선수 ${playerId}의 ${season} 시즌 데이터가 없어서 ${actualSeason} 시즌 데이터를 사용합니다`);
+      }
+      
+      console.log(`선수 ${playerId}의 경기 데이터 요청 완료: ${actualSeason} 시즌, ${result.data?.length || 0}개 항목, 소요시간: ${loadTime}초`);
+      
+      // 데이터 반환 시 캐시 여부 확인하여 사용자에게 알림
+      if (result.cached) {
+        console.log(`선수 ${playerId}의 서버 캐시된 데이터 사용됨`);
+      }
+      
+      // 데이터 변환 및 캐시에 저장
+      const formattedData = { data: result.data || [] };
+      cachedDataRef.current[season] = { 
+        data: result.data || [], 
+        timestamp: now 
+      };
+      
+      setFixturesData(formattedData);
     } catch (err) {
       // AbortError는 사용자 취소이므로 에러 처리 안함
       if (err instanceof Error && err.name === 'AbortError') {
-        console.log('데이터 요청이 취소되었습니다.');
+        console.log(`선수 ${playerId}의 데이터 요청이 취소되었습니다`);
         return;
       }
       
-      console.error('경기 데이터 로딩 오류:', err);
-      setError('경기 데이터를 가져오는데 실패했습니다.');
+      console.error(`선수 ${playerId}의 경기 데이터 로딩 오류:`, err);
+      setError('경기 데이터를 가져오는데 실패했습니다');
       setFixturesData({ data: [] });
     } finally {
       setLoading(false);
       isFetchingRef.current[season] = false;
       abortControllerRef.current = null;
     }
-  }, [playerId, baseUrl]);
+  }, [playerId, CACHE_EXPIRY]);
 
   // 컴포넌트 마운트 시 데이터 가져오기 (초기 데이터가 비어있는 경우)
   useEffect(() => {
@@ -187,30 +207,44 @@ export default function PlayerFixtures({
     if (initialFixturesData.data && initialFixturesData.data.length > 0) {
       if (!cachedDataRef.current[selectedSeason] || 
           cachedDataRef.current[selectedSeason].data.length === 0) {
-        console.log(`초기 데이터 캐싱: ${selectedSeason} 시즌, ${initialFixturesData.data.length}개 경기`);
-        cachedDataRef.current[selectedSeason] = initialFixturesData;
+        console.log(`선수 ${playerId}의 초기 데이터 캐싱: ${selectedSeason} 시즌, ${initialFixturesData.data.length}개 경기`);
+        cachedDataRef.current[selectedSeason] = { 
+          data: initialFixturesData.data,
+          timestamp: Date.now()
+        };
       }
       return;
     }
 
-    // 시즌이 이미 선택되어 있으면 해당 시즌 데이터 로드
+    // 초기 데이터가 없고 시즌이 이미 선택되어 있으면 해당 시즌 데이터 로드
     if (selectedSeason) {
-      console.log(`초기 데이터가 없어 데이터 로드 시도: ${selectedSeason} 시즌`);
+      console.log(`선수 ${playerId}의 초기 데이터가 없어 데이터 로드 시도: ${selectedSeason} 시즌`);
       fetchFixturesData(selectedSeason);
     }
     
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchFixturesData, selectedSeason]);
+  }, []);
 
   // 시즌이 변경될 때 새 데이터 가져오기
   useEffect(() => {
-    // 이미 캐시된 데이터가 있으면 사용하고, 없으면 새로 가져오기
-    if (selectedSeason && cachedDataRef.current[selectedSeason]?.data?.length > 0) {
-      setFixturesData(cachedDataRef.current[selectedSeason]);
-    } else if (selectedSeason) {
+    if (!selectedSeason) return;
+    
+    // 시즌 변경 시 첫 페이지로 리셋
+    setCurrentPage(1);
+    
+    // 이미 캐시된 데이터가 있고 만료되지 않았으면 사용
+    const now = Date.now();
+    if (
+      cachedDataRef.current[selectedSeason]?.data?.length > 0 && 
+      (now - (cachedDataRef.current[selectedSeason]?.timestamp || 0)) < CACHE_EXPIRY
+    ) {
+      console.log(`선수 ${playerId}의 캐시된 데이터 사용 (시즌 변경): ${selectedSeason} 시즌`);
+      setFixturesData({ data: cachedDataRef.current[selectedSeason].data });
+    } else {
+      console.log(`선수 ${playerId}의 새 데이터 요청 (시즌 변경): ${selectedSeason} 시즌`);
       fetchFixturesData(selectedSeason);
     }
-  }, [selectedSeason, fetchFixturesData]);
+  }, [selectedSeason, fetchFixturesData, playerId, CACHE_EXPIRY]);
 
   // 컴포넌트 언마운트 시 요청 취소
   useEffect(() => {
@@ -219,6 +253,12 @@ export default function PlayerFixtures({
         abortControllerRef.current.abort();
       }
     };
+  }, []);
+
+  // 리그 선택 변경 핸들러
+  const handleLeagueChange = useCallback((leagueId: string) => {
+    setSelectedLeague(leagueId);
+    setCurrentPage(1); // 리그 변경 시 첫 페이지로 이동
   }, []);
 
   // 사용 가능한 리그 목록 (전체 리그 데이터에서 추출) - 메모이제이션
@@ -258,11 +298,6 @@ export default function PlayerFixtures({
       return awayGoals > homeGoals ? '승' : '패';
     }
   };
-
-  // 리그나 시즌 변경 시 첫 페이지로 리셋
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [selectedSeason, selectedLeague]);
 
   // 현재 보여줄 데이터 필터링 및 페이지네이션 적용 - 메모이제이션
   const { paginatedData, totalPages, totalItems } = useMemo(() => {
@@ -360,94 +395,24 @@ export default function PlayerFixtures({
     );
   };
 
-  // 로딩 상태 표시 - 개선된 로딩 UI
+  // 로딩 상태 표시
   if (loading) {
-    return (
-      <div className="mb-4 bg-white rounded-lg border overflow-hidden p-6">
-        <div className="flex flex-col justify-center items-center py-6">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500 mb-3"></div>
-          <p className="text-gray-600 text-sm font-medium">경기 데이터를 불러오는 중입니다...</p>
-          <p className="text-gray-400 text-xs mt-1">최대 15초 정도 소요될 수 있습니다</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
-  // 에러 상태 표시 - 개선된 에러 UI와 재시도 버튼 추가
+  // 에러 상태 표시
   if (error) {
-    return (
-      <div className="mb-4 bg-white rounded-lg border overflow-hidden p-6">
-        <div className="flex flex-col justify-center items-center py-6">
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            className="h-14 w-14 mx-auto text-red-500 mb-3" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={1.5} 
-              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-            />
-          </svg>
-          <p className="text-lg font-medium text-gray-600 mb-2">{error}</p>
-          <p className="text-sm text-gray-500 mb-4">네트워크 연결을 확인하고 다시 시도해주세요.</p>
-          <button
-            onClick={() => fetchFixturesData(selectedSeason)}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-          >
-            다시 시도
-          </button>
-        </div>
-      </div>
-    );
+    return null;
   }
 
-  // 데이터가 없을 때 표시 - 개선된 빈 상태 UI와 재시도 버튼
+  // 데이터가 없을 때 표시
   if (!fixturesData.data || fixturesData.data.length === 0) {
     return (
-      <div className="mb-4 bg-white rounded-lg border overflow-hidden p-6">
-        <div className="text-center py-8">
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            className="h-16 w-16 mx-auto text-gray-400 mb-4" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={1.5} 
-              d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-            />
-          </svg>
-          <p className="text-lg font-medium text-gray-600">경기 기록이 없습니다</p>
-          <p className="text-sm text-gray-500 mt-2 mb-4">
-            {selectedSeason} 시즌에 대한 경기 기록을 찾을 수 없습니다.<br />
-            다른 시즌을 선택하거나 아래 버튼을 클릭하여 다시 시도해 보세요.
-          </p>
-          <button
-            onClick={() => fetchFixturesData(selectedSeason)}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-          >
-            다시 시도
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {/* 필터 컨트롤 - 스타일 통일 */}
-      <div className="mb-4 bg-white rounded-lg border overflow-hidden">
-        <div className="p-4">
-          <div className="flex flex-wrap gap-4 items-center">
+      <div className="mb-4 bg-white rounded-lg border overflow-hidden p-4">
+        <div className="text-center py-4">
+          <div className="mb-4">
             {/* 시즌 선택 드롭다운 */}
-            <div className="flex-1 min-w-[180px]">
+            <div className="max-w-xs mx-auto">
               <label htmlFor="fixture-season-select" className="block text-sm font-medium text-gray-700 mb-1">
                 시즌 선택
               </label>
@@ -457,10 +422,6 @@ export default function PlayerFixtures({
                 onChange={(e) => {
                   const newSeason = Number(e.target.value);
                   setSelectedSeason(newSeason);
-                  // 시즌이 변경되면 캐시된 데이터가 있는지 확인하고 없으면 새로 데이터 가져오기
-                  if (!cachedDataRef.current[newSeason] || cachedDataRef.current[newSeason].data.length === 0) {
-                    fetchFixturesData(newSeason);
-                  }
                 }}
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               >
@@ -471,32 +432,70 @@ export default function PlayerFixtures({
                 ))}
               </select>
             </div>
+          </div>
+          <p className="text-gray-500">
+            {selectedSeason} 시즌에 대한 경기 기록이 없습니다.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
-            {/* 리그 선택 드롭다운 */}
-            <div className="flex-1 min-w-[180px]">
-              <label htmlFor="fixture-league-select" className="block text-sm font-medium text-gray-700 mb-1">
-                리그 선택
-              </label>
-              <select
-                id="fixture-league-select"
-                value={selectedLeague}
-                onChange={(e) => setSelectedLeague(e.target.value)}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                disabled={availableLeagues.length === 0}
-              >
-                <option value="">모든 리그</option>
-                {availableLeagues.map((league) => (
-                  <option key={league.id} value={league.id.toString()}>
-                    {league.name}
-                  </option>
-                ))}
-              </select>
+  return (
+    <div className="space-y-4">
+      {/* 필터 컨트롤 - 스타일 통일 */}
+      <div className="mb-4 bg-white rounded-lg border overflow-hidden">
+        <div className="p-4">
+          <div className="flex flex-wrap gap-4 items-center justify-between mb-4">
+            <div className="flex flex-wrap gap-4 items-center flex-1">
+              {/* 시즌 선택 드롭다운 */}
+              <div className="flex-1 min-w-[120px] max-w-[200px]">
+                <label htmlFor="fixture-season-select" className="block text-sm font-medium text-gray-700 mb-1">
+                  시즌 선택
+                </label>
+                <select
+                  id="fixture-season-select"
+                  value={selectedSeason}
+                  onChange={(e) => {
+                    const newSeason = Number(e.target.value);
+                    setSelectedSeason(newSeason);
+                  }}
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                >
+                  {availableSeasons.map((season: number) => (
+                    <option key={season} value={season}>
+                      {season}/{season + 1}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 리그 선택 드롭다운 */}
+              <div className="flex-1 min-w-[120px] max-w-[200px]">
+                <label htmlFor="fixture-league-select" className="block text-sm font-medium text-gray-700 mb-1">
+                  리그 선택
+                </label>
+                <select
+                  id="fixture-league-select"
+                  value={selectedLeague}
+                  onChange={(e) => handleLeagueChange(e.target.value)}
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  disabled={availableLeagues.length === 0}
+                >
+                  <option value="">모든 리그</option>
+                  {availableLeagues.map((league) => (
+                    <option key={league.id} value={league.id.toString()}>
+                      {league.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
           {/* 선택된 리그 표시 */}
           {selectedLeague && selectedLeagueInfo && (
-            <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg mt-4">
+            <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
               <div className="w-6 h-6 flex items-center justify-center">
                 <Image
                   src={selectedLeagueInfo.logo}
@@ -514,7 +513,7 @@ export default function PlayerFixtures({
           {/* 데이터 요약 정보 */}
           {totalItems > 0 && (
             <div className="mt-4 text-xs text-gray-500">
-              총 {totalItems}개 경기 중 {Math.min(itemsPerPage, paginatedData.length)}개 표시 ({currentPage}/{totalPages} 페이지)
+              총 {totalItems}개 경기 중 {Math.min(itemsPerPage, paginatedData.length)}개 표시 ({currentPage}/{totalPages || 1} 페이지)
             </div>
           )}
         </div>

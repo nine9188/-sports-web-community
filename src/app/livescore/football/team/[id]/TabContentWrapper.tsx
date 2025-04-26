@@ -16,23 +16,37 @@ function TabContent({
   stats: React.ReactNode;
   pathname: string;
 }) {
-  // 현재 활성화된 탭 확인
-  const currentTab = pathname.includes('/squad') 
+  // overview/* 경로도 처리하도록 수정
+  const currentTabPath = pathname;
+  
+  // 현재 활성화된 탭 확인 (기본 경로와 /overview 경로 모두 처리)
+  const currentTab = currentTabPath.includes('/squad') 
     ? 'squad'
-    : pathname.includes('/standings')
+    : currentTabPath.includes('/standings')
     ? 'standings'
-    : pathname.includes('/stats')
+    : currentTabPath.includes('/stats')
     ? 'stats'
-    : 'overview';
+    : 'overview'; // 기본값은 항상 overview
 
-  return (
-    <>
-      {currentTab === 'overview' && overview}
-      {currentTab === 'squad' && squad}
-      {currentTab === 'standings' && standings}
-      {currentTab === 'stats' && stats}
-    </>
-  );
+  // 탭 컨텐츠 렌더링 (삼항 연산자를 if문으로 풀어서 작성)
+  if (currentTab === 'overview' && overview) {
+    return <>{overview}</>;
+  }
+  
+  if (currentTab === 'squad' && squad) {
+    return <>{squad}</>;
+  }
+  
+  if (currentTab === 'standings' && standings) {
+    return <>{standings}</>;
+  }
+  
+  if (currentTab === 'stats' && stats) {
+    return <>{stats}</>;
+  }
+  
+  // 아무 것도 매칭되지 않으면 오버뷰 보여주기
+  return <>{overview}</>;
 }
 
 export default function TabContentWrapper({

@@ -116,7 +116,7 @@ function Standings({ standings, teamId }: StandingsProps) {
   // 다른 팀 페이지로 이동 핸들러
   const handleRowClick = useCallback((clickedTeamId: number) => {
     if (clickedTeamId !== teamId) {
-      router.push(`/livescore/football/team/${clickedTeamId}`);
+      router.push(`/livescore/football/team/${clickedTeamId}/overview`);
     }
   }, [router, teamId]);
   

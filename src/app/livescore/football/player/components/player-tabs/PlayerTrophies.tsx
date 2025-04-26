@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import classNames from 'classnames';
+import { fetchPlayerTrophies } from '@/app/actions/livescore/player/trophies';
 
 interface Trophy {
   league: string;
@@ -14,17 +15,42 @@ interface Trophy {
 
 interface PlayerTrophiesProps {
   playerId: number;
-  baseUrl?: string;
   trophiesData?: Trophy[];
 }
 
 export default function PlayerTrophies({ 
   playerId, 
-  baseUrl = '',
   trophiesData: initialTrophiesData = [] 
 }: PlayerTrophiesProps) {
   const [trophiesData, setTrophiesData] = useState<Trophy[]>(initialTrophiesData);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  
+  // 데이터 가져오기 함수
+  const fetchTrophiesData = useCallback(async () => {
+    try {
+      setError(null);
+      setLoading(true);
+      
+      console.log(`선수 ${playerId}의 트로피 데이터 요청 시작`);
+      const startTime = Date.now();
+      
+      // 서버 액션 직접 호출
+      const data = await fetchPlayerTrophies(playerId);
+      
+      const endTime = Date.now();
+      const loadTime = (endTime - startTime) / 1000;
+      console.log(`선수 ${playerId}의 트로피 데이터 요청 완료: ${data?.length || 0}개 항목, 소요시간: ${loadTime}초`);
+      
+      setTrophiesData(data || []);
+    } catch (error) {
+      console.error('트로피 데이터 로딩 오류:', error);
+      setError('트로피 정보를 불러오는데 실패했습니다.');
+      setTrophiesData([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [playerId]);
   
   // 트로피 종류별 분류 및 집계
   const trophySummary = trophiesData.reduce((acc, trophy) => {
@@ -41,81 +67,26 @@ export default function PlayerTrophies({
   // 컴포넌트 마운트 시 트로피 데이터 가져오기
   useEffect(() => {
     // 이미 데이터가 있으면 가져오지 않음
-    if (initialTrophiesData.length > 0) return;
-    
-    const fetchTrophiesData = async () => {
-      try {
-        // API 요청 URL 설정
-        const apiUrl = baseUrl 
-          ? `${baseUrl}/api/livescore/football/players/${playerId}/trophies` 
-          : `/api/livescore/football/players/${playerId}/trophies`;
-        
-        const response = await fetch(apiUrl, { cache: 'no-store' });
-        
-        if (!response.ok) {
-          throw new Error('트로피 정보를 불러오는데 실패했습니다.');
-        }
-        
-        const data = await response.json();
-        setTrophiesData(data || []);
-      } catch (error) {
-        console.error('트로피 데이터 로딩 오류:', error);
-        setError('트로피 정보를 불러오는데 실패했습니다.');
-        setTrophiesData([]);
-      }
-    };
+    if (initialTrophiesData.length > 0) {
+      console.log(`선수 ${playerId}의 트로피 데이터: 초기 데이터 사용 (${initialTrophiesData.length}개 항목)`);
+      return;
+    }
     
     fetchTrophiesData();
-  }, [playerId, baseUrl, initialTrophiesData.length]);
+  }, [playerId, initialTrophiesData.length, fetchTrophiesData]);
+
+  if (loading) {
+    return null;
+  }
 
   if (error) {
-    return (
-      <div className="mb-4 bg-white rounded-lg border p-4">
-        <div className="flex flex-col justify-center items-center py-6">
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            className="h-14 w-14 mx-auto text-red-500 mb-3" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={1.5} 
-              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-            />
-          </svg>
-          <p className="text-lg font-medium text-gray-600 mb-2">{error}</p>
-          <p className="text-sm text-gray-500">네트워크 연결을 확인하고 다시 시도해주세요.</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (!trophiesData || trophiesData.length === 0) {
     return (
-      <div className="mb-4 bg-white rounded-lg border p-4">
-        <div className="text-center py-6">
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            className="h-16 w-16 mx-auto text-gray-400 mb-4" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={1.5} 
-              d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-            />
-          </svg>
-          <p className="text-lg font-medium text-gray-600">수상 기록이 없습니다</p>
-          <p className="text-sm text-gray-500 mt-2">
-            이 선수의 수상 기록을 찾을 수 없습니다.
-          </p>
-        </div>
+      <div className="text-center py-6">
+        <p className="text-gray-500">수상 기록이 없습니다.</p>
       </div>
     );
   }

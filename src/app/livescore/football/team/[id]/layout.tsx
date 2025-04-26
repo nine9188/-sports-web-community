@@ -3,25 +3,18 @@ import { fetchCachedTeamData } from '@/app/actions/livescore/teams/team';
 import TeamHeader from '../components/TeamHeader';
 import Link from 'next/link';
 import TabNavigation from './TabNavigation';
-import TabContentWrapper from './TabContentWrapper';
 
 // 동적 렌더링 강제 설정 추가
 export const dynamic = 'force-dynamic';
 
+// 레이아웃 props 정의
 interface TeamLayoutProps {
   children: React.ReactNode;
-  overview: React.ReactNode;
-  squad: React.ReactNode;
-  standings: React.ReactNode;
-  stats: React.ReactNode;
-  params: { id: string, tab?: string };
+  params: Promise<{ id: string, tab?: string }>;
 }
 
 export default async function TeamLayout({
-  overview,
-  squad,
-  standings,
-  stats,
+  children,
   params
 }: TeamLayoutProps) {
   try {
@@ -52,12 +45,9 @@ export default async function TeamLayout({
             </div>
           }>
             <TabNavigation teamId={id} />
-            <TabContentWrapper
-              overview={overview}
-              squad={squad}
-              standings={standings}
-              stats={stats}
-            />
+            
+            {/* 각 탭 페이지 컨텐츠 표시 */}
+            {children}
           </Suspense>
         </div>
       </div>

@@ -1,11 +1,39 @@
-import { redirect } from 'next/navigation';
+'use client';
 
-export const dynamic = 'force-dynamic';
-export const fetchCache = 'default-no-store';
-export const revalidate = 0;
+import { useState, useEffect, Suspense, use } from 'react';
+import { useSearchParams } from 'next/navigation';
+import MatchHeader from '@/app/livescore/football/match/components/MatchHeader';
+import TabNavigation from './TabNavigation';
+import TabContent from './TabContent';
+import { TabType } from '../types';
 
-// 메인 페이지는 항상 이벤트 탭으로 리다이렉트
-export default async function MatchPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  redirect(`/livescore/football/match/${id}/events`);
+export default function MatchPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
+  const searchParams = useSearchParams();
+  const tabFromUrl = searchParams.get('tab') as TabType | null;
+  const [activeTab, setActiveTab] = useState<TabType>(tabFromUrl || 'events');
+  const matchId = resolvedParams.id;
+
+  // URL 파라미터의 탭을 감지하여 활성 탭 설정
+  useEffect(() => {
+    if (tabFromUrl && ['events', 'lineups', 'stats', 'standings'].includes(tabFromUrl)) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [tabFromUrl]);
+
+  return (
+    <div className="w-full">
+      <Suspense fallback={<div className="animate-pulse bg-gray-200 h-40 rounded-lg"></div>}>
+        <MatchHeader matchId={matchId} />
+      </Suspense>
+      
+      <TabNavigation 
+        activeTab={activeTab} 
+        matchId={matchId} 
+        onTabChange={setActiveTab} 
+      />
+
+      <TabContent activeTab={activeTab} matchId={matchId} />
+    </div>
+  );
 }

@@ -90,40 +90,63 @@ export interface StandingsResponse {
 
 /**
  * 특정 경기의 리그 순위표 정보를 가져오는 서버 액션
- * @param matchId 경기 ID
+ * @param matchId 경기 ID 또는 리그 ID
+ * @param isLeagueId matchId 파라미터가 리그 ID인지 여부
  * @returns 리그 순위표 정보
  */
-export async function fetchMatchStandings(matchId: string): Promise<StandingsData | null> {
+export async function fetchMatchStandings(
+  matchId: string,
+  isLeagueId: boolean = false
+): Promise<StandingsData | null> {
   try {
     if (!matchId) {
-      throw new Error('Match ID is required');
+      throw new Error('ID is required');
     }
 
-    // 먼저 경기 기본 정보를 가져와 리그 ID 및 시즌 확인
-    const matchResponse = await fetch(
-      `https://v3.football.api-sports.io/fixtures?id=${matchId}`,
-      {
-        headers: {
-          'x-rapidapi-host': 'v3.football.api-sports.io',
-          'x-rapidapi-key': process.env.FOOTBALL_API_KEY || '',
-        },
-        cache: 'no-store'
+    let leagueId: number | null = null;
+    let season: number | null = null;
+
+    // 리그 ID가 직접 제공된 경우
+    if (isLeagueId) {
+      leagueId = parseInt(matchId, 10);
+      
+      // 현재 날짜에 따라 시즌 결정
+      const currentDate = new Date();
+      // 7월 이전이면 이전 연도, 이후면 현재 연도를 시즌으로 사용
+      season = currentDate.getMonth() < 6 ? currentDate.getFullYear() - 1 : currentDate.getFullYear();
+    } else {
+      // 매치 ID가 제공된 경우, 먼저 경기 기본 정보를 가져와 리그 ID 및 시즌 확인
+      const matchResponse = await fetch(
+        `https://v3.football.api-sports.io/fixtures?id=${matchId}`,
+        {
+          headers: {
+            'x-rapidapi-host': 'v3.football.api-sports.io',
+            'x-rapidapi-key': process.env.FOOTBALL_API_KEY || '',
+          },
+          cache: 'no-store'
+        }
+      );
+
+      if (!matchResponse.ok) {
+        throw new Error(`경기 정보 API 응답 오류: ${matchResponse.status}`);
       }
-    );
 
-    if (!matchResponse.ok) {
-      throw new Error(`경기 정보 API 응답 오류: ${matchResponse.status}`);
+      const matchData = await matchResponse.json();
+      
+      if (!matchData?.response?.[0]?.league) {
+        return null;
+      }
+      
+      leagueId = matchData.response[0].league.id;
+      season = matchData.response[0].league.season;
     }
-
-    const matchData = await matchResponse.json();
     
-    if (!matchData?.response?.[0]?.league) {
-      console.log('리그 정보가 없어 순위표를 가져올 수 없습니다.');
+    if (!leagueId || !season) {
+      console.error('리그 ID 또는 시즌 정보를 찾을 수 없습니다.');
       return null;
     }
     
-    const leagueId = matchData.response[0].league.id;
-    const season = matchData.response[0].league.season;
+    console.log(`순위표 가져오기: 리그 ID=${leagueId}, 시즌=${season}`);
     
     // 리그 ID와 시즌으로 순위표 가져오기
     const standingsResponse = await fetch(
@@ -144,7 +167,7 @@ export async function fetchMatchStandings(matchId: string): Promise<StandingsDat
     const standingsData = await standingsResponse.json();
     
     if (!standingsData?.response || standingsData.response.length === 0) {
-      console.log('순위표 데이터를 찾을 수 없습니다.');
+      console.error('순위표 데이터가 비어있습니다.');
       return null;
     }
     

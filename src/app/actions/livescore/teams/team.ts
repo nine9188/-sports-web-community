@@ -85,6 +85,21 @@ export interface TeamStats {
     yellow: Record<string, { total: number; percentage: string }>;
     red: Record<string, { total: number; percentage: string }>;
   };
+  penalty?: {
+    total: number;
+    scored: { total: number; percentage: string };
+    missed: { total: number; percentage: string };
+  };
+  failed_to_score?: {
+    home: number;
+    away: number;
+    total: number;
+  };
+  biggest?: {
+    streak: { wins: number; draws: number; loses: number };
+    wins: { home: string; away: string };
+    loses: { home: string; away: string };
+  };
 }
 
 export interface TeamResponse {

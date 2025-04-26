@@ -17,8 +17,8 @@ export interface MatchEvent {
     name: string;
   };
   assist?: {
-    id: number | null;
-    name: string | null;
+    id?: number;
+    name?: string;
   };
   type: string;
   detail: string;

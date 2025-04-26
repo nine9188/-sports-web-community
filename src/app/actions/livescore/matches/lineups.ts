@@ -109,6 +109,33 @@ interface ApiTeamData {
   };
 }
 
+// 경기 세부 정보 관련 타입 정의
+interface MatchPlayerStatistics {
+  statistics: Array<{
+    games?: {
+      minutes?: number;
+      number?: number;
+      position?: string;
+      rating?: string;
+      captain?: boolean;
+      substitute?: boolean;
+    }
+  }>;
+  player: {
+    id: number;
+    name: string;
+  };
+}
+
+interface MatchTeamPlayers {
+  team: {
+    id: number;
+    name: string;
+    logo: string;
+  };
+  players: MatchPlayerStatistics[];
+}
+
 /**
  * 특정 경기의 라인업 정보를 가져오는 서버 액션
  * @param matchId 경기 ID
@@ -151,8 +178,84 @@ export async function fetchMatchLineups(matchId: string): Promise<LineupsRespons
     const homeTeamData = data.response[0] as ApiTeamData;
     const awayTeamData = data.response[1] as ApiTeamData;
     
+    // 추가적인 경기 데이터를 통해 주장 정보 확인 시도
+    let homeCaptainId: number | null = null;
+    let awayCaptainId: number | null = null;
+    
+    try {
+      // 경기 상세 정보에서 주장 확인 시도
+      const matchDetailsResponse = await fetch(
+        `https://v3.football.api-sports.io/fixtures?id=${matchId}`,
+        {
+          headers: {
+            'x-rapidapi-host': 'v3.football.api-sports.io',
+            'x-rapidapi-key': process.env.FOOTBALL_API_KEY || '',
+          },
+          cache: 'no-store'
+        }
+      );
+      
+      if (matchDetailsResponse.ok) {
+        const matchDetails = await matchDetailsResponse.json();
+        if (matchDetails?.response?.[0]?.players) {
+          const players = matchDetails.response[0].players;
+          
+          // 홈팀 ID와 원정팀 ID
+          const homeTeamId = homeTeamData.team.id;
+          const awayTeamId = awayTeamData.team.id;
+          
+          // 홈팀 주장 찾기
+          const homeTeamPlayers = players.find((p: MatchTeamPlayers) => p.team.id === homeTeamId);
+          if (homeTeamPlayers) {
+            const homeCaptain = homeTeamPlayers.players?.find(
+              (p: MatchPlayerStatistics) => p.statistics?.[0]?.games?.captain === true
+            );
+            if (homeCaptain) {
+              homeCaptainId = homeCaptain.player.id;
+            }
+          }
+          
+          // 원정팀 주장 찾기
+          const awayTeamPlayers = players.find((p: MatchTeamPlayers) => p.team.id === awayTeamId);
+          if (awayTeamPlayers) {
+            const awayCaptain = awayTeamPlayers.players?.find(
+              (p: MatchPlayerStatistics) => p.statistics?.[0]?.games?.captain === true
+            );
+            if (awayCaptain) {
+              awayCaptainId = awayCaptain.player.id;
+            }
+          }
+        }
+      }
+    } catch {
+      // 오류가 발생해도 계속 진행
+    }
+    
+    // 라인업 데이터에서 직접 주장 확인 (backup)
+    if (!homeCaptainId) {
+      // 선발 라인업에서 캡틴 찾기
+      const captainInStartXI = homeTeamData.startXI.find(item => 
+        item.player.captain === true
+      );
+      
+      if (captainInStartXI) {
+        homeCaptainId = captainInStartXI.player.id;
+      }
+    }
+    
+    if (!awayCaptainId) {
+      // 선발 라인업에서 캡틴 찾기
+      const captainInStartXI = awayTeamData.startXI.find(item => 
+        item.player.captain === true
+      );
+      
+      if (captainInStartXI) {
+        awayCaptainId = captainInStartXI.player.id;
+      }
+    }
+    
     // API 응답 강화하여 이미지 URL 추가 및 팀 매핑 적용
-    const enhanceTeamLineup = (teamData: ApiTeamData): TeamLineup => {
+    const enhanceTeamLineup = (teamData: ApiTeamData, captainId: number | null): TeamLineup => {
       // 팀 매핑 정보 가져오기
       const teamMapping = getTeamById(teamData.team.id);
       
@@ -179,8 +282,11 @@ export async function fetchMatchLineups(matchId: string): Promise<LineupsRespons
         },
         formation: teamData.formation,
         startXI: teamData.startXI.map((item) => {
-          // 주장 정보 보존 확인
-          const isCaptain = item.player.captain === true;
+          // API에서 가져온 captain 정보와 찾은 captainId 둘 다 사용하여 명확히 처리
+          // captainId가 있으면 해당 ID와 일치하는 선수를 주장으로 설정
+          const apiCaptain = item.player.captain === true;
+          const isIdCaptain = captainId ? item.player.id === captainId : false;
+          const isCaptain = apiCaptain || isIdCaptain;
           
           return {
             player: {
@@ -195,8 +301,11 @@ export async function fetchMatchLineups(matchId: string): Promise<LineupsRespons
           };
         }),
         substitutes: teamData.substitutes.map((item) => {
-          // 주장 정보 보존 확인 (교체 선수도 체크)
-          const isCaptain = item.player.captain === true;
+          // API에서 가져온 captain 정보와 찾은 captainId 둘 다 사용하여 명확히 처리
+          // captainId가 있으면 해당 ID와 일치하는 선수를 주장으로 설정
+          const apiCaptain = item.player.captain === true;
+          const isIdCaptain = captainId ? item.player.id === captainId : false;
+          const isCaptain = apiCaptain || isIdCaptain;
           
           return {
             player: {
@@ -218,8 +327,8 @@ export async function fetchMatchLineups(matchId: string): Promise<LineupsRespons
       };
     };
     
-    const enhancedHomeTeam = enhanceTeamLineup(homeTeamData);
-    const enhancedAwayTeam = enhanceTeamLineup(awayTeamData);
+    const enhancedHomeTeam = enhanceTeamLineup(homeTeamData, homeCaptainId);
+    const enhancedAwayTeam = enhanceTeamLineup(awayTeamData, awayCaptainId);
     
     return { 
       success: true,
@@ -231,7 +340,6 @@ export async function fetchMatchLineups(matchId: string): Promise<LineupsRespons
     };
 
   } catch (error) {
-    console.error('라인업 정보 가져오기 오류:', error);
     return { 
       success: false,
       response: null,

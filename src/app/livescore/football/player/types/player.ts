@@ -33,15 +33,37 @@ export interface LeagueInfo {
 }
 
 // 선수 통계 타입
-export interface StatisticsData {
-  team: TeamInfo;
-  league: LeagueInfo;
+export interface PlayerStatistic {
+  team: {
+    id: number;
+    name: string;
+    logo: string;
+  };
+  league: {
+    id: number;
+    name: string;
+    logo: string;
+    country: string;
+    flag?: string;
+    season: number;
+  };
   games: {
-    appearences?: number;
-    lineups?: number;
-    minutes?: number;
-    position?: string;
+    appearences: number;
+    lineups: number;
+    minutes: number;
+    number?: number;
+    position: string;
     rating?: string;
+    captain: boolean;
+  };
+  substitutes: {
+    in: number;
+    out: number;
+    bench: number;
+  };
+  shots: {
+    total?: number;
+    on?: number;
   };
   goals: {
     total?: number;
@@ -50,23 +72,11 @@ export interface StatisticsData {
     saves?: number;
     cleansheets?: number;
   };
-  shots: {
-    total?: number;
-    on?: number;
-  };
   passes: {
     total?: number;
     key?: number;
     accuracy?: string;
     cross?: number;
-  };
-  dribbles: {
-    attempts?: number;
-    success?: number;
-  };
-  duels: {
-    total?: number;
-    won?: number;
   };
   tackles: {
     total?: number;
@@ -74,15 +84,27 @@ export interface StatisticsData {
     interceptions?: number;
     clearances?: number;
   };
+  duels: {
+    total?: number;
+    won?: number;
+  };
+  dribbles: {
+    attempts?: number;
+    success?: number;
+    past?: number;
+  };
   fouls: {
     drawn?: number;
     committed?: number;
   };
   cards: {
-    yellow?: number;
-    red?: number;
+    yellow: number;
+    yellowred: number;
+    red: number;
   };
   penalty: {
+    won?: number;
+    commited?: number;
     scored?: number;
     missed?: number;
     saved?: number;
@@ -195,9 +217,8 @@ export interface RankingsData {
   topYellowCards?: PlayerRanking[];
 }
 
-// API 응답에서 오는 전체 선수 데이터
+// 선수 데이터 통합 타입
 export interface PlayerData {
   info: PlayerInfo;
-  statistics?: StatisticsData[];
-  stats?: StatisticsData[];
+  statistics: PlayerStatistic[];
 } 
