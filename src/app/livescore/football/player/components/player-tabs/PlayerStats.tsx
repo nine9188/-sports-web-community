@@ -1,16 +1,15 @@
 'use client';
 
-import { useState, useMemo, memo, useEffect, useCallback } from 'react';
+import { useState, useMemo, memo } from 'react';
 import Image from 'next/image';
-import { fetchPlayerStats, fetchPlayerSeasons } from '@/app/actions/livescore/player/stats';
 import { PlayerStatistic as ImportedPlayerStatistic } from '@/app/livescore/football/player/types/player';
+import { EmptyState } from '@/app/livescore/football/components/CommonComponents';
 
 // 컴포넌트 내에서 사용할 PlayerStatistic 타입 정의
 type PlayerStatistic = ImportedPlayerStatistic;
 
 interface PlayerStatsProps {
   statistics: PlayerStatistic[];
-  playerId: number;
   preloadedSeasons?: number[];
   preloadedStats?: PlayerStatistic[];
 }
@@ -57,7 +56,7 @@ const TeamLogo = memo(({ logo, name }: { logo: string; name: string }) => {
 
 TeamLogo.displayName = 'TeamLogo';
 
-// 현재 시즌 결정 함수
+// 현재 시즌 계산
 const getCurrentSeason = (): number => {
   const now = new Date();
   const year = now.getFullYear();
@@ -68,25 +67,38 @@ const getCurrentSeason = (): number => {
 
 export default function PlayerStats({ 
   statistics: initialStatistics, 
-  playerId,
-  preloadedSeasons,
-  preloadedStats
+  preloadedSeasons = [],
+  preloadedStats = []
 }: PlayerStatsProps) {
+  // 현재 시즌 계산
+  const currentSeason = useMemo(() => getCurrentSeason(), []);
+  
+  // 미래 시즌 필터링 (현재 + 1년까지만 허용)
+  const validSeasons = useMemo(() => {
+    return preloadedSeasons.filter(season => season <= currentSeason + 1);
+  }, [preloadedSeasons, currentSeason]);
+  
+  // 초기 선택 시즌은 currentSeason으로 설정하거나 가장 가까운 시즌 선택
+  const initialSeason = useMemo(() => {
+    if (validSeasons.length === 0) return currentSeason;
+    
+    // 현재 시즌이 있으면 현재 시즌 선택
+    if (validSeasons.includes(currentSeason)) return currentSeason;
+    
+    // 현재 시즌과 가장 가까운 시즌 선택 (내림차순 정렬되어 있으므로 첫 번째 요소가 가장 최신)
+    return validSeasons[0];
+  }, [validSeasons, currentSeason]);
+  
   const [selectedLeague, setSelectedLeague] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [seasons, setSeasons] = useState<number[]>(preloadedSeasons || []);
-  const [selectedSeason, setSelectedSeason] = useState<number>(0);
-  const [statistics, setStatistics] = useState<PlayerStatistic[]>(initialStatistics || []);
-  const [error, setError] = useState<string | null>(null);
-  const [loadedStats, setLoadedStats] = useState<Record<string, PlayerStatistic[]>>({});
+  const [selectedSeason, setSelectedSeason] = useState<number>(initialSeason);
   
   // 리그 목록 메모이제이션
   const leagues = useMemo(() => {
     // 빈 경우 처리
-    if (!statistics || statistics.length === 0) return [];
+    if (!initialStatistics || initialStatistics.length === 0) return [];
     
     // 중복 제거된 리그 목록
-    return [...new Map(statistics.map(stat => [
+    return [...new Map(initialStatistics.map(stat => [
       stat.league.id,
       {
         id: stat.league.id,
@@ -95,160 +107,28 @@ export default function PlayerStats({
         country: stat.league.country
       }
     ])).values()];
-  }, [statistics]);
+  }, [initialStatistics]);
+  
+  // 선택된 시즌의 통계 데이터
+  const seasonStats = useMemo(() => {
+    if (!selectedSeason) return initialStatistics;
+    
+    // preloadedStats에서 현재 선택된 시즌 데이터를 확인
+    const stats = preloadedStats.filter(stat => 
+      stat.league?.season === selectedSeason
+    );
+    
+    return stats;
+  }, [selectedSeason, preloadedStats, initialStatistics]);
   
   // 선택된 리그의 통계 데이터 메모이제이션
   const filteredStats = useMemo(() => {
-    if (!selectedLeague) return statistics;
-    return statistics.filter(stat => stat.league.id === selectedLeague);
-  }, [statistics, selectedLeague]);
-  
-  // 선수의 시즌 목록 가져오기
-  const getPlayerSeasons = useCallback(async () => {
-    try {
-      // 이미 시즌 데이터가 있으면 가져오지 않음
-      if (preloadedSeasons && preloadedSeasons.length > 0) {
-        console.log(`선수 ${playerId}의 시즌 데이터: 초기 데이터 사용 (${preloadedSeasons.length}개 시즌)`);
-        setSeasons(preloadedSeasons);
-        // 가장 최근 시즌 선택
-        setSelectedSeason(preloadedSeasons[0]);
-        return;
-      }
-      
-      setLoading(true);
-      setError(null);
-      
-      console.log(`선수 ${playerId}의 시즌 데이터 요청 시작`);
-      const startTime = Date.now();
-      
-      // 서버 액션 직접 호출
-      const data = await fetchPlayerSeasons(playerId);
-      
-      const endTime = Date.now();
-      const loadTime = (endTime - startTime) / 1000;
-      
-      if (data && data.length > 0) {
-        console.log(`선수 ${playerId}의 시즌 데이터 요청 완료: ${data.length}개 시즌, 소요시간: ${loadTime}초`);
-        setSeasons(data);
-        // 가장 최근 시즌 선택
-        setSelectedSeason(data[0]);
-      } else {
-        // 시즌 데이터가 없을 경우 현재 시즌 사용
-        const currentSeason = getCurrentSeason();
-        console.log(`선수 ${playerId}의 시즌 데이터가 없어 현재 시즌(${currentSeason}) 사용`);
-        setSeasons([currentSeason]);
-        setSelectedSeason(currentSeason);
-      }
-    } catch (err) {
-      console.error('시즌 데이터 로딩 오류:', err);
-      setError('시즌 정보를 불러오는데 실패했습니다.');
-      // 시즌 데이터 로드 실패 시 현재 시즌 사용
-      const currentSeason = getCurrentSeason();
-      setSeasons([currentSeason]);
-      setSelectedSeason(currentSeason);
-    } finally {
-      setLoading(false);
-    }
-  }, [playerId, preloadedSeasons]);
-  
-  // 특정 시즌의 통계 데이터 가져오기
-  const getStatistics = useCallback(async (season: number = 0) => {
-    try {
-      // season이 0이면 선택된 시즌 사용
-      const targetSeason = season || selectedSeason;
-      if (!targetSeason) return;
-      
-      // 이미 캐시된 데이터가 있으면 사용
-      const cacheKey = `${playerId}-${targetSeason}`;
-      if (loadedStats[cacheKey]) {
-        console.log(`선수 ${playerId}의 ${targetSeason} 시즌 통계: 캐시 데이터 사용`);
-        setStatistics(loadedStats[cacheKey]);
-        return;
-      }
-      
-      // 이미 통계 데이터가 있고 preloadedStats가 있으면 확인
-      if (preloadedStats && preloadedStats.length > 0) {
-        // preloadedStats에서 현재 선택된 시즌 데이터를 확인
-        const seasonStats = preloadedStats.filter(stat => 
-          stat.league?.season === targetSeason
-        );
-        
-        if (seasonStats.length > 0) {
-          console.log(`선수 ${playerId}의 ${targetSeason} 시즌 통계: 초기 데이터 사용 (${seasonStats.length}개 항목)`);
-          setStatistics(seasonStats);
-          
-          // 캐시에 데이터 저장
-          setLoadedStats(prev => ({
-            ...prev,
-            [cacheKey]: seasonStats
-          }));
-          return;
-        }
-      }
-      
-      setLoading(true);
-      setError(null);
-      
-      console.log(`선수 ${playerId}의 ${targetSeason} 시즌 통계 데이터 요청 시작`);
-      const startTime = Date.now();
-      
-      // 서버 액션 직접 호출
-      const data = await fetchPlayerStats(playerId, targetSeason);
-      
-      const endTime = Date.now();
-      const loadTime = (endTime - startTime) / 1000;
-      
-      if (data && data.length > 0) {
-        console.log(`선수 ${playerId}의 ${targetSeason} 시즌 통계 데이터 요청 완료: ${data.length}개 항목, 소요시간: ${loadTime}초`);
-        setStatistics(data);
-        
-        // 캐시에 데이터 저장
-        setLoadedStats(prev => ({
-          ...prev,
-          [cacheKey]: data
-        }));
-      } else {
-        console.log(`선수 ${playerId}의 ${targetSeason} 시즌 통계 데이터 없음`);
-        setStatistics([]);
-        if (targetSeason === getCurrentSeason()) {
-          setError(`${targetSeason} 시즌 통계 정보가 아직 없습니다.`);
-        } else {
-          setError(`${targetSeason} 시즌 통계 정보를 찾을 수 없습니다.`);
-        }
-      }
-    } catch (err) {
-      console.error('통계 데이터 로딩 오류:', err);
-      setError('통계 정보를 불러오는데 실패했습니다.');
-      setStatistics([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [playerId, selectedSeason, preloadedStats, loadedStats]);
-  
-  // 컴포넌트 마운트 시 시즌 목록 가져오기
-  useEffect(() => {
-    getPlayerSeasons();
-  }, [getPlayerSeasons]);
-  
-  // 선택된 시즌이 변경되면 해당 시즌의 통계 가져오기
-  useEffect(() => {
-    if (selectedSeason) {
-      getStatistics(selectedSeason);
-    }
-  }, [selectedSeason, getStatistics]);
-  
-  // 로딩 중 표시
-  if (loading) {
-    return null;
-  }
-  
-  // 에러 표시
-  if (error) {
-    return null;
-  }
+    if (!selectedLeague) return seasonStats;
+    return seasonStats.filter(stat => stat.league.id === selectedLeague);
+  }, [seasonStats, selectedLeague]);
   
   // 데이터가 없는 경우
-  if (!statistics || statistics.length === 0) {
+  if (!initialStatistics || initialStatistics.length === 0) {
     return (
       <div className="mb-4 bg-white rounded-lg border overflow-hidden p-4">
         <div className="text-center py-4">
@@ -265,7 +145,7 @@ export default function PlayerStats({
                 onChange={(e) => setSelectedSeason(Number(e.target.value))}
               >
                 <option value="">시즌 선택</option>
-                {seasons.map((season) => (
+                {validSeasons.map((season) => (
                   <option key={season} value={season}>
                     {season}/{season + 1}
                   </option>
@@ -273,9 +153,45 @@ export default function PlayerStats({
               </select>
             </div>
           </div>
-          <p className="text-gray-500">
-            {selectedSeason ? `${selectedSeason}/${selectedSeason + 1} 시즌 통계 데이터가 없습니다.` : '통계 데이터가 없습니다.'}
-          </p>
+          <EmptyState 
+            title="통계 데이터가 없습니다" 
+            message={selectedSeason ? `${selectedSeason}/${selectedSeason + 1} 시즌 통계 데이터가 없습니다.` : '통계 데이터가 없습니다.'} 
+          />
+        </div>
+      </div>
+    );
+  }
+  
+  // 선택된 시즌에 데이터가 없는 경우
+  if (selectedSeason && filteredStats.length === 0) {
+    return (
+      <div className="mb-4 bg-white rounded-lg border overflow-hidden p-4">
+        <div className="text-center py-4">
+          <div className="mb-4">
+            {/* 시즌 선택 드롭다운 */}
+            <div className="max-w-xs mx-auto">
+              <label htmlFor="season-select" className="block text-sm font-medium text-gray-700 mb-1">
+                시즌 선택
+              </label>
+              <select
+                id="season-select"
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                value={selectedSeason || ''}
+                onChange={(e) => setSelectedSeason(Number(e.target.value))}
+              >
+                <option value="">시즌 선택</option>
+                {validSeasons.map((season) => (
+                  <option key={season} value={season}>
+                    {season}/{season + 1}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <EmptyState 
+            title="통계 데이터가 없습니다" 
+            message={`${selectedSeason}/${selectedSeason + 1} 시즌 통계 데이터가 없습니다.`} 
+          />
         </div>
       </div>
     );
@@ -299,7 +215,7 @@ export default function PlayerStats({
                 onChange={(e) => setSelectedSeason(Number(e.target.value))}
               >
                 <option value="">시즌 선택</option>
-                {seasons.map((season) => (
+                {validSeasons.map((season) => (
                   <option key={season} value={season}>
                     {season}/{season + 1}
                   </option>

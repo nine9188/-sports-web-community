@@ -4,6 +4,9 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { LoadingState, ErrorState, EmptyState } from '@/app/livescore/football/components/CommonComponents';
+import { Match } from '@/app/actions/livescore/teams/matches';
+import React from 'react';
 
 // Goal 관련 인터페이스 추가
 interface GoalStats {
@@ -37,8 +40,38 @@ interface CleanSheetInfo {
   total: number;
 }
 
+// standings를 위한 인터페이스
+interface StandingDisplay {
+  league: {
+    id: number;
+    name: string;
+    logo: string;
+  };
+  standings: Array<{
+    rank: number;
+    team: {
+      id: number;
+      name: string;
+      logo: string;
+    };
+    all: {
+      played: number;
+      win: number;
+      draw: number;
+      lose: number;
+      goals: {
+        for: number;
+        against: number;
+      };
+    };
+    goalsDiff: number;
+    points: number;
+    form: string;
+  }>;
+}
+
 interface OverviewProps {
-  team: {
+  team?: {
     team: {
       id: number;
       name: string;
@@ -52,7 +85,7 @@ interface OverviewProps {
       image: string;
     };
   };
-  stats: {
+  stats?: {
     league?: LeagueInfo;
     fixtures?: FixturesInfo;
     goals?: {
@@ -62,77 +95,73 @@ interface OverviewProps {
     clean_sheet?: CleanSheetInfo;
     form?: string;
   };
-  matches: Array<{
-    fixture: {
-      id: number;
-      date: string;
-      status: { short: string };
-    };
-    league: {
-      name: string;
-      logo: string;
-    };
-    teams: {
-      home: {
-        id: number;
-        name: string;
-        logo: string;
-        winner: boolean | null;
-      };
-      away: {
-        id: number;
-        name: string;
-        logo: string;
-        winner: boolean | null;
-      };
-    };
-    goals: {
-      home: number | null;
-      away: number | null;
-    };
-  }>;
-  standings: Array<{
-    league: {
-      id: number;
-      name: string;
-      logo: string;
-    };
-    standings: Array<{
-      rank: number;
-      team: {
-        id: number;
-        name: string;
-        logo: string;
-      };
-      all: {
-        played: number;
-        win: number;
-        draw: number;
-        lose: number;
-        goals: {
-          for: number;
-          against: number;
-        };
-      };
-      goalsDiff: number;
-      points: number;
-      form: string;
-    }>;
-  }>;
+  matches?: Match[];
+  standings?: StandingDisplay[];
   onTabChange?: (tab: string) => void;
-  teamId?: number;
+  teamId: number;
+  isLoading?: boolean;
+  error?: string | null;
 }
 
-export default function Overview({ team, stats, matches, standings, onTabChange, teamId }: OverviewProps) {
+export default function Overview({ 
+  team, 
+  stats, 
+  matches, 
+  standings, 
+  onTabChange, 
+  teamId, 
+  isLoading, 
+  error 
+}: OverviewProps) {
   const router = useRouter();
+  
+  // 안전한 상태 객체 정의 (undefined 방지)
+  const safeStats = stats || {};
+  const safeLeague: LeagueInfo = safeStats.league || {
+    name: '',
+    country: '',
+    logo: '',
+    season: 0
+  };
+  const safeFixtures: FixturesInfo = safeStats.fixtures || {
+    wins: { total: 0 },
+    draws: { total: 0 },
+    loses: { total: 0 }
+  };
+  const safeGoals = safeStats.goals || {
+    for: {
+      total: { home: 0, away: 0, total: 0 },
+      average: { home: '0', away: '0', total: '0' },
+      minute: {}
+    },
+    against: {
+      total: { home: 0, away: 0, total: 0 },
+      average: { home: '0', away: '0', total: '0' },
+      minute: {}
+    }
+  };
+  const safeCleanSheet: CleanSheetInfo = safeStats.clean_sheet || { total: 0 };
+
+  // 탭 변경 핸들러 (메모이제이션으로 불필요한 렌더링 방지)
+  const handleTabChange = React.useCallback((tab: string) => {
+    if (onTabChange) {
+      onTabChange(tab);
+    }
+  }, [onTabChange]);
+  
+  // 로딩 상태 처리
+  if (isLoading) {
+    return <LoadingState message="팀 개요 데이터를 불러오는 중..." />;
+  }
+
+  // 에러 상태 처리
+  if (error) {
+    return <ErrorState message={error || ''} />;
+  }
 
   // 데이터가 없는 경우 처리
   if (!team || !team.team) {
-    return (
-      <div className="p-4 bg-gray-50 rounded-lg text-center">
-        <p className="text-gray-500">팀 정보를 불러오는 중입니다...</p>
-      </div>
-    );
+    return <EmptyState title="팀 정보가 없습니다" message="현재 이 팀에 대한 정보를 제공할 수 없습니다." />;
   }
 
   // 경기 필터링 로직
@@ -182,14 +211,19 @@ export default function Overview({ team, stats, matches, standings, onTabChange,
   const findTeamStanding = () => {
     if (!standings || !Array.isArray(standings) || standings.length === 0) return null;
     
-    // 첫 번째 리그의 순위 정보 사용 (일반적으로 메인 리그)
-    const mainLeague = standings[0];
-    if (!mainLeague || !mainLeague.standings || !Array.isArray(mainLeague.standings)) return null;
+    // 모든 리그의 순위 정보를 검색
+    for (const league of standings) {
+      if (!league || !league.standings || !Array.isArray(league.standings)) continue;
+      
+      // 팀 ID로 순위 정보 찾기
+      const teamStanding = league.standings.find(standing => 
+        standing && standing.team && standing.team.id === teamId
+      );
+      
+      if (teamStanding) return teamStanding;
+    }
     
-    // 팀 ID로 순위 정보 찾기 - teamId prop 사용
-    return mainLeague.standings.find(standing => 
-      standing && standing.team && standing.team.id === teamId
-    );
+    return null;
   };
   
   const currentTeamStanding = findTeamStanding();
@@ -198,8 +232,23 @@ export default function Overview({ team, stats, matches, standings, onTabChange,
   const getDisplayStandings = () => {
     if (!standings || !Array.isArray(standings) || standings.length === 0) return [];
     
-    // 첫 번째 리그의 순위 정보 사용
-    const mainLeague = standings[0];
+    // 팀이 포함된 리그 찾기
+    let targetLeague = null;
+    for (const league of standings) {
+      if (!league || !league.standings || !Array.isArray(league.standings)) continue;
+      
+      const hasTeam = league.standings.some(standing => 
+        standing && standing.team && standing.team.id === teamId
+      );
+      
+      if (hasTeam) {
+        targetLeague = league;
+        break;
+      }
+    }
+    
+    // 팀이 속한 리그가 없으면 첫 번째 리그 사용
+    const mainLeague = targetLeague || standings[0];
     if (!mainLeague || !mainLeague.standings || !Array.isArray(mainLeague.standings)) return [];
     
     const allStandings = mainLeague.standings;
@@ -226,7 +275,7 @@ export default function Overview({ team, stats, matches, standings, onTabChange,
 
   // 팀 페이지로 이동하는 함수 추가
   const handleTeamClick = (teamId: number) => {
-    router.push(`/livescore/football/team/${teamId}/overview`);
+    router.push(`/livescore/football/team/${teamId}`);
   };
 
   // 공통 스타일
@@ -237,7 +286,7 @@ export default function Overview({ team, stats, matches, standings, onTabChange,
   const FormDisplay = ({ form }: { form: string }) => {
     return (
       <div className="flex gap-1">
-        {form.split('').map((result, index) => {
+        {form.split('').reverse().map((result: string, index: number) => {
           let bgColor = '';
           let textColor = '';
           
@@ -285,16 +334,6 @@ export default function Overview({ team, stats, matches, standings, onTabChange,
 
   const leagueInfo = getLeagueInfo();
 
-  // 안전하게 stats 객체 접근
-  const safeStats = stats || {};
-  const safeLeague = safeStats.league || { name: '', country: '', logo: '', season: 0 };
-  const safeFixtures = safeStats.fixtures || { wins: { total: 0 }, draws: { total: 0 }, loses: { total: 0 } };
-  const safeGoals = safeStats.goals || { 
-    for: { total: { home: 0, away: 0, total: 0 } }, 
-    against: { total: { home: 0, away: 0, total: 0 } } 
-  };
-  const safeCleanSheet = safeStats.clean_sheet || { total: 0 };
-
   // 득점 및 실점 데이터 안전하게 접근하는 함수 추가
   const getSafeGoalValue = (goalObj: GoalStats, type: string): number => {
     if (!goalObj || !goalObj.total) return 0;
@@ -324,7 +363,7 @@ export default function Overview({ team, stats, matches, standings, onTabChange,
         <div className="grid grid-cols-2 md:grid-cols-4">
           {/* 리그 정보 카드 */}
           <div className="col-span-2 md:col-span-1 border-b md:border-b-0 md:border-r border-gray-200">
-            <h4 className="text-base font-semibold p-2 border-b border-gray-100">리그 정보</h4>
+            <h4 className="text-sm font-medium p-2 border-b border-gray-100">리그 정보</h4>
             <div className="flex items-center p-2">
               <div className="w-6 h-6 relative flex-shrink-0 mr-3">
                 {safeLeague.logo && (
@@ -347,7 +386,7 @@ export default function Overview({ team, stats, matches, standings, onTabChange,
 
           {/* 시즌 통계 카드 */}
           <div className="border-b border-r md:border-b-0 md:border-r border-gray-200">
-            <h4 className="text-base font-semibold p-2 border-b border-gray-100">시즌 통계</h4>
+            <h4 className="text-sm font-medium p-2 border-b border-gray-100">시즌 통계</h4>
             <div className="grid grid-cols-3 p-2 text-center">
               <div>
                 <p className="text-base font-bold">{safeFixtures.wins.total || 0}</p>
@@ -366,7 +405,7 @@ export default function Overview({ team, stats, matches, standings, onTabChange,
 
           {/* 득실 통계 카드 */}
           <div className="border-b md:border-b-0 md:border-r border-gray-200">
-            <h4 className="text-base font-semibold p-2 border-b border-gray-100">득실 통계</h4>
+            <h4 className="text-sm font-medium p-2 border-b border-gray-100">득실 통계</h4>
             <div className="grid grid-cols-3 p-2 text-center">
               <div>
                 <p className="text-base font-bold">
@@ -389,7 +428,7 @@ export default function Overview({ team, stats, matches, standings, onTabChange,
 
           {/* 최근 5경기 카드 */}
           <div className="col-span-2 md:col-span-1">
-            <h4 className="text-base font-semibold p-2 border-b border-gray-100">최근 5경기</h4>
+            <h4 className="text-sm font-medium p-2 border-b border-gray-100">최근 5경기</h4>
             <div className="p-2 flex items-center justify-center">
               {safeStats.form ? (
                 (() => {
@@ -442,7 +481,7 @@ export default function Overview({ team, stats, matches, standings, onTabChange,
 
         {/* 자세한 통계 보기 버튼 */}
         <button 
-          onClick={() => onTabChange?.('stats')}
+          onClick={() => handleTabChange('stats')}
           className="w-full p-2 text-blue-600 hover:text-blue-800 transition-colors border-t border-gray-200"
         >
           <div className="flex items-center justify-center gap-1">
@@ -479,7 +518,7 @@ export default function Overview({ team, stats, matches, standings, onTabChange,
                 />
               )}
             </div>
-            <h4 className="text-base font-semibold">{leagueInfo.name || safeLeague.name || '리그 순위'}</h4>
+            <h4 className="text-sm font-medium">{leagueInfo.name || safeLeague.name || '리그 순위'}</h4>
           </div>
           <div className="overflow-hidden">
             <table className="w-full">
@@ -547,7 +586,7 @@ export default function Overview({ team, stats, matches, standings, onTabChange,
           
           {/* 전체 순위 보기 버튼 */}
           <button 
-            onClick={() => onTabChange?.('standings')}
+            onClick={() => handleTabChange('standings')}
             className="w-full p-2 text-blue-600 hover:text-blue-800 transition-colors border-t border-gray-200"
           >
             <div className="flex items-center justify-center gap-1">
@@ -575,7 +614,7 @@ export default function Overview({ team, stats, matches, standings, onTabChange,
         <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
           {/* 최근 경기 결과 */}
           <div>
-            <h4 className="text-base font-semibold p-2 border-b border-gray-200">최근 경기</h4>
+            <h4 className="text-sm font-medium p-2 border-b border-gray-200">최근 경기</h4>
             <div className="overflow-hidden">
               <table className="w-full">
                 <thead className="bg-gray-50">
@@ -672,7 +711,7 @@ export default function Overview({ team, stats, matches, standings, onTabChange,
 
           {/* 예정된 경기 */}
           <div>
-            <h4 className="text-base font-semibold p-2 border-b border-gray-200">예정된 경기</h4>
+            <h4 className="text-sm font-medium p-2 border-b border-gray-200">예정된 경기</h4>
             <div className="overflow-hidden">
               <table className="w-full">
                 <thead className="bg-gray-50">

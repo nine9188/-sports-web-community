@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useEffect, Fragment, useCallback } from 'react';
+import { useState, useEffect, Fragment, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import Formation from './lineups/Formation';
-import { fetchMatchLineups, TeamLineup } from '@/app/actions/livescore/matches/lineups';
-import { fetchMatchEvents } from '@/app/actions/livescore/matches/events';
-import { PlayerStats, fetchMultiplePlayerStats } from '@/app/actions/livescore/matches/playerStats';
+import { TeamLineup } from '@/app/actions/livescore/matches/lineups';
 import { getTeamById } from '@/app/constants';
+import { LoadingState, ErrorState, EmptyState } from '@/app/livescore/football/components/CommonComponents';
 // 아이콘 라이브러리 import 추가
 import { FaFutbol, FaShoePrints } from 'react-icons/fa';
 import { BsCardText, BsCardHeading } from 'react-icons/bs';
@@ -16,6 +15,7 @@ import { liverpoolPlayers, NottinghamForestPlayers, Arsenalplayers, NewcastleUni
 import { MatchEvent } from '../../types';
 // 독립된 모달 컴포넌트 임포트
 import PlayerStatsModal from './lineups/components/PlayerStatsModal';
+import { PlayerStats, fetchCachedMultiplePlayerStats, MultiplePlayerStatsResponse } from '@/app/actions/livescore/matches/playerStats';
 
 // TeamMapping 타입 정의 추가
 interface TeamMapping {
@@ -38,6 +38,26 @@ interface Player {
 
 interface LineupsProps {
   matchId: string;
+  matchData?: {
+    lineups?: {
+      response: {
+        home: TeamLineup;
+        away: TeamLineup;
+      } | null;
+    };
+    events?: MatchEvent[];
+    homeTeam?: {
+      id: number;
+      name: string;
+      logo: string;
+    };
+    awayTeam?: {
+      id: number;
+      name: string;
+      logo: string;
+    };
+    playersStats?: Record<number, { response: PlayerStats[] }>;
+  };
 }
 
 // 선수 데이터 타입 정의
@@ -86,19 +106,29 @@ const getPlayerKoreanName = (playerId: number): string | null => {
 const PlayerEvents = ({ player, events }: { player: Player; events: MatchEvent[] }) => {
   if (!events || events.length === 0) return null;
   
-  // 해당 선수의 이벤트 필터링
-  const playerEvents = events.filter(event => 
-    event.player?.id === player.id || 
-    event.assist?.id === player.id
-  );
+  // 해당 선수의 이벤트 필터링 - 더 정확한 필터링
+  const playerEvents = events.filter(event => {
+    // ID가 없는 경우 필터링에서 제외
+    if (!event?.player?.id && !event?.assist?.id) return false;
+    
+    // 교체 이벤트의 경우 특별 처리
+    if (event.type === 'subst' || event.type === 'Substitution') {
+      return event.player?.id === player.id || event.assist?.id === player.id;
+    }
+    
+    // 일반 이벤트의 경우 기본 처리
+    return event.player?.id === player.id || event.assist?.id === player.id;
+  });
   
   if (playerEvents.length === 0) return null;
   
   return (
     <div className="inline-flex flex-wrap gap-1 ml-1">
       {playerEvents.map((event, index) => {
+        if (!event) return null;
+        
         // 이벤트 시간 포맷팅
-        const timeStr = `${event.time.elapsed}'${event.time.extra ? '+' + event.time.extra : ''}`;
+        const timeStr = `${event.time.elapsed || '0'}'${event.time.extra ? '+' + event.time.extra : ''}`;
         
         // 이벤트 타입에 따른 아이콘 및 텍스트 렌더링
         if (event.type === 'Goal') {
@@ -106,7 +136,7 @@ const PlayerEvents = ({ player, events }: { player: Player; events: MatchEvent[]
           if (event.player?.id === player.id) {
             // 골
             return (
-              <span key={index} className="inline-flex items-center text-xs bg-green-100 text-green-800 rounded px-1">
+              <span key={`goal-${index}`} className="inline-flex items-center text-xs bg-green-100 text-green-800 rounded px-1">
                 <FaFutbol className="text-green-600 mr-0.5" />
                 {timeStr}
               </span>
@@ -114,46 +144,73 @@ const PlayerEvents = ({ player, events }: { player: Player; events: MatchEvent[]
           } else if (event.assist?.id === player.id) {
             // 어시스트
             return (
-              <span key={index} className="inline-flex items-center text-xs bg-blue-100 text-blue-800 rounded px-1">
+              <span key={`assist-${index}`} className="inline-flex items-center text-xs bg-blue-100 text-blue-800 rounded px-1">
                 <FaShoePrints className="text-blue-600 mr-0.5" />
                 {timeStr}
               </span>
             );
           }
         } else if (event.type === 'Card') {
-          if (event.detail === 'Yellow Card') {
-            // 옐로카드
-            return (
-              <span key={index} className="inline-flex items-center text-xs bg-yellow-100 text-yellow-800 rounded px-1">
-                <BsCardText className="text-yellow-500 mr-0.5" />
-                {timeStr}
-              </span>
-            );
-          } else {
-            // 레드카드
-            return (
-              <span key={index} className="inline-flex items-center text-xs bg-red-100 text-red-800 rounded px-1">
-                <BsCardHeading className="text-red-600 mr-0.5" />
-                {timeStr}
-              </span>
-            );
+          if (event.player?.id === player.id) {
+            if (event.detail === 'Yellow Card') {
+              // 옐로카드
+              return (
+                <span key={`yellow-${index}`} className="inline-flex items-center text-xs bg-yellow-100 text-yellow-800 rounded px-1">
+                  <BsCardText className="text-yellow-500 mr-0.5" />
+                  {timeStr}
+                </span>
+              );
+            } else if (event.detail === 'Red Card') {
+              // 레드카드
+              return (
+                <span key={`red-${index}`} className="inline-flex items-center text-xs bg-red-100 text-red-800 rounded px-1">
+                  <BsCardHeading className="text-red-600 mr-0.5" />
+                  {timeStr}
+                </span>
+              );
+            }
           }
-        } else if (event.type === 'subst') {
-          // 교체 - player는 들어오는 선수(IN), assist는 나가는 선수(OUT)
-          // 이벤트 데이터 상의 assist는 나가는 선수이므로 assist.id와 player.id 비교 수정
-          const isIn = event.assist?.id === player.id;  // 현재 선수가 들어온 선수
-          const isOut = event.player?.id === player.id; // 현재 선수가 나간 선수
+        } else if (event.type === 'subst' || event.type === 'Substitution') {
+          // 교체 정보 매핑 수정 - API 응답에 따라 다른 구조일 수 있음
+          let isIn = false;
+          let isOut = false;
+          
+          // 선수가 나가는 경우 (API에 따라 player가 out 또는 assist가 out일 수 있음)
+          if (event.player?.id === player.id && (event.detail === 'Substitution Out' || event.detail?.includes('Out'))) {
+            isOut = true;
+          } else if (event.assist?.id === player.id && (event.detail === 'Substitution Out' || event.detail?.includes('Out'))) {
+            isOut = true;
+          }
+          
+          // 선수가 들어오는 경우 (API에 따라 player가 in 또는 assist가 in일 수 있음)
+          if (event.player?.id === player.id && (event.detail === 'Substitution In' || event.detail?.includes('In'))) {
+            isIn = true;
+          } else if (event.assist?.id === player.id && (event.detail === 'Substitution In' || event.detail?.includes('In'))) {
+            isIn = true;
+          }
+          
+          // 이전 로직 백업 (일부 API는 다른 구조 사용)
+          if (!isIn && !isOut) {
+            // player가 교체 투입, assist가 교체 아웃 선수인 경우
+            if (event.detail === 'Substitution' || event.detail?.includes('Substitution')) {
+              if (event.player?.id === player.id) {
+                isOut = true;
+              } else if (event.assist?.id === player.id) {
+                isIn = true;
+              }
+            }
+          }
           
           if (isIn) {
             return (
-              <span key={index} className="inline-flex items-center text-xs bg-green-100 text-green-800 rounded px-1">
+              <span key={`in-${index}`} className="inline-flex items-center text-xs bg-green-100 text-green-800 rounded px-1">
                 <IoMdSwap className="text-green-600 mr-0.5" />
                 IN {timeStr}
               </span>
             );
           } else if (isOut) {
             return (
-              <span key={index} className="inline-flex items-center text-xs bg-red-100 text-red-800 rounded px-1">
+              <span key={`out-${index}`} className="inline-flex items-center text-xs bg-red-100 text-red-800 rounded px-1">
                 <IoMdSwap className="text-red-600 mr-0.5 rotate-180" />
                 OUT {timeStr}
               </span>
@@ -203,87 +260,14 @@ const PlayerImage = ({ src, alt, className = "" }: { src: string | undefined; al
   );
 };
 
-// 데이터 변환 함수 수정
-const transformLineupData = (lineup: TeamLineup): TeamLineup => {
-  if (!lineup) return lineup;
-  
-  const transformed = {
-    ...lineup,
-    startXI: lineup.startXI?.map((item) => {
-      // API 응답에 따라 player가 직접 제공되거나 중첩 구조로 제공될 수 있음
-      const playerData = 'player' in item ? item.player : item;
-      
-      // 캡틴 정보가 undefined나 null이 아닌 명확한 boolean 값으로 설정
-      // true 값이 아닐 경우 명시적으로 false 반환
-      const isCaptain = playerData.captain === true;
-      
-      return {
-        player: {
-          id: playerData.id,
-          name: playerData.name,
-          number: playerData.number,
-          pos: playerData.pos,
-          grid: playerData.grid || '',
-          captain: isCaptain,
-          photo: playerData.photo
-        }
-      };
-    }) || [],
-    substitutes: lineup.substitutes?.map((item) => {
-      // API 응답에 따라 player가 직접 제공되거나 중첩 구조로 제공될 수 있음
-      const playerData = 'player' in item ? item.player : item;
-      
-      // captain 정보가 undefined나 null이 아닌 명확한 boolean 값으로 설정
-      const isCaptain = playerData.captain === true;
-      
-      return {
-        player: {
-          id: playerData.id,
-          name: playerData.name,
-          number: playerData.number,
-          pos: playerData.pos,
-          grid: playerData.grid || '',
-          captain: isCaptain,
-          photo: playerData.photo
-        }
-      };
-    }) || []
-  };
-  
-  return transformed;
-};
-
-export default function Lineups({ matchId }: LineupsProps) {
+export default function Lineups({ matchId, matchData }: LineupsProps) {
   // 모든 useState Hook 선언
-  const [matchData, setMatchData] = useState<{
-    matchId?: string;
-    homeTeam: {
-      id: number;
-      name: string;
-      logo: string;
-    };
-    awayTeam: {
-      id: number;
-      name: string;
-      logo: string;
-    };
-    lineups: {
-      response: {
-        home: TeamLineup;
-        away: TeamLineup;
-      } | null;
-    };
-    events?: MatchEvent[];
-    playersStats?: Record<number, { response: PlayerStats[] }>;
-  }>({
-    homeTeam: { id: 0, name: '', logo: '' },
-    awayTeam: { id: 0, name: '', logo: '' },
-    lineups: { response: null }
-  });
-  const [loading, setLoading] = useState(true);
-  const [lineups, setLineups] = useState<{home: TeamLineup; away: TeamLineup} | null>(null);
-  const [events, setEvents] = useState<MatchEvent[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(!matchData?.lineups);
+  const [lineups, setLineups] = useState<{home: TeamLineup; away: TeamLineup} | null>(
+    matchData?.lineups?.response || null
+  );
+  const [events, setEvents] = useState<MatchEvent[]>(matchData?.events || []);
+  const [error] = useState<string | null>(null);
   const [teamCache, setTeamCache] = useState<Record<number, TeamMapping>>({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<{
@@ -296,6 +280,21 @@ export default function Lineups({ matchId }: LineupsProps) {
       name: string;
     };
   } | null>(null);
+  const [playersStatsData, setPlayersStatsData] = useState<MultiplePlayerStatsResponse>(
+    matchData?.playersStats || {}
+  );
+  
+  // 데이터 로드 여부를 추적하는 ref - 불필요한 재요청 방지
+  const dataLoadedRef = useRef<{
+    lineups: boolean;
+    stats: boolean;
+  }>({
+    lineups: !!matchData?.lineups?.response,
+    stats: !!matchData?.playersStats && Object.keys(matchData.playersStats).length > 0
+  });
+
+  // matchID 변경 추적을 위한 ref 추가
+  const prevMatchIdRef = useRef<string | null>(null);
 
   // 포메이션 데이터를 가공하는 함수 (리렌더링 방지를 위해 useCallback 사용)
   const prepareFormationData = useCallback((teamLineup: TeamLineup) => {
@@ -335,100 +334,169 @@ export default function Lineups({ matchId }: LineupsProps) {
     };
   }, []);
 
-  // 매치 데이터 로드 useEffect
-  useEffect(() => {
-    const fetchMatchDataAndLineups = async () => {
-      if (!matchId) return;
+  // 라인업 데이터에서 모든 선수 ID를 추출하는 함수
+  const extractPlayerIds = useCallback((homeLineup: TeamLineup | null, awayLineup: TeamLineup | null) => {
+    const playerIds: number[] = [];
+    
+    if (homeLineup) {
+      // 출전 선수들
+      if (homeLineup.startXI) {
+        homeLineup.startXI.forEach(player => {
+          if (player.player?.id) {
+            playerIds.push(player.player.id);
+          }
+        });
+      }
       
-      setLoading(true);
+      // 교체 선수들
+      if (homeLineup.substitutes) {
+        homeLineup.substitutes.forEach(player => {
+          if (player.player?.id) {
+            playerIds.push(player.player.id);
+          }
+        });
+      }
+    }
+    
+    if (awayLineup) {
+      // 출전 선수들
+      if (awayLineup.startXI) {
+        awayLineup.startXI.forEach(player => {
+          if (player.player?.id) {
+            playerIds.push(player.player.id);
+          }
+        });
+      }
+      
+      // 교체 선수들
+      if (awayLineup.substitutes) {
+        awayLineup.substitutes.forEach(player => {
+          if (player.player?.id) {
+            playerIds.push(player.player.id);
+          }
+        });
+      }
+    }
+    
+    return playerIds;
+  }, []);
+  
+  // 선수 통계 데이터 로드
+  useEffect(() => {
+    const loadPlayersStats = async () => {
+      // 이미 통계 데이터가 로드되었으면 스킵
+      if (dataLoadedRef.current.stats || !lineups || !matchId) return;
+      
+      // 캐시 키 생성 (경기 ID 기반)
+      const cacheKey = `match-${matchId}-players-stats`;
+      
+      // 세션 스토리지에서 캐시된 데이터 확인
       try {
-        // 라인업 데이터 가져오기
-        const lineupsData = await fetchMatchLineups(matchId);
+        const cachedData = sessionStorage.getItem(cacheKey);
         
-        // 이벤트 데이터 가져오기
-        const eventsData = await fetchMatchEvents(matchId);
-        
-        if (lineupsData.success && lineupsData.response) {
-          // 홈팀과 원정팀 정보 추출
-          const homeTeam = {
-            id: lineupsData.response.home.team.id,
-            name: lineupsData.response.home.team.name,
-            logo: lineupsData.response.home.team.logo
-          };
-          
-          const awayTeam = {
-            id: lineupsData.response.away.team.id,
-            name: lineupsData.response.away.team.name,
-            logo: lineupsData.response.away.team.logo
-          };
-          
-          // 데이터 변환 로직
-          const transformedHomeLineup = transformLineupData(lineupsData.response.home);
-          const transformedAwayLineup = transformLineupData(lineupsData.response.away);
-          
-          // 선수 ID 목록 생성 (통계 데이터 요청용)
-          const allPlayerIds: number[] = [];
-          
-          // 홈팀 선수 ID 추가
-          transformedHomeLineup.startXI?.forEach(player => allPlayerIds.push(player.player.id));
-          transformedHomeLineup.substitutes?.forEach(player => allPlayerIds.push(player.player.id));
-          
-          // 원정팀 선수 ID 추가
-          transformedAwayLineup.startXI?.forEach(player => allPlayerIds.push(player.player.id));
-          transformedAwayLineup.substitutes?.forEach(player => allPlayerIds.push(player.player.id));
-          
-          // 선수 통계 데이터 가져오기
-          let playersStatsData = {};
-          if (allPlayerIds.length > 0) {
-            try {
-              playersStatsData = await fetchMultiplePlayerStats(matchId, allPlayerIds);
-            } catch {
-              // 에러 발생 시 조용히 처리
-            }
-          }
-          
-          // 단일 상태 업데이트로 통합 - 불필요한 리렌더링 방지
-          setMatchData({
-            matchId,
-            homeTeam,
-            awayTeam,
-            lineups: { 
-              response: {
-                home: transformedHomeLineup,
-                away: transformedAwayLineup
-              }
-            },
-            events: eventsData.status === 'success' ? eventsData.events : [],
-            playersStats: playersStatsData
-          });
-          
-          // 라인업과 이벤트 데이터 설정 (추가 정보 제공)
-          setLineups({
-            home: transformedHomeLineup,
-            away: transformedAwayLineup
-          });
-          
-          if (eventsData.status === 'success') {
-            setEvents(eventsData.events);
-          }
-        } else {
-          // 데이터 없음 처리
-          setError('라인업 정보를 가져올 수 없습니다.');
+        if (cachedData) {
+          const parsedData = JSON.parse(cachedData);
+          setPlayersStatsData(parsedData);
+          dataLoadedRef.current.stats = true;
+          return;
         }
-      } catch {
-        setError('데이터 로딩 중 오류가 발생했습니다.');
-      } finally {
-        setLoading(false);
+      } catch (error) {
+        // 캐시 파싱 오류 무시하고 계속 진행
+        console.error('캐시 데이터 파싱 오류:', error);
+      }
+      
+      // 이미 충분한 통계 데이터가 있는지 확인
+      const playerIds = extractPlayerIds(lineups.home, lineups.away);
+      if (playerIds.length === 0) return;
+
+      const existingStatsCount = Object.keys(playersStatsData || {}).length;
+      if (existingStatsCount >= playerIds.length) {
+        dataLoadedRef.current.stats = true;
+        return;
+      }
+      
+      try {
+        // 아직 로드되지 않은 선수 ID만 필터링
+        const missingPlayerIds = playerIds.filter(id => 
+          !playersStatsData || !playersStatsData[id]
+        );
+        
+        if (missingPlayerIds.length === 0) {
+          dataLoadedRef.current.stats = true;
+          return;
+        }
+        
+        const stats = await fetchCachedMultiplePlayerStats(matchId, missingPlayerIds);
+        
+        // 새 데이터와 기존 데이터 병합
+        const mergedStats = {
+          ...playersStatsData,
+          ...stats
+        };
+        
+        setPlayersStatsData(mergedStats);
+        dataLoadedRef.current.stats = true;
+        
+        // 세션 스토리지에 데이터 캐싱
+        try {
+          sessionStorage.setItem(cacheKey, JSON.stringify(mergedStats));
+        } catch (err) {
+          // 스토리지 용량 초과 등의 오류 무시
+          console.error('세션 스토리지 캐싱 오류:', err);
+        }
+      } catch (error) {
+        // 오류 시 처리
+        console.error('선수 통계 로드 오류:', error);
       }
     };
     
-    fetchMatchDataAndLineups();
-  }, [matchId]);
+    loadPlayersStats();
+  }, [matchId, lineups, extractPlayerIds, playersStatsData]);
+
+  // matchData prop이 변경될 때 상태 업데이트
+  useEffect(() => {
+    // 이미 로드된 데이터가 있고, matchId가 변경되지 않았다면 재로드하지 않음
+    if (dataLoadedRef.current.lineups && matchId === prevMatchIdRef.current) {
+      return;
+    }
+    
+    // 현재 matchId 저장
+    prevMatchIdRef.current = matchId;
+    
+    if (matchData) {
+      // 라인업 데이터 설정
+      if (matchData.lineups?.response) {
+        setLineups(matchData.lineups.response);
+        setLoading(false);
+        dataLoadedRef.current.lineups = true;
+      }
+      
+      // 이벤트 데이터 설정
+      if (matchData.events) {
+        setEvents(matchData.events);
+      }
+      
+      // 선수 통계 데이터 설정
+      if (matchData.playersStats && Object.keys(matchData.playersStats).length > 0) {
+        setPlayersStatsData(prevStats => {
+          // 새 데이터가 있는 경우에만 업데이트
+          if (Object.keys(matchData.playersStats || {}).length > Object.keys(prevStats || {}).length) {
+            const mergedStats = { ...prevStats, ...matchData.playersStats };
+            if (Object.keys(mergedStats).length > 0) {
+              dataLoadedRef.current.stats = true;
+            }
+            return mergedStats;
+          }
+          return prevStats;
+        });
+      }
+    }
+  }, [matchId, matchData]);
   
   // 팀 정보 캐싱을 위한 hook
   useEffect(() => {
-    const homeTeam = matchData.homeTeam;
-    const awayTeam = matchData.awayTeam;
+    const homeTeam = matchData?.homeTeam;
+    const awayTeam = matchData?.awayTeam;
     
     // 홈팀과 원정팀 ID를 확인
     const teamIds = new Set<number>();
@@ -453,7 +521,7 @@ export default function Lineups({ matchId }: LineupsProps) {
     if (cacheUpdated) {
       setTeamCache(newTeamCache);
     }
-  }, [matchData.homeTeam, matchData.awayTeam, matchData.homeTeam?.id, matchData.awayTeam?.id, teamCache]);
+  }, [matchData?.homeTeam, matchData?.awayTeam, teamCache]);
   
   // 선수 클릭 핸들러
   const handlePlayerClick = (player: Player, teamId: number, teamName: string) => {
@@ -477,76 +545,23 @@ export default function Lineups({ matchId }: LineupsProps) {
 
   // 로딩 중이면 로딩 표시
   if (loading) {
-    return (
-      <div className="mb-4 bg-white rounded-lg border p-4">
-        <div className="flex justify-center items-center py-8">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
-        </div>
-      </div>
-    );
+    return <LoadingState message="라인업 데이터를 불러오는 중..." />;
   }
   
   // 오류 표시
   if (error) {
-    return (
-      <div className="mb-4 bg-white rounded-lg border p-4">
-        <div className="flex justify-center items-center py-8">
-          <div className="text-center">
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-12 w-12 mx-auto text-red-500 mb-2" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={1.5} 
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" 
-              />
-            </svg>
-            <p className="text-lg font-medium text-gray-600">오류 발생</p>
-            <p className="text-sm text-gray-500 mt-1">{error}</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <ErrorState message={error} />;
   }
 
   // 라인업 데이터가 없는 경우 처리
   if (!lineups) {
-    return (
-      <div className="mb-4 bg-white rounded-lg border p-4">
-        <div className="flex justify-center items-center py-8">
-          <div className="text-center">
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-12 w-12 mx-auto text-gray-400 mb-2" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={1.5} 
-                d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-              />
-            </svg>
-            <p className="text-lg font-medium text-gray-600">라인업 정보가 없습니다</p>
-            <p className="text-sm text-gray-500 mt-1">현재 이 경기에 대한 라인업 정보를 제공할 수 없습니다.</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <EmptyState title="라인업 정보가 없습니다" message="현재 이 경기에 대한 라인업 정보를 제공할 수 없습니다." />;
   }
 
-  const homeTeam = matchData.homeTeam;
-  const awayTeam = matchData.awayTeam;
+  const homeTeam = matchData?.homeTeam || { id: 0, name: '홈팀', logo: '/placeholder-team.png' };
+  const awayTeam = matchData?.awayTeam || { id: 0, name: '원정팀', logo: '/placeholder-team.png' };
   const homeLineup = lineups.home;
   const awayLineup = lineups.away;
-  const playersStatsData = matchData.playersStats || {};
   
   // 포메이션 데이터 준비 (useCallback으로 정의된 함수 사용)
   const homeFormationData = prepareFormationData(homeLineup);
@@ -889,12 +904,12 @@ export default function Lineups({ matchId }: LineupsProps) {
       </div>
       
       {/* 선수 통계 모달 */}
-      {selectedPlayer && playersStatsData && (
+      {selectedPlayer && (
         <PlayerStatsModal
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           playerId={selectedPlayer.id}
-          matchId={matchData.matchId?.toString() || ''}
+          matchId={matchId}
           playerInfo={{
             name: getPlayerKoreanName(selectedPlayer.id) || selectedPlayer.name, // 한국어 이름 적용
             number: selectedPlayer.number,

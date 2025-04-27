@@ -117,7 +117,6 @@ async function fetchWithRetry(
     
     // 429 (Too Many Requests) 오류 처리
     if (response.status === 429 && retries > 0) {
-      console.log(`API 요청 제한 도달: ${retries}회 재시도 남음. ${delay * 2}ms 후 재시도...`);
       // 지수 백오프 적용 (재시도마다 대기 시간 증가)
       return fetchWithRetry(url, options, retries - 1, delay * 2);
     }
@@ -125,8 +124,6 @@ async function fetchWithRetry(
     return response;
   } catch (error) {
     if (retries > 0) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      console.log(`API 호출 오류: ${errorMessage}. ${retries}회 재시도 남음...`);
       return fetchWithRetry(url, options, retries - 1, delay);
     }
     throw error;
@@ -153,11 +150,8 @@ export async function fetchPlayerData(playerId: string): Promise<PlayerData> {
     
     // 캐시된 데이터가 있고, 유효 기간이 지나지 않았으면 캐시 데이터 반환
     if (cachedData && (now - cachedData.timestamp) < CACHE_TTL) {
-      console.log(`캐시에서 선수 ID ${playerId} 데이터 반환`);
       return cachedData.data;
     }
-
-    console.log(`API에서 선수 ID ${playerId} 데이터 요청 중...`);
     
     // 현재 시즌 계산 (7월 1일 기준으로 새 시즌 시작)
     const currentDate = new Date();
@@ -186,8 +180,6 @@ export async function fetchPlayerData(playerId: string): Promise<PlayerData> {
     
     if (!data.response || data.response.length === 0) {
       // 현재 시즌에서 정보를 찾을 수 없는 경우 이전 시즌 조회
-      console.log(`현재 시즌 ${season}에서 선수 정보를 찾을 수 없어 이전 시즌 조회 중...`);
-      
       const lastSeasonResponse = await fetchWithRetry(
         `https://v3.football.api-sports.io/players?id=${playerId}&season=${season-1}`,
         {
@@ -219,7 +211,6 @@ export async function fetchPlayerData(playerId: string): Promise<PlayerData> {
         data: formattedData
       });
       
-      console.log(`선수 ID ${playerId} 데이터 로드 완료 (이전 시즌)`);
       return formattedData;
     }
     
@@ -234,11 +225,9 @@ export async function fetchPlayerData(playerId: string): Promise<PlayerData> {
       data: formattedData
     });
     
-    console.log(`선수 ID ${playerId} 데이터 로드 완료`);
     return formattedData;
 
   } catch (error) {
-    console.error('선수 데이터 로딩 중 오류:', error);
     throw error;
   }
 }

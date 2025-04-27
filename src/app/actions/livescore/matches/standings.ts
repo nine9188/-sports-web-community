@@ -142,11 +142,8 @@ export async function fetchMatchStandings(
     }
     
     if (!leagueId || !season) {
-      console.error('리그 ID 또는 시즌 정보를 찾을 수 없습니다.');
       return null;
     }
-    
-    console.log(`순위표 가져오기: 리그 ID=${leagueId}, 시즌=${season}`);
     
     // 리그 ID와 시즌으로 순위표 가져오기
     const standingsResponse = await fetch(
@@ -167,7 +164,6 @@ export async function fetchMatchStandings(
     const standingsData = await standingsResponse.json();
     
     if (!standingsData?.response || standingsData.response.length === 0) {
-      console.error('순위표 데이터가 비어있습니다.');
       return null;
     }
     
@@ -206,8 +202,7 @@ export async function fetchMatchStandings(
       }
     };
 
-  } catch (error) {
-    console.error('순위표 정보 가져오기 오류:', error);
+  } catch {
     return null;
   }
 }

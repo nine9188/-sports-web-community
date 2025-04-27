@@ -6,9 +6,9 @@ import { FaFutbol } from 'react-icons/fa';
 import { BsCardText, BsCardHeading } from "react-icons/bs";
 import { IoMdSwap } from 'react-icons/io';
 import { MatchEvent } from '../../types';
-import { fetchMatchEvents } from '@/app/actions/livescore/matches/events';
 import { getTeamById, TeamMapping } from '@/app/constants/teams';
 import { mapEventToKoreanText } from '@/app/constants/event-mappings';
+import { LoadingState, ErrorState, EmptyState } from '@/app/livescore/football/components/CommonComponents';
 // 프리미어리그 팀 선수 데이터 불러오기
 import { liverpoolPlayers, NottinghamForestPlayers, Arsenalplayers, NewcastleUnitedplayers, Chelseaplayers, ManchesterCityplayers, AstonVillaplayers, Bournemouthplayers, Fulhamplayers, Brightonplayers } from '@/app/constants/teams/premier-league/premier-teams';
 
@@ -62,43 +62,21 @@ const getPlayerKoreanName = (playerId: number): string | null => {
 };
 
 // 메모이제이션을 적용하여 불필요한 리렌더링 방지
-function Events({ matchId, matchData }: EventsProps) {
+function Events({ matchData }: EventsProps) {
   const [events, setEvents] = useState<MatchEvent[]>(matchData?.events || []);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
   const [teamCache, setTeamCache] = useState<Record<number, TeamMapping>>({});
   
   const iconClass = "text-xl";
 
-  // 서버 액션을 사용해 이벤트 데이터 가져오기
+  // matchData prop이 변경될 때 이벤트 데이터 업데이트
   useEffect(() => {
-    if (matchId) {
-      const fetchEvents = async () => {
-        setLoading(true);
-        setError(null);
-        
-        try {
-          const response = await fetchMatchEvents(matchId);
-          
-          if (response.status === 'success') {
-            setEvents(response.events);
-          } else {
-            setError(response.message || '이벤트 데이터를 가져오는데 실패했습니다.');
-          }
-        } catch (err) {
-          setError('이벤트 데이터를 가져오는데 실패했습니다.');
-          console.error('이벤트 데이터 로딩 오류:', err);
-        } finally {
-          setLoading(false);
-        }
-      };
-      
-      fetchEvents();
-    } else if (matchData?.events && matchData.events.length > 0) {
-      // props로 전달받은 초기 이벤트 데이터가 있는 경우 사용
+    if (matchData?.events) {
       setEvents(matchData.events);
+      setLoading(false);
     }
-  }, [matchId, matchData?.events]);
+  }, [matchData]);
 
   // 팀 정보 캐싱을 위한 hook
   useEffect(() => {
@@ -170,68 +148,16 @@ function Events({ matchId, matchData }: EventsProps) {
 
   // 로딩 상태 표시
   if (loading) {
-    return (
-      <div className="mb-4 bg-white rounded-lg border p-4">
-        <div className="flex justify-center items-center py-8">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
-        </div>
-      </div>
-    );
+    return <LoadingState message="이벤트 데이터를 불러오는 중..." />;
   }
   
   // 에러 상태 표시
   if (error) {
-    return (
-      <div className="mb-4 bg-white rounded-lg border p-4">
-        <div className="flex justify-center items-center py-8">
-          <div className="text-center">
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-12 w-12 mx-auto text-red-500 mb-2" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={1.5} 
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" 
-              />
-            </svg>
-            <p className="text-lg font-medium text-gray-600">오류 발생</p>
-            <p className="text-sm text-gray-500 mt-1">{error}</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <ErrorState message={error} />;
   }
 
   if (!events.length) {
-    return (
-      <div className="mb-4 bg-white rounded-lg border p-4">
-        <div className="flex justify-center items-center py-8">
-          <div className="text-center">
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-12 w-12 mx-auto text-gray-400 mb-2" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={1.5} 
-                d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-              />
-            </svg>
-            <p className="text-lg font-medium text-gray-600">이벤트 데이터가 없습니다</p>
-            <p className="text-sm text-gray-500 mt-1">현재 이 경기에 대한 이벤트 정보를 제공할 수 없습니다.</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <EmptyState title="이벤트 데이터가 없습니다" message="현재 이 경기에 대한 이벤트 정보를 제공할 수 없습니다." />;
   }
 
   // 이벤트를 시간 순으로 정렬

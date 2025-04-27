@@ -2,92 +2,27 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { LoadingState, ErrorState, EmptyState } from '@/app/livescore/football/components/CommonComponents';
 
-// 상세 인터페이스 정의
-interface TeamData {
-  id: number;
-  name: string;
+// 골 데이터 인터페이스
+interface GoalValue {
+  total: number | null;
+  percentage: string | null;
 }
 
-interface GoalValue {
+// 카드 데이터 인터페이스
+interface CardData {
   total: number;
   percentage: string;
 }
 
-interface MinuteGoals {
-  [key: string]: GoalValue;
-}
-
-interface GoalDetails {
-  total: {
-    home: number;
-    away: number;
-    total: number;
-    minute?: MinuteGoals;
-  };
-  average?: {
-    home: string;
-    away: string;
-    total: string;
-  };
-}
-
-interface FixtureDetails {
-  played: { home: number; away: number; total: number };
-  wins: { home: number; away: number; total: number };
-  draws: { home: number; away: number; total: number };
-  loses: { home: number; away: number; total: number };
-}
-
-interface CleanSheetDetails {
-  home: number;
-  away: number;
-  total: number;
-}
-
+// 포메이션 데이터 인터페이스
 interface LineupData {
   formation: string;
   played: number;
 }
 
-interface CardData {
-  [key: string]: { total: number; percentage: string };
-}
-
-interface CardDetails {
-  yellow: CardData;
-  red: CardData;
-}
-
-interface BiggestStreakData {
-  wins: number;
-  draws: number;
-  loses: number;
-}
-
-interface BiggestScoresData {
-  home: string;
-  away: string;
-}
-
-interface BiggestData {
-  streak: BiggestStreakData;
-  wins: BiggestScoresData;
-  loses: BiggestScoresData;
-}
-
-interface PenaltyData {
-  total: number;
-  scored: { total: number; percentage: string };
-  missed: { total: number; percentage: string };
-}
-
-interface FailedToScoreData {
-  home: number;
-  away: number;
-  total: number;
-}
-
+// 리그 정보 인터페이스
 interface LeagueData {
   id: number;
   name: string;
@@ -97,35 +32,104 @@ interface LeagueData {
   season: number;
 }
 
-interface StatsData {
-  league: LeagueData;
-  form: string;
-  fixtures: FixtureDetails;
-  goals: {
-    for: GoalDetails;
-    against: GoalDetails;
+// 팀 통계 데이터 인터페이스
+interface TeamStatsData {
+  league?: LeagueData;
+  form?: string;
+  fixtures?: {
+    wins: { total: number; home: number; away: number };
+    draws: { total: number; home: number; away: number };
+    loses: { total: number; home: number; away: number };
+    played: { total: number; home: number; away: number };
   };
-  clean_sheet: CleanSheetDetails;
-  lineups: LineupData[];
-  cards: CardDetails;
-  biggest?: BiggestData;
-  penalty?: PenaltyData;
-  failed_to_score?: FailedToScoreData;
+  goals?: {
+    for: { 
+      total: { total: number; home: number; away: number; minute?: Record<string, GoalValue> };
+      average: { total: string; home: string; away: string };
+      minute?: Record<string, GoalValue>;
+    };
+    against: { 
+      total: { total: number; home: number; away: number; minute?: Record<string, GoalValue> };
+      average: { total: string; home: string; away: string };
+      minute?: Record<string, GoalValue>;
+    };
+  };
+  clean_sheet?: { total: number; home: number; away: number };
+  lineups?: LineupData[];
+  cards?: {
+    yellow: Record<string, CardData>;
+    red: Record<string, CardData>;
+  };
+  penalty?: {
+    total: number;
+    scored: { total: number; percentage: string };
+    missed: { total: number; percentage: string };
+  };
+  failed_to_score?: {
+    home: number;
+    away: number;
+    total: number;
+  };
+  biggest?: {
+    streak: { wins: number; draws: number; loses: number };
+    wins: { home: string; away: string };
+    loses: { home: string; away: string };
+  };
 }
 
-interface OverviewProps {
-  team: {
-    team: TeamData;
-    venue: Record<string, unknown>;
-  };
-  stats: StatsData;
+// 컴포넌트 Props 인터페이스
+interface StatsProps {
+  initialStats?: TeamStatsData;
+  isLoading?: boolean;
+  error?: string | null;
 }
 
-export default function Overview({ stats }: Partial<OverviewProps>) {
+export default function Stats({ initialStats, isLoading: externalLoading, error: externalError }: StatsProps) {
   const [showAllFormations, setShowAllFormations] = useState(false);
 
+  // 로딩 상태 처리
+  if (externalLoading) {
+    return <LoadingState message="팀 통계 데이터를 불러오는 중..." />;
+  }
+
+  // 에러 상태 처리
+  if (externalError) {
+    return <ErrorState message={externalError || '데이터를 불러올 수 없습니다'} />;
+  }
+
+  // 데이터가 없는 경우
+  if (!initialStats) {
+    return <EmptyState title="통계 데이터 없음" message="이 팀에 대한 통계 데이터가 없습니다." />;
+  }
+
+  // 컴포넌트에 전달된 초기 stats 데이터 사용
+  const stats = initialStats;
+  
+  // 리그/팀 로고 렌더링 함수
+  const renderLogo = (url: string | undefined, alt: string) => {
+      return (
+      <div className="w-6 h-6 relative">
+        <Image
+          src={url || '/placeholder-team.png'}
+          alt={alt}
+          fill
+          className="object-contain"
+          sizes="24px"
+        />
+      </div>
+    );
+  };
+  
+  // 라인업 데이터 가공
+  let topFormations = stats.lineups || [];
+  // 사용 빈도순으로 정렬
+  topFormations = [...topFormations].sort((a, b) => b.played - a.played);
+  
+  // 표시할 포메이션 수 결정
+  const visibleFormations = showAllFormations ? topFormations : topFormations.slice(0, 5);
+  
   // stats 객체의 안전한 접근을 위한 기본값 제공
-  const safeStats = stats || {} as StatsData;
+  const safeStats = stats || {} as TeamStatsData;
   const safeLeague = safeStats.league || {} as LeagueData;
   const safeFixtures = safeStats.fixtures || {
     wins: { total: 0, home: 0, away: 0 },
@@ -137,15 +141,37 @@ export default function Overview({ stats }: Partial<OverviewProps>) {
   const safeGoals = safeStats.goals || {
     for: { 
       total: { total: 0, home: 0, away: 0 },
-      average: { total: '0', home: '0', away: '0' }
+      average: { total: '0', home: '0', away: '0' },
+      minute: {} as Record<string, GoalValue>
     },
     against: { 
       total: { total: 0, home: 0, away: 0 },
-      average: { total: '0', home: '0', away: '0' }
+      average: { total: '0', home: '0', away: '0' },
+      minute: {} as Record<string, GoalValue>
     }
   };
   
   const safeCleanSheet = safeStats.clean_sheet || { total: 0, home: 0, away: 0 };
+  
+  const safeBiggest = safeStats.biggest || {
+    streak: { wins: 0, draws: 0, loses: 0 },
+    wins: { home: '', away: '' },
+    loses: { home: '', away: '' }
+  };
+  
+  const safeLineups = safeStats.lineups || [];
+  
+  const safePenalty = safeStats.penalty || {
+    total: 0,
+    scored: { total: 0, percentage: '0%' },
+    missed: { total: 0, percentage: '0%' }
+  };
+  
+  const safeFailedToScore = safeStats.failed_to_score || {
+    home: 0,
+    away: 0,
+    total: 0
+  };
 
   return (
     <div className="space-y-4">
@@ -154,67 +180,61 @@ export default function Overview({ stats }: Partial<OverviewProps>) {
         <div className="grid grid-cols-2 md:grid-cols-4">
           {/* 리그 정보 카드 */}
           <div className="col-span-2 md:col-span-1 border-b md:border-b-0 md:border-r border-gray-200">
-            <h4 className="text-base font-semibold p-2 border-b border-gray-100">리그 정보</h4>
+            <h4 className="text-sm font-medium p-2 border-b border-gray-100">리그 정보</h4>
             <div className="flex items-center p-2">
-              <div className="w-6 h-6 relative flex-shrink-0 mr-3">
-              <Image
-                src={safeLeague.logo || ''}
-                alt={safeLeague.name || ''}
-                fill
-                  sizes="24px"
-                className="object-contain"
-              />
-            </div>
-            <div>
+              <div className="mr-3 flex-shrink-0">
+                {renderLogo(safeLeague.logo, safeLeague.name || '')}
+              </div>
+              <div>
                 <p className="font-medium text-sm">{safeLeague.name || ''}</p>
                 <p className="text-xs text-gray-600">시즌: {safeLeague.season || ''}</p>
                 <p className="text-xs text-gray-600">국가: {safeLeague.country || ''}</p>
+              </div>
             </div>
           </div>
-        </div>
 
           {/* 시즌 통계 카드 */}
           <div className="border-b border-r md:border-b-0 md:border-r border-gray-200">
-            <h4 className="text-base font-semibold p-2 border-b border-gray-100">시즌 통계</h4>
+            <h4 className="text-sm font-medium p-2 border-b border-gray-100">시즌 통계</h4>
             <div className="grid grid-cols-3 p-2 text-center">
-            <div>
+              <div>
                 <p className="text-base font-bold">{safeFixtures.wins.total}</p>
                 <p className="text-xs text-gray-500">승</p>
-            </div>
-            <div>
+              </div>
+              <div>
                 <p className="text-base font-bold">{safeFixtures.draws.total}</p>
                 <p className="text-xs text-gray-500">무</p>
-            </div>
-            <div>
+              </div>
+              <div>
                 <p className="text-base font-bold">{safeFixtures.loses.total}</p>
                 <p className="text-xs text-gray-500">패</p>
+              </div>
             </div>
           </div>
-        </div>
 
           {/* 득실 통계 카드 */}
           <div className="border-b md:border-b-0 md:border-r border-gray-200">
-            <h4 className="text-base font-semibold p-2 border-b border-gray-100">득실 통계</h4>
+            <h4 className="text-sm font-medium p-2 border-b border-gray-100">득실 통계</h4>
             <div className="grid grid-cols-3 p-2 text-center">
-            <div>
+              <div>
                 <p className="text-base font-bold">{safeGoals.for.total.total}</p>
                 <p className="text-xs text-gray-500">득점</p>
-            </div>
-            <div>
+              </div>
+              <div>
                 <p className="text-base font-bold">{safeGoals.against.total.total}</p>
                 <p className="text-xs text-gray-500">실점</p>
-            </div>
-            <div>
+              </div>
+              <div>
                 <p className="text-base font-bold">{safeCleanSheet.total}</p>
                 <p className="text-xs text-gray-500">클린시트</p>
+              </div>
             </div>
           </div>
-        </div>
 
           {/* 최근 5경기 */}
-          <div className="col-span-2 md:col-span-1">
-            <h4 className="text-base font-semibold p-2 border-b border-gray-100">최근 5경기</h4>
-            <div className="p-2 flex items-center justify-center">
+          <div className="col-span-2 md:col-span-1 flex flex-col">
+            <h4 className="text-sm font-medium p-2 border-b border-gray-100">최근 5경기</h4>
+            <div className="flex-1 flex items-center justify-center">
               {safeStats.form
                 ?.split('')
                 .reverse()
@@ -240,7 +260,7 @@ export default function Overview({ stats }: Partial<OverviewProps>) {
       <div className="grid grid-cols-2 lg:grid-cols-2 gap-4 mb-4">
         {/* 홈 통계 */}
         <div className="bg-white rounded-lg border overflow-hidden">
-          <h4 className="text-base font-semibold p-2 border-b border-gray-200">홈 경기 통계</h4>
+          <h4 className="text-sm font-medium p-2 border-b border-gray-200">홈 경기 통계</h4>
           <div className="p-4">
             <div className="flex flex-col md:flex-row gap-4 mb-3">
               {/* 승무패 통계 */}
@@ -286,7 +306,7 @@ export default function Overview({ stats }: Partial<OverviewProps>) {
 
         {/* 원정 통계 */}
         <div className="bg-white rounded-lg border overflow-hidden">
-          <h4 className="text-base font-semibold p-2 border-b border-gray-200">원정 경기 통계</h4>
+          <h4 className="text-sm font-medium p-2 border-b border-gray-200">원정 경기 통계</h4>
           <div className="p-4">
             <div className="flex flex-col md:flex-row gap-4 mb-3">
               {/* 승무패 통계 */}
@@ -331,10 +351,10 @@ export default function Overview({ stats }: Partial<OverviewProps>) {
         </div>
       </div>
 
-      {/* 시간대별 득실점 */}
-      {safeGoals.for.total.minute && safeGoals.against.total.minute && (
-        <div className="mb-4 bg-white rounded-lg border overflow-hidden">
-          <h4 className="text-sm font-medium p-2 border-b border-gray-200">시간대별 득실점</h4>
+      {/* 시간대별 골 */}
+      {safeGoals && (safeGoals.for.minute || safeGoals.against.minute) && (
+        <div className="bg-white rounded-lg border overflow-hidden">
+          <h4 className="text-sm font-medium p-2 border-b border-gray-200">시간대별 골</h4>
           <div className="p-4">
             {/* 범례 */}
             <div className="flex items-center justify-center gap-6 mb-2">
@@ -348,126 +368,128 @@ export default function Overview({ stats }: Partial<OverviewProps>) {
               </div>
             </div>
             
-            {/* 시간대별 차트 */}
-            <div className="space-y-2">
-              {Object.entries(safeGoals.for.total.minute || {})
-                .filter(([key]) => key !== '106-120' && key !== 'percentage')
-                .map(([time, forData]) => {
-                  const againstData = safeGoals.against.total.minute?.[time];
-                  
-                  // 득점과 실점 중 최대값 구하기 (최대치를 기준으로 바 길이 계산)
-                  const forTotal = forData.total || 0;
-                  const againstTotal = againstData?.total || 0;
-                  
-                  // 모든 시간대 중 최대 득점/실점 값 계산 (이 값이 100%가 됨)
-                  const allForValues = Object.entries(safeGoals.for.total.minute || {})
-                    .filter(([key]) => key !== '106-120' && key !== 'percentage')
-                    .map(([, data]) => data.total);
-                  
-                  const allAgainstValues = Object.entries(safeGoals.against.total.minute || {})
-                    .filter(([key]) => key !== '106-120' && key !== 'percentage')
-                    .map(([, data]) => data.total);
-                  
-                  const maxForValue = Math.max(...allForValues, 1);
-                  const maxAgainstValue = Math.max(...allAgainstValues, 1);
-                  
-                  // 각 시간대별 비율 계산
-                  const forPercentage = (forTotal / maxForValue) * 100;
-                  const againstPercentage = (againstTotal / maxAgainstValue) * 100;
-                  
-                  return (
-                    <div key={time} className="flex flex-col gap-1">
-                      <div className="flex justify-center">
-                        <span className="text-xs font-medium text-gray-700">{time}분</span>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-1">
-                        {/* 득점 바 */}
-                        <div className="flex items-center">
-                          <div className="flex-1 h-6 bg-gray-100 rounded-sm relative overflow-hidden">
-                            <div 
-                              className="absolute inset-y-0 right-0 bg-green-500 flex items-center justify-start pl-1 rounded-sm"
-                              style={{ width: `${forPercentage}%` }}
-                            >
-                              {forTotal > 0 && (
-                                <span className="text-xs font-medium text-white">{forTotal}</span>
-                              )}
-                            </div>
-                          </div>
+            <div className="space-y-8">
+              {/* 득점/실점 시간대 통합 차트 */}
+              <div className="space-y-2">
+                {Object.entries(safeGoals.for.minute || {})
+                  .filter(([key]) => key !== '106-120' && key !== '')
+                  .map(([time, forData]) => {
+                    const againstData = safeGoals.against.minute?.[time];
+                    
+                    // 득점과 실점 중 최대값 구하기 (최대치를 기준으로 바 길이 계산)
+                    const forTotal = forData.total || 0;
+                    const againstTotal = (againstData?.total || 0);
+                    
+                    // 모든 시간대 중 최대 득점/실점 값 계산 (이 값이 100%가 됨)
+                    const allForValues = Object.entries(safeGoals.for.minute || {})
+                      .filter(([key]) => key !== '106-120' && key !== '')
+                      .map(([, data]) => data.total || 0);
+                    
+                    const allAgainstValues = Object.entries(safeGoals.against.minute || {})
+                      .filter(([key]) => key !== '106-120' && key !== '')
+                      .map(([, data]) => data?.total || 0);
+                    
+                    const maxForValue = Math.max(...allForValues, 1);
+                    const maxAgainstValue = Math.max(...allAgainstValues, 1);
+                    
+                    // 각 시간대별 비율 계산
+                    const forPercentage = (forTotal / maxForValue) * 100;
+                    const againstPercentage = (againstTotal / maxAgainstValue) * 100;
+                    
+                    return (
+                      <div key={time} className="flex flex-col gap-1">
+                        <div className="flex justify-center">
+                          <span className="text-xs font-medium text-gray-700">{time}분</span>
                         </div>
                         
-                        {/* 실점 바 */}
-                        <div className="flex items-center">
-                          <div className="flex-1 h-6 bg-gray-100 rounded-sm relative overflow-hidden">
-                            <div 
-                              className="absolute inset-y-0 left-0 bg-red-500 flex items-center justify-end pr-1 rounded-sm"
-                              style={{ width: `${againstPercentage}%` }}
-                            >
-                              {againstTotal > 0 && (
-                                <span className="text-xs font-medium text-white">{againstTotal}</span>
-                              )}
+                        <div className="grid grid-cols-2 gap-1">
+                          {/* 득점 바 */}
+                          <div className="flex items-center">
+                            <div className="flex-1 h-6 bg-gray-100 rounded-sm relative overflow-hidden">
+                              <div 
+                                className="absolute inset-y-0 right-0 bg-green-500 flex items-center justify-start pl-1 rounded-sm"
+                                style={{ width: `${forPercentage}%` }}
+                              >
+                                {forTotal > 0 && (
+                                  <span className="text-xs font-medium text-white">{forTotal}</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* 실점 바 */}
+                          <div className="flex items-center">
+                            <div className="flex-1 h-6 bg-gray-100 rounded-sm relative overflow-hidden">
+                              <div 
+                                className="absolute inset-y-0 left-0 bg-red-500 flex items-center justify-end pr-1 rounded-sm"
+                                style={{ width: `${againstPercentage}%` }}
+                              >
+                                {againstTotal > 0 && (
+                                  <span className="text-xs font-medium text-white">{againstTotal}</span>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+              </div>
             </div>
           </div>
         </div>
       )}
 
       {/* 시즌 기록 */}
-      {safeStats.biggest && (
+      {safeBiggest && (
         <div className="mb-4 bg-white rounded-lg border overflow-hidden">
           <h4 className="text-sm font-medium p-2 border-b border-gray-200">시즌 기록</h4>
-          <div className="p-4 grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="p-3 grid grid-cols-3 gap-3">
             {/* 연속 기록 */}
-            <div className="md:border-r md:border-gray-200 md:pr-4">
-              <h5 className="text-sm font-bold mb-3">연속 기록</h5>
-              <div className="space-y-2">
+            <div className="md:border-r md:border-gray-200 md:pr-3">
+              <h5 className="text-xs font-semibold mb-1.5">연속 기록</h5>
+              <div className="space-y-1">
                 <div className="flex justify-between">
-                  <span>최다 연승</span>
-                  <span className="font-medium">{safeStats.biggest.streak.wins}경기</span>
+                  <span className="text-xs">최다 연승</span>
+                  <span className="text-xs font-medium">{safeBiggest.streak.wins}경기</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>최다 연속 무</span>
-                  <span className="font-medium">{safeStats.biggest.streak.draws}경기</span>
+                  <span className="text-xs">최다 연속 무</span>
+                  <span className="text-xs font-medium">{safeBiggest.streak.draws}경기</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>최다 연패</span>
-                  <span className="font-medium">{safeStats.biggest.streak.loses}경기</span>
+                  <span className="text-xs">최다 연패</span>
+                  <span className="text-xs font-medium">{safeBiggest.streak.loses}경기</span>
                 </div>
               </div>
             </div>
 
             {/* 최다 득점 */}
-            <div className="md:border-r md:border-gray-200 md:pr-4">
-              <h5 className="text-sm font-bold mb-3">최다 득점</h5>
-              <div className="space-y-2">
+            <div className="md:border-r md:border-gray-200 md:pr-3">
+              <h5 className="text-xs font-semibold mb-1.5">최다 득점</h5>
+              <div className="space-y-1">
                 <div className="flex justify-between">
-                  <span>홈</span>
-                  <span className="font-medium">{safeStats.biggest.wins.home}</span>
+                  <span className="text-xs">홈</span>
+                  <span className="text-xs font-medium">{safeBiggest.wins.home}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>원정</span>
-                  <span className="font-medium">{safeStats.biggest.wins.away}</span>
+                  <span className="text-xs">원정</span>
+                  <span className="text-xs font-medium">{safeBiggest.wins.away}</span>
                 </div>
               </div>
             </div>
 
             {/* 최다 실점 */}
-            <div className="col-span-2 md:col-span-1 mt-4 md:mt-0">
-              <h5 className="text-sm font-bold mb-3">최다 실점</h5>
-              <div className="space-y-2">
+            <div>
+              <h5 className="text-xs font-semibold mb-1.5">최다 실점</h5>
+              <div className="space-y-1">
                 <div className="flex justify-between">
-                  <span>홈</span>
-                  <span className="font-medium">{safeStats.biggest.loses.home}</span>
+                  <span className="text-xs">홈</span>
+                  <span className="text-xs font-medium">{safeBiggest.loses.home}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>원정</span>
-                  <span className="font-medium">{safeStats.biggest.loses.away}</span>
+                  <span className="text-xs">원정</span>
+                  <span className="text-xs font-medium">{safeBiggest.loses.away}</span>
                 </div>
               </div>
             </div>
@@ -475,88 +497,89 @@ export default function Overview({ stats }: Partial<OverviewProps>) {
         </div>
       )}
 
-      {/* 기타 통계 (카드, 포메이션) */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        {/* 왼쪽 열: 포메이션 */}
-        <div className="md:col-span-2">
-          {/* 포메이션 정보 */}
+      {/* 기타 통계 (포메이션, 페널티, 무득점, 카드) */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+        {/* 왼쪽 열: 포메이션, 페널티, 무득점 - 1/3 너비 */}
+        <div className="md:col-span-4">
+          {/* 기타 통계 섹션 */}
           <div className="bg-white rounded-lg border overflow-hidden h-full">
-            <h4 className="text-sm font-medium p-2 border-b border-gray-200">주요 포메이션</h4>
-            <div className="p-4">
-              {safeStats.lineups && safeStats.lineups.length > 0 ? (
-                <div>
-                  <div className="space-y-2">
-                    {safeStats.lineups
-                      ?.sort((a, b) => b.played - a.played)
-                      .slice(0, showAllFormations ? undefined : 5)
-                      .map((lineup, index) => (
+            <h4 className="text-sm font-medium p-2 border-b border-gray-200">기타 통계</h4>
+            <div className="p-4 space-y-3">
+              {/* 포메이션 정보 - 더 컴팩트하게 */}
+              <div>
+                <h5 className="text-xs font-semibold mb-1.5">주요 포메이션</h5>
+                {safeLineups && safeLineups.length > 0 ? (
+                  <div>
+                    <div className="space-y-1.5">
+                      {visibleFormations.slice(0, showAllFormations ? 8 : 2).map((formation, index) => (
                         <div key={index} className="flex items-center">
-                          <span className="text-sm font-medium w-20">{lineup.formation}</span>
+                          <span className="text-xs font-medium w-16">{formation.formation}</span>
                           <div className="flex-1 flex items-center">
-                            <div className="relative w-full h-4 bg-gray-100 rounded-sm overflow-hidden">
+                            <div className="relative w-full h-3 bg-gray-100 rounded-sm overflow-hidden">
                               <div 
                                 className="absolute inset-y-0 left-0 bg-blue-500 rounded-sm"
                                 style={{ 
-                                  width: `${(lineup.played / Math.max(...safeStats.lineups.map(l => l.played))) * 100}%` 
+                                  width: `${(formation.played / Math.max(...safeLineups.map(l => l.played))) * 100}%` 
                                 }}
                               />
                             </div>
-                            <span className="text-xs text-gray-600 ml-2 w-14 text-right">{lineup.played}경기</span>
+                            <span className="text-xs text-gray-600 ml-2 w-8 text-right">{formation.played}</span>
                           </div>
                         </div>
                       ))}
-                  </div>
-                  {safeStats.lineups.length > 5 && (
-                    <div className="mt-3 text-center">
-                      <button 
-                        onClick={() => setShowAllFormations(!showAllFormations)}
-                        className="text-xs text-blue-600 hover:text-blue-800"
-                      >
-                        {showAllFormations ? '접기' : '더보기'}
-                      </button>
                     </div>
-                  )}
-                </div>
-              ) : (
-                <p className="text-sm text-center text-gray-500">포메이션 데이터가 없습니다.</p>
-              )}
+                    {topFormations.length > 2 && (
+                      <div className="mt-1 text-center">
+                        <button 
+                          onClick={() => setShowAllFormations(!showAllFormations)}
+                          className="text-xs text-blue-600 hover:text-blue-800"
+                        >
+                          {showAllFormations ? '접기' : `+${topFormations.length - 2}`}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-center text-gray-500">포메이션 데이터가 없습니다.</p>
+                )}
+              </div>
               
-              {/* 패널티 통계 (포메이션 아래로 이동) */}
-              {safeStats.penalty && (
-                <div className="mt-6">
-                  <h5 className="text-sm font-semibold mb-2">페널티</h5>
+              {/* 페널티 통계 - 더 컴팩트하게 */}
+              {safePenalty && (
+                <div>
+                  <h5 className="text-xs font-semibold mb-1.5">페널티 통계</h5>
                   <div className="grid grid-cols-3 gap-1 text-center">
-                    <div className="bg-gray-50 p-2 rounded">
-                      <p className="text-sm font-bold">{safeStats.penalty.total}</p>
+                    <div className="bg-gray-50 p-1 rounded">
+                      <p className="text-xs font-bold">{safePenalty.total}</p>
                       <p className="text-xs text-gray-600">총계</p>
                     </div>
-                    <div className="bg-green-50 p-2 rounded">
-                      <p className="text-sm font-bold text-green-700">{safeStats.penalty.scored.total}</p>
+                    <div className="bg-green-50 p-1 rounded">
+                      <p className="text-xs font-bold text-green-700">{safePenalty.scored.total}</p>
                       <p className="text-xs text-gray-600">성공</p>
                     </div>
-                    <div className="bg-red-50 p-2 rounded">
-                      <p className="text-sm font-bold text-red-700">{safeStats.penalty.missed.total}</p>
+                    <div className="bg-red-50 p-1 rounded">
+                      <p className="text-xs font-bold text-red-700">{safePenalty.missed.total}</p>
                       <p className="text-xs text-gray-600">실패</p>
                     </div>
                   </div>
                 </div>
               )}
               
-              {/* 무득점 경기 (패널티 아래로 이동) */}
-              {safeStats.failed_to_score && (
-                <div className="mt-4">
-                  <h5 className="text-sm font-semibold mb-2">무득점 경기</h5>
+              {/* 무득점 경기 통계 - 더 컴팩트하게 */}
+              {safeFailedToScore && (
+                <div>
+                  <h5 className="text-xs font-semibold mb-1.5">무득점 경기</h5>
                   <div className="grid grid-cols-3 gap-1 text-center">
-                    <div className="bg-gray-50 p-2 rounded">
-                      <p className="text-sm font-bold">{safeStats.failed_to_score.home}</p>
+                    <div className="bg-gray-50 p-1 rounded">
+                      <p className="text-xs font-bold">{safeFailedToScore.home}</p>
                       <p className="text-xs text-gray-600">홈</p>
                     </div>
-                    <div className="bg-gray-50 p-2 rounded">
-                      <p className="text-sm font-bold">{safeStats.failed_to_score.away}</p>
+                    <div className="bg-gray-50 p-1 rounded">
+                      <p className="text-xs font-bold">{safeFailedToScore.away}</p>
                       <p className="text-xs text-gray-600">원정</p>
                     </div>
-                    <div className="bg-gray-50 p-2 rounded">
-                      <p className="text-sm font-bold">{safeStats.failed_to_score.total}</p>
+                    <div className="bg-gray-50 p-1 rounded">
+                      <p className="text-xs font-bold">{safeFailedToScore.total}</p>
                       <p className="text-xs text-gray-600">전체</p>
                     </div>
                   </div>
@@ -566,87 +589,84 @@ export default function Overview({ stats }: Partial<OverviewProps>) {
           </div>
         </div>
 
-        {/* 오른쪽 열: 카드 통계 */}
-        <div className="md:col-span-3">
+        {/* 오른쪽 열: 카드 통계 - 2/3 너비 */}
+        <div className="md:col-span-8">
           <div className="bg-white rounded-lg border overflow-hidden h-full">
             <h4 className="text-sm font-medium p-2 border-b border-gray-200">카드 통계</h4>
-            <div className="p-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 h-full">
-                {/* 왼쪽: 경고 카드 */}
-                <div className="space-y-3">
-                  {/* 경고 카드 */}
-                  <div>
-                    <h5 className="text-sm font-semibold mb-1">경고 카드</h5>
-                    <div className="space-y-1">
-                      {Object.entries(safeStats.cards?.yellow || {})
-                        .filter(([key]) => key !== '' && key !== '106-120')
-                        .map(([time, data]) => {
-                          const maxCards = Math.max(...Object.values(safeStats.cards?.yellow || {})
-                            .filter(v => v.total !== null)
-                            .map(v => v.total));
-                          const ratio = maxCards > 0 ? (data.total / maxCards) * 100 : 0;
-                          
-                          return (
-                            <div key={time} className="flex justify-between items-center">
-                              <span className="text-xs w-14">{time}분</span>
-                              <div className="flex-1 h-6 bg-gray-100 rounded-sm relative overflow-hidden">
-                                <div 
-                                  className="absolute inset-y-0 left-0 bg-yellow-400 flex items-center justify-end pr-1"
-                                  style={{ width: `${ratio}%` }}
-                                >
-                                  {data.total > 0 && ratio > 15 && (
-                                    <span className="text-xs font-medium text-yellow-800">{data.total}장</span>
-                                  )}
-                                </div>
-                                {(data.total === 0 || ratio <= 15) && (
-                                  <div className="absolute inset-0 flex justify-end items-center px-2">
-                                    <span className="text-xs font-medium text-gray-600">{data.total}장</span>
-                                  </div>
+            <div className="p-4">
+              {/* 가로로 배치된 탭 버튼 */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* 경고 카드 */}
+                <div>
+                  <h5 className="text-xs font-semibold mb-2">경고 카드</h5>
+                  <div className="space-y-1.5">
+                    {Object.entries(safeStats.cards?.yellow || {})
+                      .filter(([key]) => key !== '' && key !== '106-120')
+                      .slice(0, 8) // 상위 8개 표시
+                      .map(([time, data]) => {
+                        const maxCards = Math.max(...Object.values(safeStats.cards?.yellow || {})
+                          .filter(v => v.total !== null)
+                          .map(v => v.total));
+                        const ratio = maxCards > 0 ? (data.total / maxCards) * 100 : 0;
+                        
+                        return (
+                          <div key={time} className="flex justify-between items-center">
+                            <span className="text-xs w-14">{time}분</span>
+                            <div className="flex-1 h-5 bg-gray-100 rounded-sm relative overflow-hidden">
+                              <div 
+                                className="absolute inset-y-0 left-0 bg-yellow-400 flex items-center justify-end pr-1"
+                                style={{ width: `${ratio}%` }}
+                              >
+                                {data.total > 0 && ratio > 15 && (
+                                  <span className="text-xs font-medium text-yellow-800">{data.total}장</span>
                                 )}
                               </div>
+                              {(data.total === 0 || ratio <= 15) && (
+                                <div className="absolute inset-0 flex justify-end items-center px-2">
+                                  <span className="text-xs font-medium text-gray-600">{data.total}장</span>
+                                </div>
+                              )}
                             </div>
-                          );
-                        })}
-                    </div>
+                          </div>
+                        );
+                      })}
                   </div>
                 </div>
                 
-                {/* 오른쪽: 퇴장 카드 */}
-                <div className="space-y-3">
-                  {/* 퇴장 카드 */}
-                  <div>
-                    <h5 className="text-sm font-semibold mb-1">퇴장 카드</h5>
-                    <div className="space-y-1">
-                      {Object.entries(safeStats.cards?.red || {})
-                        .filter(([key, data]) => key !== '' && key !== '106-120' && data.total !== null)
-                        .map(([time, data]) => {
-                          const maxCards = Math.max(...Object.values(safeStats.cards?.red || {})
-                            .filter(v => v.total !== null)
-                            .map(v => v.total));
-                          const ratio = maxCards > 0 ? (data.total / maxCards) * 100 : 0;
+                {/* 퇴장 카드 */}
+                <div>
+                  <h5 className="text-xs font-semibold mb-2">퇴장 카드</h5>
+                  <div className="space-y-1.5">
+                    {Object.entries(safeStats.cards?.red || {})
+                      .filter(([key, data]) => key !== '' && key !== '106-120' && data.total !== null)
+                      .slice(0, 8) // 상위 8개 표시
+                      .map(([time, data]) => {
+                        const maxCards = Math.max(...Object.values(safeStats.cards?.red || {})
+                          .filter(v => v.total !== null)
+                          .map(v => v.total));
+                        const ratio = maxCards > 0 ? (data.total / maxCards) * 100 : 0;
 
-                          return (
-                            <div key={time} className="flex justify-between items-center">
-                              <span className="text-xs w-14">{time}분</span>
-                              <div className="flex-1 h-6 bg-gray-100 rounded-sm relative overflow-hidden">
-                                <div 
-                                  className="absolute inset-y-0 left-0 bg-red-500 flex items-center justify-end pr-1"
-                                  style={{ width: `${ratio}%` }}
-                                >
-                                  {data.total > 0 && ratio > 15 && (
-                                    <span className="text-xs font-medium text-white">{data.total}장</span>
-                                  )}
-                                </div>
-                                {(data.total === 0 || ratio <= 15) && (
-                                  <div className="absolute inset-0 flex justify-end items-center px-2">
-                                    <span className="text-xs font-medium text-gray-600">{data.total}장</span>
-                                  </div>
+                        return (
+                          <div key={time} className="flex justify-between items-center">
+                            <span className="text-xs w-14">{time}분</span>
+                            <div className="flex-1 h-5 bg-gray-100 rounded-sm relative overflow-hidden">
+                              <div 
+                                className="absolute inset-y-0 left-0 bg-red-500 flex items-center justify-end pr-1"
+                                style={{ width: `${ratio}%` }}
+                              >
+                                {data.total > 0 && ratio > 15 && (
+                                  <span className="text-xs font-medium text-white">{data.total}장</span>
                                 )}
                               </div>
+                              {(data.total === 0 || ratio <= 15) && (
+                                <div className="absolute inset-0 flex justify-end items-center px-2">
+                                  <span className="text-xs font-medium text-gray-600">{data.total}장</span>
+                                </div>
+                              )}
                             </div>
-                          );
-                        })}
-                    </div>
+                          </div>
+                        );
+                      })}
                   </div>
                 </div>
               </div>

@@ -119,36 +119,36 @@ export function mapEventToKoreanText(event: MatchEvent): string {
       break;
       
     case EventType.SUBSTITUTION:
-      // 교체 이벤트: assist(교체인), player(교체아웃)
+      // 교체 이벤트: player가 투입(IN), assist가 교체아웃(OUT)
       if (detail === EventDetail.SUBSTITUTION_1 || detail === 'Substitution 1') {
         if (assistName) {
-          sentenceText = `${assistName}이(가) ${playerName}을(를) 대신해 첫 번째 교체 선수로 투입됐습니다.`;
+          sentenceText = `${assistName}이(가) 나가고 ${playerName}이(가) 첫 번째 교체 선수로 투입됐습니다.`;
         } else {
-          sentenceText = `${playerName}이(가) 첫 번째 교체로 교체되어 나갔습니다.`;
+          sentenceText = `${playerName}이(가) 첫 번째 교체로 투입됐습니다.`;
         }
       } else if (detail === EventDetail.SUBSTITUTION_2 || detail === 'Substitution 2') {
         if (assistName) {
-          sentenceText = `${assistName}이(가) ${playerName}을(를) 대신해 두 번째 교체 선수로 투입됐습니다.`;
+          sentenceText = `${assistName}이(가) 나가고 ${playerName}이(가) 두 번째 교체 선수로 투입됐습니다.`;
         } else {
-          sentenceText = `${playerName}이(가) 두 번째 교체로 교체되어 나갔습니다.`;
+          sentenceText = `${playerName}이(가) 두 번째 교체로 투입됐습니다.`;
         }
       } else if (detail === EventDetail.SUBSTITUTION_3 || detail === 'Substitution 3') {
         if (assistName) {
-          sentenceText = `${assistName}이(가) ${playerName}을(를) 대신해 세 번째 교체 선수로 투입됐습니다.`;
+          sentenceText = `${assistName}이(가) 나가고 ${playerName}이(가) 세 번째 교체 선수로 투입됐습니다.`;
         } else {
-          sentenceText = `${playerName}이(가) 세 번째 교체로 교체되어 나갔습니다.`;
+          sentenceText = `${playerName}이(가) 세 번째 교체로 투입됐습니다.`;
         }
       } else if (detail === EventDetail.SUBSTITUTION_4 || detail === 'Substitution 4') {
         if (assistName) {
-          sentenceText = `${assistName}이(가) ${playerName}을(를) 대신해 네 번째 교체 선수로 투입됐습니다.`;
+          sentenceText = `${assistName}이(가) 나가고 ${playerName}이(가) 네 번째 교체 선수로 투입됐습니다.`;
         } else {
-          sentenceText = `${playerName}이(가) 네 번째 교체로 교체되어 나갔습니다.`;
+          sentenceText = `${playerName}이(가) 네 번째 교체로 투입됐습니다.`;
         }
       } else if (detail === EventDetail.SUBSTITUTION_5 || detail === 'Substitution 5') {
         if (assistName) {
-          sentenceText = `${assistName}이(가) ${playerName}을(를) 대신해 다섯 번째 교체 선수로 투입됐습니다.`;
+          sentenceText = `${assistName}이(가) 나가고 ${playerName}이(가) 다섯 번째 교체 선수로 투입됐습니다.`;
         } else {
-          sentenceText = `${playerName}이(가) 다섯 번째 교체로 교체되어 나갔습니다.`;
+          sentenceText = `${playerName}이(가) 다섯 번째 교체로 투입됐습니다.`;
         }
       } else if (detail.startsWith('Substitution ') && /\d+$/.test(detail)) {
         // 그 외 숫자가 있는 교체
@@ -166,28 +166,28 @@ export function mapEventToKoreanText(event: MatchEvent): string {
         }
         
         if (assistName) {
-          sentenceText = `${assistName}이(가) ${playerName}을(를) 대신해 ${numText} 번째 교체 선수로 투입됐습니다.`;
+          sentenceText = `${assistName}이(가) 나가고 ${playerName}이(가) ${numText} 번째 교체 선수로 투입됐습니다.`;
         } else {
-          sentenceText = `${playerName}이(가) ${numText} 번째 교체로 교체되어 나갔습니다.`;
+          sentenceText = `${playerName}이(가) ${numText} 번째 교체로 투입됐습니다.`;
         }
       } else if (detail === EventDetail.SUBSTITUTION_IN) {
         if (assistName) {
-          sentenceText = `${assistName}이(가) ${playerName}을(를) 대신해 투입됐습니다.`;
+          sentenceText = `${assistName}이(가) 나가고 ${playerName}이(가) 투입됐습니다.`;
         } else {
-          sentenceText = `${playerName}이(가) 교체되어 나갔습니다.`;
+          sentenceText = `${playerName}이(가) 교체 투입됐습니다.`;
         }
       } else if (detail === EventDetail.SUBSTITUTION_OUT) {
         if (assistName) {
-          sentenceText = `${assistName}이(가) ${playerName}을(를) 대신해 투입됐습니다.`;
+          sentenceText = `${assistName}이(가) 나가고 ${playerName}이(가) 투입됐습니다.`;
         } else {
-          sentenceText = `${playerName}이(가) 교체되어 나갔습니다.`;
+          sentenceText = `${playerName}이(가) 교체 투입됐습니다.`;
         }
       } else {
         // 기본 교체 메시지
         if (assistName) {
-          sentenceText = `${assistName}이(가) ${playerName}을(를) 대신해 투입됐습니다.`;
+          sentenceText = `${assistName}이(가) 나가고 ${playerName}이(가) 투입됐습니다.`;
         } else {
-          sentenceText = `${playerName}이(가) 교체되어 나갔습니다.`;
+          sentenceText = `${playerName}이(가) 교체 투입됐습니다.`;
         }
       }
       break;
@@ -245,4 +245,4 @@ export function getEventIcon(type: string, detail: string): string {
   }
   
   return '';
-} 
+}

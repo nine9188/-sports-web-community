@@ -1,57 +1,17 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import classNames from 'classnames';
-import { fetchPlayerTrophies } from '@/app/actions/livescore/player/trophies';
-
-interface Trophy {
-  league: string;
-  country: string;
-  place: string;
-  season: string;
-  leagueLogo: string | null;
-}
+import { EmptyState } from '@/app/livescore/football/components/CommonComponents';
+import { TrophyData } from '@/app/livescore/football/player/types/player';
 
 interface PlayerTrophiesProps {
   playerId: number;
-  trophiesData?: Trophy[];
+  trophiesData?: TrophyData[];
 }
 
 export default function PlayerTrophies({ 
-  playerId, 
-  trophiesData: initialTrophiesData = [] 
+  trophiesData = [] 
 }: PlayerTrophiesProps) {
-  const [trophiesData, setTrophiesData] = useState<Trophy[]>(initialTrophiesData);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  
-  // 데이터 가져오기 함수
-  const fetchTrophiesData = useCallback(async () => {
-    try {
-      setError(null);
-      setLoading(true);
-      
-      console.log(`선수 ${playerId}의 트로피 데이터 요청 시작`);
-      const startTime = Date.now();
-      
-      // 서버 액션 직접 호출
-      const data = await fetchPlayerTrophies(playerId);
-      
-      const endTime = Date.now();
-      const loadTime = (endTime - startTime) / 1000;
-      console.log(`선수 ${playerId}의 트로피 데이터 요청 완료: ${data?.length || 0}개 항목, 소요시간: ${loadTime}초`);
-      
-      setTrophiesData(data || []);
-    } catch (error) {
-      console.error('트로피 데이터 로딩 오류:', error);
-      setError('트로피 정보를 불러오는데 실패했습니다.');
-      setTrophiesData([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [playerId]);
-  
   // 트로피 종류별 분류 및 집계
   const trophySummary = trophiesData.reduce((acc, trophy) => {
     if (trophy.place === '우승') {
@@ -63,250 +23,111 @@ export default function PlayerTrophies({
     }
     return acc;
   }, { total: trophiesData.length, champion: 0, runnerUp: 0, other: 0 });
-
-  // 컴포넌트 마운트 시 트로피 데이터 가져오기
-  useEffect(() => {
-    // 이미 데이터가 있으면 가져오지 않음
-    if (initialTrophiesData.length > 0) {
-      console.log(`선수 ${playerId}의 트로피 데이터: 초기 데이터 사용 (${initialTrophiesData.length}개 항목)`);
-      return;
-    }
-    
-    fetchTrophiesData();
-  }, [playerId, initialTrophiesData.length, fetchTrophiesData]);
-
-  if (loading) {
-    return null;
-  }
-
-  if (error) {
-    return null;
-  }
-
-  if (!trophiesData || trophiesData.length === 0) {
-    return (
-      <div className="text-center py-6">
-        <p className="text-gray-500">수상 기록이 없습니다.</p>
-      </div>
-    );
-  }
-
+  
   // 트로피 아이콘 렌더링 함수
   const renderTrophyIcon = (place: string) => {
-    let color;
-    
-    // 우승, 준우승, 3위에 따라 색상 다르게 적용
-    switch(place) {
-      case '우승':
-        color = 'text-yellow-500';
-        break;
-      case '준우승':
-        color = 'text-gray-400';
-        break;
-      case '3위':
-        color = 'text-amber-600';
-        break;
-      default:
-        color = 'text-gray-500';
+    if (place === '우승') {
+      return (
+        <div className="w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center text-white">
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 15C8.7 15 6 12.3 6 9V1H18V9C18 12.3 15.3 15 12 15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M6 3H3V6C3 7.7 4.3 9 6 9V3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M18 3H21V6C21 7.7 19.7 9 18 9V3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M6 21H18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M12 15V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+      );
+    } else if (place === '준우승') {
+      return (
+        <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-white">
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 15C8.7 15 6 12.3 6 9V1H18V9C18 12.3 15.3 15 12 15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M6 3H3V6C3 7.7 4.3 9 6 9V3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M18 3H21V6C21 7.7 19.7 9 18 9V3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M6 21H18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M12 15V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+      );
+    } else {
+      return (
+        <div className="w-6 h-6 bg-amber-700 rounded-full flex items-center justify-center text-white">
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 15C8.7 15 6 12.3 6 9V1H18V9C18 12.3 15.3 15 12 15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M6 21H18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M12 15V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+      );
     }
-    
-    return (
-      <svg 
-        xmlns="http://www.w3.org/2000/svg" 
-        className={`h-5 w-5 ${color} mr-1`} 
-        viewBox="0 0 20 20" 
-        fill="currentColor"
-      >
-        <path 
-          fillRule="evenodd" 
-          d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.616a1 1 0 01.894-1.79l1.599.8L9 4.323V3a1 1 0 011-1z" 
-          clipRule="evenodd" 
-        />
-      </svg>
-    );
   };
+  
+  if (trophiesData.length === 0) {
+    return <EmptyState title="트로피 기록이 없습니다" message="이 선수의 트로피 기록 정보를 찾을 수 없습니다." />;
+  }
 
   return (
-    <div className="mb-4 bg-white rounded-lg">
-      <div className="overflow-x-auto rounded-lg border border-gray-200">
-        {/* 트로피 요약 정보 헤더 */}
-        <div className="bg-gray-50 border-b border-gray-200">
-          <div className="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2 sm:mb-0">트로피 요약</div>
-            
-            <div className="overflow-x-auto pb-1 sm:pb-0">
-              <div className="flex items-center space-x-4 whitespace-nowrap min-w-max">
-                <div className="flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-500 mr-1.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.616a1 1 0 01.894-1.79l1.599.8L9 4.323V3a1 1 0 011-1z" clipRule="evenodd" />
-                  </svg>
-                  <span className="font-medium text-gray-700 whitespace-nowrap">총 트로피: <span className="text-yellow-600 font-bold">{trophySummary.total}개</span></span>
-                </div>
-                
-                <div className="flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-500 mr-1.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                  <span className="font-medium text-gray-700 whitespace-nowrap">우승: <span className="text-yellow-600 font-bold">{trophySummary.champion}회</span></span>
-                </div>
-                
-                <div className="flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 mr-1.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                  <span className="font-medium text-gray-700 whitespace-nowrap">준우승: <span className="font-bold">{trophySummary.runnerUp}회</span></span>
-                </div>
-                
-                {trophySummary.other > 0 && (
-                  <div className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-600 mr-1.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                    <span className="font-medium text-gray-700 whitespace-nowrap">기타: <span className="font-bold">{trophySummary.other}회</span></span>
-                  </div>
-                )}
-              </div>
-            </div>
+    <div className="mb-4 bg-white rounded-lg border overflow-hidden">
+      {/* 트로피 요약 정보 */}
+      <div className="p-3 border-b bg-blue-50">
+        <h3 className="text-sm font-semibold mb-2">트로피 통계</h3>
+        <div className="grid grid-cols-4 gap-2">
+          <div className="p-2 bg-white rounded-lg border text-center">
+            <p className="text-xs text-gray-600">총</p>
+            <p className="text-lg font-bold">{trophySummary.total}</p>
+          </div>
+          <div className="p-2 bg-white rounded-lg border text-center">
+            <p className="text-xs text-gray-600">우승</p>
+            <p className="text-lg font-bold text-yellow-500">{trophySummary.champion}</p>
+          </div>
+          <div className="p-2 bg-white rounded-lg border text-center">
+            <p className="text-xs text-gray-600">준우승</p>
+            <p className="text-lg font-bold text-gray-500">{trophySummary.runnerUp}</p>
+          </div>
+          <div className="p-2 bg-white rounded-lg border text-center">
+            <p className="text-xs text-gray-600">기타</p>
+            <p className="text-lg font-bold text-amber-700">{trophySummary.other}</p>
           </div>
         </div>
-        
-        {/* 데스크탑 및 태블릿 버전 - 완전한 테이블 */}
-        <table className="hidden md:table min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                리그
-              </th>
-              <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                국가
-              </th>
-              <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                결과
-              </th>
-              <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                시즌
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {trophiesData.map((trophy, index) => (
-              <tr key={index} className="hover:bg-gray-50 transition-colors">
-                <td className="px-4 py-3 whitespace-nowrap">
-                  <div className="flex items-center space-x-3">
-                    {trophy.leagueLogo ? (
-                      <div className="flex-shrink-0 w-8 h-8 bg-gray-50 rounded-md border border-gray-100 flex items-center justify-center">
-                        <Image
-                          src={trophy.leagueLogo}
-                          alt={trophy.league}
-                          width={24}
-                          height={24}
-                          className="object-contain"
-                          unoptimized
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-md flex items-center justify-center">
-                        <svg 
-                          xmlns="http://www.w3.org/2000/svg" 
-                          className="h-5 w-5 text-gray-400" 
-                          viewBox="0 0 20 20" 
-                          fill="currentColor"
-                        >
-                          <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
-                        </svg>
-                      </div>
-                    )}
-                    <div className="font-medium text-gray-800">{trophy.league}</div>
-                  </div>
-                </td>
-                <td className="px-4 py-3 whitespace-nowrap text-gray-600">
-                  {trophy.country}
-                </td>
-                <td className="px-4 py-3 whitespace-nowrap text-center">
-                  <span className={classNames('inline-flex items-center px-3 py-1 rounded-full text-xs font-medium', {
-                    'bg-yellow-100 text-yellow-800': trophy.place === '우승',
-                    'bg-gray-100 text-gray-800': trophy.place === '준우승',
-                    'bg-amber-100 text-amber-800': trophy.place === '3위',
-                    'bg-blue-100 text-blue-800': !['우승', '준우승', '3위'].includes(trophy.place)
-                  })}>
-                    <span className="flex items-center">
-                      {renderTrophyIcon(trophy.place)}
-                      {trophy.place}
-                    </span>
-                  </span>
-                </td>
-                <td className="px-4 py-3 whitespace-nowrap text-center text-gray-700 font-medium">
-                  {trophy.season}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        
-        {/* 모바일 버전 - 간소화된 테이블 */}
-        <table className="md:hidden min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                리그/대회
-              </th>
-              <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                결과/시즌
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {trophiesData.map((trophy, index) => (
-              <tr key={index} className="hover:bg-gray-50 transition-colors">
-                <td className="px-4 py-3">
-                  <div className="flex items-center space-x-3">
-                    {trophy.leagueLogo ? (
-                      <div className="flex-shrink-0 w-10 h-10 bg-gray-50 rounded-md border border-gray-100 flex items-center justify-center p-1">
-                        <Image
-                          src={trophy.leagueLogo}
-                          alt={trophy.league}
-                          width={28}
-                          height={28}
-                          className="object-contain"
-                          unoptimized
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-md flex items-center justify-center">
-                        <svg 
-                          xmlns="http://www.w3.org/2000/svg" 
-                          className="h-6 w-6 text-gray-400" 
-                          viewBox="0 0 20 20" 
-                          fill="currentColor"
-                        >
-                          <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
-                        </svg>
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-gray-800 text-sm">{trophy.league}</div>
-                      <div className="text-xs text-gray-500 mt-1">{trophy.country}</div>
+      </div>
+      
+      {/* 트로피 목록 */}
+      <div className="p-3">
+        <h3 className="text-sm font-semibold mb-2">트로피 목록</h3>
+        <div className="space-y-3">
+          {trophiesData.map((trophy, index) => (
+            <div key={index} className="flex items-center p-2 bg-white rounded-lg border">
+              <div className="mr-3">
+                {renderTrophyIcon(trophy.place)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  {trophy.leagueLogo && (
+                    <div className="w-4 h-4 relative flex-shrink-0">
+                      <Image
+                        src={trophy.leagueLogo}
+                        alt={trophy.league}
+                        width={16}
+                        height={16}
+                        className="w-4 h-4 object-contain"
+                        unoptimized
+                      />
                     </div>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <span className={classNames('inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium', {
-                    'bg-yellow-100 text-yellow-800': trophy.place === '우승',
-                    'bg-gray-100 text-gray-800': trophy.place === '준우승',
-                    'bg-amber-100 text-amber-800': trophy.place === '3위',
-                    'bg-blue-100 text-blue-800': !['우승', '준우승', '3위'].includes(trophy.place)
-                  })}>
-                    <span className="flex items-center">
-                      {renderTrophyIcon(trophy.place)}
-                      {trophy.place}
-                    </span>
-                  </span>
-                  <div className="text-xs text-gray-500 mt-1">{trophy.season}</div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  )}
+                  <p className="text-sm font-medium truncate">{trophy.league}</p>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-gray-600">
+                  <span>{trophy.country}</span>
+                  <span>•</span>
+                  <span className="font-medium">{trophy.place}</span>
+                  <span>•</span>
+                  <span>{trophy.season}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

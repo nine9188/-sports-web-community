@@ -3,14 +3,10 @@
 import { useState, memo, useCallback } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { Standing } from '@/app/actions/livescore/teams/standings';
+import { LoadingState, ErrorState, EmptyState } from '@/app/livescore/football/components/CommonComponents';
 
 // 구체적인 인터페이스 정의
-interface League {
-  id: number;
-  name: string;
-  logo: string;
-}
-
 interface Team {
   id: number;
   name: string;
@@ -40,14 +36,14 @@ interface StandingItem {
   description?: string;
 }
 
-interface LeagueStanding {
-  league: League;
-  standings: StandingItem[][];
-}
+// 서버 액션에서 정의한 Standing 인터페이스와 일치시킴
+type LeagueStanding = Standing;
 
 interface StandingsProps {
-  standings: LeagueStanding[];
   teamId: number;
+  initialStandings?: LeagueStanding[];
+  isLoading?: boolean;
+  error?: string | null;
 }
 
 // 팀 로고 컴포넌트 - 메모이제이션
@@ -86,7 +82,7 @@ const tableStyles = {
   container: "mb-4 bg-white rounded-lg border overflow-hidden" // will-change 제거
 };
 
-function Standings({ standings, teamId }: StandingsProps) {
+function Standings({ teamId, initialStandings, isLoading: externalLoading, error: externalError }: StandingsProps) {
   const router = useRouter();
   
   // 폼 결과에 따른 스타일 설정 함수
@@ -116,45 +112,31 @@ function Standings({ standings, teamId }: StandingsProps) {
   // 다른 팀 페이지로 이동 핸들러
   const handleRowClick = useCallback((clickedTeamId: number) => {
     if (clickedTeamId !== teamId) {
-      router.push(`/livescore/football/team/${clickedTeamId}/overview`);
+      router.push(`/livescore/football/team/${clickedTeamId}`);
     }
   }, [router, teamId]);
   
-  // 빈 상태 렌더링 함수
-  const renderEmptyState = useCallback(() => (
-    <div className="flex justify-center items-center py-16">
-      <div className="text-center">
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          className="h-16 w-16 mx-auto text-gray-400 mb-4" 
-          fill="none" 
-          viewBox="0 0 24 24" 
-          stroke="currentColor"
-        >
-          <path 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            strokeWidth={1.5} 
-            d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-          />
-        </svg>
-        <p className="text-lg font-medium text-gray-600">순위 정보가 없습니다</p>
-        <p className="text-sm text-gray-500 mt-2">현재 이 리그에 대한 순위 정보를 제공할 수 없습니다.</p>
-      </div>
-    </div>
-  ), []);
+  // 로딩 상태 처리
+  if (externalLoading) {
+    return <LoadingState message="순위 데이터를 불러오는 중..." />;
+  }
 
-  // 데이터가 없는 경우 처리
-  if (!standings || !Array.isArray(standings) || standings.length === 0) {
-    return renderEmptyState();
+  // 에러 상태 처리
+  if (externalError) {
+    return <ErrorState message={externalError || '순위 데이터를 불러올 수 없습니다'} />;
+  }
+
+  // 데이터가 없는 경우
+  if (!initialStandings || initialStandings.length === 0) {
+    return <EmptyState title="순위 데이터가 없습니다" message="현재 이 팀의 리그 순위 정보를 제공할 수 없습니다." />;
   }
 
   return (
     <div className="space-y-4">
       {/* 모든 리그 순위를 순차적으로 표시 */}
-      {standings.map((league, leagueIndex) => {
+      {initialStandings.map((league, leagueIndex) => {
         const leagueInfo = league.league || {};
-        const standingsData = league.standings || [];
+        const standingsData = league.league?.standings || [];
         
         if (!standingsData || standingsData.length === 0) return null;
         

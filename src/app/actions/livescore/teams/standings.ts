@@ -193,7 +193,6 @@ export async function fetchTeamStandings(teamId: string): Promise<StandingsRespo
     };
 
   } catch (error) {
-    console.error('순위표 정보 가져오기 오류:', error);
     return { 
       success: false,
       message: error instanceof Error ? error.message : 'Unknown error'

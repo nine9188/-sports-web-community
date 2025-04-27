@@ -3,11 +3,10 @@
 import { useState, memo, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { TeamStats, Team } from '../../types';
-import { fetchMatchStats } from '@/app/actions/livescore/matches/stats';
-import { fetchMatchData } from '@/app/actions/livescore/matches/match';
+import { LoadingState, ErrorState, EmptyState } from '@/app/livescore/football/components/CommonComponents';
 
 interface StatsProps {
-  matchId: string;
+  matchId?: string;
   matchData?: {
     stats?: TeamStats[];
     homeTeam?: Team;
@@ -109,62 +108,37 @@ const StatItem = memo(({ homeValue, awayValue, koreanLabel }: {
 
 StatItem.displayName = 'StatItem';
 
-function Stats({ matchId, matchData }: StatsProps) {
+function Stats({ matchData }: StatsProps) {
   const [stats, setStats] = useState<TeamStats[]>(matchData?.stats || []);
   const [homeTeam, setHomeTeam] = useState<Team | undefined>(matchData?.homeTeam);
   const [awayTeam, setAwayTeam] = useState<Team | undefined>(matchData?.awayTeam);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(!matchData?.stats?.length);
+  const [error] = useState<string | null>(null);
 
-  // 통계 데이터 가져오기
+  // props로 받은 데이터 업데이트
   useEffect(() => {
-    // 이미 데이터가 있으면 다시 가져오지 않음
-    if (matchId && (!stats.length || !homeTeam || !awayTeam)) {
-      const fetchData = async () => {
-        setLoading(true);
-        try {
-          // 통계 데이터 가져오기
-          const statsResponse = await fetchMatchStats(matchId);
-          if (statsResponse.success && statsResponse.response.length > 0) {
-            setStats(statsResponse.response);
-          }
-
-          // 필요하면 기본 매치 데이터도 가져와서 홈/어웨이 팀 정보 설정
-          if (!homeTeam || !awayTeam) {
-            const matchResponse = await fetchMatchData(matchId);
-            if (matchResponse.success && matchResponse.data) {
-              setHomeTeam({
-                id: matchResponse.data.teams?.home?.id || 0,
-                name: matchResponse.data.teams?.home?.name || '',
-                logo: matchResponse.data.teams?.home?.logo || '',
-              });
-              setAwayTeam({
-                id: matchResponse.data.teams?.away?.id || 0,
-                name: matchResponse.data.teams?.away?.name || '',
-                logo: matchResponse.data.teams?.away?.logo || '',
-              });
-            }
-          }
-
-          setError(null);
-        } catch (err) {
-          setError('통계 데이터를 가져오는데 실패했습니다.');
-          console.error('통계 데이터 로딩 오류:', err);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      fetchData();
+    if (matchData) {
+      if (matchData.stats && matchData.stats.length > 0) {
+        setStats(matchData.stats);
+        setLoading(false);
+      }
+      
+      if (matchData.homeTeam) {
+        setHomeTeam(matchData.homeTeam);
+      }
+      
+      if (matchData.awayTeam) {
+        setAwayTeam(matchData.awayTeam);
+      }
     }
-  }, [matchId, stats.length, homeTeam, awayTeam]);
+  }, [matchData]);
 
   // 통계 항목 매핑 (API에서 사용하는 키값 -> 표시 레이블)
   const statMappings = useMemo(() => [
     // 슈팅 관련 통계
+    { key: 'Total Shots', label: '전체 슈팅', category: 'shooting' },
     { key: 'Shots on Goal', label: '유효슈팅', category: 'shooting' },
     { key: 'Shots off Goal', label: '빗나간 슈팅', category: 'shooting' },
-    { key: 'Total Shots', label: '전체 슈팅', category: 'shooting' },
     { key: 'Blocked Shots', label: '막힌 슈팅', category: 'shooting' },
     { key: 'Shots insidebox', label: '박스 안 슈팅', category: 'shooting' },
     { key: 'Shots outsidebox', label: '박스 밖 슈팅', category: 'shooting' },
@@ -233,70 +207,17 @@ function Stats({ matchId, matchData }: StatsProps) {
 
   // 로딩 상태 표시
   if (loading) {
-    return (
-      <div className="mb-4 bg-white rounded-lg border p-4">
-        <div className="flex flex-col justify-center items-center py-8">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
-          <p className="mt-2 text-gray-600">데이터를 불러오는 중...</p>
-        </div>
-      </div>
-    );
+    return <LoadingState message="통계 데이터를 불러오는 중..." />;
   }
-
+  
   // 에러 상태 표시
   if (error) {
-    return (
-      <div className="mb-4 bg-white rounded-lg border p-4">
-        <div className="flex justify-center items-center py-8">
-          <div className="text-center">
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-12 w-12 mx-auto text-red-500 mb-2" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={1.5} 
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" 
-              />
-            </svg>
-            <p className="text-lg font-medium text-gray-600">오류 발생</p>
-            <p className="text-sm text-gray-500 mt-1">{error}</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <ErrorState message={error} />;
   }
 
   // 데이터가 없을 경우 메시지 표시
   if (!stats.length) {
-    return (
-      <div className="mb-4 bg-white rounded-lg border p-4">
-        <div className="flex justify-center items-center py-8">
-          <div className="text-center">
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-12 w-12 mx-auto text-gray-400 mb-2" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={1.5} 
-                d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-              />
-            </svg>
-            <p className="text-lg font-medium text-gray-600">통계 데이터가 없습니다</p>
-            <p className="text-sm text-gray-500 mt-1">현재 이 경기에 대한 통계 정보를 제공할 수 없습니다.</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <EmptyState title="통계 데이터가 없습니다" message="현재 이 경기에 대한 통계 정보를 제공할 수 없습니다." />;
   }
 
   // 안전하게 팀 데이터 가져오기

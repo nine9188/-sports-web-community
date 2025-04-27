@@ -42,6 +42,9 @@ export const fetchPlayerSeasons = cache(async (playerId: number): Promise<number
   }
 
   try {
+    // API 요청 전 대기
+    await new Promise(resolve => setTimeout(resolve, API_DELAY));
+    
     const response = await fetch(`${API_BASE_URL}/players/seasons?player=${playerId}`, {
       headers: {
         'x-rapidapi-host': API_HOST,
@@ -60,8 +63,13 @@ export const fetchPlayerSeasons = cache(async (playerId: number): Promise<number
       return [];
     }
     
-    // 최신 시즌부터 정렬
-    const seasons = [...data.response].sort((a, b) => b - a);
+    // 현재 시즌 구하기
+    const currentSeason = getCurrentSeason();
+    
+    // 시즌 데이터 필터링 (미래 시즌 제외) 및 최신 시즌부터 정렬
+    const seasons = [...data.response]
+      .filter(season => season <= currentSeason + 1) // 다음 시즌까지만 허용 (예시: 현재 2024년이면 2025년까지)
+      .sort((a, b) => b - a); // 내림차순 정렬 (가장 최신 시즌이 맨 앞에)
     
     // 캐시에 저장
     seasonsCache.set(playerId, { data: seasons, timestamp: now });

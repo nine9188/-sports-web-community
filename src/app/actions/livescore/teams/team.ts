@@ -20,7 +20,7 @@ export interface TeamData {
   };
 }
 
-interface TeamInfo {
+export interface TeamInfo {
   team: TeamData;
   venue?: {
     id?: number;
@@ -109,24 +109,42 @@ export interface TeamResponse {
   message: string;
 }
 
+// 데이터 모듈 import
+import { fetchCachedTeamMatches as getTeamMatches, Match } from './matches';
+import { fetchCachedTeamSquad as getTeamSquad, Player, Coach } from './squad';
+import { fetchCachedTeamPlayerStats as getTeamPlayerStats, PlayerStats } from './player-stats';
+import { fetchCachedTeamStandings as getTeamStandings, Standing } from './standings';
+
+// 통합 응답 타입 정의
+export interface TeamFullDataResponse {
+  success: boolean;
+  message: string;
+  teamData?: TeamResponse;
+  matches?: { success: boolean; data?: Match[]; message: string };
+  squad?: { success: boolean; data?: (Player | Coach)[]; message: string };
+  playerStats?: { success: boolean; data?: Record<number, PlayerStats>; message: string };
+  standings?: { success: boolean; data?: Standing[]; message: string };
+  [key: string]: unknown; // 인덱스 시그니처
+}
+
 /**
- * 특정 팀의 기본 정보를 가져오는 서버 액션
- * @param teamId 팀 ID
- * @returns 팀 기본 정보 및 스탯
+ * 특정 팀의 기본 정보를 가져오는 내부 함수
  */
-export async function fetchTeamData(teamId: string): Promise<TeamResponse> {
+async function fetchTeamData(teamId: string): Promise<TeamResponse> {
   try {
     if (!teamId) {
       throw new Error('팀 ID는 필수입니다');
     }
 
-    // 팀 정보 API 요청 - API-Sports 직접 호출
+    const apiKey = process.env.FOOTBALL_API_KEY || '';
+
+    // 팀 정보 API 요청
     const teamResponse = await fetch(
       `https://v3.football.api-sports.io/teams?id=${teamId}`,
       {
         headers: {
           'x-rapidapi-host': 'v3.football.api-sports.io',
-          'x-rapidapi-key': process.env.FOOTBALL_API_KEY || '',
+          'x-rapidapi-key': apiKey,
         },
         cache: 'no-store'
       }
@@ -157,7 +175,7 @@ export async function fetchTeamData(teamId: string): Promise<TeamResponse> {
       {
         headers: {
           'x-rapidapi-host': 'v3.football.api-sports.io',
-          'x-rapidapi-key': process.env.FOOTBALL_API_KEY || '',
+          'x-rapidapi-key': apiKey,
         },
         cache: 'no-store'
       }
@@ -167,6 +185,7 @@ export async function fetchTeamData(teamId: string): Promise<TeamResponse> {
     
     if (statsResponse.ok) {
       const statsResult = await statsResponse.json();
+      
       if (statsResult?.response) {
         statsData = statsResult.response as TeamStats;
       }
@@ -186,7 +205,6 @@ export async function fetchTeamData(teamId: string): Promise<TeamResponse> {
     };
 
   } catch (error) {
-    console.error('팀 정보 가져오기 오류:', error);
     return { 
       success: false,
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -194,5 +212,88 @@ export async function fetchTeamData(teamId: string): Promise<TeamResponse> {
   }
 }
 
-// 캐싱 적용 함수
-export const fetchCachedTeamData = cache(fetchTeamData); 
+/**
+ * 특정 팀의 기본 정보를 가져오는 캐시된 함수 
+ * @param teamId 팀 ID
+ */
+export const fetchCachedTeamData = cache(
+  async (teamId: string): Promise<TeamResponse> => {
+    return fetchTeamData(teamId);
+  }
+);
+
+/**
+ * 팀의 모든 관련 데이터를 한 번에 가져오는 통합 서버 액션
+ * @param teamId 팀 ID
+ * @param options 가져올 데이터 타입을 지정하는 옵션
+ */
+export const fetchTeamFullData = cache(
+  async (
+    teamId: string, 
+    options = { 
+      fetchMatches: true, 
+      fetchSquad: true, 
+      fetchPlayerStats: true, 
+      fetchStandings: true 
+    }
+  ): Promise<TeamFullDataResponse> => {
+    try {
+      // 항상 기본 팀 데이터는 가져옵니다
+      const teamData = await fetchTeamData(teamId);
+      
+      if (!teamData.success) {
+        return {
+          success: false,
+          message: teamData.message,
+          teamData
+        };
+      }
+
+      // 필요한 데이터를 병렬로 요청하여 성능 최적화
+      const promises: Promise<unknown>[] = [];
+      const dataTypes: string[] = [];
+
+      if (options.fetchMatches) {
+        promises.push(getTeamMatches(teamId));
+        dataTypes.push('matches');
+      }
+
+      if (options.fetchSquad) {
+        promises.push(getTeamSquad(teamId));
+        dataTypes.push('squad');
+      }
+
+      if (options.fetchPlayerStats) {
+        promises.push(getTeamPlayerStats(teamId));
+        dataTypes.push('playerStats');
+      }
+
+      if (options.fetchStandings) {
+        promises.push(getTeamStandings(teamId));
+        dataTypes.push('standings');
+      }
+
+      // 모든 데이터 병렬로 요청
+      const results = await Promise.all(promises);
+      
+      // 결과 조합
+      const response: TeamFullDataResponse = {
+        success: true,
+        message: '팀 데이터를 성공적으로 가져왔습니다',
+        teamData
+      };
+
+      // 결과 매핑
+      dataTypes.forEach((type, index) => {
+        response[type] = results[index];
+      });
+
+      return response;
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다',
+      };
+    }
+  }
+); 

@@ -1,5 +1,5 @@
 // 경기 상세 페이지의 탭 타입을 정의합니다
-export type TabType = 'events' | 'lineups' | 'stats' | 'standings';
+export type TabType = string;
 
 // 매치 이벤트 타입 정의
 export interface MatchEvent {

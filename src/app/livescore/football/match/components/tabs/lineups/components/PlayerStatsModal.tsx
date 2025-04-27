@@ -2,8 +2,11 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
-import { fetchPlayerStats, PlayerStats, PlayerStatsResponse } from '@/app/actions/livescore/matches/playerStats';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { fetchCachedPlayerStats, PlayerStats, PlayerStatsResponse } from '@/app/actions/livescore/matches/playerStats';
+
+// 메모리 캐시 (전역 수준에서 선수 통계 캐싱)
+const playerStatsCache = new Map<string, PlayerStatsResponse>();
 
 interface PlayerStatsModalProps {
   isOpen: boolean;
@@ -33,12 +36,21 @@ export default function PlayerStatsModal({
   const [playerStats, setPlayerStats] = useState<PlayerStatsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // 데이터 로드 여부를 추적하는 ref
+  const dataLoadedRef = useRef<boolean>(false);
 
   // 컴포넌트가 마운트되거나 isOpen, playerId, matchId가 변경될 때마다 데이터 가져오기
   useEffect(() => {
+    // 모달이 닫혀있거나 플레이어 ID나 매치 ID가 없으면 로드하지 않음
+    if (!isOpen || !playerId || !matchId) return;
+    
+    // 이미 로드된 데이터가 있고 ID가 일치하면 재로드하지 않음
+    if (dataLoadedRef.current && playerStats?.response?.player?.id === playerId) {
+      return;
+    }
+    
+    // 선수 통계 로드 함수
     async function loadPlayerStats() {
-      if (!isOpen || !playerId || !matchId) return;
-      
       // 미리 가져온 데이터가 있으면 바로 사용
       if (preloadedStats && preloadedStats.response && preloadedStats.response.length > 0) {
         setPlayerStats({
@@ -46,25 +58,75 @@ export default function PlayerStatsModal({
           response: preloadedStats.response[0],
           message: '선수 통계 데이터 로드 성공'
         });
+        dataLoadedRef.current = true;
         return;
       }
       
-      setIsLoading(true);
+      // 모달 처음 열 때만 로드 표시
+      if (!dataLoadedRef.current) {
+        setIsLoading(true);
+      }
       setError(null);
       
       try {
-        const data = await fetchPlayerStats(matchId, playerId);
+        // 캐시용 키 생성 - 매치 ID와 선수 ID 조합
+        const cacheKey = `player-stats-${matchId}-${playerId}`;
+        
+        // 메모리 캐시에서 데이터 확인
+        if (playerStatsCache.has(cacheKey)) {
+          const cachedData = playerStatsCache.get(cacheKey);
+          setPlayerStats(cachedData || null);
+          dataLoadedRef.current = true;
+          setIsLoading(false);
+          return;
+        }
+        
+        // 서버에서 데이터 가져오기
+        const data = await fetchCachedPlayerStats(matchId, playerId);
+        
         setPlayerStats(data);
+        if (data.success && data.response) {
+          dataLoadedRef.current = true;
+          
+          // 데이터를 메모리 캐시에 저장
+          playerStatsCache.set(cacheKey, data);
+        }
       } catch (error) {
-        console.error('선수 통계 가져오기 오류:', error);
-        setError('선수 통계를 가져오는 중 오류가 발생했습니다');
+        const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류';
+        setError(`선수 통계를 가져오는 중 오류가 발생했습니다: ${errorMessage}`);
       } finally {
         setIsLoading(false);
       }
     }
     
-    loadPlayerStats();
-  }, [isOpen, playerId, matchId, preloadedStats]);
+    // 실행 전에 오류 방지를 위한 try-catch 블록 추가
+    try {
+      loadPlayerStats();
+    } catch (err) {
+      console.error('선수 데이터 로드 중 예외 발생:', err);
+      setIsLoading(false);
+      setError('데이터 로드 중 오류가 발생했습니다');
+    }
+  }, [isOpen, playerId, matchId, preloadedStats, playerStats]);
+
+  // 모달이 닫힐 때 데이터 로드 상태 초기화 방지 (데이터 유지)
+  useEffect(() => {
+    if (!isOpen) {
+      setIsLoading(false);
+      setError(null);
+      // 데이터는 유지하여 재사용 (dataLoadedRef와 playerStats 상태 유지)
+    }
+  }, [isOpen]);
+
+  // 통계 테이블 데이터 메모이제이션
+  const playerStatsData = useMemo(() => {
+    if (!playerStats?.response) return null;
+    
+    const stats = playerStats.response.statistics[0] || {};
+    const playerData = playerStats.response.player || {};
+    
+    return { stats, playerData };
+  }, [playerStats]);
 
   // 로딩 상태 표시
   if (isLoading) {
@@ -81,6 +143,7 @@ export default function PlayerStatsModal({
           <div className="py-8">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
             <p className="mt-4 text-gray-600">선수 통계를 불러오는 중...</p>
+            <p className="text-xs text-gray-500 mt-2">선수 ID: {playerId}</p>
           </div>
         </div>
       </div>
@@ -106,6 +169,7 @@ export default function PlayerStatsModal({
               </svg>
             </div>
             <p className="text-gray-700">{error}</p>
+            <p className="text-xs text-gray-500 mt-2">선수 ID: {playerId}, 매치 ID: {matchId}</p>
             <button 
               onClick={() => {
                 setError(null);
@@ -122,10 +186,35 @@ export default function PlayerStatsModal({
   }
 
   if (!isOpen) return null;
-  if (!playerStats?.response) return null;
+  
+  // 데이터 없음 확인 추가
+  if (!playerStatsData) {
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl w-full max-w-md p-6 text-center">
+          <div className="flex justify-end">
+            <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="py-8">
+            <p className="text-gray-700">선수 통계 데이터를 찾을 수 없습니다</p>
+            <p className="text-xs text-gray-500 mt-2">선수 ID: {playerId}, 선수 이름: {playerInfo.name}</p>
+            <button 
+              onClick={onClose}
+              className="mt-4 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  const stats = playerStats.response.statistics[0] || {};
-  const playerData = playerStats.response.player || {};
+  const { stats, playerData } = playerStatsData;
 
   // 이미지 URL 처리 로직
   const getImageUrl = (url: string | undefined, defaultUrl: string) => {
@@ -166,8 +255,8 @@ export default function PlayerStatsModal({
                 height={112}
                 className="w-full h-full rounded-full object-cover"
                 unoptimized
-                onError={(e) => {
-                  console.error(`이미지 로드 실패: ${(e.currentTarget as HTMLImageElement).src}`);
+                onError={() => {
+                  // console.error(`이미지 로드 실패: ${(e.currentTarget as HTMLImageElement).src}`);
                   // 에러 시에도 동일한 이미지 유지 (API에서 제공하는 기본 이미지가 있음)
                   // 필요한 경우 아래 주석을 해제하여 로컬 기본 이미지로 변경 가능
                   // (e.currentTarget as HTMLImageElement).src = '/images/default-player.png';

@@ -1,203 +1,23 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import { FaMedal } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
-import { fetchPlayerRankings } from '@/app/actions/livescore/player/rankings';
-import { fetchPlayerStats } from '@/app/actions/livescore/player/stats';
-
-// 선수 데이터 인터페이스
-interface Player {
-  id: number;
-  name: string;
-  photo: string;
-}
-
-// 팀 데이터 인터페이스
-interface Team {
-  id: number;
-  name: string;
-  logo: string;
-}
-
-// 통계 데이터 인터페이스
-interface Statistic {
-  team: Team;
-  games: {
-    appearences?: number;
-    minutes?: number;
-  };
-  goals: {
-    total?: number;
-    assists?: number;
-  };
-  cards: {
-    yellow?: number;
-    red?: number;
-  };
-}
-
-// 선수 순위 데이터 인터페이스
-interface PlayerRanking {
-  player: Player;
-  statistics: Statistic[];
-}
-
-// 모든 랭킹 데이터를 포함하는 인터페이스
-interface RankingsData {
-  topScorers?: PlayerRanking[];
-  topAssists?: PlayerRanking[];
-  mostGamesScored?: PlayerRanking[];
-  leastPlayTime?: PlayerRanking[];
-  topRedCards?: PlayerRanking[];
-  topYellowCards?: PlayerRanking[];
-}
+import { EmptyState } from '@/app/livescore/football/components/CommonComponents';
+import { RankingsData, PlayerRanking } from '@/app/livescore/football/player/types/player';
 
 interface PlayerRankingsProps {
-  playerId: number;
-  currentLeague?: number;
+  playerId?: number;
   rankingsData?: RankingsData;
 }
 
-// 현재 시즌 결정 함수
-const getCurrentSeason = (): number => {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  // 7월 이후면 다음 시즌으로 간주 (예: 2024년 7월 이후면 2024 시즌)
-  return month >= 6 ? year : year - 1;
-};
-
 export default function PlayerRankings({ 
   playerId, 
-  currentLeague = 0, 
-  rankingsData: initialRankingsData
+  rankingsData = {}
 }: PlayerRankingsProps) {
   const router = useRouter();
   const [rankingType, setRankingType] = useState('topScorers');
-  const [rankings, setRankings] = useState<RankingsData>(initialRankingsData || {});
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [leagueId, setLeagueId] = useState<number | null>(currentLeague || null);
-
-  // 선수의 주 리그를 찾는 함수
-  const fetchPlayerLeague = useCallback(async () => {
-    if (leagueId && leagueId !== 0) return; // 이미 리그 ID가 있으면 스킵
-    
-    try {
-      setLoading(true);
-      setError(null);
-      
-      console.log(`선수 ${playerId}의 리그 정보 요청 시작`);
-      const startTime = Date.now();
-      
-      // 현재 시즌 계산
-      const season = getCurrentSeason();
-      
-      // 선수 통계에서 주 리그 찾기
-      const stats = await fetchPlayerStats(playerId, season);
-      
-      if (stats && stats.length > 0) {
-        // 출전 경기가 가장 많은 리그 선택
-        const mainLeague = stats.reduce((prev, current) => {
-          const prevAppearances = prev.games?.appearences || 0;
-          const currentAppearances = current.games?.appearences || 0;
-          return currentAppearances > prevAppearances ? current : prev;
-        });
-        
-        if (mainLeague.league?.id) {
-          setLeagueId(mainLeague.league.id);
-          console.log(`선수 ${playerId}의 주 리그 ID 찾음: ${mainLeague.league.id}`);
-        } else {
-          setError('선수의 리그 정보를 찾을 수 없습니다');
-          console.error('선수의 리그 ID를 찾을 수 없음');
-        }
-      } else {
-        // 이전 시즌으로 재시도
-        const prevSeasonStats = await fetchPlayerStats(playerId, season - 1);
-        
-        if (prevSeasonStats && prevSeasonStats.length > 0) {
-          // 출전 경기가 가장 많은 리그 선택
-          const mainLeague = prevSeasonStats.reduce((prev, current) => {
-            const prevAppearances = prev.games?.appearences || 0;
-            const currentAppearances = current.games?.appearences || 0;
-            return currentAppearances > prevAppearances ? current : prev;
-          });
-          
-          if (mainLeague.league?.id) {
-            setLeagueId(mainLeague.league.id);
-            console.log(`선수 ${playerId}의 주 리그 ID 찾음(이전 시즌): ${mainLeague.league.id}`);
-          } else {
-            setError('선수의 리그 정보를 찾을 수 없습니다');
-            console.error('선수의 리그 ID를 찾을 수 없음');
-          }
-        } else {
-          setError('선수의 통계 정보를 찾을 수 없습니다');
-          console.error('선수의 통계 정보를 찾을 수 없음');
-        }
-      }
-      
-      const endTime = Date.now();
-      const loadTime = (endTime - startTime) / 1000;
-      console.log(`선수 ${playerId}의 리그 정보 요청 완료, 소요시간: ${loadTime}초`);
-    } catch (err) {
-      setError('선수의 리그 정보를 로드하는데 실패했습니다');
-      console.error('리그 정보 로드 오류:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [playerId, leagueId]);
-  
-  // 랭킹 데이터 가져오기 함수
-  const fetchRankings = useCallback(async () => {
-    // 리그 ID가 없으면 아직 로드 중이므로 반환
-    if (!leagueId || leagueId === 0) return;
-    
-    try {
-      setLoading(true);
-      setError(null);
-      
-      console.log(`선수 ${playerId}의 랭킹 데이터 요청 시작 (리그 ID: ${leagueId})`);
-      const startTime = Date.now();
-      
-      // 서버 액션 직접 호출
-      const data = await fetchPlayerRankings(playerId, leagueId);
-      
-      const endTime = Date.now();
-      const loadTime = (endTime - startTime) / 1000;
-      
-      if (data && Object.keys(data).length > 0) {
-        console.log(`선수 ${playerId}의 랭킹 데이터 요청 완료, 소요시간: ${loadTime}초`);
-        setRankings(data);
-      } else {
-        console.error(`랭킹 데이터를 찾을 수 없음`);
-        setError('랭킹 데이터를 찾을 수 없습니다');
-      }
-    } catch (err) {
-      console.error('랭킹 데이터 로드 오류:', err);
-      setError('랭킹 데이터를 로드하는데 실패했습니다');
-    } finally {
-      setLoading(false);
-    }
-  }, [playerId, leagueId]);
-
-  // 선수의 주 리그를 찾음
-  useEffect(() => {
-    fetchPlayerLeague();
-  }, [fetchPlayerLeague]);
-
-  // 컴포넌트 마운트 시 랭킹 데이터 가져오기
-  useEffect(() => {
-    // 이미 데이터가 있으면 가져오지 않음
-    if (initialRankingsData && Object.keys(initialRankingsData).length > 0) {
-      console.log(`선수 ${playerId}의 랭킹 데이터: 초기 데이터 사용`);
-      setRankings(initialRankingsData);
-      return;
-    }
-    
-    fetchRankings();
-  }, [initialRankingsData, playerId, fetchRankings]);
 
   const rankingTypes = [
     { id: 'topScorers', label: '최다 득점' },
@@ -207,24 +27,10 @@ export default function PlayerRankings({
     { id: 'topRedCards', label: '최다 레드카드' },
     { id: 'topYellowCards', label: '최다 옐로카드' },
   ];
-  
-  // 로딩 중 표시
-  if (loading) {
-    return null;
-  }
-
-  // 에러 표시
-  if (error) {
-    return null;
-  }
 
   // 데이터가 없는 경우
-  if (!rankings || Object.keys(rankings).length === 0) {
-    return (
-      <div className="text-center py-6">
-        <p className="text-gray-500">순위 데이터가 없습니다.</p>
-      </div>
-    );
+  if (!rankingsData || Object.keys(rankingsData).length === 0) {
+    return <EmptyState title="순위 데이터가 없습니다" message="이 선수의 순위 데이터 정보를 찾을 수 없습니다." />;
   }
 
   // 선수 페이지로 이동하는 함수
@@ -244,21 +50,21 @@ export default function PlayerRankings({
   };
 
   const getRankingData = (): PlayerRanking[] => {
-    if (!rankings) return [];
+    if (!rankingsData) return [];
     
     switch (rankingType) {
       case 'topScorers':
-        return rankings.topScorers || [];
+        return rankingsData.topScorers || [];
       case 'topAssists':
-        return rankings.topAssists || [];
+        return rankingsData.topAssists || [];
       case 'mostGamesScored':
-        return rankings.mostGamesScored || [];
+        return rankingsData.mostGamesScored || [];
       case 'leastPlayTime':
-        return rankings.leastPlayTime || [];
+        return rankingsData.leastPlayTime || [];
       case 'topRedCards':
-        return rankings.topRedCards || [];
+        return rankingsData.topRedCards || [];
       case 'topYellowCards':
-        return rankings.topYellowCards || [];
+        return rankingsData.topYellowCards || [];
       default:
         return [];
     }

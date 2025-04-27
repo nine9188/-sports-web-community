@@ -13,7 +13,7 @@ export default function PlayerLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="py-4">
+    <div className="py-0">
       {children}
     </div>
   );
