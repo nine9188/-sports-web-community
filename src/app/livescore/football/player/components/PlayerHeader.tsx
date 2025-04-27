@@ -104,7 +104,7 @@ const PlayerHeader = memo(function PlayerHeader() {
           </div>
           
           <div className="text-left flex-1">
-            <h1 className="text-lg md:text-2xl font-bold truncate max-w-[200px] md:max-w-full">{playerData.info.name}</h1>
+            <h1 className="text-md md:text-base font-bold truncate max-w-[200px] md:max-w-full">{playerData.info.name}</h1>
             {mainTeamStats?.team && (
               <p className="text-sm text-gray-600 truncate max-w-[200px]">{mainTeamStats.team.name}</p>
             )}

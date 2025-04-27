@@ -175,27 +175,23 @@ const PlayerEvents = ({ player, events }: { player: Player; events: MatchEvent[]
           let isIn = false;
           let isOut = false;
           
-          // 선수가 나가는 경우 (API에 따라 player가 out 또는 assist가 out일 수 있음)
-          if (event.player?.id === player.id && (event.detail === 'Substitution Out' || event.detail?.includes('Out'))) {
+          // 교체 OUT은 player ID, 교체 IN은 assist ID에 해당
+          // 선수가 나가는 경우 (player ID가 OUT 선수)
+          if (event.assist?.id === player.id && (event.detail === 'Substitution Out' || event.detail?.includes('Out'))) {
             isOut = true;
-          } else if (event.assist?.id === player.id && (event.detail === 'Substitution Out' || event.detail?.includes('Out'))) {
-            isOut = true;
-          }
-          
-          // 선수가 들어오는 경우 (API에 따라 player가 in 또는 assist가 in일 수 있음)
-          if (event.player?.id === player.id && (event.detail === 'Substitution In' || event.detail?.includes('In'))) {
-            isIn = true;
-          } else if (event.assist?.id === player.id && (event.detail === 'Substitution In' || event.detail?.includes('In'))) {
+          } 
+          // 선수가 들어오는 경우 (assist ID가 IN 선수)
+          else if (event.player?.id === player.id && (event.detail === 'Substitution In' || event.detail?.includes('In'))) {
             isIn = true;
           }
           
           // 이전 로직 백업 (일부 API는 다른 구조 사용)
           if (!isIn && !isOut) {
-            // player가 교체 투입, assist가 교체 아웃 선수인 경우
+            // player가 교체 아웃, assist가 교체 투입 선수인 경우
             if (event.detail === 'Substitution' || event.detail?.includes('Substitution')) {
-              if (event.player?.id === player.id) {
+              if (event.assist?.id === player.id) {
                 isOut = true;
-              } else if (event.assist?.id === player.id) {
+              } else if (event.player?.id === player.id) {
                 isIn = true;
               }
             }
