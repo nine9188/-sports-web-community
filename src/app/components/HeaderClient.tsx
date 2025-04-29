@@ -11,6 +11,7 @@ import { createClient } from '@/app/lib/supabase-browser';
 import ProfileDropdown from './ProfileDropdown';
 import { HeaderUserData } from '@/app/lib/types';
 import BoardNavigationClient from './header/BoardNavigationClient';
+import { useAuth } from '../context/AuthContext';
 
 type HeaderClientProps = {
   onMenuClick: () => void;
@@ -26,6 +27,29 @@ export default function HeaderClient({
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
+  
+  // 이전 userData 상태 유지 (깜빡임 방지)
+  const [userData, setUserData] = useState<HeaderUserData | null>(initialUserData);
+  
+  // 초기 데이터가 없더라도 user 객체가 있으면 기본 데이터 설정
+  useEffect(() => {
+    if (!userData && user) {
+      const nickname = user.user_metadata?.nickname || '사용자';
+      setUserData({
+        id: user.id,
+        email: user.email || '',
+        nickname: nickname,
+        iconInfo: {
+          iconId: null,
+          iconUrl: '',
+          iconName: ''
+        }
+      });
+    } else if (initialUserData && !userData) {
+      setUserData(initialUserData);
+    }
+  }, [userData, user, initialUserData]);
   
   // 드롭다운 메뉴 토글
   const toggleDropdown = useCallback((e: React.MouseEvent) => {
@@ -39,6 +63,8 @@ export default function HeaderClient({
       const supabase = createClient();
       await supabase.auth.signOut();
       toast.success('로그아웃되었습니다.');
+      setUserData(null);
+      
       router.push('/');
       router.refresh();
     } catch (error) {
@@ -61,95 +87,77 @@ export default function HeaderClient({
 
   // 인증 상태에 따른 렌더링 결정
   const renderAuthState = useMemo(() => {
-    // 로그인하지 않은 경우
-    if (!initialUserData) {
-      return (
-        <div className="flex space-x-2">
-          {/* PC 버전(md 이상): 기존 링크 유지 */}
+    return (
+      <div className="flex space-x-2">
+        {/* PC 버전(md 이상): 커스텀 드롭다운 */}
+        {userData ? (
+          <div className="hidden md:block relative" ref={profileDropdownRef}>
+            <button
+              onClick={toggleDropdown}
+              className="flex items-center space-x-1 px-3 py-2 rounded hover:bg-gray-100"
+            >
+              <div className="w-6 h-6 relative rounded-full overflow-hidden">
+                {userData.iconInfo?.iconUrl ? (
+                  <Image 
+                    src={userData.iconInfo.iconUrl}
+                    alt="프로필 이미지"
+                    fill
+                    sizes="20px"
+                    className="object-cover"
+                    unoptimized={true}
+                    title={userData.iconInfo?.iconName || undefined}
+                    priority={true}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-slate-300 flex items-center justify-center text-white">
+                    {userData.email?.charAt(0).toUpperCase() || '?'}
+                  </div>
+                )}
+              </div>
+              <span className="text-sm">{userData.nickname || '사용자'}</span>
+              <ChevronDown className="h-4 w-4" />
+            </button>
+
+            {/* 드롭다운 메뉴 */}
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-[100]">
+                <Link href="/settings/profile" className="block px-4 py-2 hover:bg-gray-100">
+                  <div className="flex items-center">
+                    <Settings className="h-3.5 w-3.5 mr-2" />
+                    <span className="text-sm">프로필 설정</span>
+                  </div>
+                </Link>
+                <Link href="/settings/icons" className="block px-4 py-2 hover:bg-gray-100">
+                  <div className="flex items-center">
+                    <Settings className="h-3.5 w-3.5 mr-2" />
+                    <span className="text-sm">아이콘 설정</span>
+                  </div>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                >
+                  <div className="flex items-center">
+                    <LogOut className="h-3.5 w-3.5 mr-2" />
+                    <span className="text-sm">로그아웃</span>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
           <Link href="/signin" className="hidden md:flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100">
             <User className="h-5 w-5" />
           </Link>
-          
-          {/* 모바일 버전: ProfileDropdown 컴포넌트 사용 */}
-          <div className="md:hidden">
-            <ProfileDropdown />
-          </div>
-        </div>
-      );
-    }
-
-    // 사용자 아이콘 URL 및 이름
-    const iconUrl = initialUserData.iconInfo.iconUrl;
-    const iconName = initialUserData.iconInfo.iconName;
-    const nickname = initialUserData.nickname || '사용자';
-
-    // 모바일 버전: ProfileDropdown 컴포넌트
-    // PC 버전: 커스텀 드롭다운
-    return (
-      <>
-        {/* 모바일 버전 */}
+        )}
+        
+        {/* 모바일 버전: ProfileDropdown 컴포넌트 사용 */}
         <div className="md:hidden">
           <ProfileDropdown />
         </div>
-        
-        {/* PC 버전 */}
-        <div className="hidden md:block relative" ref={profileDropdownRef}>
-          <button
-            onClick={toggleDropdown}
-            className="flex items-center space-x-1 px-3 py-2 rounded hover:bg-gray-100"
-          >
-            <div className="w-6 h-6 relative rounded-full overflow-hidden">
-              {iconUrl ? (
-                <Image 
-                  src={iconUrl}
-                  alt="프로필 이미지"
-                  fill
-                  sizes="20px"
-                  className="object-cover"
-                  unoptimized={true}
-                  title={iconName || undefined}
-                  priority={true}
-                />
-              ) : (
-                <div className="w-full h-full bg-slate-300 flex items-center justify-center text-white">
-                  {initialUserData.email?.charAt(0).toUpperCase() || '?'}
-                </div>
-              )}
-            </div>
-            <span className="text-sm">{nickname}</span>
-            <ChevronDown className="h-4 w-4" />
-          </button>
-
-          {/* 드롭다운 메뉴 */}
-          {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-[100]">
-              <Link href="/settings/profile" className="block px-4 py-2 hover:bg-gray-100">
-                <div className="flex items-center">
-                  <Settings className="h-3.5 w-3.5 mr-2" />
-                  <span className="text-sm">프로필 설정</span>
-                </div>
-              </Link>
-              <Link href="/settings/icons" className="block px-4 py-2 hover:bg-gray-100">
-                <div className="flex items-center">
-                  <Settings className="h-3.5 w-3.5 mr-2" />
-                  <span className="text-sm">아이콘 설정</span>
-                </div>
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="w-full text-left px-4 py-2 hover:bg-gray-100"
-              >
-                <div className="flex items-center">
-                  <LogOut className="h-3.5 w-3.5 mr-2" />
-                  <span className="text-sm">로그아웃</span>
-                </div>
-              </button>
-            </div>
-          )}
-        </div>
-      </>
+      </div>
     );
-  }, [initialUserData, isDropdownOpen, toggleDropdown, handleLogout]);
+  }, [userData, isDropdownOpen, toggleDropdown, handleLogout]);
 
   return (
     <header className="sticky top-0 z-50 border-b shadow-sm bg-white">

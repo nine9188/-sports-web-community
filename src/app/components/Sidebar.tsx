@@ -107,15 +107,7 @@ export default function Sidebar({
 
         {/* 스크롤 영역 */}
         <div className="h-[calc(100%-56px)] overflow-y-auto bg-white">
-          {/* 사용자 정보 섹션 - 모바일용 */}
-          <div className="mb-4 bg-white">
-            <div className="px-4 py-3 border-b">
-              <h3 className="text-sm font-bold">계정</h3>
-            </div>
-            <div className="px-4 py-2">
-              {authSection}
-            </div>
-          </div>
+          {/* 모바일에서는 사용자 정보 섹션 제거 */}
           
           {/* 게시판 이동 섹션 */}
           <div className="mb-4 bg-white">
