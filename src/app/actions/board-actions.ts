@@ -80,4 +80,65 @@ export async function getBoardsForNavigation(): Promise<{
       success: false
     };
   }
+}
+
+/**
+ * 게시판 정보를 슬러그나 ID로 조회하는 서버 액션
+ */
+export async function getBoardBySlugOrId(slugOrId: string) {
+  try {
+    const supabase = await createClient();
+    const isUUID = /^[0-9a-fA-F-]{36}$/.test(slugOrId);
+
+    let data;
+    let error;
+
+    if (isUUID) {
+      // UUID로 조회
+      const result = await supabase
+        .from('boards')
+        .select('*')
+        .eq('id', slugOrId)
+        .single();
+      
+      data = result.data;
+      error = result.error;
+    } else {
+      // 슬러그로 조회
+      const result = await supabase
+        .from('boards')
+        .select('*')
+        .eq('slug', slugOrId)
+        .single();
+      
+      data = result.data;
+      error = result.error;
+    }
+
+    if (error) throw new Error('게시판 정보를 가져오지 못했습니다.');
+    return data;
+  } catch (error) {
+    console.error('게시판 정보 조회 오류:', error);
+    throw error;
+  }
+}
+
+/**
+ * 모든 게시판 목록을 가져오는 서버 액션
+ */
+export async function getAllBoards() {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('boards')
+      .select('*')
+      .order('display_order', { ascending: true })
+      .order('name', { ascending: true });
+
+    if (error) throw new Error('게시판 목록 조회 실패');
+    return data;
+  } catch (error) {
+    console.error('게시판 목록 조회 오류:', error);
+    throw error;
+  }
 } 

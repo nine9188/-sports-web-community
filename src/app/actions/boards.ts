@@ -78,4 +78,174 @@ export async function fetchBoardsDirectly(): Promise<{ rootBoards: HierarchicalB
 export async function invalidateBoardsCache() {
   revalidatePath('/'); // 메인 경로 재검증 (모든 게시판 관련 페이지에 영향)
   return { success: true };
+}
+
+/**
+ * 게시판 정보를 슬러그나 ID로 조회하는 서버 액션
+ */
+export async function getBoardBySlugOrId(slugOrId: string) {
+  try {
+    const supabase = await createClient();
+    const isUUID = /^[0-9a-fA-F-]{36}$/.test(slugOrId);
+
+    let data;
+    let error;
+
+    if (isUUID) {
+      // UUID로 조회
+      const result = await supabase
+        .from('boards')
+        .select('*')
+        .eq('id', slugOrId)
+        .single();
+      
+      data = result.data;
+      error = result.error;
+    } else {
+      // 슬러그로 조회
+      const result = await supabase
+        .from('boards')
+        .select('*')
+        .eq('slug', slugOrId)
+        .single();
+      
+      data = result.data;
+      error = result.error;
+    }
+
+    if (error) throw new Error('게시판 정보를 가져오지 못했습니다.');
+    return data;
+  } catch (error) {
+    console.error('게시판 정보 조회 오류:', error);
+    throw error;
+  }
+}
+
+/**
+ * 모든 게시판 목록을 가져오는 서버 액션
+ */
+export async function getAllBoards() {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('boards')
+      .select('*')
+      .order('display_order', { ascending: true })
+      .order('name', { ascending: true });
+
+    if (error) throw new Error('게시판 목록 조회 실패');
+    return data;
+  } catch (error) {
+    console.error('게시판 목록 조회 오류:', error);
+    throw error;
+  }
+}
+
+/**
+ * 게시글 생성 서버 액션
+ */
+export async function createPost(
+  title: string,
+  content: string,
+  boardId: string,
+  userId: string
+) {
+  try {
+    const supabase = await createClient();
+    
+    // 게시판 정보 가져오기
+    const { data: boardData } = await supabase
+      .from('boards')
+      .select('name, slug')
+      .eq('id', boardId)
+      .single();
+    
+    if (!boardData) {
+      throw new Error('게시판 정보를 찾을 수 없습니다.');
+    }
+    
+    // 게시글 생성
+    const { data, error } = await supabase
+      .from('posts')
+      .insert({
+        title: title.trim(),
+        content,
+        user_id: userId,
+        board_id: boardId,
+        category: boardData.name || null,
+        views: 0,
+        likes: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        status: 'published'
+      })
+      .select();
+    
+    if (error) throw error;
+    
+    // 생성된 게시글의 post_number 가져오기
+    if (data && data.length > 0) {
+      const { data: createdPost } = await supabase
+        .from('posts')
+        .select('post_number')
+        .eq('id', data[0].id)
+        .single();
+      
+      return {
+        success: true,
+        postId: data[0].id,
+        postNumber: createdPost?.post_number,
+        boardSlug: boardData.slug
+      };
+    }
+    
+    throw new Error('게시글 생성 중 오류가 발생했습니다.');
+  } catch (error) {
+    console.error('게시글 생성 오류:', error);
+    throw error;
+  }
+}
+
+/**
+ * 게시글 수정 서버 액션
+ */
+export async function updatePost(
+  postId: string, 
+  title: string, 
+  content: string, 
+  userId: string
+) {
+  try {
+    const supabase = await createClient();
+    
+    // 게시글 업데이트 쿼리
+    const { error, data } = await supabase
+      .from('posts')
+      .update({
+        title: title.trim(),
+        content,
+        updated_at: new Date().toISOString()
+      })
+      .match({ id: postId, user_id: userId })
+      .select('board_id, post_number')
+      .single();
+    
+    if (error) throw error;
+    
+    // 게시판 슬러그 가져오기
+    const { data: boardData } = await supabase
+      .from('boards')
+      .select('slug')
+      .eq('id', data.board_id)
+      .single();
+    
+    return {
+      success: true,
+      boardSlug: boardData?.slug,
+      postNumber: data.post_number
+    };
+  } catch (error) {
+    console.error('게시글 수정 오류:', error);
+    throw error;
+  }
 } 

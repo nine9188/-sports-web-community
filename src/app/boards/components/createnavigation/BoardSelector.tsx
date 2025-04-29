@@ -39,10 +39,8 @@ const BoardSelector = React.memo(({
   // 입력 데이터 유효성 검사
   useEffect(() => {
     if (!boards || boards.length === 0) {
-      console.error('BoardSelector: boards 데이터가 비어 있습니다');
       setIsLoading(true);
     } else {
-      console.log('BoardSelector: 총 게시판 수:', boards.length);
       setIsLoading(false);
     }
   }, [boards]);
@@ -70,7 +68,6 @@ const BoardSelector = React.memo(({
     const findCategories = () => {
       // 입력 데이터 검증
       if (!boards || boards.length === 0) {
-        console.error('게시판 데이터가 없습니다:', boards);
         return [];
       }
       
@@ -89,7 +86,6 @@ const BoardSelector = React.memo(({
       if (footballBoard) {
         const directLeagues = boards.filter(b => b.parent_id === footballBoard.id);
         leagueBoards = directLeagues;
-        console.log('찾은 리그 게시판들:', directLeagues.map(b => b.name));
       }
       
       // 해외축구를 제외한 모든 상위 게시판 (직접적인 자식 게시판이 있는 게시판)
@@ -107,7 +103,6 @@ const BoardSelector = React.memo(({
       const removeDuplicates = (boardList: Board[]) => {
         return boardList.filter(board => {
           if (idSet.has(board.id)) {
-            console.warn(`중복 게시판 ID 발견: ${board.id} (${board.name})`);
             return false;
           }
           idSet.add(board.id);
@@ -120,7 +115,6 @@ const BoardSelector = React.memo(({
       const filteredOtherBoards = removeDuplicates(otherParentBoards);
       const allParentBoards = [...filteredLeagueBoards, ...filteredOtherBoards];
       
-      console.log('1차 분류용 상위 게시판:', allParentBoards.map(b => b.name));
       return sortBoards(allParentBoards);
     };
     
@@ -132,19 +126,6 @@ const BoardSelector = React.memo(({
       // 각 상위 게시판의 직접적인 자식들을 하위 게시판으로 설정
       const childBoards = boards.filter(b => b.parent_id === category.id);
       result.subCategories[category.id] = sortBoards(childBoards);
-    });
-    
-    console.log('최종 카테고리 결과:', {
-      카테고리수: result.categories.length,
-      카테고리목록: result.categories.map(c => c.name),
-      하위카테고리매핑: Object.keys(result.subCategories).map(id => {
-        const cat = result.categories.find(c => c.id === id);
-        return {
-          상위게시판: cat?.name,
-          하위게시판수: result.subCategories[id].length,
-          하위게시판목록: result.subCategories[id].map(s => s.name)
-        };
-      })
     });
     
     return result;
@@ -231,7 +212,6 @@ const BoardSelector = React.memo(({
   // 카테고리 옵션 렌더링
   const renderCategoryOptions = useCallback(() => {
     if (isLoading || !categories || categories.length === 0) {
-      console.error('렌더링할 카테고리가 없습니다:', categories);
       return (
         <div className="px-3 py-1.5 text-gray-500">
           {isLoading ? "게시판 데이터를 불러오는 중입니다..." : "게시판이 없습니다. 관리자에게 문의하세요."}
@@ -304,11 +284,6 @@ const BoardSelector = React.memo(({
     if (!selectedCategory) return false;
     return subCategories[selectedCategory.id] && subCategories[selectedCategory.id].length > 0;
   }, [selectedCategory, subCategories]);
-  
-  // 디버깅용 콘솔 로그 (실제 배포 시 제거)
-  useEffect(() => {
-    console.log('카테고리 목록:', categories.map(c => c.name));
-  }, [categories]);
   
   return (
     <div className="w-full space-y-4">

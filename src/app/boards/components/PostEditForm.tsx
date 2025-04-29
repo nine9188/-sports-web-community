@@ -18,6 +18,7 @@ import { MatchData } from '@/app/actions/footballApi';
 import { toast } from 'react-hot-toast';
 import { SocialEmbed } from '@/app/lib/tiptap/SocialEmbed';
 import { AutoEmbedExtension } from '@/app/lib/tiptap/AutoEmbedExtension';
+import { createPost, updatePost } from '@/app/actions/boards';
 
 // 게시판(Board) 타입 정의 - BoardSelector와 호환되도록 수정
 interface Board {
@@ -36,14 +37,15 @@ interface PostEditFormProps {
   postId?: string;
   // 모든 경우에 필요한 props
   boardId?: string;
-  boardSlug?: string;
-  postNumber?: string;
+  // 미사용 변수이지만 호환성을 위해 타입 정의에는 유지
+  _boardSlug?: string;
+  _postNumber?: string;
   initialTitle?: string;
   initialContent?: string;
   boardName: string;
-  // 새 props: 게시판 선택 옵션
+  // 카테고리 관련 props
   categoryId?: string;
-  setCategoryId?: (id: string) => void;
+  setCategoryId?: ((id: string) => void) | null | undefined; // 옵션으로 변경
   allBoardsFlat?: Board[];
   isCreateMode?: boolean;
 }
@@ -51,12 +53,11 @@ interface PostEditFormProps {
 export default function PostEditForm({ 
   postId,
   boardId, 
-  boardSlug,
-  postNumber,
+  // 미사용 변수 제거
   initialTitle = '', 
   initialContent = '',
   boardName,
-  categoryId,
+  categoryId: externalCategoryId,
   setCategoryId,
   allBoardsFlat = [],
   isCreateMode = false
@@ -65,6 +66,8 @@ export default function PostEditForm({
   const [content, setContent] = useState(initialContent);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // 내부 상태로 categoryId 관리
+  const [categoryId, setCategoryIdInternal] = useState(externalCategoryId || '');
   
   // 드롭다운 상태들
   const [showImageModal, setShowImageModal] = useState(false);
@@ -77,7 +80,6 @@ export default function PostEditForm({
   const boardDropdownRef = useRef<HTMLDivElement>(null);
   
   const router = useRouter();
-  const supabase = createClient();
   
   const editor = useEditor({
     extensions: [
@@ -135,6 +137,15 @@ export default function PostEditForm({
     };
   }, [boardDropdownRef]);
   
+  // 카테고리 변경 핸들러
+  const handleCategoryChange = (id: string) => {
+    setCategoryIdInternal(id);
+    // 외부에서 전달한 setCategoryId가 함수인 경우에만 호출
+    if (setCategoryId && typeof setCategoryId === 'function') {
+      setCategoryId(id);
+    }
+  };
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -157,6 +168,8 @@ export default function PostEditForm({
     setError(null);
     
     try {
+      // 사용자 인증 정보 확인
+      const supabase = createClient();
       const { data: userData, error: userError } = await supabase.auth.getUser();
       
       if (userError || !userData.user) {
@@ -166,55 +179,28 @@ export default function PostEditForm({
       
       // 게시글 생성 모드
       if (isCreateMode) {
-        // 선택한 게시판의 정보 가져오기
-        const { data: selectedBoard } = await supabase
-          .from('boards')
-          .select('slug')
-          .eq('id', categoryId)
-          .single();
-        
-        if (!selectedBoard) {
-          throw new Error('선택한 게시판 정보를 찾을 수 없습니다.');
+        if (!categoryId) {
+          throw new Error('게시판 ID가 필요합니다.');
         }
         
-        // 게시글 생성
-        const { data, error: insertError } = await supabase
-          .from('posts')
-          .insert({
-            title: title.trim(),
-            content: content,
-            user_id: userData.user.id,
-            board_id: categoryId,
-            category: boardName || null,
-            views: 0,
-            likes: 0,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            status: 'published'
-          })
-          .select();
-          
-        if (insertError) throw insertError;
+        // 서버 액션으로 게시글 생성
+        const result = await createPost(
+          title, 
+          content, 
+          categoryId, 
+          userData.user.id
+        );
         
-        // 방금 생성한 게시글의 post_number 가져오기
-        const { data: createdPost } = await supabase
-          .from('posts')
-          .select('post_number')
-          .eq('id', data[0].id)
-          .single();
-        
-        // 게시글 작성 후 보상 지급
-        if (data && data.length > 0) {
-          // 활동 유형 가져오기
+        if (result.success) {
+          // 활동 보상 지급
           const activityTypes = await getActivityTypeValues();
-          await rewardUserActivity(userData.user.id, activityTypes.POST_CREATION, data[0].id);
-        }
-        
-        // 게시글 작성 성공 후 게시판 페이지로 이동 (새 URL 형식으로)
-        if (createdPost) {
-          router.push(`/boards/${selectedBoard.slug}/${createdPost.post_number}`);
+          await rewardUserActivity(userData.user.id, activityTypes.POST_CREATION, result.postId);
+          
+          // 게시글 상세 페이지로 이동
+          router.push(`/boards/${result.boardSlug}/${result.postNumber}`);
+          router.refresh();
         } else {
-          router.push(`/boards/${selectedBoard.slug}`);
+          throw new Error('게시글 생성에 실패했습니다.');
         }
       } 
       // 게시글 수정 모드
@@ -223,32 +209,23 @@ export default function PostEditForm({
           throw new Error('게시글 ID가 제공되지 않았습니다.');
         }
         
-        const { error } = await supabase
-          .from('posts')
-          .update({
-            title: title.trim(),
-            content: content,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', postId)
-          .eq('user_id', userData.user.id);
-          
-        if (error) {
-          throw error;
-        }
+        // 서버 액션으로 게시글 수정
+        const result = await updatePost(
+          postId,
+          title,
+          content,
+          userData.user.id
+        );
         
-        // 성공적으로 수정 완료 - 새 URL 형식 사용
-        if (boardSlug && postNumber) {
-          router.push(`/boards/${boardSlug}/${postNumber}`);
+        if (result.success) {
+          // 게시글 상세 페이지로 이동
+          router.push(`/boards/${result.boardSlug}/${result.postNumber}`);
+          router.refresh();
         } else {
-          // 이전 URL 형식 대체
-          router.push(`/boards/${boardId}/posts/${postId}`);
+          throw new Error('게시글 수정에 실패했습니다.');
         }
       }
-      
-      router.refresh();
     } catch (error: unknown) {
-      console.error(`게시글 ${isCreateMode ? '작성' : '수정'} 중 오류:`, error);
       const errorMessage = error instanceof Error ? error.message : `게시글 ${isCreateMode ? '작성' : '수정'} 중 오류가 발생했습니다.`;
       setError(errorMessage);
     } finally {
@@ -261,6 +238,9 @@ export default function PostEditForm({
     if (!file || !editor) return;
     
     try {
+      // Supabase 클라이언트 생성
+      const supabase = createClient();
+      
       // 파일명에서 특수문자 및 공백 제거하여, 고유한 파일명 생성
       const timestamp = new Date().getTime();
       const randomString = Math.random().toString(36).substring(2, 8); // 추가 무작위 문자열
@@ -299,7 +279,6 @@ export default function PostEditForm({
       // 드롭다운 닫기
       setShowImageModal(false);
     } catch (error: unknown) {
-      console.error('이미지 업로드 오류:', error);
       const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류';
       alert(`이미지 업로드 중 오류가 발생했습니다: ${errorMessage}`);
     }
@@ -323,10 +302,7 @@ export default function PostEditForm({
         width: 640,
         height: 360
       });
-      
-      console.log('유튜브 영상 삽입 성공!');
-    } catch (error) {
-      console.error('유튜브 삽입 실패:', error);
+    } catch {
       alert('유튜브 영상을 추가하는데 실패했습니다. 다시 시도해주세요.');
     }
     
@@ -350,8 +326,6 @@ export default function PostEditForm({
   
   // 한 번에 하나의 드롭다운만 표시되도록 관리 (함수 수정)
   const handleToggleDropdown = (dropdown: 'match' | 'link' | 'video' | 'image' | 'youtube') => {
-    console.log(`드롭다운 토글: ${dropdown}`);
-    
     // 현재 상태 확인
     const currentState: Record<'image' | 'youtube' | 'video' | 'match' | 'link', boolean> = {
       image: showImageModal,
@@ -419,8 +393,7 @@ export default function PostEditForm({
       
       // 모달 닫기
       setShowMatchModal(false);
-    } catch (error) {
-      console.error('경기 추가 중 오류 발생:', error);
+    } catch {
       toast.error('경기 추가 중 오류가 발생했습니다.');
     }
   };
@@ -463,7 +436,7 @@ export default function PostEditForm({
           </div>
           
           {/* 게시판 선택 필드 (생성 모드에서만 표시) */}
-          {isCreateMode && setCategoryId && (
+          {isCreateMode && (
             <div className="space-y-2">
               <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700">
                 게시판 선택 <span className="text-red-500">*</span>
@@ -471,7 +444,7 @@ export default function PostEditForm({
               <BoardSelector 
                 boards={allBoardsFlat}
                 selectedId={categoryId}
-                onSelect={(id) => setCategoryId(id)}
+                onSelect={handleCategoryChange}
                 currentBoardId={boardId}
               />
             </div>

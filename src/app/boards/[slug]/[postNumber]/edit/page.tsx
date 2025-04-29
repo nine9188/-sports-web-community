@@ -52,8 +52,8 @@ export default async function EditPostPage({ params }: { params: Promise<{ slug:
         <PostEditForm 
           postId={post.id}
           boardId={board.id}
-          boardSlug={slug}
-          postNumber={postNumber}
+          _boardSlug={slug}
+          _postNumber={postNumber}
           initialTitle={post.title}
           initialContent={post.content}
           boardName={board.name}
@@ -61,8 +61,7 @@ export default async function EditPostPage({ params }: { params: Promise<{ slug:
         />
       </div>
     );
-  } catch (error) {
-    console.error('게시글 수정 페이지 로딩 중 오류:', error);
+  } catch {
     return notFound();
   }
 } 
