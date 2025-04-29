@@ -189,9 +189,9 @@ const PlayerEvents = ({ player, events }: { player: Player; events: MatchEvent[]
           if (!isIn && !isOut) {
             // player가 교체 아웃, assist가 교체 투입 선수인 경우
             if (event.detail === 'Substitution' || event.detail?.includes('Substitution')) {
-              if (event.assist?.id === player.id) {
+              if (event.player?.id === player.id) {
                 isOut = true;
-              } else if (event.player?.id === player.id) {
+              } else if (event.assist?.id === player.id) {
                 isIn = true;
               }
             }

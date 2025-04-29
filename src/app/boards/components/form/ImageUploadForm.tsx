@@ -80,116 +80,131 @@ export default function ImageUploadForm({
   if (!isOpen) return null;
 
   return (
-    <div 
-      ref={dropdownRef}
-      className="absolute z-10 bg-white rounded-lg shadow-lg border w-80 p-4 mt-2"
-    >
-      <div className="min-h-[124px]">
-        <div className="border-b mb-4">
-          <div className="flex">
-            <button
-              type="button"
-              onClick={() => handleTabChange('file')}
-              className={`px-4 py-1 text-xs ${activeTab === 'file' 
-                ? 'border-b-2 border-blue-500 text-blue-600 font-medium' 
-                : 'text-gray-500'}`}
-            >
-              파일
-            </button>
-            <button
-              type="button"
-              onClick={() => handleTabChange('link')}
-              className={`px-4 py-1 text-xs ${activeTab === 'link' 
-                ? 'border-b-2 border-blue-500 text-blue-600 font-medium' 
-                : 'text-gray-500'}`}
-            >
-              주소
-            </button>
+    <>
+      {/* 모바일 오버레이 */}
+      <div
+        className="fixed inset-0 bg-black/20 z-40 sm:hidden"
+        onClick={onCancel}
+        aria-hidden="true"
+      />
+      <div
+        ref={dropdownRef}
+        className={`z-50 bg-white rounded-lg shadow-lg border p-4
+          fixed sm:absolute
+          left-1/2 top-1/2 sm:left-0 sm:top-full
+          -translate-x-1/2 -translate-y-1/2 sm:translate-x-0 sm:translate-y-0
+          w-[90vw] max-w-sm sm:w-80
+          ${activeTab === 'file' ? '' : ''}
+        `}
+        style={{ marginTop: '0.5rem' }}
+      >
+        <div className="min-h-[124px]">
+          <div className="border-b mb-4">
+            <div className="flex">
+              <button
+                type="button"
+                onClick={() => handleTabChange('file')}
+                className={`px-4 py-1 text-xs ${activeTab === 'file' 
+                  ? 'border-b-2 border-blue-500 text-blue-600 font-medium' 
+                  : 'text-gray-500'}`}
+              >
+                파일
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTabChange('link')}
+                className={`px-4 py-1 text-xs ${activeTab === 'link' 
+                  ? 'border-b-2 border-blue-500 text-blue-600 font-medium' 
+                  : 'text-gray-500'}`}
+              >
+                주소
+              </button>
+            </div>
+          </div>
+          
+          <div>
+            {activeTab === 'file' ? (
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={handleFileButtonClick}
+                    className="bg-gray-100 text-gray-700 px-3 py-2 text-xs rounded-md border border-gray-300 hover:bg-gray-200 flex-shrink-0"
+                  >
+                    파일 선택
+                  </button>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    ref={fileInputRef}
+                  />
+                  <div className="text-xs text-gray-600 truncate border border-gray-300 rounded-md px-3 py-2 flex-1 min-h-[28px] flex items-center">
+                    {selectedFileName || '선택된 파일 없음'}
+                  </div>
+                </div>
+                
+                <div>
+                  <input
+                    type="text"
+                    id="file-imageCaption"
+                    value={imageCaption}
+                    onChange={(e) => setImageCaption(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-xs"
+                    placeholder="표시할 텍스트 (선택사항)"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <input
+                    type="text"
+                    id="imageUrl"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-xs"
+                    placeholder="이미지 URL을 입력하세요"
+                  />
+                </div>
+                
+                <div>
+                  <input
+                    type="text"
+                    id="link-imageCaption"
+                    value={imageCaption}
+                    onChange={(e) => setImageCaption(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-xs"
+                    placeholder="선택적 파일을 설명하세요."
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
         
-        <div>
-          {activeTab === 'file' ? (
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <button
-                  type="button"
-                  onClick={handleFileButtonClick}
-                  className="bg-gray-100 text-gray-700 px-3 py-2 text-xs rounded-md border border-gray-300 hover:bg-gray-200 flex-shrink-0"
-                >
-                  파일 선택
-                </button>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  ref={fileInputRef}
-                />
-                <div className="text-xs text-gray-600 truncate border border-gray-300 rounded-md px-3 py-2 flex-1 min-h-[28px] flex items-center">
-                  {selectedFileName || '선택된 파일 없음'}
-                </div>
-              </div>
-              
-              <div>
-                <input
-                  type="text"
-                  id="file-imageCaption"
-                  value={imageCaption}
-                  onChange={(e) => setImageCaption(e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-xs"
-                  placeholder="표시할 텍스트 (선택사항)"
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div>
-                <input
-                  type="text"
-                  id="imageUrl"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-xs"
-                  placeholder="이미지 URL을 입력하세요"
-                />
-              </div>
-              
-              <div>
-                <input
-                  type="text"
-                  id="link-imageCaption"
-                  value={imageCaption}
-                  onChange={(e) => setImageCaption(e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-xs"
-                  placeholder="선택적 파일을 설명하세요."
-                />
-              </div>
-            </div>
-          )}
+        <div className="flex justify-end space-x-2 mt-4">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onCancel}
+            className="text-xs py-1 px-2 h-6"
+          >
+            취소
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleSubmit}
+            disabled={(activeTab === 'file' && !selectedFile) || (activeTab === 'link' && !imageUrl)}
+            className="text-xs py-1 px-2 h-6"
+          >
+            확인
+          </Button>
         </div>
       </div>
-      
-      <div className="flex justify-end space-x-2 mt-4">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={onCancel}
-          className="text-xs py-1 px-2 h-6"
-        >
-          취소
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          onClick={handleSubmit}
-          disabled={(activeTab === 'file' && !selectedFile) || (activeTab === 'link' && !imageUrl)}
-          className="text-xs py-1 px-2 h-6"
-        >
-          확인
-        </Button>
-      </div>
-    </div>
+    </>
   );
 } 

@@ -52,67 +52,81 @@ export default function LinkForm({
   if (!isOpen) return null;
 
   return (
-    <div 
-      ref={dropdownRef}
-      className="absolute z-10 bg-white rounded-lg shadow-lg border w-80 p-4 mt-2"
-    >
-      <div className="h-[124px]">
-        <div className="border-b mb-4">
-          <div className="flex">
-            <button
-              type="button"
-              className="px-4 py-1 text-xs border-b-2 border-blue-500 text-blue-600 font-medium"
-            >
-              링크 추가
-            </button>
+    <>
+      {/* 모바일 오버레이 */}
+      <div
+        className="fixed inset-0 bg-black/20 z-40 sm:hidden"
+        onClick={onCancel}
+        aria-hidden="true"
+      />
+      <div
+        ref={dropdownRef}
+        className={`z-50 bg-white rounded-lg shadow-lg border p-4
+          fixed sm:absolute
+          left-1/2 top-1/2 sm:left-0 sm:top-full
+          -translate-x-1/2 -translate-y-1/2 sm:translate-x-0 sm:translate-y-0
+          w-[90vw] max-w-sm sm:w-80
+        `}
+        style={{ marginTop: '0.5rem' }}
+      >
+        <div className="h-[124px]">
+          <div className="border-b mb-4">
+            <div className="flex">
+              <button
+                type="button"
+                className="px-4 py-1 text-xs border-b-2 border-blue-500 text-blue-600 font-medium"
+              >
+                링크 추가
+              </button>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <input
+                type="text"
+                id="linkUrl"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-xs"
+                placeholder="URL을 입력하세요"
+              />
+            </div>
+            
+            <div>
+              <input
+                type="text"
+                id="linkText"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-xs"
+                placeholder="표시할 텍스트 (선택사항)"
+              />
+            </div>
           </div>
         </div>
         
-        <div className="space-y-4">
-          <div>
-            <input
-              type="text"
-              id="linkUrl"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-xs"
-              placeholder="URL을 입력하세요"
-            />
-          </div>
-          
-          <div>
-            <input
-              type="text"
-              id="linkText"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-xs"
-              placeholder="표시할 텍스트 (선택사항)"
-            />
-          </div>
+        <div className="flex justify-end space-x-2 mt-4">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onCancel}
+            className="text-xs py-1 px-2 h-6"
+          >
+            취소
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleSubmit}
+            disabled={!url}
+            className="text-xs py-1 px-2 h-6"
+          >
+            확인
+          </Button>
         </div>
       </div>
-      
-      <div className="flex justify-end space-x-2 mt-4">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={onCancel}
-          className="text-xs py-1 px-2 h-6"
-        >
-          취소
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          onClick={handleSubmit}
-          disabled={!url}
-          className="text-xs py-1 px-2 h-6"
-        >
-          확인
-        </Button>
-      </div>
-    </div>
+    </>
   );
 } 

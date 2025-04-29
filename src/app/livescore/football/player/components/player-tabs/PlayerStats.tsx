@@ -141,10 +141,9 @@ export default function PlayerStats({
               <select
                 id="season-select"
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                value={selectedSeason || ''}
+                value={selectedSeason}
                 onChange={(e) => setSelectedSeason(Number(e.target.value))}
               >
-                <option value="">시즌 선택</option>
                 {validSeasons.map((season) => (
                   <option key={season} value={season}>
                     {season}/{season + 1}
@@ -176,10 +175,9 @@ export default function PlayerStats({
               <select
                 id="season-select"
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                value={selectedSeason || ''}
+                value={selectedSeason}
                 onChange={(e) => setSelectedSeason(Number(e.target.value))}
               >
-                <option value="">시즌 선택</option>
                 {validSeasons.map((season) => (
                   <option key={season} value={season}>
                     {season}/{season + 1}
@@ -202,47 +200,67 @@ export default function PlayerStats({
       {/* 필터 영역 */}
       <div className="mb-4 bg-white rounded-lg border overflow-hidden">
         <div className="p-4">
-          <div className="flex flex-wrap gap-4 items-center">
-            {/* 시즌 선택 드롭다운 */}
-            <div className="flex-1 min-w-[180px]">
-              <label htmlFor="season-select" className="block text-sm font-medium text-gray-700 mb-1">
-                시즌 선택
-              </label>
-              <select
-                id="season-select"
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                value={selectedSeason || ''}
-                onChange={(e) => setSelectedSeason(Number(e.target.value))}
-              >
-                <option value="">시즌 선택</option>
-                {validSeasons.map((season) => (
-                  <option key={season} value={season}>
-                    {season}/{season + 1}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            {/* 리그 선택 드롭다운 */}
-            <div className="flex-1 min-w-[180px]">
-              <label htmlFor="league-select" className="block text-sm font-medium text-gray-700 mb-1">
-                리그 선택
-              </label>
-              <select
-                id="league-select"
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                value={selectedLeague || ''}
-                onChange={(e) => setSelectedLeague(e.target.value ? Number(e.target.value) : null)}
-              >
-                <option value="">모든 리그</option>
-                {leagues.map((league) => (
-                  <option key={league.id} value={league.id}>
-                    {league.name} ({league.country})
-                  </option>
-                ))}
-              </select>
+          <div className="flex flex-wrap gap-4 items-center justify-between mb-4">
+            <div className="flex flex-wrap gap-4 items-center flex-1">
+              {/* 시즌 선택 드롭다운 */}
+              <div className="flex-1 min-w-[120px] max-w-[200px]">
+                <label htmlFor="season-select" className="block text-sm font-medium text-gray-700 mb-1">
+                  시즌 선택
+                </label>
+                <select
+                  id="season-select"
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  value={selectedSeason}
+                  onChange={(e) => setSelectedSeason(Number(e.target.value))}
+                >
+                  {validSeasons.map((season) => (
+                    <option key={season} value={season}>
+                      {season}/{season + 1}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* 리그 선택 드롭다운 */}
+              <div className="flex-1 min-w-[120px] max-w-[200px]">
+                <label htmlFor="league-select" className="block text-sm font-medium text-gray-700 mb-1">
+                  리그 선택
+                </label>
+                <select
+                  id="league-select"
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  value={selectedLeague || ''}
+                  onChange={(e) => setSelectedLeague(e.target.value ? Number(e.target.value) : null)}
+                >
+                  <option value="">모든 리그</option>
+                  {leagues.map((league) => (
+                    <option key={league.id} value={league.id}>
+                      {league.name} ({league.country})
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
+          
+          {/* 선택된 리그 표시 */}
+          {selectedLeague && (
+            <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
+              <div className="w-6 h-6 flex items-center justify-center">
+                <Image
+                  src={leagues.find(l => l.id === selectedLeague)?.logo || '/placeholder-league.png'}
+                  alt={leagues.find(l => l.id === selectedLeague)?.name || '리그'}
+                  width={24}
+                  height={24}
+                  className="w-5 h-5 object-contain"
+                  unoptimized
+                />
+              </div>
+              <span className="font-medium">
+                {leagues.find(l => l.id === selectedLeague)?.name}
+              </span>
+            </div>
+          )}
         </div>
       </div>
       

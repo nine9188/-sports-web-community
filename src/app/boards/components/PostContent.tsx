@@ -3,6 +3,24 @@
 import React, { useEffect, useRef } from 'react';
 import { generateMatchCardHTML } from '@/app/utils/matchCardRenderer';
 
+// 글로벌 타입 확장
+declare global {
+  interface Window {
+    twttr: {
+      widgets: {
+        load: () => void;
+      };
+      [key: string]: unknown;
+    } | undefined;
+    instgrm: {
+      Embeds: {
+        process: () => void;
+      };
+      [key: string]: unknown;
+    } | undefined;
+  }
+}
+
 // TipTap 문서 타입 정의
 interface TipTapNode {
   type: string;
@@ -196,7 +214,157 @@ export default function PostContent({ content }: PostContentProps) {
       }
     });
     
-    // 2. YouTube iframe 처리
+    // 2. 소셜 임베드 처리
+    const socialEmbedElements = rootElement.querySelectorAll('div[data-type="social-embed"]');
+    
+    socialEmbedElements.forEach((element) => {
+      try {
+        const platform = element.getAttribute('data-platform');
+        const url = element.getAttribute('data-url');
+        
+        if (!platform || !url) {
+          element.innerHTML = `<div class="p-4 border rounded bg-red-50 text-red-600">
+            지원하지 않는 링크입니다.
+          </div>`;
+          return;
+        }
+        
+        // 플랫폼별 처리
+        if (platform === 'youtube') {
+          // YouTube ID 추출
+          const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+          const match = url.match(youtubeRegex);
+          const videoId = match ? match[1] : null;
+          
+          if (!videoId) {
+            element.innerHTML = `<div class="p-4 border rounded bg-red-50 text-red-600">
+              지원하지 않는 YouTube 링크입니다.
+            </div>`;
+            return;
+          }
+          
+          element.innerHTML = `
+            <div class="youtube-embed my-4">
+              <iframe
+                width="100%"
+                height="400"
+                src="https://www.youtube.com/embed/${videoId}"
+                title="YouTube video"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            </div>
+          `;
+        } else if (platform === 'twitter') {
+          // 트위터 임베드 스크립트 로드
+          if (!document.getElementById('twitter-widget-js')) {
+            const script = document.createElement('script');
+            script.id = 'twitter-widget-js';
+            script.src = 'https://platform.twitter.com/widgets.js';
+            script.async = true;
+            document.body.appendChild(script);
+          }
+          
+          // 트위터 ID 추출
+          const twitterRegex = /(?:twitter\.com|x\.com)\/[^/]+\/status\/(\d+)/i;
+          const match = url.match(twitterRegex);
+          const tweetId = match ? match[1] : null;
+          
+          if (!tweetId) {
+            element.innerHTML = `<div class="p-4 border rounded bg-red-50 text-red-600">
+              지원하지 않는 트위터 링크입니다.
+            </div>`;
+            return;
+          }
+          
+          element.innerHTML = `
+            <div class="twitter-embed my-4">
+              <blockquote class="twitter-tweet" data-conversation="none">
+                <a href="https://twitter.com/i/status/${tweetId}">Loading Tweet...</a>
+              </blockquote>
+            </div>
+          `;
+          
+          // 트위터 위젯 렌더링
+          if (window.twttr) {
+            window.twttr.widgets.load();
+          }
+        } else if (platform === 'instagram') {
+          // 인스타그램 임베드 스크립트 로드
+          if (!document.getElementById('instagram-embed-js')) {
+            const script = document.createElement('script');
+            script.id = 'instagram-embed-js';
+            script.src = 'https://www.instagram.com/embed.js';
+            script.async = true;
+            document.body.appendChild(script);
+          }
+          
+          // 인스타그램 ID 추출
+          const instagramRegex = /(?:www\.)?instagram\.com(?:\/p|\/reel)\/([a-zA-Z0-9_-]+)/i;
+          const match = url.match(instagramRegex);
+          const postId = match ? match[1] : null;
+          
+          if (!postId) {
+            element.innerHTML = `<div class="p-4 border rounded bg-red-50 text-red-600">
+              지원하지 않는 인스타그램 링크입니다.
+            </div>`;
+            return;
+          }
+          
+          element.innerHTML = `
+            <div class="instagram-embed my-4">
+              <blockquote
+                class="instagram-media"
+                data-instgrm-permalink="https://www.instagram.com/p/${postId}/"
+                data-instgrm-version="14"
+                style="
+                  background: #FFF;
+                  border: 0;
+                  border-radius: 3px;
+                  box-shadow: 0 0 1px 0 rgba(0,0,0,0.5), 0 1px 10px 0 rgba(0,0,0,0.15);
+                  margin: 1px;
+                  max-width: 540px;
+                  min-width: 326px;
+                  padding: 0;
+                  width: 99.375%;
+                "
+              >
+                <div style="padding: 16px;">
+                  <a
+                    href="https://www.instagram.com/p/${postId}/"
+                    style="
+                      background: #FFFFFF;
+                      line-height: 0;
+                      padding: 0 0;
+                      text-align: center;
+                      text-decoration: none;
+                      width: 100%;
+                    "
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    인스타그램 게시물 보기
+                  </a>
+                </div>
+              </blockquote>
+            </div>
+          `;
+          
+          // 인스타그램 임베드 처리
+          if (window.instgrm) {
+            window.instgrm.Embeds.process();
+          }
+        }
+      } catch (error) {
+        console.error('소셜 임베드 처리 중 오류 발생:', error);
+        element.innerHTML = `<div class="p-4 border rounded bg-red-50 text-red-600">
+          소셜 미디어 콘텐츠를 로드하는 중 오류가 발생했습니다.
+        </div>`;
+      }
+    });
+    
+    // 3. YouTube iframe 처리
     const youtubeElements = rootElement.querySelectorAll('div[data-type="youtube"]');
     
     // TipTap의 YouTube 익스텐션으로 생성된 요소 처리

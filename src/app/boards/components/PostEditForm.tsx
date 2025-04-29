@@ -12,44 +12,12 @@ import { YoutubeExtension } from '@/app/lib/tiptap/YoutubeExtension';
 import { Video } from '@/app/lib/tiptap/VideoExtension';
 import BoardSelector from './createnavigation/BoardSelector';
 import EditorToolbar from './createnavigation/EditorToolbar';
-import { generateMatchCardHTML } from '@/app/utils/matchCardRenderer';
 import { MatchCardExtension } from '@/app/lib/tiptap/MatchCardExtension';
 import { rewardUserActivity, getActivityTypeValues } from '@/app/actions/activity-actions';
-
-// MatchData 타입 직접 정의
-interface MatchData {
-  id?: number | string;
-  fixture?: {
-    id: string | number;
-    date?: string;
-  };
-  league?: {
-    id: number | string;
-    name: string;
-    logo: string;
-  };
-  teams: {
-    home: {
-      id: number | string;
-      name: string;
-      logo: string;
-    };
-    away: {
-      id: number | string;
-      name: string;
-      logo: string;
-    };
-  };
-  goals: {
-    home: number | null;
-    away: number | null;
-  };
-  status?: {
-    code: string;
-    elapsed?: number;
-    name?: string;
-  };
-}
+import { MatchData } from '@/app/actions/footballApi';
+import { toast } from 'react-hot-toast';
+import { SocialEmbed } from '@/app/lib/tiptap/SocialEmbed';
+import { AutoEmbedExtension } from '@/app/lib/tiptap/AutoEmbedExtension';
 
 // 게시판(Board) 타입 정의 - BoardSelector와 호환되도록 수정
 interface Board {
@@ -100,10 +68,10 @@ export default function PostEditForm({
   
   // 드롭다운 상태들
   const [showImageModal, setShowImageModal] = useState(false);
-  const [showLinkModal, setShowLinkModal] = useState(false);
   const [showYoutubeModal, setShowYoutubeModal] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [showMatchModal, setShowMatchModal] = useState(false);
+  const [showLinkModal, setShowLinkModal] = useState(false);
   
   // boardDropdownRef는 유지하되 사용하지 않는 showBoardDropdown 상태는 제거
   const boardDropdownRef = useRef<HTMLDivElement>(null);
@@ -138,10 +106,13 @@ export default function PostEditForm({
       }),
       Video,
       MatchCardExtension,
+      SocialEmbed,
+      AutoEmbedExtension,
     ],
     content,
     onUpdate: ({ editor }) => {
-      setContent(editor.getHTML());
+      const content = editor.getHTML();
+      setContent(content);
     },
     editorProps: { 
       attributes: {
@@ -335,28 +306,10 @@ export default function PostEditForm({
   };
   
   // URL 이미지 추가
-  const handleAddImageUrl = (url: string, caption: string) => {
-    if (!url || !editor) return;
-    
-    editor.chain().focus().setImage({ src: url, alt: caption }).run();
-    
-    // 드롭다운 닫기
-    setShowImageModal(false);
-  };
-  
-  // 링크 추가 함수
-  const handleAddLink = (url: string, text: string) => {
-    if (!url || !editor) return;
-    
-    if (text) {
-      // 선택된 텍스트가 없고 텍스트가 제공된 경우, 텍스트와 함께 링크 삽입
-      editor.chain().focus().insertContent(`<a href="${url}" target="_blank">${text}</a>`).run();
-    } else {
-      // 이미 선택된 텍스트나 제공된 텍스트가 없는 경우
-      editor.chain().focus().setLink({ href: url }).run();
+  const handleAddImage = (url: string, caption?: string) => {
+    if (editor) {
+      editor.chain().focus().setImage({ src: url, alt: caption || "" }).run();
     }
-    
-    setShowLinkModal(false);
   };
   
   // 유튜브 추가 함수
@@ -396,43 +349,40 @@ export default function PostEditForm({
   };
   
   // 한 번에 하나의 드롭다운만 표시되도록 관리 (함수 수정)
-  const handleToggleDropdown = (dropdown: 'image' | 'link' | 'youtube' | 'video' | 'match') => {
+  const handleToggleDropdown = (dropdown: 'match' | 'link' | 'video' | 'image' | 'youtube') => {
     console.log(`드롭다운 토글: ${dropdown}`);
     
     // 현재 상태 확인
-    const currentState = {
+    const currentState: Record<'image' | 'youtube' | 'video' | 'match' | 'link', boolean> = {
       image: showImageModal,
-      link: showLinkModal,
       youtube: showYoutubeModal,
       video: showVideoModal,
-      match: showMatchModal
+      match: showMatchModal,
+      link: showLinkModal
     };
     
     // 이미 열려있는 모달이면 닫기
     if (currentState[dropdown]) {
       // 모든 모달 닫기
       setShowImageModal(false);
-      setShowLinkModal(false);
       setShowYoutubeModal(false);
       setShowVideoModal(false);
       setShowMatchModal(false);
+      setShowLinkModal(false);
       return;
     }
     
     // 모든 모달 닫기
     setShowImageModal(false);
-    setShowLinkModal(false);
     setShowYoutubeModal(false);
     setShowVideoModal(false);
     setShowMatchModal(false);
+    setShowLinkModal(false);
     
     // 선택된 드롭다운만 열기
     switch (dropdown) {
       case 'image':
         setShowImageModal(true);
-        break;
-      case 'link':
-        setShowLinkModal(true);
         break;
       case 'youtube':
         setShowYoutubeModal(true);
@@ -443,87 +393,42 @@ export default function PostEditForm({
       case 'match':
         setShowMatchModal(true);
         break;
+      case 'link':
+        setShowLinkModal(true);
+        break;
     }
   };
   
   // 경기 카드 추가 함수 수정
-  const handleAddMatch = (matchId: string, matchData: MatchData) => {
+  const handleAddMatch = async (matchId: string, matchData: MatchData) => {
+    if (!editor) return;
+    
     try {
-      if (!editor) {
-        console.error("에디터가 초기화되지 않았습니다.");
-        return;
-      }
-      
-      // 안전한 데이터 구성 (기본값 제공)
-      const safeMatchData = {
-        id: matchData.id,
-        fixture: {
-          id: matchData.fixture?.id || 0,
-          date: matchData.fixture?.date
-        },
-        league: {
-          id: matchData.league?.id || 0,
-          name: matchData.league?.name || "리그 정보 없음",
-          logo: matchData.league?.logo || "/placeholder.png"
-        },
-        teams: {
-          home: {
-            id: matchData.teams.home.id || 0,
-            name: matchData.teams.home.name || "홈팀",
-            logo: matchData.teams.home.logo || "/placeholder.png"
-          },
-          away: {
-            id: matchData.teams.away.id || 0,
-            name: matchData.teams.away.name || "원정팀",
-            logo: matchData.teams.away.logo || "/placeholder.png"
+      // 경기 데이터를 에디터에 삽입
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: 'matchCard',
+          attrs: {
+            matchId,
+            matchData
           }
-        },
-        goals: {
-          home: matchData.goals.home,
-          away: matchData.goals.away
-        },
-        status: matchData.status || { code: "FT", elapsed: 90 }
-      };
-      
-      // 공통 유틸리티 함수 사용
-      const matchIdToUse = matchId || safeMatchData.fixture.id.toString();
-      // safeMatchData를 matchCardRenderer가 기대하는 형식으로 변환
-      const cardData = {
-        id: matchIdToUse,
-        teams: {
-          home: {
-            name: safeMatchData.teams.home.name,
-            logo: safeMatchData.teams.home.logo,
-          },
-          away: {
-            name: safeMatchData.teams.away.name,
-            logo: safeMatchData.teams.away.logo,
-          }
-        },
-        goals: {
-          home: safeMatchData.goals.home !== null ? safeMatchData.goals.home : undefined,
-          away: safeMatchData.goals.away !== null ? safeMatchData.goals.away : undefined,
-        },
-        league: {
-          name: safeMatchData.league?.name || "",
-          logo: safeMatchData.league?.logo || "",
-        },
-        status: {
-          code: safeMatchData.status?.code,
-          elapsed: safeMatchData.status?.elapsed,
-        }
-      };
-      const matchCardHTML = generateMatchCardHTML(cardData, matchIdToUse);
-      
-      // 에디터에 삽입
-      editor.commands.insertContent(matchCardHTML);
-      console.log("경기 카드 추가 성공!");
+        })
+        .run();
       
       // 모달 닫기
       setShowMatchModal(false);
     } catch (error) {
-      console.error("경기 카드 추가 실패:", error);
-      alert("경기 데이터를 처리하는 중 오류가 발생했습니다. 다시 시도해주세요.");
+      console.error('경기 추가 중 오류 발생:', error);
+      toast.error('경기 추가 중 오류가 발생했습니다.');
+    }
+  };
+  
+  // 링크 추가 핸들러
+  const handleAddLink = (url: string) => {
+    if (editor) {
+      editor.chain().focus().setLink({ href: url }).run();
     }
   };
   
@@ -585,7 +490,7 @@ export default function PostEditForm({
               showMatchModal={showMatchModal}
               handleToggleDropdown={handleToggleDropdown}
               handleFileUpload={handleFileUpload}
-              handleAddImageUrl={handleAddImageUrl}
+              handleAddImage={handleAddImage}
               handleAddLink={handleAddLink}
               handleAddYoutube={handleAddYoutube}
               handleAddVideo={handleAddVideo}
@@ -608,6 +513,19 @@ export default function PostEditForm({
                 .ProseMirror .match-card img {
                   max-width: unset !important;
                   display: inline-block !important;
+                }
+
+                /* 임베드 스타일 */
+                .youtube-embed {
+                  margin: 1rem 0;
+                  width: 100%;
+                  max-width: 100%;
+                }
+
+                .youtube-embed iframe {
+                  width: 100%;
+                  height: 400px;
+                  border-radius: 8px;
                 }
               `}</style>
               <EditorContent editor={editor} />

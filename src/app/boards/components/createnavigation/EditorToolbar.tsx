@@ -11,41 +11,7 @@ import LinkForm from '../form/LinkForm';
 import YoutubeForm from '../form/YoutubeForm';
 import VideoForm from '../form/VideoForm';
 import MatchResultForm from '../form/MatchResultForm';
-
-// 경기 데이터를 위한 인터페이스 정의
-interface MatchData {
-  id?: number | string;
-  fixture?: {
-    id: string | number;
-    date?: string;
-  };
-  league?: {
-    id: number | string;
-    name: string;
-    logo: string;
-  };
-  teams: {
-    home: {
-      id: number | string;
-      name: string;
-      logo: string;
-    };
-    away: {
-      id: number | string;
-      name: string;
-      logo: string;
-    };
-  };
-  goals: {
-    home: number | null;
-    away: number | null;
-  };
-  status?: {
-    code: string;
-    elapsed?: number;
-    name?: string;
-  };
-}
+import type { MatchData } from '@/app/actions/footballApi';
 
 interface EditorToolbarProps {
   editor: Editor | null;
@@ -56,7 +22,7 @@ interface EditorToolbarProps {
   showMatchModal: boolean;
   handleToggleDropdown: (dropdown: 'image' | 'link' | 'youtube' | 'video' | 'match') => void;
   handleFileUpload: (file: File, caption: string) => Promise<void>;
-  handleAddImageUrl: (url: string, caption: string) => void;
+  handleAddImage: (url: string, caption?: string) => void;
   handleAddLink: (url: string, text: string) => void;
   handleAddYoutube: (url: string, caption?: string) => void;
   handleAddVideo: (videoUrl: string, caption: string) => void;
@@ -72,7 +38,7 @@ export default function EditorToolbar({
   showMatchModal,
   handleToggleDropdown,
   handleFileUpload,
-  handleAddImageUrl,
+  handleAddImage,
   handleAddLink,
   handleAddYoutube,
   handleAddVideo,
@@ -146,7 +112,7 @@ export default function EditorToolbar({
         <ImageUploadForm 
           onCancel={() => handleCloseModal('image')}
           onFileUpload={handleFileUpload}
-          onImageUrlAdd={handleAddImageUrl}
+          onImageUrlAdd={handleAddImage}
           isOpen={showImageModal}
         />
       </div>
