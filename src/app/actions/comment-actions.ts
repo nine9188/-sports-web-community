@@ -182,7 +182,7 @@ export async function addComment(postId: string, content: string): Promise<Comme
     }
     
     // 페이지 재검증
-    revalidatePath(`/boards/[slug]/[postNumber]`);
+    revalidatePath(`/boards/[slug]/[postNumber]`, 'page');
     
     return {
       success: true,
@@ -263,7 +263,7 @@ export async function updateComment(commentId: string, content: string): Promise
     }
     
     // 페이지 재검증
-    revalidatePath(`/boards/[slug]/[postNumber]`);
+    revalidatePath(`/boards/[slug]/[postNumber]`, 'page');
     
     return {
       success: true,
@@ -335,7 +335,7 @@ export async function deleteComment(commentId: string): Promise<CommentActionRes
     }
     
     // 페이지 재검증
-    revalidatePath(`/boards/[slug]/[postNumber]`);
+    revalidatePath(`/boards/[slug]/[postNumber]`, 'page');
     
     return {
       success: true

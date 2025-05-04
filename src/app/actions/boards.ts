@@ -230,22 +230,38 @@ export async function updatePost(
       .select('board_id, post_number')
       .single();
     
-    if (error) throw error;
+    if (error) {
+      return {
+        success: false,
+        error: `게시글 수정 실패: ${error.message}`
+      };
+    }
     
     // 게시판 슬러그 가져오기
-    const { data: boardData } = await supabase
+    const { data: boardData, error: boardError } = await supabase
       .from('boards')
       .select('slug')
       .eq('id', data.board_id)
       .single();
     
+    if (boardError) {
+      return {
+        success: false,
+        error: `게시판 정보 조회 실패: ${boardError.message}`
+      };
+    }
+    
     return {
       success: true,
       boardSlug: boardData?.slug,
-      postNumber: data.post_number
+      postNumber: data.post_number,
+      error: null
     };
   } catch (error) {
     console.error('게시글 수정 오류:', error);
-    throw error;
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '게시글 수정 중 오류가 발생했습니다.'
+    };
   }
 } 

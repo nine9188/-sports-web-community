@@ -1,48 +1,8 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import { createClient } from '@/app/lib/supabase.server';
-import { getComments } from '@/app/actions/comment-actions'; // Server Action 직접 임포트
-
-// 재사용 가능한 컴포넌트 임포트
-import CommentSection from '@/app/boards/components/CommentSection';
-import PostNavigation from '@/app/boards/components/PostNavigation';
-import BoardBreadcrumbs from '@/app/boards/components/BoardBreadcrumbs';
-import PostHeader from '@/app/boards/components/PostHeader';
-import PostContent from '@/app/boards/components/PostContent';
-import PostActions from '@/app/boards/components/PostActions';
-import HoverMenu from '@/app/boards/components/HoverMenu';
-import PostList from '@/app/components/post/PostList';
-import Pagination from '@/app/boards/components/Pagination';
-import PostFooter from '@/app/boards/components/PostFooter';
-
-// 타입 정의 임포트
-import { Breadcrumb, BoardData } from '@/app/types/board';
-import { CommentType } from '@/app/types/comment';
-
-// 서비스 함수 임포트 - 필요한 함수만 가져오기
-import { getBoardBySlug, getRootBoardId, createBreadcrumbs } from '@/app/services/board.service';
-import {
-  getAdjacentPosts,
-  getFilteredPostsByBoardHierarchy,
-  getIconUrl,
-  getCommentCounts,
-  getTeamAndLeagueInfo,
-  formatPosts,
-  getPostByNumber
-} from '@/app/services/post.service';
-import { incrementViewCount } from '@/app/lib/api/posts';
-
-// 게시판 관련 타입 정의
-interface BoardStructure {
-  id: string;
-  name: string;
-  slug?: string;
-  parent_id?: string;
-  display_order: number;
-  team_id?: number | null;
-  league_id?: number | null;
-}
+import { getPostPageData } from '@/domains/boards/actions';
+import PostDetailLayout from '@/domains/boards/components/layout/PostDetailLayout';
+import ErrorMessage from '@/shared/ui/error-message';
 
 // 동적 렌더링 강제 설정 추가
 export const dynamic = 'force-dynamic';
@@ -62,414 +22,161 @@ export default async function PostDetailPage({
       searchParams
     ]);
     
-    // 이제 resolvedSearchParams에서 from 값과 page 값을 안전하게 추출
+    // 이제 resolvedSearchParams에서 from 값 추출
     const fromBoardId = resolvedSearchParams?.from;
-    const page = resolvedSearchParams?.page ? parseInt(resolvedSearchParams.page, 10) : 1;
-    
-    // 페이지 값이 유효하지 않으면 기본값 1로 설정
-    const currentPage = isNaN(page) || page < 1 ? 1 : page;
     
     // 특수 케이스 처리: 'undefined'가 문자열로 전달된 경우
-    let normalizedFromBoardId = fromBoardId === 'undefined' ? undefined : fromBoardId;
+    const normalizedFromBoardId = fromBoardId === 'undefined' ? undefined : fromBoardId;
     
     if (!slug || !postNumber) {
       return notFound();
     }
     
-    const postNum = parseInt(postNumber, 10);
-    if (isNaN(postNum) || postNum <= 0) {
-      return notFound();
-    }
+    // 서버 액션을 통해 모든 데이터 로드
+    const result = await getPostPageData(slug, postNumber, normalizedFromBoardId);
     
-    const supabase = await createClient();
-    
-    // 로그인 상태 확인
-    const { data: { user } } = await supabase.auth.getUser();
-    const isLoggedIn = !!user;
-    
-    // --- 병렬 데이터 페칭 최적화 ---
-    
-    // 1. 게시판 정보 가져오기
-    const boardPromise = getBoardBySlug(slug).catch(() => {
-      return null;
-    });
-    
-    // 필요한 모든 데이터를 병렬로 가져오기
-    const [board] = await Promise.all([boardPromise]);
-    
-    if (!board) {
+    if (!result.success) {
       return (
-        <div className="container mx-auto px-4 py-8">
-          <div className="bg-white rounded-lg border shadow-md p-8 text-center">
-            <h2 className="text-2xl font-semibold mb-4">게시판을 찾을 수 없습니다</h2>
-            <p className="text-gray-600 mb-6">요청하신 &apos;{slug}&apos; 게시판이 존재하지 않습니다.</p>
-            <Link href="/boards" className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
-              게시판 목록으로 돌아가기
-            </Link>
-          </div>
-        </div>
+        <ErrorMessage 
+          message={result.error || '페이지를 불러오는 중 문제가 발생했습니다.'} 
+        />
       );
     }
     
-    // 2. 여러 데이터를 병렬로 가져오기 최적화
-    const [
-      post,
-      rootBoardId,
-      boardStructure,
-      adjacentPosts
-    ] = await Promise.all([
-      // 게시글 상세 정보 가져오기
-      getPostByNumber(board.id, postNum).catch(() => null),
-      
-      // 루트 게시판 ID
-      getRootBoardId(board).catch(() => board.id),
-      
-      // 게시판 구조 데이터
-      supabase.from('boards').select('*').order('display_order').then(res => res.data || []),
-      
-      // 이전/다음 게시글
-      getAdjacentPosts(board.id, postNum).catch(() => ({ prevPost: null, nextPost: null }))
-    ]);
-    
-    // 게시글 데이터 검증
-    if (!post) {
+    // 결과가 성공적이고 모든 필요한 데이터가 있는지 확인
+    if (!result.post || !result.board) {
       return (
-        <div className="container mx-auto px-4 py-8">
-          <div className="bg-white rounded-lg border shadow-md p-8 text-center">
-            <h2 className="text-2xl font-semibold mb-4">게시글을 찾을 수 없습니다</h2>
-            <p className="text-gray-600 mb-6">
-              요청하신 게시글(게시판: {board.name}, 번호: {postNum})이 존재하지 않습니다.
-            </p>
-            <div className="flex justify-center gap-4">
-              <Link href={`/boards/${slug}`} className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
-                {board.name} 게시판으로 이동
-              </Link>
-              <Link href="/boards" className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors">
-                게시판 목록으로 이동
-              </Link>
-            </div>
-          </div>
-        </div>
+        <ErrorMessage message="게시글 또는 게시판 정보가 없습니다." />
       );
     }
     
-    // 3. 댓글 가져오기 및 게시판 하위 구조 처리
-    const [
-      comments
-    ] = await Promise.all([
-      // 댓글 데이터 가져오기 - Server Action 직접 호출
-      getComments(post.id).then(result => {
-        if (!result.success || !result.comments) {
-          console.error('댓글 로딩 실패:', result.error);
-          return [];
-        }
-        return result.comments;
-      }).catch(error => {
-        console.error('댓글 로딩 중 오류:', error);
-        return [];
-      })
-    ]);
-    
-    // 4. 하위 게시판 ID 찾기
-    const allSubBoardIds: string[] = [];
-    // 하위 게시판 ID를 직접 추출
-    (boardStructure as BoardStructure[]).forEach(board => {
-      if (board.parent_id === rootBoardId) {
-        allSubBoardIds.push(board.id);
-        
-        // 추가: 하위 게시판의 하위 게시판도 찾기 (손자 게시판)
-        (boardStructure as BoardStructure[]).forEach(subBoard => {
-          if (subBoard.parent_id === board.id) {
-            allSubBoardIds.push(subBoard.id);
-          }
-        });
-      }
-    });
-    
-    const allBoardIds = [rootBoardId, ...allSubBoardIds];
-    
-    // fromParam이 'boards'인 경우 처리 (최상위 게시판에서 온 경우)
-    if (normalizedFromBoardId === 'boards' || normalizedFromBoardId === 'root') {
-      // boards/root 파라미터로 왔을 때는 rootBoardId로 변환하여 모든 게시판 포함
-      normalizedFromBoardId = rootBoardId;
-    }
-    
-    // 게시글 필터링 (이제 allBoardIds가 정의된 후)
-    const filteredPostsResult = await getFilteredPostsByBoardHierarchy(
-      board.id, 
-      normalizedFromBoardId,
-      rootBoardId, 
-      allBoardIds,
-      currentPage,
-      async (boardId: string) => {
-        return (boardStructure as BoardStructure[])
-          .filter(b => b.parent_id === boardId)
-          .map(b => b.id);
-      }
-    ).catch(() => ({ posts: [], totalCount: 0 }));
-    
-    // 필터링된 게시글 및 총 개수
-    const filteredPosts = filteredPostsResult.posts || [];
-    const totalCount = filteredPostsResult.totalCount || 0;
-    
-    // 5. 게시판 데이터 맵 구성
-    const boardsData = (boardStructure as BoardStructure[]).reduce((acc: Record<string, BoardData>, board: BoardStructure) => {
-      acc[board.id] = {
-        team_id: board.team_id || null,
-        league_id: board.league_id || null,
-        slug: board.slug || board.id
-      };
-      return acc;
-    }, {});
-    
-    // 6. 게시판 이름 맵 구성
-    const boardNameMap = (boardStructure as BoardStructure[]).reduce((acc: Record<string, string>, board: BoardStructure) => {
-      acc[board.id] = board.name;
-      return acc;
-    }, {});
-    
-    // 7. 최상위 게시판의 직계 하위 게시판들 가져오기
-    const topLevelBoards = (boardStructure as BoardStructure[])
-      .filter((board: BoardStructure) => board.parent_id === rootBoardId)
-      .sort((a: BoardStructure, b: BoardStructure) => 
-        (a.display_order || 0) - (b.display_order || 0));
-    
-    // 8. HoverMenu 데이터 준비
-    const childBoardsMap: Record<string, BoardStructure[]> = {};
-    
-    (boardStructure as BoardStructure[]).forEach((board: BoardStructure) => {
-      if (board.parent_id) {
-        if (!childBoardsMap[board.parent_id]) {
-          childBoardsMap[board.parent_id] = [];
-        }
-        childBoardsMap[board.parent_id].push(board);
-      }
-    });
-    
-    const topLevelBoardsWithSlug = topLevelBoards.map((board: BoardStructure) => ({
+    // 타입 호환을 위한 데이터 변환
+    const topLevelBoards = result.topLevelBoards?.map(board => ({
       id: board.id,
       name: board.name,
       display_order: board.display_order || 0,
-      slug: board.slug
+      slug: board.slug || undefined // null을 undefined로 변환
+    })) || [];
+    
+    // processedChildBoardsMap 변환 - null 값 제거 및 display_order 확인
+    const processedChildBoardsMap: Record<string, Array<{
+      id: string;
+      name: string;
+      parent_id: string; // null 허용하지 않음
+      display_order: number; // null 허용하지 않음
+      slug: string; // 필수 속성으로 변경
+      team_id: number | null;
+      league_id: number | null;
+      description: string | null;
+      access_level: string | null;
+      logo: string | null;
+      views: number | null;
+    }>> = {};
+    
+    if (result.childBoardsMap) {
+      Object.keys(result.childBoardsMap).forEach(key => {
+        processedChildBoardsMap[key] = result.childBoardsMap[key].map(board => ({
+          id: board.id,
+          name: board.name,
+          parent_id: board.parent_id || '',  // null을 빈 문자열로 변환
+          display_order: board.display_order || 0, // null을 0으로 변환
+          slug: board.slug || board.id,  // slug가 없는 경우 id를 기본값으로 사용
+          team_id: board.team_id,  // null 허용
+          league_id: board.league_id,  // null 허용
+          description: board.description,  // null 허용
+          access_level: board.access_level || null,
+          logo: board.logo || null,
+          views: board.views || null
+        }));
+      });
+    }
+    
+    // CommentType 변환을 위한 처리
+    const processedComments = (result.comments || []).map(comment => ({
+      id: comment.id,
+      content: comment.content,
+      created_at: comment.created_at || '',
+      user_id: comment.user_id || '',
+      post_id: comment.post_id || '',
+      likes: comment.likes || 0,
+      dislikes: comment.dislikes || 0,
+      profiles: {
+        nickname: comment.profiles?.nickname || null,
+        id: comment.user_id || '',
+        icon_id: comment.profiles?.icon_id || null,
+        icon_url: null
+      },
+      children: []
     }));
     
-    // 9. 총 페이지 수 계산
-    const pageSize = 20;
-    const totalPages = Math.ceil(totalCount / pageSize);
+    // formattedPosts 변환에 게시판 아이콘, 유저 레벨 및 아이콘 정보 추가
+    const processedFormattedPosts = (result.formattedPosts || []).map(post => ({
+      id: post.id,
+      title: post.title,
+      board_id: post.boardId,
+      board_name: post.boardName,
+      board_slug: post.boardSlug,
+      post_number: post.postNumber,
+      created_at: post.created_at,
+      views: post.views,
+      likes: post.likes,
+      author_nickname: post.author,
+      author_id: post.author_id || '',
+      author_level: post.author_level || 1, // 기본 레벨 1
+      author_icon_id: post.author_icon_id || null,
+      author_icon_url: post.author_icon_url || null,
+      comment_count: post.commentCount,
+      // 팀/리그 정보
+      team_id: post.team?.id || null,
+      team_name: post.team?.name || null,
+      team_logo: post.team?.logo || null,
+      league_id: post.league?.id || null,
+      league_name: post.league?.name || null,
+      league_logo: post.league?.logo || null
+    }));
     
-    // 10. 게시글 ID 목록 추출
-    const postIds = filteredPosts.map(p => p.id);
+    // post 데이터에 iconUrl과 icon_id 직접 설정
+    const postWithIcon = {
+      ...result.post,
+      profiles: {
+        ...result.post.profiles,
+        icon_url: result.iconUrl || null,  // 아이콘 URL을 profiles 내부에 직접 추가
+        icon_id: result.post.profiles?.icon_id || null  // 아이콘 ID도 확실하게 설정
+      }
+    };
     
-    // 11. 나머지 데이터 병렬 처리
-    const [
-      commentCounts,
-      teamAndLeagueInfo,
-      iconUrl
-    ] = await Promise.all([
-      // 댓글 수 가져오기
-      getCommentCounts(postIds).catch(() => ({})),
-      
-      // 팀 및 리그 정보 가져오기
-      getTeamAndLeagueInfo(allBoardIds).catch(() => ({ teams: {}, leagues: {} })),
-      
-      // 작성자 아이콘 URL 가져오기
-      getIconUrl(post.profiles?.icon_id || null).catch(() => null)
-    ]);
-    
-    // 조회수 증가는 결과를 기다리지 않고 비동기로 처리
-    incrementViewCount(post.id).catch(() => {
-      // 조회수 증가 실패해도, 게시글 보기에는 영향 없음
-    });
-    
-    // 12. 게시글 데이터 포맷팅
-    const formattedPosts = formatPosts(
-      filteredPosts, 
-      commentCounts, 
-      boardsData, 
-      boardNameMap, 
-      teamAndLeagueInfo.teams, 
-      teamAndLeagueInfo.leagues
-    );
-    
-    // 13. 사용자 세션 확인 (글 작성자인지 확인용)
-    const isAuthor = user?.id === post.user_id;
-    
-    // 14. 브레드크럼 생성
-    const breadcrumbs = createBreadcrumbs(board, post.title, postNumber);
-
+    // 레이아웃 컴포넌트에 데이터 전달
     return (
-      <div className="container mx-auto">
-        {/* 1. 게시판 경로 - BoardBreadcrumbs 컴포넌트 사용 */}
-        <div className="overflow-x-auto sm:mt-0 mt-4">
-          <BoardBreadcrumbs breadcrumbs={breadcrumbs as Breadcrumb[]} />
-        </div>
-        
-        {/* 모바일 화면에서 우측 하단에 고정된 글쓰기 버튼 (로그인 시에만) */}
-        {isLoggedIn && (
-          <div className="sm:hidden fixed bottom-4 right-4 z-30">
-            <Link href={`/boards/${slug}/create`}>
-              <button className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-white rounded-full font-medium py-2 px-4 shadow-md border border-slate-700 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                <span>글쓰기</span>
-              </button>
-            </Link>
-          </div>
-        )}
-        
-        {/* 2. 게시글 본문 (상세 정보) */}
-        <div className="bg-white rounded-lg border shadow-sm overflow-hidden mb-4">
-          {/* 게시글 헤더 컴포넌트 */}
-          <PostHeader 
-            title={post.title}
-            author={{
-              nickname: post.profiles?.nickname || null,
-              id: post.user_id,
-              icon_id: post.profiles?.icon_id || null,
-              icon_url: iconUrl
-            }}
-            createdAt={post.created_at}
-            views={post.views || 0}
-            likes={post.likes || 0}
-            boardName={post.board?.name || '게시판'}
-            commentCount={comments?.length || 0}
-          />
-          
-          {/* 게시글 본문 컴포넌트 */}
-          <PostContent content={post.content || ''} />
-          
-          {/* 3. 추천/비추천 버튼 및 게시글 액션 */}
-          <div className="px-4 sm:px-6 py-4 border-t">
-            <div className="flex flex-col space-y-4">
-              {/* 추천/비추천 버튼 */}
-              <PostActions 
-                postId={post.id} 
-                boardId={board.id} 
-                initialLikes={post.likes || 0} 
-                initialDislikes={post.dislikes || 0}
-              />
-            </div>
-          </div>
-          
-          {/* 첨부파일 섹션 (있는 경우) */}
-          {post.files && post.files.length > 0 && (
-            <div className="px-4 sm:px-6 py-4 border-t">
-              <h3 className="text-sm font-medium mb-2">첨부파일</h3>
-              <ul className="space-y-1">
-                {post.files.map((file: { url: string; filename: string }, index: number) => (
-                  <li key={index} className="text-sm">
-                    <a 
-                      href={file.url} 
-                      className="text-blue-600 hover:underline flex items-center"
-                      download
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-                      </svg>
-                      <span className="truncate">{file.filename}</span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-        
-        {/* 4. 게시글 하단 버튼 영역 */}
-        <div className="mb-4">
-          <PostFooter 
-            boardSlug={slug}
-            postNumber={postNumber}
-            isAuthor={isAuthor}
-            isLoggedIn={isLoggedIn}
-          />
-        </div>
-        
-        {/* 5. 포스트 네비게이션 */}
-        <div className="mb-4">
-          <PostNavigation 
-            prevPost={adjacentPosts.prevPost} 
-            nextPost={adjacentPosts.nextPost}
-            boardSlug={slug}
-          />
-        </div>
-        
-        {/* 6. 댓글 섹션 */}
-        <div className="mb-4">
-          <CommentSection 
-            postId={post.id} 
-            initialComments={Array.isArray(comments) ? comments as CommentType[] : []} 
-            boardSlug={slug}
-            postNumber={postNumber}
-            postOwnerId={post.user_id}
-          />
-        </div>
-        
-        {/* 7. 호버 메뉴 */}
-        <div className="mb-4">
-          <HoverMenu
-            topBoards={topLevelBoardsWithSlug}
-            childBoardsMap={childBoardsMap}
-            currentBoardId={board.id}
-            rootBoardId={rootBoardId}
-            rootBoardSlug={boardsData[rootBoardId]?.slug}
-          />
-        </div>
-        
-        {/* 8. 같은 게시판의 다른 글 목록 */}
-        <div className="mb-4">
-          <PostList 
-            posts={formattedPosts}
-            showBoard={true}
-            currentBoardId={board.id}
-            currentPostId={post.id}
-          />
-        </div>
-        
-        {/* 9. 게시글 푸터 (중복) */}
-        <div className="mb-4">
-          <PostFooter 
-            boardSlug={slug}
-            postNumber={postNumber}
-            isAuthor={isAuthor}
-            isLoggedIn={isLoggedIn}
-          />
-        </div>
-        
-        {/* 10. 페이지네이션 */}
-        <div className="mb-4">
-          {totalPages > 1 && (
-            <div className="px-4 sm:px-6">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                boardSlug={slug}
-                fromBoardId={normalizedFromBoardId}
-              />
-            </div>
-          )}
-        </div>
-      </div>
+      <PostDetailLayout
+        post={postWithIcon}
+        board={result.board}
+        breadcrumbs={result.breadcrumbs || []}
+        comments={processedComments}
+        isLoggedIn={result.isLoggedIn || false}
+        isAuthor={result.isAuthor || false}
+        adjacentPosts={result.adjacentPosts || { prevPost: null, nextPost: null }}
+        formattedPosts={processedFormattedPosts}
+        topLevelBoards={topLevelBoards}
+        childBoardsMap={processedChildBoardsMap}
+        rootBoardId={result.rootBoardId || ''}
+        rootBoardSlug={result.rootBoardSlug || undefined}
+        totalPages={result.totalPages || 1}
+        currentPage={result.currentPage || 1}
+        normalizedFromBoardId={result.normalizedFromBoardId}
+        iconUrl={result.iconUrl || null}
+        slug={slug}
+        postNumber={postNumber}
+      />
     );
   } catch (error) {
     // 오류가 NEXT_NOT_FOUND 관련인지 확인
     if (error instanceof Error && error.message?.includes('NEXT_NOT_FOUND')) {
       return notFound();
     }
+    
     // 그 외 일반 오류는 사용자 친화적인 에러 페이지 표시
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg border shadow-md p-8 text-center">
-          <h2 className="text-2xl font-semibold mb-4">오류가 발생했습니다</h2>
-          <p className="text-gray-600 mb-6">
-            페이지를 불러오는 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.
-          </p>
-          <Link href="/boards" className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
-            게시판 목록으로 이동
-          </Link>
-        </div>
-      </div>
+      <ErrorMessage message="페이지를 불러오는 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요." />
     );
   }
 } 

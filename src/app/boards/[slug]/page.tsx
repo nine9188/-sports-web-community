@@ -1,153 +1,56 @@
-import React from 'react';
-import { createClient } from '@/app/lib/supabase.server';
-import { notFound } from 'next/navigation';
-import { ScrollArea } from '@/app/ui/scroll-area';
-import BoardBreadcrumbs from '@/app/boards/components/BoardBreadcrumbs';
-import ServerPostList from '@/app/components/post/ServerPostList';
-import BoardTeamInfo from '@/app/boards/components/BoardTeamInfo';
-import LeagueInfo from '@/app/boards/components/LeagueInfo';
-import BoardPagination from '@/app/boards/components/BoardPagination';
-import { PenLine } from 'lucide-react';
-import Link from 'next/link';
-import ServerHoverMenu from '@/app/boards/components/ServerHoverMenu';
+import { getBoardPageData } from '@/domains/boards/actions';
+import { fetchPosts, Post as ApiPost } from '@/domains/boards/actions';
+import BoardDetailLayout from '@/domains/boards/components/layout/BoardDetailLayout';
+import ErrorMessage from '@/shared/ui/error-message';
+import { createClient } from '@/shared/api/supabaseServer';
+
+// BoardDetailLayout에서 사용하는 Post 타입 정의
+interface LayoutPost {
+  id: string;
+  title: string;
+  board_id: string;
+  board_name: string;
+  board_slug: string;
+  post_number: number;
+  created_at: string;
+  views: number;
+  likes: number;
+  author_nickname: string;
+  author_id?: string;
+  comment_count: number;
+  team_id?: number | null;
+  team_name?: string | null;
+  team_logo?: string | null;
+  league_id?: number | null;
+  league_name?: string | null;
+  league_logo?: string | null;
+}
+
+// API Post를 레이아웃 호환 Post로 변환하는 함수
+function convertApiPostsToLayoutPosts(apiPosts: ApiPost[]): LayoutPost[] {
+  return apiPosts.map(post => ({
+    id: post.id,
+    title: post.title,
+    board_id: post.board_id,
+    board_name: post.board_name,
+    board_slug: post.board_slug,
+    post_number: post.post_number,
+    created_at: post.created_at,
+    views: post.views || 0,
+    likes: post.likes || 0,
+    author_nickname: post.author_nickname || '익명',
+    author_id: post.author_id,
+    comment_count: post.comment_count || 0,
+    team_id: typeof post.team_id === 'string' ? parseInt(post.team_id, 10) : post.team_id as number | null,
+    team_logo: post.team_logo,
+    league_id: typeof post.league_id === 'string' ? parseInt(post.league_id, 10) : post.league_id as number | null,
+    league_logo: post.league_logo
+  }));
+}
 
 // 동적 렌더링 강제 설정 추가
 export const dynamic = 'force-dynamic';
-
 export const revalidate = 0;
-
-// 인터페이스 정의
-interface Board {
-  id: string;
-  name: string;
-  slug?: string;
-  parent_id?: string;
-  team_id?: number | null;
-  league_id?: number | null;
-  display_order?: number;
-}
-
-interface BoardMap {
-  [key: string]: Board;
-}
-
-interface ChildBoardsMap {
-  [key: string]: Board[];
-}
-
-interface BoardNameMap {
-  [key: string]: string;
-}
-
-// 브레드크럼 생성 함수
-function generateBoardBreadcrumbs(currentBoard: Board, boardsMap: BoardMap) {
-  const boardPath: Array<{id: string; name: string; slug: string}> = [];
-  
-  // 현재 게시판 추가
-  boardPath.push({
-    id: currentBoard.id,
-    name: currentBoard.name,
-    slug: currentBoard.slug || currentBoard.id
-  });
-  
-  // 상위 게시판들 추적
-  let parentId = currentBoard.parent_id;
-  while (parentId) {
-    const parentBoard = boardsMap[parentId];
-    if (parentBoard) {
-      boardPath.unshift({
-        id: parentBoard.id,
-        name: parentBoard.name,
-        slug: parentBoard.slug || parentBoard.id
-      });
-      parentId = parentBoard.parent_id;
-    } else {
-      break;
-    }
-  }
-  
-  return boardPath;
-}
-
-// 최상위 게시판 찾기 함수 추가
-function findRootBoard(boardId: string, boardsMap: BoardMap) {
-  let currentId = boardId;
-  while (boardsMap[currentId]?.parent_id) {
-    currentId = boardsMap[currentId].parent_id || '';
-  }
-  return currentId;
-}
-
-// 게시판 레벨 결정 함수 추가
-function getBoardLevel(boardId: string, boardsMap: BoardMap, childBoardsMap: ChildBoardsMap) {
-  // 부모가 없으면 최상위 게시판
-  if (!boardsMap[boardId]?.parent_id) {
-    return 'top';
-  }
-  
-  // 부모가 있고 자식이 있으면 상위 게시판
-  if (boardsMap[boardId]?.parent_id && childBoardsMap[boardId]?.length > 0) {
-    return 'mid';
-  }
-  
-  // 부모가 있고 자식이 없으면 하위 게시판
-  return 'bottom';
-}
-
-// 게시판 계층에 따른 필터링할 게시판 ID 목록 가져오기
-function getFilteredBoardIds(boardId: string, boardLevel: string, boardsMap: BoardMap, childBoardsMap: ChildBoardsMap) {
-  const result = new Set<string>();
-  
-  // 최상위 게시판: 모든 하위 게시판 포함
-  if (boardLevel === 'top') {
-    // 자신 추가
-    result.add(boardId);
-    
-    // 직접 하위 게시판 추가
-    if (childBoardsMap[boardId]) {
-      for (const child of childBoardsMap[boardId]) {
-        result.add(child.id);
-        
-        // 하위 게시판의 하위 게시판 추가 (손자)
-        if (childBoardsMap[child.id]) {
-          for (const grandChild of childBoardsMap[child.id]) {
-            result.add(grandChild.id);
-          }
-        }
-      }
-    }
-  } 
-  // 상위 게시판: 자신과 직접 하위 게시판
-  else if (boardLevel === 'mid') {
-    // 자신 추가
-    result.add(boardId);
-    
-    // 직접 하위 게시판 추가
-    if (childBoardsMap[boardId]) {
-      for (const child of childBoardsMap[boardId]) {
-        result.add(child.id);
-      }
-    }
-  } 
-  // 하위 게시판: 자신만 포함
-  else {
-    result.add(boardId);
-  }
-  
-  return Array.from(result);
-}
-
-// ErrorComponent 추가
-function ErrorComponent({ message }: { message: string }) {
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="bg-white dark:bg-gray-800 rounded-lg border shadow-md p-8 text-center">
-        <h2 className="text-2xl font-semibold mb-4">오류가 발생했습니다</h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-6">{message}</p>
-      </div>
-    </div>
-  );
-}
 
 export default async function BoardDetailPage({ 
   params,
@@ -164,234 +67,115 @@ export default async function BoardDetailPage({
     // 페이지 값이 유효하지 않으면 기본값 1로 설정
     const currentPage = isNaN(parseInt(page, 10)) || parseInt(page, 10) < 1 ? 1 : parseInt(page, 10);
     
-    const supabase = await createClient();
+    // 서버 액션을 통해 모든 데이터 로드
+    const result = await getBoardPageData(slug, currentPage, fromParam);
     
-    // 사용자 인증 확인 (로그인 상태)
-    const { data: userData } = await supabase.auth.getUser();
-    const isLoggedIn = !!userData?.user;
-    
-    // 병렬로 데이터 요청 처리
-    const [boardResult, allBoardsResult] = await Promise.all([
-      // 1. 현재 slug로 게시판 정보 조회
-      supabase
-        .from('boards')
-        .select('*')
-        .eq('slug', slug)
-        .single(),
-      
-      // 2. 모든 게시판 조회 (계층 구조 파악을 위해)
-      supabase
-        .from('boards')
-        .select('*')
-    ]);
-    
-    // 게시판 검증
-    if (boardResult.error) {
-      return notFound();
+    if (!result.success) {
+      return (
+        <ErrorMessage message={result.error || '게시판 정보를 불러오는 중 오류가 발생했습니다.'} />
+      );
     }
     
-    const boardData = boardResult.data;
-    const allBoardsData = allBoardsResult.data || [];
+    if (!result.boardData) {
+      return (
+        <ErrorMessage 
+          title="게시판을 찾을 수 없습니다" 
+          message={`요청하신 '${slug}' 게시판이 존재하지 않습니다.`} 
+        />
+      );
+    }
     
-    // 3. 게시판 계층 구조 설정
-    const boardsMap: BoardMap = {};
-    const childBoardsMap: ChildBoardsMap = {};
-    const boardNameMap: BoardNameMap = {};
-    
-    // 모든 게시판 정보 맵핑
-    allBoardsData.forEach(board => {
-      boardsMap[board.id] = board;
-      boardNameMap[board.id] = board.name;
-      
-      // 부모 ID 기준으로 자식 게시판 맵핑
-      if (board.parent_id) {
-        if (!childBoardsMap[board.parent_id]) {
-          childBoardsMap[board.parent_id] = [];
-        }
-        childBoardsMap[board.parent_id].push(board);
-      }
+    // 게시글 데이터 로드 (서버에서 미리 가져옴)
+    const postsData = await fetchPosts({
+      boardIds: result.filteredBoardIds,
+      currentBoardId: result.boardData.id,
+      page: currentPage,
+      limit: 20,
+      fromParam
     });
     
-    // 4. 브레드크럼 생성
-    const breadcrumbs = generateBoardBreadcrumbs(boardData, boardsMap);
+    // API 데이터를 레이아웃 호환 형식으로 변환
+    const layoutPosts = convertApiPostsToLayoutPosts(postsData.data || []);
     
-    // 현재 게시판의 레벨 결정 (최상위, 상위, 하위)
-    const boardLevel = getBoardLevel(boardData.id, boardsMap, childBoardsMap);
-    
-    // fromParam 처리: 
-    // - from=boards인 경우 현재 게시판만 표시
-    // - fromParam이 유효한 게시판 ID인 경우 해당 게시판 필터링
-    // - 그 외의 경우 기본 필터링 적용
-    let filteredBoardIds: string[] = [];
-    
-    if (fromParam === 'boards') {
-      // 현재 게시판만 표시
-      filteredBoardIds = [boardData.id];
-    } else if (fromParam && boardsMap[fromParam]) {
-      // fromParam이 유효한 게시판 ID인 경우 해당 게시판 관련 게시글 표시
-      const fromBoardLevel = getBoardLevel(fromParam, boardsMap, childBoardsMap);
-      filteredBoardIds = getFilteredBoardIds(fromParam, fromBoardLevel, boardsMap, childBoardsMap);
-    } else {
-      // 기본 필터링 적용
-      filteredBoardIds = getFilteredBoardIds(boardData.id, boardLevel, boardsMap, childBoardsMap);
-    }
-    
-    // 최상위 게시판의 ID 및 slug 확인
-    const rootBoardId = findRootBoard(boardData.id, boardsMap);
-    const rootBoardSlug = boardsMap[rootBoardId]?.slug || rootBoardId;
-    
-    // 팀/리그 데이터 병렬 요청
-    let teamData = null;
-    let leagueData = null;
-    
-    if (boardData.team_id || boardData.league_id) {
-      const [teamResult, leagueResult] = await Promise.all([
-        boardData.team_id 
-          ? supabase
-              .from('teams')
-              .select('*')
-              .eq('id', boardData.team_id)
-              .single()
-          : Promise.resolve({ data: null }),
-          
-        boardData.league_id 
-          ? supabase
-              .from('leagues')
-              .select('*')
-              .eq('id', boardData.league_id)
-              .single()
-          : Promise.resolve({ data: null })
-      ]);
+    // HoverMenu용 데이터 가져오기
+    const supabase = await createClient();
+    const { data: boardsData } = await supabase
+      .from('boards')
+      .select('*')
+      .order('display_order', { ascending: true });
       
-      // 팀 데이터 처리
-      if (teamResult.data) {
-        const team = teamResult.data;
-        teamData = {
-          team: {
-            id: team.id,
-            name: team.name,
-            country: team.country || '',
-            founded: team.founded || 0,
-            logo: team.logo || 'https://via.placeholder.com/80'
-          },
-          venue: {
-            name: team.venue_name || 'Unknown',
-            city: team.venue_city || '',
-            capacity: team.venue_capacity || 0
+    // HoverMenu용 데이터 구조화
+    const topBoards: Array<{
+      id: string;
+      name: string;
+      display_order: number;
+      slug?: string;
+    }> = [];
+    
+    const hoverChildBoardsMap: Record<string, Array<{
+      id: string;
+      name: string;
+      display_order: number;
+      slug?: string;
+    }>> = {};
+    
+    if (boardsData) {
+      // 루트 게시판 찾기 (현재 게시판의 최상위)
+      const rootBoardId = result.rootBoardId || '';
+      
+      // 루트 게시판의 직접 하위 게시판들 (상위 게시판들)
+      const rootChildBoards = boardsData.filter(board => 
+        board.parent_id === rootBoardId
+      );
+      
+      // HoverMenu용 상위 게시판 데이터 구조화
+      topBoards.push(...rootChildBoards.map(board => ({
+        id: board.id,
+        name: board.name,
+        display_order: board.display_order || 0,
+        slug: board.slug
+      })));
+      
+      // 모든 하위 게시판 관계 맵핑
+      boardsData.forEach(board => {
+        if (board.parent_id) {
+          if (!hoverChildBoardsMap[board.parent_id]) {
+            hoverChildBoardsMap[board.parent_id] = [];
           }
-        };
-      }
-      
-      // 리그 데이터 처리
-      if (leagueResult.data) {
-        const league = leagueResult.data;
-        leagueData = {
-          id: league.id,
-          name: league.name,
-          country: league.country || '',
-          logo: league.logo || 'https://via.placeholder.com/80',
-          type: league.type || 'League'
-        };
-      }
+          hoverChildBoardsMap[board.parent_id].push({
+            id: board.id,
+            name: board.name,
+            display_order: board.display_order || 0,
+            slug: board.slug
+          });
+        }
+      });
     }
-
+    
+    // 레이아웃 컴포넌트에 데이터 전달
     return (
-      <div className="container mx-auto">
-        <div className="mb-4 sm:mt-0 mt-4">
-          <BoardBreadcrumbs breadcrumbs={breadcrumbs} />
-        </div>
-        
-        {teamData && (
-          <div className="mb-4 hidden sm:block">
-            <BoardTeamInfo 
-              teamData={teamData}
-              boardId={boardData.id}
-              boardSlug={slug}
-              isLoggedIn={isLoggedIn}
-            />
-          </div>
-        )}
-
-        {leagueData && (
-          <div className="mb-4 hidden sm:block">
-            <LeagueInfo 
-              leagueData={leagueData}
-              boardId={boardData.id}
-              boardSlug={slug}
-              isLoggedIn={isLoggedIn}
-            />
-          </div>
-        )}
-        
-        <div className="mb-4">
-          {/* 게시판 네비게이션 메뉴 
-            - 최상위 게시판 (전체/해외축구): rootBoardId
-            - 상위 게시판 (프리미어리그, 라리가 등): 드롭다운 메뉴를 가진 항목
-            - 하위 게시판: 드롭다운 내부에 표시되는 항목들
-          */}
-          <ServerHoverMenu
-            currentBoardId={boardData.id}
-            rootBoardId={rootBoardId}
-            currentBoardSlug={slug}
-            rootBoardSlug={rootBoardSlug}
-            fromParam={fromParam}
-          />
-        </div>
-        
-        <div className="mb-4 relative">
-          {/* 글쓰기 버튼 - 모바일에서 고정 위치 (로그인 시에만) */}
-          {isLoggedIn && (
-            <div className="sm:hidden fixed bottom-4 right-4 z-30">
-              <Link href={`/boards/${slug}/create`}>
-                <button className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-white rounded-full font-medium py-2 px-4 shadow-md border border-slate-700 transition-colors">
-                  <PenLine className="h-4 w-4" />
-                  <span>글쓰기</span>
-                </button>
-              </Link>
-            </div>
-          )}
-          
-          <ScrollArea className="h-full">
-            <ServerPostList 
-              boardIds={filteredBoardIds}
-              currentBoardId={boardData.id}
-              showBoard={true}
-              fromParam={fromParam}
-              className="overflow-hidden"
-              initialPage={currentPage}
-            />
-          </ScrollArea>
-          
-          <div className="flex items-center mt-4">
-            <div className="flex-1"></div>
-            
-            <div className="flex-1 flex justify-center">
-              <BoardPagination
-                currentPage={currentPage}
-                totalPages={10} /* 무한 스크롤 사용으로 페이지네이션은 표시만 함 */
-                boardSlug={slug}
-              />
-            </div>
-            
-            <div className="flex-1 flex justify-end">
-              {/* 데스크톱용 글쓰기 버튼 (로그인 시에만) */}
-              {isLoggedIn && (
-                <div className="hidden sm:block">
-                  <Link href={`/boards/${slug}/create`}>
-                    <button className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-white py-2 px-3 rounded-md text-sm font-medium border border-slate-700 transition-colors">
-                      <PenLine className="h-4 w-4" />
-                      <span>글쓰기</span>
-                    </button>
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+      <BoardDetailLayout
+        boardData={result.boardData}
+        breadcrumbs={result.breadcrumbs || []}
+        teamData={result.teamData || null}
+        leagueData={result.leagueData || null}
+        isLoggedIn={result.isLoggedIn || false}
+        currentPage={currentPage}
+        slug={slug}
+        fromParam={fromParam}
+        childBoardsMap={result.childBoardsMap || {}}
+        rootBoardId={result.rootBoardId || ''}
+        rootBoardSlug={result.rootBoardSlug || undefined}
+        // 서버에서 미리 가져온 데이터 전달
+        posts={layoutPosts}
+        topBoards={topBoards}
+        hoverChildBoardsMap={hoverChildBoardsMap}
+      />
     );
   } catch (error) {
     console.error("BoardDetailPage Error:", error);
-    return <ErrorComponent message="게시판 정보를 불러오는 중 오류가 발생했습니다." />;
+    return (
+      <ErrorMessage message="게시판 정보를 불러오는 중 오류가 발생했습니다." />
+    );
   }
 } 

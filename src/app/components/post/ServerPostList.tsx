@@ -1,3 +1,4 @@
+// 이 파일은 서버 컴포넌트입니다 - 'use client' 지시어 없음
 import { fetchPosts } from '@/app/actions/posts';
 import PostList from './PostList';
 import { Suspense } from 'react';

@@ -1,7 +1,8 @@
 import React from 'react';
-import { createClient } from '@/app/lib/supabase.server';
 import { notFound, redirect } from 'next/navigation';
-import PostEditForm from '@/app/boards/components/PostEditForm';
+import { getPostEditData } from '@/domains/boards/actions';
+import PostEditForm from '@/domains/boards/components/post/PostEditForm';
+import ErrorMessage from '@/shared/ui/error-message';
 
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
@@ -9,59 +10,47 @@ export const dynamic = 'force-dynamic';
 export default async function EditPostPage({ params }: { params: Promise<{ slug: string, postNumber: string }> }) {
   try {
     const { slug, postNumber } = await params;
-    const supabase = await createClient();
     
-    // 세션 정보 가져오기
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData?.user?.id;
+    // 서버 액션을 통해 데이터 로드
+    const result = await getPostEditData(slug, postNumber);
     
-    if (!userId) {
+    // 로그인 필요한 경우 리다이렉트
+    if (result.redirectToLogin) {
       redirect(`/login?message=로그인이+필요한+기능입니다&redirect=/boards/${slug}/${postNumber}`);
     }
     
-    // slug로 게시판 정보 가져오기
-    const { data: board, error: boardError } = await supabase
-      .from('boards')
-      .select('*')
-      .eq('slug', slug)
-      .single();
-      
-    if (boardError || !board) {
-      return notFound();
-    }
-    
-    // 게시물 정보 가져오기
-    const { data: post, error: postError } = await supabase
-      .from('posts')
-      .select('*, profiles(nickname), board:board_id(name)')
-      .eq('board_id', board.id)
-      .eq('post_number', postNumber)
-      .single();
-      
-    if (postError || !post) {
-      return notFound();
-    }
-    
-    // 작성자가 아니면 원래 게시글로 리다이렉트
-    if (post.user_id !== userId) {
+    // 권한 없는 경우 리다이렉트
+    if (result.redirectToPost) {
       redirect(`/boards/${slug}/${postNumber}?message=본인+작성글만+수정할+수+있습니다`);
+    }
+    
+    // 오류 처리
+    if (!result.success || !result.post || !result.board) {
+      return (
+        <ErrorMessage 
+          message={result.error || '게시글 정보를 불러오는 중 오류가 발생했습니다.'} 
+          backLink={`/boards/${slug}/${postNumber}`}
+          backText="게시글로 돌아가기"
+        />
+      );
     }
     
     return (
       <div className="container mx-auto">
         <PostEditForm 
-          postId={post.id}
-          boardId={board.id}
+          postId={result.post.id}
+          boardId={result.board.id}
           _boardSlug={slug}
           _postNumber={postNumber}
-          initialTitle={post.title}
-          initialContent={post.content}
-          boardName={board.name}
+          initialTitle={result.post.title}
+          initialContent={result.post.content}
+          boardName={result.board.name}
           isCreateMode={false}
         />
       </div>
     );
-  } catch {
+  } catch (error) {
+    console.error('EditPostPage 오류:', error);
     return notFound();
   }
 } 
