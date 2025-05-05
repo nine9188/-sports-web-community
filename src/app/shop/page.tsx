@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
-import { createClient } from '@/app/lib/supabase.server';
-import ShopCategoryCard from './components/ShopCategoryCard';
+import { getShopCategories, getUserPoints } from '@/domains/shop/actions/actions';
+import ShopCategoryCard from '@/domains/shop/components/ShopCategoryCard';
+import { createClient } from '@/shared/api/supabaseServer';
 
 // 동적 렌더링 강제 설정 추가
 export const dynamic = 'force-dynamic';
@@ -10,40 +11,17 @@ export const metadata: Metadata = {
   description: '다양한 아이템을 구매하세요.',
 };
 
-// 사용자 포인트를 가져오는 부분 수정
-const getUserPoints = async (userId: string) => {
-  const supabase = await createClient();
-  const { data: userData, error } = await supabase
-    .from('users')
-    .select('points')
-    .eq('id', userId)
-    .single();
-    
-  if (error) {
-    console.error('Error fetching user points:', error);
-    return 0;
-  }
-  
-  return userData?.points || 0;
-};
-
 export default async function ShopPage() {
   const supabase = await createClient();
   
   // 활성화된 카테고리 목록 가져오기
-  const { data: categories } = await supabase
-    .from('shop_categories')
-    .select('*')
-    .eq('is_active', true)
-    .order('display_order', { ascending: true });
+  const categories = await getShopCategories();
   
-  // 사용자 정보 가져오기 (getUser 사용 - 보안 강화)
+  // 사용자 정보 가져오기
   const { data: { user }, error } = await supabase.auth.getUser();
   
-  let userPoints = 0;
-  if (user && !error) {
-    userPoints = await getUserPoints(user.id);
-  }
+  // 사용자 포인트 가져오기
+  const userPoints = user && !error ? await getUserPoints(user.id) : 0;
 
   return (
     <div className="container mx-auto py-8 px-4">

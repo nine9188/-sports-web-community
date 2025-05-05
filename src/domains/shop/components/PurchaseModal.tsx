@@ -1,20 +1,15 @@
-import Image from 'next/image';
+'use client'
 
-interface ShopItem {
-  id: number;
-  name: string;
-  description: string | null;
-  image_url: string;
-  price: number;
-}
+import Image from 'next/image'
+import { ShopItem } from '../types'
 
 interface PurchaseModalProps {
-  item: ShopItem;
-  isProcessing: boolean;
-  canAfford: boolean;
-  userPoints: number;
-  onCancel: () => void;
-  onConfirm: () => void;
+  item: ShopItem
+  isProcessing: boolean
+  canAfford: boolean
+  userPoints: number
+  onCancel: () => void
+  onConfirm: () => void
 }
 
 export default function PurchaseModal({
@@ -82,5 +77,5 @@ export default function PurchaseModal({
         </div>
       </div>
     </div>
-  );
+  )
 } 

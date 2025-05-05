@@ -1,41 +1,33 @@
-'use client';
+'use client'
 
-import { useState, useMemo } from 'react';
-import ItemGrid from '../components/ItemGrid';
-
-// 쇼핑 아이템 인터페이스 정의
-interface ShopItem {
-  id: number;
-  category_id: number;
-  name: string;
-  description: string | null;
-  image_url: string;
-  price: number;
-  is_default: boolean;
-  is_active: boolean;
-  category?: {
-    name: string;
-  };
-}
+import { useState, useMemo } from 'react'
+import { ShopItem } from '../types'
+import ItemGrid from '@/domains/shop/components/ItemGrid'
 
 interface CategoryFilterProps {
-  items: ShopItem[];
-  userItems: number[];
-  userPoints: number;
-  userId: string | undefined;
+  items: ShopItem[]
+  userItems: number[]
+  userPoints: number
+  userId: string | undefined
   categories: {
-    id: number;
-    name: string;
-  }[];
+    id: number
+    name: string
+  }[]
 }
 
-export default function CategoryFilter({ items, userItems, userPoints, userId, categories }: CategoryFilterProps) {
-  const [activeCategory, setActiveCategory] = useState<string>('all');
+export default function CategoryFilter({ 
+  items, 
+  userItems, 
+  userPoints, 
+  userId, 
+  categories 
+}: CategoryFilterProps) {
+  const [activeCategory, setActiveCategory] = useState<string>('all')
   
   const filteredItems = useMemo(() => {
-    if (activeCategory === 'all') return items;
-    return items.filter(item => item.category_id.toString() === activeCategory);
-  }, [items, activeCategory]);
+    if (activeCategory === 'all') return items
+    return items.filter(item => item.category_id.toString() === activeCategory)
+  }, [items, activeCategory])
 
   return (
     <div>
@@ -72,5 +64,5 @@ export default function CategoryFilter({ items, userItems, userPoints, userId, c
         userId={userId}
       />
     </div>
-  );
+  )
 } 

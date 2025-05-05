@@ -1,16 +1,11 @@
-import Link from 'next/link';
-import Image from 'next/image';
+'use client'
 
-interface ShopCategory {
-  id: number;
-  slug: string;
-  name: string;
-  description: string | null;
-  image_url: string | null;
-}
+import Link from 'next/link'
+import Image from 'next/image'
+import { ShopCategory } from '../types'
 
 interface ShopCategoryCardProps {
-  category: ShopCategory;
+  category: ShopCategory
 }
 
 export default function ShopCategoryCard({ category }: ShopCategoryCardProps) {
@@ -48,5 +43,5 @@ export default function ShopCategoryCard({ category }: ShopCategoryCardProps) {
         </div>
       </div>
     </Link>
-  );
+  )
 } 

@@ -1,142 +1,69 @@
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import CategoryFilter from './CategoryFilter';
-import { createClient } from '@/app/lib/supabase.server';
-import { SupabaseClient } from '@supabase/supabase-js';
+import { notFound } from 'next/navigation'
+import Link from 'next/link'
+import { Metadata } from 'next'
+import { createClient } from '@/shared/api/supabaseServer'
+import { 
+  getShopCategory, 
+  getCategoryItems, 
+  getUserPoints, 
+  getUserItems 
+} from '@/domains/shop/actions/actions'
+import CategoryFilter from '@/domains/shop/components/CategoryFilter'
+import { ShopCategory } from '@/domains/shop/types'
 
 // 동적 렌더링 강제 설정 추가
-export const dynamic = 'force-dynamic';
-
-export interface ShopCategory {
-  id: number;
-  slug: string;
-  name: string;
-  description: string | null;
-  image_url: string | null;
-  subcategories?: ShopCategory[];
-}
-
-export interface ShopItem {
-  id: number;
-  category_id: number;
-  name: string;
-  description: string | null;
-  image_url: string;
-  price: number;
-  is_default: boolean;
-  is_active: boolean;
-  category?: {
-    name: string;
-  };
-}
-
-export interface UserItem {
-  item_id: number;
-}
+export const dynamic = 'force-dynamic'
 
 interface Props {
   params: Promise<{
-    category: string;
-  }>;
+    category: string
+  }>
 }
 
-export async function generateMetadata({ params }: Props) {
-  const { category } = await params;
-  const supabase = await createClient();
-  
-  const { data: categoryData } = await supabase
-    .from('shop_categories')
-    .select('name')
-    .eq('slug', category)
-    .single();
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { category } = await params
+  const categoryData = await getShopCategory(category)
   
   if (!categoryData) {
     return {
       title: '상점',
       description: '상품을 구매하세요.',
-    };
+    }
   }
   
   return {
     title: `${categoryData.name} | 상점`,
     description: `${categoryData.name} 아이템을 구매하세요.`,
-  };
-}
-
-const getUserPoints = async (supabase: SupabaseClient, userId: string): Promise<number> => {
-  try {
-    const { data: userData, error } = await supabase
-      .from('profiles')
-      .select('points')
-      .eq('id', userId)
-      .single();
-      
-    if (error) {
-      console.error('Error fetching user points:', error);
-      return 0;
-    }
-    
-    return userData?.points || 0;
-  } catch (error) {
-    console.error('Error in getUserPoints:', error);
-    return 0;
   }
-};
-
-const getUserItems = async (supabase: SupabaseClient, userId: string | undefined): Promise<number[]> => {
-  if (!userId) return [];
-  
-  const { data } = await supabase
-    .from('user_items')
-    .select('item_id')
-    .eq('user_id', userId);
-    
-  return data?.map((item: UserItem) => item.item_id) || [];
-};
+}
 
 export default async function CategoryPage({ params }: Props) {
   try {
-    const { category } = await params;
-    const supabase = await createClient();
+    const { category } = await params
     
     // 현재 카테고리와 하위 카테고리 정보 가져오기
-    const { data: currentCategory } = await supabase
-      .from('shop_categories')
-      .select(`
-        *,
-        subcategories:shop_categories(
-          id,
-          name,
-          slug,
-          description
-        )
-      `)
-      .eq('slug', category)
-      .eq('is_active', true)
-      .single();
+    const currentCategory = await getShopCategory(category)
 
     if (!currentCategory) {
-      notFound();
+      notFound()
     }
 
     // 모든 관련 카테고리 ID 수집
     const allCategoryIds = [
       currentCategory.id,
       ...(currentCategory.subcategories?.map((sub: ShopCategory) => sub.id) || [])
-    ];
+    ]
 
+    // 사용자 정보 및 아이템 가져오기
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
     // 모든 아이템 가져오기
-    const { data: items } = await supabase
-      .from('shop_items')
-      .select('*, category:shop_categories(name)')
-      .in('category_id', allCategoryIds)
-      .eq('is_active', true)
-      .order('price', { ascending: true });
-
-    // 사용자 정보 가져오기 (getUser 사용 - 보안 강화)
-    const { data: { user }, error } = await supabase.auth.getUser();
-    const userPoints = user?.id && !error ? await getUserPoints(supabase, user.id) : 0;
-    const userItems = await getUserItems(supabase, user?.id);
+    const items = await getCategoryItems(allCategoryIds)
+    
+    // 사용자 포인트 및 보유 아이템 가져오기
+    const userPoints = await getUserPoints(user?.id)
+    const userItems = await getUserItems(user?.id)
 
     return (
       <div className="container mx-auto py-6 px-4">
@@ -160,16 +87,16 @@ export default async function CategoryPage({ params }: Props) {
         </div>
 
         <CategoryFilter 
-          items={items || []}
+          items={items}
           userItems={userItems}
           userPoints={userPoints}
           userId={user?.id}
           categories={[currentCategory, ...(currentCategory.subcategories || [])]}
         />
       </div>
-    );
+    )
   } catch (error) {
-    console.error('Error:', error);
-    return <div>오류가 발생했습니다.</div>;
+    console.error('Error:', error)
+    return <div>오류가 발생했습니다.</div>
   }
-} 
+}

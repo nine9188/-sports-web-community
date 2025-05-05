@@ -1,20 +1,13 @@
-import Image from 'next/image';
+'use client'
 
-interface ShopItem {
-  id: number;
-  name: string;
-  description: string | null;
-  image_url: string;
-  price: number;
-  is_default: boolean;
-  is_active: boolean;
-}
+import Image from 'next/image'
+import { ShopItem } from '../types'
 
 interface ItemCardProps {
-  item: ShopItem;
-  isOwned: boolean;
-  canAfford: boolean;
-  onPurchase: () => void;
+  item: ShopItem
+  isOwned: boolean
+  canAfford: boolean
+  onPurchase: () => void
 }
 
 export default function ItemCard({ item, isOwned, canAfford, onPurchase }: ItemCardProps) {
@@ -57,5 +50,5 @@ export default function ItemCard({ item, isOwned, canAfford, onPurchase }: ItemC
         </div>
       </div>
     </div>
-  );
+  )
 } 
