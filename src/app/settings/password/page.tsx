@@ -1,24 +1,21 @@
-import { createClient } from '@/app/lib/supabase.server';
-import { redirect } from 'next/navigation';
-import PasswordForm from './components/PasswordForm';
+import { checkUserAuth } from '@/domains/settings';
+import { Metadata } from 'next';
+import { PasswordForm } from '@/domains/settings/components';
+
+export const metadata: Metadata = {
+  title: '비밀번호 변경 - 설정',
+  description: '계정 보안을 위해 비밀번호를 변경합니다.',
+};
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function PasswordSettingsPage() {
-  // Supabase 클라이언트 생성
-  const supabase = await createClient();
-  
-  // 사용자 인증 정보 확인 (getUser 메서드 사용)
-  const { data: { user }, error } = await supabase.auth.getUser();
-  
-  // 로그인되지 않은 경우 로그인 페이지로 리디렉션
-  if (!user || error) {
-    redirect('/signin?returnUrl=/settings/password');
-  }
+  // 사용자 인증 확인 (자동으로 리다이렉트됨)
+  const user = await checkUserAuth('/auth/signin');
   
   // OAuth 계정인 경우 비밀번호 변경 불가
-  const isOAuthAccount = user?.app_metadata?.provider && 
+  const isOAuthAccount = user.app_metadata?.provider && 
     user.app_metadata.provider !== 'email';
   
   return (

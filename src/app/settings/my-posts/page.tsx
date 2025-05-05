@@ -1,10 +1,10 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
-import { getMyPosts } from './actions';
-import { createClient } from '@/app/lib/supabase.server';
 import { Metadata } from 'next';
-import MyPostsContent from './components/MyPostsContent';
-import PostsPagination from './components/PostsPagination';
+import { getMyPosts } from '@/domains/settings/actions/my-posts';
+import { createClient } from '@/shared/api/supabaseServer';
+import MyPostsContent from '@/domains/settings/components/my-posts/MyPostsContent';
+import PostsPagination from '@/domains/settings/components/my-posts/PostsPagination';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
 
 export const metadata: Metadata = {
@@ -73,7 +73,8 @@ export default async function MyPostsPage({
         />
       </div>
     );
-  } catch {
+  } catch (error) {
+    console.error('내 게시글 페이지 오류:', error);
     return (
       <div className="p-4 text-center text-red-500">
         게시글을 불러오는 중 오류가 발생했습니다. 다시 시도해 주세요.

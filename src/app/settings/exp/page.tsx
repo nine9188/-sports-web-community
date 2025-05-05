@@ -1,36 +1,32 @@
-import { createClient } from '@/app/lib/supabase.server';
-import { redirect } from 'next/navigation';
-import { getUserExpHistory } from './actions';
-import ExpForm from './components/ExpForm';
-import ExpHistory from './components/ExpHistory';
-import LevelList from './components/LevelList';
+import { Metadata } from 'next';
+import { 
+  checkUserAuth
+} from '@/domains/settings/actions/auth';
+import { 
+  getUserExpHistory, 
+  getUserExpLevel 
+} from '@/domains/settings/actions/exp';
+import ExpForm from '@/domains/settings/components/exp/ExpForm';
+import ExpHistory from '@/domains/settings/components/exp/ExpHistory';
+import LevelList from '@/domains/settings/components/exp/LevelList';
+
+export const metadata: Metadata = {
+  title: '경험치 및 레벨 - 설정',
+  description: '경험치 획득 내역 및 레벨 정보를 확인합니다.',
+};
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function ExpPage() {
-  // Supabase 클라이언트 생성
-  const supabase = await createClient();
-  
-  // 사용자 인증 정보 확인 (getUser 메서드 사용)
-  const { data: { user }, error } = await supabase.auth.getUser();
-  
-  // 로그인하지 않은 사용자는 로그인 페이지로 리다이렉트
-  if (!user || error) {
-    redirect('/auth/signin?callbackUrl=/settings/exp');
-  }
-  
+  // 사용자 인증 확인 (자동 리다이렉트)
+  const user = await checkUserAuth('/auth/signin');
   const userId = user.id;
   
-  // 사용자 경험치 정보 가져오기
-  const { data: profileData } = await supabase
-    .from('profiles')
-    .select('exp, level')
-    .eq('id', userId)
-    .single();
-    
-  const userExp = profileData?.exp || 0;
-  const userLevel = profileData?.level || 1;
+  // 사용자의 경험치 및 레벨 정보 가져오기
+  const expLevelResult = await getUserExpLevel(userId);
+  const userExp = expLevelResult.success ? expLevelResult.data?.exp || 0 : 0;
+  const userLevel = expLevelResult.success ? expLevelResult.data?.level || 1 : 1;
   
   // 사용자의 경험치 내역 가져오기 (최근 10개)
   const expHistoryResult = await getUserExpHistory(userId, 10);
@@ -43,12 +39,12 @@ export default async function ExpPage() {
         <p className="text-gray-500 text-sm mb-6">
           현재 레벨과 경험치 획득 내역을 확인합니다.
         </p>
-              {/* 경험치 정보 컴포넌트 */}
-      <ExpForm 
-        userId={userId}
-        userExp={userExp}
-        userLevel={userLevel}
-      />
+        {/* 경험치 정보 컴포넌트 */}
+        <ExpForm 
+          userId={userId}
+          userExp={userExp}
+          userLevel={userLevel}
+        />
       </div>
     
       {/* 레벨 목록 컴포넌트 */}

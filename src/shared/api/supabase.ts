@@ -2,9 +2,7 @@
 'use client'
 
 import { createBrowserClient } from '@supabase/ssr'
-
-// 임시 Database 타입 (실제 프로젝트 타입으로 교체 필요)
-type Database = Record<string, unknown>
+import { Database } from '@/shared/types/supabase'
 
 /**
  * 클라이언트 사이드 Supabase 클라이언트 생성

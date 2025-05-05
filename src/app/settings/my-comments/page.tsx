@@ -1,10 +1,10 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { Metadata } from 'next';
-import { createClient } from '@/app/lib/supabase.server';
-import { getMyComments } from './actions';
-import MyCommentsContent from './components/MyCommentsContent';
-import PostsPagination from '../my-posts/components/PostsPagination';
+import { createClient } from '@/shared/api/supabaseServer';
+import { getMyComments } from '@/domains/settings/actions/my-comments';
+import MyCommentsContent from '@/domains/settings/components/my-comments/MyCommentsContent';
+import PostsPagination from '@/domains/settings/components/my-comments/PostsPagination';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
 
 export const metadata: Metadata = {

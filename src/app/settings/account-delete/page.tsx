@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { createClient } from '@/app/lib/supabase.server';
-import AccountDeleteForm from './components/AccountDeleteForm';
+import { AccountDeleteForm } from '@/domains/settings/components';
+import { createClient } from '@/shared/api/supabaseServer';
 
 export const metadata: Metadata = {
   title: '회원 탈퇴 | 설정',
