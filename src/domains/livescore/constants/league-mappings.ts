@@ -1,321 +1,86 @@
-// 리그 매핑 상수 파일
-// 주요 축구 리그 ID 및 매핑 정보
+/**
+ * 축구 주요 리그 ID 매핑 상수
+ * API-Football 기준 리그 ID 값을 정의합니다.
+ */
 
-// 리그 ID 타입 정의
-export type LeagueId = number;
+// 메이저 리그 ID 
+export const MAJOR_LEAGUE_IDS = {
+  // 유럽 주요 리그 
+  PREMIER_LEAGUE: 39, // 잉글랜드 프리미어 리그
+  LA_LIGA: 140,       // 스페인 라리가
+  BUNDESLIGA: 78,     // 독일 분데스리가
+  SERIE_A: 135,       // 이탈리아 세리에 A
+  LIGUE_1: 61,        // 프랑스 리그앙
 
-// 리그 정보 인터페이스
-export interface LeagueInfo {
-  id: LeagueId;
-  name: string;
-  country: string;
-  logo: string;
-  flag: string;
-  slug: string;
-  nameKo?: string; // 한국어 리그명 (선택)
-  priority: number; // 정렬 우선순위 (낮을수록 먼저 표시)
-}
+  // 유럽 컵 대회
+  CHAMPIONS_LEAGUE: 2, // UEFA 챔피언스 리그
+  EUROPA_LEAGUE: 3,    // UEFA 유로파 리그
+  CONFERENCE_LEAGUE: 848, // UEFA 컨퍼런스 리그
 
-// 주요 리그 ID 맵 (리그별 정적 정보)
-const LEAGUES_MAP: Record<string, LeagueInfo> = {
-  // 주요 리그 (Tier 1)
-  'premier-league': {
-    id: 39,
-    name: 'Premier League',
-    country: 'England',
-    logo: 'https://media.api-sports.io/football/leagues/39.png',
-    flag: 'https://media.api-sports.io/flags/gb.svg',
-    slug: 'premier-league',
-    nameKo: '프리미어리그',
-    priority: 10
-  },
-  'la-liga': { 
-    id: 140,
-    name: 'La Liga',
-    country: 'Spain',
-    logo: 'https://media.api-sports.io/football/leagues/140.png',
-    flag: 'https://media.api-sports.io/flags/es.svg',
-    slug: 'la-liga',
-    nameKo: '라리가',
-    priority: 11
-  },
-  'bundesliga': {
-    id: 78,
-    name: 'Bundesliga',
-    country: 'Germany',
-    logo: 'https://media.api-sports.io/football/leagues/78.png',
-    flag: 'https://media.api-sports.io/flags/de.svg',
-    slug: 'bundesliga',
-    nameKo: '분데스리가',
-    priority: 12
-  },
-  'serie-a': {
-    id: 135,
-    name: 'Serie A',
-    country: 'Italy',
-    logo: 'https://media.api-sports.io/football/leagues/135.png',
-    flag: 'https://media.api-sports.io/flags/it.svg',
-    slug: 'serie-a',
-    nameKo: '세리에 A',
-    priority: 13
-  },
-  'ligue-1': {
-    id: 61,
-    name: 'Ligue 1',
-    country: 'France',
-    logo: 'https://media.api-sports.io/football/leagues/61.png',
-    flag: 'https://media.api-sports.io/flags/fr.svg',
-    slug: 'ligue-1',
-    nameKo: '리그 1',
-    priority: 14
-  },
+  // 기타 유럽 리그
+  EREDIVISIE: 88,     // 네덜란드 에레디비지에
+  PRIMEIRA_LIGA: 94,  // 포르투갈 프리메이라 리가
+
+  // 아시아
+  K_LEAGUE_1: 292,    // 한국 K리그1
+  J1_LEAGUE: 98,      // 일본 J1 리그
+  CSL: 169,           // 중국 슈퍼리그
+
+  // 아메리카
+  MLS: 253,           // 미국 MLS
+  BRASILEIRAO: 71,    // 브라질 세리에 A
+  LIGA_MX: 262,       // 멕시코 리가 MX
   
-  // 주요 컵대회 (Tier 1)
-  'champions-league': {
-    id: 2,
-    name: 'UEFA Champions League',
-    country: 'World',
-    logo: 'https://media.api-sports.io/football/leagues/2.png',
-    flag: 'https://media.api-sports.io/flags/eu.svg',
-    slug: 'champions-league',
-    nameKo: '챔피언스리그',
-    priority: 1
-  },
-  'europa-league': {
-    id: 3,
-    name: 'UEFA Europa League',
-    country: 'World',
-    logo: 'https://media.api-sports.io/football/leagues/3.png',
-    flag: 'https://media.api-sports.io/flags/eu.svg',
-    slug: 'europa-league',
-    nameKo: '유로파리그',
-    priority: 2
-  },
-  'fa-cup': {
-    id: 45,
-    name: 'FA Cup',
-    country: 'England',
-    logo: 'https://media.api-sports.io/football/leagues/45.png',
-    flag: 'https://media.api-sports.io/flags/gb.svg',
-    slug: 'fa-cup',
-    nameKo: 'FA컵',
-    priority: 20
-  },
+  // 국제 대회
+  WORLD_CUP: 1,       // FIFA 월드컵
+  EURO: 4,            // UEFA 유로
+  COPA_AMERICA: 13,   // 코파 아메리카
+  AFC_CHAMPIONS: 17,  // AFC 챔피언스 리그
+};
+
+// 메이저 리그 ID 배열 반환 (필터링 용도)
+export const getMajorLeagueIds = (): number[] => {
+  return Object.values(MAJOR_LEAGUE_IDS);
+};
+
+// 리그 이름 - ID 매핑
+export const LEAGUE_NAMES_MAP: Record<number, string> = {
+  [MAJOR_LEAGUE_IDS.PREMIER_LEAGUE]: '프리미어 리그',
+  [MAJOR_LEAGUE_IDS.LA_LIGA]: '라리가',
+  [MAJOR_LEAGUE_IDS.BUNDESLIGA]: '분데스리가',
+  [MAJOR_LEAGUE_IDS.SERIE_A]: '세리에 A',
+  [MAJOR_LEAGUE_IDS.LIGUE_1]: '리그앙',
+  [MAJOR_LEAGUE_IDS.CHAMPIONS_LEAGUE]: '챔피언스 리그',
+  [MAJOR_LEAGUE_IDS.EUROPA_LEAGUE]: '유로파 리그',
+  [MAJOR_LEAGUE_IDS.CONFERENCE_LEAGUE]: '컨퍼런스 리그',
+  [MAJOR_LEAGUE_IDS.EREDIVISIE]: '에레디비지에',
+  [MAJOR_LEAGUE_IDS.PRIMEIRA_LIGA]: '프리메이라 리가',
+  [MAJOR_LEAGUE_IDS.K_LEAGUE_1]: 'K리그1',
+  [MAJOR_LEAGUE_IDS.J1_LEAGUE]: 'J1 리그',
+  [MAJOR_LEAGUE_IDS.CSL]: '중국 슈퍼리그',
+  [MAJOR_LEAGUE_IDS.MLS]: 'MLS',
+  [MAJOR_LEAGUE_IDS.BRASILEIRAO]: '브라질레이로',
+  [MAJOR_LEAGUE_IDS.LIGA_MX]: '리가 MX',
+  [MAJOR_LEAGUE_IDS.WORLD_CUP]: '월드컵',
+  [MAJOR_LEAGUE_IDS.EURO]: '유로',
+  [MAJOR_LEAGUE_IDS.COPA_AMERICA]: '코파 아메리카',
+  [MAJOR_LEAGUE_IDS.AFC_CHAMPIONS]: 'AFC 챔피언스 리그',
+};
+
+// 리그 ID로 이름 가져오기
+export const getLeagueName = (leagueId: number): string => {
+  return LEAGUE_NAMES_MAP[leagueId] || '알 수 없는 리그';
+};
+
+// 리그 ID로 리그 정보 가져오기
+export const getLeagueById = (leagueId: number): { id: number; nameKo: string } | null => {
+  if (!leagueId) return null;
   
-  // 2부 리그 (Tier 2)
-  'championship': {
-    id: 40,
-    name: 'Championship',
-    country: 'England',
-    logo: 'https://media.api-sports.io/football/leagues/40.png',
-    flag: 'https://media.api-sports.io/flags/gb.svg',
-    slug: 'championship',
-    nameKo: '챔피언십',
-    priority: 30
-  },
-  'serie-b': {
-    id: 136,
-    name: 'Serie B',
-    country: 'Italy',
-    logo: 'https://media.api-sports.io/football/leagues/136.png',
-    flag: 'https://media.api-sports.io/flags/it.svg',
-    slug: 'serie-b',
-    nameKo: '세리에 B',
-    priority: 31
-  },
-  'laliga2': {
-    id: 141,
-    name: 'LaLiga 2',
-    country: 'Spain',
-    logo: 'https://media.api-sports.io/football/leagues/141.png',
-    flag: 'https://media.api-sports.io/flags/es.svg',
-    slug: 'laliga2',
-    nameKo: '라리가2',
-    priority: 32
-  },
+  const nameKo = LEAGUE_NAMES_MAP[leagueId];
+  if (!nameKo) return null;
   
-  // 주요 컵대회 (Tier 2)
-  'conference-league': {
-    id: 848,
-    name: 'UEFA Conference League',
-    country: 'World',
-    logo: 'https://media.api-sports.io/football/leagues/848.png',
-    flag: 'https://media.api-sports.io/flags/eu.svg',
-    slug: 'conference-league',
-    nameKo: '컨퍼런스리그',
-    priority: 3
-  },
-  'copa-del-rey': {
-    id: 143,
-    name: 'Copa del Rey',
-    country: 'Spain',
-    logo: 'https://media.api-sports.io/football/leagues/143.png',
-    flag: 'https://media.api-sports.io/flags/es.svg',
-    slug: 'copa-del-rey',
-    nameKo: '국왕컵',
-    priority: 21
-  },
-  'coppa-italia': {
-    id: 137,
-    name: 'Coppa Italia',
-    country: 'Italy',
-    logo: 'https://media.api-sports.io/football/leagues/137.png',
-    flag: 'https://media.api-sports.io/flags/it.svg',
-    slug: 'coppa-italia',
-    nameKo: '코파 이탈리아',
-    priority: 22
-  },
-  'dfb-pokal': {
-    id: 81,
-    name: 'DFB Pokal',
-    country: 'Germany',
-    logo: 'https://media.api-sports.io/football/leagues/81.png',
-    flag: 'https://media.api-sports.io/flags/de.svg',
-    slug: 'dfb-pokal',
-    nameKo: 'DFB 포칼',
-    priority: 23
-  },
-
-  // 한국 리그 (Tier 3)
-  'k-league': {
-    id: 292,
-    name: 'K League 1',
-    country: 'South Korea',
-    logo: 'https://media.api-sports.io/football/leagues/292.png',
-    flag: 'https://media.api-sports.io/flags/kr.svg',
-    slug: 'k-league',
-    nameKo: 'K리그1',
-    priority: 50
-  },
-  'k-league-2': {
-    id: 293,
-    name: 'K League 2',
-    country: 'South Korea',
-    logo: 'https://media.api-sports.io/football/leagues/293.png',
-    flag: 'https://media.api-sports.io/flags/kr.svg',
-    slug: 'k-league-2',
-    nameKo: 'K리그2',
-    priority: 51
-  },
-  
-  // 기타 인기 리그 및 컵대회 (Tier 4)
-  'eredivisie': {
-    id: 88,
-    name: 'Eredivisie',
-    country: 'Netherlands',
-    logo: 'https://media.api-sports.io/football/leagues/88.png',
-    flag: 'https://media.api-sports.io/flags/nl.svg',
-    slug: 'eredivisie',
-    nameKo: '에레디비지',
-    priority: 40
-  },
-  'primeira-liga': {
-    id: 94,
-    name: 'Primeira Liga',
-    country: 'Portugal',
-    logo: 'https://media.api-sports.io/football/leagues/94.png',
-    flag: 'https://media.api-sports.io/flags/pt.svg',
-    slug: 'primeira-liga',
-    nameKo: '프리메이라리가',
-    priority: 41
-  },
-  'mls': {
-    id: 253,
-    name: 'Major League Soccer',
-    country: 'USA',
-    logo: 'https://media.api-sports.io/football/leagues/253.png',
-    flag: 'https://media.api-sports.io/flags/us.svg',
-    slug: 'mls',
-    nameKo: 'MLS',
-    priority: 60
-  },
-  
-  // 국제 토너먼트 (Tier 5)
-  'world-cup': {
-    id: 1,
-    name: 'World Cup',
-    country: 'World',
-    logo: 'https://media.api-sports.io/football/leagues/1.png',
-    flag: 'https://media.api-sports.io/flags/int.svg',
-    slug: 'world-cup',
-    nameKo: '월드컵',
-    priority: 5
-  },
-  'euro-cup': {
-    id: 4,
-    name: 'European Championship',
-    country: 'World',
-    logo: 'https://media.api-sports.io/football/leagues/4.png',
-    flag: 'https://media.api-sports.io/flags/eu.svg',
-    slug: 'euro-cup',
-    nameKo: '유로',
-    priority: 6
-  },
-  'copa-america': {
-    id: 13,
-    name: 'Copa America',
-    country: 'World',
-    logo: 'https://media.api-sports.io/football/leagues/13.png',
-    flag: 'https://media.api-sports.io/flags/sa.svg',
-    slug: 'copa-america',
-    nameKo: '코파 아메리카',
-    priority: 7
-  },
-  
-  // 친선 매치 (Tier 6)
-  'friendly': {
-    id: 667,
-    name: 'International Friendlies',
-    country: 'World',
-    logo: 'https://media.api-sports.io/football/leagues/667.png',
-    flag: 'https://media.api-sports.io/flags/int.svg',
-    slug: 'friendly',
-    nameKo: '국제 친선경기',
-    priority: 70
-  },
-  'club-friendly': {
-    id: 667,
-    name: 'Club Friendlies',
-    country: 'World',
-    logo: 'https://media.api-sports.io/football/leagues/667.png',
-    flag: 'https://media.api-sports.io/flags/int.svg',
-    slug: 'club-friendly',
-    nameKo: '클럽 친선경기',
-    priority: 71
-  },
-};
-
-// 리그 정보 가져오기 (슬러그로)
-export const getLeagueBySlug = (slug: string): LeagueInfo | undefined => {
-  return LEAGUES_MAP[slug];
-};
-
-// 리그 정보 가져오기 (ID로)
-export const getLeagueById = (id: LeagueId): LeagueInfo | undefined => {
-  return Object.values(LEAGUES_MAP).find(league => league.id === id);
-};
-
-// 모든 리그 ID 목록 가져오기
-export const getMajorLeagueIds = (): LeagueId[] => {
-  return Object.values(LEAGUES_MAP).map(league => league.id);
-};
-
-// 리그 목록 가져오기 (우선순위 정렬)
-export const getAllLeagues = (): LeagueInfo[] => {
-  return Object.values(LEAGUES_MAP).sort((a, b) => a.priority - b.priority);
-};
-
-// 티어별 리그 필터링 유틸리티
-export const getLeaguesByPriority = (maxPriority: number): LeagueInfo[] => {
-  return Object.values(LEAGUES_MAP)
-    .filter(league => league.priority <= maxPriority)
-    .sort((a, b) => a.priority - b.priority);
-};
-
-// Tier 1 리그 (최우선 표시)
-export const getTier1Leagues = (): LeagueInfo[] => {
-  return getLeaguesByPriority(15);
-};
-
-// 모든 리그 & 대회가 포함된 맵 내보내기
-export default LEAGUES_MAP; 
+  return {
+    id: leagueId,
+    nameKo
+  };
+}; 

@@ -1,9 +1,9 @@
-import { MatchHeaderSkeleton } from '@/app/livescore/football/components/HeadersUI';
-import TabNavigation from './TabNavigation';
-import TabContent from './TabContent';
-import MatchHeader from '@/app/livescore/football/match/components/MatchHeader';
-import { fetchMatchFullData, MatchFullDataResponse } from '@/app/actions/livescore/matches/matchData';
-import { MatchDataProvider } from '../context/MatchDataContext';
+import { MatchHeaderSkeleton } from '@/domains/livescore/components/common/HeadersUI';
+import TabNavigation from '@/domains/livescore/components/football/match/TabNavigation';
+import TabContent from '@/domains/livescore/components/football/match/TabContent';
+import MatchHeader from '@/domains/livescore/components/football/match/MatchHeader';
+import { fetchCachedMatchFullData, MatchFullDataResponse } from '@/domains/livescore/actions/match/matchData';
+import { MatchDataProvider } from '@/domains/livescore/components/football/match/context/MatchDataContext';
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 
@@ -63,11 +63,12 @@ export default async function MatchPage({
         fetchEvents: initialTab === 'events' || initialTab === 'lineups',
         fetchLineups: initialTab === 'lineups',
         fetchStats: initialTab === 'stats',
-        fetchStandings: initialTab === 'standings'
+        fetchStandings: initialTab === 'standings',
+        fetchPlayersStats: initialTab === 'lineups' // 라인업 탭일 때 선수 통계 데이터도 함께 가져오기
       };
       
       // 초기 데이터 로드 - 서버에서 필요한 데이터만 프리로드
-      matchData = await fetchMatchFullData(matchId, options);
+      matchData = await fetchCachedMatchFullData(matchId, options);
       
       // 결과를 타임스탬프와 함께 캐시에 저장
       dataCache.set(cacheKey, {

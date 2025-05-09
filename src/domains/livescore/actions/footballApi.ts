@@ -158,7 +158,7 @@ interface MultiDayMatchesResult {
   error?: string;
 }
 
-const fetchFromFootballApi = async (endpoint: string, params: Record<string, string | number> = {}) => {
+export const fetchFromFootballApi = async (endpoint: string, params: Record<string, string | number> = {}) => {
   // URL 파라미터 구성
   const queryParams = new URLSearchParams();
   
