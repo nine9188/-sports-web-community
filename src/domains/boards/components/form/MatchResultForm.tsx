@@ -6,7 +6,7 @@ import { ko } from 'date-fns/locale';
 import { CalendarIcon, Search, X } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/shared/ui';
-import { getMatchesByDate } from '@/app/actions/get-matches-by-date';
+import { getMatchesByDate } from '@/domains/boards/actions/matches';
 import type { MatchData } from '@/app/actions/footballApi';
 
 // 경기 데이터를 위한 인터페이스
