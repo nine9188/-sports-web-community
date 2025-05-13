@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { LoadingState, ErrorState, EmptyState } from '@/app/livescore/football/components/CommonComponents';
+import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import { Match } from '@/app/actions/livescore/teams/matches';
 import React from 'react';
 

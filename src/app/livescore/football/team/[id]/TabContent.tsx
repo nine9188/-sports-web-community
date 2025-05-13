@@ -12,7 +12,7 @@ import {
   convertTeamStatsForStatsComponent, 
   convertStandingsData 
 } from '@/app/utils/teamDataUtils';
-import { LoadingState, ErrorState } from '@/app/livescore/football/components/CommonComponents';
+import { LoadingState, ErrorState } from '@/domains/livescore/components/common/CommonComponents';
 import { Suspense } from 'react';
 
 // 탭 컨텐츠 컴포넌트 props

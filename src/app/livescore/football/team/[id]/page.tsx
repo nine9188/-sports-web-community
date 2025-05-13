@@ -1,7 +1,7 @@
 import TabContent from './TabContent';
 import TabNavigation from './TabNavigation';
 import { fetchTeamFullData } from '@/app/actions/livescore/teams/team';
-import { ErrorState } from '@/app/livescore/football/components/CommonComponents';
+import { ErrorState } from '@/domains/livescore/components/common/CommonComponents';
 import { notFound } from 'next/navigation';
 import { TeamDataProvider } from '../context/TeamDataContext';
 import TeamHeader from '../components/TeamHeader';

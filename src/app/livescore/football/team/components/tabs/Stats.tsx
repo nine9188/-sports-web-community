@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { LoadingState, ErrorState, EmptyState } from '@/app/livescore/football/components/CommonComponents';
+import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 
 // 골 데이터 인터페이스
 interface GoalValue {

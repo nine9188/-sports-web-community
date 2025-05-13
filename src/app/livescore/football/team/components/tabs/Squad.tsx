@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
 import { PlayerStats } from '@/app/actions/livescore/teams/player-stats';
-import { LoadingState, ErrorState, EmptyState } from '@/app/livescore/football/components/CommonComponents';
+import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 
 // 컴포넌트에서 사용할 타입 정의
 interface Coach {

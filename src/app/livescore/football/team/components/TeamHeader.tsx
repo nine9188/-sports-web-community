@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { LoadingState, ErrorState, EmptyState } from '@/app/livescore/football/components/CommonComponents';
+import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import { useTeamData } from '../context/TeamDataContext';
 
 // 팀 정보를 위한 기본 인터페이스

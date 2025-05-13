@@ -4,7 +4,7 @@ import { useState, memo, useCallback } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Standing } from '@/app/actions/livescore/teams/standings';
-import { LoadingState, ErrorState, EmptyState } from '@/app/livescore/football/components/CommonComponents';
+import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 
 // 구체적인 인터페이스 정의
 interface Team {
