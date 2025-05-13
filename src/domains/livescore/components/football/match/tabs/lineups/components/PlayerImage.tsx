@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 
 interface PlayerImageProps {
@@ -14,7 +14,7 @@ export default function PlayerImage({ src, alt, className = "" }: PlayerImagePro
   const [loading, setLoading] = useState(true);
   
   const handleError = () => {
-    setImgSrc('/images/player.svg');
+    setImgSrc('');
     setLoading(false);
   };
   
@@ -30,7 +30,7 @@ export default function PlayerImage({ src, alt, className = "" }: PlayerImagePro
         </div>
       )}
       <Image 
-        src={imgSrc || '/images/player.svg'}
+        src={imgSrc || ''}
         alt={alt}
         width={40}
         height={40}

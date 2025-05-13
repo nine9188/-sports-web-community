@@ -1,8 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import { EmptyState } from '@/app/livescore/football/components/CommonComponents';
-import { InjuryData } from '@/app/livescore/football/player/types/player';
+import { EmptyState } from '@/domains/livescore/components/common/CommonComponents';
+import { InjuryData } from '@/domains/livescore/types/player';
 
 interface PlayerInjuriesProps {
   playerId: number;
@@ -12,6 +12,9 @@ interface PlayerInjuriesProps {
 export default function PlayerInjuries({
   injuriesData = []
 }: PlayerInjuriesProps) {
+  // 디버깅을 위한 콘솔 로그 추가
+  console.log('[PlayerInjuries] injuriesData:', injuriesData);
+  
   // 날짜 포맷팅 함수
   const formatDate = (dateString: string) => {
     if (!dateString) return '날짜 정보 없음';

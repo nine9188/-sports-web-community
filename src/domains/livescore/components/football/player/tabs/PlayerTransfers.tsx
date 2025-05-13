@@ -2,8 +2,8 @@
 
 import Image from 'next/image';
 import { format } from 'date-fns';
-import { EmptyState } from '@/app/livescore/football/components/CommonComponents';
-import { TransferData } from '@/app/livescore/football/player/types/player';
+import { EmptyState } from '@/domains/livescore/components/common';
+import { TransferData } from '@/domains/livescore/types/player';
 
 interface PlayerTransfersProps {
   playerId: number;
@@ -15,6 +15,22 @@ const transferTypeMap: { [key: string]: string } = {
   'Loan': '임대',
   'Free': '자유 이적',
   'N/A': '정보 없음',
+};
+
+// 팀 로고 컴포넌트
+const TeamLogo = ({ logo, name }: { logo?: string; name: string }) => {
+  return (
+    <div className="w-12 h-12 bg-white rounded-full border border-gray-200 flex items-center justify-center p-1.5 overflow-hidden">
+      <Image
+        src={logo || ''}
+        alt={name || '팀'}
+        width={40}
+        height={40}
+        className="w-full h-full object-contain"
+        unoptimized
+      />
+    </div>
+  );
 };
 
 export default function PlayerTransfers({
@@ -49,21 +65,11 @@ export default function PlayerTransfers({
             <div className="flex items-center">
               {/* 이전 팀 */}
               <div className="flex-1 flex flex-col items-center">
-                <div className="w-12 h-12 bg-white rounded-full border border-gray-200 flex items-center justify-center p-1.5 overflow-hidden">
-                  <Image
-                    src={transfer.teams.from.logo || '/placeholder-team.png'}
-                    alt={transfer.teams.from.name}
-                    width={40}
-                    height={40}
-                    className="w-full h-full object-contain"
-                    unoptimized
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = '/placeholder-team.png';
-                    }}
-                  />
-                </div>
-                <p className="mt-1 text-sm font-medium text-center text-gray-800 max-w-[120px] truncate">{transfer.teams.from.name}</p>
+                <TeamLogo 
+                  logo={transfer.teams.from.logo} 
+                  name={transfer.teams.from.name} 
+                />
+                <p className="mt-1 text-sm font-medium text-center text-gray-800 max-w-[120px] truncate">{transfer.teams.from.name || '알 수 없는 팀'}</p>
               </div>
 
               {/* 이적 정보 */}
@@ -92,21 +98,11 @@ export default function PlayerTransfers({
 
               {/* 새로운 팀 */}
               <div className="flex-1 flex flex-col items-center">
-                <div className="w-12 h-12 bg-white rounded-full border border-gray-200 flex items-center justify-center p-1.5 overflow-hidden">
-                  <Image
-                    src={transfer.teams.to.logo || '/placeholder-team.png'}
-                    alt={transfer.teams.to.name}
-                    width={40}
-                    height={40}
-                    className="w-full h-full object-contain"
-                    unoptimized
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = '/placeholder-team.png';
-                    }}
-                  />
-                </div>
-                <p className="mt-1 text-sm font-medium text-center text-gray-800 max-w-[120px] truncate">{transfer.teams.to.name}</p>
+                <TeamLogo 
+                  logo={transfer.teams.to.logo} 
+                  name={transfer.teams.to.name} 
+                />
+                <p className="mt-1 text-sm font-medium text-center text-gray-800 max-w-[120px] truncate">{transfer.teams.to.name || '알 수 없는 팀'}</p>
               </div>
             </div>
           </div>

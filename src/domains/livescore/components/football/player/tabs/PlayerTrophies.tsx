@@ -1,8 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import { EmptyState } from '@/app/livescore/football/components/CommonComponents';
-import { TrophyData } from '@/app/livescore/football/player/types/player';
+import { EmptyState } from '@/domains/livescore/components/common';
+import { TrophyData } from '@/domains/livescore/types/player';
 
 interface PlayerTrophiesProps {
   playerId: number;

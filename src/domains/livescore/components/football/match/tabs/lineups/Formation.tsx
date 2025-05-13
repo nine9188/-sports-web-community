@@ -122,4 +122,4 @@ export default function Formation({ homeTeamData, awayTeamData }: FormationProps
       </Field>
     </div>
   );
-} 
+}

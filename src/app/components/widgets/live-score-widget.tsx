@@ -481,10 +481,6 @@ export default function LiveScoreWidget({ initialMatches = [] }: LiveScoreWidget
                             height={40}
                             style={{ width: '40px', height: '40px', objectFit: 'contain' }}
                             className="mb-0.5 group-hover:scale-110 transition-transform"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = '/placeholder-team.png';
-                            }}
                             unoptimized
                           />
                         )}
@@ -512,10 +508,6 @@ export default function LiveScoreWidget({ initialMatches = [] }: LiveScoreWidget
                             height={40}
                             style={{ width: '40px', height: '40px', objectFit: 'contain' }}
                             className="mb-0.5 group-hover:scale-110 transition-transform"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = '/placeholder-team.png';
-                            }}
                             unoptimized
                           />
                         )}

@@ -4,8 +4,8 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { FaMedal } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
-import { EmptyState } from '@/app/livescore/football/components/CommonComponents';
-import { RankingsData, PlayerRanking } from '@/app/livescore/football/player/types/player';
+import { EmptyState } from '@/domains/livescore/components/common';
+import { RankingsData, PlayerRanking } from '@/domains/livescore/types/player';
 
 interface PlayerRankingsProps {
   playerId?: number;

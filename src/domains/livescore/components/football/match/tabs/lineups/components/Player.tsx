@@ -3,7 +3,7 @@
 import { useRef, useEffect, useState } from 'react';
 import styles from '../styles/formation.module.css';
 // 프리미어리그 팀 선수 데이터 import
-import { liverpoolPlayers, NottinghamForestPlayers, Arsenalplayers, NewcastleUnitedplayers, Chelseaplayers, ManchesterCityplayers, AstonVillaplayers, Bournemouthplayers, Fulhamplayers, Brightonplayers } from '@/domains/livescore/constants/teams/premier-league/premier-teams';
+import { liverpoolPlayers, NottinghamForestPlayers, Arsenalplayers, NewcastleUnitedplayers, Chelseaplayers, ManchesterCityplayers, AstonVillaplayers, Bournemouthplayers, Fulhamplayers, Brightonplayers } from '@/app/constants/teams/premier-league/premier-teams';
 import Image from 'next/image';
 
 // 미디어 쿼리를 사용하기 위한 커스텀 훅
@@ -238,20 +238,17 @@ const Player = ({ homeTeamData, awayTeamData }: PlayerProps) => {
 
   // 이미지 오류 핸들러
   const handleImageError = (e: React.SyntheticEvent<SVGImageElement>, playerData: PlayerData) => {
-    // 이미지 로드 실패 시 이미지 교체 대신 상태만 업데이트
-    const imageId = `image-${playerData.id}`;
+    // 이미지 로드 실패 시 로그 추가
+    console.error(`선수 이미지 로드 실패: ${(e.currentTarget as SVGImageElement).href.baseVal}`);
+    
+    // 대체 이미지로 다시 시도
+    if (playerData.photo && !playerData.photo.startsWith('http')) {
+      const correctedUrl = `https://media.api-sports.io/football/players/${playerData.id}.png`;
+      (e.currentTarget as SVGImageElement).href.baseVal = correctedUrl;
+    }
     
     // 실패한 이미지 기록
-    setFailedImages(prev => ({...prev, [imageId]: true}));
-    
-    // 이미지가 로드되지 않았을 때 href 속성을 빈 값으로 설정하여 완전히 숨김
-    try {
-      if (e && e.currentTarget) {
-        (e.currentTarget as SVGImageElement).style.display = 'none';
-      }
-    } catch {
-      // 오류가 발생해도 계속 진행
-    }
+    setFailedImages(prev => ({...prev, [`image-${playerData.id}`]: true}));
   };
 
   const renderTeam = (team: TeamData, isHome: boolean) => {
@@ -266,7 +263,7 @@ const Player = ({ homeTeamData, awayTeamData }: PlayerProps) => {
       const uniqueKey = `player-${isHome ? 'home' : 'away'}-${teamId}-${playerId}`;
       const numberKey = `number-${teamId}-${playerId}`;
       const nameKey = `name-${isHome ? 'home' : 'away'}-${teamId}-${playerId}`;
-      const imageId = `image-${playerId}`;
+      const imageId = `image-${teamId}-${playerId}`;
 
       // 이미지 URL 처리
       let photoUrl = player.photo;
@@ -406,8 +403,15 @@ export const PlayerImage = ({ playerId, name, posX, posY, x, y }: { playerId: nu
 
   const handleImageError = () => {
     setImageError(true);
-    // 기본 이미지 사용으로 바로 변경
-    setImageUrl('/images/player-placeholder.png');
+    // 다른 API 이미지 URL 형식 시도
+    if (imageUrl.includes('media.api-sports.io')) {
+      setImageUrl(`https://media-3.api-sports.io/football/players/${playerId}.png`);
+    } else if (imageUrl.includes('media-3.api-sports.io')) {
+      setImageUrl(`https://media-2.api-sports.io/football/players/${playerId}.png`);
+    } else {
+      // 이미지를 찾을 수 없는 경우 빈 이미지 사용
+      setImageUrl('');
+    }
   };
 
   return (
@@ -420,7 +424,7 @@ export const PlayerImage = ({ playerId, name, posX, posY, x, y }: { playerId: nu
         zIndex: 9,
       }}
     >
-      {!imageError ? (
+      {!imageError || imageUrl.includes('api-sports.io') ? (
         <Image
           src={imageUrl}
           alt={`${name} 선수 이미지`}
@@ -428,7 +432,6 @@ export const PlayerImage = ({ playerId, name, posX, posY, x, y }: { playerId: nu
           height={26}
           className="object-cover w-full h-full"
           onError={handleImageError}
-          unoptimized
         />
       ) : (
         <div 

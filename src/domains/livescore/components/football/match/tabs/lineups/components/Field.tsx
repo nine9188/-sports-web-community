@@ -272,7 +272,7 @@ const Field = ({ children }: { children?: React.ReactNode }) => {
               />
 
               {/* 센터 서클 */}
-              <circle 
+              <circle
                 stroke="white" 
                 strokeLinecap="round"
                 fill="transparent" 
@@ -393,7 +393,7 @@ const Field = ({ children }: { children?: React.ReactNode }) => {
                 cy="28" 
                 r="0.25"
               />
-              <circle 
+              <circle
                 stroke="white" 
                 strokeLinecap="round"
                 fill="white" 

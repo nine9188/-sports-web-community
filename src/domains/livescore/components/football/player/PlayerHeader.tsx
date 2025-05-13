@@ -2,8 +2,8 @@
 
 import React, { memo } from 'react';
 import Image from 'next/image';
-import { ErrorState, PlayerProfileLoadingState } from '@/app/livescore/football/components/CommonComponents';
-import { usePlayerData } from '../context/PlayerDataContext';
+import { ErrorState, PlayerProfileLoadingState } from '@/domains/livescore/components/common/CommonComponents';
+import { usePlayerData } from './context/PlayerDataContext';
 
 // 필요한 타입 정의
 interface TeamData {
@@ -80,7 +80,7 @@ const PlayerHeader = memo(function PlayerHeader() {
             <div className="relative w-20 h-20 md:w-28 md:h-28">
               <div className="absolute inset-0 rounded-full border-4 border-white shadow-lg"></div>
               <Image
-                src={playerData.info.photo || '/images/player-placeholder.png'}
+                src={playerData.info.photo || ''}
                 alt={playerData.info.name}
                 width={112}
                 height={112}
@@ -180,4 +180,4 @@ const PlayerHeader = memo(function PlayerHeader() {
   );
 });
 
-export default PlayerHeader;
+export default PlayerHeader; 

@@ -1,11 +1,11 @@
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
-import PlayerHeader from '../components/PlayerHeader';
-import PlayerTabNavigation from './PlayerTabNavigation';
-import TabContent from './TabContent';
-import { fetchPlayerFullData, PlayerFullDataResponse } from '@/app/actions/livescore/player/data';
-import { PlayerDataProvider } from '../context/PlayerDataContext';
-import { LoadingState } from '@/app/livescore/football/components/CommonComponents';
+import PlayerHeader from '@/domains/livescore/components/football/player/PlayerHeader';
+import PlayerTabNavigation from '@/domains/livescore/components/football/player/TabNavigation';
+import TabContent from '@/domains/livescore/components/football/player/TabContent';
+import { fetchPlayerFullData, PlayerFullDataResponse } from '@/domains/livescore/actions/player/data';
+import { PlayerDataProvider } from '@/domains/livescore/components/football/player/context/PlayerDataContext';
+import { LoadingState } from '@/domains/livescore/components/common/CommonComponents';
 
 // 플레이스홀더 로딩 컴포넌트
 function ContentLoading() {

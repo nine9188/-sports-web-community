@@ -4,7 +4,7 @@ import React, { memo } from 'react';
 import Image from 'next/image';
 import { useMatchData } from '@/domains/livescore/components/football/match/context/MatchDataContext';
 import { formatDateToKorean } from '@/domains/livescore/utils/dateUtils';
-import { ErrorState, LoadingState } from '@/domains/livescore/components/common';
+import { ErrorState, LoadingState } from '@/domains/livescore/components/common/CommonComponents';
 import { MatchEvent } from '@/domains/livescore/types/match';
 
 // 프리미어리그 팀 선수 데이터 불러오기

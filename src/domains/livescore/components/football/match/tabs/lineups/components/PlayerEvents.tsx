@@ -1,21 +1,26 @@
 'use client';
 
-import { MatchEvent } from '@/domains/livescore/types/match';
 import { FaFutbol, FaShoePrints } from 'react-icons/fa';
 import { BsCardText, BsCardHeading } from 'react-icons/bs';
 import { IoMdSwap } from 'react-icons/io';
+import { MatchEvent } from '@/domains/livescore/types/match';
 
 interface Player {
   id: number;
   name: string;
   number: number;
   pos: string;
-  grid?: string | null;
+  grid: string | null;
   captain?: boolean;
   photo?: string;
 }
 
-export default function PlayerEvents({ player, events }: { player: Player; events: MatchEvent[] | undefined }) {
+interface PlayerEventsProps {
+  player: Player;
+  events: MatchEvent[];
+}
+
+export default function PlayerEvents({ player, events }: PlayerEventsProps) {
   if (!events || events.length === 0) return null;
   
   // 해당 선수의 이벤트 필터링 - 더 정확한 필터링
@@ -40,7 +45,7 @@ export default function PlayerEvents({ player, events }: { player: Player; event
         if (!event) return null;
         
         // 이벤트 시간 포맷팅
-        const timeStr = `${event.time.elapsed || '0'}${event.time.extra ? '+' + event.time.extra : ''}`;
+        const timeStr = `${event.time.elapsed || '0'}'${event.time.extra ? '+' + event.time.extra : ''}`;
         
         // 이벤트 타입에 따른 아이콘 및 텍스트 렌더링
         if (event.type === 'Goal') {
@@ -50,7 +55,7 @@ export default function PlayerEvents({ player, events }: { player: Player; event
             return (
               <span key={`goal-${index}`} className="inline-flex items-center text-xs bg-green-100 text-green-800 rounded px-1">
                 <FaFutbol className="text-green-600 mr-0.5" />
-                {timeStr}&apos;
+                {timeStr}
               </span>
             );
           } else if (event.assist?.id === player.id) {
@@ -58,7 +63,7 @@ export default function PlayerEvents({ player, events }: { player: Player; event
             return (
               <span key={`assist-${index}`} className="inline-flex items-center text-xs bg-blue-100 text-blue-800 rounded px-1">
                 <FaShoePrints className="text-blue-600 mr-0.5" />
-                {timeStr}&apos;
+                {timeStr}
               </span>
             );
           }
@@ -69,7 +74,7 @@ export default function PlayerEvents({ player, events }: { player: Player; event
               return (
                 <span key={`yellow-${index}`} className="inline-flex items-center text-xs bg-yellow-100 text-yellow-800 rounded px-1">
                   <BsCardText className="text-yellow-500 mr-0.5" />
-                  {timeStr}&apos;
+                  {timeStr}
                 </span>
               );
             } else if (event.detail === 'Red Card') {
@@ -77,7 +82,7 @@ export default function PlayerEvents({ player, events }: { player: Player; event
               return (
                 <span key={`red-${index}`} className="inline-flex items-center text-xs bg-red-100 text-red-800 rounded px-1">
                   <BsCardHeading className="text-red-600 mr-0.5" />
-                  {timeStr}&apos;
+                  {timeStr}
                 </span>
               );
             }
@@ -89,11 +94,11 @@ export default function PlayerEvents({ player, events }: { player: Player; event
           
           // 교체 OUT은 player ID, 교체 IN은 assist ID에 해당
           // 선수가 나가는 경우 (player ID가 OUT 선수)
-          if (event.player?.id === player.id && (event.detail === 'Substitution Out' || event.detail?.includes('Out'))) {
+          if (event.assist?.id === player.id && (event.detail === 'Substitution Out' || event.detail?.includes('Out'))) {
             isOut = true;
           } 
           // 선수가 들어오는 경우 (assist ID가 IN 선수)
-          else if (event.assist?.id === player.id && (event.detail === 'Substitution In' || event.detail?.includes('In'))) {
+          else if (event.player?.id === player.id && (event.detail === 'Substitution In' || event.detail?.includes('In'))) {
             isIn = true;
           }
           
@@ -113,25 +118,20 @@ export default function PlayerEvents({ player, events }: { player: Player; event
             return (
               <span key={`in-${index}`} className="inline-flex items-center text-xs bg-green-100 text-green-800 rounded px-1">
                 <IoMdSwap className="text-green-600 mr-0.5" />
-                IN {timeStr}&apos;
+                IN {timeStr}
               </span>
             );
           } else if (isOut) {
             return (
               <span key={`out-${index}`} className="inline-flex items-center text-xs bg-red-100 text-red-800 rounded px-1">
                 <IoMdSwap className="text-red-600 mr-0.5 rotate-180" />
-                OUT {timeStr}&apos;
+                OUT {timeStr}
               </span>
             );
           }
         }
         
-        // 기본 이벤트 표시 (위에서 처리되지 않은 모든 이벤트)
-        return (
-          <span key={`event-${index}`} className="inline-flex items-center text-xs bg-gray-100 text-gray-800 rounded px-1">
-            {timeStr}&apos;
-          </span>
-        );
+        return null;
       })}
     </div>
   );
