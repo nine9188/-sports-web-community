@@ -1,7 +1,7 @@
 'use server';
 
 import { cache } from 'react';
-import { PlayerData } from '@/app/livescore/football/player/types/player';
+import { PlayerData } from '@/domains/livescore/types/player';
 
 // API 응답을 위한 인터페이스 정의
 interface ApiPlayerResponse {

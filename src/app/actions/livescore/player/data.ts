@@ -1,7 +1,7 @@
 'use server';
 
 import { cache } from 'react';
-import { PlayerData, PlayerStatistic, FixtureData, TransferData, InjuryData, TrophyData, RankingsData } from '@/app/livescore/football/player/types/player';
+import { PlayerData, PlayerStatistic, FixtureData, TransferData, InjuryData, TrophyData, RankingsData } from '@/domains/livescore/types/player';
 import { fetchPlayerData } from './player';
 import { fetchPlayerSeasons, fetchPlayerStats } from './stats';
 import { fetchPlayerFixtures } from './fixtures';

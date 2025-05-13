@@ -9,12 +9,12 @@ export const revalidate = 0;
 
 // 페이지 속성 타입 정의
 interface PageProps {
-  params: Promise<{ id: string }> | { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps) {
   try {
-    const id = 'then' in params ? (await params).id : params.id;
+    const { id } = await params;
     
     const short = await fetchShortById(id);
     
@@ -35,8 +35,7 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function ShortPage({ params }: PageProps) {
   try {
-    // params가 Promise인 경우와 객체인 경우 모두 처리
-    const id = 'then' in params ? (await params).id : params.id;
+    const { id } = await params;
     
     // ID가 없는 경우 404 페이지로 리다이렉트
     if (!id) {

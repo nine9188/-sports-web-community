@@ -34,16 +34,15 @@ export default async function MatchPage({
   params,
   searchParams 
 }: { 
-  params: Promise<{ id: string }> | { id: string },
-  searchParams: Promise<{ tab?: string }> | { tab?: string }
+  params: Promise<{ id: string }>,
+  searchParams: Promise<{ tab?: string }>
 }) {
   try {
     // URL에서 ID 및 탭 가져오기 - params와 searchParams를 await으로 처리
-    const resolvedParams = 'then' in params ? await params : params;
-    const resolvedSearchParams = 'then' in searchParams ? await searchParams : searchParams;
+    const { id: matchId } = await params;
+    const { tab = 'events' } = await searchParams;
     
-    const matchId = resolvedParams.id;
-    const initialTab = resolvedSearchParams.tab || 'events';
+    const initialTab = tab;
     
     // 캐시 키 생성
     const cacheKey = `match-${matchId}-${initialTab}`;

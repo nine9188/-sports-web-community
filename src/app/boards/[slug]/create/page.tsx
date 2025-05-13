@@ -8,11 +8,11 @@ import ErrorMessage from '@/shared/ui/error-message';
 export async function generateMetadata({ 
   params 
 }: { 
-  params: { slug: string } 
+  params: Promise<{ slug: string }> 
 }): Promise<Metadata> {
   try {
     // 슬러그 가져오기
-    const slug = params.slug;
+    const { slug } = await params;
     
     if (!slug) {
       return {
@@ -43,11 +43,11 @@ export async function generateMetadata({
 export default async function CreatePostPage({ 
   params 
 }: { 
-  params: { slug: string } 
+  params: Promise<{ slug: string }> 
 }) {
   try {
     // 슬러그 가져오기
-    const slug = params.slug;
+    const { slug } = await params;
     
     if (!slug) {
       return (

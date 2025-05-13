@@ -1,7 +1,7 @@
 'use server';
 
 import { cache } from 'react';
-import { PlayerStatistic } from '@/app/livescore/football/player/types/player';
+import { PlayerStatistic } from '@/domains/livescore/types/player';
 
 // API 기본 설정
 const API_BASE_URL = 'https://v3.football.api-sports.io';

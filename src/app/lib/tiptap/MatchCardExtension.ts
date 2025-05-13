@@ -1,6 +1,6 @@
 import { Node, mergeAttributes } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
-import MatchCardNode from '@/app/boards/components/match/MatchCardNode';
+import MatchCardNode from '@/domains/boards/components/match/MatchCardNode';
 
 export interface MatchCardOptions {
   HTMLAttributes: Record<string, string | number | boolean>;

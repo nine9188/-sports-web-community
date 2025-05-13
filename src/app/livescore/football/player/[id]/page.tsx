@@ -37,16 +37,13 @@ export default async function PlayerPage({
   params,
   searchParams 
 }: { 
-  params: { id: string };
-  searchParams: { tab?: string };
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }) {
   try {
     // URL에서 ID 및 탭 가져오기 - params와 searchParams를 await으로 처리
-    const resolvedParams = await params;
-    const resolvedSearchParams = await searchParams;
-    
-    const playerId = resolvedParams.id;
-    const tab = resolvedSearchParams.tab || 'stats';
+    const { id: playerId } = await params;
+    const { tab = 'stats' } = await searchParams;
     
     // 캐시 키 생성
     const cacheKey = `${playerId}-${tab}`;

@@ -1,6 +1,6 @@
 import { Node, mergeAttributes } from '@tiptap/core';
 import { ReactNodeViewRenderer, NodeViewProps } from '@tiptap/react';
-import MatchCard from '../../../boards/components/match/MatchCard';
+import MatchCard from '@/domains/boards/components/match/MatchCard';
 import React from 'react';
 
 // MatchCard를 감싸는 래퍼 컴포넌트

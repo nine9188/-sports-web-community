@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Image from 'next/image';
-import { Match } from '../../../types/match';
+import { Match } from '@/domains/livescore/types/match';
 
 // 매치 카드 props
 interface MatchCardProps {

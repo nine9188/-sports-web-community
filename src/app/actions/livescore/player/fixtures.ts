@@ -1,7 +1,7 @@
 'use server';
 
 import { cache } from 'react';
-import { FixtureData } from '@/app/livescore/football/player/types/player';
+import { FixtureData } from '@/domains/livescore/types/player';
 
 // 픽스처 객체 타입 정의
 interface ApiFixture {

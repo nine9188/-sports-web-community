@@ -1,6 +1,6 @@
 'use client';
 
-import { Match } from '../../../types/match';
+import { Match } from '@/domains/livescore/types/match';
 import MatchCard from '../MatchCard';
 import React from 'react';
 import Image from 'next/image';
