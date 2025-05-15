@@ -34,7 +34,13 @@ const TeamDataContext = createContext<TeamDataContextType>({
 });
 
 // 컨텍스트 훅
-export const useTeamData = () => useContext(TeamDataContext);
+export const useTeamData = () => {
+  const context = useContext(TeamDataContext);
+  if (context === undefined) {
+    throw new Error('useTeamData는 TeamDataProvider 내부에서 사용해야 합니다');
+  }
+  return context;
+};
 
 // 컨텍스트 제공자 컴포넌트 Props
 interface TeamDataProviderProps {
@@ -55,7 +61,8 @@ const tabDataRequirements = {
   overview: ['teamData', 'matchesData', 'standingsData'],
   standings: ['teamData', 'standingsData'],
   squad: ['teamData', 'squadData', 'playerStats'],
-  stats: ['teamData']
+  stats: ['teamData', 'playerStats'],
+  fixtures: ['teamData', 'matchesData']
 };
 
 // 컨텍스트 제공자 컴포넌트
@@ -220,4 +227,6 @@ export function TeamDataProvider({
       {children}
     </TeamDataContext.Provider>
   );
-} 
+}
+
+export default TeamDataContext; 
