@@ -1,10 +1,8 @@
-import TabContent from './TabContent';
-import TabNavigation from './TabNavigation';
-import { fetchTeamFullData } from '@/app/actions/livescore/teams/team';
+import { TabContent, TabNavigation, TeamHeader } from '@/domains/livescore/components/football/team';
+import { fetchTeamFullData } from '@/domains/livescore/actions/teams/team';
 import { ErrorState } from '@/domains/livescore/components/common/CommonComponents';
 import { notFound } from 'next/navigation';
-import { TeamDataProvider } from '../context/TeamDataContext';
-import TeamHeader from '../components/TeamHeader';
+import { TeamDataProvider } from '@/domains/livescore/components/football/team/context/TeamDataContext';
 import { Suspense } from 'react';
 
 interface TeamPageProps {
