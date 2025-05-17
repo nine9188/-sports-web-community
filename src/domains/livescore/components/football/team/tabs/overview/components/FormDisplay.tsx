@@ -15,7 +15,7 @@ export default function FormDisplay({ form, maxLength = 5, reverse = false }: Fo
   const formItems = reverse ? formArray.reverse() : formArray;
   
   return (
-    <div className="flex gap-1">
+    <div className="flex gap-2 py-1">
       {formItems.map((result: string, index: number) => {
         let bgColor = '';
         let textColor = '';

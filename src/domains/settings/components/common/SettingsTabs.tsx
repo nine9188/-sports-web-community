@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useState, useCallback } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 
 interface SettingsTab {
   href: string;
@@ -14,6 +14,8 @@ interface SettingsTab {
  */
 export default function SettingsTabs() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [isChangingTab, setIsChangingTab] = useState(false);
   
   // 탭 목록 정의
   const tabs: SettingsTab[] = [
@@ -30,26 +32,43 @@ export default function SettingsTabs() {
   // 현재 탭이 활성화되어 있는지 확인하는 함수
   const isTabActive = (href: string) => pathname === href;
   
+  // 탭 변경 처리 - useCallback으로 최적화
+  const handleTabChange = useCallback((href: string) => {
+    // 같은 탭이면 이동하지 않음
+    if (pathname === href || isChangingTab) return;
+    
+    setIsChangingTab(true);
+    router.push(href, { scroll: false }); // scroll: false로 불필요한 스크롤 방지
+    
+    // 페이지 이동 후 상태 초기화 (항상 실행되지 않을 수 있어 타임아웃 추가)
+    setTimeout(() => {
+      setIsChangingTab(false);
+    }, 500);
+  }, [pathname, router, isChangingTab]);
+  
   return (
-    <div className="mb-6 bg-white rounded-lg border overflow-x-auto">
-      <div className="flex border-b min-w-max">
+    <div className="mb-4">
+      <div className="bg-white rounded-lg border overflow-hidden flex sticky top-0 z-10 overflow-x-auto">
         {tabs.map((tab) => {
           const isActive = isTabActive(tab.href);
           
           return (
-            <Link 
-              key={tab.href} 
-              href={tab.href}
-              className={`
-                px-4 py-2 text-sm font-medium transition-colors
-                ${isActive 
-                  ? 'text-blue-600 border-b-2 border-blue-600 -mb-px' 
-                  : 'text-gray-600 hover:text-gray-900'
-                }
-              `}
+            <button
+              key={tab.href}
+              onClick={() => handleTabChange(tab.href)}
+              className={`px-4 py-3 text-sm font-medium flex-1 whitespace-nowrap ${
+                isActive
+                  ? 'text-blue-600 border-b-2 border-blue-600 font-semibold'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+              aria-current={isActive ? 'page' : undefined}
+              disabled={isChangingTab}
             >
               {tab.label}
-            </Link>
+              {isChangingTab && isActive && (
+                <span className="ml-1 inline-block h-3 w-3 animate-pulse rounded-full bg-blue-200"></span>
+              )}
+            </button>
           );
         })}
       </div>

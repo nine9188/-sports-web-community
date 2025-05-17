@@ -113,7 +113,7 @@ export default function BasicStatsCards({ stats }: BasicStatsCardsProps) {
         {/* 최근 5경기 */}
         <div className="col-span-2 md:col-span-1 flex flex-col">
           <h4 className="text-sm font-medium p-2 border-b border-gray-100">최근 5경기</h4>
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center py-3 px-2 my-1">
             {stats.form
               ?.split('')
               .reverse()
