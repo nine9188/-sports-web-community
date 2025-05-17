@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useMatchData, TabType } from './context/MatchDataContext';
 
@@ -27,39 +27,27 @@ export default function TabNavigation({ activeTab = 'events' }: TabNavigationPro
   const searchParams = useSearchParams();
   const { currentTab, setCurrentTab, tabsData } = useMatchData();
   
-  // 현재 활성화된 탭 확인
-  const currentTabValue = activeTab || 'events';
+  // 현재 활성화된 탭 표시를 위한 상태
+  const [currentTabUI, setCurrentTabUI] = useState(activeTab);
+  const [isChangingTab, setIsChangingTab] = useState(false);
   
-  // 이전 URL을 추적하는 ref
-  const prevUrlRef = useRef<string>('');
-  
-  // 탭 변경 중 여부를 추적하는 ref
-  const isChangingTabRef = useRef<boolean>(false);
-  
-  // URL을 통한 탭 초기화 (외부에서 URL이 변경된 경우)
+  // activeTab이 변경되면 currentTabUI와 isChangingTab 상태를 업데이트
   useEffect(() => {
-    // 현재 URL 생성
-    const currentUrl = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : '');
-    
-    // 이전 URL과 다르고, 탭 변경 중이 아니면 컨텍스트 상태 업데이트
-    if (prevUrlRef.current !== currentUrl && !isChangingTabRef.current) {
-      setCurrentTab(activeTab);
-      prevUrlRef.current = currentUrl;
-    }
-    
-    // 탭 변경 중 플래그 리셋
-    isChangingTabRef.current = false;
-  }, [activeTab, pathname, searchParams, setCurrentTab]);
+    setCurrentTab(activeTab);
+    setCurrentTabUI(activeTab);
+    setIsChangingTab(false);
+  }, [activeTab, setCurrentTab]);
   
   // 탭 변경 처리 - useCallback으로 최적화
   const handleTabChange = useCallback((tabId: string) => {
-    // 같은 탭이면 아무 작업도 하지 않음
-    if (tabId === currentTab) return;
+    // 같은 탭이면 이동하지 않음
+    if (tabId === currentTab || isChangingTab) return;
     
-    // 탭 변경 중 플래그 설정
-    isChangingTabRef.current = true;
+    // UI 먼저 업데이트
+    setCurrentTabUI(tabId);
+    setIsChangingTab(true);
     
-    // 먼저 컨텍스트 상태 업데이트
+    // 컨텍스트 상태 업데이트
     setCurrentTab(tabId);
     
     // 현재 URL 파라미터 복사
@@ -73,17 +61,16 @@ export default function TabNavigation({ activeTab = 'events' }: TabNavigationPro
     
     // URL 변경
     const newUrl = `${pathname}${params.toString() ? `?${params.toString()}` : ''}`;
-    prevUrlRef.current = newUrl; // 이전 URL 업데이트
     router.push(newUrl, { scroll: false }); // scroll: false로 불필요한 스크롤 방지
     
-    // 데이터 로드는 이제 TabContent 컴포넌트에서 처리되므로 여기서는 제거
-  }, [router, pathname, searchParams, currentTab, setCurrentTab]);
+    // 로딩 상태는 페이지 전환 완료 후 자동으로 해제됨
+  }, [router, pathname, searchParams, currentTab, setCurrentTab, isChangingTab]);
   
   return (
     <div className="mb-4">
       <div className="bg-white rounded-lg border overflow-hidden flex sticky top-0 z-10 overflow-x-auto">
         {tabs.map((tab) => {
-          const isActive = currentTabValue === tab.id;
+          const isActive = currentTabUI === tab.id;
           // 해당 탭이 이미 로드되었는지 확인 (tabsData에 데이터가 있으면 로드된 것으로 간주)
           const isLoaded = !!tabsData[tab.id];
           
@@ -98,8 +85,12 @@ export default function TabNavigation({ activeTab = 'events' }: TabNavigationPro
               } ${isLoaded ? 'loaded-tab' : ''}`}
               aria-current={isActive ? 'page' : undefined}
               data-loaded={isLoaded ? 'true' : 'false'}
+              disabled={isChangingTab}
             >
               {tab.label}
+              {isChangingTab && isActive && (
+                <span className="ml-1 inline-block h-3 w-3 animate-pulse rounded-full bg-blue-200"></span>
+              )}
             </button>
           );
         })}

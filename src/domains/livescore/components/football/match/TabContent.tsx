@@ -10,22 +10,6 @@ import { useMatchData, TabType, isLineupsTabData } from './context/MatchDataCont
 import { Team, MatchEvent, TeamLineup, TeamStats, StandingsData } from '@/domains/livescore/types/match';
 import { PlayerStats } from '@/domains/livescore/actions/match/playerStats';
 
-// 탭 로딩 컴포넌트
-const TabLoading = memo(function TabLoading() {
-  return (
-    <div className="p-4 bg-white rounded-lg border">
-      <div className="animate-pulse">
-        <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-4">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-12 bg-gray-200 rounded"></div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-});
-
 // 데이터 없음 표시 컴포넌트
 const NoDataState = memo(function NoDataState({ tabName }: { tabName: string }) {
   const messages = {
@@ -57,26 +41,13 @@ const NoDataState = memo(function NoDataState({ tabName }: { tabName: string }) 
   return <EmptyState title={title} message={message} />;
 });
 
-// 각 탭 컴포넌트를 개별적으로 메모이제이션하여 최적화
-const EventsTab = memo(function EventsTab({ 
-  events 
-}: { 
-  events: MatchEvent[] 
-}) {
-  return (
-    <Events 
-      events={events} 
-    />
-  );
+// 각 탭 컴포넌트를 개별적으로 메모이제이션
+const EventsTab = memo(function EventsTab({ events }: { events: MatchEvent[] }) {
+  return <Events events={events} />;
 });
 
 const LineupsTab = memo(function LineupsTab({ 
-  matchId, 
-  lineups,
-  homeTeam,
-  awayTeam,
-  events,
-  playersStats
+  matchId, lineups, homeTeam, awayTeam, events, playersStats
 }: { 
   matchId: string, 
   lineups: {
@@ -105,10 +76,7 @@ const LineupsTab = memo(function LineupsTab({
 });
 
 const StatsTab = memo(function StatsTab({ 
-  matchId, 
-  stats,
-  homeTeam,
-  awayTeam
+  matchId, stats, homeTeam, awayTeam
 }: { 
   matchId: string, 
   stats: TeamStats[],
@@ -128,10 +96,7 @@ const StatsTab = memo(function StatsTab({
 });
 
 const StandingsTab = memo(function StandingsTab({ 
-  matchId, 
-  standings,
-  homeTeam,
-  awayTeam
+  matchId, standings, homeTeam, awayTeam
 }: { 
   matchId: string, 
   standings: StandingsData | null,
@@ -150,7 +115,7 @@ const StandingsTab = memo(function StandingsTab({
   );
 });
 
-const TabContent = memo(function TabContent() {
+export default function TabContent() {
   // 컨텍스트에서 필요한 데이터 및 상태 가져오기
   const {
     matchId,
@@ -163,78 +128,55 @@ const TabContent = memo(function TabContent() {
     awayTeam,
     isLoading,
     loadMatchData,
-    tabsLoaded,
     tabsData
   } = useMatchData();
   
   // 탭 변경 시 데이터 로드 상태 추적을 위한 로컬 상태
-  const [isTabLoading, setIsTabLoading] = useState(false);
+  const [isTabChanging, setIsTabChanging] = useState(false);
 
-  // 현재 탭에 해당하는 캐시된 데이터 가져오기
-  const cachedTabData = tabsData[tab as TabType];
-
-  // 필요한 경우에만 데이터 로드하는 useEffect 추가
+  // 탭 변경 시 마다 필요한 데이터 로드
   useEffect(() => {
     // 매치 ID가 없으면 로드하지 않음
     if (!matchId) return;
     
-    // 이미 해당 탭이 로드된 경우 중복 로드 방지
-    if (tabsLoaded[tab]) return;
+    // 현재 탭에 대한 데이터 확인
+    const hasEventsData = tab === 'events' && eventsData && eventsData.length > 0;
+    const hasLineupsData = tab === 'lineups' && lineupsData && lineupsData.response;
+    const hasStatsData = tab === 'stats' && statsData && statsData.length > 0;
+    const hasStandingsData = tab === 'standings' && standingsData;
     
-    // 현재 탭 타입
-    const currentTabType = tab as TabType;
-    
-    // 현재 탭에 해당하는 데이터 가져오기
-    const currentTabData = tabsData[currentTabType];
-    
-    // 로딩 필요 여부 확인
-    let needsData = false;
-    
-    if (!currentTabData) {
-      // 해당 탭 데이터가 아예 없는 경우
-      needsData = true;
+    // 필요한 데이터가 없을 때만 로드
+    if (!hasEventsData && !hasLineupsData && !hasStatsData && !hasStandingsData) {
+      setIsTabChanging(true);
+      loadMatchData(matchId, tab as TabType);
     } else {
-      // 각 탭에 따라 데이터 유효성 검사
-      switch (currentTabType) {
-        case 'events':
-          needsData = !eventsData || eventsData.length === 0;
-          break;
-        case 'lineups':
-          needsData = !lineupsData || !lineupsData.response;
-          break;
-        case 'stats':
-          needsData = !statsData || statsData.length === 0;
-          break;
-        case 'standings':
-          needsData = !standingsData;
-          break;
-      }
+      // 데이터가 이미 있으면 즉시 탭 변경 상태 해제
+      setIsTabChanging(false);
     }
     
-    // 데이터가 필요한 경우에만 로드
-    if (needsData) {
-      const loadData = async () => {
-        setIsTabLoading(true);
-        await loadMatchData(matchId, currentTabType);
-        setIsTabLoading(false);
-      };
-      
-      loadData();
-    }
-  }, [matchId, tab, tabsData, loadMatchData, tabsLoaded, eventsData, lineupsData, statsData, standingsData]);
+    // 최대 1초 후에는 강제로 로딩 상태 해제 (UX 향상)
+    const timerId = setTimeout(() => {
+      setIsTabChanging(false);
+    }, 1000);
+    
+    return () => clearTimeout(timerId);
+  }, [matchId, tab, eventsData, lineupsData, statsData, standingsData, loadMatchData]);
 
-  // 현재 탭에 따라 컴포넌트 렌더링 - useMemo를 사용하여 불필요한 재렌더링 방지
-  const tabContent = useMemo(() => {
-    // 전역 로딩 상태 또는 현재 탭 로딩 상태 확인
-    const showLoading = isLoading || isTabLoading;
-    
-    if (showLoading) {
-      return (
-        <LoadingState message={`${tab === 'events' ? '이벤트' : 
-          tab === 'lineups' ? '라인업' : 
-          tab === 'stats' ? '통계' : 
-          tab === 'standings' ? '순위' : '경기'} 데이터를 불러오는 중...`} />
-      );
+  // 탭 변경이 완료되면 로딩 상태 해제
+  useEffect(() => {
+    if (!isLoading && isTabChanging) {
+      setIsTabChanging(false);
+    }
+  }, [isLoading, isTabChanging]);
+
+  // 현재 탭에 따라 컴포넌트 렌더링
+  const renderTabContent = useMemo(() => {
+    // 전체 로딩 상태일 때
+    if (isLoading || isTabChanging) {
+      return <LoadingState message={`${tab === 'events' ? '이벤트' : 
+                                      tab === 'lineups' ? '라인업' : 
+                                      tab === 'stats' ? '통계' : 
+                                      tab === 'standings' ? '순위' : '경기'} 데이터를 불러오는 중...`} />;
     }
 
     // 매치 ID 없는 경우 처리
@@ -247,18 +189,13 @@ const TabContent = memo(function TabContent() {
         </div>
       );
     }
-    
-    // 캐시된 데이터가 없으면 로딩 상태 표시
-    if (!cachedTabData) {
-      return <TabLoading />;
-    }
 
     switch (tab) {
       case 'events': {
         return eventsData && eventsData.length > 0 ? (
-          <EventsTab 
-            events={eventsData} 
-          />
+          <Suspense fallback={<LoadingState message="이벤트 데이터를 불러오는 중..." />}>
+            <EventsTab events={eventsData} />
+          </Suspense>
         ) : (
           <NoDataState tabName="events" />
         );
@@ -279,19 +216,21 @@ const TabContent = memo(function TabContent() {
         }
         
         return lineupsData && lineupsData.response ? (
-          <LineupsTab 
-            matchId={matchId} 
-            lineups={lineupsData && {
-              response: {
-                home: lineupsData.response.home as TeamLineup,
-                away: lineupsData.response.away as TeamLineup
-              }
-            }}
-            homeTeam={homeTeam as unknown as Team}
-            awayTeam={awayTeam as unknown as Team}
-            events={eventsData}
-            playersStats={playersStatsData}
-          />
+          <Suspense fallback={<LoadingState message="라인업 정보를 불러오는 중..." />}>
+            <LineupsTab 
+              matchId={matchId} 
+              lineups={lineupsData && {
+                response: {
+                  home: lineupsData.response.home as TeamLineup,
+                  away: lineupsData.response.away as TeamLineup
+                }
+              }}
+              homeTeam={homeTeam as unknown as Team}
+              awayTeam={awayTeam as unknown as Team}
+              events={eventsData}
+              playersStats={playersStatsData}
+            />
+          </Suspense>
         ) : (
           <NoDataState tabName="lineups" />
         );
@@ -299,12 +238,14 @@ const TabContent = memo(function TabContent() {
       
       case 'stats': {
         return statsData && statsData.length > 0 ? (
-          <StatsTab 
-            matchId={matchId} 
-            stats={statsData}
-            homeTeam={homeTeam as unknown as Team}
-            awayTeam={awayTeam as unknown as Team}
-          />
+          <Suspense fallback={<LoadingState message="통계 데이터를 불러오는 중..." />}>
+            <StatsTab 
+              matchId={matchId} 
+              stats={statsData}
+              homeTeam={homeTeam as unknown as Team}
+              awayTeam={awayTeam as unknown as Team}
+            />
+          </Suspense>
         ) : (
           <NoDataState tabName="stats" />
         );
@@ -312,12 +253,14 @@ const TabContent = memo(function TabContent() {
       
       case 'standings': {
         return standingsData ? (
-          <StandingsTab 
-            matchId={matchId} 
-            standings={standingsData}
-            homeTeam={homeTeam as unknown as Team}
-            awayTeam={awayTeam as unknown as Team}
-          />
+          <Suspense fallback={<LoadingState message="순위 정보를 불러오는 중..." />}>
+            <StandingsTab 
+              matchId={matchId} 
+              standings={standingsData}
+              homeTeam={homeTeam as unknown as Team}
+              awayTeam={awayTeam as unknown as Team}
+            />
+          </Suspense>
         ) : (
           <NoDataState tabName="standings" />
         );
@@ -340,16 +283,9 @@ const TabContent = memo(function TabContent() {
     homeTeam, 
     awayTeam, 
     isLoading,
-    isTabLoading,
-    cachedTabData,
+    isTabChanging,
     tabsData
   ]);
 
-  return (
-    <Suspense fallback={<TabLoading />}>
-      {tabContent}
-    </Suspense>
-  );
-});
-
-export default TabContent; 
+  return renderTabContent;
+} 

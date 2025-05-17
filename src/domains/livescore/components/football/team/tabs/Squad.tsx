@@ -2,9 +2,19 @@
 
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { PlayerStats } from '@/domains/livescore/actions/teams/player-stats';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
+
+// 상수 정의
+const POSITION_ORDER = ['Goalkeeper', 'Defender', 'Midfielder', 'Attacker', 'Coach'];
+const POSITION_NAMES = {
+  Coach: '감독',
+  Goalkeeper: '골키퍼',
+  Defender: '수비수',
+  Midfielder: '미드필더',
+  Attacker: '공격수'
+};
 
 // 컴포넌트에서 사용할 타입 정의
 interface Coach {
@@ -38,52 +48,42 @@ interface SquadProps {
   error?: string | null;
 }
 
-// 포지션 순서 변경 - Coach를 마지막으로
-const positionOrder = ['Goalkeeper', 'Defender', 'Midfielder', 'Attacker', 'Coach'];
-const positionNames = {
-  Coach: '감독',
-  Goalkeeper: '골키퍼',
-  Defender: '수비수',
-  Midfielder: '미드필더',
-  Attacker: '공격수'
-};
-
-// 포지션별 색상 정의 (배경색 제거하고 보더만 유지)
-const positionColors = {
-  Coach: 'border-l-4',
-  Goalkeeper: 'border-l-4',
-  Defender: 'border-l-4',
-  Midfielder: 'border-l-4',
-  Attacker: 'border-l-4'
-};
-
 export default function Squad({ initialSquad, initialStats, isLoading: externalLoading, error: externalError }: SquadProps) {
   const router = useRouter();
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
-  const [squad, setSquad] = useState<(Player | Coach)[]>(initialSquad || []);
 
-  useEffect(() => {
-    // 초기 데이터가 있을 때만 처리
-    if (initialSquad && initialSquad.length > 0) {
-      // 선수단 데이터와 통계 데이터 병합
-      const mergedSquad = initialSquad.map(member => {
-        if (member.position !== 'Coach' && initialStats) {
-          const playerId = member.id;
-          const playerStats = initialStats[playerId];
-          
-          if (playerStats) {
-            return {
-              ...member,
-              stats: playerStats
-            };
-          }
+  // 데이터 병합 처리를 useMemo를 사용하여 최적화
+  const squad = useMemo(() => {
+    if (!initialSquad || initialSquad.length === 0) return [];
+    
+    return initialSquad.map(member => {
+      if (member.position !== 'Coach' && initialStats) {
+        const playerStats = initialStats[member.id];
+        if (playerStats) {
+          return {
+            ...member,
+            stats: playerStats
+          };
         }
-        return member;
-      });
-      
-      setSquad(mergedSquad);
-    }
+      }
+      return member;
+    });
   }, [initialSquad, initialStats]);
+  
+  // 선수단 정렬 로직을 useMemo로 최적화
+  const sortedPlayers = useMemo(() => {
+    if (squad.length === 0) return [];
+    
+    return [...squad].sort((a, b) => {
+      const posA = POSITION_ORDER.indexOf(a.position);
+      const posB = POSITION_ORDER.indexOf(b.position);
+      
+      if (posA !== posB) return posA - posB;
+      
+      // 같은 포지션 내에서는 이름 순으로 정렬
+      return a.name.localeCompare(b.name);
+    });
+  }, [squad]);
 
   const handleImageError = (id: number) => {
     setImageErrors(prev => ({ ...prev, [id]: true }));
@@ -104,17 +104,7 @@ export default function Squad({ initialSquad, initialStats, isLoading: externalL
     return <EmptyState title="선수단 데이터가 없습니다" message="현재 이 팀에 대한 선수단 정보를 제공할 수 없습니다." />;
   }
 
-  // 선수단 정렬 로직
-  const sortedPlayers = [...squad].sort((a, b) => {
-    const posA = positionOrder.indexOf(a.position);
-    const posB = positionOrder.indexOf(b.position);
-    
-    if (posA !== posB) return posA - posB;
-    
-    // 같은 포지션 내에서는 이름 순으로 정렬
-    return a.name.localeCompare(b.name);
-  });
-
+  // 렌더링에 사용할 현재 포지션 추적
   let currentPosition = '';
 
   return (
@@ -123,28 +113,28 @@ export default function Squad({ initialSquad, initialStats, isLoading: externalL
         <table className="w-full">
           <tbody className="divide-y divide-gray-100">
             {sortedPlayers.map((member) => {
+              // 포지션 헤더 표시 여부 결정
               const showPositionHeader = member.position !== currentPosition;
               currentPosition = member.position;
               
               // 선수 통계 정보 접근
               const playerStats = member.position !== 'Coach' ? (member as Player).stats : undefined;
+              const isPlayer = member.position !== 'Coach';
 
               return (
                 <React.Fragment key={member.id}>
                   {showPositionHeader && (
-                    <tr className={`bg-gray-50 ${positionColors[member.position as keyof typeof positionColors]}`}>
+                    <tr className="bg-gray-50 border-l-4">
                       <td colSpan={3} className="px-2 sm:px-4 md:px-6 py-1">
                         <h3 className="text-sm md:text-base font-medium flex items-center gap-1">
-                          <span>{positionNames[member.position as keyof typeof positionNames]}</span>
+                          <span>{POSITION_NAMES[member.position as keyof typeof POSITION_NAMES]}</span>
                           <span className="text-xs text-gray-500">
                             ({sortedPlayers.filter(p => p.position === member.position).length}명)
                           </span>
                         </h3>
                       </td>
                       <td className="px-1 sm:px-2 md:px-6 py-1 text-center text-xs font-medium whitespace-nowrap">나이</td>
-                      {member.position === 'Coach' ? (
-                        <td colSpan={5} className="px-1 sm:px-2 md:px-6 py-1"></td>
-                      ) : (
+                      {isPlayer ? (
                         <>
                           <td className="px-1 sm:px-2 md:px-6 py-1 text-center text-xs font-medium whitespace-nowrap">출장</td>
                           <td className="px-1 sm:px-2 md:px-6 py-1 text-center text-xs font-medium whitespace-nowrap">골</td>
@@ -156,13 +146,15 @@ export default function Squad({ initialSquad, initialStats, isLoading: externalL
                             <span className="inline-block w-3 h-3 bg-red-500 rounded-sm" title="퇴장"/>
                           </td>
                         </>
+                      ) : (
+                        <td colSpan={5} className="px-1 sm:px-2 md:px-6 py-1"></td>
                       )}
                     </tr>
                   )}
                   <tr 
-                    className={`hover:bg-gray-50 ${member.position !== 'Coach' ? 'cursor-pointer' : ''}`}
+                    className={`hover:bg-gray-50 transition-colors ${isPlayer ? 'cursor-pointer' : ''}`}
                     onClick={() => {
-                      if (member.position !== 'Coach') {
+                      if (isPlayer) {
                         router.push(`/livescore/football/player/${member.id}`);
                       }
                     }}
@@ -188,7 +180,7 @@ export default function Squad({ initialSquad, initialStats, isLoading: externalL
                       </div>
                     </td>
                     <td className="px-2 sm:px-4 md:px-6 py-1 text-sm md:text-base font-medium">
-                      {member.position === 'Coach' ? '' : (member as Player).number}
+                      {isPlayer ? (member as Player).number : ''}
                     </td>
                     <td className="px-2 sm:px-4 md:px-6 py-1">
                       <div className="font-medium text-xs md:text-sm truncate max-w-[100px] md:max-w-none">
@@ -198,9 +190,7 @@ export default function Squad({ initialSquad, initialStats, isLoading: externalL
                     <td className="px-1 sm:px-2 md:px-6 py-1 text-xs text-center whitespace-nowrap">
                       {member.age}세
                     </td>
-                    {member.position === 'Coach' ? (
-                      <td colSpan={5} className="px-1 sm:px-2 md:px-6 py-1"></td>
-                    ) : (
+                    {isPlayer ? (
                       <>
                         <td className="px-1 sm:px-2 md:px-6 py-1 text-xs text-center whitespace-nowrap">
                           {playerStats?.appearances || 0}
@@ -218,6 +208,8 @@ export default function Squad({ initialSquad, initialStats, isLoading: externalL
                           {playerStats?.redCards || 0}
                         </td>
                       </>
+                    ) : (
+                      <td colSpan={5} className="px-1 sm:px-2 md:px-6 py-1"></td>
                     )}
                   </tr>
                 </React.Fragment>
