@@ -1,6 +1,6 @@
-import { fetchPosts } from '@/app/actions/posts';
-import { CardTitle } from '@/app/ui/card';
-import PostList from '@/app/components/post/PostList';
+import { fetchPosts } from '@/domains/boards/actions';
+import { CardTitle } from '@/shared/ui/card';
+import PostList from '@/domains/boards/components/post/PostList';
 
 // 서버 컴포넌트로 변경 - 직접 데이터 로드
 export default async function AllPostsWidget() {

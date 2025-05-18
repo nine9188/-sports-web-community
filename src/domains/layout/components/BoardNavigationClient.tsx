@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ChevronDown, ChevronRight, ShoppingBag } from 'lucide-react';
 import ReactDOM from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { getBoardsForNavigation, Board } from '@/app/actions/board-actions';
+import { getBoardsForNavigation, Board } from '@/domains/layout/actions';
 
 // 헤더 네비게이션의 캐싱 지속 시간 (30분)
 const CACHE_DURATION = 30 * 60 * 1000;

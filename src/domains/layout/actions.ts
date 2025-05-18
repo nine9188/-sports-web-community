@@ -1,6 +1,7 @@
 'use server';
 
-import { createClient } from '@/app/lib/supabase.server';
+import { createClient } from '@/shared/api/supabaseServer';
+import { HeaderUserData } from './types/header';
 
 // Board 타입 정의
 export type Board = {
@@ -83,62 +84,58 @@ export async function getBoardsForNavigation(): Promise<{
 }
 
 /**
- * 게시판 정보를 슬러그나 ID로 조회하는 서버 액션
+ * 헤더에 표시할 사용자 정보를 가져오는 서버 액션
  */
-export async function getBoardBySlugOrId(slugOrId: string) {
+export async function getHeaderUserData(): Promise<HeaderUserData | null> {
   try {
     const supabase = await createClient();
-    const isUUID = /^[0-9a-fA-F-]{36}$/.test(slugOrId);
-
-    let data;
-    let error;
-
-    if (isUUID) {
-      // UUID로 조회
-      const result = await supabase
-        .from('boards')
-        .select('*')
-        .eq('id', slugOrId)
-        .single();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) return null;
+    
+    // 아이콘 정보를 서버에서 빠르게 가져오기
+    const iconInfo = {
+      iconId: null as number | null,
+      iconUrl: '',
+      iconName: ''
+    };
+    
+    // 프로필 정보 조회
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('nickname, icon_id, level, exp')
+      .eq('id', user.id)
+      .single();
+    
+    if (profile?.icon_id) {
+      iconInfo.iconId = profile.icon_id;
       
-      data = result.data;
-      error = result.error;
-    } else {
-      // 슬러그로 조회
-      const result = await supabase
-        .from('boards')
-        .select('*')
-        .eq('slug', slugOrId)
+      // 아이콘 정보 조회
+      const { data: iconData } = await supabase
+        .from('profile_icons')
+        .select('name, image_url')
+        .eq('id', profile.icon_id)
         .single();
-      
-      data = result.data;
-      error = result.error;
+        
+      if (iconData) {
+        iconInfo.iconUrl = iconData.image_url;
+        iconInfo.iconName = iconData.name;
+      }
     }
-
-    if (error) throw new Error('게시판 정보를 가져오지 못했습니다.');
-    return data;
+    
+    // 기본 사용자 데이터 구성
+    const userData: HeaderUserData = {
+      id: user.id,
+      email: user.email || '',
+      nickname: profile?.nickname || user.user_metadata?.nickname || '사용자',
+      isAdmin: user.user_metadata?.is_admin === true,
+      level: profile?.level || user.user_metadata?.level || 1,
+      iconInfo
+    };
+    
+    return userData;
   } catch (error) {
-    console.error('게시판 정보 조회 오류:', error);
-    throw error;
-  }
-}
-
-/**
- * 모든 게시판 목록을 가져오는 서버 액션
- */
-export async function getAllBoards() {
-  try {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from('boards')
-      .select('*')
-      .order('display_order', { ascending: true })
-      .order('name', { ascending: true });
-
-    if (error) throw new Error('게시판 목록 조회 실패');
-    return data;
-  } catch (error) {
-    console.error('게시판 목록 조회 오류:', error);
-    throw error;
+    console.error('헤더 사용자 데이터 가져오기 오류:', error);
+    return null;
   }
 } 

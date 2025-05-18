@@ -1,4 +1,4 @@
-import AllPostsWidget from './components/widgets/all-posts-widget'
+import AllPostsWidget from '@/domains/widgets/components/AllPostsWidget'
 import LiveScoreWidget from './components/widgets/live-score-widget';
 import NewsWidget from './components/widgets/news-widget';
 import YouTubeWidget from './components/widgets/youtube-widget/index';

@@ -1,11 +1,4 @@
-import { Suspense } from 'react';
-import { redirect } from 'next/navigation';
-import { Metadata } from 'next';
-import { getMyPosts } from '@/domains/settings/actions/my-posts';
-import { createClient } from '@/shared/api/supabaseServer';
-import MyPostsContent from '@/domains/settings/components/my-posts/MyPostsContent';
-import PostsPagination from '@/domains/settings/components/my-posts/PostsPagination';
-import LoadingSpinner from '@/app/components/LoadingSpinner';
+import { Suspense } from 'react';import { redirect } from 'next/navigation';import { Metadata } from 'next';import { getMyPosts } from '@/domains/settings/actions/my-posts';import { createClient } from '@/shared/api/supabaseServer';import MyPostsContent from '@/domains/settings/components/my-posts/MyPostsContent';import PostsPagination from '@/domains/settings/components/my-posts/PostsPagination';
 
 export const metadata: Metadata = {
   title: '내가 쓴 글 - 설정',
@@ -59,7 +52,11 @@ export default async function MyPostsPage({
           </p>
         </div>
         
-        <Suspense fallback={<div className="flex justify-center py-8"><LoadingSpinner /></div>}>
+        <Suspense fallback={
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        }>
           <MyPostsContent
             key={`my-posts-content-page-${page}`}
             initialPosts={data || []}

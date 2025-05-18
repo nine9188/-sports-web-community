@@ -1,7 +1,8 @@
 import './globals.css';
 import { Inter } from 'next/font/google';
 import RootLayoutClient from './RootLayoutClient';
-import { getUserProfile, getHeaderUserData } from '@/app/actions/auth-actions';
+import { getUserProfile } from '@/app/actions/auth-actions';
+import { getHeaderUserData } from '@/domains/layout/actions';
 import BoardNavigation from '@/domains/sidebar/components/board/BoardNavigation';
 import AuthSection from '@/domains/sidebar/components/auth/AuthSection';
 import { fetchStandingsData } from '@/domains/sidebar/actions/football';
@@ -90,8 +91,8 @@ export default async function RootLayout({
             </Suspense>
           }
           authSection={authSection}
-          headerUserData={headerUserData}
           leagueStandingsComponent={leagueStandingsComponent}
+          headerUserData={headerUserData}
         >
           {children}
         </RootLayoutClient>

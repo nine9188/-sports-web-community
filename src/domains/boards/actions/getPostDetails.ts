@@ -5,6 +5,7 @@ import { AdjacentPosts } from '../types/post';
 import { getBoardLevel, getFilteredBoardIds, findRootBoard, createBreadcrumbs } from '../utils/board/boardHierarchy';
 import { formatPosts } from '../utils/post/postUtils';
 import { BoardMap, ChildBoardsMap, BoardData } from '../types/board';
+import { createActionClient } from '@/shared/api/supabaseServer'
 
 /**
  * 게시글 상세 페이지에 필요한 모든 데이터를 가져옵니다.
@@ -366,5 +367,46 @@ export async function getComments(postId: string) {
       success: false,
       error: error instanceof Error ? error.message : '댓글을 불러오는 중 오류가 발생했습니다.'
     };
+  }
+}
+
+/**
+ * 게시글 상세 조회
+ */
+export async function getPost(postId: string) {
+  try {
+    const supabase = await createActionClient()
+    
+    // 게시글 조회 및 조회수 증가
+    const { data, error } = await supabase
+      .from('posts')
+      .select(`
+        id, 
+        title, 
+        content, 
+        created_at, 
+        updated_at,
+        user_id, 
+        board_id,
+        view_count, 
+        like_count,
+        profiles(id, username, avatar_url, full_name),
+        boards(id, name, slug)
+      `)
+      .eq('id', postId)
+      .single()
+    
+    if (error) {
+      console.error('게시글 조회 오류:', error)
+      throw new Error('게시글 조회 실패')
+    }
+    
+    // 조회수 증가 (별도 쿼리)
+    await supabase.rpc('increment_view_count', { post_id: postId })
+    
+    return data
+  } catch (error) {
+    console.error('게시글 조회 오류:', error)
+    return null
   }
 } 

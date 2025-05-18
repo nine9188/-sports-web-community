@@ -2,11 +2,12 @@
 
 import { createClient } from '@/shared/api/supabaseServer';
 import { revalidatePath } from 'next/cache';
+import { createActionClient } from '@/shared/api/supabaseServer'
 
 /**
- * 게시글 생성 서버 액션
+ * 게시글 생성 서버 액션 (매개변수 사용)
  */
-export async function createPost(
+export async function createPostWithParams(
   title: string,
   content: string,
   boardId: string,
@@ -778,5 +779,56 @@ export async function getUserPostAction(postId: string): Promise<{ userAction: '
   } catch (error) {
     console.error('사용자 액션 확인 중 오류:', error);
     return { userAction: null };
+  }
+}
+
+/**
+ * 게시글 생성
+ */
+export async function createPost(formData: FormData) {
+  try {
+    const supabase = await createActionClient()
+    
+    // 폼 데이터에서 값 추출
+    const title = formData.get('title') as string
+    const content = formData.get('content') as string
+    const boardId = formData.get('boardId') as string
+    
+    if (!title || !content || !boardId) {
+      return { error: '필수 입력값이 누락되었습니다' }
+    }
+    
+    // 현재 사용자 확인
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return { error: '로그인이 필요합니다' }
+    }
+    
+    // 게시글 작성
+    const { data, error } = await supabase
+      .from('posts')
+      .insert({
+        title,
+        content: typeof content === 'string' && content.startsWith('{') 
+          ? JSON.parse(content) 
+          : content,
+        user_id: user.id,
+        board_id: boardId
+      })
+      .select()
+      .single()
+    
+    if (error) {
+      console.error('게시글 작성 오류:', error)
+      return { error: '게시글 작성 실패' }
+    }
+    
+    // 캐시 갱신
+    revalidatePath(`/boards/${boardId}`)
+    
+    return { success: true, post: data }
+  } catch (error) {
+    console.error('게시글 작성 오류:', error)
+    return { error: '게시글 작성 중 오류가 발생했습니다' }
   }
 }

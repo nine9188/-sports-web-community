@@ -3,10 +3,11 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
-import { updateUserIcon } from '@/domains/settings/actions/icons';
+import { updateUserIconServer } from '@/domains/settings/actions/icons';
 import { toast } from 'react-toastify';
 import { Loader2 } from 'lucide-react';
 import { IconItem } from '../../types';
+import { useIcon } from '@/shared/context/IconContext';
 
 interface IconFormProps {
   userId: string;
@@ -32,6 +33,7 @@ export default function IconForm({
 }: IconFormProps) {
   const [selectedIconId, setSelectedIconId] = useState<number | null>(currentIconId);
   const [isLoading, setIsLoading] = useState(false);
+  const { updateUserIconState, refreshUserIcon } = useIcon(); // 전역 아이콘 상태 업데이트 함수 사용
   
   // 아이콘 선택 처리 함수
   const handleIconSelect = (iconId: number | null) => {
@@ -40,22 +42,54 @@ export default function IconForm({
   
   // 아이콘 저장 처리 함수
   const handleSaveIcon = async () => {
+    // 이미 로딩 중이거나 선택된 아이콘이 현재 아이콘과 같다면 무시
+    if (isLoading || selectedIconId === currentIconId) return;
+    
     try {
       setIsLoading(true);
       
+      // 토스트가 이미 열려있다면 모두 닫기
+      toast.dismiss();
+      
       // 서버에 아이콘 변경 요청
-      const result = await updateUserIcon(userId, selectedIconId);
+      const result = await updateUserIconServer(userId, selectedIconId);
       
       if (result.success) {
-        toast.success('아이콘이 변경되었습니다.');
+        // 고유 ID로 토스트 생성하여 중복 방지
+        toast.success('아이콘이 변경되었습니다.', {
+          toastId: 'icon-update-success',
+          autoClose: 2000
+        });
+        
+        // 선택된 아이콘에 따라 전역 상태 업데이트
+        if (selectedIconId === null) {
+          // 기본 아이콘으로 설정한 경우
+          updateUserIconState(levelIconUrl, `레벨 ${userLevel} 기본 아이콘`);
+        } else {
+          // 커스텀 아이콘으로 설정한 경우
+          const selectedIcon = userIcons.find(icon => icon.id === selectedIconId);
+          if (selectedIcon) {
+            updateUserIconState(selectedIcon.image_url, selectedIcon.name);
+          }
+        }
+        
+        // 전역 아이콘 정보 새로고침 (다른 컴포넌트에서도 반영되도록)
+        await refreshUserIcon();
       } else {
-        toast.error(result.error || '아이콘 변경에 실패했습니다.');
+        // 고유 ID로 토스트 생성하여 중복 방지
+        toast.error(result.error || '아이콘 변경에 실패했습니다.', {
+          toastId: 'icon-update-error',
+          autoClose: 2000
+        });
         // 실패 시 원래 선택으로 되돌림
         setSelectedIconId(currentIconId);
       }
     } catch (error) {
       console.error('아이콘 변경 오류:', error);
-      toast.error('아이콘 변경 중 오류가 발생했습니다.');
+      toast.error('아이콘 변경 중 오류가 발생했습니다.', {
+        toastId: 'icon-update-exception',
+        autoClose: 2000
+      });
       setSelectedIconId(currentIconId);
     } finally {
       setIsLoading(false);

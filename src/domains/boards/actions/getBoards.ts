@@ -3,6 +3,7 @@
 import { createClient } from '@/shared/api/supabaseServer';
 import { BoardMap, ChildBoardsMap } from '../types/board';
 import { getBoardLevel, getFilteredBoardIds, findRootBoard, generateBoardBreadcrumbs } from '../utils/board/boardHierarchy';
+import { createActionClient } from '@/shared/api/supabaseServer'
 
 /**
  * 모든 게시판 목록을 가져옵니다.
@@ -201,5 +202,30 @@ export async function getBoardPageData(slug: string, currentPage: number, fromPa
       success: false,
       error: error instanceof Error ? error.message : '게시판 정보를 불러오는 중 오류가 발생했습니다.'
     };
+  }
+}
+
+/**
+ * 게시판 목록 조회
+ */
+export async function getBoards() {
+  try {
+    const supabase = await createActionClient()
+    
+    const { data, error } = await supabase
+      .from('boards')
+      .select('id, name, parent_id, display_order, slug, team_id, league_id')
+      .order('display_order', { ascending: true })
+      .order('name')
+    
+    if (error) {
+      console.error('게시판 목록 조회 오류:', error)
+      throw new Error('게시판 목록 조회 실패')
+    }
+    
+    return data || []
+  } catch (error) {
+    console.error('게시판 데이터 불러오기 오류:', error)
+    return []
   }
 } 

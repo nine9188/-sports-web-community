@@ -1,17 +1,17 @@
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
-import Header from './components/Header';
-import Footer from './components/Footer';
-import { ThemeProvider } from './components/ThemeProvider';
-import { AuthProvider } from './context/AuthContext';
+import { usePathname, useRouter } from 'next/navigation';
+import { Header } from '@/domains/layout';
+import Footer from '@/shared/components/Footer';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { IconProvider } from '@/shared/context/IconContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
 import Sidebar from '@/domains/sidebar/components/Sidebar';
-import { HeaderUserData } from './lib/types';
+import { HeaderUserData } from '@/domains/layout/types/header';
 
 // DevTools 동적 로드 - 개발 환경에서만 로드
 const ReactQueryDevtools = dynamic(() => 
@@ -26,8 +26,10 @@ interface RootLayoutClientProps {
   boardNavigation: React.ReactNode;
   rightSidebar: React.ReactNode;
   authSection: React.ReactNode;
-  headerUserData: HeaderUserData | null;
   leagueStandingsComponent: React.ReactNode;
+  headerUserData?: HeaderUserData | null;
+  initialIconUrl?: string;
+  initialIconName?: string;
 }
 
 export default function RootLayoutClient({ 
@@ -35,8 +37,10 @@ export default function RootLayoutClient({
   boardNavigation, 
   rightSidebar,
   authSection,
+  leagueStandingsComponent,
   headerUserData,
-  leagueStandingsComponent
+  initialIconUrl = '',
+  initialIconName = ''
 }: RootLayoutClientProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
@@ -100,59 +104,99 @@ export default function RootLayoutClient({
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <ThemeProvider 
-          attribute="class" 
-          defaultTheme="light"
-          enableSystem={false}
-          disableTransitionOnChange
-        >
+        <IconProvider initialIconUrl={initialIconUrl} initialIconName={initialIconName}>
           {isIndependentLayout ? (
             // 인증 페이지나 쇼츠 페이지일 경우 헤더, 사이드바 없이 직접 children만 렌더링
             children
           ) : (
             // 일반 페이지는 기존 레이아웃 사용
-            <div className="flex flex-col min-h-screen w-full">
-              <Header 
-                onMenuClick={toggleSidebar} 
-                isSidebarOpen={isOpen} 
-                userData={headerUserData}
-              />
-              <div className="flex flex-1 w-full md:max-w-screen-2xl md:mx-auto">
-                {/* 도메인 구조로 변경된 Sidebar 컴포넌트 사용 */}
-                <Sidebar 
-                  isOpen={isOpen}
-                  onClose={closeSidebar}
-                  leagueStandingsComponent={leagueStandingsComponent}
-                  authSection={authSection}
-                >
-                  {boardNavigation}
-                </Sidebar>
-                <main className="flex-1 md:p-4 w-full overflow-y-auto box-border">
-                  {children}
-                </main>
-                {rightSidebar}
-              </div>
-              <Footer />
-            </div>
+            <AuthStateManager 
+              headerUserData={headerUserData}
+              authSection={authSection}
+              boardNavigation={boardNavigation}
+              leagueStandingsComponent={leagueStandingsComponent}
+              rightSidebar={rightSidebar}
+              isOpen={isOpen}
+              onClose={closeSidebar}
+              onMenuClick={toggleSidebar}
+            >
+              {children}
+            </AuthStateManager>
           )}
-          
-          {/* 인증 페이지나 쇼츠 페이지에서는 토스트 컨테이너가 표시되지 않도록 */}
-          {!isIndependentLayout && (
-            <ToastContainer 
-              position="top-right"
-              autoClose={5000}
-              hideProgressBar={false}
-              newestOnTop={false}
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-            />
-          )}
-        </ThemeProvider>
+            
+          {/* 항상 ToastContainer를 표시하도록 수정 */}
+          <ToastContainer 
+            position="top-right"
+            autoClose={3000}
+            limit={3}
+            newestOnTop
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+          />
+        </IconProvider>
       </AuthProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
+  );
+}
+
+// 인증 상태 변경을 감지하는 래퍼 컴포넌트
+function AuthStateManager({
+  children,
+  headerUserData,
+  authSection,
+  boardNavigation,
+  leagueStandingsComponent,
+  rightSidebar,
+  isOpen,
+  onClose,
+  onMenuClick
+}: {
+  children: React.ReactNode,
+  headerUserData?: HeaderUserData | null,
+  authSection: React.ReactNode,
+  boardNavigation: React.ReactNode,
+  leagueStandingsComponent: React.ReactNode,
+  rightSidebar: React.ReactNode,
+  isOpen: boolean,
+  onClose: () => void,
+  onMenuClick: () => void
+}) {
+  const { user } = useAuth();
+  const router = useRouter();
+  
+  // 인증 상태 변경 감지 및 리다이렉트 처리
+  useEffect(() => {
+    // 인증 상태 변경시 레이아웃 갱신
+    router.refresh();
+  }, [user, router]);
+  
+  return (
+    <div className="flex flex-col min-h-screen w-full">
+      <Header
+        onMenuClick={onMenuClick}
+        isSidebarOpen={isOpen}
+        userData={headerUserData}
+      />
+      <div className="flex flex-1 w-full md:max-w-screen-2xl md:mx-auto">
+        {/* 도메인 구조로 변경된 Sidebar 컴포넌트 사용 */}
+        <Sidebar 
+          isOpen={isOpen}
+          onClose={onClose}
+          leagueStandingsComponent={leagueStandingsComponent}
+          authSection={authSection}
+        >
+          {boardNavigation}
+        </Sidebar>
+        <main className="flex-1 md:p-4 w-full overflow-y-auto box-border">
+          {children}
+        </main>
+        {rightSidebar}
+      </div>
+      <Footer />
+    </div>
   );
 } 

@@ -5,7 +5,7 @@ import { createClient } from '@/shared/api/supabaseServer';
 import { getMyComments } from '@/domains/settings/actions/my-comments';
 import MyCommentsContent from '@/domains/settings/components/my-comments/MyCommentsContent';
 import PostsPagination from '@/domains/settings/components/my-comments/PostsPagination';
-import LoadingSpinner from '@/app/components/LoadingSpinner';
+
 
 export const metadata: Metadata = {
   title: '내가 쓴 댓글 - 설정',
@@ -64,7 +64,7 @@ export default async function MyCommentsPage({
           </p>
         </div>
         
-        <Suspense fallback={<div className="flex justify-center py-8"><LoadingSpinner /></div>}>
+        <Suspense fallback={<div className="flex justify-center py-8"><div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div></div>}>
           <MyCommentsContent
             key={`my-comments-content-page-${page}`}
             initialComments={data || []}

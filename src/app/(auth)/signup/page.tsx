@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 import Link from 'next/link';
 import { useAuth } from '@/app/context/AuthContext';
 import { createClient } from '@/app/lib/supabase-browser';
@@ -367,7 +366,6 @@ export default function SignupPage() {
             <p className="mt-2 text-gray-600">홈 화면으로 이동합니다...</p>
           </div>
         </div>
-        <ToastContainer position="top-right" autoClose={1500} />
       </div>
     );
   }
@@ -633,8 +631,6 @@ export default function SignupPage() {
         <Link href="/terms" className="hover:text-gray-700">이용약관</Link>
         <Link href="/privacy" className="hover:text-gray-700">개인정보처리방침</Link>
       </div>
-      
-      <ToastContainer position="top-right" autoClose={2000} hideProgressBar={false} />
     </div>
   );
 } 

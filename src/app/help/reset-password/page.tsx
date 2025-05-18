@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 import { createClient } from '@/app/lib/supabase-browser';
 import Link from 'next/link';
 
@@ -106,7 +105,6 @@ export default function ResetPasswordPage() {
           </button>
         </form>
       </div>
-      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 } 

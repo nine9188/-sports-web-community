@@ -3,8 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 import { useAuth } from '@/app/context/AuthContext';
 import { EyeIcon, EyeOffIcon } from 'lucide-react';
 import { createClient } from '@/app/lib/supabase-browser';
@@ -224,8 +223,6 @@ export default function SignInPage() {
         <Link href="/terms" className="hover:text-gray-700">이용약관</Link>
         <Link href="/privacy" className="hover:text-gray-700">개인정보처리방침</Link>
       </div>
-      
-      <ToastContainer position="top-right" autoClose={2000} />
     </div>
   );
 } 

@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/shared/api/supabaseServer';
+import { createActionClient } from '@/shared/api/supabaseServer'
 
 // 게시글 타입 정의
 export interface Post {
@@ -413,5 +414,39 @@ export async function revalidatePostsData(path: string = '/') {
   } catch (error) {
     console.error('캐시 갱신 오류:', error);
     return { success: false, message: '캐시 갱신 중 오류가 발생했습니다.' };
+  }
+}
+
+/**
+ * 특정 게시판의 게시글 목록 조회
+ */
+export async function getPosts(boardId: string, page = 1, limit = 20) {
+  try {
+    const supabase = await createActionClient()
+    
+    // 페이지네이션을 위한 offset 계산
+    const offset = (page - 1) * limit
+    
+    const { data, error, count } = await supabase
+      .from('posts')
+      .select('id, title, created_at, user_id, view_count, like_count, profiles(username, avatar_url)', { count: 'exact' })
+      .eq('board_id', boardId)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1)
+    
+    if (error) {
+      console.error('게시글 목록 조회 오류:', error)
+      throw new Error('게시글 목록 조회 실패')
+    }
+    
+    return { 
+      posts: data || [], 
+      totalCount: count || 0,
+      totalPages: count ? Math.ceil(count / limit) : 0,
+      currentPage: page
+    }
+  } catch (error) {
+    console.error('게시글 데이터 불러오기 오류:', error)
+    return { posts: [], totalCount: 0, totalPages: 0, currentPage: page }
   }
 } 

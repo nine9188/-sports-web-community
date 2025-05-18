@@ -226,3 +226,83 @@ export async function updateUserIcon(userId: string, iconId: number | null): Pro
     };
   }
 }
+
+/**
+ * 사용자 아이콘 업데이트 (서버 컴포넌트용)
+ */
+export async function updateUserIconServer(userId: string, iconId: number | null) {
+  try {
+    const supabase = await createClient();
+    
+    // 사용자 프로필 아이콘 업데이트
+    const { error } = await supabase
+      .from('profiles')
+      .update({ icon_id: iconId })
+      .eq('id', userId);
+    
+    if (error) throw error;
+    
+    // 페이지 캐시 갱신
+    revalidatePath('/settings/profile');
+    revalidatePath('/settings/icons');
+    revalidatePath('/'); // 홈페이지 (레이아웃 포함)
+    
+    return { success: true };
+  } catch (error: unknown) {
+    console.error('아이콘 업데이트 오류:', error);
+    const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다';
+    return { success: false, error: errorMessage };
+  }
+}
+
+/**
+ * 사용자 아이콘 정보 조회
+ */
+export async function getUserIcon(userId: string) {
+  try {
+    const supabase = await createClient();
+    
+    // 사용자 프로필에서 선택된 아이콘 ID 가져오기
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('icon_id')
+      .eq('id', userId)
+      .single();
+    
+    if (profileError) throw profileError;
+    
+    // 선택된 아이콘이 없으면 기본 아이콘 정보 반환
+    if (!profile?.icon_id) {
+      // 기본 레벨 아이콘 정보 반환
+      return { 
+        iconUrl: `/images/level-icons/level-default.png`, // 적절한 기본 아이콘 경로
+        iconName: `기본 아이콘`,
+        success: true 
+      };
+    }
+    
+    // 선택된 아이콘 정보 가져오기
+    const { data: icon, error: iconError } = await supabase
+      .from('shop_items')
+      .select('name, image_url')
+      .eq('id', profile.icon_id)
+      .single();
+    
+    if (iconError) throw iconError;
+    
+    return { 
+      iconUrl: icon.image_url,
+      iconName: icon.name,
+      success: true 
+    };
+  } catch (error: unknown) {
+    console.error('아이콘 조회 오류:', error);
+    const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다';
+    return { 
+      iconUrl: `/images/level-icons/level-default.png`, // 적절한 기본 아이콘 경로 
+      iconName: `기본 아이콘`,
+      success: false, 
+      error: errorMessage 
+    };
+  }
+}

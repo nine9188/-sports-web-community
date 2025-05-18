@@ -5,6 +5,7 @@ import { Coins } from 'lucide-react';
 import UserStats from './UserStats';
 import ProfileActions from './ProfileActions';
 import { useAuth } from '@/app/context/AuthContext';
+import { useIcon } from '@/shared/context/IconContext';
 import Image from 'next/image';
 import { getUserIconInfo } from '@/app/utils/level-icons-client';
 import { 
@@ -13,6 +14,7 @@ import {
   getExpToNextLevel,
   getLevelIconUrl
 } from '@/app/utils/level-icons';
+import { createClient } from '@/app/lib/supabase-browser';
 
 interface ProfileData {
   id?: string;
@@ -36,8 +38,9 @@ interface UserProfileProps {
   profileData: ProfileData | null;
 }
 
-export default function UserProfile({ profileData }: UserProfileProps) {
+export default function UserProfile({ profileData: initialProfileData }: UserProfileProps) {
   const { user } = useAuth();
+  const [profileData, setProfileData] = useState<ProfileData | null>(initialProfileData);
   
   // 프로필 데이터에서 기본 정보 추출
   const userLevel = useMemo(() => profileData?.level || 1, [profileData?.level]);
@@ -65,10 +68,17 @@ export default function UserProfile({ profileData }: UserProfileProps) {
     return defaultIconUrl;
   }, [profileData?.icon_url, iconId, defaultIconUrl]);
   
-  // 아이콘 상태 관리 - 초기값을 미리 설정하여 로딩 없이 즉시 렌더링
-  const [iconUrl, setIconUrl] = useState<string>(initialIconUrl);
-  const [iconName, setIconName] = useState<string>(`${profileData?.nickname || ''} 아이콘`);
+  // 전역 아이콘 상태 사용
+  const { iconUrl: globalIconUrl, iconName: globalIconName, updateUserIconState } = useIcon();
+  
+  // 로컬 아이콘 상태 (전역 상태가 비어있을 때 사용)
+  const [localIconUrl, setLocalIconUrl] = useState<string>(initialIconUrl);
+  const [localIconName, setLocalIconName] = useState<string>(`${profileData?.nickname || ''} 아이콘`);
   const [isLoadingAdditionalInfo, setIsLoadingAdditionalInfo] = useState<boolean>(false);
+  
+  // 사용할 아이콘 URL과 이름 결정 - 전역 상태 우선, 없으면 로컬 상태 사용
+  const displayIconUrl = globalIconUrl || localIconUrl;
+  const displayIconName = globalIconName || localIconName;
   
   // 상세 아이콘 정보 로드 함수 - 필요한 경우에만 실행
   const loadAdditionalIconInfo = useCallback(async () => {
@@ -82,8 +92,14 @@ export default function UserProfile({ profileData }: UserProfileProps) {
         const iconInfo = await getUserIconInfo(userId);
         
         if (iconInfo) {
-          setIconUrl(iconInfo.currentIconUrl);
-          setIconName(iconInfo.currentIconName);
+          // 로컬 상태 업데이트
+          setLocalIconUrl(iconInfo.currentIconUrl);
+          setLocalIconName(iconInfo.currentIconName);
+          
+          // 전역 상태 업데이트 (비어있는 경우)
+          if (!globalIconUrl) {
+            updateUserIconState(iconInfo.currentIconUrl, iconInfo.currentIconName);
+          }
         }
       } catch (error) {
         console.error('아이콘 상세 정보 로드 오류:', error);
@@ -92,27 +108,80 @@ export default function UserProfile({ profileData }: UserProfileProps) {
         setIsLoadingAdditionalInfo(false);
       }
     }
-  }, [userId, iconId, profileData?.icon_url, isLoadingAdditionalInfo]);
+  }, [userId, iconId, profileData?.icon_url, isLoadingAdditionalInfo, globalIconUrl, updateUserIconState]);
   
   // 필요한 경우에만 추가 아이콘 정보를 비동기적으로 로드
   useEffect(() => {
     loadAdditionalIconInfo();
   }, [loadAdditionalIconInfo]);
   
-  // 아이콘 업데이트 이벤트 리스너
+  // 초기 상태에서 기본값 설정
   useEffect(() => {
-    const handleIconUpdate = () => {
-      loadAdditionalIconInfo();
-    };
-    
-    window.addEventListener('icon-updated', handleIconUpdate);
-    return () => window.removeEventListener('icon-updated', handleIconUpdate);
-  }, [loadAdditionalIconInfo]);
+    // 전역 상태가 비어있고 초기 로컬 상태가 있는 경우 전역 상태에 설정
+    if (!globalIconUrl && initialIconUrl) {
+      updateUserIconState(initialIconUrl, `${profileData?.nickname || ''} 아이콘`);
+    }
+  }, [globalIconUrl, initialIconUrl, profileData?.nickname, updateUserIconState]);
 
   // 이미지 로드 에러 핸들러
   const handleImageError = useCallback(() => {
-    setIconUrl(defaultIconUrl); // 오류 시 기본 레벨 아이콘으로 대체
-  }, [defaultIconUrl]);
+    // 로컬 상태 업데이트
+    setLocalIconUrl(defaultIconUrl);
+    
+    // 전역 상태도 업데이트
+    updateUserIconState(defaultIconUrl, `레벨 ${userLevel} 기본 아이콘`);
+  }, [defaultIconUrl, updateUserIconState, userLevel]);
+
+  // 초기 profileData가 없거나 인증 상태가 변경되었을 때 프로필 데이터 가져오기
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      // 이미 서버 데이터가 있거나 로그인되지 않은 경우 건너뛰기
+      if (profileData || !user) return;
+      
+      try {
+        const supabase = createClient();
+        
+        // 프로필 정보 조회
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        
+        if (error) {
+          console.error("프로필 정보 조회 중 오류 발생:", error);
+          return;
+        }
+        
+        // 게시글 수 조회
+        const { count: postCount } = await supabase
+          .from('posts')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+        
+        // 댓글 수 조회
+        const { count: commentCount } = await supabase
+          .from('comments')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+          
+        // 아이콘 정보 추출
+        const userMetadata = user.user_metadata || {};
+        const icon_url = userMetadata.icon_url || null;
+        
+        setProfileData({
+          ...profile,
+          postCount: postCount || 0,
+          commentCount: commentCount || 0,
+          icon_url
+        });
+      } catch (error) {
+        console.error('프로필 데이터 가져오기 오류:', error);
+      }
+    };
+    
+    fetchProfileData();
+  }, [user, profileData]);
 
   if (!profileData) {
     return (
@@ -126,9 +195,9 @@ export default function UserProfile({ profileData }: UserProfileProps) {
     <div className="space-y-3">
       <div className="py-3 px-4 flex items-start gap-3 bg-muted/50 rounded-md">
         <div className="flex-shrink-0">
-          <div className="w-10 h-10 relative rounded-full overflow-hidden" title={iconName || undefined}>
+          <div className="w-10 h-10 relative rounded-full overflow-hidden" title={displayIconName || undefined}>
             <Image 
-              src={iconUrl}
+              src={displayIconUrl}
               alt={`${profileData.nickname || '사용자'} 프로필`}
               fill
               sizes="40px"

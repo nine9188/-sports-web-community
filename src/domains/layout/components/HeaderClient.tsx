@@ -1,17 +1,20 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, LogOut, Settings, ChevronDown, User } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUser, faSignOutAlt, faCog, faChevronDown, faBars } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@/app/ui/button';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import Image from 'next/image';
-import { createClient } from '@/app/lib/supabase-browser';
+import { createClient } from '@/shared/api/supabase';
 import ProfileDropdown from './ProfileDropdown';
-import { HeaderUserData } from '@/app/lib/types';
-import BoardNavigationClient from './header/BoardNavigationClient';
-import { useAuth } from '../context/AuthContext';
+import BoardNavigationClient from './BoardNavigationClient';
+import { useAuth } from '@/app/context/AuthContext';
+import { HeaderUserData } from '@/domains/layout/types/header';
+import { getLevelIconUrl } from '@/app/utils/level-icons';
+import { useIcon } from '@/shared/context/IconContext';
 
 type HeaderClientProps = {
   onMenuClick: () => void;
@@ -28,9 +31,18 @@ export default function HeaderClient({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
+  const { iconUrl, iconName, refreshUserIcon, isIconLoading } = useIcon();
   
   // 이전 userData 상태 유지 (깜빡임 방지)
   const [userData, setUserData] = useState<HeaderUserData | null>(initialUserData);
+  
+  // 사용자 레벨 기반 기본 아이콘 URL
+  const userLevel = userData?.level || 1;
+  const defaultIconUrl = getLevelIconUrl(userLevel);
+  
+  // 표시할 아이콘 및 이름 결정
+  const displayIconUrl = iconUrl || defaultIconUrl;
+  const displayIconName = iconName || `레벨 ${userLevel} 기본 아이콘`;
   
   // 초기 데이터가 없더라도 user 객체가 있으면 기본 데이터 설정
   useEffect(() => {
@@ -40,6 +52,7 @@ export default function HeaderClient({
         id: user.id,
         email: user.email || '',
         nickname: nickname,
+        level: user.user_metadata?.level || 1,
         iconInfo: {
           iconId: null,
           iconUrl: '',
@@ -50,6 +63,20 @@ export default function HeaderClient({
       setUserData(initialUserData);
     }
   }, [userData, user, initialUserData]);
+  
+  // 아이콘 정보 초기화
+  useEffect(() => {
+    if (user && (!iconUrl || !iconName)) {
+      refreshUserIcon();
+    }
+  }, [user, iconUrl, iconName, refreshUserIcon]);
+  
+  // 이미지 로드 에러 핸들러
+  const handleImageError = useCallback(() => {
+    // 오류 시 기본 레벨 아이콘으로 대체
+    const defaultIcon = getLevelIconUrl(userLevel);
+    return defaultIcon;
+  }, [userLevel]);
   
   // 드롭다운 메뉴 토글
   const toggleDropdown = useCallback((e: React.MouseEvent) => {
@@ -97,25 +124,28 @@ export default function HeaderClient({
               className="flex items-center space-x-1 px-3 py-2 rounded hover:bg-gray-100"
             >
               <div className="w-6 h-6 relative rounded-full overflow-hidden">
-                {userData.iconInfo?.iconUrl ? (
+                {isIconLoading ? (
+                  <div className="w-full h-full bg-gray-200 animate-pulse"></div>
+                ) : displayIconUrl ? (
                   <Image 
-                    src={userData.iconInfo.iconUrl}
+                    src={displayIconUrl}
                     alt="프로필 이미지"
                     fill
                     sizes="20px"
                     className="object-cover"
                     unoptimized={true}
-                    title={userData.iconInfo?.iconName || undefined}
+                    title={displayIconName || undefined}
                     priority={true}
+                    onError={() => handleImageError()}
                   />
                 ) : (
                   <div className="w-full h-full bg-slate-300 flex items-center justify-center text-white">
-                    {userData.email?.charAt(0).toUpperCase() || '?'}
+                    <FontAwesomeIcon icon={faUser} className="h-3 w-3" />
                   </div>
                 )}
               </div>
               <span className="text-sm">{userData.nickname || '사용자'}</span>
-              <ChevronDown className="h-4 w-4" />
+              <FontAwesomeIcon icon={faChevronDown} className="h-3 w-3" />
             </button>
 
             {/* 드롭다운 메뉴 */}
@@ -123,13 +153,13 @@ export default function HeaderClient({
               <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-[100]">
                 <Link href="/settings/profile" className="block px-4 py-2 hover:bg-gray-100">
                   <div className="flex items-center">
-                    <Settings className="h-3.5 w-3.5 mr-2" />
+                    <FontAwesomeIcon icon={faCog} className="h-3.5 w-3.5 mr-2" />
                     <span className="text-sm">프로필 설정</span>
                   </div>
                 </Link>
                 <Link href="/settings/icons" className="block px-4 py-2 hover:bg-gray-100">
                   <div className="flex items-center">
-                    <Settings className="h-3.5 w-3.5 mr-2" />
+                    <FontAwesomeIcon icon={faCog} className="h-3.5 w-3.5 mr-2" />
                     <span className="text-sm">아이콘 설정</span>
                   </div>
                 </Link>
@@ -138,7 +168,7 @@ export default function HeaderClient({
                   className="w-full text-left px-4 py-2 hover:bg-gray-100"
                 >
                   <div className="flex items-center">
-                    <LogOut className="h-3.5 w-3.5 mr-2" />
+                    <FontAwesomeIcon icon={faSignOutAlt} className="h-3.5 w-3.5 mr-2" />
                     <span className="text-sm">로그아웃</span>
                   </div>
                 </button>
@@ -147,7 +177,7 @@ export default function HeaderClient({
           </div>
         ) : (
           <Link href="/signin" className="hidden md:flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100">
-            <User className="h-5 w-5" />
+            <FontAwesomeIcon icon={faUser} className="h-4 w-4" />
           </Link>
         )}
         
@@ -157,7 +187,7 @@ export default function HeaderClient({
         </div>
       </div>
     );
-  }, [userData, isDropdownOpen, toggleDropdown, handleLogout]);
+  }, [userData, displayIconUrl, displayIconName, isIconLoading, isDropdownOpen, toggleDropdown, handleLogout, handleImageError]);
 
   return (
     <header className="sticky top-0 z-50 border-b shadow-sm bg-white">
@@ -175,7 +205,7 @@ export default function HeaderClient({
                 {renderAuthState}
               </div>
               <Button variant="ghost" size="icon" className="lg:hidden" onClick={onMenuClick}>
-                <Menu className="h-5 w-5" />
+                <FontAwesomeIcon icon={faBars} className="h-4 w-4" />
               </Button>
             </div>
           </div>

@@ -2,9 +2,10 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { createClient } from '@/app/lib/supabase-browser';
+import { findUsername } from '@/domains/auth/actions';
 import Link from 'next/link';
 
 // SearchParams를 사용하는 내용 컴포넌트
@@ -77,7 +78,7 @@ function AccountRecoveryContent() {
     }
   };
   
-  // 인증 코드 확인 후 아이디 찾기
+  // 인증 코드 확인 후 아이디 찾기 (서버 액션 사용)
   const handleFindId = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -94,32 +95,16 @@ function AccountRecoveryContent() {
     try {
       setLoading(true);
       
-      const supabase = createClient();
+      // 서버 액션 호출
+      const result = await findUsername(email, verificationCode);
       
-      // 1. 인증 코드 확인 (OTP 검증)
-      const { error: verifyError } = await supabase.auth.verifyOtp({
-        email,
-        token: verificationCode,
-        type: 'email'
-      });
-      
-      if (verifyError) {
-        throw new Error('인증 코드가 올바르지 않습니다.');
-      }
-      
-      // 2. 이메일로 사용자 정보 조회
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('username, full_name')
-        .eq('email', email)
-        .single();
-      
-      if (error || !data) {
-        throw new Error('입력하신 정보와 일치하는 계정을 찾을 수 없습니다.');
+      if (result.error) {
+        toast.error(result.error);
+        return;
       }
       
       // 계정 정보를 찾았으면 결과 페이지로 이동
-      router.push(`/help/account-found?username=${data.username}&fullName=${data.full_name}`);
+      router.push(`/help/account-found?username=${result.username}&fullName=${result.fullName}`);
       
     } catch (error: unknown) {
       console.error('아이디 찾기 오류:', error);
@@ -326,7 +311,6 @@ export default function AccountRecoveryPage() {
       }>
         <AccountRecoveryContent />
       </Suspense>
-      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 } 

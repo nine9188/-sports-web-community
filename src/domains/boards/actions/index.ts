@@ -5,23 +5,31 @@
 export * from './getBoards';
 export * from './getPosts';
 
-// getPostDetails에서는 getComments를 제외하고 내보내기
-export { getPostPageData, incrementViewCount } from './getPostDetails';
+// getPostDetails에서 getComments를 제외한 모든 함수 내보내기
+export { 
+  getPostPageData, 
+  incrementViewCount,
+  getPost
+} from './getPostDetails';
 
 export * from './getPostForm';
 
-// posts 액션 내보내기
-export { likePost, dislikePost, getUserPostAction } from './posts';
+// posts 액션 내보내기 - 이름 충돌 해결을 위해 명시적으로 내보내기
+export { 
+  createPostWithParams,
+  updatePost,
+  deletePost,
+  likePost, 
+  dislikePost, 
+  getUserPostAction,
+  createPost
+} from './posts';
 
-// comments 모듈에서 내보내는 함수들을 명시적으로 내보내기
-export {
-  createComment,
-  updateComment,
-  deleteComment,
-  likeComment,
-  dislikeComment,
-  getComments
-} from './comments';
+// comments 모듈에서 내보내는 함수들 내보내기
+export * from './comments';
+
+// matches 관련 함수들 내보내기
+export * from './matches';
 
 // 이 파일에 직접 정의된 함수들은 더 이상 필요 없음
 // 이 주석을 제외하고 이 파일 안에 더 이상의 코드는 없어야 함
