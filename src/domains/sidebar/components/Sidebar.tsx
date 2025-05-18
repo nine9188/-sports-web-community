@@ -1,9 +1,9 @@
 'use client';
 
 import { X } from 'lucide-react';
-import { Button } from '../ui/button';
+import { Button } from '@/app/ui/button';
 import { Suspense } from 'react';
-import { ReactNode } from 'react';
+import { SidebarProps } from '../types';
 
 // 로딩 중 표시할 스켈레톤 UI
 function LeagueStandingsSkeleton() {
@@ -32,13 +32,7 @@ export default function Sidebar({
   children,
   leagueStandingsComponent,
   authSection,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  children?: ReactNode;
-  leagueStandingsComponent?: ReactNode;
-  authSection?: ReactNode;
-}) {
+}: SidebarProps) {
   return (
     <>
       {/* Overlay - 모바일에서만 표시 */}
@@ -130,4 +124,4 @@ export default function Sidebar({
       </div>
     </>
   );
-}
+} 

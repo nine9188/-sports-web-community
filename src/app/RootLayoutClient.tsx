@@ -10,7 +10,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
-import SidebarWrapper from './components/SidebarWrapper';
+import Sidebar from '@/domains/sidebar/components/Sidebar';
 import { HeaderUserData } from './lib/types';
 
 // DevTools 동적 로드 - 개발 환경에서만 로드
@@ -27,6 +27,7 @@ interface RootLayoutClientProps {
   rightSidebar: React.ReactNode;
   authSection: React.ReactNode;
   headerUserData: HeaderUserData | null;
+  leagueStandingsComponent: React.ReactNode;
 }
 
 export default function RootLayoutClient({ 
@@ -34,9 +35,10 @@ export default function RootLayoutClient({
   boardNavigation, 
   rightSidebar,
   authSection,
-  headerUserData
+  headerUserData,
+  leagueStandingsComponent
 }: RootLayoutClientProps) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const prevPathnameRef = useRef<string | null>(null);
   
@@ -73,8 +75,8 @@ export default function RootLayoutClient({
   useEffect(() => {
     if (prevPathnameRef.current !== pathname) {
       // 사이드바가 열려있다면 닫기 (모바일)
-      if (isSidebarOpen) {
-        setIsSidebarOpen(false);
+      if (isOpen) {
+        setIsOpen(false);
       }
       
       // 스크롤 위치 복원 (필요 시)
@@ -83,16 +85,16 @@ export default function RootLayoutClient({
       // 경로 변경 저장
       prevPathnameRef.current = pathname;
     }
-  }, [pathname, isSidebarOpen]);
+  }, [pathname, isOpen]);
 
-  // 사이드바가 열릴 때 핸들러
-  const handleSidebarOpen = () => {
-    setIsSidebarOpen(true);
+  // 사이드바 열기 토글
+  const toggleSidebar = () => {
+    setIsOpen(!isOpen);
   };
 
-  // 사이드바가 닫힐 때 핸들러
-  const handleSidebarClose = () => {
-    setIsSidebarOpen(false);
+  // 사이드바 닫기
+  const closeSidebar = () => {
+    setIsOpen(false);
   };
 
   return (
@@ -111,18 +113,20 @@ export default function RootLayoutClient({
             // 일반 페이지는 기존 레이아웃 사용
             <div className="flex flex-col min-h-screen w-full">
               <Header 
-                onMenuClick={handleSidebarOpen} 
-                isSidebarOpen={isSidebarOpen} 
+                onMenuClick={toggleSidebar} 
+                isSidebarOpen={isOpen} 
                 userData={headerUserData}
               />
               <div className="flex flex-1 w-full md:max-w-screen-2xl md:mx-auto">
-                {/* 클라이언트 컴포넌트인 SidebarWrapper에 이벤트 핸들러 전달 */}
-                <SidebarWrapper 
-                  isOpen={isSidebarOpen}
-                  onClose={handleSidebarClose}
-                  boardNavigation={boardNavigation}
+                {/* 도메인 구조로 변경된 Sidebar 컴포넌트 사용 */}
+                <Sidebar 
+                  isOpen={isOpen}
+                  onClose={closeSidebar}
+                  leagueStandingsComponent={leagueStandingsComponent}
                   authSection={authSection}
-                />
+                >
+                  {boardNavigation}
+                </Sidebar>
                 <main className="flex-1 md:p-4 w-full overflow-y-auto box-border">
                   {children}
                 </main>

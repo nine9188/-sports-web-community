@@ -1,26 +1,8 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import UserProfile from './auth/UserProfile';
+import UserProfile from './UserProfile';
+import { ProfileData } from '../../types';
 import { User } from '@supabase/supabase-js';
-
-// 프로필 데이터 타입
-interface ProfileData {
-  id?: string;
-  username?: string;
-  email?: string;
-  nickname?: string;
-  full_name?: string;
-  avatar_url?: string;
-  level?: number;
-  exp?: number;
-  points?: number;
-  created_at?: string;
-  updated_at?: string;
-  postCount?: number;
-  commentCount?: number;
-  icon_id?: number | null;
-  icon_url?: string | null;
-}
 
 // AuthSection 컴포넌트는 이제 props를 통해 사용자와 프로필 데이터를 받습니다
 export default function AuthSection({
@@ -56,4 +38,4 @@ export default function AuthSection({
       </div>
     </>
   );
-}
+} 

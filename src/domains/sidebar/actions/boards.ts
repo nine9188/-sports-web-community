@@ -1,13 +1,13 @@
-// 서버 컴포넌트 및 클라이언트 컴포넌트 구분
-import { Suspense } from 'react';
-import BoardNavigationClient from './BoardNavigationClient';
+'use server';
+
 import { createClient } from '@/app/lib/supabase.server';
 import { cache } from 'react';
-import { HierarchicalBoard } from '@/app/lib/types';
+import { HierarchicalBoard, BoardNavigationData } from '../types';
 import { Database } from '@/app/lib/database.types';
+import { revalidatePath } from 'next/cache';
 
-// 서버 측에서 데이터를 가져오는 함수 (캐싱 적용)
-const getCachedBoardsData = cache(async () => {
+// 서버 측에서 게시판 데이터를 가져오는 함수 (캐싱 적용)
+export const getBoardsData = cache(async (): Promise<BoardNavigationData> => {
   try {
     const supabase = await createClient();
     
@@ -27,10 +27,19 @@ const getCachedBoardsData = cache(async () => {
     // 계층형 구조 변환
     const boardMap = new Map<string, HierarchicalBoard>();
     boards?.forEach((board: Database['public']['Tables']['boards']['Row']) => {
-      boardMap.set(board.id, {
-        ...board,
+      // 필요한 필드만 추출하여 HierarchicalBoard 타입에 맞게 생성
+      const hierarchicalBoard: HierarchicalBoard = {
+        id: board.id,
+        name: board.name,
+        slug: board.slug,
+        parent_id: board.parent_id,
+        display_order: board.display_order,
+        team_id: board.team_id || null,
+        league_id: board.league_id || null,
         children: []
-      });
+      };
+      
+      boardMap.set(board.id, hierarchicalBoard);
     });
 
     const rootBoards: HierarchicalBoard[] = [];
@@ -75,24 +84,15 @@ const getCachedBoardsData = cache(async () => {
   }
 });
 
-// 캐시 무효화 함수 (Server Action)는 제거하고 import로 대체
-
-// 서버 컴포넌트 (기본 내보내기)
-export default async function BoardNavigation() {
-  // 서버 측에서 데이터 가져오기 (캐싱 적용)
-  const initialData = await getCachedBoardsData();
-  
-  return (
-    <Suspense fallback={
-      <div className="space-y-4">
-        <div>
-          <div className="h-7 bg-gray-100 animate-pulse rounded mb-1.5"></div>
-          <div className="h-7 bg-gray-100 animate-pulse rounded mb-1.5"></div>
-          <div className="h-7 bg-gray-100 animate-pulse rounded"></div>
-        </div>
-      </div>
-    }>
-      <BoardNavigationClient initialData={initialData} />
-    </Suspense>
-  );
+// 게시판 캐시 무효화 함수
+export async function invalidateBoardsCache() {
+  try {
+    // 상위 라우트 및 하위 라우트 모두 재검증
+    revalidatePath('/', 'layout');
+    
+    return { success: true };
+  } catch (error) {
+    console.error('게시판 캐시 무효화 오류:', error);
+    return { success: false, error: '캐시 무효화 중 오류가 발생했습니다.' };
+  }
 } 

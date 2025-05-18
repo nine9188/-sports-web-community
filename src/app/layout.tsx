@@ -1,10 +1,12 @@
 import './globals.css';
 import { Inter } from 'next/font/google';
-import BoardNavigation from './components/sidebar/BoardNavigation';
 import RightSidebar from './components/RightSidebar';
 import RootLayoutClient from './RootLayoutClient';
 import { getUserProfile, getHeaderUserData } from '@/app/actions/auth-actions';
-import AuthSection from './components/sidebar/auth-section';
+import BoardNavigation from '@/domains/sidebar/components/board/BoardNavigation';
+import AuthSection from '@/domains/sidebar/components/auth/AuthSection';
+import { fetchStandingsData } from '@/domains/sidebar/actions/football';
+import LeagueStandings from '@/domains/sidebar/components/league/LeagueStandings';
 
 // 동적 렌더링 설정
 export const dynamic = 'force-dynamic';
@@ -36,6 +38,15 @@ export default async function RootLayout({
   // 서버 컴포넌트에서 BoardNavigation 생성
   const boardNav = <BoardNavigation />;
 
+  // 서버 컴포넌트에서 축구 순위 데이터 가져오기
+  const standingsData = await fetchStandingsData('premier').catch(error => {
+    console.error('축구 순위 데이터 가져오기 실패:', error);
+    return null;
+  });
+
+  // 리그 순위 컴포넌트 생성
+  const leagueStandingsComponent = <LeagueStandings initialLeague="premier" initialStandings={standingsData} />;
+
   return (
     <html lang="ko" className={`w-full h-full ${inter.className}`} suppressHydrationWarning>
       <head />
@@ -45,6 +56,7 @@ export default async function RootLayout({
           rightSidebar={<RightSidebar />}
           authSection={authSection}
           headerUserData={headerUserData}
+          leagueStandingsComponent={leagueStandingsComponent}
         >
           {children}
         </RootLayoutClient>
