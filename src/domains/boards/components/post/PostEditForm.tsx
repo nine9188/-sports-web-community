@@ -204,13 +204,14 @@ export default function PostEditForm({
         console.log('게시글 생성 시도:', { title, categoryId });
         
         try {
+          // FormData 객체 생성
+          const formData = new FormData();
+          formData.append('title', title);
+          formData.append('content', content);
+          formData.append('boardId', categoryId);
+          
           // 서버 액션으로 게시글 생성 실행
-          const result = await createPost(
-            title, 
-            content, 
-            categoryId, 
-            userData.user.id
-          );
+          const result = await createPost(formData);
           
           console.log('게시글 생성 결과:', result);
           
@@ -218,12 +219,21 @@ export default function PostEditForm({
             throw new Error('서버에서 응답이 없습니다.');
           }
           
-          if (result.success && result.postId && result.postNumber && result.boardSlug) {
+          if (result.success && result.post) {
+            // 게시글 정보 추출
+            const postId = result.post.id;
+            const postNumber = result.post.post_number;
+            const boardSlug = result.post.board?.slug || allBoardsFlat.find(b => b.id === categoryId)?.slug;
+            
+            if (!boardSlug) {
+              throw new Error('게시판 정보를 찾을 수 없습니다.');
+            }
+            
             // 활동 보상 지급 시도 - 실패해도 게시글 이동은 처리
             try {
               console.log('게시글 생성 성공, 활동 보상 지급 시도');
               const activityTypes = await getActivityTypeValues();
-              await rewardUserActivity(userData.user.id, activityTypes.POST_CREATION, result.postId);
+              await rewardUserActivity(userData.user.id, activityTypes.POST_CREATION, postId);
               console.log('활동 보상 지급 완료');
             } catch (rewardError) {
               console.error('보상 지급 오류:', rewardError);
@@ -232,18 +242,20 @@ export default function PostEditForm({
             
             // 게시글 생성 성공 메시지
             toast.success('게시글이 작성되었습니다.');
-            console.log('게시글로 이동:', `/boards/${result.boardSlug}/${result.postNumber}`);
+            console.log('게시글로 이동:', `/boards/${boardSlug}/${postNumber}`);
             
             // 페이지 이동 전 약간의 지연 추가 (토스트 메시지 표시 및 상태 업데이트 위함)
             setTimeout(() => {
-              router.push(`/boards/${result.boardSlug}/${result.postNumber}`);
+              router.push(`/boards/${boardSlug}/${postNumber}`);
               router.refresh();
             }, 300);
             
             return; // 성공적으로 처리 완료
-          } else {
-            console.error('게시글 생성 실패:', result.error || '알 수 없는 오류');
+          } else if (result.error) {
+            console.error('게시글 생성 실패:', result.error);
             throw new Error(result.error || '게시글 생성에 실패했습니다. 다시 시도해주세요.');
+          } else {
+            throw new Error('게시글 생성에 실패했습니다. 다시 시도해주세요.');
           }
         } catch (createError) {
           console.error('게시글 생성 과정 중 오류:', createError);
