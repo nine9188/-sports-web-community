@@ -83,4 +83,33 @@ export interface SidebarProps {
   children?: ReactNode;
   leagueStandingsComponent?: ReactNode;
   authSection?: ReactNode;
-} 
+}
+
+// 인기글 게시물 타입 정의
+export interface TopicPost {
+  id: string;
+  title: string;
+  created_at: string;
+  board_id: string;
+  board_name: string;
+  board_slug: string;
+  post_number: number;
+  comment_count: number;
+  views: number;
+  likes: number;
+  team_id: number | null;
+  league_id: number | null;
+  team_logo: string | null;
+  league_logo: string | null;
+  content?: string;
+}
+
+// 인기글 데이터 타입 (탭별 분류)
+export interface TopicPostsData {
+  views: TopicPost[];
+  likes: TopicPost[];
+  comments: TopicPost[];
+}
+
+// 탭 타입 정의
+export type TabType = 'views' | 'likes' | 'comments'; 

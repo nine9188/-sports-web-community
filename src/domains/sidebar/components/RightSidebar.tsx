@@ -1,5 +1,5 @@
-import { getCachedTopicPosts } from '@/app/lib/api/topicPosts';
-import { TopicTabsClient } from './rsidebar/TabsClient';
+import { getCachedTopicPosts } from '../actions/topicPosts';
+import { TopicTabsClient } from './TabsClient';
 
 export default async function RightSidebar() {
   try {

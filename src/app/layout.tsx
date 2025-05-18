@@ -1,12 +1,43 @@
 import './globals.css';
 import { Inter } from 'next/font/google';
-import RightSidebar from './components/RightSidebar';
 import RootLayoutClient from './RootLayoutClient';
 import { getUserProfile, getHeaderUserData } from '@/app/actions/auth-actions';
 import BoardNavigation from '@/domains/sidebar/components/board/BoardNavigation';
 import AuthSection from '@/domains/sidebar/components/auth/AuthSection';
 import { fetchStandingsData } from '@/domains/sidebar/actions/football';
 import LeagueStandings from '@/domains/sidebar/components/league/LeagueStandings';
+import { RightSidebar } from '@/domains/sidebar/components';
+import { Suspense } from 'react';
+
+// 로딩 스켈레톤 컴포넌트
+function RightSidebarSkeleton() {
+  return (
+    <aside className="hidden xl:block w-[280px] shrink-0">
+      <div className="h-full pt-4">
+        <div className="mb-4 bg-white rounded-lg border animate-pulse">
+          <div className="px-3 py-2 border-b">
+            <div className="h-5 bg-gray-200 rounded w-24"></div>
+          </div>
+          <div className="px-3 py-2 border-b">
+            <div className="flex space-x-2">
+              <div className="h-6 bg-gray-200 rounded w-16"></div>
+              <div className="h-6 bg-gray-200 rounded w-16"></div>
+              <div className="h-6 bg-gray-200 rounded w-16"></div>
+            </div>
+          </div>
+          <div className="p-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center py-2">
+                <div className="w-6 h-6 bg-gray-200 rounded-full mr-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-full"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}
 
 // 동적 렌더링 설정
 export const dynamic = 'force-dynamic';
@@ -53,7 +84,11 @@ export default async function RootLayout({
       <body className="w-full h-full overflow-x-hidden">
         <RootLayoutClient 
           boardNavigation={boardNav}
-          rightSidebar={<RightSidebar />}
+          rightSidebar={
+            <Suspense fallback={<RightSidebarSkeleton />}>
+              <RightSidebar />
+            </Suspense>
+          }
           authSection={authSection}
           headerUserData={headerUserData}
           leagueStandingsComponent={leagueStandingsComponent}

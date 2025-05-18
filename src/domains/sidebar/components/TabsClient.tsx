@@ -4,17 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Eye, ThumbsUp, MessageSquare, Image as ImageIcon, Link as LinkIcon, Video as VideoIcon, Youtube as YoutubeIcon } from 'lucide-react';
-import type { TopicPost } from '@/app/lib/api/topicPosts';
-
-// 탭 타입 정의
-type TabType = 'views' | 'likes' | 'comments';
-
-// 인기글 데이터 타입
-export interface TopicPostsData {
-  views: TopicPost[];
-  likes: TopicPost[];
-  comments: TopicPost[];
-}
+import { TopicPostsData, TabType, TopicPost } from '../types';
 
 interface TopicTabsClientProps {
   postsData: TopicPostsData;

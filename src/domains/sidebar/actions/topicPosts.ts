@@ -1,62 +1,17 @@
-import { createClientWithoutCookies } from '@/app/lib/supabase-middleware';
+'use server'
+
+import { createClient } from '@/shared/api/supabaseServer';
 import { cache } from 'react';
+import { TopicPost } from '../types';
 
-// 로고 정보를 위한 인터페이스
-interface TeamInfo {
-  id: number;
-  logo?: string;
-}
-
-interface LeagueInfo {
-  id: number;
-  logo?: string;
-}
-
-// 게시판 정보 타입
-interface BoardInfo {
-  id: string;
-  name?: string;
-  slug?: string;
-  team_id?: number | null;
-  league_id?: number | null;
-}
-
-// 인기글 타입 정의
-export interface TopicPost {
-  id: string;
-  title: string;
-  created_at: string;
-  board_id: string;
-  board_name: string;
-  board_slug: string;
-  post_number: number;
-  comment_count: number;
-  views: number;
-  likes: number;
-  team_id: number | null;
-  league_id: number | null;
-  team_logo: string | null;
-  league_logo: string | null;
-  content?: string;
-}
-
-// 처리되지 않은 게시글 타입 (데이터베이스에서 가져온 원시 데이터)
-interface RawPost {
-  id: string;
-  title?: string;
-  created_at?: string;
-  board_id?: string;
-  views?: number;
-  likes?: number;
-  post_number?: number;
-  content?: string;
-}
-
-// 데이터 가져오기 함수를 React 캐시로 래핑
+/**
+ * 인기글 목록을 유형별로 조회하는 서버 액션
+ * React.cache로 래핑하여 중복 요청 방지
+ */
 export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comments'): Promise<TopicPost[]> => {
   try {
-    // 서버 컴포넌트에서 직접 Supabase 클라이언트 생성
-    const supabase = await createClientWithoutCookies();
+    // 서버 컴포넌트에서 Supabase 클라이언트 생성
+    const supabase = await createClient();
     
     // 1. 글 목록 가져오기 (정렬 기준에 따라)
     let query = supabase
@@ -86,7 +41,16 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
       throw error;
     }
     
-    const validPosts = (postsData || []) as RawPost[];
+    const validPosts = (postsData || []) as {
+      id: string;
+      title?: string;
+      created_at?: string;
+      board_id?: string;
+      views?: number;
+      likes?: number;
+      post_number?: number;
+      content?: string;
+    }[];
     
     // 빈 배열인 경우 빠르게 반환
     if (validPosts.length === 0) {
@@ -105,7 +69,13 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
       throw boardsError;
     }
     
-    const validBoards = (boardsData || []) as BoardInfo[];
+    const validBoards = (boardsData || []) as {
+      id: string;
+      name?: string;
+      slug?: string;
+      team_id?: number | null;
+      league_id?: number | null;
+    }[];
     
     // 3. 게시판 매핑 구성
     const boardMap: Record<string, { 
@@ -115,7 +85,7 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
       league_id: number | null 
     }> = {};
     
-    validBoards.forEach((board: BoardInfo) => {
+    validBoards.forEach((board) => {
       if (board && board.id) {
         boardMap[board.id] = { 
           name: board.name || '', 
@@ -128,13 +98,13 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
     
     // 4. 팀 및 리그 정보 가져오기
     const teamIds = validBoards
-      .filter((b: BoardInfo) => b.team_id)
-      .map((b: BoardInfo) => b.team_id)
+      .filter((b) => b.team_id)
+      .map((b) => b.team_id)
       .filter(Boolean) as number[];
       
     const leagueIds = validBoards
-      .filter((b: BoardInfo) => b.league_id)
-      .map((b: BoardInfo) => b.league_id)
+      .filter((b) => b.league_id)
+      .map((b) => b.league_id)
       .filter(Boolean) as number[];
       
     // 모든 필요한 정보를 병렬로 가져오기
@@ -152,12 +122,12 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
     
     // 5. 로고 맵핑 구성
     const teamLogoMap: Record<number, string> = {};
-    (teamsResult.data || []).forEach((team: TeamInfo) => { 
+    (teamsResult.data || []).forEach((team: { id: number; logo?: string }) => { 
       if (team.id) teamLogoMap[team.id] = team.logo || '';
     });
     
     const leagueLogoMap: Record<number, string> = {};
-    (leaguesResult.data || []).forEach((league: LeagueInfo) => { 
+    (leaguesResult.data || []).forEach((league: { id: number; logo?: string }) => { 
       if (league.id) leagueLogoMap[league.id] = league.logo || '';
     });
     
