@@ -335,9 +335,10 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                 const homeTeamInfo = match.teams?.home?.id ? getTeamById(match.teams.home.id) : null;
                 const awayTeamInfo = match.teams?.away?.id ? getTeamById(match.teams.away.id) : null;
                 
-                const homeTeamNameKo = homeTeamInfo?.name_ko || match.teams?.home?.name || '홈팀';
-                const awayTeamNameKo = awayTeamInfo?.name_ko || match.teams?.away?.name || '원정팀';
-                const leagueNameKo = leagueInfo?.nameKo || match.league?.name || '리그 정보 없음';
+                // 🔧 안전한 텍스트 처리 - undefined 방지
+                const homeTeamNameKo = String(homeTeamInfo?.name_ko || match.teams?.home?.name || '홈팀');
+                const awayTeamNameKo = String(awayTeamInfo?.name_ko || match.teams?.away?.name || '원정팀');
+                const leagueNameKo = String(leagueInfo?.nameKo || match.league?.name || '리그 정보 없음');
                 
                 return (
                   <Link 
@@ -358,7 +359,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                       {match.league?.logo && (
                         <Image 
                           src={match.league.logo} 
-                          alt={leagueNameKo} 
+                          alt={String(leagueNameKo)} 
                           width={16} 
                           height={16}
                           style={{ width: '16px', height: '16px', objectFit: 'contain' }}
@@ -379,7 +380,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                         {match.teams?.home?.logo && (
                           <Image 
                             src={match.teams.home.logo} 
-                            alt={homeTeamNameKo} 
+                            alt={String(homeTeamNameKo)} 
                             width={40} 
                             height={40}
                             style={{ width: '40px', height: '40px', objectFit: 'contain' }}
@@ -396,7 +397,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                         <div className="flex flex-col items-center">
                           <span className="text-xs font-medium group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{formatMatchTime(match)}</span>
                           {match.status?.code === 'NS' && match.displayDate && (
-                            <span className="text-[9px] text-gray-500 mt-0.5">{match.displayDate}</span>
+                            <span className="text-[9px] text-gray-500 mt-0.5">{String(match.displayDate)}</span>
                           )}
                         </div>
                       </div>
@@ -406,7 +407,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                         {match.teams?.away?.logo && (
                           <Image 
                             src={match.teams.away.logo} 
-                            alt={awayTeamNameKo} 
+                            alt={String(awayTeamNameKo)} 
                             width={40} 
                             height={40}
                             style={{ width: '40px', height: '40px', objectFit: 'contain' }}

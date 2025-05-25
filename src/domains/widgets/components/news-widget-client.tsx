@@ -166,7 +166,7 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
                 )}
                 <Image
                   src={getSafeImageUrl(initialNews[0], 0)}
-                  alt={initialNews[0].title}
+                  alt={String(initialNews[0]?.title || '뉴스 이미지')}
                   fill
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, 50vw"
@@ -181,11 +181,11 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
               </div>
               <div className="p-1 bg-white flex-grow">
                 <h3 className="text-base font-semibold line-clamp-2 group-hover:text-blue-600 transition-colors">
-                  {initialNews[0].title}
+                  {String(initialNews[0]?.title || '제목 없음')}
                 </h3>
                 <div className="flex justify-between items-center text-xs text-gray-500 mt-1">
-                  <span>{initialNews[0].source}</span>
-                  <span>{formatDate(initialNews[0].publishedAt)}</span>
+                  <span>{String(initialNews[0]?.source || '출처 없음')}</span>
+                  <span>{formatDate(initialNews[0]?.publishedAt || '')}</span>
                 </div>
               </div>
             </div>
@@ -215,7 +215,7 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
                     )}
                     <Image
                       src={getSafeImageUrl(item, index + 1)}
-                      alt={item.title}
+                      alt={String(item?.title || '뉴스 이미지')}
                       fill
                       className="object-cover"
                       sizes="(max-width: 768px) 50vw, 25vw"
@@ -229,11 +229,11 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
                   </div>
                   <div className="p-2 flex-grow flex flex-col">
                     <h3 className="text-sm font-medium line-clamp-2 group-hover:text-blue-600 transition-colors flex-grow">
-                      {item.title}
+                      {String(item?.title || '제목 없음')}
                     </h3>
                     <div className="flex justify-between items-center text-xs text-gray-500 mt-1">
-                      <span className="truncate max-w-[70px]">{item.source}</span>
-                      <span>{formatDate(item.publishedAt)}</span>
+                      <span className="truncate max-w-[70px]">{String(item?.source || '출처 없음')}</span>
+                      <span>{formatDate(item?.publishedAt || '')}</span>
                     </div>
                   </div>
                 </div>

@@ -190,29 +190,45 @@ export const checkContentType = (content: string) => {
 
 // 날짜 포맷팅 함수
 export const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const postDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  
-  // 오늘 작성된 글이면 시간만 표시
-  if (postDate.getTime() === today.getTime()) {
-    return date.toLocaleTimeString('ko-KR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    });
+  // 빈 문자열이나 undefined 체크
+  if (!dateString || typeof dateString !== 'string') {
+    return '-';
   }
   
-  // 1년 이내면 월-일 표시
-  const oneYearAgo = new Date();
-  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-  if (date > oneYearAgo) {
-    return `${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getDate().toString().padStart(2, '0')}`;
+  try {
+    const date = new Date(dateString);
+    
+    // 유효하지 않은 날짜 체크
+    if (isNaN(date.getTime())) {
+      return '-';
+    }
+    
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const postDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    
+    // 오늘 작성된 글이면 시간만 표시
+    if (postDate.getTime() === today.getTime()) {
+      return date.toLocaleTimeString('ko-KR', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+    }
+    
+    // 1년 이내면 월-일 표시
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    if (date > oneYearAgo) {
+      return `${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getDate().toString().padStart(2, '0')}`;
+    }
+    
+    // 1년 이상이면 연-월-일 표시
+    return `${date.getFullYear()}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getDate().toString().padStart(2, '0')}`;
+  } catch (error) {
+    console.warn('날짜 포맷팅 오류:', error);
+    return '-';
   }
-  
-  // 1년 이상이면 연-월-일 표시
-  return `${date.getFullYear()}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getDate().toString().padStart(2, '0')}`;
 };
 
 // 게시판 ID에서 slug로 변환하는 함수

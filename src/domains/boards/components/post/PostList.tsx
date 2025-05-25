@@ -88,7 +88,7 @@ const VirtualizedPostItem = React.memo(function VirtualizedPostItem({
             <div>
               <div className="flex flex-wrap items-center">
                 <span className={`text-sm ${isCurrentPost ? 'text-blue-600 font-medium' : ''}`}>
-                  {post.title}
+                  {String(post?.title || '제목 없음')}
                 </span>
                 {renderContentTypeIcons(post)}
               </div>
@@ -130,7 +130,7 @@ const VirtualizedPostItem = React.memo(function VirtualizedPostItem({
         <Link href={href} className="block w-full" prefetch={false}>
           <div className="flex items-center">
             <span className={`text-sm hover:text-blue-600 line-clamp-1 ${isCurrentPost ? 'text-blue-600 font-medium' : ''}`}>
-              {post.title}
+              {String(post?.title || '제목 없음')}
             </span>
             {renderContentTypeIcons(post)}
           </div>
@@ -188,7 +188,7 @@ const PostItem = React.memo(function PostItem({
             <div>
               <div className="flex flex-wrap items-center">
                 <span className={`text-sm ${isCurrentPost ? 'text-blue-600 font-medium' : ''}`}>
-                  {post.title}
+                  {String(post?.title || '제목 없음')}
                 </span>
                 {renderContentTypeIcons(post)}
               </div>
@@ -230,7 +230,7 @@ const PostItem = React.memo(function PostItem({
         <Link href={href} className="block w-full" prefetch={false}>
           <div className="flex items-center">
             <span className={`text-sm hover:text-blue-600 line-clamp-1 ${isCurrentPost ? 'text-blue-600 font-medium' : ''}`}>
-              {post.title}
+              {String(post?.title || '제목 없음')}
             </span>
             {renderContentTypeIcons(post)}
           </div>

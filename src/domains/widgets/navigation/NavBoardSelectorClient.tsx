@@ -78,7 +78,7 @@ export default function NavBoardSelectorClient({
                   >
                     <LeagueLogo
                       src={league.logo}
-                      alt={league.name}
+                      alt={String(league?.name || '리그 로고')}
                       size={56}
                       priority={index === 0}
                       className={hoveredLeague === league.id ? 'scale-110' : ''}
