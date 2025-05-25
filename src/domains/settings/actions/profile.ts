@@ -151,7 +151,7 @@ export async function getUserIcons(userId: string) {
     const { data, error } = await supabase
       .from('user_icons')
       .select(`
-        icons (
+        shop_items (
           id,
           name,
           image_url
@@ -164,7 +164,7 @@ export async function getUserIcons(userId: string) {
     }
     
     // 데이터 형식 변환
-    const icons = data.map(item => item.icons);
+    const icons = data.map(item => item.shop_items);
     
     return { success: true, data: icons };
   } catch (error) {
@@ -203,7 +203,7 @@ export async function getCurrentUserIcon(userId: string) {
     
     // 아이콘 정보 조회
     const { data: iconData, error: iconError } = await supabase
-      .from('icons')
+      .from('shop_items')
       .select('id, name, image_url')
       .eq('id', profileData.icon_id)
       .single();

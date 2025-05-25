@@ -82,7 +82,10 @@ export default async function CreatePostPage({
             initialContent=""
             boardName={result.board.name}
             categoryId={result.board.id}
-            allBoardsFlat={result.allBoards || []}
+            allBoardsFlat={(result.allBoards || []).map(board => ({
+              ...board,
+              slug: board.slug || board.id
+            }))}
             isCreateMode={true}
           />
         </div>

@@ -43,7 +43,7 @@ export default async function EditPostPage({ params }: { params: Promise<{ slug:
           _boardSlug={slug}
           _postNumber={postNumber}
           initialTitle={result.post.title}
-          initialContent={result.post.content}
+          initialContent={typeof result.post.content === 'string' ? result.post.content : JSON.stringify(result.post.content)}
           boardName={result.board.name}
           isCreateMode={false}
         />

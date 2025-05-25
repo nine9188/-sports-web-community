@@ -138,17 +138,18 @@ export default async function PostDetailPage({
     // post 데이터에 iconUrl과 icon_id 직접 설정
     const postWithIcon = {
       ...result.post,
+      content: result.post.content as Record<string, unknown>,
       profiles: {
         ...result.post.profiles,
         icon_url: result.iconUrl
       }
-    };
+    } as unknown;
     
     // 레이아웃 컴포넌트에 데이터 전달
     return (
       <PostDetailLayout
-        post={postWithIcon}
-        board={result.board}
+        post={postWithIcon as Parameters<typeof PostDetailLayout>[0]['post']}
+        board={result.board as Parameters<typeof PostDetailLayout>[0]['board']}
         breadcrumbs={result.breadcrumbs || []}
         comments={processedComments}
         isLoggedIn={result.isLoggedIn || false}

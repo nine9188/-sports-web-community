@@ -16,7 +16,7 @@ interface AccountInfo {
 function AccountFoundContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const type = searchParams.get('type') || 'id';
+  const type = searchParams?.get('type') || 'id';
   const [accountInfo, setAccountInfo] = useState<AccountInfo | null>(null);
   
   useEffect(() => {

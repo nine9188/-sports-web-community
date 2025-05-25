@@ -139,7 +139,7 @@ export default async function BoardDetailPage({
         id: board.id,
         name: board.name,
         display_order: board.display_order || 0,
-        slug: board.slug
+        slug: board.slug || undefined
       })));
       
       // 모든 하위 게시판 관계 맵핑
@@ -152,7 +152,7 @@ export default async function BoardDetailPage({
             id: board.id,
             name: board.name,
             display_order: board.display_order || 0,
-            slug: board.slug
+            slug: board.slug || undefined
           });
         }
       });
@@ -161,10 +161,16 @@ export default async function BoardDetailPage({
     // 레이아웃 컴포넌트에 데이터 전달
     return (
       <BoardDetailLayout
-        boardData={result.boardData}
+        boardData={{
+          ...result.boardData,
+          slug: result.boardData.slug || ''
+        }}
         breadcrumbs={result.breadcrumbs || []}
         teamData={result.teamData || null}
-        leagueData={result.leagueData || null}
+        leagueData={result.leagueData ? {
+          ...result.leagueData,
+          type: 'league'
+        } : null}
         isLoggedIn={result.isLoggedIn || false}
         currentPage={currentPage}
         slug={slug}

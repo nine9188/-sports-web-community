@@ -10,6 +10,7 @@ export interface CommentType {
   parent_id?: string | null;
   likes?: number;
   dislikes?: number;
+  userAction?: 'like' | 'dislike' | null;
   profiles?: {
     nickname: string | null;
     icon_id: number | null;

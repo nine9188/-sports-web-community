@@ -229,7 +229,7 @@ export async function getComments(postId: string): Promise<{ success: boolean, c
           return acc;
         }, {} as Record<string, string>);
         
-        data.forEach(comment => {
+        (data as CommentType[]).forEach(comment => {
           if (actionMap[comment.id]) {
             comment.userAction = actionMap[comment.id] === 'like' ? 'like' : 'dislike';
           } else {

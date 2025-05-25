@@ -55,8 +55,7 @@ export async function fetchYouTubeVideos(boardSlug: string): Promise<YouTubeVide
             id,
             nickname
           ),
-          youtube_id,
-          thumbnail_url
+          meta
         `)
         .eq('board_id', boardData.id)
         .eq('post_type', 'youtube')
@@ -68,7 +67,7 @@ export async function fetchYouTubeVideos(boardSlug: string): Promise<YouTubeVide
         return formatVideosData(postsData);
       }
       
-      // youtube_id가 있는 게시물 검색
+      // youtube_id가 있는 게시물 검색 (meta 필드 사용)
       const { data: altData, error: altError } = await supabase
         .from('posts')
         .select(`
@@ -81,20 +80,31 @@ export async function fetchYouTubeVideos(boardSlug: string): Promise<YouTubeVide
             id,
             nickname
           ),
-          youtube_id,
-          thumbnail_url
+          meta
         `)
         .eq('board_id', boardData.id)
-        .not('youtube_id', 'is', null)
+        .not('meta', 'is', null)
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(10);
       
       if (altError || !altData || altData.length === 0) {
         // 게시물 내용에서 유튜브 URL을 검색
         return await searchYoutubeUrlsInPosts(supabase, boardData.id);
       }
       
-      return formatVideosData(altData);
+      // meta 필드에서 youtube_id가 있는 게시물 필터링
+      const youtubePostsFromMeta = altData.filter(post => 
+        post.meta && 
+        typeof post.meta === 'object' && 
+        (post.meta as Record<string, unknown>).youtube_id
+      );
+      
+      if (youtubePostsFromMeta.length > 0) {
+        return formatVideosData(youtubePostsFromMeta);
+      }
+      
+      // meta에서 찾지 못하면 content에서 검색
+      return await searchYoutubeUrlsInPosts(supabase, boardData.id);
     })();
     
     // 두 Promise 중 먼저 완료되는 것을 반환
@@ -284,31 +294,29 @@ function extractVideoId(url: string): string | null {
 interface PostData {
   id: string;
   title?: string;
-  created_at?: string;
-  youtube_id?: string;
-  thumbnail_url?: string;
+  created_at?: string | null;
   post_number?: number;
-  profiles?: { id?: string; nickname?: string }[] | { id?: string; nickname?: string } | null;
+  profiles?: { id: string; nickname: string | null } | null;
+  meta?: unknown | null;
 }
 
 function formatVideosData(postsData: PostData[]): YouTubeVideo[] {
   return postsData.map(post => {
-    let thumbnailUrl = post.thumbnail_url;
+    // meta 필드에서 youtube_id와 thumbnail_url 추출
+    const meta = post.meta as Record<string, unknown> | null;
+    const youtubeId = meta?.youtube_id as string || '';
+    let thumbnailUrl = meta?.thumbnail_url as string;
     
     // 썸네일 URL이 없는 경우 YouTube ID가 있으면 YouTube 썸네일 URL 생성
-    if (!thumbnailUrl && post.youtube_id) {
-      thumbnailUrl = `https://img.youtube.com/vi/${post.youtube_id}/maxresdefault.jpg`;
+    if (!thumbnailUrl && youtubeId) {
+      thumbnailUrl = `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`;
     } else if (!thumbnailUrl) {
       // 기본 썸네일 사용
       thumbnailUrl = '/public/sample/youtube-placeholder.jpg';
     }
     
     // 프로필 정보 안전하게 추출
-    const profileNickname = post.profiles && typeof post.profiles === 'object' 
-      ? (Array.isArray(post.profiles) 
-          ? (post.profiles[0]?.nickname || 'KBS 스포츠') 
-          : (post.profiles as { nickname?: string }).nickname || 'KBS 스포츠')
-      : 'KBS 스포츠';
+    const profileNickname = post.profiles?.nickname || 'KBS 스포츠';
     
     return {
       id: post.id,
@@ -316,7 +324,7 @@ function formatVideosData(postsData: PostData[]): YouTubeVideo[] {
       thumbnailUrl: thumbnailUrl,
       channelTitle: profileNickname,
       publishedAt: post.created_at || new Date().toISOString(),
-      videoId: post.youtube_id || '',
+      videoId: youtubeId,
       post_number: post.post_number || 0
     };
   });

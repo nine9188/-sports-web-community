@@ -4,8 +4,8 @@
 
 // 경험치 내역 아이템 타입
 export interface ExpHistoryItem {
-  id: number;
-  created_at: string;
+  id: string;
+  created_at: string | null;
   amount: number;
   reason: string;
 }

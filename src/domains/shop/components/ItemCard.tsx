@@ -42,7 +42,7 @@ export default function ItemCard({ item, isOwned, canAfford, onPurchase }: ItemC
                   ? 'bg-gray-300 text-gray-700 cursor-not-allowed'
                   : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
               }`}
-              disabled={!canAfford || item.is_default}
+              disabled={!canAfford || !!item.is_default}
             >
               {item.is_default ? '기본' : !canAfford ? '포인트 부족' : '구매'}
             </button>

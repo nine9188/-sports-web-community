@@ -12,9 +12,9 @@ interface ServerHoverMenuProps {
 interface Board {
   id: string;
   name: string;
-  display_order: number;
-  slug?: string;
-  parent_id?: string;
+  display_order: number | null;
+  slug?: string | null;
+  parent_id?: string | null;
 }
 
 export default async function ServerHoverMenu({
@@ -100,9 +100,20 @@ export default async function ServerHoverMenu({
   const formattedTopBoards = topBoards.map(board => ({
     id: board.id,
     name: board.name,
-    display_order: board.display_order,
-    slug: board.slug
+    display_order: board.display_order ?? 0,
+    slug: board.slug || undefined
   }));
+  
+  // childBoardsMap 타입 변환
+  const formattedChildBoardsMap: Record<string, { id: string; name: string; display_order: number; slug?: string }[]> = {};
+  Object.keys(childBoardsMap).forEach(key => {
+    formattedChildBoardsMap[key] = childBoardsMap[key].map(board => ({
+      id: board.id,
+      name: board.name,
+      display_order: board.display_order ?? 0,
+      slug: board.slug || undefined
+    }));
+  });
   
   // 특별 처리: fromParam이 'boards'인 경우 rootBoardId로 변환
   const normalizedFromParam = fromParam === 'boards' ? rootBoard.id : fromParam;
@@ -118,7 +129,7 @@ export default async function ServerHoverMenu({
       // 미리 가공된 데이터 전달
       prefetchedData={{
         topBoards: formattedTopBoards, 
-        childBoardsMap,
+        childBoardsMap: formattedChildBoardsMap,
         isServerFetched: true
       }}
     />

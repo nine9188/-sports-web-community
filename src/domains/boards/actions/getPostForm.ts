@@ -40,7 +40,7 @@ export async function getPostEditData(slug: string, postNumber: string) {
       .from('posts')
       .select('*, profiles(nickname), board:board_id(name)')
       .eq('board_id', board.id)
-      .eq('post_number', postNumber)
+      .eq('post_number', parseInt(postNumber, 10))
       .single();
       
     if (postError || !post) {

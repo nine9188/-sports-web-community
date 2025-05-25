@@ -814,7 +814,14 @@ export async function createPost(formData: FormData) {
         user_id: user.id,
         board_id: boardId
       })
-      .select()
+      .select(`
+        *,
+        board:boards(
+          id,
+          name,
+          slug
+        )
+      `)
       .single()
     
     if (error) {

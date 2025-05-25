@@ -36,7 +36,7 @@ export default async function ProfileSettingsPage() {
       <ProfileForm initialData={{
         id: profileData.id,
         nickname: profileData.nickname,
-        email: profileData.email || user.email,
+        email: profileData.email || user.email || null,
         full_name: profileData.full_name,
         created_at: user?.created_at,
         last_sign_in_at: user?.last_sign_in_at,

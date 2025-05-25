@@ -9,7 +9,6 @@ import {
   getUserItems 
 } from '@/domains/shop/actions/actions'
 import CategoryFilter from '@/domains/shop/components/CategoryFilter'
-import { ShopCategory } from '@/domains/shop/types'
 
 // 동적 렌더링 강제 설정 추가
 export const dynamic = 'force-dynamic'
@@ -51,7 +50,7 @@ export default async function CategoryPage({ params }: Props) {
     // 모든 관련 카테고리 ID 수집
     const allCategoryIds = [
       currentCategory.id,
-      ...(currentCategory.subcategories?.map((sub: ShopCategory) => sub.id) || [])
+      ...(currentCategory.subcategories?.map((sub) => sub.id) || [])
     ]
 
     // 사용자 정보 및 아이템 가져오기

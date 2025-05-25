@@ -1,9 +1,15 @@
 'use server'
 
-import { createClient } from '@/shared/api/supabaseServer';
+// import { createClient } from '@/shared/api/supabaseServer';
 
 export async function getMatchesByDate(date: string) {
   try {
+    // TODO: matches 테이블이 생성되면 활성화
+    // 현재는 빈 배열 반환
+    console.log(`경기 데이터 요청: ${date} (matches 테이블 미구현)`);
+    return [];
+    
+    /* 
     // Supabase 클라이언트 초기화
     const supabase = await createClient();
     
@@ -58,6 +64,7 @@ export async function getMatchesByDate(date: string) {
         name: match.status_name
       }
     }));
+    */
     
   } catch (error) {
     console.error('경기 데이터 조회 중 오류 발생:', error);

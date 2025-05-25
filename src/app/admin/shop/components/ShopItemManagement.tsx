@@ -6,17 +6,18 @@ import { Card } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import Image from 'next/image';
 import { Trash2 } from 'lucide-react';
+import { ShopCategory as BaseShopCategory } from '@/domains/shop/types';
 
 interface Team {
   id: number;
   name: string;
-  logo: string;
+  logo: string | null;
 }
 
 interface League {
   id: number;
   name: string;
-  logo: string;
+  logo: string | null;
 }
 
 interface StorageImage {
@@ -24,28 +25,23 @@ interface StorageImage {
   url: string;
 }
 
-interface ShopCategory {
-  id: number;
-  name: string;
-  description: string;
-  image_url: string;
-  display_order: number;
-  is_active: boolean;
+// 글로벌 타입을 확장하여 필요한 필드 추가
+interface ShopCategory extends BaseShopCategory {
   parent_id: number | null;
-  children?: ShopCategory[]; // 하위 카테고리
-  price?: number; // 가격 속성 추가
+  children?: ShopCategory[];
+  price?: number;
 }
 
 interface ShopItem {
   id: number;
   name: string;
-  description: string;
+  description: string | null;
   image_url: string;
   price: number;
-  is_default: boolean;
-  is_active: boolean;
-  created_at: string;
-  category_id: number;
+  is_default: boolean | null;
+  is_active: boolean | null;
+  created_at: string | null;
+  category_id: number | null;
 }
 
 interface ShopItemManagementProps {
@@ -224,7 +220,7 @@ export default function ShopItemManagement({ teams, leagues, storageImages, shop
     setEditingItem(item);
     setName(item.name);
     setSelectedImage({ url: item.image_url, name: item.name });
-    setSelectedCategory(item.category_id);
+    setSelectedCategory(item.category_id || null);
   };
 
   // 수정 취소
@@ -250,7 +246,7 @@ export default function ShopItemManagement({ teams, leagues, storageImages, shop
         description: description || `${name} 아이콘입니다.`,
         image_url: selectedImage?.url || editingItem.image_url,
         price: editingItem.price,
-        category_id: selectedCategory || editingItem.category_id,
+        category_id: selectedCategory || editingItem.category_id || 0,
       };
 
       const { error } = await supabase
@@ -361,16 +357,16 @@ export default function ShopItemManagement({ teams, leagues, storageImages, shop
           {/* 팀 로고 선택 */}
           {imageSource === 'teams' && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {teams.map((team) => (
+              {teams.filter(team => team.logo).map((team) => (
                 <div
                   key={team.id}
                   className={`relative cursor-pointer border rounded-lg p-2 hover:border-blue-500 transition-colors
                     ${selectedImage?.url === team.logo ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}
-                  onClick={() => setSelectedImage({ url: team.logo, name: team.name })}
+                  onClick={() => team.logo && setSelectedImage({ url: team.logo, name: team.name })}
                 >
                   <div className="aspect-square relative mb-2">
                     <Image
-                      src={team.logo}
+                      src={team.logo!}
                       alt={team.name}
                       fill
                       className="object-contain"
@@ -386,16 +382,16 @@ export default function ShopItemManagement({ teams, leagues, storageImages, shop
           {/* 리그 로고 선택 */}
           {imageSource === 'leagues' && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {leagues.map((league) => (
+              {leagues.filter(league => league.logo).map((league) => (
                 <div
                   key={league.id}
                   className={`relative cursor-pointer border rounded-lg p-2 hover:border-blue-500 transition-colors
                     ${selectedImage?.url === league.logo ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}
-                  onClick={() => setSelectedImage({ url: league.logo, name: league.name })}
+                  onClick={() => league.logo && setSelectedImage({ url: league.logo, name: league.name })}
                 >
                   <div className="aspect-square relative mb-2">
                     <Image
-                      src={league.logo}
+                      src={league.logo!}
                       alt={league.name}
                       fill
                       className="object-contain"

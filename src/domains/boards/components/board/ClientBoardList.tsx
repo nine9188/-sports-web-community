@@ -7,9 +7,9 @@ import { usePathname } from 'next/navigation';
 interface Board {
   id: string;
   name: string;
-  slug?: string;
+  slug?: string | null;
   parent_id?: string | null;
-  display_order?: number;
+  display_order?: number | null;
 }
 
 interface ClientBoardListProps {

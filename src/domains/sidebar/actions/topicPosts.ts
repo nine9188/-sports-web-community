@@ -58,7 +58,7 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
     }
     
     // 2. 게시판 정보 가져오기
-    const boardIds = [...new Set(validPosts.map(post => post.board_id).filter(Boolean))];
+    const boardIds = [...new Set(validPosts.map(post => post.board_id).filter(Boolean))] as string[];
     
     const { data: boardsData, error: boardsError } = await supabase
       .from('boards')
@@ -122,12 +122,12 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
     
     // 5. 로고 맵핑 구성
     const teamLogoMap: Record<number, string> = {};
-    (teamsResult.data || []).forEach((team: { id: number; logo?: string }) => { 
+    (teamsResult.data || []).forEach((team: { id: number; logo: string | null }) => { 
       if (team.id) teamLogoMap[team.id] = team.logo || '';
     });
     
     const leagueLogoMap: Record<number, string> = {};
-    (leaguesResult.data || []).forEach((league: { id: number; logo?: string }) => { 
+    (leaguesResult.data || []).forEach((league: { id: number; logo: string | null }) => { 
       if (league.id) leagueLogoMap[league.id] = league.logo || '';
     });
     

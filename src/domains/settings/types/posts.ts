@@ -4,7 +4,7 @@
  * 내 게시글 아이템 타입
  */
 export interface MyPostItem {
-  id: number;
+  id: string;
   title: string;
   content: string | null;
   created_at: string;
@@ -24,7 +24,7 @@ export interface MyPostItem {
  * 데이터베이스 결과에 대한 타입 정의
  */
 export interface DbPostResult {
-  id: number;
+  id: string;
   title: string;
   content: string | null;
   created_at: string;

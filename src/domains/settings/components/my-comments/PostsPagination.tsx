@@ -18,7 +18,7 @@ export default function PostsPagination({
   
   // 페이지 번호를 기준으로 URL 생성 함수
   const createPageURL = (pageNumber: number | string) => {
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParams?.toString() || '');
     params.set('page', pageNumber.toString());
     return `${pathname}?${params.toString()}`;
   };

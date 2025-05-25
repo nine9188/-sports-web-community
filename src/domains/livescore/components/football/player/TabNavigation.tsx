@@ -55,8 +55,8 @@ export default function PlayerTabNavigation({ activeTab = 'stats' }: PlayerTabNa
     // 컨텍스트 상태 업데이트
     setCurrentTab(tabId);
     
-    // 현재 URL 파라미터 복사
-    const params = new URLSearchParams(searchParams.toString());
+    // 현재 URL 파라미터 복사 - searchParams가 null일 수 있으므로 안전하게 처리
+    const params = new URLSearchParams(searchParams?.toString() || '');
     
     if (tabId === 'stats') {
       params.delete('tab'); // 기본 탭은 파라미터 제거

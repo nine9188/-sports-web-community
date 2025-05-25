@@ -4,7 +4,7 @@ import { createClient } from '@/shared/api/supabaseServer';
 
 // 포인트 내역 아이템 타입 정의
 export interface PointHistoryItem {
-  id: number;
+  id: string;
   created_at: string;
   points: number;
   reason: string;
@@ -95,7 +95,7 @@ export async function getUserPointHistory(
       // 테스트 데이터 추가 (실제 프로덕션에서는 제거)
       const testData: PointHistoryItem[] = [
         {
-          id: 1,
+          id: "1",
           created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2시간 전
           points: 100,
           reason: '로그인 보상',
@@ -103,7 +103,7 @@ export async function getUserPointHistory(
           type: 'earn'
         },
         {
-          id: 2,
+          id: "2",
           created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2일 전
           points: 50,
           reason: '댓글 작성 보상',
@@ -111,7 +111,7 @@ export async function getUserPointHistory(
           type: 'earn'
         },
         {
-          id: 3,
+          id: "3",
           created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(), // 5일 전
           points: -200, // 음수는 차감
           reason: '아이콘 구매',

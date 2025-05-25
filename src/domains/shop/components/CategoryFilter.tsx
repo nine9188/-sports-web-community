@@ -26,7 +26,7 @@ export default function CategoryFilter({
   
   const filteredItems = useMemo(() => {
     if (activeCategory === 'all') return items
-    return items.filter(item => item.category_id.toString() === activeCategory)
+    return items.filter(item => item.category_id?.toString() === activeCategory)
   }, [items, activeCategory])
 
   return (
