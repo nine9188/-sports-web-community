@@ -45,7 +45,7 @@ export async function getBoardsForNavigation(): Promise<{
         
         return {
           id: parent.id,
-          name: parent.name,
+          name: parent.name || '게시판',
           slug: parent.slug,
           display_order: parent.display_order || 0,
           parent_id: parent.parent_id,
@@ -55,13 +55,13 @@ export async function getBoardsForNavigation(): Promise<{
             
             return {
               id: child.id,
-              name: child.name,
+              name: child.name || '게시판',
               slug: child.slug,
               display_order: child.display_order || 0,
               parent_id: child.parent_id,
               children: subChildren.length > 0 ? subChildren.map(subChild => ({
                 id: subChild.id,
-                name: subChild.name,
+                name: subChild.name || '게시판',
                 slug: subChild.slug,
                 display_order: subChild.display_order || 0,
                 parent_id: subChild.parent_id
@@ -127,7 +127,7 @@ export async function getHeaderUserData(): Promise<HeaderUserData | null> {
         if (iconPurchase?.shop_items) {
           const shopItem = iconPurchase.shop_items as { name?: string; image_url?: string };
           iconInfo.iconUrl = shopItem.image_url || '';
-          iconInfo.iconName = shopItem.name || '';
+          iconInfo.iconName = shopItem.name || '기본 아이콘';
         }
       } catch (iconError) {
         console.log('아이콘 정보 조회 실패, 기본값 사용:', iconError);

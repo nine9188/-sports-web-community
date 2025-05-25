@@ -100,7 +100,7 @@ export default function ProfileDropdown() {
                     {user.user_metadata?.nickname || '사용자'}
                   </div>
                   <div className="text-xs text-gray-500 truncate">
-                    {user.email}
+                    {user.email || '이메일 없음'}
                   </div>
                 </div>
               </div>

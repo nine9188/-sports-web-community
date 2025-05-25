@@ -37,7 +37,7 @@ const BoardItem = React.memo(function BoardItem({
             {level > 0 ? '┗' : ''}
           </span>
           <span className={`${level === 0 ? 'font-medium' : ''}`}>
-            {board.name}
+            {board.name || '게시판'}
           </span>
         </div>
       </Link>
@@ -89,7 +89,7 @@ const DropdownMenu = React.memo(function DropdownMenu({
       >
         <div className="flex items-center">
           <ChevronRight className="h-3.5 w-3.5 mr-1" />
-          <span>{board.name} 메인 페이지</span>
+          <span>{board.name || '게시판'} 메인 페이지</span>
         </div>
       </Link>
       
@@ -142,7 +142,7 @@ const TopLevelBoard = React.memo(function TopLevelBoard({
         className="px-2 py-1 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1 cursor-pointer whitespace-nowrap"
         onClick={() => onClick(board)}
       >
-        {board.name}
+        {board.name || '게시판'}
         {board.children && board.children.length > 0 && (
           <ChevronDown className="h-3.5 w-3.5" />
         )}

@@ -24,7 +24,7 @@ const UserIcon = React.memo(function UserIcon({
   iconUrl,
   level = 1,
   size = 20,
-  alt = '유저 아이콘',
+  alt,
   className = '',
   priority = false
 }: UserIconProps) {
@@ -62,7 +62,7 @@ const UserIcon = React.memo(function UserIcon({
     >
       <Image
         src={src}
-        alt={alt}
+        alt={alt || '유저 아이콘'}
         fill
         sizes={imageSizes}
         className="object-cover"

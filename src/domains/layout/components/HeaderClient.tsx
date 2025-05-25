@@ -118,7 +118,7 @@ export default function HeaderClient({
                   iconUrl={iconUrl || userData?.iconInfo?.iconUrl}
                   level={userLevel}
                   size={24}
-                  alt={iconName || '프로필 이미지'}
+                  alt={iconName || userData?.iconInfo?.iconName || '프로필 이미지'}
                   className="object-cover"
                 />
               </div>

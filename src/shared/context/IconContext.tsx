@@ -84,7 +84,7 @@ export function IconProvider({
         .single();
       
       if (iconData?.image_url && iconData?.name) {
-        updateUserIconState(iconData.image_url, iconData.name);
+        updateUserIconState(iconData.image_url, iconData.name || '사용자 아이콘');
       } else {
         // 아이콘 정보가 없으면 기본 아이콘으로 설정
         updateUserIconState(defaultLevelIcon, defaultIconName);
