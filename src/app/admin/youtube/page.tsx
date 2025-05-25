@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/app/lib/supabase-browser';
+import { createClient } from '@/shared/api/supabase';
 import { toast } from 'react-toastify';
 import { Youtube, Plus, Trash2, RefreshCw, Code } from 'lucide-react';
 
@@ -11,10 +11,11 @@ interface YoutubeChannel {
   channel_name: string;
   board_id: string;
   api_key: string;
-  auto_publish: boolean;
+  auto_publish: boolean | null;
   playlist_id: string | null;
   last_crawled_at: string | null;
-  created_at: string;
+  created_at: string | null;
+  updated_at?: string | null;
 }
 
 interface Board {

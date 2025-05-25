@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@/app/lib/supabase-browser';
+import { createClient } from '@/shared/api/supabase';
 import { toast } from 'react-toastify';
-import { Button } from '@/app/ui/button';
-import { useAuth } from '@/app/context/AuthContext';
+import { Button } from '@/shared/components/ui/button';
+import { useAuth } from '@/shared/context/AuthContext';
 import UserList from './components/UserList';
 import ExpManager from './components/ExpManager';
-import { calculateLevelFromExp } from '@/app/utils/level-icons';
+import { calculateLevelFromExp } from '@/shared/utils/level-icons';
 
 interface UserInfo {
   id: string;
@@ -87,7 +87,13 @@ export default function ExpManagementPage() {
         .single();
         
       if (!error && data) {
-        setSelectedUser(data);
+        // null 값에 대한 처리를 통해 UserInfo 타입에 맞게 변환
+        setSelectedUser({
+          id: data.id,
+          nickname: data.nickname || '이름 없음',
+          exp: data.exp || 0,
+          level: data.level || 1
+        });
       }
     }
   };

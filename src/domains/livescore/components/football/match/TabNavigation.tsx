@@ -51,7 +51,7 @@ export default function TabNavigation({ activeTab = 'events' }: TabNavigationPro
     setCurrentTab(tabId);
     
     // 현재 URL 파라미터 복사
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParams?.toString() || '');
     
     if (tabId === 'events') {
       params.delete('tab'); // 기본 탭은 파라미터 제거

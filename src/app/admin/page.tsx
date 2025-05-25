@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/app/lib/supabase-browser';
+import { createClient } from '@/shared/api/supabase';
 import { Users, FileText, MessageSquare, Coins, TrendingUp } from 'lucide-react';
 
 interface DashboardStats {
@@ -27,30 +27,84 @@ export default function AdminDashboard() {
       try {
         setIsLoading(true);
         
-        // 기본 통계 데이터만 가져오기
-        const fetchStatCount = async (table: string) => {
+        // 각 테이블 별로 개별적으로 통계 조회 (타입 안전성 확보)
+        const fetchUsersCount = async () => {
           try {
             const { count, error } = await supabase
-              .from(table)
+              .from('profiles')
               .select('*', { count: 'exact', head: true });
               
             if (error) {
-              console.warn(`${table} 카운트 오류:`, error);
+              console.warn('프로필 카운트 오류:', error);
               return 0;
             }
             
             return count || 0;
           } catch (e) {
-            console.warn(`${table} 카운트 오류:`, e);
+            console.warn('프로필 카운트 오류:', e);
+            return 0;
+          }
+        };
+        
+        const fetchPostsCount = async () => {
+          try {
+            const { count, error } = await supabase
+              .from('posts')
+              .select('*', { count: 'exact', head: true });
+              
+            if (error) {
+              console.warn('게시글 카운트 오류:', error);
+              return 0;
+            }
+            
+            return count || 0;
+          } catch (e) {
+            console.warn('게시글 카운트 오류:', e);
+            return 0;
+          }
+        };
+        
+        const fetchCommentsCount = async () => {
+          try {
+            const { count, error } = await supabase
+              .from('comments')
+              .select('*', { count: 'exact', head: true });
+              
+            if (error) {
+              console.warn('댓글 카운트 오류:', error);
+              return 0;
+            }
+            
+            return count || 0;
+          } catch (e) {
+            console.warn('댓글 카운트 오류:', e);
+            return 0;
+          }
+        };
+        
+        const fetchBoardsCount = async () => {
+          try {
+            const { count, error } = await supabase
+              .from('boards')
+              .select('*', { count: 'exact', head: true });
+              
+            if (error) {
+              console.warn('게시판 카운트 오류:', error);
+              return 0;
+            }
+            
+            return count || 0;
+          } catch (e) {
+            console.warn('게시판 카운트 오류:', e);
             return 0;
           }
         };
         
         // 각 테이블 별 통계 조회 (오류가 나도 중단되지 않게)
-        const usersCount = await fetchStatCount('profiles');
-        const postsCount = await fetchStatCount('posts');
-        const commentsCount = await fetchStatCount('comments');
-        const boardsCount = await fetchStatCount('boards');
+        const usersCount = await fetchUsersCount();
+        const postsCount = await fetchPostsCount();
+        const commentsCount = await fetchCommentsCount();
+        const boardsCount = await fetchBoardsCount();
         
         setStats({
           totalUsers: usersCount,

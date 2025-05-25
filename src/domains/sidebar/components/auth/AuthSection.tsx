@@ -1,42 +1,11 @@
-'use client';
-
 import { Suspense } from 'react';
 import Link from 'next/link';
-import UserProfile from './UserProfile';
-import { ProfileData } from '../../types';
-import { User } from '@supabase/supabase-js';
-import { useAuth } from '@/app/context/AuthContext';
-import { useEffect, useState } from 'react';
+import ServerUserProfile from './ServerUserProfile';
+import { getSidebarUserProfile } from '../../actions/userProfile';
 
-// AuthSection 컴포넌트는 이제 props를 통해 사용자와 프로필 데이터를 받지만,
-// 서버와 클라이언트 상태를 동기화하기 위해 useAuth 훅도 사용합니다.
-export default function AuthSection({
-  userData: initialUserData,
-  profileData: initialProfileData
-}: {
-  userData: User | null;
-  profileData: ProfileData | null;
-}) {
-  const { user } = useAuth();
-  // 서버에서 받은 초기 상태와 클라이언트 상태를 동기화
-  const [isLoggedIn, setIsLoggedIn] = useState(!!initialUserData);
-  
-  // useAuth 훅의 상태가 변경되면 이를 감지하여 상태 업데이트
-  useEffect(() => {
-    setIsLoggedIn(!!user);
-  }, [user]);
-  
-  // 로그인 상태에 따라 다른 UI 렌더링
-  // 클라이언트 상태(isLoggedIn)를 기준으로 판단
-  return isLoggedIn ? (
-    <Suspense fallback={
-      <div className="text-center py-4">
-        <p className="text-sm text-muted-foreground">로딩 중...</p>
-      </div>
-    }>
-      <UserProfile profileData={initialProfileData} />
-    </Suspense>
-  ) : (
+// 로그인하지 않은 사용자를 위한 UI
+function GuestAuthSection() {
+  return (
     <>
       <Link 
         href="/signin" 
@@ -52,5 +21,24 @@ export default function AuthSection({
         <Link href="/signup" className="hover:underline">회원가입</Link>
       </div>
     </>
+  );
+}
+
+// 서버 컴포넌트 - 사용자 인증 상태를 확인하고 적절한 UI 렌더링
+export default async function AuthSection() {
+  // 서버에서 사용자 프로필 데이터 확인
+  const profileData = await getSidebarUserProfile();
+  
+  // 로그인 상태에 따라 다른 UI 렌더링
+  return profileData ? (
+    <Suspense fallback={
+      <div className="text-center py-4">
+        <p className="text-sm text-muted-foreground">로딩 중...</p>
+      </div>
+    }>
+      <ServerUserProfile />
+    </Suspense>
+  ) : (
+    <GuestAuthSection />
   );
 } 

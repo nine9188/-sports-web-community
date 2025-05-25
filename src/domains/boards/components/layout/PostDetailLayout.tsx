@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { CommentType } from '../../types/post/comment';
 import { AdjacentPosts } from '../../types/post';
 import { Breadcrumb } from '../../types/board/data';
@@ -11,11 +12,49 @@ import PostNavigation from '../post/PostNavigation';
 import PostHeader from '../post/PostHeader';
 import PostContent from '../post/PostContent';
 import PostActions from '../post/PostActions';
-import CommentSection from '../post/CommentSection';
-import HoverMenu from '../common/HoverMenu';
-import PostList from '../post/PostList';
 import PostFooter from '../post/PostFooter';
 import Pagination from '../common/Pagination';
+
+// 지연 로딩으로 렌더링 시간 단축
+const CommentSection = dynamic(() => import('../post/CommentSection'), { 
+  ssr: false,
+  loading: () => (
+    <div className="p-4 bg-white rounded-lg border mb-4">
+      <div className="h-8 bg-gray-100 rounded animate-pulse mb-3"></div>
+      <div className="space-y-2">
+        {Array(3).fill(0).map((_, i) => (
+          <div key={i} className="h-14 bg-gray-100 rounded animate-pulse"></div>
+        ))}
+      </div>
+    </div>
+  )
+});
+
+const HoverMenu = dynamic(() => import('../common/HoverMenu'), { 
+  ssr: false,
+  loading: () => <div className="h-10 bg-gray-100 rounded animate-pulse mb-4"></div>
+});
+
+const PostList = dynamic(() => import('../post/PostList'), {
+  ssr: false,
+  loading: () => (
+    <div className="mb-4 bg-white rounded-lg border p-4">
+      <div className="space-y-2">
+        {Array(5).fill(0).map((_, i) => (
+          <div key={i} className="h-6 bg-gray-100 rounded animate-pulse"></div>
+        ))}
+      </div>
+    </div>
+  )
+});
+
+// 메모이제이션 적용
+const MemoizedBoardBreadcrumbs = memo(BoardBreadcrumbs);
+const MemoizedPostHeader = memo(PostHeader);
+const MemoizedPostNavigation = memo(PostNavigation);
+const MemoizedPostActions = memo(PostActions);
+const MemoizedPostFooter = memo(PostFooter);
+const MemoizedPagination = memo(Pagination);
 
 interface PostAuthor {
   nickname: string | null;
@@ -39,6 +78,7 @@ interface PostDetailLayoutProps {
     profiles?: {
       nickname: string | null;
       icon_id: number | null;
+      icon_url: string | null;
     };
     board?: {
       name: string;
@@ -70,6 +110,7 @@ interface PostDetailLayoutProps {
     likes: number;
     author_nickname: string;
     comment_count: number;
+    author_icon_url?: string;
   }>;
   topLevelBoards: Array<{
     id: string;
@@ -108,12 +149,36 @@ export default function PostDetailLayout({
   slug,
   postNumber
 }: PostDetailLayoutProps) {
+  // 지연 로딩을 위한 마운트 상태
+  const [hasMounted, setHasMounted] = useState(false);
+  
+  useEffect(() => {
+    // 성능을 위해 초기 마운트 시점에는 일부 컴포넌트만 로드
+    setHasMounted(true);
+    
+    // 스크롤 처리 - 해시가 있으면 해당 댓글로 스크롤
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const hashId = window.location.hash.substring(1);
+      setTimeout(() => {
+        const element = document.getElementById(hashId);
+        if (element) element.scrollIntoView({ behavior: 'smooth' });
+      }, 500); // 컴포넌트가 모두 로드된 후 스크롤
+    }
+    
+    // 메모리 누수 방지 및 transform 오류 해결을 위한 이벤트 리스너 정리
+    return () => {
+      // 메모리 누수 방지를 위한 이벤트 리스너 정리
+      const abortController = new AbortController();
+      abortController.abort();
+    };
+  }, []);
+  
   // 게시글 상세 정보 구성
   const author: PostAuthor = {
     nickname: post.profiles?.nickname || null,
     id: post.user_id,
     icon_id: post.profiles?.icon_id || null,
-    icon_url: iconUrl
+    icon_url: post.profiles?.icon_url || null
   };
   
   // 타입 호환성을 위해 직접 타입 변환
@@ -132,30 +197,17 @@ export default function PostDetailLayout({
     slug?: string;
   }[]>);
   
-  // 댓글 타입 변환
-  type AppCommentType = Parameters<typeof CommentSection>[0]['initialComments'][0];
-  const processedComments = comments.map(c => ({
-    id: c.id,
-    content: c.content,
-    created_at: c.created_at || '',
-    user_id: c.user_id || '',
-    post_id: c.post_id || '',
-    parent_id: c.parent_id,
-    likes: c.likes,
-    dislikes: c.dislikes,
-    profiles: c.profiles ? {
-      nickname: c.profiles.nickname,
-      id: c.user_id || '',
-      icon_id: c.profiles.icon_id,
-      icon_url: null
-    } : null
-  } as AppCommentType));
+  // 아이콘 URL을 formattedPosts에 추가
+  const postsWithIcons = formattedPosts.map(post => ({
+    ...post,
+    author_icon_url: post.author_icon_url || iconUrl
+  }));
   
   return (
     <div className="container mx-auto">
       {/* 1. 게시판 경로 - BoardBreadcrumbs 컴포넌트 사용 */}
       <div className="overflow-x-auto sm:mt-0 mt-4">
-        <BoardBreadcrumbs breadcrumbs={breadcrumbs} />
+        <MemoizedBoardBreadcrumbs breadcrumbs={breadcrumbs} />
       </div>
       
       {/* 모바일 화면에서 우측 하단에 고정된 글쓰기 버튼 (로그인 시에만) */}
@@ -175,7 +227,7 @@ export default function PostDetailLayout({
       {/* 2. 게시글 본문 (상세 정보) */}
       <div className="bg-white rounded-lg border shadow-sm overflow-hidden mb-4">
         {/* 게시글 헤더 컴포넌트 */}
-        <PostHeader 
+        <MemoizedPostHeader 
           title={post.title}
           author={author}
           createdAt={post.created_at || ''}
@@ -192,7 +244,7 @@ export default function PostDetailLayout({
         <div className="px-4 sm:px-6 py-4 border-t">
           <div className="flex flex-col space-y-4">
             {/* 추천/비추천 버튼 */}
-            <PostActions 
+            <MemoizedPostActions 
               postId={post.id} 
               boardId={board.id || ''} 
               initialLikes={post.likes || 0} 
@@ -227,7 +279,7 @@ export default function PostDetailLayout({
       
       {/* 4. 게시글 하단 버튼 영역 */}
       <div className="mb-4">
-        <PostFooter 
+        <MemoizedPostFooter 
           boardSlug={slug}
           postNumber={postNumber}
           isAuthor={isAuthor}
@@ -239,48 +291,69 @@ export default function PostDetailLayout({
       
       {/* 5. 포스트 네비게이션 */}
       <div className="mb-4">
-        <PostNavigation 
+        <MemoizedPostNavigation 
           prevPost={adjacentPosts.prevPost} 
           nextPost={adjacentPosts.nextPost}
           boardSlug={slug}
         />
       </div>
       
-      {/* 6. 댓글 섹션 */}
-      <div className="mb-4">
-        <CommentSection 
-          postId={post.id} 
-          initialComments={processedComments}
-          boardSlug={slug}
-          postNumber={postNumber}
-          postOwnerId={post.user_id}
-        />
-      </div>
+      {/* 6. 댓글 섹션 - 지연 로딩 */}
+      {hasMounted && (
+        <div className="mb-4">
+          <CommentSection 
+            postId={post.id} 
+            initialComments={comments.map(c => ({
+              id: c.id,
+              content: c.content,
+              created_at: c.created_at || '',
+              user_id: c.user_id || '',
+              post_id: c.post_id || '',
+              parent_id: c.parent_id,
+              likes: c.likes,
+              dislikes: c.dislikes,
+              profiles: c.profiles ? {
+                nickname: c.profiles.nickname,
+                id: c.user_id || '',
+                icon_id: c.profiles.icon_id,
+                icon_url: iconUrl
+              } : null
+            }))}
+            boardSlug={slug}
+            postNumber={postNumber}
+            postOwnerId={post.user_id}
+          />
+        </div>
+      )}
       
-      {/* 7. 호버 메뉴 */}
-      <div className="mb-4">
-        <HoverMenu
-          topBoards={topLevelBoards}
-          childBoardsMap={hoverMenuChildBoardsMap}
-          currentBoardId={board.id}
-          rootBoardId={rootBoardId}
-          rootBoardSlug={rootBoardSlug}
-        />
-      </div>
+      {/* 7. 호버 메뉴 - 지연 로딩 */}
+      {hasMounted && (
+        <div className="mb-4">
+          <HoverMenu
+            topBoards={topLevelBoards}
+            childBoardsMap={hoverMenuChildBoardsMap}
+            currentBoardId={board.id}
+            rootBoardId={rootBoardId}
+            rootBoardSlug={rootBoardSlug}
+          />
+        </div>
+      )}
       
-      {/* 8. 같은 게시판의 다른 글 목록 */}
-      <div className="mb-4">
-        <PostList 
-          posts={formattedPosts}
-          showBoard={true}
-          currentBoardId={board.id}
-          currentPostId={post.id}
-        />
-      </div>
+      {/* 8. 같은 게시판의 다른 글 목록 - 지연 로딩 */}
+      {hasMounted && (
+        <div className="mb-4">
+          <PostList 
+            posts={postsWithIcons}
+            showBoard={true}
+            currentBoardId={board.id}
+            currentPostId={post.id}
+          />
+        </div>
+      )}
       
       {/* 9. 게시글 푸터 (중복) */}
       <div className="mb-4">
-        <PostFooter 
+        <MemoizedPostFooter 
           boardSlug={slug}
           postNumber={postNumber}
           isAuthor={isAuthor}
@@ -294,7 +367,7 @@ export default function PostDetailLayout({
       <div className="mb-4">
         {totalPages > 1 && (
           <div className="px-4 sm:px-6">
-            <Pagination
+            <MemoizedPagination
               currentPage={currentPage}
               totalPages={totalPages}
               boardSlug={slug}

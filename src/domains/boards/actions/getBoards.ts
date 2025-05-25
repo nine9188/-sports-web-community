@@ -3,7 +3,7 @@
 import { createClient } from '@/shared/api/supabaseServer';
 import { BoardMap, ChildBoardsMap } from '../types/board';
 import { getBoardLevel, getFilteredBoardIds, findRootBoard, generateBoardBreadcrumbs } from '../utils/board/boardHierarchy';
-import { createActionClient } from '@/shared/api/supabaseServer'
+import { BoardsResponse, Board, HierarchicalBoard } from '@/domains/boards/types';
 
 /**
  * 모든 게시판 목록을 가져옵니다.
@@ -89,7 +89,12 @@ export async function getBoardPageData(slug: string, currentPage: number, fromPa
     
     // 모든 게시판 정보 맵핑
     allBoardsData.forEach(board => {
-      boardsMap[board.id] = board;
+      const safeBoard = {
+        ...board,
+        slug: board.slug || board.id,
+        display_order: board.display_order || 0
+      };
+      boardsMap[board.id] = safeBoard;
       boardNameMap[board.id] = board.name;
       
       // 부모 ID 기준으로 자식 게시판 맵핑
@@ -97,12 +102,16 @@ export async function getBoardPageData(slug: string, currentPage: number, fromPa
         if (!childBoardsMap[board.parent_id]) {
           childBoardsMap[board.parent_id] = [];
         }
-        childBoardsMap[board.parent_id].push(board);
+        childBoardsMap[board.parent_id].push(safeBoard);
       }
     });
     
     // 4. 브레드크럼 생성
-    const breadcrumbs = generateBoardBreadcrumbs(boardData, boardsMap);
+    const safeBoardData = {
+      ...boardData,
+      slug: boardData.slug || boardData.id
+    };
+    const breadcrumbs = generateBoardBreadcrumbs(safeBoardData, boardsMap);
     
     // 현재 게시판의 레벨 결정 (최상위, 상위, 하위)
     const boardLevel = getBoardLevel(boardData.id, boardsMap, childBoardsMap);
@@ -178,8 +187,7 @@ export async function getBoardPageData(slug: string, currentPage: number, fromPa
           id: league.id,
           name: league.name,
           country: league.country || '',
-          logo: league.logo || 'https://via.placeholder.com/80',
-          type: league.type || 'League'
+          logo: league.logo || 'https://via.placeholder.com/80'
         };
       }
     }
@@ -206,26 +214,51 @@ export async function getBoardPageData(slug: string, currentPage: number, fromPa
 }
 
 /**
+ * boards 배열을 계층 구조(hierarchical)로 변환하는 함수
+ */
+function buildHierarchicalBoards(boards: Board[]): HierarchicalBoard[] {
+  const boardMap: Record<string, HierarchicalBoard> = {};
+  const roots: HierarchicalBoard[] = [];
+
+  boards.forEach((board) => {
+    boardMap[board.id] = { ...board };
+  });
+
+  boards.forEach((board) => {
+    if (board.parent_id && boardMap[board.parent_id]) {
+      const parent = boardMap[board.parent_id];
+      if (!parent.children) parent.children = [];
+      parent.children.push(boardMap[board.id]);
+    } else {
+      roots.push(boardMap[board.id]);
+    }
+  });
+
+  return roots;
+}
+
+/**
  * 게시판 목록 조회
  */
-export async function getBoards() {
+export async function getBoards(): Promise<BoardsResponse> {
   try {
-    const supabase = await createActionClient()
-    
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from('boards')
-      .select('id, name, parent_id, display_order, slug, team_id, league_id')
+      .select('id, name, parent_id, display_order, slug, team_id, league_id, description, access_level, logo, views')
       .order('display_order', { ascending: true })
-      .order('name')
-    
+      .order('name');
+
     if (error) {
-      console.error('게시판 목록 조회 오류:', error)
-      throw new Error('게시판 목록 조회 실패')
+      console.error('게시판 목록 조회 오류:', error);
+      throw new Error('게시판 목록 조회 실패');
     }
-    
-    return data || []
+
+    const boards = (data || []) as Board[];
+    const hierarchical = buildHierarchicalBoards(boards);
+    return { boards, hierarchical };
   } catch (error) {
-    console.error('게시판 데이터 불러오기 오류:', error)
-    return []
+    console.error('게시판 데이터 불러오기 오류:', error);
+    return { boards: [], hierarchical: [] };
   }
 } 

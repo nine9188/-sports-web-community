@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/app/lib/supabase-browser';
+import { createClient } from '@/shared/api/supabase';
 import { toast } from 'react-toastify';
-import { Button } from '@/app/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { Coins } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 
@@ -15,11 +15,11 @@ interface UserInfo {
 
 interface PointHistoryItem {
   id: string;
-  user_id: string;
+  user_id: string | null;
   points: number;
   reason: string;
-  created_at: string;
-  admin_id?: string;
+  created_at: string | null;
+  admin_id?: string | null;
 }
 
 interface PointManagerProps {
@@ -96,7 +96,7 @@ export default function PointManager({ adminUser, selectedUser, onRefreshData }:
       
       try {
         const { error } = await supabase.rpc('admin_adjust_points', {
-          admin_id: adminUser?.id,
+          admin_id: adminUser?.id || '',
           target_user_id: selectedUser.id,
           points_amount: pointAmount,
           reason_text: reason
@@ -266,7 +266,7 @@ export default function PointManager({ adminUser, selectedUser, onRefreshData }:
                 {pointHistory.map(history => (
                   <tr key={history.id}>
                     <td className="px-4 py-2 text-sm text-gray-500">
-                      {formatDate(history.created_at)}
+                      {history.created_at ? formatDate(history.created_at as string) : '-'}
                     </td>
                     <td className="px-4 py-2 text-sm">
                       {history.reason}

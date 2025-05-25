@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { useAuth } from '@/app/context/AuthContext';
+import { useAuth } from '@/shared/context/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
-import { createClient } from '@/app/lib/supabase-browser';
+import { createClient } from '@/shared/api/supabase';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
 import { UserCog, Coins, TrendingUp, Users, Home, LayoutDashboard, ChevronDown, ShoppingBag, Rss, Youtube } from 'lucide-react';

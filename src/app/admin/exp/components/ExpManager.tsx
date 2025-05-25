@@ -1,16 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/app/lib/supabase-browser';
+import { createClient } from '@/shared/api/supabase';
 import { toast } from 'react-toastify';
-import { Button } from '@/app/ui/button';
+import { Button } from '@/shared/ui/button';
 import { Award } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { 
   LEVEL_EXP_REQUIREMENTS, 
   calculateLevelFromExp as calcLevelFromExp,
   calculateLevelProgress as calcProgress
-} from '@/app/utils/level-icons';
+} from '@/shared/utils/level-icons';
 
 interface UserInfo {
   id: string;
@@ -21,10 +21,10 @@ interface UserInfo {
 
 interface ExpHistoryItem {
   id: string;
-  user_id: string;
+  user_id: string | null;
   exp: number;
   reason: string;
-  created_at: string;
+  created_at: string | null;
 }
 
 interface ExpManagerProps {
@@ -116,7 +116,7 @@ export default function ExpManager({
       // 1. RPC 함수 호출 시도
       try {
         const { error } = await supabase.rpc('admin_adjust_exp', {
-          admin_id: adminUser?.id,
+          admin_id: adminUser?.id || '',
           target_user_id: selectedUser.id,
           exp_amount: expAmount,
           reason_text: reason
@@ -361,7 +361,7 @@ export default function ExpManager({
                   {expHistory.map((item) => (
                     <tr key={item.id}>
                       <td className="px-4 py-2 text-sm text-gray-900">
-                        {new Date(item.created_at).toLocaleString('ko-KR', {
+                        {new Date(item.created_at || '').toLocaleString('ko-KR', {
                           year: 'numeric',
                           month: '2-digit',
                           day: '2-digit',

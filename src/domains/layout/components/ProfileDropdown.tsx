@@ -7,10 +7,9 @@ import { faUser, faSignOutAlt, faCog } from '@fortawesome/free-solid-svg-icons';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { createClient } from '@/shared/api/supabase';
-import { useAuth } from '@/app/context/AuthContext';
+import { useAuth } from '@/shared/context/AuthContext';
 import { useIcon } from '@/shared/context/IconContext';
-import Image from 'next/image';
-import { getLevelIconUrl } from '@/app/utils/level-icons';
+import UserIcon from '@/shared/components/UserIcon';
 
 export default function ProfileDropdown() {
   const router = useRouter();
@@ -20,31 +19,18 @@ export default function ProfileDropdown() {
   const { 
     iconUrl, 
     iconName, 
-    updateUserIconState, 
-    isIconLoading, 
     refreshUserIcon 
   } = useIcon();
   
   // 사용자 레벨 기반 기본 아이콘 URL
   const userLevel = user?.user_metadata?.level || 1;
-  const defaultIconUrl = getLevelIconUrl(userLevel);
   
-  // 표시할 아이콘 및 이름 결정
-  const displayIconUrl = iconUrl || defaultIconUrl;
-  const displayIconName = iconName || `레벨 ${userLevel} 기본 아이콘`;
-
   // 아이콘 정보 초기화
   useEffect(() => {
     if (user && (!iconUrl || !iconName)) {
       refreshUserIcon();
     }
   }, [user, iconUrl, iconName, refreshUserIcon]);
-  
-  // 이미지 로드 에러 핸들러
-  const handleImageError = useCallback(() => {
-    // 기본 아이콘으로 대체
-    updateUserIconState(defaultIconUrl, `레벨 ${userLevel} 기본 아이콘`);
-  }, [defaultIconUrl, updateUserIconState, userLevel]);
   
   // 드롭다운 메뉴 토글
   const toggleDropdown = useCallback((e: React.MouseEvent) => {
@@ -87,23 +73,13 @@ export default function ProfileDropdown() {
           onClick={toggleDropdown}
           className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100"
         >
-          {isIconLoading ? (
-            <div className="w-6 h-6 rounded-full bg-gray-200 animate-pulse"></div>
-          ) : displayIconUrl ? (
-            <Image 
-              src={displayIconUrl}
-              alt="프로필 이미지"
-              width={24}
-              height={24}
-              className="rounded-full object-cover"
-              unoptimized={true}
-              title={displayIconName || undefined}
-              priority={true}
-              onError={handleImageError}
-            />
-          ) : (
-            <FontAwesomeIcon icon={faUser} className="h-4 w-4" />
-          )}
+          <UserIcon 
+            iconUrl={iconUrl}
+            level={userLevel}
+            size={24}
+            alt="프로필 이미지"
+            className="rounded-full object-cover"
+          />
         </button>
         
         {isDropdownOpen && (
@@ -111,23 +87,13 @@ export default function ProfileDropdown() {
             <div className="px-4 py-2 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 relative rounded-full overflow-hidden">
-                  {isIconLoading ? (
-                    <div className="w-full h-full bg-gray-200 animate-pulse"></div>
-                  ) : displayIconUrl ? (
-                    <Image 
-                      src={displayIconUrl}
-                      alt="프로필 이미지"
-                      fill
-                      sizes="32px"
-                      className="object-cover"
-                      unoptimized={true}
-                      onError={handleImageError}
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-slate-300 flex items-center justify-center text-white">
-                      <FontAwesomeIcon icon={faUser} className="h-3 w-3" />
-                    </div>
-                  )}
+                  <UserIcon 
+                    iconUrl={iconUrl}
+                    level={userLevel}
+                    size={32}
+                    alt="프로필 이미지"
+                    className="object-cover"
+                  />
                 </div>
                 <div>
                   <div className="text-sm font-medium">

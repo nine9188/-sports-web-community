@@ -93,7 +93,7 @@ export default function ClientBoardNavigation({
 }: { 
   initialData: BoardNavigationData
 }) {
-  const pathname = usePathname();
+  const pathname = usePathname() || '';
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   
   // 카테고리 토글 핸들러

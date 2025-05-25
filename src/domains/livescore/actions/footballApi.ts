@@ -1,6 +1,5 @@
 'use server';
 
-import { cache } from 'react';
 import { getMajorLeagueIds } from '../constants/league-mappings';
 
 // 매치 데이터 인터페이스
@@ -182,16 +181,19 @@ export const fetchFromFootballApi = async (endpoint: string, params: Record<stri
         'x-rapidapi-host': 'v3.football.api-sports.io',
         'x-rapidapi-key': API_KEY,
       },
-      next: { revalidate: 300 } // 5분 캐싱 (라이브 데이터는 자주 업데이트되어야 함)
+      // Next.js revalidate 옵션 제거 (가능한 직렬화 문제 해결)
+      cache: 'no-store'
     });
 
     if (!response.ok) {
       throw new Error(`API 응답 오류: ${response.status}`);
     }
 
-    return await response.json();
+    const rawData = await response.json();
+    
+    // JSON-safe 객체로 강제 변환하여 Stream 직렬화 문제 해결
+    return JSON.parse(JSON.stringify(rawData));
   } catch (error) {
-    console.error(`Football API 요청 오류 (${endpoint}):`, error);
     throw error;
   }
 };
@@ -250,12 +252,12 @@ export async function fetchMatchesByDate(date: string): Promise<MatchData[]> {
           };
         });
       
-      return filteredMatches;
+      // JSON 직렬화로 안전한 객체 보장
+      return JSON.parse(JSON.stringify(filteredMatches));
     }
     
     return [];
-  } catch (error) {
-    console.error('날짜별 매치 데이터 가져오기 오류:', error);
+  } catch {
     return [];
   }
 }
@@ -290,6 +292,8 @@ export async function fetchMultiDayMatches(): Promise<MultiDayMatchesResult> {
       fetchMatchesByDate(tomorrowFormatted)
     ]);
 
+    const totalMatches = yesterdayMatches.length + todayMatches.length + tomorrowMatches.length;
+
     const result: MultiDayMatchesResult = {
       success: true,
       dates: {
@@ -298,7 +302,7 @@ export async function fetchMultiDayMatches(): Promise<MultiDayMatchesResult> {
         tomorrow: tomorrowFormatted
       },
       meta: {
-        totalMatches: yesterdayMatches.length + todayMatches.length + tomorrowMatches.length
+        totalMatches: totalMatches
       },
       data: {
         yesterday: { matches: yesterdayMatches },
@@ -307,9 +311,9 @@ export async function fetchMultiDayMatches(): Promise<MultiDayMatchesResult> {
       }
     };
     
-    return result;
-  } catch (error) {
-    console.error('다중 경기 데이터 가져오기 오류:', error);
+    // JSON 직렬화로 안전한 객체 보장
+    return JSON.parse(JSON.stringify(result));
+  } catch {
     return {
       success: false,
       error: '데이터를 가져오는데 실패했습니다.'
@@ -340,18 +344,18 @@ export async function fetchMatchDetails(matchId: string) {
         });
       }
       
-      return matchData;
+      // JSON 직렬화로 안전한 객체 보장
+      return JSON.parse(JSON.stringify(matchData));
     }
     
     return null;
-  } catch (error) {
-    console.error('경기 상세 정보 가져오기 오류:', error);
+  } catch {
     throw new Error('경기 정보를 가져오는데 실패했습니다.');
   }
 }
 
 // 캐싱을 적용한 다중 경기 데이터 가져오기
-export const fetchCachedMultiDayMatches = cache(fetchMultiDayMatches);
+export const fetchCachedMultiDayMatches = fetchMultiDayMatches;
 
 // 캐싱을 적용한 경기 상세 정보 가져오기
-export const fetchCachedMatchDetails = cache(fetchMatchDetails); 
+export const fetchCachedMatchDetails = fetchMatchDetails; 

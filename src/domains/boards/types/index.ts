@@ -2,4 +2,5 @@
 
 // 게시판 타입 재내보내기
 export * from './board';
-export * from './post'; 
+export * from './post';
+export * from './response'; 

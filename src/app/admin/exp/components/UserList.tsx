@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { Search, X, Award } from 'lucide-react';
-import { calculateLevelProgress } from '@/app/utils/level-icons';
 
 interface UserInfo {
   id: string;
@@ -110,10 +109,12 @@ export default function UserList({ users, loading, selectedUser, onSelectUser }:
   );
 }
 
-// 경험치 퍼센트 계산 함수 수정
+// 경험치 퍼센트 계산 함수
 function calculateExpPercentage(user: UserInfo): number {
-  const currentLevel = user.level || 1;
   const currentExp = user.exp || 0;
   
-  return calculateLevelProgress(currentLevel, currentExp);
+  // 간단한 진행률 계산 (레벨당 100 경험치로 가정)
+  const levelExp = 100;
+  const progress = (currentExp % levelExp) / levelExp * 100;
+  return Math.min(progress, 100);
 } 

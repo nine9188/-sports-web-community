@@ -3,7 +3,7 @@
 import { useRef, useEffect, useState } from 'react';
 import styles from '../styles/formation.module.css';
 // 프리미어리그 팀 선수 데이터 import
-import { liverpoolPlayers, NottinghamForestPlayers, Arsenalplayers, NewcastleUnitedplayers, Chelseaplayers, ManchesterCityplayers, AstonVillaplayers, Bournemouthplayers, Fulhamplayers, Brightonplayers } from '@/app/constants/teams/premier-league/premier-teams';
+import { liverpoolPlayers, NottinghamForestPlayers, Arsenalplayers, NewcastleUnitedplayers, Chelseaplayers, ManchesterCityplayers, AstonVillaplayers, Bournemouthplayers, Fulhamplayers, Brightonplayers } from '@/domains/livescore/constants/teams/premier-league/premier-teams';
 import Image from 'next/image';
 
 // 미디어 쿼리를 사용하기 위한 커스텀 훅

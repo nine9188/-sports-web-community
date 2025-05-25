@@ -122,9 +122,9 @@ export default async function PostDetailPage({
       likes: post.likes,
       author_nickname: post.author,
       author_id: post.author_id || '',
-      author_level: post.author_level || 1, // 기본 레벨 1
-      author_icon_id: post.author_icon_id || null,
-      author_icon_url: post.author_icon_url || null,
+      author_level: post.author_level || 1,
+      author_icon_id: post.author_icon_id,
+      author_icon_url: post.author_icon_url || undefined,  // null을 undefined로 변환
       comment_count: post.commentCount,
       // 팀/리그 정보
       team_id: post.team?.id || null,
@@ -140,8 +140,7 @@ export default async function PostDetailPage({
       ...result.post,
       profiles: {
         ...result.post.profiles,
-        icon_url: result.iconUrl || null,  // 아이콘 URL을 profiles 내부에 직접 추가
-        icon_id: result.post.profiles?.icon_id || null  // 아이콘 ID도 확실하게 설정
+        icon_url: result.iconUrl
       }
     };
     

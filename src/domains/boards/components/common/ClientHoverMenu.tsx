@@ -2,8 +2,9 @@
 
 import React from 'react';
 import HoverMenu from '@/domains/boards/components/common/HoverMenu';
-import { useBoards } from '@/app/hooks/useBoards';
+import { useBoards, HierarchicalBoard } from '@/domains/boards/hooks/useBoards';
 
+// 게시판 관련 타입 정의
 interface ChildBoard {
   id: string;
   name: string;
@@ -80,31 +81,29 @@ export default function ClientHoverMenu({
   }
   
   // 최상위 게시판 추출 (예: 해외축구)
-  const topBoards: TopBoard[] = data.rootBoards.map(board => ({
+  const topBoards: TopBoard[] = data.hierarchical.map((board: HierarchicalBoard) => ({
     id: board.id,
     name: board.name,
-    display_order: board.display_order,
+    display_order: board.display_order || 0,
     slug: board.slug
   }));
   
   // 하위 게시판 매핑 (상위 게시판 ID → 하위 게시판 목록)
   const childBoardsMap: Record<string, ChildBoard[]> = {};
   
-  // boardsMap에서 하위 게시판 구성
-  // 여기서는 상위 게시판(프리미어리그, 라리가)과 그 하위 게시판들의 관계를 매핑합니다
-  Object.values(data.boardsMap || {}).forEach(board => {
-    if (board.parent_id && board.children && board.children.length > 0) {
-      childBoardsMap[board.parent_id] = board.children.map(child => ({
+  // 계층적 구조에서 하위 게시판 구성
+  data.hierarchical.forEach((board: HierarchicalBoard) => {
+    if (board.children && board.children.length > 0) {
+      childBoardsMap[board.id] = board.children.map((child: HierarchicalBoard) => ({
         id: child.id,
         name: child.name,
-        display_order: child.display_order,
+        display_order: child.display_order || 0,
         slug: child.slug
       }));
     }
   });
   
   // 최상위 게시판 ID 확인 (rootBoardId가 제공되지 않은 경우)
-  // 이는 "전체" 메뉴에 해당하는 게시판 ID입니다
   let finalRootBoardId = rootBoardId;
   
   if (!finalRootBoardId && topBoards.length > 0) {

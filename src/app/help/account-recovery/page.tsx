@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { createClient } from '@/app/lib/supabase-browser';
+import { createClient } from '@/shared/api/supabase';
 import { findUsername } from '@/domains/auth/actions';
 import Link from 'next/link';
 
@@ -12,7 +12,7 @@ import Link from 'next/link';
 function AccountRecoveryContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const tabParam = searchParams.get('tab');
+  const tabParam = searchParams?.get('tab');
   const [activeTab, setActiveTab] = useState<'id' | 'password'>(
     tabParam === 'password' ? 'password' : 'id'
   );

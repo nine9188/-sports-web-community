@@ -4,34 +4,36 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Coins } from 'lucide-react';
 import UserStats from './UserStats';
 import ProfileActions from './ProfileActions';
-import { useAuth } from '@/app/context/AuthContext';
+import { useAuth } from '@/shared/context/AuthContext';
 import { useIcon } from '@/shared/context/IconContext';
 import Image from 'next/image';
-import { getUserIconInfo } from '@/app/utils/level-icons-client';
+import { getUserIconInfo } from '@/shared/utils/level-icons';
 import { 
   LEVEL_EXP_REQUIREMENTS, 
   calculateLevelProgress,
   getExpToNextLevel,
   getLevelIconUrl
-} from '@/app/utils/level-icons';
-import { createClient } from '@/app/lib/supabase-browser';
+} from '@/shared/utils/level-icons';
+import { createClient } from '@/shared/api/supabase';
+import { profileImageProps } from '@/shared/utils/user-icons';
 
 interface ProfileData {
   id?: string;
-  username?: string;
-  email?: string;
-  nickname?: string;
-  full_name?: string;
-  avatar_url?: string;
-  level?: number;
-  exp?: number;
-  points?: number;
-  created_at?: string;
-  updated_at?: string;
+  username?: string | null;
+  email?: string | null;
+  nickname?: string | null;
+  full_name?: string | null;
+  avatar_url?: string | null;
+  level?: number | null;
+  exp?: number | null;
+  points?: number | null;
+  created_at?: string | null;
+  updated_at?: string | null;
   postCount?: number;
   commentCount?: number;
   icon_id?: number | null;
   icon_url?: string | null;
+  is_admin?: boolean | null;
 }
 
 interface UserProfileProps {
@@ -41,6 +43,8 @@ interface UserProfileProps {
 export default function UserProfile({ profileData: initialProfileData }: UserProfileProps) {
   const { user } = useAuth();
   const [profileData, setProfileData] = useState<ProfileData | null>(initialProfileData);
+  const [hasImageError, setHasImageError] = useState(false);
+  const [isLoadingAdditionalInfo, setIsLoadingAdditionalInfo] = useState<boolean>(false);
   
   // 프로필 데이터에서 기본 정보 추출
   const userLevel = useMemo(() => profileData?.level || 1, [profileData?.level]);
@@ -74,10 +78,11 @@ export default function UserProfile({ profileData: initialProfileData }: UserPro
   // 로컬 아이콘 상태 (전역 상태가 비어있을 때 사용)
   const [localIconUrl, setLocalIconUrl] = useState<string>(initialIconUrl);
   const [localIconName, setLocalIconName] = useState<string>(`${profileData?.nickname || ''} 아이콘`);
-  const [isLoadingAdditionalInfo, setIsLoadingAdditionalInfo] = useState<boolean>(false);
   
-  // 사용할 아이콘 URL과 이름 결정 - 전역 상태 우선, 없으면 로컬 상태 사용
-  const displayIconUrl = globalIconUrl || localIconUrl;
+  // 사용할 아이콘 URL과 이름 결정 - 이미지 오류 상태 고려
+  const displayIconUrl = hasImageError 
+    ? defaultIconUrl
+    : globalIconUrl || localIconUrl;
   const displayIconName = globalIconName || localIconName;
   
   // 상세 아이콘 정보 로드 함수 - 필요한 경우에만 실행
@@ -92,13 +97,16 @@ export default function UserProfile({ profileData: initialProfileData }: UserPro
         const iconInfo = await getUserIconInfo(userId);
         
         if (iconInfo) {
-          // 로컬 상태 업데이트
-          setLocalIconUrl(iconInfo.currentIconUrl);
-          setLocalIconName(iconInfo.currentIconName);
+          // 로컬 상태 업데이트 - null이 될 수 있는 값에 대해 기본값 제공
+          const iconUrl = iconInfo.currentIconUrl || defaultIconUrl;
+          const iconName = iconInfo.currentIconName || `${profileData?.nickname || ''} 아이콘`;
+          
+          setLocalIconUrl(iconUrl);
+          setLocalIconName(iconName);
           
           // 전역 상태 업데이트 (비어있는 경우)
           if (!globalIconUrl) {
-            updateUserIconState(iconInfo.currentIconUrl, iconInfo.currentIconName);
+            updateUserIconState(iconUrl, iconName);
           }
         }
       } catch (error) {
@@ -108,7 +116,7 @@ export default function UserProfile({ profileData: initialProfileData }: UserPro
         setIsLoadingAdditionalInfo(false);
       }
     }
-  }, [userId, iconId, profileData?.icon_url, isLoadingAdditionalInfo, globalIconUrl, updateUserIconState]);
+  }, [userId, iconId, profileData?.icon_url, isLoadingAdditionalInfo, globalIconUrl, updateUserIconState, defaultIconUrl, profileData?.nickname]);
   
   // 필요한 경우에만 추가 아이콘 정보를 비동기적으로 로드
   useEffect(() => {
@@ -125,11 +133,13 @@ export default function UserProfile({ profileData: initialProfileData }: UserPro
 
   // 이미지 로드 에러 핸들러
   const handleImageError = useCallback(() => {
-    // 로컬 상태 업데이트
+    // 오류 발생 시 기본 레벨 아이콘으로 대체
+    setHasImageError(true);
     setLocalIconUrl(defaultIconUrl);
     
     // 전역 상태도 업데이트
     updateUserIconState(defaultIconUrl, `레벨 ${userLevel} 기본 아이콘`);
+    return true;
   }, [defaultIconUrl, updateUserIconState, userLevel]);
 
   // 초기 profileData가 없거나 인증 상태가 변경되었을 때 프로필 데이터 가져오기
@@ -195,16 +205,15 @@ export default function UserProfile({ profileData: initialProfileData }: UserPro
     <div className="space-y-3">
       <div className="py-3 px-4 flex items-start gap-3 bg-muted/50 rounded-md">
         <div className="flex-shrink-0">
-          <div className="w-10 h-10 relative rounded-full overflow-hidden" title={displayIconName || undefined}>
+          <div className="w-10 h-10 relative rounded-full overflow-hidden">
             <Image 
               src={displayIconUrl}
               alt={`${profileData.nickname || '사용자'} 프로필`}
               fill
-              sizes="40px"
               className="object-cover"
-              unoptimized={true}
+              {...profileImageProps}
               onError={handleImageError}
-              priority={true}
+              title={displayIconName}
             />
           </div>
         </div>

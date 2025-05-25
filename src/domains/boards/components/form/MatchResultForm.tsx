@@ -7,7 +7,7 @@ import { CalendarIcon, Search, X } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/shared/ui';
 import { getMatchesByDate } from '@/domains/boards/actions/matches';
-import type { MatchData } from '@/app/actions/footballApi';
+import type { MatchData } from '@/domains/livescore/actions/footballApi';
 
 // 경기 데이터를 위한 인터페이스
 interface League {

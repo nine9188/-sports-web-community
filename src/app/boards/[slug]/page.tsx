@@ -17,6 +17,9 @@ interface LayoutPost {
   likes: number;
   author_nickname: string;
   author_id?: string;
+  author_icon_id?: number | null;
+  author_icon_url?: string | null;
+  author_level?: number;
   comment_count: number;
   team_id?: number | null;
   team_name?: string | null;
@@ -40,6 +43,9 @@ function convertApiPostsToLayoutPosts(apiPosts: ApiPost[]): LayoutPost[] {
     likes: post.likes || 0,
     author_nickname: post.author_nickname || '익명',
     author_id: post.author_id,
+    author_icon_id: post.author_icon_id,
+    author_icon_url: post.author_icon_url,
+    author_level: post.author_level || 1,
     comment_count: post.comment_count || 0,
     team_id: typeof post.team_id === 'string' ? parseInt(post.team_id, 10) : post.team_id as number | null,
     team_logo: post.team_logo,

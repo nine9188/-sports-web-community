@@ -34,10 +34,10 @@ interface CategoryNavigationProps {
 }
 
 export default function CategoryNavigation({ category, categoryInfo }: CategoryNavigationProps) {
-  const params = useParams()
-  const currentSubcategory = params.subcategory as string
-  const currentTeam = params.team as string
-  const [hoveredLeague, setHoveredLeague] = useState<string | null>(null)
+  const params = useParams() || {};
+  const currentSubcategory = params.subcategory as string;
+  const currentTeam = params.team as string;
+  const [hoveredLeague, setHoveredLeague] = useState<string | null>(null);
   
   return (
     <div className="space-y-4">

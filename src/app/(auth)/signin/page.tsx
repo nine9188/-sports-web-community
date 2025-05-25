@@ -4,16 +4,16 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'react-toastify';
-import { useAuth } from '@/app/context/AuthContext';
+import { useAuth } from '@/shared/context/AuthContext';
 import { EyeIcon, EyeOffIcon } from 'lucide-react';
-import { createClient } from '@/app/lib/supabase-browser';
+import { createClient } from '@/shared/api/supabase';
 
 // SearchParams를 사용하는 로그인 컴포넌트
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get('redirect') || searchParams.get('redirect_url') || '/';
-  const message = searchParams.get('message');
+  const redirectUrl = searchParams?.get('redirect') || searchParams?.get('redirect_url') || '/';
+  const message = searchParams?.get('message');
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

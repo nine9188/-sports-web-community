@@ -60,4 +60,65 @@ export async function getCurrentUser() {
     console.error('사용자 정보 조회 중 오류:', error)
     return { user: null }
   }
+}
+
+/**
+ * 사용자 메타데이터 업데이트
+ */
+export async function updateUserData(userId: string, metadata: Record<string, unknown>) {
+  try {
+    const supabase = await createClient()
+    
+    // 메타데이터 업데이트
+    const { data, error } = await supabase.auth.admin.updateUserById(
+      userId,
+      { user_metadata: metadata }
+    )
+    
+    if (error) {
+      console.error('사용자 데이터 업데이트 오류:', error)
+      return { success: false, error: error.message }
+    }
+    
+    return { 
+      success: true, 
+      user: data.user
+    }
+  } catch (error) {
+    console.error('사용자 데이터 업데이트 중 오류:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : '사용자 데이터 업데이트 중 오류가 발생했습니다'
+    }
+  }
+}
+
+/**
+ * 세션 갱신
+ */
+export async function refreshSession(refreshToken: string) {
+  try {
+    const supabase = await createClient()
+    
+    // 세션 갱신
+    const { data, error } = await supabase.auth.refreshSession({
+      refresh_token: refreshToken
+    })
+    
+    if (error) {
+      console.error('세션 갱신 오류:', error)
+      return { success: false, error: error.message }
+    }
+    
+    return { 
+      success: true, 
+      session: data.session
+    }
+  } catch (error) {
+    console.error('세션 갱신 중 오류:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : '세션 갱신 중 오류가 발생했습니다'
+    }
+  }
 } 

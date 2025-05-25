@@ -1,48 +1,45 @@
 'use client';
 
+import React, { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faSignOutAlt, faCog, faChevronDown, faBars } from '@fortawesome/free-solid-svg-icons';
-import { Button } from '@/app/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
-import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import Image from 'next/image';
 import { createClient } from '@/shared/api/supabase';
 import ProfileDropdown from './ProfileDropdown';
 import BoardNavigationClient from './BoardNavigationClient';
-import { useAuth } from '@/app/context/AuthContext';
+import { useAuth } from '@/shared/context/AuthContext';
 import { HeaderUserData } from '@/domains/layout/types/header';
-import { getLevelIconUrl } from '@/app/utils/level-icons';
 import { useIcon } from '@/shared/context/IconContext';
+import UserIcon from '@/shared/components/UserIcon';
+import { Board } from '../types/board';
 
 type HeaderClientProps = {
   onMenuClick: () => void;
   isSidebarOpen: boolean;
   initialUserData: HeaderUserData | null;
+  boards: Board[];
 };
 
 export default function HeaderClient({ 
   onMenuClick, 
   isSidebarOpen, 
-  initialUserData
+  initialUserData,
+  boards
 }: HeaderClientProps) {
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
-  const { iconUrl, iconName, refreshUserIcon, isIconLoading } = useIcon();
+  const { iconUrl, iconName, refreshUserIcon } = useIcon();
   
   // 이전 userData 상태 유지 (깜빡임 방지)
   const [userData, setUserData] = useState<HeaderUserData | null>(initialUserData);
   
   // 사용자 레벨 기반 기본 아이콘 URL
   const userLevel = userData?.level || 1;
-  const defaultIconUrl = getLevelIconUrl(userLevel);
-  
-  // 표시할 아이콘 및 이름 결정
-  const displayIconUrl = iconUrl || defaultIconUrl;
-  const displayIconName = iconName || `레벨 ${userLevel} 기본 아이콘`;
   
   // 초기 데이터가 없더라도 user 객체가 있으면 기본 데이터 설정
   useEffect(() => {
@@ -70,13 +67,6 @@ export default function HeaderClient({
       refreshUserIcon();
     }
   }, [user, iconUrl, iconName, refreshUserIcon]);
-  
-  // 이미지 로드 에러 핸들러
-  const handleImageError = useCallback(() => {
-    // 오류 시 기본 레벨 아이콘으로 대체
-    const defaultIcon = getLevelIconUrl(userLevel);
-    return defaultIcon;
-  }, [userLevel]);
   
   // 드롭다운 메뉴 토글
   const toggleDropdown = useCallback((e: React.MouseEvent) => {
@@ -124,25 +114,13 @@ export default function HeaderClient({
               className="flex items-center space-x-1 px-3 py-2 rounded hover:bg-gray-100"
             >
               <div className="w-6 h-6 relative rounded-full overflow-hidden">
-                {isIconLoading ? (
-                  <div className="w-full h-full bg-gray-200 animate-pulse"></div>
-                ) : displayIconUrl ? (
-                  <Image 
-                    src={displayIconUrl}
-                    alt="프로필 이미지"
-                    fill
-                    sizes="20px"
-                    className="object-cover"
-                    unoptimized={true}
-                    title={displayIconName || undefined}
-                    priority={true}
-                    onError={() => handleImageError()}
-                  />
-                ) : (
-                  <div className="w-full h-full bg-slate-300 flex items-center justify-center text-white">
-                    <FontAwesomeIcon icon={faUser} className="h-3 w-3" />
-                  </div>
-                )}
+                <UserIcon 
+                  iconUrl={iconUrl || userData?.iconInfo?.iconUrl}
+                  level={userLevel}
+                  size={24}
+                  alt={iconName || '프로필 이미지'}
+                  className="object-cover"
+                />
               </div>
               <span className="text-sm">{userData.nickname || '사용자'}</span>
               <FontAwesomeIcon icon={faChevronDown} className="h-3 w-3" />
@@ -187,7 +165,7 @@ export default function HeaderClient({
         </div>
       </div>
     );
-  }, [userData, displayIconUrl, displayIconName, isIconLoading, isDropdownOpen, toggleDropdown, handleLogout, handleImageError]);
+  }, [userData, iconUrl, iconName, userLevel, isDropdownOpen, toggleDropdown, handleLogout]);
 
   return (
     <header className="sticky top-0 z-50 border-b shadow-sm bg-white">
@@ -211,7 +189,7 @@ export default function HeaderClient({
           </div>
         </div>
         <nav className="flex items-center h-12 px-4 overflow-x-auto border-t relative">
-          <BoardNavigationClient />
+          <BoardNavigationClient boards={boards} />
         </nav>
       </div>
     </header>

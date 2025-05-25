@@ -65,13 +65,18 @@ export default async function ShortsPage() {
               <div className="absolute bottom-0 left-0 right-0 p-2">
                 <h3 className="text-sm font-medium line-clamp-2 text-white">{short.title}</h3>
                 <div className="flex items-center mt-1">
-                  <Image 
-                    src={short.authorAvatar || '/placeholder-avatar.png'} 
-                    alt={short.author || '작성자'} 
-                    width={20}
-                    height={20}
-                    className="rounded-full mr-1"
-                  />
+                  {short.authorAvatar && short.authorAvatar !== '#' && (
+                    <Image 
+                      src={short.authorAvatar} 
+                      alt={short.author || '작성자'} 
+                      width={20}
+                      height={20}
+                      className="rounded-full mr-1"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  )}
                   <span className="text-xs text-gray-300">{short.author}</span>
                 </div>
                 <div className="text-xs text-gray-400 mt-1">

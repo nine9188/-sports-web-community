@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient } from '@/shared/api/supabaseServer';
-import { calculateLevelFromExpServer } from '@/shared/utils/level-icons';
+import { calculateLevelFromExp } from '@/shared/utils/level-icons';
 
 // 활동 유형 정의 - 내부에서만 사용하는 상수 (export 하지 않음)
 const ActivityTypeValues = {
@@ -22,6 +22,11 @@ export async function getActivityTypeValues() {
 
 // 활동 상수를 async 함수로 내보냄 (기존 코드와의 호환성 유지)
 export async function getActivityTypes() {
+  return ActivityTypeValues;
+}
+
+// 클라이언트에서 사용할 ActivityTypes를 가져오는 비동기 함수
+export async function getActivityTypesForClient() {
   return ActivityTypeValues;
 }
 
@@ -173,7 +178,7 @@ export async function rewardUserActivity(
       // 7. 사용자 경험치와 포인트 업데이트
       const newExp = currentExp + expReward;
       const newPoints = currentPoints + pointsReward;
-      const newLevel = calculateLevelFromExpServer(newExp);
+      const newLevel = calculateLevelFromExp(newExp);
       
       const { error: updateError } = await supabase
         .from('profiles')
@@ -248,45 +253,61 @@ export async function checkConsecutiveLogin(userId: string): Promise<{ consecuti
     
     // 6. 어제 로그인했는지 확인
     const loggedInYesterday = loginDays.includes(yesterdayStr);
-    
+
     // 7. 연속 로그인 일수 계산
-    let consecutiveDays = alreadyLoggedInToday ? 1 : 0;
+    let consecutiveDays = 1; // 오늘 포함
     
-    if (loggedInYesterday) {
-      consecutiveDays = 1; // 어제 로그인했으면 최소 1일
+    // 6-7일 연속 로그인 보상은 한 번만 지급 (최초 달성 시)
+    // 이전에 6-7일 연속 로그인 보상을 받은 적이 있는지 확인
+    const supabase2 = await createClient();
+    const { count: rewardRecords } = await supabase2
+      .from('exp_history')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('reason', '연속 출석 보너스');
       
-      // 이전 기록 확인하여 연속일 계산
-      const checkDate = new Date(yesterday); // let을 const로 변경 - 루프 내에서 값이 변경되므로 참조하는 변수 사용
-      let maxDays = 30; // 최대 30일까지만 체크 (무한루프 방지)
+    // 8. 새 로그인 기록 저장 (오늘 처음 로그인한 경우에만)
+    if (!alreadyLoggedInToday) {
+      await supabase
+        .from('login_history')
+        .insert({
+          user_id: userId,
+          login_date: today
+        });
+    }
+    
+    // 9. 어제 로그인하지 않았다면 연속 로그인 초기화
+    if (!loggedInYesterday) {
+      return { consecutive: 1, reward: false };
+    }
+    
+    // 10. 마지막 로그인부터 역순으로 연속 일수 계산
+    for (let i = 1; i < loginDays.length; i++) {
+      const currentDate = new Date(loginDays[i]);
+      const previousDate = new Date(loginDays[i-1]);
       
-      while (maxDays > 0) {
-        maxDays--;
-        checkDate.setDate(checkDate.getDate() - 1);
-        const checkDateStr = checkDate.toISOString().split('T')[0];
-        
-        if (loginDays.includes(checkDateStr)) {
-          consecutiveDays++;
-        } else {
-          break; // 연속이 끊기면 종료
-        }
-      }
+      // 날짜 차이가 1일이면 연속 로그인
+      const diffTime = previousDate.getTime() - currentDate.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       
-      // 오늘 로그인했으면 +1
-      if (alreadyLoggedInToday) {
+      if (diffDays === 1) {
         consecutiveDays++;
+      } else {
+        break;
       }
     }
     
-    // 8. 보상 지급 여부 결정 (오늘 처음 로그인하면서 어제도 로그인했을 때)
-    const shouldReward = alreadyLoggedInToday && loggedInYesterday && consecutiveDays >= 2;
+    // 11. 7일 이상 연속 로그인이면 보상 조건 충족
+    const rewardEligible = consecutiveDays >= 7 && rewardRecords === 0;
     
     return { 
       consecutive: consecutiveDays,
-      reward: shouldReward
+      reward: rewardEligible
     };
   } catch (error) {
-    console.error('연속 로그인 확인 중 오류:', error);
-    // 오류 발생 시 기본값 반환
+    console.error('연속 로그인 확인 오류:', error);
     return { consecutive: 1, reward: false };
   }
-} 
+}
+
+ 

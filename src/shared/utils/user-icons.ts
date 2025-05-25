@@ -17,6 +17,14 @@ interface IconCacheEntry {
 const iconCache = new Map<string, IconCacheEntry>();
 
 /**
+ * 이미지 로딩 상태 플레이스홀더 URL 생성 함수
+ * 블러 이펙트에 사용
+ */
+export function getPlaceholderImage(size = 10): string {
+  return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${size}' viewBox='0 0 ${size} ${size}'%3E%3Crect width='${size}' height='${size}' fill='%23f1f5f9'/%3E%3C/svg%3E`;
+}
+
+/**
  * 최적화된 아이콘 가져오기 함수
  * PostList.tsx 스타일로 즉시 사용 가능한 아이콘 URL을 반환
  */
@@ -109,8 +117,30 @@ export async function getOptimizedUserIcon(
 }
 
 /**
+ * 프로필 이미지 공통 스타일 속성
+ * Next/Image 컴포넌트용
+ */
+export const profileImageProps = {
+  sizes: "(max-width: 768px) 20px, 40px",
+  priority: false,
+  loading: "lazy" as const,
+  unoptimized: true,
+  placeholder: "blur" as const,
+  blurDataURL: getPlaceholderImage(),
+};
+
+/**
  * 레벨에 기반한 기본 아이콘 URL을 즉시 반환하는 함수
  */
 export function getUserLevelIconUrl(level: number = 1): string {
   return getLevelIconUrl(Math.max(1, level));
+}
+
+/**
+ * 이미지 로딩 에러 시 사용할 핸들러
+ * @param level 사용자 레벨
+ * @returns 이미지 오류 발생 시 사용할 URL
+ */
+export function getFallbackIconUrl(level: number = 1): string {
+  return getUserLevelIconUrl(level);
 } 

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { logout } from '@/shared/actions/auth-actions';
-import { useAuth } from '@/app/context/AuthContext';
+import { useAuth } from '@/shared/context/AuthContext';
 import { useIcon } from '@/shared/context/IconContext';
 
 export default function ProfileActions() {

@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { getOptimizedUserIcon } from '@/shared/utils';
+import React from 'react';
+import UserIcon from '@/shared/components/UserIcon';
 
 interface PostHeaderProps {
   title: string;
@@ -27,44 +26,9 @@ export default function PostHeader({
   likes, 
   commentCount = 0, // 기본값 제공
 }: PostHeaderProps) {
-  // 기본 아이콘 URL 사용 (author.icon_url이 있으면 사용, 없으면 기본 아이콘)
-  const [userIconUrl, setUserIconUrl] = useState<string | null>(author.icon_url || '/images/player.svg');
-  const [iconName, setIconName] = useState<string | null>(null);
-  const [iconError, setIconError] = useState<boolean>(false);
-  
   // 제목 정리 - 클라이언트 측에서만 적용됨 (replace 메서드 사용)
   const cleanTitle = typeof title === 'string' ? 
     title.replace(/&quot;|"|"|"/g, '"').replace(/&ldquo;|&rdquo;/g, '"') : title;
-  
-  // 사용자 아이콘 가져오기 - 최적화된 버전 사용
-  useEffect(() => {
-    const fetchUserIcon = async () => {
-      // 아이콘 오류 상태이거나 사용자 ID가 없으면 아이콘을 가져오지 않음
-      if (iconError || !author.id) return;
-      
-      try {
-        // 최적화된 아이콘 로딩 함수 사용
-        const iconInfo = await getOptimizedUserIcon(author.id);
-        
-        if (iconInfo && iconInfo.url) {
-          setUserIconUrl(iconInfo.url);
-          setIconName(iconInfo.name);
-        }
-      } catch (error) {
-        console.error('아이콘 로딩 오류:', error);
-        setIconError(true);
-      }
-    };
-    
-    fetchUserIcon();
-  }, [author.id, iconError]);
-  
-  // 이미지 로드 에러 핸들러
-  const handleImageError = () => {
-    // 이미지 로드 실패 시 기본 아이콘으로 변경
-    setUserIconUrl('/images/player.svg');
-    setIconError(true);
-  };
 
   // 날짜 포맷 변경
   const formatDate = (dateString: string) => {
@@ -86,22 +50,15 @@ export default function PostHeader({
       <div className="hidden md:flex flex-wrap items-center justify-between text-xs text-gray-500">
         {/* 작성자 정보 - 왼쪽 배치 */}
         <div className="flex items-center flex-shrink-0">
-          {userIconUrl ? (
-            <div className="w-5 h-5 mr-1.5 relative rounded-full overflow-hidden flex-shrink-0" title={iconName || undefined}>
-              <Image 
-                src={userIconUrl}
-                alt={author.nickname || '사용자'}
-                fill
-                className="object-cover"
-                sizes="20px"
-                unoptimized={true}
-                priority={true}
-                onError={handleImageError}
-              />
-            </div>
-          ) : (
-            <div className="w-5 h-5 mr-1.5 bg-transparent rounded-full flex-shrink-0"></div>
-          )}
+          <div className="w-5 h-5 mr-1.5 relative rounded-full overflow-hidden flex-shrink-0">
+            <UserIcon 
+              iconUrl={author.icon_url}
+              size={20}
+              alt={author.nickname || '사용자'}
+              className="object-cover"
+              priority={true}
+            />
+          </div>
           <span className="font-medium text-sm">{author.nickname || '알 수 없음'}</span>
         </div>
         
@@ -122,22 +79,15 @@ export default function PostHeader({
         <div className="flex flex-wrap items-center justify-between text-xs text-gray-500 mb-1">
           {/* 작성자 정보 - 왼쪽 배치 */}
           <div className="flex items-center flex-shrink-0">
-            {userIconUrl ? (
-              <div className="w-5 h-5 mr-1.5 relative rounded-full overflow-hidden flex-shrink-0" title={iconName || undefined}>
-                <Image 
-                  src={userIconUrl}
-                  alt={author.nickname || '사용자'}
-                  fill
-                  className="object-cover"
-                  sizes="20px"
-                  unoptimized={true}
-                  priority={true}
-                  onError={handleImageError}
-                />
-              </div>
-            ) : (
-              <div className="w-5 h-5 mr-1.5 bg-transparent rounded-full flex-shrink-0"></div>
-            )}
+            <div className="w-5 h-5 mr-1.5 relative rounded-full overflow-hidden flex-shrink-0">
+              <UserIcon 
+                iconUrl={author.icon_url}
+                size={20}
+                alt={author.nickname || '사용자'}
+                className="object-cover"
+                priority={true}
+              />
+            </div>
             <span className="font-medium text-sm">{author.nickname || '알 수 없음'}</span>
           </div>
           

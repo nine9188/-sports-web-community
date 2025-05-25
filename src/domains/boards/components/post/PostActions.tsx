@@ -31,7 +31,8 @@ export default function PostActions({
       try {
         const { userAction, error } = await getUserPostAction(postId);
         
-        if (error) {
+        // 로그인 필요 메시지는 오류로 처리하지 않음
+        if (error && error !== '로그인이 필요합니다.') {
           console.error('좋아요/싫어요 상태 확인 중 오류:', error);
           return;
         }

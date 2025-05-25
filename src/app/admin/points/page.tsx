@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@/app/lib/supabase-browser';
+import { createClient } from '@/shared/api/supabase';
 import { toast } from 'react-toastify';
-import { Button } from '@/app/ui/button';
-import { useAuth } from '@/app/context/AuthContext';
+import { Button } from '@/shared/components/ui/button';
+import { useAuth } from '@/shared/context/AuthContext';
 import UserList from './components/UserList';
 import PointManager from './components/PointManager';
 
@@ -72,7 +72,8 @@ export default function PointsManagementPage() {
       if (!error && data) {
         const updatedUser = {
           ...data,
-          nickname: data.nickname || '사용자'
+          nickname: data.nickname || '사용자',
+          points: data.points ?? 0,
         };
         setSelectedUser(updatedUser);
       }

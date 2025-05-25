@@ -2,7 +2,6 @@
 
 import { createClient } from '@/shared/api/supabaseServer';
 import { revalidatePath } from 'next/cache';
-import { createActionClient } from '@/shared/api/supabaseServer'
 
 /**
  * 게시글 생성 서버 액션 (매개변수 사용)
@@ -71,7 +70,7 @@ export async function createPostWithParams(
         content,
         user_id: userId,
         board_id: boardId,
-        category: boardData.name || null,
+        category: boardData.name || '',
         views: 0,
         likes: 0,
         created_at: new Date().toISOString(),
@@ -304,7 +303,7 @@ export async function deletePost(
     const { data: boardData, error: boardError } = await supabase
       .from('boards')
       .select('slug')
-      .eq('id', existingPost.board_id)
+      .eq('id', existingPost.board_id || '')
       .single();
       
     if (boardError || !boardData) {
@@ -460,7 +459,7 @@ export async function likePost(postId: string): Promise<LikeActionResponse> {
       }
       
       // 게시글 좋아요 수 감소
-      newLikes = Math.max(0, currentPost.likes - 1);
+      newLikes = Math.max(0, (currentPost.likes || 0) - 1);
       
       const { error: updateError } = await supabase
         .from('posts')
@@ -514,7 +513,7 @@ export async function likePost(postId: string): Promise<LikeActionResponse> {
       }
       
       // 게시글 좋아요 수 증가
-      newLikes = currentPost.likes + 1;
+      newLikes = (currentPost.likes || 0) + 1;
       
       const { error: updateError } = await supabase
         .from('posts')
@@ -539,8 +538,8 @@ export async function likePost(postId: string): Promise<LikeActionResponse> {
     
     return {
       success: true,
-      likes: newLikes,
-      dislikes: newDislikes,
+      likes: newLikes || 0,
+      dislikes: newDislikes || 0,
       userAction: newUserAction
     };
     
@@ -625,7 +624,7 @@ export async function dislikePost(postId: string): Promise<LikeActionResponse> {
       }
       
       // 게시글 싫어요 수 감소
-      newDislikes = Math.max(0, currentPost.dislikes - 1);
+      newDislikes = Math.max(0, (currentPost.dislikes || 0) - 1);
       
       const { error: updateError } = await supabase
         .from('posts')
@@ -658,7 +657,7 @@ export async function dislikePost(postId: string): Promise<LikeActionResponse> {
         
         if (!deleteLikeError) {
           // 게시글 좋아요 수 감소
-          newLikes = Math.max(0, currentPost.likes - 1);
+          newLikes = Math.max(0, (currentPost.likes || 0) - 1);
         }
       }
       
@@ -679,7 +678,7 @@ export async function dislikePost(postId: string): Promise<LikeActionResponse> {
       }
       
       // 게시글 싫어요 수 증가
-      newDislikes = currentPost.dislikes + 1;
+      newDislikes = (currentPost.dislikes || 0) + 1;
       
       const { error: updateError } = await supabase
         .from('posts')
@@ -704,8 +703,8 @@ export async function dislikePost(postId: string): Promise<LikeActionResponse> {
     
     return {
       success: true,
-      likes: newLikes,
-      dislikes: newDislikes,
+      likes: newLikes || 0,
+      dislikes: newDislikes || 0,
       userAction: newUserAction
     };
     
@@ -787,7 +786,7 @@ export async function getUserPostAction(postId: string): Promise<{ userAction: '
  */
 export async function createPost(formData: FormData) {
   try {
-    const supabase = await createActionClient()
+    const supabase = await createClient()
     
     // 폼 데이터에서 값 추출
     const title = formData.get('title') as string

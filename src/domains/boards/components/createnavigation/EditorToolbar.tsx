@@ -11,7 +11,7 @@ import LinkForm from '../form/LinkForm';
 import YoutubeForm from '../form/YoutubeForm';
 import VideoForm from '../form/VideoForm';
 import MatchResultForm from '../form/MatchResultForm';
-import type { MatchData } from '@/app/actions/footballApi';
+import type { MatchData } from '@/domains/livescore/actions/footballApi';
 
 interface EditorToolbarProps {
   editor: Editor | null;

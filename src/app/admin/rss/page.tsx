@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@/app/lib/supabase-client';
+import { createClient } from '@/shared/api/supabase';
 import { toast } from 'react-toastify';
 import { Loader2, RefreshCw, Plus, Trash2, Check, X, ExternalLink } from 'lucide-react';
 
@@ -22,7 +22,7 @@ interface RSSFeed {
 interface Board {
   id: string;
   name: string;
-  slug?: string;
+  slug?: string | null;
 }
 
 interface FetchResult {

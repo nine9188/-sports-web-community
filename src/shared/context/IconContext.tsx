@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 import { createClient } from '@/shared/api/supabase';
-import { getLevelIconUrl } from '@/app/utils/level-icons';
+import { getLevelIconUrl } from '@/shared/utils/level-icons';
 
 interface IconContextType {
   iconUrl: string;

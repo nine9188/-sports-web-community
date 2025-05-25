@@ -1,8 +1,7 @@
 import './globals.css';
 import { Inter } from 'next/font/google';
 import RootLayoutClient from './RootLayoutClient';
-import { getUserProfile } from '@/app/actions/auth-actions';
-import { getHeaderUserData } from '@/domains/layout/actions';
+import { getHeaderUserData, getBoardsForNavigation } from '@/domains/layout/actions';
 import BoardNavigation from '@/domains/sidebar/components/board/BoardNavigation';
 import AuthSection from '@/domains/sidebar/components/auth/AuthSection';
 import { fetchStandingsData } from '@/domains/sidebar/actions/football';
@@ -58,14 +57,14 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // 서버 컴포넌트에서 사용자 정보 가져오기
-  const { user, profile } = await getUserProfile();
-  
   // 헤더 컴포넌트를 위한 사용자 데이터 가져오기
   const headerUserData = await getHeaderUserData();
   
-  // AuthSection 컴포넌트 생성 
-  const authSection = <AuthSection userData={user} profileData={profile} />;
+  // 게시판 데이터 가져오기 (헤더 네비게이션용)
+  const boardsResult = await getBoardsForNavigation();
+  
+  // AuthSection 컴포넌트 생성 - 이제 서버 컴포넌트이므로 props 불필요
+  const authSection = <AuthSection />;
   
   // 서버 컴포넌트에서 BoardNavigation 생성
   const boardNav = <BoardNavigation />;
@@ -93,6 +92,7 @@ export default async function RootLayout({
           authSection={authSection}
           leagueStandingsComponent={leagueStandingsComponent}
           headerUserData={headerUserData}
+          boardsData={boardsResult.boardData || []}
         >
           {children}
         </RootLayoutClient>

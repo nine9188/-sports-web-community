@@ -1,8 +1,8 @@
 import React from 'react';
 import Link from 'next/link';
-import { createClient } from '@/app/lib/supabase.server';
-import { Button } from '@/app/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/app/ui/card';
+import { createClient } from '@/shared/api/supabaseServer';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/shared/components/ui/card';
 
 export const dynamic = 'force-dynamic';
 

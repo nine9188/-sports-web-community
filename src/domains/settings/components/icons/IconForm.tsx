@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { updateUserIconServer } from '@/domains/settings/actions/icons';
@@ -8,6 +7,7 @@ import { toast } from 'react-toastify';
 import { Loader2 } from 'lucide-react';
 import { IconItem } from '../../types';
 import { useIcon } from '@/shared/context/IconContext';
+import UserIcon from '@/shared/components/UserIcon';
 
 interface IconFormProps {
   userId: string;
@@ -108,12 +108,12 @@ export default function IconForm({
           <div className="flex items-center">
             {/* 현재 아이콘 표시 */}
             <div className="rounded-full overflow-hidden border-2 border-gray-200 bg-gray-50 w-12 h-12 flex items-center justify-center mr-3">
-              <Image 
-                src={displayIconUrl || levelIconUrl} 
+              <UserIcon 
+                iconUrl={displayIconUrl}
+                level={userLevel}
+                size={32}
                 alt="현재 아이콘"
-                width={20} 
-                height={20} 
-                className="w-8 h-8 object-contain"
+                className="object-contain"
               />
             </div>
             
@@ -154,12 +154,12 @@ export default function IconForm({
               title={`레벨 ${userLevel} 기본 아이콘`}
             >
               <div className="rounded-full overflow-hidden bg-gray-50 w-12 h-12 mx-auto flex items-center justify-center">
-                <Image
-                  src={levelIconUrl}
+                <UserIcon
+                  iconUrl={levelIconUrl}
+                  level={userLevel}
+                  size={32}
                   alt={`레벨 ${userLevel} 기본 아이콘`}
-                  width={20}
-                  height={20}
-                  className="w-8 h-8 object-contain"
+                  className="object-contain"
                 />
               </div>
               
@@ -191,12 +191,12 @@ export default function IconForm({
                   title={icon.name}
                 >
                   <div className="rounded-full overflow-hidden bg-gray-50 w-12 h-12 mx-auto flex items-center justify-center">
-                    <Image
-                      src={icon.image_url}
+                    <UserIcon
+                      iconUrl={icon.image_url}
+                      level={userLevel}
+                      size={32}
                       alt={icon.name}
-                      width={20}
-                      height={20}
-                      className="w-8 h-8 object-contain"
+                      className="object-contain"
                     />
                   </div>
                   

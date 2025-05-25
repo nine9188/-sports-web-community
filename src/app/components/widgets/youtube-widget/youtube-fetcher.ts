@@ -1,4 +1,4 @@
-import { createClient } from '@/app/lib/supabase.server';
+import { createClient } from '@/shared/api/supabaseServer';
 import { SupabaseClient } from '@supabase/supabase-js';
 
 // 유튜브 비디오 데이터 인터페이스
@@ -15,76 +15,90 @@ export interface YouTubeVideo {
 // 서버측에서 유튜브 데이터를 가져오는 함수
 export async function fetchYouTubeVideos(boardSlug: string): Promise<YouTubeVideo[]> {
   try {
-    const supabase = await createClient();
+    // 타임아웃 Promise 생성 (8초)
+    const timeoutPromise = new Promise<YouTubeVideo[]>((resolve) => {
+      setTimeout(() => {
+        console.warn('YouTube 데이터 가져오기 시간 초과 (8초)');
+        resolve([]); // 빈 배열 반환
+      }, 8000);
+    });
     
-    if (!supabase) {
-      return [];
-    }
-    
-    // 게시판 정보 가져오기
-    const { data: boardData, error: boardError } = await supabase
-      .from('boards')
-      .select('id, slug')
-      .eq('slug', boardSlug)
-      .single();
+    // 데이터 가져오기 Promise
+    const fetchPromise = (async () => {
+      const supabase = await createClient();
       
-    if (boardError || !boardData) {
-      return [];
-    }
+      if (!supabase) {
+        return [];
+      }
+      
+      // 게시판 정보 가져오기
+      const { data: boardData, error: boardError } = await supabase
+        .from('boards')
+        .select('id, slug')
+        .eq('slug', boardSlug)
+        .single();
+        
+      if (boardError || !boardData) {
+        return [];
+      }
+      
+      // 게시판 ID로 유튜브 영상 데이터 가져오기 (post_type이 youtube인 게시물)
+      const { data: postsData, error: postsError } = await supabase
+        .from('posts')
+        .select(`
+          id, 
+          title, 
+          created_at, 
+          content,
+          post_number,
+          profiles (
+            id,
+            nickname
+          ),
+          youtube_id,
+          thumbnail_url
+        `)
+        .eq('board_id', boardData.id)
+        .eq('post_type', 'youtube')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      // post_type이 youtube인 게시물이 있으면 사용
+      if (!postsError && postsData && postsData.length > 0) {
+        return formatVideosData(postsData);
+      }
+      
+      // youtube_id가 있는 게시물 검색
+      const { data: altData, error: altError } = await supabase
+        .from('posts')
+        .select(`
+          id, 
+          title, 
+          created_at, 
+          content,
+          post_number,
+          profiles (
+            id,
+            nickname
+          ),
+          youtube_id,
+          thumbnail_url
+        `)
+        .eq('board_id', boardData.id)
+        .not('youtube_id', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      if (altError || !altData || altData.length === 0) {
+        // 게시물 내용에서 유튜브 URL을 검색
+        return await searchYoutubeUrlsInPosts(supabase, boardData.id);
+      }
+      
+      return formatVideosData(altData);
+    })();
     
-    // 게시판 ID로 유튜브 영상 데이터 가져오기 (post_type이 youtube인 게시물)
-    const { data: postsData, error: postsError } = await supabase
-      .from('posts')
-      .select(`
-        id, 
-        title, 
-        created_at, 
-        content,
-        post_number,
-        profiles (
-          id,
-          nickname
-        ),
-        youtube_id,
-        thumbnail_url
-      `)
-      .eq('board_id', boardData.id)
-      .eq('post_type', 'youtube')
-      .order('created_at', { ascending: false })
-      .limit(5);
-    
-    // post_type이 youtube인 게시물이 있으면 사용
-    if (!postsError && postsData && postsData.length > 0) {
-      return formatVideosData(postsData);
-    }
-    
-    // youtube_id가 있는 게시물 검색
-    const { data: altData, error: altError } = await supabase
-      .from('posts')
-      .select(`
-        id, 
-        title, 
-        created_at, 
-        content,
-        post_number,
-        profiles (
-          id,
-          nickname
-        ),
-        youtube_id,
-        thumbnail_url
-      `)
-      .eq('board_id', boardData.id)
-      .not('youtube_id', 'is', null)
-      .order('created_at', { ascending: false })
-      .limit(5);
-    
-    if (altError || !altData || altData.length === 0) {
-      // 게시물 내용에서 유튜브 URL을 검색
-      return await searchYoutubeUrlsInPosts(supabase, boardData.id);
-    }
-    
-    return formatVideosData(altData);
+    // 두 Promise 중 먼저 완료되는 것을 반환
+    return await Promise.race([fetchPromise, timeoutPromise]);
   } catch (error) {
     console.error('유튜브 데이터 가져오기 오류:', error);
     return [];

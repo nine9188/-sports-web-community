@@ -1,7 +1,7 @@
 'use client';
 
 import { X } from 'lucide-react';
-import { Button } from '@/app/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { Suspense } from 'react';
 import { SidebarProps } from '../types';
 

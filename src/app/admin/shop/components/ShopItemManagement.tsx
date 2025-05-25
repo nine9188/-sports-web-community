@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useRef, useMemo, Fragment } from 'react';
-import { createClient } from '@/app/lib/supabase-browser';
-import { Card } from '@/app/ui/card';
-import { Button } from '@/app/ui/button';
+import { createClient } from '@/shared/api/supabase';
+import { Card } from '@/shared/components/ui/card';
+import { Button } from '@/shared/components/ui/button';
 import Image from 'next/image';
 import { Trash2 } from 'lucide-react';
 
@@ -191,7 +191,17 @@ export default function ShopItemManagement({ teams, leagues, storageImages, shop
       if (error) throw error;
 
       // 로컬 상태 업데이트
-      setShopItems(prev => [...prev, data]);
+      setShopItems(prev => [
+        ...prev,
+        {
+          ...data,
+          description: data.description ?? '',
+          created_at: data.created_at ?? '',
+          is_active: data.is_active ?? true,
+          is_default: data.is_default ?? false,
+          category_id: data.category_id ?? 0,
+        }
+      ]);
 
       alert('아이콘이 등록되었습니다.');
       

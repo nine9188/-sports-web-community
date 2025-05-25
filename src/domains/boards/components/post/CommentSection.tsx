@@ -9,7 +9,7 @@ import {
 } from "@/domains/boards/actions/comments";
 import { CommentType } from "@/domains/boards/types/post/comment";
 import Comment from "./Comment";
-import { Button } from "@/app/ui/button";
+import { Button } from "@/shared/components/ui/button";
 import { createClient } from '@/shared/api/supabase';
 
 // 내부 디바운스 함수 구현

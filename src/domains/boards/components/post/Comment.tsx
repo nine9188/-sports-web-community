@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
+import UserIcon from '@/shared/components/UserIcon';
 import { getOptimizedUserIcon } from '@/shared/utils';
 import { likeComment, dislikeComment } from '@/domains/boards/actions/comments';
 import { CommentType } from '@/domains/boards/types/post/comment';
@@ -25,7 +25,6 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
   const [isLiking, setIsLiking] = useState(false);
   const [isDisliking, setIsDisliking] = useState(false);
   const [userIconUrl, setUserIconUrl] = useState<string | null>(null);
-  const [iconName, setIconName] = useState<string | null>(null);
   
   // 사용자 아이콘 가져오기 - 최적화된 버전 사용
   useEffect(() => {
@@ -38,7 +37,6 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
         
         if (iconInfo) {
           setUserIconUrl(iconInfo.url);
-          setIconName(iconInfo.name);
         }
       } catch (error) {
         console.error('아이콘 로딩 오류:', error);
@@ -163,33 +161,21 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
     }
   };
   
-  // 이미지 로드 에러 핸들러
-  const handleImageError = () => {
-    setUserIconUrl(null);
-  };
-  
   return (
     <div className="border-b py-4 px-4 transition-colors hover:bg-gray-50">
       <div className="flex">
         <div className="flex-1">
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center">
-              {userIconUrl ? (
-                <div className="w-5 h-5 mr-1.5 relative rounded-full overflow-hidden flex-shrink-0" title={iconName || undefined}>
-                  <Image 
-                    src={userIconUrl}
-                    alt={comment.profiles?.nickname || '사용자'}
-                    fill
-                    className="object-cover"
-                    sizes="20px"
-                    unoptimized={true}
-                    priority={true}
-                    onError={handleImageError}
-                  />
-                </div>
-              ) : (
-                <div className="w-5 h-5 mr-1.5 bg-transparent rounded-full flex-shrink-0"></div>
-              )}
+              <div className="w-5 h-5 mr-1.5 relative rounded-full overflow-hidden flex-shrink-0">
+                <UserIcon 
+                  iconUrl={userIconUrl}
+                  size={20}
+                  alt={comment.profiles?.nickname || '사용자'}
+                  className="object-cover"
+                  priority={true}
+                />
+              </div>
               <span className="font-medium text-sm mr-2">{comment.profiles?.nickname || '알 수 없음'}</span>
               {isPostOwner && currentUserId === comment.user_id && (
                 <span className="text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded mr-2">작성자</span>

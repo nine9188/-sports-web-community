@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient } from '@/shared/api/supabaseServer';
-import { createActionClient } from '@/shared/api/supabaseServer'
+import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
 
 // 게시글 타입 정의
 export interface Post {
@@ -193,8 +193,8 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
     }
     
     // 게시판 정보 가져오기
-    const postBoardIds = [...new Set(postsData.map(post => post.board_id).filter(Boolean))];
-    let boardsData: Record<string, { name: string; team_id?: string | null; league_id?: string | null; slug: string }> = {};
+    const postBoardIds = [...new Set(postsData.map(post => post.board_id).filter(Boolean))] as string[];
+    let boardsData: Record<string, { name: string; team_id?: number | null; league_id?: number | null; slug: string }> = {};
     
     if (postBoardIds.length > 0) {
       const { data: boards, error: boardsError } = await supabase
@@ -211,18 +211,18 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
             slug: board.slug || board.id
           };
           return acc;
-        }, {} as Record<string, { name: string; team_id?: string | null; league_id?: string | null; slug: string }>);
+        }, {} as Record<string, { name: string; team_id?: number | null; league_id?: number | null; slug: string }>);
       }
     }
     
     // 팀/리그 로고 정보 가져오기
     const teamIds = Object.values(boardsData)
       .map(board => board.team_id)
-      .filter(Boolean) as string[];
+      .filter(Boolean) as number[];
     
     const leagueIds = Object.values(boardsData)
       .map(board => board.league_id)
-      .filter(Boolean) as string[];
+      .filter(Boolean) as number[];
     
     const teamLogoMap: Record<string, string> = {};
     const leagueLogoMap: Record<string, string> = {};
@@ -269,24 +269,52 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
     
     // 사용자 아이콘 정보 가져오기
     const userIconMap: Record<number, string> = {};
-    const userIconIds = postsData.map(post => post.profiles && 'icon_id' in post.profiles ? post.profiles.icon_id : null).filter(Boolean);
+    const userIds: string[] = postsData.map(post => post.user_id).filter(Boolean);
+    const userProfileMap: Record<string, { level: number; icon_id: number | null }> = {};
     
-    if (userIconIds.length > 0) {
+    if (userIds.length > 0) {
       try {
-        const { data: iconsData } = await supabase
-          .from('icons')
-          .select('id, image_url')
-          .in('id', userIconIds as number[]);
+        // 1. 모든 사용자 프로필 정보 한 번에 가져오기 (level, icon_id)
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, level, icon_id')
+          .in('id', userIds);
         
-        if (iconsData) {
-          iconsData.forEach(icon => {
-            if (icon.id && icon.image_url) {
-              userIconMap[icon.id] = icon.image_url;
+        if (profilesData) {
+          // 사용자 ID 기준으로 프로필 정보 맵 구성
+          profilesData.forEach(profile => {
+            if (profile.id) {
+              userProfileMap[profile.id] = {
+                level: profile.level || 1,
+                icon_id: profile.icon_id
+              };
             }
           });
         }
-      } catch {
-        // 아이콘 정보 가져오기 실패 시 무시
+        
+        // 2. 커스텀 아이콘이 있는 사용자만 필터링
+        const iconIds = profilesData
+          ?.map(profile => profile.icon_id)
+          .filter(Boolean) as number[] || [];
+        
+        if (iconIds.length > 0) {
+          // 3. 커스텀 아이콘 정보 한 번에 가져오기
+          const { data: iconsData } = await supabase
+            .from('shop_items')
+            .select('id, image_url')
+            .in('id', iconIds);
+          
+          if (iconsData) {
+            iconsData.forEach(icon => {
+              if (icon.id && icon.image_url) {
+                userIconMap[icon.id] = icon.image_url;
+              }
+            });
+          }
+        }
+      } catch (error) {
+        console.error('아이콘 정보 가져오기 오류:', error);
+        // 오류 발생해도 계속 진행 (기본 아이콘 사용)
       }
     }
     
@@ -303,12 +331,14 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
           .in('post_id', postIds);
         
         if (commentCounts) {
-          commentCounts.forEach((item: { post_id: string; count: string | number }) => {
-            const count = typeof item.count === 'string'
-              ? parseInt(item.count, 10)
-              : item.count;
-            
-            commentCountMap[item.post_id] = count || 0;
+          commentCounts.forEach((item) => {
+            if (item.post_id) {
+              const count = typeof item.count === 'string'
+                ? parseInt(item.count, 10)
+                : item.count;
+              
+              commentCountMap[item.post_id] = count || 0;
+            }
           });
         }
       } catch {
@@ -319,16 +349,17 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
     // 최종 결과 변환
     const formattedPosts = postsData.map(post => {
       // 각 게시물에 대한 게시판 정보
-      const boardInfo = boardsData[post.board_id] || { 
+      const boardInfo = post.board_id ? boardsData[post.board_id] : null;
+      const safeBoardInfo = boardInfo || { 
         name: '알 수 없는 게시판', 
-        slug: post.board_id,
+        slug: post.board_id || 'unknown',
         team_id: null,
         league_id: null
       };
       
       // 게시판이 속한 팀/리그 로고
-      const teamLogo = boardInfo.team_id ? teamLogoMap[boardInfo.team_id] : null;
-      const leagueLogo = boardInfo.league_id ? leagueLogoMap[boardInfo.league_id] : null;
+      const teamLogo = safeBoardInfo.team_id ? teamLogoMap[safeBoardInfo.team_id] : null;
+      const leagueLogo = safeBoardInfo.league_id ? leagueLogoMap[safeBoardInfo.league_id] : null;
       
       // 사용자 프로필 정보
       interface ProfileData {
@@ -340,35 +371,50 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
       
       const profile = post.profiles as ProfileData | null;
       
-      // 아이콘 URL 가져오기 (직접 또는 레벨 기반)
-      let iconUrl = null;
-      if (profile?.icon_id && userIconMap[profile.icon_id]) {
+      // 사용자 레벨 (기본값: 1)
+      const userLevel = profile?.level || 1;
+      
+      // 아이콘 URL 생성 로직 개선
+      let iconUrl: string | null = null;
+      const userId = post.user_id;
+      
+      if (userId && userProfileMap[userId]) {
+        const userProfile = userProfileMap[userId];
+        
+        if (userProfile.icon_id && userIconMap[userProfile.icon_id]) {
+          // 커스텀 아이콘이 있는 경우
+          iconUrl = userIconMap[userProfile.icon_id];
+        } else {
+          // 커스텀 아이콘이 없는 경우 레벨 아이콘 사용
+          iconUrl = getLevelIconUrl(userProfile.level);
+        }
+      } else if (profile?.icon_id && userIconMap[profile.icon_id]) {
+        // 프로필에서 직접 아이콘 ID를 가져온 경우
         iconUrl = userIconMap[profile.icon_id];
-      } else if (profile?.level) {
-        // getLevelIconUrl이 여기서는 import되지 않았으므로 null로 설정
-        // 실제로는 아이콘 가져오는 로직 추가 필요
-        iconUrl = null;
+      } else {
+        // 기본적으로 레벨 아이콘 사용
+        iconUrl = getLevelIconUrl(userLevel);
       }
       
       return {
         id: post.id,
         title: post.title,
-        created_at: post.created_at,
-        board_id: post.board_id,
-        board_name: boardInfo.name,
-        board_slug: boardInfo.slug,
+        created_at: post.created_at || new Date().toISOString(),
+        board_id: post.board_id || '',
+        board_name: safeBoardInfo.name,
+        board_slug: safeBoardInfo.slug,
         post_number: post.post_number,
         author_nickname: profile?.nickname || '익명',
         author_id: profile?.id || '',
-        author_level: profile?.level,
+        author_level: userLevel,
         author_icon_id: profile?.icon_id,
         author_icon_url: iconUrl,
         views: post.views || 0,
         likes: post.likes || 0,
         comment_count: commentCountMap[post.id] || 0,
-        content: post.content || '',
-        team_id: boardInfo.team_id,
-        league_id: boardInfo.league_id,
+        content: typeof post.content === 'string' ? post.content : JSON.stringify(post.content || ''),
+        team_id: safeBoardInfo.team_id,
+        league_id: safeBoardInfo.league_id,
         team_logo: teamLogo,
         league_logo: leagueLogo
       };
@@ -422,7 +468,7 @@ export async function revalidatePostsData(path: string = '/') {
  */
 export async function getPosts(boardId: string, page = 1, limit = 20) {
   try {
-    const supabase = await createActionClient()
+    const supabase = await createClient()
     
     // 페이지네이션을 위한 offset 계산
     const offset = (page - 1) * limit

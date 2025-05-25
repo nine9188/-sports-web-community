@@ -1,36 +1,28 @@
 'use server'
 
-import { createActionClient } from '@/shared/api/supabaseServer'
+import { createClient } from '@/shared/api/supabaseServer'
 import { revalidatePath } from 'next/cache'
 
 /**
  * 사용자 로그인 처리 서버 액션
  */
-export async function signIn(formData: FormData) {
+export async function signIn(email: string, password: string) {
   try {
-    const supabase = await createActionClient()
-    
-    const email = formData.get('email') as string
-    const password = formData.get('password') as string
-    
-    if (!email || !password) {
-      return { error: '이메일과 비밀번호를 입력해주세요' }
-    }
+    const supabase = await createClient()
     
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
-      password
+      password,
     })
-    
+
     if (error) {
       return { error: error.message }
     }
-    
-    revalidatePath('/')
-    return { success: true, user: data.user }
-  } catch (error) {
-    console.error('로그인 오류:', error)
-    return { error: '로그인 처리 중 오류가 발생했습니다' }
+
+    revalidatePath('/', 'layout')
+    return { data }
+  } catch {
+    return { error: '로그인 중 오류가 발생했습니다.' }
   }
 }
 
@@ -39,19 +31,18 @@ export async function signIn(formData: FormData) {
  */
 export async function signOut() {
   try {
-    const supabase = await createActionClient()
+    const supabase = await createClient()
     
     const { error } = await supabase.auth.signOut()
-    
+
     if (error) {
       return { error: error.message }
     }
-    
-    revalidatePath('/')
+
+    revalidatePath('/', 'layout')
     return { success: true }
-  } catch (error) {
-    console.error('로그아웃 오류:', error)
-    return { error: '로그아웃 처리 중 오류가 발생했습니다' }
+  } catch {
+    return { error: '로그아웃 중 오류가 발생했습니다.' }
   }
 }
 
@@ -60,7 +51,7 @@ export async function signOut() {
  */
 export async function findUsername(email: string, verificationCode: string) {
   try {
-    const supabase = await createActionClient()
+    const supabase = await createClient()
     
     // 1. 인증 코드 확인 (OTP 검증)
     const { error: verifyError } = await supabase.auth.verifyOtp({
@@ -92,5 +83,24 @@ export async function findUsername(email: string, verificationCode: string) {
   } catch (error) {
     console.error('아이디 찾기 오류:', error)
     return { error: '계정 정보를 찾는 중 오류가 발생했습니다' }
+  }
+}
+
+export async function signUp(email: string, password: string) {
+  try {
+    const supabase = await createClient()
+    
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    })
+
+    if (error) {
+      return { error: error.message }
+    }
+
+    return { data }
+  } catch {
+    return { error: '회원가입 중 오류가 발생했습니다.' }
   }
 } 

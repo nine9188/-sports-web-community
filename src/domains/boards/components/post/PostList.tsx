@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, startTransition, useDeferredValue } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { FixedSizeList as List } from 'react-window';
 import { ScrollArea } from '@/shared/ui/scroll-area';
-import { Image as ImageIcon, Link as LinkIcon, Video as VideoIcon, Youtube as YoutubeIcon, User as UserIcon } from 'lucide-react';
+import { Image as ImageIcon, Link as LinkIcon, Video as VideoIcon, Youtube as YoutubeIcon } from 'lucide-react';
 import { formatDate } from '@/domains/boards/utils/post/postUtils';
-import { getLevelIconUrl } from '@/shared/utils/level-icons';
-import { getOptimizedUserIcon } from '@/shared/utils';
+import UserIconComponent from '@/shared/components/UserIcon';
 
 // 게시글 타입 정의
 interface Post {
@@ -47,14 +47,230 @@ interface PostListProps {
   boardNameMaxWidth?: string;
 }
 
-// 아이콘 상태 관리를 위한 타입
-interface IconState {
-  [authorId: string]: {
-    iconUrl: string | null;
-    iconName: string | null;
-    hasError: boolean;
+// 가상화된 리스트 아이템 컴포넌트
+const VirtualizedPostItem = React.memo(function VirtualizedPostItem({
+  index,
+  style,
+  data
+}: {
+  index: number;
+  style: React.CSSProperties;
+  data: {
+    posts: Post[];
+    currentPostId?: string;
+    currentBoardId: string;
+    showBoard: boolean;
+    isMobile: boolean;
+    renderContentTypeIcons: (post: Post) => React.ReactNode;
+    renderAuthor: (post: Post, size: number, containerClass: string) => React.ReactNode;
+    renderBoardLogo: (post: Post) => React.ReactNode;
   };
-}
+}) {
+  const { posts, currentPostId, currentBoardId, showBoard, isMobile, renderContentTypeIcons, renderAuthor, renderBoardLogo } = data;
+  const post = posts[index];
+  
+  // Hook을 조건부가 아닌 항상 호출하도록 수정
+  const formattedDate = useMemo(() => {
+    if (!post?.created_at) return '';
+    return formatDate(post.created_at);
+  }, [post?.created_at]);
+  
+  if (!post) return null;
+  
+  const isCurrentPost = post.id === currentPostId;
+  const href = `/boards/${post.board_slug}/${post.post_number}?from=${currentBoardId}`;
+  
+  if (isMobile) {
+    return (
+      <div style={style} className={`py-2 px-3 border-b ${isCurrentPost ? 'bg-blue-50' : ''}`}>
+        <Link href={href} prefetch={false}>
+          <div className="space-y-1">
+            <div>
+              <div className="flex flex-wrap items-center">
+                <span className={`text-sm ${isCurrentPost ? 'text-blue-600 font-medium' : ''}`}>
+                  {post.title}
+                </span>
+                {renderContentTypeIcons(post)}
+              </div>
+            </div>
+            
+            <div className="flex text-[11px] text-gray-500">
+              <div className="w-full grid grid-cols-[1fr_auto] gap-2">
+                <div className="flex items-center overflow-hidden whitespace-nowrap">
+                  {showBoard && (
+                    <span className="truncate max-w-[100px] inline-block">{post.board_name}</span>
+                  )}
+                  <span className="mx-1 flex-shrink-0">|</span>
+                  <span className="flex-shrink-0 flex items-center">
+                    {renderAuthor(post, 20, "justify-start")}
+                  </span>
+                  <span className="mx-1 flex-shrink-0">|</span>
+                  <span className="flex-shrink-0">{formattedDate}</span>
+                </div>
+                <div className="flex items-center justify-end space-x-2 flex-shrink-0">
+                  <span>조회 {post.views || 0}</span>
+                  <span>추천 {post.likes || 0}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div style={style} className={`flex border-b hover:bg-gray-50 ${isCurrentPost ? 'bg-blue-50' : ''}`}>
+      {showBoard && (
+        <div className="py-2 px-3 flex items-center" style={{ width: '120px' }}>
+          {renderBoardLogo(post)}
+        </div>
+      )}
+      <div className="py-2 px-4 flex-1 flex items-center">
+        <Link href={href} className="block w-full" prefetch={false}>
+          <div className="flex items-center">
+            <span className={`text-sm hover:text-blue-600 line-clamp-1 ${isCurrentPost ? 'text-blue-600 font-medium' : ''}`}>
+              {post.title}
+            </span>
+            {renderContentTypeIcons(post)}
+          </div>
+        </Link>
+      </div>
+      <div className="py-2 px-2 flex items-center justify-center" style={{ width: '120px' }}>
+        {renderAuthor(post, 24, "justify-start")}
+      </div>
+      <div className="py-2 px-1 flex items-center justify-center" style={{ width: '80px' }}>
+        <span className="text-xs text-gray-500">{formattedDate}</span>
+      </div>
+      <div className="py-2 px-1 flex items-center justify-center" style={{ width: '60px' }}>
+        <span className="text-xs text-gray-500">{post.views || 0}</span>
+      </div>
+      <div className="py-2 px-1 flex items-center justify-center" style={{ width: '60px' }}>
+        <span className="text-xs text-gray-500">{post.likes || 0}</span>
+      </div>
+    </div>
+  );
+});
+
+// 개별 게시글 아이템 컴포넌트 - React.memo로 최적화 (비가상화용)
+const PostItem = React.memo(function PostItem({
+  post,
+  isLast,
+  currentPostId,
+  currentBoardId,
+  showBoard,
+  isMobile,
+  renderContentTypeIcons,
+  renderAuthor,
+  renderBoardLogo
+}: {
+  post: Post;
+  isLast: boolean;
+  currentPostId?: string;
+  currentBoardId: string;
+  showBoard: boolean;
+  isMobile: boolean;
+  renderContentTypeIcons: (post: Post) => React.ReactNode;
+  renderAuthor: (post: Post, size: number, containerClass: string) => React.ReactNode;
+  renderBoardLogo: (post: Post) => React.ReactNode;
+}) {
+  const isCurrentPost = post.id === currentPostId;
+  const href = `/boards/${post.board_slug}/${post.post_number}?from=${currentBoardId}`;
+  
+  // 날짜 포맷팅 메모이제이션
+  const formattedDate = useMemo(() => formatDate(post.created_at), [post.created_at]);
+  
+  if (isMobile) {
+    return (
+      <div className={`py-2 px-3 ${!isLast ? 'border-b' : ''} ${isCurrentPost ? 'bg-blue-50' : ''}`}>
+        <Link href={href} prefetch={false}>
+          <div className="space-y-1">
+            <div>
+              <div className="flex flex-wrap items-center">
+                <span className={`text-sm ${isCurrentPost ? 'text-blue-600 font-medium' : ''}`}>
+                  {post.title}
+                </span>
+                {renderContentTypeIcons(post)}
+              </div>
+            </div>
+            
+            <div className="flex text-[11px] text-gray-500">
+              <div className="w-full grid grid-cols-[1fr_auto] gap-2">
+                <div className="flex items-center overflow-hidden whitespace-nowrap">
+                  {showBoard && (
+                    <span className="truncate max-w-[100px] inline-block">{post.board_name}</span>
+                  )}
+                  <span className="mx-1 flex-shrink-0">|</span>
+                  <span className="flex-shrink-0 flex items-center">
+                    {renderAuthor(post, 20, "justify-start")}
+                  </span>
+                  <span className="mx-1 flex-shrink-0">|</span>
+                  <span className="flex-shrink-0">{formattedDate}</span>
+                </div>
+                <div className="flex items-center justify-end space-x-2 flex-shrink-0">
+                  <span>조회 {post.views || 0}</span>
+                  <span>추천 {post.likes || 0}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <tr className={`${!isLast ? 'border-b' : ''} hover:bg-gray-50 ${isCurrentPost ? 'bg-blue-50' : ''}`}>
+      {showBoard && (
+        <td className="py-2 px-3 align-middle">
+          {renderBoardLogo(post)}
+        </td>
+      )}
+      <td className="py-2 px-4 align-middle">
+        <Link href={href} className="block w-full" prefetch={false}>
+          <div className="flex items-center">
+            <span className={`text-sm hover:text-blue-600 line-clamp-1 ${isCurrentPost ? 'text-blue-600 font-medium' : ''}`}>
+              {post.title}
+            </span>
+            {renderContentTypeIcons(post)}
+          </div>
+        </Link>
+      </td>
+      <td className="py-2 px-2 text-center text-xs text-gray-500 align-middle">
+        {renderAuthor(post, 24, "justify-start")}
+      </td>
+      <td className="py-2 px-1 text-center text-xs text-gray-500 align-middle">
+        {formattedDate}
+      </td>
+      <td className="py-2 px-1 text-center text-xs text-gray-500 align-middle">
+        {post.views || 0}
+      </td>
+      <td className="py-2 px-1 text-center text-xs text-gray-500 align-middle">
+        {post.likes || 0}
+      </td>
+    </tr>
+  );
+});
+
+// 로딩 스켈레톤 컴포넌트 - React.memo로 최적화
+const LoadingSkeleton = React.memo(function LoadingSkeleton() {
+  return (
+    <div className="p-4 space-y-2">
+      {Array(10).fill(0).map((_, i) => (
+        <div key={i} className="h-5 bg-gray-100 rounded animate-pulse"></div>
+      ))}
+    </div>
+  );
+});
+
+// 빈 상태 컴포넌트 - React.memo로 최적화
+const EmptyState = React.memo(function EmptyState({ message }: { message: string }) {
+  return (
+    <div className="p-6 text-center">
+      <p className="text-gray-500">{message}</p>
+    </div>
+  );
+});
 
 export default function PostList({
   posts,
@@ -69,14 +285,45 @@ export default function PostList({
   currentBoardId,
   boardNameMaxWidth = "100px"
 }: PostListProps) {
-  // 각 작성자의 아이콘 상태를 관리
-  const [iconsState, setIconsState] = useState<IconState>({});
+  // 모바일 화면인지 확인하는 상태 - 디바운스 적용
+  const [isMobile, setIsMobile] = useState(false);
   
-  // 게시글 내용에 특정 요소가 포함되어 있는지 확인하는 함수
-  const checkContentType = (content: string | undefined) => {
+  // React 18 동시성 기능: posts 데이터를 지연시켜 메인 스레드 블로킹 방지
+  const deferredPosts = useDeferredValue(posts);
+  const deferredLoading = useDeferredValue(loading);
+  
+  // 화면 크기 감지 - 디바운스 적용 + startTransition 사용
+  useEffect(() => {
+    const checkMobile = () => {
+      startTransition(() => {
+        setIsMobile(window.innerWidth < 640);
+      });
+    };
+    
+    checkMobile();
+    
+    let timeoutId: NodeJS.Timeout;
+    const debouncedResize = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        startTransition(() => {
+          setIsMobile(window.innerWidth < 640);
+        });
+      }, 150);
+    };
+    
+    window.addEventListener('resize', debouncedResize);
+    
+    return () => {
+      window.removeEventListener('resize', debouncedResize);
+      clearTimeout(timeoutId);
+    };
+  }, []);
+
+  // 게시글 내용에 특정 요소가 포함되어 있는지 확인하는 함수 (메모이제이션)
+  const checkContentType = useCallback((content: string | undefined) => {
     if (!content) return { hasImage: false, hasVideo: false, hasYoutube: false, hasLink: false };
     
-    // 문자열인 경우 (기존 로직)
     try {
       const hasImage = content.includes('<img') || content.includes('![');
       const hasVideo = content.includes('<video') || content.includes('mp4');
@@ -87,86 +334,10 @@ export default function PostList({
     } catch {
       return { hasImage: false, hasVideo: false, hasYoutube: false, hasLink: false };
     }
-  };
+  }, []);
 
-  // 작성자 아이콘 최적화 로드
-  useEffect(() => {
-    const fetchAuthorIcons = async () => {
-      // posts 배열에서 고유한 작성자 ID 추출
-      const uniqueAuthors = [...new Set(
-        posts
-          .filter(post => post.author_id)
-          .map(post => post.author_id as string)
-      )];
-      
-      // 각 작성자의 아이콘 정보 로드
-      for (const authorId of uniqueAuthors) {
-        // 이미 로드했거나 에러가 발생한 경우 스킵
-        if (iconsState[authorId]?.hasError) continue;
-        
-        try {
-          const iconInfo = await getOptimizedUserIcon(authorId);
-          
-          if (iconInfo && iconInfo.url) {
-            setIconsState(prev => ({
-              ...prev,
-              [authorId]: {
-                iconUrl: iconInfo.url,
-                iconName: iconInfo.name,
-                hasError: false
-              }
-            }));
-          }
-        } catch (error) {
-          console.error('아이콘 로딩 오류:', error);
-          setIconsState(prev => ({
-            ...prev,
-            [authorId]: {
-              iconUrl: null,
-              iconName: null,
-              hasError: true
-            }
-          }));
-        }
-      }
-    };
-    
-    if (posts.length > 0 && !loading) {
-      fetchAuthorIcons();
-    }
-  }, [posts, loading, iconsState]);
-
-  // 이미지 로드 에러 처리
-  const handleImageError = (authorId: string) => {
-    setIconsState(prev => ({
-      ...prev,
-      [authorId]: {
-        ...prev[authorId],
-        iconUrl: null,
-        hasError: true
-      }
-    }));
-  };
-
-  // 작성자의 아이콘 URL 가져오기
-  const getAuthorIconUrl = (post: Post) => {
-    if (!post.author_id) return null;
-    
-    // 최적화된 아이콘이 있으면 사용
-    if (iconsState[post.author_id]?.iconUrl) {
-      return iconsState[post.author_id].iconUrl;
-    }
-    
-    // 제공된 아이콘 URL 사용
-    if (post.author_icon_url) {
-      return post.author_icon_url;
-    }
-    
-    // 레벨 아이콘 fallback
-    return getLevelIconUrl(post.author_level || 1);
-  };
-
-  const renderContentTypeIcons = (post: Post) => {
+  // 컨텐츠 타입 아이콘 렌더링 (메모이제이션)
+  const renderContentTypeIcons = useCallback((post: Post) => {
     if (!post.content) return null;
     
     const { hasImage, hasVideo, hasYoutube, hasLink } = checkContentType(post.content);
@@ -182,76 +353,200 @@ export default function PostList({
         )}
       </div>
     );
-  };
+  }, [checkContentType]);
+  
+  // 사용자 아이콘 렌더링 함수 (메모이제이션)
+  const renderAuthor = useCallback((post: Post, size: number, containerClass: string) => {
+    return (
+      <div className={`flex items-center ${containerClass}`}>
+        <div className="mr-0.5 flex items-center justify-center overflow-hidden">
+          <UserIconComponent
+            iconUrl={post.author_icon_url}
+            level={post.author_level || 1}
+            size={size}
+            alt={post.author_nickname || '익명'}
+          />
+        </div>
+        <span className="truncate text-xs text-gray-600" 
+              title={post.author_nickname || '익명'} 
+              style={{maxWidth: size === 20 ? '100px' : '100px'}}>
+          {post.author_nickname || '익명'}
+        </span>
+      </div>
+    );
+  }, []);
 
-  const scrollAreaClass = maxHeight ? `max-h-[${maxHeight}]` : "h-full";
+  // 게시판 로고 렌더링 함수 (메모이제이션)
+  const renderBoardLogo = useCallback((post: Post) => {
+    if (post.team_logo || post.league_logo) {
+      return (
+        <div className="flex items-center">
+          <div className="relative w-5 h-5 mr-1">
+            <Image 
+              src={post.team_logo || post.league_logo || ''}
+              alt={post.board_name}
+              fill
+              sizes="20px"
+              className="object-contain absolute inset-0"
+              loading="lazy"
+              priority={false}
+            />
+          </div>
+          <span className="text-xs text-gray-700 truncate" 
+                title={post.board_name} 
+                style={{maxWidth: '85px'}}>
+            {post.board_name}
+          </span>
+        </div>
+      );
+    } else {
+      return (
+        <span className="inline-block text-xs bg-gray-100 px-1.5 py-0.5 rounded-full truncate" 
+              title={post.board_name} 
+              style={{maxWidth: '90px'}}>
+          {post.board_name}
+        </span>
+      );
+    }
+  }, []);
 
-  // 모바일 뷰에서 사용할 간결한 게시글 목록 렌더링
-  const renderMobilePostList = () => {
+  // 가상화 사용 여부 결정 (30개 이상일 때 가상화 적용) - deferredPosts 사용
+  const useVirtualization = deferredPosts.length > 30;
+  
+  // 가상화된 리스트 데이터 메모이제이션 - deferredPosts 사용
+  const virtualizedData = useMemo(() => ({
+    posts: deferredPosts,
+    currentPostId,
+    currentBoardId,
+    showBoard,
+    isMobile,
+    renderContentTypeIcons,
+    renderAuthor,
+    renderBoardLogo
+  }), [deferredPosts, currentPostId, currentBoardId, showBoard, isMobile, renderContentTypeIcons, renderAuthor, renderBoardLogo]);
+
+  // 가상화된 모바일 뷰 렌더링
+  const virtualizedMobileContent = useMemo(() => {
+    if (!isMobile || !useVirtualization) return null;
+    
+    const height = maxHeight ? parseInt(maxHeight.replace('px', '')) : 400;
+    
+    return (
+      <div className="block sm:hidden">
+        <List
+          height={height}
+          itemCount={deferredPosts.length}
+          itemSize={80} // 각 아이템의 높이
+          itemData={virtualizedData}
+          overscanCount={5} // 성능 최적화를 위한 오버스캔
+          width="100%" // width 속성 추가
+        >
+          {VirtualizedPostItem}
+        </List>
+      </div>
+    );
+  }, [isMobile, useVirtualization, maxHeight, deferredPosts.length, virtualizedData]);
+
+  // 가상화된 데스크톱 뷰 렌더링
+  const virtualizedDesktopContent = useMemo(() => {
+    if (isMobile || !useVirtualization) return null;
+    
+    const height = maxHeight ? parseInt(maxHeight.replace('px', '')) : 400;
+    
+    return (
+      <div className="hidden sm:block">
+        {/* 테이블 헤더 */}
+        <div className="flex border-b bg-gray-50">
+          {showBoard && (
+            <div className="py-2 px-3 text-center text-sm font-medium text-gray-500" style={{ width: '120px' }}>게시판</div>
+          )}
+          <div className="py-2 px-4 text-center text-sm font-medium text-gray-500 flex-1">제목</div>
+          <div className="py-2 px-3 text-center text-sm font-medium text-gray-500" style={{ width: '120px' }}>글쓴이</div>
+          <div className="py-2 px-1 text-center text-sm font-medium text-gray-500" style={{ width: '80px' }}>날짜</div>
+          <div className="py-2 px-1 text-center text-sm font-medium text-gray-500" style={{ width: '60px' }}>조회</div>
+          <div className="py-2 px-1 text-center text-sm font-medium text-gray-500" style={{ width: '60px' }}>추천</div>
+        </div>
+        
+        {/* 가상화된 리스트 */}
+        <List
+          height={height - 40} // 헤더 높이 제외
+          itemCount={deferredPosts.length}
+          itemSize={50} // 각 행의 높이
+          itemData={virtualizedData}
+          overscanCount={5}
+          width="100%" // width 속성 추가
+        >
+          {VirtualizedPostItem}
+        </List>
+      </div>
+    );
+  }, [isMobile, useVirtualization, maxHeight, showBoard, deferredPosts.length, virtualizedData]);
+
+  // 일반 모바일 뷰 렌더링 - 메모이제이션 + deferredPosts 사용
+  const mobileContent = useMemo(() => {
+    if (!isMobile || useVirtualization) return null;
+    
     return (
       <div className="block sm:hidden">
         <div>
-          {posts.map((post, index) => (
-            <div 
-              key={post.id} 
-              className={`py-2 px-3 ${index !== posts.length - 1 ? 'border-b' : ''} ${post.id === currentPostId ? 'bg-blue-50' : ''}`}
-            >
-              <Link href={`/boards/${post.board_slug}/${post.post_number}?from=${currentBoardId}`}>
-                <div className="space-y-1">
-                  {/* 제목 + 내용 타입 아이콘 */}
-                  <div>
-                    <div className="flex flex-wrap items-center">
-                      <span className={`text-sm ${post.id === currentPostId ? 'text-blue-600 font-medium' : ''}`}>
-                        {post.title}
-                      </span>
-                      {renderContentTypeIcons(post)}
-                    </div>
-                  </div>
-                  
-                  {/* 하단 정보 영역 - 그리드 레이아웃 적용 */}
-                  <div className="flex text-[11px] text-gray-500">
-                    <div className="w-full grid grid-cols-[1fr_auto] gap-2">
-                      <div className="flex items-center overflow-hidden whitespace-nowrap">
-                        {/* 왼쪽: 게시판이름 | 아이콘+글쓴이 | 시간 */}
-                        {showBoard && (
-                          <span className="truncate max-w-[100px] inline-block">{post.board_name}</span>
-                        )}
-                        <span className="mx-1 flex-shrink-0">|</span>
-                        <span className="flex-shrink-0 flex items-center">
-                          <div className="h-4 w-4 mr-0.5 rounded-full flex items-center justify-center">
-                            {post.author_id ? (
-                              <Image
-                                src={getAuthorIconUrl(post) || '/images/player.svg'}
-                                alt={post.author_nickname || '익명'}
-                                width={12}
-                                height={12}
-                                className="object-contain"
-                                onError={() => post.author_id && handleImageError(post.author_id)}
-                              />
-                            ) : (
-                              <UserIcon className="h-3 w-3 text-gray-500" />
-                            )}
-                          </div>
-                          <span>{post.author_nickname || '익명'}</span>
-                        </span>
-                        <span className="mx-1 flex-shrink-0">|</span>
-                        <span className="flex-shrink-0">{formatDate(post.created_at)}</span>
-                      </div>
-                      <div className="flex items-center justify-end space-x-2 flex-shrink-0">
-                        {/* 오른쪽: 조회수 + 추천수 */}
-                        <span>조회 {post.views || 0}</span>
-                        <span>추천 {post.likes || 0}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            </div>
+          {deferredPosts.map((post, index) => (
+            <PostItem
+              key={post.id}
+              post={post}
+              isLast={index === deferredPosts.length - 1}
+              currentPostId={currentPostId}
+              currentBoardId={currentBoardId}
+              showBoard={showBoard}
+              isMobile={true}
+              renderContentTypeIcons={renderContentTypeIcons}
+              renderAuthor={renderAuthor}
+              renderBoardLogo={renderBoardLogo}
+            />
           ))}
         </div>
       </div>
     );
-  };
+  }, [isMobile, useVirtualization, deferredPosts, currentPostId, currentBoardId, showBoard, renderContentTypeIcons, renderAuthor, renderBoardLogo]);
+
+  // 일반 데스크톱 뷰 렌더링 - 메모이제이션 + deferredPosts 사용
+  const desktopContent = useMemo(() => {
+    if (isMobile || useVirtualization) return null;
+    
+    return (
+      <div className="hidden sm:block overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="border-b bg-gray-50">
+              {showBoard && (
+                <th className={`py-2 px-3 text-center w-[${boardNameMaxWidth}] text-sm font-medium text-gray-500`}>게시판</th>
+              )}
+              <th className="py-2 px-4 text-center text-sm font-medium text-gray-500">제목</th>
+              <th className={`py-2 px-3 text-center w-[${boardNameMaxWidth}] text-sm font-medium text-gray-500`}>글쓴이</th>
+              <th className="py-2 px-1 text-center w-16 text-sm font-medium text-gray-500">날짜</th>
+              <th className="py-2 px-1 text-center w-12 text-sm font-medium text-gray-500">조회</th>
+              <th className="py-2 px-1 text-center w-12 text-sm font-medium text-gray-500">추천</th>
+            </tr>
+          </thead>
+          <tbody>
+            {deferredPosts.map((post, index) => (
+              <PostItem
+                key={post.id}
+                post={post}
+                isLast={index === deferredPosts.length - 1}
+                currentPostId={currentPostId}
+                currentBoardId={currentBoardId}
+                showBoard={showBoard}
+                isMobile={false}
+                renderContentTypeIcons={renderContentTypeIcons}
+                renderAuthor={renderAuthor}
+                renderBoardLogo={renderBoardLogo}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }, [isMobile, useVirtualization, deferredPosts, showBoard, boardNameMaxWidth, currentPostId, currentBoardId, renderContentTypeIcons, renderAuthor, renderBoardLogo]);
 
   return (
     <div className={`mb-4 bg-white rounded-lg border overflow-hidden ${className}`}>
@@ -261,122 +556,23 @@ export default function PostList({
         </div>
       )}
       
-      <ScrollArea className={scrollAreaClass}>
-        {loading ? (
-          <div className="p-4 space-y-2">
-            {Array(10).fill(0).map((_, i) => (
-              <div key={i} className="h-5 bg-gray-100 rounded animate-pulse"></div>
-            ))}
-          </div>
-        ) : posts.length === 0 ? (
-          <div className="p-6 text-center">
-            <p className="text-gray-500">{emptyMessage}</p>
-          </div>
+      <ScrollArea 
+        className="h-full" 
+        style={{ maxHeight: maxHeight ? maxHeight : 'none' }}
+      >
+        {deferredLoading ? (
+          <LoadingSkeleton />
+        ) : deferredPosts.length === 0 ? (
+          <EmptyState message={emptyMessage} />
         ) : (
           <>
-            {/* 모바일 뷰 */}
-            {renderMobilePostList()}
+            {/* 가상화된 컨텐츠 (30개 이상일 때) */}
+            {virtualizedMobileContent}
+            {virtualizedDesktopContent}
             
-            {/* 데스크톱 뷰 */}
-            <div className="hidden sm:block overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b bg-gray-50">
-                    {showBoard && (
-                      <th className={`py-2 px-3 text-center w-[${boardNameMaxWidth}] text-sm font-medium text-gray-500`}>게시판</th>
-                    )}
-                    <th className="py-2 px-4 text-center text-sm font-medium text-gray-500">제목</th>
-                    <th className={`py-2 px-3 text-center w-[${boardNameMaxWidth}] text-sm font-medium text-gray-500`}>글쓴이</th>
-                    <th className="py-2 px-1 text-center w-16 text-sm font-medium text-gray-500">날짜</th>
-                    <th className="py-2 px-1 text-center w-12 text-sm font-medium text-gray-500">조회</th>
-                    <th className="py-2 px-1 text-center w-12 text-sm font-medium text-gray-500">추천</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {posts.map((post, index) => (
-                    <tr 
-                      key={post.id} 
-                      className={`${index !== posts.length - 1 ? 'border-b' : ''} hover:bg-gray-50 ${post.id === currentPostId ? 'bg-blue-50' : ''}`}
-                    >
-                      {showBoard && (
-                        <td className="py-2 px-3 align-middle">
-                          {(post.team_logo || post.league_logo) ? (
-                            <div className="flex items-center">
-                              <div className="relative w-5 h-5 mr-1">
-                                <Image 
-                                  src={post.team_logo || post.league_logo || ''}
-                                  alt={post.board_name}
-                                  fill
-                                  className="object-contain"
-                                  sizes="20px"
-                                  priority={true}
-                                />
-                              </div>
-                              <span className="text-xs text-gray-700 truncate" 
-                                    title={post.board_name} 
-                                    style={{maxWidth: '85px'}}>
-                                {post.board_name}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="inline-block text-xs bg-gray-100 px-1.5 py-0.5 rounded-full truncate" 
-                                  title={post.board_name} 
-                                  style={{maxWidth: '90px'}}>
-                              {post.board_name}
-                            </span>
-                          )}
-                        </td>
-                      )}
-                      <td className="py-2 px-4 align-middle">
-                        <Link 
-                          href={`/boards/${post.board_slug}/${post.post_number}?from=${currentBoardId}`} 
-                          className="block w-full"
-                        >
-                          <div className="flex items-center">
-                            <span className={`text-sm hover:text-blue-600 line-clamp-1 ${post.id === currentPostId ? 'text-blue-600 font-medium' : ''}`}>
-                              {post.title}
-                            </span>
-                            {renderContentTypeIcons(post)}
-                          </div>
-                        </Link>
-                      </td>
-                      <td className="py-2 px-2 text-center text-xs text-gray-500 align-middle">
-                        <div className="flex items-center justify-start">
-                          <div className="flex-shrink-0 w-5 h-5 relative rounded-full mr-1 flex items-center justify-center">
-                            {post.author_id ? (
-                              <Image
-                                src={getAuthorIconUrl(post) || '/images/player.svg'}
-                                alt={post.author_nickname || '익명'}
-                                width={20}
-                                height={20}
-                                className="object-contain"
-                                onError={() => post.author_id && handleImageError(post.author_id)}
-                              />
-                            ) : (
-                              <UserIcon className="h-5 w-5 text-gray-500"/>
-                            )}
-                          </div>
-                          <span className="truncate text-xs text-gray-600" 
-                                title={post.author_nickname || '익명'} 
-                                style={{maxWidth: '100px', textAlign: 'left'}}>
-                            {post.author_nickname || '익명'}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="py-2 px-1 text-center text-xs text-gray-500 align-middle">
-                        {formatDate(post.created_at)}
-                      </td>
-                      <td className="py-2 px-1 text-center text-xs text-gray-500 align-middle">
-                        {post.views || 0}
-                      </td>
-                      <td className="py-2 px-1 text-center text-xs text-gray-500 align-middle">
-                        {post.likes || 0}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {/* 일반 컨텐츠 (30개 미만일 때) */}
+            {mobileContent}
+            {desktopContent}
           </>
         )}
       </ScrollArea>

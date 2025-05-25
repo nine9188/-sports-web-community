@@ -2,16 +2,7 @@
 
 import { createClient } from '@/shared/api/supabaseServer';
 import { HeaderUserData } from './types/header';
-
-// Board 타입 정의
-export type Board = {
-  id: string;
-  name: string;
-  slug: string;
-  display_order: number;
-  parent_id: string | null;
-  children?: Board[];
-};
+import { Board } from './types/board';
 
 /**
  * 헤더 네비게이션에 표시할 게시판 데이터를 가져오는 서버 액션
@@ -53,14 +44,28 @@ export async function getBoardsForNavigation(): Promise<{
         const children = allBoards.filter(board => board.parent_id === parent.id);
         
         return {
-          ...parent,
+          id: parent.id,
+          name: parent.name,
+          slug: parent.slug,
+          display_order: parent.display_order || 0,
+          parent_id: parent.parent_id,
           children: children.map(child => {
             // 2단계 하위 게시판 찾기
             const subChildren = allBoards.filter(board => board.parent_id === child.id);
             
             return {
-              ...child,
-              children: subChildren.length > 0 ? subChildren : undefined
+              id: child.id,
+              name: child.name,
+              slug: child.slug,
+              display_order: child.display_order || 0,
+              parent_id: child.parent_id,
+              children: subChildren.length > 0 ? subChildren.map(subChild => ({
+                id: subChild.id,
+                name: subChild.name,
+                slug: subChild.slug,
+                display_order: subChild.display_order || 0,
+                parent_id: subChild.parent_id
+              })) : undefined
             };
           })
         };
@@ -110,16 +115,23 @@ export async function getHeaderUserData(): Promise<HeaderUserData | null> {
     if (profile?.icon_id) {
       iconInfo.iconId = profile.icon_id;
       
-      // 아이콘 정보 조회
-      const { data: iconData } = await supabase
-        .from('profile_icons')
-        .select('name, image_url')
-        .eq('id', profile.icon_id)
-        .single();
-        
-      if (iconData) {
-        iconInfo.iconUrl = iconData.image_url;
-        iconInfo.iconName = iconData.name;
+      // 아이콘 정보는 icon_purchases 테이블에서 조회하거나 기본값 사용
+      try {
+        const { data: iconPurchase } = await supabase
+          .from('icon_purchases')
+          .select('shop_items(name, image_url)')
+          .eq('user_id', user.id)
+          .eq('item_id', profile.icon_id)
+          .single();
+          
+        if (iconPurchase?.shop_items) {
+          const shopItem = iconPurchase.shop_items as { name?: string; image_url?: string };
+          iconInfo.iconUrl = shopItem.image_url || '';
+          iconInfo.iconName = shopItem.name || '';
+        }
+      } catch (iconError) {
+        console.log('아이콘 정보 조회 실패, 기본값 사용:', iconError);
+        // 아이콘 정보를 가져올 수 없는 경우 기본값 유지
       }
     }
     

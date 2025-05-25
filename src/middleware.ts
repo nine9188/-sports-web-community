@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
+import { updateSession } from '@/shared/api/middleware';
 import { createServerClient } from '@supabase/ssr';
 
 export async function middleware(request: NextRequest) {
@@ -34,14 +34,23 @@ export async function middleware(request: NextRequest) {
     pathname === path || pathname.startsWith(path + '/') || pathname.startsWith('/_next/')
   );
   
-  // 보호된 경로가 아니면 인증 검사 없이 통과
-  if (!isProtectedPath || isPublicPath) {
-    return NextResponse.next();
+  // /boards/[slug]/write 경로 확인
+  if (pathname.match(/^\/boards\/[^\/]+\/write$/)) {
+    // /boards/[slug]/create 로 리디렉션
+    const slug = pathname.split('/')[2];
+    const redirectUrl = new URL(`/boards/${slug}/create`, request.url);
+    return NextResponse.redirect(redirectUrl);
   }
   
-  const response = NextResponse.next();
+  // 세션 업데이트 (Auth 토큰 새로고침)
+  const response = await updateSession(request);
   
-  // 서버 클라이언트 생성
+  // 보호된 경로가 아니거나 공개 경로면 인증 검사 없이 통과
+  if (!isProtectedPath || isPublicPath) {
+    return response;
+  }
+  
+  // 보호된 경로에 대해서만 인증 확인
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -50,11 +59,11 @@ export async function middleware(request: NextRequest) {
         get(name) {
           return request.cookies.get(name)?.value;
         },
-        set(name, value, options) {
-          response.cookies.set(name, value, options);
+        set() {
+          // 미들웨어에서는 쿠키 설정하지 않음 (updateSession에서 처리됨)
         },
-        remove(name, options) {
-          response.cookies.set(name, '', { ...options, maxAge: 0 });
+        remove() {
+          // 미들웨어에서는 쿠키 제거하지 않음 (updateSession에서 처리됨)
         },
       },
     }
@@ -70,18 +79,19 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
   
-  // /boards/[slug]/write 경로 확인
-  if (pathname.match(/^\/boards\/[^\/]+\/write$/)) {
-    // /boards/[slug]/create 로 리디렉션
-    const slug = pathname.split('/')[2];
-    const redirectUrl = new URL(`/boards/${slug}/create`, request.url);
-    return NextResponse.redirect(redirectUrl);
-  }
-  
   return response;
 }
 
 // 미들웨어를 적용할 경로 지정
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: [
+    /*
+     * 다음으로 시작하는 경로를 제외한 모든 요청 경로와 매치:
+     * - _next/static (정적 파일)
+     * - _next/image (이미지 최적화 파일)
+     * - favicon.ico (파비콘 파일)
+     * 더 많은 경로를 포함하려면 이 패턴을 수정하세요.
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 }; 

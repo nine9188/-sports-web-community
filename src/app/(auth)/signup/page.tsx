@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
-import { useAuth } from '@/app/context/AuthContext';
-import { createClient } from '@/app/lib/supabase-browser';
+import { useAuth } from '@/shared/context/AuthContext';
+import { createClient } from '@/shared/api/supabase';
 import { AlertCircle, Check, Eye, EyeOff } from 'lucide-react';
 
 export default function SignupPage() {
@@ -253,23 +253,7 @@ export default function SignupPage() {
       
       console.log('회원가입 시도:', { email, username, nickname, fullName });
       
-      // RLS 정책 우회를 위해 직접 API 엔드포인트 생성
-      const { error: createProfileError } = await supabase
-        .from('profiles')
-        .insert([{
-          // ID는 아직 없으므로 생략 (인증 후 갱신)
-          username, 
-          email,
-          nickname,
-          full_name: fullName,
-          updated_at: new Date().toISOString()
-        }]);
-        
-      if (createProfileError) {
-        console.warn('사전 프로필 생성 실패 (무시 가능):', createProfileError);
-      }
-      
-      // 사용자 인증 계정 생성
+      // 먼저 인증 계정 생성
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email,
         password: password,
@@ -290,47 +274,21 @@ export default function SignupPage() {
       
       console.log('회원가입 성공:', authData);
       
-      // 이전에 생성한 프로필과 연결 시도
+      // 인증 성공 후 프로필 생성
       if (authData.user) {
-        const { error: linkError } = await supabase
+        const { error: createProfileError } = await supabase
           .from('profiles')
-          .update({
+          .upsert({
             id: authData.user.id,
-            username: username.toString(),
-            email: email.toString(),
-            nickname: nickname,
+            username, 
+            email,
+            nickname,
             full_name: fullName,
             updated_at: new Date().toISOString()
-          })
-          .eq('email', email);
+          });
           
-        if (linkError) {
-          console.warn('프로필 연결 실패:', linkError);
-          
-          // plan B: 각 필드 개별적으로 시도
-          try {
-            // 우선 ID 연결
-            await supabase
-              .from('profiles')
-              .update({ id: authData.user.id })
-              .eq('email', email);
-              
-            // 그 다음 username만 업데이트
-            await supabase
-              .from('profiles')
-              .update({ username: username.toString() })
-              .eq('id', authData.user.id);
-              
-            // 마지막으로 email 업데이트
-            await supabase
-              .from('profiles')
-              .update({ email: email.toString() })
-              .eq('id', authData.user.id);
-              
-            console.log('각 필드 개별 업데이트 완료');
-          } catch (individualError) {
-            console.error('개별 필드 업데이트 실패:', individualError);
-          }
+        if (createProfileError) {
+          console.warn('프로필 생성 실패:', createProfileError);
         }
       }
       

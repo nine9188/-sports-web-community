@@ -206,16 +206,7 @@ const MatchHeader = memo(function MatchHeader() {
           {/* 리그 정보 - 왼쪽 1/3 차지 */}
           <div className="flex items-center gap-2 px-2 py-2 md:px-4 border-b md:border-b-0 md:border-r md:w-1/3">
             <div className="relative w-6 h-6">
-              {league?.logo && (
-                <Image
-                  src={league.logo}
-                  alt={league?.name || ''}
-                  fill
-                  className="object-contain"
-                  unoptimized={true}
-                  priority={true}
-                />
-              )}
+                              {league?.logo && (                  <Image                    src={league.logo}                    alt={league?.name || ''}                    fill                    className="object-contain"                  />                )}
             </div>
             <span className="text-sm font-medium">
               {/* 한국어 리그명 우선 표시, 없으면 일반 이름 */}
@@ -253,14 +244,7 @@ const MatchHeader = memo(function MatchHeader() {
             <div className="w-1/3 md:w-1/3 text-center">
               <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-1 md:mb-2">
                 {homeTeam?.logo && (
-                  <Image 
-                    src={homeTeam.logo}
-                    alt={homeTeam.name || ''}
-                    fill
-                    className="object-contain"
-                    unoptimized={true}
-                    priority={true}
-                  />
+                                    <Image                     src={homeTeam.logo}                    alt={homeTeam.name || ''}                    fill                    className="object-contain"                  />
                 )}
               </div>
               {/* 한국어 팀명 우선 표시, 없으면 일반 이름 */}
@@ -293,14 +277,7 @@ const MatchHeader = memo(function MatchHeader() {
             <div className="w-1/3 md:w-1/3 text-center">
               <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-1 md:mb-2">
                 {awayTeam?.logo && (
-                  <Image 
-                    src={awayTeam.logo}
-                    alt={awayTeam.name || ''}
-                    fill
-                    className="object-contain"
-                    unoptimized={true}
-                    priority={true}
-                  />
+                                    <Image                     src={awayTeam.logo}                    alt={awayTeam.name || ''}                    fill                    className="object-contain"                  />
                 )}
               </div>
               {/* 한국어 팀명 우선 표시, 없으면 일반 이름 */}
@@ -320,13 +297,7 @@ const MatchHeader = memo(function MatchHeader() {
                 <div className="md:hidden py-1 font-semibold mb-2 text-sm flex items-center">
                   <div className="relative w-4 h-4 mr-2">
                     {homeTeam?.logo && (
-                      <Image 
-                        src={homeTeam.logo}
-                        alt={homeTeam.name || ''}
-                        fill
-                        className="object-contain"
-                        unoptimized={true}
-                      />
+                                            <Image                         src={homeTeam.logo}                        alt={homeTeam.name || ''}                        fill                        className="object-contain"                      />
                     )}
                   </div>
                   {/* 한국어 팀명 우선 표시 */}
@@ -373,13 +344,7 @@ const MatchHeader = memo(function MatchHeader() {
                 <div className="md:hidden py-1 font-semibold mb-2 text-sm flex items-center">
                   <div className="relative w-4 h-4 mr-2">
                     {awayTeam?.logo && (
-                      <Image 
-                        src={awayTeam.logo}
-                        alt={awayTeam.name || ''}
-                        fill
-                        className="object-contain"
-                        unoptimized={true}
-                      />
+                                            <Image                         src={awayTeam.logo}                        alt={awayTeam.name || ''}                        fill                        className="object-contain"                      />
                     )}
                   </div>
                   {/* 한국어 팀명 우선 표시 */}

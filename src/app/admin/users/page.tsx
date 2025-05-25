@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { createClient } from '@/app/lib/supabase-browser';
-import { useAuth } from '@/app/context/AuthContext';
+import { createClient } from '@/shared/api/supabase';
+import { useAuth } from '@/shared/context/AuthContext';
 
 interface User {
   id: string;
   email: string;
   nickname: string;
   is_admin: boolean;
-  created_at: string;
+  created_at?: string;
 }
 
 export default function UsersAdminPage() {
@@ -38,7 +38,7 @@ export default function UsersAdminPage() {
         email: profile.email || '',
         nickname: profile.nickname || profile.full_name || '',
         is_admin: profile.is_admin || false,
-        created_at: profile.created_at || '',
+        created_at: profile.updated_at || '',
       })) || [];
       
       setUsers(formattedUsers);

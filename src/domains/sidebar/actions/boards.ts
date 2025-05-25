@@ -1,10 +1,24 @@
 'use server';
 
-import { createClient } from '@/app/lib/supabase.server';
+import { createClient } from '@/shared/api/supabaseServer';
 import { cache } from 'react';
 import { HierarchicalBoard, BoardNavigationData } from '../types';
-import { Database } from '@/app/lib/database.types';
 import { revalidatePath } from 'next/cache';
+
+// 데이터베이스 스키마에 맞는 Board 타입 정의
+type DatabaseBoard = {
+  id: string;
+  name: string;
+  slug: string | null;
+  parent_id: string | null;
+  display_order: number | null;
+  team_id: number | null;
+  league_id: number | null;
+  access_level: string | null;
+  description: string | null;
+  logo: string | null;
+  views: number | null;
+};
 
 // 서버 측에서 게시판 데이터를 가져오는 함수 (캐싱 적용)
 export const getBoardsData = cache(async (): Promise<BoardNavigationData> => {
@@ -26,16 +40,16 @@ export const getBoardsData = cache(async (): Promise<BoardNavigationData> => {
 
     // 계층형 구조 변환
     const boardMap = new Map<string, HierarchicalBoard>();
-    boards?.forEach((board: Database['public']['Tables']['boards']['Row']) => {
+    boards?.forEach((board: DatabaseBoard) => {
       // 필요한 필드만 추출하여 HierarchicalBoard 타입에 맞게 생성
       const hierarchicalBoard: HierarchicalBoard = {
         id: board.id,
         name: board.name,
-        slug: board.slug,
+        slug: board.slug || '', // null 값을 빈 문자열로 변환
         parent_id: board.parent_id,
-        display_order: board.display_order,
-        team_id: board.team_id || null,
-        league_id: board.league_id || null,
+        display_order: board.display_order || 0, // null 값을 0으로 변환
+        team_id: board.team_id,
+        league_id: board.league_id,
         children: []
       };
       
@@ -45,7 +59,7 @@ export const getBoardsData = cache(async (): Promise<BoardNavigationData> => {
     const rootBoards: HierarchicalBoard[] = [];
     
     // 부모-자식 관계 구성
-    boards?.forEach((board: Database['public']['Tables']['boards']['Row']) => {
+    boards?.forEach((board: DatabaseBoard) => {
       const mappedBoard = boardMap.get(board.id);
       if (!mappedBoard) return;
 
