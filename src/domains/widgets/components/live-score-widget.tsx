@@ -29,7 +29,7 @@ interface MultiDayMatchesResponse {
 // 서버 컴포넌트로 변경 - 데이터를 미리 가져옴
 export default async function LiveScoreWidget() {
   try {
-    // 서버에서 경기 데이터 미리 가져오기
+    // 서버 액션을 사용하여 경기 데이터 가져오기
     const result = await fetchMultiDayMatches() as MultiDayMatchesResponse;
     
     let matches: EnhancedMatchData[] = [];
@@ -43,7 +43,7 @@ export default async function LiveScoreWidget() {
             }
             return {
               ...match,
-              displayDate: '어제'
+              displayDate: '어제' // 🔧 고정값으로 Hydration 안정성 확보
             };
           }).filter(Boolean) // null 항목 제거
         : [];
@@ -56,7 +56,7 @@ export default async function LiveScoreWidget() {
             }
             return {
               ...match,
-              displayDate: '오늘'
+              displayDate: '오늘' // 🔧 고정값으로 Hydration 안정성 확보
             };
           }).filter(Boolean) // null 항목 제거
         : [];
@@ -69,7 +69,7 @@ export default async function LiveScoreWidget() {
             }
             return {
               ...match, 
-              displayDate: '내일'
+              displayDate: '내일' // 🔧 고정값으로 Hydration 안정성 확보
             };
           }).filter(Boolean) // null 항목 제거
         : [];
@@ -83,7 +83,7 @@ export default async function LiveScoreWidget() {
       
       // 종료된 경기 필터링 (FT, AET, PEN 상태 제외)
       matches = combinedMatches.filter(match => 
-        !['FT', 'AET', 'PEN'].includes(match.status.code)
+        !['FT', 'AET', 'PEN'].includes(match.status?.code || '')
       );
     }
     

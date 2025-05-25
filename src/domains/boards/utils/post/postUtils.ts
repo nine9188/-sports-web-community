@@ -203,6 +203,12 @@ export const formatDate = (dateString: string) => {
       return '-';
     }
     
+    // 🔧 Hydration 불일치 방지 - 서버 환경에서는 간단한 포맷만 사용
+    if (typeof window === 'undefined') {
+      // 서버 환경에서는 연-월-일 형식으로 고정
+      return `${date.getFullYear()}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getDate().toString().padStart(2, '0')}`;
+    }
+    
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const postDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());

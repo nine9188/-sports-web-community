@@ -14,6 +14,7 @@ type ImageLoadingState = 'loading' | 'loaded' | 'error' | 'timeout';
 
 export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps) {
   const [imageStates, setImageStates] = useState<Record<string, ImageLoadingState>>({});
+  const [isClient, setIsClient] = useState(false); // 🔧 클라이언트 렌더링 확인용
   
   // 백업 이미지 목록 (더 다양하게)
   const backupImages = [
@@ -22,6 +23,11 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
     '/213/news3.jpg',
     '/213/news4.jpg'
   ];
+  
+  // 🔧 클라이언트 렌더링 확인 - Hydration 불일치 방지
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   
   // 이미지 상태 업데이트 함수
   const updateImageState = useCallback((id: string, state: ImageLoadingState) => {
@@ -73,6 +79,11 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
 
   // 날짜 포맷팅
   const formatDate = (dateString: string) => {
+    // 🔧 Hydration 불일치 방지 - 클라이언트에서만 정확한 시간 계산
+    if (!isClient) {
+      return '방금 전';
+    }
+    
     try {
       const date = new Date(dateString);
       const now = new Date();

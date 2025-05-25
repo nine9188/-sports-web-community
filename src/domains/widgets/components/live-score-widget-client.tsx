@@ -38,6 +38,7 @@ interface LiveScoreWidgetClientProps {
 export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidgetClientProps) {
   const [matches, setMatches] = useState<EnhancedMatchData[]>(initialMatches);
   const [error, setError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false); // 🔧 클라이언트 렌더링 확인용
   
   // API 호출 추적을 위한 ref
   const fetchingRef = useRef<boolean>(false);
@@ -47,7 +48,15 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
   const cardContainerRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLAnchorElement | null)[]>([]);
 
+  // 🔧 클라이언트 렌더링 확인 - Hydration 불일치 방지
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    // 클라이언트에서만 데이터 갱신 실행
+    if (!isClient) return;
+    
     // 5분마다 데이터 갱신
     const fetchLiveScores = async () => {
       // 이미 가져오는 중이면 중복 요청 방지
@@ -137,7 +146,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
     }, 5 * 60 * 1000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [isClient]);
 
   useEffect(() => {
     // 다크모드 감지 및 배경색 설정
@@ -195,6 +204,11 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
         // 예정된 경기 - 시작 시간 표시
         if (!match.time.date) {
           return '-';
+        }
+        
+        // 🔧 Hydration 불일치 방지 - 클라이언트에서만 시간 계산
+        if (!isClient) {
+          return '예정';
         }
         
         // 날짜 문자열을 Date 객체로 변환 (타임존 고려)
