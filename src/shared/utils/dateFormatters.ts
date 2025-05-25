@@ -77,6 +77,15 @@ export const getRelativeTimeString = (date: Date): string => {
     return '알 수 없음';
   }
   
+  // 🔧 Hydration 불일치 방지 - 서버 환경에서는 고정된 날짜 형식 사용
+  if (typeof window === 'undefined') {
+    // 서버에서는 YYYY-MM-DD 형식으로 고정
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
   

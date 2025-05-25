@@ -15,6 +15,8 @@ type ImageLoadingState = 'loading' | 'loaded' | 'error' | 'timeout';
 export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps) {
   const [imageStates, setImageStates] = useState<Record<string, ImageLoadingState>>({});
   const [isClient, setIsClient] = useState(false); // 🔧 클라이언트 렌더링 확인용
+  const [news, setNews] = useState<NewsItem[]>([]); // 🔧 뉴스 데이터 상태 추가
+  const [isLoading, setIsLoading] = useState(true); // 🔧 로딩 상태 추가
   
   // 백업 이미지 목록 (더 다양하게)
   const backupImages = [
@@ -27,7 +29,9 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
   // 🔧 클라이언트 렌더링 확인 - Hydration 불일치 방지
   useEffect(() => {
     setIsClient(true);
-  }, []);
+    setNews(initialNews); // 클라이언트에서만 데이터 설정
+    setIsLoading(false);
+  }, [initialNews]);
   
   // 이미지 상태 업데이트 함수
   const updateImageState = useCallback((id: string, state: ImageLoadingState) => {
@@ -41,7 +45,7 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
   useEffect(() => {
     const timeouts: Record<string, NodeJS.Timeout> = {};
     
-    initialNews.forEach(item => {
+    news.forEach(item => {
       if (item.imageUrl && !item.imageUrl.startsWith('/213/')) {
         // 외부 이미지의 경우 10초 타임아웃 설정 (더 여유롭게)
         timeouts[item.id] = setTimeout(() => {
@@ -59,7 +63,7 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
     return () => {
       Object.values(timeouts).forEach(timeout => clearTimeout(timeout));
     };
-  }, [initialNews]);
+  }, [news]);
   
   // 이미지 로드 에러 처리 함수
   const handleImageError = useCallback((id: string) => {
@@ -79,9 +83,20 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
 
   // 날짜 포맷팅
   const formatDate = (dateString: string) => {
-    // 🔧 Hydration 불일치 방지 - 클라이언트에서만 정확한 시간 계산
+    // 🔧 Hydration 불일치 방지 - 서버 환경에서는 고정된 날짜 형식 사용
     if (!isClient) {
-      return '방금 전';
+      try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '-';
+        
+        // 서버에서는 YYYY-MM-DD 형식으로 고정
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      } catch {
+        return '-';
+      }
     }
     
     try {
@@ -143,7 +158,17 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
   };
 
   // 뉴스 없음 상태
-  if (!initialNews.length) {
+  if (isLoading) {
+    return (
+      <div className="mb-4">
+        <div className="flex justify-center items-center h-48">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!news.length) {
     return (
       <div className="mb-1">
         <div className="flex justify-center items-center h-48 text-muted-foreground bg-gray-50 rounded-lg border p-3">
@@ -160,7 +185,7 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
         {/* 메인 뉴스 (첫 번째 뉴스) - 왼쪽 배치 */}
         <div className="md:w-1/2">
           <Link
-            href={initialNews[0].url}
+            href={news[0].url}
             className="block h-full mb-1 md:mb-0 bg-white rounded-lg border overflow-hidden hover:shadow-md transition-all group hover:translate-y-[-1px] hover:border-blue-300 dark:hover:border-blue-500 touch-manipulation active:scale-[0.99]"
             style={{
               WebkitTapHighlightColor: 'transparent',
@@ -170,21 +195,21 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
             <div className="flex flex-col h-full">
               <div className="relative w-full h-full transform transition-transform group-hover:scale-[1.02]">
                 {/* 로딩 스피너 */}
-                {isImageLoading(initialNews[0].id) && (
+                {isImageLoading(news[0].id) && (
                   <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                   </div>
                 )}
                 <Image
-                  src={getSafeImageUrl(initialNews[0], 0)}
-                  alt={String(initialNews[0]?.title || '뉴스 이미지')}
+                  src={getSafeImageUrl(news[0], 0)}
+                  alt={String(news[0]?.title || '뉴스 이미지')}
                   fill
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, 50vw"
                   priority
-                  onLoad={() => handleImageLoad(initialNews[0].id)}
-                  onLoadStart={() => handleImageLoadStart(initialNews[0].id)}
-                  onError={() => handleImageError(initialNews[0].id)}
+                  onLoad={() => handleImageLoad(news[0].id)}
+                  onLoadStart={() => handleImageLoadStart(news[0].id)}
+                  onError={() => handleImageError(news[0].id)}
                   // 이미지 로딩 최적화
                   placeholder="blur"
                   blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
@@ -192,11 +217,11 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
               </div>
               <div className="p-1 bg-white flex-grow">
                 <h3 className="text-base font-semibold line-clamp-2 group-hover:text-blue-600 transition-colors">
-                  {String(initialNews[0]?.title || '제목 없음')}
+                  {String(news[0]?.title || '제목 없음')}
                 </h3>
                 <div className="flex justify-between items-center text-xs text-gray-500 mt-1">
-                  <span>{String(initialNews[0]?.source || '출처 없음')}</span>
-                  <span>{formatDate(initialNews[0]?.publishedAt || '')}</span>
+                  <span>{String(news[0]?.source || '출처 없음')}</span>
+                  <span>{formatDate(news[0]?.publishedAt || '')}</span>
                 </div>
               </div>
             </div>
@@ -206,7 +231,7 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
         {/* 작은 뉴스 (나머지 뉴스) - 오른쪽 2x2 그리드 */}
         <div className="md:w-1/2">
           <div className="grid grid-cols-2 gap-4 h-full">
-            {initialNews.slice(1, 5).map((item, index) => (
+            {news.slice(1, 5).map((item, index) => (
               <Link
                 key={item.id}
                 href={item.url}

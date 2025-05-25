@@ -36,9 +36,10 @@ interface LiveScoreWidgetClientProps {
 }
 
 export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidgetClientProps) {
-  const [matches, setMatches] = useState<EnhancedMatchData[]>(initialMatches);
+  const [matches, setMatches] = useState<EnhancedMatchData[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false); // 🔧 클라이언트 렌더링 확인용
+  const [isLoading, setIsLoading] = useState(true); // 🔧 로딩 상태 추가
   
   // API 호출 추적을 위한 ref
   const fetchingRef = useRef<boolean>(false);
@@ -51,7 +52,9 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
   // 🔧 클라이언트 렌더링 확인 - Hydration 불일치 방지
   useEffect(() => {
     setIsClient(true);
-  }, []);
+    setMatches(initialMatches); // 클라이언트에서만 데이터 설정
+    setIsLoading(false);
+  }, [initialMatches]);
 
   useEffect(() => {
     // 클라이언트에서만 데이터 갱신 실행
@@ -284,7 +287,12 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
 
   return (
     <div className="w-full mb-4 mt-4 md:mt-0">
-      {error ? (
+      {/* 🔧 Hydration 불일치 방지 - 초기 로딩 상태 */}
+      {isLoading ? (
+        <div className="flex justify-center items-center h-40">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      ) : error ? (
         <div className="flex flex-col justify-center items-center h-40 text-center">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 mb-2 text-red-500">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />

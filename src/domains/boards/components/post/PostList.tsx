@@ -61,24 +61,25 @@ const VirtualizedPostItem = React.memo(function VirtualizedPostItem({
     currentBoardId: string;
     showBoard: boolean;
     isMobile: boolean;
+    isClient: boolean;
     renderContentTypeIcons: (post: Post) => React.ReactNode;
     renderAuthor: (post: Post, size: number, containerClass: string) => React.ReactNode;
     renderBoardLogo: (post: Post) => React.ReactNode;
   };
 }) {
-  const { posts, currentPostId, currentBoardId, showBoard, isMobile, renderContentTypeIcons, renderAuthor, renderBoardLogo } = data;
+  const { posts, currentPostId, currentBoardId, showBoard, isMobile, isClient, renderContentTypeIcons, renderAuthor, renderBoardLogo } = data;
   const post = posts[index];
   
-  // Hook을 조건부가 아닌 항상 호출하도록 수정
+  // 🔧 안전한 날짜 포맷팅 - Hydration 불일치 방지
   const formattedDate = useMemo(() => {
-    if (!post?.created_at) return '';
+    if (!isClient) return '-'; // 서버 렌더링에서는 고정값
     return formatDate(post.created_at);
-  }, [post?.created_at]);
-  
-  if (!post) return null;
+  }, [post.created_at, isClient]);
   
   const isCurrentPost = post.id === currentPostId;
   const href = `/boards/${post.board_slug}/${post.post_number}?from=${currentBoardId}`;
+  
+  if (!post) return null;
   
   if (isMobile) {
     return (
@@ -160,6 +161,7 @@ const PostItem = React.memo(function PostItem({
   currentBoardId,
   showBoard,
   isMobile,
+  isClient,
   renderContentTypeIcons,
   renderAuthor,
   renderBoardLogo
@@ -170,6 +172,7 @@ const PostItem = React.memo(function PostItem({
   currentBoardId: string;
   showBoard: boolean;
   isMobile: boolean;
+  isClient: boolean;
   renderContentTypeIcons: (post: Post) => React.ReactNode;
   renderAuthor: (post: Post, size: number, containerClass: string) => React.ReactNode;
   renderBoardLogo: (post: Post) => React.ReactNode;
@@ -177,8 +180,11 @@ const PostItem = React.memo(function PostItem({
   const isCurrentPost = post.id === currentPostId;
   const href = `/boards/${post.board_slug}/${post.post_number}?from=${currentBoardId}`;
   
-  // 날짜 포맷팅 메모이제이션
-  const formattedDate = useMemo(() => formatDate(post.created_at), [post.created_at]);
+  // 🔧 안전한 날짜 포맷팅 - Hydration 불일치 방지
+  const formattedDate = useMemo(() => {
+    if (!isClient) return '-'; // 서버 렌더링에서는 고정값
+    return formatDate(post.created_at);
+  }, [post.created_at, isClient]);
   
   if (isMobile) {
     return (
@@ -272,6 +278,17 @@ const EmptyState = React.memo(function EmptyState({ message }: { message: string
   );
 });
 
+// 🔧 클라이언트 렌더링 확인 훅
+const useIsClient = () => {
+  const [isClient, setIsClient] = useState(false);
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  
+  return isClient;
+};
+
 export default function PostList({
   posts,
   loading = false,
@@ -285,8 +302,8 @@ export default function PostList({
   currentBoardId,
   boardNameMaxWidth = "100px"
 }: PostListProps) {
-  // 모바일 화면인지 확인하는 상태 - 디바운스 적용
   const [isMobile, setIsMobile] = useState(false);
+  const isClient = useIsClient(); // 🔧 클라이언트 렌더링 확인
   
   // React 18 동시성 기능: posts 데이터를 지연시켜 메인 스레드 블로킹 방지
   const deferredPosts = useDeferredValue(posts);
@@ -420,10 +437,11 @@ export default function PostList({
     currentBoardId,
     showBoard,
     isMobile,
+    isClient,
     renderContentTypeIcons,
     renderAuthor,
     renderBoardLogo
-  }), [deferredPosts, currentPostId, currentBoardId, showBoard, isMobile, renderContentTypeIcons, renderAuthor, renderBoardLogo]);
+  }), [deferredPosts, currentPostId, currentBoardId, showBoard, isMobile, isClient, renderContentTypeIcons, renderAuthor, renderBoardLogo]);
 
   // 가상화된 모바일 뷰 렌더링
   const virtualizedMobileContent = useMemo(() => {
@@ -498,6 +516,7 @@ export default function PostList({
               currentBoardId={currentBoardId}
               showBoard={showBoard}
               isMobile={true}
+              isClient={isClient}
               renderContentTypeIcons={renderContentTypeIcons}
               renderAuthor={renderAuthor}
               renderBoardLogo={renderBoardLogo}
@@ -506,7 +525,7 @@ export default function PostList({
         </div>
       </div>
     );
-  }, [isMobile, useVirtualization, deferredPosts, currentPostId, currentBoardId, showBoard, renderContentTypeIcons, renderAuthor, renderBoardLogo]);
+  }, [isMobile, useVirtualization, deferredPosts, currentPostId, currentBoardId, showBoard, isClient, renderContentTypeIcons, renderAuthor, renderBoardLogo]);
 
   // 일반 데스크톱 뷰 렌더링 - 메모이제이션 + deferredPosts 사용
   const desktopContent = useMemo(() => {
@@ -537,6 +556,7 @@ export default function PostList({
                 currentBoardId={currentBoardId}
                 showBoard={showBoard}
                 isMobile={false}
+                isClient={isClient}
                 renderContentTypeIcons={renderContentTypeIcons}
                 renderAuthor={renderAuthor}
                 renderBoardLogo={renderBoardLogo}
@@ -546,7 +566,7 @@ export default function PostList({
         </table>
       </div>
     );
-  }, [isMobile, useVirtualization, deferredPosts, showBoard, boardNameMaxWidth, currentPostId, currentBoardId, renderContentTypeIcons, renderAuthor, renderBoardLogo]);
+  }, [isMobile, useVirtualization, deferredPosts, showBoard, boardNameMaxWidth, currentPostId, currentBoardId, isClient, renderContentTypeIcons, renderAuthor, renderBoardLogo]);
 
   return (
     <div className={`mb-4 bg-white rounded-lg border overflow-hidden ${className}`}>

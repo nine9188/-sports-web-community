@@ -91,6 +91,15 @@ export function getRelativeDateString(date: Date): string {
  */
 export function getDateDifference(start: Date, end: Date = new Date()): string {
   try {
+    // 🔧 Hydration 불일치 방지 - 서버 환경에서는 고정된 날짜 형식 사용
+    if (typeof window === 'undefined') {
+      // 서버에서는 YYYY-MM-DD 형식으로 고정
+      const year = start.getFullYear();
+      const month = String(start.getMonth() + 1).padStart(2, '0');
+      const day = String(start.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+    
     const diffMs = end.getTime() - start.getTime();
     const diffSec = Math.floor(diffMs / 1000);
     const diffMin = Math.floor(diffSec / 60);
