@@ -2,7 +2,7 @@
 
 import React from 'react';
 import HoverMenu from '@/domains/boards/components/common/HoverMenu';
-import { useBoards, HierarchicalBoard } from '@/domains/boards/hooks/useBoards';
+import { useBoards, HierarchicalBoard, BoardsResponse } from '@/domains/boards/hooks/useBoards';
 
 // 게시판 관련 타입 정의
 interface ChildBoard {
@@ -34,6 +34,8 @@ interface ClientHoverMenuProps {
   // 서버에서 미리 가져온 데이터 (선택 사항)
   prefetchedData?: PrefetchedData;
   fromParam?: string;
+  // 서버 컴포넌트에서 전달받은 초기 게시판 데이터
+  initialBoardsData?: BoardsResponse;
 }
 
 export default function ClientHoverMenu({
@@ -42,10 +44,13 @@ export default function ClientHoverMenu({
   rootBoardSlug,
   currentBoardSlug: _currentBoardSlug,
   prefetchedData,
-  fromParam
+  fromParam,
+  initialBoardsData
 }: ClientHoverMenuProps) {
   // 서버에서 데이터를 미리 가져왔다면 그것을 사용하고, 아니면 useBoards 훅 사용
-  const { data, isLoading, error } = useBoards();
+  const { data, isLoading, error } = useBoards(
+    initialBoardsData ? { initialData: initialBoardsData } : undefined
+  );
   
   // 서버에서 미리 가져온 데이터가 있으면 그것을 사용
   if (prefetchedData?.isServerFetched) {

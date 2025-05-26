@@ -11,11 +11,11 @@ export const BOARDS_QUERY_KEY = ['boards'];
 
 // 게시판 데이터 훅 옵션 타입
 interface UseBoardsOptions {
-  initialData: BoardsResponse; // 필수로 변경 - 서버 컴포넌트에서 전달받아야 함
+  initialData?: BoardsResponse; // 선택적으로 변경
 }
 
 // 게시판 데이터 훅 (서버 컴포넌트에서 전달받은 초기 데이터 사용)
-export function useBoards(options: UseBoardsOptions) {
+export function useBoards(options?: UseBoardsOptions) {
   return useQuery<BoardsResponse, Error>({
     queryKey: BOARDS_QUERY_KEY,
     queryFn: async () => {
@@ -26,7 +26,10 @@ export function useBoards(options: UseBoardsOptions) {
     staleTime: 1000 * 60 * 60, // 1시간 동안 최신 상태로 간주
     gcTime: 1000 * 60 * 60 * 24, // 24시간 동안 캐시 유지
     retry: false, // 에러 시 재시도 하지 않음
-    initialData: options.initialData, // 서버에서 전달받은 데이터 사용
+    initialData: options?.initialData || {
+      boards: [],
+      hierarchical: []
+    }, // 기본값 제공
     enabled: false // 자동 refetch 비활성화
   });
 }
