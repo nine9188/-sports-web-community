@@ -6,6 +6,7 @@ import { useAuth } from '@/shared/context/AuthContext';
 import { Header } from '@/domains/layout';
 import Footer from '@/shared/components/Footer';
 import Sidebar from '@/domains/sidebar/components/Sidebar';
+import ProfileSidebar from '@/domains/sidebar/components/ProfileSidebar';
 import { HeaderUserData } from '@/domains/layout/types/header';
 import { Board } from '@/domains/layout/types/board';
 
@@ -20,6 +21,9 @@ const AuthStateManager = React.memo(function AuthStateManager({
   isOpen,
   onClose,
   onMenuClick,
+  isProfileOpen,
+  onProfileClose,
+  onProfileClick,
   boardsData
 }: {
   children: React.ReactNode,
@@ -31,6 +35,9 @@ const AuthStateManager = React.memo(function AuthStateManager({
   isOpen: boolean,
   onClose: () => void,
   onMenuClick: () => void,
+  isProfileOpen: boolean,
+  onProfileClose: () => void,
+  onProfileClick: () => void,
   boardsData: Board[]
 }) {
   const { user } = useAuth();
@@ -51,6 +58,7 @@ const AuthStateManager = React.memo(function AuthStateManager({
     <div className="flex flex-col min-h-screen w-full">
       <Header
         onMenuClick={onMenuClick}
+        onProfileClick={onProfileClick}
         isSidebarOpen={isOpen}
         userData={headerUserData}
         boards={boardsData}
@@ -64,6 +72,10 @@ const AuthStateManager = React.memo(function AuthStateManager({
         >
           {boardNavigation}
         </Sidebar>
+        <ProfileSidebar
+          isOpen={isProfileOpen}
+          onClose={onProfileClose}
+        />
         <main className="flex-1 md:p-4 w-full overflow-y-auto box-border">
           {children}
         </main>

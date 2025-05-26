@@ -19,6 +19,7 @@ export type HeaderUserData = {
  */
 export type HeaderProps = {
   onMenuClick: () => void;
+  onProfileClick?: () => void;
   isSidebarOpen: boolean;
   userData?: HeaderUserData | null;
 }; 

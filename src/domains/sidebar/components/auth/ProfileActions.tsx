@@ -1,37 +1,27 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
-import { logout } from '@/shared/actions/auth-actions';
 import { useAuth } from '@/shared/context/AuthContext';
 import { useIcon } from '@/shared/context/IconContext';
 
 export default function ProfileActions() {
-  const router = useRouter();
   const { logoutUser } = useAuth();
   const { updateUserIconState } = useIcon();
   
   // 로그아웃 처리
   async function handleLogout() {
     try {
-      // 서버 액션으로 로그아웃
-      const result = await logout();
+      // AuthContext의 logoutUser 함수 사용
+      await logoutUser();
       
-      if (result.success) {
-        // AuthContext에서도 로그아웃 처리 (클라이언트 상태 동기화)
-        await logoutUser();
-        
-        // 아이콘 상태 초기화
-        updateUserIconState('', '');
-        
-        toast.success('로그아웃되었습니다.');
-        router.refresh();
-        // 로그인 페이지로 리디렉션
-        router.push('/signin');
-      } else {
-        toast.error(result.error || '로그아웃 중 오류가 발생했습니다.');
-      }
+      // 아이콘 상태 초기화
+      updateUserIconState('', '');
+      
+      toast.success('로그아웃되었습니다.');
+      
+      // 확실한 페이지 새로고침을 위해 window.location 사용
+      window.location.href = '/';
     } catch (error) {
       console.error('로그아웃 중 오류 발생:', error);
       toast.error('로그아웃 중 오류가 발생했습니다.');

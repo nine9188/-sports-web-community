@@ -40,7 +40,8 @@ export default async function AllPostsWidget() {
           headerContent={headerContent}
           footerContent={footerContent}
           showBoard={true}
-          maxHeight="400px"
+          // 🔧 모바일에서는 높이 제한 없음, 데스크톱에서만 400px 제한
+          maxHeight="sm:400px"
           currentBoardId="all" // 모든 게시판을 의미하는 ID
           className="h-full"
         />

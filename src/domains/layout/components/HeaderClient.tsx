@@ -5,10 +5,7 @@ import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faSignOutAlt, faCog, faChevronDown, faBars } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@/shared/components/ui/button';
-import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
-import { createClient } from '@/shared/api/supabase';
-import ProfileDropdown from './ProfileDropdown';
 import BoardNavigationClient from './BoardNavigationClient';
 import { useAuth } from '@/shared/context/AuthContext';
 import { HeaderUserData } from '@/domains/layout/types/header';
@@ -18,21 +15,22 @@ import { Board } from '../types/board';
 
 type HeaderClientProps = {
   onMenuClick: () => void;
+  onProfileClick: () => void;
   isSidebarOpen: boolean;
   initialUserData: HeaderUserData | null;
   boards: Board[];
 };
 
 export default function HeaderClient({ 
-  onMenuClick, 
+  onMenuClick,
+  onProfileClick, 
   isSidebarOpen, 
   initialUserData,
   boards
 }: HeaderClientProps) {
-  const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
-  const { user } = useAuth();
+  const { user, logoutUser } = useAuth();
   const { iconUrl, iconName, refreshUserIcon } = useIcon();
   
   // 이전 userData 상태 유지 (깜빡임 방지)
@@ -74,21 +72,27 @@ export default function HeaderClient({
     setIsDropdownOpen(!isDropdownOpen);
   }, [isDropdownOpen]);
 
-  // 로그아웃 처리
+  // 로그아웃 처리 - AuthContext의 logoutUser 사용
   const handleLogout = useCallback(async () => {
     try {
-      const supabase = createClient();
-      await supabase.auth.signOut();
-      toast.success('로그아웃되었습니다.');
+      // 드롭다운 닫기
+      setIsDropdownOpen(false);
+      
+      // AuthContext의 logoutUser 함수 사용
+      await logoutUser();
+      
+      // 로컬 상태 초기화
       setUserData(null);
       
-      router.push('/');
-      router.refresh();
+      toast.success('로그아웃되었습니다.');
+      
+      // 확실한 페이지 새로고침을 위해 window.location 사용
+      window.location.href = '/';
     } catch (error) {
       console.error('로그아웃 오류:', error);
       toast.error('로그아웃 중 오류가 발생했습니다.');
     }
-  }, [router]);
+  }, [logoutUser]);
 
   // 드롭다운 메뉴 닫기 (외부 클릭 감지)
   useEffect(() => {
@@ -159,13 +163,33 @@ export default function HeaderClient({
           </Link>
         )}
         
-        {/* 모바일 버전: ProfileDropdown 컴포넌트 사용 */}
+        {/* 모바일 버전: 직접 프로필 아이콘 렌더링 */}
         <div className="md:hidden">
-          <ProfileDropdown />
+          {userData ? (
+            <button
+              onClick={onProfileClick}
+              className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100"
+            >
+              <UserIcon 
+                iconUrl={iconUrl || userData?.iconInfo?.iconUrl}
+                level={userLevel}
+                size={24}
+                alt="프로필 이미지"
+                className="rounded-full object-cover"
+              />
+            </button>
+          ) : (
+            <button
+              onClick={onProfileClick}
+              className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100"
+            >
+              <FontAwesomeIcon icon={faUser} className="h-4 w-4" />
+            </button>
+          )}
         </div>
       </div>
     );
-  }, [userData, iconUrl, iconName, userLevel, isDropdownOpen, toggleDropdown, handleLogout]);
+  }, [userData, iconUrl, iconName, userLevel, isDropdownOpen, toggleDropdown, handleLogout, onProfileClick]);
 
   return (
     <header className="sticky top-0 z-50 border-b shadow-sm bg-white">

@@ -36,18 +36,25 @@ export default function RootLayoutClient({
   boardsData
 }: RootLayoutClientProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const pathname = usePathname();
   const prevPathnameRef = useRef<string>('');
   
   // React 18 동시성 기능: 사이드바 상태를 지연시켜 메인 스레드 블로킹 방지
   const deferredIsOpen = useDeferredValue(isOpen);
+  const deferredIsProfileOpen = useDeferredValue(isProfileOpen);
   
   // 독립적인 레이아웃이 필요한 경로들 확인
   const isIndependentLayout = useMemo(() => {
     if (!pathname) return false;
+    
+    // 인증 관련 경로들 (라우트 그룹 (auth) 사용)
+    const authPaths = ['/signin', '/signup'];
+    
     return pathname.startsWith('/auth/') || 
            pathname.startsWith('/admin/') ||
-           pathname.startsWith('/help/');
+           pathname.startsWith('/help/') ||
+           authPaths.includes(pathname);
   }, [pathname]);
 
   // queryClient를 useMemo로 최적화하여 불필요한 재생성 방지
@@ -82,6 +89,20 @@ export default function RootLayoutClient({
       setIsOpen(false);
     });
   }, []);
+
+  // 프로필 사이드바 토글 함수
+  const toggleProfileSidebar = useCallback(() => {
+    startTransition(() => {
+      setIsProfileOpen(prev => !prev);
+    });
+  }, []);
+
+  // 프로필 사이드바 닫기 함수
+  const closeProfileSidebar = useCallback(() => {
+    startTransition(() => {
+      setIsProfileOpen(false);
+    });
+  }, []);
   
   // 페이지 전환 감지 및 스크롤 복원 관리 - 디바운스 적용 + startTransition
   useEffect(() => {
@@ -91,6 +112,11 @@ export default function RootLayoutClient({
           // 사이드바가 열려있다면 닫기 (모바일)
           if (isOpen) {
             setIsOpen(false);
+          }
+          
+          // 프로필 사이드바가 열려있다면 닫기 (모바일)
+          if (isProfileOpen) {
+            setIsProfileOpen(false);
           }
           
           // 스크롤 위치 복원
@@ -103,7 +129,7 @@ export default function RootLayoutClient({
       
       return () => clearTimeout(timeoutId);
     }
-  }, [pathname, isOpen]);
+  }, [pathname, isOpen, isProfileOpen]);
 
   // ToastContainer 설정을 메모이제이션
   const toastConfig = useMemo(() => ({
@@ -134,6 +160,9 @@ export default function RootLayoutClient({
               isOpen={deferredIsOpen}
               onClose={closeSidebar}
               onMenuClick={toggleSidebar}
+              isProfileOpen={deferredIsProfileOpen}
+              onProfileClose={closeProfileSidebar}
+              onProfileClick={toggleProfileSidebar}
               boardsData={boardsData}
             >
               {children}

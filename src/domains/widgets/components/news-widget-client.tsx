@@ -181,9 +181,9 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
   return (
     <div className="mb-4">
       {/* 뉴스 레이아웃 - 메인 뉴스 왼쪽, 작은 뉴스 오른쪽 2x2 그리드 */}
-      <div className="flex flex-col md:flex-row gap-4">
+      <div className="flex flex-col md:flex-row gap-4 min-h-[300px] md:min-h-[400px]">
         {/* 메인 뉴스 (첫 번째 뉴스) - 왼쪽 배치 */}
-        <div className="md:w-1/2">
+        <div className="md:w-1/2 h-auto md:h-full">
           <Link
             href={news[0].url}
             className="block h-full mb-1 md:mb-0 bg-white rounded-lg border overflow-hidden hover:shadow-md transition-all group hover:translate-y-[-1px] hover:border-blue-300 dark:hover:border-blue-500 touch-manipulation active:scale-[0.99]"
@@ -193,7 +193,8 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
             }}
           >
             <div className="flex flex-col h-full">
-              <div className="relative w-full h-full transform transition-transform group-hover:scale-[1.02]">
+              {/* 🔧 모바일에서 이미지 높이 명시적 설정 */}
+              <div className="relative w-full h-48 md:h-64 lg:h-72 transform transition-transform group-hover:scale-[1.02]">
                 {/* 로딩 스피너 */}
                 {isImageLoading(news[0].id) && (
                   <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
@@ -215,11 +216,11 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
                   blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                 />
               </div>
-              <div className="p-1 bg-white flex-grow">
-                <h3 className="text-base font-semibold line-clamp-2 group-hover:text-blue-600 transition-colors">
+              <div className="p-3 bg-white flex-grow">
+                <h3 className="text-base md:text-lg font-semibold line-clamp-2 group-hover:text-blue-600 transition-colors">
                   {String(news[0]?.title || '제목 없음')}
                 </h3>
-                <div className="flex justify-between items-center text-xs text-gray-500 mt-1">
+                <div className="flex justify-between items-center text-xs md:text-sm text-gray-500 mt-2">
                   <span>{String(news[0]?.source || '출처 없음')}</span>
                   <span>{formatDate(news[0]?.publishedAt || '')}</span>
                 </div>
@@ -229,8 +230,8 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
         </div>
         
         {/* 작은 뉴스 (나머지 뉴스) - 오른쪽 2x2 그리드 */}
-        <div className="md:w-1/2">
-          <div className="grid grid-cols-2 gap-4 h-full">
+        <div className="md:w-1/2 h-auto md:h-full">
+          <div className="grid grid-cols-2 gap-2 md:gap-4 h-full">
             {news.slice(1, 5).map((item, index) => (
               <Link
                 key={item.id}
@@ -242,11 +243,12 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
                 }}
               >
                 <div className="flex flex-col h-full">
-                  <div className="relative w-full h-32 transform transition-transform group-hover:scale-[1.02]">
+                  {/* 🔧 작은 뉴스 이미지 높이도 반응형으로 조정 */}
+                  <div className="relative w-full h-24 md:h-32 transform transition-transform group-hover:scale-[1.02]">
                     {/* 로딩 스피너 */}
                     {isImageLoading(item.id) && (
                       <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                        <div className="animate-spin rounded-full h-4 w-4 md:h-6 md:w-6 border-b-2 border-blue-600"></div>
                       </div>
                     )}
                     <Image
@@ -263,12 +265,12 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
                       blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                     />
                   </div>
-                  <div className="p-2 flex-grow flex flex-col">
-                    <h3 className="text-sm font-medium line-clamp-2 group-hover:text-blue-600 transition-colors flex-grow">
+                  <div className="p-1.5 md:p-2 flex-grow flex flex-col">
+                    <h3 className="text-xs md:text-sm font-medium line-clamp-2 group-hover:text-blue-600 transition-colors flex-grow">
                       {String(item?.title || '제목 없음')}
                     </h3>
-                    <div className="flex justify-between items-center text-xs text-gray-500 mt-1">
-                      <span className="truncate max-w-[70px]">{String(item?.source || '출처 없음')}</span>
+                    <div className="flex justify-between items-center text-[10px] md:text-xs text-gray-500 mt-1">
+                      <span className="truncate max-w-[50px] md:max-w-[70px]">{String(item?.source || '출처 없음')}</span>
                       <span>{formatDate(item?.publishedAt || '')}</span>
                     </div>
                   </div>

@@ -447,7 +447,16 @@ export default function PostList({
   const virtualizedMobileContent = useMemo(() => {
     if (!isMobile || !useVirtualization) return null;
     
-    const height = maxHeight ? parseInt(maxHeight.replace('px', '')) : 400;
+    // 🔧 모바일에서 maxHeight 처리 개선
+    let height = 400; // 기본값
+    if (maxHeight) {
+      if (maxHeight.startsWith('sm:')) {
+        // sm: prefix가 있으면 모바일에서는 높이 제한 없음
+        height = Math.min(deferredPosts.length * 80 + 100, 600); // 최대 600px로 제한
+      } else {
+        height = parseInt(maxHeight.replace('px', ''));
+      }
+    }
     
     return (
       <div className="block sm:hidden">
@@ -469,7 +478,16 @@ export default function PostList({
   const virtualizedDesktopContent = useMemo(() => {
     if (isMobile || !useVirtualization) return null;
     
-    const height = maxHeight ? parseInt(maxHeight.replace('px', '')) : 400;
+    // 🔧 데스크톱에서 maxHeight 처리
+    let height = 400; // 기본값
+    if (maxHeight) {
+      if (maxHeight.startsWith('sm:')) {
+        // sm: prefix가 있으면 sm: 제거하고 사용
+        height = parseInt(maxHeight.replace('sm:', '').replace('px', ''));
+      } else {
+        height = parseInt(maxHeight.replace('px', ''));
+      }
+    }
     
     return (
       <div className="hidden sm:block">
@@ -577,8 +595,24 @@ export default function PostList({
       )}
       
       <ScrollArea 
-        className="h-full" 
-        style={{ maxHeight: maxHeight ? maxHeight : 'none' }}
+        className={`h-full ${isMobile && maxHeight?.startsWith('sm:') ? '' : ''}`}
+        style={{ 
+          maxHeight: (() => {
+            if (!maxHeight) return 'none';
+            
+            // 🔧 모바일에서 sm: prefix 처리
+            if (isMobile && maxHeight.startsWith('sm:')) {
+              return 'none'; // 모바일에서는 높이 제한 없음
+            }
+            
+            // 데스크톱에서 sm: prefix 제거
+            if (maxHeight.startsWith('sm:')) {
+              return maxHeight.replace('sm:', '');
+            }
+            
+            return maxHeight;
+          })()
+        }}
       >
         {deferredLoading ? (
           <LoadingSkeleton />

@@ -4,22 +4,20 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faSignOutAlt, faCog } from '@fortawesome/free-solid-svg-icons';
-import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
-import { createClient } from '@/shared/api/supabase';
 import { useAuth } from '@/shared/context/AuthContext';
 import { useIcon } from '@/shared/context/IconContext';
 import UserIcon from '@/shared/components/UserIcon';
 
 export default function ProfileDropdown() {
-  const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
-  const { user } = useAuth();
+  const { user, logoutUser } = useAuth();
   const { 
     iconUrl, 
     iconName, 
-    refreshUserIcon 
+    refreshUserIcon,
+    updateUserIconState 
   } = useIcon();
   
   // 사용자 레벨 기반 기본 아이콘 URL
@@ -38,20 +36,27 @@ export default function ProfileDropdown() {
     setIsDropdownOpen(!isDropdownOpen);
   }, [isDropdownOpen]);
 
-  // 로그아웃 처리
+  // 로그아웃 처리 - AuthContext의 logoutUser 사용
   const handleLogout = useCallback(async () => {
     try {
-      const supabase = createClient();
-      await supabase.auth.signOut();
+      // 드롭다운 닫기
+      setIsDropdownOpen(false);
+      
+      // AuthContext의 logoutUser 함수 사용
+      await logoutUser();
+      
+      // 아이콘 상태 초기화
+      updateUserIconState('', '');
+      
       toast.success('로그아웃되었습니다.');
       
-      router.push('/');
-      router.refresh();
+      // 확실한 페이지 새로고침을 위해 window.location 사용
+      window.location.href = '/';
     } catch (error) {
       console.error('로그아웃 오류:', error);
       toast.error('로그아웃 중 오류가 발생했습니다.');
     }
-  }, [router]);
+  }, [logoutUser, updateUserIconState]);
 
   // 드롭다운 메뉴 닫기 (외부 클릭 감지)
   useEffect(() => {
