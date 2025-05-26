@@ -2,7 +2,6 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { BoardsResponse } from '@/domains/boards/types';
-import { getBoards } from '@/domains/boards/actions'; // 서버 액션 import
 
 // 클라이언트에서 필요한 타입만 다시 export
 export type { HierarchicalBoard, Board, BoardsResponse } from '@/domains/boards/types';
@@ -12,27 +11,27 @@ export const BOARDS_QUERY_KEY = ['boards'];
 
 // 게시판 데이터 훅 옵션 타입
 interface UseBoardsOptions {
-  initialData?: BoardsResponse;
+  initialData: BoardsResponse; // 필수로 변경 - 서버 컴포넌트에서 전달받아야 함
 }
 
-// 게시판 데이터 훅 (Server Action이 도입되면서 이 훅은 사용되지 않지만, 
-// 혹시 API 폴백이 필요한 경우를 위해 남겨둠)
-export function useBoards(options?: UseBoardsOptions) {
+// 게시판 데이터 훅 (서버 컴포넌트에서 전달받은 초기 데이터 사용)
+export function useBoards(options: UseBoardsOptions) {
   return useQuery<BoardsResponse, Error>({
     queryKey: BOARDS_QUERY_KEY,
     queryFn: async () => {
-      // 서버 액션 직접 호출
-      const data = await getBoards();
-      return data;
+      // 클라이언트에서는 서버 액션을 직접 호출하지 않음
+      // 대신 서버 컴포넌트에서 전달받은 초기 데이터를 사용
+      throw new Error('클라이언트에서 서버 액션 직접 호출 불가 - 서버 컴포넌트에서 데이터를 전달받아야 합니다');
     },
     staleTime: 1000 * 60 * 60, // 1시간 동안 최신 상태로 간주
     gcTime: 1000 * 60 * 60 * 24, // 24시간 동안 캐시 유지
-    retry: 3,
-    initialData: options?.initialData
+    retry: false, // 에러 시 재시도 하지 않음
+    initialData: options.initialData, // 서버에서 전달받은 데이터 사용
+    enabled: false // 자동 refetch 비활성화
   });
 }
 
-// 게시판 캐시 갱신 훅
+// 게시판 캐시 갱신 훅 (서버 액션 기반)
 export function useBoardsCache() {
   const queryClient = useQueryClient();
   
@@ -42,25 +41,13 @@ export function useBoardsCache() {
     return true;
   };
   
-  // 캐시 갱신 함수
-  const refreshBoardsCache = async () => {
-    try {
-      await queryClient.fetchQuery({ 
-        queryKey: BOARDS_QUERY_KEY,
-        queryFn: async () => {
-          const data = await getBoards();
-          return data;
-        }
-      });
-      return true;
-    } catch (error) {
-      console.error('게시판 캐시 갱신 오류:', error);
-      return false;
-    }
+  // 서버 컴포넌트에서 새로운 데이터를 받아서 캐시 업데이트
+  const updateBoardsCache = (newData: BoardsResponse) => {
+    queryClient.setQueryData(BOARDS_QUERY_KEY, newData);
   };
   
   return {
     invalidateBoardsCache,
-    refreshBoardsCache
+    updateBoardsCache
   };
 } 
