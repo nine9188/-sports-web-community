@@ -3,6 +3,7 @@
 import { createClient } from '@/shared/api/supabaseServer';
 import { revalidatePath } from 'next/cache';
 import { CommentType } from '../types/post/comment';
+import { rewardUserActivity, getActivityTypeValues } from '@/shared/actions/activity-actions';
 
 /**
  * 댓글 작성
@@ -39,7 +40,17 @@ export async function createComment({
       return { success: false, error: error.message };
     }
     
-    // 3. 경로 재검증
+    // 3. 댓글 작성 보상 지급 (비동기로 처리하여 메인 로직에 영향 없도록)
+    try {
+      const activityTypes = await getActivityTypeValues();
+      await rewardUserActivity(user.id, activityTypes.COMMENT_CREATION, data.id);
+      console.log('댓글 작성 보상 지급 완료');
+    } catch (rewardError) {
+      console.error('댓글 작성 보상 지급 오류:', rewardError);
+      // 보상 지급 실패해도 댓글 작성은 성공으로 처리
+    }
+    
+    // 4. 경로 재검증
     revalidatePath(`/boards/[slug]/[postNumber]`, 'page');
     
     return { success: true, comment: data as CommentType };
@@ -417,7 +428,7 @@ export async function likeComment(commentId: string): Promise<{
         dislikes: dislikes
       })
       .eq('id', commentId)
-      .select('likes, dislikes')
+      .select('likes, dislikes, user_id')
       .single();
     
     if (updateCommentError) {
@@ -426,6 +437,18 @@ export async function likeComment(commentId: string): Promise<{
         success: false,
         error: `댓글 업데이트 오류: ${updateCommentError.message}`
       };
+    }
+    
+    // 좋아요가 새로 추가된 경우 댓글 작성자에게 보상 지급
+    if (newUserAction === 'like' && updatedComment.user_id && updatedComment.user_id !== user.id) {
+      try {
+        const activityTypes = await getActivityTypeValues();
+        await rewardUserActivity(updatedComment.user_id, activityTypes.RECEIVED_LIKE, commentId);
+        console.log('댓글 추천 받기 보상 지급 완료');
+      } catch (rewardError) {
+        console.error('댓글 추천 받기 보상 지급 오류:', rewardError);
+        // 보상 지급 실패해도 좋아요는 성공으로 처리
+      }
     }
     
     console.log(`[likeComment] 완료: userAction=${newUserAction}`);
@@ -668,4 +691,4 @@ export async function dislikeComment(commentId: string): Promise<{
       error: error instanceof Error ? error.message : '싫어요 처리 중 오류가 발생했습니다.'
     };
   }
-} 
+}

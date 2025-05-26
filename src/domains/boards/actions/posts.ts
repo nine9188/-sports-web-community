@@ -2,6 +2,7 @@
 
 import { createClient } from '@/shared/api/supabaseServer';
 import { revalidatePath } from 'next/cache';
+import { rewardUserActivity, getActivityTypeValues } from '@/shared/actions/activity-actions';
 
 /**
  * 게시글 생성 서버 액션 (매개변수 사용)
@@ -411,7 +412,7 @@ export async function likePost(postId: string): Promise<LikeActionResponse> {
     // 게시글 최신 정보 조회
     const { data: currentPost, error: fetchError } = await supabase
       .from('posts')
-      .select('likes, dislikes')
+      .select('likes, dislikes, user_id')
       .eq('id', postId)
       .single();
       
@@ -531,6 +532,18 @@ export async function likePost(postId: string): Promise<LikeActionResponse> {
       }
       
       newUserAction = 'like';
+      
+      // 좋아요가 새로 추가된 경우 게시글 작성자에게 보상 지급
+      if (currentPost.user_id && currentPost.user_id !== userId) {
+        try {
+          const activityTypes = await getActivityTypeValues();
+          await rewardUserActivity(currentPost.user_id, activityTypes.RECEIVED_LIKE, postId);
+          console.log('게시글 추천 받기 보상 지급 완료');
+        } catch (rewardError) {
+          console.error('게시글 추천 받기 보상 지급 오류:', rewardError);
+          // 보상 지급 실패해도 좋아요는 성공으로 처리
+        }
+      }
     }
     
     // 페이지 재검증
@@ -576,7 +589,7 @@ export async function dislikePost(postId: string): Promise<LikeActionResponse> {
     // 게시글 최신 정보 조회
     const { data: currentPost, error: fetchError } = await supabase
       .from('posts')
-      .select('likes, dislikes')
+      .select('likes, dislikes, user_id')
       .eq('id', postId)
       .single();
       
