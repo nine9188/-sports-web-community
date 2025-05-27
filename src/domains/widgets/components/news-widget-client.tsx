@@ -181,7 +181,7 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
   return (
     <div className="mb-4">
       {/* 뉴스 레이아웃 - 메인 뉴스 왼쪽, 작은 뉴스 오른쪽 2x2 그리드 */}
-      <div className="flex flex-col md:flex-row gap-4 min-h-[300px] md:min-h-[400px]">
+      <div className="flex flex-col md:flex-row gap-3 md:gap-4 min-h-[300px] md:min-h-[420px]">
         {/* 메인 뉴스 (첫 번째 뉴스) - 왼쪽 배치 */}
         <div className="md:w-1/2 h-auto md:h-full">
           <Link
@@ -193,8 +193,8 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
             }}
           >
             <div className="flex flex-col h-full">
-              {/* 🔧 모바일에서 이미지 높이 명시적 설정 */}
-              <div className="relative w-full h-48 md:h-64 lg:h-72 transform transition-transform group-hover:scale-[1.02]">
+              {/* 🔧 큰 뉴스 이미지 높이를 더 길게 조정 */}
+              <div className="relative w-full h-56 md:h-80 lg:h-96 transform transition-transform group-hover:scale-[1.02]">
                 {/* 로딩 스피너 */}
                 {isImageLoading(news[0].id) && (
                   <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
@@ -243,8 +243,8 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
                 }}
               >
                 <div className="flex flex-col h-full">
-                  {/* 🔧 작은 뉴스 이미지 높이도 반응형으로 조정 */}
-                  <div className="relative w-full h-24 md:h-32 transform transition-transform group-hover:scale-[1.02]">
+                  {/* 🔧 작은 뉴스 이미지 높이 조정 - 2x2 그리드에서 균형 맞춤 */}
+                  <div className="relative w-full h-28 md:h-36 lg:h-40 transform transition-transform group-hover:scale-[1.02]">
                     {/* 로딩 스피너 */}
                     {isImageLoading(item.id) && (
                       <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
