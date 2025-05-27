@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faSignOutAlt, faCog, faChevronDown, faBars } from '@fortawesome/free-solid-svg-icons';
 import { ChevronDown, ShoppingBag, X, Search } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
 import { toast } from 'react-toastify';
 import BoardNavigationClient from './BoardNavigationClient';
 import { useAuth } from '@/shared/context/AuthContext';
