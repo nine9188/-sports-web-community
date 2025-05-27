@@ -20,7 +20,6 @@ const AuthStateManager = React.memo(function AuthStateManager({
   rightSidebar,
   isOpen,
   onClose,
-  onMenuClick,
   isProfileOpen,
   onProfileClose,
   onProfileClick,
@@ -34,7 +33,6 @@ const AuthStateManager = React.memo(function AuthStateManager({
   rightSidebar: React.ReactNode,
   isOpen: boolean,
   onClose: () => void,
-  onMenuClick: () => void,
   isProfileOpen: boolean,
   onProfileClose: () => void,
   onProfileClick: () => void,
@@ -57,7 +55,6 @@ const AuthStateManager = React.memo(function AuthStateManager({
   return (
     <div className="flex flex-col min-h-screen w-full">
       <Header
-        onMenuClick={onMenuClick}
         onProfileClick={onProfileClick}
         isSidebarOpen={isOpen}
         userData={headerUserData}

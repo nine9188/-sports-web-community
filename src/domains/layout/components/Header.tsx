@@ -15,7 +15,6 @@ interface ExtendedHeaderProps extends HeaderProps {
  * 상위에서 전달받은 게시판 데이터를 HeaderClient에 전달합니다.
  */
 export default function Header({ 
-  onMenuClick,
   onProfileClick = () => {}, 
   isSidebarOpen,
   userData,
@@ -23,7 +22,6 @@ export default function Header({
 }: ExtendedHeaderProps) {
   return (
     <HeaderClient 
-      onMenuClick={onMenuClick}
       onProfileClick={onProfileClick} 
       isSidebarOpen={isSidebarOpen} 
       initialUserData={userData || null}

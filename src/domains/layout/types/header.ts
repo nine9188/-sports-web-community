@@ -18,7 +18,6 @@ export type HeaderUserData = {
  * 헤더 컴포넌트 기본 속성
  */
 export type HeaderProps = {
-  onMenuClick: () => void;
   onProfileClick?: () => void;
   isSidebarOpen: boolean;
   userData?: HeaderUserData | null;

@@ -76,13 +76,6 @@ export default function RootLayoutClient({
     },
   }), []);
   
-  // 사이드바 토글 함수 - useCallback으로 최적화 + startTransition 적용
-  const toggleSidebar = useCallback(() => {
-    startTransition(() => {
-      setIsOpen(prev => !prev);
-    });
-  }, []);
-
   // 사이드바 닫기 함수 - useCallback으로 최적화 + startTransition 적용
   const closeSidebar = useCallback(() => {
     startTransition(() => {
@@ -159,7 +152,6 @@ export default function RootLayoutClient({
               rightSidebar={rightSidebar}
               isOpen={deferredIsOpen}
               onClose={closeSidebar}
-              onMenuClick={toggleSidebar}
               isProfileOpen={deferredIsProfileOpen}
               onProfileClose={closeProfileSidebar}
               onProfileClick={toggleProfileSidebar}
