@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
-import { ChevronDown, ChevronRight, ShoppingBag } from 'lucide-react';
+import { ChevronDown, ChevronRight, ShoppingBag, X, Search } from 'lucide-react';
 import ReactDOM from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { Board } from '../types/board';
@@ -11,6 +11,215 @@ import { Board } from '../types/board';
 interface BoardNavigationClientProps {
   boards: Board[];
 }
+
+// 모바일 게시판 모달 컴포넌트
+const MobileBoardModal = React.memo(function MobileBoardModal({
+  boards,
+  isOpen,
+  onClose
+}: {
+  boards: Board[];
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [expandedBoards, setExpandedBoards] = useState<Set<string>>(() => {
+    // 초기 상태에서 1단계 게시판들은 모두 펼쳐진 상태로 설정
+    const initialExpanded = new Set<string>();
+    boards.forEach(board => {
+      if (board.children && board.children.length > 0) {
+        initialExpanded.add(board.id);
+      }
+    });
+    return initialExpanded;
+  });
+  const router = useRouter();
+
+  // 모든 게시판을 평면화하여 검색 가능하게 만들기
+  const flattenBoards = (boards: Board[]): Board[] => {
+    const result: Board[] = [];
+    boards.forEach(board => {
+      result.push(board);
+      if (board.children) {
+        result.push(...flattenBoards(board.children));
+      }
+    });
+    return result;
+  };
+
+  const allBoards = flattenBoards(boards);
+  const filteredBoards = searchTerm 
+    ? allBoards.filter(board => 
+        board.name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : boards;
+
+  const handleBoardClick = (board: Board) => {
+    router.push(`/boards/${board.slug || board.id}`);
+    onClose();
+  };
+
+  const toggleExpanded = (boardId: string) => {
+    const newExpanded = new Set(expandedBoards);
+    if (newExpanded.has(boardId)) {
+      newExpanded.delete(boardId);
+    } else {
+      newExpanded.add(boardId);
+    }
+    setExpandedBoards(newExpanded);
+  };
+
+  if (!isOpen) return null;
+
+  return ReactDOM.createPortal(
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden">
+      <div className="bg-white h-full flex flex-col">
+        {/* 헤더 - 고정 */}
+        <div className="flex items-center justify-between p-4 border-b">
+          <h2 className="text-sm font-semibold">게시판 선택</h2>
+          <button 
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* 검색 - 고정 */}
+        <div className="p-4 border-b">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="게시판 검색..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            />
+          </div>
+        </div>
+
+        {/* 스크롤 가능한 콘텐츠 영역 */}
+        <div className="flex-1 overflow-y-auto">
+          {/* 라이브스코어, 아이콘샵 링크 */}
+          <div className="p-4 border-b space-y-2">
+            <Link 
+              href="/livescore/football"
+              onClick={onClose}
+              className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-lg"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polygon points="10 8 16 12 10 16 10 8"></polygon>
+              </svg>
+              <span className="text-sm font-medium">라이브스코어</span>
+            </Link>
+            
+            <Link 
+              href="/shop/profile-icons"
+              onClick={onClose}
+              className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-lg"
+            >
+              <ShoppingBag className="h-4 w-4" />
+              <span className="text-sm font-medium">아이콘샵</span>
+            </Link>
+          </div>
+
+          {/* 게시판 목록 */}
+          <div className="pb-4">
+            {searchTerm ? (
+              // 검색 결과
+              <div className="p-2">
+                {filteredBoards.map(board => (
+                  <button
+                    key={board.id}
+                    onClick={() => handleBoardClick(board)}
+                    className="w-full text-left p-2 hover:bg-gray-100 rounded-lg"
+                  >
+                    <div className="text-sm font-medium">{board.name}</div>
+                  </button>
+                ))}
+                {filteredBoards.length === 0 && (
+                  <div className="text-center py-8 text-gray-500 text-sm">
+                    검색 결과가 없습니다
+                  </div>
+                )}
+              </div>
+            ) : (
+              // 카테고리별 게시판 (아코디언 스타일)
+              <div className="p-2">
+                {boards.map(board => (
+                  <div key={board.id} className="mb-2">
+                    {/* 1단계: 크기 줄임, 다른 버튼들과 동일한 크기 */}
+                    <button
+                      onClick={() => handleBoardClick(board)}
+                      className="w-full text-left p-2 bg-gray-50 hover:bg-gray-100 rounded-lg mb-1"
+                    >
+                      <div className="font-semibold text-blue-600 text-sm">{board.name}</div>
+                    </button>
+                    
+                    {/* 2단계: 항상 표시됨 */}
+                    {board.children && board.children.length > 0 && (
+                      <div className="ml-4 space-y-1">
+                        {board.children
+                          .sort((a, b) => a.display_order - b.display_order)
+                          .map(child => (
+                            <div key={child.id}>
+                              <div className="flex items-center bg-white rounded">
+                                {/* 2단계 게시판 이름 */}
+                                <button
+                                  onClick={() => handleBoardClick(child)}
+                                  className="flex-1 text-left p-2 hover:bg-gray-50 rounded-l text-sm"
+                                >
+                                  {child.name}
+                                </button>
+                                
+                                {/* 3단계 하위 메뉴가 있는 경우에만 펼치기/접기 버튼 */}
+                                {child.children && child.children.length > 0 && (
+                                  <button
+                                    onClick={() => toggleExpanded(child.id)}
+                                    className="p-2 hover:bg-gray-50 rounded-r border-l border-gray-200"
+                                  >
+                                    <ChevronDown 
+                                      className={`h-3 w-3 transition-transform ${
+                                        expandedBoards.has(child.id) ? 'rotate-180' : ''
+                                      }`} 
+                                    />
+                                  </button>
+                                )}
+                              </div>
+                              
+                              {/* 3단계 하위 게시판 (펼쳐진 경우에만 표시) */}
+                              {child.children && child.children.length > 0 && expandedBoards.has(child.id) && (
+                                <div className="ml-4 mt-1 space-y-1">
+                                  {child.children
+                                    .sort((a, b) => a.display_order - b.display_order)
+                                    .map(grandChild => (
+                                      <button
+                                        key={grandChild.id}
+                                        onClick={() => handleBoardClick(grandChild)}
+                                        className="w-full text-left p-2 hover:bg-gray-50 rounded text-sm text-gray-600 bg-gray-50"
+                                      >
+                                        ┗ {grandChild.name}
+                                      </button>
+                                    ))}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+});
 
 // 개별 게시판 아이템 컴포넌트 - 메모이제이션
 const BoardItem = React.memo(function BoardItem({ 
@@ -35,7 +244,7 @@ const BoardItem = React.memo(function BoardItem({
     <div key={board.id}>
       <div
         ref={itemRef}
-        className="w-full px-3 py-1.5 md:py-1.5 py-2.5 hover:bg-gray-100 flex items-center text-sm cursor-pointer relative"
+        className="w-full px-3 py-2.5 md:py-1.5 hover:bg-gray-100 flex items-center text-sm cursor-pointer relative"
         onMouseEnter={() => {
           if (hasChildren && showSubmenu && onSubmenuHover && itemRef.current) {
             onSubmenuHover(board, itemRef.current);
@@ -47,9 +256,13 @@ const BoardItem = React.memo(function BoardItem({
           }
         }}
         onClick={(e) => {
-          if (!hasChildren) {
-            e.stopPropagation();
-            onItemClick?.();
+          e.stopPropagation();
+          // 모든 게시판이 클릭 가능하도록 변경
+          if (onItemClick) {
+            onItemClick();
+          } else {
+            // onItemClick이 없는 경우 직접 이동
+            window.location.href = `/boards/${board.slug || board.id}`;
           }
         }}
       >
@@ -57,24 +270,18 @@ const BoardItem = React.memo(function BoardItem({
           <span className="text-gray-400 mr-1.5">
             {level > 0 ? '┗' : ''}
           </span>
-          {!hasChildren ? (
-            <Link 
-              href={`/boards/${board.slug || board.id}`}
-              className="flex-1"
-              onClick={(e) => {
-                e.stopPropagation();
-                onItemClick?.();
-              }}
-            >
-              <span className={`${level === 0 ? 'font-medium' : ''}`}>
-                {board.name || '게시판'}
-              </span>
-            </Link>
-          ) : (
-            <span className={`${level === 0 ? 'font-medium' : ''} flex-1`}>
+          <Link 
+            href={`/boards/${board.slug || board.id}`}
+            className="flex-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              onItemClick?.();
+            }}
+          >
+            <span className={`${level === 0 ? 'font-medium' : ''}`}>
               {board.name || '게시판'}
             </span>
-          )}
+          </Link>
           {hasChildren && showSubmenu && (
             <ChevronRight className="h-3.5 w-3.5 text-gray-400 ml-1" />
           )}
@@ -115,11 +322,11 @@ const Submenu = React.memo(function Submenu({
 }) {
   return ReactDOM.createPortal(
     <div 
-      className="fixed bg-white border rounded-md shadow-lg py-1"
+      className="fixed bg-white border rounded-md shadow-lg py-1 hidden md:block"
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`,
-        width: window.innerWidth <= 768 ? 'calc(100vw - 20px)' : '200px',
+        width: '200px',
         maxWidth: '200px',
         maxHeight: '60vh',
         overflowY: 'auto',
@@ -256,11 +463,11 @@ const DropdownMenu = React.memo(function DropdownMenu({
 
   return ReactDOM.createPortal(
     <div 
-      className="fixed bg-white border rounded-md shadow-lg py-1"
+      className="fixed bg-white border rounded-md shadow-lg py-1 hidden md:block"
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`,
-        width: window.innerWidth <= 768 ? 'calc(100vw - 20px)' : '240px',
+        width: '240px',
         maxWidth: '240px',
         maxHeight: '60vh',
         overflowY: 'auto',
@@ -357,6 +564,7 @@ const TopLevelBoard = React.memo(function TopLevelBoard({
 function BoardNavigationClient({ boards }: BoardNavigationClientProps) {
   const [hoveredBoard, setHoveredBoard] = useState<string | null>(null);
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
+  const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
@@ -377,7 +585,7 @@ function BoardNavigationClient({ boards }: BoardNavigationClientProps) {
   const handleMouseEnter = (boardId: string, element: HTMLDivElement) => {
     clearTimers();
     
-    const rect = element.getBoundingClientRect();
+      const rect = element.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
     const menuWidth = 240;
     const spacing = 10;
@@ -395,11 +603,11 @@ function BoardNavigationClient({ boards }: BoardNavigationClientProps) {
       left = spacing;
     }
     
-    setDropdownPosition({
-      top: rect.bottom + window.scrollY,
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY,
       left: left
-    });
-    setHoveredBoard(boardId);
+      });
+      setHoveredBoard(boardId);
   };
 
   // 호버 종료 처리 (트리거 요소에서)
@@ -429,9 +637,8 @@ function BoardNavigationClient({ boards }: BoardNavigationClientProps) {
 
   // 게시판 클릭 처리
   const handleBoardClick = (board: Board) => {
-    if (!board.children || board.children.length === 0) {
-      router.push(`/boards/${board.slug || board.id}`);
-    }
+    // 모든 게시판이 클릭 가능하도록 변경 (하위 메뉴 여부와 관계없이)
+    router.push(`/boards/${board.slug || board.id}`);
   };
 
   // 드롭다운 닫기
@@ -445,7 +652,9 @@ function BoardNavigationClient({ boards }: BoardNavigationClientProps) {
   const hoveredBoardData = hoveredBoard ? boards.find(b => b.id === hoveredBoard) : null;
 
   return (
-    <div className="flex items-center gap-1 overflow-x-auto w-full no-scrollbar pb-1 snap-x snap-mandatory">
+    <>
+      {/* 데스크탑 네비게이션 */}
+      <div className="hidden md:flex items-center gap-1 overflow-x-auto w-full no-scrollbar pb-1 snap-x snap-mandatory">
       {/* 게시판 목록 */}
       {boards.map(board => (
         <TopLevelBoard
@@ -484,11 +693,49 @@ function BoardNavigationClient({ boards }: BoardNavigationClientProps) {
           board={hoveredBoardData}
           position={dropdownPosition}
           onClose={closeDropdown}
-          onMouseEnter={handleDropdownMouseEnter}
-          onMouseLeave={handleDropdownMouseLeave}
+            onMouseEnter={handleDropdownMouseEnter}
+            onMouseLeave={handleDropdownMouseLeave}
         />
       )}
     </div>
+
+      {/* 모바일 네비게이션 */}
+      <div className="md:hidden flex items-center gap-2">
+        <button
+          onClick={() => setIsMobileModalOpen(true)}
+          className="px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1"
+        >
+          게시판 선택
+          <ChevronDown className="h-3.5 w-3.5" />
+        </button>
+        
+        <Link 
+          href="/livescore/football" 
+          className="px-2 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polygon points="10 8 16 12 10 16 10 8"></polygon>
+          </svg>
+          라이브
+        </Link>
+        
+        <Link 
+          href="/shop/profile-icons" 
+          className="px-2 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1"
+        >
+          <ShoppingBag className="h-3.5 w-3.5" />
+          아이콘샵
+        </Link>
+      </div>
+
+      {/* 모바일 게시판 모달 */}
+      <MobileBoardModal
+        boards={boards}
+        isOpen={isMobileModalOpen}
+        onClose={() => setIsMobileModalOpen(false)}
+      />
+    </>
   );
 }
 
