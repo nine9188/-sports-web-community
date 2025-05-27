@@ -290,6 +290,14 @@ export default function HeaderClient({
     setIsMobileMenuOpen(!isMobileMenuOpen);
   }, [isMobileMenuOpen]);
 
+  // 모바일에서 hover 상태 제거를 위한 터치 이벤트 핸들러
+  const handleMobileMenuTouch = useCallback((e: React.TouchEvent) => {
+    // 터치 후 hover 상태 제거
+    const target = e.currentTarget as HTMLElement;
+    target.blur();
+    toggleMobileMenu();
+  }, [toggleMobileMenu]);
+
   // 로그아웃 처리 - AuthContext의 logoutUser 사용
   const handleLogout = useCallback(async () => {
     try {
@@ -386,7 +394,8 @@ export default function HeaderClient({
           {userData ? (
             <button
               onClick={onProfileClick}
-              className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100"
+              className="flex items-center justify-center w-9 h-9 rounded-full active:bg-gray-200 transition-colors duration-150"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               <UserIcon 
                 iconUrl={iconUrl || userData?.iconInfo?.iconUrl}
@@ -399,7 +408,8 @@ export default function HeaderClient({
           ) : (
             <button
               onClick={onProfileClick}
-              className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100"
+              className="flex items-center justify-center w-9 h-9 rounded-full active:bg-gray-200 transition-colors duration-150"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               <FontAwesomeIcon icon={faUser} className="h-4 w-4" />
             </button>
@@ -424,9 +434,14 @@ export default function HeaderClient({
               <div className="min-w-[40px] h-9">
                 {renderAuthState}
               </div>
-              <Button variant="ghost" size="icon" className="lg:hidden" onClick={toggleMobileMenu}>
+              <button 
+                className="lg:hidden flex items-center justify-center w-9 h-9 rounded-full active:bg-gray-200 transition-colors duration-150"
+                onClick={toggleMobileMenu}
+                onTouchEnd={handleMobileMenuTouch}
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+              >
                 <FontAwesomeIcon icon={faBars} className="h-4 w-4" />
-              </Button>
+              </button>
             </div>
           </div>
         </div>
