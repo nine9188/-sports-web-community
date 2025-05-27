@@ -92,7 +92,20 @@ export default async function PostDetailPage({
     }
     
     // CommentType 변환을 위한 처리
-    const processedComments = (result.comments || []).map(comment => ({
+    const processedComments = (result.comments || []).map((comment: {
+      id: string;
+      content: string;
+      created_at?: string;
+      user_id?: string;
+      post_id?: string;
+      likes?: number;
+      dislikes?: number;
+      userAction?: 'like' | 'dislike' | null;
+      profiles?: {
+        nickname?: string;
+        icon_id?: number;
+      };
+    }) => ({
       id: comment.id,
       content: comment.content,
       created_at: comment.created_at || '',
