@@ -5,7 +5,7 @@ import {
   createComment,
   deleteComment,
   updateComment,
-  getComments as getCommentsForPost
+  getComments
 } from "@/domains/boards/actions/comments";
 import { CommentType } from "@/domains/boards/types/post/comment";
 import Comment from "./Comment";
@@ -44,12 +44,16 @@ export default function CommentSection({ postId, initialComments, postOwnerId }:
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const supabase = useMemo(() => createClient(), []);
 
-  // 댓글 데이터 업데이트 함수 최적화
+  // 댓글 데이터 업데이트 함수 최적화 - 사용자 액션 정보 포함
   const updateComments = useCallback(async () => {
     try {
-      const response = await getCommentsForPost(postId);
+      console.log('댓글 실시간 업데이트 시작');
+      const response = await getComments(postId);
       if (response.success && response.comments && response.comments.length >= 0) {
+        console.log('댓글 업데이트 성공:', response.comments.length, '개');
         setComments(response.comments);
+      } else {
+        console.error('댓글 업데이트 실패:', response.error);
       }
     } catch (error) {
       console.error("댓글 실시간 업데이트 중 오류:", error);
@@ -135,7 +139,9 @@ export default function CommentSection({ postId, initialComments, postOwnerId }:
       }
       
       if (result.comment) {
-        setComments(prevComments => [...prevComments, result.comment as CommentType]);
+        // 새 댓글에 userAction 초기값 설정
+        const newComment = { ...result.comment, userAction: null } as CommentType;
+        setComments(prevComments => [...prevComments, newComment]);
         setContent('');
         setErrorMessage(null);
       }
@@ -162,12 +168,16 @@ export default function CommentSection({ postId, initialComments, postOwnerId }:
         throw new Error(result.error || '댓글 수정에 실패했습니다.');
       }
       
-      // 댓글 목록 업데이트
+      // 댓글 목록 업데이트 - 기존 userAction 상태 유지
       if (result.comment) {
         setComments(prevComments => 
-          prevComments.map(comment => 
-            comment.id === commentId ? result.comment as CommentType : comment
-          )
+          prevComments.map(comment => {
+            if (comment.id === commentId) {
+              // 기존 userAction 상태 유지
+              return { ...result.comment as CommentType, userAction: comment.userAction };
+            }
+            return comment;
+          })
         );
       } else {
         // 데이터가 반환되지 않은 경우 전체 목록 새로고침
@@ -224,7 +234,7 @@ export default function CommentSection({ postId, initialComments, postOwnerId }:
         />
       ))
     ) : (
-      <div className="px-6 py-4 text-sm text-gray-500">
+      <div className="px-4 py-8 text-center text-sm text-gray-500">
         아직 댓글이 없습니다. 첫 댓글을 남겨보세요!
       </div>
     );
@@ -232,34 +242,41 @@ export default function CommentSection({ postId, initialComments, postOwnerId }:
 
   return (
     <div className="bg-white rounded-lg border shadow-sm overflow-hidden mb-4">
-      <div className="px-6 py-4 border-b">
-        <h3 className="font-medium">댓글 {comments.length}개</h3>
+      {/* 댓글 헤더 */}
+      <div className="px-4 py-3 border-b bg-gray-50">
+        <h3 className="font-medium text-sm text-gray-900">
+          댓글 <span className="text-blue-600">{comments.length}</span>개
+        </h3>
       </div>
       
       {/* 댓글 목록 */}
-      <div className="divide-y">
+      <div className="divide-y divide-gray-100">
         {commentsList}
       </div>
 
       {/* 댓글 작성 폼 */}
-      <div className="px-6 py-4 border-t bg-gray-50">
+      <div className="px-4 py-4 border-t bg-gray-50">
         {errorMessage && (
-          <div className="mb-3 p-2 bg-red-50 text-red-600 rounded text-sm">
+          <div className="mb-3 p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">
             {errorMessage}
           </div>
         )}
         <form className="space-y-3" onSubmit={handleCommentSubmit}>
           <textarea 
-            className="w-full px-3 py-2 border rounded-md"
+            className="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             rows={3}
-            placeholder="댓글을 작성해주세요"
+            placeholder="댓글을 작성해주세요..."
             value={content}
             onChange={handleTextareaChange}
             required
             disabled={isSubmitting}
-          ></textarea>
+          />
           <div className="flex justify-end">
-            <Button type="submit" disabled={isSubmitting}>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting || !content.trim()}
+              className="px-4 py-2 text-sm font-medium"
+            >
               {isSubmitting ? '작성 중...' : '댓글 작성'}
             </Button>
           </div>

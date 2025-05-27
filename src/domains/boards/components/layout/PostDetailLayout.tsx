@@ -303,22 +303,7 @@ export default function PostDetailLayout({
         <div className="mb-4">
           <CommentSection 
             postId={post.id} 
-            initialComments={comments.map(c => ({
-              id: c.id,
-              content: c.content,
-              created_at: c.created_at || '',
-              user_id: c.user_id || '',
-              post_id: c.post_id || '',
-              parent_id: c.parent_id,
-              likes: c.likes,
-              dislikes: c.dislikes,
-              profiles: c.profiles ? {
-                nickname: c.profiles.nickname,
-                id: c.user_id || '',
-                icon_id: c.profiles.icon_id,
-                icon_url: iconUrl
-              } : null
-            }))}
+            initialComments={comments}
             boardSlug={slug}
             postNumber={postNumber}
             postOwnerId={post.user_id}

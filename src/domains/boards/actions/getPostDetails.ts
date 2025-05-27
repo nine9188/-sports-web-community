@@ -5,6 +5,7 @@ import { AdjacentPosts } from '../types/post';
 import { getBoardLevel, getFilteredBoardIds, findRootBoard, createBreadcrumbs } from '../utils/board/boardHierarchy';
 import { formatPosts } from '../utils/post/postUtils';
 import { BoardMap, ChildBoardsMap, BoardData } from '../types/board';
+import { getComments } from './comments';
 
 /**
  * 게시글 상세 페이지에 필요한 모든 데이터를 가져옵니다.
@@ -168,12 +169,8 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
         .order('created_at', { ascending: false })
         .range((page - 1) * pageSize, page * pageSize - 1),
       
-      // 댓글 목록
-      supabase
-        .from('comments')
-        .select('*, profiles(nickname, icon_id)')
-        .eq('post_id', post.id)
-        .order('created_at', { ascending: true }),
+      // 댓글 목록 - 사용자 액션 정보 포함
+      getComments(post.id),
       
       // 첨부 파일
       supabase
@@ -183,10 +180,36 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
     ]);
     
     const { data: postsData, count } = postsResult;
-    const { data: commentsData } = commentsResult;
-    const { data: filesData } = filesResult;
+    const filesData = filesResult.data;
     
-    const comments = commentsData || [];
+    // 댓글 데이터 처리
+    const comments = commentsResult.success ? (commentsResult.comments || []) : [];
+    
+    // 댓글 데이터에 userAction 필드가 포함되도록 명시적으로 매핑
+    const processedComments = comments.map(comment => {
+      // userAction을 명시적으로 문자열로 변환하여 직렬화 보장
+      const userAction = comment.userAction;
+      const serializedUserAction = userAction === 'like' ? 'like' : 
+                                   userAction === 'dislike' ? 'dislike' : 
+                                   null;
+      
+      return {
+        id: comment.id,
+        user_id: comment.user_id,
+        post_id: comment.post_id,
+        content: comment.content,
+        created_at: comment.created_at,
+        updated_at: comment.updated_at,
+        parent_id: comment.parent_id,
+        likes: comment.likes || 0,
+        dislikes: comment.dislikes || 0,
+        userAction: serializedUserAction, // 명시적으로 직렬화된 값 사용
+        profiles: comment.profiles
+      };
+    });
+    
+    // JSON 직렬화를 통해 데이터 무결성 보장
+    const serializedComments = JSON.parse(JSON.stringify(processedComments));
     
     // 9. 댓글 수 가져오기 - 최적화
     const postIds = (postsData || []).map(p => p.id);
@@ -304,7 +327,7 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       },
       board,
       breadcrumbs,
-      comments,
+      comments: serializedComments,
       isLoggedIn,
       isAuthor: user?.id === post.user_id,
       adjacentPosts,
@@ -342,33 +365,6 @@ export async function incrementViewCount(postId: string): Promise<void> {
     await supabase.rpc('increment_view_count', { post_id: postId });
   } catch (error) {
     console.error('조회수 증가 오류:', error);
-  }
-}
-
-/**
- * 댓글 목록 가져오기
- */
-export async function getComments(postId: string) {
-  try {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from('comments')
-      .select('*, profiles(nickname, icon_id)')
-      .eq('post_id', postId)
-      .order('created_at');
-      
-    if (error) throw error;
-    
-    return {
-      success: true,
-      comments: data
-    };
-  } catch (error) {
-    console.error('댓글 가져오기 오류:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : '댓글을 불러오는 중 오류가 발생했습니다.'
-    };
   }
 }
 

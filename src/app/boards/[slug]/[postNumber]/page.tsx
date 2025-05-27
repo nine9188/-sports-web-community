@@ -100,6 +100,7 @@ export default async function PostDetailPage({
       post_id: comment.post_id || '',
       likes: comment.likes || 0,
       dislikes: comment.dislikes || 0,
+      userAction: comment.userAction || null,
       profiles: {
         nickname: comment.profiles?.nickname || null,
         id: comment.user_id || '',

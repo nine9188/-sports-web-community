@@ -5,6 +5,7 @@ import UserIcon from '@/shared/components/UserIcon';
 import { getOptimizedUserIcon } from '@/shared/utils';
 import { likeComment, dislikeComment } from '@/domains/boards/actions/comments';
 import { CommentType } from '@/domains/boards/types/post/comment';
+import { formatCommentDate } from '@/shared/utils/commentDateFormat';
 
 interface CommentProps {
   comment: CommentType & {
@@ -25,6 +26,17 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
   const [isLiking, setIsLiking] = useState(false);
   const [isDisliking, setIsDisliking] = useState(false);
   const [userIconUrl, setUserIconUrl] = useState<string | null>(null);
+  
+  // 현재 사용자가 댓글 작성자인지 확인
+  const isCommentOwner = currentUserId === comment.user_id;
+  
+  // comment props가 변경될 때 상태 업데이트 (페이지 이동 후 돌아왔을 때 등)
+  useEffect(() => {
+    setLikes(comment.likes || 0);
+    setDislikes(comment.dislikes || 0);
+    setUserAction(comment.userAction || null);
+    setEditContent(comment.content);
+  }, [comment.likes, comment.dislikes, comment.userAction, comment.content]);
   
   // 사용자 아이콘 가져오기 - 최적화된 버전 사용
   useEffect(() => {
@@ -59,10 +71,8 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
     if (!editContent.trim()) return;
     
     try {
-      console.log(`댓글 수정 시도 - 댓글 ID: ${comment.id}`);
       await onUpdate(comment.id, editContent.trim());
       setIsEditing(false);
-      console.log('댓글 수정 완료');
     } catch (error) {
       console.error('댓글 수정 실패:', error);
       alert('댓글 수정에 실패했습니다.');
@@ -73,12 +83,10 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
     if (isLiking || isDisliking || !currentUserId) return;
     
     setIsLiking(true);
-    console.log(`좋아요 시도 - 댓글 ID: ${comment.id}`);
     
     try {
       // 서버 액션으로 좋아요 처리
       const result = await likeComment(comment.id);
-      console.log("좋아요 결과:", result);
       
       if (!result.success) {
         // 로그인 필요 시 처리
@@ -108,7 +116,6 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
         console.error('오류 스택:', error.stack);
       }
       
-      console.log('오류 세부 정보:', JSON.stringify(error, null, 2));
       alert(error instanceof Error ? `좋아요 처리 중 오류: ${error.message}` : '좋아요 처리 중 알 수 없는 오류가 발생했습니다.');
     } finally {
       setIsLiking(false);
@@ -119,12 +126,10 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
     if (isLiking || isDisliking || !currentUserId) return;
     
     setIsDisliking(true);
-    console.log(`싫어요 시도 - 댓글 ID: ${comment.id}`);
     
     try {
       // 서버 액션으로 싫어요 처리
       const result = await dislikeComment(comment.id);
-      console.log("싫어요 결과:", result);
       
       if (!result.success) {
         // 로그인 필요 시 처리
@@ -154,7 +159,6 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
         console.error('오류 스택:', error.stack);
       }
       
-      console.log('오류 세부 정보:', JSON.stringify(error, null, 2));
       alert(error instanceof Error ? `싫어요 처리 중 오류: ${error.message}` : '싫어요 처리 중 알 수 없는 오류가 발생했습니다.');
     } finally {
       setIsDisliking(false);
@@ -162,37 +166,86 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
   };
   
   return (
-    <div className="border-b py-4 px-4 transition-colors hover:bg-gray-50">
-      <div className="flex">
-        <div className="flex-1">
+    <div className="border-b py-3 px-4 transition-colors hover:bg-gray-50">
+      <div className="flex space-x-3">
+        {/* 사용자 아이콘 */}
+        <div className="w-8 h-8 relative rounded-full overflow-hidden flex-shrink-0">
+          <UserIcon 
+            iconUrl={userIconUrl}
+            size={32}
+            alt={comment.profiles?.nickname || '사용자'}
+            className="object-cover"
+            priority={true}
+          />
+        </div>
+        
+        {/* 댓글 내용 영역 */}
+        <div className="flex-1 min-w-0">
+          {/* 사용자 정보 및 시간 */}
           <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center">
-              <div className="w-5 h-5 mr-1.5 relative rounded-full overflow-hidden flex-shrink-0">
-                <UserIcon 
-                  iconUrl={userIconUrl}
-                  size={20}
-                  alt={comment.profiles?.nickname || '사용자'}
-                  className="object-cover"
-                  priority={true}
-                />
-              </div>
-              <span className="font-medium text-sm mr-2">{comment.profiles?.nickname || '알 수 없음'}</span>
-              {isPostOwner && currentUserId === comment.user_id && (
-                <span className="text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded mr-2">작성자</span>
+            <div className="flex items-center space-x-2 min-w-0">
+              <span className={`font-medium text-sm truncate ${
+                isPostOwner && isCommentOwner 
+                  ? 'text-blue-600' 
+                  : 'text-gray-900'
+              }`}>
+                {comment.profiles?.nickname || '알 수 없음'}
+              </span>
+              {isPostOwner && isCommentOwner && (
+                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full flex-shrink-0">
+                  작성자
+                </span>
               )}
-              <span className="text-xs text-gray-500">{new Date(comment.created_at || '').toLocaleString('ko-KR')}</span>
             </div>
-            
+            <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
+              {formatCommentDate(comment.created_at || '')}
+            </span>
+          </div>
+          
+          {/* 댓글 내용 (수정 모드가 아닐 때) */}
+          {!isEditing ? (
+            <div className="text-sm text-gray-800 mb-2 break-words">
+              {comment.content}
+            </div>
+          ) : (
+            <div className="mb-3">
+              <textarea 
+                className="w-full px-3 py-2 border rounded-md text-sm resize-none"
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                rows={3}
+                placeholder="댓글을 수정해주세요"
+              />
+              <div className="flex justify-end space-x-2 mt-2">
+                <button 
+                  onClick={handleCancel}
+                  className="px-3 py-1 text-xs text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                >
+                  취소
+                </button>
+                <button 
+                  onClick={handleSave}
+                  className="px-3 py-1 text-xs text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  disabled={!editContent.trim()}
+                >
+                  저장
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {/* 액션 버튼들 */}
+          <div className="flex items-center justify-between">
             {/* 좋아요/싫어요 버튼 */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-4">
               <button 
                 className={`flex items-center text-xs space-x-1 ${
                   userAction === 'like' 
                     ? 'text-blue-600 font-medium' 
                     : 'text-gray-500 hover:text-gray-700'
-                } transition-colors`}
+                } transition-colors disabled:opacity-50`}
                 onClick={handleLike}
-                disabled={isLiking || isDisliking}
+                disabled={isLiking || isDisliking || !currentUserId}
                 aria-label="좋아요"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill={userAction === 'like' ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
@@ -205,9 +258,9 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
                   userAction === 'dislike' 
                     ? 'text-red-600 font-medium' 
                     : 'text-gray-500 hover:text-gray-700'
-                } transition-colors`}
+                } transition-colors disabled:opacity-50`}
                 onClick={handleDislike}
-                disabled={isLiking || isDisliking}
+                disabled={isLiking || isDisliking || !currentUserId}
                 aria-label="싫어요"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill={userAction === 'dislike' ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
@@ -216,54 +269,25 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
                 <span>{dislikes}</span>
               </button>
             </div>
-          </div>
-          
-          {/* 댓글 내용 (수정 모드가 아닐 때) */}
-          {!isEditing ? (
-            <div className="text-sm mb-2">{comment.content}</div>
-          ) : (
-            <div className="mt-2 mb-3">
-              <textarea 
-                className="w-full px-3 py-2 border rounded-md text-sm"
-                value={editContent}
-                onChange={(e) => setEditContent(e.target.value)}
-                rows={3}
-              ></textarea>
-              <div className="flex justify-end space-x-2 mt-2">
+            
+            {/* 수정/삭제 버튼 (본인 댓글일 때만 표시) */}
+            {isCommentOwner && !isEditing && (
+              <div className="flex space-x-3">
                 <button 
-                  onClick={handleCancel}
-                  className="px-3 py-1 text-xs text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                  onClick={handleEdit}
+                  className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
                 >
-                  취소
+                  수정
                 </button>
                 <button 
-                  onClick={handleSave}
-                  className="px-3 py-1 text-xs text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
-                  disabled={!editContent.trim()}
+                  onClick={() => onDelete(comment.id)}
+                  className="text-xs text-red-500 hover:text-red-700 transition-colors"
                 >
-                  저장
+                  삭제
                 </button>
               </div>
-            </div>
-          )}
-          
-          {/* 수정/삭제 버튼 (본인 댓글일 때만 표시) */}
-          {currentUserId === comment.user_id && !isEditing && (
-            <div className="flex justify-end space-x-2 mt-1">
-              <button 
-                onClick={handleEdit}
-                className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
-              >
-                수정
-              </button>
-              <button 
-                onClick={() => onDelete(comment.id)}
-                className="text-xs text-red-500 hover:text-red-700 transition-colors"
-              >
-                삭제
-              </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>

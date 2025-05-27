@@ -222,37 +222,56 @@ export async function getComments(postId: string): Promise<{ success: boolean, c
       };
     }
     
+    // 댓글 데이터를 CommentType으로 캐스팅
+    const comments = (data || []) as CommentType[];
+    
     // 사용자 액션(좋아요/싫어요) 확인
     const { data: { user } } = await supabase.auth.getUser();
     
-    if (user) {
+    if (user && comments.length > 0) {
+      const commentIds = comments.map(comment => comment.id);
+      
       // 로그인 상태면 사용자 액션 정보 로드
-      const { data: userLikes } = await supabase
+      const { data: userLikes, error: likesError } = await supabase
         .from('comment_likes')
         .select('comment_id, type')
         .eq('user_id', user.id)
-        .in('comment_id', data.map(comment => comment.id));
+        .in('comment_id', commentIds);
+      
+      if (likesError) {
+        console.error('[getComments] 사용자 액션 조회 오류:', likesError);
+      }
       
       // 댓글에 사용자 액션 정보 추가
-      if (userLikes) {
+      if (userLikes && userLikes.length > 0) {
         const actionMap = userLikes.reduce((acc, action) => {
           acc[action.comment_id] = action.type;
           return acc;
         }, {} as Record<string, string>);
         
-        (data as CommentType[]).forEach(comment => {
+        comments.forEach(comment => {
           if (actionMap[comment.id]) {
             comment.userAction = actionMap[comment.id] === 'like' ? 'like' : 'dislike';
           } else {
             comment.userAction = null;
           }
         });
+      } else {
+        // 사용자 액션이 없는 경우 모든 댓글에 null 설정
+        comments.forEach(comment => {
+          comment.userAction = null;
+        });
       }
+    } else {
+      // 로그인하지 않은 경우 모든 댓글에 null 설정
+      comments.forEach(comment => {
+        comment.userAction = null;
+      });
     }
     
     return {
       success: true,
-      comments: data as CommentType[]
+      comments: comments
     };
   } catch (error) {
     console.error('댓글 목록 로딩 중 예외:', error);
@@ -274,21 +293,17 @@ export async function likeComment(commentId: string): Promise<{
   error?: string;
 }> {
   try {
-    console.log(`[likeComment] 시작: commentId=${commentId}`);
     const supabase = await createClient();
 
     // 인증된 사용자 확인
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
-      console.log(`[likeComment] 인증 오류:`, authError);
       return {
         success: false,
         error: '로그인이 필요합니다.'
       };
     }
-    
-    console.log(`[likeComment] 사용자 확인됨: userId=${user.id}`);
     
     // 현재 댓글 정보 가져오기
     const { data: currentComment, error: commentFetchError } = await supabase
@@ -298,14 +313,11 @@ export async function likeComment(commentId: string): Promise<{
       .single();
     
     if (commentFetchError) {
-      console.log(`[likeComment] 댓글 조회 오류:`, commentFetchError);
       return {
         success: false,
         error: `댓글 조회 오류: ${commentFetchError.message}`
       };
     }
-    
-    console.log(`[likeComment] 현재 댓글 정보:`, currentComment);
     
     // 현재 좋아요/싫어요 수
     let likes = currentComment.likes || 0;
@@ -324,19 +336,15 @@ export async function likeComment(commentId: string): Promise<{
       .maybeSingle();
       
     if (likeError) {
-      console.log(`[likeComment] 좋아요 조회 오류:`, likeError);
       return {
         success: false,
         error: `좋아요 조회 오류: ${likeError.message}`
       };
     }
     
-    console.log(`[likeComment] 기존 좋아요:`, likeRecord);
-    
     // 액션 처리 로직
     if (likeRecord) {
       // 이미 좋아요면 취소
-      console.log(`[likeComment] 좋아요 취소`);
       newUserAction = null;
       likes -= 1;
       
@@ -347,7 +355,6 @@ export async function likeComment(commentId: string): Promise<{
         .eq('id', likeRecord.id);
       
       if (deleteError) {
-        console.log(`[likeComment] 좋아요 삭제 오류:`, deleteError);
         return {
           success: false,
           error: `좋아요 삭제 오류: ${deleteError.message}`
@@ -364,7 +371,6 @@ export async function likeComment(commentId: string): Promise<{
         .maybeSingle();
         
       if (dislikeError) {
-        console.log(`[likeComment] 싫어요 조회 오류:`, dislikeError);
         return {
           success: false,
           error: `싫어요 조회 오류: ${dislikeError.message}`
@@ -373,7 +379,6 @@ export async function likeComment(commentId: string): Promise<{
       
       if (dislikeRecord) {
         // 싫어요였으면 좋아요로 변경
-        console.log(`[likeComment] 싫어요 → 좋아요 변경`);
         newUserAction = 'like';
         likes += 1;
         dislikes -= 1;
@@ -385,7 +390,6 @@ export async function likeComment(commentId: string): Promise<{
           .eq('id', dislikeRecord.id);
         
         if (deleteError) {
-          console.log(`[likeComment] 싫어요 삭제 오류:`, deleteError);
           return {
             success: false,
             error: `싫어요 삭제 오류: ${deleteError.message}`
@@ -393,7 +397,6 @@ export async function likeComment(commentId: string): Promise<{
         }
       } else {
         // 이전 액션이 없었으면 좋아요 추가
-        console.log(`[likeComment] 새 좋아요 추가`);
         newUserAction = 'like';
         likes += 1;
       }
@@ -409,7 +412,6 @@ export async function likeComment(commentId: string): Promise<{
           });
         
         if (insertError) {
-          console.log(`[likeComment] 좋아요 추가 오류:`, insertError);
           return {
             success: false,
             error: `좋아요 추가 오류: ${insertError.message}`
@@ -417,8 +419,6 @@ export async function likeComment(commentId: string): Promise<{
         }
       }
     }
-    
-    console.log(`[likeComment] 댓글 업데이트: likes=${likes}, dislikes=${dislikes}`);
     
     // 댓글 정보 업데이트
     const { data: updatedComment, error: updateCommentError } = await supabase
@@ -432,7 +432,6 @@ export async function likeComment(commentId: string): Promise<{
       .single();
     
     if (updateCommentError) {
-      console.log(`[likeComment] 댓글 업데이트 오류:`, updateCommentError);
       return {
         success: false,
         error: `댓글 업데이트 오류: ${updateCommentError.message}`
@@ -450,8 +449,6 @@ export async function likeComment(commentId: string): Promise<{
         // 보상 지급 실패해도 좋아요는 성공으로 처리
       }
     }
-    
-    console.log(`[likeComment] 완료: userAction=${newUserAction}`);
     
     // 경로 재검증
     revalidatePath(`/boards/[slug]/[postNumber]`, 'page');
@@ -495,21 +492,17 @@ export async function dislikeComment(commentId: string): Promise<{
   error?: string;
 }> {
   try {
-    console.log(`[dislikeComment] 시작: commentId=${commentId}`);
     const supabase = await createClient();
 
     // 인증된 사용자 확인
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
-      console.log(`[dislikeComment] 인증 오류:`, authError);
       return {
         success: false,
         error: '로그인이 필요합니다.'
       };
     }
-    
-    console.log(`[dislikeComment] 사용자 확인됨: userId=${user.id}`);
     
     // 현재 댓글 정보 가져오기
     const { data: currentComment, error: commentFetchError } = await supabase
@@ -519,14 +512,11 @@ export async function dislikeComment(commentId: string): Promise<{
       .single();
     
     if (commentFetchError) {
-      console.log(`[dislikeComment] 댓글 조회 오류:`, commentFetchError);
       return {
         success: false,
         error: `댓글 조회 오류: ${commentFetchError.message}`
       };
     }
-    
-    console.log(`[dislikeComment] 현재 댓글 정보:`, currentComment);
     
     // 현재 좋아요/싫어요 수
     let likes = currentComment.likes || 0;
@@ -545,19 +535,15 @@ export async function dislikeComment(commentId: string): Promise<{
       .maybeSingle();
       
     if (dislikeError) {
-      console.log(`[dislikeComment] 싫어요 조회 오류:`, dislikeError);
       return {
         success: false,
         error: `싫어요 조회 오류: ${dislikeError.message}`
       };
     }
     
-    console.log(`[dislikeComment] 기존 싫어요:`, dislikeRecord);
-    
     // 액션 처리 로직
     if (dislikeRecord) {
       // 이미 싫어요면 취소
-      console.log(`[dislikeComment] 싫어요 취소`);
       newUserAction = null;
       dislikes -= 1;
       
@@ -568,7 +554,6 @@ export async function dislikeComment(commentId: string): Promise<{
         .eq('id', dislikeRecord.id);
       
       if (deleteError) {
-        console.log(`[dislikeComment] 싫어요 삭제 오류:`, deleteError);
         return {
           success: false,
           error: `싫어요 삭제 오류: ${deleteError.message}`
@@ -585,7 +570,6 @@ export async function dislikeComment(commentId: string): Promise<{
         .maybeSingle();
         
       if (likeError) {
-        console.log(`[dislikeComment] 좋아요 조회 오류:`, likeError);
         return {
           success: false,
           error: `좋아요 조회 오류: ${likeError.message}`
@@ -594,7 +578,6 @@ export async function dislikeComment(commentId: string): Promise<{
       
       if (likeRecord) {
         // 좋아요였으면 싫어요로 변경
-        console.log(`[dislikeComment] 좋아요 → 싫어요 변경`);
         newUserAction = 'dislike';
         likes -= 1;
         dislikes += 1;
@@ -606,7 +589,6 @@ export async function dislikeComment(commentId: string): Promise<{
           .eq('id', likeRecord.id);
         
         if (deleteError) {
-          console.log(`[dislikeComment] 좋아요 삭제 오류:`, deleteError);
           return {
             success: false,
             error: `좋아요 삭제 오류: ${deleteError.message}`
@@ -614,7 +596,6 @@ export async function dislikeComment(commentId: string): Promise<{
         }
       } else {
         // 이전 액션이 없었으면 싫어요 추가
-        console.log(`[dislikeComment] 새 싫어요 추가`);
         newUserAction = 'dislike';
         dislikes += 1;
       }
@@ -630,7 +611,6 @@ export async function dislikeComment(commentId: string): Promise<{
           });
         
         if (insertError) {
-          console.log(`[dislikeComment] 싫어요 추가 오류:`, insertError);
           return {
             success: false,
             error: `싫어요 추가 오류: ${insertError.message}`
@@ -638,8 +618,6 @@ export async function dislikeComment(commentId: string): Promise<{
         }
       }
     }
-    
-    console.log(`[dislikeComment] 댓글 업데이트: likes=${likes}, dislikes=${dislikes}`);
     
     // 댓글 정보 업데이트
     const { data: updatedComment, error: updateCommentError } = await supabase
@@ -653,14 +631,11 @@ export async function dislikeComment(commentId: string): Promise<{
       .single();
     
     if (updateCommentError) {
-      console.log(`[dislikeComment] 댓글 업데이트 오류:`, updateCommentError);
       return {
         success: false,
         error: `댓글 업데이트 오류: ${updateCommentError.message}`
       };
     }
-    
-    console.log(`[dislikeComment] 완료: userAction=${newUserAction}`);
     
     // 경로 재검증
     revalidatePath(`/boards/[slug]/[postNumber]`, 'page');
