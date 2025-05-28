@@ -50,10 +50,10 @@ export default function PostHeader({
       <div className="hidden md:flex flex-wrap items-center justify-between text-xs text-gray-500">
         {/* 작성자 정보 - 왼쪽 배치 */}
         <div className="flex items-center flex-shrink-0">
-          <div className="w-5 h-5 mr-1.5 relative rounded-full overflow-hidden flex-shrink-0">
+          <div className="w-6 h-6 mr-1.5 relative rounded-full overflow-hidden flex-shrink-0">
             <UserIcon 
               iconUrl={author.icon_url}
-              size={20}
+              size={24}
               alt={author.nickname || '사용자'}
               className="object-cover"
               priority={true}
