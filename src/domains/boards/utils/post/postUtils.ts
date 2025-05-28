@@ -125,6 +125,7 @@ export function formatPosts(
       author_icon_id: post.profiles?.icon_id || null,
       author_icon_url: null,
       created_at: post.created_at || '',
+      formattedDate: formatDate(post.created_at || ''),
       views: post.views || 0,
       likes: post.likes || 0,
       commentCount: commentCounts[post.id] || 0,

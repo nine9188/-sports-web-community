@@ -132,6 +132,7 @@ export default async function PostDetailPage({
       board_slug: post.boardSlug,
       post_number: post.postNumber,
       created_at: post.created_at,
+      formattedDate: post.formattedDate,
       views: post.views,
       likes: post.likes,
       author_nickname: post.author,

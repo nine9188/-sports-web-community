@@ -9,6 +9,7 @@ export interface FormattedPost {
   author_icon_id?: number | null;
   author_icon_url?: string | null;
   created_at: string;
+  formattedDate: string; // 서버에서 포맷된 날짜
   views: number;
   likes: number;
   commentCount: number;

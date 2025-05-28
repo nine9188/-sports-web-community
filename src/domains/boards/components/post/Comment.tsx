@@ -2,10 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import UserIcon from '@/shared/components/UserIcon';
-import { getOptimizedUserIcon } from '@/shared/utils';
 import { likeComment, dislikeComment } from '@/domains/boards/actions/comments';
 import { CommentType } from '@/domains/boards/types/post/comment';
-import { formatCommentDate } from '@/shared/utils/commentDateFormat';
 
 interface CommentProps {
   comment: CommentType & {
@@ -17,6 +15,41 @@ interface CommentProps {
   isPostOwner?: boolean;
 }
 
+// 댓글 날짜 포맷팅 함수
+const formatCommentDate = (dateString: string | null): string => {
+  if (!dateString) return '알 수 없음';
+  
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '알 수 없음';
+    
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInSec = Math.floor(diffInMs / 1000);
+    const diffInMin = Math.floor(diffInSec / 60);
+    const diffInHour = Math.floor(diffInMin / 60);
+    const diffInDay = Math.floor(diffInHour / 24);
+    
+    if (diffInSec < 60) {
+      return '방금 전';
+    } else if (diffInMin < 60) {
+      return `${diffInMin}분 전`;
+    } else if (diffInHour < 24) {
+      return `${diffInHour}시간 전`;
+    } else if (diffInDay < 7) {
+      return `${diffInDay}일 전`;
+    } else {
+      // 1주일 이상이면 날짜 표시
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      return `${month}월 ${day}일`;
+    }
+  } catch (error) {
+    console.error('댓글 날짜 포맷팅 오류:', error);
+    return '알 수 없음';
+  }
+};
+
 export default function Comment({ comment, currentUserId, onUpdate, onDelete, isPostOwner = false }: CommentProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(comment.content);
@@ -25,7 +58,6 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
   const [userAction, setUserAction] = useState<'like' | 'dislike' | null>(comment.userAction || null);
   const [isLiking, setIsLiking] = useState(false);
   const [isDisliking, setIsDisliking] = useState(false);
-  const [userIconUrl, setUserIconUrl] = useState<string | null>(null);
   
   // 현재 사용자가 댓글 작성자인지 확인
   const isCommentOwner = currentUserId === comment.user_id;
@@ -37,26 +69,6 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
     setUserAction(comment.userAction || null);
     setEditContent(comment.content);
   }, [comment.likes, comment.dislikes, comment.userAction, comment.content]);
-  
-  // 사용자 아이콘 가져오기 - 최적화된 버전 사용
-  useEffect(() => {
-    const fetchUserIcon = async () => {
-      if (!comment.user_id) return;
-      
-      try {
-        // 최적화된 아이콘 로딩 함수 사용
-        const iconInfo = await getOptimizedUserIcon(comment.user_id);
-        
-        if (iconInfo) {
-          setUserIconUrl(iconInfo.url);
-        }
-      } catch (error) {
-        console.error('아이콘 로딩 오류:', error);
-      }
-    };
-    
-    fetchUserIcon();
-  }, [comment.user_id]);
   
   const handleEdit = () => {
     setIsEditing(true);
@@ -171,7 +183,7 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
         {/* 사용자 아이콘 */}
         <div className="w-8 h-8 relative rounded-full overflow-hidden flex-shrink-0">
           <UserIcon 
-            iconUrl={userIconUrl}
+            iconUrl={null}
             size={32}
             alt={comment.profiles?.nickname || '사용자'}
             className="object-cover"
@@ -198,7 +210,7 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
               )}
             </div>
             <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
-              {formatCommentDate(comment.created_at || '')}
+              {formatCommentDate(comment.created_at)}
             </span>
           </div>
           

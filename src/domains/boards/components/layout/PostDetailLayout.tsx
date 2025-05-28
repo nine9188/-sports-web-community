@@ -14,38 +14,13 @@ import PostContent from '../post/PostContent';
 import PostActions from '../post/PostActions';
 import PostFooter from '../post/PostFooter';
 import Pagination from '../common/Pagination';
+import CommentSection from '../post/CommentSection';
+import PostList from '../post/PostList';
 
-// 지연 로딩으로 렌더링 시간 단축
-const CommentSection = dynamic(() => import('../post/CommentSection'), { 
-  ssr: false,
-  loading: () => (
-    <div className="p-4 bg-white rounded-lg border mb-4">
-      <div className="h-8 bg-gray-100 rounded animate-pulse mb-3"></div>
-      <div className="space-y-2">
-        {Array(3).fill(0).map((_, i) => (
-          <div key={i} className="h-14 bg-gray-100 rounded animate-pulse"></div>
-        ))}
-      </div>
-    </div>
-  )
-});
-
+// 호버 메뉴만 지연 로딩 (덜 중요한 컴포넌트)
 const HoverMenu = dynamic(() => import('../common/HoverMenu'), { 
   ssr: false,
   loading: () => <div className="h-10 bg-gray-100 rounded animate-pulse mb-4"></div>
-});
-
-const PostList = dynamic(() => import('../post/PostList'), {
-  ssr: false,
-  loading: () => (
-    <div className="mb-4 bg-white rounded-lg border p-4">
-      <div className="space-y-2">
-        {Array(5).fill(0).map((_, i) => (
-          <div key={i} className="h-6 bg-gray-100 rounded animate-pulse"></div>
-        ))}
-      </div>
-    </div>
-  )
 });
 
 // 메모이제이션 적용
@@ -55,6 +30,8 @@ const MemoizedPostNavigation = memo(PostNavigation);
 const MemoizedPostActions = memo(PostActions);
 const MemoizedPostFooter = memo(PostFooter);
 const MemoizedPagination = memo(Pagination);
+const MemoizedCommentSection = memo(CommentSection);
+const MemoizedPostList = memo(PostList);
 
 interface PostAuthor {
   nickname: string | null;
@@ -155,7 +132,7 @@ export default function PostDetailLayout({
   const [hasMounted, setHasMounted] = useState(false);
   
   useEffect(() => {
-    // 성능을 위해 초기 마운트 시점에는 일부 컴포넌트만 로드
+    // 호버 메뉴 지연 로딩
     setHasMounted(true);
     
     // 스크롤 처리 - 해시가 있으면 해당 댓글로 스크롤
@@ -164,15 +141,8 @@ export default function PostDetailLayout({
       setTimeout(() => {
         const element = document.getElementById(hashId);
         if (element) element.scrollIntoView({ behavior: 'smooth' });
-      }, 500); // 컴포넌트가 모두 로드된 후 스크롤
+      }, 100); // 댓글이 즉시 로드되므로 시간 단축
     }
-    
-    // 메모리 누수 방지 및 transform 오류 해결을 위한 이벤트 리스너 정리
-    return () => {
-      // 메모리 누수 방지를 위한 이벤트 리스너 정리
-      const abortController = new AbortController();
-      abortController.abort();
-    };
   }, []);
   
   // 게시글 상세 정보 구성
@@ -301,18 +271,16 @@ export default function PostDetailLayout({
         />
       </div>
       
-      {/* 6. 댓글 섹션 - 지연 로딩 */}
-      {hasMounted && (
-        <div className="mb-4">
-          <CommentSection 
-            postId={post.id} 
-            initialComments={comments}
-            boardSlug={slug}
-            postNumber={postNumber}
-            postOwnerId={post.user_id}
-          />
-        </div>
-      )}
+      {/* 6. 댓글 섹션 - 즉시 로딩 */}
+      <div className="mb-4">
+        <MemoizedCommentSection 
+          postId={post.id} 
+          initialComments={comments}
+          boardSlug={slug}
+          postNumber={postNumber}
+          postOwnerId={post.user_id}
+        />
+      </div>
       
       {/* 7. 호버 메뉴 - 지연 로딩 */}
       {hasMounted && (
@@ -327,17 +295,15 @@ export default function PostDetailLayout({
         </div>
       )}
       
-      {/* 8. 같은 게시판의 다른 글 목록 - 지연 로딩 */}
-      {hasMounted && (
-        <div className="mb-4">
-          <PostList 
-            posts={postsWithIcons}
-            showBoard={true}
-            currentBoardId={board.id}
-            currentPostId={post.id}
-          />
-        </div>
-      )}
+      {/* 8. 같은 게시판의 다른 글 목록 - 즉시 로딩 */}
+      <div className="mb-4">
+        <MemoizedPostList 
+          posts={postsWithIcons}
+          showBoard={true}
+          currentBoardId={board.id}
+          currentPostId={post.id}
+        />
+      </div>
       
       {/* 9. 게시글 푸터 (중복) */}
       <div className="mb-4">
