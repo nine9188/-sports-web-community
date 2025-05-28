@@ -159,7 +159,8 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
     const [
       postsResult,
       commentsResult,
-      filesResult
+      filesResult,
+      postUserActionResult
     ] = await Promise.all([
       // 게시글 목록
       supabase
@@ -176,11 +177,25 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       supabase
         .from('post_files')
         .select('url, filename')
+        .eq('post_id', post.id),
+      
+      // 게시글 사용자 액션 정보 (로그인한 경우에만)
+      user ? supabase
+        .from('post_likes')
+        .select('type')
         .eq('post_id', post.id)
+        .eq('user_id', user.id)
+        .maybeSingle() : Promise.resolve({ data: null })
     ]);
     
     const { data: postsData, count } = postsResult;
     const filesData = filesResult.data;
+    const postUserActionData = postUserActionResult.data;
+    
+    // 게시글 사용자 액션 처리
+    const postUserAction: 'like' | 'dislike' | null = postUserActionData?.type === 'like' ? 'like' :
+                                                       postUserActionData?.type === 'dislike' ? 'dislike' :
+                                                       null;
     
     // 댓글 데이터 처리
     const comments = commentsResult.success ? (commentsResult.comments || []) : [];
@@ -345,6 +360,7 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       currentPage: page,
       normalizedFromBoardId,
       iconUrl,
+      postUserAction,
       allSubBoardIds
     };
   } catch (error) {

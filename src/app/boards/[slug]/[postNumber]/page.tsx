@@ -178,6 +178,7 @@ export default async function PostDetailPage({
         currentPage={result.currentPage || 1}
         normalizedFromBoardId={result.normalizedFromBoardId}
         iconUrl={result.iconUrl || null}
+        postUserAction={result.postUserAction || null}
         slug={slug}
         postNumber={postNumber}
       />

@@ -125,6 +125,7 @@ interface PostDetailLayoutProps {
   currentPage: number;
   normalizedFromBoardId?: string;
   iconUrl: string | null;
+  postUserAction: 'like' | 'dislike' | null;
   slug: string;
   postNumber: string;
 }
@@ -146,6 +147,7 @@ export default function PostDetailLayout({
   currentPage,
   normalizedFromBoardId,
   iconUrl,
+  postUserAction,
   slug,
   postNumber
 }: PostDetailLayoutProps) {
@@ -249,6 +251,7 @@ export default function PostDetailLayout({
               boardId={board.id || ''} 
               initialLikes={post.likes || 0} 
               initialDislikes={post.dislikes || 0}
+              initialUserAction={postUserAction}
             />
           </div>
         </div>

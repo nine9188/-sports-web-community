@@ -1,50 +1,31 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
-import { likePost, dislikePost, getUserPostAction } from '@/domains/boards/actions/posts';
+import { likePost, dislikePost } from '@/domains/boards/actions/posts';
 
 interface PostActionsProps {
   postId: string;
   boardId?: string;
   initialLikes: number;
   initialDislikes: number;
+  initialUserAction: 'like' | 'dislike' | null;
 }
 
 export default function PostActions({ 
   postId, 
   initialLikes = 0, 
   initialDislikes = 0,
+  initialUserAction = null,
 }: PostActionsProps) {
   const [likes, setLikes] = useState(initialLikes);
   const [dislikes, setDislikes] = useState(initialDislikes);
   const [isLiking, setIsLiking] = useState(false);
   const [isDisliking, setIsDisliking] = useState(false);
-  const [userAction, setUserAction] = useState<'like' | 'dislike' | null>(null);
+  const [userAction, setUserAction] = useState<'like' | 'dislike' | null>(initialUserAction);
   
   const router = useRouter();
-  
-  // 사용자의 이전 액션(좋아요/싫어요) 확인
-  useEffect(() => {
-    async function checkUserAction() {
-      try {
-        const { userAction, error } = await getUserPostAction(postId);
-        
-        // 로그인 필요 메시지는 오류로 처리하지 않음
-        if (error && error !== '로그인이 필요합니다.') {
-          console.error('좋아요/싫어요 상태 확인 중 오류:', error);
-          return;
-        }
-        
-        setUserAction(userAction);
-      } catch (error) {
-        console.error('좋아요/싫어요 상태 확인 중 오류:', error);
-      }
-    }
-    
-    checkUserAction();
-  }, [postId]);
   
   // 좋아요 처리 함수
   const handleLike = async () => {
