@@ -45,90 +45,63 @@ const BoardSelector = React.memo(({
     }
   }, [boards]);
   
-  // 카테고리(상위게시판)와 하위 게시판 데이터 처리
+  // 카테고리(상위게시판)와 하위 게시판 데이터 처리 - 최적화
   const { categories, subCategories } = useMemo(() => {
-    // 결과를 담을 객체
-    const result = {
-      categories: [] as Board[],
-      subCategories: {} as Record<string, Board[]>
-    };
+    // 빈 배열 체크
+    if (!boards || boards.length === 0) {
+      return {
+        categories: [] as Board[],
+        subCategories: {} as Record<string, Board[]>
+      };
+    }
+
+    // 게시판을 parent_id로 그룹화 (한 번만 순회)
+    const boardsByParent = new Map<string | null, Board[]>();
+    const boardsById = new Map<string, Board>();
     
-    // 게시판 정렬 함수
+    for (const board of boards) {
+      // ID로 빠른 조회를 위한 맵
+      boardsById.set(board.id, board);
+      
+      // parent_id로 그룹화
+      const parentId = board.parent_id;
+      if (!boardsByParent.has(parentId)) {
+        boardsByParent.set(parentId, []);
+      }
+      boardsByParent.get(parentId)!.push(board);
+    }
+
+    // 정렬 함수 (한 번만 정의)
     const sortBoards = (boardList: Board[]) => {
-      if (!boardList || boardList.length === 0) return [];
-      return [...boardList].sort((a, b) => {
+      return boardList.sort((a, b) => {
         if (a.display_order !== b.display_order) {
           return a.display_order - b.display_order;
         }
         return a.name.localeCompare(b.name);
       });
     };
-    
-    // 상위 게시판 찾기 (1차 분류)
-    const findCategories = () => {
-      // 입력 데이터 검증
-      if (!boards || boards.length === 0) {
-        return [];
-      }
-      
-      // 최상위 게시판 찾기 (해외축구 같은)
-      const rootBoards = boards.filter(b => !b.parent_id);
-      
-      // 리그 게시판 목록 (해외축구 하위의 리그들)
-      let leagueBoards: Board[] = [];
-      
-      // 해외축구 게시판 찾기
-      const footballBoard = rootBoards.find(b => 
-        b.name === '해외축구' || b.name === '해외 축구' || b.slug === 'football'
-      );
-      
-      // 해외축구 게시판이 있으면 그 하위 게시판(리그들)을 가져옴
-      if (footballBoard) {
-        const directLeagues = boards.filter(b => b.parent_id === footballBoard.id);
-        leagueBoards = directLeagues;
-      }
-      
-      // 해외축구를 제외한 모든 상위 게시판 (직접적인 자식 게시판이 있는 게시판)
-      const otherParentBoards = boards.filter(b => 
-        b.name !== '해외축구' && 
-        b.name !== '해외 축구' && 
-        b.slug !== 'football' &&
-        boards.some(child => child.parent_id === b.id)
-      );
-      
-      // 중복 제거를 위해 ID 세트 생성
-      const idSet = new Set<string>();
-      
-      // 중복 제거 함수
-      const removeDuplicates = (boardList: Board[]) => {
-        return boardList.filter(board => {
-          if (idSet.has(board.id)) {
-            return false;
-          }
-          idSet.add(board.id);
-          return true;
-        });
-      };
-      
-      // 리그 게시판과 다른 상위 게시판 합치기 (중복 제거)
-      const filteredLeagueBoards = removeDuplicates(leagueBoards);
-      const filteredOtherBoards = removeDuplicates(otherParentBoards);
-      const allParentBoards = [...filteredLeagueBoards, ...filteredOtherBoards];
-      
-      return sortBoards(allParentBoards);
-    };
-    
-    // 카테고리(1차 분류) 목록 설정 - 상위 게시판
-    result.categories = findCategories();
-    
-    // 각 카테고리별 하위 게시판 설정 - 2차 분류용
-    result.categories.forEach(category => {
-      // 각 상위 게시판의 직접적인 자식들을 하위 게시판으로 설정
-      const childBoards = boards.filter(b => b.parent_id === category.id);
-      result.subCategories[category.id] = sortBoards(childBoards);
-    });
-    
-    return result;
+
+    // 상위 게시판 찾기 (parent_id가 있는 게시판들만)
+    const parentBoards = Array.from(boardsByParent.keys())
+      .filter(parentId => parentId !== null)
+      .map(parentId => boardsById.get(parentId!))
+      .filter((board): board is Board => board !== undefined);
+
+    // 중복 제거 및 정렬
+    const uniqueParents = Array.from(new Set(parentBoards.map(b => b.id)))
+      .map(id => boardsById.get(id)!)
+      .filter(Boolean);
+
+    const categories = sortBoards(uniqueParents);
+
+    // 하위 게시판 매핑
+    const subCategories: Record<string, Board[]> = {};
+    for (const category of categories) {
+      const children = boardsByParent.get(category.id) || [];
+      subCategories[category.id] = sortBoards(children);
+    }
+
+    return { categories, subCategories };
   }, [boards]);
   
   // 클릭 이벤트 처리

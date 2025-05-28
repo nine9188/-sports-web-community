@@ -182,13 +182,18 @@ export async function updatePost(
       };
     }
     
+    // 경기 카드 데이터를 완전한 HTML로 변환
+    console.log('[서버] 게시글 수정 - 경기 카드 처리 시작');
+    const processedContent = processMatchCardsInContent(content);
+    console.log('[서버] 게시글 수정 - 경기 카드 처리 완료');
+    
     // 게시글 업데이트 쿼리
     console.log('[서버] 게시글 수정 시도...');
     const { error: updateError } = await supabase
       .from('posts')
       .update({
         title: title.trim(),
-        content,
+        content: processedContent,
         updated_at: new Date().toISOString()
       })
       .eq('id', postId);
@@ -795,6 +800,269 @@ export async function getUserPostAction(postId: string): Promise<{ userAction: '
 }
 
 /**
+ * 경기 카드 데이터를 완전한 HTML로 변환하는 서버 함수
+ */
+function processMatchCardsInContent(content: string): string {
+  try {
+    // data-type="match-card" 요소를 찾아서 완전한 HTML로 변환
+    const matchCardRegex = /<div[^>]*data-type="match-card"[^>]*data-match="([^"]*)"[^>]*><\/div>/g;
+    
+    return content.replace(matchCardRegex, (match, encodedData) => {
+      try {
+        // URL 디코딩 후 JSON 파싱
+        const decodedData = decodeURIComponent(encodedData);
+        const matchData = JSON.parse(decodedData);
+        
+        console.log('[서버] 경기 카드 데이터 처리:', matchData);
+        
+        // 경기 카드 내용 생성
+        const { teams, goals, league, status } = matchData;
+        const homeTeam = teams?.home || { name: '홈팀', logo: '/placeholder.png' };
+        const awayTeam = teams?.away || { name: '원정팀', logo: '/placeholder.png' };
+        const leagueData = league || { name: '알 수 없는 리그', logo: '/placeholder.png' };
+        const homeScore = typeof goals?.home === 'number' ? goals.home : '-';
+        const awayScore = typeof goals?.away === 'number' ? goals.away : '-';
+        const actualMatchId = matchData.id || 'unknown';
+        
+        // 경기 상태 텍스트 설정
+        let statusText = '경기 결과';
+        let statusClass = '';
+        
+        if (status) {
+          const statusCode = status.code || '';
+          
+          if (statusCode === 'FT') {
+            statusText = '경기 종료';
+          } else if (statusCode === 'NS') {
+            statusText = '경기 예정';
+          } else if (['1H', '2H', 'HT', 'LIVE'].includes(statusCode)) {
+            if (statusCode === '1H') {
+              statusText = `전반전 진행 중 ${status.elapsed ? `(${status.elapsed}분)` : ''}`;
+            } else if (statusCode === '2H') {
+              statusText = `후반전 진행 중 ${status.elapsed ? `(${status.elapsed}분)` : ''}`;
+            } else if (statusCode === 'HT') {
+              statusText = '하프타임';
+            } else {
+              statusText = `진행 중 ${status.elapsed ? `(${status.elapsed}분)` : ''}`;
+            }
+            statusClass = 'color: #059669; font-weight: 500;';
+          }
+        }
+        
+        // 완전한 경기 카드 HTML 생성
+        return `
+          <div class="match-card processed-match-card" data-processed="true" style="
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            margin: 12px 0;
+            background: white;
+            width: 100%;
+            max-width: 100%;
+            display: block;
+          ">
+            <a href="/livescore/football/match/${actualMatchId}" style="display: block; text-decoration: none; color: inherit;">
+              <!-- 리그 헤더 -->
+              <div style="
+                padding: 12px;
+                background-color: #f9fafb;
+                border-bottom: 1px solid #e5e7eb;
+                display: flex;
+                align-items: center;
+                height: 40px;
+              ">
+                <div style="display: flex; align-items: center;">
+                  <img 
+                    src="${leagueData.logo}" 
+                    alt="${leagueData.name}" 
+                    style="
+                      width: 24px;
+                      height: 24px;
+                      object-fit: contain;
+                      margin-right: 8px;
+                      flex-shrink: 0;
+                    "
+                    onerror="this.onerror=null;this.src='/placeholder.png';"
+                  />
+                  <span style="
+                    font-size: 14px;
+                    font-weight: 500;
+                    color: #4b5563;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                  ">${leagueData.name}</span>
+                </div>
+              </div>
+              
+              <!-- 경기 카드 메인 -->
+              <div style="
+                padding: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+              ">
+                <!-- 홈팀 -->
+                <div style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  width: 40%;
+                ">
+                  <img 
+                    src="${homeTeam.logo}" 
+                    alt="${homeTeam.name}" 
+                    style="
+                      width: 48px;
+                      height: 48px;
+                      object-fit: contain;
+                      margin-bottom: 8px;
+                      flex-shrink: 0;
+                    "
+                    onerror="this.onerror=null;this.src='/placeholder.png';"
+                  />
+                  <span style="
+                    font-size: 14px;
+                    font-weight: 500;
+                    text-align: center;
+                    line-height: 1.2;
+                    color: ${homeTeam.winner ? '#2563eb' : '#000'};
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                  ">
+                    ${homeTeam.name}
+                  </span>
+                </div>
+                
+                <!-- 스코어 -->
+                <div style="
+                  text-align: center;
+                  flex-shrink: 0;
+                  width: 20%;
+                ">
+                  <div style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-bottom: 8px;
+                  ">
+                    <span style="
+                      font-size: 24px;
+                      font-weight: bold;
+                      min-width: 24px;
+                      text-align: center;
+                    ">${homeScore}</span>
+                    <span style="
+                      color: #9ca3af;
+                      margin: 0 4px;
+                    ">-</span>
+                    <span style="
+                      font-size: 24px;
+                      font-weight: bold;
+                      min-width: 24px;
+                      text-align: center;
+                    ">${awayScore}</span>
+                  </div>
+                  <div style="
+                    font-size: 12px;
+                    ${statusClass}
+                  ">
+                    ${statusText}
+                  </div>
+                </div>
+                
+                <!-- 원정팀 -->
+                <div style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  width: 40%;
+                ">
+                  <img 
+                    src="${awayTeam.logo}" 
+                    alt="${awayTeam.name}" 
+                    style="
+                      width: 48px;
+                      height: 48px;
+                      object-fit: contain;
+                      margin-bottom: 8px;
+                      flex-shrink: 0;
+                    "
+                    onerror="this.onerror=null;this.src='/placeholder.png';"
+                  />
+                  <span style="
+                    font-size: 14px;
+                    font-weight: 500;
+                    text-align: center;
+                    line-height: 1.2;
+                    color: ${awayTeam.winner ? '#2563eb' : '#000'};
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                  ">
+                    ${awayTeam.name}
+                  </span>
+                </div>
+              </div>
+              
+              <!-- 푸터 -->
+              <div style="
+                padding: 8px 12px;
+                background-color: #f9fafb;
+                border-top: 1px solid #e5e7eb;
+                text-align: center;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              ">
+                <span style="
+                  font-size: 12px;
+                  color: #2563eb;
+                  text-decoration: underline;
+                ">
+                  매치 상세 정보
+                </span>
+              </div>
+            </a>
+          </div>
+        `;
+      } catch (parseError) {
+        console.error('[서버] 경기 카드 파싱 오류:', parseError);
+        // 파싱 실패 시 기본 경기 카드 반환
+        return `
+          <div class="match-card processed-match-card" data-processed="true" style="
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            margin: 12px 0;
+            background: white;
+            width: 100%;
+            max-width: 100%;
+            padding: 12px;
+            text-align: center;
+          ">
+            <div style="color: #ef4444; font-weight: 500;">
+              ⚠️ 경기 카드 오류
+            </div>
+            <div style="margin-top: 8px; font-size: 14px; color: #666;">
+              경기 정보를 불러올 수 없습니다.
+            </div>
+          </div>
+        `;
+      }
+    });
+  } catch (error) {
+    console.error('[서버] 경기 카드 처리 중 오류:', error);
+    return content; // 오류 시 원본 content 반환
+  }
+}
+
+/**
  * 게시글 생성
  */
 export async function createPost(formData: FormData) {
@@ -803,7 +1071,7 @@ export async function createPost(formData: FormData) {
     
     // 폼 데이터에서 값 추출
     const title = formData.get('title') as string
-    const content = formData.get('content') as string
+    let content = formData.get('content') as string
     const boardId = formData.get('boardId') as string
     
     if (!title || !content || !boardId) {
@@ -815,6 +1083,11 @@ export async function createPost(formData: FormData) {
     if (!user) {
       return { error: '로그인이 필요합니다' }
     }
+    
+    // 경기 카드 데이터를 완전한 HTML로 변환
+    console.log('[서버] 경기 카드 처리 시작');
+    content = processMatchCardsInContent(content);
+    console.log('[서버] 경기 카드 처리 완료');
     
     // 게시글 작성
     const { data, error } = await supabase

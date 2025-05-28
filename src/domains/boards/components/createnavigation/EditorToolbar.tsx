@@ -1,17 +1,19 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Editor } from '@tiptap/react';
 import { 
   Bold, Italic, List, ListOrdered, Image as ImageIcon, Link as LinkIcon, 
   Undo, Redo, Youtube as YoutubeIcon, Video as VideoIcon, Activity
 } from 'lucide-react';
-import ImageUploadForm from '../form/ImageUploadForm';
-import LinkForm from '../form/LinkForm';
-import YoutubeForm from '../form/YoutubeForm';
-import VideoForm from '../form/VideoForm';
-import MatchResultForm from '../form/MatchResultForm';
 import type { MatchData } from '@/domains/livescore/actions/footballApi';
+
+// 폼 컴포넌트들을 지연 로딩으로 변경
+const ImageUploadForm = lazy(() => import('../form/ImageUploadForm'));
+const LinkForm = lazy(() => import('../form/LinkForm'));
+const YoutubeForm = lazy(() => import('../form/YoutubeForm'));
+const VideoForm = lazy(() => import('../form/VideoForm'));
+const MatchResultForm = lazy(() => import('../form/MatchResultForm'));
 
 interface EditorToolbarProps {
   editor: Editor | null;
@@ -23,11 +25,21 @@ interface EditorToolbarProps {
   handleToggleDropdown: (dropdown: 'image' | 'link' | 'youtube' | 'video' | 'match') => void;
   handleFileUpload: (file: File, caption: string) => Promise<void>;
   handleAddImage: (url: string, caption?: string) => void;
-  handleAddLink: (url: string, text: string) => void;
+  handleAddLink: (url: string, text?: string) => void;
   handleAddYoutube: (url: string, caption?: string) => void;
   handleAddVideo: (videoUrl: string, caption: string) => void;
   handleAddMatch: (matchId: string, matchData: MatchData) => void;
 }
+
+// 로딩 스피너 컴포넌트
+const FormLoadingSpinner = () => (
+  <div className="absolute top-full left-0 mt-1 bg-white border rounded-md shadow-lg p-4 z-50">
+    <div className="flex items-center space-x-2">
+      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+      <span className="text-sm text-gray-600">로딩 중...</span>
+    </div>
+  </div>
+);
 
 export default function EditorToolbar({
   editor,
@@ -98,7 +110,7 @@ export default function EditorToolbar({
       
       <div className="w-px h-6 bg-gray-300 mx-1"></div>
       
-      {/* 이미지 버튼과 드롭다운 */}
+      {/* 이미지 버튼과 드롭다운 - 지연 로딩 */}
       <div className="relative">
         <button
           type="button"
@@ -109,15 +121,19 @@ export default function EditorToolbar({
           <ImageIcon size={18} />
         </button>
         
-        <ImageUploadForm 
-          onCancel={() => handleCloseModal('image')}
-          onFileUpload={handleFileUpload}
-          onImageUrlAdd={handleAddImage}
-          isOpen={showImageModal}
-        />
+        {showImageModal && (
+          <Suspense fallback={<FormLoadingSpinner />}>
+            <ImageUploadForm 
+              onCancel={() => handleCloseModal('image')}
+              onFileUpload={handleFileUpload}
+              onImageUrlAdd={handleAddImage}
+              isOpen={showImageModal}
+            />
+          </Suspense>
+        )}
       </div>
       
-      {/* 링크 버튼과 드롭다운 */}
+      {/* 링크 버튼과 드롭다운 - 지연 로딩 */}
       <div className="relative">
         <button
           type="button"
@@ -128,14 +144,18 @@ export default function EditorToolbar({
           <LinkIcon size={18} />
         </button>
         
-        <LinkForm 
-          onCancel={() => handleCloseModal('link')}
-          onLinkAdd={handleAddLink}
-          isOpen={showLinkModal}
-        />
+        {showLinkModal && (
+          <Suspense fallback={<FormLoadingSpinner />}>
+            <LinkForm 
+              onCancel={() => handleCloseModal('link')}
+              onLinkAdd={handleAddLink}
+              isOpen={showLinkModal}
+            />
+          </Suspense>
+        )}
       </div>
       
-      {/* 유튜브 버튼과 드롭다운 */}
+      {/* 유튜브 버튼과 드롭다운 - 지연 로딩 */}
       <div className="relative">
         <button
           type="button"
@@ -146,14 +166,18 @@ export default function EditorToolbar({
           <YoutubeIcon size={18} />
         </button>
         
-        <YoutubeForm 
-          onCancel={() => handleCloseModal('youtube')}
-          onYoutubeAdd={handleAddYoutube}
-          isOpen={showYoutubeModal}
-        />
+        {showYoutubeModal && (
+          <Suspense fallback={<FormLoadingSpinner />}>
+            <YoutubeForm 
+              onCancel={() => handleCloseModal('youtube')}
+              onYoutubeAdd={handleAddYoutube}
+              isOpen={showYoutubeModal}
+            />
+          </Suspense>
+        )}
       </div>
       
-      {/* 비디오 버튼과 드롭다운 */}
+      {/* 비디오 버튼과 드롭다운 - 지연 로딩 */}
       <div className="relative">
         <button
           type="button"
@@ -164,14 +188,18 @@ export default function EditorToolbar({
           <VideoIcon size={18} />
         </button>
         
-        <VideoForm 
-          onCancel={() => handleCloseModal('video')}
-          onVideoAdd={handleAddVideo}
-          isOpen={showVideoModal}
-        />
+        {showVideoModal && (
+          <Suspense fallback={<FormLoadingSpinner />}>
+            <VideoForm 
+              onCancel={() => handleCloseModal('video')}
+              onVideoAdd={handleAddVideo}
+              isOpen={showVideoModal}
+            />
+          </Suspense>
+        )}
       </div>
       
-      {/* 경기 결과 버튼과 드롭다운 */}
+      {/* 경기 결과 버튼과 드롭다운 - 지연 로딩 */}
       <div className="relative">
         <button
           type="button"
@@ -182,16 +210,20 @@ export default function EditorToolbar({
           <Activity size={18} />
         </button>
         
-        <MatchResultForm
-          isOpen={showMatchModal}
-          onCancel={() => {
-            console.log("match 모달 닫기 요청");
-            handleCloseModal('match');
-          }}
-          onMatchAdd={(matchId, matchData) => {
-            handleAddMatch(matchId, matchData);
-          }}
-        />
+        {showMatchModal && (
+          <Suspense fallback={<FormLoadingSpinner />}>
+            <MatchResultForm
+              isOpen={showMatchModal}
+              onCancel={() => {
+                console.log("match 모달 닫기 요청");
+                handleCloseModal('match');
+              }}
+              onMatchAdd={(matchId, matchData) => {
+                handleAddMatch(matchId, matchData);
+              }}
+            />
+          </Suspense>
+        )}
       </div>
       
       <div className="w-px h-6 bg-gray-300 mx-1"></div>

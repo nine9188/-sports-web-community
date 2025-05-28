@@ -5,6 +5,8 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { CalendarIcon, Search, X } from 'lucide-react';
 import Image from 'next/image';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
 import { Button } from '@/shared/ui';
 import { getMatchesByDate } from '@/domains/boards/actions/matches';
 import type { MatchData } from '@/domains/livescore/actions/footballApi';
@@ -106,8 +108,9 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
   }, [isOpen, selectedDate]);
 
   // 날짜 변경 핸들러
-  const handleDateChange = (newDate: Date) => {
-    setSelectedDate(newDate);
+  const handleDateChange = (date: Date | null) => {
+    if (!date) return;
+    setSelectedDate(date);
     setCalendar(false);
   };
 
@@ -185,27 +188,18 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
               {calendar && (
                 <div className="absolute top-full left-0 mt-1 bg-white shadow-lg rounded-md border z-10">
                   <div className="p-2">
-                    <div className="grid grid-cols-7 gap-1">
-                      {Array.from({ length: 14 }).map((_, i) => {
-                        const date = new Date();
-                        date.setDate(date.getDate() - 7 + i);
-                        const isSelected = date.toDateString() === selectedDate.toDateString();
-                        
-                        return (
-                          <button
-                            key={i}
-                            type="button"
-                            className={`p-1.5 text-center rounded-md hover:bg-gray-100 text-xs ${
-                              isSelected ? 'bg-blue-100 text-blue-600' : ''
-                            }`}
-                            onClick={() => handleDateChange(date)}
-                          >
-                            <div className="text-[10px]">{format(date, 'E', { locale: ko })}</div>
-                            <div>{date.getDate()}</div>
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <DatePicker
+                      selected={selectedDate}
+                      onChange={handleDateChange}
+                      inline
+                      locale={ko}
+                      minDate={new Date(2024, 0, 1)}
+                      maxDate={new Date(2025, 11, 31)}
+                      showMonthDropdown
+                      showYearDropdown
+                      dropdownMode="select"
+                      calendarClassName="custom-datepicker"
+                    />
                   </div>
                 </div>
               )}
@@ -242,13 +236,13 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
               {Object.values(groupedMatches).map((group: LeagueGroup) => (
                 <div key={group.league.id} className="space-y-1.5">
                   <div className="flex items-center mb-1">
-                    <div className="w-4 h-4 relative mr-1.5">
+                    <div className="w-5 h-5 relative mr-2 flex-shrink-0">
                       <Image
                         src={group.league.logo || '/placeholder.png'}
                         alt={group.league.name}
-                        width={20}
-                        height={20}
-                        className="mr-2 object-contain"
+                        fill
+                        className="object-contain"
+                        sizes="20px"
                         onError={(e) => {
                           e.currentTarget.src = '/placeholder.png';
                         }}
@@ -308,32 +302,38 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
                         className="w-full text-left border rounded-md p-2 hover:bg-gray-50 transition-colors"
                       >
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center flex-1">
-                            <div className="w-4 h-4 relative mr-1.5">
+                          <div className="flex items-center flex-1 min-w-0">
+                            <div className="w-6 h-6 relative mr-2 flex-shrink-0">
                               <Image
                                 src={match.teams.home.logo || '/placeholder-team.png'}
                                 alt={match.teams.home.name}
-                                width={16}
-                                height={16}
+                                fill
                                 className="object-contain"
+                                sizes="24px"
+                                onError={(e) => {
+                                  e.currentTarget.src = '/placeholder-team.png';
+                                }}
                               />
                             </div>
-                            <span className="text-xs">{match.teams.home.name}</span>
+                            <span className="text-xs truncate">{match.teams.home.name}</span>
                           </div>
                           
-                          <div className="mx-1 px-2 py-0.5 bg-gray-100 rounded text-xs font-semibold">
+                          <div className="mx-3 px-2 py-0.5 bg-gray-100 rounded text-xs font-semibold flex-shrink-0">
                             {match.goals.home ?? '-'} - {match.goals.away ?? '-'}
                           </div>
                           
-                          <div className="flex items-center flex-1 justify-end">
-                            <span className="text-xs">{match.teams.away.name}</span>
-                            <div className="w-4 h-4 relative ml-1.5">
+                          <div className="flex items-center flex-1 justify-end min-w-0">
+                            <span className="text-xs truncate">{match.teams.away.name}</span>
+                            <div className="w-6 h-6 relative ml-2 flex-shrink-0">
                               <Image
                                 src={match.teams.away.logo || '/placeholder-team.png'}
                                 alt={match.teams.away.name}
-                                width={16}
-                                height={16}
+                                fill
                                 className="object-contain"
+                                sizes="24px"
+                                onError={(e) => {
+                                  e.currentTarget.src = '/placeholder-team.png';
+                                }}
                               />
                             </div>
                           </div>
@@ -367,6 +367,145 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
           </Button>
         </div>
       </div>
+      
+      {/* DatePicker 커스텀 스타일 */}
+      <style jsx>{`
+        :global(.custom-datepicker) {
+          font-family: inherit;
+          border: none;
+          box-shadow: none;
+        }
+        
+        :global(.react-datepicker) {
+          font-family: inherit;
+          border: 1px solid #e5e7eb;
+          border-radius: 0.5rem;
+          box-shadow: none;
+        }
+        
+        :global(.react-datepicker__header) {
+          background-color: #f9fafb;
+          border-bottom: 1px solid #e5e7eb;
+          border-radius: 0.5rem 0.5rem 0 0;
+          padding: 0.5rem;
+        }
+        
+        :global(.react-datepicker__current-month) {
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: #374151;
+          margin-bottom: 0.5rem;
+        }
+        
+        :global(.react-datepicker__day-names) {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 0.25rem;
+        }
+        
+        :global(.react-datepicker__day-name) {
+          color: #6b7280;
+          font-size: 0.75rem;
+          font-weight: 500;
+          width: 2rem;
+          line-height: 1.5rem;
+          text-align: center;
+        }
+        
+        :global(.react-datepicker__month) {
+          margin: 0.5rem;
+        }
+        
+        :global(.react-datepicker__week) {
+          display: flex;
+          justify-content: space-between;
+        }
+        
+        :global(.react-datepicker__day) {
+          width: 2rem;
+          height: 2rem;
+          line-height: 2rem;
+          text-align: center;
+          font-size: 0.75rem;
+          color: #374151;
+          cursor: pointer;
+          border-radius: 0.25rem;
+          margin: 0.125rem 0;
+          display: inline-block;
+        }
+        
+        :global(.react-datepicker__day:hover) {
+          background-color: #f3f4f6;
+        }
+        
+        :global(.react-datepicker__day--selected) {
+          background-color: #3b82f6;
+          color: white;
+        }
+        
+        :global(.react-datepicker__day--selected:hover) {
+          background-color: #2563eb;
+        }
+        
+        :global(.react-datepicker__day--today) {
+          background-color: #dbeafe;
+          color: #1d4ed8;
+        }
+        
+        :global(.react-datepicker__day--outside-month) {
+          color: #d1d5db;
+        }
+        
+        :global(.react-datepicker__navigation) {
+          top: 0.75rem;
+          width: 1.5rem;
+          height: 1.5rem;
+          border: none;
+          background: none;
+          cursor: pointer;
+        }
+        
+        :global(.react-datepicker__navigation--previous) {
+          left: 0.75rem;
+        }
+        
+        :global(.react-datepicker__navigation--next) {
+          right: 0.75rem;
+        }
+        
+        :global(.react-datepicker__navigation-icon::before) {
+          border-color: #6b7280;
+          border-width: 2px 2px 0 0;
+          width: 0.5rem;
+          height: 0.5rem;
+        }
+        
+        :global(.react-datepicker__month-dropdown),
+        :global(.react-datepicker__year-dropdown) {
+          background-color: white;
+          border: 1px solid #e5e7eb;
+          border-radius: 0.25rem;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        :global(.react-datepicker__month-option),
+        :global(.react-datepicker__year-option) {
+          padding: 0.25rem 0.5rem;
+          font-size: 0.75rem;
+          cursor: pointer;
+        }
+        
+        :global(.react-datepicker__month-option:hover),
+        :global(.react-datepicker__year-option:hover) {
+          background-color: #f3f4f6;
+        }
+        
+        :global(.react-datepicker__month-option--selected),
+        :global(.react-datepicker__year-option--selected) {
+          background-color: #3b82f6;
+          color: white;
+        }
+      `}</style>
     </>
   );
 } 

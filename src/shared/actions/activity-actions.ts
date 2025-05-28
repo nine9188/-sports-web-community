@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient } from '@/shared/api/supabaseServer';
-import { calculateLevelFromExp } from '@/shared/utils/level-icons';
+import { calculateLevelFromExp } from '@/shared/utils/level-icons-server';
 
 // 활동 유형 정의 - 내부에서만 사용하는 상수 (export 하지 않음)
 const ActivityTypeValues = {

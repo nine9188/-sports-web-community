@@ -5,7 +5,7 @@ import { Button } from '@/shared/ui';
 
 interface LinkFormProps {
   onCancel: () => void;
-  onLinkAdd: (url: string, text: string) => void;
+  onLinkAdd: (url: string, text?: string) => void;
   isOpen: boolean;
 }
 
@@ -45,8 +45,8 @@ export default function LinkForm({
 
   const handleSubmit = () => {
     if (!url) return;
-    // 데이터 속성 추가하여 일반 링크 구분
-    onLinkAdd(url, text);
+    // text가 비어있으면 undefined로 전달
+    onLinkAdd(url, text || undefined);
   };
 
   if (!isOpen) return null;

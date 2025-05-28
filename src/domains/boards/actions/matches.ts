@@ -1,73 +1,55 @@
 'use server'
 
-// import { createClient } from '@/shared/api/supabaseServer';
+import { fetchMatchesByDate } from '@/domains/livescore/actions/footballApi';
 
 export async function getMatchesByDate(date: string) {
   try {
-    // TODO: matches 테이블이 생성되면 활성화
-    // 현재는 빈 배열 반환
-    console.log(`경기 데이터 요청: ${date} (matches 테이블 미구현)`);
-    return [];
+    console.log(`경기 데이터 요청: ${date} (실제 API 호출)`);
     
-    /* 
-    // Supabase 클라이언트 초기화
-    const supabase = await createClient();
+    // 실제 Football API에서 경기 데이터 가져오기
+    const matches = await fetchMatchesByDate(date);
     
-    // matches 테이블에서 해당 날짜의 경기 데이터 조회
-    const { data, error } = await supabase
-      .from('matches')
-      .select('*')
-      .eq('date', date)
-      .order('timestamp', { ascending: true });
-    
-    if (error) {
-      console.error('경기 데이터 조회 오류:', error.message);
-      return [];
-    }
-    
-    // 데이터가 없을 경우 빈 배열 반환
-    if (!data || data.length === 0) {
-      return [];
-    }
-    
-    // 응답 데이터 형식 변환
-    return data.map(match => ({
-      id: match.id,
+    // 게시글 작성용 형식으로 변환
+    const formattedMatches = matches.map(match => ({
+      id: match.id.toString(),
       fixture: {
-        id: match.id,
-        date: match.date
+        id: match.id.toString(),
+        date: date
       },
       league: {
-        id: match.league_id,
-        name: match.league_name,
-        logo: match.league_logo
+        id: match.league.id.toString(),
+        name: match.league.name,
+        logo: match.league.logo
       },
       teams: {
         home: {
-          id: match.home_team_id,
-          name: match.home_team_name,
-          logo: match.home_team_logo
+          id: match.teams.home.id.toString(),
+          name: match.teams.home.name,
+          logo: match.teams.home.logo
         },
         away: {
-          id: match.away_team_id,
-          name: match.away_team_name,
-          logo: match.away_team_logo
+          id: match.teams.away.id.toString(),
+          name: match.teams.away.name,
+          logo: match.teams.away.logo
         }
       },
       goals: {
-        home: match.home_goals,
-        away: match.away_goals
+        home: match.goals.home,
+        away: match.goals.away
       },
       status: {
-        code: match.status_code,
-        elapsed: match.elapsed,
-        name: match.status_name
+        code: match.status.code,
+        elapsed: match.status.elapsed,
+        name: match.status.name
       }
     }));
-    */
+    
+    return formattedMatches;
     
   } catch (error) {
     console.error('경기 데이터 조회 중 오류 발생:', error);
+    
+    // API 오류 시 빈 배열 반환
     return [];
   }
 } 

@@ -8,18 +8,20 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
-import { YoutubeExtension } from '@/shared/ui/tiptap/YoutubeExtension';
-import { Video } from '@/shared/ui/tiptap/VideoExtension';
 import BoardSelector from '@/domains/boards/components/createnavigation/BoardSelector';
 import EditorToolbar from '@/domains/boards/components/createnavigation/EditorToolbar';
-import { MatchCardExtension } from '@/shared/ui/tiptap/MatchCardExtension';
 import { rewardUserActivity, getActivityTypeValues } from '@/shared/actions/activity-actions';
 import { MatchData } from '@/domains/livescore/actions/footballApi';
 import { toast } from 'react-hot-toast';
-import { SocialEmbed } from '@/shared/ui/tiptap/SocialEmbed';
-import { AutoEmbedExtension } from '@/shared/ui/tiptap/AutoEmbedExtension';
 import { createPost, updatePost } from '@/domains/boards/actions/posts';
 import { Board } from '@/domains/boards/types/board';
+import { generateMatchCardHTML } from '@/shared/utils/matchCardRenderer';
+
+// MatchCard 확장 로딩 함수
+const loadMatchCardExtension = async () => {
+  const { MatchCardExtension } = await import('@/shared/ui/tiptap/MatchCardExtension');
+  return MatchCardExtension;
+};
 
 // 특정 컴포넌트에서 사용하는 Board 인터페이스 (서로 다른 Board 타입 문제를 해결하기 위함)
 interface BoardSelectorItem {
@@ -75,41 +77,48 @@ export default function PostEditForm({
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
   
+  // Supabase 클라이언트 - 한 번만 생성하여 재사용 (성능 최적화)
+  const supabase = useMemo(() => createClient(), []);
+  
+  // 확장 로딩 상태 관리 - any 타입으로 타입 충돌 해결
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [loadedExtensions, setLoadedExtensions] = useState<any[]>([
+    StarterKit,
+    Image.configure({
+      inline: false,
+      allowBase64: false,
+    }),
+    Link.configure({
+      openOnClick: true,
+      HTMLAttributes: {
+        target: '_blank',
+        rel: 'noopener noreferrer',
+      }
+    }),
+  ]);
+  
+  // 초기 로딩 시 MatchCard 확장 추가
+  useEffect(() => {
+    const loadInitialExtensions = async () => {
+      try {
+        const MatchCardExt = await loadMatchCardExtension();
+        setLoadedExtensions(prev => [...prev, MatchCardExt]);
+      } catch (error) {
+        console.error('MatchCard 확장 로딩 실패:', error);
+      }
+    };
+    
+    loadInitialExtensions();
+  }, []);
+  
   // boardDropdownRef는 유지하되 사용하지 않는 showBoardDropdown 상태는 제거
   const boardDropdownRef = useRef<HTMLDivElement>(null);
   
   const router = useRouter();
   
+  // 에디터 초기화 - MatchCard 확장이 로드된 후에만 생성
   const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Image.configure({
-        inline: false,
-        allowBase64: false,
-      }),
-      Link.configure({
-        openOnClick: true,
-        HTMLAttributes: {
-          target: '_blank',
-          rel: 'noopener noreferrer',
-        }
-      }),
-      YoutubeExtension.configure({
-        controls: true,
-        nocookie: false,
-        width: 640,
-        height: 360,
-        responsive: true,
-        HTMLAttributes: {
-          class: 'youtube-container',
-        },
-        allowFullscreen: true
-      }),
-      Video,
-      MatchCardExtension,
-      SocialEmbed,
-      AutoEmbedExtension,
-    ],
+    extensions: loadedExtensions,
     content,
     onUpdate: ({ editor }) => {
       const content = editor.getHTML();
@@ -121,8 +130,8 @@ export default function PostEditForm({
       },
     },
     immediatelyRender: false
-  });
-  
+  }, [loadedExtensions]); // loadedExtensions가 변경될 때마다 에디터 재생성
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (boardDropdownRef.current && !boardDropdownRef.current.contains(event.target as Node)) {
@@ -186,7 +195,6 @@ export default function PostEditForm({
     
     try {
       // 사용자 인증 정보 확인
-      const supabase = createClient();
       const { data: userData, error: userError } = await supabase.auth.getUser();
       
       if (userError || !userData.user) {
@@ -320,16 +328,13 @@ export default function PostEditForm({
     if (!file || !editor) return;
     
     try {
-      // Supabase 클라이언트 생성
-      const supabase = createClient();
-      
       // 파일명에서 특수문자 및 공백 제거하여, 고유한 파일명 생성
       const timestamp = new Date().getTime();
       const randomString = Math.random().toString(36).substring(2, 8); // 추가 무작위 문자열
       const safeFileName = file.name.replace(/[^a-zA-Z0-9.]/g, '_');
       const fileName = `upload_${timestamp}_${randomString}_${safeFileName}`;
       
-      // Supabase Storage에 업로드
+      // Supabase Storage에 업로드 (재사용된 클라이언트 사용)
       const { error } = await supabase
         .storage
         .from('post-images')
@@ -342,7 +347,7 @@ export default function PostEditForm({
         throw new Error(`파일 업로드 실패: ${error.message}`);
       }
       
-      // 업로드된 파일의 공개 URL 가져오기
+      // 업로드된 파일의 공개 URL 가져오기 (재사용된 클라이언트 사용)
       const { data: urlData } = supabase
         .storage
         .from('post-images')
@@ -373,41 +378,72 @@ export default function PostEditForm({
     }
   };
   
-  // 유튜브 추가 함수
-  const handleAddYoutube = (url: string, caption?: string) => {
+  // 유튜브 추가 함수 - 직접 HTML 삽입으로 단순화
+  const handleAddYoutube = async (url: string, caption?: string) => {
     if (!url || !editor) return;
     
     try {
-      editor.commands.setYoutubeVideo({
-        src: url,
-        caption: caption || undefined,
-        width: 640,
-        height: 360
-      });
-    } catch {
-      alert('유튜브 영상을 추가하는데 실패했습니다. 다시 시도해주세요.');
+      console.log('유튜브 추가:', { url, caption });
+      
+      // 유튜브 URL을 embed URL로 변환
+      let embedUrl = url;
+      if (url.includes('youtube.com/watch?v=')) {
+        const videoId = url.split('v=')[1]?.split('&')[0];
+        embedUrl = `https://www.youtube.com/embed/${videoId}`;
+      } else if (url.includes('youtu.be/')) {
+        const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+        embedUrl = `https://www.youtube.com/embed/${videoId}`;
+      }
+      
+      // 직접 HTML 삽입 (확장 로딩 없이)
+      const youtubeHTML = `
+        <div class="youtube-container" style="margin: 1rem 0;">
+          <iframe src="${embedUrl}" width="640" height="360" frameborder="0" allowfullscreen style="width: 100%; max-width: 640px; height: 360px;"></iframe>
+          ${caption ? `<div class="youtube-caption" style="margin-top: 0.5rem; font-size: 0.875rem; color: #666;">${caption}</div>` : ''}
+        </div>
+      `;
+      
+      editor.commands.insertContent(youtubeHTML);
+      console.log('유튜브 HTML 삽입 완료');
+      
+    } catch (error) {
+      console.error('유튜브 추가 중 오류:', error);
+      toast.error('유튜브 영상을 추가하는데 실패했습니다. 다시 시도해주세요.');
     }
     
     setShowYoutubeModal(false);
   };
   
-  // 비디오 추가 함수
-  const handleAddVideo = (videoUrl: string, caption: string) => {
+  // 비디오 추가 함수 - 직접 HTML 삽입으로 단순화
+  const handleAddVideo = async (videoUrl: string, caption: string) => {
     if (!videoUrl || !editor) return;
     
-    // Video Extension 사용 - TipTap의 타입 문제로 인해 commands 직접 사용
-    editor.commands.insertContent(
-      `<div data-type="video" class="video-wrapper">
-        <video src="${videoUrl}" controls data-caption="${caption || ''}"></video>
-        ${caption ? `<div class="video-caption">${caption}</div>` : ''}
-      </div>`
-    );
+    try {
+      console.log('비디오 추가:', { videoUrl, caption });
+      
+      // 직접 HTML 삽입 (확장 로딩 없이)
+      const videoHTML = `
+        <div class="video-wrapper" style="margin: 1rem 0;">
+          <video src="${videoUrl}" controls style="width: 100%; max-width: 640px; height: auto;" data-caption="${caption || ''}">
+            브라우저가 비디오를 지원하지 않습니다.
+          </video>
+          ${caption ? `<div class="video-caption" style="margin-top: 0.5rem; font-size: 0.875rem; color: #666;">${caption}</div>` : ''}
+        </div>
+      `;
+      
+      editor.commands.insertContent(videoHTML);
+      console.log('비디오 HTML 삽입 완료');
+      
+    } catch (error) {
+      console.error('비디오 추가 중 오류:', error);
+      toast.error('비디오를 추가하는데 실패했습니다. 다시 시도해주세요.');
+    }
     
     setShowVideoModal(false);
   };
   
   // 한 번에 하나의 드롭다운만 표시되도록 관리 (함수 수정)
-  const handleToggleDropdown = (dropdown: 'match' | 'link' | 'video' | 'image' | 'youtube') => {
+  const handleToggleDropdown = async (dropdown: 'match' | 'link' | 'video' | 'image' | 'youtube') => {
     // 현재 상태 확인
     const currentState: Record<'image' | 'youtube' | 'video' | 'match' | 'link', boolean> = {
       image: showImageModal,
@@ -435,7 +471,7 @@ export default function PostEditForm({
     setShowMatchModal(false);
     setShowLinkModal(false);
     
-    // 선택된 드롭다운만 열기
+    // 선택된 드롭다운만 열기 (확장 로딩 제거)
     switch (dropdown) {
       case 'image':
         setShowImageModal(true);
@@ -455,35 +491,56 @@ export default function PostEditForm({
     }
   };
   
-  // 경기 카드 추가 함수 수정
+  // 경기 카드 추가 함수 수정 - HTML 직접 삽입 방식으로 변경
   const handleAddMatch = async (matchId: string, matchData: MatchData) => {
-    if (!editor) return;
+    if (!editor) {
+      toast.error('에디터가 준비되지 않았습니다.');
+      return;
+    }
     
     try {
-      // 경기 데이터를 에디터에 삽입
-      editor
-        .chain()
-        .focus()
-        .insertContent({
-          type: 'matchCard',
-          attrs: {
-            matchId,
-            matchData
-          }
-        })
-        .run();
+      console.log('경기 카드 추가 시도:', { matchId, matchData });
+      
+      // 경기 카드 HTML 생성
+      const matchCardHTML = generateMatchCardHTML(matchData);
+      
+      // HTML 직접 삽입
+      editor.commands.insertContent(matchCardHTML);
       
       // 모달 닫기
       setShowMatchModal(false);
-    } catch {
+      toast.success('경기 결과가 추가되었습니다.');
+      console.log('경기 카드 추가 성공');
+    } catch (error) {
+      console.error('경기 추가 중 오류:', error);
       toast.error('경기 추가 중 오류가 발생했습니다.');
     }
   };
   
-  // 링크 추가 핸들러
-  const handleAddLink = (url: string) => {
-    if (editor) {
-      editor.chain().focus().setLink({ href: url }).run();
+  // 링크 추가 핸들러 - 개선
+  const handleAddLink = (url: string, text?: string) => {
+    if (!editor || !url) return;
+    
+    try {
+      console.log('링크 추가:', { url, text });
+      
+      // 현재 선택된 텍스트가 있는지 확인
+      const { from, to } = editor.state.selection;
+      const selectedText = editor.state.doc.textBetween(from, to);
+      
+      if (selectedText) {
+        // 선택된 텍스트가 있으면 링크로 변환
+        editor.chain().focus().setLink({ href: url }).run();
+      } else {
+        // 선택된 텍스트가 없으면 링크 텍스트와 함께 삽입
+        const linkText = text || url;
+        editor.chain().focus().insertContent(`<a href="${url}" target="_blank" rel="noopener noreferrer">${linkText}</a>`).run();
+      }
+      
+      console.log('링크 삽입 완료');
+    } catch (error) {
+      console.error('링크 추가 중 오류:', error);
+      toast.error('링크를 추가하는데 실패했습니다.');
     }
   };
   
@@ -560,14 +617,27 @@ export default function PostEditForm({
                   min-height: 500px;
                 }
                 
-                .match-card {
+                /* 경기 카드 스타일 */
+                .ProseMirror .match-card {
                   width: 100% !important;
                   max-width: 100% !important;
+                  margin: 12px 0 !important;
+                  border: 1px solid #e5e7eb !important;
+                  border-radius: 8px !important;
+                  overflow: hidden !important;
+                  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+                  background: white !important;
                 }
                 
                 .ProseMirror .match-card img {
                   max-width: unset !important;
                   display: inline-block !important;
+                  object-fit: contain !important;
+                }
+
+                /* 경기 카드 내부 요소들 */
+                .ProseMirror .match-card > div {
+                  width: 100% !important;
                 }
 
                 /* 임베드 스타일 */
@@ -581,6 +651,18 @@ export default function PostEditForm({
                   width: 100%;
                   height: 400px;
                   border-radius: 8px;
+                }
+
+                /* 비디오 스타일 */
+                .video-wrapper {
+                  margin: 1rem 0;
+                  width: 100%;
+                }
+
+                .video-wrapper video {
+                  width: 100%;
+                  max-width: 640px;
+                  height: auto;
                 }
               `}</style>
               <EditorContent editor={editor} />

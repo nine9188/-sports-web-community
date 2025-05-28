@@ -111,10 +111,11 @@ export async function getCreatePostData(slug: string) {
       };
     }
     
-    // 모든 게시판 정보 가져오기 (카테고리 선택용)
+    // 모든 게시판 정보 가져오기 (모든 필드 포함)
     const { data: allBoards, error: allBoardsError } = await supabase
       .from('boards')
       .select('*')
+      .order('display_order', { ascending: true })
       .order('name');
       
     if (allBoardsError) {

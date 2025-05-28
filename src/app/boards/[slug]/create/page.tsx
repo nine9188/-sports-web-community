@@ -3,15 +3,20 @@ import PostEditForm from '@/domains/boards/components/post/PostEditForm';
 import { getCreatePostData } from '@/domains/boards/actions';
 import { Metadata } from 'next';
 import ErrorMessage from '@/shared/ui/error-message';
+import { cache } from 'react';
 
-// 메타데이터 생성 함수
+// 캐시된 데이터 가져오기 함수 - 중복 호출 방지
+const getCachedCreatePostData = cache(async (slug: string) => {
+  return await getCreatePostData(slug);
+});
+
+// 메타데이터 생성 함수 - 간소화
 export async function generateMetadata({ 
   params 
 }: { 
   params: Promise<{ slug: string }> 
 }): Promise<Metadata> {
   try {
-    // 슬러그 가져오기
     const { slug } = await params;
     
     if (!slug) {
@@ -20,8 +25,9 @@ export async function generateMetadata({
         description: '게시판에 새 글을 작성합니다.'
       };
     }
-    
-    const result = await getCreatePostData(slug);
+
+    // 캐시된 데이터 사용
+    const result = await getCachedCreatePostData(slug);
     if (result.success && result.board) {
       return {
         title: `새 글 작성 - ${result.board.name}`,
@@ -32,7 +38,6 @@ export async function generateMetadata({
     console.error('메타데이터 생성 오류:', error);
   }
   
-  // 오류 발생 시 기본 메타데이터 반환
   return {
     title: '새 글 작성',
     description: '게시판에 새 글을 작성합니다.'
@@ -46,7 +51,6 @@ export default async function CreatePostPage({
   params: Promise<{ slug: string }> 
 }) {
   try {
-    // 슬러그 가져오기
     const { slug } = await params;
     
     if (!slug) {
@@ -58,9 +62,9 @@ export default async function CreatePostPage({
         />
       );
     }
-    
-    // 서버 액션으로 데이터 가져오기
-    const result = await getCreatePostData(slug);
+
+    // 캐시된 데이터 사용 - 중복 호출 방지
+    const result = await getCachedCreatePostData(slug);
     
     if (!result.success || !result.board) {
       return (
@@ -93,7 +97,6 @@ export default async function CreatePostPage({
     );
   } catch (error) {
     console.error('CreatePostPage 오류:', error);
-    // 오류 발생시 표시할 UI
     return (
       <ErrorMessage 
         title="오류"
