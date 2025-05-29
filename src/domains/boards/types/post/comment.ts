@@ -14,6 +14,8 @@ export interface CommentType {
   profiles?: {
     nickname: string | null;
     icon_id: number | null;
+    icon_url?: string | null;
+    level?: number | null;
   } | null;
   children?: CommentType[];
 } 

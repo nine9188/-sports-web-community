@@ -104,6 +104,8 @@ export default async function PostDetailPage({
       profiles?: {
         nickname?: string;
         icon_id?: number;
+        level?: number;
+        icon_url?: string; // icon_url 타입 추가
       };
     }) => ({
       id: comment.id,
@@ -118,7 +120,8 @@ export default async function PostDetailPage({
         nickname: comment.profiles?.nickname || null,
         id: comment.user_id || '',
         icon_id: comment.profiles?.icon_id || null,
-        icon_url: null
+        level: comment.profiles?.level || null,
+        icon_url: comment.profiles?.icon_url || null // 실제 icon_url 사용
       },
       children: []
     }));

@@ -551,8 +551,8 @@ export async function likePost(postId: string): Promise<LikeActionResponse> {
       }
     }
     
-    // 페이지 재검증
-    revalidatePath(`/boards/[slug]/[postNumber]`);
+    // 페이지 재검증 - 경기 카드 보호를 위해 주석 처리
+    // revalidatePath(`/boards/[slug]/[postNumber]`);
     
     return {
       success: true,
@@ -716,8 +716,8 @@ export async function dislikePost(postId: string): Promise<LikeActionResponse> {
       newUserAction = 'dislike';
     }
     
-    // 페이지 재검증
-    revalidatePath(`/boards/[slug]/[postNumber]`);
+    // 페이지 재검증 - 경기 카드 보호를 위해 주석 처리
+    // revalidatePath(`/boards/[slug]/[postNumber]`);
     
     return {
       success: true,
@@ -804,16 +804,22 @@ export async function getUserPostAction(postId: string): Promise<{ userAction: '
  */
 function processMatchCardsInContent(content: string): string {
   try {
-    // data-type="match-card" 요소를 찾아서 완전한 HTML로 변환
-    const matchCardRegex = /<div[^>]*data-type="match-card"[^>]*data-match="([^"]*)"[^>]*><\/div>/g;
+    console.log('[서버] 경기 카드 처리 시작, 원본 content:', content);
     
-    return content.replace(matchCardRegex, (match, encodedData) => {
+    // 더 유연한 정규식 - 자체 닫힘 태그와 일반 태그 모두 처리
+    const matchCardRegex = /<div[^>]*data-type="match-card"[^>]*data-match="([^"]*)"[^>]*(?:\/>|><\/div>)/g;
+    
+    let matchCount = 0;
+    const result = content.replace(matchCardRegex, (match, encodedData) => {
+      matchCount++;
+      console.log(`[서버] 경기 카드 ${matchCount} 발견:`, match);
+      
       try {
         // URL 디코딩 후 JSON 파싱
         const decodedData = decodeURIComponent(encodedData);
         const matchData = JSON.parse(decodedData);
         
-        console.log('[서버] 경기 카드 데이터 처리:', matchData);
+        console.log(`[서버] 경기 카드 ${matchCount} 데이터 처리:`, matchData);
         
         // 경기 카드 내용 생성
         const { teams, goals, league, status } = matchData;
@@ -849,8 +855,7 @@ function processMatchCardsInContent(content: string): string {
           }
         }
         
-        // 완전한 경기 카드 HTML 생성
-        return `
+        const processedHTML = `
           <div class="match-card processed-match-card" data-processed="true" style="
             border: 1px solid #e5e7eb;
             border-radius: 8px;
@@ -1030,8 +1035,11 @@ function processMatchCardsInContent(content: string): string {
             </a>
           </div>
         `;
+        
+        console.log(`[서버] 경기 카드 ${matchCount} 처리 완료`);
+        return processedHTML;
       } catch (parseError) {
-        console.error('[서버] 경기 카드 파싱 오류:', parseError);
+        console.error(`[서버] 경기 카드 ${matchCount} 파싱 오류:`, parseError);
         // 파싱 실패 시 기본 경기 카드 반환
         return `
           <div class="match-card processed-match-card" data-processed="true" style="
@@ -1056,6 +1064,11 @@ function processMatchCardsInContent(content: string): string {
         `;
       }
     });
+    
+    console.log(`[서버] 경기 카드 처리 완료, 총 ${matchCount}개 처리됨`);
+    console.log('[서버] 처리 후 content:', result);
+    
+    return result;
   } catch (error) {
     console.error('[서버] 경기 카드 처리 중 오류:', error);
     return content; // 오류 시 원본 content 반환

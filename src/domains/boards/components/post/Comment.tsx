@@ -183,7 +183,8 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
         {/* 사용자 아이콘 */}
         <div className="w-6 h-6 relative rounded-full overflow-hidden flex-shrink-0">
           <UserIcon 
-            iconUrl={null}
+            iconUrl={comment.profiles?.icon_url || null}
+            level={comment.profiles?.level || 1}
             size={24}
             alt={comment.profiles?.nickname || '사용자'}
             className="object-cover"

@@ -1,7 +1,6 @@
 'use server';
 
 import { createClient } from '@/shared/api/supabaseServer';
-import { revalidatePath } from 'next/cache';
 import { CommentType } from '../types/post/comment';
 import { rewardUserActivity, getActivityTypeValues } from '@/shared/actions/activity-actions';
 
@@ -33,11 +32,26 @@ export async function createComment({
         user_id: user.id,
         content
       })
-      .select('*, profiles(nickname, icon_id)')
+      .select('*, profiles(nickname, icon_id, level)')
       .single();
       
     if (error) {
       return { success: false, error: error.message };
+    }
+    
+    // 새로 작성된 댓글에 아이콘 URL 정보 추가
+    const newComment = data as CommentType;
+    if (newComment.profiles?.icon_id) {
+      // 커스텀 아이콘 정보 조회
+      const { data: iconData } = await supabase
+        .from('shop_items')
+        .select('image_url')
+        .eq('id', newComment.profiles.icon_id)
+        .single();
+      
+      if (iconData?.image_url && newComment.profiles) {
+        newComment.profiles.icon_url = iconData.image_url;
+      }
     }
     
     // 3. 댓글 작성 보상 지급 (비동기로 처리하여 메인 로직에 영향 없도록)
@@ -50,10 +64,7 @@ export async function createComment({
       // 보상 지급 실패해도 댓글 작성은 성공으로 처리
     }
     
-    // 4. 경로 재검증
-    revalidatePath(`/boards/[slug]/[postNumber]`, 'page');
-    
-    return { success: true, comment: data as CommentType };
+    return { success: true, comment: newComment };
   } catch (error) {
     return { 
       success: false, 
@@ -116,7 +127,7 @@ export async function updateComment(commentId: string, content: string): Promise
         updated_at: new Date().toISOString()
       })
       .eq('id', commentId)
-      .select('*, profiles(nickname, icon_id)')
+      .select('*, profiles(nickname, icon_id, level)')
       .single();
     
     if (updateError) {
@@ -126,12 +137,24 @@ export async function updateComment(commentId: string, content: string): Promise
       };
     }
     
-    // 경로 재검증
-    revalidatePath(`/boards/[slug]/[postNumber]`, 'page');
+    // 수정된 댓글에 아이콘 URL 정보 추가
+    const updatedCommentWithIcon = updatedComment as CommentType;
+    if (updatedCommentWithIcon.profiles?.icon_id) {
+      // 커스텀 아이콘 정보 조회
+      const { data: iconData } = await supabase
+        .from('shop_items')
+        .select('image_url')
+        .eq('id', updatedCommentWithIcon.profiles.icon_id)
+        .single();
+      
+      if (iconData?.image_url && updatedCommentWithIcon.profiles) {
+        updatedCommentWithIcon.profiles.icon_url = iconData.image_url;
+      }
+    }
     
     return {
       success: true,
-      comment: updatedComment as CommentType
+      comment: updatedCommentWithIcon
     };
   } catch (error) {
     return {
@@ -181,9 +204,6 @@ export async function deleteComment(commentId: string): Promise<{ success: boole
       return { success: false, error: deleteError.message };
     }
     
-    // 5. 경로 재검증
-    revalidatePath(`/boards/[slug]/[postNumber]`, 'page');
-    
     return { success: true };
   } catch (error) {
     return { 
@@ -208,7 +228,8 @@ export async function getComments(postId: string): Promise<{ success: boolean, c
         profiles(
           id,
           nickname,
-          icon_id
+          icon_id,
+          level
         )
       `)
       .eq('post_id', postId)
@@ -224,6 +245,42 @@ export async function getComments(postId: string): Promise<{ success: boolean, c
     
     // 댓글 데이터를 CommentType으로 캐스팅
     const comments = (data || []) as CommentType[];
+    
+    // 아이콘 정보 추가 처리
+    if (comments.length > 0) {
+      // 커스텀 아이콘을 사용하는 사용자들의 icon_id 수집
+      const iconIds = comments
+        .map(comment => comment.profiles?.icon_id)
+        .filter(Boolean) as number[];
+      
+      if (iconIds.length > 0) {
+        // 아이콘 정보 조회
+        const { data: iconsData } = await supabase
+          .from('shop_items')
+          .select('id, image_url')
+          .in('id', iconIds);
+        
+        if (iconsData) {
+          // 아이콘 ID별 URL 맵 생성
+          const iconMap: Record<number, string> = {};
+          iconsData.forEach(icon => {
+            if (icon.id && icon.image_url) {
+              iconMap[icon.id] = icon.image_url;
+            }
+          });
+          
+          // 댓글에 아이콘 URL 추가
+          comments.forEach(comment => {
+            if (comment.profiles?.icon_id && iconMap[comment.profiles.icon_id]) {
+              // profiles 객체에 icon_url 추가
+              if (comment.profiles) {
+                comment.profiles.icon_url = iconMap[comment.profiles.icon_id];
+              }
+            }
+          });
+        }
+      }
+    }
     
     // 사용자 액션(좋아요/싫어요) 확인
     const { data: { user } } = await supabase.auth.getUser();
@@ -450,9 +507,6 @@ export async function likeComment(commentId: string): Promise<{
       }
     }
     
-    // 경로 재검증
-    revalidatePath(`/boards/[slug]/[postNumber]`, 'page');
-    
     return {
       success: true,
       likes: updatedComment.likes,
@@ -636,9 +690,6 @@ export async function dislikeComment(commentId: string): Promise<{
         error: `댓글 업데이트 오류: ${updateCommentError.message}`
       };
     }
-    
-    // 경로 재검증
-    revalidatePath(`/boards/[slug]/[postNumber]`, 'page');
     
     return {
       success: true,

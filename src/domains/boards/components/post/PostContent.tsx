@@ -69,10 +69,16 @@ export default function PostContent({ content }: PostContentProps) {
   const processContent = () => {
     if (!content) return '';
     
+    // 디버깅: 실제 content 내용 확인
+    console.log('PostContent - 원본 content:', content);
+    console.log('PostContent - content 타입:', typeof content);
+    
     // 이미 문자열인 경우 그대로 반환 (기존 HTML 내용)
     if (typeof content === 'string') {
       console.log('PostContent - 저장된 HTML 내용:', content);
       console.log('PostContent - match-card 포함 여부:', content.includes('match-card'));
+      console.log('PostContent - data-type="match-card" 포함 여부:', content.includes('data-type="match-card"'));
+      console.log('PostContent - processed-match-card 포함 여부:', content.includes('processed-match-card'));
       return content;
     }
     
@@ -185,31 +191,36 @@ export default function PostContent({ content }: PostContentProps) {
     if (!contentRef.current || !isMounted) return;
     
     const rootElement = contentRef.current;
-    console.log('PostContent processMatchCards - DOM 내용:', rootElement.innerHTML);
+    console.log('PostContent processMatchCards - DOM 내용 확인');
     
-    // 이미 서버에서 처리된 경기 카드가 있는지 확인
-    const alreadyProcessedCards = rootElement.querySelectorAll('.processed-match-card, [data-processed="true"]');
+    // 서버에서 이미 처리된 경기 카드가 있는지 확인
+    const alreadyProcessedCards = rootElement.querySelectorAll('.match-card, .processed-match-card, [data-processed="true"]');
     console.log('PostContent - 이미 처리된 경기 카드 수:', alreadyProcessedCards.length);
     
-    // 서버에서 이미 처리된 경기 카드가 있으면 클라이언트 처리 건너뛰기
+    // 서버에서 이미 처리된 경기 카드가 있으면 클라이언트 처리 완전히 건너뛰기
     if (alreadyProcessedCards.length > 0) {
-      console.log('PostContent - 서버에서 이미 처리된 경기 카드가 있어 클라이언트 처리 건너뛰기');
+      console.log('PostContent - 서버에서 이미 처리된 경기 카드가 있어 클라이언트 처리 완전히 건너뛰기');
+      
+      // 이미 처리된 카드들을 processedElementsRef에 추가하여 중복 처리 방지
+      alreadyProcessedCards.forEach(card => {
+        processedElementsRef.current.add(card);
+      });
+      
       return;
     }
     
     // data-type="match-card" 속성을 가진 요소 찾기 (서버에서 처리되지 않은 것만)
-    // 이미 처리된 요소는 제외하고, Set을 사용해 중복 처리 방지
     const matchCardDataElements = Array.from(
-      rootElement.querySelectorAll('[data-type="match-card"]:not(.processed-match-card):not([data-processed="true"])')
+      rootElement.querySelectorAll('[data-type="match-card"]:not(.processed-match-card):not([data-processed="true"]):not(.match-card)')
     ).filter(element => !processedElementsRef.current.has(element));
     
     console.log('PostContent - 새로 처리할 경기 카드 요소 수:', matchCardDataElements.length);
     
     if (matchCardDataElements.length === 0) {
       console.log('PostContent - 처리할 경기 카드 없음');
-      return;
-    }
-    
+          return;
+        }
+        
     console.log('PostContent - 클라이언트에서 경기 카드 처리 시작 (서버 처리 실패 시 백업)');
     
     // 각 경기 카드 요소 처리 (서버 처리 실패 시 백업용)
@@ -450,9 +461,10 @@ export default function PostContent({ content }: PostContentProps) {
               </a>
             `;
             
-            // 처리 완료 표시
-            cardElement.classList.add('match-card', 'processed-match-card');
+            // 처리 완료 표시 (삼중 마킹으로 강력하게 보호)
+            cardElement.classList.add('match-card', 'processed-match-card', 'client-processed');
             cardElement.setAttribute('data-processed', 'true');
+            cardElement.setAttribute('data-client-processed', 'true');
             
             console.log(`PostContent - 경기 카드 ${index + 1} 완전한 렌더링 완료`);
           } catch (parseError) {
@@ -480,8 +492,9 @@ export default function PostContent({ content }: PostContentProps) {
               </div>
             `;
             
-            cardElement.classList.add('match-card', 'processed-match-card');
+            cardElement.classList.add('match-card', 'processed-match-card', 'client-processed');
             cardElement.setAttribute('data-processed', 'true');
+            cardElement.setAttribute('data-client-processed', 'true');
           }
         } else {
           // data-match 속성이 없는 경우 기본 처리
@@ -506,8 +519,9 @@ export default function PostContent({ content }: PostContentProps) {
             </div>
           `;
           
-          cardElement.classList.add('match-card', 'processed-match-card');
+          cardElement.classList.add('match-card', 'processed-match-card', 'client-processed');
           cardElement.setAttribute('data-processed', 'true');
+          cardElement.setAttribute('data-client-processed', 'true');
         }
         
         console.log(`PostContent - 경기 카드 ${index + 1} 처리 완료`);
@@ -520,9 +534,13 @@ export default function PostContent({ content }: PostContentProps) {
   // 컴포넌트 마운트 상태 추적
   useEffect(() => {
     setIsMounted(true);
+    
+    // cleanup 함수에서 사용할 ref 값을 미리 복사
+    const processedElements = processedElementsRef.current;
+    
     return () => {
       setIsMounted(false);
-      processedElementsRef.current.clear();
+      processedElements.clear();
     };
   }, []);
 
@@ -533,10 +551,18 @@ export default function PostContent({ content }: PostContentProps) {
     // DOM이 완전히 렌더링된 후 처리하기 위해 약간의 지연
     const timeoutId = setTimeout(() => {
       processMatchCards();
+      
+      // 디버깅: DOM 내용 확인
+      if (contentRef.current) {
+        console.log('PostContent - DOM innerHTML:', contentRef.current.innerHTML);
+        console.log('PostContent - 모든 div 요소:', contentRef.current.querySelectorAll('div').length);
+        console.log('PostContent - match-card 클래스 요소:', contentRef.current.querySelectorAll('.match-card').length);
+        console.log('PostContent - data-type 속성 요소:', contentRef.current.querySelectorAll('[data-type]').length);
+      }
     }, 100);
     
     return () => clearTimeout(timeoutId);
-  }, [isMounted, processMatchCards]);
+  }, [isMounted, processMatchCards, content]);
 
   // 소셜 임베드 처리 useEffect (기존 코드 유지)
   useEffect(() => {
@@ -731,11 +757,11 @@ export default function PostContent({ content }: PostContentProps) {
           height: auto;
         }
       `}</style>
-      <div 
-        ref={contentRef}
-        className="prose prose-sm sm:prose-base lg:prose-lg max-w-none prose-headings:font-bold prose-img:rounded-lg prose-img:mx-auto p-4 sm:p-6"
-        dangerouslySetInnerHTML={{ __html: processContent() }}
-      />
+    <div 
+      ref={contentRef}
+      className="prose prose-sm sm:prose-base lg:prose-lg max-w-none prose-headings:font-bold prose-img:rounded-lg prose-img:mx-auto p-4 sm:p-6"
+      dangerouslySetInnerHTML={{ __html: processContent() }}
+    />
     </>
   );
 } 
