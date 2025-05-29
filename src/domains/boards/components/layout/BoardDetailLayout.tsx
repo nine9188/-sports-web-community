@@ -19,6 +19,7 @@ interface Post {
   board_slug: string;
   post_number: number;
   created_at: string;
+  formattedDate: string;
   views: number;
   likes: number;
   author_nickname: string;

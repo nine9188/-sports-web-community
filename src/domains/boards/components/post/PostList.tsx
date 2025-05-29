@@ -325,13 +325,128 @@ export default function PostList({
     if (!content) return { hasImage: false, hasVideo: false, hasYoutube: false, hasLink: false };
     
     try {
-      const hasImage = content.includes('<img') || content.includes('![');
-      const hasVideo = content.includes('<video') || content.includes('mp4');
-      const hasYoutube = content.includes('youtube.com') || content.includes('youtu.be');
-      const hasLink = content.includes('http://') || content.includes('https://');
+      let contentToCheck = content;
+      let hasSpecialContent = false;
+      
+      // 디버깅: 콘텐츠 타입 확인
+      const isJSON = content.startsWith('{') || content.startsWith('[');
+      
+      // JSON 형태의 콘텐츠인지 확인하고 파싱
+      if (isJSON) {
+        try {
+          const parsedContent = JSON.parse(content);
+          
+          // TipTap 형식인지 확인
+          if (parsedContent && typeof parsedContent === 'object') {
+            if (parsedContent.type === 'doc' && Array.isArray(parsedContent.content)) {
+              // TipTap 문서 형식 - 재귀적으로 모든 노드 검사
+              const extractTextFromTipTap = (nodes: unknown[]): string => {
+                let text = '';
+                for (const node of nodes) {
+                  if (typeof node === 'object' && node !== null) {
+                    const nodeObj = node as Record<string, unknown>;
+                    
+                    if (nodeObj.type === 'text' && typeof nodeObj.text === 'string') {
+                      text += nodeObj.text + ' ';
+                    } else if (nodeObj.type === 'image' && 
+                              typeof nodeObj.attrs === 'object' && 
+                              nodeObj.attrs !== null &&
+                              typeof (nodeObj.attrs as Record<string, unknown>).src === 'string') {
+                      const attrs = nodeObj.attrs as Record<string, unknown>;
+                      text += `<img src="${attrs.src}"> `;
+                      hasSpecialContent = true;
+                    } else if (nodeObj.type === 'matchCard') {
+                      // 매치카드 감지
+                      text += ' [매치카드] ';
+                      hasSpecialContent = true;
+                    } else if (Array.isArray(nodeObj.content)) {
+                      text += extractTextFromTipTap(nodeObj.content);
+                    }
+                    
+                    // 링크 마크 확인
+                    if (Array.isArray(nodeObj.marks)) {
+                      for (const mark of nodeObj.marks) {
+                        if (typeof mark === 'object' && mark !== null) {
+                          const markObj = mark as Record<string, unknown>;
+                          if (markObj.type === 'link' && 
+                              typeof markObj.attrs === 'object' && 
+                              markObj.attrs !== null &&
+                              typeof (markObj.attrs as Record<string, unknown>).href === 'string') {
+                            const attrs = markObj.attrs as Record<string, unknown>;
+                            text += ` ${attrs.href} `;
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+                return text;
+              };
+              
+              contentToCheck = extractTextFromTipTap(parsedContent.content);
+            } else {
+              // 다른 JSON 형식 - 문자열로 변환
+              contentToCheck = JSON.stringify(parsedContent);
+            }
+          }
+        } catch {
+          // JSON 파싱 실패 시 원본 문자열 사용
+          contentToCheck = content;
+        }
+      }
+      
+      // 소셜 임베드 및 특수 콘텐츠 확인
+      const hasSocialEmbed = contentToCheck.includes('data-type="social-embed"') ||
+                           contentToCheck.includes('twitter.com') ||
+                           contentToCheck.includes('instagram.com') ||
+                           contentToCheck.includes('youtube.com/embed');
+      
+      const hasMatchCard = contentToCheck.includes('data-type="match-card"') ||
+                          contentToCheck.includes('[매치카드]') ||
+                          contentToCheck.includes('match-card');
+      
+      // 이미지 확인 (다양한 형식)
+      const hasImage = contentToCheck.includes('<img') || 
+                      contentToCheck.includes('![') ||
+                      contentToCheck.includes('image') ||
+                      /\.(jpg|jpeg|png|gif|webp|svg|bmp|ico)/i.test(contentToCheck) ||
+                      hasSpecialContent;
+      
+      // 비디오 확인
+      const hasVideo = contentToCheck.includes('<video') || 
+                      contentToCheck.includes('mp4') ||
+                      contentToCheck.includes('webm') ||
+                      contentToCheck.includes('mov') ||
+                      /\.(mp4|webm|mov|avi|mkv|flv|wmv)/i.test(contentToCheck);
+      
+      // YouTube 확인 (더 정확한 패턴)
+      const hasYoutube = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)/i.test(contentToCheck) ||
+                        contentToCheck.includes('youtube') ||
+                        hasSocialEmbed;
+      
+      // 링크 확인 (http/https 링크)
+      const hasLink = /https?:\/\/[^\s<>"]+/i.test(contentToCheck) ||
+                     contentToCheck.includes('href=') ||
+                     hasSocialEmbed ||
+                     hasMatchCard;
+      
+      // 디버깅 로그 (개발 환경에서만)
+      if (process.env.NODE_ENV === 'development' && (hasImage || hasVideo || hasYoutube || hasLink)) {
+        console.log('PostList 콘텐츠 타입 감지:', {
+          isJSON,
+          hasImage,
+          hasVideo, 
+          hasYoutube,
+          hasLink,
+          hasSocialEmbed,
+          hasMatchCard,
+          contentPreview: contentToCheck.substring(0, 100)
+        });
+      }
       
       return { hasImage, hasVideo, hasYoutube, hasLink };
-    } catch {
+    } catch (error) {
+      console.warn('콘텐츠 타입 확인 중 오류:', error);
       return { hasImage: false, hasVideo: false, hasYoutube: false, hasLink: false };
     }
   }, []);
@@ -342,14 +457,40 @@ export default function PostList({
     
     const { hasImage, hasVideo, hasYoutube, hasLink } = checkContentType(post.content);
     
+    // 아이콘이 하나도 없으면 null 반환
+    if (!hasImage && !hasVideo && !hasYoutube && !hasLink && post.comment_count === 0) {
+      return null;
+    }
+    
     return (
       <div className="inline-flex items-center space-x-1 ml-1">
-        {hasImage && <ImageIcon className="h-3 w-3 text-gray-400" />}
-        {hasVideo && <VideoIcon className="h-3 w-3 text-gray-400" />}
-        {hasYoutube && <YoutubeIcon className="h-3 w-3 text-red-400" />}
-        {hasLink && <LinkIcon className="h-3 w-3 text-blue-400" />}
+        {hasImage && (
+          <div title="이미지 포함">
+            <ImageIcon className="h-3 w-3 text-green-500 flex-shrink-0" />
+          </div>
+        )}
+        {hasVideo && (
+          <div title="동영상 포함">
+            <VideoIcon className="h-3 w-3 text-purple-500 flex-shrink-0" />
+          </div>
+        )}
+        {hasYoutube && (
+          <div title="YouTube 동영상">
+            <YoutubeIcon className="h-3 w-3 text-red-500 flex-shrink-0" />
+          </div>
+        )}
+        {hasLink && (
+          <div title="링크 포함">
+            <LinkIcon className="h-3 w-3 text-blue-500 flex-shrink-0" />
+          </div>
+        )}
         {post.comment_count > 0 && (
-          <span className="text-xs text-gray-500 ml-0.5">[{post.comment_count}]</span>
+          <span 
+            className="text-xs text-orange-600 font-medium ml-0.5 flex-shrink-0"
+            title={`댓글 ${post.comment_count}개`}
+          >
+            [{post.comment_count}]
+          </span>
         )}
       </div>
     );

@@ -2,12 +2,14 @@
 
 import { createClient } from '@/shared/api/supabaseServer';
 import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
+import { formatDate } from '@/domains/boards/utils/post/postUtils';
 
 // 게시글 타입 정의
 export interface Post {
   id: string;
   title: string;
   created_at: string;
+  formattedDate: string;
   board_id: string;
   board_name: string;
   board_slug: string;
@@ -49,10 +51,12 @@ interface FetchPostsParams {
 
 // 안전한 fallback 게시물 데이터 생성 함수
 function createFallbackPost(index: number): Post {
+  const now = new Date().toISOString();
   return {
     id: `fallback-${index}`,
     title: '게시물을 불러오는 중입니다...',
-    created_at: new Date().toISOString(),
+    created_at: now,
+    formattedDate: formatDate(now),
     board_id: 'fallback',
     board_name: '로딩 중',
     board_slug: 'loading',
@@ -400,6 +404,7 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
         id: post.id,
         title: post.title,
         created_at: post.created_at || new Date().toISOString(),
+        formattedDate: formatDate(post.created_at || new Date().toISOString()),
         board_id: post.board_id || '',
         board_name: safeBoardInfo.name,
         board_slug: safeBoardInfo.slug,

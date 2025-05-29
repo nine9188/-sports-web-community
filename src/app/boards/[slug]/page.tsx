@@ -13,6 +13,7 @@ interface LayoutPost {
   board_slug: string;
   post_number: number;
   created_at: string;
+  formattedDate: string;
   views: number;
   likes: number;
   author_nickname: string;
@@ -39,6 +40,7 @@ function convertApiPostsToLayoutPosts(apiPosts: ApiPost[]): LayoutPost[] {
     board_slug: post.board_slug,
     post_number: post.post_number,
     created_at: post.created_at,
+    formattedDate: post.formattedDate,
     views: post.views || 0,
     likes: post.likes || 0,
     author_nickname: post.author_nickname || '익명',
