@@ -806,13 +806,13 @@ function processMatchCardsInContent(content: string): string {
   try {
     console.log('[서버] 경기 카드 처리 시작, 원본 content:', content);
     
-    // 더 유연한 정규식 - 자체 닫힘 태그와 일반 태그 모두 처리
-    const matchCardRegex = /<div[^>]*data-type="match-card"[^>]*data-match="([^"]*)"[^>]*(?:\/>|><\/div>)/g;
+    // 더 유연한 정규식 - 내용이 있는 div 태그 처리
+    const matchCardRegex = /<div[^>]*data-type="match-card"[^>]*data-match="([^"]*)"[^>]*>([\s\S]*?)<\/div>/g;
     
     let matchCount = 0;
     const result = content.replace(matchCardRegex, (match, encodedData) => {
       matchCount++;
-      console.log(`[서버] 경기 카드 ${matchCount} 발견:`, match);
+      console.log(`[서버] 경기 카드 ${matchCount} 발견:`, match.substring(0, 200) + '...');
       
       try {
         // URL 디코딩 후 JSON 파싱
@@ -856,179 +856,65 @@ function processMatchCardsInContent(content: string): string {
         }
         
         const processedHTML = `
-          <div class="match-card processed-match-card" data-processed="true" style="
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-            margin: 12px 0;
-            background: white;
-            width: 100%;
-            max-width: 100%;
-            display: block;
-          ">
-            <a href="/livescore/football/match/${actualMatchId}" style="display: block; text-decoration: none; color: inherit;">
+          <div class="match-card processed-match-card" data-processed="true">
+            <a href="/livescore/football/match/${actualMatchId}">
               <!-- 리그 헤더 -->
-              <div style="
-                padding: 12px;
-                background-color: #f9fafb;
-                border-bottom: 1px solid #e5e7eb;
-                display: flex;
-                align-items: center;
-                height: 40px;
-              ">
+              <div class="league-header">
                 <div style="display: flex; align-items: center;">
                   <img 
                     src="${leagueData.logo}" 
                     alt="${leagueData.name}" 
-                    style="
-                      width: 24px;
-                      height: 24px;
-                      object-fit: contain;
-                      margin-right: 8px;
-                      flex-shrink: 0;
-                    "
+                    class="league-logo"
                     onerror="this.onerror=null;this.src='/placeholder.png';"
                   />
-                  <span style="
-                    font-size: 14px;
-                    font-weight: 500;
-                    color: #4b5563;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                  ">${leagueData.name}</span>
+                  <span class="league-name">${leagueData.name}</span>
                 </div>
               </div>
               
               <!-- 경기 카드 메인 -->
-              <div style="
-                padding: 12px;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-              ">
+              <div class="match-main">
                 <!-- 홈팀 -->
-                <div style="
-                  display: flex;
-                  flex-direction: column;
-                  align-items: center;
-                  width: 40%;
-                ">
+                <div class="team-info">
                   <img 
                     src="${homeTeam.logo}" 
                     alt="${homeTeam.name}" 
-                    style="
-                      width: 48px;
-                      height: 48px;
-                      object-fit: contain;
-                      margin-bottom: 8px;
-                      flex-shrink: 0;
-                    "
+                    class="team-logo"
                     onerror="this.onerror=null;this.src='/placeholder.png';"
                   />
-                  <span style="
-                    font-size: 14px;
-                    font-weight: 500;
-                    text-align: center;
-                    line-height: 1.2;
-                    color: ${homeTeam.winner ? '#2563eb' : '#000'};
-                    display: -webkit-box;
-                    -webkit-line-clamp: 2;
-                    -webkit-box-orient: vertical;
-                    overflow: hidden;
-                  ">
+                  <span class="team-name${homeTeam.winner ? ' winner' : ''}">
                     ${homeTeam.name}
                   </span>
                 </div>
                 
                 <!-- 스코어 -->
-                <div style="
-                  text-align: center;
-                  flex-shrink: 0;
-                  width: 20%;
-                ">
-                  <div style="
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    margin-bottom: 8px;
-                  ">
-                    <span style="
-                      font-size: 24px;
-                      font-weight: bold;
-                      min-width: 24px;
-                      text-align: center;
-                    ">${homeScore}</span>
-                    <span style="
-                      color: #9ca3af;
-                      margin: 0 4px;
-                    ">-</span>
-                    <span style="
-                      font-size: 24px;
-                      font-weight: bold;
-                      min-width: 24px;
-                      text-align: center;
-                    ">${awayScore}</span>
+                <div class="score-area">
+                  <div class="score">
+                    <span class="score-number">${homeScore}</span>
+                    <span class="score-separator">-</span>
+                    <span class="score-number">${awayScore}</span>
                   </div>
-                  <div style="
-                    font-size: 12px;
-                    ${statusClass}
-                  ">
+                  <div class="match-status${statusClass.includes('color: #059669') ? ' live' : ''}">
                     ${statusText}
                   </div>
                 </div>
                 
                 <!-- 원정팀 -->
-                <div style="
-                  display: flex;
-                  flex-direction: column;
-                  align-items: center;
-                  width: 40%;
-                ">
+                <div class="team-info">
                   <img 
                     src="${awayTeam.logo}" 
                     alt="${awayTeam.name}" 
-                    style="
-                      width: 48px;
-                      height: 48px;
-                      object-fit: contain;
-                      margin-bottom: 8px;
-                      flex-shrink: 0;
-                    "
+                    class="team-logo"
                     onerror="this.onerror=null;this.src='/placeholder.png';"
                   />
-                  <span style="
-                    font-size: 14px;
-                    font-weight: 500;
-                    text-align: center;
-                    line-height: 1.2;
-                    color: ${awayTeam.winner ? '#2563eb' : '#000'};
-                    display: -webkit-box;
-                    -webkit-line-clamp: 2;
-                    -webkit-box-orient: vertical;
-                    overflow: hidden;
-                  ">
+                  <span class="team-name${awayTeam.winner ? ' winner' : ''}">
                     ${awayTeam.name}
                   </span>
                 </div>
               </div>
               
               <!-- 푸터 -->
-              <div style="
-                padding: 8px 12px;
-                background-color: #f9fafb;
-                border-top: 1px solid #e5e7eb;
-                text-align: center;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-              ">
-                <span style="
-                  font-size: 12px;
-                  color: #2563eb;
-                  text-decoration: underline;
-                ">
+              <div class="match-footer">
+                <span class="footer-link">
                   매치 상세 정보
                 </span>
               </div>

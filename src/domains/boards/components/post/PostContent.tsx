@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { MatchData } from '@/domains/livescore/actions/footballApi';
 
 // 글로벌 타입 확장
 declare global {
@@ -63,22 +62,18 @@ interface PostContentProps {
 export default function PostContent({ content }: PostContentProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const [isMounted, setIsMounted] = useState(false);
-  const processedElementsRef = useRef<Set<Element>>(new Set());
   
   // content가 객체인 경우 HTML로 변환
   const processContent = () => {
     if (!content) return '';
     
-    // 디버깅: 실제 content 내용 확인
-    console.log('PostContent - 원본 content:', content);
-    console.log('PostContent - content 타입:', typeof content);
-    
     // 이미 문자열인 경우 그대로 반환 (기존 HTML 내용)
     if (typeof content === 'string') {
-      console.log('PostContent - 저장된 HTML 내용:', content);
-      console.log('PostContent - match-card 포함 여부:', content.includes('match-card'));
-      console.log('PostContent - data-type="match-card" 포함 여부:', content.includes('data-type="match-card"'));
-      console.log('PostContent - processed-match-card 포함 여부:', content.includes('processed-match-card'));
+      console.log('PostContent - HTML 내용 반환:', {
+        hasMatchCard: content.includes('match-card'),
+        hasProcessedMatchCard: content.includes('processed-match-card'),
+        contentLength: content.length
+      });
       return content;
     }
     
@@ -186,65 +181,29 @@ export default function PostContent({ content }: PostContentProps) {
     return '';
   };
   
-  // 경기 카드 처리 함수를 useCallback으로 메모이제이션
-  const processMatchCards = useCallback(() => {
+  // 소셜 임베드와 매치카드 백업 처리 함수
+  const processEmbeds = useCallback(() => {
     if (!contentRef.current || !isMounted) return;
-    
     const rootElement = contentRef.current;
-    console.log('PostContent processMatchCards - DOM 내용 확인');
     
-    // 서버에서 이미 처리된 경기 카드가 있는지 확인
-    const alreadyProcessedCards = rootElement.querySelectorAll('.match-card, .processed-match-card, [data-processed="true"]');
-    console.log('PostContent - 이미 처리된 경기 카드 수:', alreadyProcessedCards.length);
+    // 1. 서버에서 처리되지 않은 매치카드 백업 처리
+    const unprocessedMatchCards = rootElement.querySelectorAll('[data-type="match-card"]:not(.processed-match-card)');
+    console.log('PostContent - 미처리 매치카드 수:', unprocessedMatchCards.length);
     
-    // 서버에서 이미 처리된 경기 카드가 있으면 클라이언트 처리 완전히 건너뛰기
-    if (alreadyProcessedCards.length > 0) {
-      console.log('PostContent - 서버에서 이미 처리된 경기 카드가 있어 클라이언트 처리 완전히 건너뛰기');
+    if (unprocessedMatchCards.length > 0) {
+      console.log('PostContent - 서버 처리 실패, 클라이언트에서 백업 처리 시작');
       
-      // 이미 처리된 카드들을 processedElementsRef에 추가하여 중복 처리 방지
-      alreadyProcessedCards.forEach(card => {
-        processedElementsRef.current.add(card);
-      });
-      
-      return;
-    }
-    
-    // data-type="match-card" 속성을 가진 요소 찾기 (서버에서 처리되지 않은 것만)
-    const matchCardDataElements = Array.from(
-      rootElement.querySelectorAll('[data-type="match-card"]:not(.processed-match-card):not([data-processed="true"]):not(.match-card)')
-    ).filter(element => !processedElementsRef.current.has(element));
-    
-    console.log('PostContent - 새로 처리할 경기 카드 요소 수:', matchCardDataElements.length);
-    
-    if (matchCardDataElements.length === 0) {
-      console.log('PostContent - 처리할 경기 카드 없음');
-          return;
-        }
-        
-    console.log('PostContent - 클라이언트에서 경기 카드 처리 시작 (서버 처리 실패 시 백업)');
-    
-    // 각 경기 카드 요소 처리 (서버 처리 실패 시 백업용)
-    matchCardDataElements.forEach((element, index) => {
-      try {
-        console.log(`PostContent - 경기 카드 데이터 ${index + 1} 처리 시작`);
-        
-        // 이미 처리된 요소로 마킹
-        processedElementsRef.current.add(element);
-        
-        // data-match 속성에서 경기 데이터 추출
-        const matchDataString = element.getAttribute('data-match');
-        const matchId = element.getAttribute('data-match-id');
-        
-        if (matchDataString) {
-          try {
-            // URL 디코딩 후 JSON 파싱
+      unprocessedMatchCards.forEach((element, index) => {
+        try {
+          const matchDataString = element.getAttribute('data-match');
+          const matchId = element.getAttribute('data-match-id');
+          
+          if (matchDataString) {
             const decodedData = decodeURIComponent(matchDataString);
-            const matchData: MatchData = JSON.parse(decodedData);
+            const matchData = JSON.parse(decodedData);
             
-            console.log(`PostContent - 경기 데이터 파싱 성공:`, matchData);
-            
-            // 경기 카드 내용 직접 생성
-            const { teams, goals, league, status } = matchData;
+            // 간단한 매치카드 HTML 생성
+            const { teams, goals, league } = matchData;
             const homeTeam = teams?.home || { name: '홈팀', logo: '/placeholder.png' };
             const awayTeam = teams?.away || { name: '원정팀', logo: '/placeholder.png' };
             const leagueData = league || { name: '알 수 없는 리그', logo: '/placeholder.png' };
@@ -252,324 +211,70 @@ export default function PostContent({ content }: PostContentProps) {
             const awayScore = typeof goals?.away === 'number' ? goals.away : '-';
             const actualMatchId = matchData.id || matchId || 'unknown';
             
-            // 경기 상태 텍스트 설정
-            let statusText = '경기 결과';
-            let statusClass = '';
-            
-            if (status) {
-              const statusCode = status.code || '';
-              
-              if (statusCode === 'FT') {
-                statusText = '경기 종료';
-              } else if (statusCode === 'NS') {
-                statusText = '경기 예정';
-              } else if (['1H', '2H', 'HT', 'LIVE'].includes(statusCode)) {
-                if (statusCode === '1H') {
-                  statusText = `전반전 진행 중 ${status.elapsed ? `(${status.elapsed}분)` : ''}`;
-                } else if (statusCode === '2H') {
-                  statusText = `후반전 진행 중 ${status.elapsed ? `(${status.elapsed}분)` : ''}`;
-                } else if (statusCode === 'HT') {
-                  statusText = '하프타임';
-                } else {
-                  statusText = `진행 중 ${status.elapsed ? `(${status.elapsed}분)` : ''}`;
-                }
-                statusClass = 'color: #059669; font-weight: 500;';
-              }
-            }
-            
-            // 기존 요소를 경기 카드로 변환
             const cardElement = element as HTMLElement;
-            
-            // 스타일 적용
-            cardElement.style.border = '1px solid #e5e7eb';
-            cardElement.style.borderRadius = '8px';
-            cardElement.style.overflow = 'hidden';
-            cardElement.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1)';
-            cardElement.style.margin = '12px 0';
-            cardElement.style.background = 'white';
-            cardElement.style.width = '100%';
-            cardElement.style.maxWidth = '100%';
-            cardElement.style.display = 'block';
-            
-            // 경기 카드 HTML 내용 설정
             cardElement.innerHTML = `
-              <a href="/livescore/football/match/${actualMatchId}" style="display: block; text-decoration: none; color: inherit;">
-                <!-- 리그 헤더 -->
-                <div style="
-                  padding: 12px;
-                  background-color: #f9fafb;
-                  border-bottom: 1px solid #e5e7eb;
-                  display: flex;
-                  align-items: center;
-                  height: 40px;
-                ">
+              <a href="/livescore/football/match/${actualMatchId}">
+                <div class="league-header">
                   <div style="display: flex; align-items: center;">
                     <img 
                       src="${leagueData.logo}" 
                       alt="${leagueData.name}" 
-                      style="
-                        width: 24px;
-                        height: 24px;
-                        object-fit: contain;
-                        margin-right: 8px;
-                        flex-shrink: 0;
-                      "
+                      class="league-logo"
                       onerror="this.onerror=null;this.src='/placeholder.png';"
                     />
-                    <span style="
-                      font-size: 14px;
-                      font-weight: 500;
-                      color: #4b5563;
-                      white-space: nowrap;
-                      overflow: hidden;
-                      text-overflow: ellipsis;
-                    ">${leagueData.name}</span>
+                    <span class="league-name">${leagueData.name}</span>
                   </div>
                 </div>
                 
-                <!-- 경기 카드 메인 -->
-                <div style="
-                  padding: 12px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: space-between;
-                ">
-                  <!-- 홈팀 -->
-                  <div style="
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    width: 40%;
-                  ">
+                <div class="match-main">
+                  <div class="team-info">
                     <img 
                       src="${homeTeam.logo}" 
                       alt="${homeTeam.name}" 
-                      style="
-                        width: 48px;
-                        height: 48px;
-                        object-fit: contain;
-                        margin-bottom: 8px;
-                        flex-shrink: 0;
-                      "
+                      class="team-logo"
                       onerror="this.onerror=null;this.src='/placeholder.png';"
                     />
-                    <span style="
-                      font-size: 14px;
-                      font-weight: 500;
-                      text-align: center;
-                      line-height: 1.2;
-                      color: ${homeTeam.winner ? '#2563eb' : '#000'};
-                      display: -webkit-box;
-                      -webkit-line-clamp: 2;
-                      -webkit-box-orient: vertical;
-                      overflow: hidden;
-                    ">
-                      ${homeTeam.name}
-                    </span>
+                    <span class="team-name">${homeTeam.name}</span>
                   </div>
                   
-                  <!-- 스코어 -->
-                  <div style="
-                    text-align: center;
-                    flex-shrink: 0;
-                    width: 20%;
-                  ">
-                    <div style="
-                      display: flex;
-                      align-items: center;
-                      justify-content: center;
-                      margin-bottom: 8px;
-                    ">
-                      <span style="
-                        font-size: 24px;
-                        font-weight: bold;
-                        min-width: 24px;
-                        text-align: center;
-                      ">${homeScore}</span>
-                      <span style="
-                        color: #9ca3af;
-                        margin: 0 4px;
-                      ">-</span>
-                      <span style="
-                        font-size: 24px;
-                        font-weight: bold;
-                        min-width: 24px;
-                        text-align: center;
-                      ">${awayScore}</span>
+                  <div class="score-area">
+                    <div class="score">
+                      <span class="score-number">${homeScore}</span>
+                      <span class="score-separator">-</span>
+                      <span class="score-number">${awayScore}</span>
                     </div>
-                    <div style="
-                      font-size: 12px;
-                      ${statusClass}
-                    ">
-                      ${statusText}
-                    </div>
+                    <div class="match-status">경기 결과</div>
                   </div>
                   
-                  <!-- 원정팀 -->
-                  <div style="
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    width: 40%;
-                  ">
+                  <div class="team-info">
                     <img 
                       src="${awayTeam.logo}" 
                       alt="${awayTeam.name}" 
-                      style="
-                        width: 48px;
-                        height: 48px;
-                        object-fit: contain;
-                        margin-bottom: 8px;
-                        flex-shrink: 0;
-                      "
+                      class="team-logo"
                       onerror="this.onerror=null;this.src='/placeholder.png';"
                     />
-                    <span style="
-                      font-size: 14px;
-                      font-weight: 500;
-                      text-align: center;
-                      line-height: 1.2;
-                      color: ${awayTeam.winner ? '#2563eb' : '#000'};
-                      display: -webkit-box;
-                      -webkit-line-clamp: 2;
-                      -webkit-box-orient: vertical;
-                      overflow: hidden;
-                    ">
-                      ${awayTeam.name}
-                    </span>
+                    <span class="team-name">${awayTeam.name}</span>
                   </div>
                 </div>
                 
-                <!-- 푸터 -->
-                <div style="
-                  padding: 8px 12px;
-                  background-color: #f9fafb;
-                  border-top: 1px solid #e5e7eb;
-                  text-align: center;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                ">
-                  <span style="
-                    font-size: 12px;
-                    color: #2563eb;
-                    text-decoration: underline;
-                  ">
-                    매치 상세 정보
-                  </span>
+                <div class="match-footer">
+                  <span class="footer-link">매치 상세 정보</span>
                 </div>
               </a>
             `;
             
-            // 처리 완료 표시 (삼중 마킹으로 강력하게 보호)
-            cardElement.classList.add('match-card', 'processed-match-card', 'client-processed');
+            cardElement.classList.add('match-card', 'processed-match-card');
             cardElement.setAttribute('data-processed', 'true');
-            cardElement.setAttribute('data-client-processed', 'true');
             
-            console.log(`PostContent - 경기 카드 ${index + 1} 완전한 렌더링 완료`);
-          } catch (parseError) {
-            console.error(`경기 데이터 파싱 오류:`, parseError);
-            
-            // 파싱 실패 시 기본 스타일 적용
-            const cardElement = element as HTMLElement;
-            cardElement.style.border = '1px solid #e5e7eb';
-            cardElement.style.borderRadius = '8px';
-            cardElement.style.overflow = 'hidden';
-            cardElement.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1)';
-            cardElement.style.margin = '12px 0';
-            cardElement.style.background = 'white';
-            cardElement.style.width = '100%';
-            cardElement.style.maxWidth = '100%';
-            cardElement.style.padding = '12px';
-            cardElement.style.textAlign = 'center';
-            
-            cardElement.innerHTML = `
-              <div style="color: #ef4444; font-weight: 500;">
-                ⚠️ 경기 카드 오류
-              </div>
-              <div style="margin-top: 8px; font-size: 14px; color: #666;">
-                경기 정보를 불러올 수 없습니다.
-              </div>
-            `;
-            
-            cardElement.classList.add('match-card', 'processed-match-card', 'client-processed');
-            cardElement.setAttribute('data-processed', 'true');
-            cardElement.setAttribute('data-client-processed', 'true');
+            console.log(`PostContent - 백업 매치카드 ${index + 1} 처리 완료`);
           }
-        } else {
-          // data-match 속성이 없는 경우 기본 처리
-          const cardElement = element as HTMLElement;
-          cardElement.style.border = '1px solid #e5e7eb';
-          cardElement.style.borderRadius = '8px';
-          cardElement.style.overflow = 'hidden';
-          cardElement.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1)';
-          cardElement.style.margin = '12px 0';
-          cardElement.style.background = 'white';
-          cardElement.style.width = '100%';
-          cardElement.style.maxWidth = '100%';
-          cardElement.style.padding = '12px';
-          cardElement.style.textAlign = 'center';
-          
-          cardElement.innerHTML = `
-            <div style="color: #2563eb; font-weight: 500;">
-              ⚽ 경기 카드
-            </div>
-            <div style="margin-top: 8px; font-size: 14px; color: #666;">
-              경기 정보를 불러오는 중...
-            </div>
-          `;
-          
-          cardElement.classList.add('match-card', 'processed-match-card', 'client-processed');
-          cardElement.setAttribute('data-processed', 'true');
-          cardElement.setAttribute('data-client-processed', 'true');
+        } catch (error) {
+          console.error(`PostContent - 백업 매치카드 ${index + 1} 처리 오류:`, error);
         }
-        
-        console.log(`PostContent - 경기 카드 ${index + 1} 처리 완료`);
-      } catch (error) {
-        console.error(`경기 카드 ${index + 1} 처리 중 오류:`, error);
-      }
-    });
-  }, [isMounted]);
-
-  // 컴포넌트 마운트 상태 추적
-  useEffect(() => {
-    setIsMounted(true);
+      });
+    }
     
-    // cleanup 함수에서 사용할 ref 값을 미리 복사
-    const processedElements = processedElementsRef.current;
-    
-    return () => {
-      setIsMounted(false);
-      processedElements.clear();
-    };
-  }, []);
-
-  // 경기 카드 처리 useEffect
-  useEffect(() => {
-    if (!isMounted) return;
-    
-    // DOM이 완전히 렌더링된 후 처리하기 위해 약간의 지연
-    const timeoutId = setTimeout(() => {
-      processMatchCards();
-      
-      // 디버깅: DOM 내용 확인
-      if (contentRef.current) {
-        console.log('PostContent - DOM innerHTML:', contentRef.current.innerHTML);
-        console.log('PostContent - 모든 div 요소:', contentRef.current.querySelectorAll('div').length);
-        console.log('PostContent - match-card 클래스 요소:', contentRef.current.querySelectorAll('.match-card').length);
-        console.log('PostContent - data-type 속성 요소:', contentRef.current.querySelectorAll('[data-type]').length);
-      }
-    }, 100);
-    
-    return () => clearTimeout(timeoutId);
-  }, [isMounted, processMatchCards, content]);
-
-  // 소셜 임베드 처리 useEffect (기존 코드 유지)
-  useEffect(() => {
-    if (!contentRef.current || !isMounted) return;
-    const rootElement = contentRef.current;
-    
-    // 소셜 임베드 요소 처리
+    // 2. 소셜 임베드 요소 처리
     const socialEmbedElements = rootElement.querySelectorAll('div[data-type="social-embed"]');
     
     socialEmbedElements.forEach((element) => {
@@ -584,7 +289,7 @@ export default function PostContent({ content }: PostContentProps) {
           return;
         }
         
-        // 플랫폼별 처리 (기존 코드와 동일)
+        // 플랫폼별 처리
         if (platform === 'youtube') {
           const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
           const match = url.match(youtubeRegex);
@@ -712,12 +417,42 @@ export default function PostContent({ content }: PostContentProps) {
       }
     });
   }, [isMounted]);
+
+  // 컴포넌트 마운트 상태 추적
+  useEffect(() => {
+    setIsMounted(true);
+    return () => {
+      setIsMounted(false);
+    };
+  }, []);
+
+  // 소셜 임베드와 매치카드 백업 처리
+  useEffect(() => {
+    if (!isMounted) return;
+    
+    const timeoutId = setTimeout(() => {
+      processEmbeds();
+      
+      // 디버깅: 매치카드 상태 확인
+      if (contentRef.current) {
+        const matchCards = contentRef.current.querySelectorAll('.match-card, .processed-match-card, [data-type="match-card"]');
+        console.log('PostContent - 매치카드 상태:', {
+          총개수: matchCards.length,
+          처리된카드: contentRef.current.querySelectorAll('.processed-match-card').length,
+          미처리카드: contentRef.current.querySelectorAll('[data-type="match-card"]:not(.processed-match-card)').length
+        });
+      }
+    }, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, [isMounted, processEmbeds, content]);
   
   return (
     <>
       <style jsx>{`
-        /* 경기 카드 스타일 */
-        :global(.match-card) {
+        /* 경기 카드 기본 스타일 */
+        :global(.match-card),
+        :global(.processed-match-card) {
           border: 1px solid #e5e7eb !important;
           border-radius: 8px !important;
           overflow: hidden !important;
@@ -726,16 +461,170 @@ export default function PostContent({ content }: PostContentProps) {
           background: white !important;
           width: 100% !important;
           max-width: 100% !important;
+          display: block !important;
         }
         
-        :global(.match-card img) {
+        /* 경기 카드 링크 스타일 */
+        :global(.match-card a),
+        :global(.processed-match-card a) {
+          display: block !important;
+          text-decoration: none !important;
+          color: inherit !important;
+        }
+        
+        /* 경기 카드 이미지 스타일 */
+        :global(.match-card img),
+        :global(.processed-match-card img) {
           object-fit: contain !important;
+          flex-shrink: 0 !important;
+          display: block !important;
+        }
+        
+        /* 리그 헤더 스타일 */
+        :global(.match-card .league-header),
+        :global(.processed-match-card .league-header) {
+          padding: 12px !important;
+          background-color: #f9fafb !important;
+          border-bottom: 1px solid #e5e7eb !important;
+          display: flex !important;
+          align-items: center !important;
+          height: 40px !important;
+        }
+        
+        /* 리그 로고 스타일 */
+        :global(.match-card .league-logo),
+        :global(.processed-match-card .league-logo) {
+          width: 24px !important;
+          height: 24px !important;
+          object-fit: contain !important;
+          margin-right: 8px !important;
           flex-shrink: 0 !important;
         }
         
-        /* 경기 카드 내부 요소들 */
-        :global(.match-card > div) {
-          width: 100% !important;
+        /* 리그 이름 스타일 */
+        :global(.match-card .league-name),
+        :global(.processed-match-card .league-name) {
+          font-size: 14px !important;
+          font-weight: 500 !important;
+          color: #4b5563 !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+        }
+        
+        /* 메인 경기 정보 스타일 */
+        :global(.match-card .match-main),
+        :global(.processed-match-card .match-main) {
+          padding: 12px !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+        }
+        
+        /* 팀 정보 스타일 */
+        :global(.match-card .team-info),
+        :global(.processed-match-card .team-info) {
+          display: flex !important;
+          flex-direction: column !important;
+          align-items: center !important;
+          width: 40% !important;
+        }
+        
+        /* 팀 로고 스타일 */
+        :global(.match-card .team-logo),
+        :global(.processed-match-card .team-logo) {
+          width: 48px !important;
+          height: 48px !important;
+          object-fit: contain !important;
+          margin-bottom: 8px !important;
+          flex-shrink: 0 !important;
+        }
+        
+        /* 팀 이름 스타일 */
+        :global(.match-card .team-name),
+        :global(.processed-match-card .team-name) {
+          font-size: 14px !important;
+          font-weight: 500 !important;
+          text-align: center !important;
+          line-height: 1.2 !important;
+          color: #000 !important;
+          display: -webkit-box !important;
+          -webkit-line-clamp: 2 !important;
+          -webkit-box-orient: vertical !important;
+          overflow: hidden !important;
+        }
+        
+        /* 승리 팀 이름 스타일 */
+        :global(.match-card .team-name.winner),
+        :global(.processed-match-card .team-name.winner) {
+          color: #2563eb !important;
+        }
+        
+        /* 스코어 영역 스타일 */
+        :global(.match-card .score-area),
+        :global(.processed-match-card .score-area) {
+          text-align: center !important;
+          flex-shrink: 0 !important;
+          width: 20% !important;
+        }
+        
+        /* 스코어 스타일 */
+        :global(.match-card .score),
+        :global(.processed-match-card .score) {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          margin-bottom: 8px !important;
+        }
+        
+        /* 스코어 숫자 스타일 */
+        :global(.match-card .score-number),
+        :global(.processed-match-card .score-number) {
+          font-size: 24px !important;
+          font-weight: bold !important;
+          min-width: 24px !important;
+          text-align: center !important;
+        }
+        
+        /* 스코어 구분자 스타일 */
+        :global(.match-card .score-separator),
+        :global(.processed-match-card .score-separator) {
+          color: #9ca3af !important;
+          margin: 0 4px !important;
+        }
+        
+        /* 경기 상태 스타일 */
+        :global(.match-card .match-status),
+        :global(.processed-match-card .match-status) {
+          font-size: 12px !important;
+          color: #6b7280 !important;
+        }
+        
+        /* 진행 중 경기 상태 스타일 */
+        :global(.match-card .match-status.live),
+        :global(.processed-match-card .match-status.live) {
+          color: #059669 !important;
+          font-weight: 500 !important;
+        }
+        
+        /* 푸터 스타일 */
+        :global(.match-card .match-footer),
+        :global(.processed-match-card .match-footer) {
+          padding: 8px 12px !important;
+          background-color: #f9fafb !important;
+          border-top: 1px solid #e5e7eb !important;
+          text-align: center !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+        }
+        
+        /* 푸터 링크 스타일 */
+        :global(.match-card .footer-link),
+        :global(.processed-match-card .footer-link) {
+          font-size: 12px !important;
+          color: #2563eb !important;
+          text-decoration: underline !important;
         }
         
         /* 반응형 비디오 컨테이너 */
@@ -755,6 +644,27 @@ export default function PostContent({ content }: PostContentProps) {
           width: 100%;
           max-width: 640px;
           height: auto;
+        }
+        
+        /* RSS 콘텐츠 스타일 */
+        :global(.rss-content) {
+          line-height: 1.6;
+        }
+        
+        :global(.rss-content img) {
+          max-width: 100%;
+          height: auto;
+          border-radius: 8px;
+          margin: 16px 0;
+        }
+        
+        /* 일반 이미지 스타일 */
+        :global(.prose img) {
+          max-width: 100% !important;
+          height: auto !important;
+          border-radius: 8px !important;
+          margin: 16px auto !important;
+          display: block !important;
         }
       `}</style>
     <div 
