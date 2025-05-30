@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { PlayerStats, fetchCachedMultiplePlayerStats } from '@/domains/livescore/actions/match/playerStats';
 import { TeamLineup } from '@/domains/livescore/types/match';
 
@@ -68,15 +68,19 @@ export default function usePlayerStats(
   );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  // 데이터 로드 여부를 추적하는 ref
-  const dataLoadedRef = useRef<boolean>(!!initialStats && Object.keys(initialStats).length > 0);
 
   // 선수 통계 데이터 로드
   useEffect(() => {
     const loadPlayersStats = async () => {
-      // 이미 통계 데이터가 로드되었으면 스킵
-      if (dataLoadedRef.current || !lineups || !matchId) return;
+      // 라인업이나 매치 ID가 없으면 스킵
+      if (!lineups || !matchId) return;
+      
+      // 이미 충분한 데이터가 있으면 스킵
+      const playerIds = extractPlayerIds(lineups.home, lineups.away);
+      const existingStatsCount = Object.keys(playersStatsData || {}).length;
+      if (existingStatsCount >= playerIds.length && playerIds.length > 0) {
+        return;
+      }
       
       // 캐시 키 생성 (경기 ID 기반)
       const cacheKey = `match-${matchId}-players-stats`;
@@ -88,7 +92,6 @@ export default function usePlayerStats(
         if (cachedData) {
           const parsedData = JSON.parse(cachedData);
           setPlayersStatsData(parsedData);
-          dataLoadedRef.current = true;
           return;
         }
       } catch (error) {
@@ -97,15 +100,7 @@ export default function usePlayerStats(
       }
       
       // 선수 ID 추출
-      const playerIds = extractPlayerIds(lineups.home, lineups.away);
       if (playerIds.length === 0) return;
-
-      // 이미 충분한 통계 데이터가 있는지 확인
-      const existingStatsCount = Object.keys(playersStatsData || {}).length;
-      if (existingStatsCount >= playerIds.length) {
-        dataLoadedRef.current = true;
-        return;
-      }
       
       setIsLoading(true);
       setError(null);
@@ -117,7 +112,6 @@ export default function usePlayerStats(
         );
         
         if (missingPlayerIds.length === 0) {
-          dataLoadedRef.current = true;
           setIsLoading(false);
           return;
         }
@@ -131,7 +125,6 @@ export default function usePlayerStats(
         };
         
         setPlayersStatsData(mergedStats);
-        dataLoadedRef.current = true;
         
         // 세션 스토리지에 데이터 캐싱
         try {

@@ -62,9 +62,10 @@ interface TeamData {
 interface FormationProps {
   homeTeamData: TeamData;
   awayTeamData: TeamData;
+  forceReload?: number;
 }
 
-export default function Formation({ homeTeamData, awayTeamData }: FormationProps) {
+export default function Formation({ homeTeamData, awayTeamData, forceReload = 0 }: FormationProps) {
   // 모바일 여부 확인 (768px 이하면 모바일로 간주)
   const isMobile = useMediaQuery('(max-width: 768px)');
   
@@ -118,6 +119,7 @@ export default function Formation({ homeTeamData, awayTeamData }: FormationProps
         <Player
           homeTeamData={processedHomeTeam}
           awayTeamData={processedAwayTeam}
+          forceReload={forceReload}
         />
       </Field>
     </div>

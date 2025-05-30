@@ -13,6 +13,7 @@ export interface FormattedPost {
   views: number;
   likes: number;
   commentCount: number;
+  content?: string;
   boardId: string;
   boardName: string;
   boardSlug: string;

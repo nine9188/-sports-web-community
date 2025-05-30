@@ -129,6 +129,7 @@ export function formatPosts(
       views: post.views || 0,
       likes: post.likes || 0,
       commentCount: commentCounts[post.id] || 0,
+      content: typeof post.content === 'string' ? post.content : JSON.stringify(post.content || ''),
       boardId: boardId,
       boardName: boardNameMap[boardId] || '알 수 없는 게시판',
       boardSlug: boardData?.slug || boardId,

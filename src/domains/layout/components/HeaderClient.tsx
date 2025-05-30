@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faSignOutAlt, faCog, faChevronDown, faBars } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faSignOutAlt, faCog, faChevronDown, faBars, faFutbol } from '@fortawesome/free-solid-svg-icons';
 import { ChevronDown, ShoppingBag, X, Search } from 'lucide-react';
 import { toast } from 'react-toastify';
 import BoardNavigationClient from './BoardNavigationClient';
@@ -14,6 +14,7 @@ import UserIcon from '@/shared/components/UserIcon';
 import { Board } from '../types/board';
 import ReactDOM from 'react-dom';
 import { useRouter } from 'next/navigation';
+import LiveScoreModal from './LiveScoreModal';
 
 type HeaderClientProps = {
   onProfileClick: () => void;
@@ -241,6 +242,7 @@ export default function HeaderClient({
 }: HeaderClientProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLiveScoreOpen, setIsLiveScoreOpen] = useState(false);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const { user, logoutUser } = useAuth();
   const { iconUrl, iconName, refreshUserIcon } = useIcon();
@@ -330,6 +332,11 @@ export default function HeaderClient({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // 라이브스코어 모달 토글
+  const toggleLiveScore = useCallback(() => {
+    setIsLiveScoreOpen(!isLiveScoreOpen);
+  }, [isLiveScoreOpen]);
 
   // 인증 상태에 따른 렌더링 결정
   const renderAuthState = useMemo(() => {
@@ -425,9 +432,19 @@ export default function HeaderClient({
       )}
       <div className="container mx-auto relative z-[999]">
         <div className="flex h-16 items-center px-4">
-          <Link href="/" className="flex items-center space-x-2">
-            <span className="font-bold text-2xl text-primary">SPORTS</span>
-          </Link>
+          <div className="flex items-center space-x-2">
+            <Link href="/" className="flex items-center space-x-2">
+              <span className="font-bold text-2xl text-primary">SPORTS</span>
+            </Link>
+            {/* 라이브스코어 버튼 - 로고 옆으로 이동 */}
+            <button 
+              onClick={toggleLiveScore}
+              className="md:hidden flex items-center justify-center w-9 h-9 rounded-full active:bg-gray-200 transition-colors duration-150"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
+            >
+              <FontAwesomeIcon icon={faFutbol} className="h-4 w-4 text-green-600" />
+            </button>
+          </div>
           <div className="flex flex-1 items-center justify-end space-x-4">
             <div className="flex items-center space-x-2">
               <div className="min-w-[40px] h-9">
@@ -454,6 +471,12 @@ export default function HeaderClient({
         boards={boards}
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
+      />
+
+      {/* 라이브스코어 모달 */}
+      <LiveScoreModal
+        isOpen={isLiveScoreOpen}
+        onClose={() => setIsLiveScoreOpen(false)}
       />
     </header>
   );

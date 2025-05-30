@@ -22,6 +22,7 @@ interface LayoutPost {
   author_icon_url?: string | null;
   author_level?: number;
   comment_count: number;
+  content?: string;
   team_id?: number | null;
   team_name?: string | null;
   team_logo?: string | null;
@@ -49,6 +50,7 @@ function convertApiPostsToLayoutPosts(apiPosts: ApiPost[]): LayoutPost[] {
     author_icon_url: post.author_icon_url,
     author_level: post.author_level || 1,
     comment_count: post.comment_count || 0,
+    content: post.content,
     team_id: typeof post.team_id === 'string' ? parseInt(post.team_id, 10) : post.team_id as number | null,
     team_logo: post.team_logo,
     league_id: typeof post.league_id === 'string' ? parseInt(post.league_id, 10) : post.league_id as number | null,

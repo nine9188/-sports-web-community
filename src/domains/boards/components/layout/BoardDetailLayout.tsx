@@ -28,6 +28,7 @@ interface Post {
   author_icon_url?: string | null;
   author_level?: number;
   comment_count: number;
+  content?: string;
   team_id?: number | null;
   team_name?: string | null;
   team_logo?: string | null;

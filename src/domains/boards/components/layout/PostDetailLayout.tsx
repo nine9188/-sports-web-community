@@ -87,6 +87,7 @@ interface PostDetailLayoutProps {
     likes: number;
     author_nickname: string;
     comment_count: number;
+    content?: string;
     author_icon_url?: string;
   }>;
   topLevelBoards: Array<{

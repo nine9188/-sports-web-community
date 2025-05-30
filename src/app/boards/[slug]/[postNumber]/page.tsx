@@ -144,6 +144,7 @@ export default async function PostDetailPage({
       author_icon_id: post.author_icon_id,
       author_icon_url: post.author_icon_url || undefined,  // null을 undefined로 변환
       comment_count: post.commentCount,
+      content: post.content,
       // 팀/리그 정보
       team_id: post.team?.id || null,
       team_name: post.team?.name || null,

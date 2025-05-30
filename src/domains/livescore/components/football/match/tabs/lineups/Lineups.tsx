@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Formation from './Formation';
 import PlayerImage from './components/PlayerImage';
@@ -10,7 +10,6 @@ import usePlayerStats from './hooks/usePlayerStats';
 import useTeamCache from './hooks/useTeamCache';
 import { TeamLineup, MatchEvent } from '@/domains/livescore/types/match';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
-import { getPlayerKoreanName } from './utils/playerUtils';
 import { PlayerStats } from '@/domains/livescore/actions/match/playerStats';
 
 // 프리미어리그 팀 선수 데이터 import
@@ -114,6 +113,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
       name: string;
     };
   } | null>(null);
+  const [forceReload, setForceReload] = useState(0);
   
   // 팀 정보 캐시 훅 사용
   const { getTeamDisplayName, getTeamLogoUrl } = useTeamCache(
@@ -127,6 +127,15 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
     lineups,
     matchData?.playersStats
   );
+
+  // 컴포넌트 마운트 시 이미지 강제 리로드
+  useEffect(() => {
+    if (lineups) {
+      setTimeout(() => {
+        setForceReload(prev => prev + 1);
+      }, 200);
+    }
+  }, [lineups]);
 
   // 포메이션 데이터를 가공하는 함수
   const prepareFormationData = useCallback((teamLineup: TeamLineup) => {
@@ -166,9 +175,32 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
     };
   }, []);
   
-  // 선수 클릭 핸들러
-  const handlePlayerClick = (player: Player, teamId: number, teamName: string) => {
-    setSelectedPlayer({
+  // 한국어 이름 매핑 메모이제이션
+  const koreanNameMap = useMemo(() => {
+    const map = new Map<number, string>();
+    
+    // 모든 팀 데이터를 순회하여 한국어 이름 매핑 생성
+    Object.values(teamPlayersData).forEach(teamPlayers => {
+      teamPlayers.forEach(player => {
+        if ('id' in player && player.id) {
+          let koreanName = '';
+          if ('koreanName' in player && player.koreanName) koreanName = player.koreanName;
+          else if ('korean_name' in player && player.korean_name) koreanName = player.korean_name;
+          
+          if (koreanName) {
+            map.set(player.id, koreanName);
+          }
+        }
+      });
+    });
+    
+    return map;
+  }, []);
+
+  // 선수 클릭 핸들러 - 성능 최적화
+  const handlePlayerClick = useCallback((player: Player, teamId: number, teamName: string) => {
+    // 선수 정보를 먼저 설정
+    const playerInfo = {
       id: player.id,
       name: player.name,
       number: player.number.toString(),
@@ -177,14 +209,17 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
         id: teamId,
         name: teamName
       }
-    });
+    };
+    
+    setSelectedPlayer(playerInfo);
+    // 선수 정보 설정 후 모달 열기
     setIsModalOpen(true);
-  };
+  }, []);
   
   // 모달 닫기 핸들러
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
-  };
+  }, []);
 
   // 로딩 중이면 로딩 표시
   if (loading) {
@@ -217,7 +252,8 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
         <div className="mb-4">
           <Formation 
             homeTeamData={homeFormationData} 
-            awayTeamData={awayFormationData} 
+            awayTeamData={awayFormationData}
+            forceReload={forceReload}
           />
         </div>
       )}
@@ -296,6 +332,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                       <div className="relative">
                         {homeLineup.startXI[index].player.photo ? (
                           <PlayerImage 
+                            key={`home-start-${homeLineup.startXI[index].player.id}-${forceReload}`}
                             src={homeLineup.startXI[index].player.photo}
                             alt={`${homeLineup.startXI[index].player.name} 선수 사진`}
                           />
@@ -313,7 +350,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                       <div className="flex-1">
                         <div className="text-sm font-medium">
                           {/* 선수 한국어 이름 매핑 */}
-                          {getPlayerKoreanName(homeLineup.startXI[index].player.id, teamPlayersData) || homeLineup.startXI[index].player.name}
+                          {koreanNameMap.get(homeLineup.startXI[index].player.id) || homeLineup.startXI[index].player.name}
                           {homeLineup.startXI[index].player.captain && (
                             <span className="ml-1 text-xs text-yellow-600 font-semibold">(주장)</span>
                           )}
@@ -339,6 +376,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                       <div className="relative">
                         {awayLineup.startXI[index].player.photo ? (
                           <PlayerImage 
+                            key={`away-start-${awayLineup.startXI[index].player.id}-${forceReload}`}
                             src={awayLineup.startXI[index].player.photo}
                             alt={`${awayLineup.startXI[index].player.name} 선수 사진`}
                           />
@@ -356,7 +394,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                       <div className="flex-1">
                         <div className="text-sm font-medium">
                           {/* 선수 한국어 이름 매핑 */}
-                          {getPlayerKoreanName(awayLineup.startXI[index].player.id, teamPlayersData) || awayLineup.startXI[index].player.name}
+                          {koreanNameMap.get(awayLineup.startXI[index].player.id) || awayLineup.startXI[index].player.name}
                           {awayLineup.startXI[index].player.captain && (
                             <span className="ml-1 text-xs text-yellow-600 font-semibold">(주장)</span>
                           )}
@@ -398,6 +436,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                       <div className="relative">
                         {homeLineup.substitutes[index].player.photo ? (
                           <PlayerImage 
+                            key={`home-subs-${homeLineup.substitutes[index].player.id}-${forceReload}`}
                             src={homeLineup.substitutes[index].player.photo}
                             alt={`${homeLineup.substitutes[index].player.name} 선수 사진`}
                           />
@@ -415,7 +454,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                       <div className="flex-1">
                         <div className="text-sm font-medium">
                           {/* 선수 한국어 이름 매핑 */}
-                          {getPlayerKoreanName(homeLineup.substitutes[index].player.id, teamPlayersData) || homeLineup.substitutes[index].player.name}
+                          {koreanNameMap.get(homeLineup.substitutes[index].player.id) || homeLineup.substitutes[index].player.name}
                           {homeLineup.substitutes[index].player.captain && (
                             <span className="ml-1 text-xs text-yellow-600 font-semibold">(주장)</span>
                           )}
@@ -441,6 +480,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                       <div className="relative">
                         {awayLineup.substitutes[index].player.photo ? (
                           <PlayerImage 
+                            key={`away-subs-${awayLineup.substitutes[index].player.id}-${forceReload}`}
                             src={awayLineup.substitutes[index].player.photo}
                             alt={`${awayLineup.substitutes[index].player.name} 선수 사진`}
                           />
@@ -458,7 +498,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                       <div className="flex-1">
                         <div className="text-sm font-medium">
                           {/* 선수 한국어 이름 매핑 */}
-                          {getPlayerKoreanName(awayLineup.substitutes[index].player.id, teamPlayersData) || awayLineup.substitutes[index].player.name}
+                          {koreanNameMap.get(awayLineup.substitutes[index].player.id) || awayLineup.substitutes[index].player.name}
                           {awayLineup.substitutes[index].player.captain && (
                             <span className="ml-1 text-xs text-yellow-600 font-semibold">(주장)</span>
                           )}
@@ -488,6 +528,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                       <div className="relative">
                         {homeLineup.coach?.photo ? (
                           <PlayerImage 
+                            key={`home-coach-${homeLineup.coach.id}-${forceReload}`}
                             src={homeLineup.coach.photo}
                             alt={`${homeLineup.coach.name} 감독 사진`}
                           />
@@ -510,6 +551,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                       <div className="relative">
                         {awayLineup.coach?.photo ? (
                           <PlayerImage 
+                            key={`away-coach-${awayLineup.coach.id}-${forceReload}`}
                             src={awayLineup.coach.photo}
                             alt={`${awayLineup.coach.name} 감독 사진`}
                           />
@@ -542,7 +584,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
           playerId={selectedPlayer.id}
           matchId={matchId}
           playerInfo={{
-            name: getPlayerKoreanName(selectedPlayer.id, teamPlayersData) || selectedPlayer.name,
+            name: koreanNameMap.get(selectedPlayer.id) || selectedPlayer.name,
             number: selectedPlayer.number,
             pos: selectedPlayer.pos,
             team: {
@@ -555,4 +597,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
       )}
     </div>
   );
-} 
+}
+
+// 성능 디버깅을 위한 displayName 추가
+Lineups.displayName = 'Lineups'; 

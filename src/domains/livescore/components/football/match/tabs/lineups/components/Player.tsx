@@ -105,9 +105,10 @@ interface TeamData {
 interface PlayerProps {
   homeTeamData: TeamData;
   awayTeamData: TeamData;
+  forceReload?: number;
 }
 
-const Player = ({ homeTeamData, awayTeamData }: PlayerProps) => {
+const Player = ({ homeTeamData, awayTeamData, forceReload = 0 }: PlayerProps) => {
   const textRefs = useRef<{[key: string]: SVGTextElement | null}>({});
   const rectRefs = useRef<{[key: string]: SVGRectElement | null}>({});
   
@@ -116,6 +117,7 @@ const Player = ({ homeTeamData, awayTeamData }: PlayerProps) => {
   
   // 이미지 로딩 상태를 관리하는 상태 추가
   const [failedImages, setFailedImages] = useState<{[key: string]: boolean}>({});
+  const [retryCount, setRetryCount] = useState<{[key: string]: number}>({});
   
   // 뷰박스 설정 - 모바일과 데스크탑에 따라 다르게 설정
   const viewBox = isMobile ? "0 0 56 100" : "0 0 100 56";
@@ -234,21 +236,37 @@ const Player = ({ homeTeamData, awayTeamData }: PlayerProps) => {
         rectElement.setAttribute('y', `${bbox.y - heightPadding * 0.5}`); // y 위치 조정
       }
     });
-  }, [homeTeamData, awayTeamData, failedImages, isMobile]); // isMobile 상태가 변경될 때도 재실행
+  }, [homeTeamData, awayTeamData, failedImages, isMobile, forceReload]); // forceReload 상태가 변경될 때도 재실행
 
-  // 이미지 오류 핸들러
+  // 이미지 오류 핸들러 - 재시도 로직 추가
   const handleImageError = (e: React.SyntheticEvent<SVGImageElement>, playerData: PlayerData) => {
-    // 이미지 로드 실패 시 로그 추가
-    console.error(`선수 이미지 로드 실패: ${(e.currentTarget as SVGImageElement).href.baseVal}`);
+    const imageKey = `image-${playerData.id}`;
+    const currentRetry = retryCount[imageKey] || 0;
     
-    // 대체 이미지로 다시 시도
-    if (playerData.photo && !playerData.photo.startsWith('http')) {
-      const correctedUrl = `https://media.api-sports.io/football/players/${playerData.id}.png`;
-      (e.currentTarget as SVGImageElement).href.baseVal = correctedUrl;
+    if (currentRetry < 2) {
+      // 최대 2번까지 재시도
+      setTimeout(() => {
+        setRetryCount(prev => ({
+          ...prev,
+          [imageKey]: currentRetry + 1
+        }));
+        
+        // 다른 URL 형식으로 재시도
+        let newUrl = playerData.photo;
+        if (currentRetry === 0 && playerData.photo && !playerData.photo.startsWith('http')) {
+          newUrl = `https://media.api-sports.io/football/players/${playerData.id}.png`;
+        } else if (currentRetry === 1) {
+          newUrl = `https://media-3.api-sports.io/football/players/${playerData.id}.png`;
+        }
+        
+        if (newUrl) {
+          (e.currentTarget as SVGImageElement).href.baseVal = newUrl;
+        }
+      }, 500);
+    } else {
+      // 최종 실패 시 실패한 이미지로 기록
+      setFailedImages(prev => ({...prev, [imageKey]: true}));
     }
-    
-    // 실패한 이미지 기록
-    setFailedImages(prev => ({...prev, [`image-${playerData.id}`]: true}));
   };
 
   const renderTeam = (team: TeamData, isHome: boolean) => {
@@ -320,6 +338,7 @@ const Player = ({ homeTeamData, awayTeamData }: PlayerProps) => {
           {/* 선수 이미지 */}
           {hasValidImage && (
             <image
+              key={`svg-image-${teamId}-${playerId}-${forceReload}`}
               x="-2.5"
               y="-2.5"
               width="5"
