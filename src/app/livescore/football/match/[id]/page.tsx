@@ -2,7 +2,9 @@ import { MatchHeaderSkeleton } from '@/domains/livescore/components/common/Heade
 import TabNavigation from '@/domains/livescore/components/football/match/TabNavigation';
 import TabContent from '@/domains/livescore/components/football/match/TabContent';
 import MatchHeader from '@/domains/livescore/components/football/match/MatchHeader';
+import { MatchInfoSection } from '@/domains/livescore/components/football/match/sidebar/MatchSidebar';
 import { fetchCachedMatchFullData, MatchFullDataResponse } from '@/domains/livescore/actions/match/matchData';
+import { getCachedSidebarData } from '@/domains/livescore/actions/match/sidebarData';
 import { MatchDataProvider } from '@/domains/livescore/components/football/match/context/MatchDataContext';
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
@@ -80,6 +82,10 @@ export default async function MatchPage({
     if (!matchData.success) {
       return notFound();
     }
+
+    // 사이드바 데이터 미리 로드
+    const sidebarDataResult = await getCachedSidebarData(matchId);
+    const sidebarData = sidebarDataResult.success ? sidebarDataResult.data : null;
     
     return (
       <div className="container">
@@ -88,24 +94,37 @@ export default async function MatchPage({
           initialTab={initialTab}
           initialData={matchData}
         >
-          {/* 헤더를 탭 외부에 배치하여 탭 전환 시 다시 로드되지 않도록 함 */}
-          <Suspense fallback={<MatchHeaderSkeleton />}>
-            <MatchHeader />
-          </Suspense>
-          
-          <TabNavigation activeTab={initialTab} />
-          
-          {/* 탭 콘텐츠는 Suspense로 감싸서 독립적으로 로딩 */}
-          <Suspense fallback={
-            <div className="mb-4 bg-white rounded-lg border p-4">
-              <div className="flex justify-center items-center py-8">
-                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-                <span className="ml-3 text-gray-600">데이터를 불러오는 중...</span>
+          <div className="flex gap-4">
+            {/* 메인 콘텐츠 */}
+            <div className="flex-1 min-w-0">
+              {/* 헤더를 탭 외부에 배치하여 탭 전환 시 다시 로드되지 않도록 함 */}
+              <Suspense fallback={<MatchHeaderSkeleton />}>
+                <MatchHeader />
+              </Suspense>
+              
+              {/* 모바일용 경기 상세정보 - 헤더와 탭 사이에 배치 */}
+              <div className="xl:hidden mb-4">
+                <MatchInfoSection 
+                  showOnlyMatchInfo={true} 
+                  initialData={matchData.matchData}
+                  sidebarData={sidebarData}
+                />
               </div>
+              
+              <TabNavigation activeTab={initialTab} />
+              
+              {/* 탭 콘텐츠 */}
+              <TabContent />
             </div>
-          }>
-            <TabContent />
-          </Suspense>
+
+            {/* 사이드바 - 데스크탑에서만 표시 */}
+            <aside className="hidden xl:block w-[280px] shrink-0">
+              <MatchInfoSection 
+                initialData={matchData.matchData}
+                sidebarData={sidebarData}
+              />
+            </aside>
+          </div>
         </MatchDataProvider>
       </div>
     );

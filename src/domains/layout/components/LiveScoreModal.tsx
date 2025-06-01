@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
+import Image from 'next/image';
 import { X, Clock, Trophy, Shield, Users } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFutbol } from '@fortawesome/free-solid-svg-icons';
@@ -32,7 +33,7 @@ interface MultiDayMatchesResponse {
   error?: string;
 }
 
-// 간단한 이미지 컴포넌트 - 강제 리로드 기능 추가
+// 간단한 이미지 컴포넌트 - Next.js Image 사용
 const SafeImage = React.memo(function SafeImage({ 
   src, 
   alt, 
@@ -79,15 +80,19 @@ const SafeImage = React.memo(function SafeImage({
   }
 
   return (
-    <img 
-      key={`${src}-${retryCount}`}
-      src={src}
-      alt={alt}
-      className={className}
-      style={{ width: size, height: size }}
-      onError={handleImageError}
-      loading="eager"
-    />
+    <div className={`relative ${className}`} style={{ width: size, height: size }}>
+      <Image
+        key={`${src}-${retryCount}`}
+        src={src}
+        alt={alt}
+        fill
+        sizes={`${size}px`}
+        className="object-contain rounded"
+        onError={handleImageError}
+        priority={false}
+        unoptimized={true} // 외부 이미지이므로 최적화 비활성화
+      />
+    </div>
   );
 });
 
@@ -111,15 +116,20 @@ const getMatchStatusStyle = (statusCode: string) => {
   }
 };
 
-// 경기 상태 텍스트 변환
-const getStatusText = (statusCode: string, statusDescription: string) => {
+// 경기 상태에 따른 텍스트 반환 - elapsed 시간 포함
+const getStatusText = (statusCode: string, statusDescription: string, elapsed?: number | null) => {
   switch (statusCode) {
     case 'LIVE':
-      return '진행중';
     case '1H':
-      return '전반전';
     case '2H':
-      return '후반전';
+      // 진행중인 경기는 elapsed 시간 표시
+      if (elapsed && elapsed > 0) {
+        return `${elapsed}'`;
+      }
+      // elapsed가 없거나 0인 경우 기본 텍스트
+      if (statusCode === '1H') return '전반전';
+      if (statusCode === '2H') return '후반전';
+      return '진행중';
     case 'HT':
       return '하프타임';
     case 'FT':
@@ -134,12 +144,29 @@ const getStatusText = (statusCode: string, statusDescription: string) => {
 };
 
 // 개별 경기 컴포넌트
-const MatchItem = React.memo(function MatchItem({ match, forceReload }: { match: MatchData; forceReload: number }) {
+const MatchItem = React.memo(function MatchItem({ 
+  match, 
+  forceReload, 
+  onClose 
+}: { 
+  match: MatchData; 
+  forceReload: number;
+  onClose: () => void;
+}) {
   const isLive = ['LIVE', '1H', '2H', 'HT'].includes(match.status?.code || '');
   const isFinished = ['FT', 'AET', 'PEN'].includes(match.status?.code || '');
   
+  // 경기 클릭 핸들러
+  const handleMatchClick = () => {
+    onClose(); // 모달 닫기
+    window.location.href = `/livescore/football/match/${match.id}`;
+  };
+  
   return (
-    <div className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow">
+    <div 
+      className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer hover:bg-gray-50"
+      onClick={handleMatchClick}
+    >
       {/* 리그 정보 */}
       {match.league && (
         <div className="flex items-center gap-2 mb-3 text-xs text-gray-600">
@@ -183,7 +210,7 @@ const MatchItem = React.memo(function MatchItem({ match, forceReload }: { match:
                 {match.goals.home || 0} - {match.goals.away || 0}
               </div>
               <div className={`text-xs px-2 py-1 rounded-full ${getMatchStatusStyle(match.status?.code || '')}`}>
-                {getStatusText(match.status?.code || '', match.status?.name || '')}
+                {getStatusText(match.status?.code || '', match.status?.name || '', match.status?.elapsed)}
               </div>
             </div>
           ) : (
@@ -195,7 +222,7 @@ const MatchItem = React.memo(function MatchItem({ match, forceReload }: { match:
                 }) : '--:--'}
               </div>
               <div className={`text-xs px-2 py-1 rounded-full ${getMatchStatusStyle(match.status?.code || '')}`}>
-                {getStatusText(match.status?.code || '', match.status?.name || '')}
+                {getStatusText(match.status?.code || '', match.status?.name || '', match.status?.elapsed)}
               </div>
             </div>
           )}
@@ -372,7 +399,7 @@ export default function LiveScoreModal({ isOpen, onClose }: LiveScoreModalProps)
           ) : currentMatches.length > 0 ? (
             <div className="p-4 space-y-3">
               {currentMatches.map(match => (
-                <MatchItem key={`${match.id}-${selectedDate}`} match={match} forceReload={forceReload} />
+                <MatchItem key={`${match.id}-${selectedDate}`} match={match} forceReload={forceReload} onClose={onClose} />
               ))}
             </div>
           ) : (

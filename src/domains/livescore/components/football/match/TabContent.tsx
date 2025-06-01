@@ -5,6 +5,8 @@ import Events from './tabs/Events';
 import Lineups from './tabs/lineups/Lineups';
 import Stats from './tabs/Stats';
 import Standings from './tabs/Standings';
+import MatchPredictionClient from './sidebar/MatchPredictionClient';
+import SupportCommentsSection from './sidebar/SupportCommentsSection';
 import { LoadingState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import { useMatchData, TabType, isLineupsTabData } from './context/MatchDataContext';
 import { Team, MatchEvent, TeamLineup, TeamStats, StandingsData } from '@/domains/livescore/types/match';
@@ -119,6 +121,7 @@ export default function TabContent() {
   // 컨텍스트에서 필요한 데이터 및 상태 가져오기
   const {
     matchId,
+    matchData,
     currentTab: tab,
     eventsData,
     lineupsData,
@@ -138,6 +141,12 @@ export default function TabContent() {
   useEffect(() => {
     // 매치 ID가 없으면 로드하지 않음
     if (!matchId) return;
+    
+    // support 탭은 별도 데이터 로딩이 필요하지 않음
+    if (tab === 'support') {
+      setIsTabChanging(false);
+      return;
+    }
     
     // 현재 탭에 대한 데이터 확인
     const hasEventsData = tab === 'events' && eventsData && eventsData.length > 0;
@@ -266,6 +275,18 @@ export default function TabContent() {
         );
       }
 
+      case 'support': {
+        // 응원 탭 - 승무패 예측과 응원 댓글
+        return (
+          <div className="space-y-4">
+            <Suspense fallback={<LoadingState message="응원 데이터를 불러오는 중..." />}>
+              <MatchPredictionClient matchData={matchData || {}} />
+              <SupportCommentsSection matchData={matchData || {}} />
+            </Suspense>
+          </div>
+        );
+      }
+
       default:
         return (
           <div className="p-4 text-center bg-white rounded-lg shadow-sm">
@@ -284,7 +305,8 @@ export default function TabContent() {
     awayTeam, 
     isLoading,
     isTabChanging,
-    tabsData
+    tabsData,
+    matchData
   ]);
 
   return renderTabContent;

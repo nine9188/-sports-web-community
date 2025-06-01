@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Field from './components/Field';
 import Player from './components/Player';
 
-// 미디어 쿼리를 사용하기 위한 커스텀 훅
+// 미디어 쿼리 커스텀 훅
 function useMediaQuery(query: string) {
   const [matches, setMatches] = useState(false);
 
@@ -12,13 +12,9 @@ function useMediaQuery(query: string) {
     const mediaQuery = window.matchMedia(query);
     const updateMatches = () => setMatches(mediaQuery.matches);
     
-    // 초기값 설정
     updateMatches();
-    
-    // 리스너 등록
     mediaQuery.addEventListener('change', updateMatches);
     
-    // 클린업
     return () => {
       mediaQuery.removeEventListener('change', updateMatches);
     };
@@ -27,7 +23,6 @@ function useMediaQuery(query: string) {
   return matches;
 }
 
-// Player 컴포넌트에서 사용하는 타입과 일치시킴
 interface PlayerData {
   id: number;
   name: string;
@@ -62,14 +57,12 @@ interface TeamData {
 interface FormationProps {
   homeTeamData: TeamData;
   awayTeamData: TeamData;
-  forceReload?: number;
 }
 
-export default function Formation({ homeTeamData, awayTeamData, forceReload = 0 }: FormationProps) {
-  // 모바일 여부 확인 (768px 이하면 모바일로 간주)
+export default function Formation({ homeTeamData, awayTeamData }: FormationProps) {
   const isMobile = useMediaQuery('(max-width: 768px)');
   
-  // 기본 팀 색상 설정
+  // 기본 팀 색상
   const defaultColors = {
     player: {
       primary: '1a5f35',
@@ -83,7 +76,7 @@ export default function Formation({ homeTeamData, awayTeamData, forceReload = 0 
     }
   };
 
-  // 팀 데이터에 colors 추가 및 데이터 정제
+  // 팀 데이터 정제
   const processTeamData = (teamData: Partial<TeamData>): TeamData => {
     return {
       team: {
@@ -112,14 +105,13 @@ export default function Formation({ homeTeamData, awayTeamData, forceReload = 0 
       borderRadius: '12px', 
       overflow: 'hidden', 
       maxWidth: '100%',
-      aspectRatio: isMobile ? '9/16' : '16/9', // 모바일과 데스크탑에 따라 비율 변경
+      aspectRatio: isMobile ? '9/16' : '16/9',
       margin: '0 auto'
     }}>
       <Field>
         <Player
           homeTeamData={processedHomeTeam}
           awayTeamData={processedAwayTeam}
-          forceReload={forceReload}
         />
       </Field>
     </div>

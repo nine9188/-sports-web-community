@@ -10,9 +10,9 @@ import { PlayerStats } from '@/domains/livescore/actions/match/playerStats';
 import { toast } from 'react-hot-toast';
 
 // 탭 타입 정의
-export type TabType = 'events' | 'lineups' | 'stats' | 'standings';
+export type TabType = 'events' | 'lineups' | 'stats' | 'standings' | 'support';
 
-// 각 탭의 데이터 타입 정의
+// 각 탭의 데이터 타입 정의 (support 제외)
 interface TabDataTypes {
   events: {
     events: MatchEvent[];
@@ -34,8 +34,8 @@ interface TabDataTypes {
   };
 }
 
-// 탭 데이터 유니온 타입
-export type TabData = TabDataTypes[TabType];
+// 탭 데이터 유니온 타입 (support 제외)
+export type TabData = TabDataTypes[keyof TabDataTypes];
 
 // 타입 가드 함수
 export function isEventsTabData(data: TabData): data is TabDataTypes['events'] {

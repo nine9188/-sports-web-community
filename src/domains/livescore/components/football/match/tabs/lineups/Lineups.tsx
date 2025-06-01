@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import Formation from './Formation';
 import PlayerImage from './components/PlayerImage';
@@ -113,7 +113,6 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
       name: string;
     };
   } | null>(null);
-  const [forceReload, setForceReload] = useState(0);
   
   // 팀 정보 캐시 훅 사용
   const { getTeamDisplayName, getTeamLogoUrl } = useTeamCache(
@@ -127,15 +126,6 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
     lineups,
     matchData?.playersStats
   );
-
-  // 컴포넌트 마운트 시 이미지 강제 리로드
-  useEffect(() => {
-    if (lineups) {
-      setTimeout(() => {
-        setForceReload(prev => prev + 1);
-      }, 200);
-    }
-  }, [lineups]);
 
   // 포메이션 데이터를 가공하는 함수
   const prepareFormationData = useCallback((teamLineup: TeamLineup) => {
@@ -253,7 +243,6 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
           <Formation 
             homeTeamData={homeFormationData} 
             awayTeamData={awayFormationData}
-            forceReload={forceReload}
           />
         </div>
       )}
@@ -332,7 +321,6 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                       <div className="relative">
                         {homeLineup.startXI[index].player.photo ? (
                           <PlayerImage 
-                            key={`home-start-${homeLineup.startXI[index].player.id}-${forceReload}`}
                             src={homeLineup.startXI[index].player.photo}
                             alt={`${homeLineup.startXI[index].player.name} 선수 사진`}
                           />
@@ -376,7 +364,6 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                       <div className="relative">
                         {awayLineup.startXI[index].player.photo ? (
                           <PlayerImage 
-                            key={`away-start-${awayLineup.startXI[index].player.id}-${forceReload}`}
                             src={awayLineup.startXI[index].player.photo}
                             alt={`${awayLineup.startXI[index].player.name} 선수 사진`}
                           />
@@ -436,7 +423,6 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                       <div className="relative">
                         {homeLineup.substitutes[index].player.photo ? (
                           <PlayerImage 
-                            key={`home-subs-${homeLineup.substitutes[index].player.id}-${forceReload}`}
                             src={homeLineup.substitutes[index].player.photo}
                             alt={`${homeLineup.substitutes[index].player.name} 선수 사진`}
                           />
@@ -480,7 +466,6 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                       <div className="relative">
                         {awayLineup.substitutes[index].player.photo ? (
                           <PlayerImage 
-                            key={`away-subs-${awayLineup.substitutes[index].player.id}-${forceReload}`}
                             src={awayLineup.substitutes[index].player.photo}
                             alt={`${awayLineup.substitutes[index].player.name} 선수 사진`}
                           />
@@ -528,7 +513,6 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                       <div className="relative">
                         {homeLineup.coach?.photo ? (
                           <PlayerImage 
-                            key={`home-coach-${homeLineup.coach.id}-${forceReload}`}
                             src={homeLineup.coach.photo}
                             alt={`${homeLineup.coach.name} 감독 사진`}
                           />
@@ -551,7 +535,6 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                       <div className="relative">
                         {awayLineup.coach?.photo ? (
                           <PlayerImage 
-                            key={`away-coach-${awayLineup.coach.id}-${forceReload}`}
                             src={awayLineup.coach.photo}
                             alt={`${awayLineup.coach.name} 감독 사진`}
                           />

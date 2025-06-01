@@ -3,6 +3,7 @@ export interface Match {
   status: {
     code: string;
     name: string;
+    elapsed?: number | null;
   };
   time: {
     date: string;

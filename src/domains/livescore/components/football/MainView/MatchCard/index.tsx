@@ -32,8 +32,27 @@ export default function MatchCard({ match: initialMatch }: MatchCardProps) {
     
     // 진행중인 경기
     if (['1H', '2H', 'LIVE', 'IN_PLAY'].includes(code)) {
-      const elapsed = 0; // Match 타입에는 elapsed가 없음
-      return `${elapsed}'`;
+      // 디버깅: 진행중인 경기의 match 객체 구조 확인
+      console.log('진행중인 경기 데이터:', {
+        matchId: match.id,
+        status: match.status,
+        elapsed: match.status?.elapsed
+      });
+      
+      // elapsed 정보 가져오기
+      const elapsed = match.status?.elapsed;
+      
+      console.log('찾은 elapsed 값:', elapsed);
+      
+      if (elapsed && elapsed > 0) {
+        return `${elapsed}'`;
+      }
+      
+      // elapsed가 없거나 0인 경우 상태 표시
+      if (code === '1H') return '전반전';
+      if (code === '2H') return '후반전';
+      if (code === 'HT') return '휴식';
+      return 'LIVE';
     }
     
     // 나머지는 모두 경기 시작 시간 표시
