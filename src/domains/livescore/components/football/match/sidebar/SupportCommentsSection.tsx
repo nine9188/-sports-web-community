@@ -11,6 +11,7 @@ import {
   type TeamType,
   type SupportComment
 } from '@/domains/livescore/actions/match/supportComments';
+import { createClient } from '@/shared/api/supabase';
 
 // 매치 데이터 타입 정의
 interface MatchDataType {
@@ -132,27 +133,60 @@ export default function SupportCommentsSection({
   const pathname = usePathname();
   const matchId = pathname?.split('/').pop() || '';
   
-  const [comments, setComments] = useState<SupportComment[]>(initialComments || []);
+  const [allComments, setAllComments] = useState<SupportComment[]>(initialComments || []);
   const [newComment, setNewComment] = useState('');
   const [selectedTeam, setSelectedTeam] = useState<TeamType>('neutral');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState<TeamType | 'all'>('all');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const homeTeam = matchData.teams?.home;
   const awayTeam = matchData.teams?.away;
 
+  // 필터링된 댓글 계산
+  const filteredComments = allComments.filter(comment => {
+    if (activeTab === 'all') return true;
+    return comment.team_type === activeTab;
+  });
+
+  // 로그인 상태 체크
+  useEffect(() => {
+    const supabase = createClient();
+    
+    const checkAuth = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        setIsLoggedIn(!!user);
+      } catch {
+        setIsLoggedIn(false);
+      }
+    };
+
+    // 초기 로그인 상태 체크
+    checkAuth();
+
+    // 로그인 상태 변화 감지
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsLoggedIn(!!session?.user);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
   // 댓글 목록 로드 - useCallback으로 감싸서 dependency 문제 해결
-  const loadComments = useCallback(async (teamType?: TeamType) => {
+  const loadComments = useCallback(async () => {
     if (!matchId) return;
     
     try {
-      console.log('댓글 로드 시작:', { matchId, teamType });
-      const result = await getSupportComments(matchId, teamType);
+      console.log('댓글 로드 시작:', { matchId });
+      const result = await getSupportComments(matchId); // 모든 댓글 로드
       console.log('댓글 로드 결과:', result);
       
       if (result.success && Array.isArray(result.data)) {
-        setComments(result.data);
+        setAllComments(result.data);
       } else {
         console.error('댓글 로드 실패:', result.error);
       }
@@ -164,16 +198,13 @@ export default function SupportCommentsSection({
   // 초기 댓글이 없는 경우에만 로드
   useEffect(() => {
     if (initialComments === undefined) {
-      const teamTypeFilter = activeTab === 'all' ? undefined : (activeTab as TeamType);
-      loadComments(teamTypeFilter);
+      loadComments();
     }
-  }, [matchId, activeTab, loadComments, initialComments]);
+  }, [matchId, loadComments, initialComments]);
 
-  // 탭 변경 핸들러
-  const handleTabChange = async (tab: TeamType | 'all') => {
+  // 탭 변경 핸들러 - 클라이언트 필터링만
+  const handleTabChange = (tab: TeamType | 'all') => {
     setActiveTab(tab);
-    const teamTypeFilter = tab === 'all' ? undefined : (tab as TeamType);
-    await loadComments(teamTypeFilter);
   };
 
   // 댓글 작성
@@ -194,8 +225,7 @@ export default function SupportCommentsSection({
         setNewComment('');
         toast.success('댓글이 작성되었습니다!');
         // 댓글 목록 새로고침
-        const teamTypeFilter = activeTab === 'all' ? undefined : (activeTab as TeamType);
-        await loadComments(teamTypeFilter);
+        loadComments();
       } else {
         console.error('댓글 작성 실패:', result.error);
         toast.error(result.error || '댓글 작성에 실패했습니다.');
@@ -214,7 +244,7 @@ export default function SupportCommentsSection({
       const result = await toggleCommentLike(commentId);
       
       if (result.success) {
-        setComments(prev => prev.map(comment => {
+        setAllComments(prev => prev.map(comment => {
           if (comment.id === commentId) {
             return {
               ...comment,
@@ -241,8 +271,7 @@ export default function SupportCommentsSection({
     
     setIsRefreshing(true);
     try {
-      const teamTypeFilter = activeTab === 'all' ? undefined : (activeTab as TeamType);
-      await loadComments(teamTypeFilter);
+      loadComments();
       toast.success('댓글을 새로고침했습니다!');
     } catch (error) {
       console.error('댓글 새로고침 오류:', error);
@@ -260,7 +289,7 @@ export default function SupportCommentsSection({
           <h3 className="font-semibold text-sm text-gray-800">응원 댓글</h3>
           <div className="flex items-center space-x-2">
             <span className="text-xs text-gray-500">
-              {comments.length}개
+              {filteredComments.length}개
             </span>
             <button
               onClick={handleRefreshComments}
@@ -288,7 +317,84 @@ export default function SupportCommentsSection({
         </div>
       </div>
 
-      {/* 간단한 탭 */}
+      {/* 댓글 작성 폼 - 개선된 UI */}
+      <div className="p-4 border-b border-gray-100 bg-white">
+        <div className="space-y-3">
+          {/* 응원팀 선택 - 상단으로 이동 */}
+          <div className="flex space-x-2 w-full">
+            <button
+              onClick={() => setSelectedTeam('home')}
+              className={`flex-1 px-2 py-1 text-xs rounded transition-colors whitespace-nowrap ${
+                selectedTeam === 'home'
+                  ? 'bg-blue-500 text-white'
+                  : 'text-blue-600 hover:bg-blue-50'
+              }`}
+            >
+              <span className="truncate block">
+                {(() => {
+                  const teamName = homeTeam?.name_ko || homeTeam?.name || '홈';
+                  return teamName.length > 7 ? `${teamName.slice(0, 7)}...` : teamName;
+                })()}
+              </span>
+            </button>
+            <button
+              onClick={() => setSelectedTeam('away')}
+              className={`flex-1 px-2 py-1 text-xs rounded transition-colors whitespace-nowrap ${
+                selectedTeam === 'away'
+                  ? 'bg-red-500 text-white'
+                  : 'text-red-600 hover:bg-red-50'
+              }`}
+            >
+              <span className="truncate block">
+                {(() => {
+                  const teamName = awayTeam?.name_ko || awayTeam?.name || '원정';
+                  return teamName.length > 7 ? `${teamName.slice(0, 7)}...` : teamName;
+                })()}
+              </span>
+            </button>
+            <button
+              onClick={() => setSelectedTeam('neutral')}
+              className={`flex-1 px-2 py-1 text-xs rounded transition-colors whitespace-nowrap ${
+                selectedTeam === 'neutral'
+                  ? 'bg-gray-500 text-white'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              중립
+            </button>
+          </div>
+
+          {/* 댓글 입력창 */}
+          <div className="relative">
+            <textarea
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder={isLoggedIn ? "응원 댓글을 남겨보세요..." : "로그인이 필요합니다."}
+              className="w-full px-3 py-3 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400"
+              rows={3}
+              maxLength={300}
+              disabled={!isLoggedIn || isSubmitting}
+            />
+            {/* 글자 수 표시 */}
+            <div className="absolute bottom-2 right-3 text-xs text-gray-400">
+              {newComment.length}/300
+            </div>
+          </div>
+
+          {/* 등록 버튼 */}
+          <div className="flex justify-end">
+            <button
+              onClick={handleSubmitComment}
+              disabled={!newComment.trim() || !isLoggedIn || isSubmitting}
+              className="px-3 py-1 bg-gray-500 text-white text-xs rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+            >
+              {isSubmitting ? '작성중...' : '등록'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 필터링 탭 - 댓글 목록 위로 이동 */}
       <div className="px-4 py-2 border-b border-gray-100">
         <div className="flex space-x-1">
           <button
@@ -334,92 +440,16 @@ export default function SupportCommentsSection({
         </div>
       </div>
 
-      {/* 댓글 작성 폼 - 개선된 UI */}
-      <div className="p-4 border-b border-gray-100 bg-white">
-        <div className="space-y-3">
-          {/* 댓글 입력창 */}
-          <div className="relative">
-            <textarea
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder="응원 댓글을 남겨보세요..."
-              className="w-full px-3 py-3 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400"
-              rows={3}
-              maxLength={300}
-              disabled={isSubmitting}
-            />
-            {/* 글자 수 표시 */}
-            <div className="absolute bottom-2 right-3 text-xs text-gray-400">
-              {newComment.length}/300
-            </div>
-          </div>
-
-          {/* 하단 액션 영역 */}
-          <div className="flex items-center justify-between">
-            {/* 응원팀 선택 */}
-            <div className="flex space-x-1">
-              <button
-                onClick={() => setSelectedTeam('home')}
-                className={`w-16 px-2 py-1 text-xs rounded transition-colors ${
-                  selectedTeam === 'home'
-                    ? 'bg-blue-500 text-white'
-                    : 'text-blue-600 hover:bg-blue-50'
-                }`}
-              >
-                <span className="truncate block">
-                  {homeTeam?.name_ko && homeTeam.name_ko.length > 5 
-                    ? `${homeTeam.name_ko.slice(0, 5)}...` 
-                    : homeTeam?.name_ko || '홈'}
-                </span>
-              </button>
-              <button
-                onClick={() => setSelectedTeam('away')}
-                className={`w-16 px-2 py-1 text-xs rounded transition-colors ${
-                  selectedTeam === 'away'
-                    ? 'bg-red-500 text-white'
-                    : 'text-red-600 hover:bg-red-50'
-                }`}
-              >
-                <span className="truncate block">
-                  {awayTeam?.name_ko && awayTeam.name_ko.length > 5 
-                    ? `${awayTeam.name_ko.slice(0, 5)}...` 
-                    : awayTeam?.name_ko || '원정'}
-                </span>
-              </button>
-              <button
-                onClick={() => setSelectedTeam('neutral')}
-                className={`w-12 px-2 py-1 text-xs rounded transition-colors ${
-                  selectedTeam === 'neutral'
-                    ? 'bg-gray-500 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                중립
-              </button>
-            </div>
-
-            {/* 작성 버튼 */}
-            <button
-              onClick={handleSubmitComment}
-              disabled={!newComment.trim() || isSubmitting}
-              className="px-3 py-1 bg-gray-500 text-white text-xs rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
-            >
-              {isSubmitting ? '작성중...' : '등록'}
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* 댓글 목록 */}
       <div className="max-h-[32rem] overflow-y-auto">
-        {comments.length === 0 ? (
+        {filteredComments.length === 0 ? (
           <div className="p-4 text-center text-sm text-gray-500">
             <p>아직 댓글이 없습니다.</p>
             <p className="text-xs mt-1">첫 번째 응원 댓글을 남겨보세요!</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
-            {comments.map((comment) => (
+            {filteredComments.map((comment) => (
               <CommentItem
                 key={comment.id}
                 comment={comment}
