@@ -1,11 +1,9 @@
 import { Suspense } from 'react';
-import { redirect } from 'next/navigation';
 import { Metadata } from 'next';
-import { createClient } from '@/shared/api/supabaseServer';
+import { serverAuthGuard } from '@/shared/utils/auth-guard';
 import { getMyComments } from '@/domains/settings/actions/my-comments';
 import MyCommentsContent from '@/domains/settings/components/my-comments/MyCommentsContent';
 import PostsPagination from '@/domains/settings/components/my-comments/PostsPagination';
-
 
 export const metadata: Metadata = {
   title: '내가 쓴 댓글 - 설정',
@@ -25,15 +23,11 @@ export default async function MyCommentsPage({
   searchParams: Promise<SearchParams>;
 }) {
   try {
-    const supabase = await createClient();
-    
-    // 사용자 인증 확인 (getUser 사용)
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError || !user) {
-      console.error('사용자 인증 확인 오류:', userError);
-      redirect('/auth/sign-in');
-    }
+    // 통합된 인증 체크 사용
+    const user = await serverAuthGuard({
+      redirectTo: '/signin',
+      logUnauthorizedAccess: true
+    });
     
     const userId = user.id;
     

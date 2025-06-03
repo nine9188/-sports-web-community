@@ -61,9 +61,16 @@ export default function EditorToolbar({
   }
 
   // 명시적인 모달 닫기 핸들러 추가
-  const handleCloseModal = (type: 'image' | 'link' | 'youtube' | 'video' | 'match') => {
-    console.log(`${type} 모달 닫기 요청`);
-    handleToggleDropdown(type); // 같은 타입으로 토글하여 닫기
+  const closeModal = (type: string) => {
+    if (type === 'youtube') {
+      handleToggleDropdown('youtube');
+    } else if (type === 'video') {
+      handleToggleDropdown('video');
+    } else if (type === 'link') {
+      handleToggleDropdown('link');
+    } else if (type === 'match') {
+      handleToggleDropdown('match');
+    }
   };
 
   return (
@@ -124,7 +131,7 @@ export default function EditorToolbar({
         {showImageModal && (
           <Suspense fallback={<FormLoadingSpinner />}>
             <ImageUploadForm 
-              onCancel={() => handleCloseModal('image')}
+              onCancel={() => closeModal('image')}
               onFileUpload={handleFileUpload}
               onImageUrlAdd={handleAddImage}
               isOpen={showImageModal}
@@ -147,7 +154,7 @@ export default function EditorToolbar({
         {showLinkModal && (
           <Suspense fallback={<FormLoadingSpinner />}>
             <LinkForm 
-              onCancel={() => handleCloseModal('link')}
+              onCancel={() => closeModal('link')}
               onLinkAdd={handleAddLink}
               isOpen={showLinkModal}
             />
@@ -169,7 +176,7 @@ export default function EditorToolbar({
         {showYoutubeModal && (
           <Suspense fallback={<FormLoadingSpinner />}>
             <YoutubeForm 
-              onCancel={() => handleCloseModal('youtube')}
+              onCancel={() => closeModal('youtube')}
               onYoutubeAdd={handleAddYoutube}
               isOpen={showYoutubeModal}
             />
@@ -191,7 +198,7 @@ export default function EditorToolbar({
         {showVideoModal && (
           <Suspense fallback={<FormLoadingSpinner />}>
             <VideoForm 
-              onCancel={() => handleCloseModal('video')}
+              onCancel={() => closeModal('video')}
               onVideoAdd={handleAddVideo}
               isOpen={showVideoModal}
             />
@@ -215,8 +222,7 @@ export default function EditorToolbar({
             <MatchResultForm
               isOpen={showMatchModal}
               onCancel={() => {
-                console.log("match 모달 닫기 요청");
-                handleCloseModal('match');
+                closeModal('match');
               }}
               onMatchAdd={(matchId, matchData) => {
                 handleAddMatch(matchId, matchData);

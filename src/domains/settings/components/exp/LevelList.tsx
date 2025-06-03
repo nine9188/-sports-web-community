@@ -136,6 +136,7 @@ function LevelItem({ level, isCurrentLevel, size }: LevelItemProps) {
   const expRequired = LEVEL_EXP_REQUIREMENTS[level - 1];
   const iconUrl = getLevelIconUrl(level);
   
+  const iconSize = size === 'small' ? 24 : 40;
   const iconSizeClass = size === 'small' ? 'w-6 h-6' : 'w-10 h-10';
   const fontSizeClass = size === 'small' ? 'text-xs' : 'text-sm';
   
@@ -150,7 +151,8 @@ function LevelItem({ level, isCurrentLevel, size }: LevelItemProps) {
         <Image
           src={iconUrl}
           alt={`레벨 ${level} 아이콘`}
-          fill
+          width={iconSize}
+          height={iconSize}
           className="object-contain"
         />
       </div>

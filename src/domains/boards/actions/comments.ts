@@ -58,10 +58,8 @@ export async function createComment({
     try {
       const activityTypes = await getActivityTypeValues();
       await rewardUserActivity(user.id, activityTypes.COMMENT_CREATION, data.id);
-      console.log('댓글 작성 보상 지급 완료');
     } catch (rewardError) {
       console.error('댓글 작성 보상 지급 오류:', rewardError);
-      // 보상 지급 실패해도 댓글 작성은 성공으로 처리
     }
     
     return { success: true, comment: newComment };
@@ -243,8 +241,39 @@ export async function getComments(postId: string): Promise<{ success: boolean, c
       };
     }
     
-    // 댓글 데이터를 CommentType으로 캐스팅
-    const comments = (data || []) as CommentType[];
+    // 댓글 데이터를 CommentType으로 캐스팅하고 상태 판단
+    const comments = (data || []).map(comment => {
+      const commentData = {
+        id: comment.id,
+        user_id: comment.user_id,
+        post_id: comment.post_id,
+        content: comment.content,
+        created_at: comment.created_at,
+        updated_at: comment.updated_at,
+        likes: comment.likes || 0,
+        dislikes: comment.dislikes || 0,
+        profiles: comment.profiles,
+        is_hidden: false,
+        is_deleted: false
+      } as CommentType;
+      
+      // 댓글 내용을 기반으로 상태 판단
+      if (commentData.content === '신고에 의해 삭제되었습니다.') {
+        commentData.is_deleted = true;
+        commentData.is_hidden = false;
+      } else if (commentData.content === '신고에 의해 일시 숨김처리 되었습니다. 7일 후 다시 확인됩니다.') {
+        commentData.is_hidden = true;
+        commentData.is_deleted = false;
+      } else {
+        // 실제 데이터베이스 값이 있다면 사용, 없다면 기본값
+        const dbHidden = (comment as Record<string, unknown>).is_hidden as boolean;
+        const dbDeleted = (comment as Record<string, unknown>).is_deleted as boolean;
+        commentData.is_hidden = dbHidden || false;
+        commentData.is_deleted = dbDeleted || false;
+      }
+      
+      return commentData;
+    });
     
     // 아이콘 정보 추가 처리
     if (comments.length > 0) {
@@ -500,10 +529,8 @@ export async function likeComment(commentId: string): Promise<{
       try {
         const activityTypes = await getActivityTypeValues();
         await rewardUserActivity(updatedComment.user_id, activityTypes.RECEIVED_LIKE, commentId);
-        console.log('댓글 추천 받기 보상 지급 완료');
       } catch (rewardError) {
         console.error('댓글 추천 받기 보상 지급 오류:', rewardError);
-        // 보상 지급 실패해도 좋아요는 성공으로 처리
       }
     }
     

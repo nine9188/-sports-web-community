@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/shared/ui';
+import { toast } from 'react-hot-toast';
 
 interface YoutubeFormProps {
   onCancel: () => void;
@@ -68,18 +69,19 @@ export default function YoutubeForm({
     setIsValidUrl(isValid);
   };
 
-  const handleSubmit = () => {
-    if (!url || !isValidUrl) return;
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     
-    console.log('유튜브 폼 제출:', { url, caption });
-    
-    // 캡션과 함께 유튜브 URL 전달
-    try {
-      onYoutubeAdd(url, caption || undefined);
-    } catch (error) {
-      console.error('유튜브 추가 중 오류:', error);
-      alert('유튜브 동영상을 추가하는 중 오류가 발생했습니다. 다시 시도해주세요.');
+    if (!url.trim()) {
+      toast.error('YouTube URL을 입력해주세요.');
+      return;
     }
+
+    onYoutubeAdd(url.trim(), caption.trim() || undefined);
+    
+    // 폼 초기화
+    setUrl('');
+    setCaption('');
   };
 
   if (!isOpen) return null;

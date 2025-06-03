@@ -31,6 +31,8 @@ interface Post {
   team_logo?: string | null;
   league_logo?: string | null;
   formattedDate?: string;
+  is_hidden?: boolean;
+  is_deleted?: boolean;
 }
 
 interface PostListProps {
@@ -86,8 +88,8 @@ const VirtualizedPostItem = React.memo(function VirtualizedPostItem({
           <div className="space-y-1">
             <div>
               <div className="flex flex-wrap items-center">
-                <span className={`text-sm ${isCurrentPost ? 'text-blue-600 font-medium' : ''}`}>
-                  {String(post?.title || '제목 없음')}
+                <span className={`text-sm ${isCurrentPost ? 'text-blue-600 font-medium' : ''} ${post.is_deleted ? 'text-red-500' : post.is_hidden ? 'text-gray-500' : ''}`}>
+                  {post.is_deleted ? '[삭제된 게시글]' : post.is_hidden ? '[숨김 처리된 게시글]' : String(post?.title || '제목 없음')}
                 </span>
                 {renderContentTypeIcons(post)}
               </div>
@@ -128,8 +130,8 @@ const VirtualizedPostItem = React.memo(function VirtualizedPostItem({
       <div className="py-2 px-4 flex-1 flex items-center">
         <Link href={href} className="block w-full" prefetch={false}>
           <div className="flex items-center">
-            <span className={`text-sm hover:text-blue-600 line-clamp-1 ${isCurrentPost ? 'text-blue-600 font-medium' : ''}`}>
-              {String(post?.title || '제목 없음')}
+            <span className={`text-sm line-clamp-1 ${isCurrentPost ? 'text-blue-600 font-medium' : ''} ${post.is_deleted ? 'text-red-500' : post.is_hidden ? 'text-gray-500' : 'hover:text-blue-600'}`}>
+              {post.is_deleted ? '[삭제된 게시글]' : post.is_hidden ? '[숨김 처리된 게시글]' : String(post?.title || '제목 없음')}
             </span>
             {renderContentTypeIcons(post)}
           </div>
@@ -188,8 +190,8 @@ const PostItem = React.memo(function PostItem({
           <div className="space-y-1">
             <div>
               <div className="flex flex-wrap items-center">
-                <span className={`text-sm ${isCurrentPost ? 'text-blue-600 font-medium' : ''}`}>
-                  {String(post?.title || '제목 없음')}
+                <span className={`text-sm ${isCurrentPost ? 'text-blue-600 font-medium' : ''} ${post.is_deleted ? 'text-red-500' : post.is_hidden ? 'text-gray-500' : ''}`}>
+                  {post.is_deleted ? '[삭제된 게시글]' : post.is_hidden ? '[숨김 처리된 게시글]' : String(post?.title || '제목 없음')}
                 </span>
                 {renderContentTypeIcons(post)}
               </div>
@@ -230,8 +232,8 @@ const PostItem = React.memo(function PostItem({
       <td className="py-2 px-4 align-middle">
         <Link href={href} className="block w-full" prefetch={false}>
           <div className="flex items-center">
-            <span className={`text-sm hover:text-blue-600 line-clamp-1 ${isCurrentPost ? 'text-blue-600 font-medium' : ''}`}>
-              {String(post?.title || '제목 없음')}
+            <span className={`text-sm line-clamp-1 ${isCurrentPost ? 'text-blue-600 font-medium' : ''} ${post.is_deleted ? 'text-red-500' : post.is_hidden ? 'text-gray-500' : 'hover:text-blue-600'}`}>
+              {post.is_deleted ? '[삭제된 게시글]' : post.is_hidden ? '[숨김 처리된 게시글]' : String(post?.title || '제목 없음')}
             </span>
             {renderContentTypeIcons(post)}
           </div>
@@ -429,20 +431,6 @@ export default function PostList({
                      contentToCheck.includes('href=') ||
                      hasSocialEmbed ||
                      hasMatchCard;
-      
-      // 디버깅 로그 (개발 환경에서만)
-      if (process.env.NODE_ENV === 'development' && (hasImage || hasVideo || hasYoutube || hasLink)) {
-        console.log('PostList 콘텐츠 타입 감지:', {
-          isJSON,
-          hasImage,
-          hasVideo, 
-          hasYoutube,
-          hasLink,
-          hasSocialEmbed,
-          hasMatchCard,
-          contentPreview: contentToCheck.substring(0, 100)
-        });
-      }
       
       return { hasImage, hasVideo, hasYoutube, hasLink };
     } catch (error) {

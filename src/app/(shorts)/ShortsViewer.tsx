@@ -349,8 +349,6 @@ export default function ShortsViewer({ currentShortId, shorts }: ShortsViewerPro
   
   // 현재 인덱스가 변경될 때 비디오 재생 관리 - 강화된 버전
   useEffect(() => {
-    console.log('현재 인덱스 변경:', currentIndex);
-    
     // 모든 비디오 강제 정지
     const pauseAllVideos = () => {
       const videos = document.querySelectorAll('video');
@@ -422,6 +420,16 @@ export default function ShortsViewer({ currentShortId, shorts }: ShortsViewerPro
       pauseAllVideos();
     };
   }, [currentIndex]);
+
+  // 현재 인덱스 변경 시 처리
+  useEffect(() => {
+    if (currentIndex >= 0 && currentIndex < shorts.length) {
+      const currentPost = shorts[currentIndex];
+      // URL 업데이트 (히스토리에 추가하지 않음)
+      const newUrl = `/shorts/${currentPost.id}`;
+      window.history.replaceState(null, '', newUrl);
+    }
+  }, [currentIndex, shorts]);
 
   if (!shorts.length) {
     return <div className="w-full text-center py-8">쇼츠를 찾을 수 없습니다.</div>;

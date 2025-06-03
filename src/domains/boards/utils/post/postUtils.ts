@@ -3,6 +3,7 @@ import { Post, AdjacentPosts } from '../../types/post';
 import { FormattedPost } from '../../types/post/formatted';
 import { CommentType } from '../../types/post/comment';
 import { BoardData } from '../../types/board/data';
+import { createClient } from '@/shared/api/supabaseServer';
 
 /**
  * 이전 및 다음 게시글을 가져옵니다.
@@ -11,33 +12,57 @@ import { BoardData } from '../../types/board/data';
  * @returns 이전/다음 게시글 정보
  */
 export async function getAdjacentPosts(boardId: string, postNumber: number): Promise<AdjacentPosts> {
-  try {
-    // 이 함수는 실제 구현에서는 supabase 클라이언트를 사용하여 데이터를 가져와야 합니다.
-    // 실제 액션 코드로 이동해야 하는 로직입니다.
-    console.log(`게시판 ID: ${boardId}, 게시글 번호: ${postNumber} 인접 게시글 조회`);
-    return {
-      prevPost: null,
-      nextPost: null
-    };
-  } catch (error) {
-    console.error('인접 게시글 조회 오류:', error);
-    return {
-      prevPost: null,
-      nextPost: null
-    };
-  }
+  const supabase = await createClient();
+  
+  // 이전 게시글 (더 작은 번호)
+  const { data: prevPost } = await supabase
+    .from('posts')
+    .select('id, post_number, title')
+    .eq('board_id', boardId)
+    .lt('post_number', postNumber)
+    .order('post_number', { ascending: false })
+    .limit(1)
+    .single();
+
+  // 다음 게시글 (더 큰 번호)
+  const { data: nextPost } = await supabase
+    .from('posts')
+    .select('id, post_number, title')
+    .eq('board_id', boardId)
+    .gt('post_number', postNumber)
+    .order('post_number', { ascending: true })
+    .limit(1)
+    .single();
+
+  return {
+    prevPost,
+    nextPost
+  };
 }
 
 /**
  * 게시글 조회수를 증가시킵니다.
  * @param postId 게시글 ID
  */
-export async function incrementViewCount(postId: string): Promise<void> {
-  try {
-    // 실제 액션 코드로 이동해야 하는 로직입니다.
-    console.log(`게시글 ID: ${postId} 조회수 증가`);
-  } catch (error) {
-    console.error('조회수 증가 오류:', error);
+export async function incrementPostViews(postId: string) {
+  const supabase = await createClient();
+  
+  // 현재 조회수를 가져와서 1 증가
+  const { data: currentPost } = await supabase
+    .from('posts')
+    .select('views')
+    .eq('id', postId)
+    .single();
+    
+  if (currentPost) {
+    const { error } = await supabase
+      .from('posts')
+      .update({ views: (currentPost.views || 0) + 1 })
+      .eq('id', postId);
+
+    if (error) {
+      console.error('조회수 증가 오류:', error);
+    }
   }
 }
 

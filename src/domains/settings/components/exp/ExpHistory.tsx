@@ -6,18 +6,25 @@ import { formatDate } from '@/domains/settings/hooks';
 
 interface ExpHistoryProps {
   expHistory: ExpHistoryItem[];
+  isLoading: boolean;
+  error: string | null;
 }
 
 /**
  * 경험치 내역 컴포넌트
  * 사용자의 경험치 획득/사용 내역을 테이블 형태로 보여줍니다.
  */
-export default function ExpHistory({ expHistory = [] }: ExpHistoryProps) {
+export default function ExpHistory({ expHistory = [], isLoading, error }: ExpHistoryProps) {
   const isEmpty = expHistory.length === 0;
   
-  // 디버깅을 위해 expHistory 데이터 출력
-  console.log('경험치 내역 컴포넌트 데이터:', expHistory);
-  
+  if (isLoading) {
+    return <div className="text-center py-4">로딩 중...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-4 text-red-500">오류가 발생했습니다.</div>;
+  }
+
   return (
     <div className="bg-white rounded-lg border overflow-hidden">
       <div className="px-4 py-3 bg-gray-50 border-b">

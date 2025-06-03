@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import UserIcon from '@/shared/components/UserIcon';
 import { likeComment, dislikeComment } from '@/domains/boards/actions/comments';
 import { CommentType } from '@/domains/boards/types/post/comment';
+import ReportButton from '@/domains/reports/components/ReportButton';
 
 interface CommentProps {
   comment: CommentType & {
@@ -61,6 +62,12 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
   
   // 현재 사용자가 댓글 작성자인지 확인
   const isCommentOwner = currentUserId === comment.user_id;
+  
+  // 댓글이 숨김 처리되었는지 확인
+  const isHidden = comment.is_hidden === true;
+  
+  // 댓글이 삭제 처리되었는지 확인
+  const isDeleted = comment.is_deleted === true;
   
   // comment props가 변경될 때 상태 업데이트 (페이지 이동 후 돌아왔을 때 등)
   useEffect(() => {
@@ -177,6 +184,69 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
     }
   };
   
+  // 삭제 처리된 댓글인 경우 특별한 UI 표시
+  if (isDeleted) {
+    return (
+      <div className="border-b py-3 px-4 bg-red-50">
+        <div className="flex items-center justify-center py-4">
+          <div className="text-center">
+            <div className="flex items-center justify-center mb-2">
+              <svg className="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              <span className="text-sm text-red-600 font-medium">신고에 의해 삭제되었습니다</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // 숨김 처리된 댓글인 경우 특별한 UI 표시
+  if (isHidden) {
+    // 숨김 기간 계산
+    const calculateRemainingDays = () => {
+      // hidden_until 필드가 있는지 확인 (타입 안전성)
+      const hiddenUntil = (comment as CommentType & { hidden_until?: string }).hidden_until;
+      if (!hiddenUntil) return '7일';
+      
+      try {
+        const hiddenUntilDate = new Date(hiddenUntil);
+        const now = new Date();
+        const diffInMs = hiddenUntilDate.getTime() - now.getTime();
+        const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
+        
+        if (diffInDays <= 0) {
+          return '곧 복구 예정';
+        } else if (diffInDays === 1) {
+          return '1일';
+        } else {
+          return `${diffInDays}일`;
+        }
+      } catch {
+        return '7일';
+      }
+    };
+    
+    const remainingTime = calculateRemainingDays();
+    
+    return (
+      <div className="border-b py-3 px-4 bg-gray-50">
+        <div className="flex items-center justify-center py-4">
+          <div className="text-center">
+            <div className="flex items-center justify-center mb-2">
+              <svg className="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+              </svg>
+              <span className="text-sm text-gray-600 font-medium">신고에 의해 일시 숨김처리 되었습니다</span>
+            </div>
+            <p className="text-xs text-gray-500">{remainingTime} 후 다시 검토됩니다</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className="border-b py-3 px-4 transition-colors hover:bg-gray-50">
       <div className="flex space-x-2">
@@ -283,23 +353,38 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
               </button>
             </div>
             
-            {/* 수정/삭제 버튼 (본인 댓글일 때만 표시) */}
-            {isCommentOwner && !isEditing && (
-              <div className="flex space-x-3">
-                <button 
-                  onClick={handleEdit}
-                  className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  수정
-                </button>
-                <button 
-                  onClick={() => onDelete(comment.id)}
-                  className="text-xs text-red-500 hover:text-red-700 transition-colors"
-                >
-                  삭제
-                </button>
-              </div>
-            )}
+            {/* 오른쪽 액션 버튼들 */}
+            <div className="flex items-center space-x-3">
+              {/* 신고 버튼 (댓글 작성자가 아니고 로그인한 경우에만 표시) */}
+              {!isCommentOwner && currentUserId && (
+                <ReportButton
+                  targetType="comment"
+                  targetId={comment.id}
+                  variant="ghost"
+                  size="sm"
+                  showText={false}
+                  className="text-xs p-1"
+                />
+              )}
+              
+              {/* 수정/삭제 버튼 (본인 댓글일 때만 표시) */}
+              {isCommentOwner && !isEditing && (
+                <>
+                  <button 
+                    onClick={handleEdit}
+                    className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                  >
+                    수정
+                  </button>
+                  <button 
+                    onClick={() => onDelete(comment.id)}
+                    className="text-xs text-red-500 hover:text-red-700 transition-colors"
+                  >
+                    삭제
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>

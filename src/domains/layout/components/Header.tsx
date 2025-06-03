@@ -26,6 +26,7 @@ export default function Header({
       isSidebarOpen={isSidebarOpen} 
       initialUserData={userData || null}
       boards={boards}
+      isAdmin={userData?.isAdmin || false}
     />
   );
 } 

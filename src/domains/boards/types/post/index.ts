@@ -16,6 +16,8 @@ export interface Post {
   dislikes?: number;
   category?: string;
   is_published?: boolean | null;
+  is_hidden?: boolean;
+  is_deleted?: boolean;
   meta?: Json | null;
   source_url?: string | null;
   status?: string | null;

@@ -209,8 +209,9 @@ export default function UserProfile({ profileData: initialProfileData }: UserPro
             <Image 
               src={displayIconUrl}
               alt={`${profileData.nickname || '사용자'} 프로필`}
-              fill
-              className="object-cover"
+              width={40}
+              height={40}
+              className="object-cover rounded-full"
               {...profileImageProps}
               onError={handleImageError}
               title={displayIconName}

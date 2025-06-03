@@ -209,7 +209,6 @@ export default function PostEditForm({
           throw new Error('게시판 ID가 필요합니다.');
         }
         
-        console.log('게시글 생성 시도:', { title, categoryId });
         
         try {
           // FormData 객체 생성
@@ -221,7 +220,6 @@ export default function PostEditForm({
           // 서버 액션으로 게시글 생성 실행
           const result = await createPost(formData);
           
-          console.log('게시글 생성 결과:', result);
           
           if (!result) {
             throw new Error('서버에서 응답이 없습니다.');
@@ -239,10 +237,8 @@ export default function PostEditForm({
             
             // 활동 보상 지급 시도 - 실패해도 게시글 이동은 처리
             try {
-              console.log('게시글 생성 성공, 활동 보상 지급 시도');
               const activityTypes = await getActivityTypeValues();
               await rewardUserActivity(userData.user.id, activityTypes.POST_CREATION, postId);
-              console.log('활동 보상 지급 완료');
             } catch (rewardError) {
               console.error('보상 지급 오류:', rewardError);
               // 오류가 있어도 게시글 이동은 진행
@@ -250,7 +246,6 @@ export default function PostEditForm({
             
             // 게시글 생성 성공 메시지
             toast.success('게시글이 작성되었습니다.');
-            console.log('게시글로 이동:', `/boards/${boardSlug}/${postNumber}`);
             
             // 페이지 이동 전 약간의 지연 추가 (토스트 메시지 표시 및 상태 업데이트 위함)
             setTimeout(() => {
@@ -276,7 +271,6 @@ export default function PostEditForm({
           throw new Error('게시글 ID가 제공되지 않았습니다.');
         }
         
-        console.log('게시글 수정 시도:', { postId });
         
         try {
           // 서버 액션으로 게시글 수정
@@ -287,7 +281,6 @@ export default function PostEditForm({
             userData.user.id
           );
           
-          console.log('게시글 수정 결과:', result);
           
           if (!result) {
             throw new Error('서버에서 응답이 없습니다.');
@@ -296,7 +289,6 @@ export default function PostEditForm({
           if (result.success && result.boardSlug && result.postNumber) {
             // 게시글 수정 성공 메시지
             toast.success('게시글이 수정되었습니다.');
-            console.log('게시글로 이동:', `/boards/${result.boardSlug}/${result.postNumber}`);
             
             // 페이지 이동 전 약간의 지연 추가
             setTimeout(() => {
@@ -383,7 +375,6 @@ export default function PostEditForm({
     if (!url || !editor) return;
     
     try {
-      console.log('유튜브 추가:', { url, caption });
       
       // 유튜브 URL을 embed URL로 변환
       let embedUrl = url;
@@ -404,7 +395,6 @@ export default function PostEditForm({
       `;
       
       editor.commands.insertContent(youtubeHTML);
-      console.log('유튜브 HTML 삽입 완료');
       
     } catch (error) {
       console.error('유튜브 추가 중 오류:', error);
@@ -419,7 +409,6 @@ export default function PostEditForm({
     if (!videoUrl || !editor) return;
     
     try {
-      console.log('비디오 추가:', { videoUrl, caption });
       
       // 직접 HTML 삽입 (확장 로딩 없이)
       const videoHTML = `
@@ -432,7 +421,6 @@ export default function PostEditForm({
       `;
       
       editor.commands.insertContent(videoHTML);
-      console.log('비디오 HTML 삽입 완료');
       
     } catch (error) {
       console.error('비디오 추가 중 오류:', error);
@@ -499,7 +487,6 @@ export default function PostEditForm({
     }
     
     try {
-      console.log('경기 카드 추가 시도:', { matchId, matchData });
       
       // 경기 카드 HTML 생성
       const matchCardHTML = generateMatchCardHTML(matchData);
@@ -510,7 +497,6 @@ export default function PostEditForm({
       // 모달 닫기
       setShowMatchModal(false);
       toast.success('경기 결과가 추가되었습니다.');
-      console.log('경기 카드 추가 성공');
     } catch (error) {
       console.error('경기 추가 중 오류:', error);
       toast.error('경기 추가 중 오류가 발생했습니다.');
@@ -522,7 +508,6 @@ export default function PostEditForm({
     if (!editor || !url) return;
     
     try {
-      console.log('링크 추가:', { url, text });
       
       // 현재 선택된 텍스트가 있는지 확인
       const { from, to } = editor.state.selection;
@@ -537,7 +522,6 @@ export default function PostEditForm({
         editor.chain().focus().insertContent(`<a href="${url}" target="_blank" rel="noopener noreferrer">${linkText}</a>`).run();
       }
       
-      console.log('링크 삽입 완료');
     } catch (error) {
       console.error('링크 추가 중 오류:', error);
       toast.error('링크를 추가하는데 실패했습니다.');

@@ -124,9 +124,7 @@ export default function AdminDashboard() {
   }, [supabase]);
   
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold mb-6">관리자 대시보드</h1>
-      
+    <>
       {isLoading ? (
         <div className="flex items-center justify-center h-64">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mr-2"></div>
@@ -135,71 +133,69 @@ export default function AdminDashboard() {
       ) : (
         <>
           {/* 주요 통계 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             <StatCard 
               title="전체 회원" 
               value={stats.totalUsers} 
-              icon={<Users className="w-5 h-5 text-blue-500" />}
+              icon={<Users className="w-6 h-6 text-blue-500" />}
             />
             <StatCard 
               title="전체 게시글" 
               value={stats.totalPosts} 
-              icon={<FileText className="w-5 h-5 text-green-500" />}
+              icon={<FileText className="w-6 h-6 text-green-500" />}
             />
             <StatCard 
               title="전체 댓글" 
               value={stats.totalComments} 
-              icon={<MessageSquare className="w-5 h-5 text-indigo-500" />}
+              icon={<MessageSquare className="w-6 h-6 text-indigo-500" />}
             />
             <StatCard 
               title="게시판 수" 
               value={stats.totalBoards} 
-              icon={<FileText className="w-5 h-5 text-yellow-500" />}
+              icon={<FileText className="w-6 h-6 text-yellow-500" />}
             />
           </div>
           
-          {/* 추가 정보 섹션 */}
-          <div className="grid grid-cols-1 gap-4">
-            <div className="bg-white shadow rounded-lg p-6 border border-gray-200">
-              <h2 className="text-lg font-medium mb-4">관리자 기능 안내</h2>
-              <div className="space-y-4">
-                <div className="flex items-start">
-                  <Users className="h-5 w-5 text-blue-500 mr-3 mt-0.5" />
-                  <div>
-                    <p className="font-medium">사용자 관리</p>
-                    <p className="text-sm text-gray-600 mt-1">사용자 계정을 검색하고 관리할 수 있습니다.</p>
-                  </div>
+          {/* 관리자 기능 안내 */}
+          <div className="bg-gray-50 rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">관리자 기능 안내</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex items-start">
+                <Users className="h-6 w-6 text-blue-500 mr-4 mt-1" />
+                <div>
+                  <p className="font-semibold text-gray-900">사용자 관리</p>
+                  <p className="text-sm text-gray-600 mt-1">사용자 계정을 검색하고 관리할 수 있습니다.</p>
                 </div>
-                
-                <div className="flex items-start">
-                  <FileText className="h-5 w-5 text-green-500 mr-3 mt-0.5" />
-                  <div>
-                    <p className="font-medium">게시판 관리</p>
-                    <p className="text-sm text-gray-600 mt-1">게시판을 생성, 수정하거나 권한을 설정할 수 있습니다.</p>
-                  </div>
+              </div>
+              
+              <div className="flex items-start">
+                <FileText className="h-6 w-6 text-green-500 mr-4 mt-1" />
+                <div>
+                  <p className="font-semibold text-gray-900">게시판 관리</p>
+                  <p className="text-sm text-gray-600 mt-1">게시판을 생성, 수정하거나 권한을 설정할 수 있습니다.</p>
                 </div>
-                
-                <div className="flex items-start">
-                  <Coins className="h-5 w-5 text-yellow-500 mr-3 mt-0.5" />
-                  <div>
-                    <p className="font-medium">포인트 관리</p>
-                    <p className="text-sm text-gray-600 mt-1">사용자 포인트를 조정하고 내역을 확인할 수 있습니다.</p>
-                  </div>
+              </div>
+              
+              <div className="flex items-start">
+                <Coins className="h-6 w-6 text-yellow-500 mr-4 mt-1" />
+                <div>
+                  <p className="font-semibold text-gray-900">포인트 관리</p>
+                  <p className="text-sm text-gray-600 mt-1">사용자 포인트를 조정하고 내역을 확인할 수 있습니다.</p>
                 </div>
-                
-                <div className="flex items-start">
-                  <TrendingUp className="h-5 w-5 text-purple-500 mr-3 mt-0.5" />
-                  <div>
-                    <p className="font-medium">경험치/레벨 관리</p>
-                    <p className="text-sm text-gray-600 mt-1">사용자의 경험치와 레벨을 조정할 수 있습니다.</p>
-                  </div>
+              </div>
+              
+              <div className="flex items-start">
+                <TrendingUp className="h-6 w-6 text-purple-500 mr-4 mt-1" />
+                <div>
+                  <p className="font-semibold text-gray-900">경험치/레벨 관리</p>
+                  <p className="text-sm text-gray-600 mt-1">사용자의 경험치와 레벨을 조정할 수 있습니다.</p>
                 </div>
               </div>
             </div>
           </div>
         </>
       )}
-    </div>
+    </>
   );
 }
 
@@ -216,13 +212,15 @@ function StatCard({
   suffix?: string;
 }) {
   return (
-    <div className="bg-white rounded-lg shadow p-4 border border-gray-200">
-      <div className="flex justify-between items-start">
-        <h3 className="text-sm font-medium text-gray-500">{title}</h3>
-        <div className="p-2 rounded-full bg-gray-100">{icon}</div>
-      </div>
-      <div className="mt-2">
-        <p className="text-2xl font-bold">{value}{suffix}</p>
+    <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-gray-600">{title}</p>
+          <p className="text-3xl font-bold text-gray-900 mt-2">{value}{suffix}</p>
+        </div>
+        <div className="p-3 rounded-full bg-gray-50">
+          {icon}
+        </div>
       </div>
     </div>
   );

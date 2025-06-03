@@ -124,12 +124,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
           );
           
           setMatches(filteredMatches);
-          
-          if (filteredMatches.length === 0) {
-            setError('예정된/진행 중인 주요 리그 경기가 없습니다.');
-          } else {
-            setError(null);
-          }
+          setError(null); // 경기가 없어도 에러가 아님
         } else {
           setError('데이터를 가져오는데 실패했습니다.');
         }
@@ -301,12 +296,17 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
           <p className="text-xs mt-1 text-gray-500">새로고침하거나 잠시 후 다시 시도해주세요</p>
         </div>
       ) : matches.length === 0 ? (
-        <div className="flex flex-col justify-center items-center h-40 text-gray-500">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 mb-2 text-gray-400">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
-          </svg>
-          <p>예정된/진행 중인 경기가 없습니다</p>
-          <p className="text-xs mt-1 text-gray-400">잠시 후 다시 확인해주세요</p>
+        <div className="w-full">
+          {/* 경기가 없을 때 전체 영역을 가득 채우는 카드 */}
+          <div className="w-full border rounded-lg p-6 h-[140px] shadow-sm bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+            <div className="flex flex-col justify-center items-center h-full text-center">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10 mb-3 text-gray-400">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
+              </svg>
+              <p className="text-lg font-medium text-gray-600 dark:text-gray-300 mb-1">예정된/진행 중인 경기가 없습니다</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500">잠시 후 다시 확인해주세요</p>
+            </div>
+          </div>
         </div>
       ) : (
         <div className="relative">

@@ -10,6 +10,8 @@ export interface CommentType {
   parent_id?: string | null;
   likes?: number;
   dislikes?: number;
+  is_hidden?: boolean | null;
+  is_deleted?: boolean | null;
   userAction?: 'like' | 'dislike' | null;
   profiles?: {
     nickname: string | null;

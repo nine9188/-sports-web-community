@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, startTransition } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import React, { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/shared/context/AuthContext';
 import { Header } from '@/domains/layout';
 import Footer from '@/shared/components/Footer';
@@ -39,22 +39,16 @@ const AuthStateManager = React.memo(function AuthStateManager({
   boardsData: Board[]
 }) {
   const { user } = useAuth();
-  const router = useRouter();
   const pathname = usePathname();
   
   // 매치 페이지인지 확인
   const isMatchPage = pathname?.includes('/livescore/football/match/');
   
-  // 인증 상태 변경 감지 및 리다이렉트 처리 - 디바운스 적용 + startTransition
+  // 인증 상태 변경 감지 및 리다이렉트 처리 - 불필요한 refresh 제거
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      startTransition(() => {
-        router.refresh();
-      });
-    }, 100); // 100ms 디바운스
-    
-    return () => clearTimeout(timeoutId);
-  }, [user, router]);
+    // router.refresh() 호출을 제거하여 무한 루프 방지
+    // 인증 상태 변경은 AuthContext에서 이미 처리되고 있음
+  }, [user]);
   
   return (
     <div className="flex flex-col min-h-screen w-full">

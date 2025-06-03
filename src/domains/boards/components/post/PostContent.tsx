@@ -69,11 +69,6 @@ export default function PostContent({ content }: PostContentProps) {
     
     // 이미 문자열인 경우 그대로 반환 (기존 HTML 내용)
     if (typeof content === 'string') {
-      console.log('PostContent - HTML 내용 반환:', {
-        hasMatchCard: content.includes('match-card'),
-        hasProcessedMatchCard: content.includes('processed-match-card'),
-        contentLength: content.length
-      });
       return content;
     }
     
@@ -188,11 +183,8 @@ export default function PostContent({ content }: PostContentProps) {
     
     // 1. 서버에서 처리되지 않은 매치카드 백업 처리
     const unprocessedMatchCards = rootElement.querySelectorAll('[data-type="match-card"]:not(.processed-match-card)');
-    console.log('PostContent - 미처리 매치카드 수:', unprocessedMatchCards.length);
     
     if (unprocessedMatchCards.length > 0) {
-      console.log('PostContent - 서버 처리 실패, 클라이언트에서 백업 처리 시작');
-      
       unprocessedMatchCards.forEach((element, index) => {
         try {
           const matchDataString = element.getAttribute('data-match');
@@ -266,7 +258,6 @@ export default function PostContent({ content }: PostContentProps) {
             cardElement.classList.add('match-card', 'processed-match-card');
             cardElement.setAttribute('data-processed', 'true');
             
-            console.log(`PostContent - 백업 매치카드 ${index + 1} 처리 완료`);
           }
         } catch (error) {
           console.error(`PostContent - 백업 매치카드 ${index + 1} 처리 오류:`, error);
@@ -432,16 +423,6 @@ export default function PostContent({ content }: PostContentProps) {
     
     const timeoutId = setTimeout(() => {
       processEmbeds();
-      
-      // 디버깅: 매치카드 상태 확인
-      if (contentRef.current) {
-        const matchCards = contentRef.current.querySelectorAll('.match-card, .processed-match-card, [data-type="match-card"]');
-        console.log('PostContent - 매치카드 상태:', {
-          총개수: matchCards.length,
-          처리된카드: contentRef.current.querySelectorAll('.processed-match-card').length,
-          미처리카드: contentRef.current.querySelectorAll('[data-type="match-card"]:not(.processed-match-card)').length
-        });
-      }
     }, 100);
     
     return () => clearTimeout(timeoutId);

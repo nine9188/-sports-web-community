@@ -51,7 +51,11 @@ export default async function ExpPage() {
       <LevelList currentLevel={userLevel} />
       
       {/* 경험치 내역 컴포넌트 */}
-      <ExpHistory expHistory={expHistory} />
+      <ExpHistory 
+        expHistory={expHistory}
+        isLoading={false}
+        error={expHistoryResult.error || null}
+      />
       
       {/* 디버깅 정보 (개발 환경에서만 표시) */}
       {process.env.NODE_ENV === 'development' && expHistoryResult.error && (

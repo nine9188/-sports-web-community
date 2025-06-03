@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/shared/ui';
 import { createClient } from '@/shared/api/supabase';
 import { AlertCircle, FileVideo } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 interface VideoFormProps {
   onCancel: () => void;
@@ -118,11 +119,10 @@ export default function VideoForm({
       // 이 형식은 "user_id/폴더명/파일명" 형태여야 함
       const fileName = `${userData.user.id}/videos/${timestamp}_${randomString}_${safeFileName}`;
       
-      console.log('비디오 업로드 시도:', fileName);
       
       // Supabase Storage에 업로드
       setUploadProgress(30);
-      const { data, error } = await supabase
+      const { error } = await supabase
         .storage
         .from('post-videos')
         .upload(fileName, selectedFile, {
@@ -137,7 +137,6 @@ export default function VideoForm({
       }
       
       setUploadProgress(70);
-      console.log('비디오 업로드 성공:', data);
       
       // 업로드된 파일의 공개 URL 가져오기
       const { data: urlData } = supabase
@@ -149,7 +148,6 @@ export default function VideoForm({
         throw new Error('파일 URL을 가져올 수 없습니다.');
       }
       
-      console.log('비디오 URL:', urlData.publicUrl);
       setUploadProgress(100);
       
       // 부모 컴포넌트에 비디오 URL 전달
@@ -157,10 +155,12 @@ export default function VideoForm({
       setIsUploading(false);
       onCancel();
       
+      toast.success('비디오가 성공적으로 업로드되었습니다!');
     } catch (error: unknown) {
       console.error('비디오 업로드 오류:', error);
       setError(`업로드 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
       setIsUploading(false);
+      toast.error('비디오 업로드에 실패했습니다.');
     }
   };
 

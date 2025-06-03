@@ -262,7 +262,6 @@ export function PlayerDataProvider({
 
       // 마운트 ID가 변경되었는지 확인 (컴포넌트가 언마운트되었거나 새로운 요청이 발생한 경우)
       if (currentMountId !== mountIdRef.current) {
-        console.log('[PlayerDataContext] 마운트 ID가 변경되어 작업 취소');
         return null;
       }
 
@@ -404,7 +403,6 @@ export function PlayerDataProvider({
   const loadPlayerData = useCallback(async (id: string, tab: string = currentTab) => {
     // 이미 로딩 중이면 중복 요청 방지
     if (isLoading) {
-      console.log('[PlayerDataContext] 이미 로딩 중이므로 요청 무시');
       return;
     }
     
@@ -412,7 +410,6 @@ export function PlayerDataProvider({
     
     // 이 탭의 데이터가 이미 로드되어 있는지 확인
     if (tabsData[typedTab] && id === playerId) {
-      console.log(`[PlayerDataContext] ${typedTab} 탭 데이터가 이미 로드되어 있음`);
       // 탭 변경만 수행
       setCurrentTab(typedTab);
       return;
@@ -450,7 +447,6 @@ export function PlayerDataProvider({
     setError(null); // 이전 오류 초기화
     
     try {
-      console.log(`[PlayerDataContext] ${typedTab} 탭 데이터 로드 시작`);
       
       // 필요한 데이터 옵션 설정
       const options = getOptionsForTab(typedTab);
@@ -460,7 +456,6 @@ export function PlayerDataProvider({
       
       // 마운트 ID가 변경되었는지 확인 (컴포넌트가 언마운트되었거나 새로운 요청이 발생한 경우)
       if (currentMountId !== mountIdRef.current) {
-        console.log('[PlayerDataContext] 마운트 ID가 변경되어 작업 취소');
         return;
       }
       
@@ -581,11 +576,9 @@ export function PlayerDataProvider({
       // 마지막으로 로드된 탭 업데이트
       lastLoadedTabRef.current = typedTab;
       
-      console.log(`[PlayerDataContext] ${typedTab} 탭 데이터 로드 완료`);
     } catch (err) {
       // 마운트 ID가 변경되었는지 다시 확인 (예외 발생 시에도)
       if (currentMountId !== mountIdRef.current) {
-        console.log('[PlayerDataContext] 마운트 ID가 변경되어 작업 취소 (에러 처리 중)');
         return;
       }
       

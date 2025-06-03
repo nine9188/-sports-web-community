@@ -52,6 +52,8 @@ interface PostDetailLayoutProps {
     dislikes: number | null;
     board_id: string | null;
     post_number: number;
+    is_hidden?: boolean;
+    is_deleted?: boolean;
     profiles?: {
       nickname: string | null;
       icon_id: number | null;
@@ -176,6 +178,67 @@ export default function PostDetailLayout({
     author_icon_url: post.author_icon_url || iconUrl
   }));
   
+  // 게시글 상태 확인
+  const isPostHidden = post.is_hidden === true;
+  const isPostDeleted = post.is_deleted === true;
+  
+  // 삭제된 게시글인 경우 특별한 UI 표시
+  if (isPostDeleted) {
+    return (
+      <div className="container mx-auto">
+        {/* 게시판 경로 */}
+        <div className="overflow-x-auto sm:mt-0 mt-4">
+          <MemoizedBoardBreadcrumbs breadcrumbs={breadcrumbs} />
+        </div>
+        
+        {/* 삭제된 게시글 메시지 */}
+        <div className="bg-red-50 rounded-lg border border-red-200 p-8 text-center">
+          <div className="flex items-center justify-center mb-4">
+            <svg className="w-12 h-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-red-800 mb-2">신고에 의해 삭제된 게시글</h2>
+          <p className="text-red-600">이 게시글은 신고 처리로 인해 삭제되었습니다.</p>
+          <div className="mt-6">
+            <Link href={`/boards/${slug}`} className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
+              게시판으로 돌아가기
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // 숨김 처리된 게시글인 경우 특별한 UI 표시
+  if (isPostHidden) {
+    return (
+      <div className="container mx-auto">
+        {/* 게시판 경로 */}
+        <div className="overflow-x-auto sm:mt-0 mt-4">
+          <MemoizedBoardBreadcrumbs breadcrumbs={breadcrumbs} />
+        </div>
+        
+        {/* 숨김 처리된 게시글 메시지 */}
+        <div className="bg-gray-50 rounded-lg border border-gray-200 p-8 text-center">
+          <div className="flex items-center justify-center mb-4">
+            <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">신고에 의해 숨김 처리된 게시글</h2>
+          <p className="text-gray-600 mb-2">이 게시글은 신고 처리로 인해 일시적으로 숨김 처리되었습니다.</p>
+          <p className="text-sm text-gray-500">7일 후 다시 검토됩니다.</p>
+          <div className="mt-6">
+            <Link href={`/boards/${slug}`} className="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors">
+              게시판으로 돌아가기
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className="container mx-auto">
       {/* 1. 게시판 경로 - BoardBreadcrumbs 컴포넌트 사용 */}
@@ -276,9 +339,6 @@ export default function PostDetailLayout({
       <div className="mb-4">
         <MemoizedCommentSection 
           postId={post.id} 
-          initialComments={comments}
-          boardSlug={slug}
-          postNumber={postNumber}
           postOwnerId={post.user_id}
         />
       </div>

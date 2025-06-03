@@ -7,6 +7,7 @@ import AuthSection from '@/domains/sidebar/components/auth/AuthSection';
 import { fetchStandingsData } from '@/domains/sidebar/actions/football';
 import LeagueStandings from '@/domains/sidebar/components/league/LeagueStandings';
 import { RightSidebar } from '@/domains/sidebar/components';
+import { getInitialSession } from '@/shared/api/supabaseServer';
 import { Suspense } from 'react';
 
 // 로딩 스켈레톤 컴포넌트
@@ -57,6 +58,9 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // 서버에서 초기 세션 가져오기 (SSR 지원)
+  const initialSession = await getInitialSession();
+  
   // 헤더 컴포넌트를 위한 사용자 데이터 가져오기
   const headerUserData = await getHeaderUserData();
   
@@ -93,6 +97,7 @@ export default async function RootLayout({
           leagueStandingsComponent={leagueStandingsComponent}
           headerUserData={headerUserData}
           boardsData={boardsResult.boardData || []}
+          initialSession={initialSession}
         >
           {children}
         </RootLayoutClient>

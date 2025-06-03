@@ -30,14 +30,13 @@ function debounce<T extends (...args: unknown[]) => unknown>(
 
 interface CommentSectionProps {
   postId: string;
-  initialComments: CommentType[];
   boardSlug?: string;
   postNumber?: string;
   postOwnerId?: string;
 }
 
-export default function CommentSection({ postId, initialComments, postOwnerId }: CommentSectionProps) {
-  const [comments, setComments] = useState<CommentType[]>(initialComments || []);
+export default function CommentSection({ postId, postOwnerId }: CommentSectionProps) {
+  const [comments, setComments] = useState<CommentType[]>([]);
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -47,10 +46,8 @@ export default function CommentSection({ postId, initialComments, postOwnerId }:
   // 댓글 데이터 업데이트 함수 최적화 - 사용자 액션 정보 포함
   const updateComments = useCallback(async () => {
     try {
-      console.log('댓글 실시간 업데이트 시작');
       const response = await getComments(postId);
       if (response.success && response.comments && response.comments.length >= 0) {
-        console.log('댓글 업데이트 성공:', response.comments.length, '개');
         setComments(response.comments);
       } else {
         console.error('댓글 업데이트 실패:', response.error);
@@ -59,6 +56,11 @@ export default function CommentSection({ postId, initialComments, postOwnerId }:
       console.error("댓글 실시간 업데이트 중 오류:", error);
     }
   }, [postId]);
+
+  // 초기 댓글 로딩
+  useEffect(() => {
+    updateComments();
+  }, [updateComments]);
 
   // 디바운스된 업데이트 함수
   const debouncedUpdateComments = useMemo(() => 
@@ -119,12 +121,10 @@ export default function CommentSection({ postId, initialComments, postOwnerId }:
     setErrorMessage(null);
     
     try {
-      console.log('댓글 작성 시도:', { postId, content: content.trim() });
       const result = await createComment({
         postId,
         content: content.trim()
       });
-      console.log('댓글 작성 결과:', result);
       
       if (!result.success) {
         if (result.error === '로그인이 필요합니다.') {
@@ -159,7 +159,6 @@ export default function CommentSection({ postId, initialComments, postOwnerId }:
   // 댓글 수정 핸들러
   const handleUpdate = useCallback(async (commentId: string, updatedContent: string) => {
     try {
-      console.log('댓글 수정 요청:', { commentId, updatedContent });
       
       // API 요청 대신 server action 직접 호출
       const result = await updateComment(commentId, updatedContent);
@@ -196,7 +195,6 @@ export default function CommentSection({ postId, initialComments, postOwnerId }:
     }
 
     try {
-      console.log('댓글 삭제 요청:', { commentId });
       
       // API 요청 대신 server action 직접 호출
       const result = await deleteComment(commentId);

@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import Link from 'next/link';
 import { useAuth } from '@/shared/context/AuthContext';
 import { createClient } from '@/shared/api/supabase';
+import { signUp } from '@/domains/auth/actions';
 import { AlertCircle, Check, Eye, EyeOff } from 'lucide-react';
 
 export default function SignupPage() {
@@ -249,66 +250,20 @@ export default function SignupPage() {
     try {
       setIsLoading(true);
       
-      const supabase = createClient();
-      
-      console.log('회원가입 시도:', { email, username, nickname, fullName });
-      
-      // 먼저 인증 계정 생성
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: email,
-        password: password,
-        options: {
-          data: {
-            username,
-            full_name: fullName,
-            nickname
-          },
-          emailRedirectTo: `${window.location.origin}/auth/callback`
-        }
+      const result = await signUp(email, password, {
+        username,
+        full_name: fullName,
+        nickname
       });
       
-      if (authError) {
-        console.error('인증 계정 생성 오류:', authError);
-        throw authError;
+      if (result.success) {
+        toast.success('회원가입이 완료되었습니다! 이메일을 확인해주세요.');
+        router.push('/signin?message=회원가입이 완료되었습니다. 이메일을 확인하고 로그인해주세요.');
+      } else {
+        toast.error(result.error || '회원가입에 실패했습니다.');
       }
-      
-      console.log('회원가입 성공:', authData);
-      
-      // 인증 성공 후 프로필 생성
-      if (authData.user) {
-        const { error: createProfileError } = await supabase
-          .from('profiles')
-          .upsert({
-            id: authData.user.id,
-            username, 
-            email,
-            nickname,
-            full_name: fullName,
-            updated_at: new Date().toISOString()
-          });
-          
-        if (createProfileError) {
-          console.warn('프로필 생성 실패:', createProfileError);
-        }
-      }
-      
-      // 로그아웃 (중요)
-      await supabase.auth.signOut();
-      
-      toast.success('회원가입이 완료되었습니다. 이메일 인증 링크를 확인해주세요.');
-      
-      setTimeout(() => {
-        router.push('/');
-      }, 3000);
-    } catch (error: unknown) {
-      console.error('회원가입 오류:', error);
-      let errorMessage = '회원가입 중 오류가 발생했습니다.';
-      
-      if (error && typeof error === 'object' && 'message' in error) {
-        errorMessage = error.message as string || errorMessage;
-      }
-      
-      toast.error(errorMessage);
+    } catch {
+      toast.error('회원가입 중 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
     }

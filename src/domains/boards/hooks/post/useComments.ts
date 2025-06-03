@@ -55,8 +55,6 @@ export function useComments({
       //  parentId: replyTo
       // });
       
-      console.log(`댓글 작성: 게시글 ID: ${postId}, 내용: ${content}, 부모 ID: ${replyTo || '없음'}`);
-      
       // 임시 댓글 ID 생성 (실제로는 서버에서 생성된 ID 사용)
       const newCommentId = `temp-${Date.now()}`;
       
@@ -100,8 +98,6 @@ export function useComments({
     try {
       // 댓글 삭제 API 호출
       // await deleteCommentAction(commentId);
-      
-      console.log(`댓글 삭제: 댓글 ID: ${commentId}`);
       
       // 댓글 목록에서 삭제된 댓글 제거
       setComments(prevComments => 

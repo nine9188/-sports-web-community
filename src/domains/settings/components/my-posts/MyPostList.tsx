@@ -48,7 +48,13 @@ export default function MyPostList({
               {posts.map((post) => (
                 <tr key={post.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <Link href={`/board/${post.board_id}/post/${post.id}`} className="text-gray-900 hover:text-blue-600 font-medium">
+                    <Link href={`/board/${post.board_id}/post/${post.id}`} className={`font-medium ${
+                      post.title === '[신고에 의해 삭제됨]' || post.title.includes('[삭제된 게시글]') 
+                        ? 'text-red-500' 
+                        : post.title === '[신고에 의해 숨김 처리됨]' || post.title.includes('[숨김 처리된 게시글]')
+                        ? 'text-gray-500'
+                        : 'text-gray-900 hover:text-blue-600'
+                    }`}>
                       {post.title}
                       {post.tags && post.tags.length > 0 && (
                         <span className="text-blue-500 ml-2 text-sm">[{post.tags.length}]</span>

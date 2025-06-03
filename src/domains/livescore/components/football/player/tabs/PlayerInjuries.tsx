@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import { EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import { InjuryData } from '@/domains/livescore/types/player';
 
 interface PlayerInjuriesProps {
@@ -12,9 +11,6 @@ interface PlayerInjuriesProps {
 export default function PlayerInjuries({
   injuriesData = []
 }: PlayerInjuriesProps) {
-  // 디버깅을 위한 콘솔 로그 추가
-  console.log('[PlayerInjuries] injuriesData:', injuriesData);
-  
   // 날짜 포맷팅 함수
   const formatDate = (dateString: string) => {
     if (!dateString) return '날짜 정보 없음';
@@ -30,8 +26,12 @@ export default function PlayerInjuries({
     }
   };
 
-  if (injuriesData.length === 0) {
-    return <EmptyState title="부상 기록이 없습니다" message="이 선수의 부상 기록 정보를 찾을 수 없습니다." />;
+  if (!injuriesData || injuriesData.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        부상 기록이 없습니다.
+      </div>
+    );
   }
   
   return (

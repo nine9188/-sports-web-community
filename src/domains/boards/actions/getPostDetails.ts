@@ -167,6 +167,8 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
         .from('posts')
         .select('*, profiles(id, nickname, icon_id, level)', { count: 'exact' })
         .in('board_id', boardFilter)
+        .eq('is_hidden', false)
+        .eq('is_deleted', false)
         .order('created_at', { ascending: false })
         .range((page - 1) * pageSize, page * pageSize - 1),
       
@@ -234,7 +236,9 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       const { data: commentCountsData } = await supabase
         .from('comments')
         .select('post_id, count')
-        .in('post_id', postIds);
+        .in('post_id', postIds)
+        .eq('is_hidden', false)
+        .eq('is_deleted', false);
       
       (commentCountsData || []).forEach((item) => {
         if (item.post_id) {

@@ -26,24 +26,16 @@ export default function MatchCard({ match: initialMatch }: MatchCardProps) {
     score: match.teams?.away?.score ?? 0
   };
 
+  // elapsed 시간 추출
+  const elapsed = match.status?.elapsed || 0;
+
   // 모바일용 시간/상태 표시 (왼쪽에 표시될 내용)
   const getMobileTimeOrStatus = () => {
     const code = match.status?.code || '';
     
     // 진행중인 경기
     if (['1H', '2H', 'LIVE', 'IN_PLAY'].includes(code)) {
-      // 디버깅: 진행중인 경기의 match 객체 구조 확인
-      console.log('진행중인 경기 데이터:', {
-        matchId: match.id,
-        status: match.status,
-        elapsed: match.status?.elapsed
-      });
-      
       // elapsed 정보 가져오기
-      const elapsed = match.status?.elapsed;
-      
-      console.log('찾은 elapsed 값:', elapsed);
-      
       if (elapsed && elapsed > 0) {
         return `${elapsed}'`;
       }

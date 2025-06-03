@@ -12,6 +12,7 @@ import {
   type SupportComment
 } from '@/domains/livescore/actions/match/supportComments';
 import { createClient } from '@/shared/api/supabase';
+import ReportButton from '@/domains/reports/components/ReportButton';
 
 // 매치 데이터 타입 정의
 interface MatchDataType {
@@ -34,10 +35,14 @@ interface MatchDataType {
 // 댓글 아이템 컴포넌트
 function CommentItem({ 
   comment, 
-  onLike
+  onLike,
+  currentUserId,
+  isLoggedIn
 }: { 
   comment: SupportComment;
   onLike: (commentId: string) => void;
+  currentUserId?: string;
+  isLoggedIn: boolean;
 }) {
   const formatTimeAgo = (dateString: string) => {
     const now = new Date();
@@ -58,6 +63,52 @@ function CommentItem({
       default: return '중립';
     }
   };
+
+  const isAuthor = currentUserId === comment.user_id;
+  const showReportButton = isLoggedIn && !isAuthor;
+  
+  // 댓글이 숨김 처리되었는지 확인
+  const isHidden = 'is_hidden' in comment && comment.is_hidden === true;
+  
+  // 댓글이 삭제 처리되었는지 확인
+  const isDeleted = 'is_deleted' in comment && comment.is_deleted === true;
+  
+  // 삭제 처리된 댓글인 경우 특별한 UI 표시
+  if (isDeleted) {
+    return (
+      <div className="p-3 bg-red-50">
+        <div className="flex items-center justify-center py-4">
+          <div className="text-center">
+            <div className="flex items-center justify-center mb-2">
+              <svg className="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              <span className="text-sm text-red-600 font-medium">신고에 의해 삭제되었습니다</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // 숨김 처리된 댓글인 경우 특별한 UI 표시
+  if (isHidden) {
+    return (
+      <div className="p-3 bg-gray-50">
+        <div className="flex items-center justify-center py-4">
+          <div className="text-center">
+            <div className="flex items-center justify-center mb-2">
+              <svg className="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+              </svg>
+              <span className="text-sm text-gray-600 font-medium">신고에 의해 일시 숨김처리 되었습니다</span>
+            </div>
+            <p className="text-xs text-gray-500">7일 후 다시 검토됩니다</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-3 hover:bg-gray-50 transition-colors">
@@ -85,16 +136,30 @@ function CommentItem({
 
         <div className="flex-1 min-w-0">
           {/* 사용자 정보 */}
-          <div className="flex items-center space-x-2 mb-1">
-            <span className="text-sm font-medium text-gray-900">
-              {comment.user_profile?.nickname || '익명'}
-            </span>
-            <span className="text-xs">
-              {getTeamEmoji(comment.team_type)}
-            </span>
-            <span className="text-xs text-gray-400">
-              {formatTimeAgo(comment.created_at)}
-            </span>
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-medium text-gray-900">
+                {comment.user_profile?.nickname || '익명'}
+              </span>
+              <span className="text-xs">
+                {getTeamEmoji(comment.team_type)}
+              </span>
+              <span className="text-xs text-gray-400">
+                {formatTimeAgo(comment.created_at || '')}
+              </span>
+            </div>
+            
+            {/* 신고 버튼 (날짜 옆으로 이동) */}
+            {showReportButton && (
+              <ReportButton
+                targetType="match_comment"
+                targetId={comment.id}
+                variant="ghost"
+                size="sm"
+                showText={false}
+                className="text-xs text-gray-400 hover:text-gray-600 p-1"
+              />
+            )}
           </div>
 
           {/* 댓글 내용 */}
@@ -102,7 +167,7 @@ function CommentItem({
             {comment.content}
           </p>
 
-          {/* 좋아요 버튼 */}
+          {/* 좋아요 버튼 (댓글 내용 아래로 이동, 크기 축소) */}
           <button
             onClick={() => onLike(comment.id)}
             className={`flex items-center space-x-1 text-xs transition-all hover:scale-105 ${
@@ -111,9 +176,9 @@ function CommentItem({
                 : 'text-gray-400 hover:text-red-400'
             }`}
           >
-            <span className="text-sm">좋아요</span>
+            <span className="text-xs">좋아요</span>
             {comment.likes_count > 0 && (
-              <span className="font-medium">{comment.likes_count}</span>
+              <span className="font-medium text-xs">{comment.likes_count}</span>
             )}
           </button>
         </div>
@@ -140,6 +205,7 @@ export default function SupportCommentsSection({
   const [activeTab, setActiveTab] = useState<TeamType | 'all'>('all');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
 
   const homeTeam = matchData.teams?.home;
   const awayTeam = matchData.teams?.away;
@@ -158,8 +224,10 @@ export default function SupportCommentsSection({
       try {
         const { data: { user } } = await supabase.auth.getUser();
         setIsLoggedIn(!!user);
+        setCurrentUserId(user?.id);
       } catch {
         setIsLoggedIn(false);
+        setCurrentUserId(undefined);
       }
     };
 
@@ -167,8 +235,22 @@ export default function SupportCommentsSection({
     checkAuth();
 
     // 로그인 상태 변화 감지
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsLoggedIn(!!session?.user);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session) {
+        // 보안 강화: getUser()로 실제 인증 확인
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (!error && user) {
+          setIsLoggedIn(true);
+          setCurrentUserId(user.id);
+        } else {
+          setIsLoggedIn(false);
+          setCurrentUserId(undefined);
+        }
+      } else {
+        setIsLoggedIn(false);
+        setCurrentUserId(undefined);
+      }
     });
 
     return () => {
@@ -180,18 +262,17 @@ export default function SupportCommentsSection({
   const loadComments = useCallback(async () => {
     if (!matchId) return;
     
+    setIsRefreshing(true);
     try {
-      console.log('댓글 로드 시작:', { matchId });
-      const result = await getSupportComments(matchId); // 모든 댓글 로드
-      console.log('댓글 로드 결과:', result);
+      const result = await getSupportComments(matchId);
       
-      if (result.success && Array.isArray(result.data)) {
+      if (result.success && result.data) {
         setAllComments(result.data);
-      } else {
-        console.error('댓글 로드 실패:', result.error);
       }
-    } catch (error) {
-      console.error('댓글 로드 오류:', error);
+    } catch {
+      // 에러 처리는 조용히 진행
+    } finally {
+      setIsRefreshing(false);
     }
   }, [matchId]);
 
@@ -208,35 +289,29 @@ export default function SupportCommentsSection({
   };
 
   // 댓글 작성
-  const handleSubmitComment = async () => {
-    if (!newComment.trim() || !matchId) {
-      toast.error('댓글 내용을 입력해주세요.');
+  const handleSubmitComment = useCallback(async () => {
+    if (!matchId || !newComment.trim() || !selectedTeam || !isLoggedIn) {
       return;
     }
-    
+
     setIsSubmitting(true);
     try {
-      console.log('댓글 작성 시작:', { matchId, selectedTeam, content: newComment });
-      const result = await createSupportComment(matchId, selectedTeam, newComment);
-      console.log('댓글 작성 결과:', result);
+      const result = await createSupportComment(
+        matchId,
+        selectedTeam,
+        newComment.trim()
+      );
       
       if (result.success) {
-        // 입력창 비우기
         setNewComment('');
-        toast.success('댓글이 작성되었습니다!');
-        // 댓글 목록 새로고침
-        loadComments();
-      } else {
-        console.error('댓글 작성 실패:', result.error);
-        toast.error(result.error || '댓글 작성에 실패했습니다.');
+        await loadComments(); // 댓글 목록 새로고침
       }
-    } catch (error) {
-      console.error('댓글 작성 오류:', error);
-      toast.error('댓글 작성 중 오류가 발생했습니다.');
+    } catch {
+      // 에러 처리는 조용히 진행
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [matchId, newComment, selectedTeam, isLoggedIn, loadComments]);
 
   // 댓글 좋아요 토글
   const handleLikeComment = async (commentId: string) => {
@@ -259,8 +334,7 @@ export default function SupportCommentsSection({
       } else {
         toast.error(result.error);
       }
-    } catch (error) {
-      console.error('좋아요 토글 오류:', error);
+    } catch {
       toast.error('좋아요 처리 중 오류가 발생했습니다.');
     }
   };
@@ -273,11 +347,8 @@ export default function SupportCommentsSection({
     try {
       loadComments();
       toast.success('댓글을 새로고침했습니다!');
-    } catch (error) {
-      console.error('댓글 새로고침 오류:', error);
+    } catch {
       toast.error('댓글 새로고침에 실패했습니다.');
-    } finally {
-      setIsRefreshing(false);
     }
   };
 
@@ -454,6 +525,8 @@ export default function SupportCommentsSection({
                 key={comment.id}
                 comment={comment}
                 onLike={handleLikeComment}
+                currentUserId={currentUserId}
+                isLoggedIn={isLoggedIn}
               />
             ))}
           </div>

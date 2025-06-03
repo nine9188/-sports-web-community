@@ -98,8 +98,6 @@ export default function PlayerFixtures({
     const status = initialFixturesData?.status || 'error';
     const message = initialFixturesData?.message || '데이터를 불러올 수 없습니다';
     
-    console.log(`[PlayerFixtures] 경기 데이터 초기화 - 항목 수: ${data.length}, 상태: ${status}`);
-    
     // 데이터 무결성 확인 - 필요한 속성이 모두 있는지 확인
     const validatedData = data.map(fixture => {
       // 안전한 goals 속성 확인

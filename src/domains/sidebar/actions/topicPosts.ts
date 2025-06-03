@@ -24,7 +24,9 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
         views,
         likes,
         post_number, 
-        content
+        content,
+        is_hidden,
+        is_deleted
       `)
       .limit(200);
       
@@ -41,7 +43,7 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
       throw error;
     }
     
-    const validPosts = (postsData || []) as {
+    const validPosts = (postsData as unknown) as Array<{
       id: string;
       title?: string;
       created_at?: string;
@@ -50,7 +52,9 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
       likes?: number;
       post_number?: number;
       content?: string;
-    }[];
+      is_hidden?: boolean;
+      is_deleted?: boolean;
+    }>;
     
     // 빈 배열인 경우 빠르게 반환
     if (validPosts.length === 0) {
@@ -142,7 +146,9 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
           const { count } = await supabase
             .from('comments')
             .select('*', { count: 'exact', head: true })
-            .eq('post_id', post.id);
+            .eq('post_id', post.id)
+            .neq('is_hidden', true)
+            .neq('is_deleted', true);
           
           commentCounts[post.id] = count || 0;
         })

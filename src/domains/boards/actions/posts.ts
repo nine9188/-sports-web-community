@@ -13,10 +13,7 @@ export async function createPostWithParams(
   boardId: string,
   userId: string
 ) {
-  console.log('[서버] createPost 호출됨:', { title, boardId, userId });
-  
   if (!title || !content || !boardId || !userId) {
-    console.log('[서버] 필수 인자 누락:', { title: !!title, content: !!content, boardId: !!boardId, userId: !!userId });
     return {
       success: false,
       error: '필수 입력값이 누락되었습니다.'
@@ -25,10 +22,8 @@ export async function createPostWithParams(
   
   try {
     const supabase = await createClient();
-    console.log('[서버] Supabase 클라이언트 생성됨');
     
     if (!supabase) {
-      console.log('[서버] Supabase 클라이언트 생성 실패');
       return {
         success: false,
         error: 'Supabase 클라이언트 초기화 오류'
@@ -42,8 +37,6 @@ export async function createPostWithParams(
       .eq('id', boardId)
       .single();
     
-    console.log('[서버] 게시판 정보 조회:', { boardData, error: boardQueryError });
-    
     if (boardQueryError) {
       return {
         success: false,
@@ -52,7 +45,6 @@ export async function createPostWithParams(
     }
     
     if (!boardData) {
-      console.log('[서버] 게시판 정보 없음');
       return {
         success: false,
         error: '게시판 정보를 찾을 수 없습니다.'
@@ -60,8 +52,6 @@ export async function createPostWithParams(
     }
     
     // 게시글 생성
-    console.log('[서버] 게시글 생성 시도...');
-    
     // 트리거 함수가 post_number를 할당 후에 전체 레코드를 반환하게 하여
     // 추가 쿼리 없이 post_number를 바로 얻을 수 있게 함
     const { data, error } = await supabase
@@ -81,10 +71,7 @@ export async function createPostWithParams(
       .select('id, post_number')
       .single();
     
-    console.log('[서버] 게시글 생성 결과:', { data, error });
-    
     if (error) {
-      console.log('[서버] 게시글 생성 오류:', error);
       return {
         success: false,
         error: `게시글 생성 실패: ${error.message}`
@@ -92,18 +79,11 @@ export async function createPostWithParams(
     }
     
     if (!data) {
-      console.log('[서버] 게시글 생성 후 데이터 없음');
       return {
         success: false,
         error: '게시글 생성은 되었으나 데이터를 받아오지 못했습니다.'
       };
     }
-    
-    console.log('[서버] 게시글 생성 완료:', { 
-      postId: data.id,
-      postNumber: data.post_number,
-      boardSlug: boardData.slug
-    });
     
     return {
       success: true,
@@ -129,10 +109,7 @@ export async function updatePost(
   content: string, 
   userId: string
 ) {
-  console.log('[서버] updatePost 호출됨:', { postId, userId });
-  
   if (!postId || !title || !content || !userId) {
-    console.log('[서버] 필수 인자 누락:', { postId: !!postId, title: !!title, content: !!content, userId: !!userId });
     return {
       success: false,
       error: '필수 입력값이 누락되었습니다.'
@@ -141,10 +118,8 @@ export async function updatePost(
   
   try {
     const supabase = await createClient();
-    console.log('[서버] Supabase 클라이언트 생성됨');
     
     if (!supabase) {
-      console.log('[서버] Supabase 클라이언트 생성 실패');
       return {
         success: false,
         error: 'Supabase 클라이언트 초기화 오류'
@@ -159,7 +134,6 @@ export async function updatePost(
       .single();
       
     if (existingPostError) {
-      console.log('[서버] 게시글 확인 오류:', existingPostError);
       return {
         success: false,
         error: `게시글을 찾을 수 없습니다: ${existingPostError.message}`
@@ -167,7 +141,6 @@ export async function updatePost(
     }
     
     if (!existingPost) {
-      console.log('[서버] 게시글이 존재하지 않음');
       return {
         success: false,
         error: '해당 게시글이 존재하지 않습니다.'
@@ -175,7 +148,6 @@ export async function updatePost(
     }
     
     if (existingPost.user_id !== userId) {
-      console.log('[서버] 게시글 작성자가 아님:', { postUserId: existingPost.user_id, requestUserId: userId });
       return {
         success: false,
         error: '본인이 작성한 게시글만 수정할 수 있습니다.'
@@ -183,12 +155,9 @@ export async function updatePost(
     }
     
     // 경기 카드 데이터를 완전한 HTML로 변환
-    console.log('[서버] 게시글 수정 - 경기 카드 처리 시작');
     const processedContent = processMatchCardsInContent(content);
-    console.log('[서버] 게시글 수정 - 경기 카드 처리 완료');
     
     // 게시글 업데이트 쿼리
-    console.log('[서버] 게시글 수정 시도...');
     const { error: updateError } = await supabase
       .from('posts')
       .update({
@@ -199,40 +168,31 @@ export async function updatePost(
       .eq('id', postId);
     
     if (updateError) {
-      console.log('[서버] 게시글 수정 오류:', updateError);
       return {
         success: false,
         error: `게시글 수정 실패: ${updateError.message}`
       };
     }
     
-    // 게시글 번호와 게시판 슬러그 가져오기
+    // 수정된 게시글 정보 가져오기
     const { data: postData, error: postDataError } = await supabase
       .from('posts')
-      .select('post_number, boards:board_id(slug)')
+      .select('post_number, board_id, boards(slug)')
       .eq('id', postId)
       .single();
-      
-    if (postDataError || !postData) {
-      console.log('[서버] 게시글 정보 가져오기 오류:', postDataError);
+    
+    if (postDataError) {
       return {
         success: false,
-        error: '게시글은 수정되었으나, 게시글 정보를 가져오는데 실패했습니다.'
+        error: `게시글 정보 가져오기 실패: ${postDataError.message}`
       };
     }
     
-    // 타입 안전하게 접근
-    const boardSlug = postData.boards && typeof postData.boards === 'object' && 'slug' in postData.boards
-      ? postData.boards.slug
-      : undefined;
-    
-    console.log('[서버] 게시글 수정 완료:', { 
-      postNumber: postData.post_number,
-      boardSlug
-    });
+    const boardSlug = (postData.boards as { slug: string } | null)?.slug;
     
     return {
       success: true,
+      postId,
       postNumber: postData.post_number,
       boardSlug
     };
@@ -252,10 +212,7 @@ export async function deletePost(
   postId: string,
   userId: string
 ) {
-  console.log('[서버] deletePost 호출됨:', { postId, userId });
-  
   if (!postId || !userId) {
-    console.log('[서버] 필수 인자 누락:', { postId: !!postId, userId: !!userId });
     return {
       success: false,
       error: '필수 입력값이 누락되었습니다.'
@@ -264,10 +221,8 @@ export async function deletePost(
   
   try {
     const supabase = await createClient();
-    console.log('[서버] Supabase 클라이언트 생성됨');
     
     if (!supabase) {
-      console.log('[서버] Supabase 클라이언트 생성 실패');
       return {
         success: false,
         error: 'Supabase 클라이언트 초기화 오류'
@@ -277,12 +232,11 @@ export async function deletePost(
     // 게시글이 존재하는지 확인 & 작성자 일치 확인
     const { data: existingPost, error: existingPostError } = await supabase
       .from('posts')
-      .select('user_id, board_id, post_number')
+      .select('user_id, board_id, boards(slug)')
       .eq('id', postId)
       .single();
       
     if (existingPostError) {
-      console.log('[서버] 게시글 확인 오류:', existingPostError);
       return {
         success: false,
         error: `게시글을 찾을 수 없습니다: ${existingPostError.message}`
@@ -290,7 +244,6 @@ export async function deletePost(
     }
     
     if (!existingPost) {
-      console.log('[서버] 게시글이 존재하지 않음');
       return {
         success: false,
         error: '해당 게시글이 존재하지 않습니다.'
@@ -298,78 +251,64 @@ export async function deletePost(
     }
     
     if (existingPost.user_id !== userId) {
-      console.log('[서버] 게시글 작성자가 아님:', { postUserId: existingPost.user_id, requestUserId: userId });
       return {
         success: false,
         error: '본인이 작성한 게시글만 삭제할 수 있습니다.'
       };
     }
     
-    // 게시판 슬러그 가져오기
+    // 게시판 정보 가져오기
     const { data: boardData, error: boardError } = await supabase
       .from('boards')
       .select('slug')
       .eq('id', existingPost.board_id || '')
       .single();
-      
-    if (boardError || !boardData) {
-      console.log('[서버] 게시판 정보 조회 오류:', boardError);
+    
+    if (boardError) {
       return {
         success: false,
-        error: '게시판 정보를 찾을 수 없습니다.'
+        error: `게시판 정보 조회 실패: ${boardError.message}`
       };
     }
     
-    // 트랜잭션 처리 - 연관된 데이터부터 삭제
-    // 1. 댓글 삭제
-    console.log('[서버] 댓글 삭제 시도...');
+    // 관련 댓글 삭제
     const { error: commentsError } = await supabase
       .from('comments')
       .delete()
       .eq('post_id', postId);
-      
+    
     if (commentsError) {
-      console.log('[서버] 댓글 삭제 오류:', commentsError);
       return {
         success: false,
         error: `댓글 삭제 실패: ${commentsError.message}`
       };
     }
     
-    // 2. 좋아요/싫어요 삭제
-    console.log('[서버] 좋아요/싫어요 삭제 시도...');
+    // 관련 좋아요/싫어요 삭제
     const { error: likesError } = await supabase
       .from('post_likes')
       .delete()
       .eq('post_id', postId);
-      
+    
     if (likesError) {
-      console.log('[서버] 좋아요/싫어요 삭제 오류:', likesError);
       return {
         success: false,
         error: `좋아요/싫어요 삭제 실패: ${likesError.message}`
       };
     }
     
-    // 3. 게시글 삭제
-    console.log('[서버] 게시글 삭제 시도...');
+    // 게시글 삭제
     const { error: deleteError } = await supabase
       .from('posts')
       .delete()
-      .eq('id', postId)
-      .eq('user_id', userId);
-      
+      .eq('id', postId);
+    
     if (deleteError) {
-      console.log('[서버] 게시글 삭제 오류:', deleteError);
       return {
         success: false,
         error: `게시글 삭제 실패: ${deleteError.message}`
       };
     }
-    
-    console.log('[서버] 게시글 삭제 완료:', { 
-      boardSlug: boardData.slug
-    });
     
     return {
       success: true,
@@ -543,16 +482,12 @@ export async function likePost(postId: string): Promise<LikeActionResponse> {
         try {
           const activityTypes = await getActivityTypeValues();
           await rewardUserActivity(currentPost.user_id, activityTypes.RECEIVED_LIKE, postId);
-          console.log('게시글 추천 받기 보상 지급 완료');
         } catch (rewardError) {
           console.error('게시글 추천 받기 보상 지급 오류:', rewardError);
           // 보상 지급 실패해도 좋아요는 성공으로 처리
         }
       }
     }
-    
-    // 페이지 재검증 - 경기 카드 보호를 위해 주석 처리
-    // revalidatePath(`/boards/[slug]/[postNumber]`);
     
     return {
       success: true,
@@ -716,9 +651,6 @@ export async function dislikePost(postId: string): Promise<LikeActionResponse> {
       newUserAction = 'dislike';
     }
     
-    // 페이지 재검증 - 경기 카드 보호를 위해 주석 처리
-    // revalidatePath(`/boards/[slug]/[postNumber]`);
-    
     return {
       success: true,
       likes: newLikes || 0,
@@ -764,7 +696,6 @@ export async function getUserPostAction(postId: string): Promise<{ userAction: '
       .maybeSingle();
     
     if (likeError) {
-      console.error('좋아요 확인 오류:', likeError);
       return { userAction: null };
     }
     
@@ -782,7 +713,6 @@ export async function getUserPostAction(postId: string): Promise<{ userAction: '
       .maybeSingle();
     
     if (dislikeError) {
-      console.error('싫어요 확인 오류:', dislikeError);
       return { userAction: null };
     }
     
@@ -804,22 +734,14 @@ export async function getUserPostAction(postId: string): Promise<{ userAction: '
  */
 function processMatchCardsInContent(content: string): string {
   try {
-    console.log('[서버] 경기 카드 처리 시작, 원본 content:', content);
-    
     // 더 유연한 정규식 - 내용이 있는 div 태그 처리
     const matchCardRegex = /<div[^>]*data-type="match-card"[^>]*data-match="([^"]*)"[^>]*>([\s\S]*?)<\/div>/g;
     
-    let matchCount = 0;
     const result = content.replace(matchCardRegex, (match, encodedData) => {
-      matchCount++;
-      console.log(`[서버] 경기 카드 ${matchCount} 발견:`, match.substring(0, 200) + '...');
-      
       try {
         // URL 디코딩 후 JSON 파싱
         const decodedData = decodeURIComponent(encodedData);
         const matchData = JSON.parse(decodedData);
-        
-        console.log(`[서버] 경기 카드 ${matchCount} 데이터 처리:`, matchData);
         
         // 경기 카드 내용 생성
         const { teams, goals, league, status } = matchData;
@@ -922,10 +844,8 @@ function processMatchCardsInContent(content: string): string {
           </div>
         `;
         
-        console.log(`[서버] 경기 카드 ${matchCount} 처리 완료`);
         return processedHTML;
-      } catch (parseError) {
-        console.error(`[서버] 경기 카드 ${matchCount} 파싱 오류:`, parseError);
+      } catch {
         // 파싱 실패 시 기본 경기 카드 반환
         return `
           <div class="match-card processed-match-card" data-processed="true" style="
@@ -950,9 +870,6 @@ function processMatchCardsInContent(content: string): string {
         `;
       }
     });
-    
-    console.log(`[서버] 경기 카드 처리 완료, 총 ${matchCount}개 처리됨`);
-    console.log('[서버] 처리 후 content:', result);
     
     return result;
   } catch (error) {
@@ -984,9 +901,7 @@ export async function createPost(formData: FormData) {
     }
     
     // 경기 카드 데이터를 완전한 HTML로 변환
-    console.log('[서버] 경기 카드 처리 시작');
     content = processMatchCardsInContent(content);
-    console.log('[서버] 경기 카드 처리 완료');
     
     // 게시글 작성
     const { data, error } = await supabase
@@ -1010,7 +925,6 @@ export async function createPost(formData: FormData) {
       .single()
     
     if (error) {
-      console.error('게시글 작성 오류:', error)
       return { error: '게시글 작성 실패' }
     }
     

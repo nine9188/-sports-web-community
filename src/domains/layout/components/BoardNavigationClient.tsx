@@ -10,17 +10,20 @@ import { Board } from '../types/board';
 // Props 타입 정의
 interface BoardNavigationClientProps {
   boards: Board[];
+  isAdmin?: boolean;
 }
 
 // 모바일 게시판 모달 컴포넌트
 const MobileBoardModal = React.memo(function MobileBoardModal({
   boards,
   isOpen,
-  onClose
+  onClose,
+  isAdmin = false
 }: {
   boards: Board[];
   isOpen: boolean;
   onClose: () => void;
+  isAdmin?: boolean;
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedBoards, setExpandedBoards] = useState<Set<string>>(() => {
@@ -123,6 +126,21 @@ const MobileBoardModal = React.memo(function MobileBoardModal({
               <ShoppingBag className="h-4 w-4" />
               <span className="text-sm font-medium">아이콘샵</span>
             </Link>
+
+            {/* 관리자 페이지 링크 - 관리자에게만 표시 */}
+            {isAdmin && (
+              <Link 
+                href="/admin"
+                onClick={onClose}
+                className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <span className="text-sm font-medium">관리자</span>
+              </Link>
+            )}
           </div>
 
           {/* 게시판 목록 */}
@@ -561,7 +579,7 @@ const TopLevelBoard = React.memo(function TopLevelBoard({
 });
 
 // 메인 컴포넌트 - 실제 데이터 사용
-function BoardNavigationClient({ boards }: BoardNavigationClientProps) {
+function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClientProps) {
   const [hoveredBoard, setHoveredBoard] = useState<string | null>(null);
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
   const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
@@ -687,6 +705,20 @@ function BoardNavigationClient({ boards }: BoardNavigationClientProps) {
         아이콘샵
       </Link>
 
+      {/* 관리자 페이지 링크 - 관리자에게만 표시 */}
+      {isAdmin && (
+        <Link 
+          href="/admin" 
+          className="px-2 py-1 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1 shrink-0 whitespace-nowrap snap-center"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          관리자
+        </Link>
+      )}
+
       {/* 드롭다운 메뉴 */}
       {hoveredBoardData && dropdownPosition && (
         <DropdownMenu
@@ -727,6 +759,20 @@ function BoardNavigationClient({ boards }: BoardNavigationClientProps) {
           <ShoppingBag className="h-3.5 w-3.5" />
           아이콘샵
         </Link>
+
+        {/* 관리자 페이지 링크 - 관리자에게만 표시 */}
+        {isAdmin && (
+          <Link 
+            href="/admin" 
+            className="px-2 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            관리자
+          </Link>
+        )}
       </div>
 
       {/* 모바일 게시판 모달 */}
@@ -734,6 +780,7 @@ function BoardNavigationClient({ boards }: BoardNavigationClientProps) {
         boards={boards}
         isOpen={isMobileModalOpen}
         onClose={() => setIsMobileModalOpen(false)}
+        isAdmin={isAdmin}
       />
     </>
   );

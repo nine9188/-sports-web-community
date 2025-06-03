@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/shared/context/AuthContext';
 import { EyeIcon, EyeOffIcon } from 'lucide-react';
-import { createClient } from '@/shared/api/supabase';
+import { signIn } from '@/domains/auth/actions';
 
 // SearchParams를 사용하는 로그인 컴포넌트
 function LoginContent() {
@@ -20,7 +20,6 @@ function LoginContent() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [loginSuccess, setLoginSuccess] = useState(false);
   const { user } = useAuth();
   
   // 메시지 파라미터 처리
@@ -30,13 +29,13 @@ function LoginContent() {
     }
   }, [message]);
   
-  // 사용자가 이미 로그인한 경우 리다이렉트
+  // 로그인 상태 감지 및 리디렉션
   useEffect(() => {
-    if (user && !loginSuccess) {
-      console.log('로그인 감지: 리디렉션 실행', redirectUrl);
+    if (user && !loading) {
+      const redirectUrl = searchParams?.get('redirect') || '/';
       router.replace(redirectUrl);
     }
-  }, [user, router, redirectUrl, loginSuccess]);
+  }, [user, loading, router, searchParams]);
   
   const handleTogglePassword = () => {
     setShowPassword(!showPassword);
@@ -53,17 +52,14 @@ function LoginContent() {
     try {
       setLoading(true);
       
-      const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      // 서버 액션을 통한 로그인
+      const result = await signIn(email, password);
       
-      if (error) {
-        if (error.message.includes('Invalid login credentials')) {
+      if (result.error) {
+        if (result.error.includes('Invalid login credentials')) {
           toast.error('이메일 또는 비밀번호가 올바르지 않습니다');
         } else {
-          toast.error(error.message);
+          toast.error(result.error);
         }
         return;
       }
@@ -73,13 +69,11 @@ function LoginContent() {
         document.cookie = "remember-user=true; max-age=1209600; path=/"; // 14일
       }
       
-      // 성공 메시지 표시 및 로그인 성공 상태 설정
+      // 성공 메시지 표시
       toast.success('로그인되었습니다.');
-      setLoginSuccess(true);
       
       // 로그인 성공 후 즉시 리다이렉션 (딜레이 없이)
       if (redirectUrl && redirectUrl !== window.location.pathname) {
-        console.log('로그인 성공: 즉시 리디렉션 실행', redirectUrl);
         router.replace(redirectUrl);
       }
       
@@ -140,7 +134,7 @@ function LoginContent() {
           disabled={loading}
           className="w-full py-3 px-4 bg-slate-700 hover:bg-slate-800 text-white font-medium rounded-md transition-colors disabled:opacity-70"
         >
-          {loading ? '이메일로 시작하기' : '이메일로 시작하기'}
+          {loading ? '로그인 중...' : '이메일로 시작하기'}
         </button>
         
         <div className="flex items-center justify-between mt-4">
@@ -203,25 +197,24 @@ function LoginContent() {
 
 export default function SignInPage() {
   return (
-    <div className="flex flex-col justify-center items-center min-h-[calc(100vh-120px)]">
-      <Suspense fallback={
-        <div className="w-full max-w-md p-8">
-          <div className="mb-6 flex justify-center">
-            <div className="h-8 bg-gray-200 rounded w-32 animate-pulse"></div>
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <Suspense fallback={
+          <div className="max-w-md w-full">
+            <div className="animate-pulse">
+              <div className="h-8 bg-gray-200 rounded w-32 mx-auto mb-6"></div>
+              <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto mb-8"></div>
+              <div className="space-y-4">
+                <div className="h-12 bg-gray-200 rounded"></div>
+                <div className="h-12 bg-gray-200 rounded"></div>
+                <div className="h-12 bg-gray-200 rounded"></div>
+              </div>
+            </div>
           </div>
-          <div className="space-y-4">
-            <div className="h-20 bg-gray-100 rounded animate-pulse"></div>
-            <div className="h-20 bg-gray-100 rounded animate-pulse"></div>
-            <div className="h-10 bg-gray-100 rounded animate-pulse"></div>
-          </div>
-        </div>
-      }>
-        <LoginContent />
-      </Suspense>
-      
-      <div className="mt-8 flex space-x-4 text-sm text-gray-500">
-        <Link href="/terms" className="hover:text-gray-700">이용약관</Link>
-        <Link href="/privacy" className="hover:text-gray-700">개인정보처리방침</Link>
+        }>
+          <LoginContent />
+        </Suspense>
       </div>
     </div>
   );

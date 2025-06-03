@@ -9,8 +9,10 @@ import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from '@/shared/context/AuthContext';
 import { IconProvider } from '@/shared/context/IconContext';
 import AuthStateManager from '@/shared/components/AuthStateManager';
+import SessionWarning from '@/shared/components/SessionWarning';
 import { HeaderUserData } from '@/domains/layout/types/header';
 import { Board } from '@/domains/layout/types/board';
+import { Session } from '@supabase/supabase-js';
 
 interface RootLayoutClientProps {
   children: React.ReactNode;
@@ -22,6 +24,7 @@ interface RootLayoutClientProps {
   initialIconUrl?: string;
   initialIconName?: string;
   boardsData: Board[];
+  initialSession?: Session | null;
 }
 
 export default function RootLayoutClient({ 
@@ -33,7 +36,8 @@ export default function RootLayoutClient({
   headerUserData,
   initialIconUrl = '',
   initialIconName = '',
-  boardsData
+  boardsData,
+  initialSession = null
 }: RootLayoutClientProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -52,7 +56,7 @@ export default function RootLayoutClient({
     const authPaths = ['/signin', '/signup'];
     
     return pathname.startsWith('/auth/') || 
-           pathname.startsWith('/admin/') ||
+           pathname.startsWith('/admin') ||  // /admin과 /admin/로 시작하는 모든 경로
            pathname.startsWith('/help/') ||
            authPaths.includes(pathname);
   }, [pathname]);
@@ -69,9 +73,13 @@ export default function RootLayoutClient({
         refetchOnReconnect: false,
         notifyOnChangeProps: ['data', 'error', 'isLoading'], // 성능 최적화
         refetchInterval: false, // 자동 리페치 비활성화
+        // 성능 최적화 추가
+        structuralSharing: false, // 구조적 공유 비활성화로 성능 향상
+        networkMode: 'online', // 온라인일 때만 요청
       },
       mutations: {
         retry: 1,
+        networkMode: 'online',
       },
     },
   }), []);
@@ -139,7 +147,7 @@ export default function RootLayoutClient({
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
+      <AuthProvider initialSession={initialSession}>
         <IconProvider initialIconUrl={initialIconUrl} initialIconName={initialIconName}>
           {isIndependentLayout ? (
             children
@@ -162,6 +170,7 @@ export default function RootLayoutClient({
           )}
             
           <ToastContainer {...toastConfig} />
+          <SessionWarning />
         </IconProvider>
       </AuthProvider>
       <ReactQueryDevtools initialIsOpen={false} />

@@ -21,17 +21,20 @@ type HeaderClientProps = {
   isSidebarOpen: boolean;
   initialUserData: HeaderUserData | null;
   boards: Board[];
+  isAdmin?: boolean;
 };
 
 // 모바일 햄버거 메뉴 모달 컴포넌트
 const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
   boards,
   isOpen,
-  onClose
+  onClose,
+  isAdmin = false
 }: {
   boards: Board[];
   isOpen: boolean;
   onClose: () => void;
+  isAdmin?: boolean;
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedBoards, setExpandedBoards] = useState<Set<string>>(() => {
@@ -136,6 +139,21 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
               <ShoppingBag className="h-4 w-4" />
               <span className="text-sm font-medium">아이콘샵</span>
             </Link>
+
+            {/* 관리자 페이지 링크 - 관리자에게만 표시 */}
+            {isAdmin && (
+              <Link 
+                href="/admin"
+                onClick={onClose}
+                className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <span className="text-sm font-medium">관리자</span>
+              </Link>
+            )}
           </div>
 
           {/* 게시판 목록 */}
@@ -238,7 +256,8 @@ export default function HeaderClient({
   onProfileClick, 
   isSidebarOpen, 
   initialUserData,
-  boards
+  boards,
+  isAdmin = false
 }: HeaderClientProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -346,6 +365,7 @@ export default function HeaderClient({
         {userData ? (
           <div className="hidden md:block relative" ref={profileDropdownRef}>
             <button
+              data-testid="user-menu"
               onClick={toggleDropdown}
               className="flex items-center space-x-1 px-3 py-2 rounded hover:bg-gray-100"
             >
@@ -364,41 +384,58 @@ export default function HeaderClient({
 
             {/* 드롭다운 메뉴 */}
             {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-[100]">
-                <Link href="/settings/profile" className="block px-4 py-2 hover:bg-gray-100">
-                  <div className="flex items-center">
-                    <FontAwesomeIcon icon={faCog} className="h-3.5 w-3.5 mr-2" />
-                    <span className="text-sm">프로필 설정</span>
-                  </div>
-                </Link>
-                <Link href="/settings/icons" className="block px-4 py-2 hover:bg-gray-100">
-                  <div className="flex items-center">
-                    <FontAwesomeIcon icon={faCog} className="h-3.5 w-3.5 mr-2" />
-                    <span className="text-sm">아이콘 설정</span>
-                  </div>
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                >
-                  <div className="flex items-center">
-                    <FontAwesomeIcon icon={faSignOutAlt} className="h-3.5 w-3.5 mr-2" />
-                    <span className="text-sm">로그아웃</span>
-                  </div>
-                </button>
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border z-50">
+                <div className="py-1">
+                  <Link
+                    href="/settings/profile"
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    onClick={() => setIsDropdownOpen(false)}
+                  >
+                    <FontAwesomeIcon icon={faUser} className="h-4 w-4 mr-2" />
+                    프로필 설정
+                  </Link>
+                  <Link
+                    href="/settings"
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    onClick={() => setIsDropdownOpen(false)}
+                  >
+                    <FontAwesomeIcon icon={faCog} className="h-4 w-4 mr-2" />
+                    설정
+                  </Link>
+                  <button
+                    data-testid="logout-button"
+                    onClick={handleLogout}
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <FontAwesomeIcon icon={faSignOutAlt} className="h-4 w-4 mr-2" />
+                    로그아웃
+                  </button>
+                </div>
               </div>
             )}
           </div>
         ) : (
-          <Link href="/signin" className="hidden md:flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100">
-            <FontAwesomeIcon icon={faUser} className="h-4 w-4" />
-          </Link>
+          <div className="hidden md:flex space-x-2">
+            <Link
+              href="/signin"
+              className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+            >
+              로그인
+            </Link>
+            <Link
+              href="/signup"
+              className="px-3 py-2 text-sm font-medium bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              회원가입
+            </Link>
+          </div>
         )}
         
-        {/* 모바일 버전: 직접 프로필 아이콘 렌더링 */}
+        {/* 모바일 버전(md 미만): 프로필 사이드바 트리거 */}
         <div className="md:hidden">
           {userData ? (
             <button
+              data-testid="user-menu-mobile"
               onClick={onProfileClick}
               className="flex items-center justify-center w-9 h-9 rounded-full active:bg-gray-200 transition-colors duration-150"
               style={{ WebkitTapHighlightColor: 'transparent' }}
@@ -413,6 +450,7 @@ export default function HeaderClient({
             </button>
           ) : (
             <button
+              data-testid="user-menu-mobile"
               onClick={onProfileClick}
               className="flex items-center justify-center w-9 h-9 rounded-full active:bg-gray-200 transition-colors duration-150"
               style={{ WebkitTapHighlightColor: 'transparent' }}
@@ -462,7 +500,7 @@ export default function HeaderClient({
           </div>
         </div>
         <nav className="flex items-center h-12 px-4 overflow-x-auto border-t relative">
-          <BoardNavigationClient boards={boards} />
+          <BoardNavigationClient boards={boards} isAdmin={isAdmin} />
         </nav>
       </div>
 
@@ -471,6 +509,7 @@ export default function HeaderClient({
         boards={boards}
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
+        isAdmin={isAdmin}
       />
 
       {/* 라이브스코어 모달 */}

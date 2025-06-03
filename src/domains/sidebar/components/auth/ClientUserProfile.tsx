@@ -37,8 +37,9 @@ export default function ClientUserProfile({ profileData }: ClientUserProfileProp
             <Image 
               src={displayIconUrl}
               alt={`${profileData.nickname || '사용자'} 프로필`}
-              fill
-              className="object-cover"
+              width={40}
+              height={40}
+              className="object-cover rounded-full"
               {...profileImageProps}
               title={displayIconName}
             />

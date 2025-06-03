@@ -275,6 +275,149 @@ export type Database = {
         }
         Relationships: []
       }
+      login_attempts: {
+        Row: {
+          attempts: number | null
+          blocked_until: string | null
+          created_at: string | null
+          email: string
+          id: number
+          last_attempt: string | null
+        }
+        Insert: {
+          attempts?: number | null
+          blocked_until?: string | null
+          created_at?: string | null
+          email: string
+          id?: number
+          last_attempt?: string | null
+        }
+        Update: {
+          attempts?: number | null
+          blocked_until?: string | null
+          created_at?: string | null
+          email?: string
+          id?: number
+          last_attempt?: string | null
+        }
+        Relationships: []
+      }
+      match_comment_likes: {
+        Row: {
+          comment_id: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_comment_likes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "match_support_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      match_prediction_stats: {
+        Row: {
+          away_votes: number | null
+          draw_votes: number | null
+          home_votes: number | null
+          match_id: string
+          total_votes: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          away_votes?: number | null
+          draw_votes?: number | null
+          home_votes?: number | null
+          match_id: string
+          total_votes?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          away_votes?: number | null
+          draw_votes?: number | null
+          home_votes?: number | null
+          match_id?: string
+          total_votes?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      match_predictions: {
+        Row: {
+          created_at: string | null
+          id: string
+          match_id: string
+          prediction_type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          match_id: string
+          prediction_type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          match_id?: string
+          prediction_type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      match_support_comments: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          likes_count: number | null
+          match_id: string
+          team_type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          likes_count?: number | null
+          match_id: string
+          team_type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          likes_count?: number | null
+          match_id?: string
+          team_type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       point_history: {
         Row: {
           admin_id: string | null
@@ -299,6 +442,36 @@ export type Database = {
           points?: number
           reason?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      point_transactions: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          match_id: string | null
+          points: number
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          match_id?: string | null
+          points: number
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          match_id?: string | null
+          points?: number
+          transaction_type?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -496,6 +669,63 @@ export type Database = {
             columns: ["icon_id"]
             isOneToOne: false
             referencedRelation: "shop_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reports: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          reason: string
+          reporter_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          target_id: string
+          target_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          reason: string
+          reporter_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          target_id: string
+          target_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          target_id?: string
+          target_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -768,6 +998,42 @@ export type Database = {
           },
         ]
       }
+      user_sessions: {
+        Row: {
+          created_at: string | null
+          device_info: Json | null
+          ended_at: string | null
+          id: number
+          ip_address: unknown | null
+          is_active: boolean | null
+          last_activity: string | null
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          device_info?: Json | null
+          ended_at?: string | null
+          id?: number
+          ip_address?: unknown | null
+          is_active?: boolean | null
+          last_activity?: string | null
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          device_info?: Json | null
+          ended_at?: string | null
+          id?: number
+          ip_address?: unknown | null
+          is_active?: boolean | null
+          last_activity?: string | null
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       youtube_channels: {
         Row: {
           api_key: string
@@ -817,7 +1083,15 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      match_support_stats: {
+        Row: {
+          comment_count: number | null
+          match_id: string | null
+          team_type: string | null
+          total_likes: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_adjust_exp: {
@@ -841,6 +1115,10 @@ export type Database = {
       change_profile_icon: {
         Args: { p_user_id: string; p_icon_id: number }
         Returns: boolean
+      }
+      cleanup_expired_data: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       create_youtube_channels_table: {
         Args: Record<PropertyKey, never>

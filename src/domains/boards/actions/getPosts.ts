@@ -3,6 +3,7 @@
 import { createClient } from '@/shared/api/supabaseServer';
 import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
 import { formatDate } from '@/domains/boards/utils/post/postUtils';
+import type { Json } from '@/types/supabase';
 
 // 게시글 타입 정의
 export interface Post {
@@ -27,6 +28,8 @@ export interface Post {
   league_id?: string | number | null;
   team_logo?: string | null;
   league_logo?: string | null;
+  is_hidden?: boolean;
+  is_deleted?: boolean;
 }
 
 // 응답 타입 정의
@@ -140,6 +143,8 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
         likes,
         post_number,
         user_id,
+        is_hidden,
+        is_deleted,
         profiles (
           id,
           nickname,
@@ -196,8 +201,44 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
       };
     }
     
+    // 타입 안전성을 위한 처리 - 실제 데이터가 있는지 확인 후 처리
+    const hasValidData = Array.isArray(postsData) && postsData.length > 0;
+    if (!hasValidData) {
+      return {
+        data: [],
+        meta: {
+          totalItems: 0,
+          totalPages: 1,
+          currentPage: page,
+          itemsPerPage: limit
+        }
+      };
+    }
+    
+    // 타입 안전성을 위한 처리
+    const typedPostsData = (postsData as unknown) as Array<{
+      id: string;
+      title?: string;
+      created_at?: string;
+      updated_at?: string;
+      board_id?: string;
+      views?: number;
+      likes?: number;
+      post_number?: number;
+      user_id?: string;
+      is_hidden?: boolean;
+      is_deleted?: boolean;
+      profiles?: {
+        id?: string;
+        nickname?: string;
+        level?: number;
+        icon_id?: number | null;
+      };
+      content?: Json;
+    }>;
+    
     // 게시판 정보 가져오기
-    const postBoardIds = [...new Set(postsData.map(post => post.board_id).filter(Boolean))] as string[];
+    const postBoardIds = [...new Set(typedPostsData.map(post => post?.board_id).filter(Boolean))] as string[];
     let boardsData: Record<string, { name: string; team_id?: number | null; league_id?: number | null; slug: string }> = {};
     
     if (postBoardIds.length > 0) {
@@ -273,7 +314,9 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
     
     // 사용자 아이콘 정보 가져오기
     const userIconMap: Record<number, string> = {};
-    const userIds: string[] = postsData.map(post => post.user_id).filter(Boolean);
+    const userIds: string[] = typedPostsData
+      .map(post => post?.user_id)
+      .filter((id): id is string => typeof id === 'string' && id.length > 0);
     const userProfileMap: Record<string, { level: number; icon_id: number | null }> = {};
     
     if (userIds.length > 0) {
@@ -323,16 +366,18 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
     }
     
     // 댓글 수 가져오기
-    const postIds = postsData.map(post => post.id);
+    const postIds = typedPostsData.map(post => post?.id).filter(Boolean);
     
     const commentCountMap: Record<string, number> = {};
     if (postIds.length > 0) {
       try {
-        // 이 부분은 DB에 따라 달라질 수 있음 (여기서는 댓글 수 계산 쿼리 사용)
+        // 숨김/삭제되지 않은 댓글만 카운트
         const { data: commentCounts } = await supabase
           .from('comments')
           .select('post_id, count')
-          .in('post_id', postIds);
+          .in('post_id', postIds)
+          .eq('is_hidden', false)
+          .eq('is_deleted', false);
         
         if (commentCounts) {
           commentCounts.forEach((item) => {
@@ -351,7 +396,7 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
     }
     
     // 최종 결과 변환
-    const formattedPosts = postsData.map(post => {
+    const formattedPosts = typedPostsData.map(post => {
       // 각 게시물에 대한 게시판 정보
       const boardInfo = post.board_id ? boardsData[post.board_id] : null;
       const safeBoardInfo = boardInfo || { 
@@ -400,15 +445,23 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
         iconUrl = getLevelIconUrl(userLevel);
       }
       
+      // 제목 처리 - 숨김/삭제 상태에 따라 변경
+      let displayTitle = post.title || '';
+      if (post.is_deleted) {
+        displayTitle = '[삭제된 게시글]';
+      } else if (post.is_hidden) {
+        displayTitle = '[숨김 처리된 게시글]';
+      }
+      
       return {
         id: post.id,
-        title: post.title,
+        title: displayTitle,
         created_at: post.created_at || new Date().toISOString(),
         formattedDate: formatDate(post.created_at || new Date().toISOString()),
         board_id: post.board_id || '',
         board_name: safeBoardInfo.name,
         board_slug: safeBoardInfo.slug,
-        post_number: post.post_number,
+        post_number: post.post_number || 0,
         author_nickname: profile?.nickname || '익명',
         author_id: profile?.id || '',
         author_level: userLevel,
@@ -421,7 +474,9 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
         team_id: safeBoardInfo.team_id,
         league_id: safeBoardInfo.league_id,
         team_logo: teamLogo,
-        league_logo: leagueLogo
+        league_logo: leagueLogo,
+        is_hidden: post.is_hidden || false,
+        is_deleted: post.is_deleted || false
       };
     });
     
@@ -480,7 +535,7 @@ export async function getPosts(boardId: string, page = 1, limit = 20) {
     
     const { data, error, count } = await supabase
       .from('posts')
-      .select('id, title, created_at, user_id, view_count, like_count, profiles(username, avatar_url)', { count: 'exact' })
+      .select('id, title, created_at, user_id, view_count, like_count, is_hidden, is_deleted, profiles(username, avatar_url)', { count: 'exact' })
       .eq('board_id', boardId)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1)

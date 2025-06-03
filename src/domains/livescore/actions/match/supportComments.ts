@@ -1,26 +1,9 @@
 'use server';
 
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient } from '@/shared/api/supabaseServer';
 import { revalidatePath } from 'next/cache';
 import { cache } from 'react';
-
-// Supabase 서버 클라이언트 생성
-async function createServerComponentClient() {
-  const cookieStore = await cookies();
-  
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name) {
-          return cookieStore.get(name)?.value;
-        }
-      }
-    }
-  );
-}
+import { ReportResponse } from '@/domains/reports/types';
 
 // 팀 타입 정의
 export type TeamType = 'home' | 'away' | 'neutral';
@@ -28,399 +11,392 @@ export type TeamType = 'home' | 'away' | 'neutral';
 // 응원 댓글 인터페이스
 export interface SupportComment {
   id: string;
-  user_id: string;
-  match_id: string;
-  team_type: TeamType;
   content: string;
+  team_type: TeamType;
   likes_count: number;
-  created_at: string;
-  updated_at: string;
-  // 조인된 사용자 정보
+  created_at: string | null;
+  user_id: string;
+  is_liked?: boolean;
+  is_hidden?: boolean;
+  is_deleted?: boolean;
   user_profile?: {
+    username?: string;
     nickname?: string;
     icon_id?: number;
     shop_items?: {
       image_url?: string;
     };
   };
-  // 현재 사용자의 좋아요 여부
-  is_liked?: boolean;
 }
 
-// 응답 인터페이스
-export interface SupportCommentResponse {
-  success: boolean;
-  data?: SupportComment | SupportComment[] | null;
-  error?: string;
-  message?: string;
-}
+// 응원 댓글 목록 조회 (캐시 적용)
+export const getSupportComments = cache(async (matchId: string) => {
+  try {
+    const supabase = await createClient();
+    
+    // 현재 사용자 확인 (좋아요 상태 확인용)
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    // 댓글 기본 정보 조회
+    const { data: comments, error } = await supabase
+      .from('match_support_comments')
+      .select(`
+        id,
+        content,
+        team_type,
+        likes_count,
+        created_at,
+        user_id
+      `)
+      .eq('match_id', matchId)
+      .order('created_at', { ascending: false });
 
-/**
- * 응원 댓글 작성
- */
+    if (error) {
+      console.error('응원 댓글 조회 오류:', error);
+      return { success: false, data: [], error: error.message };
+    }
+
+    if (!comments || comments.length === 0) {
+      return { success: true, data: [], error: null };
+    }
+
+    // 사용자 프로필 정보 별도 조회
+    const userIds = [...new Set(comments.map(comment => comment.user_id))];
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select(`
+        id,
+        username,
+        nickname,
+        icon_id,
+        shop_items:icon_id (
+          image_url
+        )
+      `)
+      .in('id', userIds);
+
+    // 사용자별 좋아요 상태 확인
+    let likedCommentIds = new Set<string>();
+    if (user && comments.length > 0) {
+      const commentIds = comments.map(comment => comment.id);
+      
+      const { data: likes } = await supabase
+        .from('match_comment_likes')
+        .select('comment_id')
+        .eq('user_id', user.id)
+        .in('comment_id', commentIds);
+      
+      likedCommentIds = new Set(likes?.map(like => like.comment_id) || []);
+    }
+
+    // 프로필 정보를 맵으로 변환
+    const profileMap = new Map(profiles?.map(profile => [profile.id, profile]) || []);
+
+    // 댓글과 프로필 정보 결합
+    const commentsWithProfiles: SupportComment[] = comments.map(comment => {
+      const profile = profileMap.get(comment.user_id);
+      
+      // 댓글 내용을 기반으로 상태 판단하거나 실제 DB 값 사용
+      let isHidden = false;
+      let isDeleted = false;
+      
+      if (comment.content === '신고에 의해 삭제되었습니다.') {
+        isDeleted = true;
+        isHidden = false;
+      } else if (comment.content === '신고에 의해 일시 숨김처리 되었습니다. 7일 후 다시 확인됩니다.') {
+        isHidden = true;
+        isDeleted = false;
+      } else {
+        // 실제 데이터베이스 값 사용
+        const dbHidden = (comment as Record<string, unknown>).is_hidden as boolean;
+        const dbDeleted = (comment as Record<string, unknown>).is_deleted as boolean;
+        isHidden = dbHidden || false;
+        isDeleted = dbDeleted || false;
+      }
+      
+      return {
+        id: comment.id,
+        content: comment.content,
+        team_type: comment.team_type as TeamType,
+        likes_count: comment.likes_count || 0,
+        created_at: comment.created_at,
+        user_id: comment.user_id,
+        is_liked: likedCommentIds.has(comment.id),
+        is_hidden: isHidden,
+        is_deleted: isDeleted,
+        user_profile: profile ? {
+          username: profile.username || undefined,
+          nickname: profile.nickname || undefined,
+          icon_id: profile.icon_id || undefined,
+          shop_items: profile.shop_items ? {
+            image_url: profile.shop_items.image_url || undefined
+          } : undefined
+        } : undefined
+      };
+    });
+
+    return { success: true, data: commentsWithProfiles, error: null };
+  } catch (error) {
+    console.error('응원 댓글 조회 중 예외 발생:', error);
+    return { success: false, data: [], error: '응원 댓글을 불러오는 중 오류가 발생했습니다.' };
+  }
+});
+
+// 응원 댓글 작성
 export async function createSupportComment(
   matchId: string,
   teamType: TeamType,
   content: string
-): Promise<SupportCommentResponse> {
+) {
   try {
-    console.log('서버 액션 시작:', { matchId, teamType, content });
-    
-    const supabase = await createServerComponentClient();
+    const supabase = await createClient();
     
     // 현재 사용자 확인
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    console.log('사용자 인증 결과:', { user: user?.id, authError });
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
     
-    if (authError || !user) {
-      console.log('인증 실패:', authError);
-      return {
-        success: false,
-        error: '로그인이 필요합니다.'
-      };
+    if (userError || !user) {
+      return { success: false, error: '로그인이 필요합니다.' };
     }
 
-    // 내용 검증
-    if (!content.trim() || content.length > 200) {
-      console.log('내용 검증 실패:', { contentLength: content.length, trimmed: content.trim() });
-      return {
-        success: false,
-        error: '댓글은 1자 이상 200자 이하로 작성해주세요.'
-      };
-    }
-
-    console.log('댓글 삽입 시도:', {
-      user_id: user.id,
-      match_id: matchId,
-      team_type: teamType,
-      content: content.trim()
-    });
-
-    // 댓글 생성
+    // 댓글 작성
     const { data, error } = await supabase
       .from('match_support_comments')
       .insert({
-        user_id: user.id,
         match_id: matchId,
+        content,
         team_type: teamType,
-        content: content.trim()
+        user_id: user.id,
+        likes_count: 0
       })
-      .select()
+      .select(`
+        id,
+        content,
+        team_type,
+        likes_count,
+        created_at,
+        user_id,
+        profiles:user_id (
+          username,
+          nickname,
+          icon_id,
+          shop_items:icon_id (
+            image_url
+          )
+        )
+      `)
       .single();
 
-    console.log('댓글 삽입 결과:', { data, error });
-
     if (error) {
-      console.error('댓글 삽입 오류:', error);
-      return {
-        success: false,
-        error: error.message
-      };
+      console.error('응원 댓글 작성 오류:', error);
+      return { success: false, error: error.message };
     }
 
     // 캐시 무효화
     revalidatePath(`/livescore/football/match/${matchId}`);
 
-    console.log('댓글 작성 성공:', data);
-    return {
-      success: true,
-      data: data,
-      message: '응원 댓글이 작성되었습니다!'
-    };
-
+    return { success: true, comment: data };
   } catch (error) {
-    console.error('응원 댓글 작성 오류:', error);
-    return {
-      success: false,
-      error: '댓글 작성 중 오류가 발생했습니다.'
-    };
+    console.error('응원 댓글 작성 중 예외 발생:', error);
+    return { success: false, error: '댓글 작성 중 오류가 발생했습니다.' };
   }
 }
 
-/**
- * 매치 응원 댓글 목록 조회
- */
-export async function getSupportComments(
-  matchId: string,
-  teamType?: TeamType,
-  limit: number = 20,
-  offset: number = 0
-): Promise<SupportCommentResponse> {
+// 응원 댓글 좋아요/취소 (별칭 함수 추가)
+export async function toggleCommentLike(commentId: string) {
+  return await toggleSupportCommentLike(commentId);
+    }
+
+// 응원 댓글 좋아요/취소
+export async function toggleSupportCommentLike(commentId: string) {
   try {
-    const supabase = await createServerComponentClient();
-    
-    // 현재 사용자 확인 (로그인하지 않아도 댓글은 볼 수 있음)
-    const { data: { user } } = await supabase.auth.getUser();
-
-    let query = supabase
-      .from('match_support_comments')
-      .select('*')
-      .eq('match_id', matchId)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
-
-    // 팀 타입 필터링
-    if (teamType) {
-      query = query.eq('team_type', teamType);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      return {
-        success: false,
-        error: error.message
-      };
-    }
-
-    // 사용자 정보를 별도로 조회
-    let commentsWithUserInfo = data || [];
-    
-    if (data && data.length > 0) {
-      const userIds = [...new Set(data.map(comment => comment.user_id))];
-      
-      // profiles 테이블에서 사용자 정보 조회
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          nickname,
-          icon_id,
-          shop_items!profiles_icon_id_fkey (
-            image_url
-          )
-        `)
-        .in('id', userIds);
-
-      // 댓글에 사용자 정보 매핑
-      commentsWithUserInfo = data.map(comment => {
-        const userProfile = profiles?.find(p => p.id === comment.user_id);
-        return {
-          ...comment,
-          user_profile: userProfile ? {
-            nickname: userProfile.nickname,
-            icon_id: userProfile.icon_id,
-            shop_items: userProfile.shop_items
-          } : null
-        };
-      });
-    }
-
-    // 현재 사용자의 좋아요 정보 추가
-    let commentsWithLikes = commentsWithUserInfo;
-    
-    if (user && commentsWithUserInfo.length > 0) {
-      const commentIds = commentsWithUserInfo.map(comment => comment.id);
-      
-      const { data: userLikes } = await supabase
-        .from('match_comment_likes')
-        .select('comment_id')
-        .eq('user_id', user.id)
-        .in('comment_id', commentIds);
-
-      const likedCommentIds = new Set(userLikes?.map(like => like.comment_id) || []);
-      
-      commentsWithLikes = commentsWithUserInfo.map(comment => ({
-        ...comment,
-        is_liked: likedCommentIds.has(comment.id)
-      }));
-    }
-
-    return {
-      success: true,
-      data: commentsWithLikes
-    };
-
-  } catch (error) {
-    console.error('응원 댓글 조회 오류:', error);
-    return {
-      success: false,
-      error: '댓글 조회 중 오류가 발생했습니다.'
-    };
-  }
-}
-
-/**
- * 댓글 좋아요/좋아요 취소
- */
-export async function toggleCommentLike(commentId: string): Promise<SupportCommentResponse> {
-  try {
-    const supabase = await createServerComponentClient();
+    const supabase = await createClient();
     
     // 현재 사용자 확인
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
     
-    if (authError || !user) {
-      return {
-        success: false,
-        error: '로그인이 필요합니다.'
-      };
+    if (userError || !user) {
+      return { success: false, error: '로그인이 필요합니다.' };
     }
 
     // 기존 좋아요 확인
     const { data: existingLike } = await supabase
       .from('match_comment_likes')
       .select('id')
-      .eq('user_id', user.id)
       .eq('comment_id', commentId)
+      .eq('user_id', user.id)
       .single();
 
     if (existingLike) {
       // 좋아요 취소
-      const { error } = await supabase
+      const { error: deleteError } = await supabase
         .from('match_comment_likes')
         .delete()
-        .eq('user_id', user.id)
-        .eq('comment_id', commentId);
+        .eq('id', existingLike.id);
 
-      if (error) {
-        return {
-          success: false,
-          error: error.message
-        };
+      if (deleteError) {
+        return { success: false, error: deleteError.message };
       }
 
-      return {
-        success: true,
-        message: '좋아요를 취소했습니다.'
-      };
+      // 댓글의 좋아요 수 감소
+      const { data: currentComment } = await supabase
+        .from('match_support_comments')
+        .select('likes_count')
+        .eq('id', commentId)
+        .single();
+      
+      if (currentComment) {
+        const currentLikes = currentComment.likes_count || 0;
+        const { error: updateError } = await supabase
+          .from('match_support_comments')
+          .update({ likes_count: Math.max(0, currentLikes - 1) })
+          .eq('id', commentId);
+
+        if (updateError) {
+          return { success: false, error: updateError.message };
+        }
+      }
+
+      return { success: true, liked: false };
     } else {
       // 좋아요 추가
-      const { error } = await supabase
+      const { error: insertError } = await supabase
         .from('match_comment_likes')
         .insert({
-          user_id: user.id,
-          comment_id: commentId
+          comment_id: commentId,
+          user_id: user.id
         });
 
-      if (error) {
-        return {
-          success: false,
-          error: error.message
-        };
+      if (insertError) {
+        return { success: false, error: insertError.message };
       }
 
-      return {
-        success: true,
-        message: '좋아요를 눌렀습니다!'
-      };
-    }
+      // 댓글의 좋아요 수 증가
+      const { data: currentComment } = await supabase
+        .from('match_support_comments')
+        .select('likes_count')
+        .eq('id', commentId)
+        .single();
+      
+      if (currentComment) {
+        const currentLikes = currentComment.likes_count || 0;
+        const { error: updateError } = await supabase
+          .from('match_support_comments')
+          .update({ likes_count: currentLikes + 1 })
+          .eq('id', commentId);
 
+        if (updateError) {
+          return { success: false, error: updateError.message };
+        }
+      }
+
+      return { success: true, liked: true };
+    }
   } catch (error) {
-    console.error('댓글 좋아요 토글 오류:', error);
-    return {
-      success: false,
-      error: '좋아요 처리 중 오류가 발생했습니다.'
-    };
+    console.error('댓글 좋아요 토글 중 예외 발생:', error);
+    return { success: false, error: '좋아요 처리 중 오류가 발생했습니다.' };
   }
 }
 
-/**
- * 댓글 삭제
- */
-export async function deleteSupportComment(commentId: string): Promise<SupportCommentResponse> {
+// 응원 댓글 삭제
+export async function deleteSupportComment(commentId: string) {
   try {
-    const supabase = await createServerComponentClient();
+    const supabase = await createClient();
     
     // 현재 사용자 확인
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
     
-    if (authError || !user) {
-      return {
-        success: false,
-        error: '로그인이 필요합니다.'
-      };
+    if (userError || !user) {
+      return { success: false, error: '로그인이 필요합니다.' };
     }
 
-    // 댓글 삭제 (RLS 정책으로 본인 댓글만 삭제 가능)
-    const { error } = await supabase
+    // 댓글 소유자 확인
+    const { data: comment, error: commentError } = await supabase
+      .from('match_support_comments')
+      .select('user_id, match_id')
+      .eq('id', commentId)
+      .single();
+
+    if (commentError || !comment) {
+      return { success: false, error: '댓글을 찾을 수 없습니다.' };
+  }
+
+    if (comment.user_id !== user.id) {
+      return { success: false, error: '본인의 댓글만 삭제할 수 있습니다.' };
+    }
+
+    // 댓글 삭제
+    const { error: deleteError } = await supabase
       .from('match_support_comments')
       .delete()
-      .eq('id', commentId)
-      .eq('user_id', user.id);
+      .eq('id', commentId);
 
-    if (error) {
-      return {
-        success: false,
-        error: error.message
-      };
+    if (deleteError) {
+      return { success: false, error: deleteError.message };
     }
 
-    return {
-      success: true,
-      message: '댓글이 삭제되었습니다.'
-    };
+    // 캐시 무효화
+    revalidatePath(`/livescore/football/match/${comment.match_id}`);
 
+    return { success: true };
   } catch (error) {
-    console.error('댓글 삭제 오류:', error);
-    return {
-      success: false,
-      error: '댓글 삭제 중 오류가 발생했습니다.'
-    };
+    console.error('댓글 삭제 중 예외 발생:', error);
+    return { success: false, error: '댓글 삭제 중 오류가 발생했습니다.' };
   }
 }
 
-/**
- * 댓글 수정
- */
-export async function updateSupportComment(
+// 응원 댓글 신고
+export async function reportSupportComment(
   commentId: string,
-  content: string
-): Promise<SupportCommentResponse> {
+  reason: string,
+  description?: string
+): Promise<ReportResponse> {
   try {
-    const supabase = await createServerComponentClient();
+    const supabase = await createClient();
     
     // 현재 사용자 확인
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
     
-    if (authError || !user) {
-      return {
-        success: false,
-        error: '로그인이 필요합니다.'
-      };
+    if (userError || !user) {
+      return { success: false, error: '로그인이 필요합니다.' };
     }
 
-    // 내용 검증
-    if (!content.trim() || content.length > 200) {
-      return {
-        success: false,
-        error: '댓글은 1자 이상 200자 이하로 작성해주세요.'
-      };
+    // 중복 신고 확인
+    const { data: existingReport } = await supabase
+      .from('reports')
+      .select('id')
+      .eq('reporter_id', user.id)
+      .eq('target_type', 'match_comment')
+      .eq('target_id', commentId)
+      .single();
+
+    if (existingReport) {
+      return { success: false, error: '이미 신고한 댓글입니다.' };
     }
 
-    // 댓글 수정
+    // 신고 생성
     const { data, error } = await supabase
-      .from('match_support_comments')
-      .update({
-        content: content.trim(),
-        updated_at: new Date().toISOString()
+      .from('reports')
+      .insert({
+        reporter_id: user.id,
+        target_type: 'match_comment',
+        target_id: commentId,
+        reason,
+        description: description || null,
       })
-      .eq('id', commentId)
-      .eq('user_id', user.id)
       .select()
       .single();
 
     if (error) {
-      return {
-        success: false,
-        error: error.message
-      };
+      console.error('응원 댓글 신고 오류:', error);
+      return { success: false, error: '신고 처리 중 오류가 발생했습니다.' };
     }
 
-    return {
-      success: true,
-      data: data,
-      message: '댓글이 수정되었습니다.'
-    };
-
+    // 관련 페이지 캐시 갱신
+    revalidatePath('/admin/reports');
+    
+    return { success: true, data };
   } catch (error) {
-    console.error('댓글 수정 오류:', error);
-    return {
-      success: false,
-      error: '댓글 수정 중 오류가 발생했습니다.'
-    };
+    console.error('응원 댓글 신고 중 예외 발생:', error);
+    return { success: false, error: '신고 처리 중 오류가 발생했습니다.' };
   }
-}
-
-// 캐싱된 함수들
-export const getCachedSupportComments = cache(getSupportComments); 
+} 

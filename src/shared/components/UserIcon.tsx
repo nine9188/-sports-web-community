@@ -63,7 +63,8 @@ const UserIcon = React.memo(function UserIcon({
       <Image
         src={src}
         alt={alt || '유저 아이콘'}
-        fill
+        width={size}
+        height={size}
         sizes={imageSizes}
         className="object-cover"
         onError={handleError}

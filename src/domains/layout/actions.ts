@@ -18,7 +18,20 @@ export async function getBoardsForNavigation(): Promise<{
     
     // 사용자 정보 가져오기 (관리자 여부 확인용)
     const { data: { user } } = await supabase.auth.getUser();
-    const isAdmin = user?.user_metadata?.is_admin === true;
+    let isAdmin = false;
+    
+    if (user) {
+      // 프로필에서 is_admin 필드 확인
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single();
+      
+      isAdmin = profile?.is_admin === true || 
+                user.user_metadata?.role === 'admin' || 
+                user.email === process.env.ADMIN_EMAIL;
+    }
     
     // 최상위 게시판 가져오기
     let rootBoards: Board[] = [];
@@ -105,10 +118,10 @@ export async function getHeaderUserData(): Promise<HeaderUserData | null> {
       iconName: ''
     };
     
-    // 프로필 정보 조회
+    // 프로필 정보 조회 (is_admin 필드 포함)
     const { data: profile } = await supabase
       .from('profiles')
-      .select('nickname, icon_id, level, exp')
+      .select('nickname, icon_id, level, exp, is_admin')
       .eq('id', user.id)
       .single();
     
@@ -140,7 +153,9 @@ export async function getHeaderUserData(): Promise<HeaderUserData | null> {
       id: user.id,
       email: user.email || '',
       nickname: profile?.nickname || user.user_metadata?.nickname || '사용자',
-      isAdmin: user.user_metadata?.is_admin === true,
+      isAdmin: profile?.is_admin === true || 
+               user.user_metadata?.role === 'admin' || 
+               user.email === process.env.ADMIN_EMAIL,
       level: profile?.level || user.user_metadata?.level || 1,
       iconInfo
     };

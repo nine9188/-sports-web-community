@@ -1,32 +1,21 @@
 import { createClient } from '@/shared/api/supabaseServer';
+import { serverAuthGuard } from '@/shared/utils/auth-guard';
 import ShopItemManagement from './components/ShopItemManagement';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
 
 export default async function ShopAdminPage() {
   try {
-    // 관리자 인증 체크
+    // 관리자 인증 체크 (통합된 방식 사용)
+    await serverAuthGuard({
+      redirectTo: '/signin',
+      requireAdmin: true,
+      logUnauthorizedAccess: true
+    });
+
     const supabase = await createClient();
-
-    // getUser를 사용하여 보안 강화
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError || !user) {
-      redirect('/signin');
-    }
-
-    // 관리자 권한 체크
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single();
-
-    if (!profile?.is_admin) {
-      redirect('/');
-    }
 
     // 팀 데이터 가져오기
     const { data: teams, error: teamsError } = await supabase

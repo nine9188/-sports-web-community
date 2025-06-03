@@ -4,8 +4,6 @@ import { fetchMatchesByDate } from '@/domains/livescore/actions/footballApi';
 
 export async function getMatchesByDate(date: string) {
   try {
-    console.log(`경기 데이터 요청: ${date} (실제 API 호출)`);
-    
     // 실제 Football API에서 경기 데이터 가져오기
     const matches = await fetchMatchesByDate(date);
     
@@ -52,4 +50,12 @@ export async function getMatchesByDate(date: string) {
     // API 오류 시 빈 배열 반환
     return [];
   }
+}
+
+export async function getMatchData(date: string) {
+  // 실제 API 호출 로직
+  return {
+    matches: [],
+    date
+  };
 } 
