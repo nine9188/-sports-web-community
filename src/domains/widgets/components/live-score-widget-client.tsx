@@ -398,7 +398,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
             
             {/* 🔧 반응형 카드 레이아웃 - 모바일 터치, 데스크탑 버튼 */}
             <div 
-              className="flex gap-3 w-full transition-all duration-300 ease-in-out"
+              className="flex gap-3 w-full transition-all duration-300 ease-in-out select-none touch-none"
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
@@ -406,7 +406,8 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                 userSelect: 'none',
                 WebkitUserSelect: 'none',
                 WebkitTouchCallout: 'none',
-                WebkitTapHighlightColor: 'transparent'
+                WebkitTapHighlightColor: 'transparent',
+                touchAction: 'pan-y pinch-zoom'
               }}
             >
               {/* 실제 경기 카드들 */}
@@ -423,7 +424,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                   <Link 
                     key={`match-${match.id || index}-${startIndex}-${index}`} 
                     href={match.id ? `/livescore/football/match/${match.id}` : '#'}
-                    className="flex-1 min-w-0 border rounded-lg p-2 transition-all h-[140px] shadow-sm cursor-pointer group hover:translate-y-[-2px] hover:shadow-md hover:border-blue-300 dark:hover:border-blue-500 touch-manipulation active:scale-[0.99] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 transform-gpu"
+                    className="flex-1 min-w-0 border rounded-lg p-2 transition-all h-[140px] shadow-sm cursor-pointer group hover:translate-y-[-2px] hover:shadow-md hover:border-blue-300 dark:hover:border-blue-500 touch-manipulation active:scale-[0.99] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 transform-gpu select-none"
                     ref={el => {
                       if (!cardRefs.current) cardRefs.current = [];
                       cardRefs.current[index] = el;
@@ -432,7 +433,8 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                       userSelect: 'none',
                       WebkitUserSelect: 'none',
                       WebkitTouchCallout: 'none',
-                      WebkitTapHighlightColor: 'transparent'
+                      WebkitTapHighlightColor: 'transparent',
+                      touchAction: 'manipulation'
                     }}
                     onDragStart={(e) => e.preventDefault()}
                   >
@@ -450,6 +452,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                             target.src = '/placeholder-league.png';
                           }}
                           unoptimized
+                          draggable={false}
                         />
                       )}
                       <span className="text-xs font-medium truncate">{leagueNameKo}</span>
@@ -467,6 +470,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                             style={{ width: '40px', height: '40px', objectFit: 'contain' }}
                             className="mb-0.5 group-hover:scale-110 transition-transform"
                             unoptimized
+                            draggable={false}
                           />
                         )}
                         <span className="text-[10px] text-center truncate w-full group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{homeTeamNameKo}</span>
@@ -494,6 +498,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                             style={{ width: '40px', height: '40px', objectFit: 'contain' }}
                             className="mb-0.5 group-hover:scale-110 transition-transform"
                             unoptimized
+                            draggable={false}
                           />
                         )}
                         <span className="text-[10px] text-center truncate w-full group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{awayTeamNameKo}</span>
