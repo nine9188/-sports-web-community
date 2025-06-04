@@ -49,6 +49,10 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
   
   // 카드 참조를 위한 ref
   const cardRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+  
+  // 🔧 터치 슬라이드를 위한 ref와 상태
+  const touchStartXRef = useRef<number | null>(null);
+  const touchEndXRef = useRef<number | null>(null);
 
   // 🔧 슬라이딩 계산 - 반응형
   const [isMobile, setIsMobile] = useState(false);
@@ -76,10 +80,42 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
     setStartIndex(prev => Math.min(maxStartIndex, prev + 1));
   };
 
+  // 🔧 터치 이벤트 핸들러 (모바일 전용)
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isMobile) return;
+    touchStartXRef.current = e.touches[0].clientX;
+    touchEndXRef.current = null;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isMobile) return;
+    touchEndXRef.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (!isMobile || touchStartXRef.current === null || touchEndXRef.current === null) return;
+    
+    const touchDiff = touchStartXRef.current - touchEndXRef.current;
+    const minSwipeDistance = 50; // 최소 스와이프 거리
+    
+    if (Math.abs(touchDiff) > minSwipeDistance) {
+      if (touchDiff > 0) {
+        // 왼쪽으로 스와이프 = 다음 카드
+        if (canSlideRight) slideRight();
+      } else {
+        // 오른쪽으로 스와이프 = 이전 카드
+        if (canSlideLeft) slideLeft();
+      }
+    }
+    
+    touchStartXRef.current = null;
+    touchEndXRef.current = null;
+  };
+
   // 🔧 버튼 활성화 상태 계산
   const canSlideLeft = startIndex > 0;
   const canSlideRight = startIndex < matches.length - cardsToShow;
-  const showSlideButtons = matches.length > cardsToShow;
+  const showSlideButtons = matches.length > cardsToShow && !isMobile; // 🔧 데스크탑에서만 버튼 표시
 
   // 🔧 클라이언트 렌더링 확인 - Hydration 불일치 방지
   useEffect(() => {
@@ -305,15 +341,15 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
         <div className="w-full">
           {/* 🔧 슬라이딩 컨트롤과 함께 상대적 위치 설정 */}
           <div className="relative">
-            {/* 🔧 좌우 슬라이딩 버튼 - 경기가 4개 초과일 때만 표시 */}
+            {/* 🔧 좌우 슬라이딩 버튼 - 데스크탑에서만 표시 */}
             {showSlideButtons && (
               <>
                 {/* 왼쪽 버튼 - 이전 카드로 슬라이드 */}
                 <button 
                   onClick={slideLeft}
-                  className={`absolute left-[-16px] top-1/2 -translate-y-1/2 z-10 rounded-full p-2 shadow-lg border transition-all duration-200 ${
+                  className={`absolute left-[-12px] top-1/2 -translate-y-1/2 z-20 rounded-full p-2 shadow-lg border transition-all duration-200 ${
                     canSlideLeft 
-                      ? 'bg-white/90 dark:bg-gray-900/90 hover:bg-blue-50 dark:hover:bg-blue-900/50 hover:border-blue-300 dark:hover:border-blue-500 border-gray-200 dark:border-gray-700 hover:scale-110 hover:shadow-xl cursor-pointer group' 
+                      ? 'bg-white/95 dark:bg-gray-900/95 hover:bg-blue-50 dark:hover:bg-blue-900/50 hover:border-blue-300 dark:hover:border-blue-500 border-gray-200 dark:border-gray-700 hover:scale-110 hover:shadow-xl cursor-pointer group' 
                       : 'bg-gray-100/50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 cursor-not-allowed opacity-50'
                   }`}
                   aria-label="이전 경기"
@@ -331,9 +367,9 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                 {/* 오른쪽 버튼 - 다음 카드로 슬라이드 */}
                 <button 
                   onClick={slideRight}
-                  className={`absolute right-[-16px] top-1/2 -translate-y-1/2 z-10 rounded-full p-2 shadow-lg border transition-all duration-200 ${
+                  className={`absolute right-[-12px] top-1/2 -translate-y-1/2 z-20 rounded-full p-2 shadow-lg border transition-all duration-200 ${
                     canSlideRight 
-                      ? 'bg-white/90 dark:bg-gray-900/90 hover:bg-blue-50 dark:hover:bg-blue-900/50 hover:border-blue-300 dark:hover:border-blue-500 border-gray-200 dark:border-gray-700 hover:scale-110 hover:shadow-xl cursor-pointer group' 
+                      ? 'bg-white/95 dark:bg-gray-900/95 hover:bg-blue-50 dark:hover:bg-blue-900/50 hover:border-blue-300 dark:hover:border-blue-500 border-gray-200 dark:border-gray-700 hover:scale-110 hover:shadow-xl cursor-pointer group' 
                       : 'bg-gray-100/50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 cursor-not-allowed opacity-50'
                   }`}
                   aria-label="다음 경기"
@@ -350,8 +386,13 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
               </>
             )}
             
-            {/* 🔧 반응형 카드 레이아웃 - 모바일 2개, 데스크탑 4개 */}
-            <div className="flex gap-3 w-full transition-all duration-300 ease-in-out">
+            {/* 🔧 반응형 카드 레이아웃 - 모바일 터치, 데스크탑 버튼 */}
+            <div 
+              className="flex gap-3 w-full transition-all duration-300 ease-in-out"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
               {/* 실제 경기 카드들 */}
               {displayMatches.map((match, index) => {
                 const leagueInfo = match.league?.id ? getLeagueById(match.league.id) : null;
