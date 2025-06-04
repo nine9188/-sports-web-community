@@ -5,66 +5,166 @@
 
 // 메이저 리그 ID 
 export const MAJOR_LEAGUE_IDS = {
-  // 유럽 주요 리그 
+  // 유럽 주요 리그 (Top 5)
   PREMIER_LEAGUE: 39, // 잉글랜드 프리미어 리그
   LA_LIGA: 140,       // 스페인 라리가
   BUNDESLIGA: 78,     // 독일 분데스리가
   SERIE_A: 135,       // 이탈리아 세리에 A
   LIGUE_1: 61,        // 프랑스 리그앙
 
+  // 유럽 2군 리그
+  CHAMPIONSHIP: 40,   // 잉글랜드 챔피언십
+  SCOTTISH_PREMIERSHIP: 179, // 스코틀랜드 프리미어십
+  EREDIVISIE: 88,     // 네덜란드 에레디비지에
+  PRIMEIRA_LIGA: 94,  // 포르투갈 프리메이라 리가
+
   // 유럽 컵 대회
   CHAMPIONS_LEAGUE: 2, // UEFA 챔피언스 리그
   EUROPA_LEAGUE: 3,    // UEFA 유로파 리그
   CONFERENCE_LEAGUE: 848, // UEFA 컨퍼런스 리그
+  UEFA_SUPER_CUP: 531, // UEFA 슈퍼컵
 
-  // 기타 유럽 리그
-  EREDIVISIE: 88,     // 네덜란드 에레디비지에
-  PRIMEIRA_LIGA: 94,  // 포르투갈 프리메이라 리가
+  // 국제 대회
+  WORLD_CUP_QUALIFIERS_EUROPE: 32, // 월드컵 유럽예선
+  WORLD_CUP_QUALIFIERS_ASIA: 30,   // 월드컵 아시아예선
+  INTERNATIONAL_FRIENDLY: 10, // 국가대표친선
+  NATIONS_LEAGUE: 5,   // UEFA 네이션스리그
+  EURO: 9,            // 유럽선수권대회
+  COPA_AMERICA: 13,   // 코파 아메리카
+  CLUB_WORLD_CUP: 15, // FIFA 클럽 월드컵
+
+  // 국내 컵 대회
+  FA_CUP: 45,         // FA컵 (잉글랜드)
+  EFL_CUP: 48,        // EFL컵 (잉글랜드)
+  COPA_DEL_REY: 143,  // 코파 델 레이 (스페인)
+  COPPA_ITALIA: 137,  // 코파 이탈리아 (이탈리아)
+  COUPE_DE_FRANCE: 66, // 쿠프 드 프랑스 (프랑스)
+  DFB_POKAL: 81,      // DFB 포칼 (독일)
 
   // 아시아
   K_LEAGUE_1: 292,    // 한국 K리그1
   J1_LEAGUE: 98,      // 일본 J1 리그
   CSL: 169,           // 중국 슈퍼리그
+  AFC_CHAMPIONS: 17,  // AFC 챔피언스 리그
+  SAUDI_PRO_LEAGUE: 307, // 사우디 프로리그
 
   // 아메리카
   MLS: 253,           // 미국 MLS
   BRASILEIRAO: 71,    // 브라질 세리에 A
   LIGA_MX: 262,       // 멕시코 리가 MX
-  
-  // 국제 대회
-  WORLD_CUP: 1,       // FIFA 월드컵
-  EURO: 4,            // UEFA 유로
-  COPA_AMERICA: 13,   // 코파 아메리카
-  AFC_CHAMPIONS: 17,  // AFC 챔피언스 리그
+
+  // 기타 유럽 리그
+  DANISH_SUPERLIGA: 119, // 덴마크 수페르리가
 };
 
-// 메이저 리그 ID 배열 반환 (필터링 용도)
+// 확장된 메이저 리그 ID 배열 (필터링 용도)
 export const getMajorLeagueIds = (): number[] => {
-  return Object.values(MAJOR_LEAGUE_IDS);
+  return [
+    // 주요 유럽 리그 (Top 5)
+    39,  // 프리미어리그 (잉글랜드) - Premier League
+    140, // 라리가 (스페인) - La Liga
+    78,  // 분데스리가 (독일) - Bundesliga
+    61,  // 리그1 (프랑스) - Ligue 1
+    135, // 세리에A (이탈리아) - Serie A
+    
+    // 유럽 2군 리그
+    40,  // 잉글랜드 챔피언십 - Championship
+    179, // 스코틀랜드 프리미어십 - Scottish Premiership
+    88,  // 에레디비지에 (네덜란드) - Eredivisie
+    94,  // 포르투갈 리그 - Primeira Liga
+    
+    // 유럽 컵 대회
+    2,   // 챔피언스리그 - UEFA Champions League
+    3,   // 유로파리그 - UEFA Europa League
+    848, // 컨퍼런스리그 - UEFA Conference League
+    531, // UEFA 슈퍼컵 - UEFA Super Cup
+    
+    // 국제 대회
+    32,  // 월드컵 유럽예선 - World Cup Qualifiers Europe
+    30,  // 월드컵 아시아예선 - World Cup Qualifiers Asia
+    10,  // 국가대표친선 - International Friendly
+    5,   // 네이션스리그 - UEFA Nations League
+    9,   // 유로 - European Championship
+    13,  // 코파아메리카 - Copa America
+    15,  // 클럽 월드컵 - FIFA Club World Cup
+    
+    // 국내 컵 대회
+    45,  // FA컵 (잉글랜드) - FA Cup
+    48,  // EFL컵 (잉글랜드) - EFL Cup
+    143, // 코파델레이 (스페인) - Copa del Rey
+    137, // 코파이탈리아 (이탈리아) - Coppa Italia
+    66,  // 쿠프드프랑스 (프랑스) - Coupe de France
+    81,  // DFB-포칼 (독일) - DFB-Pokal
+    
+    // 아시아
+    292, // K리그1 (한국) - K League 1
+    98,  // J1리그 (일본) - J1 League
+    169, // 중국 슈퍼리그 - Chinese Super League
+    17,  // AFC 챔피언스리그 - AFC Champions League
+    307, // 사우디 프로리그 - Saudi Pro League
+    
+    // 아메리카
+    253, // 메이저리그사커 (MLS) - Major League Soccer
+    71,  // 브라질레이로 - Brasileirao
+    262, // 리가 MX (멕시코) - Liga MX
+    
+    // 기타
+    119, // 덴마크 수페르리가 - Danish Superliga
+  ];
 };
 
-// 리그 이름 - ID 매핑
+// 리그 이름 - ID 매핑 (확장)
 export const LEAGUE_NAMES_MAP: Record<number, string> = {
+  // 유럽 주요 리그
   [MAJOR_LEAGUE_IDS.PREMIER_LEAGUE]: '프리미어 리그',
   [MAJOR_LEAGUE_IDS.LA_LIGA]: '라리가',
   [MAJOR_LEAGUE_IDS.BUNDESLIGA]: '분데스리가',
   [MAJOR_LEAGUE_IDS.SERIE_A]: '세리에 A',
   [MAJOR_LEAGUE_IDS.LIGUE_1]: '리그앙',
+  
+  // 유럽 2군 리그
+  [MAJOR_LEAGUE_IDS.CHAMPIONSHIP]: '챔피언십',
+  [MAJOR_LEAGUE_IDS.SCOTTISH_PREMIERSHIP]: '스코틀랜드 프리미어십',
+  [MAJOR_LEAGUE_IDS.EREDIVISIE]: '에레디비지에',
+  [MAJOR_LEAGUE_IDS.PRIMEIRA_LIGA]: '프리메이라 리가',
+  
+  // 유럽 컵 대회
   [MAJOR_LEAGUE_IDS.CHAMPIONS_LEAGUE]: '챔피언스 리그',
   [MAJOR_LEAGUE_IDS.EUROPA_LEAGUE]: '유로파 리그',
   [MAJOR_LEAGUE_IDS.CONFERENCE_LEAGUE]: '컨퍼런스 리그',
-  [MAJOR_LEAGUE_IDS.EREDIVISIE]: '에레디비지에',
-  [MAJOR_LEAGUE_IDS.PRIMEIRA_LIGA]: '프리메이라 리가',
+  [MAJOR_LEAGUE_IDS.UEFA_SUPER_CUP]: 'UEFA 슈퍼컵',
+  
+  // 국제 대회
+  [MAJOR_LEAGUE_IDS.WORLD_CUP_QUALIFIERS_EUROPE]: '월드컵 유럽예선',
+  [MAJOR_LEAGUE_IDS.WORLD_CUP_QUALIFIERS_ASIA]: '월드컵 아시아예선',
+  [MAJOR_LEAGUE_IDS.INTERNATIONAL_FRIENDLY]: '국가대표 친선경기',
+  [MAJOR_LEAGUE_IDS.NATIONS_LEAGUE]: 'UEFA 네이션스리그',
+  [MAJOR_LEAGUE_IDS.EURO]: '유럽선수권대회',
+  [MAJOR_LEAGUE_IDS.COPA_AMERICA]: '코파 아메리카',
+  [MAJOR_LEAGUE_IDS.CLUB_WORLD_CUP]: 'FIFA 클럽 월드컵',
+  
+  // 국내 컵 대회
+  [MAJOR_LEAGUE_IDS.FA_CUP]: 'FA컵',
+  [MAJOR_LEAGUE_IDS.EFL_CUP]: 'EFL컵',
+  [MAJOR_LEAGUE_IDS.COPA_DEL_REY]: '코파 델 레이',
+  [MAJOR_LEAGUE_IDS.COPPA_ITALIA]: '코파 이탈리아',
+  [MAJOR_LEAGUE_IDS.COUPE_DE_FRANCE]: '쿠프 드 프랑스',
+  [MAJOR_LEAGUE_IDS.DFB_POKAL]: 'DFB 포칼',
+  
+  // 아시아
   [MAJOR_LEAGUE_IDS.K_LEAGUE_1]: 'K리그1',
   [MAJOR_LEAGUE_IDS.J1_LEAGUE]: 'J1 리그',
   [MAJOR_LEAGUE_IDS.CSL]: '중국 슈퍼리그',
+  [MAJOR_LEAGUE_IDS.AFC_CHAMPIONS]: 'AFC 챔피언스 리그',
+  [MAJOR_LEAGUE_IDS.SAUDI_PRO_LEAGUE]: '사우디 프로리그',
+  
+  // 아메리카
   [MAJOR_LEAGUE_IDS.MLS]: 'MLS',
   [MAJOR_LEAGUE_IDS.BRASILEIRAO]: '브라질레이로',
   [MAJOR_LEAGUE_IDS.LIGA_MX]: '리가 MX',
-  [MAJOR_LEAGUE_IDS.WORLD_CUP]: '월드컵',
-  [MAJOR_LEAGUE_IDS.EURO]: '유로',
-  [MAJOR_LEAGUE_IDS.COPA_AMERICA]: '코파 아메리카',
-  [MAJOR_LEAGUE_IDS.AFC_CHAMPIONS]: 'AFC 챔피언스 리그',
+  
+  // 기타
+  [MAJOR_LEAGUE_IDS.DANISH_SUPERLIGA]: '덴마크 수페르리가',
 };
 
 // 리그 ID로 이름 가져오기

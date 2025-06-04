@@ -43,9 +43,9 @@ export default async function LiveScoreWidget() {
             }
             return {
               ...match,
-              displayDate: '어제' // 🔧 고정값으로 Hydration 안정성 확보
+              displayDate: '어제'
             };
-          }).filter(Boolean) // null 항목 제거
+          }).filter(Boolean)
         : [];
       
       // 오늘 경기
@@ -56,9 +56,9 @@ export default async function LiveScoreWidget() {
             }
             return {
               ...match,
-              displayDate: '오늘' // 🔧 고정값으로 Hydration 안정성 확보
+              displayDate: '오늘'
             };
-          }).filter(Boolean) // null 항목 제거
+          }).filter(Boolean)
         : [];
         
       // 내일 경기
@@ -69,9 +69,9 @@ export default async function LiveScoreWidget() {
             }
             return {
               ...match, 
-              displayDate: '내일' // 🔧 고정값으로 Hydration 안정성 확보
+              displayDate: '내일'
             };
-          }).filter(Boolean) // null 항목 제거
+          }).filter(Boolean)
         : [];
       
       // 모든 경기 데이터 병합 (어제 → 오늘 → 내일 순서로)
@@ -82,9 +82,12 @@ export default async function LiveScoreWidget() {
       ] as EnhancedMatchData[];
       
       // 종료된 경기 필터링 (FT, AET, PEN 상태 제외)
-      matches = combinedMatches.filter(match => 
+      const filteredMatches = combinedMatches.filter(match => 
         !['FT', 'AET', 'PEN'].includes(match.status?.code || '')
       );
+      
+      // 🔧 모든 경기 데이터 전달 (페이지네이션은 클라이언트에서 처리)
+      matches = filteredMatches;
     }
     
     // 클라이언트 컴포넌트에 데이터 전달

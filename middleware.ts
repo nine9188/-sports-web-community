@@ -61,18 +61,26 @@ export async function middleware(request: NextRequest) {
     // 세션 새로고침 및 사용자 정보 확인 (중요: 쿠키 동기화)
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     
-    // 세션 유효성 추가 확인
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    // 세션 유효성 추가 확인 - 임시 비활성화
+    // const { data: { session }, error: sessionError } = await supabase.auth.getSession()
     
-    if (userError || sessionError) {
-      console.warn('미들웨어에서 인증 확인 실패:', { userError, sessionError })
+    if (userError) {
+      console.warn('미들웨어에서 인증 확인 실패:', { userError })
     }
 
     // 인증이 필요한 경로들
     const protectedPaths = ['/admin', '/settings']
     const authPaths = ['/signin', '/signup', '/auth']
     
-    // Admin 경로에 대한 추가 권한 체크
+    // 보호된 경로에 비로그인 사용자 접근 시 로그인 페이지로 리다이렉트 (우선 처리)
+    if (protectedPaths.some(path => pathname.startsWith(path)) && !user) {
+      const redirectUrl = new URL('/signin', request.url)
+      redirectUrl.searchParams.set('redirect', pathname)
+      redirectUrl.searchParams.set('message', '로그인이 필요한 페이지입니다')
+      return NextResponse.redirect(redirectUrl)
+    }
+    
+    // Admin 경로에 대한 추가 권한 체크 (로그인된 사용자만)
     if (pathname.startsWith('/admin') && user) {
       try {
         // 관리자 권한 확인 - 환경변수로 관리
@@ -91,14 +99,6 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(redirectUrl)
       }
     }
-    
-    // 보호된 경로에 비로그인 사용자 접근 시 로그인 페이지로 리다이렉트
-    if (protectedPaths.some(path => pathname.startsWith(path)) && !user) {
-      const redirectUrl = new URL('/signin', request.url)
-      redirectUrl.searchParams.set('redirect', pathname)
-      redirectUrl.searchParams.set('message', '로그인이 필요한 페이지입니다')
-      return NextResponse.redirect(redirectUrl)
-    }
 
     // 로그인된 사용자가 인증 페이지 접근 시 홈으로 리다이렉트
     if (authPaths.some(path => pathname.startsWith(path)) && user) {
@@ -106,7 +106,8 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL(redirectUrl, request.url))
     }
 
-    // 세션 만료 체크 및 자동 갱신
+    // 세션 만료 체크 및 자동 갱신 - 임시 비활성화
+    /*
     if (session && session.expires_at) {
       const expiresAt = session.expires_at * 1000 // 밀리초로 변환
       const now = Date.now()
@@ -128,36 +129,7 @@ export async function middleware(request: NextRequest) {
         }
       }
     }
-
-    // 다중 로그인 차단 체크 (선택적)
-    if (user && session) {
-      try {
-        const { data: activeSessions } = await supabase
-          .from('user_sessions')
-          .select('session_id, created_at')
-          .eq('user_id', user.id)
-          .eq('is_active', true)
-          .order('created_at', { ascending: false })
-        
-        if (activeSessions && activeSessions.length > 1) {
-          // 현재 세션이 가장 최신이 아니면 로그아웃
-          const currentSessionId = session.access_token.split('.')[2] // JWT payload의 일부를 세션 ID로 사용
-          const latestSession = activeSessions[0]
-          
-          if (latestSession.session_id !== currentSessionId) {
-            console.log('다중 로그인 감지: 이전 세션 무효화')
-            await supabase.auth.signOut()
-            
-            const redirectUrl = new URL('/signin', request.url)
-            redirectUrl.searchParams.set('message', '다른 기기에서 로그인되어 자동 로그아웃되었습니다')
-            return NextResponse.redirect(redirectUrl)
-          }
-        }
-      } catch (error) {
-        console.error('다중 로그인 체크 실패:', error)
-        // 에러가 발생해도 계속 진행
-      }
-    }
+    */
 
   } catch (error) {
     console.error('미들웨어 처리 중 오류:', error)
