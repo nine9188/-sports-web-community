@@ -60,6 +60,9 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
   // 🔧 스와이프 힌트 상태 (처음에만 보여주기)
   const [showSwipeHint, setShowSwipeHint] = useState(true);
   
+  // 🔧 오버레이 힌트 상태 (모바일 전용)
+  const [showOverlayHint, setShowOverlayHint] = useState(true);
+  
   // 화면 크기에 따른 카드 수 결정
   const cardsToShow = isMobile ? 2 : 4;
   
@@ -92,6 +95,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
     e.preventDefault();
     // 🔧 터치 시작하면 힌트 숨기기
     setShowSwipeHint(false);
+    setShowOverlayHint(false);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -263,6 +267,17 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
     }
   }, [cardsToShow, matches.length, startIndex]);
 
+  // 🔧 모바일 오버레이 힌트 자동 제거 (5초 후)
+  useEffect(() => {
+    if (isMobile && showOverlayHint) {
+      const timeout = setTimeout(() => {
+        setShowOverlayHint(false);
+      }, 5000); // 5초 후 자동 사라짐
+
+      return () => clearTimeout(timeout);
+    }
+  }, [isMobile, showOverlayHint]);
+
   // 경기 시간 포맷팅 함수
   const formatMatchTime = (match: FootballMatchData) => {
     if (!match || !match.id || !match.status || !match.time) {
@@ -387,6 +402,21 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                 touchAction: 'pan-y pinch-zoom'
               }}
             >
+              {/* 🔧 모바일 오버레이 힌트 - 애플/토스 스타일 */}
+              {isMobile && showOverlayHint && matches.length > cardsToShow && (
+                <div className="absolute inset-0 z-20 bg-gray-100/70 pointer-events-none select-none flex items-center justify-center animate-pulse rounded-lg">
+                  <div className="text-sm text-gray-700 flex items-center gap-2 bg-white/90 px-4 py-2 rounded-full shadow-lg">
+                    <svg className="w-5 h-5 animate-bounce" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    <span className="font-medium">← 슬라이드해서 확인하세요</span>
+                    <svg className="w-5 h-5 animate-bounce" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              )}
+              
               {/* 실제 경기 카드들 */}
               {displayMatches.map((match, index) => {
                 const leagueInfo = match.league?.id ? getLeagueById(match.league.id) : null;
