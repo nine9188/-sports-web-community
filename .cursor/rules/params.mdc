@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+page.tsx, generateMetadata, generateStaticParams 내에서 params는 항상 await 또는 .then()으로 처리할 것. (App Router 비동기 segment 구조에 따라)
