@@ -182,7 +182,6 @@ export default async function PostDetailPage({
         totalPages={result.totalPages || 1}
         currentPage={result.currentPage || 1}
         normalizedFromBoardId={result.normalizedFromBoardId}
-        iconUrl={result.iconUrl || null}
         postUserAction={result.postUserAction || null}
         slug={slug}
         postNumber={postNumber}

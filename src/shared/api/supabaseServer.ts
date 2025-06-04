@@ -24,28 +24,55 @@ import { Database } from '@/shared/types/supabase'
  * ```
  */
 export const createClient = async () => {
-  const cookieStore = await cookies()
-  
-  return createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
+  try {
+    // 타임아웃을 설정하여 무한 대기 방지
+    const cookieStore = await Promise.race([
+      cookies(),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Cookie access timeout')), 5000)
+      )
+    ]) as Awaited<ReturnType<typeof cookies>>;
+    
+    return createServerClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            try {
+              return cookieStore.getAll()
+            } catch (error) {
+              console.warn('쿠키 읽기 실패:', error);
+              return [];
+            }
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              )
+            } catch (error) {
+              // 서버 컴포넌트에서는 쿠키 설정이 제한될 수 있음
+              console.warn('쿠키 설정 실패:', error);
+            }
+          },
         },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          } catch {
-            // 서버 컴포넌트에서는 쿠키 설정이 제한될 수 있음
-          }
+      }
+    )
+  } catch (error) {
+    console.error('Supabase 클라이언트 생성 실패:', error);
+    // 쿠키 없이 기본 클라이언트 생성
+    return createServerClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() { return []; },
+          setAll() { /* no-op */ },
         },
-      },
-    }
-  )
+      }
+    );
+  }
 }
 
 // 서버 액션용 Supabase 클라이언트 생성 (쿠키 수정 가능)

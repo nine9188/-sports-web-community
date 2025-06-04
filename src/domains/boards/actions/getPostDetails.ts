@@ -280,7 +280,7 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
     }
     
     // 11. 게시글 데이터 포맷팅
-    const formattedPosts = formatPosts(
+    const formattedPosts = await formatPosts(
       (postsData || []).map(post => ({
         ...post,
         profiles: post.profiles ? {

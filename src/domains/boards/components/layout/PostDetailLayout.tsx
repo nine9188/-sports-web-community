@@ -104,7 +104,6 @@ interface PostDetailLayoutProps {
   totalPages: number;
   currentPage: number;
   normalizedFromBoardId?: string;
-  iconUrl: string | null;
   postUserAction: 'like' | 'dislike' | null;
   slug: string;
   postNumber: string;
@@ -126,7 +125,6 @@ export default function PostDetailLayout({
   totalPages,
   currentPage,
   normalizedFromBoardId,
-  iconUrl,
   postUserAction,
   slug,
   postNumber
@@ -172,10 +170,11 @@ export default function PostDetailLayout({
     slug?: string;
   }[]>);
   
-  // 아이콘 URL을 formattedPosts에 추가
+  // 아이콘 URL을 formattedPosts에 추가 - 각 게시글 작성자의 고유한 아이콘 유지
   const postsWithIcons = formattedPosts.map(post => ({
     ...post,
-    author_icon_url: post.author_icon_url || iconUrl
+    // 이미 author_icon_url이 있으면 그대로 사용, 없으면 기본 아이콘도 사용하지 않음
+    author_icon_url: post.author_icon_url || undefined
   }));
   
   // 게시글 상태 확인

@@ -4,6 +4,7 @@ import { FormattedPost } from '../../types/post/formatted';
 import { CommentType } from '../../types/post/comment';
 import { BoardData } from '../../types/board/data';
 import { createClient } from '@/shared/api/supabaseServer';
+import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
 
 /**
  * 이전 및 다음 게시글을 가져옵니다.
@@ -125,21 +126,66 @@ interface LeagueInfo {
  * @param boardNameMap 게시판 이름 맵
  * @param teamsMap 팀 정보 맵
  * @param leaguesMap 리그 정보 맵
+ * @param iconsMap 아이콘 정보 맵 (선택적)
  * @returns 포맷팅된 게시글 배열
  */
-export function formatPosts(
+export async function formatPosts(
   posts: Post[],
   commentCounts: Record<string, number>,
   boardsData: Record<string, BoardData>,
   boardNameMap: Record<string, string>,
   teamsMap: Record<string, TeamInfo>,
-  leaguesMap: Record<string, LeagueInfo>
-): FormattedPost[] {
+  leaguesMap: Record<string, LeagueInfo>,
+  iconsMap?: Record<number, string>
+): Promise<FormattedPost[]> {
+  // 아이콘 정보가 제공되지 않은 경우 직접 가져오기
+  let finalIconsMap = iconsMap || {};
+  
+  if (!iconsMap) {
+    // 커스텀 아이콘을 사용하는 사용자들의 icon_id 수집
+    const iconIds = posts
+      .map(post => post.profiles?.icon_id)
+      .filter(Boolean) as number[];
+    
+    if (iconIds.length > 0) {
+      try {
+        const { createClient } = await import('@/shared/api/supabaseServer');
+        const supabase = await createClient();
+        
+        // 아이콘 정보 조회
+        const { data: iconsData } = await supabase
+          .from('shop_items')
+          .select('id, image_url')
+          .in('id', iconIds);
+        
+        if (iconsData) {
+          finalIconsMap = {};
+          iconsData.forEach(icon => {
+            if (icon.id && icon.image_url) {
+              finalIconsMap[icon.id] = icon.image_url;
+            }
+          });
+        }
+      } catch (error) {
+        console.error('아이콘 정보 가져오기 오류:', error);
+      }
+    }
+  }
+  
   return posts.map(post => {
     const boardId = post.board_id || '';
     const boardData = boardsData[boardId];
     const team = boardData?.team_id ? teamsMap[boardData.team_id] || null : null;
     const league = boardData?.league_id ? leaguesMap[boardData.league_id] || null : null;
+    
+    // 아이콘 URL 결정
+    let authorIconUrl = null;
+    if (post.profiles?.icon_id && finalIconsMap[post.profiles.icon_id]) {
+      authorIconUrl = finalIconsMap[post.profiles.icon_id];
+    } else {
+      // 커스텀 아이콘이 없는 경우 레벨 아이콘 사용
+      authorIconUrl = getLevelIconUrl(post.profiles?.level || 1);
+    }
     
     return {
       id: post.id,
@@ -148,7 +194,7 @@ export function formatPosts(
       author_id: post.profiles?.id || post.user_id || '',
       author_level: post.profiles?.level || 1,
       author_icon_id: post.profiles?.icon_id || null,
-      author_icon_url: null,
+      author_icon_url: authorIconUrl,
       created_at: post.created_at || '',
       formattedDate: formatDate(post.created_at || ''),
       views: post.views || 0,

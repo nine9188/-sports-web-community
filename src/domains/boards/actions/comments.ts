@@ -3,6 +3,7 @@
 import { createClient } from '@/shared/api/supabaseServer';
 import { CommentType } from '../types/post/comment';
 import { rewardUserActivity, getActivityTypeValues } from '@/shared/actions/activity-actions';
+import { checkSuspensionGuard } from '@/shared/utils/suspension-guard';
 
 /**
  * 댓글 작성
@@ -22,6 +23,15 @@ export async function createComment({
     
     if (!user) {
       return { success: false, error: '로그인이 필요합니다.' };
+    }
+    
+    // 2. 계정 정지 상태 확인
+    const suspensionCheck = await checkSuspensionGuard(user.id);
+    if (suspensionCheck.isSuspended) {
+      return { 
+        success: false, 
+        error: suspensionCheck.message || '계정이 정지되어 댓글을 작성할 수 없습니다.' 
+      };
     }
     
     // 2. 댓글 작성
@@ -95,6 +105,15 @@ export async function updateComment(commentId: string, content: string): Promise
       };
     }
     
+    // 계정 정지 상태 확인
+    const suspensionCheck = await checkSuspensionGuard(user.id);
+    if (suspensionCheck.isSuspended) {
+      return {
+        success: false,
+        error: suspensionCheck.message || '계정이 정지되어 댓글을 수정할 수 없습니다.'
+      };
+    }
+    
     // 댓글 조회
     const { data: comment, error: fetchError } = await supabase
       .from('comments')
@@ -155,9 +174,9 @@ export async function updateComment(commentId: string, content: string): Promise
       comment: updatedCommentWithIcon
     };
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : '댓글 수정 중 오류가 발생했습니다.'
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : '댓글 수정 중 오류가 발생했습니다.' 
     };
   }
 }

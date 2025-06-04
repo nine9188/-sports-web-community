@@ -14,8 +14,9 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { getReports, processReport, executeReportAction, restoreExpiredHiddenContent } from '@/domains/reports/actions';
+import { getReports, processReport, executeReportAction, restoreExpiredHiddenContent, getReportTargetAuthorId } from '@/domains/reports/actions';
 import { ReportWithReporter, ReportStatus, ReportTargetType } from '@/domains/reports/types';
+import SuspensionManager from '@/domains/admin/components/SuspensionManager';
 
 export default function ReportsAdminPage() {
   const [reports, setReports] = useState<ReportWithReporter[]>([]);
@@ -25,6 +26,10 @@ export default function ReportsAdminPage() {
   const [processingIds, setProcessingIds] = useState<string[]>([]);
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
+  
+  // 작성자 정지 모달 관련 상태
+  const [showSuspensionModal, setShowSuspensionModal] = useState(false);
+  const [selectedAuthor, setSelectedAuthor] = useState<{ id: string; nickname: string; reportId: string } | null>(null);
 
   // 신고 목록 불러오기
   const fetchReports = useCallback(async () => {
@@ -71,10 +76,55 @@ export default function ReportsAdminPage() {
       setDropdownPosition(null);
     } else {
       const rect = buttonElement.getBoundingClientRect();
-      setDropdownPosition({
-        top: rect.bottom + window.scrollY + 8,
-        left: rect.right + window.scrollX - 208 // 드롭다운 너비(52*4=208px)만큼 왼쪽으로
-      });
+      const dropdownWidth = 208; // 드롭다운 너비
+      
+      // 드롭다운 내용에 따른 높이 계산
+      const report = reports.find(r => r.id === reportId);
+      let estimatedHeight = 100; // 기본 높이
+      
+      if (report) {
+        // 콘텐츠 조치 (2개 항목) + 작성자 정지 (1개 항목) = 약 200px
+        if (report.target_type === 'post' || report.target_type === 'comment' || report.target_type === 'match_comment') {
+          estimatedHeight = 250;
+        }
+        // 사용자 정지 (3개 항목) = 약 200px
+        else if (report.target_type === 'user') {
+          estimatedHeight = 200;
+        }
+      }
+      
+      // 최대 높이 제한 (max-h-96 = 384px)
+      const dropdownHeight = Math.min(estimatedHeight, 384);
+      
+      // 화면 크기 가져오기
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      // 기본 위치 계산
+      let left = rect.right + window.scrollX - dropdownWidth;
+      let top = rect.bottom + window.scrollY + 8;
+      
+      // 오른쪽으로 넘어가는 경우 왼쪽으로 이동
+      if (left < 10) {
+        left = rect.left + window.scrollX;
+      }
+      
+      // 화면 오른쪽 끝을 넘어가는 경우
+      if (left + dropdownWidth > viewportWidth - 10) {
+        left = viewportWidth - dropdownWidth - 10;
+      }
+      
+      // 아래쪽으로 넘어가는 경우 위쪽에 표시
+      if (top + dropdownHeight > viewportHeight + window.scrollY - 10) {
+        top = rect.top + window.scrollY - dropdownHeight - 8;
+        
+        // 위쪽에도 공간이 없으면 화면 내에서 최대한 위쪽에 표시
+        if (top < window.scrollY + 10) {
+          top = window.scrollY + 10;
+        }
+      }
+      
+      setDropdownPosition({ top, left });
       setActionMenuOpen(reportId);
     }
   };
@@ -106,7 +156,7 @@ export default function ReportsAdminPage() {
   // 실제 조치 실행
   const handleExecuteAction = async (
     reportId: string,
-    action: 'delete' | 'hide' | 'suspend_user',
+    action: 'delete' | 'hide' | 'suspend_user' | 'suspend_author',
     suspendDays?: number
   ) => {
     const confirmMessage = getActionConfirmMessage(action, suspendDays);
@@ -161,6 +211,61 @@ export default function ReportsAdminPage() {
     }
   };
 
+  // 작성자 정지 모달 열기
+  const openAuthorSuspensionModal = async (reportId: string) => {
+    try {
+      const report = reports.find(r => r.id === reportId);
+      if (!report) return;
+
+      // 실제 작성자 ID 가져오기
+      const result = await getReportTargetAuthorId(reportId);
+      if (!result.success) {
+        toast.error(result.error || '작성자 정보를 가져오는데 실패했습니다.');
+        return;
+      }
+
+      // 작성자 정보 설정
+      const authorNickname = report.target_info?.author || '알 수 없는 사용자';
+      
+      setSelectedAuthor({
+        id: result.authorId!,
+        nickname: authorNickname,
+        reportId: reportId
+      });
+      setShowSuspensionModal(true);
+      setActionMenuOpen(null);
+      setDropdownPosition(null);
+    } catch (error) {
+      console.error('작성자 정지 모달 열기 오류:', error);
+      toast.error('작성자 정보를 가져오는데 실패했습니다.');
+    }
+  };
+
+  // 정지 처리 완료 후 콜백
+  const handleSuspensionUpdate = async () => {
+    if (selectedAuthor?.reportId) {
+      try {
+        // 신고를 해결됨으로 처리
+        const result = await processReport({ 
+          reportId: selectedAuthor.reportId, 
+          status: 'resolved' 
+        });
+        
+        if (result.success) {
+          toast.success('작성자 정지 처리가 완료되었습니다.');
+        } else {
+          toast.error('신고 상태 업데이트에 실패했습니다.');
+        }
+      } catch (error) {
+        console.error('신고 상태 업데이트 오류:', error);
+        toast.error('신고 상태 업데이트 중 오류가 발생했습니다.');
+      }
+    }
+    setShowSuspensionModal(false);
+    setSelectedAuthor(null);
+    await fetchReports();
+  };
+
   const getActionConfirmMessage = (action: string, suspendDays?: number) => {
     switch (action) {
       case 'delete':
@@ -169,6 +274,8 @@ export default function ReportsAdminPage() {
         return '해당 내용을 숨김 처리하시겠습니까?';
       case 'suspend_user':
         return `사용자를 ${suspendDays || 7}일간 정지시키겠습니까?`;
+      case 'suspend_author':
+        return `작성자를 ${suspendDays || 7}일간 정지시키겠습니까?`;
       default:
         return '이 작업을 실행하시겠습니까?';
     }
@@ -420,7 +527,7 @@ export default function ReportsAdminPage() {
       {/* Portal로 렌더링되는 드롭다운 */}
       {actionMenuOpen && dropdownPosition && typeof window !== 'undefined' && createPortal(
         <div 
-          className="fixed w-52 bg-white border border-gray-200 rounded-lg shadow-xl z-[9999] overflow-hidden action-menu"
+          className="fixed w-52 bg-white border border-gray-200 rounded-lg shadow-xl z-[9999] overflow-hidden action-menu max-h-96 overflow-y-auto"
           style={{
             top: `${dropdownPosition.top}px`,
             left: `${dropdownPosition.left}px`
@@ -509,17 +616,13 @@ export default function ReportsAdminPage() {
                     작성자 정지
                   </div>
                   <button
-                    onClick={() => {
-                      setActionMenuOpen(null);
-                      setDropdownPosition(null);
-                      toast.info('작성자 정지 기능은 개발 중입니다.');
-                    }}
+                    onClick={() => openAuthorSuspensionModal(actionMenuOpen)}
                     className="w-full text-left px-4 py-3 text-sm text-purple-600 hover:bg-purple-50 flex items-center transition-colors"
                   >
                     <UserX className="w-4 h-4 mr-3 flex-shrink-0" />
                     <div>
-                      <div className="font-medium">작성자 7일 정지</div>
-                      <div className="text-xs text-gray-500">개발 예정</div>
+                      <div className="font-medium">작성자 정지 관리</div>
+                      <div className="text-xs text-gray-500">정지 기간과 사유를 설정합니다</div>
                     </div>
                   </button>
                 </div>
@@ -528,6 +631,38 @@ export default function ReportsAdminPage() {
           </div>
         </div>,
         document.body
+      )}
+
+      {/* 작성자 정지 관리 모달 */}
+      {showSuspensionModal && selectedAuthor && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  작성자 정지 관리
+                </h3>
+                <button
+                  onClick={() => setShowSuspensionModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              <SuspensionManager
+                userId={selectedAuthor.id}
+                userNickname={selectedAuthor.nickname}
+                currentSuspension={{
+                  is_suspended: false,
+                  suspended_until: null,
+                  suspended_reason: null
+                }}
+                onUpdate={handleSuspensionUpdate}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

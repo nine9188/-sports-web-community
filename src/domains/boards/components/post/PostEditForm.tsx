@@ -256,13 +256,22 @@ export default function PostEditForm({
             return; // 성공적으로 처리 완료
           } else if (result.error) {
             console.error('게시글 생성 실패:', result.error);
-            throw new Error(result.error || '게시글 생성에 실패했습니다. 다시 시도해주세요.');
+            // 서버에서 온 정확한 오류 메시지를 그대로 사용
+            setError(result.error);
+            toast.error(result.error);
+            return; // 여기서 함수 종료
           } else {
-            throw new Error('게시글 생성에 실패했습니다. 다시 시도해주세요.');
+            const errorMsg = '게시글 생성에 실패했습니다. 다시 시도해주세요.';
+            setError(errorMsg);
+            toast.error(errorMsg);
+            return; // 여기서 함수 종료
           }
         } catch (createError) {
           console.error('게시글 생성 과정 중 오류:', createError);
-          throw createError;
+          const errorMsg = createError instanceof Error ? createError.message : '게시글 작성 중 오류가 발생했습니다.';
+          setError(errorMsg);
+          toast.error(errorMsg);
+          return; // 여기서 함수 종료
         }
       } 
       // 게시글 수정 모드
@@ -299,15 +308,24 @@ export default function PostEditForm({
             return; // 성공적으로 처리 완료
           } else {
             console.error('게시글 수정 실패:', result.error || '알 수 없는 오류');
-            throw new Error(result.error || '게시글 수정에 실패했습니다. 다시 시도해주세요.');
+            // 서버에서 온 정확한 오류 메시지를 그대로 사용
+            const errorMsg = result.error || '게시글 수정에 실패했습니다. 다시 시도해주세요.';
+            setError(errorMsg);
+            toast.error(errorMsg);
+            return; // 여기서 함수 종료
           }
         } catch (updateError) {
           console.error('게시글 수정 과정 중 오류:', updateError);
-          throw updateError;
+          const errorMsg = updateError instanceof Error ? updateError.message : '게시글 수정 중 오류가 발생했습니다.';
+          setError(errorMsg);
+          toast.error(errorMsg);
+          return; // 여기서 함수 종료
         }
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : `게시글 ${isCreateMode ? '작성' : '수정'} 중 오류가 발생했습니다.`;
+      // 이 블록은 위에서 처리되지 않은 예외적인 경우에만 실행됨
+      console.error('예상치 못한 오류:', error);
+      const errorMessage = error instanceof Error ? error.message : `게시글 ${isCreateMode ? '작성' : '수정'} 중 예상치 못한 오류가 발생했습니다.`;
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {

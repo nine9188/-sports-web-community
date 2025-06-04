@@ -3,6 +3,7 @@
 import { createClient } from '@/shared/api/supabaseServer';
 import { revalidatePath } from 'next/cache';
 import { rewardUserActivity, getActivityTypeValues } from '@/shared/actions/activity-actions';
+import { checkSuspensionGuard } from '@/shared/utils/suspension-guard';
 
 /**
  * 게시글 생성 서버 액션 (매개변수 사용)
@@ -21,6 +22,15 @@ export async function createPostWithParams(
   }
   
   try {
+    // 계정 정지 상태 확인
+    const suspensionCheck = await checkSuspensionGuard(userId);
+    if (suspensionCheck.isSuspended) {
+      return {
+        success: false,
+        error: suspensionCheck.message || '계정이 정지되어 게시글을 작성할 수 없습니다.'
+      };
+    }
+    
     const supabase = await createClient();
     
     if (!supabase) {
@@ -117,6 +127,15 @@ export async function updatePost(
   }
   
   try {
+    // 계정 정지 상태 확인
+    const suspensionCheck = await checkSuspensionGuard(userId);
+    if (suspensionCheck.isSuspended) {
+      return {
+        success: false,
+        error: suspensionCheck.message || '계정이 정지되어 게시글을 수정할 수 없습니다.'
+      };
+    }
+    
     const supabase = await createClient();
     
     if (!supabase) {
@@ -353,6 +372,15 @@ export async function likePost(postId: string): Promise<LikeActionResponse> {
     
     const userId = user.id;
     
+    // 계정 정지 상태 확인
+    const suspensionCheck = await checkSuspensionGuard(userId);
+    if (suspensionCheck.isSuspended) {
+      return { 
+        success: false, 
+        error: suspensionCheck.message || '계정이 정지되어 좋아요를 누를 수 없습니다.' 
+      };
+    }
+    
     // 게시글 최신 정보 조회
     const { data: currentPost, error: fetchError } = await supabase
       .from('posts')
@@ -498,6 +526,7 @@ export async function likePost(postId: string): Promise<LikeActionResponse> {
     
   } catch (error) {
     console.error('좋아요 처리 중 오류:', error);
+    
     return { 
       success: false, 
       error: '좋아요 처리 중 오류가 발생했습니다.' 
@@ -525,6 +554,15 @@ export async function dislikePost(postId: string): Promise<LikeActionResponse> {
     }
     
     const userId = user.id;
+    
+    // 계정 정지 상태 확인
+    const suspensionCheck = await checkSuspensionGuard(userId);
+    if (suspensionCheck.isSuspended) {
+      return { 
+        success: false, 
+        error: suspensionCheck.message || '계정이 정지되어 싫어요를 누를 수 없습니다.' 
+      };
+    }
     
     // 게시글 최신 정보 조회
     const { data: currentPost, error: fetchError } = await supabase
@@ -660,6 +698,7 @@ export async function dislikePost(postId: string): Promise<LikeActionResponse> {
     
   } catch (error) {
     console.error('싫어요 처리 중 오류:', error);
+    
     return { 
       success: false, 
       error: '싫어요 처리 중 오류가 발생했습니다.' 
@@ -898,6 +937,12 @@ export async function createPost(formData: FormData) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       return { error: '로그인이 필요합니다' }
+    }
+    
+    // 계정 정지 상태 확인
+    const suspensionCheck = await checkSuspensionGuard(user.id);
+    if (suspensionCheck.isSuspended) {
+      return { error: suspensionCheck.message || '계정이 정지되어 게시글을 작성할 수 없습니다.' };
     }
     
     // 경기 카드 데이터를 완전한 HTML로 변환

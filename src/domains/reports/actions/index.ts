@@ -2,6 +2,7 @@
 
 import { createClient } from '@/shared/api/supabaseServer';
 import { revalidatePath } from 'next/cache';
+import { suspendUser } from '@/domains/admin/actions/suspension';
 import { 
   CreateReportRequest, 
   ReportResponse, 
@@ -247,7 +248,7 @@ export async function processReport(request: ProcessReportRequest): Promise<Repo
  */
 export async function executeReportAction(
   reportId: string,
-  action: 'delete' | 'hide' | 'suspend_user',
+  action: 'delete' | 'hide' | 'suspend_user' | 'suspend_author',
   suspendDays?: number
 ): Promise<ReportResponse> {
   try {
@@ -282,26 +283,64 @@ export async function executeReportAction(
 
     let actionResult = { success: true, message: '' };
 
-    // 대상 타입별 조치 실행
-    switch (report.target_type) {
-      case 'post':
-        actionResult = await handlePostAction(supabase, report.target_id, action);
-        break;
-      case 'comment':
-        actionResult = await handleCommentAction(supabase, report.target_id, action);
-        break;
-      case 'match_comment':
-        actionResult = await handleMatchCommentAction(supabase, report.target_id, action);
-        break;
-      case 'user':
-        if (action === 'suspend_user') {
-          actionResult = await handleUserSuspension(supabase, report.target_id, suspendDays || 7);
-        } else {
-          return { success: false, error: '사용자에 대해서는 정지 조치만 가능합니다.' };
-        }
-        break;
-      default:
-        return { success: false, error: '지원하지 않는 대상 타입입니다.' };
+    // 작성자 정지 액션 처리
+    if (action === 'suspend_author') {
+      // 게시글/댓글의 작성자 ID 조회
+      let authorId: string | null = null;
+      
+      if (report.target_type === 'post') {
+        const { data: post } = await supabase
+          .from('posts')
+          .select('user_id')
+          .eq('id', report.target_id)
+          .single();
+        authorId = post?.user_id || null;
+      } else if (report.target_type === 'comment') {
+        const { data: comment } = await supabase
+          .from('comments')
+          .select('user_id')
+          .eq('id', report.target_id)
+          .single();
+        authorId = comment?.user_id || null;
+      } else if (report.target_type === 'match_comment') {
+        const { data: comment } = await supabase
+          .from('match_support_comments')
+          .select('user_id')
+          .eq('id', report.target_id)
+          .single();
+        authorId = comment?.user_id || null;
+      }
+      
+      if (!authorId) {
+        return { success: false, error: '작성자 정보를 찾을 수 없습니다.' };
+      }
+      
+      // 신고 사유를 포함한 정지 사유 생성
+      const suspensionReason = `신고에 의한 정지 - ${report.reason}${report.description ? `: ${report.description}` : ''}`;
+      
+      actionResult = await handleUserSuspension(supabase, authorId, suspendDays || 7, suspensionReason);
+    } else {
+      // 기존 조치 실행
+      switch (report.target_type) {
+        case 'post':
+          actionResult = await handlePostAction(supabase, report.target_id, action);
+          break;
+        case 'comment':
+          actionResult = await handleCommentAction(supabase, report.target_id, action);
+          break;
+        case 'match_comment':
+          actionResult = await handleMatchCommentAction(supabase, report.target_id, action);
+          break;
+        case 'user':
+          if (action === 'suspend_user') {
+            actionResult = await handleUserSuspension(supabase, report.target_id, suspendDays || 7);
+          } else {
+            return { success: false, error: '사용자에 대해서는 정지 조치만 가능합니다.' };
+          }
+          break;
+        default:
+          return { success: false, error: '지원하지 않는 대상 타입입니다.' };
+      }
     }
 
     if (!actionResult.success) {
@@ -455,18 +494,20 @@ async function handleMatchCommentAction(supabase: Awaited<ReturnType<typeof crea
 }
 
 // 사용자 정지 처리
-async function handleUserSuspension(supabase: Awaited<ReturnType<typeof createClient>>, userId: string, days: number) {
+async function handleUserSuspension(supabase: Awaited<ReturnType<typeof createClient>>, userId: string, days: number, reason?: string) {
   try {
-    // 임시로 닉네임 변경으로 정지 표시
-    const { error } = await supabase
-      .from('profiles')
-      .update({ 
-        nickname: `[${days}일 정지된 사용자]`
-      })
-      .eq('id', userId);
+    // 실제 정지 시스템 사용
+    const result = await suspendUser({
+      userId,
+      reason: reason || '신고에 의한 정지',
+      days
+    });
     
-    if (error) throw error;
-    return { success: true, message: `사용자가 ${days}일간 정지되었습니다.` };
+    if (!result.success) {
+      return { success: false, message: result.error || '사용자 정지 중 오류가 발생했습니다.' };
+    }
+    
+    return { success: true, message: `사용자가 ${days}일간 정지되었습니다. (해제일: ${new Date(result.suspendedUntil!).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })})` };
   } catch (error) {
     console.error('사용자 정지 오류:', error);
     return { success: false, message: '사용자 정지 중 오류가 발생했습니다.' };
@@ -602,5 +643,75 @@ export async function restoreExpiredHiddenContent(): Promise<{ success: boolean;
       message: '자동 복구 처리 중 오류가 발생했습니다.',
       restored: 0
     };
+  }
+}
+
+/**
+ * 신고 대상의 작성자 ID 조회
+ */
+export async function getReportTargetAuthorId(reportId: string): Promise<{ success: boolean; authorId?: string; error?: string }> {
+  try {
+    const supabase = await createClient();
+    
+    // 관리자 권한 확인
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { success: false, error: '로그인이 필요합니다.' };
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile?.is_admin) {
+      return { success: false, error: '관리자 권한이 필요합니다.' };
+    }
+
+    // 신고 정보 조회
+    const { data: report, error: reportError } = await supabase
+      .from('reports')
+      .select('target_type, target_id')
+      .eq('id', reportId)
+      .single();
+
+    if (reportError || !report) {
+      return { success: false, error: '신고 정보를 찾을 수 없습니다.' };
+    }
+
+    let authorId: string | null = null;
+    
+    if (report.target_type === 'post') {
+      const { data: post } = await supabase
+        .from('posts')
+        .select('user_id')
+        .eq('id', report.target_id)
+        .single();
+      authorId = post?.user_id || null;
+    } else if (report.target_type === 'comment') {
+      const { data: comment } = await supabase
+        .from('comments')
+        .select('user_id')
+        .eq('id', report.target_id)
+        .single();
+      authorId = comment?.user_id || null;
+    } else if (report.target_type === 'match_comment') {
+      const { data: comment } = await supabase
+        .from('match_support_comments')
+        .select('user_id')
+        .eq('id', report.target_id)
+        .single();
+      authorId = comment?.user_id || null;
+    }
+    
+    if (!authorId) {
+      return { success: false, error: '작성자 정보를 찾을 수 없습니다.' };
+    }
+    
+    return { success: true, authorId };
+  } catch (error) {
+    console.error('작성자 ID 조회 오류:', error);
+    return { success: false, error: '작성자 정보 조회 중 오류가 발생했습니다.' };
   }
 } 
