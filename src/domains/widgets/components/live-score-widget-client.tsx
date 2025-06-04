@@ -50,10 +50,13 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
   // 카드 참조를 위한 ref
   const cardRefs = useRef<(HTMLAnchorElement | null)[]>([]);
 
-  // 🔧 슬라이딩 계산
-  const cardsToShow = 4; // 항상 4개 카드 표시
+  // 🔧 슬라이딩 계산 - 반응형
+  const [isMobile, setIsMobile] = useState(false);
   
-  // 현재 표시할 경기들 (startIndex부터 4개)
+  // 화면 크기에 따른 카드 수 결정
+  const cardsToShow = isMobile ? 2 : 4;
+  
+  // 현재 표시할 경기들 (startIndex부터 cardsToShow개)
   const displayMatches = useMemo(() => {
     if (matches.length === 0) return [];
     
@@ -257,6 +260,33 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
     }
   };
 
+  // 🔧 화면 크기 감지
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768); // md breakpoint
+    };
+    
+    // 초기 설정
+    checkScreenSize();
+    
+    // 리사이즈 이벤트 리스너
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => {
+      window.removeEventListener('resize', checkScreenSize);
+    };
+  }, []);
+
+  // 🔧 화면 크기 변경 시 startIndex 조정
+  useEffect(() => {
+    if (matches.length > 0) {
+      const maxStartIndex = Math.max(0, matches.length - cardsToShow);
+      if (startIndex > maxStartIndex) {
+        setStartIndex(maxStartIndex);
+      }
+    }
+  }, [cardsToShow, matches.length, startIndex]);
+
   return (
     <div className="w-full mb-4 mt-4 md:mt-0">
       {isLoading ? (
@@ -320,8 +350,8 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
               </>
             )}
             
-            {/* 🔧 4개 카드 고정 그리드 레이아웃 */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full transition-all duration-300 ease-in-out">
+            {/* 🔧 반응형 카드 레이아웃 - 모바일 2개, 데스크탑 4개 */}
+            <div className="flex gap-3 w-full transition-all duration-300 ease-in-out">
               {/* 실제 경기 카드들 */}
               {displayMatches.map((match, index) => {
                 const leagueInfo = match.league?.id ? getLeagueById(match.league.id) : null;
@@ -336,7 +366,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                   <Link 
                     key={`match-${match.id || index}-${startIndex}-${index}`} 
                     href={match.id ? `/livescore/football/match/${match.id}` : '#'}
-                    className="border rounded-lg p-2 transition-all h-[140px] shadow-sm cursor-pointer group hover:translate-y-[-2px] hover:shadow-md hover:border-blue-300 dark:hover:border-blue-500 touch-manipulation active:scale-[0.99] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 transform-gpu"
+                    className="flex-1 min-w-0 border rounded-lg p-2 transition-all h-[140px] shadow-sm cursor-pointer group hover:translate-y-[-2px] hover:shadow-md hover:border-blue-300 dark:hover:border-blue-500 touch-manipulation active:scale-[0.99] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 transform-gpu"
                     ref={el => {
                       if (!cardRefs.current) cardRefs.current = [];
                       cardRefs.current[index] = el;
@@ -350,7 +380,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                           width={16} 
                           height={16}
                           style={{ width: '16px', height: '16px', objectFit: 'contain' }}
-                          className="rounded-full"
+                          className="rounded-full flex-shrink-0"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.src = '/placeholder-league.png';
@@ -409,11 +439,11 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                 );
               })}
               
-              {/* 빈 슬롯 카드들 - 경기가 4개 미만일 때 채우기 */}
+              {/* 빈 슬롯 카드들 - 경기가 cardsToShow개 미만일 때 채우기 */}
               {matches.length < cardsToShow && Array.from({ length: cardsToShow - matches.length }).map((_, index) => (
                 <div 
                   key={`empty-slot-${index}`}
-                  className="border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-lg p-2 h-[140px] bg-gray-50/50 dark:bg-gray-800/50"
+                  className="flex-1 min-w-0 border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-lg p-2 h-[140px] bg-gray-50/50 dark:bg-gray-800/50"
                 >
                   <div className="flex flex-col justify-center items-center h-full text-center">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-8 h-8 mb-2 text-gray-300 dark:text-gray-600">
