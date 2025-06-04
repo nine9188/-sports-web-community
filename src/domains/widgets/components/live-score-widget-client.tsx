@@ -85,20 +85,30 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
     if (!isMobile) return;
     touchStartXRef.current = e.touches[0].clientX;
     touchEndXRef.current = null;
+    // 기본 동작 방지 (텍스트 선택, 드래그 등)
+    e.preventDefault();
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isMobile) return;
     touchEndXRef.current = e.touches[0].clientX;
+    // 스크롤 방지 (수평 스와이프 중)
+    if (touchStartXRef.current !== null) {
+      const touchDiff = Math.abs(touchStartXRef.current - e.touches[0].clientX);
+      if (touchDiff > 10) { // 10px 이상 움직이면 스와이프로 간주
+        e.preventDefault();
+      }
+    }
   };
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e: React.TouchEvent) => {
     if (!isMobile || touchStartXRef.current === null || touchEndXRef.current === null) return;
     
     const touchDiff = touchStartXRef.current - touchEndXRef.current;
     const minSwipeDistance = 50; // 최소 스와이프 거리
     
     if (Math.abs(touchDiff) > minSwipeDistance) {
+      e.preventDefault(); // 기본 동작 방지
       if (touchDiff > 0) {
         // 왼쪽으로 스와이프 = 다음 카드
         if (canSlideRight) slideRight();
@@ -392,6 +402,12 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
+              style={{
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+                WebkitTouchCallout: 'none',
+                WebkitTapHighlightColor: 'transparent'
+              }}
             >
               {/* 실제 경기 카드들 */}
               {displayMatches.map((match, index) => {
@@ -412,6 +428,13 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                       if (!cardRefs.current) cardRefs.current = [];
                       cardRefs.current[index] = el;
                     }}
+                    style={{
+                      userSelect: 'none',
+                      WebkitUserSelect: 'none',
+                      WebkitTouchCallout: 'none',
+                      WebkitTapHighlightColor: 'transparent'
+                    }}
+                    onDragStart={(e) => e.preventDefault()}
                   >
                     <div className="flex items-center gap-0.5 mb-1 text-gray-700 dark:text-gray-300">
                       {match.league?.logo && (
