@@ -84,8 +84,7 @@ export const getSidebarUserProfile = cache(async (): Promise<SidebarUserProfile 
           iconUrl = iconData.image_url;
           iconName = iconData.name;
         }
-      } catch (iconError) {
-  
+      } catch {
         // 아이콘 정보를 가져올 수 없어도 계속 진행
       }
     }
