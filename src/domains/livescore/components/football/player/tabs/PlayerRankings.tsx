@@ -116,6 +116,7 @@ export default function PlayerRankings({
                     src={player.player.photo || '/placeholder-player.png'}
                     alt={player.player.name}
                     fill
+                    sizes="64px"
                     className="rounded-full object-cover"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
@@ -132,6 +133,7 @@ export default function PlayerRankings({
                         src={player.statistics[0].team.logo || '/placeholder-team.png'}
                         alt={player.statistics[0].team.name}
                         fill
+                        sizes="16px"
                         className="object-contain"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
@@ -188,6 +190,7 @@ export default function PlayerRankings({
                           src={player.player.photo || '/placeholder-player.png'}
                           alt={player.player.name}
                           fill
+                          sizes="(max-width: 640px) 32px, 40px"
                           className="rounded-full object-cover"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
@@ -210,6 +213,7 @@ export default function PlayerRankings({
                           src={player.statistics[0].team.logo || '/placeholder-team.png'}
                           alt={player.statistics[0].team.name}
                           fill
+                          sizes="(max-width: 640px) 20px, 24px"
                           className="object-contain"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useState, useMemo } from 'react';
+import { useRef, useEffect, useState, useMemo, useCallback, memo } from 'react';
 import styles from '../styles/formation.module.css';
 import { liverpoolPlayers, NottinghamForestPlayers, Arsenalplayers, NewcastleUnitedplayers, Chelseaplayers, ManchesterCityplayers, AstonVillaplayers, Bournemouthplayers, Fulhamplayers, Brightonplayers } from '@/domains/livescore/constants/teams/premier-league/premier-teams';
 
@@ -59,10 +59,75 @@ interface PlayerProps {
   awayTeamData: TeamData;
 }
 
-const Player = ({ homeTeamData, awayTeamData }: PlayerProps) => {
+// SVG 내부에서 사용할 최적화된 선수 이미지 컴포넌트
+interface SVGPlayerImageProps {
+  playerId: number;
+  photoUrl: string;
+  teamId: number;
+  onImageLoad: () => void;
+  onImageError: () => void;
+}
+
+const SVGPlayerImage = memo(function SVGPlayerImage({ playerId, photoUrl, teamId, onImageLoad, onImageError }: SVGPlayerImageProps) {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  
+  const onImageLoadRef = useRef(onImageLoad);
+  const onImageErrorRef = useRef(onImageError);
+  
+  // 최신 콜백 함수들을 ref에 저장
+  useEffect(() => {
+    onImageLoadRef.current = onImageLoad;
+    onImageErrorRef.current = onImageError;
+  });
+
+  useEffect(() => {
+    if (!photoUrl || imageError) return;
+
+    const img = new Image();
+    img.onload = () => {
+      setImageLoaded(true);
+      setImageError(false);
+      onImageLoadRef.current();
+    };
+    img.onerror = () => {
+      if (retryCount < 2) {
+        // 최대 2번 재시도
+        setTimeout(() => {
+          setRetryCount(prev => prev + 1);
+        }, 1000 * (retryCount + 1));
+      } else {
+        setImageError(true);
+        onImageErrorRef.current();
+      }
+    };
+    img.src = photoUrl;
+  }, [photoUrl, retryCount, imageError]); // 콜백 함수들 제거
+
+  if (imageError || !photoUrl) {
+    return null;
+  }
+
+  return imageLoaded ? (
+    <image
+      x="-2.5"
+      y="-2.5"
+      width="5"
+      height="5"
+      href={photoUrl}
+      clipPath={`url(#clip-${teamId}-${playerId})`}
+      role="img"
+      aria-labelledby={`player-name-${teamId}-${playerId}`}
+    />
+  ) : null;
+});
+
+const Player = memo(function Player({ homeTeamData, awayTeamData }: PlayerProps) {
   const textRefs = useRef<{[key: string]: SVGTextElement | null}>({});
   const rectRefs = useRef<{[key: string]: SVGRectElement | null}>({});
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   
   const viewBox = isMobile ? "0 0 56 100" : "0 0 100 56";
@@ -197,16 +262,19 @@ const Player = ({ homeTeamData, awayTeamData }: PlayerProps) => {
     });
   }, [homeTeamData, awayTeamData, isMobile]);
 
+  // 이미지 로드 성공 핸들러
+  const handleImageLoad = useCallback((playerId: number) => {
+    setLoadedImages(prev => new Set(prev).add(`${playerId}`));
+  }, []);
+
   // 이미지 오류 핸들러
-  const handleImageError = (playerId: number) => {
+  const handleImageError = useCallback((playerId: number) => {
     setFailedImages(prev => new Set(prev).add(`${playerId}`));
-  };
+  }, []);
 
   const renderTeam = (team: TeamData, isHome: boolean) => {
     return team.startXI.map((player) => {
       const position = getPositionFromGrid(player.grid, isHome, team.formation);
-      const isGoalkeeper = player.pos === 'G';
-      const colors = isGoalkeeper ? team.team.colors.goalkeeper : team.team.colors.player;
       
       const teamId = team.team.id;
       const playerId = player.id;
@@ -214,9 +282,10 @@ const Player = ({ homeTeamData, awayTeamData }: PlayerProps) => {
       const numberKey = `number-${teamId}-${playerId}`;
       const nameKey = `name-${isHome ? 'home' : 'away'}-${teamId}-${playerId}`;
       
-      // 이미지 URL 처리
+      // 이미지 URL 처리 - 우선순위 로딩 적용
       const photoUrl = player.photo || `https://media.api-sports.io/football/players/${player.id}.png`;
       const hasValidImage = Boolean(photoUrl) && !failedImages.has(`${playerId}`);
+      const imageLoaded = loadedImages.has(`${playerId}`);
       
       const koreanName = koreanNameMap.get(player.id);
       const displayName = koreanName || player.name;
@@ -226,13 +295,13 @@ const Player = ({ homeTeamData, awayTeamData }: PlayerProps) => {
           key={uniqueKey}
           transform={`translate(${position.x},${position.y})`}
         >
-          {/* 배경 원 */}
+          {/* 배경 원 - 회색으로 통일 */}
           <circle
             r="2.5"
-            fill={`#${colors.primary}`}
+            fill="#f3f4f6"
             stroke="white"
             strokeWidth="0.15"
-            opacity={hasValidImage ? "0.9" : "1"}
+            opacity="1"
           />
           
           {/* 선수 이미지를 위한 클리핑 패스 */}
@@ -242,12 +311,43 @@ const Player = ({ homeTeamData, awayTeamData }: PlayerProps) => {
             </clipPath>
           </defs>
           
+          {/* 로딩 중일 때 스피너 표시 */}
+          {hasValidImage && !imageLoaded && (
+            <g>
+              {/* 스피너 배경 */}
+              <circle
+                r="1"
+                fill="none"
+                stroke="#e5e7eb"
+                strokeWidth="0.2"
+              />
+              {/* 스피너 */}
+              <circle
+                r="1"
+                fill="none"
+                stroke="#3b82f6"
+                strokeWidth="0.2"
+                strokeDasharray="3.14"
+                strokeDashoffset="3.14"
+                transform="rotate(0)"
+              >
+                <animateTransform
+                  attributeName="transform"
+                  type="rotate"
+                  values="0;360"
+                  dur="1s"
+                  repeatCount="indefinite"
+                />
+              </circle>
+            </g>
+          )}
+          
           {/* 이미지가 없거나 로딩 실패한 경우 선수 번호 표시 */}
-          {!hasValidImage && (
+          {(!hasValidImage || (!imageLoaded && !hasValidImage)) && (
             <text
               x="0"
               y="0.4"
-              fill={`#${colors.number}`}
+              fill="#374151"
               fontSize="2"
               fontWeight="bold"
               textAnchor="middle"
@@ -257,18 +357,14 @@ const Player = ({ homeTeamData, awayTeamData }: PlayerProps) => {
             </text>
           )}
           
-          {/* 선수 이미지 */}
+          {/* 선수 이미지 - 지연 로딩 적용 */}
           {hasValidImage && (
-            <image
-              x="-2.5"
-              y="-2.5"
-              width="5"
-              height="5"
-              href={photoUrl}
-              clipPath={`url(#clip-${teamId}-${playerId})`}
-              onError={() => handleImageError(playerId)}
-              role="img"
-              aria-labelledby={`player-name-${teamId}-${playerId}`}
+            <SVGPlayerImage
+              playerId={playerId}
+              photoUrl={photoUrl}
+              teamId={teamId}
+              onImageLoad={() => handleImageLoad(playerId)}
+              onImageError={() => handleImageError(playerId)}
             />
           )}
           
@@ -335,6 +431,6 @@ const Player = ({ homeTeamData, awayTeamData }: PlayerProps) => {
       {renderTeam(awayTeamData, false)}
     </svg>
   );
-};
+});
 
 export default Player; 

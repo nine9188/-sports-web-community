@@ -323,6 +323,8 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                           <PlayerImage 
                             src={homeLineup.startXI[index].player.photo}
                             alt={`${homeLineup.startXI[index].player.name} 선수 사진`}
+                            playerId={homeLineup.startXI[index].player.id}
+                            priority={index < 5} // 처음 5명은 우선 로딩
                           />
                         ) : (
                           <div className="w-10 h-10 flex items-center justify-center text-gray-700 font-bold text-sm bg-gray-100 rounded-full border-2 border-gray-200">
@@ -366,6 +368,8 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                           <PlayerImage 
                             src={awayLineup.startXI[index].player.photo}
                             alt={`${awayLineup.startXI[index].player.name} 선수 사진`}
+                            playerId={awayLineup.startXI[index].player.id}
+                            priority={index < 5} // 처음 5명은 우선 로딩
                           />
                         ) : (
                           <div className="w-10 h-10 flex items-center justify-center text-gray-700 font-bold text-sm bg-gray-100 rounded-full border-2 border-gray-200">
@@ -425,6 +429,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                           <PlayerImage 
                             src={homeLineup.substitutes[index].player.photo}
                             alt={`${homeLineup.substitutes[index].player.name} 선수 사진`}
+                            playerId={homeLineup.substitutes[index].player.id}
                           />
                         ) : (
                           <div className="w-10 h-10 flex items-center justify-center text-gray-700 font-bold text-sm bg-gray-100 rounded-full border-2 border-gray-200">
@@ -468,6 +473,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                           <PlayerImage 
                             src={awayLineup.substitutes[index].player.photo}
                             alt={`${awayLineup.substitutes[index].player.name} 선수 사진`}
+                            playerId={awayLineup.substitutes[index].player.id}
                           />
                         ) : (
                           <div className="w-10 h-10 flex items-center justify-center text-gray-700 font-bold text-sm bg-gray-100 rounded-full border-2 border-gray-200">

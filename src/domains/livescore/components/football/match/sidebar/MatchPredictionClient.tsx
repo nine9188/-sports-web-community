@@ -228,6 +228,7 @@ export default function MatchPredictionClient({
                 src={homeTeam?.logo || '/images/team-placeholder.png'} 
                 alt={homeTeam?.name || 'Home Team'} 
                 fill
+                sizes="32px"
                 className="object-contain"
                 onError={(e) => {
                   e.currentTarget.src = '/images/team-placeholder.png';
@@ -287,6 +288,7 @@ export default function MatchPredictionClient({
                 src={awayTeam?.logo || '/images/team-placeholder.png'} 
                 alt={awayTeam?.name || 'Away Team'} 
                 fill
+                sizes="32px"
                 className="object-contain"
                 onError={(e) => {
                   e.currentTarget.src = '/images/team-placeholder.png';
@@ -335,6 +337,7 @@ export default function MatchPredictionClient({
                     src={homeTeam?.logo || '/images/team-placeholder.png'} 
                     alt={homeTeam?.name || 'Home'} 
                     fill
+                    sizes="32px"
                     className="object-contain"
                   />
                 </div>
@@ -372,6 +375,7 @@ export default function MatchPredictionClient({
                     src={awayTeam?.logo || '/images/team-placeholder.png'} 
                     alt={awayTeam?.name || 'Away'} 
                     fill
+                    sizes="32px"
                     className="object-contain"
                   />
                 </div>

@@ -27,30 +27,14 @@ const nextConfig = {
         hostname: 'i.pravatar.cc',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'cdn.sportmonks.com',
+        pathname: '/**',
+      },
     ],
   },
   reactStrictMode: false,
-  // 개발 환경에서 CSS preload 경고 줄이기
-  webpack: (config, { dev }) => {
-    if (dev) {
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: {
-          ...config.optimization.splitChunks,
-          cacheGroups: {
-            ...config.optimization.splitChunks?.cacheGroups,
-            styles: {
-              name: 'styles',
-              test: /\.(css|scss|sass)$/,
-              chunks: 'all',
-              enforce: true,
-            },
-          },
-        },
-      };
-    }
-    return config;
-  },
 };
 
 module.exports = nextConfig;

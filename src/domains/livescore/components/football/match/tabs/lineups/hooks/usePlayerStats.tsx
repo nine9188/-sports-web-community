@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { PlayerStats, fetchCachedMultiplePlayerStats } from '@/domains/livescore/actions/match/playerStats';
 import { TeamLineup } from '@/domains/livescore/types/match';
 
@@ -68,6 +68,10 @@ export default function usePlayerStats(
   );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // 로딩 상태를 추적하기 위한 ref
+  const loadingRef = useRef(false);
+  const loadedMatchRef = useRef<string>('');
 
   // 선수 통계 데이터 로드
   useEffect(() => {
@@ -75,12 +79,12 @@ export default function usePlayerStats(
       // 라인업이나 매치 ID가 없으면 스킵
       if (!lineups || !matchId) return;
       
-      // 이미 충분한 데이터가 있으면 스킵
+      // 이미 로딩 중이거나 같은 매치 데이터를 로드했으면 스킵
+      if (loadingRef.current || loadedMatchRef.current === matchId) return;
+      
+      // 선수 ID 추출
       const playerIds = extractPlayerIds(lineups.home, lineups.away);
-      const existingStatsCount = Object.keys(playersStatsData || {}).length;
-      if (existingStatsCount >= playerIds.length && playerIds.length > 0) {
-        return;
-      }
+      if (playerIds.length === 0) return;
       
       // 캐시 키 생성 (경기 ID 기반)
       const cacheKey = `match-${matchId}-players-stats`;
@@ -92,6 +96,7 @@ export default function usePlayerStats(
         if (cachedData) {
           const parsedData = JSON.parse(cachedData);
           setPlayersStatsData(parsedData);
+          loadedMatchRef.current = matchId;
           return;
         }
       } catch (error) {
@@ -99,36 +104,19 @@ export default function usePlayerStats(
         console.error('캐시 데이터 파싱 오류:', error);
       }
       
-      // 선수 ID 추출
-      if (playerIds.length === 0) return;
-      
+      loadingRef.current = true;
       setIsLoading(true);
       setError(null);
       
       try {
-        // 아직 로드되지 않은 선수 ID만 필터링
-        const missingPlayerIds = playerIds.filter(id => 
-          !playersStatsData || !playersStatsData[id]
-        );
+        const stats = await fetchCachedMultiplePlayerStats(matchId, playerIds);
         
-        if (missingPlayerIds.length === 0) {
-          setIsLoading(false);
-          return;
-        }
-        
-        const stats = await fetchCachedMultiplePlayerStats(matchId, missingPlayerIds);
-        
-        // 새 데이터와 기존 데이터 병합
-        const mergedStats = {
-          ...playersStatsData,
-          ...stats
-        };
-        
-        setPlayersStatsData(mergedStats);
+        setPlayersStatsData(stats);
+        loadedMatchRef.current = matchId;
         
         // 세션 스토리지에 데이터 캐싱
         try {
-          sessionStorage.setItem(cacheKey, JSON.stringify(mergedStats));
+          sessionStorage.setItem(cacheKey, JSON.stringify(stats));
         } catch (err) {
           // 스토리지 용량 초과 등의 오류 무시
           console.error('세션 스토리지 캐싱 오류:', err);
@@ -139,11 +127,12 @@ export default function usePlayerStats(
         console.error('선수 통계 로드 오류:', error);
       } finally {
         setIsLoading(false);
+        loadingRef.current = false;
       }
     };
     
     loadPlayersStats();
-  }, [matchId, lineups, playersStatsData]);
+  }, [matchId, lineups]); // playersStatsData 제거
 
   return {
     playersStatsData,

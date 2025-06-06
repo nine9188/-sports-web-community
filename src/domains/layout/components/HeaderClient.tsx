@@ -117,7 +117,7 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
 
         {/* 스크롤 가능한 콘텐츠 영역 */}
         <div className="flex-1 overflow-y-auto">
-          {/* 라이브스코어, 아이콘샵 링크 */}
+          {/* 라이브스코어, 데이터센터, 아이콘샵 링크 */}
           <div className="p-4 border-b space-y-2">
             <Link 
               href="/livescore/football"
@@ -129,6 +129,18 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
                 <polygon points="10 8 16 12 10 16 10 8"></polygon>
               </svg>
               <span className="text-sm font-medium">라이브스코어</span>
+            </Link>
+            
+            <Link 
+              href="/livescore/football/leagues"
+              onClick={onClose}
+              className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-lg"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                <path d="M3 3v18h18V3H3zm16 16H5V5h14v14z"/>
+                <path d="M8 8h8v2H8V8zm0 4h8v2H8v-2zm0 4h5v2H8v-2z"/>
+              </svg>
+              <span className="text-sm font-medium">데이터센터</span>
             </Link>
             
             <Link 

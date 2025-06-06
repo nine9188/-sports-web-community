@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Field from './components/Field';
 import Player from './components/Player';
 
@@ -63,7 +63,7 @@ export default function Formation({ homeTeamData, awayTeamData }: FormationProps
   const isMobile = useMediaQuery('(max-width: 768px)');
   
   // 기본 팀 색상
-  const defaultColors = {
+  const defaultColors = useMemo(() => ({
     player: {
       primary: '1a5f35',
       number: 'ffffff',
@@ -74,31 +74,33 @@ export default function Formation({ homeTeamData, awayTeamData }: FormationProps
       number: '000000',
       border: 'ffd700'
     }
-  };
+  }), []);
 
-  // 팀 데이터 정제
-  const processTeamData = (teamData: Partial<TeamData>): TeamData => {
-    return {
-      team: {
-        id: teamData.team?.id || 0,
-        name: teamData.team?.name || '',
-        colors: teamData.team?.colors || defaultColors
-      },
-      formation: teamData.formation || '',
-      startXI: (teamData.startXI || []).map((player: Partial<PlayerData>) => ({
-        id: player.id || 0,
-        name: player.name || '',
-        number: player.number || 0,
-        pos: player.pos || '',
-        grid: player.grid || '',
-        captain: player.captain || false,
-        photo: player.photo || ''
-      }))
+  // 팀 데이터 정제 함수 메모이제이션
+  const processTeamData = useMemo(() => {
+    return (teamData: Partial<TeamData>): TeamData => {
+      return {
+        team: {
+          id: teamData.team?.id || 0,
+          name: teamData.team?.name || '',
+          colors: teamData.team?.colors || defaultColors
+        },
+        formation: teamData.formation || '',
+        startXI: (teamData.startXI || []).map((player: Partial<PlayerData>) => ({
+          id: player.id || 0,
+          name: player.name || '',
+          number: player.number || 0,
+          pos: player.pos || '',
+          grid: player.grid || '',
+          captain: player.captain || false,
+          photo: player.photo || ''
+        }))
+      };
     };
-  };
+  }, [defaultColors]);
 
-  const processedHomeTeam = processTeamData(homeTeamData);
-  const processedAwayTeam = processTeamData(awayTeamData);
+  const processedHomeTeam = useMemo(() => processTeamData(homeTeamData), [processTeamData, homeTeamData]);
+  const processedAwayTeam = useMemo(() => processTeamData(awayTeamData), [processTeamData, awayTeamData]);
 
   return (
     <div style={{ 

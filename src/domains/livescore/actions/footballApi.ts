@@ -358,4 +358,143 @@ export async function fetchMatchDetails(matchId: string) {
 export const fetchCachedMultiDayMatches = fetchMultiDayMatches;
 
 // 캐싱을 적용한 경기 상세 정보 가져오기
-export const fetchCachedMatchDetails = fetchMatchDetails; 
+export const fetchCachedMatchDetails = fetchMatchDetails;
+
+// ===== 리그 관련 함수들 =====
+
+// 리그 상세 정보 타입
+export interface LeagueDetails {
+  id: number;
+  name: string;
+  country: string;
+  logo: string;
+  flag: string;
+  season: number;
+  type: string;
+}
+
+// 리그 소속 팀 타입
+export interface LeagueTeam {
+  id: number;
+  name: string;
+  logo: string;
+  founded: number;
+  venue: {
+    id: number;
+    name: string;
+    city: string;
+    capacity: number;
+  };
+}
+
+// 리그 상세 정보 가져오기
+export async function fetchLeagueDetails(leagueId: string): Promise<LeagueDetails | null> {
+  try {
+    console.log('API 호출 시작 - 리그 상세:', leagueId);
+    
+    // timezone 제거하고 호출
+    const url = `${API_BASE_URL}/leagues?id=${leagueId}&current=true`;
+    const response = await fetch(url, {
+      headers: {
+        'x-rapidapi-host': 'v3.football.api-sports.io',
+        'x-rapidapi-key': API_KEY,
+      },
+      cache: 'no-store'
+    });
+
+    if (!response.ok) {
+      throw new Error(`API 응답 오류: ${response.status}`);
+    }
+
+    const apiData = await response.json();
+    console.log('API 응답 - 리그 상세:', apiData);
+
+    if (!apiData?.response?.[0]) {
+      console.log('리그 데이터 없음');
+      return null;
+    }
+
+    const data = apiData.response[0];
+    const league = data.league;
+    const currentSeason = data.seasons?.find((season: { current?: boolean }) => season.current);
+
+    if (!league?.id) {
+      console.log('리그 ID 없음');
+      return null;
+    }
+
+    const result = {
+      id: league.id,
+      name: league.name || '',
+      country: league.country || '',
+      logo: league.logo || '',
+      flag: league.flag || '',
+      season: currentSeason?.year || new Date().getFullYear(),
+      type: league.type || ''
+    };
+
+    console.log('리그 상세 결과:', result);
+    return result;
+  } catch (error) {
+    console.error('리그 상세 정보 가져오기 실패:', error);
+    return null;
+  }
+}
+
+// 리그 소속 팀 목록 가져오기
+export async function fetchLeagueTeams(leagueId: string): Promise<LeagueTeam[]> {
+  try {
+    console.log('API 호출 시작 - 리그 팀:', leagueId);
+    
+    // 2024 시즌으로 고정하고 timezone 제거
+    const url = `${API_BASE_URL}/teams?league=${leagueId}&season=2024`;
+    const response = await fetch(url, {
+      headers: {
+        'x-rapidapi-host': 'v3.football.api-sports.io',
+        'x-rapidapi-key': API_KEY,
+      },
+      cache: 'no-store'
+    });
+
+    if (!response.ok) {
+      throw new Error(`API 응답 오류: ${response.status}`);
+    }
+
+    const apiData = await response.json();
+    console.log('API 응답 - 리그 팀:', apiData);
+
+    if (!apiData?.response) {
+      console.log('팀 데이터 없음');
+      return [];
+    }
+
+    const teams: LeagueTeam[] = apiData.response
+      .map((item: { team?: { id?: number; name?: string; logo?: string; founded?: number }; venue?: { id?: number; name?: string; city?: string; capacity?: number } }) => {
+        const team = item.team;
+        const venue = item.venue;
+
+        if (!team?.id) return null;
+
+        return {
+          id: team.id,
+          name: team.name || '',
+          logo: team.logo || '',
+          founded: team.founded || 0,
+          venue: {
+            id: venue?.id || 0,
+            name: venue?.name || '',
+            city: venue?.city || '',
+            capacity: venue?.capacity || 0
+          }
+        };
+      })
+      .filter((team: LeagueTeam | null): team is LeagueTeam => team !== null)
+      .sort((a: LeagueTeam, b: LeagueTeam) => a.name.localeCompare(b.name));
+
+    console.log('팀 목록 결과:', teams.length, '개');
+    return teams;
+  } catch (error) {
+    console.error('리그 팀 목록 가져오기 실패:', error);
+    return [];
+  }
+} 
