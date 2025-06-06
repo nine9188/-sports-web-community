@@ -21,35 +21,30 @@ interface CachedImageResult {
 // 현재는 player_images, image_cache 테이블이 존재하지 않아 타입 에러 발생
 
 // 선수 이미지 캐시에서 조회
-export async function getCachedPlayerImage(playerId: number): Promise<CachedImageResult> {
+export async function getCachedPlayerImage(_playerId: number): Promise<CachedImageResult> {
   // TODO: 테이블 생성 후 구현
-  console.log('getCachedPlayerImage called for player:', playerId)
   return { success: false, error: 'Not implemented yet' }
 }
 
 // 선수 이미지를 Supabase 스토리지에 업로드
-export async function uploadPlayerImageToStorage(imageData: PlayerImageData): Promise<CachedImageResult> {
+export async function uploadPlayerImageToStorage(_imageData: PlayerImageData): Promise<CachedImageResult> {
   // TODO: 테이블 생성 후 구현
-  console.log('uploadPlayerImageToStorage called for player:', imageData.player_id)
   return { success: false, error: 'Not implemented yet' }
 }
 
 // 배치로 여러 선수 이미지 처리
-export async function batchProcessPlayerImages(playersData: PlayerImageData[]): Promise<void> {
+export async function batchProcessPlayerImages(_playersData: PlayerImageData[]): Promise<void> {
   // TODO: 테이블 생성 후 구현
-  console.log('batchProcessPlayerImages called for', playersData.length, 'players')
 }
 
 // 만료된 캐시 정리
 export async function cleanupExpiredCache(): Promise<void> {
   // TODO: 테이블 생성 후 구현
-  console.log('cleanupExpiredCache called')
 }
 
 // 특정 선수의 이미지 강제 새로고침
-export async function refreshPlayerImage(playerId: number): Promise<CachedImageResult> {
+export async function refreshPlayerImage(_playerId: number): Promise<CachedImageResult> {
   // TODO: 테이블 생성 후 구현
-  console.log('refreshPlayerImage called for player:', playerId)
   return { success: false, error: 'Not implemented yet' }
 }
 

@@ -385,13 +385,13 @@ export interface LeagueTeam {
     city: string;
     capacity: number;
   };
+  position?: number; // 리그 순위 (옵셔널)
+  isWinner?: boolean; // 컵대회 우승팀 여부 (옵셔널)
 }
 
 // 리그 상세 정보 가져오기
 export async function fetchLeagueDetails(leagueId: string): Promise<LeagueDetails | null> {
   try {
-    console.log('API 호출 시작 - 리그 상세:', leagueId);
-    
     // timezone 제거하고 호출
     const url = `${API_BASE_URL}/leagues?id=${leagueId}&current=true`;
     const response = await fetch(url, {
@@ -407,10 +407,8 @@ export async function fetchLeagueDetails(leagueId: string): Promise<LeagueDetail
     }
 
     const apiData = await response.json();
-    console.log('API 응답 - 리그 상세:', apiData);
 
     if (!apiData?.response?.[0]) {
-      console.log('리그 데이터 없음');
       return null;
     }
 
@@ -419,7 +417,6 @@ export async function fetchLeagueDetails(leagueId: string): Promise<LeagueDetail
     const currentSeason = data.seasons?.find((season: { current?: boolean }) => season.current);
 
     if (!league?.id) {
-      console.log('리그 ID 없음');
       return null;
     }
 
@@ -433,7 +430,6 @@ export async function fetchLeagueDetails(leagueId: string): Promise<LeagueDetail
       type: league.type || ''
     };
 
-    console.log('리그 상세 결과:', result);
     return result;
   } catch (error) {
     console.error('리그 상세 정보 가져오기 실패:', error);
@@ -441,13 +437,171 @@ export async function fetchLeagueDetails(leagueId: string): Promise<LeagueDetail
   }
 }
 
-// 리그 소속 팀 목록 가져오기
+// 시즌 완료 여부 확인 함수
+async function isSeasonCompleted(leagueId: string, season: string = '2024'): Promise<boolean> {
+  try {
+    // 현재 날짜
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const seasonYear = parseInt(season);
+    
+    // K리그의 경우 특별 처리
+    const kLeagueIds = ['292', '293', '294']; // K리그 1, K리그 2, K리그 3
+    if (kLeagueIds.includes(leagueId)) {
+      // K리그 2025 시즌은 현재 진행 중
+      if (seasonYear === 2025 && currentYear === 2025) {
+        return false;
+      }
+      // K리그 2024 시즌은 완료됨
+      if (seasonYear === 2024 && currentYear >= 2025) {
+        return true;
+      }
+    }
+    
+    // 일반적인 경우: 시즌 연도가 현재 연도보다 이전이면 완료된 것으로 간주
+    if (seasonYear < currentYear) {
+      return true;
+    }
+    
+    // 현재 연도 시즌은 진행 중으로 간주
+    return false;
+  } catch {
+    // 오류 시 안전하게 진행 중으로 간주
+    return false;
+  }
+}
+
+// 리그 소속 팀 목록 가져오기 (우승팀 정보 포함)
 export async function fetchLeagueTeams(leagueId: string): Promise<LeagueTeam[]> {
   try {
-    console.log('API 호출 시작 - 리그 팀:', leagueId);
+    // K리그는 2025 시즌, 다른 리그는 2024 시즌 사용
+    const kLeagueIds = ['292', '293', '294']; // K리그 1, K리그 2, K리그 3
+    const season = kLeagueIds.includes(leagueId) ? '2025' : '2024';
     
-    // 2024 시즌으로 고정하고 timezone 제거
-    const url = `${API_BASE_URL}/teams?league=${leagueId}&season=2024`;
+    // 시즌 완료 여부 확인
+    const seasonCompleted = await isSeasonCompleted(leagueId, season);
+    
+    // 팀 목록, 순위 정보, 우승팀 정보를 병렬로 가져오기
+    const [teamsResponse, standingsResponse, winnerPromise] = await Promise.all([
+      fetch(`${API_BASE_URL}/teams?league=${leagueId}&season=${season}`, {
+        headers: {
+          'x-rapidapi-host': 'v3.football.api-sports.io',
+          'x-rapidapi-key': API_KEY,
+        },
+        cache: 'no-store'
+      }),
+      fetch(`${API_BASE_URL}/standings?league=${leagueId}&season=${season}`, {
+        headers: {
+          'x-rapidapi-host': 'v3.football.api-sports.io',
+          'x-rapidapi-key': API_KEY,
+        },
+        cache: 'no-store'
+      }),
+      fetchCupWinner(leagueId, season)
+    ]);
+
+    if (!teamsResponse.ok) {
+      throw new Error(`팀 목록 API 응답 오류: ${teamsResponse.status}`);
+    }
+
+    const teamsData = await teamsResponse.json();
+
+    if (!teamsData?.response) {
+      return [];
+    }
+
+    // 순위 정보 처리
+    const standingsMap = new Map<number, number>();
+    if (standingsResponse.ok) {
+      try {
+        const standingsData = await standingsResponse.json();
+        
+        if (standingsData.response && Array.isArray(standingsData.response)) {
+          const standings = standingsData.response[0]?.league?.standings?.[0];
+          if (Array.isArray(standings)) {
+            standings.forEach((standing: { team?: { id?: number }; rank?: number }) => {
+              if (standing.team?.id && standing.rank) {
+                standingsMap.set(standing.team.id, standing.rank);
+              }
+            });
+          }
+        }
+      } catch (standingsError) {
+        console.warn('순위 정보 처리 중 오류:', standingsError);
+      }
+    }
+
+    // 우승팀 정보
+    const winnerId = await winnerPromise;
+
+    const teams: LeagueTeam[] = teamsData.response
+      .map((item: { team?: { id?: number; name?: string; logo?: string; founded?: number }; venue?: { id?: number; name?: string; city?: string; capacity?: number } }) => {
+        const team = item.team;
+        const venue = item.venue;
+
+        if (!team?.id) return null;
+
+        const position = standingsMap.get(team.id);
+        // 우승팀 표시 로직: 컵대회 우승팀 또는 (시즌이 완료된 경우에만) 리그 1위 팀
+        const isWinner = winnerId === team.id || (seasonCompleted && position === 1);
+
+        return {
+          id: team.id,
+          name: team.name || '',
+          logo: team.logo || '',
+          founded: team.founded || 0,
+          venue: {
+            id: venue?.id || 0,
+            name: venue?.name || '',
+            city: venue?.city || '',
+            capacity: venue?.capacity || 0
+          },
+          position: position || undefined,
+          isWinner: isWinner
+        };
+      })
+      .filter((team: LeagueTeam | null): team is LeagueTeam => team !== null);
+
+    // 우승팀을 맨 앞으로, 그 다음 순위순으로 정렬
+    teams.sort((a: LeagueTeam, b: LeagueTeam) => {
+      // 우승팀이 있으면 맨 앞으로
+      if (a.isWinner && !b.isWinner) return -1;
+      if (!a.isWinner && b.isWinner) return 1;
+      
+      // 둘 다 우승팀이 아니면 기존 정렬 로직
+      if (a.position && b.position) {
+        return a.position - b.position;
+      }
+      if (a.position && !b.position) {
+        return -1;
+      }
+      if (!a.position && b.position) {
+        return 1;
+      }
+      return a.name.localeCompare(b.name);
+    });
+
+    return teams;
+  } catch (error) {
+    console.error('리그 팀 목록 가져오기 실패:', error);
+    return [];
+  }
+}
+
+// ===== 컵대회 우승팀 관련 함수들 =====
+
+// 컵대회 우승팀 정보 타입
+export interface TrophyInfo {
+  league: string;
+  country: string;
+  season: string;
+  place: string;
+}
+
+// 컵대회 우승팀 정보 가져오기
+export async function fetchTeamTrophies(teamId: string): Promise<TrophyInfo[]> {
+  try {
+    const url = `${API_BASE_URL}/trophies?team=${teamId}`;
     const response = await fetch(url, {
       headers: {
         'x-rapidapi-host': 'v3.football.api-sports.io',
@@ -461,40 +615,148 @@ export async function fetchLeagueTeams(leagueId: string): Promise<LeagueTeam[]> 
     }
 
     const apiData = await response.json();
-    console.log('API 응답 - 리그 팀:', apiData);
 
     if (!apiData?.response) {
-      console.log('팀 데이터 없음');
       return [];
     }
 
-    const teams: LeagueTeam[] = apiData.response
-      .map((item: { team?: { id?: number; name?: string; logo?: string; founded?: number }; venue?: { id?: number; name?: string; city?: string; capacity?: number } }) => {
-        const team = item.team;
-        const venue = item.venue;
+    const trophies: TrophyInfo[] = apiData.response
+      .map((item: { league?: string; country?: string; season?: string; place?: string }) => ({
+        league: item.league || '',
+        country: item.country || '',
+        season: item.season || '',
+        place: item.place || ''
+      }))
+      .filter((trophy: TrophyInfo) => trophy.league && trophy.place);
 
-        if (!team?.id) return null;
-
-        return {
-          id: team.id,
-          name: team.name || '',
-          logo: team.logo || '',
-          founded: team.founded || 0,
-          venue: {
-            id: venue?.id || 0,
-            name: venue?.name || '',
-            city: venue?.city || '',
-            capacity: venue?.capacity || 0
-          }
-        };
-      })
-      .filter((team: LeagueTeam | null): team is LeagueTeam => team !== null)
-      .sort((a: LeagueTeam, b: LeagueTeam) => a.name.localeCompare(b.name));
-
-    console.log('팀 목록 결과:', teams.length, '개');
-    return teams;
+    return trophies;
   } catch (error) {
-    console.error('리그 팀 목록 가져오기 실패:', error);
+    console.error('팀 트로피 정보 가져오기 실패:', error);
     return [];
   }
+}
+
+// 특정 리그의 우승팀 확인
+export async function fetchLeagueWinner(leagueId: string, season: string = '2024'): Promise<number | null> {
+  try {
+    // 해당 리그의 최종 순위에서 1위 팀 찾기
+    const url = `${API_BASE_URL}/standings?league=${leagueId}&season=${season}`;
+    const response = await fetch(url, {
+      headers: {
+        'x-rapidapi-host': 'v3.football.api-sports.io',
+        'x-rapidapi-key': API_KEY,
+      },
+      cache: 'no-store'
+    });
+
+    if (!response.ok) {
+      throw new Error(`API 응답 오류: ${response.status}`);
+    }
+
+    const apiData = await response.json();
+
+    if (apiData.response && Array.isArray(apiData.response)) {
+      const standings = apiData.response[0]?.league?.standings?.[0];
+      if (Array.isArray(standings) && standings.length > 0) {
+        const winner = standings.find((standing: { rank?: number; team?: { id?: number } }) => standing.rank === 1);
+        if (winner?.team?.id) {
+          return winner.team.id;
+        }
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error('리그 우승팀 정보 가져오기 실패:', error);
+    return null;
+  }
+}
+
+// 컵대회 결승전 정보 가져오기
+export async function fetchCupFinal(leagueId: string, season: string = '2024'): Promise<number | null> {
+  try {
+    // 해당 리그의 결승전 경기 찾기 (round가 "Final"인 경기)
+    const url = `${API_BASE_URL}/fixtures?league=${leagueId}&season=${season}&round=Final`;
+    const response = await fetch(url, {
+      headers: {
+        'x-rapidapi-host': 'v3.football.api-sports.io',
+        'x-rapidapi-key': API_KEY,
+      },
+      cache: 'no-store'
+    });
+
+    if (!response.ok) {
+      throw new Error(`API 응답 오류: ${response.status}`);
+    }
+
+    const apiData = await response.json();
+
+    if (apiData.response && Array.isArray(apiData.response) && apiData.response.length > 0) {
+      const finalMatch = apiData.response[0];
+      
+      // 경기가 끝났고 승자가 있는 경우
+      if (finalMatch.fixture?.status?.short === 'FT') {
+        const homeTeam = finalMatch.teams?.home;
+        const awayTeam = finalMatch.teams?.away;
+        
+        if (homeTeam?.winner === true) {
+          return homeTeam.id;
+        } else if (awayTeam?.winner === true) {
+          return awayTeam.id;
+        }
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error('컵대회 결승전 정보 가져오기 실패:', error);
+    return null;
+  }
+}
+
+// 다양한 라운드명으로 결승전 찾기
+export async function fetchCupWinner(leagueId: string, season: string = '2024'): Promise<number | null> {
+  const possibleFinalRounds = [
+    'Final',
+    'Finals', 
+    'Championship Final',
+    'Grand Final',
+    'Cup Final'
+  ];
+
+  for (const round of possibleFinalRounds) {
+    try {
+      const url = `${API_BASE_URL}/fixtures?league=${leagueId}&season=${season}&round=${round}`;
+      const response = await fetch(url, {
+        headers: {
+          'x-rapidapi-host': 'v3.football.api-sports.io',
+          'x-rapidapi-key': API_KEY,
+        },
+        cache: 'no-store'
+      });
+
+      if (response.ok) {
+        const apiData = await response.json();
+
+        if (apiData.response && Array.isArray(apiData.response) && apiData.response.length > 0) {
+          const finalMatch = apiData.response[0];
+          
+          if (finalMatch.fixture?.status?.short === 'FT') {
+            const homeTeam = finalMatch.teams?.home;
+            const awayTeam = finalMatch.teams?.away;
+            
+            if (homeTeam?.winner === true) {
+              return homeTeam.id;
+            } else if (awayTeam?.winner === true) {
+              return awayTeam.id;
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.warn(`${round} 검색 실패:`, error);
+    }
+  }
+
+  return null;
 } 

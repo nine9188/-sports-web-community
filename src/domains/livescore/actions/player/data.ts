@@ -331,10 +331,8 @@ export const fetchPlayerFullData = async (
         }
         
         if (loadOptions.fetchInjuries) {
-          console.log(`[fetchPlayerFullData] 부상 데이터 로드 시작: 선수 ID ${playerIdNum}`);
           apiPromises.injuries = fetchPlayerInjuries(playerIdNum)
             .then(injuries => {
-              console.log(`[fetchPlayerFullData] 부상 데이터 로드 완료: ${injuries.length}개 항목`);
               return injuries;
             })
             .catch(error => {

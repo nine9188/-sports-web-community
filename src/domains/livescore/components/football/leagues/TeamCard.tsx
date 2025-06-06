@@ -19,8 +19,19 @@ export default function TeamCard({ team }: TeamCardProps) {
   return (
     <Link 
       href={`/livescore/football/team/${team.id}`}
-      className="group block bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200 p-2 lg:p-4"
+      className={`group block bg-white rounded-lg border transition-all duration-200 p-2 lg:p-4 relative ${
+        team.isWinner 
+          ? 'border-yellow-400 hover:border-yellow-500 hover:shadow-lg shadow-md' 
+          : 'border-gray-200 hover:border-blue-300 hover:shadow-md'
+      }`}
     >
+      {/* 우승 표시 */}
+      {team.isWinner && (
+        <div className="absolute top-1 right-1 lg:top-2 lg:right-2 bg-yellow-500 text-white text-[8px] lg:text-xs font-bold px-1 lg:px-2 py-0.5 lg:py-1 rounded shadow-sm">
+          우승
+        </div>
+      )}
+      
       <div className="flex flex-col items-center space-y-1 lg:space-y-3">
         {/* 팀 로고 */}
         <div className="relative w-8 h-8 lg:w-16 lg:h-16 flex-shrink-0">

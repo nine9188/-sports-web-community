@@ -121,7 +121,7 @@ export async function rewardUserActivity(
         activityCount >= DAILY_LIMITS[activityType].count) {
       // 일일 제한에 도달한 경우 (로그만 남기고 에러는 리턴하지 않음)
       if (process.env.NODE_ENV === 'development') {
-        console.log(`사용자(${userId})가 ${activityType} 활동 제한에 도달했습니다.`);
+    
       }
       return { success: false, error: '오늘 이 활동으로 받을 수 있는 보상을 모두 받았습니다.' };
     }
@@ -203,7 +203,7 @@ export async function rewardUserActivity(
     activityCache.set(cacheKey, (activityCache.get(cacheKey) || 0) + 1);
     
     if (process.env.NODE_ENV === 'development') {
-      console.log(`사용자(${userId})에게 ${activityType} 활동 보상 지급: EXP +${expReward}, Points +${pointsReward}`);
+  
     }
     return { success: true };
   } catch (error) {

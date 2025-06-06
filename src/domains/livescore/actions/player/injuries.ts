@@ -66,10 +66,7 @@ const reasonMap: { [key: string]: string } = {
  */
 export async function fetchPlayerInjuries(playerId: number): Promise<InjuryData[]> {
   try {
-    console.log(`[fetchPlayerInjuries] 시작: 선수 ID ${playerId}`);
-    
     if (!playerId) {
-      console.log('[fetchPlayerInjuries] 유효하지 않은 선수 ID');
       return [];
     }
 
@@ -81,12 +78,9 @@ export async function fetchPlayerInjuries(playerId: number): Promise<InjuryData[
       `${currentYear-2}`
     ];
 
-    console.log(`[fetchPlayerInjuries] 조회할 시즌: ${seasons.join(', ')}`);
-
     // 모든 시즌의 부상 데이터를 가져오기 위한 Promise 배열
     const injuryPromises = seasons.map(season => {
       const apiUrl = `https://v3.football.api-sports.io/injuries?player=${playerId}&season=${season}`;
-      console.log(`[fetchPlayerInjuries] API 요청: ${apiUrl}`);
       
       return fetch(
         apiUrl,
@@ -110,28 +104,13 @@ export async function fetchPlayerInjuries(playerId: number): Promise<InjuryData[
       )
     );
     
-    console.log(`[fetchPlayerInjuries] API 응답 받음: ${responsesData.length}개 시즌`);
-    
     // 모든 부상 데이터 합치기
     let allInjuries: ApiInjuryResponse[] = [];
-    responsesData.forEach((data, index) => {
-      console.log(`[fetchPlayerInjuries] 시즌 ${seasons[index]} 응답:`, 
-        JSON.stringify(data).substring(0, 200) + '...');
-      console.log(`[fetchPlayerInjuries] 시즌 ${seasons[index]} 항목 수:`, 
-        data.response?.length || 0);
-        
+    responsesData.forEach((data) => {
       if (data.response && data.response.length > 0) {
         allInjuries = [...allInjuries, ...data.response];
       }
     });
-
-    console.log(`[fetchPlayerInjuries] 전체 부상 데이터 항목 수: ${allInjuries.length}`);
-
-    // 첫 번째 항목 구조 로깅
-    if (allInjuries.length > 0) {
-      console.log('[fetchPlayerInjuries] 첫 번째 부상 데이터 구조:', 
-        JSON.stringify(allInjuries[0]).substring(0, 300) + '...');
-    }
 
     // 부상 기록 데이터 변환
     const injuries: InjuryData[] = allInjuries.map((injury: ApiInjuryResponse) => {
@@ -165,8 +144,6 @@ export async function fetchPlayerInjuries(playerId: number): Promise<InjuryData[
       };
     });
 
-    console.log(`[fetchPlayerInjuries] 변환된 부상 데이터 수: ${injuries.length}`);
-    
     // 최신 부상 순으로 정렬
     const sortedInjuries = injuries.sort((a, b) => {
       // 날짜가 없으면 가장 오래된 것으로 간주
@@ -176,8 +153,6 @@ export async function fetchPlayerInjuries(playerId: number): Promise<InjuryData[
       // 최신 날짜가 먼저 오도록 내림차순 정렬
       return new Date(b.fixture.date).getTime() - new Date(a.fixture.date).getTime();
     });
-
-    console.log(`[fetchPlayerInjuries] 완료: ${sortedInjuries.length}개 항목 반환`);
     return sortedInjuries;
   } catch (error) {
     console.error('선수 부상 기록 가져오기 오류:', error);

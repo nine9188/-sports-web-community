@@ -36,11 +36,8 @@ interface ApiTransferResponse {
 export async function fetchPlayerTransfers(playerId: number): Promise<TransferData[]> {
   try {
     if (!playerId) {
-      console.log('[transfers] 유효하지 않은 선수 ID:', playerId);
       return [];
     }
-
-    console.log(`[transfers] 선수 ID ${playerId}의 이적 기록 요청`);
 
     // API 호출
     const response = await fetch(
@@ -60,24 +57,17 @@ export async function fetchPlayerTransfers(playerId: number): Promise<TransferDa
     }
 
     const data = await response.json();
-    
-    console.log(`[transfers] 데이터 응답 받음: 결과 ${data.results || 0}개`);
 
     // 데이터 존재 확인
     if (!data.response || !Array.isArray(data.response) || data.response.length === 0) {
-      console.log(`[transfers] 이적 기록 없음, 선수 ID: ${playerId}`);
       return [];
     }
-
-    // API 응답 구조 로깅
-    console.log(`[transfers] 첫 번째 이적 기록 구조:`, JSON.stringify(data.response[0], null, 2));
 
     // 응답은 배열이지만 첫 번째 요소에 모든 이적 기록이 포함됨
     const playerData = data.response[0] as ApiTransferResponse;
     
     // 이적 기록이 없으면 빈 배열 반환
     if (!playerData.transfers || !Array.isArray(playerData.transfers)) {
-      console.log(`[transfers] 이적 기록 없음, 선수 ID: ${playerId}`);
       return [];
     }
 
@@ -117,8 +107,6 @@ export async function fetchPlayerTransfers(playerId: number): Promise<TransferDa
         };
       }
     }).filter((t: TransferData) => t.teams.from.name !== '데이터 오류' || t.teams.to.name !== '데이터 오류');
-
-    console.log(`[transfers] 변환된 이적 기록 수: ${transfers.length}`);
 
     // 최신 이적 순으로 정렬
     const sortedTransfers = transfers.sort((a, b) => {

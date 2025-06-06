@@ -85,7 +85,7 @@ export const getSidebarUserProfile = cache(async (): Promise<SidebarUserProfile 
           iconName = iconData.name;
         }
       } catch (iconError) {
-        console.log('아이콘 정보 조회 실패, 기본 아이콘 사용:', iconError);
+  
         // 아이콘 정보를 가져올 수 없어도 계속 진행
       }
     }

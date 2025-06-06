@@ -24,7 +24,7 @@ export async function getMyPosts(
       };
     }
 
-    console.log(`내 게시글 조회 시도: 사용자 ID ${userId}, 페이지 ${pagination.page}, 한도 ${pagination.limit}`);
+
     
     const supabase = await createClient();
     
@@ -99,7 +99,7 @@ export async function getMyPosts(
         }
       }
       
-      console.log(`내 게시글 조회 결과: ${formattedData.length}개 항목 발견`);
+  
       
       return { 
         success: true, 

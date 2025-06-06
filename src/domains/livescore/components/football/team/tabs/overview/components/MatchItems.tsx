@@ -111,7 +111,7 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
               <thead className="bg-gray-50">
                 <tr className="h-10">
                   <th className="p-0 md:p-2 text-left text-xs font-medium text-gray-500 w-10 md:w-16">날짜</th>
-                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500 w-6 md:w-10">리그</th>
+                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500 w-6 md:w-32">리그</th>
                   <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500">경기</th>
                   <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500 w-10 md:w-16">결과</th>
                 </tr>
@@ -126,15 +126,18 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                     <td className="p-0 md:px-2 text-xs whitespace-nowrap w-10 md:w-16">
                       {format(new Date(match.fixture.date), 'MM.dd', { locale: ko })}
                     </td>
-                    <td className="p-0 md:px-2 w-6 md:w-10">
-                      <div className="flex justify-center items-center">
+                    <td className="p-0 md:px-2 w-6 md:w-32">
+                      <div className="flex justify-center items-center md:gap-2">
                         <Image
                           src={match.league.logo}
                           alt={match.league.name}
                           width={16}
                           height={16}
-                          className="object-contain w-4 h-4 md:w-5 md:h-5"
+                          className="object-contain w-4 h-4 md:w-5 md:h-5 flex-shrink-0"
                         />
+                        <span className="hidden md:block text-xs whitespace-nowrap">
+                          {match.league.name}
+                        </span>
                       </div>
                     </td>
                     <td className="p-0 md:px-2">
@@ -208,7 +211,7 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
               <thead className="bg-gray-50">
                 <tr className="h-10">
                   <th className="p-0 md:p-2 text-left text-xs font-medium text-gray-500 w-16 md:w-20">날짜</th>
-                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500 w-6 md:w-10">리그</th>
+                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500 w-6 md:w-32">리그</th>
                   <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500">경기</th>
                 </tr>
               </thead>
@@ -222,15 +225,18 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                     <td className="p-0 md:px-2 text-xs whitespace-nowrap w-16 md:w-20">
                       {format(new Date(match.fixture.date), 'MM.dd HH:mm', { locale: ko })}
                     </td>
-                    <td className="p-0 md:px-2 w-6 md:w-10">
-                      <div className="flex justify-center items-center">
+                    <td className="p-0 md:px-2 w-6 md:w-32">
+                      <div className="flex justify-center items-center md:gap-2">
                         <Image
                           src={match.league.logo}
                           alt={match.league.name}
                           width={16}
                           height={16}
-                          className="object-contain w-4 h-4 md:w-5 md:h-5"
+                          className="object-contain w-4 h-4 md:w-5 md:h-5 flex-shrink-0"
                         />
+                        <span className="hidden md:block text-xs whitespace-nowrap">
+                          {match.league.name}
+                        </span>
                       </div>
                     </td>
                     <td className="p-0 md:px-2">

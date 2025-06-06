@@ -436,7 +436,7 @@ export default function HeaderClient({
             </Link>
             <Link
               href="/signup"
-              className="px-3 py-2 text-sm font-medium bg-blue-600 text-white rounded hover:bg-blue-700"
+              className="px-3 py-2 text-sm font-medium bg-slate-800 text-white rounded hover:bg-slate-700"
             >
               회원가입
             </Link>
