@@ -3,11 +3,12 @@
 import React, { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/shared/context/AuthContext';
-import { Header } from '@/domains/layout';
+import Header from '@/domains/layout/components/Header';
 import Footer from '@/shared/components/Footer';
 import Sidebar from '@/domains/sidebar/components/Sidebar';
 import ProfileSidebar from '@/domains/sidebar/components/ProfileSidebar';
-
+import { HeaderUserData } from '@/domains/layout/types/header';
+import { Board } from '@/domains/layout/types/board';
 
 // AuthStateManager를 React.memo로 최적화
 const AuthStateManager = React.memo(function AuthStateManager({
@@ -16,6 +17,9 @@ const AuthStateManager = React.memo(function AuthStateManager({
   boardNavigation,
   leagueStandingsComponent,
   rightSidebar,
+  headerUserData,
+  headerBoards,
+  headerIsAdmin,
   isOpen,
   onClose,
   isProfileOpen,
@@ -27,6 +31,9 @@ const AuthStateManager = React.memo(function AuthStateManager({
   boardNavigation: React.ReactNode,
   leagueStandingsComponent: React.ReactNode,
   rightSidebar: React.ReactNode,
+  headerUserData?: HeaderUserData | null,
+  headerBoards?: Board[],
+  headerIsAdmin?: boolean,
   isOpen: boolean,
   onClose: () => void,
   isProfileOpen: boolean,
@@ -47,8 +54,11 @@ const AuthStateManager = React.memo(function AuthStateManager({
   
   return (
     <div className="flex flex-col min-h-screen w-full">
-      <Header
+      <Header 
         onProfileClick={onProfileClick}
+        initialUserData={headerUserData}
+        boards={headerBoards}
+        isAdmin={headerIsAdmin}
       />
       <div className="flex flex-1 w-full md:max-w-screen-2xl md:mx-auto">
         <Sidebar 

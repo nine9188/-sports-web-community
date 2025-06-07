@@ -1,4 +1,5 @@
 // 서버 컴포넌트 작성
+import { cache } from 'react';
 import { createClient } from '@/shared/api/supabaseServer';
 import NavBoardSelectorClient from './NavBoardSelectorClient';
 
@@ -15,8 +16,8 @@ interface NavBoardSelectorProps {
   backgroundImage?: string;
 }
 
-// 서버에서 리그 데이터를 가져오는 함수
-async function getLeagues(): Promise<League[]> {
+// 서버에서 리그 데이터를 가져오는 함수 (캐싱 적용)
+const getLeagues = cache(async (): Promise<League[]> => {
   try {
     const supabase = await createClient();
     
@@ -87,7 +88,7 @@ async function getLeagues(): Promise<League[]> {
       url: '/boards/k-league-1'
     }
   ];
-}
+});
 
 export default async function NavBoardSelector({
   backgroundImage = '/213/20241124173016789001-removebg-preview.png', // 선수 이미지

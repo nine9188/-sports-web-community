@@ -4,11 +4,15 @@
 export interface HeaderUserData {
   id: string;
   nickname: string;
+  email: string | null;
   level: number;
+  exp: number;
+  points: number;
   iconInfo: {
     iconUrl: string;
     iconName?: string;
-  };
+  } | null;
+  isAdmin: boolean;
 }
 
 /**

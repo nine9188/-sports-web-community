@@ -262,8 +262,10 @@ export async function fetchMatchesByDate(date: string): Promise<MatchData[]> {
   }
 }
 
-// 어제, 오늘, 내일 경기 데이터를 한 번에 가져오기
-export async function fetchMultiDayMatches(): Promise<MultiDayMatchesResult> {
+import { cache } from 'react';
+
+// 어제, 오늘, 내일 경기 데이터를 한 번에 가져오기 - cache 적용
+export const fetchMultiDayMatches = cache(async (): Promise<MultiDayMatchesResult> => {
   // 날짜 포맷팅 함수
   const formatDate = (date: Date) => {
     return date.toISOString().split('T')[0];
@@ -319,7 +321,7 @@ export async function fetchMultiDayMatches(): Promise<MultiDayMatchesResult> {
       error: '데이터를 가져오는데 실패했습니다.'
     };
   }
-}
+});
 
 // 특정 경기 상세 정보 가져오기
 export async function fetchMatchDetails(matchId: string) {

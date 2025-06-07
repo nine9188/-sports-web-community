@@ -8,6 +8,7 @@ import { fetchStandingsData } from '@/domains/sidebar/actions/football';
 import LeagueStandings from '@/domains/sidebar/components/league/LeagueStandings';
 import { RightSidebar } from '@/domains/sidebar/components';
 import { getInitialSession } from '@/shared/api/supabaseServer';
+import { getHeaderUserData, getBoardsForNavigation } from '@/domains/layout/actions';
 import { Suspense } from 'react';
 
 // 로딩 스켈레톤 컴포넌트
@@ -76,6 +77,12 @@ export default async function RootLayout({
   // 리그 순위 컴포넌트 생성
   const leagueStandingsComponent = <LeagueStandings initialLeague="premier" initialStandings={standingsData} />;
 
+  // 헤더 데이터 가져오기
+  const [headerUserData, headerBoardsData] = await Promise.all([
+    getHeaderUserData(),
+    getBoardsForNavigation()
+  ]);
+
   return (
     <html lang="ko" className={`w-full h-full ${inter.className}`} suppressHydrationWarning>
       <head />
@@ -90,6 +97,9 @@ export default async function RootLayout({
           authSection={authSection}
           leagueStandingsComponent={leagueStandingsComponent}
           initialSession={initialSession}
+          headerUserData={headerUserData}
+          headerBoards={headerBoardsData.boardData}
+          headerIsAdmin={headerBoardsData.isAdmin}
         >
           {children}
         </RootLayoutClient>

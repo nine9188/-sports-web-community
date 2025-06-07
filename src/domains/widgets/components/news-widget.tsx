@@ -153,7 +153,7 @@ async function getBoardPosts(boardSlug: string): Promise<NewsItem[]> {
       .select("id, title, content, created_at, views, likes, post_number")
       .eq("board_id", boardData.id)
       .order('created_at', { ascending: false })
-      .limit(5);
+      .limit(15);
 
     if (postsError) {
       console.error("게시글 목록 조회 오류:", postsError);

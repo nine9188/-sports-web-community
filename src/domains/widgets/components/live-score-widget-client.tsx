@@ -36,10 +36,11 @@ interface LiveScoreWidgetClientProps {
 }
 
 export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidgetClientProps) {
-  const [matches, setMatches] = useState<EnhancedMatchData[]>([]);
+  // 🔧 성능 최적화: 초기 데이터로 즉시 렌더링
+  const [matches, setMatches] = useState<EnhancedMatchData[]>(initialMatches);
   const [error, setError] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  // 🔧 성능 최적화: 초기 로딩 상태 제거 (isLoading 제거)
   
   // 🔧 슬라이딩 인덱스 상태 추가 (시작 인덱스)
   const [startIndex, setStartIndex] = useState(0);
@@ -139,10 +140,9 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
   // 🔧 클라이언트 렌더링 확인 - Hydration 불일치 방지
   useEffect(() => {
     setIsClient(true);
-    setMatches(initialMatches);
-    setIsLoading(false);
+    // 🔧 성능 최적화: initialMatches는 이미 설정되어 있으므로 추가 설정 불필요
     setStartIndex(0); // 초기 인덱스 설정
-  }, [initialMatches]);
+  }, []);
 
   useEffect(() => {
     // 클라이언트에서만 데이터 갱신 실행
@@ -213,18 +213,19 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
           
           setMatches(filteredMatches);
           
-          // 🔧 데이터 업데이트 시 인덱스 범위 확인
+          // �� 데이터 업데이트 시 인덱스 범위 확인
           if (filteredMatches.length > 0 && startIndex >= filteredMatches.length) {
             setStartIndex(0);
           }
           
           setError(null);
         } else {
-          setError('데이터를 가져오는데 실패했습니다.');
+          // 🔧 성능 최적화: 에러 발생 시에도 기존 데이터 유지
+          console.warn('데이터를 가져오는데 실패했습니다.');
         }
       } catch (err) {
         console.error('경기 데이터 처리 중 오류:', err);
-        setError(err instanceof Error ? `${err.message}` : '알 수 없는 오류가 발생했습니다.');
+        // 🔧 성능 최적화: 에러 발생 시에도 기존 데이터 유지
       } finally {
         fetchingRef.current = false;
       }
@@ -327,11 +328,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
 
   return (
     <div className="w-full mb-4 mt-4 md:mt-0">
-      {isLoading ? (
-        <div className="flex justify-center items-center h-40">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
-      ) : error ? (
+      {error ? (
         <div className="flex flex-col justify-center items-center h-40 text-center">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 mb-2 text-red-500">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />

@@ -1,20 +1,19 @@
 'use client';
 
-import React, { useCallback, useEffect, useState, useRef, useMemo } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faSignOutAlt, faCog, faChevronDown, faBars, faFutbol } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faBars, faFutbol } from '@fortawesome/free-solid-svg-icons';
 import { ChevronDown, ShoppingBag, X, Search } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { useRouter } from 'next/navigation';
 import BoardNavigationClient from './BoardNavigationClient';
-import { useAuth } from '@/shared/context/AuthContext';
 import { HeaderUserData } from '@/domains/layout/types/header';
 import { useIcon } from '@/shared/context/IconContext';
 import UserIcon from '@/shared/components/UserIcon';
 import { Board } from '../types/board';
 import ReactDOM from 'react-dom';
-import { useRouter } from 'next/navigation';
 import LiveScoreModal from './LiveScoreModal';
+import UserProfileClient from './UserProfileClient';
 
 type HeaderClientProps = {
   onProfileClick: () => void;
@@ -272,49 +271,23 @@ export default function HeaderClient({
   boards,
   isAdmin = false
 }: HeaderClientProps) {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLiveScoreOpen, setIsLiveScoreOpen] = useState(false);
-  const profileDropdownRef = useRef<HTMLDivElement>(null);
-  const { user, logoutUser } = useAuth();
-  const { iconUrl, iconName, updateUserIconState } = useIcon();
+  const { iconUrl, updateUserIconState } = useIcon();
   
-  // 이전 userData 상태 유지 (깜빡임 방지)
-  const [userData, setUserData] = useState<HeaderUserData | null>(initialUserData || null);
+  // 서버에서 전달받은 사용자 데이터 사용
+  const userData = initialUserData;
   
   // 사용자 레벨 기반 기본 아이콘 URL
   const userLevel = userData?.level || 1;
   
-  // 인증 상태 변화 감지 및 userData 동기화 (사이드바와 완전히 동일한 패턴)
+  // 아이콘 정보 초기화 - 서버 데이터 우선 사용 (한 번만 실행)
   useEffect(() => {
-    const fetchUserData = async () => {
-      // 이미 서버 데이터가 있거나 로그인되지 않은 경우 건너뛰기 (사이드바와 동일)
-      if (userData || !user) return;
-      
-      // 사용자가 로그인되었고 초기 데이터가 있는 경우에만 설정
-      if (user && !userData && initialUserData) {
-        setUserData(initialUserData);
-      }
-    };
-    
-    fetchUserData();
-  }, [user, userData, initialUserData]);
-  
-  // 아이콘 정보 초기화 - 사이드바 패턴 적용 (안정화)
-  useEffect(() => {
-    // 서버 데이터에 아이콘 정보가 있고 전역 상태가 비어있는 경우에만 설정
     if (userData?.iconInfo?.iconUrl && !iconUrl) {
       updateUserIconState(userData.iconInfo.iconUrl, userData.iconInfo.iconName || '');
     }
-    // 그 외의 경우 refreshUserIcon 호출하지 않음 (깜빡임 방지)
   }, [userData?.iconInfo?.iconUrl, userData?.iconInfo?.iconName, iconUrl, updateUserIconState]);
   
-  // 드롭다운 메뉴 토글
-  const toggleDropdown = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsDropdownOpen(!isDropdownOpen);
-  }, [isDropdownOpen]);
-
   // 모바일 메뉴 토글
   const toggleMobileMenu = useCallback(() => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -328,120 +301,17 @@ export default function HeaderClient({
     toggleMobileMenu();
   }, [toggleMobileMenu]);
 
-  // 로그아웃 처리 - 사이드바와 동일한 패턴 적용
-  const handleLogout = useCallback(async () => {
-    try {
-      // 드롭다운 닫기
-      setIsDropdownOpen(false);
-      
-      // AuthContext의 logoutUser 함수 사용
-      await logoutUser();
-      
-      // 아이콘 상태 초기화 (사이드바와 동일)
-      updateUserIconState('', '');
-      
-      toast.success('로그아웃되었습니다.');
-      
-      // 확실한 페이지 새로고침을 위해 window.location 사용
-      window.location.href = '/';
-    } catch (error) {
-      console.error('로그아웃 중 오류 발생:', error);
-      toast.error('로그아웃 중 오류가 발생했습니다.');
-    }
-  }, [logoutUser, updateUserIconState]);
-
-  // 드롭다운 메뉴 닫기 (외부 클릭 감지)
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (profileDropdownRef.current && !profileDropdownRef.current.contains(e.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   // 라이브스코어 모달 토글
   const toggleLiveScore = useCallback(() => {
     setIsLiveScoreOpen(!isLiveScoreOpen);
   }, [isLiveScoreOpen]);
 
-
-
   // 인증 상태에 따른 렌더링 결정
   const renderAuthState = useMemo(() => {
     return (
       <div className="flex space-x-2">
-        {/* PC 버전(md 이상): 커스텀 드롭다운 */}
-        {userData ? (
-          <div className="hidden md:block relative" ref={profileDropdownRef}>
-            <button
-              data-testid="user-menu"
-              onClick={toggleDropdown}
-              className="flex items-center space-x-1 px-3 py-2 rounded hover:bg-gray-100"
-            >
-              <div className="w-6 h-6 relative rounded-full overflow-hidden">
-                <UserIcon 
-                  iconUrl={userData?.iconInfo?.iconUrl || iconUrl}
-                  level={userLevel}
-                  size={24}
-                  alt={userData?.iconInfo?.iconName || iconName || '프로필 이미지'}
-                  className="object-cover"
-                />
-              </div>
-              <span className="text-sm">{userData.nickname || '사용자'}</span>
-              <FontAwesomeIcon icon={faChevronDown} className="h-3 w-3" />
-            </button>
-
-            {/* 드롭다운 메뉴 */}
-            {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border z-50">
-                <div className="py-1">
-                  <Link
-                    href="/settings/profile"
-                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    onClick={() => setIsDropdownOpen(false)}
-                  >
-                    <FontAwesomeIcon icon={faUser} className="h-4 w-4 mr-2" />
-                    프로필 설정
-                  </Link>
-                  <Link
-                    href="/settings"
-                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    onClick={() => setIsDropdownOpen(false)}
-                  >
-                    <FontAwesomeIcon icon={faCog} className="h-4 w-4 mr-2" />
-                    설정
-                  </Link>
-                  <button
-                    data-testid="logout-button"
-                    onClick={handleLogout}
-                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    <FontAwesomeIcon icon={faSignOutAlt} className="h-4 w-4 mr-2" />
-                    로그아웃
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="hidden md:flex space-x-2">
-            <Link
-              href="/signin"
-              className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
-            >
-              로그인
-            </Link>
-            <Link
-              href="/signup"
-              className="px-3 py-2 text-sm font-medium bg-slate-800 text-white rounded hover:bg-slate-700"
-            >
-              회원가입
-            </Link>
-          </div>
-        )}
+        {/* PC 버전(md 이상): UserProfileClient 사용 */}
+        <UserProfileClient userData={userData || null} />
         
         {/* 모바일 버전(md 미만): 프로필 사이드바 트리거 */}
         <div className="md:hidden">
@@ -473,7 +343,7 @@ export default function HeaderClient({
         </div>
       </div>
     );
-  }, [userData, iconUrl, iconName, userLevel, isDropdownOpen, toggleDropdown, handleLogout, onProfileClick]);
+  }, [userData, iconUrl, userLevel, onProfileClick]);
 
   return (
     <header className="sticky top-0 z-50 border-b shadow-sm bg-white">

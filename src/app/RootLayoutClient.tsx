@@ -9,7 +9,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from '@/shared/context/AuthContext';
 import { IconProvider } from '@/shared/context/IconContext';
 import AuthStateManager from '@/shared/components/AuthStateManager';
-
+import { HeaderUserData } from '@/domains/layout/types/header';
+import { Board } from '@/domains/layout/types/board';
 
 import { Session } from '@supabase/supabase-js';
 
@@ -19,6 +20,9 @@ interface RootLayoutClientProps {
   rightSidebar: React.ReactNode;
   authSection: React.ReactNode;
   leagueStandingsComponent: React.ReactNode;
+  headerUserData?: HeaderUserData | null;
+  headerBoards?: Board[];
+  headerIsAdmin?: boolean;
   initialIconUrl?: string;
   initialIconName?: string;
   initialSession?: Session | null;
@@ -30,6 +34,9 @@ export default function RootLayoutClient({
   rightSidebar,
   authSection,
   leagueStandingsComponent,
+  headerUserData,
+  headerBoards,
+  headerIsAdmin,
   initialIconUrl = '',
   initialIconName = '',
   initialSession = null
@@ -152,6 +159,9 @@ export default function RootLayoutClient({
               boardNavigation={boardNavigation}
               leagueStandingsComponent={leagueStandingsComponent}
               rightSidebar={rightSidebar}
+              headerUserData={headerUserData}
+              headerBoards={headerBoards}
+              headerIsAdmin={headerIsAdmin}
               isOpen={deferredIsOpen}
               onClose={closeSidebar}
               isProfileOpen={deferredIsProfileOpen}

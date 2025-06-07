@@ -298,14 +298,14 @@ export function AuthProvider({
         
         setTimeUntilLogout(null);
         
-        // 서버 액션을 통한 로그아웃 (백그라운드에서 처리)
+        // 백그라운드에서 서버 로그아웃 처리
         await signOut();
         
         // 토스트 알림 표시
         toast.info('장시간 미사용으로 자동 로그아웃됩니다.');
         
-        // 토스트 알림이 표시될 시간을 기다린 후 페이지 새로고침
-        // 상태 변경 없이 바로 페이지 이동으로 처리
+        // 토스트 표시 후 페이지 새로고침 (상태 변경 없이)
+        // 헤더와 사이드바 모두 새로고침 시에만 로그아웃 상태로 변경됨
         setTimeout(() => {
           window.location.href = '/';
         }, 1500);
