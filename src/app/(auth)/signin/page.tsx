@@ -72,9 +72,11 @@ function LoginContent() {
       // 성공 메시지 표시
       toast.success('로그인되었습니다.');
       
-      // 로그인 성공 후 즉시 리다이렉션 (딜레이 없이)
+      // 로그인 성공 후 페이지 새로고침으로 AuthContext 업데이트 보장
       if (redirectUrl && redirectUrl !== window.location.pathname) {
-        router.replace(redirectUrl);
+        window.location.href = redirectUrl;
+      } else {
+        window.location.reload();
       }
       
     } catch (error: unknown) {

@@ -7,13 +7,11 @@ import { Header } from '@/domains/layout';
 import Footer from '@/shared/components/Footer';
 import Sidebar from '@/domains/sidebar/components/Sidebar';
 import ProfileSidebar from '@/domains/sidebar/components/ProfileSidebar';
-import { HeaderUserData } from '@/domains/layout/types/header';
-import { Board } from '@/domains/layout/types/board';
+
 
 // AuthStateManager를 React.memo로 최적화
 const AuthStateManager = React.memo(function AuthStateManager({
   children,
-  headerUserData,
   authSection,
   boardNavigation,
   leagueStandingsComponent,
@@ -22,11 +20,9 @@ const AuthStateManager = React.memo(function AuthStateManager({
   onClose,
   isProfileOpen,
   onProfileClose,
-  onProfileClick,
-  boardsData
+  onProfileClick
 }: {
   children: React.ReactNode,
-  headerUserData?: HeaderUserData | null,
   authSection: React.ReactNode,
   boardNavigation: React.ReactNode,
   leagueStandingsComponent: React.ReactNode,
@@ -35,8 +31,7 @@ const AuthStateManager = React.memo(function AuthStateManager({
   onClose: () => void,
   isProfileOpen: boolean,
   onProfileClose: () => void,
-  onProfileClick: () => void,
-  boardsData: Board[]
+  onProfileClick: () => void
 }) {
   const { user } = useAuth();
   const pathname = usePathname();
@@ -54,9 +49,6 @@ const AuthStateManager = React.memo(function AuthStateManager({
     <div className="flex flex-col min-h-screen w-full">
       <Header
         onProfileClick={onProfileClick}
-        isSidebarOpen={isOpen}
-        userData={headerUserData}
-        boards={boardsData}
       />
       <div className="flex flex-1 w-full md:max-w-screen-2xl md:mx-auto">
         <Sidebar 

@@ -6,12 +6,10 @@ import { Session, User } from '@supabase/supabase-js';
 import { updateUserData, refreshSession, signOut } from '@/domains/auth/actions';
 import { toast } from 'react-toastify';
 
-// 세션 갱신 주기 (15분)
-const SESSION_REFRESH_INTERVAL = 15 * 60 * 1000;
-// 자동 로그아웃 시간 (30분)
-const AUTO_LOGOUT_TIME = 30 * 60 * 1000;
-// 세션 만료 경고 시간 (5분 전)
-const SESSION_WARNING_TIME = 5 * 60 * 1000;
+// 테스트용 설정 - 10초 후 자동 로그아웃
+const SESSION_REFRESH_INTERVAL = 5 * 1000; // 5초마다 갱신
+const AUTO_LOGOUT_TIME = 10 * 1000; // 10초 후 자동 로그아웃
+const SESSION_WARNING_TIME = 5 * 1000; // 5초 전 경고 (로그인 후 5초에 경고)
 // 기본 JWT 만료 시간 (1시간) - fallback용
 const DEFAULT_JWT_EXPIRY = 60 * 60;
 
@@ -49,6 +47,8 @@ export function AuthProvider({
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(initialSession);
   const [isLoading, setIsLoading] = useState(true);
+  
+
   const [timeUntilLogout, setTimeUntilLogout] = useState<number | null>(null);
   
   const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -94,12 +94,15 @@ export function AuthProvider({
   // 세션 연장 함수
   const extendSession = useCallback(() => {
     updateLastActivity();
-    toast.success('세션이 연장되었습니다.');
+    toast.info('세션이 연장되었습니다.');
   }, [updateLastActivity]);
   
   // 로그아웃 함수
   const logoutUser = useCallback(async () => {
     try {
+      // 세션 경고 토스트 닫기
+      toast.dismiss('session-warning');
+      
       // 모든 타이머 정리
       if (refreshTimerRef.current) {
         clearTimeout(refreshTimerRef.current);
@@ -242,20 +245,28 @@ export function AuthProvider({
           }
         }, 1000);
         
-        toast.warning(
+        // 세션 경고 토스트 (프로그레스 바와 함께)
+        toast.info(
           <div>
-            <p>5분 후 자동 로그아웃됩니다.</p>
+            <p>5초 후 자동 로그아웃됩니다. (테스트 모드)</p>
             <button 
-              onClick={() => extendSessionRef.current?.()}
+              onClick={() => {
+                extendSessionRef.current?.();
+                toast.dismiss('session-warning'); // 세션 연장 시 토스트 닫기
+              }}
               className="mt-2 px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
             >
               세션 연장
             </button>
           </div>,
           {
-            autoClose: false,
+            toastId: 'session-warning', // 고유 ID 설정
+            autoClose: SESSION_WARNING_TIME, // 5초 후 자동 닫기
             closeOnClick: false,
             draggable: false,
+            hideProgressBar: false, // 프로그레스 바 표시
+            pauseOnHover: false, // 호버 시 일시정지 비활성화
+            pauseOnFocusLoss: false, // 포커스 잃을 때 일시정지 비활성화
           }
         );
       }
@@ -263,9 +274,43 @@ export function AuthProvider({
     
     // 자동 로그아웃 타이머 (30분 후)
     autoLogoutTimerRef.current = setTimeout(async () => {
-      toast.info('장시간 미사용으로 자동 로그아웃됩니다.');
-      if (logoutUserRef.current) {
-        await logoutUserRef.current();
+      try {
+        // 세션 경고 토스트 닫기
+        toast.dismiss('session-warning');
+        
+        // 모든 타이머 정리
+        if (refreshTimerRef.current) {
+          clearTimeout(refreshTimerRef.current);
+          refreshTimerRef.current = null;
+        }
+        if (autoLogoutTimerRef.current) {
+          clearTimeout(autoLogoutTimerRef.current);
+          autoLogoutTimerRef.current = null;
+        }
+        if (warningTimerRef.current) {
+          clearTimeout(warningTimerRef.current);
+          warningTimerRef.current = null;
+        }
+        if (countdownTimerRef.current) {
+          clearInterval(countdownTimerRef.current);
+          countdownTimerRef.current = null;
+        }
+        
+        setTimeUntilLogout(null);
+        
+        // 서버 액션을 통한 로그아웃 (백그라운드에서 처리)
+        await signOut();
+        
+        // 토스트 알림 표시
+        toast.info('장시간 미사용으로 자동 로그아웃됩니다.');
+        
+        // 토스트 알림이 표시될 시간을 기다린 후 페이지 새로고침
+        // 상태 변경 없이 바로 페이지 이동으로 처리
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1500);
+      } catch (error) {
+        console.error('자동 로그아웃 중 오류:', error);
       }
     }, AUTO_LOGOUT_TIME);
   }, []);
@@ -427,10 +472,14 @@ export function AuthProvider({
         // 현재 사용자 인증 확인 (보안 강화) - 초기 세션이 있어도 검증
         const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
         
+
+        
         if (mounted) {
           if (!userError && currentUser) {
             // 인증된 사용자가 있는 경우에만 세션 정보 가져오기
             const { data: { session: currentSession } } = await supabase.auth.getSession();
+            
+
             
             setUser(currentUser);
             setSession(currentSession || initialSession);
@@ -446,6 +495,7 @@ export function AuthProvider({
               setupAutoLogoutTimerRef.current();
             }
           } else {
+
             setUser(null);
             setSession(null);
           }
@@ -467,6 +517,8 @@ export function AuthProvider({
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
+        
+
         
         if (event === 'SIGNED_IN' && session) {
           // 보안 강화: getUser()로 실제 인증 확인

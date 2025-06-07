@@ -102,7 +102,7 @@ export async function getBoardsForNavigation(): Promise<{
 }
 
 /**
- * 헤더에 표시할 사용자 정보를 가져오는 서버 액션
+ * 헤더에 표시할 사용자 정보를 가져오는 서버 액션 (사이드바와 동일한 패턴)
  */
 export async function getHeaderUserData(): Promise<HeaderUserData | null> {
   try {
@@ -111,51 +111,42 @@ export async function getHeaderUserData(): Promise<HeaderUserData | null> {
     
     if (!user) return null;
     
-    // 아이콘 정보를 서버에서 빠르게 가져오기
+    // 프로필 정보 조회
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('nickname, icon_id, level')
+      .eq('id', user.id)
+      .single();
+    
+    // 아이콘 정보 초기화
     const iconInfo = {
-      iconId: null as number | null,
       iconUrl: '',
       iconName: ''
     };
     
-    // 프로필 정보 조회 (is_admin 필드 포함)
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('nickname, icon_id, level, exp, is_admin')
-      .eq('id', user.id)
-      .single();
-    
+    // icon_id가 있으면 해당 아이콘 사용, null이면 레벨 아이콘 사용
     if (profile?.icon_id) {
-      iconInfo.iconId = profile.icon_id;
-      
-      // 아이콘 정보는 icon_purchases 테이블에서 조회하거나 기본값 사용
       try {
-        const { data: iconPurchase } = await supabase
-          .from('icon_purchases')
-          .select('shop_items(name, image_url)')
-          .eq('user_id', user.id)
-          .eq('item_id', profile.icon_id)
+        const { data: shopItem } = await supabase
+          .from('shop_items')
+          .select('name, image_url')
+          .eq('id', profile.icon_id)
           .single();
           
-        if (iconPurchase?.shop_items) {
-          const shopItem = iconPurchase.shop_items as { name?: string; image_url?: string };
+        if (shopItem) {
           iconInfo.iconUrl = shopItem.image_url || '';
-          iconInfo.iconName = shopItem.name || '기본 아이콘';
+          iconInfo.iconName = shopItem.name || '프로필 아이콘';
         }
       } catch (iconError) {
-        console.log('아이콘 정보 조회 실패, 기본값 사용:', iconError);
-        // 아이콘 정보를 가져올 수 없는 경우 기본값 유지
+        console.log('아이콘 정보 조회 실패 - 레벨 아이콘 사용:', iconError);
+        // 조회 실패 시 iconInfo는 빈 상태로 유지 (레벨 아이콘 사용)
       }
     }
     
-    // 기본 사용자 데이터 구성
+    // 기본 사용자 데이터 구성 (새로운 타입에 맞게)
     const userData: HeaderUserData = {
       id: user.id,
-      email: user.email || '',
       nickname: profile?.nickname || user.user_metadata?.nickname || '사용자',
-      isAdmin: profile?.is_admin === true || 
-               user.user_metadata?.role === 'admin' || 
-               user.email === process.env.ADMIN_EMAIL,
       level: profile?.level || user.user_metadata?.level || 1,
       iconInfo
     };

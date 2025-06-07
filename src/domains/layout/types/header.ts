@@ -1,18 +1,15 @@
 /**
  * 헤더 컴포넌트에서 사용하는 사용자 데이터 타입
  */
-export type HeaderUserData = {
+export interface HeaderUserData {
   id: string;
-  email: string;
-  nickname?: string;
-  isAdmin?: boolean;
-  level?: number;
+  nickname: string;
+  level: number;
   iconInfo: {
-    iconId: number | null;
     iconUrl: string;
-    iconName: string;
+    iconName?: string;
   };
-};
+}
 
 /**
  * 헤더 컴포넌트 기본 속성

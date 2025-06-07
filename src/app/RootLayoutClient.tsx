@@ -9,9 +9,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from '@/shared/context/AuthContext';
 import { IconProvider } from '@/shared/context/IconContext';
 import AuthStateManager from '@/shared/components/AuthStateManager';
-import SessionWarning from '@/shared/components/SessionWarning';
-import { HeaderUserData } from '@/domains/layout/types/header';
-import { Board } from '@/domains/layout/types/board';
+
+
 import { Session } from '@supabase/supabase-js';
 
 interface RootLayoutClientProps {
@@ -20,10 +19,8 @@ interface RootLayoutClientProps {
   rightSidebar: React.ReactNode;
   authSection: React.ReactNode;
   leagueStandingsComponent: React.ReactNode;
-  headerUserData?: HeaderUserData | null;
   initialIconUrl?: string;
   initialIconName?: string;
-  boardsData: Board[];
   initialSession?: Session | null;
 }
 
@@ -33,10 +30,8 @@ export default function RootLayoutClient({
   rightSidebar,
   authSection,
   leagueStandingsComponent,
-  headerUserData,
   initialIconUrl = '',
   initialIconName = '',
-  boardsData,
   initialSession = null
 }: RootLayoutClientProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -153,7 +148,6 @@ export default function RootLayoutClient({
             children
           ) : (
             <AuthStateManager 
-              headerUserData={headerUserData}
               authSection={authSection}
               boardNavigation={boardNavigation}
               leagueStandingsComponent={leagueStandingsComponent}
@@ -163,14 +157,12 @@ export default function RootLayoutClient({
               isProfileOpen={deferredIsProfileOpen}
               onProfileClose={closeProfileSidebar}
               onProfileClick={toggleProfileSidebar}
-              boardsData={boardsData}
             >
               {children}
             </AuthStateManager>
           )}
             
           <ToastContainer {...toastConfig} />
-          <SessionWarning />
         </IconProvider>
       </AuthProvider>
       <ReactQueryDevtools initialIsOpen={false} />

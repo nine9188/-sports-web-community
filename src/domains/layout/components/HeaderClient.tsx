@@ -19,9 +19,10 @@ import LiveScoreModal from './LiveScoreModal';
 type HeaderClientProps = {
   onProfileClick: () => void;
   isSidebarOpen: boolean;
-  initialUserData: HeaderUserData | null;
+  initialUserData?: HeaderUserData | null;
   boards: Board[];
   isAdmin?: boolean;
+  renderMode?: 'full' | 'logo-and-mobile' | 'navigation';
 };
 
 // 모바일 햄버거 메뉴 모달 컴포넌트
@@ -276,40 +277,37 @@ export default function HeaderClient({
   const [isLiveScoreOpen, setIsLiveScoreOpen] = useState(false);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const { user, logoutUser } = useAuth();
-  const { iconUrl, iconName, refreshUserIcon } = useIcon();
+  const { iconUrl, iconName, updateUserIconState } = useIcon();
   
   // 이전 userData 상태 유지 (깜빡임 방지)
-  const [userData, setUserData] = useState<HeaderUserData | null>(initialUserData);
+  const [userData, setUserData] = useState<HeaderUserData | null>(initialUserData || null);
   
   // 사용자 레벨 기반 기본 아이콘 URL
   const userLevel = userData?.level || 1;
   
-  // 초기 데이터가 없더라도 user 객체가 있으면 기본 데이터 설정
+  // 인증 상태 변화 감지 및 userData 동기화 (사이드바와 완전히 동일한 패턴)
   useEffect(() => {
-    if (!userData && user) {
-      const nickname = user.user_metadata?.nickname || '사용자';
-      setUserData({
-        id: user.id,
-        email: user.email || '',
-        nickname: nickname,
-        level: user.user_metadata?.level || 1,
-        iconInfo: {
-          iconId: null,
-          iconUrl: '',
-          iconName: ''
-        }
-      });
-    } else if (initialUserData && !userData) {
-      setUserData(initialUserData);
-    }
-  }, [userData, user, initialUserData]);
+    const fetchUserData = async () => {
+      // 이미 서버 데이터가 있거나 로그인되지 않은 경우 건너뛰기 (사이드바와 동일)
+      if (userData || !user) return;
+      
+      // 사용자가 로그인되었고 초기 데이터가 있는 경우에만 설정
+      if (user && !userData && initialUserData) {
+        setUserData(initialUserData);
+      }
+    };
+    
+    fetchUserData();
+  }, [user, userData, initialUserData]);
   
-  // 아이콘 정보 초기화
+  // 아이콘 정보 초기화 - 사이드바 패턴 적용 (안정화)
   useEffect(() => {
-    if (user && (!iconUrl || !iconName)) {
-      refreshUserIcon();
+    // 서버 데이터에 아이콘 정보가 있고 전역 상태가 비어있는 경우에만 설정
+    if (userData?.iconInfo?.iconUrl && !iconUrl) {
+      updateUserIconState(userData.iconInfo.iconUrl, userData.iconInfo.iconName || '');
     }
-  }, [user, iconUrl, iconName, refreshUserIcon]);
+    // 그 외의 경우 refreshUserIcon 호출하지 않음 (깜빡임 방지)
+  }, [userData?.iconInfo?.iconUrl, userData?.iconInfo?.iconName, iconUrl, updateUserIconState]);
   
   // 드롭다운 메뉴 토글
   const toggleDropdown = useCallback((e: React.MouseEvent) => {
@@ -330,7 +328,7 @@ export default function HeaderClient({
     toggleMobileMenu();
   }, [toggleMobileMenu]);
 
-  // 로그아웃 처리 - AuthContext의 logoutUser 사용
+  // 로그아웃 처리 - 사이드바와 동일한 패턴 적용
   const handleLogout = useCallback(async () => {
     try {
       // 드롭다운 닫기
@@ -339,18 +337,18 @@ export default function HeaderClient({
       // AuthContext의 logoutUser 함수 사용
       await logoutUser();
       
-      // 로컬 상태 초기화
-      setUserData(null);
+      // 아이콘 상태 초기화 (사이드바와 동일)
+      updateUserIconState('', '');
       
       toast.success('로그아웃되었습니다.');
       
       // 확실한 페이지 새로고침을 위해 window.location 사용
       window.location.href = '/';
     } catch (error) {
-      console.error('로그아웃 오류:', error);
+      console.error('로그아웃 중 오류 발생:', error);
       toast.error('로그아웃 중 오류가 발생했습니다.');
     }
-  }, [logoutUser]);
+  }, [logoutUser, updateUserIconState]);
 
   // 드롭다운 메뉴 닫기 (외부 클릭 감지)
   useEffect(() => {
@@ -369,6 +367,8 @@ export default function HeaderClient({
     setIsLiveScoreOpen(!isLiveScoreOpen);
   }, [isLiveScoreOpen]);
 
+
+
   // 인증 상태에 따른 렌더링 결정
   const renderAuthState = useMemo(() => {
     return (
@@ -383,10 +383,10 @@ export default function HeaderClient({
             >
               <div className="w-6 h-6 relative rounded-full overflow-hidden">
                 <UserIcon 
-                  iconUrl={iconUrl || userData?.iconInfo?.iconUrl}
+                  iconUrl={userData?.iconInfo?.iconUrl || iconUrl}
                   level={userLevel}
                   size={24}
-                  alt={iconName || userData?.iconInfo?.iconName || '프로필 이미지'}
+                  alt={userData?.iconInfo?.iconName || iconName || '프로필 이미지'}
                   className="object-cover"
                 />
               </div>
@@ -453,7 +453,7 @@ export default function HeaderClient({
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               <UserIcon 
-                iconUrl={iconUrl || userData?.iconInfo?.iconUrl}
+                iconUrl={userData?.iconInfo?.iconUrl || iconUrl}
                 level={userLevel}
                 size={24}
                 alt="프로필 이미지"

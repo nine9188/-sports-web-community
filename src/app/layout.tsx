@@ -1,7 +1,7 @@
 import './globals.css';
 import { Inter } from 'next/font/google';
 import RootLayoutClient from './RootLayoutClient';
-import { getHeaderUserData, getBoardsForNavigation } from '@/domains/layout/actions';
+
 import BoardNavigation from '@/domains/sidebar/components/board/BoardNavigation';
 import AuthSection from '@/domains/sidebar/components/auth/AuthSection';
 import { fetchStandingsData } from '@/domains/sidebar/actions/football';
@@ -61,12 +61,6 @@ export default async function RootLayout({
   // 서버에서 초기 세션 가져오기 (SSR 지원)
   const initialSession = await getInitialSession();
   
-  // 헤더 컴포넌트를 위한 사용자 데이터 가져오기
-  const headerUserData = await getHeaderUserData();
-  
-  // 게시판 데이터 가져오기 (헤더 네비게이션용)
-  const boardsResult = await getBoardsForNavigation();
-  
   // AuthSection 컴포넌트 생성 - 이제 서버 컴포넌트이므로 props 불필요
   const authSection = <AuthSection />;
   
@@ -95,8 +89,6 @@ export default async function RootLayout({
           }
           authSection={authSection}
           leagueStandingsComponent={leagueStandingsComponent}
-          headerUserData={headerUserData}
-          boardsData={boardsResult.boardData || []}
           initialSession={initialSession}
         >
           {children}

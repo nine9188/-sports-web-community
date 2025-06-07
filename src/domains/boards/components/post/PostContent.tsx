@@ -67,12 +67,30 @@ export default function PostContent({ content }: PostContentProps) {
   const processContent = () => {
     if (!content) return '';
     
-    // 이미 문자열인 경우 그대로 반환 (기존 HTML 내용)
+    // 문자열인 경우 JSON 파싱 시도
     if (typeof content === 'string') {
-      return content;
+      // JSON 형태인지 확인 (TipTap JSON)
+      if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
+        try {
+          const parsedContent = JSON.parse(content);
+          console.log('🔍 JSON 파싱 성공:', parsedContent);
+          
+          // 파싱된 객체를 처리
+          return processObjectContent(parsedContent);
+        } catch (error) {
+          console.warn('JSON 파싱 실패, 문자열로 처리:', error);
+          return content; // 파싱 실패시 원본 문자열 반환
+        }
+      }
+      return content; // 일반 HTML 문자열
     }
     
-    // 객체인 경우 JSON 구조를 HTML로 변환
+    // 객체인 경우 처리
+    return processObjectContent(content);
+  };
+
+  // 객체 콘텐츠를 HTML로 변환하는 함수
+  const processObjectContent = (content: TipTapDoc | RssPost | Record<string, unknown>) => {
     if (typeof content === 'object') {
       try {
         // RSS 게시글인지 확인 (source_url 필드가 있는 경우가 많음)
@@ -123,27 +141,89 @@ export default function PostContent({ content }: PostContentProps) {
         if ('type' in content && content.type === 'doc' && 'content' in content && Array.isArray((content as TipTapDoc).content)) {
           const tipTapDoc = content as TipTapDoc;
           
-          tipTapDoc.content.forEach((node) => {
-            if (node.type === 'paragraph' && Array.isArray(node.content)) {
-              htmlContent += '<p>';
-              node.content.forEach((textNode) => {
+          console.log('🔍 TipTap 문서 처리 중:', tipTapDoc);
+          
+          tipTapDoc.content.forEach((node, nodeIndex) => {
+            console.log(`📝 노드 ${nodeIndex}:`, node);
+            
+            if (node.type === 'image' && node.attrs && node.attrs.src) {
+              // 이미지 노드 처리 (paragraph보다 먼저)
+              console.log('🖼️ 이미지 노드 발견:', node.attrs.src);
+              htmlContent += `
+                <div class="my-6 text-center">
+                  <img 
+                    src="${node.attrs.src}" 
+                    alt="${node.attrs.alt || '기사 이미지'}" 
+                    title="${node.attrs.title || ''}"
+                    class="max-w-full h-auto mx-auto rounded-lg shadow-md"
+                    style="max-height: 500px; object-fit: contain;"
+                    onerror="this.onerror=null;this.style.display='none';"
+                  />
+                </div>
+              `;
+            } else if (node.type === 'paragraph' && Array.isArray(node.content)) {
+              htmlContent += '<p class="mb-4 leading-relaxed">';
+              node.content.forEach((textNode, textIndex) => {
+                console.log(`📄 텍스트 노드 ${textIndex}:`, textNode);
+                
                 if (textNode.type === 'text') {
+                  let textContent = textNode.text || '';
+                  
                   if (textNode.marks && textNode.marks.length > 0) {
                     // 링크 처리
                     const linkMark = textNode.marks.find((mark) => mark.type === 'link');
                     if (linkMark && linkMark.attrs && linkMark.attrs.href) {
-                      htmlContent += `<a href="${linkMark.attrs.href}" target="${linkMark.attrs.target || '_blank'}" rel="${linkMark.attrs.rel || 'noopener noreferrer'}">${textNode.text}</a>`;
+                      console.log('🔗 링크 발견:', linkMark.attrs.href);
+                      htmlContent += `<a href="${linkMark.attrs.href}" target="${linkMark.attrs.target || '_blank'}" rel="${linkMark.attrs.rel || 'noopener noreferrer'}" class="text-blue-600 hover:text-blue-800 underline">${textContent}</a>`;
                     } else {
-                      htmlContent += textNode.text;
+                      // 다른 마크 처리 (볼드, 이탤릭 등)
+                      const boldMark = textNode.marks.find((mark) => mark.type === 'bold');
+                      const italicMark = textNode.marks.find((mark) => mark.type === 'italic');
+                      
+                      if (boldMark) textContent = `<strong>${textContent}</strong>`;
+                      if (italicMark) textContent = `<em>${textContent}</em>`;
+                      
+                      htmlContent += textContent;
                     }
                   } else {
-                    htmlContent += textNode.text;
+                    htmlContent += textContent;
                   }
+                } else if (textNode.type === 'image' && textNode.attrs && textNode.attrs.src) {
+                  // 문단 내 이미지 처리
+                  console.log('🖼️ 문단 내 이미지 발견:', textNode.attrs.src);
+                  htmlContent += `<img src="${textNode.attrs.src}" alt="${textNode.attrs.alt || ''}" class="inline-block max-w-full h-auto rounded" />`;
                 }
               });
               htmlContent += '</p>';
-            } else if (node.type === 'image' && node.attrs && node.attrs.src) {
-              htmlContent += `<img src="${node.attrs.src}" alt="${node.attrs.alt || ''}" class="max-w-full mx-auto my-4 rounded-lg" />`;
+            } else if (node.type === 'heading' && Array.isArray(node.content)) {
+              const level = node.attrs?.level || 2;
+              htmlContent += `<h${level} class="font-bold text-lg mb-3 mt-6">`;
+              node.content.forEach((textNode) => {
+                if (textNode.type === 'text') {
+                  htmlContent += textNode.text || '';
+                }
+              });
+              htmlContent += `</h${level}>`;
+            } else if (node.type === 'bulletList' && Array.isArray(node.content)) {
+              htmlContent += '<ul class="list-disc list-inside mb-4">';
+              node.content.forEach((listItem) => {
+                if (listItem.type === 'listItem' && Array.isArray(listItem.content)) {
+                  htmlContent += '<li>';
+                  listItem.content.forEach((para) => {
+                    if (para.type === 'paragraph' && Array.isArray(para.content)) {
+                      para.content.forEach((textNode) => {
+                        if (textNode.type === 'text') {
+                          htmlContent += textNode.text || '';
+                        }
+                      });
+                    }
+                  });
+                  htmlContent += '</li>';
+                }
+              });
+              htmlContent += '</ul>';
+            } else {
+              console.log('❓ 알 수 없는 노드 타입:', node.type);
             }
           });
         } else {
