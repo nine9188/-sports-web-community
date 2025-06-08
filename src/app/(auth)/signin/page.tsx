@@ -69,10 +69,10 @@ function LoginContent() {
         document.cookie = "remember-user=true; max-age=1209600; path=/"; // 14일
       }
       
-      // 성공 메시지 표시
-      toast.success('로그인되었습니다.');
+      // 로그인 성공 플래그를 sessionStorage에 저장 (새로고침 후 토스트용)
+      sessionStorage.setItem('login-success', 'true');
       
-      // 로그인 성공 후 페이지 새로고침으로 AuthContext 업데이트 보장
+      // 로그인 성공 후 즉시 페이지 새로고침으로 AuthContext 업데이트 보장
       if (redirectUrl && redirectUrl !== window.location.pathname) {
         window.location.href = redirectUrl;
       } else {

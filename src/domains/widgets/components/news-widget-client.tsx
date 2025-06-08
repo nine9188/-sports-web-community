@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -20,8 +20,7 @@ interface NewsWidgetClientProps {
 type ImageLoadingState = 'loading' | 'loaded' | 'error' | 'timeout';
 
 export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps) {
-  const [news, setNews] = useState<NewsItem[]>(initialNews);
-  const [isLoading, setIsLoading] = useState(false);
+  const [news] = useState<NewsItem[]>(initialNews);
   const [imageStates, setImageStates] = useState<Record<string, ImageLoadingState>>({});
 
   // 이미지 로딩 상태 관리
@@ -45,30 +44,6 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
 
   const handleImageError = useCallback((id: string) => {
     setImageStates(prev => ({ ...prev, [id]: 'error' }));
-  }, []);
-
-  // 백그라운드에서 뉴스 업데이트 (5분마다)
-  useEffect(() => {
-    const updateNews = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch('/api/news');
-        if (response.ok) {
-          const newNews = await response.json();
-          setNews(newNews);
-        }
-      } catch (error) {
-        console.error('뉴스 업데이트 실패:', error);
-        // 에러 발생 시 기존 데이터 유지
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    // 5분마다 업데이트
-    const interval = setInterval(updateNews, 5 * 60 * 1000);
-    
-    return () => clearInterval(interval);
   }, []);
 
   // 날짜 포맷팅
@@ -127,16 +102,6 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
   };
 
   // 뉴스 없음 상태
-  if (isLoading) {
-    return (
-      <div className="mb-4">
-        <div className="flex justify-center items-center h-48">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
-      </div>
-    );
-  }
-
   if (!news.length) {
     return (
       <div className="mb-1">

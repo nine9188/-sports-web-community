@@ -6,10 +6,10 @@ import { Session, User } from '@supabase/supabase-js';
 import { updateUserData, refreshSession, signOut } from '@/domains/auth/actions';
 import { toast } from 'react-toastify';
 
-// 테스트용 설정 - 10초 후 자동 로그아웃
-const SESSION_REFRESH_INTERVAL = 5 * 1000; // 5초마다 갱신
-const AUTO_LOGOUT_TIME = 10 * 1000; // 10초 후 자동 로그아웃
-const SESSION_WARNING_TIME = 5 * 1000; // 5초 전 경고 (로그인 후 5초에 경고)
+// 실제 운영용 설정 - 30분 후 자동 로그아웃
+const SESSION_REFRESH_INTERVAL = 5 * 60 * 1000; // 5분마다 갱신
+const AUTO_LOGOUT_TIME = 30 * 60 * 1000; // 30분 후 자동 로그아웃
+const SESSION_WARNING_TIME = 5 * 60 * 1000; // 5분 전 경고
 // 기본 JWT 만료 시간 (1시간) - fallback용
 const DEFAULT_JWT_EXPIRY = 60 * 60;
 
@@ -248,7 +248,7 @@ export function AuthProvider({
         // 세션 경고 토스트 (프로그레스 바와 함께)
         toast.info(
           <div>
-            <p>5초 후 자동 로그아웃됩니다. (테스트 모드)</p>
+            <p>5분 후 자동 로그아웃됩니다.</p>
             <button 
               onClick={() => {
                 extendSessionRef.current?.();
@@ -261,7 +261,7 @@ export function AuthProvider({
           </div>,
           {
             toastId: 'session-warning', // 고유 ID 설정
-            autoClose: SESSION_WARNING_TIME, // 5초 후 자동 닫기
+            autoClose: SESSION_WARNING_TIME, // 5분 후 자동 닫기
             closeOnClick: false,
             draggable: false,
             hideProgressBar: false, // 프로그레스 바 표시
@@ -351,6 +351,20 @@ export function AuthProvider({
       });
     };
   }, [user, updateLastActivity]);
+  
+  // 로그인 성공 토스트 처리
+  useEffect(() => {
+    // 로딩이 완료되고 사용자가 로그인된 상태에서만 체크
+    if (!isLoading && user) {
+      const loginSuccess = sessionStorage.getItem('login-success');
+      if (loginSuccess === 'true') {
+        // sessionStorage에서 플래그 제거
+        sessionStorage.removeItem('login-success');
+        // 토스트 표시
+        toast.success('로그인되었습니다.');
+      }
+    }
+  }, [isLoading, user]);
   
   // 아이콘 업데이트 함수
   const updateIcon = useCallback(async (iconId: number): Promise<boolean> => {
