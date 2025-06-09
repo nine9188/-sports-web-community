@@ -5,10 +5,13 @@ import { formatDistanceToNow } from 'date-fns'
 import { ko } from 'date-fns/locale'
 // SVG 아이콘을 직접 사용
 import UserIcon from '@/shared/components/UserIcon'
-import type { SearchResult } from '../types'
+import type { PostSearchResult, CommentSearchResult } from '../types'
+
+// 🔧 통합 검색 결과 타입 정의
+type SearchResultItem = PostSearchResult | CommentSearchResult
 
 interface SearchResultsProps {
-  results: SearchResult[]
+  results: SearchResultItem[]
   query: string
   isLoading?: boolean
   totalResults?: number
@@ -78,12 +81,57 @@ export default function SearchResults({
 }
 
 interface SearchResultRowProps {
-  result: SearchResult
+  result: SearchResultItem
   query: string
 }
 
 function SearchResultRow({ result, query }: SearchResultRowProps) {
-  const { metadata } = result
+  // 🔧 타입 가드를 사용하여 PostSearchResult인지 CommentSearchResult인지 구분
+  const isPost = 'title' in result && 'post_number' in result
+  const isComment = 'post_id' in result && !('post_number' in result)
+
+  // 🔧 공통 데이터 추출
+  const getResultData = () => {
+    if (isPost) {
+      const post = result as PostSearchResult
+      return {
+        title: post.title,
+        content: post.snippet || '',
+        url: `/boards/${post.boards?.slug || 'unknown'}/${post.post_number}`,
+        author: post.author_name || post.profiles?.nickname || '익명',
+        boardName: post.board_name || post.boards?.name || '게시판',
+        views: post.views || 0,
+        createdAt: post.created_at,
+        type: 'post' as const
+      }
+    } else if (isComment) {
+      const comment = result as CommentSearchResult
+      return {
+        title: comment.post_title || comment.posts?.title || '댓글',
+        content: comment.snippet || '',
+        url: `/boards/${comment.posts?.boards?.slug || 'unknown'}/${comment.posts?.post_number || 0}#comment-${comment.id}`,
+        author: comment.author_name || comment.profiles?.nickname || '익명',
+        boardName: comment.board_name || comment.posts?.boards?.name || '게시판',
+        views: 0, // 댓글은 조회수 없음
+        createdAt: comment.created_at,
+        type: 'comment' as const
+      }
+    }
+    
+    // 기본값
+    return {
+      title: '제목 없음',
+      content: '',
+      url: '#',
+      author: '익명',
+      boardName: '게시판',
+      views: 0,
+      createdAt: null,
+      type: 'post' as const
+    }
+  }
+
+  const data = getResultData()
 
   // 검색어 하이라이트 함수
   const highlightQuery = (text: string, searchQuery: string) => {
@@ -102,7 +150,7 @@ function SearchResultRow({ result, query }: SearchResultRowProps) {
   }
 
   // 날짜 포맷팅
-  const formatDate = (dateString?: string) => {
+  const formatDate = (dateString?: string | null) => {
     if (!dateString) return ''
     
     try {
@@ -118,26 +166,31 @@ function SearchResultRow({ result, query }: SearchResultRowProps) {
   return (
     <tr className="hover:bg-gray-50">
       <td className="px-6 py-4 whitespace-nowrap text-sm">
-        <Link href={result.url} className="block">
+        <Link href={data.url} className="block">
           <div className="font-medium text-gray-900 hover:text-blue-600 line-clamp-2">
-            {highlightQuery(result.title, query)}
+            {data.type === 'comment' && (
+              <span className="inline-block px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded mr-2">
+                댓글
+              </span>
+            )}
+            {highlightQuery(data.title, query)}
           </div>
-          {result.content && (
+          {data.content && (
             <div className="text-gray-600 text-xs mt-1 line-clamp-1">
-              {highlightQuery(result.content, query)}
+              {highlightQuery(data.content, query)}
             </div>
           )}
         </Link>
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
-        {metadata.boardName && (
+        {data.boardName && (
           <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
-            {metadata.boardName}
+            {data.boardName}
           </span>
         )}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
-        {metadata.author && (
+        {data.author && (
           <div className="flex items-center space-x-1">
             <UserIcon 
               iconUrl={null}
@@ -145,15 +198,15 @@ function SearchResultRow({ result, query }: SearchResultRowProps) {
               size={16}
               className="w-4 h-4"
             />
-            <span>{metadata.author}</span>
+            <span>{data.author}</span>
           </div>
         )}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center hidden sm:table-cell">
-        {metadata.views !== undefined ? metadata.views.toLocaleString() : '-'}
+        {data.type === 'post' ? (data.views ? data.views.toLocaleString() : '-') : '-'}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
-        {formatDate(metadata.createdAt)}
+        {formatDate(data.createdAt)}
       </td>
     </tr>
   )

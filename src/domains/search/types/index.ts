@@ -1,27 +1,7 @@
-// 검색 관련 타입 정의
+// 검색 관련 타입 정의 (단순화)
 import { Json } from '@/shared/types/supabase'
 
-export interface SearchResult {
-  id: string
-  title: string
-  content?: string
-  url: string
-  score?: number
-  type: 'post' | 'comment' | 'news' | 'team' | 'match'
-  metadata: {
-    author?: string
-    authorId?: string
-    authorIconId?: number | null
-    boardName?: string
-    boardSlug?: string
-    createdAt?: string
-    views?: number
-    likes?: number
-    postNumber?: number
-    [key: string]: string | number | boolean | null | undefined
-  }
-}
-
+// 게시글 검색 결과 (서버 액션용)
 export interface PostSearchResult {
   id: string
   title: string
@@ -39,8 +19,13 @@ export interface PostSearchResult {
     name: string
     slug: string | null
   } | null
+  // 추가 필드 (서버에서 계산)
+  author_name?: string
+  board_name?: string
+  snippet?: string
 }
 
+// 댓글 검색 결과 (서버 액션용)
 export interface CommentSearchResult {
   id: string
   content: Json
@@ -60,30 +45,25 @@ export interface CommentSearchResult {
       slug: string | null
     } | null
   } | null
+  // 추가 필드 (서버에서 계산)
+  author_name?: string
+  post_title?: string
+  board_name?: string
+  snippet?: string
 }
 
-export interface SearchFilters {
-  type?: 'all' | 'posts' | 'comments' | 'news' | 'teams'
-  boardId?: string
-  dateRange?: {
-    from: string
-    to: string
-  }
-  sortBy?: 'relevance' | 'date' | 'views' | 'likes'
-}
-
-export interface SearchResponse {
-  query: string
-  totalResults: number
-  results: SearchResult[]
-  suggestions?: string[]
-  hasMore: boolean
-}
-
+// 검색 파라미터
 export interface SearchParams {
-  q?: string
-  type?: string
-  board?: string
-  sort?: string
-  page?: string
+  query: string
+  type?: 'all' | 'posts' | 'comments'
+  sortBy?: 'latest' | 'views' | 'likes'
+  limit?: number
+  offset?: number
+}
+
+// 검색 응답
+export interface SearchResponse {
+  posts: PostSearchResult[]
+  comments: CommentSearchResult[]
+  totalCount: number
 } 

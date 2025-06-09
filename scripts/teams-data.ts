@@ -1,3 +1,13 @@
+// ⚠️ 경고: 이 파일의 팀 ID 데이터는 부정확합니다!
+// 실제 API-Football 공식 데이터와 일치하지 않으므로 사용하지 마세요.
+// 대신 src/domains/livescore/constants/teams/ 디렉토리의 매핑을 사용하세요.
+// 
+// 예시: 분데스리가 실제 ID vs 이 파일의 잘못된 ID
+// - VfB Stuttgart: 실제 172 → 이 파일 160 ❌
+// - SC Freiburg: 실제 160 → 이 파일 174 ❌  
+// - RB Leipzig: 실제 173 → 이 파일 172 ❌
+// - FC Köln: 실제 192 → 이 파일 173 ❌
+
 // 리그별 팀 데이터 분리
 export const PREMIER_LEAGUE_TEAMS = [
   { id: 40, name: "Liverpool" },           // 리버풀

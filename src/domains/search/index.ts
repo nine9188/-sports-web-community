@@ -1,6 +1,5 @@
-// Search domain exports
-export { searchPosts, searchComments, searchAll } from './actions'
-export type * from './types'
-export { default as SearchPageContent } from './components/SearchPageContent'
+// Search domain exports (리팩토링됨)
+export * from './types'
+export * from './actions'
 export { default as SearchBar } from './components/SearchBar'
 export { default as SearchResults } from './components/SearchResults' 

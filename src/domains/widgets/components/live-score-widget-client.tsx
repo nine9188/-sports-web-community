@@ -39,8 +39,8 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
   // 🔧 성능 최적화: 초기 데이터로 즉시 렌더링
   const [matches, setMatches] = useState<EnhancedMatchData[]>(initialMatches);
   const [error, setError] = useState<string | null>(null);
-  const [isClient, setIsClient] = useState(false);
-  // 🔧 성능 최적화: 초기 로딩 상태 제거 (isLoading 제거)
+  // 🔧 Hydration 불일치 해결: isClient 제거
+  const [mounted, setMounted] = useState(false);
   
   // 🔧 슬라이딩 인덱스 상태 추가 (시작 인덱스)
   const [startIndex, setStartIndex] = useState(0);
@@ -55,14 +55,14 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
   const touchStartXRef = useRef<number | null>(null);
   const touchEndXRef = useRef<number | null>(null);
 
-  // 🔧 슬라이딩 계산 - 반응형
+  // 🔧 Hydration 불일치 해결: 서버 렌더링과 일치하도록 초기값 설정
   const [isMobile, setIsMobile] = useState(false);
   
   // 🔧 스와이프 힌트 상태 (처음에만 보여주기)
   const [showSwipeHint, setShowSwipeHint] = useState(true);
   
   // 🔧 오버레이 힌트 상태 (모바일 전용)
-  const [showOverlayHint, setShowOverlayHint] = useState(true);
+  const [showOverlayHint, setShowOverlayHint] = useState(false); // 🔧 초기값 false로 변경
   
   // 화면 크기에 따른 카드 수 결정
   const cardsToShow = isMobile ? 2 : 4;
@@ -137,16 +137,40 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
   const canSlideRight = startIndex < matches.length - cardsToShow;
   const showSlideButtons = matches.length > cardsToShow && !isMobile; // 🔧 데스크탑에서만 버튼 표시
 
-  // 🔧 클라이언트 렌더링 확인 - Hydration 불일치 방지
+  // 🔧 Hydration 불일치 해결: mounted 상태로 클라이언트 렌더링 확인
   useEffect(() => {
-    setIsClient(true);
-    // 🔧 성능 최적화: initialMatches는 이미 설정되어 있으므로 추가 설정 불필요
+    setMounted(true);
     setStartIndex(0); // 초기 인덱스 설정
   }, []);
 
+  // 🔧 화면 크기 감지 - mounted 후에만 실행
   useEffect(() => {
-    // 클라이언트에서만 데이터 갱신 실행
-    if (!isClient) return;
+    if (!mounted) return;
+    
+    const checkScreenSize = () => {
+      const newIsMobile = window.innerWidth < 768; // md breakpoint
+      setIsMobile(newIsMobile);
+      
+      // 🔧 모바일로 변경될 때만 오버레이 힌트 표시
+      if (newIsMobile && matches.length > 2) {
+        setShowOverlayHint(true);
+      }
+    };
+    
+    // 초기 설정
+    checkScreenSize();
+    
+    // 리사이즈 이벤트 리스너
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => {
+      window.removeEventListener('resize', checkScreenSize);
+    };
+  }, [mounted, matches.length]);
+
+  useEffect(() => {
+    // 🔧 mounted 후에만 데이터 갱신 실행
+    if (!mounted) return;
     
     // 5분마다 데이터 갱신
     const fetchLiveScores = async () => {
@@ -213,7 +237,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
           
           setMatches(filteredMatches);
           
-          // �� 데이터 업데이트 시 인덱스 범위 확인
+          // 🔧 데이터 업데이트 시 인덱스 범위 확인
           if (filteredMatches.length > 0 && startIndex >= filteredMatches.length) {
             setStartIndex(0);
           }
@@ -239,24 +263,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
     }, 5 * 60 * 1000);
     
     return () => clearInterval(interval);
-  }, [isClient, startIndex]);
-
-  // 🔧 화면 크기 감지
-  useEffect(() => {
-    const checkScreenSize = () => {
-      setIsMobile(window.innerWidth < 768); // md breakpoint
-    };
-    
-    // 초기 설정
-    checkScreenSize();
-    
-    // 리사이즈 이벤트 리스너
-    window.addEventListener('resize', checkScreenSize);
-    
-    return () => {
-      window.removeEventListener('resize', checkScreenSize);
-    };
-  }, []);
+  }, [mounted, startIndex]);
 
   // 🔧 화면 크기 변경 시 startIndex 조정
   useEffect(() => {
@@ -279,7 +286,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
     }
   }, [isMobile, showOverlayHint]);
 
-  // 경기 시간 포맷팅 함수
+  // 🔧 Hydration 불일치 해결: 경기 시간 포맷팅 함수 개선
   const formatMatchTime = (match: FootballMatchData) => {
     if (!match || !match.id || !match.status || !match.time) {
       return '-';
@@ -293,10 +300,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
           return '-';
         }
         
-        if (!isClient) {
-          return '예정';
-        }
-        
+        // 🔧 Hydration 불일치 해결: 서버/클라이언트 동일한 로직 사용
         const matchTime = new Date(match.time.date);
         
         if (isNaN(matchTime.getTime())) {
@@ -325,6 +329,42 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
       return '-';
     }
   };
+
+  // 🔧 Hydration 불일치 해결: mounted 전에는 기본 레이아웃만 렌더링
+  if (!mounted) {
+    return (
+      <div className="w-full mb-4 mt-4 md:mt-0">
+        <div className="flex gap-3 w-full">
+          {/* 기본 4개 카드 레이아웃 (서버 렌더링과 일치) */}
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div 
+              key={`skeleton-${index}`}
+              className="flex-1 min-w-0 border rounded-lg p-2 h-[140px] shadow-sm bg-gray-50 animate-pulse"
+            >
+              <div className="flex items-center gap-0.5 mb-1">
+                <div className="w-4 h-4 bg-gray-200 rounded-full"></div>
+                <div className="w-16 h-3 bg-gray-200 rounded"></div>
+              </div>
+              <div className="grid grid-cols-3 gap-1 h-[110px]">
+                <div className="flex flex-col items-center justify-center gap-0">
+                  <div className="w-10 h-10 bg-gray-200 rounded-full mb-0.5"></div>
+                  <div className="w-12 h-2 bg-gray-200 rounded"></div>
+                </div>
+                <div className="flex flex-col items-center justify-center gap-0.5">
+                  <div className="w-8 h-4 bg-gray-200 rounded"></div>
+                  <div className="w-10 h-3 bg-gray-200 rounded"></div>
+                </div>
+                <div className="flex flex-col items-center justify-center gap-0">
+                  <div className="w-10 h-10 bg-gray-200 rounded-full mb-0.5"></div>
+                  <div className="w-12 h-2 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full mb-4 mt-4 md:mt-0">

@@ -175,13 +175,13 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     logo: 'https://media.api-sports.io/football/teams/169.png'
   },
   {
-    id: 172, 
+    id: 173, 
     name_ko: 'RB 라이프치히',
     name_en: 'RB Leipzig',
     country_ko: '독일',
     country_en: 'Germany',
     code: 'RBL',
-    logo: 'https://media.api-sports.io/football/teams/172.png'
+    logo: 'https://media.api-sports.io/football/teams/173.png'
   },
   {
     id: 851, 

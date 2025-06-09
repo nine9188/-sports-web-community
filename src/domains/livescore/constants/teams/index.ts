@@ -124,11 +124,26 @@ export function getTeamById(id: number): TeamMapping | undefined {
 
 // 팀 이름으로 팀 검색하기 (모든 리그 대상)
 export function searchTeamsByName(name: string): TeamMapping[] {
-  const lowercaseName = name.toLowerCase();
-  return ALL_TEAMS.filter(team => 
-    team.name_ko.includes(name) || 
-    team.name_en.toLowerCase().includes(lowercaseName)
-  );
+  if (!name.trim()) return [];
+  
+  const searchTerm = name.trim().toLowerCase();
+  
+  return ALL_TEAMS.filter(team => {
+    // 한국어 이름 검색 (대소문자 구분 없음)
+    const koreanMatch = team.name_ko.toLowerCase().includes(searchTerm);
+    
+    // 영어 이름 검색 (대소문자 구분 없음)
+    const englishMatch = team.name_en.toLowerCase().includes(searchTerm);
+    
+    // 국가명 검색 (한국어/영어)
+    const countryKoMatch = team.country_ko?.toLowerCase().includes(searchTerm) || false;
+    const countryEnMatch = team.country_en?.toLowerCase().includes(searchTerm) || false;
+    
+    // 팀 코드 검색
+    const codeMatch = team.code?.toLowerCase().includes(searchTerm) || false;
+    
+    return koreanMatch || englishMatch || countryKoMatch || countryEnMatch || codeMatch;
+  });
 }
 
 // 리그 ID로 해당 리그의 모든 팀 가져오기
