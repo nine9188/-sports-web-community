@@ -3,6 +3,7 @@
 import type { SearchParams, SearchResponse, PostSearchResult, CommentSearchResult } from '../types'
 import { searchPosts } from './searchPosts'
 import { searchComments } from './searchComments'
+import { searchTeams, getPopularTeams, getTeamCountByLeague } from './searchTeams'
 
 /**
  * 통합 검색 서버 액션
@@ -58,4 +59,7 @@ export async function searchContent({
 export async function getSearchSuggestions(): Promise<string[]> {
   // TODO: 인기 검색어, 팀명 등을 기반으로 자동완성 구현
   return []
-} 
+}
+
+// 팀 검색 관련 함수들 re-export
+export { searchTeams, getPopularTeams, getTeamCountByLeague } 
