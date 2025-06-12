@@ -1,7 +1,11 @@
 'use client'
 
 import Image from 'next/image'
-import { TeamSearchResult } from '../actions/searchTeams'
+import Link from 'next/link'
+import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import type { TeamSearchResult } from '../types'
+import { getTeamMatches, type TeamMatch } from '../actions/teamMatches'
 
 interface TeamSearchResultsProps {
   teams: TeamSearchResult[]
@@ -10,6 +14,7 @@ interface TeamSearchResultsProps {
   isLoading?: boolean
   onLoadMore?: () => void
   onTeamSelect?: (team: TeamSearchResult) => void
+  showMoreButton?: boolean // 더보기 버튼 표시 여부
 }
 
 export default function TeamSearchResults({
@@ -18,8 +23,48 @@ export default function TeamSearchResults({
   hasMore,
   isLoading = false,
   onLoadMore,
-  onTeamSelect
+  onTeamSelect,
+  showMoreButton = true
 }: TeamSearchResultsProps) {
+  const searchParams = useSearchParams()
+  const query = searchParams?.get('q') || ''
+  const currentType = searchParams?.get('type') || 'all'
+  
+  // 확장된 팀 상태 관리
+  const [expandedTeamId, setExpandedTeamId] = useState<number | null>(null)
+  const [teamMatches, setTeamMatches] = useState<TeamMatch[]>([])
+  const [matchesLoading, setMatchesLoading] = useState(false)
+
+  const handleTeamClick = async (team: TeamSearchResult) => {
+    if (onTeamSelect) {
+      onTeamSelect(team)
+      return
+    }
+
+    // 이미 확장된 팀을 다시 클릭하면 접기
+    if (expandedTeamId === team.team_id) {
+      setExpandedTeamId(null)
+      setTeamMatches([])
+      return
+    }
+
+    // 새로운 팀 확장
+    setExpandedTeamId(team.team_id)
+    setMatchesLoading(true)
+    setTeamMatches([])
+
+    try {
+      const result = await getTeamMatches(team.team_id, 5) // 최근 5경기만
+      if (result.success) {
+        setTeamMatches(result.data)
+      }
+    } catch (error) {
+      console.error('매치 정보 로딩 실패:', error)
+    } finally {
+      setMatchesLoading(false)
+    }
+  }
+  
   if (isLoading && teams.length === 0) {
     return <TeamSearchSkeleton />
   }
@@ -66,18 +111,36 @@ export default function TeamSearchResults({
           </thead>
           <tbody className="divide-y divide-gray-200">
             {teams.map((team) => (
-              <TeamRow 
+              <TeamRowWithMatches 
                 key={team.team_id} 
                 team={team} 
-                onSelect={onTeamSelect}
+                onSelect={handleTeamClick}
+                isExpanded={expandedTeamId === team.team_id}
+                matches={expandedTeamId === team.team_id ? teamMatches : []}
+                matchesLoading={matchesLoading && expandedTeamId === team.team_id}
               />
             ))}
           </tbody>
+          {/* 더보기 버튼을 테이블 푸터로 추가 */}
+          {showMoreButton && currentType === 'all' && teams.length >= 5 && (
+            <tfoot>
+              <tr>
+                <td colSpan={5} className="px-6 py-3 border-t bg-gray-50">
+                  <Link
+                    href={`/search?q=${encodeURIComponent(query)}&type=teams`}
+                    className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                  >
+                    더 많은 팀 보기 →
+                  </Link>
+                </td>
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
 
-      {/* 더보기 버튼 */}
-      {hasMore && (
+      {/* 기존 더보기 버튼 (팀 탭에서만 사용) */}
+      {currentType === 'teams' && hasMore && (
         <div className="text-center pt-6">
           <button
             onClick={onLoadMore}
@@ -98,13 +161,19 @@ export default function TeamSearchResults({
   )
 }
 
-// 개별 팀 행 컴포넌트
-function TeamRow({ 
+// 매치 정보를 포함한 팀 행 컴포넌트
+function TeamRowWithMatches({ 
   team, 
-  onSelect 
+  onSelect,
+  isExpanded,
+  matches,
+  matchesLoading
 }: { 
   team: TeamSearchResult
-  onSelect?: (team: TeamSearchResult) => void 
+  onSelect?: (team: TeamSearchResult) => void
+  isExpanded: boolean
+  matches: TeamMatch[]
+  matchesLoading: boolean
 }) {
   const handleClick = () => {
     if (onSelect) {
@@ -113,79 +182,193 @@ function TeamRow({
   }
 
   return (
-    <tr 
-      className={`
-        hover:bg-gray-50 transition-colors
-        ${onSelect ? 'cursor-pointer' : ''}
-      `}
-      onClick={handleClick}
-    >
-      {/* 팀 정보 */}
-      <td className="px-4 py-4">
-        <div className="flex items-center space-x-3">
-          {team.logo_url ? (
-            <Image
-              src={team.logo_url}
-              alt={`${team.name} 로고`}
-              width={32}
-              height={32}
-              className="rounded object-contain"
-            />
-          ) : (
-            <div className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
-              <span className="text-gray-500 text-xs font-bold">
-                {team.code || team.name.charAt(0)}
-              </span>
+    <>
+      {/* 팀 정보 행 */}
+      <tr 
+        className={`
+          hover:bg-gray-50 transition-colors cursor-pointer
+          ${isExpanded ? 'bg-blue-50' : ''}
+        `}
+        onClick={handleClick}
+      >
+        {/* 팀 정보 */}
+        <td className="px-4 py-4">
+          <div className="flex items-center space-x-3">
+            {team.logo_url ? (
+              <Image
+                src={team.logo_url}
+                alt={`${team.display_name} 로고`}
+                width={28}
+                height={28}
+                className="w-7 h-7 object-contain"
+              />
+            ) : (
+              <div className="w-7 h-7 bg-gray-200 rounded flex items-center justify-center">
+                <span className="text-gray-500 text-xs font-bold">
+                  {team.code || team.name.charAt(0)}
+                </span>
+              </div>
+            )}
+            <div>
+              <div className="font-medium text-gray-900 flex items-center">
+                {team.display_name}
+                {/* 확장 아이콘 */}
+                <svg 
+                  className={`ml-2 w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+              {/* 영어명이나 짧은 이름 표시 */}
+              {((team.name_en && team.name_en !== team.display_name) || 
+                (team.short_name && team.short_name !== team.display_name)) && (
+                <div className="text-sm text-gray-500">
+                  {team.name_en || team.short_name}
+                </div>
+              )}
             </div>
-          )}
-          <div>
-            <div className="font-medium text-gray-900">{team.display_name}</div>
-            {team.short_name && team.short_name !== team.display_name && (
-              <div className="text-sm text-gray-500">{team.short_name}</div>
+          </div>
+        </td>
+
+        {/* 리그 */}
+        <td className="px-4 py-4 text-sm text-gray-900">
+          <div className="truncate max-w-32" title={team.league_name_ko}>
+            {team.league_name_ko}
+          </div>
+        </td>
+
+        {/* 국가 */}
+        <td className="px-4 py-4 text-sm text-gray-900">
+          {team.country}
+        </td>
+
+        {/* 홈구장 */}
+        <td className="px-4 py-4 text-sm text-gray-900">
+          <div className="max-w-40">
+            {team.venue_name && (
+              <div className="font-medium truncate" title={team.venue_name}>
+                {team.venue_name}
+              </div>
+            )}
+            {team.venue_city && (
+              <div className="text-gray-500 truncate" title={team.venue_city}>
+                {team.venue_city}
+              </div>
             )}
           </div>
-        </div>
-      </td>
+        </td>
 
-      {/* 리그 */}
-      <td className="px-4 py-4 text-sm text-gray-900">
-        <div className="truncate max-w-32" title={team.league_name_ko}>
-          {team.league_name_ko}
-        </div>
-      </td>
-
-      {/* 국가 */}
-      <td className="px-4 py-4 text-sm text-gray-900">
-        {team.country}
-      </td>
-
-      {/* 홈구장 */}
-      <td className="px-4 py-4 text-sm text-gray-900">
-        <div className="max-w-40">
-          {team.venue_name && (
-            <div className="font-medium truncate" title={team.venue_name}>
-              {team.venue_name}
-            </div>
+        {/* 코드 */}
+        <td className="px-4 py-4 text-center">
+          {team.code ? (
+            <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
+              {team.code}
+            </span>
+          ) : (
+            <span className="text-gray-400">-</span>
           )}
-          {team.venue_city && (
-            <div className="text-gray-500 truncate" title={team.venue_city}>
-              {team.venue_city}
-            </div>
-          )}
-        </div>
-      </td>
+        </td>
+      </tr>
 
-      {/* 코드 */}
-      <td className="px-4 py-4 text-center">
-        {team.code ? (
-          <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
-            {team.code}
-          </span>
+      {/* 매치 정보 확장 행 */}
+      {isExpanded && (
+        <tr>
+          <td colSpan={5} className="px-4 py-4 bg-gray-50 border-t">
+            <div className="space-y-3">
+              <h4 className="font-medium text-gray-900 text-sm">최근 경기</h4>
+              
+              {matchesLoading ? (
+                <div className="flex items-center justify-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                  <span className="ml-2 text-sm text-gray-600">경기 정보 로딩중...</span>
+                </div>
+              ) : matches.length > 0 ? (
+                <div className="space-y-2">
+                  {matches.slice(0, 3).map((match) => (
+                    <MatchItem key={match.fixture.id} match={match} teamId={team.team_id} />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 py-2">경기 정보를 찾을 수 없습니다.</p>
+              )}
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
+  )
+}
+
+// 개별 매치 아이템 컴포넌트
+function MatchItem({ match, teamId }: { match: TeamMatch; teamId: number }) {
+  const isHome = match.teams.home.id === teamId
+  const opponent = isHome ? match.teams.away : match.teams.home
+  const teamScore = isHome ? match.goals.home : match.goals.away
+  const opponentScore = isHome ? match.goals.away : match.goals.home
+  
+  // 경기 상태에 따른 표시
+  const getMatchStatus = () => {
+    const status = match.fixture.status.short
+    if (status === 'FT') return '종료'
+    if (status === 'NS') return '예정'
+    if (status === 'LIVE' || status === '1H' || status === '2H') return '진행중'
+    return status
+  }
+
+  // 경기 날짜 포맷팅
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffTime = date.getTime() - now.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    
+    if (diffDays === 0) return '오늘'
+    if (diffDays === 1) return '내일'
+    if (diffDays === -1) return '어제'
+    
+    return date.toLocaleDateString('ko-KR', { 
+      month: 'short', 
+      day: 'numeric',
+      weekday: 'short'
+    })
+  }
+
+  return (
+    <div className="flex items-center justify-between p-3 bg-white rounded border text-sm">
+      <div className="flex items-center space-x-3">
+        {/* 상대팀 로고 */}
+        <Image
+          src={opponent.logo}
+          alt={`${opponent.name} 로고`}
+          width={20}
+          height={20}
+          className="w-5 h-5 object-contain"
+        />
+        <div>
+          <div className="font-medium text-gray-900">
+            vs {opponent.name}
+          </div>
+          <div className="text-xs text-gray-500">
+            {match.league.name} • {formatDate(match.fixture.date)}
+          </div>
+        </div>
+      </div>
+      
+      <div className="text-right">
+        {match.fixture.status.short === 'FT' ? (
+          <div className="font-medium">
+            {teamScore} - {opponentScore}
+          </div>
         ) : (
-          <span className="text-gray-400">-</span>
+          <div className="text-sm text-gray-600">
+            {getMatchStatus()}
+          </div>
         )}
-      </td>
-    </tr>
+      </div>
+    </div>
   )
 }
 
@@ -202,14 +385,13 @@ function TeamSearchSkeleton() {
             <div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div>
             <div className="h-4 bg-gray-200 rounded w-32 animate-pulse"></div>
             <div className="h-4 bg-gray-200 rounded w-12 animate-pulse"></div>
-            <div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div>
           </div>
         </div>
         <div className="divide-y divide-gray-200">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="px-4 py-4">
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gray-200 rounded animate-pulse"></div>
+                <div className="w-7 h-7 bg-gray-200 rounded animate-pulse"></div>
                 <div className="flex-1 space-y-2">
                   <div className="h-4 bg-gray-200 rounded w-32 animate-pulse"></div>
                   <div className="h-3 bg-gray-200 rounded w-24 animate-pulse"></div>

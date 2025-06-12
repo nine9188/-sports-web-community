@@ -52,10 +52,34 @@ export interface CommentSearchResult {
   snippet?: string
 }
 
+// 팀 검색 결과 (searchTeams.ts에서 가져옴)
+export interface TeamSearchResult {
+  id: string
+  team_id: number
+  name: string
+  display_name: string
+  short_name: string | null
+  code: string | null
+  logo_url: string | null
+  league_id: number
+  league_name: string
+  league_name_ko: string
+  country: string
+  venue_name: string | null
+  venue_city: string | null
+  current_position: number | null
+  is_winner: boolean
+  popularity_score: number
+  // 한국어 매핑 관련 필드
+  name_ko?: string
+  name_en?: string
+  is_korean_mapped?: boolean
+}
+
 // 검색 파라미터
 export interface SearchParams {
   query: string
-  type?: 'all' | 'posts' | 'comments'
+  type?: 'all' | 'posts' | 'comments' | 'teams'
   sortBy?: 'latest' | 'views' | 'likes'
   limit?: number
   offset?: number
@@ -65,5 +89,6 @@ export interface SearchParams {
 export interface SearchResponse {
   posts: PostSearchResult[]
   comments: CommentSearchResult[]
+  teams: TeamSearchResult[]
   totalCount: number
 } 

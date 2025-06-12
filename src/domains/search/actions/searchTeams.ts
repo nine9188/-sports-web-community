@@ -2,25 +2,8 @@
 
 import { createClient } from '@/shared/api/supabaseServer'
 import { getLeagueName } from '@/domains/livescore/constants/league-mappings'
-
-export interface TeamSearchResult {
-  id: string
-  team_id: number
-  name: string
-  display_name: string
-  short_name: string | null
-  code: string | null
-  logo_url: string | null
-  league_id: number
-  league_name: string
-  league_name_ko: string
-  country: string
-  venue_name: string | null
-  venue_city: string | null
-  current_position: number | null
-  is_winner: boolean
-  popularity_score: number
-}
+import { getTeamById, searchTeamsByName } from '@/domains/livescore/constants/teams'
+import type { TeamSearchResult } from '../types'
 
 export interface TeamSearchOptions {
   query: string
@@ -43,6 +26,13 @@ export async function searchTeams(options: TeamSearchOptions): Promise<{
 
   try {
     const supabase = await createClient()
+    
+    // 한국어 팀명 매핑을 통한 검색 개선
+    const searchTerm = query.trim().toLowerCase()
+    
+    // 1. 한국어 매핑에서 검색하여 해당하는 팀 ID들 찾기
+    const mappedTeams = searchTeamsByName(query)
+    const mappedTeamIds = mappedTeams.map(team => team.id)
     
     // 검색 쿼리 구성
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -67,9 +57,14 @@ export async function searchTeams(options: TeamSearchOptions): Promise<{
       `)
       .eq('is_active', true)
 
-    // 텍스트 검색 (팀명, 코드, 도시명에서 검색)
-    const searchTerm = query.trim().toLowerCase()
-    searchQuery = searchQuery.or(`name.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%,short_name.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%,venue_city.ilike.%${searchTerm}%`)
+    // 검색 조건: 기존 텍스트 검색 + 한국어 매핑 팀 ID 검색
+    if (mappedTeamIds.length > 0) {
+      // 한국어 매핑에서 찾은 팀들과 기존 텍스트 검색 결합
+      searchQuery = searchQuery.or(`team_id.in.(${mappedTeamIds.join(',')}),name.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%,short_name.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%,venue_city.ilike.%${searchTerm}%`)
+    } else {
+      // 한국어 매핑에서 찾지 못한 경우 기존 텍스트 검색만
+      searchQuery = searchQuery.or(`name.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%,short_name.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%,venue_city.ilike.%${searchTerm}%`)
+    }
 
     // 필터 조건 추가
     if (leagueId) {
@@ -80,7 +75,7 @@ export async function searchTeams(options: TeamSearchOptions): Promise<{
       searchQuery = searchQuery.eq('country', country)
     }
 
-    // 정렬: 인기도 > 현재 순위 > 이름순
+    // 정렬: 한국어 매핑 우선 > 인기도 > 현재 순위 > 이름순
     searchQuery = searchQuery
       .order('popularity_score', { ascending: false })
       .order('current_position', { ascending: true, nullsFirst: false })
@@ -94,8 +89,12 @@ export async function searchTeams(options: TeamSearchOptions): Promise<{
       .eq('is_active', true)
 
     // 검색 조건 동일하게 적용
-    const countSearchTerm = query.trim().toLowerCase()
-    let finalCountQuery = countQuery.or(`name.ilike.%${countSearchTerm}%,display_name.ilike.%${countSearchTerm}%,short_name.ilike.%${countSearchTerm}%,code.ilike.%${countSearchTerm}%,venue_city.ilike.%${countSearchTerm}%`)
+    let finalCountQuery
+    if (mappedTeamIds.length > 0) {
+      finalCountQuery = countQuery.or(`team_id.in.(${mappedTeamIds.join(',')}),name.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%,short_name.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%,venue_city.ilike.%${searchTerm}%`)
+    } else {
+      finalCountQuery = countQuery.or(`name.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%,short_name.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%,venue_city.ilike.%${searchTerm}%`)
+    }
     
     if (leagueId) {
       finalCountQuery = finalCountQuery.eq('league_id', leagueId)
@@ -116,10 +115,28 @@ export async function searchTeams(options: TeamSearchOptions): Promise<{
 
     return {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      teams: (teams || []).map((team: any) => ({
-        ...team,
-        league_name_ko: getLeagueName(team.league_id)
-      })),
+      teams: (teams || []).map((team: any) => {
+        // 한국어 매핑 정보 추가
+        const mappedTeam = getTeamById(team.team_id)
+        
+        return {
+          ...team,
+          league_name_ko: getLeagueName(team.league_id),
+          // 한국어 팀명이 있으면 display_name을 한국어로 대체
+          display_name: mappedTeam?.name_ko || team.display_name,
+          // 한국어 매핑 정보 추가
+          name_ko: mappedTeam?.name_ko,
+          name_en: mappedTeam?.name_en || team.name,
+          // 한국어 매핑에서 찾은 팀인지 표시 (정렬 우선순위용)
+          is_korean_mapped: !!mappedTeam
+        }
+      })
+      // 한국어 매핑된 팀을 우선 정렬
+      .sort((a: TeamSearchResult, b: TeamSearchResult) => {
+        if (a.is_korean_mapped && !b.is_korean_mapped) return -1
+        if (!a.is_korean_mapped && b.is_korean_mapped) return 1
+        return 0
+      }),
       total: count || 0,
       hasMore: (count || 0) > offset + limit
     }
@@ -196,20 +213,27 @@ export async function getPopularTeams(limit: number = 12): Promise<TeamSearchRes
       return await getFallbackTeams(limit)
     }
 
-    // 한국어 리그명 추가
+    // 한국어 리그명 및 팀명 추가
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const teamsWithKoreanLeague = (teams || []).map((team: any) => ({
-      ...team,
-      league_name_ko: getLeagueName(team.league_id)
-    }))
+    const teamsWithKoreanMapping = (teams || []).map((team: any) => {
+      const mappedTeam = getTeamById(team.team_id)
+      
+      return {
+        ...team,
+        league_name_ko: getLeagueName(team.league_id),
+        display_name: mappedTeam?.name_ko || team.display_name,
+        name_ko: mappedTeam?.name_ko,
+        name_en: mappedTeam?.name_en || team.name
+      }
+    })
 
     // 팀이 부족하면 추가로 가져오기
-    if (teamsWithKoreanLeague.length < limit) {
-      const additionalTeams = await getFallbackTeams(limit - teamsWithKoreanLeague.length)
-      return [...teamsWithKoreanLeague, ...additionalTeams]
+    if (teamsWithKoreanMapping.length < limit) {
+      const additionalTeams = await getFallbackTeams(limit - teamsWithKoreanMapping.length)
+      return [...teamsWithKoreanMapping, ...additionalTeams]
     }
 
-    return teamsWithKoreanLeague
+    return teamsWithKoreanMapping
 
   } catch (error) {
     console.error('주요 팀 조회 실패:', error)
@@ -252,10 +276,17 @@ async function getFallbackTeams(limit: number): Promise<TeamSearchResult[]> {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (teams || []).map((team: any) => ({
-      ...team,
-      league_name_ko: getLeagueName(team.league_id)
-    }))
+    return (teams || []).map((team: any) => {
+      const mappedTeam = getTeamById(team.team_id)
+      
+      return {
+        ...team,
+        league_name_ko: getLeagueName(team.league_id),
+        display_name: mappedTeam?.name_ko || team.display_name,
+        name_ko: mappedTeam?.name_ko,
+        name_en: mappedTeam?.name_en || team.name
+      }
+    })
 
   } catch {
     return []
