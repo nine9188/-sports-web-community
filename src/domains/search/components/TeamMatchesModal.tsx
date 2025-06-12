@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import { getTeamMatches, type TeamMatch } from '../actions/teamMatches'
 import type { TeamSearchResult } from '../types'
@@ -16,7 +16,7 @@ export default function TeamMatchesModal({ team, isOpen, onClose }: TeamMatchesM
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchMatches = async () => {
+  const fetchMatches = useCallback(async () => {
     if (!team) return
 
     setLoading(true)
@@ -35,7 +35,7 @@ export default function TeamMatchesModal({ team, isOpen, onClose }: TeamMatchesM
     } finally {
       setLoading(false)
     }
-  }
+  }, [team])
 
   useEffect(() => {
     if (isOpen && team) {
