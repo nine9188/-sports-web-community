@@ -39,8 +39,6 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
   // 🔧 성능 최적화: 초기 데이터로 즉시 렌더링
   const [matches, setMatches] = useState<EnhancedMatchData[]>(initialMatches);
   const [error, setError] = useState<string | null>(null);
-  // 🔧 Hydration 불일치 해결: isClient 제거
-  const [mounted, setMounted] = useState(false);
   
   // 🔧 슬라이딩 인덱스 상태 추가 (시작 인덱스)
   const [startIndex, setStartIndex] = useState(0);
@@ -137,16 +135,8 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
   const canSlideRight = startIndex < matches.length - cardsToShow;
   const showSlideButtons = matches.length > cardsToShow && !isMobile; // 🔧 데스크탑에서만 버튼 표시
 
-  // 🔧 Hydration 불일치 해결: mounted 상태로 클라이언트 렌더링 확인
+  // 🔧 화면 크기 감지
   useEffect(() => {
-    setMounted(true);
-    setStartIndex(0); // 초기 인덱스 설정
-  }, []);
-
-  // 🔧 화면 크기 감지 - mounted 후에만 실행
-  useEffect(() => {
-    if (!mounted) return;
-    
     const checkScreenSize = () => {
       const newIsMobile = window.innerWidth < 768; // md breakpoint
       setIsMobile(newIsMobile);
@@ -166,12 +156,9 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
     return () => {
       window.removeEventListener('resize', checkScreenSize);
     };
-  }, [mounted, matches.length]);
+  }, [matches.length]);
 
   useEffect(() => {
-    // 🔧 mounted 후에만 데이터 갱신 실행
-    if (!mounted) return;
-    
     // 5분마다 데이터 갱신
     const fetchLiveScores = async () => {
       // 이미 가져오는 중이면 중복 요청 방지
@@ -263,7 +250,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
     }, 5 * 60 * 1000);
     
     return () => clearInterval(interval);
-  }, [mounted, startIndex]);
+  }, [startIndex]);
 
   // 🔧 화면 크기 변경 시 startIndex 조정
   useEffect(() => {
@@ -330,41 +317,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
     }
   };
 
-  // 🔧 Hydration 불일치 해결: mounted 전에는 기본 레이아웃만 렌더링
-  if (!mounted) {
-    return (
-      <div className="w-full mb-4 mt-4 md:mt-0">
-        <div className="flex gap-3 w-full">
-          {/* 기본 4개 카드 레이아웃 (서버 렌더링과 일치) */}
-          {Array.from({ length: 4 }).map((_, index) => (
-            <div 
-              key={`skeleton-${index}`}
-              className="flex-1 min-w-0 border rounded-lg p-2 h-[140px] shadow-sm bg-gray-50 animate-pulse"
-            >
-              <div className="flex items-center gap-0.5 mb-1">
-                <div className="w-4 h-4 bg-gray-200 rounded-full"></div>
-                <div className="w-16 h-3 bg-gray-200 rounded"></div>
-              </div>
-              <div className="grid grid-cols-3 gap-1 h-[110px]">
-                <div className="flex flex-col items-center justify-center gap-0">
-                  <div className="w-10 h-10 bg-gray-200 rounded-full mb-0.5"></div>
-                  <div className="w-12 h-2 bg-gray-200 rounded"></div>
-                </div>
-                <div className="flex flex-col items-center justify-center gap-0.5">
-                  <div className="w-8 h-4 bg-gray-200 rounded"></div>
-                  <div className="w-10 h-3 bg-gray-200 rounded"></div>
-                </div>
-                <div className="flex flex-col items-center justify-center gap-0">
-                  <div className="w-10 h-10 bg-gray-200 rounded-full mb-0.5"></div>
-                  <div className="w-12 h-2 bg-gray-200 rounded"></div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="w-full mb-4 mt-4 md:mt-0">
