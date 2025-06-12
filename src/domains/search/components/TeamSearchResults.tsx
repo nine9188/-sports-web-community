@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import type { TeamSearchResult } from '../types'
 import { getTeamMatches, type TeamMatch } from '../actions/teamMatches'
+import { trackSearchResultClick } from '../actions/searchLogs'
 
 interface TeamSearchResultsProps {
   teams: TeamSearchResult[]
@@ -36,6 +37,17 @@ export default function TeamSearchResults({
   const [matchesLoading, setMatchesLoading] = useState(false)
 
   const handleTeamClick = async (team: TeamSearchResult) => {
+    // 팀 클릭 추적
+    try {
+      await trackSearchResultClick({
+        search_query: query,
+        clicked_result_id: team.team_id.toString(),
+        clicked_result_type: 'team'
+      })
+    } catch (error) {
+      console.error('팀 클릭 추적 실패:', error)
+    }
+
     if (onTeamSelect) {
       onTeamSelect(team)
       return

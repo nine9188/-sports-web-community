@@ -5,6 +5,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import UserIcon from '@/shared/components/UserIcon'
 import type { PostSearchResult } from '../types'
+import { trackSearchResultClick } from '../actions/searchLogs'
 
 interface PostSearchResultsProps {
   posts: PostSearchResult[]
@@ -17,6 +18,19 @@ export default function PostSearchResults({
   query, 
   isLoading = false 
 }: PostSearchResultsProps) {
+  // 게시글 클릭 추적
+  const handlePostClick = async (post: PostSearchResult) => {
+    try {
+      await trackSearchResultClick({
+        search_query: query,
+        clicked_result_id: post.id,
+        clicked_result_type: 'post'
+      })
+    } catch (error) {
+      console.error('게시글 클릭 추적 실패:', error)
+    }
+  }
+
   if (isLoading) {
     return <PostSearchSkeleton />
   }
@@ -52,6 +66,7 @@ export default function PostSearchResults({
             <Link 
               href={`/boards/${post.boards?.slug || 'unknown'}/${post.post_number}`}
               className="block"
+              onClick={() => handlePostClick(post)}
             >
               {/* 제목 */}
               <div className="text-sm font-medium text-gray-900 hover:text-blue-600 mb-2 transition-colors">

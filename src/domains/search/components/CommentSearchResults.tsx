@@ -5,6 +5,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import UserIcon from '@/shared/components/UserIcon'
 import type { CommentSearchResult } from '../types'
+import { trackSearchResultClick } from '../actions/searchLogs'
 
 interface CommentSearchResultsProps {
   comments: CommentSearchResult[]
@@ -17,6 +18,19 @@ export default function CommentSearchResults({
   query, 
   isLoading = false 
 }: CommentSearchResultsProps) {
+  // 댓글 클릭 추적
+  const handleCommentClick = async (comment: CommentSearchResult) => {
+    try {
+      await trackSearchResultClick({
+        search_query: query,
+        clicked_result_id: comment.id,
+        clicked_result_type: 'comment'
+      })
+    } catch (error) {
+      console.error('댓글 클릭 추적 실패:', error)
+    }
+  }
+
   if (isLoading) {
     return <CommentSearchSkeleton />
   }
@@ -52,6 +66,7 @@ export default function CommentSearchResults({
             <Link 
               href={`/boards/${comment.posts?.boards?.slug || 'unknown'}/${comment.posts?.post_number || 0}#comment-${comment.id}`}
               className="block"
+              onClick={() => handleCommentClick(comment)}
             >
               {/* 댓글 내용 */}
               <div className="text-sm font-medium text-gray-900 hover:text-blue-600 mb-2 transition-colors">
