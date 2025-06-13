@@ -65,7 +65,7 @@ export default function PostSearchResults({
       {/* 헤더 */}
       <div className="px-4 py-3 bg-gray-50 border-b">
         <h3 className="text-sm font-medium text-gray-900">
-          게시글 ({posts.length}개)
+          게시글 ({pagination?.totalItems || posts.length}개)
         </h3>
       </div>
 

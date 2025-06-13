@@ -14,8 +14,9 @@ export async function searchComments({
   query,
   sortBy = 'latest',
   limit = 20,
-  offset = 0
-}: SearchCommentsParams): Promise<{ comments: CommentSearchResult[], totalCount: number }> {
+  offset = 0,
+  skipCount = false
+}: SearchCommentsParams & { skipCount?: boolean }): Promise<{ comments: CommentSearchResult[], totalCount: number }> {
   if (!query.trim()) {
     return { comments: [], totalCount: 0 }
   }
@@ -27,13 +28,18 @@ export async function searchComments({
       throw new Error('Supabase 클라이언트 초기화 실패')
     }
 
-    // 먼저 총 개수 조회
-    const { count: totalCount } = await supabase
-      .from('comments')
-      .select('*', { count: 'exact', head: true })
-      .not('is_deleted', 'eq', true)
-      .not('is_hidden', 'eq', true)
-      .ilike('content', `%${query}%`)
+    // COUNT 쿼리는 필요할 때만 실행
+    let totalCount = 0
+    if (!skipCount) {
+      const { count } = await supabase
+        .from('comments')
+        .select('*', { count: 'exact', head: true })
+        .not('is_deleted', 'eq', true)
+        .not('is_hidden', 'eq', true)
+        .ilike('content', `%${query}%`)
+      
+      totalCount = count || 0
+    }
 
     let searchQuery = supabase
       .from('comments')

@@ -34,7 +34,11 @@ export default function SearchResultsContainer({
 }: SearchResultsContainerProps) {
   // 검색 타입 탭 데이터 (전체 개수 표시)
   const searchTabs = [
-    { key: 'all', label: '전체', count: posts.length + comments.length + teams.length },
+    { 
+      key: 'all', 
+      label: '전체', 
+      count: pagination.posts.total + pagination.comments.total + pagination.teams.total 
+    },
     { key: 'teams', label: '팀', count: pagination.teams.total },
     { key: 'posts', label: '게시글', count: pagination.posts.total },
     { key: 'comments', label: '댓글', count: pagination.comments.total },
@@ -137,6 +141,36 @@ export default function SearchResultsContainer({
 
   return (
     <div className={`space-y-4 ${className}`}>
+      {/* 검색어가 있을 때 항상 네비게이션 탭 표시 */}
+      {query && (
+        <div className="bg-white rounded-lg border shadow-sm">
+          <div className="px-4 py-3 bg-gray-50 rounded-lg">
+            <nav className="flex space-x-8">
+              {searchTabs.map((tab) => {
+                const isActive = type === tab.key
+                const href = `/search?q=${encodeURIComponent(query)}&type=${tab.key}${sort !== 'latest' ? `&sort=${sort}` : ''}`
+                
+                return (
+                  <Link
+                    key={tab.key}
+                    href={href}
+                    className={`
+                      py-2 px-1 border-b-2 font-medium text-sm transition-colors
+                      ${isActive
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      }
+                    `}
+                  >
+                    {tab.label} ({tab.count.toLocaleString()})
+                  </Link>
+                )
+              })}
+            </nav>
+          </div>
+        </div>
+      )}
+
       {/* 검색 결과가 없을 때 */}
       {query && !hasResults && (
         <div className="bg-white rounded-lg border shadow-sm">
@@ -175,45 +209,9 @@ export default function SearchResultsContainer({
         </div>
       )}
       
-      {/* 검색 결과 섹션들 */}
-      {resultSections.map((section, index) => (
+      {/* 각 검색 결과 섹션들 (별도 테이블로 분리) */}
+      {resultSections.map((section) => (
         <div key={section.key} className="bg-white rounded-lg border shadow-sm">
-          {/* 첫 번째 결과에만 네비게이션 탭 표시 */}
-          {index === 0 && query && (
-            <div className="px-4 py-3 border-b bg-gray-50 rounded-t-lg">
-              <nav className="flex space-x-8">
-                {searchTabs.map((tab) => {
-                  const isActive = type === tab.key
-                  const href = `/search?q=${encodeURIComponent(query)}&type=${tab.key}${sort !== 'latest' ? `&sort=${sort}` : ''}`
-                  
-                  return (
-                    <Link
-                      key={tab.key}
-                      href={href}
-                      className={`
-                        py-2 px-1 border-b-2 font-medium text-sm transition-colors
-                        ${isActive
-                          ? 'border-blue-500 text-blue-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                        }
-                      `}
-                    >
-                      {tab.label}
-                      {query && tab.count > 0 && (
-                        <span className={`ml-2 py-0.5 px-2 rounded-full text-xs ${
-                          isActive ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'
-                        }`}>
-                          {tab.count}
-                        </span>
-                      )}
-                    </Link>
-                  )
-                })}
-              </nav>
-            </div>
-          )}
-          
-          {/* 검색 결과 컴포넌트 */}
           {section.component}
         </div>
       ))}

@@ -14,8 +14,9 @@ export async function searchPosts({
   query,
   sortBy = 'latest',
   limit = 20,
-  offset = 0
-}: SearchPostsParams): Promise<{ posts: PostSearchResult[], totalCount: number }> {
+  offset = 0,
+  skipCount = false
+}: SearchPostsParams & { skipCount?: boolean }): Promise<{ posts: PostSearchResult[], totalCount: number }> {
   if (!query.trim()) {
     return { posts: [], totalCount: 0 }
   }
@@ -27,14 +28,19 @@ export async function searchPosts({
       throw new Error('Supabase 클라이언트 초기화 실패')
     }
 
-    // 먼저 총 개수 조회
-    const { count: totalCount } = await supabase
-      .from('posts')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_published', true)
-      .not('is_hidden', 'eq', true)
-      .not('is_deleted', 'eq', true)
-      .or(`title.ilike.%${query}%`)
+    // COUNT 쿼리는 필요할 때만 실행 (성능 최적화)
+    let totalCount = 0
+    if (!skipCount) {
+      const { count } = await supabase
+        .from('posts')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_published', true)
+        .not('is_hidden', 'eq', true)
+        .not('is_deleted', 'eq', true)
+        .or(`title.ilike.%${query}%`)
+      
+      totalCount = count || 0
+    }
 
     let searchQuery = supabase
       .from('posts')
@@ -86,7 +92,7 @@ export async function searchPosts({
     }
 
     if (!data) {
-      return { posts: [], totalCount: totalCount || 0 }
+      return { posts: [], totalCount }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -97,7 +103,7 @@ export async function searchPosts({
       snippet: extractContentSnippet(post.content, query)
     }))
 
-    return { posts, totalCount: totalCount || 0 }
+    return { posts, totalCount }
 
   } catch (error) {
     console.error('searchPosts 오류:', error)

@@ -65,7 +65,7 @@ export default function CommentSearchResults({
       {/* 헤더 */}
       <div className="px-4 py-3 bg-gray-50 border-b">
         <h3 className="text-sm font-medium text-gray-900">
-          댓글 ({comments.length}개)
+          댓글 ({pagination?.totalItems || comments.length}개)
         </h3>
       </div>
 
