@@ -20,13 +20,26 @@ export async function searchContent({
   const startTime = Date.now()
   
   if (!query.trim()) {
-    return { posts: [], comments: [], teams: [], totalCount: 0 }
+    return { 
+      posts: [], 
+      comments: [], 
+      teams: [], 
+      totalCount: 0,
+      pagination: {
+        posts: { total: 0, hasMore: false },
+        comments: { total: 0, hasMore: false },
+        teams: { total: 0, hasMore: false }
+      }
+    }
   }
 
   try {
     let posts: PostSearchResult[] = []
     let comments: CommentSearchResult[] = []
     let teams: TeamSearchResult[] = []
+    let postsTotalCount = 0
+    let commentsTotalCount = 0
+    let teamsTotalCount = 0
     
     // 게시글 검색
     if (type === 'all' || type === 'posts') {
@@ -34,10 +47,11 @@ export async function searchContent({
         const postResults = await searchPosts({
           query,
           sortBy,
-          limit: type === 'posts' ? limit : Math.floor(limit / 3),
+          limit: type === 'posts' ? limit : 5, // 전체 탭에서는 5개만
           offset: type === 'posts' ? offset : 0
         })
         posts = postResults.posts
+        postsTotalCount = postResults.totalCount
       } catch (error) {
         console.error('게시글 검색 오류:', error)
       }
@@ -49,10 +63,11 @@ export async function searchContent({
         const commentResults = await searchComments({
           query,
           sortBy: sortBy === 'views' ? 'latest' : sortBy,
-          limit: type === 'comments' ? limit : Math.floor(limit / 3),
+          limit: type === 'comments' ? limit : 5, // 전체 탭에서는 5개만
           offset: type === 'comments' ? offset : 0
         })
         comments = commentResults.comments
+        commentsTotalCount = commentResults.totalCount
       } catch (error) {
         console.error('댓글 검색 오류:', error)
       }
@@ -67,6 +82,7 @@ export async function searchContent({
           offset: type === 'teams' ? offset : 0
         })
         teams = teamResults.teams
+        teamsTotalCount = teamResults.totalCount || teams.length
       } catch (error) {
         console.error('팀 검색 오류:', error)
       }
@@ -90,7 +106,21 @@ export async function searchContent({
       posts,
       comments,
       teams,
-      totalCount
+      totalCount,
+      pagination: {
+        posts: { 
+          total: postsTotalCount, 
+          hasMore: type === 'posts' ? (offset + limit < postsTotalCount) : (postsTotalCount > 5)
+        },
+        comments: { 
+          total: commentsTotalCount, 
+          hasMore: type === 'comments' ? (offset + limit < commentsTotalCount) : (commentsTotalCount > 5)
+        },
+        teams: { 
+          total: teamsTotalCount, 
+          hasMore: type === 'teams' ? (offset + limit < teamsTotalCount) : (teamsTotalCount > 5)
+        }
+      }
     }
 
   } catch (error) {

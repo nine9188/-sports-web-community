@@ -10,26 +10,30 @@ import { trackSearchResultClick } from '../actions/searchLogs'
 
 interface TeamSearchResultsProps {
   teams: TeamSearchResult[]
-  total: number
   hasMore: boolean
   isLoading?: boolean
   onLoadMore?: () => void
   onTeamSelect?: (team: TeamSearchResult) => void
   showMoreButton?: boolean // 더보기 버튼 표시 여부
+  currentType?: 'all' | 'posts' | 'comments' | 'teams'
+  query?: string
+  totalCount?: number
 }
 
 export default function TeamSearchResults({
   teams,
-  total,
   hasMore,
   isLoading = false,
   onLoadMore,
   onTeamSelect,
-  showMoreButton = true
+  showMoreButton = true,
+  currentType: propCurrentType = 'teams',
+  query: propQuery = '',
+  totalCount = 0
 }: TeamSearchResultsProps) {
   const searchParams = useSearchParams()
-  const query = searchParams?.get('q') || ''
-  const currentType = searchParams?.get('type') || 'all'
+  const query = propQuery || searchParams?.get('q') || ''
+  const currentType = propCurrentType || searchParams?.get('type') || 'all'
   
   // 확장된 팀 상태 관리
   const [expandedTeamId, setExpandedTeamId] = useState<number | null>(null)
@@ -78,7 +82,12 @@ export default function TeamSearchResults({
   }
   
   if (isLoading && teams.length === 0) {
-    return <TeamSearchSkeleton />
+    return (
+      <div className="text-center py-8">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        <p className="mt-2 text-gray-500">팀 정보 로딩 중...</p>
+      </div>
+    )
   }
 
   if (teams.length === 0) {
@@ -92,31 +101,24 @@ export default function TeamSearchResults({
 
   return (
     <div className="space-y-4">
-      {/* 검색 결과 헤더 */}
-      <div className="flex items-center justify-between border-b pb-3">
-        <h3 className="text-lg font-semibold text-gray-900">
-          팀 검색 결과 ({total.toLocaleString()})
-        </h3>
-      </div>
-
       {/* 팀 테이블 */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+      <div className="overflow-hidden rounded-lg">
+        <table className="min-w-full">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 팀
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 리그
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 국가
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="hidden lg:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 홈구장
               </th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-2 sm:px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 코드
               </th>
             </tr>
@@ -137,12 +139,20 @@ export default function TeamSearchResults({
           {showMoreButton && currentType === 'all' && teams.length >= 5 && (
             <tfoot>
               <tr>
-                <td colSpan={5} className="px-6 py-3 border-t bg-gray-50">
+                <td colSpan={2} className="px-4 py-3 border-t bg-gray-50 sm:hidden">
                   <Link
                     href={`/search?q=${encodeURIComponent(query)}&type=teams`}
                     className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
                   >
-                    더 많은 팀 보기 →
+                    더 많은 팀 보기 ({totalCount}개) →
+                  </Link>
+                </td>
+                <td colSpan={5} className="hidden sm:table-cell px-6 py-3 border-t bg-gray-50">
+                  <Link
+                    href={`/search?q=${encodeURIComponent(query)}&type=teams`}
+                    className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                  >
+                    더 많은 팀 보기 ({totalCount}개) →
                   </Link>
                 </td>
               </tr>
@@ -204,29 +214,29 @@ function TeamRowWithMatches({
         onClick={handleClick}
       >
         {/* 팀 정보 */}
-        <td className="px-4 py-4">
-          <div className="flex items-center space-x-3">
+        <td className="px-2 sm:px-4 py-4">
+          <div className="flex items-center space-x-2 sm:space-x-3">
             {team.logo_url ? (
               <Image
                 src={team.logo_url}
                 alt={`${team.display_name} 로고`}
                 width={28}
                 height={28}
-                className="w-7 h-7 object-contain"
+                className="w-6 h-6 sm:w-7 sm:h-7 object-contain"
               />
             ) : (
-              <div className="w-7 h-7 bg-gray-200 rounded flex items-center justify-center">
+              <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-200 rounded flex items-center justify-center">
                 <span className="text-gray-500 text-xs font-bold">
                   {team.code || team.name.charAt(0)}
                 </span>
               </div>
             )}
-            <div>
-              <div className="font-medium text-gray-900 flex items-center">
-                {team.display_name}
+            <div className="min-w-0 flex-1">
+              <div className="font-medium text-gray-900 flex items-center text-xs sm:text-sm">
+                <span className="truncate">{team.display_name}</span>
                 {/* 확장 아이콘 */}
                 <svg 
-                  className={`ml-2 w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                  className={`ml-1 sm:ml-2 w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                   fill="none" 
                   stroke="currentColor" 
                   viewBox="0 0 24 24"
@@ -237,28 +247,32 @@ function TeamRowWithMatches({
               {/* 영어명이나 짧은 이름 표시 */}
               {((team.name_en && team.name_en !== team.display_name) || 
                 (team.short_name && team.short_name !== team.display_name)) && (
-                <div className="text-sm text-gray-500">
+                <div className="text-xs text-gray-500 truncate sm:hidden">
                   {team.name_en || team.short_name}
                 </div>
               )}
+              {/* 모바일에서 리그 정보 표시 */}
+              <div className="text-xs text-gray-500 truncate sm:hidden">
+                {team.league_name_ko}
+              </div>
             </div>
           </div>
         </td>
 
         {/* 리그 */}
-        <td className="px-4 py-4 text-sm text-gray-900">
+        <td className="hidden sm:table-cell px-4 py-4 text-sm text-gray-900">
           <div className="truncate max-w-32" title={team.league_name_ko}>
             {team.league_name_ko}
           </div>
         </td>
 
         {/* 국가 */}
-        <td className="px-4 py-4 text-sm text-gray-900">
+        <td className="hidden md:table-cell px-4 py-4 text-sm text-gray-900">
           {team.country}
         </td>
 
         {/* 홈구장 */}
-        <td className="px-4 py-4 text-sm text-gray-900">
+        <td className="hidden lg:table-cell px-4 py-4 text-sm text-gray-900">
           <div className="max-w-40">
             {team.venue_name && (
               <div className="font-medium truncate" title={team.venue_name}>
@@ -274,13 +288,13 @@ function TeamRowWithMatches({
         </td>
 
         {/* 코드 */}
-        <td className="px-4 py-4 text-center">
+        <td className="px-2 sm:px-4 py-4 text-center">
           {team.code ? (
-            <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
+            <span className="font-mono text-xs bg-gray-100 px-1.5 sm:px-2 py-1 rounded">
               {team.code}
             </span>
           ) : (
-            <span className="text-gray-400">-</span>
+            <span className="text-gray-400 text-xs sm:text-sm">-</span>
           )}
         </td>
       </tr>
@@ -288,7 +302,27 @@ function TeamRowWithMatches({
       {/* 매치 정보 확장 행 */}
       {isExpanded && (
         <tr>
-          <td colSpan={5} className="px-4 py-4 bg-gray-50 border-t">
+          <td colSpan={2} className="px-4 py-4 bg-gray-50 border-t sm:hidden">
+            <div className="space-y-3">
+              <h4 className="font-medium text-gray-900 text-sm">최근 경기</h4>
+              
+              {matchesLoading ? (
+                <div className="flex items-center justify-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                  <span className="ml-2 text-sm text-gray-600">경기 정보 로딩중...</span>
+                </div>
+              ) : matches.length > 0 ? (
+                <div className="space-y-2">
+                  {matches.slice(0, 3).map((match) => (
+                    <MatchItem key={match.fixture.id} match={match} teamId={team.team_id} />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 py-2">경기 정보를 찾을 수 없습니다.</p>
+              )}
+            </div>
+          </td>
+          <td colSpan={5} className="hidden sm:table-cell px-4 py-4 bg-gray-50 border-t">
             <div className="space-y-3">
               <h4 className="font-medium text-gray-900 text-sm">최근 경기</h4>
               
@@ -384,35 +418,4 @@ function MatchItem({ match, teamId }: { match: TeamMatch; teamId: number }) {
   )
 }
 
-// 로딩 스켈레톤
-function TeamSearchSkeleton() {
-  return (
-    <div className="space-y-4">
-      <div className="h-6 bg-gray-200 rounded w-48 animate-pulse"></div>
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
-        <div className="bg-gray-50 px-4 py-3">
-          <div className="flex space-x-4">
-            <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
-            <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
-            <div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div>
-            <div className="h-4 bg-gray-200 rounded w-32 animate-pulse"></div>
-            <div className="h-4 bg-gray-200 rounded w-12 animate-pulse"></div>
-          </div>
-        </div>
-        <div className="divide-y divide-gray-200">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="px-4 py-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-7 h-7 bg-gray-200 rounded animate-pulse"></div>
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-32 animate-pulse"></div>
-                  <div className="h-3 bg-gray-200 rounded w-24 animate-pulse"></div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-} 
+ 

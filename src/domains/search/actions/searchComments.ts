@@ -27,6 +27,14 @@ export async function searchComments({
       throw new Error('Supabase 클라이언트 초기화 실패')
     }
 
+    // 먼저 총 개수 조회
+    const { count: totalCount } = await supabase
+      .from('comments')
+      .select('*', { count: 'exact', head: true })
+      .not('is_deleted', 'eq', true)
+      .not('is_hidden', 'eq', true)
+      .ilike('content', `%${query}%`)
+
     let searchQuery = supabase
       .from('comments')
       .select(`
@@ -75,7 +83,7 @@ export async function searchComments({
     }
 
     if (!data) {
-      return { comments: [], totalCount: 0 }
+      return { comments: [], totalCount: totalCount || 0 }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -87,7 +95,7 @@ export async function searchComments({
       snippet: extractContentSnippet(comment.content, query)
     }))
 
-    return { comments, totalCount: comments.length }
+    return { comments, totalCount: totalCount || 0 }
 
   } catch (error) {
     console.error('searchComments 오류:', error)

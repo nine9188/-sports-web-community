@@ -27,6 +27,15 @@ export async function searchPosts({
       throw new Error('Supabase 클라이언트 초기화 실패')
     }
 
+    // 먼저 총 개수 조회
+    const { count: totalCount } = await supabase
+      .from('posts')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_published', true)
+      .not('is_hidden', 'eq', true)
+      .not('is_deleted', 'eq', true)
+      .or(`title.ilike.%${query}%`)
+
     let searchQuery = supabase
       .from('posts')
       .select(`
@@ -77,7 +86,7 @@ export async function searchPosts({
     }
 
     if (!data) {
-      return { posts: [], totalCount: 0 }
+      return { posts: [], totalCount: totalCount || 0 }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -88,7 +97,7 @@ export async function searchPosts({
       snippet: extractContentSnippet(post.content, query)
     }))
 
-    return { posts, totalCount: posts.length }
+    return { posts, totalCount: totalCount || 0 }
 
   } catch (error) {
     console.error('searchPosts 오류:', error)

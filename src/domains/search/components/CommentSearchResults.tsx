@@ -6,17 +6,29 @@ import { ko } from 'date-fns/locale'
 import UserIcon from '@/shared/components/UserIcon'
 import type { CommentSearchResult } from '../types'
 import { trackSearchResultClick } from '../actions/searchLogs'
+import Pagination from './Pagination'
 
 interface CommentSearchResultsProps {
   comments: CommentSearchResult[]
   query: string
   isLoading?: boolean
+  pagination?: {
+    currentPage: number
+    totalItems: number
+    itemsPerPage: number
+    sort: 'latest' | 'views' | 'likes'
+  }
+  showMoreButton?: boolean
+  currentType?: 'all' | 'posts' | 'comments' | 'teams'
 }
 
 export default function CommentSearchResults({ 
   comments, 
   query, 
-  isLoading = false 
+  isLoading = false,
+  pagination,
+  showMoreButton = false,
+  currentType = 'comments'
 }: CommentSearchResultsProps) {
   // 댓글 클릭 추적
   const handleCommentClick = async (comment: CommentSearchResult) => {
@@ -32,26 +44,24 @@ export default function CommentSearchResults({
   }
 
   if (isLoading) {
-    return <CommentSearchSkeleton />
+    return (
+      <div className="text-center py-8">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        <p className="mt-2 text-gray-500">댓글 로딩 중...</p>
+      </div>
+    )
   }
 
   if (!comments.length && query) {
     return (
-      <div className="bg-white rounded-lg border">
-        <div className="px-4 py-3 bg-gray-50 border-b">
-          <h3 className="text-sm font-medium text-gray-900">
-            댓글 ({comments.length}개)
-          </h3>
-        </div>
-        <div className="text-center py-8 text-gray-500 text-sm">
-          댓글 검색 결과가 없습니다
-        </div>
+      <div className="text-center py-8 text-gray-500 text-sm">
+        댓글 검색 결과가 없습니다
       </div>
     )
   }
 
   return (
-    <div className="bg-white rounded-lg border">
+    <div className="overflow-hidden rounded-lg">
       {/* 헤더 */}
       <div className="px-4 py-3 bg-gray-50 border-b">
         <h3 className="text-sm font-medium text-gray-900">
@@ -108,6 +118,30 @@ export default function CommentSearchResults({
           </div>
         ))}
       </div>
+      
+      {/* 더보기 버튼 (전체 탭에서만 표시) */}
+      {showMoreButton && currentType === 'all' && comments.length >= 5 && (
+        <div className="px-4 py-3 border-t bg-gray-50">
+          <Link
+            href={`/search?q=${encodeURIComponent(query)}&type=comments`}
+            className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+          >
+            더 많은 댓글 보기 ({pagination?.totalItems || 0}개) →
+          </Link>
+        </div>
+      )}
+      
+      {/* 페이지네이션 (개별 탭에서만 표시) */}
+      {pagination && currentType === 'comments' && (
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalItems={pagination.totalItems}
+          itemsPerPage={pagination.itemsPerPage}
+          query={query}
+          type="comments"
+          sort={pagination.sort}
+        />
+      )}
     </div>
   )
 }
@@ -142,33 +176,4 @@ function formatDate(dateString?: string | null) {
   }
 }
 
-function CommentSearchSkeleton() {
-  return (
-    <div className="bg-white rounded-lg border">
-      <div className="px-4 py-3 bg-gray-50 border-b">
-        <div className="h-4 bg-gray-200 rounded w-32 animate-pulse"></div>
-      </div>
-      
-      <div className="divide-y divide-gray-200">
-        {[...Array(3)].map((_, index) => (
-          <div key={index} className="p-4">
-            <div className="space-y-2">
-              <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse" />
-              <div className="h-3 bg-gray-200 rounded w-2/3 animate-pulse" />
-              <div className="flex justify-between items-center mt-3">
-                <div className="flex space-x-2">
-                  <div className="h-3 bg-gray-200 rounded w-16 animate-pulse" />
-                  <div className="h-3 bg-gray-200 rounded w-12 animate-pulse" />
-                </div>
-                <div className="flex space-x-2">
-                  <div className="h-3 bg-gray-200 rounded w-12 animate-pulse" />
-                  <div className="h-3 bg-gray-200 rounded w-16 animate-pulse" />
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-} 
+ 

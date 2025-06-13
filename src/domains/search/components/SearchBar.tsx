@@ -78,13 +78,14 @@ export default function SearchBar({
           placeholder={placeholder}
           disabled={isLoading}
           className={`
-            block w-full pl-10 pr-20 py-3 
+            block w-full pl-10 pr-20 py-2.5 sm:py-3 
             border border-gray-300 rounded-lg
             bg-white text-gray-900 placeholder-gray-500
             focus:ring-2 focus:ring-blue-500 focus:border-blue-500
             disabled:bg-gray-50 disabled:text-gray-500
-            transition-colors duration-200
+            transition-all duration-200
             text-sm sm:text-base
+            shadow-sm hover:shadow-md focus:shadow-md
           `}
         />
         

@@ -85,10 +85,21 @@ export interface SearchParams {
   offset?: number
 }
 
+// 페이지네이션 정보
+export interface PaginationInfo {
+  total: number
+  hasMore: boolean
+}
+
 // 검색 응답
 export interface SearchResponse {
   posts: PostSearchResult[]
   comments: CommentSearchResult[]
   teams: TeamSearchResult[]
   totalCount: number
+  pagination: {
+    posts: PaginationInfo
+    comments: PaginationInfo
+    teams: PaginationInfo
+  }
 } 

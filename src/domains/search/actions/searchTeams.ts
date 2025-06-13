@@ -15,13 +15,13 @@ export interface TeamSearchOptions {
 
 export async function searchTeams(options: TeamSearchOptions): Promise<{
   teams: TeamSearchResult[]
-  total: number
+  totalCount: number
   hasMore: boolean
 }> {
   const { query, leagueId, country, limit = 20, offset = 0 } = options
   
   if (!query.trim()) {
-    return { teams: [], total: 0, hasMore: false }
+    return { teams: [], totalCount: 0, hasMore: false }
   }
 
   try {
@@ -137,7 +137,7 @@ export async function searchTeams(options: TeamSearchOptions): Promise<{
         if (!a.is_korean_mapped && b.is_korean_mapped) return 1
         return 0
       }),
-      total: count || 0,
+      totalCount: count || 0,
       hasMore: (count || 0) > offset + limit
     }
 

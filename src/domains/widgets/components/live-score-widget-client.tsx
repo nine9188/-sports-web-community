@@ -53,17 +53,18 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
   const touchStartXRef = useRef<number | null>(null);
   const touchEndXRef = useRef<number | null>(null);
 
-  // 🔧 Hydration 불일치 해결: 서버 렌더링과 일치하도록 초기값 설정
+  // 🔧 Hydration 불일치 해결: 마운트 상태 관리
+  const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   
   // 🔧 스와이프 힌트 상태 (처음에만 보여주기)
   const [showSwipeHint, setShowSwipeHint] = useState(true);
   
   // 🔧 오버레이 힌트 상태 (모바일 전용)
-  const [showOverlayHint, setShowOverlayHint] = useState(false); // 🔧 초기값 false로 변경
+  const [showOverlayHint, setShowOverlayHint] = useState(false);
   
-  // 화면 크기에 따른 카드 수 결정
-  const cardsToShow = isMobile ? 2 : 4;
+  // 화면 크기에 따른 카드 수 결정 - 마운트 전에는 기본값 4개
+  const cardsToShow = mounted ? (isMobile ? 2 : 4) : 4;
   
   // 현재 표시할 경기들 (startIndex부터 cardsToShow개)
   const displayMatches = useMemo(() => {
@@ -135,7 +136,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
   const canSlideRight = startIndex < matches.length - cardsToShow;
   const showSlideButtons = matches.length > cardsToShow && !isMobile; // 🔧 데스크탑에서만 버튼 표시
 
-  // 🔧 화면 크기 감지
+  // 🔧 화면 크기 감지 및 마운트 상태 관리
   useEffect(() => {
     const checkScreenSize = () => {
       const newIsMobile = window.innerWidth < 768; // md breakpoint
@@ -149,6 +150,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
     
     // 초기 설정
     checkScreenSize();
+    setMounted(true); // 🔧 마운트 완료 표시
     
     // 리사이즈 이벤트 리스너
     window.addEventListener('resize', checkScreenSize);
