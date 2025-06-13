@@ -306,55 +306,46 @@ const SearchModal = React.memo(function SearchModal({
 
   return ReactDOM.createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center pt-20">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-sm sm:max-w-md mx-4 p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">검색</h2>
+          <h2 className="text-base sm:text-lg font-semibold">검색</h2>
           <button 
             onClick={onClose}
             className="p-1 hover:bg-gray-100 rounded-full"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
         </div>
         
         <form onSubmit={handleSearch}>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
             <input
               type="text"
               placeholder="게시글, 뉴스, 팀 검색..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              className="w-full pl-10 pr-16 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               autoFocus
             />
-          </div>
-          
-          <div className="flex justify-end mt-4 space-x-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
-            >
-              취소
-            </button>
             <button
               type="submit"
               disabled={!searchQuery.trim()}
-              className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
             >
               검색
             </button>
           </div>
         </form>
         
-        {/* 검색 팁 */}
-        <div className="mt-4 pt-4 border-t text-xs text-gray-500">
-          <p>💡 검색 팁:</p>
-          <ul className="mt-1 space-y-1">
-            <li>• 게시글 제목, 내용, 작성자로 검색 가능</li>
-            <li>• 팀명이나 선수명으로도 검색할 수 있어요</li>
+        {/* 검색 팁 - 모바일에서는 간소화 */}
+        <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t text-xs text-gray-500">
+          <p className="hidden sm:block">💡 검색 팁:</p>
+          <ul className="mt-1 space-y-1 text-xs sm:text-xs">
+            <li className="hidden sm:block">• 게시글 제목, 내용, 작성자로 검색 가능</li>
+            <li className="hidden sm:block">• 팀명이나 선수명으로도 검색할 수 있어요</li>
+            <li className="sm:hidden text-center">게시글, 팀, 선수 검색 가능</li>
           </ul>
         </div>
       </div>
