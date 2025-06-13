@@ -75,45 +75,7 @@ const SearchBar = React.memo(function SearchBar() {
   );
 });
 
-// 모바일 검색창 컴포넌트
-const MobileSearchBar = React.memo(function MobileSearchBar() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const router = useRouter();
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery('');
-    }
-  };
-
-  return (
-    <form onSubmit={handleSearch} className="relative w-32">
-      <div className="relative">
-        <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
-        <input
-          type="text"
-          placeholder="검색..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-8 pr-3 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-full 
-            focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent 
-            focus:bg-white transition-all duration-200 placeholder-gray-400"
-        />
-        {searchQuery && (
-          <button
-            type="button"
-            onClick={() => setSearchQuery('')}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 p-0.5 hover:bg-gray-200 rounded-full transition-colors"
-          >
-            <X className="h-2.5 w-2.5 text-gray-400" />
-          </button>
-        )}
-      </div>
-    </form>
-  );
-});
+// 모바일 검색창 컴포넌트 제거 - HeaderClient로 이동
 
 // 모바일 게시판 모달 컴포넌트
 const MobileBoardModal = React.memo(function MobileBoardModal({
@@ -127,7 +89,6 @@ const MobileBoardModal = React.memo(function MobileBoardModal({
   onClose: () => void;
   isAdmin?: boolean;
 }) {
-  const [searchTerm, setSearchTerm] = useState('');
   const [expandedBoards, setExpandedBoards] = useState<Set<string>>(() => {
     // 초기 상태에서 1단계 게시판들은 모두 펼쳐진 상태로 설정
     const initialExpanded = new Set<string>();
@@ -139,25 +100,6 @@ const MobileBoardModal = React.memo(function MobileBoardModal({
     return initialExpanded;
   });
   const router = useRouter();
-
-  // 모든 게시판을 평면화하여 검색 가능하게 만들기
-  const flattenBoards = (boards: Board[]): Board[] => {
-    const result: Board[] = [];
-    boards.forEach(board => {
-      result.push(board);
-      if (board.children) {
-        result.push(...flattenBoards(board.children));
-      }
-    });
-    return result;
-  };
-
-  const allBoards = flattenBoards(boards);
-  const filteredBoards = searchTerm 
-    ? allBoards.filter(board => 
-        board.name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : boards;
 
   const handleBoardClick = (board: Board) => {
     router.push(`/boards/${board.slug || board.id}`);
@@ -190,19 +132,7 @@ const MobileBoardModal = React.memo(function MobileBoardModal({
           </button>
         </div>
 
-        {/* 검색 - 고정 */}
-        <div className="p-4 border-b">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="게시판 검색..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-            />
-          </div>
-        </div>
+        {/* 검색 기능 제거 - 더 많은 게시판 목록 공간 확보 */}
 
         {/* 스크롤 가능한 콘텐츠 영역 */}
         <div className="flex-1 overflow-y-auto">
@@ -257,94 +187,74 @@ const MobileBoardModal = React.memo(function MobileBoardModal({
             )}
           </div>
 
-          {/* 게시판 목록 */}
+          {/* 게시판 목록 - 검색 기능 제거로 더 많은 공간 확보 */}
           <div className="pb-4">
-            {searchTerm ? (
-              // 검색 결과
-              <div className="p-2">
-                {filteredBoards.map(board => (
+            {/* 카테고리별 게시판 (아코디언 스타일) */}
+            <div className="p-2">
+              {boards.map(board => (
+                <div key={board.id} className="mb-2">
+                  {/* 1단계: 크기 줄임, 다른 버튼들과 동일한 크기 */}
                   <button
-                    key={board.id}
                     onClick={() => handleBoardClick(board)}
-                    className="w-full text-left p-2 hover:bg-gray-100 rounded-lg"
+                    className="w-full text-left p-2 bg-gray-50 hover:bg-gray-100 rounded-lg mb-1"
                   >
-                    <div className="text-sm font-medium">{board.name}</div>
+                    <div className="font-semibold text-blue-600 text-sm">{board.name}</div>
                   </button>
-                ))}
-                {filteredBoards.length === 0 && (
-                  <div className="text-center py-8 text-gray-500 text-sm">
-                    검색 결과가 없습니다
-                  </div>
-                )}
-              </div>
-            ) : (
-              // 카테고리별 게시판 (아코디언 스타일)
-              <div className="p-2">
-                {boards.map(board => (
-                  <div key={board.id} className="mb-2">
-                    {/* 1단계: 크기 줄임, 다른 버튼들과 동일한 크기 */}
-                    <button
-                      onClick={() => handleBoardClick(board)}
-                      className="w-full text-left p-2 bg-gray-50 hover:bg-gray-100 rounded-lg mb-1"
-                    >
-                      <div className="font-semibold text-blue-600 text-sm">{board.name}</div>
-                    </button>
-                    
-                    {/* 2단계: 항상 표시됨 */}
-                    {board.children && board.children.length > 0 && (
-                      <div className="ml-4 space-y-1">
-                        {board.children
-                          .sort((a, b) => a.display_order - b.display_order)
-                          .map(child => (
-                            <div key={child.id}>
-                              <div className="flex items-center bg-white rounded">
-                                {/* 2단계 게시판 이름 */}
-                                <button
-                                  onClick={() => handleBoardClick(child)}
-                                  className="flex-1 text-left p-2 hover:bg-gray-50 rounded-l text-sm"
-                                >
-                                  {child.name}
-                                </button>
-                                
-                                {/* 3단계 하위 메뉴가 있는 경우에만 펼치기/접기 버튼 */}
-                                {child.children && child.children.length > 0 && (
-                                  <button
-                                    onClick={() => toggleExpanded(child.id)}
-                                    className="p-2 hover:bg-gray-50 rounded-r border-l border-gray-200"
-                                  >
-                                    <ChevronDown 
-                                      className={`h-3 w-3 transition-transform ${
-                                        expandedBoards.has(child.id) ? 'rotate-180' : ''
-                                      }`} 
-                                    />
-                                  </button>
-                                )}
-                              </div>
+                  
+                  {/* 2단계: 항상 표시됨 */}
+                  {board.children && board.children.length > 0 && (
+                    <div className="ml-4 space-y-1">
+                      {board.children
+                        .sort((a, b) => a.display_order - b.display_order)
+                        .map(child => (
+                          <div key={child.id}>
+                            <div className="flex items-center bg-white rounded">
+                              {/* 2단계 게시판 이름 */}
+                              <button
+                                onClick={() => handleBoardClick(child)}
+                                className="flex-1 text-left p-2 hover:bg-gray-50 rounded-l text-sm"
+                              >
+                                {child.name}
+                              </button>
                               
-                              {/* 3단계 하위 게시판 (펼쳐진 경우에만 표시) */}
-                              {child.children && child.children.length > 0 && expandedBoards.has(child.id) && (
-                                <div className="ml-4 mt-1 space-y-1">
-                                  {child.children
-                                    .sort((a, b) => a.display_order - b.display_order)
-                                    .map(grandChild => (
-                                      <button
-                                        key={grandChild.id}
-                                        onClick={() => handleBoardClick(grandChild)}
-                                        className="w-full text-left p-2 hover:bg-gray-50 rounded text-sm text-gray-600 bg-gray-50"
-                                      >
-                                        ┗ {grandChild.name}
-                                      </button>
-                                    ))}
-                                </div>
+                              {/* 3단계 하위 메뉴가 있는 경우에만 펼치기/접기 버튼 */}
+                              {child.children && child.children.length > 0 && (
+                                <button
+                                  onClick={() => toggleExpanded(child.id)}
+                                  className="p-2 hover:bg-gray-50 rounded-r border-l border-gray-200"
+                                >
+                                  <ChevronDown 
+                                    className={`h-3 w-3 transition-transform ${
+                                      expandedBoards.has(child.id) ? 'rotate-180' : ''
+                                    }`} 
+                                  />
+                                </button>
                               )}
                             </div>
-                          ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+                            
+                            {/* 3단계 하위 게시판 (펼쳐진 경우에만 표시) */}
+                            {child.children && child.children.length > 0 && expandedBoards.has(child.id) && (
+                              <div className="ml-4 mt-1 space-y-1">
+                                {child.children
+                                  .sort((a, b) => a.display_order - b.display_order)
+                                  .map(grandChild => (
+                                    <button
+                                      key={grandChild.id}
+                                      onClick={() => handleBoardClick(grandChild)}
+                                      className="w-full text-left p-2 hover:bg-gray-50 rounded text-sm text-gray-600 bg-gray-50"
+                                    >
+                                      ┗ {grandChild.name}
+                                    </button>
+                                  ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -922,10 +832,7 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
           )}
         </div>
 
-        {/* 모바일 검색창 - 제일 오른쪽에 고정 */}
-        <div className="flex-shrink-0">
-          <MobileSearchBar />
-        </div>
+        {/* 모바일 검색창 제거 - HeaderClient로 이동 */}
       </div>
 
       {/* 모바일 게시판 모달 */}

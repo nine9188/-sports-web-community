@@ -264,6 +264,105 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
   );
 });
 
+// 검색 모달 컴포넌트
+const SearchModal = React.memo(function SearchModal({
+  isOpen,
+  onClose
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const router = useRouter();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+      onClose();
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      onClose();
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return ReactDOM.createPortal(
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center pt-20">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">검색</h2>
+          <button 
+            onClick={onClose}
+            className="p-1 hover:bg-gray-100 rounded-full"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        
+        <form onSubmit={handleSearch}>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="게시글, 뉴스, 팀 검색..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              autoFocus
+            />
+          </div>
+          
+          <div className="flex justify-end mt-4 space-x-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
+            >
+              취소
+            </button>
+            <button
+              type="submit"
+              disabled={!searchQuery.trim()}
+              className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            >
+              검색
+            </button>
+          </div>
+        </form>
+        
+        {/* 검색 팁 */}
+        <div className="mt-4 pt-4 border-t text-xs text-gray-500">
+          <p>💡 검색 팁:</p>
+          <ul className="mt-1 space-y-1">
+            <li>• 게시글 제목, 내용, 작성자로 검색 가능</li>
+            <li>• 팀명이나 선수명으로도 검색할 수 있어요</li>
+          </ul>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+});
+
 export default function HeaderClient({ 
   onProfileClick, 
   isSidebarOpen, 
@@ -273,6 +372,7 @@ export default function HeaderClient({
 }: HeaderClientProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLiveScoreOpen, setIsLiveScoreOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { iconUrl, updateUserIconState } = useIcon();
   
   // 서버에서 전달받은 사용자 데이터 사용
@@ -305,6 +405,11 @@ export default function HeaderClient({
   const toggleLiveScore = useCallback(() => {
     setIsLiveScoreOpen(!isLiveScoreOpen);
   }, [isLiveScoreOpen]);
+
+  // 검색 모달 토글
+  const toggleSearch = useCallback(() => {
+    setIsSearchOpen(!isSearchOpen);
+  }, [isSearchOpen]);
 
   // 인증 상태에 따른 렌더링 결정
   const renderAuthState = useMemo(() => {
@@ -367,6 +472,15 @@ export default function HeaderClient({
           </div>
           <div className="flex flex-1 items-center justify-end space-x-4">
             <div className="flex items-center space-x-2">
+              {/* 검색 아이콘 - 프로필 왼쪽에 추가 */}
+              <button 
+                onClick={toggleSearch}
+                className="flex items-center justify-center w-9 h-9 rounded-full active:bg-gray-200 transition-colors duration-150"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+              >
+                <Search className="h-4 w-4 text-gray-600" />
+              </button>
+              
               <div className="min-w-[40px] h-9">
                 {renderAuthState}
               </div>
@@ -398,6 +512,12 @@ export default function HeaderClient({
       <LiveScoreModal
         isOpen={isLiveScoreOpen}
         onClose={() => setIsLiveScoreOpen(false)}
+      />
+
+      {/* 검색 모달 */}
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
       />
     </header>
   );
