@@ -45,21 +45,11 @@ export async function createSearchLog(params: {
       })
 
     if (error) {
-      console.error('검색 로그 저장 실패:', error)
       return false
     }
 
-    console.log('✅ 검색 로그 저장 성공:', {
-      query: params.search_query,
-      type: params.search_type,
-      results: params.results_count,
-      user: user?.id ? '로그인 사용자' : '비로그인 사용자',
-      ip: ipAddress?.substring(0, 8) + '***' // IP 일부만 로깅
-    })
-
     return true
-  } catch (error) {
-    console.error('검색 로그 저장 중 오류:', error)
+  } catch {
     return false
   }
 }
@@ -87,7 +77,6 @@ export async function getPopularSearches(
     const { data, error } = await query
 
     if (error) {
-      console.error('인기 검색어 조회 실패:', error)
       return []
     }
 
@@ -108,8 +97,7 @@ export async function getPopularSearches(
         search_count
       }))
 
-  } catch (error) {
-    console.error('인기 검색어 조회 중 오류:', error)
+  } catch {
     return []
   }
 }
@@ -159,7 +147,6 @@ export async function trackSearchResultClick(params: {
     const { data: searchLogs, error: searchError } = await searchLogQuery
 
     if (searchError) {
-      console.error('검색 로그 조회 실패:', searchError)
       return false
     }
 
@@ -175,16 +162,9 @@ export async function trackSearchResultClick(params: {
         .eq('id', searchLogs[0].id)
 
       if (updateError) {
-        console.error('검색 로그 클릭 업데이트 실패:', updateError)
         return false
       }
 
-      console.log('✅ 검색 결과 클릭 추적 성공 (기존 로그 업데이트):', {
-        query: params.search_query,
-        clicked_id: params.clicked_result_id,
-        clicked_type: params.clicked_result_type,
-        user: user?.id ? '로그인 사용자' : '비로그인 사용자'
-      })
     } else {
       // 기존 검색 로그가 없으면 새로 생성 (클릭 정보 포함)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -203,21 +183,12 @@ export async function trackSearchResultClick(params: {
         })
 
       if (insertError) {
-        console.error('검색 로그 클릭 생성 실패:', insertError)
         return false
       }
-
-      console.log('✅ 검색 결과 클릭 추적 성공 (새 로그 생성):', {
-        query: params.search_query,
-        clicked_id: params.clicked_result_id,
-        clicked_type: params.clicked_result_type,
-        user: user?.id ? '로그인 사용자' : '비로그인 사용자'
-      })
     }
 
     return true
-  } catch (error) {
-    console.error('검색 결과 클릭 추적 중 오류:', error)
+  } catch {
     return false
   }
 }
