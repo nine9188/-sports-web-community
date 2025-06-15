@@ -54,6 +54,15 @@ export const metadata = {
   description: '스포츠 팬들을 위한 커뮤니티 플랫폼',
 };
 
+// 뷰포트 설정 - 모바일에서 확대/축소 방지
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover'
+};
+
 export default async function RootLayout({
   children,
 }: {

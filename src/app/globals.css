@@ -73,10 +73,22 @@
   
   html, body {
     @apply w-full h-full overflow-x-hidden;
+    /* 모바일에서 확대/축소 방지 */
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* 모바일에서 배경 고정 */
+    position: relative;
+    min-height: 100vh;
+    min-height: 100dvh; /* 동적 뷰포트 높이 지원 */
   }
 
   body {
     @apply bg-white text-gray-900;
+    /* 모바일에서 배경 확대 방지 */
+    background-attachment: fixed;
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
   }
 
   @media (max-width: 768px) {
