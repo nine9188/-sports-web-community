@@ -305,8 +305,8 @@ const SearchModal = React.memo(function SearchModal({
   if (!isOpen) return null;
 
   return ReactDOM.createPortal(
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center pt-20">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-sm sm:max-w-md mx-4 p-4 sm:p-6">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center pt-20 px-6">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-sm sm:max-w-md p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base sm:text-lg font-semibold">검색</h2>
           <button 
