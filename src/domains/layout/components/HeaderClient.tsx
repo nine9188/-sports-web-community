@@ -463,10 +463,10 @@ export default function HeaderClient({
           </div>
           <div className="flex flex-1 items-center justify-end space-x-4">
             <div className="flex items-center space-x-2">
-              {/* 검색 아이콘 - 프로필 왼쪽에 추가 */}
+              {/* 검색 아이콘 - 모바일에서만 표시 */}
               <button 
                 onClick={toggleSearch}
-                className="flex items-center justify-center w-9 h-9 rounded-full active:bg-gray-200 transition-colors duration-150"
+                className="md:hidden flex items-center justify-center w-9 h-9 rounded-full active:bg-gray-200 transition-colors duration-150"
                 style={{ WebkitTapHighlightColor: 'transparent' }}
               >
                 <Search className="h-4 w-4 text-gray-600" />
@@ -475,6 +475,7 @@ export default function HeaderClient({
               <div className="min-w-[40px] h-9">
                 {renderAuthState}
               </div>
+              
               <button 
                 className="lg:hidden flex items-center justify-center w-9 h-9 rounded-full active:bg-gray-200 transition-colors duration-150"
                 onClick={toggleMobileMenu}
