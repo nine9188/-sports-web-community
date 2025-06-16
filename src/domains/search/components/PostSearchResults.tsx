@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import UserIcon from '@/shared/components/UserIcon'
 import type { PostSearchResult } from '../types'
 import { trackSearchResultClick } from '../actions/searchLogs'
 import Pagination from './Pagination'
@@ -93,20 +92,15 @@ export default function PostSearchResults({
               {/* 메타 정보 */}
               <div className="flex items-center justify-between text-xs text-gray-500">
                 <div className="flex items-center space-x-3">
+                  <span>{post.author_name || post.profiles?.nickname || '익명'}</span>
                   {(post.board_name || post.boards?.name) && (
-                    <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
-                      {post.board_name || post.boards?.name}
-                    </span>
+                    <>
+                      <span className="text-gray-400">|</span>
+                      <span className="text-gray-600">
+                        {post.board_name || post.boards?.name}
+                      </span>
+                    </>
                   )}
-                  <div className="flex items-center space-x-1">
-                    <UserIcon 
-                      iconUrl={null}
-                      level={1}
-                      size={14}
-                      className="w-3.5 h-3.5"
-                    />
-                    <span>{post.author_name || post.profiles?.nickname || '익명'}</span>
-                  </div>
                 </div>
                 <div className="flex items-center space-x-3">
                   <span>조회 {post.views ? post.views.toLocaleString() : '0'}</span>

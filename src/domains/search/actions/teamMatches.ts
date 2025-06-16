@@ -80,6 +80,8 @@ export async function getTeamMatches(teamId: number, limit: number = 10): Promis
   error?: string
 }> {
   try {
+    console.log(`[getTeamMatches] 팀 ID ${teamId}의 경기 정보 요청 (limit: ${limit})`)
+    
     // footballApi.ts의 fetchFromFootballApi 함수 사용
     const currentSeason = new Date().getFullYear()
     
@@ -89,11 +91,17 @@ export async function getTeamMatches(teamId: number, limit: number = 10): Promis
         team: teamId,
         season: currentSeason,
         last: Math.floor(limit / 2)
+      }).catch(error => {
+        console.warn(`[getTeamMatches] 최근 경기 조회 실패:`, error)
+        return { response: [] }
       }),
       fetchFromFootballApi('fixtures', {
         team: teamId,
         season: currentSeason,
         next: Math.ceil(limit / 2)
+      }).catch(error => {
+        console.warn(`[getTeamMatches] 예정 경기 조회 실패:`, error)
+        return { response: [] }
       })
     ])
 
@@ -102,6 +110,8 @@ export async function getTeamMatches(teamId: number, limit: number = 10): Promis
       ...(lastMatches.response || []),
       ...(nextMatches.response || [])
     ]
+
+    console.log(`[getTeamMatches] 팀 ID ${teamId}: 총 ${allMatches.length}개 경기 조회됨`)
 
     // 날짜순으로 정렬 (최신순)
     const sortedMatches = allMatches.sort((a: TeamMatch, b: TeamMatch) => {
@@ -114,7 +124,7 @@ export async function getTeamMatches(teamId: number, limit: number = 10): Promis
     }
 
   } catch (error) {
-    console.error('팀 매치 조회 오류:', error)
+    console.error('[getTeamMatches] 팀 매치 조회 오류:', error)
     return {
       success: false,
       data: [],
@@ -130,16 +140,22 @@ export async function getMatchDetails(fixtureId: number): Promise<{
   error?: string
 }> {
   try {
+    console.log(`[getMatchDetails] 경기 ID ${fixtureId} 상세 정보 요청`)
+    
     // footballApi.ts의 fetchFromFootballApi 함수 사용
     const data = await fetchFromFootballApi('fixtures', { id: fixtureId })
 
+    const matchData = data.response?.[0] || null
+    
+    console.log(`[getMatchDetails] 경기 ID ${fixtureId}: ${matchData ? '조회 성공' : '데이터 없음'}`)
+
     return {
       success: true,
-      data: data.response?.[0] || null
+      data: matchData
     }
 
   } catch (error) {
-    console.error('경기 상세 정보 조회 오류:', error)
+    console.error('[getMatchDetails] 경기 상세 정보 조회 오류:', error)
     return {
       success: false,
       data: null,
