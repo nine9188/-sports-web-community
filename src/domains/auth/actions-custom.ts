@@ -189,7 +189,7 @@ export async function resetPasswordWithToken(token: string, newPassword: string)
     const { data: user, error: userError } = await supabase
       .from('profiles')
       .select('id')
-      .eq('email', email)
+      .eq('email', email!)
       .single();
 
     if (userError || !user) {

@@ -3,7 +3,7 @@
 import { createClient } from '@/shared/api/supabaseServer';
 import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
 import { formatDate } from '@/domains/boards/utils/post/postUtils';
-import type { Json } from '@/types/supabase';
+import type { Json } from '@/shared/types/supabase';
 
 // 게시글 타입 정의
 export interface Post {

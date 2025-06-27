@@ -283,6 +283,8 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
     const formattedPosts = await formatPosts(
       (postsData || []).map(post => ({
         ...post,
+        is_hidden: post.is_hidden ?? undefined,
+        is_deleted: post.is_deleted ?? undefined,
         profiles: post.profiles ? {
           ...post.profiles,
           level: post.profiles.level || undefined

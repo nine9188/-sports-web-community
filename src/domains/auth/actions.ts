@@ -52,10 +52,7 @@ export async function signIn(username: string, password: string) {
     // 로그인 성공 시 시도 기록 초기화
     await clearLoginAttempts(username);
     
-    // 다중 로그인 차단 - 기존 세션 무효화
-    if (data.user) {
-      await handleSingleDeviceLogin(data.user.id);
-    }
+    // 다중 로그인 차단 기능은 현재 비활성화됨
 
     revalidatePath('/', 'layout')
     return { data, success: true }
@@ -140,109 +137,7 @@ async function clearLoginAttempts(username: string): Promise<void> {
   }
 }
 
-/**
- * 단일 디바이스 로그인 처리 (다중 로그인 차단)
- */
-async function handleSingleDeviceLogin(userId: string) {
-  try {
-    const supabase = await createClient();
-    const now = new Date().toISOString();
-    const sessionId = generateSessionId();
-    
-    // 기존 활성 세션 확인
-    const { data: existingSessions } = await supabase
-      .from('user_sessions')
-      .select('session_id, created_at')
-      .eq('user_id', userId)
-      .eq('is_active', true);
-    
-    // 기존 세션들을 비활성화
-    if (existingSessions && existingSessions.length > 0) {
-      await supabase
-        .from('user_sessions')
-        .update({ 
-          is_active: false, 
-          ended_at: now 
-        })
-        .eq('user_id', userId)
-        .eq('is_active', true);
-      
-      console.log(`사용자 ${userId}의 기존 세션 ${existingSessions.length}개를 무효화했습니다.`);
-    }
-    
-    // 새 세션 기록
-    await supabase
-      .from('user_sessions')
-      .insert({
-        user_id: userId,
-        session_id: sessionId,
-        created_at: now,
-        last_activity: now,
-        is_active: true
-      });
-    
-    // 세션 ID를 로컬 스토리지에 저장 (클라이언트에서 확인용)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('current_session_id', sessionId);
-    }
-    
-  } catch (error) {
-    console.error('단일 디바이스 로그인 처리 오류:', error);
-  }
-}
-
-/**
- * 세션 ID 생성
- */
-function generateSessionId(): string {
-  return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-}
-
-/**
- * 현재 세션 유효성 확인
- */
-export async function validateCurrentSession() {
-  try {
-    const supabase = await createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { valid: false, reason: 'no_user' };
-    
-    // 클라이언트에서 세션 ID 확인
-    const currentSessionId = typeof window !== 'undefined' 
-      ? localStorage.getItem('current_session_id') 
-      : null;
-    
-    if (!currentSessionId) return { valid: false, reason: 'no_session_id' };
-    
-    // 서버에서 세션 유효성 확인
-    const { data: sessionData } = await supabase
-      .from('user_sessions')
-      .select('is_active, created_at')
-      .eq('user_id', user.id)
-      .eq('session_id', currentSessionId)
-      .eq('is_active', true)
-      .single();
-    
-    if (!sessionData) {
-      // 다른 디바이스에서 로그인했음을 의미
-      return { valid: false, reason: 'session_invalidated' };
-    }
-    
-    // 세션 활동 시간 업데이트
-    await supabase
-      .from('user_sessions')
-      .update({ last_activity: new Date().toISOString() })
-      .eq('user_id', user.id)
-      .eq('session_id', currentSessionId);
-    
-    return { valid: true };
-    
-  } catch (error) {
-    console.error('세션 유효성 확인 오류:', error);
-    return { valid: false, reason: 'error' };
-  }
-}
+// 세션 관리 기능은 현재 비활성화됨
 
 /**
  * 사용자 회원가입 처리 서버 액션
