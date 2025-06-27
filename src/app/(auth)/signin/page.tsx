@@ -15,27 +15,27 @@ function LoginContent() {
   const redirectUrl = searchParams?.get('redirect') || searchParams?.get('redirect_url') || '/';
   const message = searchParams?.get('message');
   
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberEmail, setRememberEmail] = useState(false);
+  const [rememberUsername, setRememberUsername] = useState(false);
   
   // 유효성 검사 상태
-  const [emailValid, setEmailValid] = useState(false);
-  const [emailError, setEmailError] = useState('');
+  const [usernameValid, setUsernameValid] = useState(false);
+  const [usernameError, setUsernameError] = useState('');
   const [passwordValid, setPasswordValid] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   
   const { user } = useAuth();
   
-  // 컴포넌트 마운트 시 저장된 이메일 불러오기
+  // 컴포넌트 마운트 시 저장된 아이디 불러오기
   useEffect(() => {
-    const savedEmail = localStorage.getItem('remembered-email');
-    if (savedEmail) {
-      setEmail(savedEmail);
-      setRememberEmail(true);
-      validateEmail(savedEmail);
+    const savedUsername = localStorage.getItem('remembered-username');
+    if (savedUsername) {
+      setUsername(savedUsername);
+      setRememberUsername(true);
+      validateUsername(savedUsername);
     }
   }, []);
   
@@ -54,20 +54,19 @@ function LoginContent() {
     }
   }, [user, loading, router, searchParams]);
   
-  // 이메일 유효성 검사
-  const validateEmail = (value: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // 아이디 유효성 검사
+  const validateUsername = (value: string) => {
     if (!value) {
-      setEmailError('이메일을 입력해주세요.');
-      setEmailValid(false);
+      setUsernameError('아이디를 입력해주세요.');
+      setUsernameValid(false);
       return false;
-    } else if (!emailRegex.test(value)) {
-      setEmailError('유효한 이메일 주소를 입력해주세요.');
-      setEmailValid(false);
+    } else if (value.length < 3) {
+      setUsernameError('아이디는 최소 3자 이상이어야 합니다.');
+      setUsernameValid(false);
       return false;
     } else {
-      setEmailError('');
-      setEmailValid(true);
+      setUsernameError('');
+      setUsernameValid(true);
       return true;
     }
   };
@@ -96,29 +95,29 @@ function LoginContent() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const isEmailValid = validateEmail(email);
+    const isUsernameValid = validateUsername(username);
     const isPasswordValid = validatePassword(password);
     
-    if (!isEmailValid || !isPasswordValid) {
+    if (!isUsernameValid || !isPasswordValid) {
       return;
     }
     
     try {
       setLoading(true);
       
-      // 이메일 기억하기 처리
-      if (rememberEmail) {
-        localStorage.setItem('remembered-email', email);
+      // 아이디 기억하기 처리
+      if (rememberUsername) {
+        localStorage.setItem('remembered-username', username);
       } else {
-        localStorage.removeItem('remembered-email');
+        localStorage.removeItem('remembered-username');
       }
       
-      // 서버 액션을 통한 로그인
-      const result = await signIn(email, password);
+      // 서버 액션을 통한 로그인 (아이디로)
+      const result = await signIn(username, password);
       
       if (result.error) {
         if (result.error.includes('Invalid login credentials')) {
-          toast.error('이메일 또는 비밀번호가 올바르지 않습니다');
+          toast.error('아이디 또는 비밀번호가 올바르지 않습니다');
         } else {
           toast.error(result.error);
         }
@@ -152,35 +151,35 @@ function LoginContent() {
       
       <form onSubmit={handleLogin} className="space-y-6">
         <div>
-          <label className="block text-gray-700 mb-1 text-sm font-medium">이메일 주소</label>
+          <label className="block text-gray-700 mb-1 text-sm font-medium">아이디</label>
           <div className="relative">
             <input
-              id="email"
-              type="email"
-              value={email}
+              id="username"
+              type="text"
+              value={username}
               onChange={(e) => {
-                setEmail(e.target.value);
-                validateEmail(e.target.value);
+                setUsername(e.target.value);
+                validateUsername(e.target.value);
               }}
-              onBlur={() => validateEmail(email)}
+              onBlur={() => validateUsername(username)}
               className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 ${
-                emailError ? 'border-red-500 focus:ring-red-300' : 
-                emailValid ? 'border-green-500 focus:ring-green-300' : 
+                usernameError ? 'border-red-500 focus:ring-red-300' : 
+                usernameValid ? 'border-green-500 focus:ring-green-300' : 
                 'border-gray-300 focus:ring-blue-500'
               }`}
-              placeholder="이메일 주소"
+              placeholder="아이디"
               required
             />
-            {emailValid && !emailError && (
+            {usernameValid && !usernameError && (
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                 <Check className="h-5 w-5 text-green-500" />
               </div>
             )}
           </div>
-          {emailError && (
+          {usernameError && (
             <p className="mt-1 text-sm text-red-600 flex items-center">
               <AlertCircle className="h-4 w-4 mr-1" />
-              {emailError}
+              {usernameError}
             </p>
           )}
         </div>
@@ -229,25 +228,30 @@ function LoginContent() {
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <input
-              id="remember-email"
+              id="remember-username"
               type="checkbox"
-              checked={rememberEmail}
-              onChange={() => setRememberEmail(!rememberEmail)}
-              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              checked={rememberUsername}
+              onChange={() => setRememberUsername(!rememberUsername)}
+              className="h-4 w-4 text-slate-600 border-gray-300 rounded focus:ring-slate-500"
             />
-            <label htmlFor="remember-email" className="ml-2 block text-sm text-gray-700">
-              이메일 기억하기
+            <label htmlFor="remember-username" className="ml-2 block text-sm text-gray-700">
+              아이디 기억하기
             </label>
           </div>
           
-          <Link href="/help/recovery" className="text-sm text-blue-600 hover:underline">
-            비밀번호 찾기
-          </Link>
+          <div className="flex flex-col items-end space-y-1">
+            <Link href="/help/account-recovery?tab=id" className="text-xs text-gray-500 hover:text-slate-600 hover:underline">
+              아이디 찾기
+            </Link>
+            <Link href="/help/account-recovery?tab=password" className="text-sm text-slate-600 hover:text-slate-800 hover:underline">
+              비밀번호 찾기
+            </Link>
+          </div>
         </div>
         
         <button
           type="submit"
-          disabled={loading || !emailValid || !passwordValid}
+          disabled={loading || !usernameValid || !passwordValid}
           className="w-full py-3 px-4 bg-slate-700 hover:bg-slate-800 text-white font-medium rounded-md transition-colors disabled:opacity-50"
         >
           {loading ? '로그인 중...' : '로그인'}
@@ -257,7 +261,7 @@ function LoginContent() {
       <div className="mt-8 text-center">
         <p className="text-gray-600">
           아직 SPORTS Member가 아니신가요?{' '}
-          <Link href="/signup" className="text-blue-600 hover:underline">
+          <Link href="/signup" className="text-slate-600 hover:text-slate-800 hover:underline font-medium">
             회원가입
           </Link>
         </p>
@@ -268,25 +272,21 @@ function LoginContent() {
 
 export default function SignInPage() {
   return (
-    <div className="flex flex-col justify-center items-center min-h-[calc(100vh-120px)]">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <Suspense fallback={
-          <div className="max-w-md w-full">
-            <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 rounded w-48 mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded w-3/4 mb-8"></div>
-              <div className="space-y-4">
-                <div className="h-12 bg-gray-200 rounded"></div>
-                <div className="h-12 bg-gray-200 rounded"></div>
-                <div className="h-12 bg-gray-200 rounded"></div>
-              </div>
-            </div>
+    <Suspense fallback={
+      <div className="max-w-md w-full">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-48 mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded w-3/4 mb-8"></div>
+          <div className="space-y-4">
+            <div className="h-12 bg-gray-200 rounded"></div>
+            <div className="h-12 bg-gray-200 rounded"></div>
+            <div className="h-12 bg-gray-200 rounded"></div>
           </div>
-        }>
-          <LoginContent />
-        </Suspense>
+        </div>
       </div>
-    </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 } 

@@ -844,6 +844,42 @@ export type Database = {
         }
         Relationships: []
       }
+      verification_codes: {
+        Row: {
+          id: string
+          email: string
+          code: string
+          type: string
+          token: string | null
+          expires_at: string
+          used_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          email: string
+          code: string
+          type: string
+          token?: string | null
+          expires_at: string
+          used_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          code?: string
+          type?: string
+          token?: string | null
+          expires_at?: string
+          used_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

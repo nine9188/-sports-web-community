@@ -5,17 +5,32 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 /**
- * 사용자 로그인 처리 서버 액션
+ * 사용자 로그인 처리 서버 액션 (아이디 기반)
  */
-export async function signIn(email: string, password: string) {
+export async function signIn(username: string, password: string) {
   try {
     const supabase = await createClient()
+    
+    // 아이디로 이메일 조회
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('username', username)
+      .single();
+    
+    if (profileError || !profile?.email) {
+      // 아이디 기반 로그인 시도 제한 확인
+      await recordLoginAttempt(username);
+      return { error: '아이디 또는 비밀번호가 올바르지 않습니다.' };
+    }
+    
+    const email = profile.email;
     
     // 로그인 시도 제한 확인
     const now = Date.now();
     
     // 차단 상태 확인 (15분 차단)
-    const blockData = await checkLoginBlock(email);
+    const blockData = await checkLoginBlock(username);
     if (blockData.isBlocked) {
       const remainingTime = Math.ceil((blockData.blockedUntil - now) / 1000 / 60);
       return { 
@@ -30,12 +45,12 @@ export async function signIn(email: string, password: string) {
 
     if (error) {
       // 로그인 실패 시 시도 횟수 증가
-      await recordLoginAttempt(email);
-      return { error: error.message }
+      await recordLoginAttempt(username);
+      return { error: '아이디 또는 비밀번호가 올바르지 않습니다.' }
     }
 
     // 로그인 성공 시 시도 기록 초기화
-    await clearLoginAttempts(email);
+    await clearLoginAttempts(username);
     
     // 다중 로그인 차단 - 기존 세션 무효화
     if (data.user) {
@@ -50,19 +65,19 @@ export async function signIn(email: string, password: string) {
 }
 
 /**
- * 로그인 차단 상태 확인
+ * 로그인 차단 상태 확인 (아이디 기반)
  */
-async function checkLoginBlock(email: string): Promise<{ isBlocked: boolean; blockedUntil: number }> {
+async function checkLoginBlock(username: string): Promise<{ isBlocked: boolean; blockedUntil: number }> {
   const now = Date.now();
   
   try {
     const supabase = await createClient();
     
-    // 최근 15분간의 로그인 시도 기록 조회
+    // 최근 15분간의 로그인 시도 기록 조회 (아이디 기반)
     const { data: attempts } = await supabase
       .from('login_attempts')
       .select('*')
-      .eq('email', email)
+      .eq('email', username) // email 필드에 username을 저장
       .gte('created_at', new Date(now - 15 * 60 * 1000).toISOString())
       .order('created_at', { ascending: false });
     
@@ -90,16 +105,16 @@ async function checkLoginBlock(email: string): Promise<{ isBlocked: boolean; blo
 }
 
 /**
- * 로그인 시도 기록
+ * 로그인 시도 기록 (아이디 기반)
  */
-async function recordLoginAttempt(email: string): Promise<void> {
+async function recordLoginAttempt(username: string): Promise<void> {
   try {
     const supabase = await createClient();
     
     await supabase
       .from('login_attempts')
       .insert({
-        email,
+        email: username, // email 필드에 username을 저장
         ip_address: 'unknown', // 실제 구현 시 IP 주소 추가
         user_agent: 'unknown', // 실제 구현 시 User-Agent 추가
         created_at: new Date().toISOString()
@@ -110,16 +125,16 @@ async function recordLoginAttempt(email: string): Promise<void> {
 }
 
 /**
- * 로그인 시도 기록 초기화
+ * 로그인 시도 기록 초기화 (아이디 기반)
  */
-async function clearLoginAttempts(email: string): Promise<void> {
+async function clearLoginAttempts(username: string): Promise<void> {
   try {
     const supabase = await createClient();
     
     await supabase
       .from('login_attempts')
       .delete()
-      .eq('email', email);
+      .eq('email', username); // email 필드에 username이 저장되어 있음
   } catch (error) {
     console.error('로그인 시도 기록 초기화 오류:', error);
   }
