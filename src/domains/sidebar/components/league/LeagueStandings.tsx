@@ -189,7 +189,7 @@ export default function LeagueStandings({
                   <tr 
                     key={team.team.team_id}
                     className={`${index < standings.standings[0].length - 1 ? 'border-b' : ''} hover:bg-gray-50 cursor-pointer ${index < 4 ? 'text-blue-600' : ''}`}
-                    onClick={() => router.push(`/livescore/football/team/${team.team.team_id}/overview`)}
+                    onClick={() => router.push(`/livescore/football/team/${team.team.team_id}?tab=overview`)}
                   >
                     <td className="text-center py-1.5 px-0">{team.rank}</td>
                     <td className="text-left py-1.5 px-1">

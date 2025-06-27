@@ -47,10 +47,10 @@ export default function CommentSection({ postId, postOwnerId }: CommentSectionPr
   const updateComments = useCallback(async () => {
     try {
       const response = await getComments(postId);
-      if (response.success && response.comments && response.comments.length >= 0) {
+      if (response && response.success && response.comments && response.comments.length >= 0) {
         setComments(response.comments);
       } else {
-        console.error('댓글 업데이트 실패:', response.error);
+        console.error('댓글 업데이트 실패:', response?.error || '응답이 없습니다');
       }
     } catch (error) {
       console.error("댓글 실시간 업데이트 중 오류:", error);

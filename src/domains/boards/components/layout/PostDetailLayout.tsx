@@ -45,6 +45,7 @@ interface PostDetailLayoutProps {
     id: string;
     title: string;
     content: Record<string, unknown>;
+    meta?: Record<string, unknown> | null;
     user_id: string;
     created_at: string | null;
     views: number | null;
@@ -273,7 +274,7 @@ export default function PostDetailLayout({
         />
         
         {/* 게시글 본문 컴포넌트 */}
-        <PostContent content={post.content || ''} />
+        <PostContent content={post.content || ''} meta={post.meta || null} />
         
         {/* 3. 추천/비추천 버튼 및 게시글 액션 */}
         <div className="px-4 sm:px-6 py-4 border-t">

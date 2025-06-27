@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import MatchStatsChart from './MatchStatsChart';
 
 // 글로벌 타입 확장
 declare global {
@@ -57,40 +58,174 @@ interface RssPost {
 
 interface PostContentProps {
   content: string | TipTapDoc | RssPost | Record<string, unknown>;
+  meta?: Record<string, unknown> | null;
 }
 
-export default function PostContent({ content }: PostContentProps) {
+// 텍스트에서 경기 통계를 추출하는 함수
+const parseMatchStatsFromText = (text: string) => {
+  try {
+    console.log('🔍 텍스트 파싱 시작:', text.substring(0, 500));
+    
+    // 홈팀과 원정팀 데이터 추출
+    const homeTeamMatch = text.match(/【\s*홈팀\s+(.+?)\s+시즌\s+통계\s*】([\s\S]*?)(?=【|$)/);
+    const awayTeamMatch = text.match(/【\s*어웨이팀\s+(.+?)\s+시즌\s+통계\s*】([\s\S]*?)(?=【|$)/);
+    const oddsMatch = text.match(/【\s*배당률\s+정보\s*】([\s\S]*?)(?=【|$)/);
+    
+    console.log('🏠 홈팀 매치:', homeTeamMatch?.[1]);
+    console.log('✈️ 어웨이팀 매치:', awayTeamMatch?.[1]);
+    console.log('💰 배당률 매치:', oddsMatch?.[1]);
+    
+    if (!homeTeamMatch || !awayTeamMatch) {
+      console.log('❌ 팀 데이터 추출 실패');
+      return null;
+    }
+
+    const homeTeamName = homeTeamMatch[1].trim();
+    const homeTeamData = homeTeamMatch[2];
+    const awayTeamName = awayTeamMatch[1].trim();
+    const awayTeamData = awayTeamMatch[2];
+    const oddsData = oddsMatch ? oddsMatch[1] : '';
+
+    // 홈팀 데이터 파싱 (실제 데이터 형식에 맞게 수정)
+    // "- 경기수: 19경기 - 승부 기록: 11승 4무 4패 - 홈 승률: 57. 9%" 형식
+    const homeMatches = parseInt(homeTeamData.match(/경기수:\s*(\d+)\s*경기/)?.[1] || '0');
+    const homeWinsMatch = homeTeamData.match(/승부\s+기록:\s*(\d+)\s*승\s+(\d+)\s*무\s+(\d+)\s*패/);
+    const homeWins = homeWinsMatch ? parseInt(homeWinsMatch[1]) : 0;
+    const homeDraws = homeWinsMatch ? parseInt(homeWinsMatch[2]) : 0;
+    const homeLosses = homeWinsMatch ? parseInt(homeWinsMatch[3]) : 0;
+    
+    // "홈 승률: 57. 9%" 형식 (공백 포함)
+    const homeWinRateMatch = homeTeamData.match(/홈\s*승률:\s*([\d.\s]+)%/);
+    const homeWinRate = homeWinRateMatch ? parseFloat(homeWinRateMatch[1].replace(/\s+/g, '')) : 0;
+    
+    // "득점: 31골" 형식
+    const homeGoals = parseInt(homeTeamData.match(/득점:\s*(\d+)\s*골/)?.[1] || '0');
+    const homeConceded = parseInt(homeTeamData.match(/실점:\s*(\d+)\s*골/)?.[1] || '0');
+    
+    // "최근 5경기 폼: W - D - W - D - L" 형식
+    const homeFormMatch = homeTeamData.match(/최근\s*5경기\s*폼:\s*([W\s\-\s*D\s\-\s*L\s\-\s*]+)/);
+    const homeForm = homeFormMatch ? homeFormMatch[1].replace(/\s+/g, '') : '';
+    
+    const homeInjuries = parseInt(homeTeamData.match(/부상자\s*수:\s*(\d+)\s*명/)?.[1] || '0');
+
+    console.log('🏠 홈팀 파싱 결과:', {
+      name: homeTeamName,
+      matches: homeMatches,
+      wins: homeWins,
+      draws: homeDraws,
+      losses: homeLosses,
+      winRate: homeWinRate,
+      goals: homeGoals,
+      conceded: homeConceded,
+      form: homeForm
+    });
+
+    // 어웨이팀 데이터 파싱 (실제 데이터 형식에 맞게 수정)
+    // "- 경기수: 20경기 - 승부 기록: 5승 4무 11패 - 원정 승률: 25. 0%" 형식
+    const awayMatches = parseInt(awayTeamData.match(/경기수:\s*(\d+)\s*경기/)?.[1] || '0');
+    const awayWinsMatch = awayTeamData.match(/승부\s+기록:\s*(\d+)\s*승\s+(\d+)\s*무\s+(\d+)\s*패/);
+    const awayWins = awayWinsMatch ? parseInt(awayWinsMatch[1]) : 0;
+    const awayDraws = awayWinsMatch ? parseInt(awayWinsMatch[2]) : 0;
+    const awayLosses = awayWinsMatch ? parseInt(awayWinsMatch[3]) : 0;
+    
+    // "원정 승률: 25. 0%" 형식 (공백 포함)
+    const awayWinRateMatch = awayTeamData.match(/원정\s*승률:\s*([\d.\s]+)%/);
+    const awayWinRate = awayWinRateMatch ? parseFloat(awayWinRateMatch[1].replace(/\s+/g, '')) : 0;
+    
+    // "득점: 25골" 형식
+    const awayGoals = parseInt(awayTeamData.match(/득점:\s*(\d+)\s*골/)?.[1] || '0');
+    const awayConceded = parseInt(awayTeamData.match(/실점:\s*(\d+)\s*골/)?.[1] || '0');
+    
+    // "최근 5경기 폼: D - W - W - W - W" 형식
+    const awayFormMatch = awayTeamData.match(/최근\s*5경기\s*폼:\s*([W\s\-\s*D\s\-\s*L\s\-\s*]+)/);
+    const awayForm = awayFormMatch ? awayFormMatch[1].replace(/\s+/g, '') : '';
+    
+    const awayInjuries = parseInt(awayTeamData.match(/부상자\s*수:\s*(\d+)\s*명/)?.[1] || '0');
+
+    console.log('✈️ 어웨이팀 파싱 결과:', {
+      name: awayTeamName,
+      matches: awayMatches,
+      wins: awayWins,
+      draws: awayDraws,
+      losses: awayLosses,
+      winRate: awayWinRate,
+      goals: awayGoals,
+      conceded: awayConceded,
+      form: awayForm
+    });
+
+    // 새로운 인터페이스에 맞는 데이터 구조
+    const homeTeam = {
+      name: homeTeamName,
+      matches: homeMatches,
+      wins: homeWins,
+      draws: homeDraws,
+      losses: homeLosses,
+      winRate: homeWinRate,
+      goals: homeGoals,
+      conceded: homeConceded,
+      goalDifference: homeGoals - homeConceded,
+      form: homeForm,
+      injuries: homeInjuries
+    };
+
+    const awayTeam = {
+      name: awayTeamName,
+      matches: awayMatches,
+      wins: awayWins,
+      draws: awayDraws,
+      losses: awayLosses,
+      winRate: awayWinRate,
+      goals: awayGoals,
+      conceded: awayConceded,
+      goalDifference: awayGoals - awayConceded,
+      form: awayForm,
+      injuries: awayInjuries
+    };
+
+    // 배당률 데이터 파싱 (실제 데이터 형식에 맞게)
+    // "- 홈 승리: 2. 75 - 무승부: 3. 30 - 어웨이 승리: 2. 45" 형식 (공백 포함)
+    let bettingOdds = null;
+    if (oddsData) {
+      const homeOddMatch = oddsData.match(/홈\s*승리:\s*([\d.\s]+)/);
+      const drawOddMatch = oddsData.match(/무승부:\s*([\d.\s]+)/);
+      const awayOddMatch = oddsData.match(/어웨이\s*승리:\s*([\d.\s]+)/);
+      
+      const homeOdd = homeOddMatch ? parseFloat(homeOddMatch[1].replace(/\s+/g, '')) : 0;
+      const drawOdd = drawOddMatch ? parseFloat(drawOddMatch[1].replace(/\s+/g, '')) : 0;
+      const awayOdd = awayOddMatch ? parseFloat(awayOddMatch[1].replace(/\s+/g, '')) : 0;
+      
+      console.log('💰 배당률 파싱 결과:', { homeOdd, drawOdd, awayOdd });
+      
+      if (homeOdd > 0 && drawOdd > 0 && awayOdd > 0) {
+        bettingOdds = {
+          home: homeOdd,
+          draw: drawOdd,
+          away: awayOdd
+        };
+      }
+    }
+
+    console.log('✅ 파싱 완료:', { homeTeam, awayTeam, bettingOdds });
+
+    return {
+      homeTeam,
+      awayTeam,
+      bettingOdds
+    };
+  } catch (error) {
+    console.error('❌ 텍스트 데이터 파싱 오류:', error);
+    return null;
+  }
+};
+
+export default function PostContent({ content, meta }: PostContentProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const [isMounted, setIsMounted] = useState(false);
-  
-  // content가 객체인 경우 HTML로 변환
-  const processContent = () => {
-    if (!content) return '';
-    
-    // 문자열인 경우 JSON 파싱 시도
-    if (typeof content === 'string') {
-      // JSON 형태인지 확인 (TipTap JSON)
-      if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
-        try {
-          const parsedContent = JSON.parse(content);
-          console.log('🔍 JSON 파싱 성공:', parsedContent);
-          
-          // 파싱된 객체를 처리
-          return processObjectContent(parsedContent);
-        } catch (error) {
-          console.warn('JSON 파싱 실패, 문자열로 처리:', error);
-          return content; // 파싱 실패시 원본 문자열 반환
-        }
-      }
-      return content; // 일반 HTML 문자열
-    }
-    
-    // 객체인 경우 처리
-    return processObjectContent(content);
-  };
+  const [processedContent, setProcessedContent] = useState<string>('');
 
   // 객체 콘텐츠를 HTML로 변환하는 함수
-  const processObjectContent = (content: TipTapDoc | RssPost | Record<string, unknown>) => {
+  const processObjectContent = useCallback((content: TipTapDoc | RssPost | Record<string, unknown>) => {
     if (typeof content === 'object') {
       try {
         // RSS 게시글인지 확인 (source_url 필드가 있는 경우가 많음)
@@ -146,7 +281,114 @@ export default function PostContent({ content }: PostContentProps) {
           tipTapDoc.content.forEach((node, nodeIndex) => {
             console.log(`📝 노드 ${nodeIndex}:`, node);
             
-            if (node.type === 'image' && node.attrs && node.attrs.src) {
+            if (node.type === 'matchCard' && node.attrs) {
+              // 매치 카드 노드 처리
+              console.log('🏟️ 매치 카드 노드 발견:', node.attrs);
+              const { matchId, matchData } = node.attrs;
+              
+              if (matchData && typeof matchData === 'object') {
+                const matchDataObj = matchData as Record<string, unknown>;
+                const teams = matchDataObj.teams as Record<string, unknown> | undefined;
+                const goals = matchDataObj.goals as Record<string, unknown> | undefined;
+                const league = matchDataObj.league as Record<string, unknown> | undefined;
+                const status = matchDataObj.status as Record<string, unknown> | undefined;
+                
+                const homeTeam = (teams?.home as Record<string, unknown>) || { name: '홈팀', logo: '/placeholder.png' };
+                const awayTeam = (teams?.away as Record<string, unknown>) || { name: '원정팀', logo: '/placeholder.png' };
+                const leagueData = league || { name: '알 수 없는 리그', logo: '/placeholder.png' };
+                const homeScore = typeof goals?.home === 'number' ? goals.home : '-';
+                const awayScore = typeof goals?.away === 'number' ? goals.away : '-';
+                const actualMatchId = matchDataObj.id || matchId || 'unknown';
+                
+                // 경기 상태 텍스트 설정
+                let statusText = '경기 결과';
+                let statusClass = '';
+                
+                if (status) {
+                  const statusCode = (status.code as string) || '';
+                  
+                  if (statusCode === 'FT') {
+                    statusText = '경기 종료';
+                  } else if (statusCode === 'NS') {
+                    statusText = '경기 예정';
+                  } else if (['1H', '2H', 'HT', 'LIVE'].includes(statusCode)) {
+                    if (statusCode === '1H') {
+                      statusText = `전반전 진행 중 ${status.elapsed ? `(${status.elapsed}분)` : ''}`;
+                    } else if (statusCode === '2H') {
+                      statusText = `후반전 진행 중 ${status.elapsed ? `(${status.elapsed}분)` : ''}`;
+                    } else if (statusCode === 'HT') {
+                      statusText = '하프타임';
+                    } else {
+                      statusText = `진행 중 ${status.elapsed ? `(${status.elapsed}분)` : ''}`;
+                    }
+                    statusClass = 'live';
+                  }
+                }
+                
+                htmlContent += `
+                  <div class="match-card processed-match-card" data-type="match-card" data-match-id="${actualMatchId}" data-processed="true">
+                    <a href="/livescore/football/match/${actualMatchId}">
+                      <div class="league-header">
+                        <div style="display: flex; align-items: center;">
+                          <img 
+                            src="${(leagueData.logo as string) || '/placeholder.png'}" 
+                            alt="${(leagueData.name as string) || '알 수 없는 리그'}" 
+                            class="league-logo"
+                            onerror="this.onerror=null;this.src='/placeholder.png';"
+                          />
+                          <span class="league-name">${(leagueData.name as string) || '알 수 없는 리그'}</span>
+                        </div>
+                      </div>
+                      
+                      <div class="match-main">
+                        <div class="team-info">
+                          <img 
+                            src="${(homeTeam.logo as string) || '/placeholder.png'}" 
+                            alt="${(homeTeam.name as string) || '홈팀'}" 
+                            class="team-logo"
+                            onerror="this.onerror=null;this.src='/placeholder.png';"
+                          />
+                          <span class="team-name${homeTeam.winner ? ' winner' : ''}">${(homeTeam.name as string) || '홈팀'}</span>
+                        </div>
+                        
+                        <div class="score-area">
+                          <div class="score">
+                            <span class="score-number">${homeScore}</span>
+                            <span class="score-separator">-</span>
+                            <span class="score-number">${awayScore}</span>
+                          </div>
+                          <div class="match-status${statusClass ? ' ' + statusClass : ''}">${statusText}</div>
+                        </div>
+                        
+                        <div class="team-info">
+                          <img 
+                            src="${(awayTeam.logo as string) || '/placeholder.png'}" 
+                            alt="${(awayTeam.name as string) || '원정팀'}" 
+                            class="team-logo"
+                            onerror="this.onerror=null;this.src='/placeholder.png';"
+                          />
+                          <span class="team-name${awayTeam.winner ? ' winner' : ''}">${(awayTeam.name as string) || '원정팀'}</span>
+                        </div>
+                      </div>
+                      
+                      <div class="match-footer">
+                        <span class="footer-link">매치 상세 정보</span>
+                      </div>
+                    </a>
+                  </div>
+                `;
+              } else {
+                // 매치 데이터가 없는 경우 오류 표시
+                htmlContent += `
+                  <div class="p-3 border rounded-lg bg-red-50 text-red-500 my-4">
+                    경기 결과 데이터를 불러올 수 없습니다.
+                  </div>
+                `;
+              }
+            } else if (node.type === 'horizontalRule') {
+              // 구분선 노드 처리
+              htmlContent += '<hr class="my-6 border-gray-300" />';
+            } else if (node.type === 'image' && node.attrs && node.attrs.src) {
               // 이미지 노드 처리 (paragraph보다 먼저)
               console.log('🖼️ 이미지 노드 발견:', node.attrs.src);
               htmlContent += `
@@ -161,40 +403,41 @@ export default function PostContent({ content }: PostContentProps) {
                   />
                 </div>
               `;
-            } else if (node.type === 'paragraph' && Array.isArray(node.content)) {
-              htmlContent += '<p class="mb-4 leading-relaxed">';
-              node.content.forEach((textNode, textIndex) => {
-                console.log(`📄 텍스트 노드 ${textIndex}:`, textNode);
-                
-                if (textNode.type === 'text') {
-                  let textContent = textNode.text || '';
+            } else if (node.type === 'paragraph' && node.content && Array.isArray(node.content)) {
+              // 단락 처리
+              let paragraphContent = '';
+              
+              node.content.forEach((textNode) => {
+                if (textNode.type === 'text' && textNode.text) {
+                  let text = textNode.text;
                   
-                  if (textNode.marks && textNode.marks.length > 0) {
-                    // 링크 처리
-                    const linkMark = textNode.marks.find((mark) => mark.type === 'link');
-                    if (linkMark && linkMark.attrs && linkMark.attrs.href) {
-                      console.log('🔗 링크 발견:', linkMark.attrs.href);
-                      htmlContent += `<a href="${linkMark.attrs.href}" target="${linkMark.attrs.target || '_blank'}" rel="${linkMark.attrs.rel || 'noopener noreferrer'}" class="text-blue-600 hover:text-blue-800 underline">${textContent}</a>`;
-                    } else {
-                      // 다른 마크 처리 (볼드, 이탤릭 등)
-                      const boldMark = textNode.marks.find((mark) => mark.type === 'bold');
-                      const italicMark = textNode.marks.find((mark) => mark.type === 'italic');
-                      
-                      if (boldMark) textContent = `<strong>${textContent}</strong>`;
-                      if (italicMark) textContent = `<em>${textContent}</em>`;
-                      
-                      htmlContent += textContent;
-                    }
-                  } else {
-                    htmlContent += textContent;
+                  // 차트 마커 제거 (단순 텍스트로 처리)
+                  const chartMarkerRegex = /\[MATCH_STATS_CHART:(.*?)\]/g;
+                  text = text.replace(chartMarkerRegex, '📊 경기 통계 차트');
+                  
+                  // 텍스트 마크업 적용
+                  if (textNode.marks && Array.isArray(textNode.marks)) {
+                    textNode.marks.forEach((mark) => {
+                      if (mark.type === 'bold') {
+                        text = `<strong>${text}</strong>`;
+                      } else if (mark.type === 'italic') {
+                        text = `<em>${text}</em>`;
+                      } else if (mark.type === 'link' && mark.attrs?.href) {
+                        const href = mark.attrs.href;
+                        const target = mark.attrs.target || '_blank';
+                        const rel = mark.attrs.rel || 'noopener noreferrer';
+                        text = `<a href="${href}" target="${target}" rel="${rel}">${text}</a>`;
+                      }
+                    });
                   }
-                } else if (textNode.type === 'image' && textNode.attrs && textNode.attrs.src) {
-                  // 문단 내 이미지 처리
-                  console.log('🖼️ 문단 내 이미지 발견:', textNode.attrs.src);
-                  htmlContent += `<img src="${textNode.attrs.src}" alt="${textNode.attrs.alt || ''}" class="inline-block max-w-full h-auto rounded" />`;
+                  
+                  paragraphContent += text;
                 }
               });
-              htmlContent += '</p>';
+              
+              if (paragraphContent.trim()) {
+                htmlContent += `<p>${paragraphContent}</p>`;
+              }
             } else if (node.type === 'heading' && Array.isArray(node.content)) {
               const level = node.attrs?.level || 2;
               htmlContent += `<h${level} class="font-bold text-lg mb-3 mt-6">`;
@@ -222,6 +465,111 @@ export default function PostContent({ content }: PostContentProps) {
                 }
               });
               htmlContent += '</ul>';
+
+            } else if (node.type === 'matchCard' && node.attrs) {
+              // 매치 카드 노드 처리
+              console.log('🏟️ 매치 카드 노드 발견:', node.attrs);
+              const { matchId, matchData } = node.attrs;
+              
+              if (matchData && typeof matchData === 'object') {
+                const matchDataObj = matchData as Record<string, unknown>;
+                const teams = matchDataObj.teams as Record<string, unknown> | undefined;
+                const goals = matchDataObj.goals as Record<string, unknown> | undefined;
+                const league = matchDataObj.league as Record<string, unknown> | undefined;
+                const status = matchDataObj.status as Record<string, unknown> | undefined;
+                
+                const homeTeam = (teams?.home as Record<string, unknown>) || { name: '홈팀', logo: '/placeholder.png' };
+                const awayTeam = (teams?.away as Record<string, unknown>) || { name: '원정팀', logo: '/placeholder.png' };
+                const leagueData = league || { name: '알 수 없는 리그', logo: '/placeholder.png' };
+                const homeScore = typeof goals?.home === 'number' ? goals.home : '-';
+                const awayScore = typeof goals?.away === 'number' ? goals.away : '-';
+                const actualMatchId = matchDataObj.id || matchId || 'unknown';
+                
+                // 경기 상태 텍스트 설정
+                let statusText = '경기 결과';
+                let statusClass = '';
+                
+                if (status) {
+                  const statusCode = (status.code as string) || '';
+                  
+                  if (statusCode === 'FT') {
+                    statusText = '경기 종료';
+                  } else if (statusCode === 'NS') {
+                    statusText = '경기 예정';
+                  } else if (['1H', '2H', 'HT', 'LIVE'].includes(statusCode)) {
+                    if (statusCode === '1H') {
+                      statusText = `전반전 진행 중 ${status.elapsed ? `(${status.elapsed}분)` : ''}`;
+                    } else if (statusCode === '2H') {
+                      statusText = `후반전 진행 중 ${status.elapsed ? `(${status.elapsed}분)` : ''}`;
+                    } else if (statusCode === 'HT') {
+                      statusText = '하프타임';
+                    } else {
+                      statusText = `진행 중 ${status.elapsed ? `(${status.elapsed}분)` : ''}`;
+                    }
+                    statusClass = 'live';
+                  }
+                }
+                
+                htmlContent += `
+                  <div class="match-card processed-match-card" data-type="match-card" data-match-id="${actualMatchId}" data-processed="true">
+                    <a href="/livescore/football/match/${actualMatchId}">
+                      <div class="league-header">
+                        <div style="display: flex; align-items: center;">
+                          <img 
+                            src="${(leagueData.logo as string) || '/placeholder.png'}" 
+                            alt="${(leagueData.name as string) || '알 수 없는 리그'}" 
+                            class="league-logo"
+                            onerror="this.onerror=null;this.src='/placeholder.png';"
+                          />
+                          <span class="league-name">${(leagueData.name as string) || '알 수 없는 리그'}</span>
+                        </div>
+                      </div>
+                      
+                      <div class="match-main">
+                        <div class="team-info">
+                          <img 
+                            src="${(homeTeam.logo as string) || '/placeholder.png'}" 
+                            alt="${(homeTeam.name as string) || '홈팀'}" 
+                            class="team-logo"
+                            onerror="this.onerror=null;this.src='/placeholder.png';"
+                          />
+                          <span class="team-name${homeTeam.winner ? ' winner' : ''}">${(homeTeam.name as string) || '홈팀'}</span>
+                        </div>
+                        
+                        <div class="score-area">
+                          <div class="score">
+                            <span class="score-number">${homeScore}</span>
+                            <span class="score-separator">-</span>
+                            <span class="score-number">${awayScore}</span>
+                          </div>
+                          <div class="match-status${statusClass ? ' ' + statusClass : ''}">${statusText}</div>
+                        </div>
+                        
+                        <div class="team-info">
+                          <img 
+                            src="${(awayTeam.logo as string) || '/placeholder.png'}" 
+                            alt="${(awayTeam.name as string) || '원정팀'}" 
+                            class="team-logo"
+                            onerror="this.onerror=null;this.src='/placeholder.png';"
+                          />
+                          <span class="team-name${awayTeam.winner ? ' winner' : ''}">${(awayTeam.name as string) || '원정팀'}</span>
+                        </div>
+                      </div>
+                      
+                      <div class="match-footer">
+                        <span class="footer-link">매치 상세 정보</span>
+                      </div>
+                    </a>
+                  </div>
+                `;
+              } else {
+                // 매치 데이터가 없는 경우 오류 표시
+                htmlContent += `
+                  <div class="p-3 border rounded-lg bg-red-50 text-red-500 my-4">
+                    경기 결과 데이터를 불러올 수 없습니다.
+                  </div>
+                `;
+              }
             } else {
               console.log('❓ 알 수 없는 노드 타입:', node.type);
             }
@@ -254,12 +602,232 @@ export default function PostContent({ content }: PostContentProps) {
     
     // 기본값
     return '';
-  };
+  }, []);
+
+  // content가 객체인 경우 HTML로 변환
+  const processContent = useCallback(() => {
+    if (!content) return '';
+    
+    // 문자열인 경우 JSON 파싱 시도
+    if (typeof content === 'string') {
+      // JSON 형태인지 확인 (TipTap JSON)
+      if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
+        try {
+          const parsedContent = JSON.parse(content);
+          console.log('🔍 JSON 파싱 성공:', parsedContent);
+          
+          // 파싱된 객체를 처리
+          return processObjectContent(parsedContent);
+        } catch (error) {
+          console.warn('JSON 파싱 실패, 문자열로 처리:', error);
+          return content; // 파싱 실패시 원본 문자열 반환
+        }
+      }
+      return content; // 일반 HTML 문자열
+    }
+    
+    // 객체인 경우 처리
+    return processObjectContent(content);
+  }, [content, processObjectContent]);
   
   // 소셜 임베드와 매치카드 백업 처리 함수
   const processEmbeds = useCallback(() => {
     if (!contentRef.current || !isMounted) return;
     const rootElement = contentRef.current;
+    
+    // 0. 차트 데이터 확인 및 렌더링 (meta 데이터 또는 텍스트 파싱)
+    let chartDataToRender = null;
+    
+    console.log('🔍 차트 데이터 확인 시작');
+    console.log('📊 meta 데이터:', meta);
+    
+    // meta 데이터에서 차트 데이터 확인
+    if (meta && meta.chart_data && Array.isArray(meta.chart_data)) {
+      console.log('📊 원본 meta 차트 데이터:', meta.chart_data);
+      console.log('📊 첫 번째 차트 데이터 상세:', meta.chart_data[0]);
+      
+      // 기존 구조를 새로운 인터페이스로 변환
+      chartDataToRender = meta.chart_data.map((data: Record<string, unknown>) => {
+        console.log('🔄 데이터 변환 중:', data);
+        
+        const homeTeam = data.homeTeam as Record<string, unknown> | undefined;
+        const awayTeam = data.awayTeam as Record<string, unknown> | undefined;
+        const bettingOdds = data.bettingOdds as Record<string, unknown> | unknown[] | undefined;
+        
+        // stats 객체에서 실제 데이터 추출
+        const homeStats = homeTeam?.stats as Record<string, unknown> | undefined;
+        const awayStats = awayTeam?.stats as Record<string, unknown> | undefined;
+        
+        console.log('🏠 홈팀 stats:', homeStats);
+        console.log('✈️ 원정팀 stats:', awayStats);
+        
+        // 홈팀과 원정팀의 실제 데이터 추출
+        const homeMatches = (homeStats?.homePlayed as number) || 0;
+        const homeWins = (homeStats?.homeWins as number) || 0;
+        const homeGoals = (homeStats?.homeGoalsFor as number) || 0;
+        const homeConceded = (homeStats?.homeGoalsAgainst as number) || 0;
+        
+        const awayMatches = (awayStats?.awayPlayed as number) || 0;
+        const awayWins = (awayStats?.awayWins as number) || 0;
+        const awayGoals = (awayStats?.awayGoalsFor as number) || 0;
+        const awayConceded = (awayStats?.awayGoalsAgainst as number) || 0;
+        
+        // 승률 직접 계산 (승수 / 경기수 * 100)
+        const homeWinRate = homeMatches > 0 ? Math.round((homeWins / homeMatches) * 100 * 10) / 10 : 0;
+        const awayWinRate = awayMatches > 0 ? Math.round((awayWins / awayMatches) * 100 * 10) / 10 : 0;
+        
+        console.log(`🏠 홈팀 승률 계산: ${homeWins}승 / ${homeMatches}경기 = ${homeWinRate}%`);
+        console.log(`✈️ 원정팀 승률 계산: ${awayWins}승 / ${awayMatches}경기 = ${awayWinRate}%`);
+        
+        // 기존 구조에서 새로운 구조로 변환
+        const convertedData = {
+          homeTeam: {
+            name: (homeTeam?.name as string) || 'Unknown',
+            matches: homeMatches,
+            wins: homeWins,
+            draws: 0, // 무승부는 계산해야 함 (경기수 - 승수 - 패수)
+            losses: 0, // 패수도 계산해야 함
+            winRate: homeWinRate, // 직접 계산한 홈승률
+            goals: homeGoals,
+            conceded: homeConceded,
+            goalDifference: homeGoals - homeConceded,
+            form: (homeStats?.form as string) || '',
+            injuries: (homeStats?.injuries as number) || 0
+          },
+          awayTeam: {
+            name: (awayTeam?.name as string) || 'Unknown',
+            matches: awayMatches,
+            wins: awayWins,
+            draws: 0, // 무승부는 계산해야 함
+            losses: 0, // 패수도 계산해야 함
+            winRate: awayWinRate, // 직접 계산한 원정승률
+            goals: awayGoals,
+            conceded: awayConceded,
+            goalDifference: awayGoals - awayConceded,
+            form: (awayStats?.form as string) || '',
+            injuries: (awayStats?.injuries as number) || 0
+          },
+          bettingOdds: bettingOdds ? {
+            home: Array.isArray(bettingOdds) ? 
+              ((bettingOdds as unknown[]).find((odd: unknown) => (odd as Record<string, unknown>).value === 'Home') as Record<string, unknown>)?.odd as number || 0 : 
+              (bettingOdds as Record<string, unknown>).home as number || 0,
+            draw: Array.isArray(bettingOdds) ? 
+              ((bettingOdds as unknown[]).find((odd: unknown) => (odd as Record<string, unknown>).value === 'Draw') as Record<string, unknown>)?.odd as number || 0 : 
+              (bettingOdds as Record<string, unknown>).draw as number || 0,
+            away: Array.isArray(bettingOdds) ? 
+              ((bettingOdds as unknown[]).find((odd: unknown) => (odd as Record<string, unknown>).value === 'Away') as Record<string, unknown>)?.odd as number || 0 : 
+              (bettingOdds as Record<string, unknown>).away as number || 0
+          } : null
+        };
+        
+        console.log('✅ 변환된 데이터:', convertedData);
+        return convertedData;
+      });
+      
+      console.log('✅ meta에서 차트 데이터 발견 및 변환 완료:', chartDataToRender);
+    } else {
+      // meta 데이터가 없으면 텍스트에서 파싱 시도
+      const textContent = rootElement.textContent || '';
+              console.log('📝 텍스트 내용 길이:', textContent.length);
+        console.log('📝 텍스트 샘플 (첫 200자):', textContent.substring(0, 200));
+        console.log('📝 텍스트 샘플 (중간 200자):', textContent.substring(Math.floor(textContent.length/2), Math.floor(textContent.length/2) + 200));
+        console.log('📝 텍스트 샘플 (마지막 200자):', textContent.substring(Math.max(0, textContent.length - 200)));
+      
+      // 더 광범위한 조건으로 파싱 시도
+      const hasMatchData = textContent.includes('【') || 
+                          textContent.includes('홈팀') || 
+                          textContent.includes('어웨이팀') ||
+                          textContent.includes('승률') ||
+                          textContent.includes('득점') ||
+                          textContent.includes('배당률') ||
+                          (textContent.includes('Gimcheon') && textContent.includes('Jeonbuk'));
+      
+      if (hasMatchData) {
+        console.log('🎯 텍스트 파싱 조건 충족, 파싱 시도');
+        const parsedData = parseMatchStatsFromText(textContent);
+        if (parsedData) {
+          chartDataToRender = [parsedData];
+          console.log('✅ 텍스트에서 차트 데이터 파싱 성공:', parsedData);
+        } else {
+          console.log('❌ 텍스트 파싱 실패');
+        }
+      } else {
+        console.log('❌ 텍스트 파싱 조건 불충족');
+        console.log('🔍 텍스트에서 찾은 키워드들:');
+        console.log('- 【:', textContent.includes('【'));
+        console.log('- 홈팀:', textContent.includes('홈팀'));
+        console.log('- 어웨이팀:', textContent.includes('어웨이팀'));
+        console.log('- Gimcheon:', textContent.includes('Gimcheon'));
+        console.log('- Jeonbuk:', textContent.includes('Jeonbuk'));
+      }
+    }
+    
+    // 차트 데이터가 있으면 렌더링
+    if (chartDataToRender && Array.isArray(chartDataToRender)) {
+      // 차트 플레이스홀더 찾기 (AI 분석 게시글에서 경기별로 삽입)
+      const matchHeaders = rootElement.querySelectorAll('h2, h3');
+      
+      matchHeaders.forEach((header, index) => {
+        if (index < chartDataToRender.length && chartDataToRender[index]) {
+          const chartData = chartDataToRender[index];
+          
+          // 차트 컨테이너가 이미 있는지 확인
+          const existingChart = header.nextElementSibling?.querySelector('.match-stats-chart');
+          if (existingChart) return;
+          
+          // 경기 관련 헤더 다음에 차트 삽입 (조건 완화)
+          const headerText = header.textContent || '';
+          const isMatchHeader = headerText.includes('경기') || 
+                               headerText.includes('분석') || 
+                               headerText.includes('통계') ||
+                               headerText.includes('데이터') ||
+                               headerText.includes('홈팀') ||
+                               headerText.includes('어웨이') ||
+                               headerText.includes('원정') ||
+                               headerText.includes('VS') ||
+                               headerText.includes('vs') ||
+                               headerText.includes('배당') ||
+                               headerText.includes('【') ||
+                               headerText.includes('】');
+          
+          if (!isMatchHeader) {
+            console.log('🚫 차트 삽입 조건 불충족:', headerText);
+            return;
+          }
+          
+          console.log('✅ 차트 삽입 조건 충족:', headerText);
+          
+          // 차트 컨테이너 생성
+          const chartContainer = document.createElement('div');
+          chartContainer.className = 'chart-container';
+          
+          // React 컴포넌트 동적 렌더링
+          import('react-dom/client').then(({ createRoot }) => {
+            const root = createRoot(chartContainer);
+            root.render(
+              React.createElement(MatchStatsChart, {
+                homeTeam: chartData.homeTeam || { name: '홈팀' },
+                awayTeam: chartData.awayTeam || { name: '원정팀' },
+                bettingOdds: chartData.bettingOdds || null
+              })
+            );
+          }).catch(error => {
+            console.error('차트 컴포넌트 로드 오류:', error);
+            chartContainer.innerHTML = `
+              <div class="match-stats-chart-container my-8 p-6 bg-red-50 border border-red-200 rounded-xl">
+                <div class="text-center text-red-600">
+                  <p class="font-medium">차트를 로드할 수 없습니다</p>
+                  <p class="text-sm mt-1">페이지를 새로고침해 주세요</p>
+                </div>
+              </div>
+            `;
+          });
+          
+          // 헤더 다음에 차트 삽입
+          header.parentNode?.insertBefore(chartContainer, header.nextSibling);
+        }
+      });
+    }
     
     // 1. 서버에서 처리되지 않은 매치카드 백업 처리
     const unprocessedMatchCards = rootElement.querySelectorAll('[data-type="match-card"]:not(.processed-match-card)');
@@ -487,15 +1055,17 @@ export default function PostContent({ content }: PostContentProps) {
         </div>`;
       }
     });
-  }, [isMounted]);
+  }, [isMounted, meta]);
 
-  // 컴포넌트 마운트 상태 추적
+  // 컴포넌트 마운트 상태 추적 및 콘텐츠 처리
   useEffect(() => {
     setIsMounted(true);
+    // 클라이언트에서만 콘텐츠 처리
+    setProcessedContent(processContent());
     return () => {
       setIsMounted(false);
     };
-  }, []);
+  }, [processContent]);
 
   // 소셜 임베드와 매치카드 백업 처리
   useEffect(() => {
@@ -506,7 +1076,7 @@ export default function PostContent({ content }: PostContentProps) {
     }, 100);
     
     return () => clearTimeout(timeoutId);
-  }, [isMounted, processEmbeds, content]);
+  }, [isMounted, processEmbeds, content, meta]);
   
   return (
     <>
@@ -731,7 +1301,7 @@ export default function PostContent({ content }: PostContentProps) {
     <div 
       ref={contentRef}
       className="prose prose-sm sm:prose-base lg:prose-lg max-w-none prose-headings:font-bold prose-img:rounded-lg prose-img:mx-auto p-4 sm:p-6"
-      dangerouslySetInnerHTML={{ __html: processContent() }}
+      dangerouslySetInnerHTML={{ __html: isMounted ? processedContent : '' }}
     />
     </>
   );

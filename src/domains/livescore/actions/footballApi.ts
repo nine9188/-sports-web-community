@@ -161,13 +161,15 @@ export const fetchFromFootballApi = async (endpoint: string, params: Record<stri
   // URL 파라미터 구성
   const queryParams = new URLSearchParams();
   
-  // 항상 타임존 파라미터 추가 (명시적으로 지정된 경우 제외)
-  const paramsWithTimezone = {
-    timezone: 'Asia/Seoul',
-    ...params
-  };
+  // timezone 파라미터는 일부 엔드포인트에서만 지원됨
+  const timezoneSupportedEndpoints = ['fixtures', 'fixtures/headtohead', 'odds'];
+  const shouldAddTimezone = timezoneSupportedEndpoints.some(ep => endpoint.includes(ep));
   
-  Object.entries(paramsWithTimezone).forEach(([key, value]) => {
+  const finalParams = shouldAddTimezone 
+    ? { timezone: 'Asia/Seoul', ...params }
+    : params;
+  
+  Object.entries(finalParams).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {
       queryParams.append(key, value.toString());
     }

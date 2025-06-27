@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { createClient } from '@/shared/api/supabase';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
-import { Coins, TrendingUp, Users, Home, LayoutDashboard, ShoppingBag, Rss, Youtube, AlertTriangle } from 'lucide-react';
+import { Coins, TrendingUp, Users, Home, LayoutDashboard, ShoppingBag, Rss, Youtube, AlertTriangle, Target } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 
 interface AdminLayoutClientProps {
@@ -112,6 +112,7 @@ export default function AdminLayoutClient({ children, user }: AdminLayoutClientP
     { path: '/admin/exp', label: '경험치/레벨 관리', icon: <TrendingUp className="w-5 h-5 mr-2" /> },
     { path: '/admin/shop', label: '아이콘 상점', icon: <ShoppingBag className="w-5 h-5 mr-2" /> },
     { path: '/admin/rss', label: 'RSS 관리', icon: <Rss className="w-5 h-5 mr-2" /> },
+    { path: '/admin/prediction', label: '예측 분석', icon: <Target className="w-5 h-5 mr-2" /> },
     { path: '/admin/youtube', label: '유튜브 크롤러', icon: <Youtube className="w-5 h-5 mr-2" /> },
     { path: '/', label: '사이트로 돌아가기', icon: <Home className="w-5 h-5 mr-2" /> },
   ];
