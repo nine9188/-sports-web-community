@@ -14,18 +14,19 @@ import { sendVerificationCodeEmail, sendPasswordResetEmail } from '@/shared/serv
 /**
  * 아이디 찾기 - 인증 코드 발송
  */
-export async function sendIdRecoveryCode(email: string) {
+export async function sendIdRecoveryCode(email: string, fullName: string) {
   try {
-    // 이메일로 사용자 존재 확인
+    // 이메일과 이름으로 사용자 존재 확인
     const supabase = await createClient();
     const { data: user, error } = await supabase
       .from('profiles')
       .select('username, full_name')
       .eq('email', email)
+      .eq('full_name', fullName)
       .single();
 
     if (error || !user) {
-      return { success: false, error: '입력하신 이메일과 일치하는 계정을 찾을 수 없습니다.' };
+      return { success: false, error: '입력하신 이메일과 이름에 일치하는 계정을 찾을 수 없습니다.' };
     }
 
     // 인증 코드 생성
@@ -69,7 +70,7 @@ export async function findUsernameWithCode(email: string, code: string) {
     const supabase = await createClient();
     const { data: user, error } = await supabase
       .from('profiles')
-      .select('username, full_name')
+      .select('username, full_name, id')
       .eq('email', email)
       .single();
 
@@ -78,21 +79,30 @@ export async function findUsernameWithCode(email: string, code: string) {
       return { success: false, error: '계정 정보를 찾을 수 없습니다.' };
     }
 
+    // auth.users 테이블에서 마지막 로그인 정보 직접 조회
+    let lastSignInAt = null;
+    try {
+      // auth.users 테이블은 직접 접근할 수 없으므로 현재는 null로 처리
+      // 추후 필요시 별도의 로그인 기록 테이블을 만들어 관리
+      lastSignInAt = null;
+    } catch (error) {
+      console.warn('마지막 로그인 정보 조회 실패:', error);
+      // 마지막 로그인 정보를 가져오지 못해도 아이디 찾기는 계속 진행
+    }
+
     // 디버깅용 로그
     console.log('조회된 사용자 정보:', {
       username: user.username,
       full_name: user.full_name,
-      email: email
+      email: email,
+      lastSignInAt: lastSignInAt
     });
-
-    // 마지막 접속일 (임시 정보)
-    const lastAccess = '정보 없음';
 
     const result = {
       success: true,
       username: user.username || '',
       fullName: user.full_name || '',
-      lastAccess
+      lastSignInAt: lastSignInAt
     };
 
     console.log('반환할 결과:', result);

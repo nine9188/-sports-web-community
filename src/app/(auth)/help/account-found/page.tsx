@@ -3,14 +3,14 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { User, Mail } from 'lucide-react';
+import { User, Mail, Clock } from 'lucide-react';
 
 // 계정 정보 인터페이스 정의
 interface AccountInfo {
   nickname: string;
-  lastAccess: string;
   username?: string;
   full_name?: string;
+  lastSignInAt?: string;
 }
 
 // SearchParams를 사용하는 컴포넌트 분리
@@ -31,14 +31,14 @@ function AccountFoundContent() {
     if (type === 'id') {
       const username = searchParams?.get('username');
       const fullName = searchParams?.get('fullName');
-      const lastAccess = searchParams?.get('lastAccess');
+      const lastSignInAt = searchParams?.get('lastSignInAt');
       
       if (username) {
         setAccountInfo({
           nickname: username,
-          lastAccess: lastAccess || '정보 없음',
           username,
-          full_name: fullName || ''
+          full_name: fullName || '',
+          lastSignInAt: lastSignInAt || undefined
         });
       } else {
         // 파라미터가 없으면 계정 복구 페이지로 리디렉션
@@ -47,16 +47,55 @@ function AccountFoundContent() {
     }
   }, [type, router, searchParams]);
 
+  // 날짜 포맷팅 함수
+  const formatLastSignIn = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (diffInDays === 0) {
+        return `오늘 ${date.toLocaleTimeString('ko-KR', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        })}`;
+      } else if (diffInDays === 1) {
+        return `어제 ${date.toLocaleTimeString('ko-KR', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        })}`;
+      } else if (diffInDays < 7) {
+        return `${diffInDays}일 전`;
+      } else {
+        return date.toLocaleDateString('ko-KR', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+      }
+    } catch {
+      return '알 수 없음';
+    }
+  };
+
   return (
     <div className="max-w-md w-full">
-      {type === 'id' && accountInfo && (
-        <>
-          <h2 className="text-2xl font-bold text-left mb-2">
-            아이디 찾기 완료
-          </h2>
-          <p className="text-gray-600 mb-8 text-left">
-            회원님의 계정 정보를 찾았습니다.
-          </p>
+      {/* 고정 헤더 */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-left mb-2">
+          {type === 'id' ? '아이디 찾기 완료' : '재설정 링크 발송 완료'}
+        </h2>
+        <p className="text-gray-600 mb-8 text-left">
+          {type === 'id' 
+            ? '회원님의 계정 정보를 찾았습니다.' 
+            : '등록된 이메일로 비밀번호 재설정 링크를 발송했습니다.'
+          }
+        </p>
+      </div>
+
+      {/* 콘텐츠 영역 - 최소 높이 설정 */}
+      <div className="min-h-[400px]">
+        {type === 'id' && accountInfo && (
           
           <div className="space-y-6">
             <div className="p-6 bg-slate-50 rounded-lg border">
@@ -64,12 +103,21 @@ function AccountFoundContent() {
                 <User className="h-5 w-5 text-slate-600 mr-2" />
                 <span className="text-sm font-medium text-gray-600">찾은 아이디</span>
               </div>
-              <div className="text-xl font-bold text-slate-800 mb-3">
+              <div className="text-xl font-bold text-slate-800 mb-4">
                 {accountInfo.nickname}
               </div>
-              <div className="text-sm text-gray-500">
-                마지막 접속일: {accountInfo.lastAccess}
-              </div>
+              
+              {accountInfo.lastSignInAt && (
+                <div className="pt-4 border-t border-slate-200">
+                  <div className="flex items-center mb-2">
+                    <Clock className="h-4 w-4 text-slate-500 mr-2" />
+                    <span className="text-sm font-medium text-gray-600">마지막 로그인</span>
+                  </div>
+                  <div className="text-sm text-slate-600">
+                    {formatLastSignIn(accountInfo.lastSignInAt)}
+                  </div>
+                </div>
+              )}
             </div>
             
             <div className="space-y-3">
@@ -85,17 +133,9 @@ function AccountFoundContent() {
               </Link>
             </div>
           </div>
-        </>
-      )}
+        )}
       
-      {type === 'password' && (
-        <>
-          <h2 className="text-2xl font-bold text-left mb-2">
-            재설정 링크 발송 완료
-          </h2>
-          <p className="text-gray-600 mb-8 text-left">
-            등록된 이메일로 비밀번호 재설정 링크를 발송했습니다.
-          </p>
+        {type === 'password' && (
           
           <div className="space-y-6">
             <div className="p-6 bg-blue-50 rounded-lg border border-blue-200">
@@ -122,16 +162,16 @@ function AccountFoundContent() {
               </Link>
             </div>
           </div>
-        </>
-      )}
+        )}
       
-      <div className="mt-8 text-center">
-        <p className="text-gray-600">
-          처음 방문이신가요?{' '}
-          <Link href="/signup" className="text-slate-600 hover:text-slate-800 hover:underline font-medium">
-            회원가입
-          </Link>
-        </p>
+        <div className="mt-8 text-center">
+          <p className="text-gray-600">
+            처음 방문이신가요?{' '}
+            <Link href="/signup" className="text-slate-600 hover:text-slate-800 hover:underline font-medium">
+              회원가입
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

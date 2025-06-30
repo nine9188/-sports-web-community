@@ -140,12 +140,18 @@ function ResetPasswordContent() {
   if (tokenValid === false) {
     return (
       <div className="max-w-md w-full">
-        <h2 className="text-2xl font-bold text-left mb-2">
-          링크가 만료되었습니다
-        </h2>
-        <p className="text-gray-600 mb-8 text-left">
-          비밀번호 재설정 링크가 만료되었거나 유효하지 않습니다.
-        </p>
+        {/* 고정 헤더 */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-left mb-2">
+            링크가 만료되었습니다
+          </h2>
+          <p className="text-gray-600 mb-8 text-left">
+            비밀번호 재설정 링크가 만료되었거나 유효하지 않습니다.
+          </p>
+        </div>
+
+        {/* 콘텐츠 영역 - 최소 높이 설정 */}
+        <div className="min-h-[400px]">
         
         <div className="space-y-6">
           <div className="p-6 bg-red-50 rounded-lg border border-red-200">
@@ -172,13 +178,14 @@ function ResetPasswordContent() {
             </Link>
           </div>
           
-          <div className="mt-8 text-center">
-            <p className="text-gray-600">
-              처음 방문이신가요?{' '}
-              <Link href="/signup" className="text-slate-600 hover:text-slate-800 hover:underline font-medium">
-                회원가입
-              </Link>
-            </p>
+            <div className="mt-8 text-center">
+              <p className="text-gray-600">
+                처음 방문이신가요?{' '}
+                <Link href="/signup" className="text-slate-600 hover:text-slate-800 hover:underline font-medium">
+                  회원가입
+                </Link>
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -205,12 +212,18 @@ function ResetPasswordContent() {
 
   return (
     <div className="max-w-md w-full">
-      <h2 className="text-2xl font-bold text-left mb-2">
-        새 비밀번호 설정
-      </h2>
-      <p className="text-gray-600 mb-8 text-left">
-        새로운 비밀번호를 입력해주세요.
-      </p>
+      {/* 고정 헤더 */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-left mb-2">
+          새 비밀번호 설정
+        </h2>
+        <p className="text-gray-600 mb-8 text-left">
+          새로운 비밀번호를 입력해주세요.
+        </p>
+      </div>
+
+      {/* 콘텐츠 영역 - 최소 높이 설정 */}
+      <div className="min-h-[400px]">
       
       <form onSubmit={handleResetPassword} className="space-y-6">
         <div>
@@ -310,13 +323,14 @@ function ResetPasswordContent() {
         </button>
       </form>
       
-      <div className="mt-8 text-center">
-        <p className="text-gray-600">
-          비밀번호가 기억나셨나요?{' '}
-          <Link href="/signin" className="text-slate-600 hover:text-slate-800 hover:underline font-medium">
-            로그인
-          </Link>
-        </p>
+        <div className="mt-8 text-center">
+          <p className="text-gray-600">
+            비밀번호가 기억나셨나요?{' '}
+            <Link href="/signin" className="text-slate-600 hover:text-slate-800 hover:underline font-medium">
+              로그인
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

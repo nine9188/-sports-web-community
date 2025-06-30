@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import { createClient } from '@/shared/api/supabase';
 import { useAuth } from '@/shared/context/AuthContext';
 import SuspensionManager from '@/domains/admin/components/SuspensionManager';
-import { checkUserSuspension } from '@/domains/admin/actions/suspension';
+import { checkUserSuspension, getAllUsersWithLastAccess } from '@/domains/admin/actions/suspension';
 
 interface User {
   id: string;
@@ -13,6 +13,7 @@ interface User {
   nickname: string;
   is_admin: boolean;
   created_at?: string;
+  last_sign_in_at?: string | null;
   is_suspended?: boolean;
   suspended_until?: string | null;
   suspended_reason?: string | null;
@@ -31,42 +32,13 @@ export default function UsersAdminPage() {
     try {
       setIsLoading(true);
       
-      const supabase = createClient();
-      // profiles 테이블에서 사용자 정보 가져오기 (정지 정보 포함)
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*');
-        
-      if (profilesError) throw profilesError;
+      const result = await getAllUsersWithLastAccess();
       
-      // 데이터 가공
-      const formattedUsers = profiles?.map(profile => {
-        // 타입 캐스팅
-        const profileData = profile as unknown as {
-          id: string;
-          email: string | null;
-          nickname: string | null;
-          full_name: string | null;
-          is_admin: boolean | null;
-          updated_at: string | null;
-          is_suspended: boolean | null;
-          suspended_until: string | null;
-          suspended_reason: string | null;
-        };
-        
-        return {
-          id: profileData.id,
-          email: profileData.email || '',
-          nickname: profileData.nickname || profileData.full_name || '',
-          is_admin: profileData.is_admin || false,
-          created_at: profileData.updated_at || '',
-          is_suspended: profileData.is_suspended || false,
-          suspended_until: profileData.suspended_until || null,
-          suspended_reason: profileData.suspended_reason || null,
-        };
-      }) || [];
+      if (!result.success) {
+        throw new Error(result.error);
+      }
       
-      setUsers(formattedUsers);
+      setUsers(result.data || []);
     } catch (error) {
       console.error('사용자 목록 조회 오류:', error);
       toast.error('사용자 목록을 불러오는데 실패했습니다.');
@@ -74,6 +46,11 @@ export default function UsersAdminPage() {
       setIsLoading(false);
     }
   };
+
+  // 마지막 접속 시간 가져오기 (임시로 주석 처리)
+  // const fetchLastAccessTimes = async (userIds: string[]) => {
+  //   // TODO: RPC 함수 타입 정의 후 구현
+  // };
 
   useEffect(() => {
     fetchUsers();
@@ -183,6 +160,9 @@ export default function UsersAdminPage() {
                     가입일
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    마지막 접속
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     상태
                   </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -201,6 +181,18 @@ export default function UsersAdminPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {user.created_at ? new Date(user.created_at).toLocaleDateString() : '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {user.last_sign_in_at ? 
+                        new Date(user.last_sign_in_at).toLocaleString('ko-KR', {
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        }) : 
+                        '정보 없음'
+                      }
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div className="space-y-1">

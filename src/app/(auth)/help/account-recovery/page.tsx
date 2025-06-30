@@ -16,6 +16,7 @@ function AccountRecoveryContent() {
     tabParam === 'password' ? 'password' : 'id'
   );
   const [email, setEmail] = useState('');
+  const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
@@ -24,6 +25,8 @@ function AccountRecoveryContent() {
   // 유효성 검사 상태
   const [emailValid, setEmailValid] = useState(false);
   const [emailError, setEmailError] = useState('');
+  const [fullNameValid, setFullNameValid] = useState(false);
+  const [fullNameError, setFullNameError] = useState('');
   const [usernameValid, setUsernameValid] = useState(false);
   const [usernameError, setUsernameError] = useState('');
   const [codeValid, setCodeValid] = useState(false);
@@ -52,6 +55,23 @@ function AccountRecoveryContent() {
     } else {
       setEmailError('');
       setEmailValid(true);
+      return true;
+    }
+  };
+
+  // 이름 유효성 검사
+  const validateFullName = (value: string) => {
+    if (!value) {
+      setFullNameError('이름을 입력해주세요.');
+      setFullNameValid(false);
+      return false;
+    } else if (value.length < 2) {
+      setFullNameError('이름은 2자 이상이어야 합니다.');
+      setFullNameValid(false);
+      return false;
+    } else {
+      setFullNameError('');
+      setFullNameValid(true);
       return true;
     }
   };
@@ -98,9 +118,12 @@ function AccountRecoveryContent() {
     setVerificationSent(false);
     setVerificationCode('');
     setEmail('');
+    setFullName('');
     setUsername('');
     setEmailValid(false);
     setEmailError('');
+    setFullNameValid(false);
+    setFullNameError('');
     setUsernameValid(false);
     setUsernameError('');
     setCodeValid(false);
@@ -114,11 +137,16 @@ function AccountRecoveryContent() {
       return;
     }
     
+    if (!fullName) {
+      toast.error('이름을 입력해주세요.');
+      return;
+    }
+    
     try {
       setLoading(true);
       
-      // 자체 구현한 서버 액션 사용
-      const result = await sendIdRecoveryCode(email);
+      // 자체 구현한 서버 액션 사용 (이메일과 이름 모두 전달)
+      const result = await sendIdRecoveryCode(email, fullName);
       
       if (!result.success) {
         toast.error(result.error || '인증 코드 발송에 실패했습니다.');
@@ -164,14 +192,18 @@ function AccountRecoveryContent() {
       }
       
       // 타입 가드로 성공 결과 확인
-      if ('username' in result && 'fullName' in result && 'lastAccess' in result) {
+      if ('username' in result && 'fullName' in result) {
         // 계정 정보를 찾았으면 결과 페이지로 이동
         const params = new URLSearchParams({
           type: 'id',
           username: result.username || '',
-          fullName: result.fullName || '',
-          lastAccess: result.lastAccess || ''
+          fullName: result.fullName || ''
         });
+        
+        // 마지막 로그인 정보가 있으면 추가
+        if ('lastSignInAt' in result && result.lastSignInAt) {
+          params.append('lastSignInAt', String(result.lastSignInAt));
+        }
         
         console.log('URL 파라미터:', params.toString());
         router.push(`/help/account-found?${params.toString()}`);
@@ -222,39 +254,83 @@ function AccountRecoveryContent() {
 
   return (
     <div className="max-w-md w-full">
-      <h2 className="text-2xl font-bold text-left mb-2">
-        {activeTab === 'id' ? '아이디 찾기' : '비밀번호 찾기'}
-      </h2>
-      <p className="text-gray-600 mb-8 text-left">
-        {activeTab === 'id' 
-          ? '가입시 사용한 이메일로 아이디를 찾을 수 있습니다.' 
-          : '아이디를 입력하시면 등록된 이메일로 재설정 링크를 보내드립니다.'
-        }
-      </p>
-      
-      {/* 탭 메뉴 */}
-      <div className="flex border-b mb-6">
-        <button 
-          className={`flex-1 py-3 font-medium border-b-2 transition-colors ${
-            activeTab === 'id' ? 'border-slate-800 text-slate-800' : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
-          onClick={() => changeTab('id')}
-        >
-          아이디 찾기
-        </button>
-        <button 
-          className={`flex-1 py-3 font-medium border-b-2 transition-colors ${
-            activeTab === 'password' ? 'border-slate-800 text-slate-800' : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
-          onClick={() => changeTab('password')}
-        >
-          비밀번호 찾기
-        </button>
+      {/* 고정 헤더 */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-left mb-2">
+          계정 찾기
+        </h2>
+        <p className="text-gray-600 mb-8 text-left">
+          가입시 사용한 정보로 계정을 찾을 수 있습니다.
+        </p>
+        
+        {/* 탭 메뉴 */}
+        <div className="flex border-b">
+          <button 
+            className={`flex-1 py-3 font-medium border-b-2 transition-colors ${
+              activeTab === 'id' ? 'border-slate-800 text-slate-800' : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+            onClick={() => changeTab('id')}
+          >
+            아이디 찾기
+          </button>
+          <button 
+            className={`flex-1 py-3 font-medium border-b-2 transition-colors ${
+              activeTab === 'password' ? 'border-slate-800 text-slate-800' : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+            onClick={() => changeTab('password')}
+          >
+            비밀번호 찾기
+          </button>
+        </div>
       </div>
+
+      {/* 콘텐츠 영역 - 최소 높이 설정 */}
+      <div className="min-h-[400px]">
       
       {/* 아이디 찾기 폼 */}
       {activeTab === 'id' && (
-        <form onSubmit={handleFindId} className="space-y-6">
+        <div>
+          <p className="text-sm text-gray-600 mb-4">
+            가입시 사용한 이름과 이메일로 아이디를 찾을 수 있습니다.
+          </p>
+          <form onSubmit={handleFindId} className="space-y-6">
+          <div>
+            <label htmlFor="fullName" className="block text-gray-700 mb-1 text-sm font-medium">
+              이름
+            </label>
+            <div className="relative">
+              <input
+                id="fullName"
+                type="text"
+                value={fullName}
+                onChange={(e) => {
+                  setFullName(e.target.value);
+                  validateFullName(e.target.value);
+                }}
+                onBlur={() => validateFullName(fullName)}
+                className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 ${
+                  fullNameError ? 'border-red-500 focus:ring-red-300' : 
+                  fullNameValid ? 'border-green-500 focus:ring-green-300' : 
+                  'border-gray-300 focus:ring-blue-500'
+                } ${verificationSent ? 'bg-gray-100' : ''}`}
+                placeholder="가입시 입력한 이름"
+                readOnly={verificationSent}
+                required
+              />
+              {fullNameValid && !fullNameError && !verificationSent && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <Check className="h-5 w-5 text-green-500" />
+                </div>
+              )}
+            </div>
+            {fullNameError && (
+              <p className="mt-1 text-sm text-red-600 flex items-center">
+                <AlertCircle className="h-4 w-4 mr-1" />
+                {fullNameError}
+              </p>
+            )}
+          </div>
+
           <div>
             <label htmlFor="email" className="block text-gray-700 mb-1 text-sm font-medium">
               이메일 주소
@@ -295,19 +371,20 @@ function AccountRecoveryContent() {
                 {emailError}
               </p>
             )}
-            {!verificationSent && (
-              <div className="mt-2">
-                <button
-                  type="button"
-                  onClick={sendVerificationCode}
-                  disabled={loading || !emailValid}
-                  className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? '발송중...' : '인증코드 받기'}
-                </button>
-              </div>
-            )}
           </div>
+
+          {!verificationSent && (
+            <div>
+              <button
+                type="button"
+                onClick={sendVerificationCode}
+                disabled={loading || !emailValid || !fullNameValid}
+                className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? '발송중...' : '인증코드 받기'}
+              </button>
+            </div>
+          )}
           
           {verificationSent && (
             <div>
@@ -363,19 +440,26 @@ function AccountRecoveryContent() {
             </div>
           )}
           
-          <button
-            type="submit"
-            disabled={loading || (verificationSent && !codeValid) || (!verificationSent && !emailValid)}
-            className="w-full py-3 px-4 bg-slate-700 hover:bg-slate-800 text-white font-medium rounded-md transition-colors disabled:opacity-50"
-          >
-            {loading ? '처리 중...' : verificationSent ? '아이디 찾기' : '인증코드 받기'}
-          </button>
-        </form>
+          {verificationSent && (
+            <button
+              type="submit"
+              disabled={loading || !codeValid}
+              className="w-full py-3 px-4 bg-slate-700 hover:bg-slate-800 text-white font-medium rounded-md transition-colors disabled:opacity-50"
+            >
+              {loading ? '처리 중...' : '아이디 찾기'}
+            </button>
+          )}
+          </form>
+        </div>
       )}
       
       {/* 비밀번호 찾기 폼 */}
       {activeTab === 'password' && (
-        <form onSubmit={handleResetPassword} className="space-y-6">
+        <div>
+          <p className="text-sm text-gray-600 mb-4">
+            아이디를 입력하시면 등록된 이메일로 재설정 링크를 보내드립니다.
+          </p>
+          <form onSubmit={handleResetPassword} className="space-y-6">
           <div>
             <label htmlFor="username" className="block text-gray-700 mb-1 text-sm font-medium">
               아이디
@@ -423,16 +507,18 @@ function AccountRecoveryContent() {
           >
             {loading ? '발송 중...' : '재설정 링크 받기'}
           </button>
-        </form>
+          </form>
+        </div>
       )}
       
-      <div className="mt-8 text-center">
-        <p className="text-gray-600">
-          계정이 기억나셨나요?{' '}
-          <Link href="/signin" className="text-slate-600 hover:text-slate-800 hover:underline font-medium">
-            로그인
-          </Link>
-        </p>
+        <div className="mt-8 text-center">
+          <p className="text-gray-600">
+            계정이 기억나셨나요?{' '}
+            <Link href="/signin" className="text-slate-600 hover:text-slate-800 hover:underline font-medium">
+              로그인
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

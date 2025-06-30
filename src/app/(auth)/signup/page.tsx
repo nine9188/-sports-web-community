@@ -286,10 +286,16 @@ export default function SignupPage() {
   return (
     <div className="flex flex-col justify-center items-center min-h-[calc(100vh-120px)]">
       <div className="max-w-md w-full">
-        <h2 className="text-2xl font-bold text-left mb-2">SPORTS 멤버 ID를 생성하세요.</h2>
-        <p className="text-gray-600 mb-8 text-left">
-          모든 게이머들을 위한 SPORTS 커뮤니티에 오신 것을 환영합니다.
-        </p>
+        {/* 고정 헤더 */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-left mb-2">SPORTS 멤버 ID를 생성하세요.</h2>
+          <p className="text-gray-600 mb-8 text-left">
+            모든 게이머들을 위한 SPORTS 커뮤니티에 오신 것을 환영합니다.
+          </p>
+        </div>
+
+        {/* 콘텐츠 영역 - 최소 높이 설정 */}
+        <div className="min-h-[400px]">
         
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* 이메일 입력 단계 */}
@@ -530,13 +536,14 @@ export default function SignupPage() {
           )}
         </form>
         
-        <div className="mt-8 text-center">
-          <p className="text-gray-600">
-            이미 계정이 있으신가요?{' '}
-            <Link href="/signin" className="text-blue-600 hover:underline">
-              로그인
-            </Link>
-          </p>
+          <div className="mt-8 text-center">
+            <p className="text-gray-600">
+              이미 계정이 있으신가요?{' '}
+              <Link href="/signin" className="text-blue-600 hover:underline">
+                로그인
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
       

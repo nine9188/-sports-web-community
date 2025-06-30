@@ -210,4 +210,73 @@ export async function checkUserSuspension(userId: string) {
     console.error('사용자 정지 상태 확인 오류:', error)
     return { success: false, error: '서버 오류가 발생했습니다.' }
   }
+}
+
+/**
+ * 모든 사용자 목록 조회 (마지막 접속 시간 포함)
+ */
+export async function getAllUsersWithLastAccess() {
+  try {
+    const supabase = await createClient()
+    
+    // 현재 사용자가 관리자인지 확인
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return { success: false, error: '인증이 필요합니다.' }
+    }
+
+    // 관리자 권한 확인
+    const { data: adminProfile } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single()
+
+    if (!adminProfile?.is_admin) {
+      return { success: false, error: '관리자 권한이 필요합니다.' }
+    }
+
+    // profiles 테이블에서 사용자 정보 가져오기
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('updated_at', { ascending: false })
+      
+    if (profilesError) {
+      return { success: false, error: '사용자 목록 조회 실패' }
+    }
+
+    // 데이터 가공
+    const usersWithLastAccess = profiles?.map(profile => {
+      const profileData = profile as unknown as {
+        id: string
+        email: string | null
+        nickname: string | null
+        full_name: string | null
+        is_admin: boolean | null
+        updated_at: string | null
+        is_suspended: boolean | null
+        suspended_until: string | null
+        suspended_reason: string | null
+      }
+      
+      return {
+        id: profileData.id,
+        email: profileData.email || '',
+        nickname: profileData.nickname || profileData.full_name || '',
+        is_admin: profileData.is_admin || false,
+        created_at: profileData.updated_at || '',
+        last_sign_in_at: null, // 클라이언트에서 별도 처리
+        is_suspended: profileData.is_suspended || false,
+        suspended_until: profileData.suspended_until || null,
+        suspended_reason: profileData.suspended_reason || null,
+      }
+    }) || []
+
+    return { success: true, data: usersWithLastAccess }
+
+  } catch (error) {
+    console.error('사용자 목록 조회 오류:', error)
+    return { success: false, error: '서버 오류가 발생했습니다.' }
+  }
 } 
