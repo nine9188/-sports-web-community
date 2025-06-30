@@ -253,29 +253,33 @@ function AccountRecoveryContent() {
   };
 
   return (
-    <div className="max-w-md w-full">
+    <div className="w-full">
       {/* 고정 헤더 */}
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-left mb-2">
           계정 찾기
         </h2>
-        <p className="text-gray-600 mb-8 text-left">
+        <p className="text-gray-600 mb-6 text-left">
           가입시 사용한 정보로 계정을 찾을 수 있습니다.
         </p>
         
         {/* 탭 메뉴 */}
-        <div className="flex border-b">
+        <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
           <button 
-            className={`flex-1 py-3 font-medium border-b-2 transition-colors ${
-              activeTab === 'id' ? 'border-slate-800 text-slate-800' : 'border-transparent text-gray-500 hover:text-gray-700'
+            className={`flex-1 py-2.5 px-4 text-sm font-medium rounded-md transition-all duration-200 ${
+              activeTab === 'id' 
+                ? 'bg-white text-slate-800 shadow-sm' 
+                : 'text-gray-600 hover:text-gray-800'
             }`}
             onClick={() => changeTab('id')}
           >
             아이디 찾기
           </button>
           <button 
-            className={`flex-1 py-3 font-medium border-b-2 transition-colors ${
-              activeTab === 'password' ? 'border-slate-800 text-slate-800' : 'border-transparent text-gray-500 hover:text-gray-700'
+            className={`flex-1 py-2.5 px-4 text-sm font-medium rounded-md transition-all duration-200 ${
+              activeTab === 'password' 
+                ? 'bg-white text-slate-800 shadow-sm' 
+                : 'text-gray-600 hover:text-gray-800'
             }`}
             onClick={() => changeTab('password')}
           >
