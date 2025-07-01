@@ -55,7 +55,7 @@ export default function RootLayoutClient({
     if (!pathname) return false;
     
     // 인증 관련 경로들 (라우트 그룹 (auth) 사용)
-    const authPaths = ['/signin', '/signup'];
+    const authPaths = ['/signin', '/signup', '/social-signup'];
     
     return pathname.startsWith('/auth/') || 
            pathname.startsWith('/admin') ||  // /admin과 /admin/로 시작하는 모든 경로

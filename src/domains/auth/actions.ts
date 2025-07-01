@@ -501,4 +501,66 @@ export async function checkNicknameAvailability(nickname: string) {
     console.error('닉네임 중복 확인 중 오류:', error)
     return { available: false, error: '닉네임 확인 중 오류가 발생했습니다.' }
   }
+}
+
+/**
+ * 카카오 로그인 - 기본 구현
+ */
+export async function signInWithKakao() {
+  try {
+    const supabase = await createClient()
+    
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'kakao',
+      options: {
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`,
+        queryParams: {
+          prompt: 'consent' // 항상 동의 화면 표시 (개발용)
+        }
+      },
+    })
+
+    if (error) {
+      return { error: '카카오 로그인 중 오류가 발생했습니다.' }
+    }
+
+    return { data, url: data.url }
+  } catch (error) {
+    console.error('카카오 로그인 오류:', error)
+    return { error: '카카오 로그인을 시작할 수 없습니다.' }
+  }
+}
+
+
+
+/**
+ * 소셜 로그인 사용자 정보 업데이트
+ */
+export async function updateSocialUserProfile(userId: string, profileData: {
+  nickname?: string
+  full_name?: string
+  username?: string
+}) {
+  try {
+    const supabase = await createClient()
+    
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        ...profileData,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId)
+
+    if (error) {
+      console.error('소셜 사용자 프로필 업데이트 오류:', error)
+      return { error: '프로필 업데이트 중 오류가 발생했습니다.' }
+    }
+
+    revalidatePath('/', 'layout')
+    return { success: true }
+  } catch (error) {
+    console.error('소셜 사용자 프로필 업데이트 오류:', error)
+    return { error: '프로필 업데이트를 완료할 수 없습니다.' }
+  }
 } 

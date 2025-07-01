@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import { useAuth } from '@/shared/context/AuthContext';
 import { EyeIcon, EyeOffIcon, AlertCircle, Check } from 'lucide-react';
 import { signIn } from '@/domains/auth/actions';
+import KakaoLoginButton from '@/domains/auth/components/KakaoLoginButton';
 
 // SearchParams를 사용하는 로그인 컴포넌트
 function LoginContent() {
@@ -263,6 +264,26 @@ function LoginContent() {
           {loading ? '로그인 중...' : '로그인'}
         </button>
       </form>
+
+      {/* 소셜 로그인 구분선 */}
+      <div className="mt-6 mb-6">
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-gray-500">또는</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 카카오 로그인 */}
+      <div className="mb-6">
+        <KakaoLoginButton 
+          disabled={loading}
+          onLoading={setLoading}
+        />
+      </div>
       
         <div className="mt-8 text-center">
           <p className="text-gray-600">

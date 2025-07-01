@@ -8,6 +8,7 @@ import { useAuth } from '@/shared/context/AuthContext';
 import { createClient } from '@/shared/api/supabase';
 import { signUp } from '@/domains/auth/actions';
 import { AlertCircle, Check, Eye, EyeOff } from 'lucide-react';
+import KakaoLoginButton from '@/domains/auth/components/KakaoLoginButton';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -15,8 +16,10 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   
   // 단계 표시 상태
+  const [showNameStep, setShowNameStep] = useState(false);
+  const [showIdStep, setShowIdStep] = useState(false);
+  const [showNicknameStep, setShowNicknameStep] = useState(false);
   const [showPasswordStep, setShowPasswordStep] = useState(false);
-  const [showProfileStep, setShowProfileStep] = useState(false);
   
   // 입력값 상태
   const [email, setEmail] = useState('');
@@ -31,6 +34,7 @@ export default function SignupPage() {
   const [emailError, setEmailError] = useState('');
   const [passwordValid, setPasswordValid] = useState(false);
   const [passwordError, setPasswordError] = useState('');
+  const [passwordStrength, setPasswordStrength] = useState<'약함' | '보통' | '강함' | ''>('');
   const [confirmPasswordValid, setConfirmPasswordValid] = useState(false);
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
   
@@ -76,14 +80,48 @@ export default function SignupPage() {
     }
   };
   
+  // 비밀번호 강도 계산
+  const calculatePasswordStrength = (password: string): '약함' | '보통' | '강함' | '' => {
+    if (!password) return '';
+    
+    let score = 0;
+    
+    // 길이 체크 (10자 이상)
+    if (password.length >= 10) score += 2;
+    else if (password.length >= 8) score += 1;
+    
+    // 특수문자 포함
+    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score += 2;
+    
+    // 숫자 포함
+    if (/\d/.test(password)) score += 1;
+    
+    // 대문자 포함
+    if (/[A-Z]/.test(password)) score += 1;
+    
+    // 소문자 포함
+    if (/[a-z]/.test(password)) score += 1;
+    
+    if (score <= 2) return '약함';
+    if (score <= 4) return '보통';
+    return '강함';
+  };
+  
   // 비밀번호 유효성 검사
   const validatePassword = (value: string) => {
+    const strength = calculatePasswordStrength(value);
+    setPasswordStrength(strength);
+    
     if (!value) {
       setPasswordError('비밀번호를 입력해주세요.');
       setPasswordValid(false);
       return false;
-    } else if (value.length < 6) {
-      setPasswordError('비밀번호는 최소 6자 이상이어야 합니다.');
+    } else if (value.length < 10) {
+      setPasswordError('비밀번호는 최소 10자 이상이어야 합니다.');
+      setPasswordValid(false);
+      return false;
+    } else if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(value)) {
+      setPasswordError('비밀번호에 특수문자를 포함해야 합니다.');
       setPasswordValid(false);
       return false;
     } else {
@@ -115,24 +153,76 @@ export default function SignupPage() {
     e.preventDefault();
     
     if (validateEmail(email)) {
-      // 이메일 중복 확인 (실제 구현 시 서버 API 호출 필요)
-      // 여기서는 테스트를 위해 이메일 중복 확인 생략하고 바로 다음 단계 표시
+      setShowNameStep(true);
+    }
+  };
+  
+  // 이름 제출 처리
+  const handleNameSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (fullName.trim()) {
+      setShowIdStep(true);
+    }
+  };
+  
+  // 아이디 제출 처리
+  const handleIdSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (usernameChecked && usernameAvailable) {
+      setShowNicknameStep(true);
+    }
+  };
+  
+  // 닉네임 제출 처리
+  const handleNicknameSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (nicknameChecked && nicknameAvailable) {
       setShowPasswordStep(true);
     }
   };
   
-  // 비밀번호 제출 처리
-  const handlePasswordSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const isPasswordValid = validatePassword(password);
-    const isConfirmPasswordValid = validateConfirmPassword(confirmPassword);
-    
-    if (isPasswordValid && isConfirmPasswordValid) {
-      setShowProfileStep(true);
+  // 아이디 유효성 검사
+  const validateUsername = (value: string) => {
+    // 길이 체크
+    if (value.length < 4) {
+      return '아이디는 최소 4자 이상이어야 합니다.';
     }
+    if (value.length > 20) {
+      return '아이디는 최대 20자까지 가능합니다.';
+    }
+    
+    // 허용 문자 체크 (영문 소문자, 숫자, 밑줄, 마침표)
+    if (!/^[a-z0-9._]+$/.test(value)) {
+      return '아이디는 영문 소문자, 숫자, 밑줄(_), 마침표(.)만 사용 가능합니다.';
+    }
+    
+    // 연속된 특수문자 체크
+    if (/[_.]{2,}/.test(value)) {
+      return '연속된 특수문자는 사용할 수 없습니다.';
+    }
+    
+    // 특수문자로 시작하거나 끝나는 경우
+    if (/^[_.]|[_.]$/.test(value)) {
+      return '아이디는 특수문자로 시작하거나 끝날 수 없습니다.';
+    }
+    
+    // 금지어 체크
+    const forbiddenWords = ['admin', 'root', 'operator', 'manager', 'support', 'help', 'service', 'system'];
+    if (forbiddenWords.some(word => value.toLowerCase().includes(word))) {
+      return '사용할 수 없는 아이디입니다.';
+    }
+    
+    // 아이디와 닉네임 동일 체크
+    if (nickname && value === nickname) {
+      return '아이디와 닉네임은 같을 수 없습니다.';
+    }
+    
+    return '';
   };
-  
+
   // 사용자명(아이디) 중복 확인
   const checkUsername = async () => {
     if (!username) {
@@ -140,13 +230,11 @@ export default function SignupPage() {
       return;
     }
     
-    if (username.length < 4) {
-      setUsernameMessage('아이디는 최소 4자 이상이어야 합니다.');
-      return;
-    }
-    
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      setUsernameMessage('아이디는 영문, 숫자, 언더스코어(_)만 사용 가능합니다.');
+    // 유효성 검사 먼저 실행
+    const validationError = validateUsername(username);
+    if (validationError) {
+      setUsernameMessage(validationError);
+      setUsernameAvailable(false);
       return;
     }
     
@@ -183,6 +271,45 @@ export default function SignupPage() {
     }
   };
   
+  // 닉네임 유효성 검사
+  const validateNickname = (value: string) => {
+    // 길이 체크
+    if (value.length < 2) {
+      return '닉네임은 최소 2자 이상이어야 합니다.';
+    }
+    if (value.length > 16) {
+      return '닉네임은 최대 16자까지 가능합니다.';
+    }
+    
+    // 허용 문자 체크 (한글, 영문, 숫자, 일부 특수문자)
+    if (!/^[가-힣a-zA-Z0-9_-]+$/.test(value)) {
+      return '닉네임은 한글, 영문, 숫자, 밑줄(_), 하이픈(-)만 사용 가능합니다.';
+    }
+    
+    // 연속된 동일 문자 체크 (4개 이상)
+    if (/(.)\1{3,}/.test(value)) {
+      return '동일한 문자를 4번 이상 연속 사용할 수 없습니다.';
+    }
+    
+    // 의미 없는 문자 반복 체크 (ㅋㅋㅋㅋ 등)
+    if (/[ㅋㅎㅠㅜㅡㅗㅁㄴㅇㄹㅇ]{4,}/.test(value)) {
+      return '의미 없는 문자 반복은 사용할 수 없습니다.';
+    }
+    
+    // 금지어 체크
+    const forbiddenWords = ['admin', 'administrator', '관리자', '운영자', '매니저', 'manager', 'operator', 'support', '고객센터', 'service'];
+    if (forbiddenWords.some(word => value.toLowerCase().includes(word.toLowerCase()))) {
+      return '사용할 수 없는 닉네임입니다.';
+    }
+    
+    // 아이디와 닉네임 동일 체크
+    if (username && value === username) {
+      return '닉네임과 아이디는 같을 수 없습니다.';
+    }
+    
+    return '';
+  };
+
   // 닉네임 중복 확인
   const checkNickname = async () => {
     if (!nickname) {
@@ -190,13 +317,11 @@ export default function SignupPage() {
       return;
     }
     
-    if (nickname.length < 2) {
-      setNicknameMessage('닉네임은 최소 2자 이상이어야 합니다.');
-      return;
-    }
-    
-    if (!/^[a-zA-Z0-9가-힣_]+$/.test(nickname)) {
-      setNicknameMessage('닉네임은 영문, 숫자, 한글, 언더스코어(_)만 사용 가능합니다.');
+    // 유효성 검사 먼저 실행
+    const validationError = validateNickname(nickname);
+    if (validationError) {
+      setNicknameMessage(validationError);
+      setNicknameAvailable(false);
       return;
     }
     
@@ -318,7 +443,7 @@ export default function SignupPage() {
                   }`}
                   placeholder="이메일 주소"
                   required
-                  disabled={showPasswordStep}
+                  disabled={showNameStep}
                 />
                 {emailValid && !emailError && (
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -332,7 +457,7 @@ export default function SignupPage() {
                   {emailError}
                 </p>
               )}
-              {!showPasswordStep && (
+              {!showNameStep && (
                 <div className="mt-2">
                   <button
                     type="button"
@@ -346,6 +471,178 @@ export default function SignupPage() {
               )}
             </div>
           </div>
+          
+          {/* 이름 입력 단계 */}
+          {showNameStep && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-gray-700 mb-1 text-sm font-medium">이름</label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="이름"
+                  required
+                  disabled={showIdStep}
+                />
+                {!showIdStep && (
+                  <div className="mt-2">
+                    <button
+                      type="button"
+                      onClick={handleNameSubmit}
+                      disabled={!fullName.trim() || isLoading}
+                      className="w-full py-3 px-4 bg-slate-700 hover:bg-slate-800 text-white rounded-md transition-colors disabled:opacity-50"
+                    >
+                      {isLoading ? '처리 중...' : '계속하기'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          
+          {/* 아이디 입력 단계 */}
+          {showIdStep && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-gray-700 mb-1 text-sm font-medium">아이디</label>
+                <p className="mb-2 text-xs text-gray-500">
+                  *4-20자, 영문 소문자·숫자·밑줄(_)·마침표(.) 사용 가능
+                </p>
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setUsername(value);
+                      setUsernameChecked(false);
+                      setUsernameAvailable(false);
+                      
+                      // 실시간 유효성 검사
+                      if (value) {
+                        const validationError = validateUsername(value);
+                        setUsernameMessage(validationError || '');
+                      } else {
+                        setUsernameMessage('');
+                      }
+                    }}
+                    className={`flex-1 p-3 border rounded-md bg-white focus:outline-none focus:ring-2 ${
+                      usernameChecked && !usernameAvailable ? 'border-red-500 focus:ring-red-300' : 
+                      usernameChecked && usernameAvailable ? 'border-green-500 focus:ring-green-300' : 
+                      'border-gray-300 focus:ring-blue-500'
+                    }`}
+                    placeholder="아이디"
+                    required
+                    disabled={showNicknameStep}
+                  />
+                  <button
+                    type="button"
+                    onClick={checkUsername}
+                    disabled={isCheckingUsername || !username || validateUsername(username) !== '' || showNicknameStep}
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-md disabled:opacity-50"
+                  >
+                    {isCheckingUsername ? '확인 중...' : '중복 확인'}
+                  </button>
+                </div>
+                {usernameMessage && (
+                  <p className={`text-sm mt-1 flex items-center ${
+                    usernameAvailable ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {usernameAvailable ? 
+                      <Check className="h-4 w-4 mr-1" /> : 
+                      <AlertCircle className="h-4 w-4 mr-1" />
+                    }
+                    {usernameMessage}
+                  </p>
+                )}
+                {!showNicknameStep && (
+                  <div className="mt-2">
+                    <button
+                      type="button"
+                      onClick={handleIdSubmit}
+                      disabled={!usernameChecked || !usernameAvailable || isLoading}
+                      className="w-full py-3 px-4 bg-slate-700 hover:bg-slate-800 text-white rounded-md transition-colors disabled:opacity-50"
+                    >
+                      {isLoading ? '처리 중...' : '계속하기'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          
+          {/* 닉네임 입력 단계 */}
+          {showNicknameStep && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-gray-700 mb-1 text-sm font-medium">닉네임</label>
+                <p className="mb-2 text-xs text-gray-500">
+                  *2-16자, 한글·영문·숫자·밑줄(_)·하이픈(-) 사용 가능
+                </p>
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={nickname}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setNickname(value);
+                      setNicknameChecked(false);
+                      setNicknameAvailable(false);
+                      
+                      // 실시간 유효성 검사
+                      if (value) {
+                        const validationError = validateNickname(value);
+                        setNicknameMessage(validationError || '');
+                      } else {
+                        setNicknameMessage('');
+                      }
+                    }}
+                    className={`flex-1 p-3 border rounded-md bg-white focus:outline-none focus:ring-2 ${
+                      nicknameChecked && !nicknameAvailable ? 'border-red-500 focus:ring-red-300' : 
+                      nicknameChecked && nicknameAvailable ? 'border-green-500 focus:ring-green-300' : 
+                      'border-gray-300 focus:ring-blue-500'
+                    }`}
+                    placeholder="닉네임"
+                    required
+                    disabled={showPasswordStep}
+                  />
+                  <button
+                    type="button"
+                    onClick={checkNickname}
+                    disabled={isCheckingNickname || !nickname || validateNickname(nickname) !== '' || showPasswordStep}
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-md disabled:opacity-50"
+                  >
+                    {isCheckingNickname ? '확인 중...' : '중복 확인'}
+                  </button>
+                </div>
+                {nicknameMessage && (
+                  <p className={`text-sm mt-1 flex items-center ${
+                    nicknameAvailable ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {nicknameAvailable ? 
+                      <Check className="h-4 w-4 mr-1" /> : 
+                      <AlertCircle className="h-4 w-4 mr-1" />
+                    }
+                    {nicknameMessage}
+                  </p>
+                )}
+                {!showPasswordStep && (
+                  <div className="mt-2">
+                    <button
+                      type="button"
+                      onClick={handleNicknameSubmit}
+                      disabled={!nicknameChecked || !nicknameAvailable || isLoading}
+                      className="w-full py-3 px-4 bg-slate-700 hover:bg-slate-800 text-white rounded-md transition-colors disabled:opacity-50"
+                    >
+                      {isLoading ? '처리 중...' : '계속하기'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           
           {/* 비밀번호 입력 단계 */}
           {showPasswordStep && (
@@ -369,7 +666,6 @@ export default function SignupPage() {
                     }`}
                     placeholder="비밀번호"
                     required
-                    disabled={showProfileStep}
                   />
                   <button
                     type="button"
@@ -380,6 +676,42 @@ export default function SignupPage() {
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
+                
+                {/* 비밀번호 안내 메시지 */}
+                <p className="mt-1 text-xs text-gray-500">
+                  *10자 이상, 특수문자 포함
+                </p>
+                
+                {/* 비밀번호 강도 표시 */}
+                {password && (
+                  <div className="mt-2">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-gray-600">강도:</span>
+                      <span className={`text-xs font-medium ${
+                        passwordStrength === '강함' ? 'text-green-600' :
+                        passwordStrength === '보통' ? 'text-yellow-600' :
+                        'text-red-600'
+                      }`}>
+                        {passwordStrength}
+                      </span>
+                    </div>
+                    <div className="flex space-x-1 mt-1">
+                      <div className={`h-1 w-1/3 rounded ${
+                        passwordStrength === '약함' ? 'bg-red-400' :
+                        passwordStrength === '보통' ? 'bg-yellow-400' :
+                        passwordStrength === '강함' ? 'bg-green-400' : 'bg-gray-200'
+                      }`}></div>
+                      <div className={`h-1 w-1/3 rounded ${
+                        passwordStrength === '보통' ? 'bg-yellow-400' :
+                        passwordStrength === '강함' ? 'bg-green-400' : 'bg-gray-200'
+                      }`}></div>
+                      <div className={`h-1 w-1/3 rounded ${
+                        passwordStrength === '강함' ? 'bg-green-400' : 'bg-gray-200'
+                      }`}></div>
+                    </div>
+                  </div>
+                )}
+                
                 {passwordError && (
                   <p className="mt-1 text-sm text-red-600 flex items-center">
                     <AlertCircle className="h-4 w-4 mr-1" />
@@ -406,7 +738,6 @@ export default function SignupPage() {
                     }`}
                     placeholder="비밀번호 확인"
                     required
-                    disabled={showProfileStep}
                   />
                 </div>
                 {confirmPasswordError && (
@@ -417,116 +748,12 @@ export default function SignupPage() {
                 )}
               </div>
               
-              {!showProfileStep && (
-                <div className="mt-2">
-                  <button
-                    type="button"
-                    onClick={handlePasswordSubmit}
-                    disabled={!passwordValid || !confirmPasswordValid || isLoading}
-                    className="w-full py-3 px-4 bg-slate-700 hover:bg-slate-800 text-white rounded-md transition-colors disabled:opacity-50"
-                  >
-                    {isLoading ? '처리 중...' : '계속하기'}
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-          
-          {/* 프로필 정보 입력 단계 */}
-          {showProfileStep && (
-            <div className="space-y-4">
-              {/* 아이디 필드 */}
-              <div>
-                <label className="block text-gray-700 mb-1 text-sm font-medium">아이디</label>
-                <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className={`flex-1 p-3 border rounded-md bg-white focus:outline-none focus:ring-2 ${
-                      usernameChecked && !usernameAvailable ? 'border-red-500 focus:ring-red-300' : 
-                      usernameChecked && usernameAvailable ? 'border-green-500 focus:ring-green-300' : 
-                      'border-gray-300 focus:ring-blue-500'
-                    }`}
-                    placeholder="아이디"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={checkUsername}
-                    disabled={isCheckingUsername || !username}
-                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-md disabled:opacity-50"
-                  >
-                    {isCheckingUsername ? '확인 중...' : '중복 확인'}
-                  </button>
-                </div>
-                {usernameMessage && (
-                  <p className={`text-sm mt-1 flex items-center ${
-                    usernameAvailable ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {usernameAvailable ? 
-                      <Check className="h-4 w-4 mr-1" /> : 
-                      <AlertCircle className="h-4 w-4 mr-1" />
-                    }
-                    {usernameMessage}
-                  </p>
-                )}
-              </div>
-              
-              {/* 이름 필드 */}
-              <div>
-                <label className="block text-gray-700 mb-1 text-sm font-medium">이름</label>
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="이름"
-                />
-              </div>
-              
-              {/* 닉네임 필드 */}
-              <div>
-                <label className="block text-gray-700 mb-1 text-sm font-medium">닉네임</label>
-                <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    value={nickname}
-                    onChange={(e) => setNickname(e.target.value)}
-                    className={`flex-1 p-3 border rounded-md bg-white focus:outline-none focus:ring-2 ${
-                      nicknameChecked && !nicknameAvailable ? 'border-red-500 focus:ring-red-300' : 
-                      nicknameChecked && nicknameAvailable ? 'border-green-500 focus:ring-green-300' : 
-                      'border-gray-300 focus:ring-blue-500'
-                    }`}
-                    placeholder="닉네임"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={checkNickname}
-                    disabled={isCheckingNickname || !nickname}
-                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-md disabled:opacity-50"
-                  >
-                    {isCheckingNickname ? '확인 중...' : '중복 확인'}
-                  </button>
-                </div>
-                {nicknameMessage && (
-                  <p className={`text-sm mt-1 flex items-center ${
-                    nicknameAvailable ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {nicknameAvailable ? 
-                      <Check className="h-4 w-4 mr-1" /> : 
-                      <AlertCircle className="h-4 w-4 mr-1" />
-                    }
-                    {nicknameMessage}
-                  </p>
-                )}
-              </div>
+
               
               <div className="mt-2">
                 <button 
                   type="submit"
-                  disabled={isLoading || !usernameChecked || !usernameAvailable || !nicknameChecked || !nicknameAvailable}
+                  disabled={isLoading || !passwordValid || !confirmPasswordValid || !emailValid || !usernameChecked || !usernameAvailable || !nicknameChecked || !nicknameAvailable}
                   className="w-full p-3 bg-slate-800 hover:bg-slate-700 text-white rounded-md transition-colors disabled:opacity-50 mt-4"
                 >
                   {isLoading ? '처리 중...' : '계정 생성하기'}
@@ -534,7 +761,28 @@ export default function SignupPage() {
               </div>
             </div>
           )}
+
         </form>
+
+        {/* 소셜 로그인 구분선 */}
+        <div className="mt-6 mb-6">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">또는</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 카카오 회원가입 */}
+        <div className="mb-6">
+          <KakaoLoginButton 
+            disabled={isLoading}
+            onLoading={setIsLoading}
+          />
+        </div>
         
           <div className="mt-8 text-center">
             <p className="text-gray-600">
