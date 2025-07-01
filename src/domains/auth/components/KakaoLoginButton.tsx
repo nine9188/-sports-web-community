@@ -33,15 +33,21 @@ export default function KakaoLoginButton({
       console.log('🎯 최종 redirectTo:', redirectTo)
 
       const result = await signInWithKakao(redirectTo)
+      
+      console.log('📤 서버 액션 결과:', result)
 
       if (result.error) {
+        console.error('❌ 서버 액션 에러:', result.error)
         toast.error(result.error)
         return
       }
 
       if (result.url) {
+        console.log('🚀 카카오 OAuth URL로 리디렉션:', result.url)
         // 카카오 OAuth 페이지로 리디렉션
         window.location.href = result.url
+      } else {
+        console.warn('⚠️ OAuth URL이 없습니다:', result)
       }
     } catch (error) {
       console.error('카카오 로그인 오류:', error)
