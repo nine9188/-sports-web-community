@@ -24,7 +24,15 @@ export default function KakaoLoginButton({
       setLoading(true)
       onLoading?.(true)
 
-      const result = await signInWithKakao()
+      // 현재 도메인 기반으로 redirectTo URL 생성
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
+      const redirectTo = `${baseUrl}/auth/callback`
+      
+      console.log('🌍 현재 도메인:', window.location.origin)
+      console.log('🔧 환경변수 SITE_URL:', process.env.NEXT_PUBLIC_SITE_URL)
+      console.log('🎯 최종 redirectTo:', redirectTo)
+
+      const result = await signInWithKakao(redirectTo)
 
       if (result.error) {
         toast.error(result.error)

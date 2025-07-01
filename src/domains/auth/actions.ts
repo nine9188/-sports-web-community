@@ -504,31 +504,21 @@ export async function checkNicknameAvailability(nickname: string) {
 }
 
 /**
- * 카카오 로그인 - 기본 구현
+ * 카카오 로그인 - 클라이언트에서 redirectTo URL 전달받음
  */
-export async function signInWithKakao() {
+export async function signInWithKakao(redirectTo: string) {
   try {
     const supabase = await createClient()
     
-    // 환경변수 확인 및 디버깅
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
-    console.log('🔍 NEXT_PUBLIC_SITE_URL:', siteUrl)
-    
-    // 배포 환경에서는 환경변수가 없으면 에러 발생
-    if (!siteUrl && process.env.NODE_ENV === 'production') {
-      console.error('❌ 배포 환경에서 NEXT_PUBLIC_SITE_URL이 설정되지 않았습니다!')
-      return { error: '환경 설정 오류가 발생했습니다.' }
-    }
-    
-    const redirectUrl = `${siteUrl || 'http://localhost:3000'}/auth/callback`
-    console.log('🔗 카카오 로그인 redirectTo URL:', redirectUrl)
+    console.log('🔗 카카오 로그인 redirectTo URL:', redirectTo)
     
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'kakao',
       options: {
-        redirectTo: redirectUrl,
+        redirectTo,
         queryParams: {
-          prompt: 'consent' // 항상 동의 화면 표시 (개발용)
+          prompt: 'consent', // 항상 동의 화면 표시
+          approval_prompt: 'force' // 강제 동의 화면 (카카오 전용)
         }
       },
     })
