@@ -510,10 +510,23 @@ export async function signInWithKakao() {
   try {
     const supabase = await createClient()
     
+    // 환경변수 확인 및 디버깅
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+    console.log('🔍 NEXT_PUBLIC_SITE_URL:', siteUrl)
+    
+    // 배포 환경에서는 환경변수가 없으면 에러 발생
+    if (!siteUrl && process.env.NODE_ENV === 'production') {
+      console.error('❌ 배포 환경에서 NEXT_PUBLIC_SITE_URL이 설정되지 않았습니다!')
+      return { error: '환경 설정 오류가 발생했습니다.' }
+    }
+    
+    const redirectUrl = `${siteUrl || 'http://localhost:3000'}/auth/callback`
+    console.log('🔗 카카오 로그인 redirectTo URL:', redirectUrl)
+    
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'kakao',
       options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`,
+        redirectTo: redirectUrl,
         queryParams: {
           prompt: 'consent' // 항상 동의 화면 표시 (개발용)
         }
@@ -521,6 +534,7 @@ export async function signInWithKakao() {
     })
 
     if (error) {
+      console.error('카카오 OAuth 오류:', error)
       return { error: '카카오 로그인 중 오류가 발생했습니다.' }
     }
 
