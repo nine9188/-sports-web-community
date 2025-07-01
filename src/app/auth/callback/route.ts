@@ -6,9 +6,15 @@ import { NextRequest, NextResponse } from 'next/server'
  * 카카오 로그인 후 인증 코드를 처리하고 세션을 생성합니다.
  */
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/'
+  
+  // 배포 환경에서는 환경변수 사용, 개발 환경에서는 요청 origin 사용
+  const origin = process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin
+  
+  console.log('🔗 콜백 처리 - 요청 URL:', request.url)
+  console.log('🌍 사용할 origin:', origin)
 
   if (code) {
     try {
