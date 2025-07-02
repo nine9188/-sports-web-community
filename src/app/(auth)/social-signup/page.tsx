@@ -8,7 +8,7 @@ import { toast } from 'react-toastify'
 
 export default function SocialSignupPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, isLoading } = useAuth()
   const [loading, setLoading] = useState(false)
   const [nickname, setNickname] = useState('')
   const [nicknameError, setNicknameError] = useState('')
@@ -16,41 +16,71 @@ export default function SocialSignupPage() {
   const [isInitializing, setIsInitializing] = useState(true)
 
   useEffect(() => {
-    const checkExistingProfile = async () => {
-      if (!user) return
-
-      const supabase = createClient()
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
-
-      if (profile && profile.nickname && profile.nickname.trim() !== '') {
-        // 닉네임이 있는 완전한 프로필이면 메인 페이지로
-        toast.success('로그인되었습니다!')
-        router.replace('/')
+    const checkAuthAndProfile = async () => {
+      // AuthContext 로딩 중이면 대기
+      if (isLoading) {
+        return
       }
-      // 프로필은 있지만 닉네임이 없으면 이 페이지에 머물러서 닉네임 설정
+
+      // 사용자가 없으면 강제로 세션 확인
+      if (!user) {
+        try {
+          const supabase = createClient()
+          
+          // 강제로 세션 새로고침 시도
+          const { data: { session } } = await supabase.auth.getSession()
+          if (session) {
+            console.log('🔄 세션 발견, 강제 새로고침 중...')
+            // 세션이 있으면 AuthContext가 업데이트될 때까지 잠시 대기
+            setTimeout(() => checkAuthAndProfile(), 1000)
+            return
+          }
+          
+          const { data: { user: currentUser }, error } = await supabase.auth.getUser()
+          
+          if (error || !currentUser) {
+            // 5초 대기 후에도 사용자 정보가 없으면 로그인 페이지로
+            setTimeout(() => {
+              if (!user) {
+                toast.error('로그인이 필요합니다.')
+                router.replace('/signin')
+              }
+            }, 5000) // 5초로 증가
+            return
+          }
+        } catch (error) {
+          console.error('세션 확인 오류:', error)
+          setTimeout(() => {
+            toast.error('로그인이 필요합니다.')
+            router.replace('/signin')
+          }, 3000)
+          return
+        }
+      }
+
+      // 사용자가 있으면 프로필 확인
+      if (user) {
+        const supabase = createClient()
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single()
+
+        if (profile && profile.nickname && profile.nickname.trim() !== '') {
+          // 닉네임이 있는 완전한 프로필이면 메인 페이지로
+          toast.success('로그인되었습니다!')
+          router.replace('/')
+          return
+        }
+        // 프로필은 있지만 닉네임이 없으면 이 페이지에 머물러서 닉네임 설정
+      }
+      
       setIsInitializing(false)
     }
 
-    if (user) {
-      // 사용자 정보가 있으면 즉시 프로필 확인
-      checkExistingProfile()
-    } else {
-      // 사용자 정보 로딩을 위한 지연 시간 추가
-      const timer = setTimeout(() => {
-        if (!user) {
-          // 충분한 시간 후에도 사용자 정보가 없으면 로그인 페이지로
-          toast.error('로그인이 필요합니다.')
-          router.replace('/signin')
-        }
-      }, 2000) // 2초 대기
-
-      return () => clearTimeout(timer)
-    }
-  }, [user, router])
+    checkAuthAndProfile()
+  }, [user, isLoading, router])
 
   // 닉네임 실시간 검증
   const validateNickname = async (nickname: string) => {

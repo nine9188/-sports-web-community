@@ -28,8 +28,31 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(`${origin}/signin?message=OAuth+인증+실패`)
       }
 
-      if (data.user) {
+      if (data.user && data.session) {
         console.log('🔍 사용자 ID:', data.user.id)
+        console.log('✅ 세션 생성 완료:', data.session.access_token ? '토큰 있음' : '토큰 없음')
+        
+        // 세션 쿠키 설정 강화
+        const response = NextResponse.redirect(`${origin}/social-signup`)
+        
+        // 쿠키에 세션 정보 명시적으로 설정 (브라우저 동기화)
+        if (data.session.access_token) {
+          response.cookies.set('sb-access-token', data.session.access_token, {
+            httpOnly: false, // 클라이언트에서 접근 가능하도록
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 60 * 60 * 24 * 7 // 7일
+          })
+        }
+        
+        if (data.session.refresh_token) {
+          response.cookies.set('sb-refresh-token', data.session.refresh_token, {
+            httpOnly: false,
+            secure: process.env.NODE_ENV === 'production', 
+            sameSite: 'lax',
+            maxAge: 60 * 60 * 24 * 30 // 30일
+          })
+        }
         
         // 기존 프로필 확인
         const { data: profile, error: profileError } = await supabase
@@ -44,7 +67,7 @@ export async function GET(request: NextRequest) {
           // 프로필은 있지만 닉네임이 없는 경우 (자동 생성된 프로필)
           if (!profile.nickname || profile.nickname.trim() === '') {
             console.log('⚠️ 닉네임이 없는 기존 사용자 - 소셜 회원가입 페이지로 이동')
-            return NextResponse.redirect(`${origin}/social-signup`)
+            return response // 이미 social-signup으로 설정됨
           }
           
           // 완전한 기존 사용자 - 메인 페이지로 리다이렉트
@@ -53,7 +76,7 @@ export async function GET(request: NextRequest) {
         } else {
           // 신규 사용자 - 소셜 회원가입 페이지로 리다이렉트
           console.log('🆕 신규 사용자 - 소셜 회원가입 페이지로 이동')
-          return NextResponse.redirect(`${origin}/social-signup`)
+          return response // 이미 social-signup으로 설정됨
         }
       }
     } catch (error) {
