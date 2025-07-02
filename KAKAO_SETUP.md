@@ -19,8 +19,8 @@
 NEXT_PUBLIC_KAKAO_CLIENT_ID=your_kakao_rest_api_key
 KAKAO_CLIENT_SECRET=your_kakao_client_secret
 
-# 사이트 URL (배포 시 변경 필요)
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
+# 프로덕션 사이트 URL
+NEXT_PUBLIC_SITE_URL=https://sports-web-community.vercel.app
 ```
 
 ---
@@ -46,16 +46,12 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ### 4. 플랫폼 설정
 1. **앱 설정** > **플랫폼** 메뉴
 2. **Web 플랫폼 등록** 클릭
-3. **사이트 도메인** 추가:
-   - 개발: `http://localhost:3000`
-   - 배포: `https://yourdomain.com`
+3. **사이트 도메인** 추가: `https://sports-web-community.vercel.app`
 
 ### 5. 카카오 로그인 활성화
 1. **제품 설정** > **카카오 로그인** 메뉴
 2. **활성화 설정** 상태를 **ON**으로 변경
-3. **Redirect URI** 등록:
-   - 개발: `http://localhost:3000/auth/callback/kakao`
-   - 배포: `https://yourdomain.com/auth/callback/kakao`
+3. **Redirect URI** 등록: `https://sports-web-community.vercel.app/auth/callback`
 
 ### 6. 동의항목 설정
 1. **제품 설정** > **카카오 로그인** > **동의항목**
@@ -85,35 +81,29 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 Kakao enabled: ON
 Client ID: [카카오 REST API 키]
 Client Secret: [카카오 Client Secret] (선택사항)
-Redirect URL: https://[your-project-ref].supabase.co/auth/v1/callback
+Redirect URL: https://vnjjfhsuzoxcljqqwwvx.supabase.co/auth/v1/callback
 ```
 
 ### 3. 사이트 URL 설정
 1. **Authentication** > **Settings**
-2. **Site URL**: `http://localhost:3000` (개발) / `https://yourdomain.com` (배포)
-3. **Additional Redirect URLs**에 추가:
-   - `http://localhost:3000/auth/callback/kakao`
-   - `https://yourdomain.com/auth/callback/kakao` (배포 시)
+2. **Site URL**: `https://sports-web-community.vercel.app`
+3. **Additional Redirect URLs**에 추가: `https://sports-web-community.vercel.app/auth/callback`
 
 ---
 
 ## 🧪 테스트 방법
 
-### 1. 개발 서버 실행
-```bash
-npm run dev
-# 또는
-yarn dev
-```
+### 1. 배포된 사이트 접속
+- 메인 URL: `https://sports-web-community.vercel.app`
 
 ### 2. 로그인 테스트
-1. `http://localhost:3000/signin` 접속
+1. 로그인 페이지 접속
 2. **카카오 로그인** 버튼 클릭
 3. 카카오 로그인 페이지에서 로그인
 4. 자동으로 사이트로 돌아와서 로그인 완료
 
 ### 3. 회원가입 테스트
-1. `http://localhost:3000/signup` 접속
+1. 회원가입 페이지 접속
 2. **카카오 로그인** 버튼 클릭 (자동 회원가입)
 3. 프로필이 자동 생성되는지 확인
 
@@ -150,7 +140,7 @@ yarn dev
 ### 디버깅 팁
 1. 브라우저 개발자 도구 > Network 탭에서 요청 확인
 2. Supabase Dashboard > Auth > Users에서 사용자 생성 확인
-3. 서버 콘솔 로그 확인 (`npm run dev` 실행 중)
+3. Vercel 배포 로그 확인
 
 ---
 
@@ -164,7 +154,7 @@ yarn dev
 ### 보안 강화
 - Client Secret 사용으로 보안 강화
 - 로그인 시도 제한 (기존 기능과 연동)
-- HTTPS 사용 (배포 환경)
+- HTTPS 사용 (프로덕션 환경)
 
 ---
 

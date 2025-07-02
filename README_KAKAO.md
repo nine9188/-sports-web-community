@@ -22,7 +22,7 @@ Next.js + Supabase 프로젝트에 카카오 간편 로그인/회원가입 기�
 - 이메일 정보 자동 저장
 
 ### 4. OAuth 콜백 처리
-- `/auth/callback/kakao` 라우트 생성
+- `/auth/callback` 라우트 처리
 - 에러 처리 및 사용자 피드백
 - 성공 시 자동 리디렉션
 
@@ -33,19 +33,20 @@ Next.js + Supabase 프로젝트에 카카오 간편 로그인/회원가입 기�
 ```env
 NEXT_PUBLIC_KAKAO_CLIENT_ID=your_kakao_rest_api_key
 KAKAO_CLIENT_SECRET=your_kakao_client_secret
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_SITE_URL=https://sports-web-community.vercel.app
 ```
 
 ### 2. 카카오 개발자 설정
 1. [카카오 개발자 콘솔](https://developers.kakao.com)에서 앱 생성
 2. REST API 키 발급
 3. 카카오 로그인 활성화
-4. Redirect URI 등록: `http://localhost:3000/auth/callback/kakao`
+4. Redirect URI 등록: `https://sports-web-community.vercel.app/auth/callback`
 
 ### 3. Supabase 설정
 1. Supabase Dashboard > Authentication > Providers
 2. Kakao Provider 활성화
 3. Client ID/Secret 입력
+4. Redirect URL: `https://vnjjfhsuzoxcljqqwwvx.supabase.co/auth/v1/callback`
 
 ## 📁 파일 구조
 
@@ -59,9 +60,9 @@ src/
 │   ├── (auth)/
 │   │   ├── signin/page.tsx          # 로그인 페이지 (버튼 추가됨)
 │   │   ├── signup/page.tsx          # 회원가입 페이지 (버튼 추가됨)
-│   │   └── callback/page.tsx        # OAuth 콜백 처리 페이지
-│   └── auth/callback/kakao/
-│       └── route.ts                 # 카카오 OAuth 콜백 API 라우트
+│   │   └── social-signup/page.tsx   # 소셜 회원가입 페이지
+│   └── auth/callback/
+│       └── route.ts                 # OAuth 콜백 API 라우트
 ```
 
 ## 🎨 사용 방법
@@ -81,8 +82,9 @@ src/
 
 - 서버 액션 기반 구현 (API 라우트 최소화)
 - 자동 프로필 생성 시 고유성 보장
-- OAuth 에러 처리 및 로깅
+- OAuth 에러 처리
 - 로그인 시도 제한과 연동 (기존 시스템)
+- HTTPS 프로덕션 환경
 
 ## 🧪 테스트 체크리스트
 

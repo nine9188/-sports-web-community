@@ -510,8 +510,6 @@ export async function signInWithKakao(redirectTo: string) {
   try {
     const supabase = await createClient()
     
-    console.log('🔗 카카오 로그인 redirectTo URL:', redirectTo)
-    
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'kakao',
       options: {
@@ -524,13 +522,11 @@ export async function signInWithKakao(redirectTo: string) {
     })
 
     if (error) {
-      console.error('카카오 OAuth 오류:', error)
       return { error: '카카오 로그인 중 오류가 발생했습니다.' }
     }
 
     return { data, url: data.url }
-  } catch (error) {
-    console.error('카카오 로그인 오류:', error)
+  } catch {
     return { error: '카카오 로그인을 시작할 수 없습니다.' }
   }
 }

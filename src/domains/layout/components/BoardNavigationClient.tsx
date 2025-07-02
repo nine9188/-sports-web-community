@@ -440,26 +440,26 @@ const DropdownMenu = React.memo(function DropdownMenu({
     let top: number;
     
     if (isMobile) {
-      // 모바일: 아래쪽으로 펼치기
-      left = Math.max(10, Math.min(rect.left + window.scrollX, viewportWidth - submenuWidth - 10));
-      top = rect.bottom + window.scrollY + spacing;
+      // 모바일: 아래쪽으로 펼치기 (스크롤 위치 제거)
+      left = Math.max(10, Math.min(rect.left, viewportWidth - submenuWidth - 10));
+      top = rect.bottom + spacing;
     } else {
       // 데스크탑: 오른쪽으로 펼치기, 화면 밖으로 나가면 왼쪽으로
       const rightSpace = viewportWidth - rect.right;
       const leftSpace = rect.left;
       
       if (rightSpace >= submenuWidth + spacing) {
-        // 오른쪽에 공간이 충분함
-        left = rect.right + window.scrollX + spacing;
+        // 오른쪽에 공간이 충분함 (스크롤 위치 제거)
+        left = rect.right + spacing;
       } else if (leftSpace >= submenuWidth + spacing) {
-        // 왼쪽에 공간이 충분함
-        left = rect.left + window.scrollX - submenuWidth - spacing;
+        // 왼쪽에 공간이 충분함 (스크롤 위치 제거)
+        left = rect.left - submenuWidth - spacing;
       } else {
         // 양쪽 모두 공간이 부족하면 화면 중앙에
         left = (viewportWidth - submenuWidth) / 2;
       }
       
-      top = rect.top + window.scrollY;
+      top = rect.top; // 스크롤 위치 제거
     }
     
     setSubmenuPosition({ top, left });
@@ -627,13 +627,14 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
   const handleMouseEnter = (boardId: string, element: HTMLDivElement) => {
     clearTimers();
     
-      const rect = element.getBoundingClientRect();
+    const rect = element.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
     const menuWidth = 240;
     const spacing = 10;
     
     // 메뉴가 화면 밖으로 나가지 않도록 위치 조정
-    let left = rect.left + window.scrollX;
+    // 헤더가 fixed/sticky 위치에 있으므로 스크롤 위치를 고려하지 않음
+    let left = rect.left;
     
     // 오른쪽으로 넘어가는 경우
     if (left + menuWidth > viewportWidth - spacing) {
@@ -645,11 +646,11 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
       left = spacing;
     }
     
-      setDropdownPosition({
-        top: rect.bottom + window.scrollY,
+    setDropdownPosition({
+      top: rect.bottom, // 스크롤 위치 제거
       left: left
-      });
-      setHoveredBoard(boardId);
+    });
+    setHoveredBoard(boardId);
   };
 
   // 호버 종료 처리 (트리거 요소에서)

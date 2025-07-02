@@ -24,30 +24,19 @@ export default function KakaoLoginButton({
       setLoading(true)
       onLoading?.(true)
 
-      // 현재 도메인 기반으로 redirectTo URL 생성
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
-      const redirectTo = `${baseUrl}/auth/callback`
-      
-      console.log('🌍 현재 도메인:', window.location.origin)
-      console.log('🔧 환경변수 SITE_URL:', process.env.NEXT_PUBLIC_SITE_URL)
-      console.log('🎯 최종 redirectTo:', redirectTo)
+      // 프로덕션 환경 redirectTo URL 생성
+      const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
 
       const result = await signInWithKakao(redirectTo)
-      
-      console.log('📤 서버 액션 결과:', result)
 
       if (result.error) {
-        console.error('❌ 서버 액션 에러:', result.error)
         toast.error(result.error)
         return
       }
 
       if (result.url) {
-        console.log('🚀 카카오 OAuth URL로 리디렉션:', result.url)
         // 카카오 OAuth 페이지로 리디렉션
         window.location.href = result.url
-      } else {
-        console.warn('⚠️ OAuth URL이 없습니다:', result)
       }
     } catch (error) {
       console.error('카카오 로그인 오류:', error)

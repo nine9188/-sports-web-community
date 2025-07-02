@@ -10,11 +10,8 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/'
   
-  // 배포 환경에서는 환경변수 사용, 개발 환경에서는 요청 origin 사용
-  const origin = process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin
-  
-  console.log('🔗 콜백 처리 - 요청 URL:', request.url)
-  console.log('🌍 사용할 origin:', origin)
+  // 프로덕션 환경 origin 사용
+  const origin = process.env.NEXT_PUBLIC_SITE_URL
 
   if (code) {
     try {
@@ -24,13 +21,10 @@ export async function GET(request: NextRequest) {
       const { data, error } = await supabase.auth.exchangeCodeForSession(code)
       
       if (error) {
-        console.error('OAuth 코드 교환 오류:', error)
         return NextResponse.redirect(`${origin}/signin?message=OAuth+인증+실패`)
       }
 
       if (data.user && data.session) {
-        console.log('🔍 사용자 ID:', data.user.id)
-        console.log('✅ 세션 생성 완료:', data.session.access_token ? '토큰 있음' : '토큰 없음')
         
         // 세션 쿠키 설정 강화
         const response = NextResponse.redirect(`${origin}/social-signup`)
@@ -61,26 +55,20 @@ export async function GET(request: NextRequest) {
           .eq('id', data.user.id)
           .single()
 
-        console.log('📋 프로필 조회 결과:', { profile, profileError })
-
         if (profile && !profileError) {
           // 프로필은 있지만 닉네임이 없는 경우 (자동 생성된 프로필)
           if (!profile.nickname || profile.nickname.trim() === '') {
-            console.log('⚠️ 닉네임이 없는 기존 사용자 - 소셜 회원가입 페이지로 이동')
             return response // 이미 social-signup으로 설정됨
           }
           
           // 완전한 기존 사용자 - 메인 페이지로 리다이렉트
-          console.log('✅ 완전한 기존 사용자 - 메인 페이지로 이동')
           return NextResponse.redirect(`${origin}${next}`)
         } else {
           // 신규 사용자 - 소셜 회원가입 페이지로 리다이렉트
-          console.log('🆕 신규 사용자 - 소셜 회원가입 페이지로 이동')
           return response // 이미 social-signup으로 설정됨
         }
       }
-    } catch (error) {
-      console.error('콜백 처리 중 오류:', error)
+    } catch {
       return NextResponse.redirect(`${origin}/signin?message=로그인+처리+중+오류가+발생했습니다`)
     }
   }
