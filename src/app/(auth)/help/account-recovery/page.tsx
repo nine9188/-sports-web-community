@@ -264,22 +264,22 @@ function AccountRecoveryContent() {
         </p>
         
         {/* 탭 메뉴 */}
-        <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
+        <div className="flex border-b border-gray-200 mb-6">
           <button 
-            className={`flex-1 py-2.5 px-4 text-sm font-medium rounded-md transition-all duration-200 ${
+            className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-all duration-200 ${
               activeTab === 'id' 
-                ? 'bg-white text-slate-800 shadow-sm' 
-                : 'text-gray-600 hover:text-gray-800'
+                ? 'border-slate-600 text-slate-800 bg-slate-50' 
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
             onClick={() => changeTab('id')}
           >
             아이디 찾기
           </button>
           <button 
-            className={`flex-1 py-2.5 px-4 text-sm font-medium rounded-md transition-all duration-200 ${
+            className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-all duration-200 ${
               activeTab === 'password' 
-                ? 'bg-white text-slate-800 shadow-sm' 
-                : 'text-gray-600 hover:text-gray-800'
+                ? 'border-slate-600 text-slate-800 bg-slate-50' 
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
             onClick={() => changeTab('password')}
           >
@@ -315,7 +315,7 @@ function AccountRecoveryContent() {
                 className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 ${
                   fullNameError ? 'border-red-500 focus:ring-red-300' : 
                   fullNameValid ? 'border-green-500 focus:ring-green-300' : 
-                  'border-gray-300 focus:ring-blue-500'
+                  'border-gray-300 focus:ring-slate-300'
                 } ${verificationSent ? 'bg-gray-100' : ''}`}
                 placeholder="가입시 입력한 이름"
                 readOnly={verificationSent}
@@ -352,7 +352,7 @@ function AccountRecoveryContent() {
                 className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 ${
                   emailError ? 'border-red-500 focus:ring-red-300' : 
                   emailValid ? 'border-green-500 focus:ring-green-300' : 
-                  'border-gray-300 focus:ring-blue-500'
+                  'border-gray-300 focus:ring-slate-300'
                 } ${verificationSent ? 'bg-gray-100' : ''}`}
                 placeholder="가입시 사용한 이메일"
                 readOnly={verificationSent}
@@ -365,7 +365,7 @@ function AccountRecoveryContent() {
               )}
               {verificationSent && (
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <Mail className="h-5 w-5 text-blue-500" />
+                  <Mail className="h-5 w-5 text-slate-500" />
                 </div>
               )}
             </div>
@@ -383,7 +383,7 @@ function AccountRecoveryContent() {
                 type="button"
                 onClick={sendVerificationCode}
                 disabled={loading || !emailValid || !fullNameValid}
-                className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 px-4 bg-slate-700 hover:bg-slate-800 text-white font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? '발송중...' : '인증코드 받기'}
               </button>
@@ -408,7 +408,7 @@ function AccountRecoveryContent() {
                   className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 ${
                     codeError ? 'border-red-500 focus:ring-red-300' : 
                     codeValid ? 'border-green-500 focus:ring-green-300' : 
-                    'border-gray-300 focus:ring-blue-500'
+                    'border-gray-300 focus:ring-slate-300'
                   }`}
                   placeholder="6자리 인증코드"
                   maxLength={6}
@@ -437,7 +437,7 @@ function AccountRecoveryContent() {
                   setCodeValid(false);
                   setCodeError('');
                 }}
-                className="text-xs text-blue-600 hover:underline mt-1"
+                className="text-xs text-slate-600 hover:text-slate-800 hover:underline mt-1"
               >
                 다른 이메일로 재발송
               </button>
@@ -481,7 +481,7 @@ function AccountRecoveryContent() {
                 className={`w-full px-4 py-3 pl-12 border rounded-md focus:outline-none focus:ring-2 ${
                   usernameError ? 'border-red-500 focus:ring-red-300' : 
                   usernameValid ? 'border-green-500 focus:ring-green-300' : 
-                  'border-gray-300 focus:ring-blue-500'
+                  'border-gray-300 focus:ring-slate-300'
                 }`}
                 placeholder="가입시 설정한 아이디"
                 required
