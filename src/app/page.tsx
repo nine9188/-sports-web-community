@@ -10,8 +10,8 @@ export default function HomePage() {
         <NavBoardSelector />
       </div>
 
-      {/* 배너 위젯 - 라이브스코어 위젯보다 1.5배 큰 2칸짜리 슬라이딩 배너 */}
-      <BannerWidget />
+      {/* 배너 위젯 - 메인 상단 */}
+      <BannerWidget position="main_top" />
 
       {/* LiveScore 위젯 - 즉시 렌더링 */}
       <LiveScoreWidget />
@@ -21,6 +21,9 @@ export default function HomePage() {
 
       {/* 뉴스 위젯 - 즉시 렌더링 */}
       <NewsWidget />
+
+      {/* 배너 위젯 - 메인 하단 */}
+      <BannerWidget position="main_bottom" />
     </main>
   );
 }

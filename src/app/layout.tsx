@@ -14,7 +14,7 @@ import { Suspense } from 'react';
 // 로딩 스켈레톤 컴포넌트
 function RightSidebarSkeleton() {
   return (
-    <aside className="hidden xl:block w-[280px] shrink-0">
+    <aside className="hidden xl:block w-[300px] shrink-0">
       <div className="h-full pt-4">
         <div className="mb-4 bg-white rounded-lg border animate-pulse">
           <div className="px-3 py-2 border-b">

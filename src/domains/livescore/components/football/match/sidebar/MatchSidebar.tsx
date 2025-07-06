@@ -265,7 +265,7 @@ export default function MatchSidebar({
   sidebarData?: SidebarData | null;
 }) {
   return (
-    <aside className="hidden xl:block w-[280px] shrink-0">
+    <aside className="hidden xl:block w-[300px] shrink-0">
       <div className="h-full pt-4">
         {/* 경기 정보 섹션 */}
         <MatchInfoSection 

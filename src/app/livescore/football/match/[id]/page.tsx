@@ -118,7 +118,7 @@ export default async function MatchPage({
             </div>
 
             {/* 사이드바 - 데스크탑에서만 표시 */}
-            <aside className="hidden xl:block w-[280px] shrink-0">
+            <aside className="hidden xl:block w-[300px] shrink-0">
               <MatchInfoSection 
                 initialData={matchData.matchData}
                 sidebarData={sidebarData}

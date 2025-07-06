@@ -45,7 +45,7 @@ export default function Sidebar({
       
       {/* 데스크탑 사이드바 (왼쪽에 고정) */}
       <div
-        className="fixed lg:relative top-0 lg:top-0 left-0 h-[100dvh] lg:h-auto w-[280px] 
+        className="fixed lg:relative top-0 lg:top-0 left-0 h-[100dvh] lg:h-auto w-[300px] 
           bg-white transform transition-transform duration-300 ease-in-out z-[1000] lg:z-30
           -translate-x-full lg:translate-x-0 hidden lg:block"
       >
