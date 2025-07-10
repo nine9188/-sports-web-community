@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/shared/api/supabaseServer'
+import { logAuthEvent, logSecurityEvent, logError } from '@/shared/actions/log-actions'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
@@ -21,6 +22,16 @@ export async function signIn(username: string, password: string) {
     if (profileError || !profile?.email) {
       // 아이디 기반 로그인 시도 제한 확인
       await recordLoginAttempt(username);
+      
+      // 로그인 실패 로그 기록
+      await logAuthEvent(
+        'LOGIN_FAILED',
+        `로그인 실패: 존재하지 않는 사용자명 ${username}`,
+        undefined,
+        false,
+        { username, reason: 'invalid_username' }
+      );
+      
       return { error: '아이디 또는 비밀번호가 올바르지 않습니다.' };
     }
     
@@ -33,6 +44,16 @@ export async function signIn(username: string, password: string) {
     const blockData = await checkLoginBlock(username);
     if (blockData.isBlocked) {
       const remainingTime = Math.ceil((blockData.blockedUntil - now) / 1000 / 60);
+      
+      // 차단된 사용자의 로그인 시도 보안 로그 기록
+      await logSecurityEvent(
+        'BLOCKED_LOGIN_ATTEMPT',
+        `차단된 사용자의 로그인 시도: ${username}`,
+        'MEDIUM',
+        undefined,
+        { username, remainingTime, blockedUntil: blockData.blockedUntil }
+      );
+      
       return { 
         error: `너무 많은 로그인 시도로 인해 ${remainingTime}분간 차단되었습니다. 나중에 다시 시도해주세요.` 
       };
@@ -46,17 +67,46 @@ export async function signIn(username: string, password: string) {
     if (error) {
       // 로그인 실패 시 시도 횟수 증가
       await recordLoginAttempt(username);
+      
+      // 로그인 실패 로그 기록
+      await logAuthEvent(
+        'LOGIN_FAILED',
+        `로그인 실패: 잘못된 비밀번호 ${username}`,
+        undefined,
+        false,
+        { username, reason: 'invalid_password', error: error.message }
+      );
+      
       return { error: '아이디 또는 비밀번호가 올바르지 않습니다.' }
     }
 
     // 로그인 성공 시 시도 기록 초기화
     await clearLoginAttempts(username);
     
+    // 로그인 성공 로그 기록
+    await logAuthEvent(
+      'LOGIN_SUCCESS',
+      `로그인 성공: ${username}`,
+      data.user?.id,
+      true,
+      { username, email }
+    );
+    
     // 다중 로그인 차단 기능은 현재 비활성화됨
 
     revalidatePath('/', 'layout')
     return { data, success: true }
-  } catch {
+  } catch (err) {
+    const error = err instanceof Error ? err : new Error(String(err));
+    
+    // 로그인 중 시스템 에러 로그 기록
+    await logError(
+      'LOGIN_SYSTEM_ERROR',
+      error,
+      undefined,
+      { username }
+    );
+    
     return { error: '로그인 중 오류가 발생했습니다.' }
   }
 }
@@ -195,10 +245,24 @@ export async function signOut() {
   try {
     const supabase = await createClient()
     
+    // 로그아웃 전 사용자 정보 확인
+    const { data: { user } } = await supabase.auth.getUser()
+    
     const { error } = await supabase.auth.signOut()
 
     if (error) {
       return { error: error.message }
+    }
+
+    // 로그아웃 성공 로그 기록
+    if (user) {
+      await logAuthEvent(
+        'LOGOUT_SUCCESS',
+        `로그아웃 성공: ${user.email}`,
+        user.id,
+        true,
+        { email: user.email }
+      );
     }
 
     revalidatePath('/', 'layout')

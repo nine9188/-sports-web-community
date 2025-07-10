@@ -2,6 +2,7 @@
 
 import { createClient } from '@/shared/api/supabaseServer'
 import type { PostSearchResult } from '../types'
+import { logUserAction } from '@/shared/actions/log-actions'
 
 interface SearchPostsParams {
   query: string
@@ -24,8 +25,24 @@ export async function searchPosts({
   try {
     const supabase = await createClient()
     
-    if (!supabase) {
+        if (!supabase) {
       throw new Error('Supabase 클라이언트 초기화 실패')
+    }
+
+    // 검색 로그 기록 (사용자가 로그인되어 있는 경우에만)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      await logUserAction(
+        'SEARCH_POSTS',
+        `게시글 검색: "${query}"`,
+        user.id,
+        {
+          query,
+          sortBy,
+          limit,
+          offset
+        }
+      );
     }
 
     // COUNT 쿼리는 필요할 때만 실행 (성능 최적화)

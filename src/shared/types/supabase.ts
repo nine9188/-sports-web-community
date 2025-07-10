@@ -9,6 +9,72 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      application_logs: {
+        Row: {
+          action: string
+          category: string
+          created_at: string | null
+          endpoint: string | null
+          error_code: string | null
+          error_details: Json | null
+          id: string
+          ip_address: unknown | null
+          level: string
+          message: string
+          metadata: Json | null
+          method: string | null
+          request_id: string | null
+          response_time_ms: number | null
+          session_id: string | null
+          stack_trace: string | null
+          status_code: number | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          category: string
+          created_at?: string | null
+          endpoint?: string | null
+          error_code?: string | null
+          error_details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          level: string
+          message: string
+          metadata?: Json | null
+          method?: string | null
+          request_id?: string | null
+          response_time_ms?: number | null
+          session_id?: string | null
+          stack_trace?: string | null
+          status_code?: number | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          category?: string
+          created_at?: string | null
+          endpoint?: string | null
+          error_code?: string | null
+          error_details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          level?: string
+          message?: string
+          metadata?: Json | null
+          method?: string | null
+          request_id?: string | null
+          response_time_ms?: number | null
+          session_id?: string | null
+          stack_trace?: string | null
+          status_code?: number | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       boards: {
         Row: {
           access_level: string | null
@@ -655,9 +721,12 @@ export type Database = {
           icon_id: number | null
           id: string
           is_admin: boolean | null
+          is_suspended: boolean | null
           level: number | null
           nickname: string | null
           points: number | null
+          suspended_reason: string | null
+          suspended_until: string | null
           updated_at: string | null
           username: string | null
         }
@@ -668,9 +737,12 @@ export type Database = {
           icon_id?: number | null
           id: string
           is_admin?: boolean | null
+          is_suspended?: boolean | null
           level?: number | null
           nickname?: string | null
           points?: number | null
+          suspended_reason?: string | null
+          suspended_until?: string | null
           updated_at?: string | null
           username?: string | null
         }
@@ -681,21 +753,16 @@ export type Database = {
           icon_id?: number | null
           id?: string
           is_admin?: boolean | null
+          is_suspended?: boolean | null
           level?: number | null
           nickname?: string | null
           points?: number | null
+          suspended_reason?: string | null
+          suspended_until?: string | null
           updated_at?: string | null
           username?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_icon_id_fkey"
-            columns: ["icon_id"]
-            isOneToOne: false
-            referencedRelation: "shop_items"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       reports: {
         Row: {

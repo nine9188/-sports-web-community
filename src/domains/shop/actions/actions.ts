@@ -3,6 +3,7 @@
 import { createClient } from '@/shared/api/supabaseServer'
 import { revalidatePath } from 'next/cache'
 import { checkSuspensionGuard } from '@/shared/utils/suspension-guard'
+import { logUserAction } from '@/shared/actions/log-actions'
 
 /**
  * 상점 카테고리 조회
@@ -124,6 +125,17 @@ export async function purchaseItem(itemId: number) {
     
     // 캐시 갱신
     revalidatePath('/shop')
+    
+    // 아이템 구매 성공 로그 기록
+    await logUserAction(
+      'ITEM_PURCHASE',
+      `상점 아이템 구매 (아이템 ID: ${itemId})`,
+      user.id,
+      {
+        itemId,
+        userId: user.id
+      }
+    );
     
     return data
   } catch (error) {

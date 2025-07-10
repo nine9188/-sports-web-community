@@ -11,6 +11,7 @@ import {
   calculateLevelFromExp as calcLevelFromExp,
   calculateLevelProgress as calcProgress
 } from '@/shared/utils/level-icons';
+import { getExpHistory } from '@/shared/actions/admin-actions';
 
 interface UserInfo {
   id: string;
@@ -57,26 +58,27 @@ export default function ExpManager({
   const fetchExpHistory = async (userId: string) => {
     try {
       setLoadingHistory(true);
-      const supabase = createClient();
       
-      try {
-        const { data, error } = await supabase
-          .from('exp_history')
-          .select('id, user_id, exp, reason, created_at')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(20);
-          
-        if (error) {
-          setExpHistory([]);
-          return;
-        }
-        
-        setExpHistory(data || []);
-      } catch {
-        // 오류 시 빈 배열로 설정
+      // 서버 액션을 사용하여 전체 내역 가져오기
+      const result = await getExpHistory(50);
+      
+      if (result.success && result.history) {
+        // 특정 사용자의 내역만 필터링
+        const userHistory = result.history.filter(item => item.userId === userId);
+        setExpHistory(userHistory.map(item => ({
+          id: item.id,
+          user_id: item.userId,
+          exp: item.exp,
+          reason: item.reason,
+          created_at: item.createdAt
+        })));
+      } else {
+        console.error('경험치 내역 조회 실패:', result.error);
         setExpHistory([]);
       }
+    } catch (error) {
+      console.error('경험치 내역 조회 중 오류:', error);
+      setExpHistory([]);
     } finally {
       setLoadingHistory(false);
     }

@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { createClient } from '@/shared/api/supabase';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
-import { Coins, TrendingUp, Users, Home, LayoutDashboard, ShoppingBag, Rss, Youtube, AlertTriangle, Target, Image as ImageIcon } from 'lucide-react';
+import { Coins, TrendingUp, Users, Home, LayoutDashboard, ShoppingBag, Rss, Youtube, AlertTriangle, Target, Image as ImageIcon, FileText } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 
 interface AdminLayoutClientProps {
@@ -109,6 +109,7 @@ export default function AdminLayoutClient({ children, user }: AdminLayoutClientP
     { path: '/admin/boards', label: '게시판 관리', icon: <Home className="w-5 h-5 mr-2" /> },
     { path: '/admin/banners', label: '배너 관리', icon: <ImageIcon className="w-5 h-5 mr-2" /> },
     { path: '/admin/reports', label: '신고 관리', icon: <AlertTriangle className="w-5 h-5 mr-2" /> },
+    { path: '/admin/logs', label: '로그 관리', icon: <FileText className="w-5 h-5 mr-2" /> },
     { path: '/admin/points', label: '포인트 관리', icon: <Coins className="w-5 h-5 mr-2" /> },
     { path: '/admin/exp', label: '경험치/레벨 관리', icon: <TrendingUp className="w-5 h-5 mr-2" /> },
     { path: '/admin/shop', label: '아이콘 상점', icon: <ShoppingBag className="w-5 h-5 mr-2" /> },

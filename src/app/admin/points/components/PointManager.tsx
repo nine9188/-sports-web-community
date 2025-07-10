@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import { Button } from '@/shared/components/ui/button';
 import { Coins } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
+import { getPointHistory } from '@/shared/actions/admin-actions';
 
 interface UserInfo {
   id: string;
@@ -46,26 +47,28 @@ export default function PointManager({ adminUser, selectedUser, onRefreshData }:
   const fetchPointHistory = async (userId: string) => {
     try {
       setLoadingHistory(true);
-      const supabase = createClient();
       
-      try {
-        const { data, error } = await supabase
-          .from('point_history')
-          .select('id, user_id, points, reason, created_at, admin_id')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(20);
-          
-        if (error) {
-          setPointHistory([]);
-          return;
-        }
-        
-        setPointHistory(data || []);
-      } catch {
-        // 오류 발생 시 빈 배열로 초기화
-        setPointHistory([]);
-      }
+      // 서버 액션을 사용하여 전체 내역 가져오기
+      const result = await getPointHistory(50);
+      
+             if (result.success && result.history) {
+         // 특정 사용자의 내역만 필터링
+         const userHistory = result.history.filter(item => item.userId === userId);
+         setPointHistory(userHistory.map(item => ({
+           id: item.id,
+           user_id: item.userId,
+           points: item.points,
+           reason: item.reason,
+           created_at: item.createdAt,
+           admin_id: item.adminId
+         })));
+       } else {
+         console.error('포인트 내역 조회 실패:', result.error);
+         setPointHistory([]);
+       }
+    } catch (error) {
+      console.error('포인트 내역 조회 중 오류:', error);
+      setPointHistory([]);
     } finally {
       setLoadingHistory(false);
     }

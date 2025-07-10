@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@/shared/api/supabase';
 import { toast } from 'react-toastify';
 import { Button } from '@/shared/components/ui/button';
 import { useAuth } from '@/shared/context/AuthContext';
+import { getExpUsers } from '@/shared/actions/admin-actions';
 import UserList from './components/UserList';
 import ExpManager from './components/ExpManager';
 import { calculateLevelFromExp } from '@/shared/utils/level-icons';
@@ -24,33 +24,24 @@ export default function ExpManagementPage() {
 
   // 사용자 데이터 불러오기 함수
   const fetchUsers = useCallback(async () => {
-    if (!adminUser) return;
+    if (!adminUser) {
+      return;
+    }
     
     try {
       setLoading(true);
-      const supabase = createClient();
       
-      // email 필드 제거, 존재하는 필드만 요청
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, nickname, exp, level');
-        
-      if (error) throw error;
+      const result = await getExpUsers();
+      
+      if (!result.success) {
+        toast.error(`사용자 목록을 불러오지 못했습니다: ${result.error}`);
+        return;
+      }
       
       // 결과 처리 - 레벨은 경험치에 따라 재계산
-      const formattedData = (data || []).map(user => {
+      const formattedData = (result.users || []).map(user => {
         const exp = user.exp || 0;
         const calculatedLevel = calculateLevelFromExp(exp);
-        
-        // 만약 DB의 레벨과 계산된 레벨이 다르면 업데이트 필요
-        if (user.level !== calculatedLevel) {
-          // 비동기로 레벨 업데이트 (결과를 기다리지 않음)
-          supabase
-            .from('profiles')
-            .update({ level: calculatedLevel })
-            .eq('id', user.id)
-            .then();
-        }
         
         return {
           id: user.id,
@@ -61,7 +52,8 @@ export default function ExpManagementPage() {
       });
       
       setUsers(formattedData);
-    } catch {
+    } catch (err) {
+      console.error('사용자 목록 조회 예외:', err);
       toast.error('사용자 목록을 불러오지 못했습니다.');
     } finally {
       setLoading(false);
@@ -79,21 +71,19 @@ export default function ExpManagementPage() {
     
     // 선택된 사용자가 있는 경우 최신 정보로 업데이트
     if (selectedUser) {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, nickname, exp, level')
-        .eq('id', selectedUser.id)
-        .single();
-        
-      if (!error && data) {
-        // null 값에 대한 처리를 통해 UserInfo 타입에 맞게 변환
-        setSelectedUser({
-          id: data.id,
-          nickname: data.nickname || '이름 없음',
-          exp: data.exp || 0,
-          level: data.level || 1
-        });
+      const result = await getExpUsers();
+      if (result.success && result.users) {
+        const updatedUser = result.users.find(user => user.id === selectedUser.id);
+        if (updatedUser) {
+          const exp = updatedUser.exp || 0;
+          const calculatedLevel = calculateLevelFromExp(exp);
+          setSelectedUser({
+            id: updatedUser.id,
+            nickname: updatedUser.nickname || '이름 없음',
+            exp: exp,
+            level: calculatedLevel
+          });
+        }
       }
     }
   };

@@ -54,7 +54,7 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
     if (isAutoPlaying && banners.length > itemsPerView && firstBanner.display_type === 'slide') {
       intervalRef.current = setInterval(() => {
         setCurrentIndex(prevIndex => 
-          prevIndex >= maxIndex ? 0 : prevIndex + 1
+          (prevIndex + 1) % banners.length
         );
       }, autoSlideInterval);
     }
@@ -90,10 +90,10 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
     const isRightSwipe = distance < -50;
 
     if (isLeftSwipe) {
-      setCurrentIndex(prevIndex => prevIndex < maxIndex ? prevIndex + 1 : 0);
+      setCurrentIndex(prevIndex => (prevIndex + 1) % banners.length);
     }
     if (isRightSwipe) {
-      setCurrentIndex(prevIndex => prevIndex > 0 ? prevIndex - 1 : maxIndex);
+      setCurrentIndex(prevIndex => (prevIndex - 1 + banners.length) % banners.length);
     }
 
     setTimeout(() => setIsAutoPlaying(true), 3000);
@@ -101,13 +101,13 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
 
   // 슬라이드 버튼 핸들러
   const slideLeft = () => {
-    setCurrentIndex(prevIndex => prevIndex > 0 ? prevIndex - 1 : maxIndex);
+    setCurrentIndex(prevIndex => (prevIndex - 1 + banners.length) % banners.length);
     setIsAutoPlaying(false);
     setTimeout(() => setIsAutoPlaying(true), 3000);
   };
 
   const slideRight = () => {
-    setCurrentIndex(prevIndex => prevIndex < maxIndex ? prevIndex + 1 : 0);
+    setCurrentIndex(prevIndex => (prevIndex + 1) % banners.length);
     setIsAutoPlaying(false);
     setTimeout(() => setIsAutoPlaying(true), 3000);
   };
@@ -211,8 +211,15 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
             touchAction: 'pan-y pinch-zoom'
           }}
         >
-          {/* 현재 보여줄 배너들 - 실제 배너만 표시 */}
-          {banners.slice(currentIndex, currentIndex + itemsPerView).map((banner, i) => {
+          {/* 현재 보여줄 배너들 - 순환 슬라이싱으로 항상 itemsPerView 개수 보장 */}
+          {(() => {
+            const displayBanners = [];
+            for (let i = 0; i < itemsPerView; i++) {
+              const index = (currentIndex + i) % banners.length;
+              displayBanners.push(banners[index]);
+            }
+            return displayBanners;
+          })().map((banner, i) => {
             const uniqueKey = `${banner.id}-${i}`;
             
             // 내부/외부 링크 구분

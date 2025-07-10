@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@/shared/api/supabase';
 import { toast } from 'react-toastify';
 import { Button } from '@/shared/components/ui/button';
 import { useAuth } from '@/shared/context/AuthContext';
+import { getPointsUsers } from '@/shared/actions/admin-actions';
 import UserList from './components/UserList';
 import PointManager from './components/PointManager';
 
@@ -20,32 +20,25 @@ export default function PointsManagementPage() {
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<UserInfo | null>(null);
 
-  // 사용자 데이터 불러오기 함수 - useCallback으로 메모이제이션
+    // 사용자 데이터 불러오기 함수 - useCallback으로 메모이제이션
   const fetchUsers = useCallback(async () => {
-    if (!adminUser) return;
+    if (!adminUser) {
+      return;
+    }
     
     try {
       setLoading(true);
-      const supabase = createClient();
       
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, nickname, points');
+      const result = await getPointsUsers();
       
-      if (error) {
-        toast.error('사용자 목록을 불러오지 못했습니다.');
+      if (!result.success) {
+        toast.error(`사용자 목록을 불러오지 못했습니다: ${result.error}`);
         return;
       }
       
-      const formattedData = (data || []).map(user => ({
-        id: user.id,
-        nickname: user.nickname || '이름 없음',
-        points: user.points || 0
-      }));
-      
-      setUsers(formattedData);
-    } catch {
-      // 오류 처리
+      setUsers(result.users || []);
+    } catch (err) {
+      console.error('사용자 목록 조회 예외:', err);
       toast.error('사용자 목록을 불러오지 못했습니다.');
     } finally {
       setLoading(false);
@@ -62,20 +55,13 @@ export default function PointsManagementPage() {
     await fetchUsers();
     
     if (selectedUser) {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, nickname, points')
-        .eq('id', selectedUser.id)
-        .single();
-        
-      if (!error && data) {
-        const updatedUser = {
-          ...data,
-          nickname: data.nickname || '사용자',
-          points: data.points ?? 0,
-        };
-        setSelectedUser(updatedUser);
+      // 새로고침 후 선택된 사용자 정보 업데이트
+      const result = await getPointsUsers();
+      if (result.success && result.users) {
+        const updatedUser = result.users.find(user => user.id === selectedUser.id);
+        if (updatedUser) {
+          setSelectedUser(updatedUser);
+        }
       }
     }
   };

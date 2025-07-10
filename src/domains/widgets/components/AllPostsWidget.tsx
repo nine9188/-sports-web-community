@@ -23,7 +23,7 @@ export default async function AllPostsWidget() {
     const footerContent = (
       <div className="px-6 py-3 border-t bg-gray-50">
         <Link 
-          href="/boards" 
+          href="/boards/해외축구" 
           className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
         >
           더 많은 게시글 보기 →
