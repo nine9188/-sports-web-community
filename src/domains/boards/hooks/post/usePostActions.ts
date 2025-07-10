@@ -4,7 +4,7 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '@/shared/context/AuthContext';
-import { likePost, dislikePost } from '@/domains/boards/actions/posts';
+import { likePost, dislikePost } from '@/domains/boards/actions/posts/index';
 
 interface UsePostActionsProps {
   postId: string;

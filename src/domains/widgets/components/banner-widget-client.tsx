@@ -112,43 +112,9 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
     setTimeout(() => setIsAutoPlaying(true), 3000);
   };
 
-  // 빈 배너 생성 함수
-  const createEmptyBanner = (index: number): Banner => ({
-    id: `empty-placeholder-${index}`,
-    position: firstBanner.position,
-    type: 'empty',
-    title: '새로운 배너를 추가해보세요',
-    subtitle: '관리자 페이지에서 배너를 관리할 수 있습니다',
-    background_color: '#f8fafc',
-    text_color: '#64748b',
-    is_active: true,
-    display_order: index,
-    display_type: 'slide',
-    sort_type: 'created',
-    desktop_per_row: 2,
-    mobile_per_row: 1,
-    auto_slide_interval: 10000,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  });
 
-  // 빈 배너 렌더링
-  const renderEmptyBanner = (banner: Banner) => (
-    <div className="h-full flex flex-col justify-center items-center text-center p-4 rounded-lg"
-         style={{ backgroundColor: banner.background_color, color: banner.text_color }}>
-      <div className="text-4xl mb-3 opacity-60">🎨</div>
-      <h3 className="text-lg font-bold mb-2">
-        {banner.title}
-      </h3>
-      {banner.subtitle && (
-        <p className="text-sm opacity-75">
-          {banner.subtitle}
-        </p>
-      )}
-    </div>
-  );
 
-  // 이미지 배너 렌더링 (제목 숨김)
+  // 이미지 배너 렌더링
   const renderImageBanner = (banner: Banner) => (
     <>
       {banner.image_url ? (
@@ -167,7 +133,13 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
           />
         </div>
       ) : (
-        renderEmptyBanner(banner)
+        <div className="h-full flex flex-col justify-center items-center text-center p-4 rounded-lg"
+             style={{ backgroundColor: banner.background_color, color: banner.text_color }}>
+          <div className="text-lg font-bold">{banner.title}</div>
+          {banner.subtitle && (
+            <div className="text-sm opacity-75">{banner.subtitle}</div>
+          )}
+        </div>
       )}
     </>
   );
@@ -187,10 +159,8 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
         return renderImageBanner(banner);
       case 'html':
         return renderHtmlBanner(banner);
-      case 'empty':
-        return renderEmptyBanner(banner);
       default:
-        return renderEmptyBanner(banner);
+        return renderImageBanner(banner);
     }
   };
 
@@ -241,19 +211,8 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
             touchAction: 'pan-y pinch-zoom'
           }}
         >
-          {/* 현재 보여줄 배너들 */}
-          {Array.from({ length: itemsPerView }, (_, i) => {
-            let banner: Banner;
-            
-            if (i < banners.length) {
-              // 실제 배너가 있는 경우
-              const bannerIndex = (currentIndex + i) % banners.length;
-              banner = banners[bannerIndex];
-            } else {
-              // 배너가 부족한 경우 빈 배너 생성
-              banner = createEmptyBanner(i);
-            }
-            
+          {/* 현재 보여줄 배너들 - 실제 배너만 표시 */}
+          {banners.slice(currentIndex, currentIndex + itemsPerView).map((banner, i) => {
             const uniqueKey = `${banner.id}-${i}`;
             
             // 내부/외부 링크 구분

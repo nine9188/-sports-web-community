@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import UserIcon from '@/shared/components/UserIcon';
-import { likeComment, dislikeComment } from '@/domains/boards/actions/comments';
+import { likeComment, dislikeComment } from '@/domains/boards/actions/comments/index';
 import { CommentType } from '@/domains/boards/types/post/comment';
 import ReportButton from '@/domains/reports/components/ReportButton';
 

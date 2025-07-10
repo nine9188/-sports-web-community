@@ -128,8 +128,8 @@ export const getSupportComments = cache(async (matchId: string) => {
           username: profile.username || undefined,
           nickname: profile.nickname || undefined,
           icon_id: profile.icon_id || undefined,
-          shop_items: profile.shop_items ? {
-            image_url: profile.shop_items.image_url || undefined
+          shop_items: profile.shop_items && (profile.shop_items as any)?.image_url ? { // eslint-disable-line @typescript-eslint/no-explicit-any
+            image_url: (profile.shop_items as any).image_url || undefined // eslint-disable-line @typescript-eslint/no-explicit-any
           } : undefined
         } : undefined
       };

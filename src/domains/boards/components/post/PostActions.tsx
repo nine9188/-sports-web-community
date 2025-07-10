@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
-import { likePost, dislikePost } from '@/domains/boards/actions/posts';
+import { likePost, dislikePost } from '@/domains/boards/actions/posts/index';
 
 interface PostActionsProps {
   postId: string;
@@ -29,19 +29,29 @@ export default function PostActions({
   
   // 좋아요 처리 함수
   const handleLike = async () => {
-    if (isLiking || isDisliking) return;
+    console.log('[PostActions] handleLike 시작, postId:', postId);
+    console.log('[PostActions] 현재 상태:', { likes, dislikes, userAction, isLiking, isDisliking });
+    
+    if (isLiking || isDisliking) {
+      console.log('[PostActions] 이미 처리 중, 무시');
+      return;
+    }
     
     setIsLiking(true);
+    console.log('[PostActions] isLiking 상태 설정');
     
     try {
+      console.log('[PostActions] likePost 서버 액션 호출 시작');
       // 서버 액션으로 좋아요 처리
       const result = await likePost(postId);
+      console.log('[PostActions] likePost 서버 액션 응답:', result);
       
       if (!result.success) {
+        console.log('[PostActions] 좋아요 실패:', result.error);
         // 로그인 필요 시 리다이렉트
         if (result.error === '로그인이 필요합니다.') {
           alert('로그인이 필요합니다.');
-          router.push('/login');
+          router.push('/signin');
           return;
         }
         
@@ -49,34 +59,53 @@ export default function PostActions({
         return;
       }
       
+      console.log('[PostActions] 좋아요 성공, 상태 업데이트 중');
+      console.log('[PostActions] 업데이트할 데이터:', { 
+        likes: result.likes, 
+        dislikes: result.dislikes, 
+        userAction: result.userAction 
+      });
+      
       // 상태 업데이트
       if (result.likes !== undefined) setLikes(result.likes);
       if (result.dislikes !== undefined) setDislikes(result.dislikes);
       setUserAction(result.userAction || null);
+      console.log('[PostActions] 상태 업데이트 완료');
       
     } catch (error) {
-      console.error('좋아요 처리 중 오류:', error);
+      console.error('[PostActions] 좋아요 처리 중 예외:', error);
       alert('좋아요 처리 중 오류가 발생했습니다.');
     } finally {
       setIsLiking(false);
+      console.log('[PostActions] handleLike 완료, 최종 상태:', { likes, dislikes, userAction });
     }
   };
   
   // 싫어요 처리 함수
   const handleDislike = async () => {
-    if (isLiking || isDisliking) return;
+    console.log('[PostActions] handleDislike 시작, postId:', postId);
+    console.log('[PostActions] 현재 상태:', { likes, dislikes, userAction, isLiking, isDisliking });
+    
+    if (isLiking || isDisliking) {
+      console.log('[PostActions] 이미 처리 중, 무시');
+      return;
+    }
     
     setIsDisliking(true);
+    console.log('[PostActions] isDisliking 상태 설정');
     
     try {
+      console.log('[PostActions] dislikePost 서버 액션 호출 시작');
       // 서버 액션으로 싫어요 처리
       const result = await dislikePost(postId);
+      console.log('[PostActions] dislikePost 서버 액션 응답:', result);
       
       if (!result.success) {
+        console.log('[PostActions] 싫어요 실패:', result.error);
         // 로그인 필요 시 리다이렉트
         if (result.error === '로그인이 필요합니다.') {
           alert('로그인이 필요합니다.');
-          router.push('/login');
+          router.push('/signin');
           return;
         }
         
@@ -84,16 +113,25 @@ export default function PostActions({
         return;
       }
       
+      console.log('[PostActions] 싫어요 성공, 상태 업데이트 중');
+      console.log('[PostActions] 업데이트할 데이터:', { 
+        likes: result.likes, 
+        dislikes: result.dislikes, 
+        userAction: result.userAction 
+      });
+      
       // 상태 업데이트
       if (result.likes !== undefined) setLikes(result.likes);
       if (result.dislikes !== undefined) setDislikes(result.dislikes);
       setUserAction(result.userAction || null);
+      console.log('[PostActions] 상태 업데이트 완료');
       
     } catch (error) {
-      console.error('싫어요 처리 중 오류:', error);
+      console.error('[PostActions] 싫어요 처리 중 오류:', error);
       alert('싫어요 처리 중 오류가 발생했습니다.');
     } finally {
       setIsDisliking(false);
+      console.log('[PostActions] handleDislike 완료, 최종 상태:', { likes, dislikes, userAction });
     }
   };
 

@@ -23,10 +23,10 @@ export {
   dislikePost, 
   getUserPostAction,
   createPost
-} from './posts';
+} from './posts/index';
 
 // comments 모듈에서 내보내는 함수들 내보내기
-export * from './comments';
+export * from './comments/index';
 
 // matches 관련 함수들 내보내기
 export * from './matches';

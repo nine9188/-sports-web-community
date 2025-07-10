@@ -13,7 +13,7 @@ import EditorToolbar from '@/domains/boards/components/createnavigation/EditorTo
 import { rewardUserActivity, getActivityTypeValues } from '@/shared/actions/activity-actions';
 import { MatchData } from '@/domains/livescore/actions/footballApi';
 import { toast } from 'react-hot-toast';
-import { createPost, updatePost } from '@/domains/boards/actions/posts';
+import { createPost, updatePost } from '@/domains/boards/actions/posts/index';
 import { Board } from '@/domains/boards/types/board';
 import { generateMatchCardHTML } from '@/shared/utils/matchCardRenderer';
 
@@ -209,7 +209,6 @@ export default function PostEditForm({
           throw new Error('게시판 ID가 필요합니다.');
         }
         
-        
         try {
           // FormData 객체 생성
           const formData = new FormData();
@@ -219,7 +218,6 @@ export default function PostEditForm({
           
           // 서버 액션으로 게시글 생성 실행
           const result = await createPost(formData);
-          
           
           if (!result) {
             throw new Error('서버에서 응답이 없습니다.');

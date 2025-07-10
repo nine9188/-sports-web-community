@@ -5,7 +5,7 @@ import { AdjacentPosts } from '../types/post';
 import { getBoardLevel, getFilteredBoardIds, findRootBoard, createBreadcrumbs } from '../utils/board/boardHierarchy';
 import { formatPosts } from '../utils/post/postUtils';
 import { BoardMap, ChildBoardsMap, BoardData } from '../types/board';
-import { getComments } from './comments';
+import { getComments } from './comments/index';
 
 /**
  * 게시글 상세 페이지에 필요한 모든 데이터를 가져옵니다.
@@ -80,6 +80,8 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
     if (postError || !post) {
       throw new Error('게시글을 찾을 수 없습니다.');
     }
+
+
     
     const { data: boardStructure } = boardStructureResult;
     const { data: prevPostData } = prevPostResult;

@@ -6,7 +6,7 @@ import {
   deleteComment,
   updateComment,
   getComments
-} from "@/domains/boards/actions/comments";
+} from "@/domains/boards/actions/comments/index";
 import { CommentType } from "@/domains/boards/types/post/comment";
 import Comment from "./Comment";
 import { Button } from "@/shared/components/ui/button";
