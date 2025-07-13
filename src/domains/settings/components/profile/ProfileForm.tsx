@@ -2,8 +2,7 @@
 
 import React from 'react';
 import { Calendar, Clock } from 'lucide-react';
-import { format } from 'date-fns';
-import { ko } from 'date-fns/locale';
+import { formatDate } from '@/shared/utils/date';
 
 interface ProfileFormProps {
   initialData: {
@@ -17,15 +16,6 @@ interface ProfileFormProps {
 }
 
 export default function ProfileForm({ initialData }: ProfileFormProps) {
-  // 날짜 포맷팅 함수
-  const formatDate = (dateString?: string): string => {
-    if (!dateString) return '정보 없음';
-    try {
-      return format(new Date(dateString), 'yyyy년 MM월 dd일 HH:mm', { locale: ko });
-    } catch {
-      return dateString;
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -87,13 +77,13 @@ export default function ProfileForm({ initialData }: ProfileFormProps) {
         <div className="flex items-center text-sm text-gray-600">
           <Calendar className="h-4 w-4 mr-2 text-gray-400" />
           <span className="mr-1 font-medium">가입일:</span>
-          {formatDate(initialData.created_at)}
+                          {formatDate(initialData.created_at) || '-'}
         </div>
         
         <div className="flex items-center text-sm text-gray-600">
           <Clock className="h-4 w-4 mr-2 text-gray-400" />
           <span className="mr-1 font-medium">마지막 로그인:</span>
-          {formatDate(initialData.last_sign_in_at)}
+                          {formatDate(initialData.last_sign_in_at) || '-'}
         </div>
       </div>
     </div>

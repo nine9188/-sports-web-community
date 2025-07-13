@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Ban, Clock, AlertTriangle, CheckCircle } from 'lucide-react'
 import { suspendUser, unsuspendUser, type SuspensionData } from '../actions/suspension'
+import { formatDate } from '@/shared/utils/date'
 
 interface SuspensionManagerProps {
   userId: string
@@ -84,15 +85,7 @@ export default function SuspensionManager({
     }
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
+
 
   const getDaysLeft = (until: string) => {
     const now = new Date()
@@ -144,7 +137,7 @@ export default function SuspensionManager({
                     <p className="text-sm">
                       <strong className="text-red-800">정지 해제일:</strong>
                       <span className="text-red-700 ml-1">
-                        {formatDate(currentSuspension.suspended_until)}
+                        {formatDate(currentSuspension.suspended_until) || '-'}
                       </span>
                     </p>
                     

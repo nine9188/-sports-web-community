@@ -6,12 +6,54 @@ import { StandingDisplay, StandingItem } from '../../../../../../types/standings
 export function findTeamStanding(standings: StandingDisplay[] | undefined, teamId: number): StandingItem | null {
   if (!standings || !Array.isArray(standings) || standings.length === 0) return null;
   
+  // MLS 리그 특별 처리
+  const processMlsStandings = (standings: StandingDisplay[]) => {
+    const mlsLeague = standings.find(league => league.league?.id === 253);
+    if (!mlsLeague) return standings;
+
+    // 현재 팀이 속한 컨퍼런스 찾기
+    let teamConferenceStandings = null;
+    
+    // standings가 2차원 배열인 경우 (컨퍼런스별로 나뉘어진 경우)
+    if (Array.isArray(mlsLeague.standings) && mlsLeague.standings.length > 0) {
+      // 각 컨퍼런스에서 팀 찾기
+      for (const conferenceStandings of mlsLeague.standings) {
+        if (Array.isArray(conferenceStandings)) {
+          const teamFound = conferenceStandings.find((standing: StandingItem) => 
+            standing && standing.team && standing.team.id === teamId
+          );
+          if (teamFound) {
+            teamConferenceStandings = conferenceStandings;
+            break;
+          }
+        }
+      }
+    }
+
+    // 팀이 속한 컨퍼런스 순위만 사용
+    if (teamConferenceStandings) {
+      const filteredMlsLeague = {
+        ...mlsLeague,
+        standings: teamConferenceStandings
+      };
+      
+      return standings.map(league => 
+        league.league?.id === 253 ? filteredMlsLeague : league
+      );
+    }
+
+    return standings;
+  };
+
+  // MLS 처리 적용
+  const processedStandings = processMlsStandings(standings);
+  
   // 국내 리그와 국제 대회 구분을 위한 변수
   let domesticLeagueStanding: StandingItem | null = null;
   let internationalLeagueStanding: StandingItem | null = null;
   
   // 모든 리그의 순위 정보를 검색
-  for (const league of standings) {
+  for (const league of processedStandings) {
     if (!league || !league.standings || !Array.isArray(league.standings)) continue;
     
     // 팀 ID로 순위 정보 찾기
@@ -50,6 +92,48 @@ export function getDisplayStandings(
 ): StandingItem[] {
   if (!standings || !Array.isArray(standings) || standings.length === 0) return [];
   
+  // MLS 리그 특별 처리
+  const processMlsStandings = (standings: StandingDisplay[]) => {
+    const mlsLeague = standings.find(league => league.league?.id === 253);
+    if (!mlsLeague) return standings;
+
+    // 현재 팀이 속한 컨퍼런스 찾기
+    let teamConferenceStandings = null;
+    
+    // standings가 2차원 배열인 경우 (컨퍼런스별로 나뉘어진 경우)
+    if (Array.isArray(mlsLeague.standings) && mlsLeague.standings.length > 0) {
+      // 각 컨퍼런스에서 팀 찾기
+      for (const conferenceStandings of mlsLeague.standings) {
+        if (Array.isArray(conferenceStandings)) {
+          const teamFound = conferenceStandings.find((standing: StandingItem) => 
+            standing && standing.team && standing.team.id === teamId
+          );
+          if (teamFound) {
+            teamConferenceStandings = conferenceStandings;
+            break;
+          }
+        }
+      }
+    }
+
+    // 팀이 속한 컨퍼런스 순위만 사용
+    if (teamConferenceStandings) {
+      const filteredMlsLeague = {
+        ...mlsLeague,
+        standings: teamConferenceStandings
+      };
+      
+      return standings.map(league => 
+        league.league?.id === 253 ? filteredMlsLeague : league
+      );
+    }
+
+    return standings;
+  };
+
+  // MLS 처리 적용
+  const processedStandings = processMlsStandings(standings);
+  
   // 팀이 포함된 리그 찾기
   let targetLeague: StandingDisplay | null = null;
   
@@ -57,7 +141,7 @@ export function getDisplayStandings(
   const majorLeagueNames = ['La Liga', 'Primera Division', 'LaLiga', 'Premier League', 'Bundesliga', 'Serie A', 'Ligue 1'];
   
   // 1. 먼저 팀이 속한 메이저 국내 리그를 특정 이름으로 찾기 (가장 높은 우선순위)
-  for (const league of standings) {
+  for (const league of processedStandings) {
     if (!league || !league.standings || !Array.isArray(league.standings)) continue;
     
     // 팀이 이 리그에 있고, 메이저 리그인지 확인
@@ -77,7 +161,7 @@ export function getDisplayStandings(
   
   // 2. 메이저 리그에서 팀을 찾지 못했다면, 일반 국내 리그 찾기
   if (!targetLeague) {
-    for (const league of standings) {
+    for (const league of processedStandings) {
       if (!league || !league.standings || !Array.isArray(league.standings)) continue;
       
       // 팀이 이 리그에 있고, 챔피언스리그/유로파리그가 아닌지 확인
@@ -97,7 +181,7 @@ export function getDisplayStandings(
   
   // 3. 국내 리그에서 팀을 찾지 못했다면, 어떤 리그든 팀이 있는 리그 찾기
   if (!targetLeague) {
-    for (const league of standings) {
+    for (const league of processedStandings) {
       if (!league || !league.standings || !Array.isArray(league.standings)) continue;
       
       const hasTeam = league.standings.some((standing: StandingItem) => 
@@ -114,7 +198,7 @@ export function getDisplayStandings(
   // 4. 여전히 리그를 찾지 못했다면 첫 번째 국내 리그 사용
   if (!targetLeague) {
     // 메이저 리그 먼저 찾기
-    const majorLeague = standings.find(league => 
+    const majorLeague = processedStandings.find(league => 
       league && league.league && 
       majorLeagueNames.some(name => league.league.name.includes(name))
     );
@@ -123,7 +207,7 @@ export function getDisplayStandings(
       targetLeague = majorLeague;
     } else {
       // 없으면 챔스/유로파 제외 리그 찾기
-      const domesticLeague = standings.find(league => 
+      const domesticLeague = processedStandings.find(league => 
         league && league.league && 
         !league.league.name.includes('Champions') && 
         !league.league.name.includes('Europa') && 
@@ -134,7 +218,7 @@ export function getDisplayStandings(
         targetLeague = domesticLeague;
       } else {
         // 그래도 없으면 첫 번째 리그 사용
-        targetLeague = standings[0];
+        targetLeague = processedStandings[0];
       }
     }
   }
@@ -167,11 +251,34 @@ export function getDisplayStandings(
 export function getLeagueInfo(standings: StandingDisplay[] | undefined) {
   if (!standings || !Array.isArray(standings) || standings.length === 0) return null;
   
+  // MLS 리그 특별 처리 (첫 번째 컨퍼런스만 사용)
+  const processMlsStandings = (standings: StandingDisplay[]) => {
+    const mlsLeague = standings.find(league => league.league?.id === 253);
+    if (!mlsLeague) return standings;
+
+    // MLS의 경우 첫 번째 컨퍼런스 정보만 사용
+    if (Array.isArray(mlsLeague.standings) && mlsLeague.standings.length > 0) {
+      const filteredMlsLeague = {
+        ...mlsLeague,
+        standings: mlsLeague.standings[0] // 첫 번째 컨퍼런스만 사용
+      };
+      
+      return standings.map(league => 
+        league.league?.id === 253 ? filteredMlsLeague : league
+      );
+    }
+
+    return standings;
+  };
+
+  // MLS 처리 적용
+  const processedStandings = processMlsStandings(standings);
+  
   // 메이저 리그 이름 정의
   const majorLeagueNames = ['La Liga', 'Primera Division', 'LaLiga', 'Premier League', 'Bundesliga', 'Serie A', 'Ligue 1'];
   
   // 1. 메이저 리그 찾기 (가장 높은 우선순위)
-  const majorLeague = standings.find(league => 
+  const majorLeague = processedStandings.find(league => 
     league && league.league && 
     majorLeagueNames.some(name => league.league.name.includes(name))
   );
@@ -181,7 +288,7 @@ export function getLeagueInfo(standings: StandingDisplay[] | undefined) {
   }
   
   // 2. 국내 리그와 챔피언스리그/유로파리그 등 구분
-  const domesticLeague = standings.find(league => 
+  const domesticLeague = processedStandings.find(league => 
     league && league.league && 
     !league.league.name.includes('Champions') && 
     !league.league.name.includes('Europa') && 
@@ -189,7 +296,7 @@ export function getLeagueInfo(standings: StandingDisplay[] | undefined) {
   );
   
   // 국내 리그가 있으면 우선 사용, 없으면 첫 번째 리그 사용
-  return domesticLeague?.league || standings[0]?.league || null;
+  return domesticLeague?.league || processedStandings[0]?.league || null;
 }
 
 /**
@@ -201,6 +308,29 @@ export function getLeagueForStandings(
 ) {
   if (!standings || !displayStandings || displayStandings.length === 0) return null;
   
+  // MLS 리그 특별 처리 (첫 번째 컨퍼런스만 사용)
+  const processMlsStandings = (standings: StandingDisplay[]) => {
+    const mlsLeague = standings.find(league => league.league?.id === 253);
+    if (!mlsLeague) return standings;
+
+    // MLS의 경우 첫 번째 컨퍼런스 정보만 사용
+    if (Array.isArray(mlsLeague.standings) && mlsLeague.standings.length > 0) {
+      const filteredMlsLeague = {
+        ...mlsLeague,
+        standings: mlsLeague.standings[0] // 첫 번째 컨퍼런스만 사용
+      };
+      
+      return standings.map(league => 
+        league.league?.id === 253 ? filteredMlsLeague : league
+      );
+    }
+
+    return standings;
+  };
+
+  // MLS 처리 적용
+  const processedStandings = processMlsStandings(standings);
+  
   // 메이저 리그 이름 정의
   const majorLeagueNames = ['La Liga', 'Primera Division', 'LaLiga', 'Premier League', 'Bundesliga', 'Serie A', 'Ligue 1'];
   
@@ -208,7 +338,7 @@ export function getLeagueForStandings(
   const firstTeamId = displayStandings[0].team.id;
   
   // 1. 메이저 리그 중에서 해당 팀이 속한 리그 찾기
-  for (const league of standings) {
+  for (const league of processedStandings) {
     if (!league || !league.standings || !Array.isArray(league.standings)) continue;
     
     const leagueHasTeam = league.standings.some(
@@ -225,7 +355,7 @@ export function getLeagueForStandings(
   }
   
   // 2. 해당 팀이 속한 리그 찾기 (어떤 리그든)
-  for (const league of standings) {
+  for (const league of processedStandings) {
     if (!league || !league.standings || !Array.isArray(league.standings)) continue;
     
     const leagueHasTeam = league.standings.some(

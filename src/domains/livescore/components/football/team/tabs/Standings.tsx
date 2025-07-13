@@ -131,10 +131,51 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
     return <EmptyState title="순위 데이터가 없습니다" message="현재 이 팀의 리그 순위 정보를 제공할 수 없습니다." />;
   }
 
+  // MLS 리그 특별 처리 함수
+  const processMlsStandings = (standings: LeagueStanding[]) => {
+    const mlsLeague = standings.find(league => league.league?.id === 253);
+    if (!mlsLeague) return standings;
+
+    // 현재 팀이 속한 컨퍼런스 찾기
+    let teamConference = null;
+    const standingsGroups = mlsLeague.league?.standings || [];
+    
+    for (let i = 0; i < standingsGroups.length; i++) {
+      const group = standingsGroups[i];
+      if (Array.isArray(group)) {
+        const teamFound = group.find((standing: StandingItem) => standing.team?.id === teamId);
+        if (teamFound) {
+          teamConference = i;
+          break;
+        }
+      }
+    }
+
+    // 팀이 속한 컨퍼런스만 표시
+    if (teamConference !== null && mlsLeague.league?.standings) {
+      const filteredMlsLeague = {
+        ...mlsLeague,
+        league: {
+          ...mlsLeague.league,
+          standings: [mlsLeague.league.standings[teamConference]]
+        }
+      };
+      
+      return standings.map(league => 
+        league.league?.id === 253 ? filteredMlsLeague : league
+      );
+    }
+
+    return standings;
+  };
+
+  // MLS 리그 처리 적용
+  const processedStandings = processMlsStandings(initialStandings);
+
   return (
     <div className="space-y-4">
       {/* 모든 리그 순위를 순차적으로 표시 */}
-      {initialStandings.map((league, leagueIndex) => {
+      {processedStandings.map((league, leagueIndex) => {
         const leagueInfo = league.league || {};
         const standingsData = league.league?.standings || [];
         
@@ -202,94 +243,96 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
                 </thead>
                 
                 <tbody className="divide-y divide-gray-200">
-                  {standingsData.flat().map((standing: StandingItem) => {
-                    // 현재 팀 여부 확인
-                    const isCurrentTeam = standing.team?.id === teamId;
-                    
-                    // 팀 행 스타일 설정
-                    const rowClass = isCurrentTeam 
-                      ? 'bg-blue-50 hover:bg-blue-100 cursor-pointer' 
-                      : 'hover:bg-gray-100 cursor-pointer';
-                    
-                    return (
-                      <tr 
-                        key={`${leagueIndex}-${standing.team?.id || Math.random()}`}
-                        className={rowClass}
-                        onClick={() => handleRowClick(standing.team?.id)}
-                      >
-                        {/* 모바일용 축약된 순위 */}
-                        <td className="md:hidden px-1 py-1 text-center text-xs relative w-8">
-                          <div className={`absolute inset-y-0 left-0 w-1 ${getStatusColor(standing.description)}`} />
-                          <span className="pl-1">{standing.rank}</span>
-                        </td>
-                        
-                        {/* 데스크톱용 순위 */}
-                        <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 relative">
-                          <div className={`absolute inset-y-0 left-0 w-1 ${getStatusColor(standing.description)}`} />
-                          <span className="pl-2">{standing.rank}</span>
-                        </td>
-                        
-                        {/* 팀 정보 - 고정 너비 사용 */}
-                        <td className="px-2 py-2 md:px-3 whitespace-nowrap text-sm text-gray-900">
-                          <div className="flex items-center gap-1 md:gap-2">
-                            <TeamLogo 
-                              teamName={standing.team.name}
-                              originalLogo={standing.team.logo}
-                            />
-                            <div className="flex items-center max-w-[calc(100%-30px)]">
-                              <span className="block truncate text-ellipsis overflow-hidden max-w-full pr-1">
-                                {standing.team.name || '알 수 없음'}
-                              </span>
-                              {isCurrentTeam && (
-                                <span className="text-[10px] md:text-xs font-bold px-0.5 md:px-1.5 md:py-0.5 ml-0.5 md:ml-2 rounded inline-block flex-shrink-0 bg-blue-100 text-blue-800">
-                                  현재
+                  {standingsData.map((standingGroup: StandingItem[], groupIndex: number) => 
+                    standingGroup.map((standing: StandingItem) => {
+                      // 현재 팀 여부 확인
+                      const isCurrentTeam = standing.team?.id === teamId;
+                      
+                      // 팀 행 스타일 설정
+                      const rowClass = isCurrentTeam 
+                        ? 'bg-blue-50 hover:bg-blue-100 cursor-pointer' 
+                        : 'hover:bg-gray-100 cursor-pointer';
+                      
+                      return (
+                        <tr 
+                          key={`league-${leagueIndex}-group-${groupIndex}-team-${standing.team?.id}-rank-${standing.rank}`}
+                          className={rowClass}
+                          onClick={() => handleRowClick(standing.team?.id)}
+                        >
+                          {/* 모바일용 축약된 순위 */}
+                          <td className="md:hidden px-1 py-1 text-center text-xs relative w-8">
+                            <div className={`absolute inset-y-0 left-0 w-1 ${getStatusColor(standing.description)}`} />
+                            <span className="pl-1">{standing.rank}</span>
+                          </td>
+                          
+                          {/* 데스크톱용 순위 */}
+                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 relative">
+                            <div className={`absolute inset-y-0 left-0 w-1 ${getStatusColor(standing.description)}`} />
+                            <span className="pl-2">{standing.rank}</span>
+                          </td>
+                          
+                          {/* 팀 정보 - 고정 너비 사용 */}
+                          <td className="px-2 py-2 md:px-3 whitespace-nowrap text-sm text-gray-900">
+                            <div className="flex items-center gap-1 md:gap-2">
+                              <TeamLogo 
+                                teamName={standing.team.name}
+                                originalLogo={standing.team.logo}
+                              />
+                              <div className="flex items-center max-w-[calc(100%-30px)]">
+                                <span className="block truncate text-ellipsis overflow-hidden max-w-full pr-1">
+                                  {standing.team.name || '알 수 없음'}
                                 </span>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        
-                        {/* 경기 수 - 모바일에서는 숨김 */}
-                        <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
-                          {standing.all?.played || 0}
-                        </td>
-                        
-                        {/* 승/무/패 - 고정 너비 사용 */}
-                        <td className={`${tableStyles.cell} text-xs md:text-sm px-0 md:px-1`}>{standing.all?.win || 0}</td>
-                        <td className={`${tableStyles.cell} text-xs md:text-sm px-0 md:px-1`}>{standing.all?.draw || 0}</td>
-                        <td className={`${tableStyles.cell} text-xs md:text-sm px-0 md:px-1`}>{standing.all?.lose || 0}</td>
-                        
-                        {/* 득점, 실점, 득실차 - 모바일에서는 숨김 */}
-                        <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
-                          {standing.all?.goals?.for || 0}
-                        </td>
-                        <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
-                          {standing.all?.goals?.against || 0}
-                        </td>
-                        <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
-                          {standing.goalsDiff || 0}
-                        </td>
-                        
-                        {/* 승점 - 모바일에서도 표시 */}
-                        <td className={`${tableStyles.cell} text-xs md:text-sm font-semibold`}>{standing.points || 0}</td>
-                        
-                        {/* 최근 5경기 - 모바일에서는 숨김 */}
-                        <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
-                          <div className="flex justify-center gap-1">
-                            {standing.form?.split('').map((result, idx) => (
-                              <div 
-                                key={idx} 
-                                className={`w-6 h-6 flex items-center justify-center ${getFormStyle(result)} text-xs font-bold`}
-                                title={result === 'W' ? '승리' : result === 'D' ? '무승부' : '패배'}
-                              >
-                                {result}
+                                {isCurrentTeam && (
+                                  <span className="text-[10px] md:text-xs font-bold px-0.5 md:px-1.5 md:py-0.5 ml-0.5 md:ml-2 rounded inline-block flex-shrink-0 bg-blue-100 text-blue-800">
+                                    현재
+                                  </span>
+                                )}
                               </div>
-                            ))}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                            </div>
+                          </td>
+                          
+                          {/* 경기 수 - 모바일에서는 숨김 */}
+                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
+                            {standing.all?.played || 0}
+                          </td>
+                          
+                          {/* 승/무/패 - 고정 너비 사용 */}
+                          <td className={`${tableStyles.cell} text-xs md:text-sm px-0 md:px-1`}>{standing.all?.win || 0}</td>
+                          <td className={`${tableStyles.cell} text-xs md:text-sm px-0 md:px-1`}>{standing.all?.draw || 0}</td>
+                          <td className={`${tableStyles.cell} text-xs md:text-sm px-0 md:px-1`}>{standing.all?.lose || 0}</td>
+                          
+                          {/* 득점, 실점, 득실차 - 모바일에서는 숨김 */}
+                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
+                            {standing.all?.goals?.for || 0}
+                          </td>
+                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
+                            {standing.all?.goals?.against || 0}
+                          </td>
+                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
+                            {standing.goalsDiff || 0}
+                          </td>
+                          
+                          {/* 승점 - 모바일에서도 표시 */}
+                          <td className={`${tableStyles.cell} text-xs md:text-sm font-semibold`}>{standing.points || 0}</td>
+                          
+                          {/* 최근 5경기 - 모바일에서는 숨김 */}
+                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
+                            <div className="flex justify-center gap-1">
+                              {standing.form?.split('').map((result, idx) => (
+                                <div 
+                                  key={idx} 
+                                  className={`w-6 h-6 flex items-center justify-center ${getFormStyle(result)} text-xs font-bold`}
+                                  title={result === 'W' ? '승리' : result === 'D' ? '무승부' : '패배'}
+                                >
+                                  {result}
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ).flat()}
                 </tbody>
               </table>
             </div>

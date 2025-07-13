@@ -24,15 +24,9 @@ export default async function SettingsLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">설정</h1>
-            <p className="mt-2 text-sm text-gray-600">
-              계정 설정 및 개인 정보를 관리할 수 있습니다.
-            </p>
-          </div>
+    <div className="min-h-screen">
+      <div className="max-w-4xl mx-auto">
+        <div>
           {/* 탭 네비게이션 */}
           <SettingsTabs />
           

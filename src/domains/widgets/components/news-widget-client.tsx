@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { formatDate } from '@/shared/utils/date';
 
 interface NewsItem {
   id: string;
@@ -46,38 +47,7 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
     setImageStates(prev => ({ ...prev, [id]: 'error' }));
   }, []);
 
-  // 날짜 포맷팅
-  const formatDate = (dateString: string) => {
-    if (!dateString) return '';
-    
-    try {
-      const date = new Date(dateString);
-      const now = new Date();
-      const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-      
-      if (diffInHours < 1) {
-        const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-        return diffInMinutes <= 0 ? '방금' : `${diffInMinutes}분 전`;
-      } else if (diffInHours < 24) {
-        return `${diffInHours}시간 전`;
-      } else if (diffInHours < 48) {
-        return '어제';
-      } else {
-        const diffInDays = Math.floor(diffInHours / 24);
-        if (diffInDays < 7) {
-          return `${diffInDays}일 전`;
-        } else {
-          return date.toLocaleDateString('ko-KR', {
-            month: 'short',
-            day: 'numeric'
-          });
-        }
-      }
-    } catch (error) {
-      console.error('날짜 파싱 오류:', error);
-      return '';
-    }
-  };
+
 
   // 백업 이미지 생성
   const getBackupImage = (id: string, index: number) => {
@@ -217,7 +187,7 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
       
       {/* 추가 뉴스 섹션 - 2열 5행 그리드 (10개) */}
       {news.length > 5 && (
-        <div className="mt-6">
+        <div className="mt-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             {news.slice(5, 15).map((item, index) => (
               <Link

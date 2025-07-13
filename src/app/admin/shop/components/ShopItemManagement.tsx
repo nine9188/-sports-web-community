@@ -2,7 +2,8 @@
 
 import { useState, useRef, useMemo, Fragment } from 'react';
 import { createClient } from '@/shared/api/supabase';
-import { Card } from '@/shared/components/ui/card';
+import { Card } from '@/shared/ui/card';
+import Tabs, { TabItem } from '@/shared/ui/tabs';
 import { Button } from '@/shared/components/ui/button';
 import Image from 'next/image';
 import { Trash2 } from 'lucide-react';
@@ -304,12 +305,32 @@ export default function ShopItemManagement({ teams, leagues, storageImages, shop
     }
   };
 
+  // 카테고리 탭 데이터 생성
+  const categoryTabs: TabItem[] = [
+    { id: 'all', label: '전체' },
+    ...hierarchicalCategories.map(category => ({
+      id: category.id.toString(),
+      label: category.name
+    }))
+  ];
+
+  // 탭 변경 핸들러
+  const handleCategoryChange = (tabId: string) => {
+    if (tabId === 'all') {
+      setActiveCategory(null);
+    } else {
+      setActiveCategory(parseInt(tabId));
+    }
+  };
+
+  // 현재 활성 탭 ID 결정
+  const activeCategoryTab = activeCategory ? activeCategory.toString() : 'all';
+
   return (
     <div className="space-y-6">
+      {/* 아이템 추가 폼 */}
       <Card className="p-6">
-        <h2 className="text-xl font-semibold mb-4">
-          {editingItem ? '아이콘 수정' : '새 아이콘 등록'}
-        </h2>
+        <h2 className="text-xl font-semibold mb-4">새 아이콘 추가</h2>
         <form onSubmit={editingItem ? handleUpdateItem : handleSubmit} className="space-y-4">
           {/* 이미지 소스 선택 */}
           <div className="flex space-x-4 mb-4">
@@ -526,51 +547,17 @@ export default function ShopItemManagement({ teams, leagues, storageImages, shop
         </form>
       </Card>
 
-      {/* 등록된 아이콘 목록 */}
+      {/* 아이템 목록 */}
       <Card className="p-6">
         <h2 className="text-xl font-semibold mb-4">등록된 아이콘 목록</h2>
         
         {/* 카테고리 탭 */}
-        <div className="flex flex-wrap gap-2 mb-4 border-b">
-          <button
-            onClick={() => setActiveCategory(null)}
-            className={`px-4 py-2 text-sm rounded-t-lg transition-colors
-              ${!activeCategory 
-                ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600' 
-                : 'text-gray-600 hover:bg-gray-50'}`}
-          >
-            전체
-          </button>
-          {hierarchicalCategories.map(category => (
-            <div key={category.id} className="relative group">
-              <button
-                onClick={() => setActiveCategory(category.id)}
-                className={`px-4 py-2 text-sm rounded-t-lg transition-colors
-                  ${activeCategory === category.id 
-                    ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600' 
-                    : 'text-gray-600 hover:bg-gray-50'}`}
-              >
-                {category.name}
-              </button>
-              
-              {/* 하위 카테고리가 있는 경우 드롭다운 메뉴 */}
-              {category.children && category.children.length > 0 && (
-                <div className="absolute hidden group-hover:block z-10 w-48 mt-1 bg-white border rounded-md shadow-lg">
-                  {category.children.map(child => (
-                    <button
-                      key={child.id}
-                      onClick={() => setActiveCategory(child.id)}
-                      className={`w-full px-4 py-2 text-sm text-left hover:bg-gray-50
-                        ${activeCategory === child.id ? 'bg-blue-50 text-blue-600' : 'text-gray-600'}`}
-                    >
-                      {child.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+        <Tabs
+          tabs={categoryTabs}
+          activeTab={activeCategoryTab}
+          onTabChange={handleCategoryChange}
+          variant="minimal"
+        />
 
         {/* 필터링된 아이템 목록 */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">

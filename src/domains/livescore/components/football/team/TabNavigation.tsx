@@ -1,34 +1,31 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useCallback, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Tabs, { TabItem } from '@/shared/ui/tabs';
 
 interface TabNavigationProps {
   teamId: string;
   activeTab?: string;
 }
 
-interface TabItem {
-  id: string;
-  label: string;
-}
-
-// 탭 목록 - 상수로 분리
-const TABS: TabItem[] = [
-  { id: 'overview', label: '개요' },
-  { id: 'standings', label: '순위' },
-  { id: 'squad', label: '선수단' },
-  { id: 'stats', label: '통계' }
-];
-
-// 타입 정의
-type TabId = 'overview' | 'standings' | 'squad' | 'stats';
-
+/**
+ * 팀 탭 네비게이션 컴포넌트
+ * 개요, 순위, 선수단, 통계 탭을 제공합니다.
+ */
 export default function TabNavigation({ teamId, activeTab = 'overview' }: TabNavigationProps) {
   const router = useRouter();
   
   // 로딩 상태를 위한 하나의 상태로 단순화
   const [isChangingTab, setIsChangingTab] = useState(false);
+  
+  // 탭 목록 정의
+  const tabs: TabItem[] = [
+    { id: 'overview', label: '개요' },
+    { id: 'standings', label: '순위' },
+    { id: 'squad', label: '선수단' },
+    { id: 'stats', label: '통계' }
+  ];
   
   // activeTab이 변경되면 로딩 상태 초기화
   useEffect(() => {
@@ -36,7 +33,7 @@ export default function TabNavigation({ teamId, activeTab = 'overview' }: TabNav
   }, [activeTab]);
   
   // 탭 변경 처리 함수
-  const handleTabChange = useCallback((tabId: TabId) => {
+  const handleTabChange = useCallback((tabId: string) => {
     // 같은 탭이거나 이미 탭 변경 중이면 무시
     if (tabId === activeTab || isChangingTab) return;
     
@@ -53,29 +50,11 @@ export default function TabNavigation({ teamId, activeTab = 'overview' }: TabNav
   }, [router, teamId, activeTab, isChangingTab]);
   
   return (
-    <div className="mb-4">
-      <div className="bg-white rounded-lg border overflow-hidden flex sticky top-0 z-10">
-        {TABS.map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => handleTabChange(tab.id as TabId)}
-              className={`
-                px-4 py-3 text-sm font-medium flex-1 transition-colors
-                ${isActive 
-                  ? 'text-blue-600 border-b-2 border-blue-600 font-semibold' 
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                }
-              `}
-              disabled={isChangingTab}
-              aria-current={isActive ? 'page' : undefined}
-            >
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
-    </div>
+    <Tabs
+      tabs={tabs}
+      activeTab={activeTab}
+      onTabChange={handleTabChange}
+      isChangingTab={isChangingTab}
+    />
   );
 } 

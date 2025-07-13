@@ -4,6 +4,7 @@ import { useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { YouTubeVideo } from './youtube-fetcher';
+import { formatDate } from '@/shared/utils/date';
 
 interface YouTubeWidgetClientProps {
   videos: YouTubeVideo[];
@@ -19,45 +20,7 @@ export default function YouTubeWidgetClient({
   const cardContainerRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   
-  // 날짜 포맷팅
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      
-      // 날짜가 유효하지 않으면 기본값 반환
-      if (isNaN(date.getTime())) return '-';
-      
-      // 🔧 Hydration 불일치 방지 - 서버 환경에서는 고정된 날짜 형식 사용
-      if (typeof window === 'undefined') {
-        // 서버에서는 YYYY-MM-DD 형식으로 고정
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-      }
-      
-      const now = new Date();
-      const diffTime = Math.abs(now.getTime() - date.getTime());
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      
-      if (diffDays === 0) {
-        const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-        if (diffHours === 0) {
-          const diffMinutes = Math.floor(diffTime / (1000 * 60));
-          return `${diffMinutes}분 전`;
-        }
-        return `${diffHours}시간 전`;
-      } else if (diffDays < 7) {
-        return `${diffDays}일 전`;
-      } else if (diffDays < 30) {
-        return `${Math.floor(diffDays / 7)}주 전`;
-      } else {
-        return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
-      }
-    } catch {
-      return '날짜 정보 없음';
-    }
-  };
+
 
   // 제목 길이 제한
   const truncateTitle = (title: string, maxLength: number = 80) => {
@@ -139,7 +102,7 @@ export default function YouTubeWidgetClient({
                   </div>
                 </div>
                 <div className="absolute top-0 right-0 bg-black/70 text-white px-2 py-1 text-xs">
-                  {formatDate(video.publishedAt)}
+                  {formatDate(video.publishedAt) || '날짜 정보 없음'}
                 </div>
               </div>
               <div className="p-2 md:p-3 bg-white">

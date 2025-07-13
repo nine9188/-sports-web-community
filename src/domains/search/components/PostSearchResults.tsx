@@ -1,11 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { formatDistanceToNow } from 'date-fns'
-import { ko } from 'date-fns/locale'
 import type { PostSearchResult } from '../types'
 import { trackSearchResultClick } from '../actions/searchLogs'
 import Pagination from './Pagination'
+import { formatDate } from '@/shared/utils/date'
 
 interface PostSearchResultsProps {
   posts: PostSearchResult[]
@@ -157,17 +156,6 @@ function highlightQuery(text: string, searchQuery: string) {
 }
 
 // 날짜 포맷팅
-function formatDate(dateString?: string | null) {
-  if (!dateString) return ''
-  
-  try {
-    return formatDistanceToNow(new Date(dateString), { 
-      addSuffix: true, 
-      locale: ko 
-    })
-  } catch {
-    return dateString
-  }
-}
+
 
  

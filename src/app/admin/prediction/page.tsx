@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useTransition } from 'react';
+import { useState, useEffect } from 'react';
 
 // Window 타입 확장
 declare global {
@@ -9,10 +9,12 @@ declare global {
   }
 }
 
-import { toast } from 'react-toastify';
+import { toast } from 'react-hot-toast';
+import Tabs, { TabItem } from '@/shared/ui/tabs';
 import Image from 'next/image';
 import { Loader2, RefreshCw, Check, X, Target } from 'lucide-react';
 import { getMajorLeagueIds } from '@/domains/livescore/constants/league-mappings';
+import { formatDate } from '@/shared/utils/date';
 import { 
   getUpcomingMatches,
   generateAllPredictions,
@@ -51,16 +53,16 @@ interface PredictionLog {
 
 export default function PredictionAdminPage() {
   const [upcomingMatches, setUpcomingMatches] = useState<UpcomingMatch[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('matches');
-  const [isPending, startTransition] = useTransition();
+  const [activeTab, setActiveTab] = useState<'matches' | 'automation'>('matches');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isAutomationEnabled, setIsAutomationEnabled] = useState(false);
+  const [automationLogs, setAutomationLogs] = useState<PredictionLog[]>([]);
   
   // 자동화 상태 관리
   const [autoGenerateEnabled, setAutoGenerateEnabled] = useState(false);
   const [autoGenerateTime, setAutoGenerateTime] = useState('09:00'); // 매일 오전 9시
   const [lastAutoGenerate, setLastAutoGenerate] = useState<string | null>(null);
   const [autoGenerateStatus, setAutoGenerateStatus] = useState<'idle' | 'running' | 'error'>('idle');
-  const [automationLogs, setAutomationLogs] = useState<PredictionLog[]>([]);
   
 
 
@@ -214,11 +216,7 @@ export default function PredictionAdminPage() {
     });
   };
 
-  // 날짜 포맷팅
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleString('ko-KR');
-  };
+
 
   // 리그별 경기 그룹화
   const groupMatchesByLeague = (matches: UpcomingMatch[]) => {
@@ -239,41 +237,29 @@ export default function PredictionAdminPage() {
 
   const leagueGroups = groupMatchesByLeague(upcomingMatches);
 
+  // 탭 목록 정의
+  const tabs: TabItem[] = [
+    { id: 'matches', label: '다음날 경기' },
+    { id: 'automation', label: '자동화 설정' },
+  ];
+
   return (
     <div className="container p-6">
-      <h1 className="text-2xl font-bold mb-6">⚽ 축구 예측 분석 관리</h1>
+      <h1 className="text-2xl font-bold mb-6">승무패 예측 관리</h1>
       
-      {/* 메이저 리그 정보 */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-        <h2 className="text-lg font-semibold text-blue-800 mb-2">📊 분석 대상 리그</h2>
-        <p className="text-blue-700 text-sm mb-2">
-          총 <strong>{majorLeagueIds.length}개</strong> 메이저 리그의 경기만 분석합니다.
-        </p>
-        <div className="text-xs text-blue-600">
+      <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+        <p className="text-sm text-blue-800">
+          <strong>안내:</strong> 이 기능은 내일 경기에 대한 승무패 예측 게시글을 자동으로 생성합니다.<br />
           프리미어리그, 라리가, 분데스리가, 세리에A, 리그앙, K리그1, J1리그, 챔피언스리그 등 주요 리그만 필터링됩니다.
-        </div>
+        </p>
       </div>
       
-      <div className="mb-4">
-        <ul className="flex border-b">
-          <li className="mr-1">
-            <button 
-              className={`py-2 px-4 ${activeTab === 'matches' ? 'border-b-2 border-blue-500 font-medium' : 'text-gray-500 hover:text-blue-500'}`} 
-              onClick={() => setActiveTab('matches')}
-            >
-              다음날 경기
-            </button>
-          </li>
-          <li className="mr-1">
-            <button 
-              className={`py-2 px-4 ${activeTab === 'automation' ? 'border-b-2 border-blue-500 font-medium' : 'text-gray-500 hover:text-blue-500'}`} 
-              onClick={() => setActiveTab('automation')}
-            >
-              자동화 설정
-            </button>
-          </li>
-        </ul>
-      </div>
+      <Tabs
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={(tabId) => setActiveTab(tabId as 'matches' | 'automation')}
+        variant="minimal"
+      />
       
       {activeTab === 'matches' && (
         <div className="space-y-4">
@@ -282,10 +268,10 @@ export default function PredictionAdminPage() {
             <div className="flex gap-2">
               <button 
                 onClick={loadUpcomingMatches} 
-                disabled={isPending}
+                disabled={isLoading}
                 className="bg-white border border-gray-300 px-4 py-2 rounded-md hover:bg-gray-50 flex items-center"
               >
-                {isPending ? (
+                {isLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <RefreshCw className="mr-2 h-4 w-4" />
@@ -294,10 +280,10 @@ export default function PredictionAdminPage() {
               </button>
               <button 
                 onClick={handleGenerateAllPredictions} 
-                disabled={isPending}
+                disabled={isLoading}
                 className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
               >
-                {isPending ? (
+                {isLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <Target className="mr-2 h-4 w-4" />
@@ -338,10 +324,10 @@ export default function PredictionAdminPage() {
                     </div>
                     <button
                       onClick={() => handleGenerateSingleLeaguePrediction(group.league.id, group.league.name)}
-                      disabled={isPending}
+                      disabled={isLoading}
                       className="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 flex items-center text-sm"
                     >
-                      {isPending ? (
+                      {isLoading ? (
                         <Loader2 className="mr-1 h-3 w-3 animate-spin" />
                       ) : (
                         <Target className="mr-1 h-3 w-3" />
@@ -410,7 +396,7 @@ export default function PredictionAdminPage() {
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h3 className="text-sm font-medium text-gray-600 mb-1">마지막 실행</h3>
                 <p className="text-lg font-semibold">
-                  {lastAutoGenerate ? formatDate(lastAutoGenerate) : '없음'}
+                  {lastAutoGenerate ? (formatDate(lastAutoGenerate) || '-') : '없음'}
                 </p>
               </div>
             </div>
@@ -419,14 +405,14 @@ export default function PredictionAdminPage() {
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={handleToggleAutomation}
-                disabled={isPending}
+                disabled={isLoading}
                 className={`px-4 py-2 rounded-md font-medium flex items-center ${
                   autoGenerateEnabled 
                     ? 'bg-red-600 text-white hover:bg-red-700' 
                     : 'bg-green-600 text-white hover:bg-green-700'
                 }`}
               >
-                {isPending ? (
+                {isLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : autoGenerateEnabled ? (
                   <X className="mr-2 h-4 w-4" />
@@ -438,10 +424,10 @@ export default function PredictionAdminPage() {
 
               <button
                 onClick={handleTestPredictionGeneration}
-                disabled={isPending}
+                disabled={isLoading}
                 className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
               >
-                {isPending ? (
+                {isLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <Target className="mr-2 h-4 w-4" />
@@ -501,7 +487,7 @@ export default function PredictionAdminPage() {
                 ) : (
                   automationLogs.map((log, index) => (
                     <div key={index} className="text-sm">
-                      <span className="text-gray-500">{formatDate(log.created_at)}</span>
+                      <span className="text-gray-500">{formatDate(log.created_at) || '-'}</span>
                       <span className={`ml-2 ${
                         log.status === 'success' ? 'text-green-600' :
                         log.status === 'error' ? 'text-red-600' :

@@ -2,36 +2,36 @@
 
 import { useCallback, useState, useEffect } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { usePlayerData, TabType } from './context/PlayerDataContext';
+import { usePlayerData } from './context/PlayerDataContext';
+import Tabs, { TabItem } from '@/shared/ui/tabs';
 
 interface PlayerTabNavigationProps {
   activeTab?: string;
 }
 
-interface TabItem {
-  id: TabType;
-  label: string;
-}
-
-// 탭 목록
-const tabs: TabItem[] = [
-  { id: 'stats', label: '선수 통계' },
-  { id: 'fixtures', label: '경기별 통계' },
-  { id: 'rankings', label: '순위' },
-  { id: 'transfers', label: '이적 기록' },
-  { id: 'injuries', label: '부상 기록' },
-  { id: 'trophies', label: '트로피' }
-];
-
+/**
+ * 선수 탭 네비게이션 컴포넌트
+ * 통계, 경기별 통계, 순위, 이적 기록, 부상 기록, 트로피 탭을 제공합니다.
+ */
 export default function PlayerTabNavigation({ activeTab = 'stats' }: PlayerTabNavigationProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { setCurrentTab, tabsData } = usePlayerData();
+  const { setCurrentTab } = usePlayerData();
   
   // 현재 활성화된 탭 표시를 위한 상태
   const [currentTabUI, setCurrentTabUI] = useState(activeTab);
   const [isChangingTab, setIsChangingTab] = useState(false);
+  
+  // 탭 목록 정의
+  const tabs: TabItem[] = [
+    { id: 'stats', label: '선수 통계' },
+    { id: 'fixtures', label: '경기별 통계' },
+    { id: 'rankings', label: '순위' },
+    { id: 'transfers', label: '이적 기록' },
+    { id: 'injuries', label: '부상 기록' },
+    { id: 'trophies', label: '트로피' }
+  ];
   
   // 현재 활성화된 탭 확인
   const currentTab = activeTab || 'stats';
@@ -72,34 +72,11 @@ export default function PlayerTabNavigation({ activeTab = 'stats' }: PlayerTabNa
   }, [router, pathname, searchParams, currentTab, setCurrentTab, isChangingTab]);
   
   return (
-    <div className="mb-4">
-      <div className="bg-white rounded-lg border overflow-hidden flex sticky top-0 z-10 overflow-x-auto">
-        {tabs.map((tab) => {
-          const isActive = currentTabUI === tab.id;
-          // 해당 탭이 이미 로드되었는지 확인 (tabsData에 데이터가 있으면 로드된 것으로 간주)
-          const isLoaded = !!tabsData[tab.id];
-          
-          return (
-            <button
-              key={tab.id}
-              onClick={() => handleTabChange(tab.id)}
-              className={`px-4 py-3 text-sm font-medium flex-1 whitespace-nowrap ${
-                isActive
-                  ? 'text-blue-600 border-b-2 border-blue-600 font-semibold'
-                  : 'text-gray-500 hover:text-gray-700'
-              } ${isLoaded ? 'loaded-tab' : ''}`}
-              aria-current={isActive ? 'page' : undefined}
-              data-loaded={isLoaded ? 'true' : 'false'}
-              disabled={isChangingTab}
-            >
-              {tab.label}
-              {isChangingTab && isActive && (
-                <span className="ml-1 inline-block h-3 w-3 animate-pulse rounded-full bg-blue-200"></span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-    </div>
+    <Tabs
+      tabs={tabs}
+      activeTab={currentTabUI}
+      onTabChange={handleTabChange}
+      isChangingTab={isChangingTab}
+    />
   );
 } 

@@ -92,11 +92,11 @@ export default function StandingsPreview({ standings, teamId, safeLeague, onTabC
             </tr>
           </thead>
           <tbody>
-            {displayStandings.map((standing) => {
+            {displayStandings.map((standing, index) => {
               const isCurrentTeam = standing.team.id === teamId;
               return (
                 <tr 
-                  key={standing.team.id}
+                  key={`standings-preview-${standing.team.id}-${standing.rank}-${index}`}
                   className={`border-b ${isCurrentTeam ? 'bg-blue-50' : ''} hover:bg-gray-50 cursor-pointer`}
                   onClick={() => standing.team.id !== teamId && handleTeamClick(standing.team.id)}
                 >

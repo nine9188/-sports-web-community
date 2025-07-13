@@ -17,6 +17,7 @@ import { toast } from 'react-toastify';
 import { getReports, processReport, executeReportAction, restoreExpiredHiddenContent, getReportTargetAuthorId } from '@/domains/reports/actions';
 import { ReportWithReporter, ReportStatus, ReportTargetType } from '@/domains/reports/types';
 import SuspensionManager from '@/domains/admin/components/SuspensionManager';
+import { formatDate } from '@/shared/utils/date';
 
 export default function ReportsAdminPage() {
   const [reports, setReports] = useState<ReportWithReporter[]>([]);
@@ -316,17 +317,6 @@ export default function ReportsAdminPage() {
     }
   };
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
@@ -466,7 +456,7 @@ export default function ReportsAdminPage() {
                       {getStatusBadge(report.status)}
                     </td>
                     <td className="px-4 py-4 text-sm text-gray-500">
-                      {formatDate(report.created_at)}
+                      {formatDate(report.created_at) || '-'}
                     </td>
                     <td className="px-4 py-4 text-right">
                       {report.status === 'pending' && (
@@ -508,7 +498,7 @@ export default function ReportsAdminPage() {
                       {report.status !== 'pending' && (
                         <div className="text-xs text-gray-500">
                           {report.reviewed_at && (
-                            <div>처리일: {formatDate(report.reviewed_at)}</div>
+                            <div>처리일: {formatDate(report.reviewed_at) || '-'}</div>
                           )}
                           {report.reviewer && (
                             <div>처리자: {report.reviewer.nickname}</div>

@@ -9,8 +9,10 @@ declare global {
   }
 }
 import { createClient } from '@/shared/api/supabase';
-import { toast } from 'react-toastify';
+import { toast } from 'react-hot-toast';
+import Tabs, { TabItem } from '@/shared/ui/tabs';
 import { Loader2, RefreshCw, Plus, Trash2, Check, X, ExternalLink } from 'lucide-react';
+import { formatDate } from '@/shared/utils/date';
 import { 
   getRSSFeeds, 
   createRSSFeed, 
@@ -253,11 +255,7 @@ export default function RSSAdminPage() {
     });
   };
 
-  // 날짜 포맷팅
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleString('ko-KR');
-  };
+
 
   // 자동화 토글 핸들러
   const handleToggleAutomation = async () => {
@@ -371,38 +369,23 @@ export default function RSSAdminPage() {
     });
   };
 
+  // 탭 목록 정의
+  const tabs: TabItem[] = [
+    { id: 'feeds', label: '피드 목록' },
+    { id: 'add', label: '피드 추가' },
+    { id: 'automation', label: '자동화 설정' },
+  ];
+
   return (
     <div className="container p-6">
       <h1 className="text-2xl font-bold mb-6">RSS 피드 관리</h1>
       
-      <div className="mb-4">
-        <ul className="flex border-b">
-          <li className="mr-1">
-            <button 
-              className={`py-2 px-4 ${activeTab === 'feeds' ? 'border-b-2 border-blue-500 font-medium' : 'text-gray-500 hover:text-blue-500'}`} 
-              onClick={() => setActiveTab('feeds')}
-            >
-              피드 목록
-            </button>
-          </li>
-          <li className="mr-1">
-            <button 
-              className={`py-2 px-4 ${activeTab === 'add' ? 'border-b-2 border-blue-500 font-medium' : 'text-gray-500 hover:text-blue-500'}`} 
-              onClick={() => setActiveTab('add')}
-            >
-              피드 추가
-            </button>
-          </li>
-          <li className="mr-1">
-            <button 
-              className={`py-2 px-4 ${activeTab === 'automation' ? 'border-b-2 border-blue-500 font-medium' : 'text-gray-500 hover:text-blue-500'}`} 
-              onClick={() => setActiveTab('automation')}
-            >
-              자동화 설정
-            </button>
-          </li>
-        </ul>
-      </div>
+      <Tabs
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={(tabId) => setActiveTab(tabId as 'feeds' | 'add' | 'automation')}
+        variant="minimal"
+      />
       
       {activeTab === 'feeds' && (
         <div className="space-y-4">
@@ -468,7 +451,7 @@ export default function RSSAdminPage() {
                         {boards.find(b => b.id === feed.board_id)?.name || feed.board_id}
                       </td>
                       <td className="border border-gray-300 px-4 py-2">
-                        {formatDate(feed.last_fetched_at)}
+                        {formatDate(feed.last_fetched_at) || '-'}
                       </td>
                       <td className="border border-gray-300 px-4 py-2">
                         <div className="flex items-center">
@@ -650,7 +633,7 @@ export default function RSSAdminPage() {
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h3 className="text-sm font-medium text-gray-600 mb-1">마지막 수집</h3>
                 <p className="text-lg font-semibold">
-                  {lastAutoFetch ? formatDate(lastAutoFetch) : '없음'}
+                  {lastAutoFetch ? (formatDate(lastAutoFetch) || '-') : '없음'}
                 </p>
               </div>
             </div>
@@ -780,7 +763,7 @@ export default function RSSAdminPage() {
                 ) : (
                   automationLogs.map((log, index) => (
                     <div key={index} className="text-sm">
-                      <span className="text-gray-500">{formatDate(log.created_at)}</span>
+                      <span className="text-gray-500">{formatDate(log.created_at) || '-'}</span>
                       <span className={`ml-2 ${
                         log.status === 'success' ? 'text-green-600' :
                         log.status === 'error' ? 'text-red-600' :

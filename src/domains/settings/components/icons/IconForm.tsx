@@ -4,10 +4,11 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { updateUserIconServer } from '@/domains/settings/actions/icons';
 import { toast } from 'react-toastify';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { IconItem } from '../../types';
 import { useIcon } from '@/shared/context/IconContext';
 import UserIcon from '@/shared/components/UserIcon';
+import { LEVEL_EXP_REQUIREMENTS, getLevelIconUrl } from '@/shared/utils/level-icons';
 
 interface IconFormProps {
   userId: string;
@@ -33,6 +34,7 @@ export default function IconForm({
 }: IconFormProps) {
   const [selectedIconId, setSelectedIconId] = useState<number | null>(currentIconId);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLevelGuideOpen, setIsLevelGuideOpen] = useState(false);
   const { updateUserIconState, refreshUserIcon } = useIcon(); // 전역 아이콘 상태 업데이트 함수 사용
   
   // 아이콘 선택 처리 함수
@@ -122,6 +124,97 @@ export default function IconForm({
             </div>
           </div>
         </div>
+      </div>
+      
+      {/* 레벨별 아이콘 가이드 */}
+      <div className="bg-white rounded-lg border overflow-hidden">
+        <button 
+          onClick={() => setIsLevelGuideOpen(!isLevelGuideOpen)}
+          className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 border-b focus:outline-none"
+        >
+          <h3 className="text-base font-medium text-gray-900">레벨별 기본 아이콘 가이드</h3>
+          {isLevelGuideOpen ? (
+            <ChevronUp className="h-5 w-5 text-gray-500" />
+          ) : (
+            <ChevronDown className="h-5 w-5 text-gray-500" />
+          )}
+        </button>
+        
+        {isLevelGuideOpen && (
+          <div className="p-4">
+            <p className="text-sm text-gray-600 mb-4">
+              레벨별 기본 아이콘을 확인하세요. 현재 레벨: <strong>Lv.{userLevel}</strong>
+            </p>
+            
+            {/* 모바일용 그리드 */}
+            <div className="grid grid-cols-5 gap-2 md:hidden">
+              {Array.from({ length: Math.min(50, LEVEL_EXP_REQUIREMENTS.length) }, (_, i) => {
+                const level = i + 1;
+                const expRequired = LEVEL_EXP_REQUIREMENTS[level - 1];
+                const iconUrl = getLevelIconUrl(level);
+                const isCurrentLevel = level === userLevel;
+                
+                return (
+                  <div 
+                    key={level}
+                    className={`
+                      flex flex-col items-center p-2 rounded-lg border text-center
+                      ${isCurrentLevel ? 'bg-blue-50 border-blue-200' : 'bg-white'}
+                    `}
+                  >
+                    <div className="relative w-6 h-6 mb-1">
+                      <UserIcon
+                        iconUrl={iconUrl}
+                        level={level}
+                        size={24}
+                        alt={`레벨 ${level} 아이콘`}
+                        className="object-contain"
+                      />
+                    </div>
+                    <div className="font-medium text-xs">Lv.{level}</div>
+                    <div className="text-xs text-gray-500">
+                      {expRequired.toLocaleString()}~
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            {/* 데스크탑용 그리드 */}
+            <div className="hidden md:grid grid-cols-10 gap-2">
+              {Array.from({ length: Math.min(50, LEVEL_EXP_REQUIREMENTS.length) }, (_, i) => {
+                const level = i + 1;
+                const expRequired = LEVEL_EXP_REQUIREMENTS[level - 1];
+                const iconUrl = getLevelIconUrl(level);
+                const isCurrentLevel = level === userLevel;
+                
+                return (
+                  <div 
+                    key={level}
+                    className={`
+                      flex flex-col items-center p-2 rounded-lg border text-center
+                      ${isCurrentLevel ? 'bg-blue-50 border-blue-200' : 'bg-white'}
+                    `}
+                  >
+                    <div className="relative w-10 h-10 mb-1">
+                      <UserIcon
+                        iconUrl={iconUrl}
+                        level={level}
+                        size={40}
+                        alt={`레벨 ${level} 아이콘`}
+                        className="object-contain"
+                      />
+                    </div>
+                    <div className="font-medium text-sm">Lv.{level}</div>
+                    <div className="text-xs text-gray-500">
+                      {expRequired.toLocaleString()}~
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
       
       {/* 아이콘 선택 영역 */}

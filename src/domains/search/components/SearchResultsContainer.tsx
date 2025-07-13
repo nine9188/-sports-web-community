@@ -4,6 +4,7 @@ import { Suspense, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { PostSearchResults, CommentSearchResults, TeamSearchResults } from '@/domains/search'
 import type { PostSearchResult, CommentSearchResult, TeamSearchResult } from '@/domains/search/types'
+import Tabs, { TabItem } from '@/shared/ui/tabs'
 
 interface SearchResultsContainerProps {
   query: string
@@ -43,15 +44,15 @@ export default function SearchResultsContainer({
   }, [type])
 
   // 검색 타입 탭 데이터 (전체 개수 표시)
-  const searchTabs = [
+  const searchTabs: TabItem[] = [
     { 
-      key: 'all' as const, 
+      id: 'all', 
       label: '전체', 
       count: pagination.posts.total + pagination.comments.total + pagination.teams.total 
     },
-    { key: 'teams' as const, label: '팀', count: pagination.teams.total },
-    { key: 'posts' as const, label: '게시글', count: pagination.posts.total },
-    { key: 'comments' as const, label: '댓글', count: pagination.comments.total },
+    { id: 'teams', label: '팀', count: pagination.teams.total },
+    { id: 'posts', label: '게시글', count: pagination.posts.total },
+    { id: 'comments', label: '댓글', count: pagination.comments.total },
   ]
 
   const hasResults = posts.length > 0 || comments.length > 0 || teams.length > 0
@@ -150,12 +151,13 @@ export default function SearchResultsContainer({
   }
 
   // 탭 클릭 핸들러
-  const handleTabClick = (tabKey: string, href: string) => {
+  const handleTabClick = (tabKey: string) => {
     const validTabKey = tabKey as 'all' | 'posts' | 'comments' | 'teams'
     if (validTabKey === currentTabUI || isChangingTab) return
     
     setCurrentTabUI(validTabKey)
     setIsChangingTab(true)
+    const href = `/search?q=${encodeURIComponent(query)}&type=${tabKey}${sort !== 'latest' ? `&sort=${sort}` : ''}`
     router.push(href)
   }
 
@@ -163,33 +165,13 @@ export default function SearchResultsContainer({
     <div className={`space-y-4 ${className}`}>
       {/* 검색어가 있을 때 항상 네비게이션 탭 표시 */}
       {query && (
-        <div className="mb-4">
-          <div className="bg-white rounded-lg border overflow-hidden flex sticky top-0 z-10 overflow-x-auto">
-            {searchTabs.map((tab) => {
-              const isActive = currentTabUI === tab.key
-              const href = `/search?q=${encodeURIComponent(query)}&type=${tab.key}${sort !== 'latest' ? `&sort=${sort}` : ''}`
-              
-              return (
-                <button
-                  key={tab.key}
-                  onClick={() => handleTabClick(tab.key, href)}
-                  className={`px-4 py-3 text-sm font-medium flex-1 whitespace-nowrap transition-colors text-center ${
-                    isActive
-                      ? 'text-blue-600 border-b-2 border-blue-600 font-semibold'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                  aria-current={isActive ? 'page' : undefined}
-                  disabled={isChangingTab}
-                >
-                  {tab.label} ({tab.count.toLocaleString()})
-                  {isChangingTab && isActive && (
-                    <span className="ml-1 inline-block h-3 w-3 animate-pulse rounded-full bg-blue-200"></span>
-                  )}
-                </button>
-              )
-            })}
-          </div>
-        </div>
+        <Tabs
+          tabs={searchTabs}
+          activeTab={currentTabUI}
+          onTabChange={handleTabClick}
+          isChangingTab={isChangingTab}
+          showCount={true}
+        />
       )}
 
       {/* 검색 결과가 없을 때 */}

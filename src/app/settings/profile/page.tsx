@@ -39,10 +39,7 @@ export default async function ProfileSettingsPage() {
       )}
       
       <div className="bg-white rounded-lg border overflow-hidden p-4">
-        <h2 className="text-xl font-semibold mb-1">기본 정보</h2>
-        <p className="text-gray-500 text-sm mb-6">
-          계정 및 프로필 정보를 관리합니다.
-        </p>
+        <h2 className="text-xl font-semibold mb-6">기본 정보</h2>
         
         <ProfileForm 
           initialData={{

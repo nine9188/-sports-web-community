@@ -7,6 +7,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Coins } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { getPointHistory } from '@/shared/actions/admin-actions';
+import { formatDate } from '@/shared/utils/date';
 
 interface UserInfo {
   id: string;
@@ -171,12 +172,6 @@ export default function PointManager({ adminUser, selectedUser, onRefreshData }:
     }
   };
 
-  // 날짜 포맷 함수
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-  };
-
   // 선택된 사용자가 없는 경우
   if (!selectedUser) {
     return (
@@ -269,7 +264,7 @@ export default function PointManager({ adminUser, selectedUser, onRefreshData }:
                 {pointHistory.map(history => (
                   <tr key={history.id}>
                     <td className="px-4 py-2 text-sm text-gray-500">
-                      {history.created_at ? formatDate(history.created_at as string) : '-'}
+                      {history.created_at ? (formatDate(history.created_at as string) || '-') : '-'}
                     </td>
                     <td className="px-4 py-2 text-sm">
                       {history.reason}
