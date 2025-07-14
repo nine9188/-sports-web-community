@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, memo, useCallback } from 'react';
 import Image from 'next/image';
+import { convertApiSportsUrl, isApiSportsUrl, getPlayerImageUrl } from '@/shared/utils/image-proxy';
 
 interface PlayerImageProps {
   src: string | undefined;
@@ -135,23 +136,38 @@ const PlayerImage = memo(function PlayerImage({
         //   }
         // }
 
-        // 원본 URL 사용
-        if (src) {
+        // 이미지 URL 처리 - 프록시 URL 사용
+        let imageUrl = src;
+        
+        // playerId가 있으면 프록시 URL 생성
+        if (playerId) {
+          imageUrl = getPlayerImageUrl(playerId);
+        } else if (src && isApiSportsUrl(src)) {
+          // API-Sports URL인 경우 프록시 URL로 변환
+          imageUrl = convertApiSportsUrl(src);
+        }
+        
+        console.log(`[PlayerImage] 이미지 로딩 시도: ${imageUrl}`);
+        
+        if (imageUrl) {
           // 이미지 유효성 검사
           const img = new window.Image();
           img.onload = () => {
+            console.log(`[PlayerImage] 이미지 로딩 성공: ${imageUrl}`);
             setImageState({
-              url: src,
+              url: imageUrl,
               loading: false,
               error: false,
               retryCount: 0
             });
           };
           img.onerror = () => {
+            console.error(`[PlayerImage] 이미지 로딩 실패: ${imageUrl}`);
             handleImageError();
           };
-          img.src = src;
+          img.src = imageUrl;
         } else {
+          console.warn('[PlayerImage] 이미지 URL이 없습니다');
           setImageState(prev => ({ ...prev, loading: false, error: true }));
         }
       } catch (error) {
