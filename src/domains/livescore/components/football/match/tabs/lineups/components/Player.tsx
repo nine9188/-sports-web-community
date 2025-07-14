@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState, useMemo, useCallback, memo } from 'react';
 import styles from '../styles/formation.module.css';
 import { liverpoolPlayers, NottinghamForestPlayers, Arsenalplayers, NewcastleUnitedplayers, Chelseaplayers, ManchesterCityplayers, AstonVillaplayers, Bournemouthplayers, Fulhamplayers, Brightonplayers } from '@/domains/livescore/constants/teams/premier-league/premier-teams';
+import { getPlayerImageUrl } from '@/shared/utils/image-proxy';
 
 // 미디어 쿼리 커스텀 훅
 function useMediaQuery(query: string) {
@@ -283,7 +284,7 @@ const Player = memo(function Player({ homeTeamData, awayTeamData }: PlayerProps)
       const nameKey = `name-${isHome ? 'home' : 'away'}-${teamId}-${playerId}`;
       
       // 이미지 URL 처리 - 우선순위 로딩 적용
-      const photoUrl = player.photo || `https://media.api-sports.io/football/players/${player.id}.png`;
+      const photoUrl = player.photo || getPlayerImageUrl(player.id);
       const hasValidImage = Boolean(photoUrl) && !failedImages.has(`${playerId}`);
       const imageLoaded = loadedImages.has(`${playerId}`);
       

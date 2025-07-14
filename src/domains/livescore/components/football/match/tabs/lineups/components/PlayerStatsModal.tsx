@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect, useCallback } from 'react';
 import { fetchCachedPlayerStats, PlayerStats, PlayerStatsResponse } from '@/domains/livescore/actions/match/playerStats';
+import { getPlayerImageUrl } from '@/shared/utils/image-proxy';
 
 interface PlayerStatsModalProps {
   isOpen: boolean;
@@ -205,7 +206,7 @@ export default function PlayerStatsModal({
   const stats = playerStats.response.statistics?.[0] || {};
   const playerData = playerStats.response.player || {};
 
-  const playerPhotoUrl = playerData.photo || `https://media.api-sports.io/football/players/${playerId}.png`;
+  const playerPhotoUrl = playerData.photo || getPlayerImageUrl(playerId);
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">

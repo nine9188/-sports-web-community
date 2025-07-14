@@ -1,9 +1,10 @@
 'use client';
 
+import React from 'react';
 import { Match } from '@/domains/livescore/types/match';
 import MatchCard from '../MatchCard';
-import React from 'react';
-import Image from 'next/image';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/utils/image-proxy';
 
 interface LeagueMatchListProps {
   matches: Match[];
@@ -77,12 +78,14 @@ export default function LeagueMatchList({ matches }: LeagueMatchListProps) {
                   <div className="flex items-center">
                     <div className="relative w-6 h-6 mr-2">
                       {/* 우선순위: 1. 리그 로고, 2. 국가 플래그, 3. 기본 이미지 */}
-                      <Image 
+                      <ApiSportsImage 
                         src={group.logo || group.flag || DEFAULT_LOGO}
                         alt={group.name}
-                        fill
-                        sizes="24px"
-                        className="object-contain"
+                        width={24}
+                        height={24}
+                        fallbackType={ImageType.Leagues}
+                        className="object-contain w-6 h-6"
+                        style={{ width: '24px', height: '24px' }}
                       />
                     </div>
                     <div>

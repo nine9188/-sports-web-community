@@ -54,56 +54,58 @@ const LEAGUE_CATEGORIES = {
   ],
 };
 
-// 리그 로고 매핑 - API-Sports.io 기준
+// 리그 로고 매핑 - Vercel CDN 프록시 사용
+import { getLeagueLogoUrl } from '@/shared/utils/image-proxy';
+
 const LEAGUE_LOGOS: Record<number, string> = {
   // 유럽 주요 리그
-  [MAJOR_LEAGUE_IDS.PREMIER_LEAGUE]: 'https://media.api-sports.io/football/leagues/39.png',
-  [MAJOR_LEAGUE_IDS.LA_LIGA]: 'https://media.api-sports.io/football/leagues/140.png',
-  [MAJOR_LEAGUE_IDS.BUNDESLIGA]: 'https://media.api-sports.io/football/leagues/78.png',
-  [MAJOR_LEAGUE_IDS.SERIE_A]: 'https://media.api-sports.io/football/leagues/135.png',
-  [MAJOR_LEAGUE_IDS.LIGUE_1]: 'https://media.api-sports.io/football/leagues/61.png',
+  [MAJOR_LEAGUE_IDS.PREMIER_LEAGUE]: getLeagueLogoUrl(39),
+  [MAJOR_LEAGUE_IDS.LA_LIGA]: getLeagueLogoUrl(140),
+  [MAJOR_LEAGUE_IDS.BUNDESLIGA]: getLeagueLogoUrl(78),
+  [MAJOR_LEAGUE_IDS.SERIE_A]: getLeagueLogoUrl(135),
+  [MAJOR_LEAGUE_IDS.LIGUE_1]: getLeagueLogoUrl(61),
   
   // 유럽 컵 대회
-  [MAJOR_LEAGUE_IDS.CHAMPIONS_LEAGUE]: 'https://media.api-sports.io/football/leagues/2.png',
-  [MAJOR_LEAGUE_IDS.EUROPA_LEAGUE]: 'https://media.api-sports.io/football/leagues/3.png',
-  [MAJOR_LEAGUE_IDS.CONFERENCE_LEAGUE]: 'https://media.api-sports.io/football/leagues/848.png',
+  [MAJOR_LEAGUE_IDS.CHAMPIONS_LEAGUE]: getLeagueLogoUrl(2),
+  [MAJOR_LEAGUE_IDS.EUROPA_LEAGUE]: getLeagueLogoUrl(3),
+  [MAJOR_LEAGUE_IDS.CONFERENCE_LEAGUE]: getLeagueLogoUrl(848),
   
   // 유럽 기타 리그
-  [MAJOR_LEAGUE_IDS.CHAMPIONSHIP]: 'https://media.api-sports.io/football/leagues/40.png',
-  [MAJOR_LEAGUE_IDS.SCOTTISH_PREMIERSHIP]: 'https://media.api-sports.io/football/leagues/179.png',
-  [MAJOR_LEAGUE_IDS.EREDIVISIE]: 'https://media.api-sports.io/football/leagues/88.png',
-  [MAJOR_LEAGUE_IDS.PRIMEIRA_LIGA]: 'https://media.api-sports.io/football/leagues/94.png',
-  [MAJOR_LEAGUE_IDS.DANISH_SUPERLIGA]: 'https://media.api-sports.io/football/leagues/119.png',
+  [MAJOR_LEAGUE_IDS.CHAMPIONSHIP]: getLeagueLogoUrl(40),
+  [MAJOR_LEAGUE_IDS.SCOTTISH_PREMIERSHIP]: getLeagueLogoUrl(179),
+  [MAJOR_LEAGUE_IDS.EREDIVISIE]: getLeagueLogoUrl(88),
+  [MAJOR_LEAGUE_IDS.PRIMEIRA_LIGA]: getLeagueLogoUrl(94),
+  [MAJOR_LEAGUE_IDS.DANISH_SUPERLIGA]: getLeagueLogoUrl(119),
   
   // 아시아
-  [MAJOR_LEAGUE_IDS.K_LEAGUE_1]: 'https://media.api-sports.io/football/leagues/292.png',
-  [MAJOR_LEAGUE_IDS.J1_LEAGUE]: 'https://media.api-sports.io/football/leagues/98.png',
-  [MAJOR_LEAGUE_IDS.CSL]: 'https://media.api-sports.io/football/leagues/169.png',
-  [MAJOR_LEAGUE_IDS.AFC_CHAMPIONS]: 'https://media.api-sports.io/football/leagues/17.png',
-  [MAJOR_LEAGUE_IDS.SAUDI_PRO_LEAGUE]: 'https://media.api-sports.io/football/leagues/307.png',
+  [MAJOR_LEAGUE_IDS.K_LEAGUE_1]: getLeagueLogoUrl(292),
+  [MAJOR_LEAGUE_IDS.J1_LEAGUE]: getLeagueLogoUrl(98),
+  [MAJOR_LEAGUE_IDS.CSL]: getLeagueLogoUrl(169),
+  [MAJOR_LEAGUE_IDS.AFC_CHAMPIONS]: getLeagueLogoUrl(17),
+  [MAJOR_LEAGUE_IDS.SAUDI_PRO_LEAGUE]: getLeagueLogoUrl(307),
   
   // 아메리카
-  [MAJOR_LEAGUE_IDS.MLS]: 'https://media.api-sports.io/football/leagues/253.png',
-  [MAJOR_LEAGUE_IDS.BRASILEIRAO]: 'https://media.api-sports.io/football/leagues/71.png',
-  [MAJOR_LEAGUE_IDS.LIGA_MX]: 'https://media.api-sports.io/football/leagues/262.png',
+  [MAJOR_LEAGUE_IDS.MLS]: getLeagueLogoUrl(253),
+  [MAJOR_LEAGUE_IDS.BRASILEIRAO]: getLeagueLogoUrl(71),
+  [MAJOR_LEAGUE_IDS.LIGA_MX]: getLeagueLogoUrl(262),
   
   // 국내 컵 대회
-  [MAJOR_LEAGUE_IDS.FA_CUP]: 'https://media.api-sports.io/football/leagues/45.png',
-  [MAJOR_LEAGUE_IDS.EFL_CUP]: 'https://media.api-sports.io/football/leagues/48.png',
-  [MAJOR_LEAGUE_IDS.COPA_DEL_REY]: 'https://media.api-sports.io/football/leagues/143.png',
-  [MAJOR_LEAGUE_IDS.COPPA_ITALIA]: 'https://media.api-sports.io/football/leagues/137.png',
-  [MAJOR_LEAGUE_IDS.COUPE_DE_FRANCE]: 'https://media.api-sports.io/football/leagues/66.png',
-  [MAJOR_LEAGUE_IDS.DFB_POKAL]: 'https://media.api-sports.io/football/leagues/81.png',
+  [MAJOR_LEAGUE_IDS.FA_CUP]: getLeagueLogoUrl(45),
+  [MAJOR_LEAGUE_IDS.EFL_CUP]: getLeagueLogoUrl(48),
+  [MAJOR_LEAGUE_IDS.COPA_DEL_REY]: getLeagueLogoUrl(143),
+  [MAJOR_LEAGUE_IDS.COPPA_ITALIA]: getLeagueLogoUrl(137),
+  [MAJOR_LEAGUE_IDS.COUPE_DE_FRANCE]: getLeagueLogoUrl(66),
+  [MAJOR_LEAGUE_IDS.DFB_POKAL]: getLeagueLogoUrl(81),
   
   // 국제 대회
-  [MAJOR_LEAGUE_IDS.WORLD_CUP_QUALIFIERS_EUROPE]: 'https://media.api-sports.io/football/leagues/32.png',
-  [MAJOR_LEAGUE_IDS.WORLD_CUP_QUALIFIERS_ASIA]: 'https://media.api-sports.io/football/leagues/30.png',
-  [MAJOR_LEAGUE_IDS.INTERNATIONAL_FRIENDLY]: 'https://media.api-sports.io/football/leagues/10.png',
-  [MAJOR_LEAGUE_IDS.NATIONS_LEAGUE]: 'https://media.api-sports.io/football/leagues/5.png',
-  [MAJOR_LEAGUE_IDS.EURO]: 'https://media.api-sports.io/football/leagues/9.png',
-  [MAJOR_LEAGUE_IDS.COPA_AMERICA]: 'https://media.api-sports.io/football/leagues/13.png',
-  [MAJOR_LEAGUE_IDS.CLUB_WORLD_CUP]: 'https://media.api-sports.io/football/leagues/15.png',
-  [MAJOR_LEAGUE_IDS.UEFA_SUPER_CUP]: 'https://media.api-sports.io/football/leagues/531.png',
+  [MAJOR_LEAGUE_IDS.WORLD_CUP_QUALIFIERS_EUROPE]: getLeagueLogoUrl(32),
+  [MAJOR_LEAGUE_IDS.WORLD_CUP_QUALIFIERS_ASIA]: getLeagueLogoUrl(30),
+  [MAJOR_LEAGUE_IDS.INTERNATIONAL_FRIENDLY]: getLeagueLogoUrl(10),
+  [MAJOR_LEAGUE_IDS.NATIONS_LEAGUE]: getLeagueLogoUrl(5),
+  [MAJOR_LEAGUE_IDS.EURO]: getLeagueLogoUrl(9),
+  [MAJOR_LEAGUE_IDS.COPA_AMERICA]: getLeagueLogoUrl(13),
+  [MAJOR_LEAGUE_IDS.CLUB_WORLD_CUP]: getLeagueLogoUrl(15),
+  [MAJOR_LEAGUE_IDS.UEFA_SUPER_CUP]: getLeagueLogoUrl(531),
 };
 
 

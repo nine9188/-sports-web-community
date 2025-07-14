@@ -1,7 +1,8 @@
 'use client';
 
 import React, { memo } from 'react';
-import Image from 'next/image';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/utils/image-proxy';
 import { useMatchData } from '@/domains/livescore/components/football/match/context/MatchDataContext';
 import { formatDateToKorean } from '@/domains/livescore/utils/dateUtils';
 import { ErrorState, LoadingState } from '@/domains/livescore/components/common/CommonComponents';
@@ -207,13 +208,14 @@ const MatchHeader = memo(function MatchHeader() {
           <div className="flex items-center gap-2 px-2 py-2 md:px-4 border-b md:border-b-0 md:border-r md:w-1/3">
             <div className="relative w-6 h-6 flex items-center justify-center">
               {league?.logo && (
-                <Image
+                <ApiSportsImage
                   src={league.logo}
                   alt={league?.name || ''}
                   width={24}
                   height={24}
                   className="object-contain w-full h-full"
                   style={{ maxWidth: '100%', maxHeight: '100%' }}
+                  fallbackType={ImageType.Leagues}
                 />
               )}
             </div>
@@ -253,13 +255,14 @@ const MatchHeader = memo(function MatchHeader() {
             <div className="w-1/3 md:w-1/3 text-center">
               <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-1 md:mb-2 flex items-center justify-center">
                 {homeTeam?.logo && (
-                  <Image
+                  <ApiSportsImage
                     src={homeTeam.logo}
                     alt={homeTeam.name || ''}
                     width={48}
                     height={48}
                     className="object-contain w-full h-full"
                     style={{ maxWidth: '100%', maxHeight: '100%' }}
+                    fallbackType={ImageType.Teams}
                   />
                 )}
               </div>
@@ -293,13 +296,14 @@ const MatchHeader = memo(function MatchHeader() {
             <div className="w-1/3 md:w-1/3 text-center">
               <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-1 md:mb-2 flex items-center justify-center">
                 {awayTeam?.logo && (
-                  <Image
+                  <ApiSportsImage
                     src={awayTeam.logo}
                     alt={awayTeam.name || ''}
                     width={48}
                     height={48}
                     className="object-contain w-full h-full"
                     style={{ maxWidth: '100%', maxHeight: '100%' }}
+                    fallbackType={ImageType.Teams}
                   />
                 )}
               </div>
@@ -320,13 +324,14 @@ const MatchHeader = memo(function MatchHeader() {
                 <div className="md:hidden py-1 font-semibold mb-2 text-sm flex items-center">
                   <div className="relative w-4 h-4 mr-2 flex items-center justify-center">
                     {homeTeam?.logo && (
-                      <Image
+                      <ApiSportsImage
                         src={homeTeam.logo}
                         alt={homeTeam.name || ''}
                         width={16}
                         height={16}
                         className="object-contain w-full h-full"
                         style={{ maxWidth: '100%', maxHeight: '100%' }}
+                        fallbackType={ImageType.Teams}
                       />
                     )}
                   </div>
@@ -374,13 +379,14 @@ const MatchHeader = memo(function MatchHeader() {
                 <div className="md:hidden py-1 font-semibold mb-2 text-sm flex items-center">
                   <div className="relative w-4 h-4 mr-2 flex items-center justify-center">
                     {awayTeam?.logo && (
-                      <Image
+                      <ApiSportsImage
                         src={awayTeam.logo}
                         alt={awayTeam.name || ''}
                         width={16}
                         height={16}
                         className="object-contain w-full h-full"
                         style={{ maxWidth: '100%', maxHeight: '100%' }}
+                        fallbackType={ImageType.Teams}
                       />
                     )}
                   </div>

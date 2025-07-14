@@ -7,6 +7,19 @@ const nextConfig = {
         hostname: 'media.api-sports.io',
         pathname: '/**',
       },
+      // Vercel 자체 도메인 (프록시 이미지용)
+      {
+        protocol: 'https',
+        hostname: process.env.VERCEL_URL || 'localhost',
+        pathname: '/api/images',
+      },
+      // 로컬 개발 환경용 (http)
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3000',
+        pathname: '/api/images',
+      },
       {
         protocol: 'https',
         hostname: 'vnjjfhsuzoxcljqqwwvx.supabase.co',

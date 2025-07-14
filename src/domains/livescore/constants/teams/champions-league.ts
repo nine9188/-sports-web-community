@@ -1,5 +1,6 @@
 // UEFA 챔피언스 리그 팀 정보
 import { TeamMapping } from '.';
+import { getTeamLogoUrl } from '@/shared/utils/image-proxy';
 
 // UEFA 챔피언스 리그 2023/24 시즌 팀 데이터
 export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
@@ -10,7 +11,7 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '잉글랜드',
     country_en: 'England',
     code: 'MCI',
-    logo: 'https://media.api-sports.io/football/teams/50.png'
+    logo: getTeamLogoUrl(50)
   },
   {
     id: 541, 
@@ -19,7 +20,7 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '스페인',
     country_en: 'Spain',
     code: 'RMA',
-    logo: 'https://media.api-sports.io/football/teams/541.png'
+    logo: getTeamLogoUrl(541)
   },
   {
     id: 505, 
@@ -28,7 +29,7 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '이탈리아',
     country_en: 'Italy',
     code: 'INT',
-    logo: 'https://media.api-sports.io/football/teams/505.png'
+    logo: getTeamLogoUrl(505)
   },
   {
     id: 489, 
@@ -37,7 +38,7 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '이탈리아',
     country_en: 'Italy',
     code: 'MIL',
-    logo: 'https://media.api-sports.io/football/teams/489.png'
+    logo: getTeamLogoUrl(489)
   },
   {
     id: 165, 
@@ -46,7 +47,7 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '독일',
     country_en: 'Germany',
     code: 'BVB',
-    logo: 'https://media.api-sports.io/football/teams/165.png'
+    logo: getTeamLogoUrl(165)
   },
   {
     id: 157, 
@@ -55,7 +56,7 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '독일',
     country_en: 'Germany',
     code: 'BAY',
-    logo: 'https://media.api-sports.io/football/teams/157.png'
+    logo: getTeamLogoUrl(157)
   },
   {
     id: 85, 
@@ -64,7 +65,7 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '프랑스',
     country_en: 'France',
     code: 'PSG',
-    logo: 'https://media.api-sports.io/football/teams/85.png'
+    logo: getTeamLogoUrl(85)
   },
   {
     id: 529, 
@@ -73,7 +74,7 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '스페인',
     country_en: 'Spain',
     code: 'BAR',
-    logo: 'https://media.api-sports.io/football/teams/529.png'
+    logo: getTeamLogoUrl(529)
   },
   {
     id: 530, 
@@ -82,7 +83,7 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '스페인',
     country_en: 'Spain',
     code: 'ATM',
-    logo: 'https://media.api-sports.io/football/teams/530.png'
+    logo: getTeamLogoUrl(530)
   },
   {
     id: 33, 
@@ -91,7 +92,7 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '잉글랜드',
     country_en: 'England',
     code: 'MUN',
-    logo: 'https://media.api-sports.io/football/teams/33.png'
+    logo: getTeamLogoUrl(33)
   },
   {
     id: 40, 
@@ -100,7 +101,7 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '잉글랜드',
     country_en: 'England',
     code: 'LIV',
-    logo: 'https://media.api-sports.io/football/teams/40.png'
+    logo: getTeamLogoUrl(40)
   },
   {
     id: 47, 
@@ -109,7 +110,7 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '잉글랜드',
     country_en: 'England',
     code: 'TOT',
-    logo: 'https://media.api-sports.io/football/teams/47.png'
+    logo: getTeamLogoUrl(47)
   },
   {
     id: 42, 
@@ -118,7 +119,7 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '잉글랜드',
     country_en: 'England',
     code: 'ARS',
-    logo: 'https://media.api-sports.io/football/teams/42.png'
+    logo: getTeamLogoUrl(42)
   },
   {
     id: 492, 
@@ -127,7 +128,7 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '이탈리아',
     country_en: 'Italy',
     code: 'NAP',
-    logo: 'https://media.api-sports.io/football/teams/492.png'
+    logo: getTeamLogoUrl(492)
   },
   {
     id: 496, 
@@ -136,7 +137,7 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '이탈리아',
     country_en: 'Italy',
     code: 'JUV',
-    logo: 'https://media.api-sports.io/football/teams/496.png'
+    logo: getTeamLogoUrl(496)
   },
   {
     id: 212, 
@@ -145,7 +146,7 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '포르투갈',
     country_en: 'Portugal',
     code: 'FCP',
-    logo: 'https://media.api-sports.io/football/teams/212.png'
+    logo: getTeamLogoUrl(212)
   },
   {
     id: 211, 
@@ -154,7 +155,7 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '포르투갈',
     country_en: 'Portugal',
     code: 'BEN',
-    logo: 'https://media.api-sports.io/football/teams/211.png'
+    logo: getTeamLogoUrl(211)
   },
   {
     id: 194, 
@@ -163,7 +164,7 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '네덜란드',
     country_en: 'Netherlands',
     code: 'AJX',
-    logo: 'https://media.api-sports.io/football/teams/194.png'
+    logo: getTeamLogoUrl(194)
   },
   {
     id: 169, 
@@ -172,7 +173,7 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '독일',
     country_en: 'Germany',
     code: 'B04',
-    logo: 'https://media.api-sports.io/football/teams/169.png'
+    logo: getTeamLogoUrl(169)
   },
   {
     id: 173, 
@@ -181,7 +182,7 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '독일',
     country_en: 'Germany',
     code: 'RBL',
-    logo: 'https://media.api-sports.io/football/teams/173.png'
+    logo: getTeamLogoUrl(173)
   },
   {
     id: 851, 
@@ -190,7 +191,7 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '벨기에',
     country_en: 'Belgium',
     code: 'BRU',
-    logo: 'https://media.api-sports.io/football/teams/851.png'
+    logo: getTeamLogoUrl(851)
   },
   {
     id: 550, 
@@ -199,7 +200,7 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '스코틀랜드',
     country_en: 'Scotland',
     code: 'CEL',
-    logo: 'https://media.api-sports.io/football/teams/550.png'
+    logo: getTeamLogoUrl(550)
   },
   {
     id: 610, 
@@ -208,7 +209,7 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '우크라이나',
     country_en: 'Ukraine',
     code: 'SHA',
-    logo: 'https://media.api-sports.io/football/teams/610.png'
+    logo: getTeamLogoUrl(610)
   },
   {
     id: 874, 
@@ -217,6 +218,6 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '오스트리아',
     country_en: 'Austria',
     code: 'RBS',
-    logo: 'https://media.api-sports.io/football/teams/874.png'
+    logo: getTeamLogoUrl(874)
   }
 ]; 

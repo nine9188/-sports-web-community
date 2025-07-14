@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import React, { useState, useEffect } from 'react';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/utils/image-proxy';
 import { useRouter } from 'next/navigation';
 import { StandingsData, League } from '../../types';
 import { fetchStandingsData } from '../../actions/football';
@@ -99,6 +100,10 @@ export default function LeagueStandings({
     return null;
   }
 
+  const handleTeamClick = (teamId: number) => {
+    router.push(`/livescore/football/team/${teamId}?tab=overview`);
+  };
+
   return (
     <div className="league-standings border rounded-md overflow-hidden">
       <div className="standings-header py-2 px-3 text-sm font-medium bg-slate-800 text-white">
@@ -127,16 +132,18 @@ export default function LeagueStandings({
         <div className="flex items-center gap-2">
           {standings?.league?.logo && (
             <div className="w-5 h-5 relative">
-              <Image
+              <ApiSportsImage
                 src={standings.league.logo}
                 alt={standings.league.name}
-                fill
-                sizes="20px"
-                className="object-contain"
+                width={20}
+                height={20}
+                fallbackType={ImageType.Leagues}
+                className="object-contain w-5 h-5"
+                style={{ width: '20px', height: '20px' }}
               />
             </div>
           )}
-          <span className="text-xs font-medium">
+          <span className="text-sm font-medium">
             {LEAGUES.find(l => l.id === activeLeague)?.fullName || ''}
           </span>
         </div>
@@ -189,21 +196,23 @@ export default function LeagueStandings({
                   <tr 
                     key={team.team.team_id}
                     className={`${index < standings.standings[0].length - 1 ? 'border-b' : ''} hover:bg-gray-50 cursor-pointer ${index < 4 ? 'text-blue-600' : ''}`}
-                    onClick={() => router.push(`/livescore/football/team/${team.team.team_id}?tab=overview`)}
+                    onClick={() => handleTeamClick(team.team.team_id)}
                   >
                     <td className="text-center py-1.5 px-0">{team.rank}</td>
                     <td className="text-left py-1.5 px-1">
                       <div className="flex items-center gap-1">
-                        <div className="w-4 h-4 relative flex-shrink-0">
-                          <Image
+                        <div className="w-5 h-5 relative flex-shrink-0">
+                          <ApiSportsImage
                             src={team.team.logo}
                             alt={team.team.name}
-                            fill
-                            sizes="16px"
-                            className="object-contain"
+                            width={20}
+                            height={20}
+                            fallbackType={ImageType.Teams}
+                            className="object-contain w-5 h-5"
+                            style={{ width: '20px', height: '20px' }}
                           />
                         </div>
-                        <span className="truncate max-w-[100px] font-medium">
+                        <span className="truncate max-w-[100px] font-medium text-sm hover:text-blue-600 transition-colors">
                           {getKoreanTeamName(team.team.team_id, team.team.name)}
                         </span>
                       </div>

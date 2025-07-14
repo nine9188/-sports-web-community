@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useEffect, startTransition } from 'react';
+import React, { useState, useEffect, useTransition } from 'react';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/utils/image-proxy';
 
 // Window 타입 확장
 declare global {
@@ -11,7 +13,6 @@ declare global {
 
 import { toast } from 'react-hot-toast';
 import Tabs, { TabItem } from '@/shared/ui/tabs';
-import Image from 'next/image';
 import { Loader2, RefreshCw, Check, X, Target } from 'lucide-react';
 import { formatDate } from '@/shared/utils/date';
 import { 
@@ -55,6 +56,7 @@ export default function PredictionAdminPage() {
   const [activeTab, setActiveTab] = useState<'matches' | 'automation'>('matches');
   const [isLoading, setIsLoading] = useState(false);
   const [automationLogs, setAutomationLogs] = useState<PredictionLog[]>([]);
+  const [isPending, startTransition] = useTransition();
   
   // 자동화 상태 관리
   const [autoGenerateEnabled, setAutoGenerateEnabled] = useState(false);
@@ -273,10 +275,10 @@ export default function PredictionAdminPage() {
               </button>
               <button 
                 onClick={handleGenerateAllPredictions} 
-                disabled={isLoading}
+                disabled={isPending}
                 className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
               >
-                {isLoading ? (
+                {isPending ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <Target className="mr-2 h-4 w-4" />
@@ -303,12 +305,13 @@ export default function PredictionAdminPage() {
                 <div key={group.league.id} className="bg-white border rounded-lg p-4">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center">
-                      <Image 
+                      <ApiSportsImage 
                         src={group.league.logo} 
                         alt={group.league.name}
                         width={32}
                         height={32}
                         className="w-8 h-8 mr-3"
+                        fallbackType={ImageType.Leagues}
                       />
                       <h3 className="text-lg font-semibold">{group.league.name}</h3>
                       <span className="ml-2 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">
@@ -317,10 +320,10 @@ export default function PredictionAdminPage() {
                     </div>
                     <button
                       onClick={() => handleGenerateSingleLeaguePrediction(group.league.id, group.league.name)}
-                      disabled={isLoading}
+                      disabled={isPending}
                       className="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 flex items-center text-sm"
                     >
-                      {isLoading ? (
+                      {isPending ? (
                         <Loader2 className="mr-1 h-3 w-3 animate-spin" />
                       ) : (
                         <Target className="mr-1 h-3 w-3" />
@@ -334,12 +337,12 @@ export default function PredictionAdminPage() {
                       <div key={match.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                         <div className="flex items-center space-x-4">
                           <div className="flex items-center space-x-2">
-                            <Image src={match.teams.home.logo} alt={match.teams.home.name} width={24} height={24} className="w-6 h-6" />
+                            <ApiSportsImage src={match.teams.home.logo} alt={match.teams.home.name} width={24} height={24} className="w-6 h-6" fallbackType={ImageType.Teams} />
                             <span className="font-medium">{match.teams.home.name}</span>
                           </div>
                           <span className="text-gray-500">vs</span>
                           <div className="flex items-center space-x-2">
-                            <Image src={match.teams.away.logo} alt={match.teams.away.name} width={24} height={24} className="w-6 h-6" />
+                            <ApiSportsImage src={match.teams.away.logo} alt={match.teams.away.name} width={24} height={24} className="w-6 h-6" fallbackType={ImageType.Teams} />
                             <span className="font-medium">{match.teams.away.name}</span>
                           </div>
                         </div>
@@ -398,14 +401,14 @@ export default function PredictionAdminPage() {
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={handleToggleAutomation}
-                disabled={isLoading}
+                disabled={isPending}
                 className={`px-4 py-2 rounded-md font-medium flex items-center ${
                   autoGenerateEnabled 
                     ? 'bg-red-600 text-white hover:bg-red-700' 
                     : 'bg-green-600 text-white hover:bg-green-700'
                 }`}
               >
-                {isLoading ? (
+                {isPending ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : autoGenerateEnabled ? (
                   <X className="mr-2 h-4 w-4" />
@@ -417,10 +420,10 @@ export default function PredictionAdminPage() {
 
               <button
                 onClick={handleTestPredictionGeneration}
-                disabled={isLoading}
+                disabled={isPending}
                 className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
               >
-                {isLoading ? (
+                {isPending ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <Target className="mr-2 h-4 w-4" />

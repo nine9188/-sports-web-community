@@ -1,9 +1,10 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Match } from '@/domains/livescore/types/match';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/utils/image-proxy';
 
 // 매치 카드 props
 interface MatchCardProps {
@@ -135,12 +136,14 @@ export default function MatchCard({ match: initialMatch }: MatchCardProps) {
                   <div className="relative w-6 h-6 shrink-0">
                     {/* 빈 문자열 체크 추가 */}
                     {homeTeam.logo ? (
-                      <Image 
+                      <ApiSportsImage 
                         src={homeTeam.logo} 
                         alt={homeTeam.name}
-                        fill
-                        sizes="24px"
-                        className="object-contain"
+                        fallbackType={ImageType.Teams}
+                        width={24}
+                        height={24}
+                        className="object-contain w-6 h-6"
+                        style={{ width: '24px', height: '24px' }}
                       />
                     ) : null}
                   </div>
@@ -161,12 +164,14 @@ export default function MatchCard({ match: initialMatch }: MatchCardProps) {
                 <div className="relative w-6 h-6 shrink-0">
                   {/* 빈 문자열 체크 추가 */}
                   {awayTeam.logo ? (
-                    <Image 
+                    <ApiSportsImage 
                       src={awayTeam.logo} 
                       alt={awayTeam.name}
-                      fill
-                      sizes="24px"
-                      className="object-contain"
+                      fallbackType={ImageType.Teams}
+                      width={24}
+                      height={24}
+                      className="object-contain w-6 h-6"
+                      style={{ width: '24px', height: '24px' }}
                     />
                   ) : null}
                 </div>
