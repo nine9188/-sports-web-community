@@ -43,6 +43,9 @@ export default function ApiSportsImage({
     if (!hasError) {
       setHasError(true);
       
+      // 디버깅 로그 추가
+      console.warn(`[ApiSportsImage] 이미지 로딩 실패: ${currentSrc}`);
+      
       // 폴백 이미지 설정
       let fallbackType_ = fallbackType;
       if (!fallbackType_) {
@@ -51,12 +54,13 @@ export default function ApiSportsImage({
       }
       
       const fallbackUrl = getFallbackImageUrl(fallbackType_);
+      console.log(`[ApiSportsImage] 폴백 이미지 사용: ${fallbackUrl}`);
       setCurrentSrc(fallbackUrl);
     }
     
     // 원본 onError 핸들러 호출
     onError?.(e);
-  }, [hasError, fallbackType, src, onError]);
+  }, [hasError, fallbackType, src, onError, currentSrc]);
 
   return (
     <Image

@@ -10,7 +10,13 @@ const nextConfig = {
       // Vercel 자체 도메인 (프록시 이미지용)
       {
         protocol: 'https',
-        hostname: process.env.VERCEL_URL || 'localhost',
+        hostname: process.env.VERCEL_URL || 'sports-web-community.vercel.app',
+        pathname: '/api/images',
+      },
+      // 추가 Vercel 도메인 패턴
+      {
+        protocol: 'https',
+        hostname: '*.vercel.app',
         pathname: '/api/images',
       },
       // 로컬 개발 환경용 (http)
