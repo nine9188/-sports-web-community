@@ -3,7 +3,7 @@
 import { useRef, useEffect, useState, useMemo, useCallback, memo } from 'react';
 import styles from '../styles/formation.module.css';
 import { liverpoolPlayers, NottinghamForestPlayers, Arsenalplayers, NewcastleUnitedplayers, Chelseaplayers, ManchesterCityplayers, AstonVillaplayers, Bournemouthplayers, Fulhamplayers, Brightonplayers } from '@/domains/livescore/constants/teams/premier-league/premier-teams';
-import { getPlayerImageUrl } from '@/shared/utils/image-proxy';
+import { getPlayerImageUrl, convertApiSportsUrl, isApiSportsUrl } from '@/shared/utils/image-proxy';
 
 // 미디어 쿼리 커스텀 훅
 function useMediaQuery(query: string) {
@@ -86,13 +86,25 @@ const SVGPlayerImage = memo(function SVGPlayerImage({ playerId, photoUrl, teamId
   useEffect(() => {
     if (!photoUrl || imageError) return;
 
+    // 프록시 URL 생성
+    let imageUrl = photoUrl;
+    if (playerId) {
+      imageUrl = getPlayerImageUrl(playerId);
+    } else if (isApiSportsUrl(photoUrl)) {
+      imageUrl = convertApiSportsUrl(photoUrl);
+    }
+
+    console.log(`[SVGPlayerImage] 이미지 로딩 시도: ${imageUrl}`);
+
     const img = new Image();
     img.onload = () => {
+      console.log(`[SVGPlayerImage] 이미지 로딩 성공: ${imageUrl}`);
       setImageLoaded(true);
       setImageError(false);
       onImageLoadRef.current();
     };
     img.onerror = () => {
+      console.error(`[SVGPlayerImage] 이미지 로딩 실패: ${imageUrl}`);
       if (retryCount < 2) {
         // 최대 2번 재시도
         setTimeout(() => {
@@ -103,25 +115,35 @@ const SVGPlayerImage = memo(function SVGPlayerImage({ playerId, photoUrl, teamId
         onImageErrorRef.current();
       }
     };
-    img.src = photoUrl;
-  }, [photoUrl, retryCount, imageError]); // 콜백 함수들 제거
+    img.src = imageUrl;
+  }, [photoUrl, retryCount, imageError, playerId]); // playerId 추가
 
   if (imageError || !photoUrl) {
     return null;
   }
 
-  return imageLoaded ? (
+  if (!imageLoaded) return null;
+
+  // 프록시 URL 생성 (렌더링 시에도 동일한 로직 적용)
+  let imageUrl = photoUrl;
+  if (playerId) {
+    imageUrl = getPlayerImageUrl(playerId);
+  } else if (isApiSportsUrl(photoUrl)) {
+    imageUrl = convertApiSportsUrl(photoUrl);
+  }
+
+  return (
     <image
       x="-2.5"
       y="-2.5"
       width="5"
       height="5"
-      href={photoUrl}
+      href={imageUrl}
       clipPath={`url(#clip-${teamId}-${playerId})`}
       role="img"
       aria-labelledby={`player-name-${teamId}-${playerId}`}
     />
-  ) : null;
+  );
 });
 
 const Player = memo(function Player({ homeTeamData, awayTeamData }: PlayerProps) {
