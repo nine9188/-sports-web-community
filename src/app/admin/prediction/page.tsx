@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, startTransition } from 'react';
 
 // Window 타입 확장
 declare global {
@@ -13,7 +13,6 @@ import { toast } from 'react-hot-toast';
 import Tabs, { TabItem } from '@/shared/ui/tabs';
 import Image from 'next/image';
 import { Loader2, RefreshCw, Check, X, Target } from 'lucide-react';
-import { getMajorLeagueIds } from '@/domains/livescore/constants/league-mappings';
 import { formatDate } from '@/shared/utils/date';
 import { 
   getUpcomingMatches,
@@ -55,7 +54,6 @@ export default function PredictionAdminPage() {
   const [upcomingMatches, setUpcomingMatches] = useState<UpcomingMatch[]>([]);
   const [activeTab, setActiveTab] = useState<'matches' | 'automation'>('matches');
   const [isLoading, setIsLoading] = useState(false);
-  const [isAutomationEnabled, setIsAutomationEnabled] = useState(false);
   const [automationLogs, setAutomationLogs] = useState<PredictionLog[]>([]);
   
   // 자동화 상태 관리
@@ -63,11 +61,6 @@ export default function PredictionAdminPage() {
   const [autoGenerateTime, setAutoGenerateTime] = useState('09:00'); // 매일 오전 9시
   const [lastAutoGenerate, setLastAutoGenerate] = useState<string | null>(null);
   const [autoGenerateStatus, setAutoGenerateStatus] = useState<'idle' | 'running' | 'error'>('idle');
-  
-
-
-  // 메이저 리그 정보
-  const majorLeagueIds = getMajorLeagueIds();
 
   // 초기 데이터 로딩
   useEffect(() => {
@@ -152,7 +145,7 @@ export default function PredictionAdminPage() {
         if (result.status === 'success') {
           toast.success(`${leagueName} 예측 분석 생성 완료!`);
         } else if (result.status === 'skipped') {
-          toast.info(`${leagueName}: ${result.message}`);
+          toast(`${leagueName}: ${result.message}`);
         } else {
           toast.error(`${leagueName} 실패: ${result.message}`);
         }

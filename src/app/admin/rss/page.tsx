@@ -266,12 +266,12 @@ export default function RSSAdminPage() {
         if (autoFetchEnabled) {
           // 자동화 중지
           clearInterval(window.rssAutoInterval); // 기존 인터벌 정리
-          toast.info('자동화를 중지했습니다.');
+          toast('자동화를 중지했습니다.');
           setAutoFetchEnabled(false);
           setAutoFetchStatus('idle');
         } else {
           // 자동화 시작 - 즉시 한 번 실행
-          toast.info('자동화를 시작합니다. 첫 번째 수집을 실행 중...');
+          toast('자동화를 시작합니다. 첫 번째 수집을 실행 중...');
           
           try {
             // 첫 번째 수집 즉시 실행
@@ -355,7 +355,7 @@ export default function RSSAdminPage() {
     startTransition(async () => {
       try {
         // GitHub Actions 상태 확인 (실제로는 더 복잡한 로직 필요)
-        toast.info('자동화 상태를 확인했습니다.');
+        toast('자동화 상태를 확인했습니다.');
         
         // 임시로 현재 상태 표시
         const status = autoFetchEnabled ? 'running' : 'idle';
@@ -724,7 +724,7 @@ export default function RSSAdminPage() {
                         }
                       }, intervalMs);
                       
-                      toast.info(`자동화 간격이 ${newInterval}분으로 변경되었습니다.`);
+                      toast(`자동화 간격이 ${newInterval}분으로 변경되었습니다.`);
                     }
                   }}
                   className="w-full p-2 border border-gray-300 rounded-md"
