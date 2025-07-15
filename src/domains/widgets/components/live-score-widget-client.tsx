@@ -37,8 +37,20 @@ interface LiveScoreWidgetClientProps {
 }
 
 export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidgetClientProps) {
-  // 🔧 성능 최적화: 초기 데이터로 즉시 렌더링
-  const [matches, setMatches] = useState<EnhancedMatchData[]>(initialMatches);
+  // 🔧 성능 최적화: 초기 데이터로 즉시 렌더링 (연기된 경기는 뒤로 정렬)
+  const [matches, setMatches] = useState<EnhancedMatchData[]>(() => {
+    return initialMatches.sort((a, b) => {
+      const aIsPostponed = a.status.code === 'PST';
+      const bIsPostponed = b.status.code === 'PST';
+      
+      // 연기된 경기는 뒤로
+      if (aIsPostponed && !bIsPostponed) return 1;
+      if (!aIsPostponed && bIsPostponed) return -1;
+      
+      // 둘 다 연기되지 않았거나 둘 다 연기된 경우 기존 순서 유지
+      return 0;
+    });
+  });
   const [error, setError] = useState<string | null>(null);
   
   // 🔧 슬라이딩 인덱스 상태 추가 (시작 인덱스)
@@ -187,7 +199,20 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
             !['FT', 'AET', 'PEN'].includes(match.status.code)
           );
           
-          setMatches(filteredMatches);
+          // 연기된 경기를 제일 뒤로 정렬
+          const sortedMatches = filteredMatches.sort((a, b) => {
+            const aIsPostponed = a.status.code === 'PST';
+            const bIsPostponed = b.status.code === 'PST';
+            
+            // 연기된 경기는 뒤로
+            if (aIsPostponed && !bIsPostponed) return 1;
+            if (!aIsPostponed && bIsPostponed) return -1;
+            
+            // 둘 다 연기되지 않았거나 둘 다 연기된 경우 기존 순서 유지
+            return 0;
+          });
+          
+          setMatches(sortedMatches);
           
           // 🔧 데이터 업데이트 시 인덱스 범위 확인
           if (filteredMatches.length > 0 && startIndex >= filteredMatches.length) {

@@ -212,7 +212,7 @@ export default function LeagueStandings({
                             style={{ width: '20px', height: '20px' }}
                           />
                         </div>
-                        <span className="truncate max-w-[100px] font-medium text-sm hover:text-blue-600 transition-colors">
+                        <span className="truncate max-w-[100px] text-sm hover:text-blue-600 transition-colors">
                           {getKoreanTeamName(team.team.team_id, team.team.name)}
                         </span>
                       </div>

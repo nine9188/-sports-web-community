@@ -147,13 +147,10 @@ const PlayerImage = memo(function PlayerImage({
           imageUrl = convertApiSportsUrl(src);
         }
         
-        console.log(`[PlayerImage] 이미지 로딩 시도: ${imageUrl}`);
-        
         if (imageUrl) {
           // 이미지 유효성 검사
           const img = new window.Image();
           img.onload = () => {
-            console.log(`[PlayerImage] 이미지 로딩 성공: ${imageUrl}`);
             setImageState({
               url: imageUrl,
               loading: false,
@@ -162,12 +159,10 @@ const PlayerImage = memo(function PlayerImage({
             });
           };
           img.onerror = () => {
-            console.error(`[PlayerImage] 이미지 로딩 실패: ${imageUrl}`);
             handleImageError();
           };
           img.src = imageUrl;
         } else {
-          console.warn('[PlayerImage] 이미지 URL이 없습니다');
           setImageState(prev => ({ ...prev, loading: false, error: true }));
         }
       } catch (error) {

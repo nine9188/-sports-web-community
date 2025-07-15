@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Image, { ImageProps } from 'next/image';
 import { convertApiSportsUrl, getFallbackImageUrl, isApiSportsUrl, ImageType } from '@/shared/utils/image-proxy';
 
@@ -33,18 +33,22 @@ export default function ApiSportsImage({
   ...props 
 }: ApiSportsImageProps) {
   const [currentSrc, setCurrentSrc] = useState(() => {
-    // API-Sports URL인 경우 프록시 URL로 변환
-    return isApiSportsUrl(src) ? convertApiSportsUrl(src) : src;
+    // 서버에서는 원본 URL 사용 (Hydration Mismatch 방지)
+    return src;
   });
   
   const [hasError, setHasError] = useState(false);
 
+  // 클라이언트에서만 프록시 URL로 변환 (Hydration Mismatch 방지)
+  useEffect(() => {
+    if (isApiSportsUrl(src)) {
+      setCurrentSrc(convertApiSportsUrl(src));
+    }
+  }, [src]);
+
   const handleImageError = useCallback((e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     if (!hasError) {
       setHasError(true);
-      
-      // 디버깅 로그 추가
-      console.warn(`[ApiSportsImage] 이미지 로딩 실패: ${currentSrc}`);
       
       // 폴백 이미지 설정
       let fallbackType_ = fallbackType;
@@ -54,13 +58,12 @@ export default function ApiSportsImage({
       }
       
       const fallbackUrl = getFallbackImageUrl(fallbackType_);
-      console.log(`[ApiSportsImage] 폴백 이미지 사용: ${fallbackUrl}`);
       setCurrentSrc(fallbackUrl);
     }
     
     // 원본 onError 핸들러 호출
     onError?.(e);
-  }, [hasError, fallbackType, src, onError, currentSrc]);
+  }, [hasError, fallbackType, src, onError]);
 
   return (
     <Image

@@ -94,17 +94,13 @@ const SVGPlayerImage = memo(function SVGPlayerImage({ playerId, photoUrl, teamId
       imageUrl = convertApiSportsUrl(photoUrl);
     }
 
-    console.log(`[SVGPlayerImage] 이미지 로딩 시도: ${imageUrl}`);
-
     const img = new Image();
     img.onload = () => {
-      console.log(`[SVGPlayerImage] 이미지 로딩 성공: ${imageUrl}`);
       setImageLoaded(true);
       setImageError(false);
       onImageLoadRef.current();
     };
     img.onerror = () => {
-      console.error(`[SVGPlayerImage] 이미지 로딩 실패: ${imageUrl}`);
       if (retryCount < 2) {
         // 최대 2번 재시도
         setTimeout(() => {

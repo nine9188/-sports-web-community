@@ -237,14 +237,14 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
     if (postIds.length > 0) {
       const { data: commentCountsData } = await supabase
         .from('comments')
-        .select('post_id, count')
+        .select('post_id')
         .in('post_id', postIds)
         .eq('is_hidden', false)
         .eq('is_deleted', false);
       
-      (commentCountsData || []).forEach((item) => {
-        if (item.post_id) {
-          commentCounts[item.post_id] = typeof item.count === 'string' ? parseInt(item.count, 10) : item.count;
+      (commentCountsData || []).forEach((comment) => {
+        if (comment.post_id) {
+          commentCounts[comment.post_id] = (commentCounts[comment.post_id] || 0) + 1;
         }
       });
     }

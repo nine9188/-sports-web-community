@@ -371,22 +371,19 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
     const commentCountMap: Record<string, number> = {};
     if (postIds.length > 0) {
       try {
-        // 숨김/삭제되지 않은 댓글만 카운트
+        // 각 게시글별 댓글 수 계산 (숨김/삭제되지 않은 댓글만)
         const { data: commentCounts } = await supabase
           .from('comments')
-          .select('post_id, count')
+          .select('post_id')
           .in('post_id', postIds)
           .eq('is_hidden', false)
           .eq('is_deleted', false);
         
         if (commentCounts) {
-          commentCounts.forEach((item) => {
-            if (item.post_id) {
-              const count = typeof item.count === 'string'
-                ? parseInt(item.count, 10)
-                : item.count;
-              
-              commentCountMap[item.post_id] = count || 0;
+          // 게시글별 댓글 수 계산
+          commentCounts.forEach((comment) => {
+            if (comment.post_id) {
+              commentCountMap[comment.post_id] = (commentCountMap[comment.post_id] || 0) + 1;
             }
           });
         }

@@ -10,30 +10,20 @@ export enum ImageType {
   Coachs = 'coachs',
 }
 
-// 기본 도메인 (환경에 따라 자동 결정)
+// 기본 도메인 (환경에 따라 자동 결정) - Hydration Mismatch 방지
 const getBaseUrl = () => {
-  if (typeof window !== 'undefined') {
-    // 클라이언트 사이드
-    return window.location.origin
-  }
-  
-  // 서버 사이드 - Vercel 환경변수 사용
-  if (process.env.VERCEL_URL) {
-    const baseUrl = `https://${process.env.VERCEL_URL}`
-    console.log(`[getBaseUrl] VERCEL_URL 사용: ${baseUrl}`)
-    return baseUrl
-  }
-  
-  // 명시적으로 설정된 사이트 URL 사용
+  // 1. 명시적으로 설정된 사이트 URL 우선 사용 (서버/클라이언트 동일)
   if (process.env.NEXT_PUBLIC_SITE_URL) {
-    console.log(`[getBaseUrl] NEXT_PUBLIC_SITE_URL 사용: ${process.env.NEXT_PUBLIC_SITE_URL}`)
     return process.env.NEXT_PUBLIC_SITE_URL
   }
   
-  // 로컬 개발 환경
-  const fallbackUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-  console.log(`[getBaseUrl] 로컬 환경 사용: ${fallbackUrl}`)
-  return fallbackUrl
+  // 2. Vercel 환경변수 사용 (프로덕션)
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`
+  }
+  
+  // 3. 상대 경로 사용 (Hydration Mismatch 완전 방지)
+  return ''
 }
 
 /**
@@ -45,14 +35,7 @@ const getBaseUrl = () => {
  */
 export function getProxiedImageUrl(type: ImageType, id: string | number): string {
   const baseUrl = getBaseUrl()
-  const proxyUrl = `${baseUrl}/api/images?type=${type}&id=${id}`
-  
-  // 디버깅용 로그 (개발 환경에서만)
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`[이미지 프록시 URL] ${type}/${id} -> ${proxyUrl}`)
-  }
-  
-  return proxyUrl
+  return `${baseUrl}/api/images?type=${type}&id=${id}`
 }
 
 /**
