@@ -579,4 +579,18 @@ iframe[src*="youtu.be/"] {
     margin: 1rem 0;
   }
 }
+
+/* 바텀시트 애니메이션 */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
   
