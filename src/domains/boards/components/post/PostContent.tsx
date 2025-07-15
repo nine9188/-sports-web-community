@@ -945,12 +945,13 @@ export default function PostContent({ content, meta }: PostContentProps) {
             <div class="youtube-embed my-4">
               <iframe
                 width="100%"
-                height="400"
+                height="450"
                 src="https://www.youtube.com/embed/${videoId}"
                 title="YouTube video"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
+                style="border-radius: 8px;"
               ></iframe>
             </div>
           `;
@@ -1267,8 +1268,9 @@ export default function PostContent({ content, meta }: PostContentProps) {
         
         :global(.youtube-container iframe) {
           width: 100%;
-          max-width: 640px;
-          height: 360px;
+          max-width: 100%;
+          height: 450px;
+          border-radius: 8px;
         }
         
         :global(.video-wrapper video) {

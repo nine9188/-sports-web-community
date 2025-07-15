@@ -96,19 +96,35 @@ export default function PostEditForm({
       }
     }),
   ]);
+  const [extensionsLoaded, setExtensionsLoaded] = useState(false);
   
-  // 초기 로딩 시 MatchCard 확장 추가
+  // 초기 로딩 시 추가 확장 로드
   useEffect(() => {
-    const loadInitialExtensions = async () => {
+    const loadAdditionalExtensions = async () => {
       try {
-        const MatchCardExt = await loadMatchCardExtension();
-        setLoadedExtensions(prev => [...prev, MatchCardExt]);
+        // 동적 확장 로드
+        const [YoutubeExtension, VideoExtension, MatchCardExt] = await Promise.all([
+          import('@/shared/ui/tiptap/YoutubeExtension').then(mod => mod.YoutubeExtension),
+          import('@/shared/ui/tiptap/VideoExtension').then(mod => mod.Video),
+          loadMatchCardExtension()
+        ]);
+
+        // 기본 확장에 추가 확장 병합
+        setLoadedExtensions(prev => [
+          ...prev,
+          YoutubeExtension,
+          VideoExtension,
+          MatchCardExt
+        ]);
+        setExtensionsLoaded(true);
       } catch (error) {
-        console.error('MatchCard 확장 로딩 실패:', error);
+        console.error('추가 확장 로딩 실패:', error);
+        // 기본 확장만으로도 에디터는 작동하도록 설정
+        setExtensionsLoaded(true);
       }
     };
     
-    loadInitialExtensions();
+    loadAdditionalExtensions();
   }, []);
   
   // boardDropdownRef는 유지하되 사용하지 않는 showBoardDropdown 상태는 제거
@@ -116,7 +132,7 @@ export default function PostEditForm({
   
   const router = useRouter();
   
-  // 에디터 초기화 - MatchCard 확장이 로드된 후에만 생성
+  // 에디터 초기화 - 기본 확장으로 먼저 생성 후 추가 확장 로드 시 재생성
   const editor = useEditor({
     extensions: loadedExtensions,
     content,
@@ -130,7 +146,7 @@ export default function PostEditForm({
       },
     },
     immediatelyRender: false
-  }, [loadedExtensions]); // loadedExtensions가 변경될 때마다 에디터 재생성
+  }, [loadedExtensions]); // loadedExtensions 변경 시 에디터 재생성
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -386,31 +402,54 @@ export default function PostEditForm({
     }
   };
   
-  // 유튜브 추가 함수 - 직접 HTML 삽입으로 단순화
+  // 유튜브 추가 함수 - TipTap 확장 명령어 사용
   const handleAddYoutube = async (url: string, caption?: string) => {
     if (!url || !editor) return;
     
     try {
+      // 에디터에 YouTube 확장이 로드되어 있는지 확인
+      if (!extensionsLoaded) {
+        toast.error('에디터가 아직 로딩 중입니다. 잠시 후 다시 시도해주세요.');
+        return;
+      }
+
+      // TipTap YouTube 확장의 setYoutubeVideo 명령어 사용
+      let result = false;
       
-      // 유튜브 URL을 embed URL로 변환
-      let embedUrl = url;
-      if (url.includes('youtube.com/watch?v=')) {
-        const videoId = url.split('v=')[1]?.split('&')[0];
-        embedUrl = `https://www.youtube.com/embed/${videoId}`;
-      } else if (url.includes('youtu.be/')) {
-        const videoId = url.split('youtu.be/')[1]?.split('?')[0];
-        embedUrl = `https://www.youtube.com/embed/${videoId}`;
+              // YouTube 확장이 로드되었는지 확인하고 명령어 실행
+        if (extensionsLoaded && 'setYoutubeVideo' in editor.commands) {
+          const commands = editor.commands as Record<string, (...args: unknown[]) => boolean>;
+          result = commands.setYoutubeVideo({
+            src: url,
+            caption: caption
+          });
+        }
+
+      if (!result) {
+        // 명령어 실행 실패 시 fallback으로 직접 HTML 삽입
+        console.warn('YouTube 확장 명령어 실행 실패, HTML 직접 삽입으로 fallback');
+        
+        // 유튜브 URL을 embed URL로 변환
+        let embedUrl = url;
+        if (url.includes('youtube.com/watch?v=')) {
+          const videoId = url.split('v=')[1]?.split('&')[0];
+          embedUrl = `https://www.youtube.com/embed/${videoId}`;
+        } else if (url.includes('youtu.be/')) {
+          const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+          embedUrl = `https://www.youtube.com/embed/${videoId}`;
+        }
+        
+        const youtubeHTML = `
+          <div class="youtube-container" style="margin: 1rem 0; width: 100%;">
+            <iframe src="${embedUrl}" width="100%" height="450" frameborder="0" allowfullscreen style="width: 100%; max-width: 100%; height: 450px; border-radius: 8px;"></iframe>
+            ${caption ? `<div class="youtube-caption" style="margin-top: 0.5rem; font-size: 0.875rem; color: #666;">${caption}</div>` : ''}
+          </div>
+        `;
+        
+        editor.commands.insertContent(youtubeHTML);
       }
       
-      // 직접 HTML 삽입 (확장 로딩 없이)
-      const youtubeHTML = `
-        <div class="youtube-container" style="margin: 1rem 0;">
-          <iframe src="${embedUrl}" width="640" height="360" frameborder="0" allowfullscreen style="width: 100%; max-width: 640px; height: 360px;"></iframe>
-          ${caption ? `<div class="youtube-caption" style="margin-top: 0.5rem; font-size: 0.875rem; color: #666;">${caption}</div>` : ''}
-        </div>
-      `;
-      
-      editor.commands.insertContent(youtubeHTML);
+      toast.success('YouTube 영상이 추가되었습니다.');
       
     } catch (error) {
       console.error('유튜브 추가 중 오류:', error);
@@ -420,23 +459,49 @@ export default function PostEditForm({
     setShowYoutubeModal(false);
   };
   
-  // 비디오 추가 함수 - 직접 HTML 삽입으로 단순화
+  // 비디오 추가 함수 - TipTap 확장 명령어 사용
   const handleAddVideo = async (videoUrl: string, caption: string) => {
     if (!videoUrl || !editor) return;
     
     try {
+      // 에디터에 Video 확장이 로드되어 있는지 확인
+      if (!extensionsLoaded) {
+        toast.error('에디터가 아직 로딩 중입니다. 잠시 후 다시 시도해주세요.');
+        return;
+      }
+
+      // TipTap Video 확장의 setVideo 명령어 사용
+      let result = false;
       
-      // 직접 HTML 삽입 (확장 로딩 없이)
-      const videoHTML = `
-        <div class="video-wrapper" style="margin: 1rem 0;">
-          <video src="${videoUrl}" controls style="width: 100%; max-width: 640px; height: auto;" data-caption="${caption || ''}">
-            브라우저가 비디오를 지원하지 않습니다.
-          </video>
-          ${caption ? `<div class="video-caption" style="margin-top: 0.5rem; font-size: 0.875rem; color: #666;">${caption}</div>` : ''}
-        </div>
-      `;
+              // Video 확장이 로드되었는지 확인하고 명령어 실행
+        if (extensionsLoaded && 'setVideo' in editor.commands) {
+          const commands = editor.commands as Record<string, (...args: unknown[]) => boolean>;
+          result = commands.setVideo({
+            src: videoUrl,
+            caption: caption,
+            controls: true,
+            width: '100%',
+            height: 'auto'
+          });
+        }
+
+      if (!result) {
+        // 명령어 실행 실패 시 fallback으로 직접 HTML 삽입
+        console.warn('Video 확장 명령어 실행 실패, HTML 직접 삽입으로 fallback');
+        
+        const videoHTML = `
+          <div class="video-wrapper" style="margin: 1rem 0;">
+            <video src="${videoUrl}" controls style="width: 100%; max-width: 640px; height: auto;" data-caption="${caption || ''}">
+              브라우저가 비디오를 지원하지 않습니다.
+            </video>
+            ${caption ? `<div class="video-caption" style="margin-top: 0.5rem; font-size: 0.875rem; color: #666;">${caption}</div>` : ''}
+          </div>
+        `;
+        
+        editor.commands.insertContent(videoHTML);
+      }
       
-      editor.commands.insertContent(videoHTML);
+      toast.success('동영상이 추가되었습니다.');
       
     } catch (error) {
       console.error('비디오 추가 중 오류:', error);
@@ -595,6 +660,7 @@ export default function PostEditForm({
             {/* 에디터 툴바 컴포넌트 */}
             <EditorToolbar
               editor={editor}
+              extensionsLoaded={extensionsLoaded}
               showImageModal={showImageModal}
               showLinkModal={showLinkModal}
               showYoutubeModal={showYoutubeModal}
@@ -649,7 +715,19 @@ export default function PostEditForm({
 
                 .youtube-embed iframe {
                   width: 100%;
-                  height: 400px;
+                  height: 450px;
+                  border-radius: 8px;
+                }
+
+                /* 유튜브 컨테이너 스타일 */
+                .youtube-container {
+                  margin: 1rem 0;
+                  width: 100%;
+                }
+
+                .youtube-container iframe {
+                  width: 100%;
+                  height: 450px;
                   border-radius: 8px;
                 }
 

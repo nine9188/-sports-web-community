@@ -17,6 +17,7 @@ const MatchResultForm = lazy(() => import('../form/MatchResultForm'));
 
 interface EditorToolbarProps {
   editor: Editor | null;
+  extensionsLoaded: boolean;
   showImageModal: boolean;
   showLinkModal: boolean;
   showYoutubeModal: boolean;
@@ -43,6 +44,7 @@ const FormLoadingSpinner = () => (
 
 export default function EditorToolbar({
   editor,
+  extensionsLoaded,
   showImageModal,
   showLinkModal,
   showYoutubeModal,
@@ -167,8 +169,9 @@ export default function EditorToolbar({
         <button
           type="button"
           onClick={() => handleToggleDropdown('youtube')}
-          className={`p-2 rounded hover:bg-gray-200 ${showYoutubeModal ? 'bg-gray-200' : ''}`}
-          title="YouTube 동영상 추가"
+          className={`p-2 rounded hover:bg-gray-200 ${showYoutubeModal ? 'bg-gray-200' : ''} ${!extensionsLoaded ? 'opacity-50 cursor-not-allowed' : ''}`}
+          title={extensionsLoaded ? "YouTube 동영상 추가" : "에디터 로딩 중..."}
+          disabled={!extensionsLoaded}
         >
           <YoutubeIcon size={18} />
         </button>
@@ -189,8 +192,9 @@ export default function EditorToolbar({
         <button
           type="button"
           onClick={() => handleToggleDropdown('video')}
-          className={`p-2 rounded hover:bg-gray-200 ${showVideoModal ? 'bg-gray-200' : ''}`}
-          title="동영상 파일 추가"
+          className={`p-2 rounded hover:bg-gray-200 ${showVideoModal ? 'bg-gray-200' : ''} ${!extensionsLoaded ? 'opacity-50 cursor-not-allowed' : ''}`}
+          title={extensionsLoaded ? "동영상 파일 추가" : "에디터 로딩 중..."}
+          disabled={!extensionsLoaded}
         >
           <VideoIcon size={18} />
         </button>

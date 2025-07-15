@@ -145,10 +145,11 @@ export default function YoutubeForm({
                 <iframe 
                   src={`https://www.youtube.com/embed/${youtubeId}`}
                   className="w-full" 
-                  height="160"
+                  height="180"
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
+                  style={{ borderRadius: '8px' }}
                 />
               </div>
             )}
