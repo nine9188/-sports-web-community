@@ -46,15 +46,14 @@ export const createClient = async () => {
               return [];
             }
           },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              )
-            } catch (error) {
-              // 서버 컴포넌트에서는 쿠키 설정이 제한될 수 있음
-              console.warn('쿠키 설정 실패:', error);
+          setAll() {
+            // 서버 컴포넌트에서는 쿠키 설정을 시도하지 않음
+            // 이는 Next.js App Router의 제한사항임
+            if (process.env.NODE_ENV === 'development') {
+              console.warn('서버 컴포넌트에서 쿠키 설정 시도가 무시되었습니다.');
             }
+            // 쿠키 설정을 시도하지 않고 조용히 무시
+            return;
           },
         },
       }
@@ -88,9 +87,13 @@ export const createServerActionClient = async () => {
           return cookieStore.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options)
-          })
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options)
+            })
+          } catch (error) {
+            console.error('서버 액션에서 쿠키 설정 실패:', error);
+          }
         },
       },
     }
