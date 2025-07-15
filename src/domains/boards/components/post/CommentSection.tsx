@@ -33,13 +33,18 @@ interface CommentSectionProps {
   boardSlug?: string;
   postNumber?: string;
   postOwnerId?: string;
+  currentUserId?: string | null;
 }
 
-export default function CommentSection({ postId, postOwnerId }: CommentSectionProps) {
+export default function CommentSection({ 
+  postId, 
+  postOwnerId, 
+  currentUserId: propCurrentUserId = null 
+}: CommentSectionProps) {
   const [comments, setComments] = useState<CommentType[]>([]);
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(propCurrentUserId);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const supabase = useMemo(() => createClient(), []);
 
@@ -68,8 +73,13 @@ export default function CommentSection({ postId, postOwnerId }: CommentSectionPr
     [updateComments]
   );
 
-  // 사용자 정보 가져오기
+  // 사용자 정보 가져오기 (props로 받지 않은 경우에만)
   useEffect(() => {
+    // props로 currentUserId를 받은 경우 클라이언트 사이드에서 다시 가져오지 않음
+    if (propCurrentUserId !== null) {
+      return;
+    }
+    
     let isMounted = true;
     
     const getCurrentUser = async () => {
@@ -77,9 +87,12 @@ export default function CommentSection({ postId, postOwnerId }: CommentSectionPr
         const { data, error } = await supabase.auth.getUser();
         if (!error && data.user && isMounted) {
           setCurrentUserId(data.user.id);
+        } else {
+          setCurrentUserId(null);
         }
       } catch (error) {
         console.error('사용자 정보 가져오기 실패:', error);
+        setCurrentUserId(null);
       }
     };
     
@@ -88,7 +101,7 @@ export default function CommentSection({ postId, postOwnerId }: CommentSectionPr
     return () => {
       isMounted = false;
     };
-  }, [supabase.auth]);
+  }, [supabase.auth, propCurrentUserId]);
 
   // 실시간 댓글 업데이트 구독 - 별도 effect로 분리
   useEffect(() => {

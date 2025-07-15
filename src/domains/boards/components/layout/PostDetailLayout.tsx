@@ -77,6 +77,7 @@ interface PostDetailLayoutProps {
   comments: CommentType[];
   isLoggedIn: boolean;
   isAuthor: boolean;
+  currentUserId?: string | null;
   adjacentPosts: AdjacentPosts;
   formattedPosts: Array<{
     id: string;
@@ -117,6 +118,7 @@ export default function PostDetailLayout({
   comments,
   isLoggedIn,
   isAuthor,
+  currentUserId,
   adjacentPosts,
   formattedPosts,
   topLevelBoards,
@@ -340,6 +342,7 @@ export default function PostDetailLayout({
         <MemoizedCommentSection 
           postId={post.id} 
           postOwnerId={post.user_id}
+          currentUserId={currentUserId}
         />
       </div>
       

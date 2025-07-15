@@ -137,20 +137,32 @@ export async function likeComment(commentId: string): Promise<CommentLikeRespons
     }
     
     // 댓글 정보 업데이트
-    const { data: updatedComment, error: updateCommentError } = await supabase
+    const { error: updateCommentError } = await supabase
       .from('comments')
       .update({
         likes: likes,
         dislikes: dislikes
       })
-      .eq('id', commentId)
-      .select('likes, dislikes, user_id')
-      .single();
+      .eq('id', commentId);
     
     if (updateCommentError) {
       return {
         success: false,
         error: `댓글 업데이트 오류: ${updateCommentError.message}`
+      };
+    }
+
+    // 업데이트된 댓글 정보 조회
+    const { data: updatedComment, error: selectError } = await supabase
+      .from('comments')
+      .select('likes, dislikes, user_id')
+      .eq('id', commentId)
+      .single();
+    
+    if (selectError) {
+      return {
+        success: false,
+        error: `댓글 조회 오류: ${selectError.message}`
       };
     }
     
@@ -325,20 +337,32 @@ export async function dislikeComment(commentId: string): Promise<CommentLikeResp
     }
     
     // 댓글 정보 업데이트
-    const { data: updatedComment, error: updateCommentError } = await supabase
+    const { error: updateCommentError } = await supabase
       .from('comments')
       .update({
         likes: likes,
         dislikes: dislikes
       })
-      .eq('id', commentId)
-      .select('likes, dislikes')
-      .single();
+      .eq('id', commentId);
     
     if (updateCommentError) {
       return {
         success: false,
         error: `댓글 업데이트 오류: ${updateCommentError.message}`
+      };
+    }
+
+    // 업데이트된 댓글 정보 조회
+    const { data: updatedComment, error: selectError } = await supabase
+      .from('comments')
+      .select('likes, dislikes')
+      .eq('id', commentId)
+      .single();
+    
+    if (selectError) {
+      return {
+        success: false,
+        error: `댓글 조회 오류: ${selectError.message}`
       };
     }
     

@@ -353,6 +353,7 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       comments: serializedComments,
       isLoggedIn,
       isAuthor: user?.id === post.user_id,
+      currentUserId: user?.id || null,
       adjacentPosts,
       formattedPosts,
       topLevelBoards: topLevelBoards.map((board) => ({

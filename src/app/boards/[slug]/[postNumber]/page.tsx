@@ -173,6 +173,7 @@ export default async function PostDetailPage({
         comments={processedComments}
         isLoggedIn={result.isLoggedIn || false}
         isAuthor={result.isAuthor || false}
+        currentUserId={result.currentUserId || null}
         adjacentPosts={result.adjacentPosts || { prevPost: null, nextPost: null }}
         formattedPosts={processedFormattedPosts}
         topLevelBoards={topLevelBoards}

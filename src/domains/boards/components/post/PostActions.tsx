@@ -72,6 +72,9 @@ export default function PostActions({
       setUserAction(result.userAction || null);
       console.log('[PostActions] 상태 업데이트 완료');
       
+      // 페이지 새로고침으로 서버 컴포넌트 데이터 갱신
+      router.refresh();
+      
     } catch (error) {
       console.error('[PostActions] 좋아요 처리 중 예외:', error);
       alert('좋아요 처리 중 오류가 발생했습니다.');
@@ -125,6 +128,9 @@ export default function PostActions({
       if (result.dislikes !== undefined) setDislikes(result.dislikes);
       setUserAction(result.userAction || null);
       console.log('[PostActions] 상태 업데이트 완료');
+      
+      // 페이지 새로고침으로 서버 컴포넌트 데이터 갱신
+      router.refresh();
       
     } catch (error) {
       console.error('[PostActions] 싫어요 처리 중 오류:', error);
