@@ -30,7 +30,7 @@ export default function BoardBreadcrumbs({ breadcrumbs }: BoardBreadcrumbsProps)
                 </span>
               ) : (
                 <Link 
-                  href={`/boards/${bc.slug || bc.id}`} 
+                  href={bc.slug?.startsWith('/') ? bc.slug : `/boards/${bc.slug || bc.id}`} 
                   className="hover:text-blue-600 hover:underline max-w-[100px] sm:max-w-none truncate flex-shrink-0"
                   title={bc.name}
                 >

@@ -30,10 +30,8 @@ interface ClientHoverMenuProps {
   currentBoardId: string;
   rootBoardId?: string;
   rootBoardSlug?: string;
-  currentBoardSlug?: string;
   // 서버에서 미리 가져온 데이터 (선택 사항)
   prefetchedData?: PrefetchedData;
-  fromParam?: string;
   // 서버 컴포넌트에서 전달받은 초기 게시판 데이터
   initialBoardsData?: BoardsResponse;
 }
@@ -42,9 +40,7 @@ export default function ClientHoverMenu({
   currentBoardId,
   rootBoardId,
   rootBoardSlug,
-  currentBoardSlug: _currentBoardSlug,
   prefetchedData,
-  fromParam,
   initialBoardsData
 }: ClientHoverMenuProps) {
   // 서버에서 데이터를 미리 가져왔다면 그것을 사용하고, 아니면 useBoards 훅 사용
@@ -61,8 +57,6 @@ export default function ClientHoverMenu({
         childBoardsMap={prefetchedData.childBoardsMap}
         rootBoardId={rootBoardId || ''}
         rootBoardSlug={rootBoardSlug}
-        currentBoardSlug={_currentBoardSlug}
-        fromParam={fromParam}
       />
     );
   }
@@ -121,10 +115,8 @@ export default function ClientHoverMenu({
       currentBoardId={currentBoardId}
       topBoards={topBoards}
       childBoardsMap={childBoardsMap}
-      rootBoardId={finalRootBoardId || ''}
+      rootBoardId={rootBoardId || ''}
       rootBoardSlug={rootBoardSlug}
-      currentBoardSlug={_currentBoardSlug}
-      fromParam={fromParam}
     />
   );
 } 

@@ -3,35 +3,12 @@ import { cookies } from 'next/headers'
 import { Database } from '@/shared/types/supabase'
 
 /**
- * 서버 컴포넌트, 서버 액션, 라우트 핸들러용 Supabase 클라이언트 생성 함수
- * 서버에서만 실행되며 쿠키를 통해 인증 상태를 관리합니다.
- * 
- * 사용 예시:
- * ```tsx
- * // 서버 컴포넌트에서
- * export default async function ServerComponent() {
- *   const supabase = await createClient()
- *   const { data } = await supabase.from('table').select()
- *   return <div>{JSON.stringify(data)}</div>
- * }
- * 
- * // 서버 액션에서
- * 'use server'
- * export async function serverAction() {
- *   const supabase = await createClient()
- *   await supabase.from('table').insert({ data: 'value' })
- * }
- * ```
+ * 서버 컴포넌트용 Supabase 클라이언트 생성 함수 (읽기 전용)
+ * 서버 컴포넌트에서만 사용하며 쿠키 설정은 불가능합니다.
  */
 export const createClient = async () => {
   try {
-    // 타임아웃을 설정하여 무한 대기 방지
-    const cookieStore = await Promise.race([
-      cookies(),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Cookie access timeout')), 5000)
-      )
-    ]) as Awaited<ReturnType<typeof cookies>>;
+    const cookieStore = await cookies();
     
     return createServerClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -47,13 +24,8 @@ export const createClient = async () => {
             }
           },
           setAll() {
-            // 서버 컴포넌트에서는 쿠키 설정을 시도하지 않음
+            // 서버 컴포넌트에서는 쿠키 설정 불가
             // 이는 Next.js App Router의 제한사항임
-            if (process.env.NODE_ENV === 'development') {
-              console.warn('서버 컴포넌트에서 쿠키 설정 시도가 무시되었습니다.');
-            }
-            // 쿠키 설정을 시도하지 않고 조용히 무시
-            return;
           },
         },
       }

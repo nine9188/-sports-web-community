@@ -138,29 +138,27 @@ export function getFilteredBoardIds(
  * @param board 게시판 정보
  * @param postTitle 게시글 제목
  * @param postNumber 게시글 번호
+ * @param boardsMap 모든 게시판 맵
  * @returns 브레드크럼 배열
  */
-export function createBreadcrumbs(board: Board, postTitle: string, postNumber: string): Breadcrumb[] {
-  return [
-    {
-      id: 'home',
-      name: '홈',
-      slug: '/'
-    },
-    {
-      id: 'boards',
-      name: '게시판',
-      slug: '/boards'
-    },
-    {
-      id: board.id,
-      name: board.name,
-      slug: `/boards/${board.slug || board.id}`
-    },
+export function createBreadcrumbs(
+  board: Board, 
+  postTitle: string, 
+  postNumber: string,
+  boardsMap: BoardMap
+): Breadcrumb[] {
+  // 게시판 계층 구조를 따라 브레드크럼 생성
+  const boardBreadcrumbs = generateBoardBreadcrumbs(board, boardsMap);
+  
+  // 게시글 제목 추가
+  const breadcrumbs = [
+    ...boardBreadcrumbs,
     {
       id: 'post',
       name: `${postTitle} (${postNumber})`,
       slug: '#'
     }
   ];
+  
+  return breadcrumbs;
 } 

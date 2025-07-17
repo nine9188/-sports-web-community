@@ -8,7 +8,7 @@ import ClientHoverMenu from '../common/ClientHoverMenu';
 import PostList from '../post/PostList';
 import BoardPagination from '../common/BoardPagination';
 import { Breadcrumb } from '../../types/board/data';
-import { Board, ChildBoardsMap } from '../../types/board';
+import { Board } from '../../types/board';
 
 // 여기에 Post 타입 정의
 interface Post {
@@ -84,8 +84,6 @@ interface BoardDetailLayoutProps {
   isLoggedIn: boolean;
   currentPage: number;
   slug: string;
-  fromParam?: string;
-  childBoardsMap: ChildBoardsMap;
   rootBoardId: string;
   rootBoardSlug?: string;
   // 서버에서 미리 로드한 게시글 데이터
@@ -109,7 +107,6 @@ export default function BoardDetailLayout({
   isLoggedIn,
   currentPage,
   slug,
-  fromParam,
   rootBoardId,
   rootBoardSlug,
   posts,
@@ -175,8 +172,6 @@ export default function BoardDetailLayout({
           currentBoardId={boardData.id}
           rootBoardId={rootBoardId}
           rootBoardSlug={rootBoardSlug}
-          currentBoardSlug={slug}
-          fromParam={fromParam}
           prefetchedData={{
             topBoards: topBoards,
             childBoardsMap: hoverChildBoardsMap,

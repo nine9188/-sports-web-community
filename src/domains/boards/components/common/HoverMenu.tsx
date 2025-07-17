@@ -22,17 +22,15 @@ interface HoverMenuProps {
   topBoards: TopBoard[];
   childBoardsMap: Record<string, ChildBoard[]>;
   rootBoardId: string;
-  activeTabId?: string;
   rootBoardSlug?: string;
-  currentBoardSlug?: string;
-  fromParam?: string;
 }
 
 export default function HoverMenu({
   currentBoardId,
   topBoards,
   childBoardsMap,
-  rootBoardId
+  rootBoardId,
+  rootBoardSlug
 }: HoverMenuProps) {
   const [hoveredBoard, setHoveredBoard] = useState<string | null>(null);
   const [mobileDropdownOpen, setMobileDropdownOpen] = useState(false);
@@ -302,9 +300,9 @@ export default function HoverMenu({
       <div className="px-4 py-2 relative" ref={containerRef}>
         {/* 네비게이션 바 */}
         <nav className="flex items-center" ref={navRef}>
-          {/* 전체 버튼 */}
+          {/* 전체 버튼 - 최상위 게시판으로 이동하도록 수정 */}
           <Link
-            href={`/boards/${rootBoardId}`}
+            href={`/boards/${rootBoardSlug || rootBoardId}`}
             data-board="all"
             className={`px-2 py-1 text-sm font-medium whitespace-nowrap hover:bg-gray-50 rounded-md ${
               !currentBoardId ? 'bg-gray-100 text-blue-600' : 'text-gray-500'

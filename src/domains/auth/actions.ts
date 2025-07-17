@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/shared/api/supabaseServer'
+import { createClient, createServerActionClient } from '@/shared/api/supabaseServer'
 import { logAuthEvent, logSecurityEvent, logError } from '@/shared/actions/log-actions'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
@@ -10,7 +10,7 @@ import { redirect } from 'next/navigation'
  */
 export async function signIn(username: string, password: string) {
   try {
-    const supabase = await createClient()
+    const supabase = await createServerActionClient()
     
     // 아이디로 이메일 조회
     const { data: profile, error: profileError } = await supabase
@@ -194,7 +194,7 @@ async function clearLoginAttempts(username: string): Promise<void> {
  */
 export async function signUp(email: string, password: string, metadata?: Record<string, unknown>) {
   try {
-    const supabase = await createClient()
+    const supabase = await createServerActionClient()
     
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -243,7 +243,7 @@ export async function signUp(email: string, password: string, metadata?: Record<
  */
 export async function signOut() {
   try {
-    const supabase = await createClient()
+    const supabase = await createServerActionClient()
     
     // 로그아웃 전 사용자 정보 확인
     const { data: { user } } = await supabase.auth.getUser()
@@ -338,7 +338,7 @@ export async function updateUserData(userId: string, metadata: Record<string, un
  */
 export async function refreshSession(refreshToken: string) {
   try {
-    const supabase = await createClient()
+    const supabase = await createServerActionClient()
     
     // 세션 갱신
     const { data, error } = await supabase.auth.refreshSession({
@@ -572,7 +572,7 @@ export async function checkNicknameAvailability(nickname: string) {
  */
 export async function signInWithKakao(redirectTo: string) {
   try {
-    const supabase = await createClient()
+    const supabase = await createServerActionClient()
     
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'kakao',
@@ -606,7 +606,7 @@ export async function updateSocialUserProfile(userId: string, profileData: {
   username?: string
 }) {
   try {
-    const supabase = await createClient()
+    const supabase = await createServerActionClient()
     
     const { error } = await supabase
       .from('profiles')

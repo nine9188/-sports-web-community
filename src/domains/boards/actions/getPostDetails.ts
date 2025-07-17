@@ -318,7 +318,7 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       ...board,
       slug: board.slug || board.id
     };
-    const breadcrumbs = createBreadcrumbs(safeBoardForBreadcrumb, post.title, postNumber);
+    const breadcrumbs = createBreadcrumbs(safeBoardForBreadcrumb, post.title, postNumber, boardsMap);
     
     // 14. 조회수 증가 (비동기 처리 - 에러 무시)
     try {

@@ -178,8 +178,6 @@ export default async function BoardDetailPage({
         isLoggedIn={result.isLoggedIn || false}
         currentPage={currentPage}
         slug={slug}
-        fromParam={fromParam}
-        childBoardsMap={result.childBoardsMap || {}}
         rootBoardId={result.rootBoardId || ''}
         rootBoardSlug={result.rootBoardSlug || undefined}
         // 서버에서 미리 가져온 데이터 전달

@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { createClient, createServerActionClient } from '@/shared/api/supabaseServer';
 import { 
   generateVerificationCode, 
   generateSecureToken, 
@@ -193,7 +193,7 @@ export async function resetPasswordWithToken(token: string, newPassword: string)
     const email = tokenResult.email;
 
     // Supabase Auth를 통한 비밀번호 업데이트
-    const supabase = await createClient();
+    const supabase = await createServerActionClient();
     
     // 사용자 조회
     const { data: user, error: userError } = await supabase
