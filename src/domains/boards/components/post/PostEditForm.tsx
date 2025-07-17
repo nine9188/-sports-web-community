@@ -440,8 +440,8 @@ export default function PostEditForm({
         }
         
         const youtubeHTML = `
-          <div class="youtube-container" style="margin: 1rem 0; width: 100%;">
-            <iframe src="${embedUrl}" width="100%" height="450" frameborder="0" allowfullscreen style="width: 100%; max-width: 100%; height: 450px; border-radius: 8px;"></iframe>
+          <div class="youtube-container">
+            <iframe src="${embedUrl}" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
             ${caption ? `<div class="youtube-caption" style="margin-top: 0.5rem; font-size: 0.875rem; color: #666;">${caption}</div>` : ''}
           </div>
         `;
@@ -706,30 +706,7 @@ export default function PostEditForm({
                   width: 100% !important;
                 }
 
-                /* 임베드 스타일 */
-                .youtube-embed {
-                  margin: 1rem 0;
-                  width: 100%;
-                  max-width: 100%;
-                }
-
-                .youtube-embed iframe {
-                  width: 100%;
-                  height: 450px;
-                  border-radius: 8px;
-                }
-
-                /* 유튜브 컨테이너 스타일 */
-                .youtube-container {
-                  margin: 1rem 0;
-                  width: 100%;
-                }
-
-                .youtube-container iframe {
-                  width: 100%;
-                  height: 450px;
-                  border-radius: 8px;
-                }
+                /* 유튜브 임베드 스타일은 globals.css에서 관리 */
 
                 /* 비디오 스타일 */
                 .video-wrapper {

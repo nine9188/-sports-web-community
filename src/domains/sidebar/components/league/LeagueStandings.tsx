@@ -137,6 +137,8 @@ export default function LeagueStandings({
                 alt={standings.league.name}
                 width={20}
                 height={20}
+                imageId={standings.league.id}
+                imageType={ImageType.Leagues}
                 fallbackType={ImageType.Leagues}
                 className="object-contain w-5 h-5"
                 style={{ width: '20px', height: '20px' }}
@@ -207,6 +209,8 @@ export default function LeagueStandings({
                             alt={team.team.name}
                             width={20}
                             height={20}
+                            imageId={team.team.team_id}
+                            imageType={ImageType.Teams}
                             fallbackType={ImageType.Teams}
                             className="object-contain w-5 h-5"
                             style={{ width: '20px', height: '20px' }}

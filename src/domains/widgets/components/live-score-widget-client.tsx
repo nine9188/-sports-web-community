@@ -8,6 +8,7 @@ import { fetchMultiDayMatches, MatchData as FootballMatchData } from '@/domains/
 import { getTeamById } from '@/domains/livescore/constants/teams';
 import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
 
+
 // 타입 확장 (displayDate 포함)
 interface EnhancedMatchData extends FootballMatchData {
   displayDate: string;
@@ -211,6 +212,8 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
             // 둘 다 연기되지 않았거나 둘 다 연기된 경우 기존 순서 유지
             return 0;
           });
+          
+          // 🔧 이미지 캐시 워밍업 제거 - 개별 컴포넌트에서 필요시에만 로드
           
           setMatches(sortedMatches);
           
@@ -425,6 +428,8 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                           style={{ width: '16px', height: '16px', objectFit: 'contain' }}
                           className="rounded-full flex-shrink-0"
                           fallbackType={ImageType.Leagues}
+                          imageId={match.league.id}
+                          imageType={ImageType.Leagues}
                         />
                       )}
                       <span className="text-xs font-medium truncate">{leagueNameKo}</span>
@@ -442,6 +447,8 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                             style={{ width: '40px', height: '40px', objectFit: 'contain' }}
                             className="mb-0.5 group-hover:scale-110 transition-transform"
                             fallbackType={ImageType.Teams}
+                            imageId={match.teams.home.id}
+                            imageType={ImageType.Teams}
                           />
                         )}
                         <span className="text-[10px] text-center truncate w-full group-hover:text-blue-600 transition-colors">{homeTeamNameKo}</span>
@@ -469,6 +476,8 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                             style={{ width: '40px', height: '40px', objectFit: 'contain' }}
                             className="mb-0.5 group-hover:scale-110 transition-transform"
                             fallbackType={ImageType.Teams}
+                            imageId={match.teams.away.id}
+                            imageType={ImageType.Teams}
                           />
                         )}
                         <span className="text-[10px] text-center truncate w-full group-hover:text-blue-600 transition-colors">{awayTeamNameKo}</span>

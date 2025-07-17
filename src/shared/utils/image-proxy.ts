@@ -1,6 +1,11 @@
 /**
- * API-Sports 이미지를 Vercel CDN을 통해 프록시하기 위한 유틸리티 함수들
+ * API-Sports 이미지 URL을 생성하고 Supabase Storage 캐싱을 관리하는 유틸리티 함수들
  */
+
+import { getCachedImageFromStorage } from '@/shared/actions/image-storage-actions'
+
+// 클라이언트 메모리 캐시 (중복 요청 방지)
+const imageUrlCache = new Map<string, string>()
 
 // 지원하는 이미지 타입 (enum으로 타입 안정성 강화)
 export enum ImageType {
@@ -10,95 +15,140 @@ export enum ImageType {
   Coachs = 'coachs',
 }
 
-// 기본 도메인 (환경에 따라 자동 결정) - Hydration Mismatch 방지
-const getBaseUrl = () => {
-  // 1. 명시적으로 설정된 사이트 URL 우선 사용 (서버/클라이언트 동일)
-  if (process.env.NEXT_PUBLIC_SITE_URL) {
-    return process.env.NEXT_PUBLIC_SITE_URL
-  }
-  
-  // 2. Vercel 환경변수 사용 (프로덕션)
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`
-  }
-  
-  // 3. 상대 경로 사용 (Hydration Mismatch 완전 방지)
-  return ''
-}
+// API-Sports.io 기본 URL
+const API_SPORTS_BASE_URL = 'https://media.api-sports.io/football'
 
 /**
- * API-Sports 이미지 ID를 Vercel CDN 프록시 URL로 변환
+ * API-Sports 이미지 URL 생성 (직접 URL)
  * 
  * @param type - 이미지 타입 (players, teams, leagues, coachs)
  * @param id - API-Sports 이미지 ID
- * @returns Vercel CDN을 통한 프록시 URL
+ * @returns API-Sports 직접 URL
  */
-export function getProxiedImageUrl(type: ImageType, id: string | number): string {
-  const baseUrl = getBaseUrl()
-  return `${baseUrl}/api/images?type=${type}&id=${id}`
+export function getApiSportsImageUrl(type: ImageType, id: string | number): string {
+  return `${API_SPORTS_BASE_URL}/${type}/${id}.png`
 }
 
 /**
- * 선수 이미지 URL 생성
+ * Supabase Storage에서 캐시된 이미지를 가져오거나 캐시하는 함수
+ * 메모리 캐시를 사용하여 중복 요청 방지
+ * 
+ * @param type - 이미지 타입
+ * @param id - 이미지 ID
+ * @returns 캐시된 이미지 URL 또는 직접 URL
+ */
+export async function getCachedImageUrl(type: ImageType, id: string | number): Promise<string> {
+  const cacheKey = `${type}-${id}`
+  
+  // 메모리 캐시에서 먼저 확인
+  if (imageUrlCache.has(cacheKey)) {
+    return imageUrlCache.get(cacheKey)!
+  }
+  
+  try {
+    const result = await getCachedImageFromStorage(type as 'players' | 'teams' | 'leagues' | 'coachs', id)
+    if (result.success && result.url) {
+      // 메모리 캐시에 저장
+      imageUrlCache.set(cacheKey, result.url)
+      return result.url
+    }
+  } catch (error) {
+    console.error('Failed to get cached image:', error)
+  }
+  
+  // 캐시 실패 시 직접 API-Sports URL 반환 (메모리 캐시에도 저장)
+  const fallbackUrl = getApiSportsImageUrl(type, id)
+  imageUrlCache.set(cacheKey, fallbackUrl)
+  return fallbackUrl
+}
+
+/**
+ * 선수 이미지 URL 생성 (Supabase Storage 우선)
  * 
  * @param playerId - 선수 ID
- * @returns 프록시된 선수 이미지 URL
+ * @returns 선수 이미지 URL (Promise)
  */
-export function getPlayerImageUrl(playerId: string | number): string {
-  return getProxiedImageUrl(ImageType.Players, playerId)
+export async function getPlayerImageUrlCached(playerId: string | number): Promise<string> {
+  return getCachedImageUrl(ImageType.Players, playerId)
 }
 
 /**
- * 팀 로고 URL 생성
+ * 팀 로고 URL 생성 (Supabase Storage 우선)
  * 
  * @param teamId - 팀 ID
- * @returns 프록시된 팀 로고 URL
+ * @returns 팀 로고 URL (Promise)
  */
-export function getTeamLogoUrl(teamId: string | number): string {
-  return getProxiedImageUrl(ImageType.Teams, teamId)
+export async function getTeamLogoUrlCached(teamId: string | number): Promise<string> {
+  return getCachedImageUrl(ImageType.Teams, teamId)
 }
 
 /**
- * 리그 로고 URL 생성
+ * 리그 로고 URL 생성 (Supabase Storage 우선)
  * 
  * @param leagueId - 리그 ID
- * @returns 프록시된 리그 로고 URL
+ * @returns 리그 로고 URL (Promise)
  */
-export function getLeagueLogoUrl(leagueId: string | number): string {
-  return getProxiedImageUrl(ImageType.Leagues, leagueId)
+export async function getLeagueLogoUrlCached(leagueId: string | number): Promise<string> {
+  return getCachedImageUrl(ImageType.Leagues, leagueId)
 }
 
 /**
- * 감독 이미지 URL 생성
+ * 감독 이미지 URL 생성 (Supabase Storage 우선)
  * 
  * @param coachId - 감독 ID
- * @returns 프록시된 감독 이미지 URL
+ * @returns 감독 이미지 URL (Promise)
  */
-export function getCoachImageUrl(coachId: string | number): string {
-  return getProxiedImageUrl(ImageType.Coachs, coachId)
+export async function getCoachImageUrlCached(coachId: string | number): Promise<string> {
+  return getCachedImageUrl(ImageType.Coachs, coachId)
 }
 
 /**
- * 기존 API-Sports URL을 프록시 URL로 변환
+ * 선수 이미지 URL 생성 (동기 버전 - 직접 URL)
+ * 
+ * @param playerId - 선수 ID
+ * @returns 선수 이미지 URL
+ */
+export function getPlayerImageUrl(playerId: string | number): string {
+  return getApiSportsImageUrl(ImageType.Players, playerId)
+}
+
+/**
+ * 팀 로고 URL 생성 (동기 버전 - 직접 URL)
+ * 
+ * @param teamId - 팀 ID
+ * @returns 팀 로고 URL
+ */
+export function getTeamLogoUrl(teamId: string | number): string {
+  return getApiSportsImageUrl(ImageType.Teams, teamId)
+}
+
+/**
+ * 리그 로고 URL 생성 (동기 버전 - 직접 URL)
+ * 
+ * @param leagueId - 리그 ID
+ * @returns 리그 로고 URL
+ */
+export function getLeagueLogoUrl(leagueId: string | number): string {
+  return getApiSportsImageUrl(ImageType.Leagues, leagueId)
+}
+
+/**
+ * 감독 이미지 URL 생성 (동기 버전 - 직접 URL)
+ * 
+ * @param coachId - 감독 ID
+ * @returns 감독 이미지 URL
+ */
+export function getCoachImageUrl(coachId: string | number): string {
+  return getApiSportsImageUrl(ImageType.Coachs, coachId)
+}
+
+/**
+ * 기존 API-Sports URL을 그대로 반환 (호환성 유지)
  * 
  * @param originalUrl - 기존 API-Sports URL
- * @returns 프록시 URL 또는 원본 URL (변환할 수 없는 경우)
+ * @returns 원본 URL
  */
 export function convertApiSportsUrl(originalUrl: string): string {
-  if (!originalUrl || !originalUrl.includes('media.api-sports.io')) {
-    return originalUrl
-  }
-  
-  // URL에서 타입과 ID 추출
-  const urlPattern = /https:\/\/media\.api-sports\.io\/football\/(players|teams|leagues|coachs)\/(\d+)\.png/
-  const match = originalUrl.match(urlPattern)
-  
-  if (match) {
-    const [, type, id] = match
-    return getProxiedImageUrl(type as ImageType, id)
-  }
-  
-  // 변환할 수 없는 경우 원본 URL 반환
   return originalUrl
 }
 

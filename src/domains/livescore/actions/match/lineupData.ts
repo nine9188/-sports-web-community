@@ -1,8 +1,8 @@
 'use server';
 
 import { cache } from 'react';
-import { getTeamById } from '@/domains/livescore/constants/teams'
-import { getPlayerImageUrl, getCoachImageUrl } from '@/shared/utils/image-proxy';
+import { getTeamById } from '@/domains/livescore/constants/teams';
+
 
 // 선수 타입 정의
 interface Player {
@@ -297,7 +297,7 @@ export async function fetchMatchLineups(matchId: string): Promise<LineupsRespons
               pos: item.player.pos,
               grid: item.player.grid || null,
               captain: isCaptain,
-              photo: getPlayerImageUrl(item.player.id)
+              photo: `https://media.api-sports.io/football/players/${item.player.id}.png`
             }
           };
         }),
@@ -316,14 +316,14 @@ export async function fetchMatchLineups(matchId: string): Promise<LineupsRespons
               pos: item.player.pos,
               grid: item.player.grid || null,
               captain: isCaptain,
-              photo: getPlayerImageUrl(item.player.id)
+              photo: `https://media.api-sports.io/football/players/${item.player.id}.png`
             }
           };
         }),
         coach: {
           id: teamData.coach.id,
           name: teamData.coach.name,
-          photo: getCoachImageUrl(teamData.coach.id)
+          photo: `https://media.api-sports.io/football/coachs/${teamData.coach.id}.png`
         }
       };
     };

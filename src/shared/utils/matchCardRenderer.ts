@@ -1,6 +1,18 @@
 import { MatchData } from '@/domains/livescore/actions/footballApi';
 
 /**
+ * Storage URL을 우선 시도하는 이미지 URL 생성 함수
+ */
+function getOptimizedImageUrl(originalUrl: string, type: 'teams' | 'leagues', id?: number): string {
+  if (id && originalUrl.includes('api-sports.io')) {
+    // Storage URL 우선 시도
+    const storageUrl = `https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/${type}/${id}.png`;
+    return `${storageUrl}" onerror="this.onerror=null;this.src='${originalUrl}';this.onerror=function(){this.src='/placeholder.png';}`;
+  }
+  return `${originalUrl}" onerror="this.onerror=null;this.src='/placeholder.png';`;
+}
+
+/**
  * 경기 카드 HTML을 생성하는 유틸리티 함수
  * @param matchData 경기 데이터 객체
  * @param matchId 경기 ID (선택적)
@@ -68,7 +80,7 @@ export function generateMatchCardHTML(matchData: MatchData, matchId?: string | n
         ">
           <div style="display: flex; align-items: center;">
             <img 
-              src="${leagueData.logo}" 
+              src="${getOptimizedImageUrl(leagueData.logo, 'leagues', league?.id)}" 
               alt="${leagueData.name}" 
               style="
                 width: 24px;
@@ -77,7 +89,6 @@ export function generateMatchCardHTML(matchData: MatchData, matchId?: string | n
                 margin-right: 8px;
                 flex-shrink: 0;
               "
-              onerror="this.onerror=null;this.src='/placeholder.png';"
             />
             <span style="
               font-size: 14px;
@@ -105,7 +116,7 @@ export function generateMatchCardHTML(matchData: MatchData, matchId?: string | n
             width: 40%;
           ">
             <img 
-              src="${homeTeam.logo}" 
+              src="${getOptimizedImageUrl(homeTeam.logo, 'teams', teams?.home?.id)}" 
               alt="${homeTeam.name}" 
               style="
                 width: 48px;
@@ -114,7 +125,6 @@ export function generateMatchCardHTML(matchData: MatchData, matchId?: string | n
                 margin-bottom: 8px;
                 flex-shrink: 0;
               "
-              onerror="this.onerror=null;this.src='/placeholder.png';"
             />
             <span style="
               font-size: 14px;
@@ -176,7 +186,7 @@ export function generateMatchCardHTML(matchData: MatchData, matchId?: string | n
             width: 40%;
           ">
             <img 
-              src="${awayTeam.logo}" 
+              src="${getOptimizedImageUrl(awayTeam.logo, 'teams', teams?.away?.id)}" 
               alt="${awayTeam.name}" 
               style="
                 width: 48px;
@@ -185,7 +195,6 @@ export function generateMatchCardHTML(matchData: MatchData, matchId?: string | n
                 margin-bottom: 8px;
                 flex-shrink: 0;
               "
-              onerror="this.onerror=null;this.src='/placeholder.png';"
             />
             <span style="
               font-size: 14px;

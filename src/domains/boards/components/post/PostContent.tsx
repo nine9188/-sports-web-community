@@ -942,16 +942,13 @@ export default function PostContent({ content, meta }: PostContentProps) {
           }
           
           element.innerHTML = `
-            <div class="youtube-embed my-4">
+            <div class="youtube-container">
               <iframe
-                width="100%"
-                height="450"
                 src="https://www.youtube.com/embed/${videoId}"
                 title="YouTube video"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
-                style="border-radius: 8px;"
               ></iframe>
             </div>
           `;
@@ -1259,19 +1256,7 @@ export default function PostContent({ content, meta }: PostContentProps) {
           text-decoration: underline !important;
         }
         
-        /* 반응형 비디오 컨테이너 */
-        :global(.responsive-video-container) {
-          position: relative;
-          width: 100%;
-          margin: 1rem 0;
-        }
-        
-        :global(.youtube-container iframe) {
-          width: 100%;
-          max-width: 100%;
-          height: 450px;
-          border-radius: 8px;
-        }
+        /* 유튜브 임베드 스타일은 globals.css에서 관리 */
         
         :global(.video-wrapper video) {
           width: 100%;

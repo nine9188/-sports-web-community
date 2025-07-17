@@ -325,6 +325,9 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                             alt={`${homeLineup.startXI[index].player.name} 선수 사진`}
                             playerId={homeLineup.startXI[index].player.id}
                             priority={index < 5} // 처음 5명은 우선 로딩
+                            width={40}
+                            height={40}
+                            className="border-2 border-gray-200"
                           />
                         ) : (
                           <div className="w-10 h-10 flex items-center justify-center text-gray-700 font-bold text-sm bg-gray-100 rounded-full border-2 border-gray-200">
@@ -370,6 +373,9 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                             alt={`${awayLineup.startXI[index].player.name} 선수 사진`}
                             playerId={awayLineup.startXI[index].player.id}
                             priority={index < 5} // 처음 5명은 우선 로딩
+                            width={40}
+                            height={40}
+                            className="border-2 border-gray-200"
                           />
                         ) : (
                           <div className="w-10 h-10 flex items-center justify-center text-gray-700 font-bold text-sm bg-gray-100 rounded-full border-2 border-gray-200">

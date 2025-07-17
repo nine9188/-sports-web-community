@@ -1,28 +1,40 @@
 'use client';
 
-import { useRef, useEffect, useState, useMemo, useCallback, memo } from 'react';
+import React, { memo, useCallback, useRef, useState, useEffect, useMemo } from 'react';
 import styles from '../styles/formation.module.css';
 import { liverpoolPlayers, NottinghamForestPlayers, Arsenalplayers, NewcastleUnitedplayers, Chelseaplayers, ManchesterCityplayers, AstonVillaplayers, Bournemouthplayers, Fulhamplayers, Brightonplayers } from '@/domains/livescore/constants/teams/premier-league/premier-teams';
-import { getPlayerImageUrl, convertApiSportsUrl, isApiSportsUrl } from '@/shared/utils/image-proxy';
+
 
 // 미디어 쿼리 커스텀 훅
 function useMediaQuery(query: string) {
   const [matches, setMatches] = useState(false);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia(query);
-    const updateMatches = () => setMatches(mediaQuery.matches);
-    
-    updateMatches();
-    mediaQuery.addEventListener('change', updateMatches);
-    
-    return () => {
-      mediaQuery.removeEventListener('change', updateMatches);
-    };
-  }, [query]);
+    const media = window.matchMedia(query);
+    if (media.matches !== matches) {
+      setMatches(media.matches);
+    }
+    const listener = () => setMatches(media.matches);
+    media.addEventListener('change', listener);
+    return () => media.removeEventListener('change', listener);
+  }, [matches, query]);
 
   return matches;
 }
+
+// 팀별 선수 데이터 매핑 (필요시 사용)
+// const teamPlayersMap: { [key: number]: any[] } = {
+//   40: liverpoolPlayers,
+//   65: NottinghamForestPlayers,
+//   42: Arsenalplayers,
+//   34: NewcastleUnitedplayers,
+//   49: Chelseaplayers,
+//   50: ManchesterCityplayers,
+//   66: AstonVillaplayers,
+//   35: Bournemouthplayers,
+//   36: Fulhamplayers,
+//   51: Brightonplayers,
+// };
 
 interface PlayerData {
   id: number;
@@ -86,12 +98,10 @@ const SVGPlayerImage = memo(function SVGPlayerImage({ playerId, photoUrl, teamId
   useEffect(() => {
     if (!photoUrl || imageError) return;
 
-    // 프록시 URL 생성
+    // 이미지 URL 결정
     let imageUrl = photoUrl;
     if (playerId) {
-      imageUrl = getPlayerImageUrl(playerId);
-    } else if (isApiSportsUrl(photoUrl)) {
-      imageUrl = convertApiSportsUrl(photoUrl);
+      imageUrl = `https://media.api-sports.io/football/players/${playerId}.png`;
     }
 
     const img = new Image();
@@ -112,7 +122,7 @@ const SVGPlayerImage = memo(function SVGPlayerImage({ playerId, photoUrl, teamId
       }
     };
     img.src = imageUrl;
-  }, [photoUrl, retryCount, imageError, playerId]); // playerId 추가
+  }, [photoUrl, retryCount, imageError, playerId]);
 
   if (imageError || !photoUrl) {
     return null;
@@ -120,12 +130,10 @@ const SVGPlayerImage = memo(function SVGPlayerImage({ playerId, photoUrl, teamId
 
   if (!imageLoaded) return null;
 
-  // 프록시 URL 생성 (렌더링 시에도 동일한 로직 적용)
+  // 렌더링 시 이미지 URL 결정
   let imageUrl = photoUrl;
   if (playerId) {
-    imageUrl = getPlayerImageUrl(playerId);
-  } else if (isApiSportsUrl(photoUrl)) {
-    imageUrl = convertApiSportsUrl(photoUrl);
+    imageUrl = `https://media.api-sports.io/football/players/${playerId}.png`;
   }
 
   return (
@@ -301,8 +309,8 @@ const Player = memo(function Player({ homeTeamData, awayTeamData }: PlayerProps)
       const numberKey = `number-${teamId}-${playerId}`;
       const nameKey = `name-${isHome ? 'home' : 'away'}-${teamId}-${playerId}`;
       
-      // 이미지 URL 처리 - 우선순위 로딩 적용
-      const photoUrl = player.photo || getPlayerImageUrl(player.id);
+      // 이미지 URL 처리 - API-Sports URL 생성
+      const photoUrl = player.photo || `https://media.api-sports.io/football/players/${player.id}.png`;
       const hasValidImage = Boolean(photoUrl) && !failedImages.has(`${playerId}`);
       const imageLoaded = loadedImages.has(`${playerId}`);
       

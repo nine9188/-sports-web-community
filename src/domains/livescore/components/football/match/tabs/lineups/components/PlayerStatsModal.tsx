@@ -4,7 +4,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect, useCallback } from 'react';
 import { fetchCachedPlayerStats, PlayerStats, PlayerStatsResponse } from '@/domains/livescore/actions/match/playerStats';
-import { getPlayerImageUrl } from '@/shared/utils/image-proxy';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/utils/image-proxy';
 
 interface PlayerStatsModalProps {
   isOpen: boolean;
@@ -206,7 +207,7 @@ export default function PlayerStatsModal({
   const stats = playerStats.response.statistics?.[0] || {};
   const playerData = playerStats.response.player || {};
 
-  const playerPhotoUrl = playerData.photo || getPlayerImageUrl(playerId);
+  const playerPhotoUrl = playerData.photo || `https://media.api-sports.io/football/players/${playerId}.png`;
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -229,13 +230,15 @@ export default function PlayerStatsModal({
           <div className="relative w-28 h-28 mx-auto mb-4">
             <div className="relative w-28 h-28">
               <div className="absolute inset-0 rounded-full border-4 border-white shadow-lg"></div>
-              <Image
+              <ApiSportsImage
                 src={playerPhotoUrl}
                 alt={playerInfo.name}
                 width={112}
                 height={112}
+                imageId={playerId}
+                imageType={ImageType.Players}
+                fallbackType={ImageType.Players}
                 className="w-full h-full rounded-full object-cover"
-                unoptimized
               />
             </div>
             {stats.team?.logo && (
