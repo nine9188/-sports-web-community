@@ -198,17 +198,44 @@ export default function HoverMenu({
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, [handleOutsideClick]);
 
-  // 모바일에서 바텀시트 열릴 때 body 스크롤 막기
+  // 모바일에서 바텀시트 열릴 때 body 스크롤 막기 (스크롤 위치 보존)
   useEffect(() => {
     if (isMobile && hoveredBoard && childBoardsMap[hoveredBoard]?.length > 0) {
+      // 현재 스크롤 위치 저장
+      const scrollY = window.scrollY;
+      
+      // body 스크롤 막기 및 위치 고정
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
       document.body.style.overflow = 'hidden';
+      
+      // cleanup 시 스크롤 위치 복원
+      return () => {
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        document.body.style.overflow = '';
+        window.scrollTo(0, scrollY);
+      };
     } else {
-      document.body.style.overflow = 'unset';
+      // 바텀시트가 닫힌 경우 스타일 리셋
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.overflow = '';
     }
     
     // 컴포넌트 언마운트 시 스크롤 복원
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.overflow = '';
     };
   }, [isMobile, hoveredBoard, childBoardsMap]);
 
