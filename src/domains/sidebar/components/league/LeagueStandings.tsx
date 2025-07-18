@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
-import { ImageType } from '@/shared/utils/image-proxy';
 import { useRouter } from 'next/navigation';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/types/image';
 import { StandingsData, League } from '../../types';
 import { fetchStandingsData } from '../../actions/football';
 import { MAJOR_LEAGUE_IDS } from '@/domains/livescore/constants/league-mappings';
@@ -134,12 +134,11 @@ export default function LeagueStandings({
             <div className="w-5 h-5 relative">
               <ApiSportsImage
                 src={standings.league.logo}
+                imageId={standings.league.id}
+                imageType={ImageType.Leagues}
                 alt={standings.league.name}
                 width={20}
                 height={20}
-                imageId={standings.league.id}
-                imageType={ImageType.Leagues}
-                fallbackType={ImageType.Leagues}
                 className="object-contain w-5 h-5"
                 style={{ width: '20px', height: '20px' }}
               />
@@ -206,12 +205,11 @@ export default function LeagueStandings({
                         <div className="w-5 h-5 relative flex-shrink-0">
                           <ApiSportsImage
                             src={team.team.logo}
+                            imageId={team.team.team_id}
+                            imageType={ImageType.Teams}
                             alt={team.team.name}
                             width={20}
                             height={20}
-                            imageId={team.team.team_id}
-                            imageType={ImageType.Teams}
-                            fallbackType={ImageType.Teams}
                             className="object-contain w-5 h-5"
                             style={{ width: '20px', height: '20px' }}
                           />

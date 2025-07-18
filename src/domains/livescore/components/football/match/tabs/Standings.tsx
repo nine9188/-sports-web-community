@@ -3,6 +3,8 @@
 import { useState, useEffect, memo, useCallback } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/types/image';
 import { useMatchData, isStandingsTabData } from '@/domains/livescore/components/football/match/context/MatchDataContext';
 import { Standing, StandingsData, Team } from '@/domains/livescore/types/match';
 
@@ -17,26 +19,30 @@ interface StandingsProps {
 }
 
 // 팀 로고 컴포넌트 - 메모이제이션
-const TeamLogo = memo(({ teamName, originalLogo }: { teamName: string; originalLogo: string }) => {
-  const [imgError, setImgError] = useState(false);
-  const logoUrl = imgError ? '/placeholder-team.png' : originalLogo || '/placeholder-team.png';
-
+const TeamLogo = memo(({ teamName, originalLogo, teamId }: { teamName: string; originalLogo: string; teamId?: number }) => {
   return (
     <div className="w-6 h-6 flex-shrink-0 relative transform-gpu">
-      <Image
-        src={logoUrl}
-        alt={teamName || '팀'}
-        fill
-        sizes="24px"
-        className="object-contain"
-        onError={() => {
-          if (!imgError) {
-            setImgError(true);
-          }
-        }}
-        loading="eager"
-        priority={false}
-      />
+      {originalLogo && teamId ? (
+        <ApiSportsImage
+          src={originalLogo}
+          imageId={teamId}
+          imageType={ImageType.Teams}
+          alt={teamName || '팀'}
+          width={24}
+          height={24}
+          className="object-contain w-6 h-6"
+        />
+      ) : (
+        <Image
+          src={originalLogo || '/placeholder-team.png'}
+          alt={teamName || '팀'}
+          fill
+          sizes="24px"
+          className="object-contain"
+          loading="eager"
+          priority={false}
+        />
+      )}
     </div>
   );
 });
@@ -182,12 +188,14 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
             {groupIndex === 0 ? (
               <div className="flex items-center gap-3">
                 <div className="w-6 h-6 relative flex-shrink-0">
-                  <Image
+                  <ApiSportsImage
                     src={leagueData.logo || '/placeholder-league.png'}
+                    imageId={leagueData.id}
+                    imageType={ImageType.Leagues}
                     alt={leagueData.name || '리그'}
-                    fill
-                    sizes="24px"
-                    className="object-contain"
+                    width={24}
+                    height={24}
+                    className="object-contain w-6 h-6"
                   />
                 </div>
                 <h2 className="text-sm font-medium text-gray-800">{leagueData.name || '리그 정보'}</h2>
@@ -284,6 +292,7 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
                           <TeamLogo
                             teamName={standing.team.name || ''}
                             originalLogo={standing.team.logo || ''}
+                            teamId={standing.team.id}
                           />
                           <div className="flex items-center max-w-[calc(100%-30px)]">
                             <span className="block truncate text-ellipsis overflow-hidden max-w-full pr-1">

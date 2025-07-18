@@ -3,6 +3,8 @@
 import Image from 'next/image';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/types/image';
 import { useRouter } from 'next/navigation';
 import { useState, useMemo } from 'react';
 import { FixtureData } from '@/domains/livescore/types/player';
@@ -46,17 +48,29 @@ interface PlayerFixturesProps {
 }
 
 // 팀 로고 컴포넌트
-const TeamLogo = ({ logo, name }: { logo: string; name: string }) => {
+const TeamLogo = ({ logo, name, teamId }: { logo: string; name: string; teamId?: number }) => {
   return (
     <div className="relative w-6 h-6 shrink-0 overflow-hidden rounded-full">
-      <Image 
-        src={logo || ''} 
-        alt={name}
-        width={24}
-        height={24}
-        className="object-contain w-full h-full"
-        unoptimized
-      />
+      {logo && teamId ? (
+        <ApiSportsImage 
+          src={logo} 
+          imageId={teamId}
+          imageType={ImageType.Teams}
+          alt={name}
+          width={24}
+          height={24}
+          className="object-contain w-full h-full"
+        />
+      ) : (
+        <Image 
+          src={logo || '/placeholder-team.png'} 
+          alt={name}
+          width={24}
+          height={24}
+          className="object-contain w-full h-full"
+          unoptimized
+        />
+      )}
     </div>
   );
 };
@@ -409,6 +423,7 @@ export default function PlayerFixtures({
                       <TeamLogo
                         logo={fixture.teams.home.logo}
                         name={fixture.teams.home.name}
+                        teamId={fixture.teams.home.id}
                       />
                     </div>
                   </td>
@@ -420,6 +435,7 @@ export default function PlayerFixtures({
                       <TeamLogo
                         logo={fixture.teams.away.logo}
                         name={fixture.teams.away.name}
+                        teamId={fixture.teams.away.id}
                       />
                       <span className={`max-w-[150px] truncate ${playerTeamId === fixture.teams.away.id ? 'font-bold' : ''}`}>
                         {fixture.teams.away.name}
@@ -503,6 +519,7 @@ export default function PlayerFixtures({
                     <TeamLogo
                       logo={fixture.teams.home.logo}
                       name={fixture.teams.home.name}
+                      teamId={fixture.teams.home.id}
                     />
                   </div>
                   
@@ -516,6 +533,7 @@ export default function PlayerFixtures({
                     <TeamLogo
                       logo={fixture.teams.away.logo}
                       name={fixture.teams.away.name}
+                      teamId={fixture.teams.away.id}
                     />
                     <span className={`text-xs truncate ${playerTeamId === fixture.teams.away.id ? 'font-bold' : ''}`}>
                       {fixture.teams.away.name}

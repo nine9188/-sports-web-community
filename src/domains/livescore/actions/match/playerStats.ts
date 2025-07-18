@@ -196,13 +196,15 @@ export async function fetchPlayerStats(matchId: string, playerId: number): Promi
       
       // console.log(`선수 데이터 파싱 중: ${playerData.player?.name || '이름 없음'}`);
       
-      // 이미지 URL 확인 및 처리 - 직접 API-Sports URL 사용
+      // 이미지 URL 확인 및 처리 - 유틸리티 함수 사용
       if (playerData.player && playerData.player.id) {
-            playerData.player.photo = `https://media.api-sports.io/football/players/${playerData.player.id}.png`;
+        // 캐시된 URL을 가져오는 것보다 컴포넌트에서 처리하도록 변경
+        playerData.player.photo = `https://media.api-sports.io/football/players/${playerData.player.id}.png`;
       }
       
-      // 팀 로고 URL 확인 및 처리 - 직접 API-Sports URL 사용
+      // 팀 로고 URL 확인 및 처리 - 유틸리티 함수 사용  
       if (teamData.team && teamData.team.id) {
+        // 캐시된 URL을 가져오는 것보다 컴포넌트에서 처리하도록 변경
         teamData.team.logo = `https://media.api-sports.io/football/teams/${teamData.team.id}.png`;
       }
       
@@ -384,14 +386,14 @@ export async function fetchMultiplePlayerStats(matchId: string, playerIds: numbe
         if (playerIds.includes(player.player.id)) {
           // console.log(`선수 통계 처리 중: ${player.player.name || '이름 없음'} (ID: ${player.player.id})`);
           
-          // 이미지 URL 확인 및 처리 - 직접 API-Sports URL 사용
+          // 이미지 URL 확인 및 처리 - 컴포넌트에서 캐싱 처리
           if (player.player && player.player.id) {
-                    player.player.photo = `https://media.api-sports.io/football/players/${player.player.id}.png`;
+            player.player.photo = `https://media.api-sports.io/football/players/${player.player.id}.png`;
           }
           
-          // 팀 로고 URL 확인 및 처리 - 직접 API-Sports URL 사용
+          // 팀 로고 URL 확인 및 처리 - 컴포넌트에서 캐싱 처리
           if (teamStats.team && teamStats.team.id) {
-                    teamStats.team.logo = `https://media.api-sports.io/football/teams/${teamStats.team.id}.png`;
+            teamStats.team.logo = `https://media.api-sports.io/football/teams/${teamStats.team.id}.png`;
           }
           
           // 통계 데이터 유효성 검사

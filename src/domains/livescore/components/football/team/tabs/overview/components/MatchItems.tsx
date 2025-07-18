@@ -4,6 +4,8 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/types/image';
 
 // 매치 타입 정의
 export interface Match {
@@ -146,8 +148,10 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                           <span className={`truncate max-w-[100px] md:max-w-[180px] text-right mr-1 text-xs md:text-sm ${match.teams.home.id === teamId ? 'font-bold' : ''}`}>
                             {match.teams.home.name}
                           </span>
-                          <Image
+                          <ApiSportsImage
                             src={match.teams.home.logo}
+                            imageId={match.teams.home.id}
+                            imageType={ImageType.Teams}
                             alt={match.teams.home.name}
                             width={20}
                             height={20}
@@ -160,8 +164,10 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                         </div>
 
                         <div className="flex-1 flex items-center justify-start gap-0 min-w-0">
-                          <Image
+                          <ApiSportsImage
                             src={match.teams.away.logo}
+                            imageId={match.teams.away.id}
+                            imageType={ImageType.Teams}
                             alt={match.teams.away.name}
                             width={20}
                             height={20}
@@ -245,8 +251,10 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                           <span className={`truncate max-w-[100px] md:max-w-[180px] text-right mr-1 text-xs md:text-sm ${match.teams.home.id === teamId ? 'font-bold' : ''}`}>
                             {match.teams.home.name}
                           </span>
-                          <Image
+                          <ApiSportsImage
                             src={match.teams.home.logo}
+                            imageId={match.teams.home.id}
+                            imageType={ImageType.Teams}
                             alt={match.teams.home.name}
                             width={20}
                             height={20}
@@ -259,8 +267,10 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                         </div>
 
                         <div className="flex-1 flex items-center justify-start gap-0 min-w-0">
-                          <Image
+                          <ApiSportsImage
                             src={match.teams.away.logo}
+                            imageId={match.teams.away.id}
+                            imageType={ImageType.Teams}
                             alt={match.teams.away.name}
                             width={20}
                             height={20}

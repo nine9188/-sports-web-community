@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
-import { ImageType } from '@/shared/utils/image-proxy';
+import { ImageType } from '@/shared/types/image';
 import { fetchMultiDayMatches, MatchData as FootballMatchData } from '@/domains/livescore/actions/footballApi';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
@@ -422,14 +422,13 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                       {match.league?.logo && (
                         <ApiSportsImage 
                           src={match.league.logo} 
+                          imageId={match.league.id}
+                          imageType={ImageType.Leagues}
                           alt={String(leagueNameKo)} 
                           width={16} 
                           height={16}
                           style={{ width: '16px', height: '16px', objectFit: 'contain' }}
                           className="rounded-full flex-shrink-0"
-                          fallbackType={ImageType.Leagues}
-                          imageId={match.league.id}
-                          imageType={ImageType.Leagues}
                         />
                       )}
                       <span className="text-xs font-medium truncate">{leagueNameKo}</span>
@@ -441,14 +440,13 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                         {match.teams?.home?.logo && (
                           <ApiSportsImage 
                             src={match.teams.home.logo} 
+                            imageId={match.teams.home.id}
+                            imageType={ImageType.Teams}
                             alt={String(homeTeamNameKo)} 
                             width={40} 
                             height={40}
                             style={{ width: '40px', height: '40px', objectFit: 'contain' }}
                             className="mb-0.5 group-hover:scale-110 transition-transform"
-                            fallbackType={ImageType.Teams}
-                            imageId={match.teams.home.id}
-                            imageType={ImageType.Teams}
                           />
                         )}
                         <span className="text-[10px] text-center truncate w-full group-hover:text-blue-600 transition-colors">{homeTeamNameKo}</span>
@@ -470,14 +468,13 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                         {match.teams?.away?.logo && (
                           <ApiSportsImage 
                             src={match.teams.away.logo} 
+                            imageId={match.teams.away.id}
+                            imageType={ImageType.Teams}
                             alt={String(awayTeamNameKo)} 
                             width={40} 
                             height={40}
                             style={{ width: '40px', height: '40px', objectFit: 'contain' }}
                             className="mb-0.5 group-hover:scale-110 transition-transform"
-                            fallbackType={ImageType.Teams}
-                            imageId={match.teams.away.id}
-                            imageType={ImageType.Teams}
                           />
                         )}
                         <span className="text-[10px] text-center truncate w-full group-hover:text-blue-600 transition-colors">{awayTeamNameKo}</span>

@@ -2,39 +2,31 @@
  * API-Sports 이미지 URL을 생성하고 Supabase Storage 캐싱을 관리하는 유틸리티 함수들
  */
 
-import { ImageType } from '@/shared/types/image';
+import { getCachedImageFromStorage } from '@/shared/actions/image-storage-actions'
 
 // 클라이언트 메모리 캐시 (중복 요청 방지)
-const imageUrlCache = new Map<string, string>();
+const imageUrlCache = new Map<string, string>()
+
+// 지원하는 이미지 타입 (enum으로 타입 안정성 강화)
+export enum ImageType {
+  Players = 'players',
+  Teams = 'teams',
+  Leagues = 'leagues',
+  Coachs = 'coachs',
+}
 
 // API-Sports.io 기본 URL
-const API_SPORTS_BASE_URL = 'https://media.api-sports.io/football';
+const API_SPORTS_BASE_URL = 'https://media.api-sports.io/football'
 
 /**
  * API-Sports 이미지 URL 생성 (직접 URL)
  * 
- * @param type - 이미지 타입 (players, teams, leagues, coachs, venues)
+ * @param type - 이미지 타입 (players, teams, leagues, coachs)
  * @param id - API-Sports 이미지 ID
  * @returns API-Sports 직접 URL
  */
 export function getApiSportsImageUrl(type: ImageType, id: string | number): string {
-  // 경기장은 venues/{id}.png 형태로 시도
-  if (type === ImageType.Venues) {
-    return `${API_SPORTS_BASE_URL}/venues/${id}.png`;
-  }
-  return `${API_SPORTS_BASE_URL}/${type}/${id}.png`;
-}
-
-/**
- * Supabase Storage URL 생성
- * 
- * @param type - 이미지 타입
- * @param id - 이미지 ID
- * @returns Supabase Storage URL
- */
-export function getSupabaseStorageUrl(type: ImageType, id: string | number): string {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  return `${supabaseUrl}/storage/v1/object/public/${type}/${id}.png`;
+  return `${API_SPORTS_BASE_URL}/${type}/${id}.png`
 }
 
 /**
@@ -46,31 +38,28 @@ export function getSupabaseStorageUrl(type: ImageType, id: string | number): str
  * @returns 캐시된 이미지 URL 또는 직접 URL
  */
 export async function getCachedImageUrl(type: ImageType, id: string | number): Promise<string> {
-  const cacheKey = `${type}-${id}`;
+  const cacheKey = `${type}-${id}`
   
   // 메모리 캐시에서 먼저 확인
   if (imageUrlCache.has(cacheKey)) {
-    return imageUrlCache.get(cacheKey)!;
+    return imageUrlCache.get(cacheKey)!
   }
   
   try {
-    // 동적 임포트로 서버 액션 불러오기 (클라이언트에서 호출 가능)
-    const { getCachedImageFromStorage } = await import('@/shared/actions/image-storage-actions');
-    const result = await getCachedImageFromStorage(type as 'players' | 'teams' | 'leagues' | 'coachs', id);
-    
+    const result = await getCachedImageFromStorage(type as 'players' | 'teams' | 'leagues' | 'coachs', id)
     if (result.success && result.url) {
       // 메모리 캐시에 저장
-      imageUrlCache.set(cacheKey, result.url);
-      return result.url;
+      imageUrlCache.set(cacheKey, result.url)
+      return result.url
     }
   } catch (error) {
-    console.error('Failed to get cached image:', error);
+    console.error('Failed to get cached image:', error)
   }
   
   // 캐시 실패 시 직접 API-Sports URL 반환 (메모리 캐시에도 저장)
-  const fallbackUrl = getApiSportsImageUrl(type, id);
-  imageUrlCache.set(cacheKey, fallbackUrl);
-  return fallbackUrl;
+  const fallbackUrl = getApiSportsImageUrl(type, id)
+  imageUrlCache.set(cacheKey, fallbackUrl)
+  return fallbackUrl
 }
 
 /**
@@ -80,7 +69,7 @@ export async function getCachedImageUrl(type: ImageType, id: string | number): P
  * @returns 선수 이미지 URL (Promise)
  */
 export async function getPlayerImageUrlCached(playerId: string | number): Promise<string> {
-  return getCachedImageUrl(ImageType.Players, playerId);
+  return getCachedImageUrl(ImageType.Players, playerId)
 }
 
 /**
@@ -90,7 +79,7 @@ export async function getPlayerImageUrlCached(playerId: string | number): Promis
  * @returns 팀 로고 URL (Promise)
  */
 export async function getTeamLogoUrlCached(teamId: string | number): Promise<string> {
-  return getCachedImageUrl(ImageType.Teams, teamId);
+  return getCachedImageUrl(ImageType.Teams, teamId)
 }
 
 /**
@@ -100,7 +89,7 @@ export async function getTeamLogoUrlCached(teamId: string | number): Promise<str
  * @returns 리그 로고 URL (Promise)
  */
 export async function getLeagueLogoUrlCached(leagueId: string | number): Promise<string> {
-  return getCachedImageUrl(ImageType.Leagues, leagueId);
+  return getCachedImageUrl(ImageType.Leagues, leagueId)
 }
 
 /**
@@ -110,7 +99,7 @@ export async function getLeagueLogoUrlCached(leagueId: string | number): Promise
  * @returns 감독 이미지 URL (Promise)
  */
 export async function getCoachImageUrlCached(coachId: string | number): Promise<string> {
-  return getCachedImageUrl(ImageType.Coachs, coachId);
+  return getCachedImageUrl(ImageType.Coachs, coachId)
 }
 
 /**
@@ -120,7 +109,7 @@ export async function getCoachImageUrlCached(coachId: string | number): Promise<
  * @returns 선수 이미지 URL
  */
 export function getPlayerImageUrl(playerId: string | number): string {
-  return getApiSportsImageUrl(ImageType.Players, playerId);
+  return getApiSportsImageUrl(ImageType.Players, playerId)
 }
 
 /**
@@ -130,7 +119,7 @@ export function getPlayerImageUrl(playerId: string | number): string {
  * @returns 팀 로고 URL
  */
 export function getTeamLogoUrl(teamId: string | number): string {
-  return getApiSportsImageUrl(ImageType.Teams, teamId);
+  return getApiSportsImageUrl(ImageType.Teams, teamId)
 }
 
 /**
@@ -140,7 +129,7 @@ export function getTeamLogoUrl(teamId: string | number): string {
  * @returns 리그 로고 URL
  */
 export function getLeagueLogoUrl(leagueId: string | number): string {
-  return getApiSportsImageUrl(ImageType.Leagues, leagueId);
+  return getApiSportsImageUrl(ImageType.Leagues, leagueId)
 }
 
 /**
@@ -150,7 +139,17 @@ export function getLeagueLogoUrl(leagueId: string | number): string {
  * @returns 감독 이미지 URL
  */
 export function getCoachImageUrl(coachId: string | number): string {
-  return getApiSportsImageUrl(ImageType.Coachs, coachId);
+  return getApiSportsImageUrl(ImageType.Coachs, coachId)
+}
+
+/**
+ * 기존 API-Sports URL을 그대로 반환 (호환성 유지)
+ * 
+ * @param originalUrl - 기존 API-Sports URL
+ * @returns 원본 URL
+ */
+export function convertApiSportsUrl(originalUrl: string): string {
+  return originalUrl
 }
 
 /**
@@ -160,7 +159,7 @@ export function getCoachImageUrl(coachId: string | number): string {
  * @returns API-Sports URL 여부
  */
 export function isApiSportsUrl(url: string): boolean {
-  return Boolean(url && url.includes('media.api-sports.io'));
+  return Boolean(url && url.includes('media.api-sports.io'))
 }
 
 /**
@@ -175,22 +174,7 @@ export function getFallbackImageUrl(type: ImageType): string {
     [ImageType.Teams]: '/images/team-placeholder.png',
     [ImageType.Leagues]: '/images/team-placeholder.png', // 리그도 팀 플레이스홀더 사용
     [ImageType.Coachs]: '/images/player-placeholder.png', // 감독도 선수 플레이스홀더 사용
-    [ImageType.Venues]: '/images/team-placeholder.png', // 경기장도 팀 플레이스홀더 사용
-  };
+  }
   
-  return fallbackMap[type] || '/images/player-placeholder.png';
-}
-
-/**
- * 이미지 타입 추론을 위한 URL 패턴 (enum 기반)
- * 
- * @param url - API Sports URL
- * @returns 추론된 이미지 타입
- */
-export function getImageTypeFromUrl(url: string): ImageType | null {
-  if (url.includes('/players/')) return ImageType.Players;
-  if (url.includes('/teams/')) return ImageType.Teams;
-  if (url.includes('/leagues/')) return ImageType.Leagues;
-  if (url.includes('/coachs/')) return ImageType.Coachs;
-  return null;
+  return fallbackMap[type] || '/images/player-placeholder.png'
 } 

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Match } from '@/domains/livescore/types/match';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
-import { ImageType } from '@/shared/utils/image-proxy';
+import { ImageType } from '@/shared/types/image';
 
 // 매치 카드 props
 interface MatchCardProps {
@@ -16,12 +16,14 @@ export default function MatchCard({ match: initialMatch }: MatchCardProps) {
   const [match] = useState(initialMatch);
 
   const homeTeam = {
+    id: match.teams?.home?.id || 0,
     name: match.teams?.home?.name || '',
     logo: match.teams?.home?.img || '',
     score: match.teams?.home?.score ?? 0
   };
 
   const awayTeam = {
+    id: match.teams?.away?.id || 0,
     name: match.teams?.away?.name || '',
     logo: match.teams?.away?.img || '',
     score: match.teams?.away?.score ?? 0
@@ -138,8 +140,9 @@ export default function MatchCard({ match: initialMatch }: MatchCardProps) {
                     {homeTeam.logo ? (
                       <ApiSportsImage 
                         src={homeTeam.logo} 
+                        imageId={homeTeam.id}
+                        imageType={ImageType.Teams}
                         alt={homeTeam.name}
-                        fallbackType={ImageType.Teams}
                         width={24}
                         height={24}
                         className="object-contain w-6 h-6"
@@ -166,8 +169,9 @@ export default function MatchCard({ match: initialMatch }: MatchCardProps) {
                   {awayTeam.logo ? (
                     <ApiSportsImage 
                       src={awayTeam.logo} 
+                      imageId={awayTeam.id}
+                      imageType={ImageType.Teams}
                       alt={awayTeam.name}
-                      fallbackType={ImageType.Teams}
                       width={24}
                       height={24}
                       className="object-contain w-6 h-6"

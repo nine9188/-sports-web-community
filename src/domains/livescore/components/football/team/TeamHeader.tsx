@@ -1,8 +1,9 @@
 'use client';
 
-import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/types/image';
 import { useTeamData } from './context/TeamDataContext';
 
 // 팀 정보를 위한 기본 인터페이스
@@ -137,13 +138,14 @@ export default function TeamHeader({ team, teamId, isLoading: externalLoading, e
         <div className="flex items-center p-2 md:p-4 md:w-96 flex-shrink-0">
           <div className="relative w-16 h-16 md:w-20 md:h-20 flex-shrink-0 mr-3 md:mr-4">
             {teamInfo.logo && !teamLogoError ? (
-              <Image
+              <ApiSportsImage
                 src={teamInfo.logo}
+                imageId={teamInfo.id}
+                imageType={ImageType.Teams}
                 alt={`${teamInfo.name} 로고`}
                 width={80}
                 height={80}
                 className="object-contain w-full h-full"
-                unoptimized
                 onError={() => setTeamLogoError(true)}
               />
             ) : (
@@ -176,15 +178,29 @@ export default function TeamHeader({ team, teamId, isLoading: externalLoading, e
             <div className="flex gap-3">
               <div className="relative w-24 h-16 md:w-36 md:h-24 rounded overflow-hidden flex-shrink-0">
                 {venue.image && !venueImageError ? (
-                  <Image
-                    src={venue.image}
-                    alt={`${venue.name} 경기장`}
-                    width={144}
-                    height={96}
-                    className="object-cover w-full h-full"
-                    unoptimized
-                    onError={() => setVenueImageError(true)}
-                  />
+                  (() => {
+                    // venue.image URL에서 venue ID 추출 시도
+                    let venueId = venue.id;
+                    if (!venueId && venue.image.includes('api-sports.io')) {
+                      const match = venue.image.match(/venues\/(\d+)/);
+                      if (match) {
+                        venueId = parseInt(match[1]);
+                      }
+                    }
+                    
+                    return (
+                      <ApiSportsImage
+                        src={venue.image}
+                        imageId={venueId || teamInfo.id}
+                        imageType={ImageType.Venues}
+                        alt={`${venue.name} 경기장`}
+                        width={144}
+                        height={96}
+                        className="object-cover w-full h-full"
+                        onError={() => setVenueImageError(true)}
+                      />
+                    );
+                  })()
                 ) : (
                   <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 text-xs">
                     이미지 없음

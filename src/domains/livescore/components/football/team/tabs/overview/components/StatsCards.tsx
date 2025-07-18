@@ -1,6 +1,8 @@
 'use client';
 
 import Image from 'next/image';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/types/image';
 import FormDisplay from './FormDisplay';
 
 // 타입 정의
@@ -108,12 +110,14 @@ export default function StatsCards({ stats, onTabChange }: StatsCardsProps) {
           <div className="flex items-center p-2">
             <div className="w-6 h-6 relative flex-shrink-0 mr-3">
               {safeLeague.logo && (
-                <Image
+                <ApiSportsImage
                   src={safeLeague.logo}
+                  imageId={safeLeague.id}
+                  imageType={ImageType.Leagues}
                   alt={safeLeague.name || '리그'}
-                  fill
-                  sizes="24px"
-                  className="object-contain"
+                  width={24}
+                  height={24}
+                  className="object-contain w-6 h-6"
                 />
               )}
             </div>

@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/types/image';
 
 interface LeagueCardProps {
   leagueId: number;
@@ -41,17 +42,25 @@ export default function LeagueCard({ leagueId, name, logo }: LeagueCardProps) {
     >
       <div className="flex flex-col items-center text-center space-y-1 lg:space-y-3">
         {/* 리그 로고 */}
-        {logo && (
-          <div className="relative w-8 h-8 lg:w-12 lg:h-12 flex-shrink-0">
-            <Image
+        <div className="relative w-8 h-8 lg:w-12 lg:h-12 flex-shrink-0">
+          {logo ? (
+            <ApiSportsImage
               src={logo}
+              imageId={leagueId}
+              imageType={ImageType.Leagues}
               alt={`${name} 로고`}
-              fill
-              className="object-contain group-hover:scale-105 transition-transform duration-200"
-              sizes="(max-width: 1024px) 32px, 48px"
+              width={48}
+              height={48}
+              className="object-contain group-hover:scale-105 transition-transform duration-200 w-8 h-8 lg:w-12 lg:h-12"
             />
-          </div>
-        )}
+          ) : (
+            <div className="w-8 h-8 lg:w-12 lg:h-12 bg-gray-100 rounded-full flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+              <span className="text-gray-400 text-xs lg:text-sm font-medium">
+                {name.charAt(0)}
+              </span>
+            </div>
+          )}
+        </div>
 
         {/* 리그 정보 */}
         <div className="w-full">

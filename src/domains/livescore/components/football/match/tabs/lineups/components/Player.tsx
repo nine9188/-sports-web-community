@@ -2,6 +2,7 @@
 
 import React, { memo, useCallback, useRef, useState, useEffect, useMemo } from 'react';
 import styles from '../styles/formation.module.css';
+import { getPlayerImageUrlCached } from '@/shared/utils/image-proxy';
 import { liverpoolPlayers, NottinghamForestPlayers, Arsenalplayers, NewcastleUnitedplayers, Chelseaplayers, ManchesterCityplayers, AstonVillaplayers, Bournemouthplayers, Fulhamplayers, Brightonplayers } from '@/domains/livescore/constants/teams/premier-league/premier-teams';
 
 
@@ -85,6 +86,7 @@ const SVGPlayerImage = memo(function SVGPlayerImage({ playerId, photoUrl, teamId
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+
   
   const onImageLoadRef = useRef(onImageLoad);
   const onImageErrorRef = useRef(onImageError);
@@ -98,30 +100,40 @@ const SVGPlayerImage = memo(function SVGPlayerImage({ playerId, photoUrl, teamId
   useEffect(() => {
     if (!photoUrl || imageError) return;
 
-    // 이미지 URL 결정
-    let imageUrl = photoUrl;
-    if (playerId) {
-      imageUrl = `https://media.api-sports.io/football/players/${playerId}.png`;
-    }
+    const loadImage = async () => {
+      try {
+        // 캐시된 URL 가져오기
+        let imageUrl = photoUrl;
+        if (playerId) {
+          imageUrl = await getPlayerImageUrlCached(playerId);
+        }
 
-    const img = new Image();
-    img.onload = () => {
-      setImageLoaded(true);
-      setImageError(false);
-      onImageLoadRef.current();
-    };
-    img.onerror = () => {
-      if (retryCount < 2) {
-        // 최대 2번 재시도
-        setTimeout(() => {
-          setRetryCount(prev => prev + 1);
-        }, 1000 * (retryCount + 1));
-      } else {
+        const img = new Image();
+        img.onload = () => {
+          setImageLoaded(true);
+          setImageError(false);
+          onImageLoadRef.current();
+        };
+        img.onerror = () => {
+          if (retryCount < 2) {
+            // 최대 2번 재시도
+            setTimeout(() => {
+              setRetryCount(prev => prev + 1);
+            }, 1000 * (retryCount + 1));
+          } else {
+            setImageError(true);
+            onImageErrorRef.current();
+          }
+        };
+        img.src = imageUrl;
+      } catch (error) {
+        console.error('Failed to get cached image URL:', error);
         setImageError(true);
         onImageErrorRef.current();
       }
     };
-    img.src = imageUrl;
+
+    loadImage();
   }, [photoUrl, retryCount, imageError, playerId]);
 
   if (imageError || !photoUrl) {

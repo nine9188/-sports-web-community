@@ -1,11 +1,9 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+// 이미지 타입을 직접 정의
+type ImageTypeString = 'players' | 'teams' | 'leagues' | 'coachs'
 import { batchCacheImages } from './image-storage-actions'
-import type { ImageCacheRequest } from '@/shared/types/image'
-
-// 이미지 타입을 직접 정의 (사용하지 않음)
-// type ImageTypeString = 'players' | 'teams' | 'leagues' | 'coachs'
 
 /**
  * 선수 이미지들을 배치로 캐시하는 함수
@@ -16,7 +14,7 @@ export async function batchCachePlayerImages(playerIds: number[]): Promise<{
   failed: number
   results: Array<{ id: number; cached: boolean; error?: string }>
 }> {
-  const images: ImageCacheRequest[] = playerIds.map(id => ({ type: 'players', id }))
+  const images = playerIds.map(id => ({ type: 'players' as ImageTypeString, id }))
   const result = await batchCacheImages(images)
   
   const cached = result.results.filter(r => r.cached).length
@@ -46,7 +44,7 @@ export async function batchCacheTeamLogos(teamIds: number[]): Promise<{
   failed: number
   results: Array<{ id: number; cached: boolean; error?: string }>
 }> {
-  const images: ImageCacheRequest[] = teamIds.map(id => ({ type: 'teams', id }))
+  const images = teamIds.map(id => ({ type: 'teams' as ImageTypeString, id }))
   const result = await batchCacheImages(images)
   
   const cached = result.results.filter(r => r.cached).length
@@ -76,7 +74,7 @@ export async function batchCacheLeagueLogos(leagueIds: number[]): Promise<{
   failed: number
   results: Array<{ id: number; cached: boolean; error?: string }>
 }> {
-  const images: ImageCacheRequest[] = leagueIds.map(id => ({ type: 'leagues', id }))
+  const images = leagueIds.map(id => ({ type: 'leagues' as ImageTypeString, id }))
   const result = await batchCacheImages(images)
   
   const cached = result.results.filter(r => r.cached).length
@@ -106,7 +104,7 @@ export async function batchCacheCoachImages(coachIds: number[]): Promise<{
   failed: number
   results: Array<{ id: number; cached: boolean; error?: string }>
 }> {
-  const images: ImageCacheRequest[] = coachIds.map(id => ({ type: 'coachs', id }))
+  const images = coachIds.map(id => ({ type: 'coachs' as ImageTypeString, id }))
   const result = await batchCacheImages(images)
   
   const cached = result.results.filter(r => r.cached).length

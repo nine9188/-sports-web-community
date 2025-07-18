@@ -1,6 +1,5 @@
 // UEFA 챔피언스 리그 팀 정보
 import { TeamMapping } from '.';
-import { getTeamLogoUrl } from '@/shared/utils/image-proxy';
 
 // UEFA 챔피언스 리그 2023/24 시즌 팀 데이터
 export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
@@ -11,7 +10,6 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '잉글랜드',
     country_en: 'England',
     code: 'MCI',
-    logo: getTeamLogoUrl(50)
   },
   {
     id: 541, 
@@ -20,7 +18,6 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '스페인',
     country_en: 'Spain',
     code: 'RMA',
-    logo: getTeamLogoUrl(541)
   },
   {
     id: 505, 
@@ -29,7 +26,6 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '이탈리아',
     country_en: 'Italy',
     code: 'INT',
-    logo: getTeamLogoUrl(505)
   },
   {
     id: 489, 
@@ -38,7 +34,6 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '이탈리아',
     country_en: 'Italy',
     code: 'MIL',
-    logo: getTeamLogoUrl(489)
   },
   {
     id: 165, 
@@ -47,7 +42,6 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '독일',
     country_en: 'Germany',
     code: 'BVB',
-    logo: getTeamLogoUrl(165)
   },
   {
     id: 157, 
@@ -56,7 +50,6 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '독일',
     country_en: 'Germany',
     code: 'BAY',
-    logo: getTeamLogoUrl(157)
   },
   {
     id: 85, 
@@ -65,7 +58,6 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '프랑스',
     country_en: 'France',
     code: 'PSG',
-    logo: getTeamLogoUrl(85)
   },
   {
     id: 529, 
@@ -74,7 +66,6 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '스페인',
     country_en: 'Spain',
     code: 'BAR',
-    logo: getTeamLogoUrl(529)
   },
   {
     id: 530, 
@@ -83,7 +74,6 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '스페인',
     country_en: 'Spain',
     code: 'ATM',
-    logo: getTeamLogoUrl(530)
   },
   {
     id: 33, 
@@ -92,7 +82,6 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '잉글랜드',
     country_en: 'England',
     code: 'MUN',
-    logo: getTeamLogoUrl(33)
   },
   {
     id: 40, 
@@ -101,7 +90,6 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '잉글랜드',
     country_en: 'England',
     code: 'LIV',
-    logo: getTeamLogoUrl(40)
   },
   {
     id: 47, 
@@ -110,7 +98,6 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '잉글랜드',
     country_en: 'England',
     code: 'TOT',
-    logo: getTeamLogoUrl(47)
   },
   {
     id: 42, 
@@ -119,7 +106,6 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '잉글랜드',
     country_en: 'England',
     code: 'ARS',
-    logo: getTeamLogoUrl(42)
   },
   {
     id: 492, 
@@ -128,7 +114,6 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '이탈리아',
     country_en: 'Italy',
     code: 'NAP',
-    logo: getTeamLogoUrl(492)
   },
   {
     id: 496, 
@@ -137,7 +122,6 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '이탈리아',
     country_en: 'Italy',
     code: 'JUV',
-    logo: getTeamLogoUrl(496)
   },
   {
     id: 212, 
@@ -146,7 +130,6 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '포르투갈',
     country_en: 'Portugal',
     code: 'FCP',
-    logo: getTeamLogoUrl(212)
   },
   {
     id: 211, 
@@ -155,7 +138,6 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '포르투갈',
     country_en: 'Portugal',
     code: 'BEN',
-    logo: getTeamLogoUrl(211)
   },
   {
     id: 194, 
@@ -164,7 +146,6 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '네덜란드',
     country_en: 'Netherlands',
     code: 'AJX',
-    logo: getTeamLogoUrl(194)
   },
   {
     id: 169, 
@@ -173,7 +154,6 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '독일',
     country_en: 'Germany',
     code: 'B04',
-    logo: getTeamLogoUrl(169)
   },
   {
     id: 173, 
@@ -182,7 +162,6 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '독일',
     country_en: 'Germany',
     code: 'RBL',
-    logo: getTeamLogoUrl(173)
   },
   {
     id: 851, 
@@ -191,7 +170,6 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '벨기에',
     country_en: 'Belgium',
     code: 'BRU',
-    logo: getTeamLogoUrl(851)
   },
   {
     id: 550, 
@@ -200,7 +178,6 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '스코틀랜드',
     country_en: 'Scotland',
     code: 'CEL',
-    logo: getTeamLogoUrl(550)
   },
   {
     id: 610, 
@@ -209,7 +186,6 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '우크라이나',
     country_en: 'Ukraine',
     code: 'SHA',
-    logo: getTeamLogoUrl(610)
   },
   {
     id: 874, 
@@ -218,6 +194,5 @@ export const CHAMPIONS_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '오스트리아',
     country_en: 'Austria',
     code: 'RBS',
-    logo: getTeamLogoUrl(874)
   }
 ]; 

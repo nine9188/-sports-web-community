@@ -1,6 +1,8 @@
 'use client';
 
 import Image from 'next/image';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/types/image';
 import Link from 'next/link';
 import { LeagueDetails } from '@/domains/livescore/actions/footballApi';
 import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
@@ -33,12 +35,14 @@ export default function LeagueHeader({ league }: LeagueHeaderProps) {
         {/* 리그 로고 */}
         {league.logo && (
           <div className="relative w-12 h-12 flex-shrink-0">
-            <Image
+            <ApiSportsImage
               src={league.logo}
+              imageId={league.id}
+              imageType={ImageType.Leagues}
               alt={`${displayName} 로고`}
-              fill
-              className="object-contain"
-              sizes="48px"
+              width={48}
+              height={48}
+              className="object-contain w-12 h-12"
             />
           </div>
         )}

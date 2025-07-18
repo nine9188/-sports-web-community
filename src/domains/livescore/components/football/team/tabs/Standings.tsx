@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, memo, useCallback } from 'react';
+import { memo, useCallback } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/types/image';
 import { Standing } from '@/domains/livescore/actions/teams/standings';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 
@@ -47,26 +49,32 @@ interface StandingsProps {
 }
 
 // 팀 로고 컴포넌트 - 메모이제이션
-const TeamLogo = memo(({ teamName, originalLogo }: { teamName: string; originalLogo: string }) => {
-  const [imgError, setImgError] = useState(false);
+const TeamLogo = memo(({ teamName, originalLogo, teamId }: { teamName: string; originalLogo: string; teamId?: number }) => {
   const leagueName = teamName || 'Team';
 
   return (
     <div className="w-6 h-6 flex-shrink-0 relative transform-gpu">
-      <Image
-        src={imgError ? '/placeholder-team.png' : originalLogo || '/placeholder-team.png'}
-        alt={leagueName}
-        fill
-        sizes="24px"
-        className="object-contain"
-        onError={() => {
-          if (!imgError) {
-            setImgError(true);
-          }
-        }}
-        loading="eager"
-        priority={false}
-      />
+      {originalLogo && teamId ? (
+        <ApiSportsImage
+          src={originalLogo}
+          imageId={teamId}
+          imageType={ImageType.Teams}
+          alt={leagueName}
+          width={24}
+          height={24}
+          className="object-contain w-6 h-6"
+        />
+      ) : (
+        <Image
+          src={originalLogo || '/placeholder-team.png'}
+          alt={leagueName}
+          fill
+          sizes="24px"
+          className="object-contain"
+          loading="eager"
+          priority={false}
+        />
+      )}
     </div>
   );
 });
@@ -188,12 +196,14 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
               <div className="flex items-center gap-3">
                 {leagueInfo.logo && (
                   <div className="w-6 h-6 relative flex-shrink-0">
-                    <Image
+                    <ApiSportsImage
                       src={leagueInfo.logo}
+                      imageId={leagueInfo.id}
+                      imageType={ImageType.Leagues}
                       alt={leagueInfo.name || '리그'}
-                      fill
-                      sizes="24px"
-                      className="object-contain"
+                      width={24}
+                      height={24}
+                      className="object-contain w-6 h-6"
                     />
                   </div>
                 )}
@@ -277,6 +287,7 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
                               <TeamLogo 
                                 teamName={standing.team.name}
                                 originalLogo={standing.team.logo}
+                                teamId={standing.team.id}
                               />
                               <div className="flex items-center max-w-[calc(100%-30px)]">
                                 <span className="block truncate text-ellipsis overflow-hidden max-w-full pr-1">

@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/types/image';
 import { LeagueTeam } from '@/domains/livescore/actions/footballApi';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 
@@ -35,16 +37,14 @@ export default function TeamCard({ team }: TeamCardProps) {
       <div className="flex flex-col items-center space-y-1 lg:space-y-3">
         {/* 팀 로고 */}
         <div className="relative w-8 h-8 lg:w-16 lg:h-16 flex-shrink-0">
-          <Image
+          <ApiSportsImage
             src={team.logo || DEFAULT_TEAM_LOGO}
+            imageId={team.id}
+            imageType={ImageType.Teams}
             alt={`${displayName} 로고`}
-            fill
-            className="object-contain group-hover:scale-105 transition-transform duration-200"
-            sizes="(max-width: 1024px) 32px, 64px"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = DEFAULT_TEAM_LOGO;
-            }}
+            width={64}
+            height={64}
+            className="object-contain group-hover:scale-105 transition-transform duration-200 w-8 h-8 lg:w-16 lg:h-16"
           />
         </div>
 

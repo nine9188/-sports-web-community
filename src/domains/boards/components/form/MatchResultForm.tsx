@@ -6,6 +6,8 @@ import { ko } from 'date-fns/locale';
 import { CalendarIcon, Search, X } from 'lucide-react';
 import Image from 'next/image';
 import DatePicker from 'react-datepicker';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/types/image';
 import "react-datepicker/dist/react-datepicker.css";
 import { Button } from '@/shared/ui';
 import { getMatchesByDate } from '@/domains/boards/actions/matches';
@@ -304,16 +306,25 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
                         <div className="flex items-center justify-between">
                           <div className="flex items-center flex-1 min-w-0">
                             <div className="w-6 h-6 relative mr-2 flex-shrink-0">
-                              <Image
-                                src={match.teams.home.logo || '/placeholder-team.png'}
-                                alt={match.teams.home.name}
-                                fill
-                                className="object-contain"
-                                sizes="24px"
-                                onError={(e) => {
-                                  e.currentTarget.src = '/placeholder-team.png';
-                                }}
-                              />
+                              {match.teams.home.logo ? (
+                                <ApiSportsImage
+                                  src={match.teams.home.logo}
+                                  imageId={match.teams.home.id}
+                                  imageType={ImageType.Teams}
+                                  alt={match.teams.home.name}
+                                  width={24}
+                                  height={24}
+                                  className="object-contain"
+                                />
+                              ) : (
+                                <Image
+                                  src="/placeholder-team.png"
+                                  alt={match.teams.home.name}
+                                  fill
+                                  className="object-contain"
+                                  sizes="24px"
+                                />
+                              )}
                             </div>
                             <span className="text-xs truncate">{match.teams.home.name}</span>
                           </div>
@@ -325,16 +336,25 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
                           <div className="flex items-center flex-1 justify-end min-w-0">
                             <span className="text-xs truncate">{match.teams.away.name}</span>
                             <div className="w-6 h-6 relative ml-2 flex-shrink-0">
-                              <Image
-                                src={match.teams.away.logo || '/placeholder-team.png'}
-                                alt={match.teams.away.name}
-                                fill
-                                className="object-contain"
-                                sizes="24px"
-                                onError={(e) => {
-                                  e.currentTarget.src = '/placeholder-team.png';
-                                }}
-                              />
+                              {match.teams.away.logo ? (
+                                <ApiSportsImage
+                                  src={match.teams.away.logo}
+                                  imageId={match.teams.away.id}
+                                  imageType={ImageType.Teams}
+                                  alt={match.teams.away.name}
+                                  width={24}
+                                  height={24}
+                                  className="object-contain"
+                                />
+                              ) : (
+                                <Image
+                                  src="/placeholder-team.png"
+                                  alt={match.teams.away.name}
+                                  fill
+                                  className="object-contain"
+                                  sizes="24px"
+                                />
+                              )}
                             </div>
                           </div>
                         </div>

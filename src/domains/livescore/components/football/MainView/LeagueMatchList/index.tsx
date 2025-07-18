@@ -3,8 +3,9 @@
 import React from 'react';
 import { Match } from '@/domains/livescore/types/match';
 import MatchCard from '../MatchCard';
+import Image from 'next/image';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
-import { ImageType } from '@/shared/utils/image-proxy';
+import { ImageType } from '@/shared/types/image';
 
 interface LeagueMatchListProps {
   matches: Match[];
@@ -78,15 +79,27 @@ export default function LeagueMatchList({ matches }: LeagueMatchListProps) {
                   <div className="flex items-center">
                     <div className="relative w-6 h-6 mr-2">
                       {/* 우선순위: 1. 리그 로고, 2. 국가 플래그, 3. 기본 이미지 */}
-                      <ApiSportsImage 
-                        src={group.logo || group.flag || DEFAULT_LOGO}
-                        alt={group.name}
-                        width={24}
-                        height={24}
-                        fallbackType={ImageType.Leagues}
-                        className="object-contain w-6 h-6"
-                        style={{ width: '24px', height: '24px' }}
-                      />
+                      {group.logo ? (
+                        <ApiSportsImage 
+                          src={group.logo}
+                          imageId={group.leagueId}
+                          imageType={ImageType.Leagues}
+                          alt={group.name}
+                          width={24}
+                          height={24}
+                          className="object-contain w-6 h-6"
+                          style={{ width: '24px', height: '24px' }}
+                        />
+                      ) : (
+                        <Image 
+                          src={group.flag || DEFAULT_LOGO}
+                          alt={group.name}
+                          width={24}
+                          height={24}
+                          className="object-contain w-6 h-6"
+                          style={{ width: '24px', height: '24px' }}
+                        />
+                      )}
                     </div>
                     <div>
                       <h2 className="font-bold text-sm">{group.name}</h2>

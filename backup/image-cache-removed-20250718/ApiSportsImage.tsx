@@ -2,8 +2,16 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import Image, { ImageProps } from 'next/image';
-import { getFallbackImageUrl, getSupabaseStorageUrl, getCachedImageUrl, getImageTypeFromUrl } from '@/shared/utils/image-proxy';
-import { ImageType } from '@/shared/types/image';
+import { getFallbackImageUrl, ImageType, getCachedImageUrl } from '@/shared/utils/image-proxy';
+
+// 이미지 타입 추론을 위한 URL 패턴 (enum 기반)
+const getImageTypeFromUrl = (url: string): ImageType | null => {
+  if (url.includes('/players/')) return ImageType.Players;
+  if (url.includes('/teams/')) return ImageType.Teams;
+  if (url.includes('/leagues/')) return ImageType.Leagues;
+  if (url.includes('/coachs/')) return ImageType.Coachs;
+  return null;
+};
 
 interface ApiSportsImageProps extends Omit<ImageProps, 'src'> {
   src: string;
@@ -35,7 +43,7 @@ export default function ApiSportsImage({
   const [currentSrc, setCurrentSrc] = useState(() => {
     // imageId와 imageType이 있으면 Storage URL 먼저 시도
     if (imageId && imageType) {
-      return getSupabaseStorageUrl(imageType, imageId);
+      return `https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/${imageType}/${imageId}.png`;
     }
     return src;
   });

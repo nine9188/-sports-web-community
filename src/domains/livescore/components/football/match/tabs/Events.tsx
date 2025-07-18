@@ -3,6 +3,8 @@
 import { memo, useState, useEffect } from 'react';
 import Image from 'next/image';
 import { FaFutbol } from 'react-icons/fa';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/types/image';
 import { BsCardText, BsCardHeading } from "react-icons/bs";
 import { IoMdSwap } from 'react-icons/io';
 import { MatchEvent } from '@/domains/livescore/types/match';
@@ -127,19 +129,31 @@ function Events({ events: propsEvents }: EventsProps) {
   const TeamLogo = ({ logo, name, teamId }: { logo: string; name: string; teamId?: number }) => {
     // 캐시된 팀 정보 확인
     const cachedTeam = teamId ? teamCache[teamId] : undefined;
-    const logoUrl = cachedTeam?.logo || logo || '/placeholder-team.png';
+    const logoUrl = cachedTeam?.logo || logo;
     const teamName = cachedTeam?.name_ko || name || '팀';
 
     return (
       <div className="w-5 h-5 md:w-6 md:h-6 relative flex-shrink-0 overflow-hidden">
-        <Image
-          src={logoUrl}
-          alt={teamName}
-          width={24}
-          height={24}
-          className="w-full h-full object-contain"
-          unoptimized
-        />
+        {logoUrl && teamId ? (
+          <ApiSportsImage
+            src={logoUrl}
+            imageId={teamId}
+            imageType={ImageType.Teams}
+            alt={teamName}
+            width={24}
+            height={24}
+            className="w-full h-full object-contain"
+          />
+        ) : (
+          <Image
+            src={logoUrl || '/placeholder-team.png'}
+            alt={teamName}
+            width={24}
+            height={24}
+            className="w-full h-full object-contain"
+            unoptimized
+          />
+        )}
       </div>
     );
   };

@@ -2,7 +2,7 @@
 
 import { memo } from 'react';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
-import { ImageType } from '@/shared/utils/image-proxy';
+import { ImageType } from '@/shared/types/image';
 
 interface PlayerImageProps {
   src?: string;
@@ -32,12 +32,11 @@ export default memo(function PlayerImage({
     <div className={`relative overflow-hidden rounded-full ${className}`} style={{ width: `${width}px`, height: `${height}px` }}>
       <ApiSportsImage
         src={imageUrl}
+        imageId={playerId}
+        imageType={ImageType.Players}
         alt={alt}
         width={width}
         height={height}
-        imageId={playerId}
-        imageType={ImageType.Players}
-        fallbackType={ImageType.Players}
         className="object-cover w-full h-full rounded-full"
         priority={priority}
       />

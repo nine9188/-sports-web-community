@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import Image from 'next/image';
 import { X, Clock, Trophy, Shield, Users } from 'lucide-react';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/types/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFutbol } from '@fortawesome/free-solid-svg-icons';
 import { fetchMultiDayMatches, MatchData } from '@/domains/livescore/actions/footballApi';
@@ -189,14 +191,22 @@ const MatchItem = React.memo(function MatchItem({
       <div className="flex items-center justify-between">
         {/* 홈팀 */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <SafeImage 
-            key={`home-${match.id}-${forceReload}`}
-            src={match.teams?.home?.logo} 
-            alt={match.teams?.home?.name || '홈팀'}
-            className="object-contain rounded"
-            fallbackIcon={Users}
-            size={24}
-          />
+          {match.teams?.home?.logo ? (
+            <ApiSportsImage 
+              key={`home-${match.id}-${forceReload}`}
+              src={match.teams.home.logo} 
+              imageId={match.teams.home.id}
+              imageType={ImageType.Teams}
+              alt={match.teams?.home?.name || '홈팀'}
+              width={24}
+              height={24}
+              className="object-contain rounded"
+            />
+          ) : (
+            <div className="flex items-center justify-center bg-gray-100 rounded w-6 h-6">
+              <Users className="w-3 h-3 text-gray-400" />
+            </div>
+          )}
           <span className="text-sm font-medium truncate">
             {match.teams?.home?.name || '홈팀'}
           </span>
@@ -233,14 +243,22 @@ const MatchItem = React.memo(function MatchItem({
           <span className="text-sm font-medium truncate">
             {match.teams?.away?.name || '원정팀'}
           </span>
-          <SafeImage 
-            key={`away-${match.id}-${forceReload}`}
-            src={match.teams?.away?.logo} 
-            alt={match.teams?.away?.name || '원정팀'}
-            className="object-contain rounded"
-            fallbackIcon={Users}
-            size={24}
-          />
+          {match.teams?.away?.logo ? (
+            <ApiSportsImage 
+              key={`away-${match.id}-${forceReload}`}
+              src={match.teams.away.logo} 
+              imageId={match.teams.away.id}
+              imageType={ImageType.Teams}
+              alt={match.teams?.away?.name || '원정팀'}
+              width={24}
+              height={24}
+              className="object-contain rounded"
+            />
+          ) : (
+            <div className="flex items-center justify-center bg-gray-100 rounded w-6 h-6">
+              <Users className="w-3 h-3 text-gray-400" />
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useTransition } from 'react';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
-import { ImageType } from '@/shared/utils/image-proxy';
+import Image from 'next/image';
 
 // Window 타입 확장
 declare global {
@@ -305,13 +304,12 @@ export default function PredictionAdminPage() {
                 <div key={group.league.id} className="bg-white border rounded-lg p-4">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center">
-                      <ApiSportsImage 
+                      <Image 
                         src={group.league.logo} 
                         alt={group.league.name}
                         width={32}
                         height={32}
                         className="w-8 h-8 mr-3"
-                        fallbackType={ImageType.Leagues}
                       />
                       <h3 className="text-lg font-semibold">{group.league.name}</h3>
                       <span className="ml-2 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">
@@ -337,12 +335,10 @@ export default function PredictionAdminPage() {
                       <div key={match.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                         <div className="flex items-center space-x-4">
                           <div className="flex items-center space-x-2">
-                            <ApiSportsImage src={match.teams.home.logo} alt={match.teams.home.name} width={24} height={24} className="w-6 h-6" fallbackType={ImageType.Teams} />
                             <span className="font-medium">{match.teams.home.name}</span>
                           </div>
                           <span className="text-gray-500">vs</span>
                           <div className="flex items-center space-x-2">
-                            <ApiSportsImage src={match.teams.away.logo} alt={match.teams.away.name} width={24} height={24} className="w-6 h-6" fallbackType={ImageType.Teams} />
                             <span className="font-medium">{match.teams.away.name}</span>
                           </div>
                         </div>

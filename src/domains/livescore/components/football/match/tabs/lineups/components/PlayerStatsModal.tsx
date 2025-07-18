@@ -1,11 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { useState, useEffect, useCallback } from 'react';
 import { fetchCachedPlayerStats, PlayerStats, PlayerStatsResponse } from '@/domains/livescore/actions/match/playerStats';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
-import { ImageType } from '@/shared/utils/image-proxy';
+import { ImageType } from '@/shared/types/image';
 
 interface PlayerStatsModalProps {
   isOpen: boolean;
@@ -232,24 +231,24 @@ export default function PlayerStatsModal({
               <div className="absolute inset-0 rounded-full border-4 border-white shadow-lg"></div>
               <ApiSportsImage
                 src={playerPhotoUrl}
+                imageId={playerId}
+                imageType={ImageType.Players}
                 alt={playerInfo.name}
                 width={112}
                 height={112}
-                imageId={playerId}
-                imageType={ImageType.Players}
-                fallbackType={ImageType.Players}
                 className="w-full h-full rounded-full object-cover"
               />
             </div>
             {stats.team?.logo && (
               <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center">
-                <Image
+                <ApiSportsImage
                   src={stats.team.logo}
+                  imageId={stats.team.id}
+                  imageType={ImageType.Teams}
                   alt={stats.team?.name || '팀 로고'}
                   width={32}
                   height={32}
                   className="w-8 h-8 object-contain"
-                  unoptimized
                 />
               </div>
             )}

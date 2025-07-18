@@ -3,6 +3,8 @@
 import { useState, useMemo, memo } from 'react';
 import Image from 'next/image';
 import { PlayerStatistic } from '@/domains/livescore/types/player';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/types/image';
 import { EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 
 interface PlayerStatsProps {
@@ -10,17 +12,29 @@ interface PlayerStatsProps {
 }
 
 // 리그 로고 컴포넌트 - 메모이제이션 적용
-const LeagueLogo = memo(({ logo, name }: { logo: string; name: string }) => {
+const LeagueLogo = memo(({ logo, name, leagueId }: { logo: string; name: string; leagueId?: number }) => {
   return (
     <div className="w-6 h-6 relative flex-shrink-0">
-      <Image
-        src={logo || ''}
-        alt={name || '리그'}
-        width={24}
-        height={24}
-        className="w-5 h-5 md:w-6 md:h-6 object-contain"
-        unoptimized
-      />
+      {logo && leagueId ? (
+        <ApiSportsImage
+          src={logo}
+          imageId={leagueId}
+          imageType={ImageType.Leagues}
+          alt={name || '리그'}
+          width={24}
+          height={24}
+          className="w-5 h-5 md:w-6 md:h-6 object-contain"
+        />
+      ) : (
+        <Image
+          src={logo || '/placeholder-league.png'}
+          alt={name || '리그'}
+          width={24}
+          height={24}
+          className="w-5 h-5 md:w-6 md:h-6 object-contain"
+          unoptimized
+        />
+      )}
     </div>
   );
 });
@@ -28,17 +42,29 @@ const LeagueLogo = memo(({ logo, name }: { logo: string; name: string }) => {
 LeagueLogo.displayName = 'LeagueLogo';
 
 // 팀 로고 컴포넌트 - 메모이제이션 적용
-const TeamLogo = memo(({ logo, name }: { logo: string; name: string }) => {
+const TeamLogo = memo(({ logo, name, teamId }: { logo: string; name: string; teamId?: number }) => {
   return (
     <div className="w-6 h-6 relative flex-shrink-0">
-      <Image
-        src={logo || ''}
-        alt={name || '팀'}
-        width={24}
-        height={24}
-        className="w-5 h-5 md:w-6 md:h-6 object-contain"
-        unoptimized
-      />
+      {logo && teamId ? (
+        <ApiSportsImage
+          src={logo}
+          imageId={teamId}
+          imageType={ImageType.Teams}
+          alt={name || '팀'}
+          width={24}
+          height={24}
+          className="w-5 h-5 md:w-6 md:h-6 object-contain"
+        />
+      ) : (
+        <Image
+          src={logo || '/placeholder-team.png'}
+          alt={name || '팀'}
+          width={24}
+          height={24}
+          className="w-5 h-5 md:w-6 md:h-6 object-contain"
+          unoptimized
+        />
+      )}
     </div>
   );
 });
@@ -132,13 +158,14 @@ export default function PlayerStats({ statistics: initialStatistics }: PlayerSta
           {selectedLeague && (
             <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
               <div className="w-6 h-6 flex items-center justify-center">
-                <Image
+                <ApiSportsImage
                   src={leagues.find(l => l.id === selectedLeague)?.logo || '/placeholder-league.png'}
+                  imageId={selectedLeague}
+                  imageType={ImageType.Leagues}
                   alt={leagues.find(l => l.id === selectedLeague)?.name || '리그'}
                   width={24}
                   height={24}
                   className="w-5 h-5 object-contain"
-                  unoptimized
                 />
               </div>
               <span className="font-medium">
@@ -163,7 +190,7 @@ export default function PlayerStats({ statistics: initialStatistics }: PlayerSta
                   <span className="text-xs text-gray-600 ml-1">({stat.league.country})</span>
                 </div>
                 <div className="flex items-center ml-auto gap-2">
-                  <TeamLogo logo={stat.team.logo} name={stat.team.name} />
+                                            <TeamLogo logo={stat.team.logo} name={stat.team.name} teamId={stat.team.id} />
                   <span className="font-medium text-sm">{stat.team.name}</span>
                 </div>
               </div>

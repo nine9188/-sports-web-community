@@ -3,6 +3,8 @@
 import { useState, memo, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { useMatchData, isStatsTabData } from '@/domains/livescore/components/football/match/context/MatchDataContext';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/types/image';
 import { TeamStats, Team } from '@/domains/livescore/types/match';
 
 interface StatsProps {
@@ -15,21 +17,29 @@ interface StatsProps {
 }
 
 // 팀 로고 컴포넌트 - 메모이제이션
-const TeamLogo = memo(({ logo, name }: { logo: string; name: string }) => {
-  const [imgError, setImgError] = useState(false);
-  const logoUrl = imgError ? '/placeholder-team.png' : logo || '/placeholder-team.png';
-  
+const TeamLogo = memo(({ logo, name, teamId }: { logo: string; name: string; teamId?: number }) => {
   return (
     <div className="w-8 h-8 relative flex-shrink-0 overflow-hidden">
-      <Image
-        src={logoUrl}
-        alt={name || '팀'}
-        width={32}
-        height={32}
-        className="w-full h-full object-contain"
-        onError={() => setImgError(true)}
-        unoptimized
-      />
+      {logo && teamId ? (
+        <ApiSportsImage
+          src={logo}
+          imageId={teamId}
+          imageType={ImageType.Teams}
+          alt={name || '팀'}
+          width={32}
+          height={32}
+          className="w-full h-full object-contain"
+        />
+      ) : (
+        <Image
+          src={logo || '/placeholder-team.png'}
+          alt={name || '팀'}
+          width={32}
+          height={32}
+          className="w-full h-full object-contain"
+          unoptimized
+        />
+      )}
     </div>
   );
 });
@@ -215,12 +225,12 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
           {isFirst && homeTeam && awayTeam && (
             <div className="flex items-center gap-4 text-xs">
               <div className="flex items-center gap-2">
-                <TeamLogo logo={homeTeam.logo} name={homeTeam.name} />
+                <TeamLogo logo={homeTeam.logo} name={homeTeam.name} teamId={homeTeam.id} />
                 <div className="w-3 h-3 bg-blue-500 rounded-sm"></div>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-500 rounded-sm"></div>
-                <TeamLogo logo={awayTeam.logo} name={awayTeam.name} />
+                <TeamLogo logo={awayTeam.logo} name={awayTeam.name} teamId={awayTeam.id} />
               </div>
             </div>
           )}

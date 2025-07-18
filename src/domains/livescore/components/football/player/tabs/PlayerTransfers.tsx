@@ -3,6 +3,8 @@
 import Image from 'next/image';
 import { format } from 'date-fns';
 import { EmptyState } from '@/domains/livescore/components/common';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/types/image';
 import { TransferData } from '@/domains/livescore/types/player';
 
 interface PlayerTransfersProps {
@@ -18,17 +20,29 @@ const transferTypeMap: { [key: string]: string } = {
 };
 
 // 팀 로고 컴포넌트
-const TeamLogo = ({ logo, name }: { logo?: string; name: string }) => {
+const TeamLogo = ({ logo, name, teamId }: { logo?: string; name: string; teamId?: number }) => {
   return (
     <div className="w-12 h-12 bg-white rounded-full border border-gray-200 flex items-center justify-center p-1.5 overflow-hidden">
-      <Image
-        src={logo || ''}
-        alt={name || '팀'}
-        width={40}
-        height={40}
-        className="w-full h-full object-contain"
-        unoptimized
-      />
+      {logo && teamId ? (
+        <ApiSportsImage
+          src={logo}
+          imageId={teamId}
+          imageType={ImageType.Teams}
+          alt={name || '팀'}
+          width={40}
+          height={40}
+          className="w-full h-full object-contain"
+        />
+      ) : (
+        <Image
+          src={logo || '/placeholder-team.png'}
+          alt={name || '팀'}
+          width={40}
+          height={40}
+          className="w-full h-full object-contain"
+          unoptimized
+        />
+      )}
     </div>
   );
 };
@@ -68,6 +82,7 @@ export default function PlayerTransfers({
                 <TeamLogo 
                   logo={transfer.teams.from.logo} 
                   name={transfer.teams.from.name} 
+                  teamId={transfer.teams.from.id}
                 />
                 <p className="mt-1 text-sm font-medium text-center text-gray-800 max-w-[120px] truncate">{transfer.teams.from.name || '알 수 없는 팀'}</p>
               </div>
@@ -101,6 +116,7 @@ export default function PlayerTransfers({
                 <TeamLogo 
                   logo={transfer.teams.to.logo} 
                   name={transfer.teams.to.name} 
+                  teamId={transfer.teams.to.id}
                 />
                 <p className="mt-1 text-sm font-medium text-center text-gray-800 max-w-[120px] truncate">{transfer.teams.to.name || '알 수 없는 팀'}</p>
               </div>
