@@ -5,7 +5,6 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
-import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 
 // 매치 타입 정의
 export interface Match {
@@ -132,7 +131,6 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                       <div className="flex justify-center items-center md:gap-2">
                         <div className="w-5 h-5 relative">
                           <ApiSportsImage
-                            src={getSupabaseStorageUrl(ImageType.Leagues, match.league.id)}
                             imageId={match.league.id}
                             imageType={ImageType.Leagues}
                             alt={match.league.name}
@@ -153,7 +151,6 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                             {match.teams.home.name}
                           </span>
                           <ApiSportsImage
-                            src={getSupabaseStorageUrl(ImageType.Teams, match.teams.home.id)}
                             imageId={match.teams.home.id}
                             imageType={ImageType.Teams}
                             alt={match.teams.home.name}
@@ -169,7 +166,6 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
 
                         <div className="flex-1 flex items-center justify-start gap-0 min-w-0">
                           <ApiSportsImage
-                            src={getSupabaseStorageUrl(ImageType.Teams, match.teams.away.id)}
                             imageId={match.teams.away.id}
                             imageType={ImageType.Teams}
                             alt={match.teams.away.name}
@@ -239,7 +235,6 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                       <div className="flex justify-center items-center md:gap-2">
                         <div className="w-5 h-5 relative">
                           <ApiSportsImage
-                            src={getSupabaseStorageUrl(ImageType.Leagues, match.league.id)}
                             imageId={match.league.id}
                             imageType={ImageType.Leagues}
                             alt={match.league.name}
@@ -260,7 +255,6 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                             {match.teams.home.name}
                           </span>
                           <ApiSportsImage
-                            src={getSupabaseStorageUrl(ImageType.Teams, match.teams.home.id)}
                             imageId={match.teams.home.id}
                             imageType={ImageType.Teams}
                             alt={match.teams.home.name}
@@ -276,7 +270,6 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
 
                         <div className="flex-1 flex items-center justify-start gap-0 min-w-0">
                           <ApiSportsImage
-                            src={getSupabaseStorageUrl(ImageType.Teams, match.teams.away.id)}
                             imageId={match.teams.away.id}
                             imageType={ImageType.Teams}
                             alt={match.teams.away.name}

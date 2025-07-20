@@ -3,7 +3,6 @@
 import React, { memo } from 'react';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
-import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 import { ErrorState, PlayerProfileLoadingState } from '@/domains/livescore/components/common/CommonComponents';
 import { usePlayerData } from './context/PlayerDataContext';
 
@@ -82,28 +81,24 @@ const PlayerHeader = memo(function PlayerHeader() {
             <div className="relative w-20 h-20 md:w-28 md:h-28">
               <div className="absolute inset-0 rounded-full border-4 border-white shadow-lg"></div>
               <ApiSportsImage
-                src={getSupabaseStorageUrl(ImageType.Players, playerData.info.id)}
                 imageId={playerData.info.id}
                 imageType={ImageType.Players}
                 alt={playerData.info.name}
                 width={112}
                 height={112}
                 className="w-full h-full rounded-full object-cover"
-                fallbackType={ImageType.Players}
               />
             </div>
             
             {mainTeamStats?.team && (
               <div className="absolute -bottom-2 -right-2 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white shadow-lg flex items-center justify-center">
                 <ApiSportsImage
-                  src={getSupabaseStorageUrl(ImageType.Teams, mainTeamStats.team.id)}
                   imageId={mainTeamStats.team.id}
                   imageType={ImageType.Teams}
                   alt={mainTeamStats.team.name || ''}
                   width={32}
                   height={32}
                   className="w-6 h-6 md:w-8 md:h-8 object-contain"
-                  fallbackType={ImageType.Teams}
                 />
               </div>
             )}

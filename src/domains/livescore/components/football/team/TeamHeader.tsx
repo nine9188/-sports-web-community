@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
-import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 import { useTeamData } from './context/TeamDataContext';
 
 // 팀 정보를 위한 기본 인터페이스
@@ -130,8 +129,7 @@ export default function TeamHeader({ team, teamId, isLoading: externalLoading, e
     venue = null;
   }
 
-  // 스토리지 URL 생성 (원본 URL 대신 스토리지 URL 우선 사용)
-  const teamLogoStorageUrl = getSupabaseStorageUrl(ImageType.Teams, teamInfo.id);
+
 
   return (
     <div className="mb-4 bg-white rounded-lg border overflow-hidden  mt-4 md:mt-0">
@@ -140,7 +138,6 @@ export default function TeamHeader({ team, teamId, isLoading: externalLoading, e
         <div className="flex items-center p-2 md:p-4 md:w-96 flex-shrink-0">
           <div className="relative w-16 h-16 md:w-20 md:h-20 flex-shrink-0 mr-3 md:mr-4">
             <ApiSportsImage
-              src={teamLogoStorageUrl}
               imageId={teamInfo.id}
               imageType={ImageType.Teams}
               alt={`${teamInfo.name} 로고`}
@@ -183,12 +180,10 @@ export default function TeamHeader({ team, teamId, isLoading: externalLoading, e
                       }
                     }
                     
-                    // 경기장 스토리지 URL 생성
-                    const venueStorageUrl = getSupabaseStorageUrl(ImageType.Venues, venueId || teamInfo.id);
+
                     
                     return (
                       <ApiSportsImage
-                        src={venueStorageUrl}
                         imageId={venueId || teamInfo.id}
                         imageType={ImageType.Venues}
                         alt={`${venue.name} 경기장`}

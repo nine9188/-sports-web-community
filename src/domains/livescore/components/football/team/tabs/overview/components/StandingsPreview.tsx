@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
-import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 import { StandingDisplay } from '@/domains/livescore/types/standings';
 import { findTeamStanding, getDisplayStandings, getLeagueInfo, getLeagueForStandings } from '../utils/standingUtils';
 import FormDisplay from './FormDisplay';
@@ -52,7 +51,6 @@ export default function StandingsPreview({ standings, teamId, safeLeague, onTabC
       <div className="flex items-center p-2 border-b border-gray-200">
         <div className="w-6 h-6 relative flex-shrink-0 mr-2">
           <ApiSportsImage
-            src={getSupabaseStorageUrl(ImageType.Leagues, displayLeagueInfo?.id || leagueInfo.id)}
             imageId={displayLeagueInfo?.id || leagueInfo.id}
             imageType={ImageType.Leagues}
             alt={displayLeagueInfo?.name || leagueInfo.name || safeLeague.name || '리그'}
@@ -107,7 +105,6 @@ export default function StandingsPreview({ standings, teamId, safeLeague, onTabC
                     <div className="flex items-center gap-2">
                       <div className="w-5 h-5 relative flex-shrink-0">
                         <ApiSportsImage
-                          src={getSupabaseStorageUrl(ImageType.Teams, standing.team.id)}
                           imageId={standing.team.id}
                           imageType={ImageType.Teams}
                           alt={standing.team.name}

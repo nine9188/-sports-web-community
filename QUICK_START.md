@@ -10,7 +10,6 @@ import { ImageType } from '@/shared/types/image'
 
 // 리버풀 팀 로고
 <ApiSportsImage
-  src="https://media.api-sports.io/football/teams/40.png"
   imageId={40}
   imageType={ImageType.Teams}
   alt="리버풀"
@@ -25,7 +24,6 @@ import { ImageType } from '@/shared/types/image'
 ```tsx
 // 메시 선수 이미지
 <ApiSportsImage
-  src="https://media.api-sports.io/football/players/874.png"
   imageId={874}
   imageType={ImageType.Players}
   alt="메시"
@@ -40,7 +38,6 @@ import { ImageType } from '@/shared/types/image'
 ```tsx
 // 프리미어리그 로고
 <ApiSportsImage
-  src="https://media.api-sports.io/football/leagues/39.png"
   imageId={39}
   imageType={ImageType.Leagues}
   alt="프리미어리그"
@@ -49,18 +46,20 @@ import { ImageType } from '@/shared/types/image'
 />
 ```
 
-## 장점
+## 핵심 특징
 
-✅ **자동 캐싱**: 첫 로드 시 Supabase Storage에 자동 저장  
-✅ **빠른 로드**: 이후 요청 시 CDN에서 빠르게 로드  
-✅ **안정성**: 이미지 로드 실패 시 플레이스홀더 자동 표시  
-✅ **쉬운 적용**: 기존 Image 컴포넌트와 동일한 사용법
+✅ **무조건 스토리지 URL만 사용**: API-Sports URL은 절대 노출되지 않음  
+✅ **메모리 캐시**: 중복 요청 방지로 성능 최적화  
+✅ **useState + useEffect 패턴**: 비동기 URL 관리  
+✅ **빈 영역 처리**: placeholder 없이 스토리지에 없으면 빈 영역 표시  
 
 ## 동작 과정
 
-1. **첫 번째 요청**: API Sports → Supabase Storage 저장 → 표시
-2. **이후 요청**: Supabase Storage에서 직접 로드 (빠름!)
-3. **에러 발생 시**: 플레이스홀더 이미지 자동 표시
+1. **컴포넌트 마운트**: src 상태는 null로 시작
+2. **메모리 캐시 확인**: 이미 요청한 URL이 있으면 즉시 사용
+3. **스토리지 확인**: getCachedImageFromStorage 호출하여 비동기로 URL 가져오기
+4. **URL 설정**: 스토리지 URL이 확인되면 상태 업데이트하여 이미지 표시
+5. **빈 영역**: 스토리지에 없으면 빈 div 유지
 
 ## 기존 코드 마이그레이션
 
@@ -78,7 +77,6 @@ import { ImageType } from '@/shared/types/image'
 **After (새 코드):**
 ```tsx
 <ApiSportsImage
-  src="https://media.api-sports.io/football/teams/40.png"
   imageId={40}
   imageType={ImageType.Teams}
   alt="리버풀"
@@ -88,4 +86,11 @@ import { ImageType } from '@/shared/types/image'
 />
 ```
 
-단 3줄만 추가하면 됩니다! 🎉 
+## ⚠️ 중요 변경사항
+
+- **src prop 제거**: 이제 imageId와 imageType만 필요
+- **alt prop 필수**: 접근성을 위해 필수 속성
+- **fallback 제거**: placeholder 대신 빈 영역 표시
+- **메모리 캐시**: 같은 이미지 재요청 시 즉시 반환
+
+더 이상 API-Sports URL을 걱정할 필요 없이 안전하고 빠른 이미지 표시가 가능합니다! 🎉 

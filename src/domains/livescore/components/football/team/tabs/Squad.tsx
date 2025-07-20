@@ -5,7 +5,6 @@ import React, { useMemo } from 'react';
 import { PlayerStats } from '@/domains/livescore/actions/teams/player-stats';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
-import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 
 // 상수 정의
@@ -159,10 +158,6 @@ export default function Squad({ initialSquad, initialStats, isLoading: externalL
                     <td className="px-2 sm:px-4 md:px-6 py-1">
                       <div className="relative w-6 h-6 md:w-8 md:h-8 bg-gray-100 rounded-full overflow-hidden">
                         <ApiSportsImage
-                          src={getSupabaseStorageUrl(
-                            member.position === 'Coach' ? ImageType.Coachs : ImageType.Players,
-                            member.id
-                          )}
                           imageId={member.id}
                           imageType={member.position === 'Coach' ? ImageType.Coachs : ImageType.Players}
                           alt={member.name}

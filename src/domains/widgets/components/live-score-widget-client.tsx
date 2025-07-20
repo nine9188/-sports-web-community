@@ -419,9 +419,8 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                     onDragStart={(e) => e.preventDefault()}
                   >
                     <div className="flex items-center gap-0.5 mb-1 text-gray-700">
-                      {match.league?.logo && (
+                      {match.league?.logo && match.league?.id && (
                         <ApiSportsImage 
-                          src={match.league.logo} 
                           imageId={match.league.id}
                           imageType={ImageType.Leagues}
                           alt={String(leagueNameKo)} 
@@ -437,9 +436,8 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                     <div className="grid grid-cols-3 gap-1 flex-1">
                       {/* 홈팀 */}
                       <div className="flex flex-col items-center justify-center gap-0">
-                        {match.teams?.home?.logo && (
+                        {match.teams?.home?.logo && match.teams?.home?.id && (
                           <ApiSportsImage 
-                            src={match.teams.home.logo} 
                             imageId={match.teams.home.id}
                             imageType={ImageType.Teams}
                             alt={String(homeTeamNameKo)} 
@@ -465,9 +463,8 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                       
                       {/* 원정팀 */}
                       <div className="flex flex-col items-center justify-center gap-0">
-                        {match.teams?.away?.logo && (
+                        {match.teams?.away?.logo && match.teams?.away?.id && (
                           <ApiSportsImage 
-                            src={match.teams.away.logo} 
                             imageId={match.teams.away.id}
                             imageType={ImageType.Teams}
                             alt={String(awayTeamNameKo)} 

@@ -4,7 +4,7 @@ import { useState, useMemo, memo } from 'react';
 import { PlayerStatistic } from '@/domains/livescore/types/player';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
-import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
+
 import { EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 
 interface PlayerStatsProps {
@@ -13,21 +13,16 @@ interface PlayerStatsProps {
 
 // 리그 로고 컴포넌트 - 메모이제이션 적용
 const LeagueLogo = memo(({ name, leagueId }: { name: string; leagueId?: number }) => {
-  // 스토리지 URL 생성
-  const logoUrl = leagueId ? getSupabaseStorageUrl(ImageType.Leagues, leagueId) : '';
-  
   return (
     <div className="w-6 h-6 relative flex-shrink-0">
-      {leagueId ? (
+      {leagueId && leagueId > 0 ? (
         <ApiSportsImage
-          src={logoUrl}
           imageId={leagueId}
           imageType={ImageType.Leagues}
           alt={name || '리그'}
           width={24}
           height={24}
           className="w-5 h-5 md:w-6 md:h-6 object-contain"
-          fallbackType={ImageType.Leagues}
         />
       ) : (
         <div className="w-5 h-5 md:w-6 md:h-6 bg-gray-200 flex items-center justify-center text-gray-400 text-xs rounded">
@@ -42,21 +37,16 @@ LeagueLogo.displayName = 'LeagueLogo';
 
 // 팀 로고 컴포넌트 - 메모이제이션 적용
 const TeamLogo = memo(({ name, teamId }: { name: string; teamId?: number }) => {
-  // 스토리지 URL 생성
-  const logoUrl = teamId ? getSupabaseStorageUrl(ImageType.Teams, teamId) : '';
-  
   return (
     <div className="w-6 h-6 relative flex-shrink-0">
-      {teamId ? (
+      {teamId && teamId > 0 ? (
         <ApiSportsImage
-          src={logoUrl}
           imageId={teamId}
           imageType={ImageType.Teams}
           alt={name || '팀'}
           width={24}
           height={24}
           className="w-5 h-5 md:w-6 md:h-6 object-contain"
-          fallbackType={ImageType.Teams}
         />
       ) : (
         <div className="w-5 h-5 md:w-6 md:h-6 bg-gray-200 flex items-center justify-center text-gray-400 text-xs rounded">
@@ -157,14 +147,12 @@ export default function PlayerStats({ statistics: initialStatistics }: PlayerSta
             <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
               <div className="w-6 h-6 flex items-center justify-center">
                 <ApiSportsImage
-                  src={getSupabaseStorageUrl(ImageType.Leagues, selectedLeague)}
                   imageId={selectedLeague}
                   imageType={ImageType.Leagues}
                   alt={leagues.find(l => l.id === selectedLeague)?.name || '리그'}
                   width={24}
                   height={24}
                   className="w-5 h-5 object-contain"
-                  fallbackType={ImageType.Leagues}
                 />
               </div>
               <span className="font-medium">

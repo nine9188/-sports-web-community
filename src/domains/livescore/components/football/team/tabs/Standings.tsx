@@ -4,7 +4,6 @@ import { memo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
-import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 import { Standing } from '@/domains/livescore/actions/teams/standings';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 
@@ -20,20 +19,20 @@ interface StandingsProps {
 
 // 팀 로고 컴포넌트 - 메모이제이션
 const TeamLogo = memo(({ teamName, teamId }: { teamName: string; teamId?: number }) => {
-  // 스토리지 URL 생성
-  const logoUrl = teamId ? getSupabaseStorageUrl(ImageType.Teams, teamId) : '';
-  
   return (
     <div className="w-6 h-6 flex-shrink-0 relative transform-gpu">
-      <ApiSportsImage
-        src={logoUrl}
-        imageId={teamId}
-        imageType={ImageType.Teams}
-        alt={teamName}
-        width={24}
-        height={24}
-        className="object-contain w-6 h-6"
-      />
+      {teamId && teamId > 0 ? (
+        <ApiSportsImage
+          imageId={teamId}
+          imageType={ImageType.Teams}
+          alt={teamName}
+          width={24}
+          height={24}
+          className="object-contain w-6 h-6"
+        />
+      ) : (
+        <div className="w-6 h-6 bg-gray-200 rounded" />
+      )}
     </div>
   );
 });
@@ -156,14 +155,12 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
                 {leagueInfo.id && (
                   <div className="w-6 h-6 relative flex-shrink-0">
                     <ApiSportsImage
-                      src={getSupabaseStorageUrl(ImageType.Leagues, leagueInfo.id)}
                       imageId={leagueInfo.id}
                       imageType={ImageType.Leagues}
                       alt={leagueInfo.name || '리그'}
                       width={24}
                       height={24}
                       className="object-contain w-6 h-6"
-                      fallbackType={ImageType.Leagues}
                     />
                   </div>
                 )}

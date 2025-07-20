@@ -48,12 +48,11 @@ interface PlayerFixturesProps {
 }
 
 // 팀 로고 컴포넌트
-const TeamLogo = ({ logo, name, teamId }: { logo: string; name: string; teamId?: number }) => {
+const TeamLogo = ({ name, teamId }: { name: string; teamId?: number }) => {
   return (
     <div className="relative w-6 h-6 shrink-0 overflow-hidden rounded-full">
-      {logo && teamId ? (
+      {teamId && teamId > 0 ? (
         <ApiSportsImage 
-          src={logo} 
           imageId={teamId}
           imageType={ImageType.Teams}
           alt={name}
@@ -63,7 +62,7 @@ const TeamLogo = ({ logo, name, teamId }: { logo: string; name: string; teamId?:
         />
       ) : (
         <Image 
-          src={logo || '/placeholder-team.png'} 
+          src="/placeholder-team.png" 
           alt={name}
           width={24}
           height={24}
@@ -421,7 +420,6 @@ export default function PlayerFixtures({
                         {fixture.teams.home.name}
                       </span>
                       <TeamLogo
-                        logo={fixture.teams.home.logo}
                         name={fixture.teams.home.name}
                         teamId={fixture.teams.home.id}
                       />
@@ -433,7 +431,6 @@ export default function PlayerFixtures({
                   <td className="py-3 pl-1 text-left">
                     <div className="flex items-center space-x-1">
                       <TeamLogo
-                        logo={fixture.teams.away.logo}
                         name={fixture.teams.away.name}
                         teamId={fixture.teams.away.id}
                       />
@@ -517,7 +514,6 @@ export default function PlayerFixtures({
                       {fixture.teams.home.name}
                     </span>
                     <TeamLogo
-                      logo={fixture.teams.home.logo}
                       name={fixture.teams.home.name}
                       teamId={fixture.teams.home.id}
                     />
@@ -531,7 +527,6 @@ export default function PlayerFixtures({
                   {/* 원정팀 */}
                   <div className="flex-1 flex items-center space-x-1 overflow-hidden">
                     <TeamLogo
-                      logo={fixture.teams.away.logo}
                       name={fixture.teams.away.name}
                       teamId={fixture.teams.away.id}
                     />

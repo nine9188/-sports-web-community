@@ -2,7 +2,6 @@
 
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
-import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 import FormDisplay from './FormDisplay';
 
 // 타입 정의
@@ -118,7 +117,6 @@ export default function StatsCards({ stats, onTabChange }: StatsCardsProps) {
           <div className="flex items-center p-2">
             <div className="w-6 h-6 relative flex-shrink-0 mr-3">
               <ApiSportsImage
-                src={getSupabaseStorageUrl(ImageType.Leagues, safeLeague.id || 0)}
                 imageId={safeLeague.id || 0}
                 imageType={ImageType.Leagues}
                 alt={safeLeague.name || '리그'}
