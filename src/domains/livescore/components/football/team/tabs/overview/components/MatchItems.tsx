@@ -1,11 +1,11 @@
 'use client';
 
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
+import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 
 // 매치 타입 정의
 export interface Match {
@@ -113,7 +113,7 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
               <thead className="bg-gray-50">
                 <tr className="h-10">
                   <th className="p-0 md:p-2 text-left text-xs font-medium text-gray-500 w-10 md:w-16">날짜</th>
-                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500 w-6 md:w-32">리그</th>
+                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500 w-8 md:w-32">리그</th>
                   <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500">경기</th>
                   <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500 w-10 md:w-16">결과</th>
                 </tr>
@@ -128,15 +128,19 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                     <td className="p-0 md:px-2 text-xs whitespace-nowrap w-10 md:w-16">
                       {format(new Date(match.fixture.date), 'MM.dd', { locale: ko })}
                     </td>
-                    <td className="p-0 md:px-2 w-6 md:w-32">
+                    <td className="p-0 md:px-2 w-8 md:w-32">
                       <div className="flex justify-center items-center md:gap-2">
-                        <Image
-                          src={match.league.logo}
-                          alt={match.league.name}
-                          width={16}
-                          height={16}
-                          className="object-contain w-4 h-4 md:w-5 md:h-5 flex-shrink-0"
-                        />
+                        <div className="w-5 h-5 relative">
+                          <ApiSportsImage
+                            src={getSupabaseStorageUrl(ImageType.Leagues, match.league.id)}
+                            imageId={match.league.id}
+                            imageType={ImageType.Leagues}
+                            alt={match.league.name}
+                            width={20}
+                            height={20}
+                            className="object-contain w-full h-full"
+                          />
+                        </div>
                         <span className="hidden md:block text-xs whitespace-nowrap">
                           {match.league.name}
                         </span>
@@ -149,7 +153,7 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                             {match.teams.home.name}
                           </span>
                           <ApiSportsImage
-                            src={match.teams.home.logo}
+                            src={getSupabaseStorageUrl(ImageType.Teams, match.teams.home.id)}
                             imageId={match.teams.home.id}
                             imageType={ImageType.Teams}
                             alt={match.teams.home.name}
@@ -165,7 +169,7 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
 
                         <div className="flex-1 flex items-center justify-start gap-0 min-w-0">
                           <ApiSportsImage
-                            src={match.teams.away.logo}
+                            src={getSupabaseStorageUrl(ImageType.Teams, match.teams.away.id)}
                             imageId={match.teams.away.id}
                             imageType={ImageType.Teams}
                             alt={match.teams.away.name}
@@ -217,7 +221,7 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
               <thead className="bg-gray-50">
                 <tr className="h-10">
                   <th className="p-0 md:p-2 text-left text-xs font-medium text-gray-500 w-16 md:w-20">날짜</th>
-                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500 w-6 md:w-32">리그</th>
+                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500 w-8 md:w-32">리그</th>
                   <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500">경기</th>
                 </tr>
               </thead>
@@ -231,15 +235,19 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                     <td className="p-0 md:px-2 text-xs whitespace-nowrap w-16 md:w-20">
                       {format(new Date(match.fixture.date), 'MM.dd HH:mm', { locale: ko })}
                     </td>
-                    <td className="p-0 md:px-2 w-6 md:w-32">
+                    <td className="p-0 md:px-2 w-8 md:w-32">
                       <div className="flex justify-center items-center md:gap-2">
-                        <Image
-                          src={match.league.logo}
-                          alt={match.league.name}
-                          width={16}
-                          height={16}
-                          className="object-contain w-4 h-4 md:w-5 md:h-5 flex-shrink-0"
-                        />
+                        <div className="w-5 h-5 relative">
+                          <ApiSportsImage
+                            src={getSupabaseStorageUrl(ImageType.Leagues, match.league.id)}
+                            imageId={match.league.id}
+                            imageType={ImageType.Leagues}
+                            alt={match.league.name}
+                            width={20}
+                            height={20}
+                            className="object-contain w-full h-full"
+                          />
+                        </div>
                         <span className="hidden md:block text-xs whitespace-nowrap">
                           {match.league.name}
                         </span>
@@ -252,7 +260,7 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                             {match.teams.home.name}
                           </span>
                           <ApiSportsImage
-                            src={match.teams.home.logo}
+                            src={getSupabaseStorageUrl(ImageType.Teams, match.teams.home.id)}
                             imageId={match.teams.home.id}
                             imageType={ImageType.Teams}
                             alt={match.teams.home.name}
@@ -268,7 +276,7 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
 
                         <div className="flex-1 flex items-center justify-start gap-0 min-w-0">
                           <ApiSportsImage
-                            src={match.teams.away.logo}
+                            src={getSupabaseStorageUrl(ImageType.Teams, match.teams.away.id)}
                             imageId={match.teams.away.id}
                             imageType={ImageType.Teams}
                             alt={match.teams.away.name}

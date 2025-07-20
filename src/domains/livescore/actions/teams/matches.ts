@@ -11,6 +11,7 @@ export interface Match {
     status: { short: string };
   };
   league: {
+    id: number;
     name: string;
     logo: string;
   };

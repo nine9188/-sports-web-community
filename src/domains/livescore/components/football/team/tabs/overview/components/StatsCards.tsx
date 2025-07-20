@@ -1,12 +1,13 @@
 'use client';
 
-import Image from 'next/image';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
+import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 import FormDisplay from './FormDisplay';
 
 // 타입 정의
 interface LeagueInfo {
+  id?: number;
   name: string;
   country: string;
   logo: string;
@@ -39,7 +40,13 @@ interface CleanSheetInfo {
 
 interface StatsCardsProps {
   stats: {
-    league?: LeagueInfo;
+    league?: {
+      id?: number;
+      name: string;
+      country: string;
+      logo: string;
+      season: number;
+    };
     fixtures?: FixturesInfo;
     goals?: {
       for: GoalStats;
@@ -55,6 +62,7 @@ export default function StatsCards({ stats, onTabChange }: StatsCardsProps) {
   // 안전한 상태 객체 정의 (undefined 방지)
   const safeStats = stats || {};
   const safeLeague: LeagueInfo = safeStats.league || {
+    id: 0,
     name: '',
     country: '',
     logo: '',
@@ -109,17 +117,15 @@ export default function StatsCards({ stats, onTabChange }: StatsCardsProps) {
           <h4 className="text-sm font-medium p-2 border-b border-gray-100">리그 정보</h4>
           <div className="flex items-center p-2">
             <div className="w-6 h-6 relative flex-shrink-0 mr-3">
-              {safeLeague.logo && (
-                <ApiSportsImage
-                  src={safeLeague.logo}
-                  imageId={safeLeague.id}
-                  imageType={ImageType.Leagues}
-                  alt={safeLeague.name || '리그'}
-                  width={24}
-                  height={24}
-                  className="object-contain w-6 h-6"
-                />
-              )}
+              <ApiSportsImage
+                src={getSupabaseStorageUrl(ImageType.Leagues, safeLeague.id || 0)}
+                imageId={safeLeague.id || 0}
+                imageType={ImageType.Leagues}
+                alt={safeLeague.name || '리그'}
+                width={24}
+                height={24}
+                className="object-contain w-6 h-6"
+              />
             </div>
             <div>
               <p className="font-medium text-sm">{safeLeague.name || '정보 없음'}</p>

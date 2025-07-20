@@ -1,7 +1,9 @@
 'use client';
 
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/types/image';
+import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 import { StandingDisplay } from '@/domains/livescore/types/standings';
 import { findTeamStanding, getDisplayStandings, getLeagueInfo, getLeagueForStandings } from '../utils/standingUtils';
 import FormDisplay from './FormDisplay';
@@ -49,15 +51,15 @@ export default function StandingsPreview({ standings, teamId, safeLeague, onTabC
     <div className="bg-white rounded-lg border overflow-hidden">
       <div className="flex items-center p-2 border-b border-gray-200">
         <div className="w-6 h-6 relative flex-shrink-0 mr-2">
-          {(displayLeagueInfo?.logo || leagueInfo.logo || safeLeague.logo) && (
-            <Image
-              src={displayLeagueInfo?.logo || leagueInfo.logo || safeLeague.logo}
-              alt={displayLeagueInfo?.name || leagueInfo.name || safeLeague.name || '리그'}
-              fill
-              sizes="24px"
-              className="object-contain"
-            />
-          )}
+          <ApiSportsImage
+            src={getSupabaseStorageUrl(ImageType.Leagues, displayLeagueInfo?.id || leagueInfo.id)}
+            imageId={displayLeagueInfo?.id || leagueInfo.id}
+            imageType={ImageType.Leagues}
+            alt={displayLeagueInfo?.name || leagueInfo.name || safeLeague.name || '리그'}
+            width={24}
+            height={24}
+            className="object-contain w-6 h-6"
+          />
         </div>
         <h4 className="text-sm font-medium">{displayLeagueInfo?.name || leagueInfo.name || safeLeague.name || '리그 순위'}</h4>
       </div>
@@ -103,17 +105,17 @@ export default function StandingsPreview({ standings, teamId, safeLeague, onTabC
                   <td className={tableCellStyle}>{standing.rank}</td>
                   <td className={tableCellStyle}>
                     <div className="flex items-center gap-2">
-                      {standing.team.logo && (
-                        <div className="w-5 h-5 relative">
-                          <Image
-                            src={standing.team.logo}
-                            alt={standing.team.name}
-                            fill
-                            sizes="20px"
-                            className="object-contain"
-                          />
-                        </div>
-                      )}
+                      <div className="w-5 h-5 relative flex-shrink-0">
+                        <ApiSportsImage
+                          src={getSupabaseStorageUrl(ImageType.Teams, standing.team.id)}
+                          imageId={standing.team.id}
+                          imageType={ImageType.Teams}
+                          alt={standing.team.name}
+                          width={20}
+                          height={20}
+                          className="object-contain w-5 h-5"
+                        />
+                      </div>
                       <span className={`truncate ${isCurrentTeam ? 'font-semibold' : ''}`}>
                         {standing.team.name}
                       </span>

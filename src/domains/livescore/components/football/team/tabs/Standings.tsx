@@ -1,80 +1,39 @@
 'use client';
 
 import { memo, useCallback } from 'react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
+import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 import { Standing } from '@/domains/livescore/actions/teams/standings';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 
-// 구체적인 인터페이스 정의
-interface Team {
-  id: number;
-  name: string;
-  logo: string;
-}
-
-interface Goals {
-  for: number;
-  against: number;
-}
-
-interface AllStats {
-  played: number;
-  win: number;
-  draw: number;
-  lose: number;
-  goals: Goals;
-}
-
-interface StandingItem {
-  rank: number;
-  team: Team;
-  all: AllStats;
-  goalsDiff: number;
-  points: number;
-  form: string;
-  description?: string;
-}
-
-// 서버 액션에서 정의한 Standing 인터페이스와 일치시킴
-type LeagueStanding = Standing;
+// Standing을 import한 타입 사용
+type StandingItem = Standing["league"]["standings"][0][0];
 
 interface StandingsProps {
   teamId: number;
-  initialStandings?: LeagueStanding[];
+  initialStandings?: Standing[];
   isLoading?: boolean;
   error?: string | null;
 }
 
 // 팀 로고 컴포넌트 - 메모이제이션
-const TeamLogo = memo(({ teamName, originalLogo, teamId }: { teamName: string; originalLogo: string; teamId?: number }) => {
-  const leagueName = teamName || 'Team';
-
+const TeamLogo = memo(({ teamName, teamId }: { teamName: string; teamId?: number }) => {
+  // 스토리지 URL 생성
+  const logoUrl = teamId ? getSupabaseStorageUrl(ImageType.Teams, teamId) : '';
+  
   return (
     <div className="w-6 h-6 flex-shrink-0 relative transform-gpu">
-      {originalLogo && teamId ? (
-        <ApiSportsImage
-          src={originalLogo}
-          imageId={teamId}
-          imageType={ImageType.Teams}
-          alt={leagueName}
-          width={24}
-          height={24}
-          className="object-contain w-6 h-6"
-        />
-      ) : (
-        <Image
-          src={originalLogo || '/placeholder-team.png'}
-          alt={leagueName}
-          fill
-          sizes="24px"
-          className="object-contain"
-          loading="eager"
-          priority={false}
-        />
-      )}
+      <ApiSportsImage
+        src={logoUrl}
+        imageId={teamId}
+        imageType={ImageType.Teams}
+        alt={teamName}
+        width={24}
+        height={24}
+        className="object-contain w-6 h-6"
+      />
     </div>
   );
 });
@@ -140,7 +99,7 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
   }
 
   // MLS 리그 특별 처리 함수
-  const processMlsStandings = (standings: LeagueStanding[]) => {
+  const processMlsStandings = (standings: Standing[]) => {
     const mlsLeague = standings.find(league => league.league?.id === 253);
     if (!mlsLeague) return standings;
 
@@ -194,16 +153,17 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
             {/* 리그 정보 헤더 */}
             <div className="px-3 py-2 border-b bg-gray-50">
               <div className="flex items-center gap-3">
-                {leagueInfo.logo && (
+                {leagueInfo.id && (
                   <div className="w-6 h-6 relative flex-shrink-0">
                     <ApiSportsImage
-                      src={leagueInfo.logo}
+                      src={getSupabaseStorageUrl(ImageType.Leagues, leagueInfo.id)}
                       imageId={leagueInfo.id}
                       imageType={ImageType.Leagues}
                       alt={leagueInfo.name || '리그'}
                       width={24}
                       height={24}
                       className="object-contain w-6 h-6"
+                      fallbackType={ImageType.Leagues}
                     />
                   </div>
                 )}
@@ -286,7 +246,6 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
                             <div className="flex items-center gap-1 md:gap-2">
                               <TeamLogo 
                                 teamName={standing.team.name}
-                                originalLogo={standing.team.logo}
                                 teamId={standing.team.id}
                               />
                               <div className="flex items-center max-w-[calc(100%-30px)]">

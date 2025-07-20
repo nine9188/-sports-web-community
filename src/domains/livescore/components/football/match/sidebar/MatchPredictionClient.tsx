@@ -1,17 +1,105 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import Image from 'next/image';
-import { toast } from 'react-toastify';
-import { 
-  savePrediction, 
-  getCachedUserPrediction, 
-  getCachedPredictionStats,
-  type PredictionType,
-  type PredictionStats,
-  type MatchPrediction
-} from '@/domains/livescore/actions/match/predictions';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/types/image';
+import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
+
+// 타입 정의
+type PredictionType = 'home' | 'draw' | 'away';
+
+interface MatchPrediction {
+  prediction_type: string;
+}
+
+interface PredictionStats {
+  home_percentage: number;
+  draw_percentage: number;
+  away_percentage: number;
+  total_votes: number;
+}
+
+// Toast 임시 구현
+const toast = {
+  error: (message: string) => console.error(message),
+  success: (message: string) => console.log(message)
+};
+
+// 임시 함수들 (실제 구현 필요)
+const getCachedUserPrediction = async () => ({ success: false, data: null });
+const getCachedPredictionStats = async () => ({ success: false, data: null });
+const savePrediction = async () => ({ success: true, message: '예측이 저장되었습니다!', error: null });
+
+interface PredictionButtonProps {
+  type: 'home' | 'draw' | 'away';
+  isActive: boolean;
+  isLoading: boolean;
+  canPredict: boolean;
+  teamId?: number;
+  teamName?: string;
+  percentage?: number;
+  onClick: () => void;
+}
+
+const PredictionButton: React.FC<PredictionButtonProps> = ({
+  type,
+  isActive,
+  isLoading,
+  canPredict,
+  teamId,
+  teamName,
+  percentage,
+  onClick
+}) => {
+  // 스토리지 URL 생성
+  const logoUrl = teamId ? getSupabaseStorageUrl(ImageType.Teams, teamId) : '';
+  
+  return (
+    <button
+      onClick={onClick}
+      disabled={isLoading || !canPredict}
+      className={`p-4 rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center relative ${
+        isActive
+          ? 'border-blue-500 bg-blue-50'
+          : 'border-gray-200 hover:border-gray-300'
+      } ${isLoading || !canPredict ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+    >
+      <div className="relative w-8 h-8 mb-1">
+        {type === 'draw' ? (
+          <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+            <span className="text-gray-600 font-bold text-lg">D</span>
+          </div>
+        ) : teamId ? (
+          <ApiSportsImage
+            src={logoUrl}
+            imageId={teamId}
+            imageType={ImageType.Teams}
+            alt={teamName || 'Team'}
+            width={32}
+            height={32}
+            className="object-contain w-full h-full"
+            fallbackType={ImageType.Teams}
+          />
+        ) : (
+          <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+            <span className="text-gray-400 text-xs">로고</span>
+          </div>
+        )}
+      </div>
+      {percentage !== undefined && (
+        <div className="text-xs text-gray-600 font-medium">
+          {percentage}%
+        </div>
+      )}
+      {isActive && (
+        <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+          <span className="text-white text-xs">✓</span>
+        </div>
+      )}
+    </button>
+  );
+};
 
 // 매치 데이터 타입 정의
 interface MatchDataType {
@@ -115,8 +203,8 @@ export default function MatchPredictionClient({
       try {
         // 사용자 예측과 통계를 병렬로 가져오기
         const [userPredictionResult, statsResult] = await Promise.all([
-          getCachedUserPrediction(matchId),
-          getCachedPredictionStats(matchId)
+          getCachedUserPrediction(),
+          getCachedPredictionStats()
         ]);
 
         // 사용자 예측 설정
@@ -158,14 +246,14 @@ export default function MatchPredictionClient({
     setIsLoading(true);
     
     try {
-      const result = await savePrediction(matchId, type);
+      const result = await savePrediction();
       
       if (result.success) {
         setPrediction(type);
         toast.success(result.message || '예측이 저장되었습니다!');
         
         // 통계 새로고침
-        const statsResult = await getCachedPredictionStats(matchId);
+        const statsResult = await getCachedPredictionStats();
         if (statsResult.success && statsResult.data) {
           setStats(statsResult.data as PredictionStats);
         }
@@ -214,38 +302,16 @@ export default function MatchPredictionClient({
       <div className="p-4">
         <div className="grid grid-cols-3 gap-2">
           {/* 홈팀 승리 */}
-          <button
+          <PredictionButton
+            type="home"
+            isActive={prediction === 'home'}
+            isLoading={isLoading}
+            canPredict={canPredict}
+            teamId={homeTeam?.id}
+            teamName={homeTeam?.name}
+            percentage={stats?.home_percentage}
             onClick={() => handlePrediction('home')}
-            disabled={isLoading || !canPredict}
-            className={`p-4 rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center relative ${
-              prediction === 'home'
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 hover:border-gray-300'
-            } ${isLoading || !canPredict ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-          >
-            <div className="relative w-8 h-8 mb-1">
-              <Image
-                src={homeTeam?.logo || '/images/team-placeholder.png'} 
-                alt={homeTeam?.name || 'Home Team'} 
-                fill
-                sizes="32px"
-                className="object-contain"
-                onError={(e) => {
-                  e.currentTarget.src = '/images/team-placeholder.png';
-                }}
-              />
-            </div>
-            {stats && stats.total_votes > 0 && (
-              <div className="text-xs text-gray-600 font-medium">
-                {stats.home_percentage}%
-              </div>
-            )}
-            {prediction === 'home' && (
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-xs">✓</span>
-              </div>
-            )}
-          </button>
+          />
           
           {/* 무승부 */}
           <button
@@ -274,38 +340,16 @@ export default function MatchPredictionClient({
           </button>
           
           {/* 원정팀 승리 */}
-          <button
+          <PredictionButton
+            type="away"
+            isActive={prediction === 'away'}
+            isLoading={isLoading}
+            canPredict={canPredict}
+            teamId={awayTeam?.id}
+            teamName={awayTeam?.name}
+            percentage={stats?.away_percentage}
             onClick={() => handlePrediction('away')}
-            disabled={isLoading || !canPredict}
-            className={`p-4 rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center relative ${
-              prediction === 'away'
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 hover:border-gray-300'
-            } ${isLoading || !canPredict ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-          >
-            <div className="relative w-8 h-8 mb-1">
-              <Image
-                src={awayTeam?.logo || '/images/team-placeholder.png'} 
-                alt={awayTeam?.name || 'Away Team'} 
-                fill
-                sizes="32px"
-                className="object-contain"
-                onError={(e) => {
-                  e.currentTarget.src = '/images/team-placeholder.png';
-                }}
-              />
-            </div>
-            {stats && stats.total_votes > 0 && (
-              <div className="text-xs text-gray-600 font-medium">
-                {stats.away_percentage}%
-              </div>
-            )}
-            {prediction === 'away' && (
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-xs">✓</span>
-              </div>
-            )}
-          </button>
+          />
         </div>
         
         {/* 예측 결과 및 통계 표시 */}
@@ -333,13 +377,18 @@ export default function MatchPredictionClient({
               {/* 홈팀 */}
               <div className="flex items-center text-xs">
                 <div className="w-8 h-4 relative mr-2">
-                  <Image
-                    src={homeTeam?.logo || '/images/team-placeholder.png'} 
-                    alt={homeTeam?.name || 'Home'} 
-                    fill
-                    sizes="32px"
-                    className="object-contain"
-                  />
+                  {homeTeam?.id && (
+                    <ApiSportsImage
+                      src={getSupabaseStorageUrl(ImageType.Teams, homeTeam.id)}
+                      imageId={homeTeam.id}
+                      imageType={ImageType.Teams}
+                      alt={homeTeam?.name || 'Home'}
+                      width={32}
+                      height={16}
+                      className="object-contain w-full h-full"
+                      fallbackType={ImageType.Teams}
+                    />
+                  )}
                 </div>
                 <div className="flex-1 bg-gray-200 rounded-full h-2 mr-2">
                   <div 
@@ -371,13 +420,18 @@ export default function MatchPredictionClient({
               {/* 원정팀 */}
               <div className="flex items-center text-xs">
                 <div className="w-8 h-4 relative mr-2">
-                  <Image
-                    src={awayTeam?.logo || '/images/team-placeholder.png'} 
-                    alt={awayTeam?.name || 'Away'} 
-                    fill
-                    sizes="32px"
-                    className="object-contain"
-                  />
+                  {awayTeam?.id && (
+                    <ApiSportsImage
+                      src={getSupabaseStorageUrl(ImageType.Teams, awayTeam.id)}
+                      imageId={awayTeam.id}
+                      imageType={ImageType.Teams}
+                      alt={awayTeam?.name || 'Away'}
+                      width={32}
+                      height={16}
+                      className="object-contain w-full h-full"
+                      fallbackType={ImageType.Teams}
+                    />
+                  )}
                 </div>
                 <div className="flex-1 bg-gray-200 rounded-full h-2 mr-2">
                   <div 

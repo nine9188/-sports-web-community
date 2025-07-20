@@ -2,7 +2,8 @@
 
 import React, { memo, useCallback, useRef, useState, useEffect, useMemo } from 'react';
 import styles from '../styles/formation.module.css';
-import { getPlayerImageUrlCached } from '@/shared/utils/image-proxy';
+import { getPlayerImageUrlCached, getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
+import { ImageType } from '@/shared/types/image';
 import { liverpoolPlayers, NottinghamForestPlayers, Arsenalplayers, NewcastleUnitedplayers, Chelseaplayers, ManchesterCityplayers, AstonVillaplayers, Bournemouthplayers, Fulhamplayers, Brightonplayers } from '@/domains/livescore/constants/teams/premier-league/premier-teams';
 
 
@@ -142,10 +143,10 @@ const SVGPlayerImage = memo(function SVGPlayerImage({ playerId, photoUrl, teamId
 
   if (!imageLoaded) return null;
 
-  // 렌더링 시 이미지 URL 결정
+  // 렌더링 시 이미지 URL 결정 - 스토리지 URL 사용
   let imageUrl = photoUrl;
   if (playerId) {
-    imageUrl = `https://media.api-sports.io/football/players/${playerId}.png`;
+    imageUrl = getSupabaseStorageUrl(ImageType.Players, playerId);
   }
 
   return (
@@ -321,8 +322,8 @@ const Player = memo(function Player({ homeTeamData, awayTeamData }: PlayerProps)
       const numberKey = `number-${teamId}-${playerId}`;
       const nameKey = `name-${isHome ? 'home' : 'away'}-${teamId}-${playerId}`;
       
-      // 이미지 URL 처리 - API-Sports URL 생성
-      const photoUrl = player.photo || `https://media.api-sports.io/football/players/${player.id}.png`;
+      // 이미지 URL 처리 - 스토리지 URL 생성
+      const photoUrl = player.photo || getSupabaseStorageUrl(ImageType.Players, player.id);
       const hasValidImage = Boolean(photoUrl) && !failedImages.has(`${playerId}`);
       const imageLoaded = loadedImages.has(`${playerId}`);
       

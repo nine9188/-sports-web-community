@@ -1,10 +1,11 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { PlayerStats } from '@/domains/livescore/actions/teams/player-stats';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
+import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 
 // 상수 정의
@@ -51,7 +52,6 @@ interface SquadProps {
 
 export default function Squad({ initialSquad, initialStats, isLoading: externalLoading, error: externalError }: SquadProps) {
   const router = useRouter();
-  const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
 
   // 데이터 병합 처리를 useMemo를 사용하여 최적화
   const squad = useMemo(() => {
@@ -85,10 +85,6 @@ export default function Squad({ initialSquad, initialStats, isLoading: externalL
       return a.name.localeCompare(b.name);
     });
   }, [squad]);
-
-  const handleImageError = (id: number) => {
-    setImageErrors(prev => ({ ...prev, [id]: true }));
-  };
 
   // 로딩 상태 처리
   if (externalLoading) {
@@ -162,22 +158,18 @@ export default function Squad({ initialSquad, initialStats, isLoading: externalL
                   >
                     <td className="px-2 sm:px-4 md:px-6 py-1">
                       <div className="relative w-6 h-6 md:w-8 md:h-8 bg-gray-100 rounded-full overflow-hidden">
-                        {!imageErrors[member.id] && member.photo ? (
-                          <ApiSportsImage
-                            src={member.photo}
-                            imageId={member.id}
-                            imageType={member.position === 'Coach' ? ImageType.Coachs : ImageType.Players}
-                            alt={member.name}
-                            width={32}
-                            height={32}
-                            className="object-cover w-full h-full rounded-full"
-                            onError={() => handleImageError(member.id)}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-500 text-xs">
-                            {member.name.charAt(0)}
-                          </div>
-                        )}
+                        <ApiSportsImage
+                          src={getSupabaseStorageUrl(
+                            member.position === 'Coach' ? ImageType.Coachs : ImageType.Players,
+                            member.id
+                          )}
+                          imageId={member.id}
+                          imageType={member.position === 'Coach' ? ImageType.Coachs : ImageType.Players}
+                          alt={member.name}
+                          width={32}
+                          height={32}
+                          className="object-cover w-full h-full rounded-full"
+                        />
                       </div>
                     </td>
                     <td className="px-2 sm:px-4 md:px-6 py-1 text-sm md:text-base font-medium">

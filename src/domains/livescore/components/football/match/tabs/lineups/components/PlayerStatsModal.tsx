@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { fetchCachedPlayerStats, PlayerStats, PlayerStatsResponse } from '@/domains/livescore/actions/match/playerStats';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
+import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 
 interface PlayerStatsModalProps {
   isOpen: boolean;
@@ -204,9 +205,9 @@ export default function PlayerStatsModal({
 
   // 데이터 표시
   const stats = playerStats.response.statistics?.[0] || {};
-  const playerData = playerStats.response.player || {};
 
-  const playerPhotoUrl = playerData.photo || `https://media.api-sports.io/football/players/${playerId}.png`;
+  // 스토리지 URL 사용 (원본 URL 대신)
+  const playerPhotoUrl = getSupabaseStorageUrl(ImageType.Players, playerId);
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -237,18 +238,20 @@ export default function PlayerStatsModal({
                 width={112}
                 height={112}
                 className="w-full h-full rounded-full object-cover"
+                fallbackType={ImageType.Players}
               />
             </div>
-            {stats.team?.logo && (
+            {stats.team?.id && (
               <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center">
                 <ApiSportsImage
-                  src={stats.team.logo}
+                  src={getSupabaseStorageUrl(ImageType.Teams, stats.team.id)}
                   imageId={stats.team.id}
                   imageType={ImageType.Teams}
                   alt={stats.team?.name || '팀 로고'}
                   width={32}
                   height={32}
                   className="w-8 h-8 object-contain"
+                  fallbackType={ImageType.Teams}
                 />
               </div>
             )}

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Match } from '@/domains/livescore/types/match';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
+import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 
 // 매치 카드 props
 interface MatchCardProps {
@@ -137,18 +138,18 @@ export default function MatchCard({ match: initialMatch }: MatchCardProps) {
                   <span className="truncate font-medium">{homeTeam.name}</span>
                   <div className="relative w-6 h-6 shrink-0">
                     {/* 빈 문자열 체크 추가 */}
-                    {homeTeam.logo ? (
-                      <ApiSportsImage 
-                        src={homeTeam.logo} 
-                        imageId={homeTeam.id}
-                        imageType={ImageType.Teams}
-                        alt={homeTeam.name}
-                        width={24}
-                        height={24}
-                        className="object-contain w-6 h-6"
-                        style={{ width: '24px', height: '24px' }}
-                      />
-                    ) : null}
+                                          {homeTeam.id ? (
+                        <ApiSportsImage 
+                          src={getSupabaseStorageUrl(ImageType.Teams, homeTeam.id)} 
+                          imageId={homeTeam.id}
+                          imageType={ImageType.Teams}
+                          alt={homeTeam.name}
+                          width={24}
+                          height={24}
+                          className="object-contain w-6 h-6"
+                          fallbackType={ImageType.Teams}
+                        />
+                      ) : null}
                   </div>
                 </div>
               </div>
@@ -166,16 +167,16 @@ export default function MatchCard({ match: initialMatch }: MatchCardProps) {
               <div className="flex items-center gap-1 md:w-auto">
                 <div className="relative w-6 h-6 shrink-0">
                   {/* 빈 문자열 체크 추가 */}
-                  {awayTeam.logo ? (
+                  {awayTeam.id ? (
                     <ApiSportsImage 
-                      src={awayTeam.logo} 
+                      src={getSupabaseStorageUrl(ImageType.Teams, awayTeam.id)} 
                       imageId={awayTeam.id}
                       imageType={ImageType.Teams}
                       alt={awayTeam.name}
                       width={24}
                       height={24}
                       className="object-contain w-6 h-6"
-                      style={{ width: '24px', height: '24px' }}
+                      fallbackType={ImageType.Teams}
                     />
                   ) : null}
                 </div>

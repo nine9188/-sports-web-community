@@ -120,7 +120,7 @@ export default function TabContent({ teamId, tab }: TabContentProps) {
         }
       },
       league: {
-        id: 0,
+        id: (match.league as { id?: number; name: string; logo: string }).id || 0,
         name: match.league.name,
         logo: match.league.logo
       },

@@ -3,6 +3,7 @@
 import { memo } from 'react';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
+import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 
 interface PlayerImageProps {
   src?: string;
@@ -23,9 +24,9 @@ export default memo(function PlayerImage({
   width = 40,
   height = 40
 }: PlayerImageProps) {
-  // playerId가 있으면 API-Sports URL 생성, 없으면 src 사용
+  // playerId가 있으면 스토리지 URL 사용, 없으면 기본 이미지
   const imageUrl = playerId 
-    ? `https://media.api-sports.io/football/players/${playerId}.png`
+    ? getSupabaseStorageUrl(ImageType.Players, playerId)
     : src || '';
 
   return (
@@ -39,6 +40,7 @@ export default memo(function PlayerImage({
         height={height}
         className="object-cover w-full h-full rounded-full"
         priority={priority}
+        fallbackType={ImageType.Players}
       />
     </div>
   );

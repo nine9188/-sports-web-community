@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useMemo, memo } from 'react';
-import Image from 'next/image';
 import { PlayerStatistic } from '@/domains/livescore/types/player';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
+import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 import { EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 
 interface PlayerStatsProps {
@@ -12,28 +12,27 @@ interface PlayerStatsProps {
 }
 
 // 리그 로고 컴포넌트 - 메모이제이션 적용
-const LeagueLogo = memo(({ logo, name, leagueId }: { logo: string; name: string; leagueId?: number }) => {
+const LeagueLogo = memo(({ name, leagueId }: { name: string; leagueId?: number }) => {
+  // 스토리지 URL 생성
+  const logoUrl = leagueId ? getSupabaseStorageUrl(ImageType.Leagues, leagueId) : '';
+  
   return (
     <div className="w-6 h-6 relative flex-shrink-0">
-      {logo && leagueId ? (
+      {leagueId ? (
         <ApiSportsImage
-          src={logo}
+          src={logoUrl}
           imageId={leagueId}
           imageType={ImageType.Leagues}
           alt={name || '리그'}
           width={24}
           height={24}
           className="w-5 h-5 md:w-6 md:h-6 object-contain"
+          fallbackType={ImageType.Leagues}
         />
       ) : (
-        <Image
-          src={logo || '/placeholder-league.png'}
-          alt={name || '리그'}
-          width={24}
-          height={24}
-          className="w-5 h-5 md:w-6 md:h-6 object-contain"
-          unoptimized
-        />
+        <div className="w-5 h-5 md:w-6 md:h-6 bg-gray-200 flex items-center justify-center text-gray-400 text-xs rounded">
+          리그
+        </div>
       )}
     </div>
   );
@@ -42,28 +41,27 @@ const LeagueLogo = memo(({ logo, name, leagueId }: { logo: string; name: string;
 LeagueLogo.displayName = 'LeagueLogo';
 
 // 팀 로고 컴포넌트 - 메모이제이션 적용
-const TeamLogo = memo(({ logo, name, teamId }: { logo: string; name: string; teamId?: number }) => {
+const TeamLogo = memo(({ name, teamId }: { name: string; teamId?: number }) => {
+  // 스토리지 URL 생성
+  const logoUrl = teamId ? getSupabaseStorageUrl(ImageType.Teams, teamId) : '';
+  
   return (
     <div className="w-6 h-6 relative flex-shrink-0">
-      {logo && teamId ? (
+      {teamId ? (
         <ApiSportsImage
-          src={logo}
+          src={logoUrl}
           imageId={teamId}
           imageType={ImageType.Teams}
           alt={name || '팀'}
           width={24}
           height={24}
           className="w-5 h-5 md:w-6 md:h-6 object-contain"
+          fallbackType={ImageType.Teams}
         />
       ) : (
-        <Image
-          src={logo || '/placeholder-team.png'}
-          alt={name || '팀'}
-          width={24}
-          height={24}
-          className="w-5 h-5 md:w-6 md:h-6 object-contain"
-          unoptimized
-        />
+        <div className="w-5 h-5 md:w-6 md:h-6 bg-gray-200 flex items-center justify-center text-gray-400 text-xs rounded">
+          팀
+        </div>
       )}
     </div>
   );
@@ -159,13 +157,14 @@ export default function PlayerStats({ statistics: initialStatistics }: PlayerSta
             <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
               <div className="w-6 h-6 flex items-center justify-center">
                 <ApiSportsImage
-                  src={leagues.find(l => l.id === selectedLeague)?.logo || '/placeholder-league.png'}
+                  src={getSupabaseStorageUrl(ImageType.Leagues, selectedLeague)}
                   imageId={selectedLeague}
                   imageType={ImageType.Leagues}
                   alt={leagues.find(l => l.id === selectedLeague)?.name || '리그'}
                   width={24}
                   height={24}
                   className="w-5 h-5 object-contain"
+                  fallbackType={ImageType.Leagues}
                 />
               </div>
               <span className="font-medium">
@@ -184,13 +183,13 @@ export default function PlayerStats({ statistics: initialStatistics }: PlayerSta
             <div className="bg-white rounded-lg border overflow-hidden">
               {/* 리그 및 팀 헤더 */}
               <div className="flex items-center gap-2 p-2 bg-gray-50 border-b">
-                <LeagueLogo logo={stat.league.logo || ''} name={stat.league.name} />
+                <LeagueLogo name={stat.league.name} leagueId={stat.league.id} />
                 <div className="flex items-center">
                   <h3 className="font-semibold text-sm">{stat.league.name}</h3>
                   <span className="text-xs text-gray-600 ml-1">({stat.league.country})</span>
                 </div>
                 <div className="flex items-center ml-auto gap-2">
-                                            <TeamLogo logo={stat.team.logo} name={stat.team.name} teamId={stat.team.id} />
+                                            <TeamLogo name={stat.team.name} teamId={stat.team.id} />
                   <span className="font-medium text-sm">{stat.team.name}</span>
                 </div>
               </div>

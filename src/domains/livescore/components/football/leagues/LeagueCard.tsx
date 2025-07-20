@@ -3,14 +3,14 @@
 import Link from 'next/link';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
+import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 
 interface LeagueCardProps {
   leagueId: number;
   name: string;
-  logo?: string;
 }
 
-export default function LeagueCard({ leagueId, name, logo }: LeagueCardProps) {
+export default function LeagueCard({ leagueId, name }: LeagueCardProps) {
   // 리그별 추가 정보 매핑
   const getLeagueInfo = (id: number) => {
     const leagueInfoMap: Record<number, { country: string; type: string; teams?: number }> = {
@@ -35,6 +35,9 @@ export default function LeagueCard({ leagueId, name, logo }: LeagueCardProps) {
 
   const leagueInfo = getLeagueInfo(leagueId);
 
+  // 스토리지에서 바로 이미지 URL 생성 (API 호출 없음)
+  const leagueLogoUrl = getSupabaseStorageUrl(ImageType.Leagues, leagueId);
+
   return (
     <Link
       href={`/livescore/football/leagues/${leagueId}`}
@@ -43,23 +46,16 @@ export default function LeagueCard({ leagueId, name, logo }: LeagueCardProps) {
       <div className="flex flex-col items-center text-center space-y-1 lg:space-y-3">
         {/* 리그 로고 */}
         <div className="relative w-8 h-8 lg:w-12 lg:h-12 flex-shrink-0">
-          {logo ? (
-            <ApiSportsImage
-              src={logo}
-              imageId={leagueId}
-              imageType={ImageType.Leagues}
-              alt={`${name} 로고`}
-              width={48}
-              height={48}
-              className="object-contain group-hover:scale-105 transition-transform duration-200 w-8 h-8 lg:w-12 lg:h-12"
-            />
-          ) : (
-            <div className="w-8 h-8 lg:w-12 lg:h-12 bg-gray-100 rounded-full flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
-              <span className="text-gray-400 text-xs lg:text-sm font-medium">
-                {name.charAt(0)}
-              </span>
-            </div>
-          )}
+          <ApiSportsImage
+            src={leagueLogoUrl}
+            imageId={leagueId}
+            imageType={ImageType.Leagues}
+            alt={`${name} 로고`}
+            width={48}
+            height={48}
+            className="object-contain group-hover:scale-105 transition-transform duration-200 w-8 h-8 lg:w-12 lg:h-12"
+            fallbackType={ImageType.Leagues}
+          />
         </div>
 
         {/* 리그 정보 */}

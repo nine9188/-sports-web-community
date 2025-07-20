@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, memo, useCallback } from 'react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
+import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 import { useMatchData, isStandingsTabData } from '@/domains/livescore/components/football/match/context/MatchDataContext';
 import { Standing, StandingsData, Team } from '@/domains/livescore/types/match';
 
@@ -19,29 +19,27 @@ interface StandingsProps {
 }
 
 // 팀 로고 컴포넌트 - 메모이제이션
-const TeamLogo = memo(({ teamName, originalLogo, teamId }: { teamName: string; originalLogo: string; teamId?: number }) => {
+const TeamLogo = memo(({ teamName, teamId }: { teamName: string; teamId?: number }) => {
+  // 스토리지 URL 생성
+  const logoUrl = teamId ? getSupabaseStorageUrl(ImageType.Teams, teamId) : '';
+  
   return (
     <div className="w-6 h-6 flex-shrink-0 relative transform-gpu">
-      {originalLogo && teamId ? (
+      {teamId ? (
         <ApiSportsImage
-          src={originalLogo}
+          src={logoUrl}
           imageId={teamId}
           imageType={ImageType.Teams}
           alt={teamName || '팀'}
           width={24}
           height={24}
           className="object-contain w-6 h-6"
+          fallbackType={ImageType.Teams}
         />
       ) : (
-        <Image
-          src={originalLogo || '/placeholder-team.png'}
-          alt={teamName || '팀'}
-          fill
-          sizes="24px"
-          className="object-contain"
-          loading="eager"
-          priority={false}
-        />
+        <div className="w-6 h-6 bg-gray-200 flex items-center justify-center text-gray-400 text-xs rounded">
+          로고 없음
+        </div>
       )}
     </div>
   );
@@ -189,13 +187,14 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
               <div className="flex items-center gap-3">
                 <div className="w-6 h-6 relative flex-shrink-0">
                   <ApiSportsImage
-                    src={leagueData.logo || '/placeholder-league.png'}
+                    src={getSupabaseStorageUrl(ImageType.Leagues, leagueData.id)}
                     imageId={leagueData.id}
                     imageType={ImageType.Leagues}
                     alt={leagueData.name || '리그'}
                     width={24}
                     height={24}
                     className="object-contain w-6 h-6"
+                    fallbackType={ImageType.Leagues}
                   />
                 </div>
                 <h2 className="text-sm font-medium text-gray-800">{leagueData.name || '리그 정보'}</h2>
@@ -291,7 +290,6 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
                         <div className="flex items-center gap-1 md:gap-2">
                           <TeamLogo
                             teamName={standing.team.name || ''}
-                            originalLogo={standing.team.logo || ''}
                             teamId={standing.team.id}
                           />
                           <div className="flex items-center max-w-[calc(100%-30px)]">

@@ -1,6 +1,5 @@
 import { MAJOR_LEAGUE_IDS, LEAGUE_NAMES_MAP } from '@/domains/livescore/constants/league-mappings';
 import { LeagueCard } from '@/domains/livescore/components/football/leagues';
-import { fetchLeagueDetails } from '@/domains/livescore/actions/footballApi';
 
 // 리그 카테고리별 분류
 const LEAGUE_CATEGORIES = {
@@ -64,30 +63,8 @@ const getAllLeagueIds = () => {
   return allIds;
 };
 
-// 리그 로고들을 API에서 가져오는 함수
-async function getLeagueLogos() {
-  const leagueIds = getAllLeagueIds();
-  const leagueLogos: Record<number, string> = {};
-  
-  // 병렬로 모든 리그 정보 가져오기
-  const leaguePromises = leagueIds.map(async (leagueId) => {
-    try {
-      const leagueDetails = await fetchLeagueDetails(leagueId.toString());
-      if (leagueDetails && leagueDetails.logo) {
-        leagueLogos[leagueId] = leagueDetails.logo;
-      }
-    } catch (error) {
-      console.error(`리그 ${leagueId} 로고 가져오기 실패:`, error);
-    }
-  });
-  
-  await Promise.all(leaguePromises);
-  return leagueLogos;
-}
-
 export default async function LeaguesPage() {
-  // 서버에서 리그 로고들을 미리 가져오기
-  const leagueLogos = await getLeagueLogos();
+  const allLeagueIds = getAllLeagueIds();
 
   return (
     <div className="bg-white min-h-screen w-full">
@@ -102,7 +79,7 @@ export default async function LeaguesPage() {
         <div className="mb-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-md border border-blue-200 p-2">
           <div className="grid grid-cols-3 gap-2">
             <div className="bg-white rounded-sm p-2 shadow-sm border border-blue-100 flex items-center justify-center space-x-1">
-              <span className="text-xl font-bold text-blue-700">{getAllLeagueIds().length}</span>
+              <span className="text-xl font-bold text-blue-700">{allLeagueIds.length}</span>
               <span className="text-xs text-blue-600 font-medium">리그</span>
             </div>
             
@@ -134,7 +111,6 @@ export default async function LeaguesPage() {
                     key={leagueId}
                     leagueId={leagueId}
                     name={LEAGUE_NAMES_MAP[leagueId]}
-                    logo={leagueLogos[leagueId]}
                   />
                 ))}
               </div>

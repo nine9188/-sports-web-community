@@ -1,6 +1,8 @@
 'use client';
 
-import Image from 'next/image';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/types/image';
+import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 import { TeamStatsData, LeagueData } from '@/domains/livescore/types/stats';
 
 // 컴포넌트 Props 타입
@@ -38,21 +40,6 @@ export default function BasicStatsCards({ stats }: BasicStatsCardsProps) {
   };
   
   const safeCleanSheet = stats.clean_sheet || { total: 0, home: 0, away: 0 };
-  
-  // 리그 로고 렌더링 함수
-  const renderLogo = (url: string | undefined, alt: string) => {
-    return (
-      <div className="w-6 h-6 relative">
-        <Image
-          src={url || '/placeholder-team.png'}
-          alt={alt}
-          fill
-          className="object-contain"
-          sizes="24px"
-        />
-      </div>
-    );
-  };
 
   return (
     <div className="bg-white rounded-lg border overflow-hidden">
@@ -62,7 +49,17 @@ export default function BasicStatsCards({ stats }: BasicStatsCardsProps) {
           <h4 className="text-sm font-medium p-2 border-b border-gray-100">리그 정보</h4>
           <div className="flex items-center p-2">
             <div className="mr-3 flex-shrink-0">
-              {renderLogo(safeLeague.logo, safeLeague.name || '')}
+              <div className="w-6 h-6 relative">
+                <ApiSportsImage
+                  src={getSupabaseStorageUrl(ImageType.Leagues, safeLeague.id)}
+                  imageId={safeLeague.id}
+                  imageType={ImageType.Leagues}
+                  alt={safeLeague.name || ''}
+                  width={24}
+                  height={24}
+                  className="object-contain w-full h-full"
+                />
+              </div>
             </div>
             <div>
               <p className="font-medium text-sm">{safeLeague.name || ''}</p>

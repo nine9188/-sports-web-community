@@ -3,9 +3,9 @@
 import React from 'react';
 import { Match } from '@/domains/livescore/types/match';
 import MatchCard from '../MatchCard';
-import Image from 'next/image';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
+import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 
 interface LeagueMatchListProps {
   matches: Match[];
@@ -57,8 +57,7 @@ export default function LeagueMatchList({ matches }: LeagueMatchListProps) {
     );
   }
 
-  // 기본 플레이스홀더 이미지 경로
-  const DEFAULT_LOGO = '/placeholder-league.png'; // 기본 리그 로고 이미지 경로
+
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -81,24 +80,19 @@ export default function LeagueMatchList({ matches }: LeagueMatchListProps) {
                       {/* 우선순위: 1. 리그 로고, 2. 국가 플래그, 3. 기본 이미지 */}
                       {group.logo ? (
                         <ApiSportsImage 
-                          src={group.logo}
+                          src={getSupabaseStorageUrl(ImageType.Leagues, group.leagueId)}
                           imageId={group.leagueId}
                           imageType={ImageType.Leagues}
                           alt={group.name}
                           width={24}
                           height={24}
                           className="object-contain w-6 h-6"
-                          style={{ width: '24px', height: '24px' }}
+                          fallbackType={ImageType.Leagues}
                         />
                       ) : (
-                        <Image 
-                          src={group.flag || DEFAULT_LOGO}
-                          alt={group.name}
-                          width={24}
-                          height={24}
-                          className="object-contain w-6 h-6"
-                          style={{ width: '24px', height: '24px' }}
-                        />
+                        <div className="w-6 h-6 bg-gray-200 flex items-center justify-center text-gray-400 text-xs rounded">
+                          리그
+                        </div>
                       )}
                     </div>
                     <div>
