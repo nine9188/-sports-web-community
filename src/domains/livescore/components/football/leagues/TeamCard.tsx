@@ -46,7 +46,7 @@ export default function TeamCard({ team }: TeamCardProps) {
             width={64}
             height={64}
             className="object-contain group-hover:scale-105 transition-transform duration-200 w-8 h-8 lg:w-16 lg:h-16"
-            fallbackType={ImageType.Teams}
+            
           />
         </div>
 

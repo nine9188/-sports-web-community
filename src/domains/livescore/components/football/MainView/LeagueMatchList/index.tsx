@@ -87,7 +87,7 @@ export default function LeagueMatchList({ matches }: LeagueMatchListProps) {
                           width={24}
                           height={24}
                           className="object-contain w-6 h-6"
-                          fallbackType={ImageType.Leagues}
+                          
                         />
                       ) : (
                         <div className="w-6 h-6 bg-gray-200 flex items-center justify-center text-gray-400 text-xs rounded">

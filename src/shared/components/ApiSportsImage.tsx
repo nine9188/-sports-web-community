@@ -67,8 +67,8 @@ export default function ApiSportsImage({
 
     setHasTriedServerAction(true);
     
-    try {
-      const { getCachedImageFromStorage } = await import('@/shared/actions/image-storage-actions');
+        try {
+          const { getCachedImageFromStorage } = await import('@/shared/actions/image-storage-actions');
       const result = await getCachedImageFromStorage(
         imageType as 'players' | 'teams' | 'leagues' | 'coachs' | 'venues', 
         imageId
@@ -83,12 +83,12 @@ export default function ApiSportsImage({
         // 서버 액션도 실패 시 빈 영역 처리
         setSrc(null);
       }
-    } catch (error) {
+        } catch (error) {
       console.debug(`이미지 서버 액션 실패: ${imageType}/${imageId}`, error);
       setSrc(null);
-    }
-  };
-
+        }
+      };
+      
   // 로딩 중이거나 src가 null이면 빈 영역 반환
   if (isLoading || !src) {
     return (
@@ -105,12 +105,12 @@ export default function ApiSportsImage({
 
   // 스토리지 URL이 확인된 경우에만 이미지 렌더링
   return (
-    <Image
-      {...props}
+      <Image
+        {...props}
       src={src}
       alt={alt}
-      onError={handleImageError}
-      unoptimized // 외부 이미지이므로 최적화 비활성화
-    />
+        onError={handleImageError}
+        unoptimized // 외부 이미지이므로 최적화 비활성화
+      />
   );
 } 

@@ -1,9 +1,9 @@
 'use client';
 
-import React, { memo } from 'react';
+import React, { memo, useMemo } from 'react';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
-import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
+
 import { useMatchData } from '@/domains/livescore/components/football/match/context/MatchDataContext';
 import { formatDateToKorean } from '@/domains/livescore/utils/dateUtils';
 import { ErrorState, LoadingState } from '@/domains/livescore/components/common/CommonComponents';
@@ -114,74 +114,109 @@ const MatchHeader = memo(() => {
     error: contextError 
   } = useMatchData();
 
-  // 로딩 상태
-  if (contextLoading) {
-    return <LoadingState message="경기 정보를 불러오는 중..." />;
-  }
-
-  // 에러 상태
-  if (contextError) {
-    return <ErrorState message={contextError} />;
-  }
-
-  // 매치 데이터가 없는 경우
-  if (!matchData) {
-    return <ErrorState message="경기 데이터를 찾을 수 없습니다." />;
-  }
-
+  // 타입 캐스팅을 가장 먼저 처리
   const typedMatchData = matchData as MatchDataType;
-  const fixture = typedMatchData?.fixture || {};
-  const league = typedMatchData?.league || {};
-  const homeTeam = typedMatchData?.teams?.home;
-  const awayTeam = typedMatchData?.teams?.away;
-  const homeGoals = typedMatchData?.goals?.home;
-  const awayGoals = typedMatchData?.goals?.away;
-  const score = typedMatchData?.score || {};
 
-  // 점수 정보 - 승부차기나 연장전 정보가 있으면 표시
-  const getScoreDisplay = () => {
+  // 경기 기본 정보 메모이제이션 - 탭 변경과 무관하게 안정적으로 유지
+  const matchInfo = useMemo(() => {
+    if (!typedMatchData) {
+      return null;
+    }
+
+    const fixture = typedMatchData?.fixture || {};
+    const league = typedMatchData?.league || {};
+    const homeTeam = typedMatchData?.teams?.home;
+    const awayTeam = typedMatchData?.teams?.away;
+    const homeGoals = typedMatchData?.goals?.home;
+    const awayGoals = typedMatchData?.goals?.away;
+    const score = typedMatchData?.score || {};
+
+    return {
+      fixture,
+      league,
+      homeTeam,
+      awayTeam,
+      homeGoals,
+      awayGoals,
+      score
+    };
+  }, [typedMatchData]);
+
+  // 점수 및 상태 정보 메모이제이션
+  const displayInfo = useMemo(() => {
+    if (!matchInfo) {
+      return { scoreDisplay: '0 - 0', statusText: '경기 정보 없음' };
+    }
+
+    const { homeGoals, awayGoals, score, fixture } = matchInfo;
     const currentScore = `${homeGoals ?? 0} - ${awayGoals ?? 0}`;
     
+    let scoreDisplay = currentScore;
     // 승부차기 정보가 있는 경우
     if (score?.penalty && score.penalty.home !== null && score.penalty.away !== null) {
-      return `${currentScore} (승부차기 ${score.penalty.home}-${score.penalty.away})`;
+      scoreDisplay = `${currentScore} (승부차기 ${score.penalty.home}-${score.penalty.away})`;
     }
-    
     // 연장전 정보가 있는 경우
-    if (score?.extratime && score.extratime.home !== null && score.extratime.away !== null) {
-      return `${currentScore} (연장 ${score.extratime.home}-${score.extratime.away})`;
+    else if (score?.extratime && score.extratime.home !== null && score.extratime.away !== null) {
+      scoreDisplay = `${currentScore} (연장 ${score.extratime.home}-${score.extratime.away})`;
     }
-    
-    return currentScore;
-  };
 
-  // 경기 상태 텍스트
-  const getStatusText = () => {
+    // 경기 상태 텍스트
     const status = fixture?.status?.short;
     const elapsed = fixture?.status?.elapsed;
     
+    let statusText = '경기 정보 없음';
     switch (status) {
-      case 'TBD': return '경기 일정 미정';
-      case 'NS': return '경기 시작 전';
-      case '1H': return `전반 ${elapsed || 0}분`;
-      case 'HT': return '하프타임';
-      case '2H': return `후반 ${elapsed || 45}분`;
-      case 'ET': return `연장전 ${elapsed || 90}분`;
-      case 'P': return '승부차기';
-      case 'FT': return '경기 종료';
-      case 'AET': return '연장전 종료';
-      case 'PEN': return '승부차기 종료';
-      case 'SUSP': return '경기 중단';
-      case 'INT': return '경기 중단';
-      case 'CANC': return '경기 취소';
-      case 'ABD': return '경기 중단';
-      case 'PST': return '경기 연기';
-      case 'AWD': return '몰수 승';
-      case 'WO': return '부전승';
-      case 'LIVE': return `진행 중 ${elapsed || 0}분`;
-      default: return status || '알 수 없음';
+      case 'TBD': statusText = '경기 일정 미정'; break;
+      case 'NS': statusText = '경기 시작 전'; break;
+      case '1H': statusText = `전반 ${elapsed || 0}분`; break;
+      case 'HT': statusText = '하프타임'; break;
+      case '2H': statusText = `후반 ${elapsed || 45}분`; break;
+      case 'ET': statusText = `연장전 ${elapsed || 90}분`; break;
+      case 'P': statusText = '승부차기'; break;
+      case 'FT': statusText = '경기 종료'; break;
+      case 'AET': statusText = '연장전 종료'; break;
+      case 'PEN': statusText = '승부차기 종료'; break;
+      case 'SUSP': statusText = '경기 중단'; break;
+      case 'INT': statusText = '경기 중단'; break;
+      case 'CANC': statusText = '경기 취소'; break;
+      case 'ABD': statusText = '경기 중단'; break;
+      case 'PST': statusText = '경기 연기'; break;
+      case 'AWD': statusText = '몰수 승'; break;
+      case 'WO': statusText = '부전승'; break;
+      case 'LIVE': statusText = `진행 중 ${elapsed || 0}분`; break;
+      default: statusText = status || '알 수 없음'; break;
     }
-  };
+
+    return {
+      scoreDisplay,
+      statusText
+    };
+  }, [matchInfo]);
+
+  // 헤더는 기본 경기 정보만 필요하므로 탭 로딩과 분리
+  // 기본 매치 데이터가 있으면 헤더를 표시하고, 탭별 로딩은 무시
+  const hasBasicMatchData = matchInfo && 
+    matchInfo.fixture && 
+    matchInfo.homeTeam && 
+    matchInfo.awayTeam;
+
+  // 로딩 상태 - 기본 경기 정보가 없을 때만 로딩 표시
+  if (contextLoading && !hasBasicMatchData) {
+    return <LoadingState message="경기 정보를 불러오는 중..." />;
+  }
+
+  // 에러 상태 - 기본 경기 정보가 없고 에러가 있을 때만 표시
+  if (contextError && !hasBasicMatchData) {
+    return <ErrorState message={contextError} />;
+  }
+
+  // 매치 데이터가 없는 경우 - 기본 경기 정보가 없을 때만 에러 표시
+  if (!hasBasicMatchData) {
+    return <ErrorState message="경기 데이터를 찾을 수 없습니다." />;
+  }
+
+    const { fixture, league, homeTeam, awayTeam } = matchInfo;
 
   // 득점자 목록 작성 - 일반 골만 필터링
   const goalEvents = eventsData?.filter((event: MatchEvent) => {
@@ -197,9 +232,7 @@ const MatchHeader = memo(() => {
   }) || [];
 
   // 리그 및 팀 로고 스토리지 URL 생성
-  const leagueLogoUrl = league?.id ? getSupabaseStorageUrl(ImageType.Leagues, league.id) : '';
-  const homeTeamLogoUrl = homeTeam?.id ? getSupabaseStorageUrl(ImageType.Teams, homeTeam.id) : '';
-  const awayTeamLogoUrl = awayTeam?.id ? getSupabaseStorageUrl(ImageType.Teams, awayTeam.id) : '';
+
 
   return (
     <div className="w-full md:max-w-screen-xl md:mx-auto">
@@ -212,14 +245,12 @@ const MatchHeader = memo(() => {
             <div className="relative w-6 h-6 flex items-center justify-center">
               {league?.id && (
                 <ApiSportsImage
-                  src={leagueLogoUrl}
                   imageId={league.id}
                   imageType={ImageType.Leagues}
                   alt={league?.name || ''}
                   width={24}
                   height={24}
                   className="object-contain w-full h-full"
-                  fallbackType={ImageType.Leagues}
                 />
               )}
             </div>
@@ -235,7 +266,7 @@ const MatchHeader = memo(() => {
               {fixture?.date ? formatDateToKorean(new Date(fixture.date)) : '날짜 정보 없음'}
             </div>
             <div className="text-sm font-medium text-center">
-              {getStatusText()}
+              {displayInfo.statusText}
             </div>
           </div>
 
@@ -258,14 +289,12 @@ const MatchHeader = memo(() => {
               <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-1 md:mb-2 flex items-center justify-center">
                 {homeTeam?.id && (
                   <ApiSportsImage
-                    src={homeTeamLogoUrl}
                     imageId={homeTeam.id}
                     imageType={ImageType.Teams}
                     alt={homeTeam.name || ''}
                     width={48}
                     height={48}
                     className="object-contain w-full h-full"
-                    fallbackType={ImageType.Teams}
                   />
                 )}
               </div>
@@ -279,7 +308,7 @@ const MatchHeader = memo(() => {
             {/* 스코어 */}
             <div className="w-1/3 text-center">
               <div className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">
-                {getScoreDisplay()}
+                {displayInfo.scoreDisplay}
               </div>
               <div className="text-xs md:text-sm text-gray-500">
                 {fixture?.status?.long}
@@ -291,14 +320,12 @@ const MatchHeader = memo(() => {
               <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-1 md:mb-2 flex items-center justify-center">
                 {awayTeam?.id && (
                   <ApiSportsImage
-                    src={awayTeamLogoUrl}
                     imageId={awayTeam.id}
                     imageType={ImageType.Teams}
                     alt={awayTeam.name || ''}
                     width={48}
                     height={48}
                     className="object-contain w-full h-full"
-                    fallbackType={ImageType.Teams}
                   />
                 )}
               </div>
@@ -320,14 +347,12 @@ const MatchHeader = memo(() => {
                   <div className="relative w-4 h-4 mr-2 flex items-center justify-center">
                     {homeTeam?.id && (
                       <ApiSportsImage
-                        src={homeTeamLogoUrl}
                         imageId={homeTeam.id}
                         imageType={ImageType.Teams}
                         alt={homeTeam.name || ''}
                         width={16}
                         height={16}
                         className="object-contain w-full h-full"
-                        fallbackType={ImageType.Teams}
                       />
                     )}
                   </div>
@@ -369,14 +394,12 @@ const MatchHeader = memo(() => {
                   <div className="relative w-4 h-4 mr-2 flex items-center justify-center">
                     {awayTeam?.id && (
                       <ApiSportsImage
-                        src={awayTeamLogoUrl}
                         imageId={awayTeam.id}
                         imageType={ImageType.Teams}
                         alt={awayTeam.name || ''}
                         width={16}
                         height={16}
                         className="object-contain w-full h-full"
-                        fallbackType={ImageType.Teams}
                       />
                     )}
                   </div>

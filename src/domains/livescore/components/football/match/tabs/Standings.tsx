@@ -4,7 +4,6 @@ import { useState, useEffect, memo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
-import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 import { useMatchData, isStandingsTabData } from '@/domains/livescore/components/football/match/context/MatchDataContext';
 import { Standing, StandingsData, Team } from '@/domains/livescore/types/match';
 
@@ -20,21 +19,16 @@ interface StandingsProps {
 
 // 팀 로고 컴포넌트 - 메모이제이션
 const TeamLogo = memo(({ teamName, teamId }: { teamName: string; teamId?: number }) => {
-  // 스토리지 URL 생성
-  const logoUrl = teamId ? getSupabaseStorageUrl(ImageType.Teams, teamId) : '';
-  
   return (
     <div className="w-6 h-6 flex-shrink-0 relative transform-gpu">
       {teamId ? (
         <ApiSportsImage
-          src={logoUrl}
           imageId={teamId}
           imageType={ImageType.Teams}
           alt={teamName || '팀'}
           width={24}
           height={24}
           className="object-contain w-6 h-6"
-          fallbackType={ImageType.Teams}
         />
       ) : (
         <div className="w-6 h-6 bg-gray-200 flex items-center justify-center text-gray-400 text-xs rounded">
@@ -187,15 +181,13 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
               <div className="flex items-center gap-3">
                 <div className="w-6 h-6 relative flex-shrink-0">
                   <ApiSportsImage
-                    src={getSupabaseStorageUrl(ImageType.Leagues, leagueData.id)}
                     imageId={leagueData.id}
                     imageType={ImageType.Leagues}
-                    alt={leagueData.name || '리그'}
+                    alt={leagueData.name}
                     width={24}
                     height={24}
                     className="object-contain w-6 h-6"
-                    fallbackType={ImageType.Leagues}
-                  />
+                />
                 </div>
                 <h2 className="text-sm font-medium text-gray-800">{leagueData.name || '리그 정보'}</h2>
               </div>

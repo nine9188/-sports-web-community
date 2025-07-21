@@ -2,7 +2,7 @@
 
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
-import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
+
 import { TeamStatsData, LeagueData } from '@/domains/livescore/types/stats';
 
 // 컴포넌트 Props 타입
@@ -51,7 +51,6 @@ export default function BasicStatsCards({ stats }: BasicStatsCardsProps) {
             <div className="mr-3 flex-shrink-0">
               <div className="w-6 h-6 relative">
                 <ApiSportsImage
-                  src={getSupabaseStorageUrl(ImageType.Leagues, safeLeague.id)}
                   imageId={safeLeague.id}
                   imageType={ImageType.Leagues}
                   alt={safeLeague.name || ''}

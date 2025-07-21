@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
-import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
+
 
 // 타입 정의
 type PredictionType = 'home' | 'draw' | 'away';
@@ -52,9 +52,6 @@ const PredictionButton: React.FC<PredictionButtonProps> = ({
   percentage,
   onClick
 }) => {
-  // 스토리지 URL 생성
-  const logoUrl = teamId ? getSupabaseStorageUrl(ImageType.Teams, teamId) : '';
-  
   return (
     <button
       onClick={onClick}
@@ -72,14 +69,12 @@ const PredictionButton: React.FC<PredictionButtonProps> = ({
           </div>
         ) : teamId ? (
           <ApiSportsImage
-            src={logoUrl}
             imageId={teamId}
             imageType={ImageType.Teams}
             alt={teamName || 'Team'}
             width={32}
             height={32}
             className="object-contain w-full h-full"
-            fallbackType={ImageType.Teams}
           />
         ) : (
           <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -379,14 +374,12 @@ export default function MatchPredictionClient({
                 <div className="w-8 h-4 relative mr-2">
                   {homeTeam?.id && (
                     <ApiSportsImage
-                      src={getSupabaseStorageUrl(ImageType.Teams, homeTeam.id)}
                       imageId={homeTeam.id}
                       imageType={ImageType.Teams}
                       alt={homeTeam?.name || 'Home'}
                       width={32}
                       height={16}
                       className="object-contain w-full h-full"
-                      fallbackType={ImageType.Teams}
                     />
                   )}
                 </div>
@@ -422,14 +415,12 @@ export default function MatchPredictionClient({
                 <div className="w-8 h-4 relative mr-2">
                   {awayTeam?.id && (
                     <ApiSportsImage
-                      src={getSupabaseStorageUrl(ImageType.Teams, awayTeam.id)}
                       imageId={awayTeam.id}
                       imageType={ImageType.Teams}
                       alt={awayTeam?.name || 'Away'}
                       width={32}
                       height={16}
                       className="object-contain w-full h-full"
-                      fallbackType={ImageType.Teams}
                     />
                   )}
                 </div>

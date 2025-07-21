@@ -22,14 +22,14 @@ const TeamLogo = memo(({ teamName, teamId }: { teamName: string; teamId?: number
   return (
     <div className="w-6 h-6 flex-shrink-0 relative transform-gpu">
       {teamId && teamId > 0 ? (
-        <ApiSportsImage
-          imageId={teamId}
-          imageType={ImageType.Teams}
-          alt={teamName}
-          width={24}
-          height={24}
-          className="object-contain w-6 h-6"
-        />
+      <ApiSportsImage
+        imageId={teamId}
+        imageType={ImageType.Teams}
+        alt={teamName}
+        width={24}
+        height={24}
+        className="object-contain w-6 h-6"
+      />
       ) : (
         <div className="w-6 h-6 bg-gray-200 rounded" />
       )}

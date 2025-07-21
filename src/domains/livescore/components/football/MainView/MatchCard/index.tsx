@@ -147,7 +147,7 @@ export default function MatchCard({ match: initialMatch }: MatchCardProps) {
                           width={24}
                           height={24}
                           className="object-contain w-6 h-6"
-                          fallbackType={ImageType.Teams}
+                          
                         />
                       ) : null}
                   </div>
@@ -176,7 +176,7 @@ export default function MatchCard({ match: initialMatch }: MatchCardProps) {
                       width={24}
                       height={24}
                       className="object-contain w-6 h-6"
-                      fallbackType={ImageType.Teams}
+                      
                     />
                   ) : null}
                 </div>

@@ -54,7 +54,7 @@ export default function LeagueCard({ leagueId, name }: LeagueCardProps) {
             width={48}
             height={48}
             className="object-contain group-hover:scale-105 transition-transform duration-200 w-8 h-8 lg:w-12 lg:h-12"
-            fallbackType={ImageType.Leagues}
+            
           />
         </div>
 

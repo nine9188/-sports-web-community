@@ -24,15 +24,15 @@ export default memo(function PlayerImage({
   return (
     <div className={`relative overflow-hidden rounded-full ${className}`} style={{ width: `${width}px`, height: `${height}px` }}>
       {playerId && playerId > 0 ? (
-        <ApiSportsImage
-          imageId={playerId}
-          imageType={ImageType.Players}
-          alt={alt}
-          width={width}
-          height={height}
-          className="object-cover w-full h-full rounded-full"
-          priority={priority}
-        />
+      <ApiSportsImage
+        imageId={playerId}
+        imageType={ImageType.Players}
+        alt={alt}
+        width={width}
+        height={height}
+        className="object-cover w-full h-full rounded-full"
+        priority={priority}
+      />
       ) : (
         // playerId가 없으면 빈 영역 표시
         <div className="w-full h-full bg-gray-200 rounded-full" />

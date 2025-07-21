@@ -12,7 +12,7 @@ import { mapEventToKoreanText } from '@/domains/livescore/constants/event-mappin
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 // 프리미어리그 팀 선수 데이터 불러오기
 import { liverpoolPlayers, NottinghamForestPlayers, Arsenalplayers, NewcastleUnitedplayers, Chelseaplayers, ManchesterCityplayers, AstonVillaplayers, Bournemouthplayers, Fulhamplayers, Brightonplayers } from '@/domains/livescore/constants/teams/premier-league/premier-teams';
-import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
+
 
 interface EventsProps {
   matchId?: string;
@@ -130,22 +130,17 @@ function Events({ events: propsEvents }: EventsProps) {
     // 캐시된 팀 정보 확인
     const cachedTeam = teamId ? teamCache[teamId] : undefined;
     const teamName = cachedTeam?.name_ko || name || '팀';
-    
-    // 스토리지 URL 생성
-    const logoUrl = teamId ? getSupabaseStorageUrl(ImageType.Teams, teamId) : '';
 
     return (
       <div className="w-5 h-5 md:w-6 md:h-6 relative flex-shrink-0 overflow-hidden">
         {teamId ? (
           <ApiSportsImage
-            src={logoUrl}
             imageId={teamId}
             imageType={ImageType.Teams}
             alt={teamName}
             width={24}
             height={24}
             className="w-full h-full object-contain"
-            fallbackType={ImageType.Teams}
           />
         ) : (
           <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 text-xs">
