@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useMatchData } from './context/MatchDataContext';
-import { Eye } from 'lucide-react';
 import Tabs, { TabItem } from '@/shared/ui/tabs';
 
 interface TabNavigationProps {
@@ -30,7 +29,7 @@ export default function TabNavigation({ activeTab = 'events' }: TabNavigationPro
     { id: 'lineups', label: '라인업' },
     { id: 'stats', label: '통계' },
     { id: 'standings', label: '순위' },
-    { id: 'support', label: '응원', mobileOnly: true, icon: <Eye className="h-3 w-3" /> }
+    { id: 'support', label: '응원', mobileOnly: true }
   ];
   
   // activeTab이 변경되면 currentTabUI와 isChangingTab 상태를 업데이트

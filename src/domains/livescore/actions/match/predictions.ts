@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { createServerActionClient } from '@/shared/api/supabaseServer';
 import { revalidatePath } from 'next/cache';
 import { cache } from 'react';
 
@@ -52,7 +52,7 @@ export async function createOrUpdatePrediction(
   predictionType: PredictionType
 ) {
   try {
-    const supabase = await createClient();
+    const supabase = await createServerActionClient();
     
     // 현재 사용자 확인
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -62,12 +62,16 @@ export async function createOrUpdatePrediction(
     }
 
     // 기존 예측 확인
-    const { data: existingPrediction } = await supabase
+    const { data: existingPrediction, error: selectError } = await supabase
       .from('match_predictions')
       .select('id, prediction_type')
       .eq('match_id', matchId)
       .eq('user_id', user.id)
       .single();
+
+    if (selectError && selectError.code !== 'PGRST116') {
+      return { success: false, error: `예측 조회 실패: ${selectError.message}` };
+    }
 
     if (existingPrediction) {
       // 같은 예측이면 삭제 (토글 기능)
@@ -78,13 +82,16 @@ export async function createOrUpdatePrediction(
           .eq('id', existingPrediction.id);
 
         if (deleteError) {
-          return { success: false, error: deleteError.message };
+          return { success: false, error: `예측 삭제 실패: ${deleteError.message}` };
         }
-
-        // 통계 업데이트
-        await updatePredictionStats(matchId);
         
-        return { success: true, message: '예측이 취소되었습니다.', action: 'removed', prediction: null };
+        return { 
+          success: true, 
+          message: '예측이 취소되었습니다.', 
+          action: 'removed', 
+          prediction: null,
+          needsStatsUpdate: true
+        };
       } else {
         // 다른 예측으로 업데이트
         const { data, error: updateError } = await supabase
@@ -98,13 +105,16 @@ export async function createOrUpdatePrediction(
           .single();
 
         if (updateError) {
-          return { success: false, error: updateError.message };
+          return { success: false, error: `예측 업데이트 실패: ${updateError.message}` };
         }
-
-        // 통계 업데이트
-        await updatePredictionStats(matchId);
         
-        return { success: true, message: '예측이 변경되었습니다.', action: 'updated', prediction: data };
+        return { 
+          success: true, 
+          message: '예측이 변경되었습니다.', 
+          action: 'updated', 
+          prediction: data,
+          needsStatsUpdate: true
+        };
       }
     } else {
       // 새 예측 생성
@@ -119,40 +129,45 @@ export async function createOrUpdatePrediction(
         .single();
 
       if (insertError) {
-        return { success: false, error: insertError.message };
+        return { success: false, error: `예측 생성 실패: ${insertError.message}` };
       }
-
-      // 통계 업데이트
-      await updatePredictionStats(matchId);
       
-      return { success: true, message: '예측이 저장되었습니다.', action: 'created', prediction: data };
+      return { 
+        success: true, 
+        message: '예측이 저장되었습니다.', 
+        action: 'created', 
+        prediction: data,
+        needsStatsUpdate: true
+      };
     }
   } catch (error) {
-    console.error('예측 생성/업데이트 중 예외 발생:', error);
-    return { success: false, error: '예측 처리 중 오류가 발생했습니다.' };
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return { success: false, error: `예측 처리 중 오류가 발생했습니다: ${errorMessage}` };
   }
 }
 
 // 예측 통계 업데이트
-async function updatePredictionStats(matchId: string) {
+export async function updatePredictionStatsManually(matchId: string) {
   try {
-    const supabase = await createClient();
+    const supabase = await createServerActionClient();
     
-    // 각 예측 타입별 투표 수 계산
-    const { data: predictions } = await supabase
+    // 예측 데이터 조회
+    const { data: predictions, error: selectError } = await supabase
       .from('match_predictions')
       .select('prediction_type')
       .eq('match_id', matchId);
 
-    if (!predictions) return;
+    if (selectError) {
+      return { success: false, error: `예측 데이터 조회 실패: ${selectError.message}` };
+    }
 
-    const homeVotes = predictions.filter(p => p.prediction_type === 'home').length;
-    const drawVotes = predictions.filter(p => p.prediction_type === 'draw').length;
-    const awayVotes = predictions.filter(p => p.prediction_type === 'away').length;
-    const totalVotes = predictions.length;
+    const homeVotes = predictions ? predictions.filter(p => p.prediction_type === 'home').length : 0;
+    const drawVotes = predictions ? predictions.filter(p => p.prediction_type === 'draw').length : 0;
+    const awayVotes = predictions ? predictions.filter(p => p.prediction_type === 'away').length : 0;
+    const totalVotes = predictions ? predictions.length : 0;
 
-    // 통계 테이블 업데이트 (upsert)
-    const { error } = await supabase
+    // 통계 업데이트
+    const { error: upsertError } = await supabase
       .from('match_prediction_stats')
       .upsert({
         match_id: matchId,
@@ -163,23 +178,21 @@ async function updatePredictionStats(matchId: string) {
         updated_at: new Date().toISOString()
       });
 
-    if (error) {
-      console.error('예측 통계 업데이트 오류:', error);
+    if (upsertError) {
+      return { success: false, error: `통계 업데이트 실패: ${upsertError.message}` };
     }
+    
+    return { success: true, message: '통계 업데이트 성공' };
   } catch (error) {
-    console.error('예측 통계 업데이트 중 예외 발생:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return { success: false, error: `통계 업데이트 중 오류: ${errorMessage}` };
   }
 }
-
-// 매치 예측 통계 조회 (캐시 적용) - 별칭 함수
-export const getCachedPredictionStats = cache(async (matchId: string) => {
-  return await getPredictionStats(matchId);
-});
 
 // 매치 예측 통계 조회 (캐시 적용)
 export const getPredictionStats = cache(async (matchId: string) => {
   try {
-    const supabase = await createClient();
+    const supabase = await createServerActionClient();
     
     const { data, error } = await supabase
       .from('match_prediction_stats')
@@ -187,9 +200,8 @@ export const getPredictionStats = cache(async (matchId: string) => {
       .eq('match_id', matchId)
       .single();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116은 "not found" 에러
-      console.error('예측 통계 조회 오류:', error);
-      return { success: false, data: null, error: error.message };
+    if (error && error.code !== 'PGRST116') {
+      return { success: false, data: null, error: `DB 오류: ${error.message}` };
     }
 
     // 백분율 계산
@@ -216,20 +228,14 @@ export const getPredictionStats = cache(async (matchId: string) => {
 
     return { success: true, data: statsWithPercentage, error: null };
   } catch (error) {
-    console.error('예측 통계 조회 중 예외 발생:', error);
-    return { success: false, data: null, error: '예측 통계를 불러오는 중 오류가 발생했습니다.' };
+    return { success: false, data: null, error: `예측 통계를 불러오는 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}` };
   }
-});
-
-// 사용자의 현재 예측 조회 (캐시 적용) - 별칭 함수
-export const getCachedUserPrediction = cache(async (matchId: string) => {
-  return await getUserPrediction(matchId);
 });
 
 // 사용자의 현재 예측 조회 (캐시 적용)
 export const getUserPrediction = cache(async (matchId: string) => {
   try {
-    const supabase = await createClient();
+    const supabase = await createServerActionClient();
     
     // 현재 사용자 확인
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -245,14 +251,12 @@ export const getUserPrediction = cache(async (matchId: string) => {
       .eq('user_id', user.id)
       .single();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116은 "not found" 에러
-      console.error('사용자 예측 조회 오류:', error);
+    if (error && error.code !== 'PGRST116') {
       return { success: false, data: null, error: error.message };
     }
 
     return { success: true, data: data, error: null };
-  } catch (error) {
-    console.error('사용자 예측 조회 중 예외 발생:', error);
+  } catch {
     return { success: false, data: null, error: '예측 정보를 불러오는 중 오류가 발생했습니다.' };
   }
 });
@@ -260,7 +264,7 @@ export const getUserPrediction = cache(async (matchId: string) => {
 // 예측 삭제
 export async function deletePrediction(matchId: string) {
   try {
-    const supabase = await createClient();
+    const supabase = await createServerActionClient();
     
     // 현재 사용자 확인
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -280,14 +284,13 @@ export async function deletePrediction(matchId: string) {
     }
 
     // 통계 업데이트
-    await updatePredictionStats(matchId);
+    await updatePredictionStatsManually(matchId);
     
     // 캐시 무효화
     revalidatePath(`/livescore/football/match/${matchId}`);
     
     return { success: true };
-  } catch (error) {
-    console.error('예측 삭제 중 예외 발생:', error);
+  } catch {
     return { success: false, error: '예측 삭제 중 오류가 발생했습니다.' };
   }
 } 

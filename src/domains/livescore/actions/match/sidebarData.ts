@@ -2,7 +2,7 @@
 
 import { cache } from 'react';
 import { fetchCachedMatchData } from '@/domains/livescore/utils/matchDataApi';
-import { getCachedUserPrediction, getCachedPredictionStats, type MatchPrediction, type PredictionStats } from './predictions';
+import { getUserPrediction, getPredictionStats, type MatchPrediction, type PredictionStats } from './predictions';
 import { getSupportComments, type SupportComment } from './supportComments';
 
 // 사이드바 전체 데이터 타입
@@ -28,8 +28,8 @@ export const getCachedSidebarData = cache(async (matchId: string): Promise<{
       commentsResult
     ] = await Promise.all([
       fetchCachedMatchData(matchId),
-      getCachedUserPrediction(matchId),
-      getCachedPredictionStats(matchId),
+      getUserPrediction(matchId),
+      getPredictionStats(matchId),
       getSupportComments(matchId)
     ]);
 

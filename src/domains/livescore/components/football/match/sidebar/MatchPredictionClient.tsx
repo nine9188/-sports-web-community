@@ -2,17 +2,19 @@
 
 import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import { toast } from 'react-toastify';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
+import { 
+  savePrediction,
+  getUserPrediction,
+  getPredictionStats,
+  updatePredictionStatsManually,
+  type PredictionType,
+  type MatchPrediction
+} from '@/domains/livescore/actions/match/predictions';
 
-
-// 타입 정의
-type PredictionType = 'home' | 'draw' | 'away';
-
-interface MatchPrediction {
-  prediction_type: string;
-}
-
+// 로컬 인터페이스 정의
 interface PredictionStats {
   home_percentage: number;
   draw_percentage: number;
@@ -20,19 +22,8 @@ interface PredictionStats {
   total_votes: number;
 }
 
-// Toast 임시 구현
-const toast = {
-  error: (message: string) => console.error(message),
-  success: (message: string) => console.log(message)
-};
-
-// 임시 함수들 (실제 구현 필요)
-const getCachedUserPrediction = async () => ({ success: false, data: null });
-const getCachedPredictionStats = async () => ({ success: false, data: null });
-const savePrediction = async () => ({ success: true, message: '예측이 저장되었습니다!', error: null });
-
 interface PredictionButtonProps {
-  type: 'home' | 'draw' | 'away';
+  type: PredictionType;
   isActive: boolean;
   isLoading: boolean;
   canPredict: boolean;
@@ -168,18 +159,14 @@ export default function MatchPredictionClient({
   // 경기 상태 확인 함수
   const isMatchFinished = () => {
     const status = fixture?.status?.short;
-    // FT: Full Time, AET: After Extra Time, PEN: Penalty, AWD: Awarded, WO: Walkover, CANC: Cancelled, SUSP: Suspended
     return ['FT', 'AET', 'PEN', 'AWD', 'WO', 'CANC', 'SUSP'].includes(status || '');
   };
 
-  // 경기 시작 여부 확인
   const isMatchStarted = () => {
     const status = fixture?.status?.short;
-    // NS: Not Started, TBD: To Be Determined, PST: Postponed
     return !['NS', 'TBD', 'PST'].includes(status || '');
   };
 
-  // 경기 상태 메시지
   const getMatchStatusMessage = () => {
     if (isMatchFinished()) {
       return '경기가 종료되어 예측할 수 없습니다';
@@ -190,7 +177,7 @@ export default function MatchPredictionClient({
     return null;
   };
 
-  // 초기 데이터가 없는 경우에만 로드
+  // 초기 데이터 로드
   useEffect(() => {
     const loadInitialData = async () => {
       if (!matchId || (initialPrediction !== undefined && initialStats !== undefined)) return;
@@ -198,22 +185,30 @@ export default function MatchPredictionClient({
       try {
         // 사용자 예측과 통계를 병렬로 가져오기
         const [userPredictionResult, statsResult] = await Promise.all([
-          getCachedUserPrediction(),
-          getCachedPredictionStats()
+          getUserPrediction(matchId),
+          getPredictionStats(matchId)
         ]);
 
         // 사용자 예측 설정
         if (userPredictionResult.success && userPredictionResult.data) {
-          const predictionData = userPredictionResult.data as MatchPrediction;
+          const predictionData = userPredictionResult.data;
           setPrediction(predictionData.prediction_type as PredictionType);
         }
 
         // 통계 설정
         if (statsResult.success && statsResult.data) {
-          setStats(statsResult.data as PredictionStats);
+          const rawStats = statsResult.data;
+          setStats({
+            home_percentage: rawStats.home_percentage,
+            draw_percentage: rawStats.draw_percentage,
+            away_percentage: rawStats.away_percentage,
+            total_votes: rawStats.total_votes || 0
+          });
+        } else if (!statsResult.success) {
+          toast.error(`예측 통계 로드 실패: ${statsResult.error}`);
         }
       } catch (error) {
-        console.error('초기 데이터 로드 오류:', error);
+        toast.error(`데이터 로드 중 오류 발생: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
       }
     };
 
@@ -233,7 +228,7 @@ export default function MatchPredictionClient({
       return;
     }
     
-    // 같은 예측을 다시 클릭하면 취소 (삭제는 구현하지 않고 변경만 허용)
+    // 같은 예측을 다시 클릭하면 취소
     if (prediction === type) {
       return;
     }
@@ -241,23 +236,81 @@ export default function MatchPredictionClient({
     setIsLoading(true);
     
     try {
-      const result = await savePrediction();
+      const result = await savePrediction(matchId, type);
       
       if (result.success) {
         setPrediction(type);
         toast.success(result.message || '예측이 저장되었습니다!');
         
+        // 통계 업데이트가 필요한 경우 별도로 호출
+        const hasStatsUpdate = (obj: unknown): obj is { needsStatsUpdate: boolean } => {
+          return typeof obj === 'object' && obj !== null && 'needsStatsUpdate' in obj;
+        };
+        
+        if (hasStatsUpdate(result) && result.needsStatsUpdate) {
+          try {
+            const statsUpdateResult = await updatePredictionStatsManually(matchId);
+            
+            if (!statsUpdateResult.success) {
+              console.error('통계 업데이트 실패:', statsUpdateResult.error);
+            }
+          } catch (statsError) {
+            console.error('통계 업데이트 예외:', statsError);
+          }
+        }
+        
         // 통계 새로고침
-        const statsResult = await getCachedPredictionStats();
+        const statsResult = await getPredictionStats(matchId);
+        
         if (statsResult.success && statsResult.data) {
-          setStats(statsResult.data as PredictionStats);
+          const rawStats = statsResult.data;
+          setStats({
+            home_percentage: rawStats.home_percentage,
+            draw_percentage: rawStats.draw_percentage,
+            away_percentage: rawStats.away_percentage,
+            total_votes: rawStats.total_votes || 0
+          });
+        } else if (!statsResult.success) {
+          toast.error(`통계 업데이트 실패: ${statsResult.error}`);
         }
       } else {
-        toast.error(result.error || '예측 저장에 실패했습니다.');
+        // 에러 타입에 따라 다른 메시지 표시
+        const hasError = (obj: unknown): obj is { error: unknown } => {
+          return typeof obj === 'object' && obj !== null && 'error' in obj;
+        };
+
+        const errorFromResult = hasError(result) ? result.error : undefined;
+        
+        let errorMessage = '예측 저장에 실패했습니다.';
+        
+        if (!errorFromResult || errorFromResult === '' || (typeof errorFromResult === 'object' && Object.keys(errorFromResult).length === 0)) {
+          errorMessage = '서버에서 알 수 없는 오류가 발생했습니다. 다시 시도해주세요.';
+        } else if (typeof errorFromResult === 'string') {
+          if (errorFromResult.includes('relation') && errorFromResult.includes('does not exist')) {
+            errorMessage = '데이터베이스 연결 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
+          } else if (errorFromResult.includes('로그인')) {
+            errorMessage = '로그인이 필요합니다. 다시 로그인해주세요.';
+          } else if (errorFromResult.includes('권한')) {
+            errorMessage = '예측할 권한이 없습니다.';
+          } else {
+            errorMessage = errorFromResult;
+          }
+        } else {
+          errorMessage = String(errorFromResult || '알 수 없는 오류가 발생했습니다.');
+        }
+        
+        toast.error(errorMessage);
       }
     } catch (error) {
-      console.error('예측 저장 오류:', error);
-      toast.error('예측 저장 중 오류가 발생했습니다.');
+      let errorMessage = '예측 저장 중 오류가 발생했습니다.';
+      
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        errorMessage = '네트워크 연결을 확인해주세요.';
+      } else if (error instanceof Error) {
+        errorMessage = `오류: ${error.message}`;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -284,7 +337,7 @@ export default function MatchPredictionClient({
         </div>
       </div>
       
-      {/* 상태 메시지 (경기가 끝났거나 시작된 경우) */}
+      {/* 상태 메시지 */}
       {statusMessage && (
         <div className="px-4 py-2 bg-yellow-50 border-b border-yellow-100">
           <p className="text-xs text-yellow-700 text-center">
@@ -347,7 +400,7 @@ export default function MatchPredictionClient({
           />
         </div>
         
-        {/* 예측 결과 및 통계 표시 */}
+        {/* 예측 결과 */}
         {prediction && (
           <div className="mt-3 p-2 bg-gray-50 rounded-lg">
             <div className="text-xs text-center text-gray-600">
@@ -440,4 +493,4 @@ export default function MatchPredictionClient({
       </div>
     </div>
   );
-} 
+}
