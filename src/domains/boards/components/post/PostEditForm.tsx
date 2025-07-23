@@ -716,8 +716,75 @@ export default function PostEditForm({
 
                 .video-wrapper video {
                   width: 100%;
-                  max-width: 640px;
+                  max-width: 800px; /* PC에서 더 큰 최대 너비 */
                   height: auto;
+                  border-radius: 0.5rem;
+                  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                }
+                
+                /* 대형 화면용 최적화 */
+                @media (min-width: 1025px) {
+                  .video-wrapper {
+                    margin: 2rem auto;
+                    max-width: 900px;
+                  }
+                  
+                  .video-wrapper video {
+                    max-height: 650px;
+                  }
+                }
+                
+                @media (min-width: 1441px) {
+                  .video-wrapper {
+                    margin: 2.5rem auto;
+                    max-width: 1000px;
+                  }
+                  
+                  .video-wrapper video {
+                    max-height: 750px;
+                  }
+                }
+                
+                /* 모바일에서 비디오 최적화 */
+                @media (max-width: 480px) {
+                  .video-wrapper video {
+                    max-height: none;
+                    height: auto;
+                    aspect-ratio: 16/9;
+                    box-shadow: none;
+                    border-radius: 0;
+                  }
+                  
+                  .video-wrapper {
+                    margin: 0.5rem -1rem;
+                    border-radius: 0;
+                  }
+                  
+                  .ProseMirror .video-wrapper {
+                    margin-left: -1rem !important;
+                    margin-right: -1rem !important;
+                    width: calc(100% + 2rem) !important;
+                    max-width: calc(100% + 2rem) !important;
+                  }
+                }
+                
+                @media (min-width: 481px) and (max-width: 768px) {
+                  .video-wrapper video {
+                    max-height: none;
+                    height: auto;
+                    aspect-ratio: 16/9;
+                  }
+                  
+                  .video-wrapper {
+                    margin: 0.5rem -0.5rem;
+                  }
+                  
+                  .ProseMirror .video-wrapper {
+                    margin-left: -0.5rem !important;
+                    margin-right: -0.5rem !important;
+                    width: calc(100% + 1rem) !important;
+                    max-width: calc(100% + 1rem) !important;
+                  }
                 }
               `}</style>
               <EditorContent editor={editor} />

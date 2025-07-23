@@ -35,7 +35,7 @@ export const Video = Node.create<VideoOptions>({
       HTMLAttributes: {
         class: 'video-wrapper',
       },
-      responsive: true,
+      responsive: true, // 기본값을 true로 설정
     };
   },
   
