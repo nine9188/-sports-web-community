@@ -14,10 +14,11 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 반응형 아이템 수 (모바일: 1개, 데스크탑: 2개)
-  const [isMobile, setIsMobile] = useState(false);
+  // 서버사이드 기본값을 모바일로 설정하여 깜빡임 방지
+  const [isMobile, setIsMobile] = useState(true);
   
   // 첫 번째 배너의 설정을 기본값으로 사용
   const firstBanner = banners[0] || {
@@ -31,8 +32,10 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
   const autoSlideInterval = firstBanner.auto_slide_interval || 10000;
   const maxIndex = banners.length - 1;
 
-  // 모바일 감지
+  // 마운트 감지 및 모바일 체크
   useEffect(() => {
+    setIsMounted(true);
+    
     const checkMobile = () => {
       const newIsMobile = window.innerWidth < 768;
       setIsMobile(newIsMobile);
@@ -43,6 +46,7 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
       }
     };
     
+    // 초기 체크
     checkMobile();
     window.addEventListener('resize', checkMobile);
     
@@ -69,6 +73,87 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
   // 배너가 없으면 렌더링하지 않음
   if (!banners || banners.length === 0) {
     return null;
+  }
+
+  // 하이드레이션 불일치 방지 - 클라이언트에서 마운트되기 전까지는 모바일 기준으로 렌더링
+  if (!isMounted) {
+    return (
+      <div className="w-full mb-4 mt-4 md:mt-0">
+        <div className="relative">
+          <div 
+            className="flex gap-3 w-full transition-all duration-300 ease-in-out select-none"
+            style={{
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              WebkitTouchCallout: 'none',
+              WebkitTapHighlightColor: 'transparent',
+              touchAction: 'pan-y pinch-zoom'
+            }}
+          >
+            {/* 모바일 기준 1개 배너만 표시 */}
+            {banners.slice(0, 1).map((banner) => {
+              const isExternalLink = banner.link_url && (
+                banner.link_url.startsWith('http://') || 
+                banner.link_url.startsWith('https://') ||
+                banner.link_url.startsWith('//')
+              );
+              
+              const commonProps = {
+                className: `flex-1 min-w-0 border rounded-lg transition-all shadow-sm group hover:translate-y-[-2px] hover:shadow-md hover:border-blue-300 touch-manipulation active:scale-[0.99] transform-gpu select-none relative overflow-hidden ${
+                  banner.link_url ? 'cursor-pointer' : ''
+                } border-gray-200`,
+                style: {
+                  height: '210px',
+                  backgroundColor: banner.background_color || '#ffffff',
+                  color: banner.text_color || '#000000',
+                  userSelect: 'none' as const,
+                  WebkitUserSelect: 'none' as const,
+                  WebkitTouchCallout: 'none' as const,
+                  WebkitTapHighlightColor: 'transparent',
+                  touchAction: 'manipulation' as const
+                },
+                onDragStart: (e: React.DragEvent) => e.preventDefault()
+              };
+              
+              if (banner.link_url) {
+                if (isExternalLink) {
+                  return (
+                    <a
+                      key={banner.id}
+                      href={banner.link_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      {...commonProps}
+                    >
+                      {renderBannerContent(banner)}
+                    </a>
+                  );
+                } else {
+                  return (
+                    <Link
+                      key={banner.id}
+                      href={banner.link_url}
+                      {...commonProps}
+                    >
+                      {renderBannerContent(banner)}
+                    </Link>
+                  );
+                }
+              } else {
+                return (
+                  <div 
+                    key={banner.id}
+                    {...commonProps}
+                  >
+                    {renderBannerContent(banner)}
+                  </div>
+                );
+              }
+            })}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // 터치 이벤트 핸들러
