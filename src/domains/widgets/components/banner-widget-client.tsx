@@ -32,6 +32,56 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
   const autoSlideInterval = firstBanner.auto_slide_interval || 10000;
   const maxIndex = banners.length - 1;
 
+  // 이미지 배너 렌더링
+  const renderImageBanner = (banner: Banner) => (
+    <>
+      {banner.image_url ? (
+        <div className="absolute inset-0">
+          <Image
+            src={banner.image_url}
+            alt={banner.title}
+            fill
+            className="object-cover rounded-lg"
+            onError={(e) => {
+              console.error('❌ 배너 이미지 로드 실패:', banner.image_url);
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+            }}
+            unoptimized
+          />
+        </div>
+      ) : (
+        <div className="h-full flex flex-col justify-center items-center text-center p-4 rounded-lg"
+             style={{ backgroundColor: banner.background_color, color: banner.text_color }}>
+          <div className="text-lg font-bold">{banner.title}</div>
+          {banner.subtitle && (
+            <div className="text-sm opacity-75">{banner.subtitle}</div>
+          )}
+        </div>
+      )}
+    </>
+  );
+
+  // HTML 배너 렌더링
+  const renderHtmlBanner = (banner: Banner) => (
+    <div 
+      className="h-full w-full"
+      dangerouslySetInnerHTML={{ __html: banner.html_content || '' }}
+    />
+  );
+
+  // 배너 타입에 따른 렌더링
+  const renderBannerContent = (banner: Banner) => {
+    switch (banner.type) {
+      case 'image':
+        return renderImageBanner(banner);
+      case 'html':
+        return renderHtmlBanner(banner);
+      default:
+        return renderImageBanner(banner);
+    }
+  };
+
   // 마운트 감지 및 모바일 체크
   useEffect(() => {
     setIsMounted(true);
@@ -195,58 +245,6 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
     setCurrentIndex(prevIndex => (prevIndex + 1) % banners.length);
     setIsAutoPlaying(false);
     setTimeout(() => setIsAutoPlaying(true), 3000);
-  };
-
-
-
-  // 이미지 배너 렌더링
-  const renderImageBanner = (banner: Banner) => (
-    <>
-      {banner.image_url ? (
-        <div className="absolute inset-0">
-          <Image
-            src={banner.image_url}
-            alt={banner.title}
-            fill
-            className="object-cover rounded-lg"
-            onError={(e) => {
-              console.error('❌ 배너 이미지 로드 실패:', banner.image_url);
-              const target = e.target as HTMLImageElement;
-              target.style.display = 'none';
-            }}
-            unoptimized
-          />
-        </div>
-      ) : (
-        <div className="h-full flex flex-col justify-center items-center text-center p-4 rounded-lg"
-             style={{ backgroundColor: banner.background_color, color: banner.text_color }}>
-          <div className="text-lg font-bold">{banner.title}</div>
-          {banner.subtitle && (
-            <div className="text-sm opacity-75">{banner.subtitle}</div>
-          )}
-        </div>
-      )}
-    </>
-  );
-
-  // HTML 배너 렌더링
-  const renderHtmlBanner = (banner: Banner) => (
-    <div 
-      className="h-full w-full"
-      dangerouslySetInnerHTML={{ __html: banner.html_content || '' }}
-    />
-  );
-
-  // 배너 타입에 따른 렌더링
-  const renderBannerContent = (banner: Banner) => {
-    switch (banner.type) {
-      case 'image':
-        return renderImageBanner(banner);
-      case 'html':
-        return renderHtmlBanner(banner);
-      default:
-        return renderImageBanner(banner);
-    }
   };
 
   return (
