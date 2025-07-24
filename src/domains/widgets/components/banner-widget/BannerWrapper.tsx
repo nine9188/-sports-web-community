@@ -13,7 +13,7 @@ export const renderImageBanner = (banner: Banner) => (
           src={banner.image_url}
           alt={banner.title}
           fill
-          className="object-cover rounded-lg"
+          className="object-cover md:rounded-lg"
           onError={(e) => {
             console.error('❌ 배너 이미지 로드 실패:', banner.image_url);
             const target = e.target as HTMLImageElement;
@@ -24,7 +24,7 @@ export const renderImageBanner = (banner: Banner) => (
       </div>
     ) : (
       <div 
-        className="h-full flex flex-col justify-center items-center text-center p-4 rounded-lg"
+        className="h-full flex flex-col justify-center items-center text-center p-4 md:rounded-lg"
         style={{ backgroundColor: banner.background_color, color: banner.text_color }}
       >
         <div className="text-lg font-bold">{banner.title}</div>
@@ -64,9 +64,9 @@ export default function BannerWrapper({ banner, children, index }: BannerWrapper
   );
   
   const commonProps = {
-    className: `flex-1 min-w-0 border rounded-lg transition-all shadow-sm group hover:translate-y-[-2px] hover:shadow-md hover:border-blue-300 touch-manipulation active:scale-[0.99] transform-gpu select-none relative overflow-hidden ${
+    className: `flex-1 min-w-0 border transition-all shadow-sm group hover:translate-y-[-2px] hover:shadow-md hover:border-blue-300 touch-manipulation active:scale-[0.99] transform-gpu select-none relative overflow-hidden ${
       banner.link_url ? 'cursor-pointer' : ''
-    } border-gray-200`,
+    } border-gray-200 md:rounded-lg`,
     style: {
       height: BANNER_HEIGHT,
       backgroundColor: banner.background_color || '#ffffff',

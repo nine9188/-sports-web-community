@@ -4,7 +4,8 @@ import { Banner } from '../../types/banner';
 export const MOBILE_BREAKPOINT = 768;
 export const DEFAULT_AUTO_SLIDE_INTERVAL = 10000;
 export const AUTO_PLAY_RESUME_DELAY = 3000;
-export const SWIPE_THRESHOLD = 50;
+export const SWIPE_THRESHOLD = 30; // 더 민감하게 조정
+export const SWIPE_VELOCITY_THRESHOLD = 0.2; // 드래그 비율 기준 임계값
 export const BANNER_HEIGHT = '210px';
 
 // 터치 상태 타입

@@ -33,9 +33,9 @@ export default function BannerWidget({ banners }: BannerWidgetProps) {
   // SSR 대응 - 하이드레이션 불일치 방지
   if (!isMounted) {
     return (
-      <div className="w-full mb-4 mt-4 md:mt-0">
+      <div className="w-full">
         <div className="relative">
-          <div className="flex gap-3 w-full">
+          <div className="flex w-full">
             <BannerWrapper banner={banners[0]} index={0}>
               {renderBannerContent(banners[0])}
             </BannerWrapper>
