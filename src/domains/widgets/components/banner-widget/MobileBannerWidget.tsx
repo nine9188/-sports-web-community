@@ -121,28 +121,28 @@ export default function MobileBannerWidget({ banners }: BannerWidgetProps) {
         }}
       >
         <div 
-          className={`flex w-full ${isDragging ? '' : 'transition-transform duration-300 ease-out'}`}
+          className={`flex ${isDragging ? '' : 'transition-transform duration-300 ease-out'}`}
           style={{
             transform: `translateX(${totalTransform}%)`,
             width: '300%' // 3개 배너를 나란히 배치
           }}
         >
           {/* 이전 배너 */}
-          <div className="w-1/3 flex-shrink-0">
+          <div className="flex-shrink-0" style={{ width: '33.333333%' }}>
             <BannerWrapper banner={prevBanner} index={getPrevIndex(currentIndex)}>
               {renderBannerContent(prevBanner)}
             </BannerWrapper>
           </div>
           
           {/* 현재 배너 */}
-          <div className="w-1/3 flex-shrink-0">
+          <div className="flex-shrink-0" style={{ width: '33.333333%' }}>
             <BannerWrapper banner={currentBanner} index={currentIndex}>
               {renderBannerContent(currentBanner)}
             </BannerWrapper>
           </div>
           
           {/* 다음 배너 */}
-          <div className="w-1/3 flex-shrink-0">
+          <div className="flex-shrink-0" style={{ width: '33.333333%' }}>
             <BannerWrapper banner={nextBanner} index={getNextIndex(currentIndex)}>
               {renderBannerContent(nextBanner)}
             </BannerWrapper>
