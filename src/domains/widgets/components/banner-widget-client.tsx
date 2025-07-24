@@ -271,7 +271,7 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
 
   return (
     <div className="w-full mb-4 mt-4 md:mt-0">
-      <div className="relative overflow-hidden">
+      <div className="relative">
         {/* 데스크탑 슬라이딩 버튼 */}
         {firstBanner.display_type === 'slide' && (
           <div className="hidden md:block">
@@ -305,90 +305,99 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
         
         <div 
           ref={containerRef}
-          className="flex w-full select-none"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
+          className="overflow-hidden"
           style={{
             userSelect: 'none',
             WebkitUserSelect: 'none',
             WebkitTouchCallout: 'none',
             WebkitTapHighlightColor: 'transparent',
-            touchAction: 'pan-y pinch-zoom',
-            transform: isDragging ? `translateX(-${dragOffset}%)` : `translateX(-${currentIndex * (100 / itemsPerView)}%)`,
-            transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-            width: `${banners.length * (100 / itemsPerView)}%`
+            touchAction: 'pan-y pinch-zoom'
           }}
         >
-          {/* 모든 배너를 렌더링하고 CSS transform으로 슬라이드 */}
-          {banners.map((banner, index) => {
-            const uniqueKey = `${banner.id}-${index}`;
-            
-            // 내부/외부 링크 구분
-            const isExternalLink = banner.link_url && (
-              banner.link_url.startsWith('http://') || 
-              banner.link_url.startsWith('https://') ||
-              banner.link_url.startsWith('//')
-            );
-            
-            const commonProps = {
-              className: `border rounded-lg transition-all shadow-sm group hover:translate-y-[-2px] hover:shadow-md hover:border-blue-300 touch-manipulation active:scale-[0.99] transform-gpu select-none relative overflow-hidden mx-1.5 ${
-                banner.link_url ? 'cursor-pointer' : ''
-              } border-gray-200`,
-              style: {
-                width: `${100 / banners.length}%`,
-                height: '210px',
-                backgroundColor: banner.background_color || '#ffffff',
-                color: banner.text_color || '#000000',
-                userSelect: 'none' as const,
-                WebkitUserSelect: 'none' as const,
-                WebkitTouchCallout: 'none' as const,
-                WebkitTapHighlightColor: 'transparent',
-                touchAction: 'manipulation' as const,
-                flexShrink: 0
-              },
-              onDragStart: (e: React.DragEvent) => e.preventDefault()
-            };
-            
-            // 링크가 있는 경우 처리
-            if (banner.link_url) {
-              if (isExternalLink) {
-                // 외부 링크 - 새 탭에서 열기
-                return (
-                  <a
-                    key={uniqueKey}
-                    href={banner.link_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    {...commonProps}
-                  >
-                    {renderBannerContent(banner)}
-                  </a>
-                );
+          <div 
+            className="flex select-none"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            style={{
+              width: `${banners.length * 100}%`,
+              transform: isDragging 
+                ? `translateX(calc(-${currentIndex * (100 / banners.length)}% - ${dragOffset * (100 / banners.length)}%))` 
+                : `translateX(-${currentIndex * (100 / banners.length)}%)`,
+              transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+            }}
+          >
+            {/* 모든 배너를 같은 크기로 렌더링 */}
+            {banners.map((banner, index) => {
+              const uniqueKey = `${banner.id}-${index}`;
+              
+              // 내부/외부 링크 구분
+              const isExternalLink = banner.link_url && (
+                banner.link_url.startsWith('http://') || 
+                banner.link_url.startsWith('https://') ||
+                banner.link_url.startsWith('//')
+              );
+              
+              const commonProps = {
+                className: `border rounded-lg transition-all shadow-sm group hover:translate-y-[-2px] hover:shadow-md hover:border-blue-300 touch-manipulation active:scale-[0.99] transform-gpu select-none relative overflow-hidden ${
+                  banner.link_url ? 'cursor-pointer' : ''
+                } border-gray-200`,
+                style: {
+                  width: `${100 / banners.length}%`,
+                  height: '210px',
+                  backgroundColor: banner.background_color || '#ffffff',
+                  color: banner.text_color || '#000000',
+                  userSelect: 'none' as const,
+                  WebkitUserSelect: 'none' as const,
+                  WebkitTouchCallout: 'none' as const,
+                  WebkitTapHighlightColor: 'transparent',
+                  touchAction: 'manipulation' as const,
+                  flexShrink: 0,
+                  margin: isMobile ? '0 6px' : '0 6px'
+                },
+                onDragStart: (e: React.DragEvent) => e.preventDefault()
+              };
+              
+              // 링크가 있는 경우 처리
+              if (banner.link_url) {
+                if (isExternalLink) {
+                  // 외부 링크 - 새 탭에서 열기
+                  return (
+                    <a
+                      key={uniqueKey}
+                      href={banner.link_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      {...commonProps}
+                    >
+                      {renderBannerContent(banner)}
+                    </a>
+                  );
+                } else {
+                  // 내부 링크 - Next.js Link 사용
+                  return (
+                    <Link
+                      key={uniqueKey}
+                      href={banner.link_url}
+                      {...commonProps}
+                    >
+                      {renderBannerContent(banner)}
+                    </Link>
+                  );
+                }
               } else {
-                // 내부 링크 - Next.js Link 사용
+                // 링크가 없는 경우
                 return (
-                  <Link
+                  <div 
                     key={uniqueKey}
-                    href={banner.link_url}
                     {...commonProps}
                   >
                     {renderBannerContent(banner)}
-                  </Link>
+                  </div>
                 );
               }
-            } else {
-              // 링크가 없는 경우
-              return (
-                <div 
-                  key={uniqueKey}
-                  {...commonProps}
-                >
-                  {renderBannerContent(banner)}
-                </div>
-              );
-            }
-          })}
+            })}
+          </div>
         </div>
         
         {/* 인디케이터 */}
