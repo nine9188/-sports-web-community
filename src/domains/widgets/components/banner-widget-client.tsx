@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Banner } from '../types/banner';
@@ -9,31 +9,158 @@ interface BannerWidgetClientProps {
   banners: Banner[];
 }
 
+// 상수 정의
+const MOBILE_BREAKPOINT = 768;
+const DEFAULT_AUTO_SLIDE_INTERVAL = 10000;
+const AUTO_PLAY_RESUME_DELAY = 3000;
+const SWIPE_THRESHOLD = 50;
+const BANNER_HEIGHT = '210px';
+
+// 타입 정의
+interface TouchState {
+  start: number | null;
+  end: number | null;
+}
+
+interface BannerConfig {
+  itemsPerView: number;
+  autoSlideInterval: number;
+  displayType: Banner['display_type'];
+}
+
 export default function BannerWidgetClient({ banners }: BannerWidgetClientProps) {
+  // 상태 관리
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [touchState, setTouchState] = useState<TouchState>({ start: null, end: null });
   const [isMounted, setIsMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(true); // SSR 기본값 모바일
+  
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 서버사이드 기본값을 모바일로 설정하여 깜빡임 방지
-  const [isMobile, setIsMobile] = useState(true);
-  
-  // 첫 번째 배너의 설정을 기본값으로 사용
-  const firstBanner = banners[0] || {
-    mobile_per_row: 1,
-    desktop_per_row: 2,
-    auto_slide_interval: 10000,
-    display_type: 'slide' as const
-  };
-  
-  const itemsPerView = isMobile ? firstBanner.mobile_per_row : firstBanner.desktop_per_row;
-  const autoSlideInterval = firstBanner.auto_slide_interval || 10000;
-  const maxIndex = banners.length - 1;
+  // 배너 설정 계산
+  const bannerConfig = useMemo((): BannerConfig => {
+    const firstBanner = banners[0];
+    if (!firstBanner) {
+      return {
+        itemsPerView: 1,
+        autoSlideInterval: DEFAULT_AUTO_SLIDE_INTERVAL,
+        displayType: 'slide'
+      };
+    }
 
-  // 이미지 배너 렌더링
-  const renderImageBanner = (banner: Banner) => (
+    return {
+      itemsPerView: isMobile ? firstBanner.mobile_per_row : firstBanner.desktop_per_row,
+      autoSlideInterval: firstBanner.auto_slide_interval || DEFAULT_AUTO_SLIDE_INTERVAL,
+      displayType: firstBanner.display_type
+    };
+  }, [banners, isMobile]);
+
+  // 표시할 배너 목록 계산
+  const displayBanners = useMemo(() => {
+    const result = [];
+    for (let i = 0; i < bannerConfig.itemsPerView; i++) {
+      const index = (currentIndex + i) % banners.length;
+      result.push(banners[index]);
+    }
+    return result;
+  }, [banners, currentIndex, bannerConfig.itemsPerView]);
+
+  // 슬라이드 제어 조건
+  const shouldShowSlideControls = useMemo(() => 
+    bannerConfig.displayType === 'slide' && banners.length > bannerConfig.itemsPerView,
+    [bannerConfig.displayType, banners.length, bannerConfig.itemsPerView]
+  );
+
+  // 자동 재생 재개 함수
+  const resumeAutoPlay = useCallback(() => {
+    setIsAutoPlaying(false);
+    setTimeout(() => setIsAutoPlaying(true), AUTO_PLAY_RESUME_DELAY);
+  }, []);
+
+  // 슬라이드 네비게이션 함수
+  const navigateSlide = useCallback((direction: 'prev' | 'next') => {
+    setCurrentIndex(prevIndex => {
+      if (direction === 'next') {
+        return (prevIndex + 1) % banners.length;
+      }
+      return (prevIndex - 1 + banners.length) % banners.length;
+    });
+    resumeAutoPlay();
+  }, [banners.length, resumeAutoPlay]);
+
+  // 인덱스로 직접 이동
+  const goToSlide = useCallback((index: number) => {
+    setCurrentIndex(index);
+    resumeAutoPlay();
+  }, [resumeAutoPlay]);
+
+  // 화면 크기 체크 함수
+  const checkMobileState = useCallback(() => {
+    const newIsMobile = window.innerWidth < MOBILE_BREAKPOINT;
+    setIsMobile(newIsMobile);
+    
+    // 화면 크기 변경 시 인덱스 보정
+    if (currentIndex >= banners.length) {
+      setCurrentIndex(0);
+    }
+  }, [currentIndex, banners.length]);
+
+  // 터치 이벤트 핸들러
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    setTouchState({ start: e.targetTouches[0].clientX, end: null });
+    setIsAutoPlaying(false);
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    setTouchState(prev => ({ ...prev, end: e.targetTouches[0].clientX }));
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (!touchState.start || !touchState.end) return;
+    
+    const distance = touchState.start - touchState.end;
+    const isLeftSwipe = distance > SWIPE_THRESHOLD;
+    const isRightSwipe = distance < -SWIPE_THRESHOLD;
+
+    if (isLeftSwipe) {
+      navigateSlide('next');
+    } else if (isRightSwipe) {
+      navigateSlide('prev');
+    } else {
+      // 스와이프가 감지되지 않으면 자동 재생 재개
+      setTimeout(() => setIsAutoPlaying(true), AUTO_PLAY_RESUME_DELAY);
+    }
+  }, [touchState, navigateSlide]);
+
+  // 마운트 및 리사이즈 이벤트 처리
+  useEffect(() => {
+    setIsMounted(true);
+    checkMobileState();
+    
+    window.addEventListener('resize', checkMobileState);
+    return () => window.removeEventListener('resize', checkMobileState);
+  }, [checkMobileState]);
+
+  // 자동 슬라이드 기능
+  useEffect(() => {
+    if (!isAutoPlaying || !shouldShowSlideControls) {
+      return;
+    }
+
+    intervalRef.current = setInterval(() => {
+      setCurrentIndex(prevIndex => (prevIndex + 1) % banners.length);
+    }, bannerConfig.autoSlideInterval);
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [isAutoPlaying, shouldShowSlideControls, banners.length, bannerConfig.autoSlideInterval]);
+
+  // 배너 렌더링 함수들
+  const renderImageBanner = useCallback((banner: Banner) => (
     <>
       {banner.image_url ? (
         <div className="absolute inset-0">
@@ -51,8 +178,10 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
           />
         </div>
       ) : (
-        <div className="h-full flex flex-col justify-center items-center text-center p-4 rounded-lg"
-             style={{ backgroundColor: banner.background_color, color: banner.text_color }}>
+        <div 
+          className="h-full flex flex-col justify-center items-center text-center p-4 rounded-lg"
+          style={{ backgroundColor: banner.background_color, color: banner.text_color }}
+        >
           <div className="text-lg font-bold">{banner.title}</div>
           {banner.subtitle && (
             <div className="text-sm opacity-75">{banner.subtitle}</div>
@@ -60,18 +189,16 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
         </div>
       )}
     </>
-  );
+  ), []);
 
-  // HTML 배너 렌더링
-  const renderHtmlBanner = (banner: Banner) => (
+  const renderHtmlBanner = useCallback((banner: Banner) => (
     <div 
       className="h-full w-full"
       dangerouslySetInnerHTML={{ __html: banner.html_content || '' }}
     />
-  );
+  ), []);
 
-  // 배너 타입에 따른 렌더링
-  const renderBannerContent = (banner: Banner) => {
+  const renderBannerContent = useCallback((banner: Banner) => {
     switch (banner.type) {
       case 'image':
         return renderImageBanner(banner);
@@ -80,207 +207,152 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
       default:
         return renderImageBanner(banner);
     }
-  };
+  }, [renderImageBanner, renderHtmlBanner]);
 
-  // 마운트 감지 및 모바일 체크
-  useEffect(() => {
-    setIsMounted(true);
+  // 배너 래퍼 컴포넌트
+  const BannerWrapper = useCallback(({ banner, children, index }: { 
+    banner: Banner; 
+    children: React.ReactNode; 
+    index: number;
+  }) => {
+    const isExternalLink = banner.link_url && (
+      banner.link_url.startsWith('http://') || 
+      banner.link_url.startsWith('https://') ||
+      banner.link_url.startsWith('//')
+    );
     
-    const checkMobile = () => {
-      const newIsMobile = window.innerWidth < 768;
-      setIsMobile(newIsMobile);
-      
-      // 화면 크기 변경 시 인덱스 보정
-      if (currentIndex > maxIndex) {
-        setCurrentIndex(0);
-      }
+    const commonProps = {
+      className: `flex-1 min-w-0 border rounded-lg transition-all shadow-sm group hover:translate-y-[-2px] hover:shadow-md hover:border-blue-300 touch-manipulation active:scale-[0.99] transform-gpu select-none relative overflow-hidden ${
+        banner.link_url ? 'cursor-pointer' : ''
+      } border-gray-200`,
+      style: {
+        height: BANNER_HEIGHT,
+        backgroundColor: banner.background_color || '#ffffff',
+        color: banner.text_color || '#000000',
+        userSelect: 'none' as const,
+        WebkitUserSelect: 'none' as const,
+        WebkitTouchCallout: 'none' as const,
+        WebkitTapHighlightColor: 'transparent',
+        touchAction: 'manipulation' as const
+      },
+      onDragStart: (e: React.DragEvent) => e.preventDefault()
     };
     
-    // 초기 체크
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
+    const uniqueKey = `${banner.id}-${index}`;
     
-    return () => window.removeEventListener('resize', checkMobile);
-  }, [currentIndex, maxIndex]);
-
-  // 자동 슬라이드 기능
-  useEffect(() => {
-    if (isAutoPlaying && banners.length > itemsPerView && firstBanner.display_type === 'slide') {
-      intervalRef.current = setInterval(() => {
-        setCurrentIndex(prevIndex => 
-          (prevIndex + 1) % banners.length
-        );
-      }, autoSlideInterval);
+    if (!banner.link_url) {
+      return (
+        <div key={uniqueKey} {...commonProps}>
+          {children}
+        </div>
+      );
     }
+    
+    if (isExternalLink) {
+      return (
+        <a
+          key={uniqueKey}
+          href={banner.link_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          {...commonProps}
+        >
+          {children}
+        </a>
+      );
+    }
+    
+    return (
+      <Link key={uniqueKey} href={banner.link_url} {...commonProps}>
+        {children}
+      </Link>
+    );
+  }, []);
 
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [isAutoPlaying, maxIndex, itemsPerView, autoSlideInterval, banners.length, firstBanner.display_type]);
+  // 슬라이드 버튼 컴포넌트
+  const SlideButton = useCallback(({ direction, onClick }: {
+    direction: 'prev' | 'next';
+    onClick: () => void;
+  }) => {
+    const isNext = direction === 'next';
+    const positionClass = isNext ? 'right-[-12px]' : 'left-[-12px]';
+    const ariaLabel = isNext ? '다음 배너' : '이전 배너';
+    const iconPath = isNext 
+      ? "m8.25 4.5 7.5 7.5-7.5 7.5" 
+      : "M15.75 19.5 8.25 12l7.5-7.5";
 
-  // 배너가 없으면 렌더링하지 않음
-  if (!banners || banners.length === 0) {
+    return (
+      <button 
+        onClick={onClick}
+        className={`absolute ${positionClass} top-1/2 -translate-y-1/2 z-20 rounded-full p-2 shadow-lg border transition-all duration-200 bg-white hover:bg-blue-50 hover:border-blue-300 border-gray-200 hover:scale-110 hover:shadow-xl cursor-pointer group`}
+        aria-label={ariaLabel}
+      >
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          fill="none" 
+          viewBox="0 0 24 24" 
+          strokeWidth={2} 
+          stroke="currentColor" 
+          className="w-5 h-5 transition-colors text-gray-600 group-hover:text-blue-600"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d={iconPath} />
+        </svg>
+      </button>
+    );
+  }, []);
+
+  // 인디케이터 컴포넌트
+  const Indicators = useCallback(() => (
+    <div className="flex justify-center mt-3">
+      <div className="flex space-x-2">
+        {banners.map((_, index) => (
+          <button
+            key={index}
+            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              currentIndex === index
+                ? 'bg-blue-600 scale-125'
+                : 'bg-gray-300 hover:bg-gray-400'
+            }`}
+            onClick={() => goToSlide(index)}
+            aria-label={`배너 ${index + 1}로 이동`}
+          />
+        ))}
+      </div>
+    </div>
+  ), [banners, currentIndex, goToSlide]);
+
+  // 빈 배너 처리
+  if (!banners?.length) {
     return null;
   }
 
-  // 하이드레이션 불일치 방지 - 클라이언트에서 마운트되기 전까지는 모바일 기준으로 렌더링
+  // SSR 대응 - 하이드레이션 불일치 방지
   if (!isMounted) {
     return (
       <div className="w-full mb-4 mt-4 md:mt-0">
         <div className="relative">
-          <div 
-            className="flex gap-3 w-full transition-all duration-300 ease-in-out select-none"
-            style={{
-              userSelect: 'none',
-              WebkitUserSelect: 'none',
-              WebkitTouchCallout: 'none',
-              WebkitTapHighlightColor: 'transparent',
-              touchAction: 'pan-y pinch-zoom'
-            }}
-          >
-            {/* 모바일 기준 1개 배너만 표시 */}
-            {banners.slice(0, 1).map((banner) => {
-              const isExternalLink = banner.link_url && (
-                banner.link_url.startsWith('http://') || 
-                banner.link_url.startsWith('https://') ||
-                banner.link_url.startsWith('//')
-              );
-              
-              const commonProps = {
-                className: `flex-1 min-w-0 border rounded-lg transition-all shadow-sm group hover:translate-y-[-2px] hover:shadow-md hover:border-blue-300 touch-manipulation active:scale-[0.99] transform-gpu select-none relative overflow-hidden ${
-                  banner.link_url ? 'cursor-pointer' : ''
-                } border-gray-200`,
-                style: {
-                  height: '210px',
-                  backgroundColor: banner.background_color || '#ffffff',
-                  color: banner.text_color || '#000000',
-                  userSelect: 'none' as const,
-                  WebkitUserSelect: 'none' as const,
-                  WebkitTouchCallout: 'none' as const,
-                  WebkitTapHighlightColor: 'transparent',
-                  touchAction: 'manipulation' as const
-                },
-                onDragStart: (e: React.DragEvent) => e.preventDefault()
-              };
-              
-              if (banner.link_url) {
-                if (isExternalLink) {
-                  return (
-                    <a
-                      key={banner.id}
-                      href={banner.link_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      {...commonProps}
-                    >
-                      {renderBannerContent(banner)}
-                    </a>
-                  );
-                } else {
-                  return (
-                    <Link
-                      key={banner.id}
-                      href={banner.link_url}
-                      {...commonProps}
-                    >
-                      {renderBannerContent(banner)}
-                    </Link>
-                  );
-                }
-              } else {
-                return (
-                  <div 
-                    key={banner.id}
-                    {...commonProps}
-                  >
-                    {renderBannerContent(banner)}
-                  </div>
-                );
-              }
-            })}
+          <div className="flex gap-3 w-full">
+            <BannerWrapper banner={banners[0]} index={0}>
+              {renderBannerContent(banners[0])}
+            </BannerWrapper>
           </div>
         </div>
       </div>
     );
   }
 
-  // 터치 이벤트 핸들러
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-    setIsAutoPlaying(false);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
-
-    if (isLeftSwipe) {
-      setCurrentIndex(prevIndex => (prevIndex + 1) % banners.length);
-    }
-    if (isRightSwipe) {
-      setCurrentIndex(prevIndex => (prevIndex - 1 + banners.length) % banners.length);
-    }
-
-    setTimeout(() => setIsAutoPlaying(true), 3000);
-  };
-
-  // 슬라이드 버튼 핸들러
-  const slideLeft = () => {
-    setCurrentIndex(prevIndex => (prevIndex - 1 + banners.length) % banners.length);
-    setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 3000);
-  };
-
-  const slideRight = () => {
-    setCurrentIndex(prevIndex => (prevIndex + 1) % banners.length);
-    setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 3000);
-  };
-
   return (
     <div className="w-full mb-4 mt-4 md:mt-0">
       <div className="relative">
         {/* 데스크탑 슬라이딩 버튼 */}
-        {firstBanner.display_type === 'slide' && (
+        {shouldShowSlideControls && (
           <div className="hidden md:block">
-            {banners.length > itemsPerView && (
-              <>
-                {/* 왼쪽 버튼 */}
-                <button 
-                  onClick={slideLeft}
-                  className="absolute left-[-12px] top-1/2 -translate-y-1/2 z-20 rounded-full p-2 shadow-lg border transition-all duration-200 bg-white hover:bg-blue-50 hover:border-blue-300 border-gray-200 hover:scale-110 hover:shadow-xl cursor-pointer group"
-                  aria-label="이전 배너"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 transition-colors text-gray-600 group-hover:text-blue-600">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-                  </svg>
-                </button>
-                
-                {/* 오른쪽 버튼 */}
-                <button 
-                  onClick={slideRight}
-                  className="absolute right-[-12px] top-1/2 -translate-y-1/2 z-20 rounded-full p-2 shadow-lg border transition-all duration-200 bg-white hover:bg-blue-50 hover:border-blue-300 border-gray-200 hover:scale-110 hover:shadow-xl cursor-pointer group"
-                  aria-label="다음 배너"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 transition-colors text-gray-600 group-hover:text-blue-600">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                  </svg>
-                </button>
-              </>
-            )}
+            <SlideButton direction="prev" onClick={() => navigateSlide('prev')} />
+            <SlideButton direction="next" onClick={() => navigateSlide('next')} />
           </div>
         )}
         
+        {/* 배너 컨테이너 */}
         <div 
           className="flex gap-3 w-full transition-all duration-300 ease-in-out select-none"
           onTouchStart={handleTouchStart}
@@ -294,104 +366,16 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
             touchAction: 'pan-y pinch-zoom'
           }}
         >
-          {/* 현재 보여줄 배너들 - 순환 슬라이싱으로 항상 itemsPerView 개수 보장 */}
-          {(() => {
-            const displayBanners = [];
-            for (let i = 0; i < itemsPerView; i++) {
-              const index = (currentIndex + i) % banners.length;
-              displayBanners.push(banners[index]);
-            }
-            return displayBanners;
-          })().map((banner, i) => {
-            const uniqueKey = `${banner.id}-${i}`;
-            
-            // 내부/외부 링크 구분
-            const isExternalLink = banner.link_url && (
-              banner.link_url.startsWith('http://') || 
-              banner.link_url.startsWith('https://') ||
-              banner.link_url.startsWith('//')
-            );
-            
-            const commonProps = {
-              className: `flex-1 min-w-0 border rounded-lg transition-all shadow-sm group hover:translate-y-[-2px] hover:shadow-md hover:border-blue-300 touch-manipulation active:scale-[0.99] transform-gpu select-none relative overflow-hidden ${
-                banner.link_url ? 'cursor-pointer' : ''
-              } border-gray-200`,
-              style: {
-                height: '210px',
-                backgroundColor: banner.background_color || '#ffffff',
-                color: banner.text_color || '#000000',
-                userSelect: 'none' as const,
-                WebkitUserSelect: 'none' as const,
-                WebkitTouchCallout: 'none' as const,
-                WebkitTapHighlightColor: 'transparent',
-                touchAction: 'manipulation' as const
-              },
-              onDragStart: (e: React.DragEvent) => e.preventDefault()
-            };
-            
-            // 링크가 있는 경우 처리
-            if (banner.link_url) {
-              if (isExternalLink) {
-                // 외부 링크 - 새 탭에서 열기
-                return (
-                  <a
-                    key={uniqueKey}
-                    href={banner.link_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    {...commonProps}
-                  >
-                    {renderBannerContent(banner)}
-                  </a>
-                );
-              } else {
-                // 내부 링크 - Next.js Link 사용
-                return (
-                  <Link
-                    key={uniqueKey}
-                    href={banner.link_url}
-                    {...commonProps}
-                  >
-                    {renderBannerContent(banner)}
-                  </Link>
-                );
-              }
-            } else {
-              // 링크가 없는 경우
-              return (
-                <div 
-                  key={uniqueKey}
-                  {...commonProps}
-                >
-                  {renderBannerContent(banner)}
-                </div>
-              );
-            }
-          })}
+          {displayBanners.map((banner, index) => (
+            <BannerWrapper key={`${banner.id}-${index}`} banner={banner} index={index}>
+              {renderBannerContent(banner)}
+            </BannerWrapper>
+          ))}
         </div>
         
         {/* 인디케이터 */}
-        {firstBanner.display_type === 'slide' && banners.length > 1 && (
-          <div className="flex justify-center mt-3">
-            <div className="flex space-x-2">
-              {Array.from({ length: banners.length }).map((_, index) => (
-                <button
-                  key={index}
-                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                    currentIndex === index
-                      ? 'bg-blue-600 scale-125'
-                      : 'bg-gray-300 hover:bg-gray-400'
-                  }`}
-                  onClick={() => {
-                    setCurrentIndex(index);
-                    setIsAutoPlaying(false);
-                    setTimeout(() => setIsAutoPlaying(true), 3000);
-                  }}
-                  aria-label={`배너 ${index + 1}로 이동`}
-                />
-              ))}
-            </div>
-          </div>
+        {bannerConfig.displayType === 'slide' && banners.length > 1 && (
+          <Indicators />
         )}
       </div>
     </div>
