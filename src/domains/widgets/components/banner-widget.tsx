@@ -1,6 +1,6 @@
 import React from 'react';
 import { getBannersByPosition } from '../actions/banners';
-import BannerWidgetClient from './banner-widget-client';
+import BannerWidgetClient from './banner-widget/BannerWidget';
 import { BannerPosition } from '../types/banner';
 
 interface BannerWidgetProps {
