@@ -33,7 +33,10 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
   
   const itemsPerView = isMobile ? firstBanner.mobile_per_row : firstBanner.desktop_per_row;
   const autoSlideInterval = firstBanner.auto_slide_interval || 10000;
-  const maxIndex = banners.length - 1;
+  
+  // totalPages 계산 - itemsPerView 기반
+  const totalPages = Math.ceil(banners.length / itemsPerView);
+  const maxIndex = totalPages - 1;
 
   // 이미지 배너 렌더링
   const renderImageBanner = (banner: Banner) => (
@@ -94,7 +97,8 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
       setIsMobile(newIsMobile);
       
       // 화면 크기 변경 시 인덱스 보정
-      if (currentIndex > maxIndex) {
+      const newTotalPages = Math.ceil(banners.length / (newIsMobile ? firstBanner.mobile_per_row : firstBanner.desktop_per_row));
+      if (currentIndex >= newTotalPages) {
         setCurrentIndex(0);
       }
     };
@@ -104,15 +108,13 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
     window.addEventListener('resize', checkMobile);
     
     return () => window.removeEventListener('resize', checkMobile);
-  }, [currentIndex, maxIndex]);
+  }, [currentIndex, banners.length, firstBanner.mobile_per_row, firstBanner.desktop_per_row]);
 
   // 자동 슬라이드 기능
   useEffect(() => {
-    if (isAutoPlaying && banners.length > itemsPerView && firstBanner.display_type === 'slide') {
+    if (isAutoPlaying && totalPages > 1 && firstBanner.display_type === 'slide') {
       intervalRef.current = setInterval(() => {
-        setCurrentIndex(prevIndex => 
-          (prevIndex + 1) % banners.length
-        );
+        setCurrentIndex(prevIndex => (prevIndex + 1) % totalPages);
       }, autoSlideInterval);
     }
 
@@ -121,29 +123,19 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
         clearInterval(intervalRef.current);
       }
     };
-  }, [isAutoPlaying, maxIndex, itemsPerView, autoSlideInterval, banners.length, firstBanner.display_type]);
+  }, [isAutoPlaying, totalPages, autoSlideInterval, firstBanner.display_type]);
 
   // 배너가 없으면 렌더링하지 않음
   if (!banners || banners.length === 0) {
     return null;
   }
 
-  // 하이드레이션 불일치 방지 - 클라이언트에서 마운트되기 전까지는 모바일 기준으로 렌더링
+  // 하이드레이션 불일치 방지
   if (!isMounted) {
     return (
       <div className="w-full mb-4 mt-4 md:mt-0">
         <div className="relative">
-          <div 
-            className="flex gap-3 w-full transition-all duration-300 ease-in-out select-none"
-            style={{
-              userSelect: 'none',
-              WebkitUserSelect: 'none',
-              WebkitTouchCallout: 'none',
-              WebkitTapHighlightColor: 'transparent',
-              touchAction: 'pan-y pinch-zoom'
-            }}
-          >
-            {/* 모바일 기준 1개 배너만 표시 */}
+          <div className="flex gap-3 w-full">
             {banners.slice(0, 1).map((banner) => {
               const isExternalLink = banner.link_url && (
                 banner.link_url.startsWith('http://') || 
@@ -152,52 +144,33 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
               );
               
               const commonProps = {
-                className: `flex-1 min-w-0 border rounded-lg transition-all shadow-sm group hover:translate-y-[-2px] hover:shadow-md hover:border-blue-300 touch-manipulation active:scale-[0.99] transform-gpu select-none relative overflow-hidden ${
+                className: `flex-1 min-w-0 border rounded-lg transition-all shadow-sm group hover:translate-y-[-2px] hover:shadow-md hover:border-blue-300 touch-manipulation relative overflow-hidden ${
                   banner.link_url ? 'cursor-pointer' : ''
                 } border-gray-200`,
                 style: {
                   height: '210px',
                   backgroundColor: banner.background_color || '#ffffff',
-                  color: banner.text_color || '#000000',
-                  userSelect: 'none' as const,
-                  WebkitUserSelect: 'none' as const,
-                  WebkitTouchCallout: 'none' as const,
-                  WebkitTapHighlightColor: 'transparent',
-                  touchAction: 'manipulation' as const
-                },
-                onDragStart: (e: React.DragEvent) => e.preventDefault()
+                  color: banner.text_color || '#000000'
+                }
               };
               
               if (banner.link_url) {
                 if (isExternalLink) {
                   return (
-                    <a
-                      key={banner.id}
-                      href={banner.link_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      {...commonProps}
-                    >
+                    <a key={banner.id} href={banner.link_url} target="_blank" rel="noopener noreferrer" {...commonProps}>
                       {renderBannerContent(banner)}
                     </a>
                   );
                 } else {
                   return (
-                    <Link
-                      key={banner.id}
-                      href={banner.link_url}
-                      {...commonProps}
-                    >
+                    <Link key={banner.id} href={banner.link_url} {...commonProps}>
                       {renderBannerContent(banner)}
                     </Link>
                   );
                 }
               } else {
                 return (
-                  <div 
-                    key={banner.id}
-                    {...commonProps}
-                  >
+                  <div key={banner.id} {...commonProps}>
                     {renderBannerContent(banner)}
                   </div>
                 );
@@ -225,9 +198,9 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
     const diff = touchStart - currentTouch;
     const containerWidth = containerRef.current?.offsetWidth || 0;
     
-    // 드래그 거리를 컨테이너 너비의 비율로 계산
-    const dragRatio = diff / containerWidth;
-    setDragOffset(dragRatio * 100); // 백분율로 변환
+    // 드래그 거리를 백분율로 계산
+    const dragRatio = (diff / containerWidth) * 100;
+    setDragOffset(dragRatio);
     setTouchEnd(currentTouch);
   };
 
@@ -245,10 +218,14 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
     const isLeftSwipe = distance > threshold;
     const isRightSwipe = distance < -threshold;
 
-    if (isLeftSwipe) {
-      setCurrentIndex(prevIndex => (prevIndex + 1) % banners.length);
-    } else if (isRightSwipe) {
-      setCurrentIndex(prevIndex => (prevIndex - 1 + banners.length) % banners.length);
+    if (isLeftSwipe && currentIndex < maxIndex) {
+      setCurrentIndex(prevIndex => prevIndex + 1);
+    } else if (isRightSwipe && currentIndex > 0) {
+      setCurrentIndex(prevIndex => prevIndex - 1);
+    } else if (isLeftSwipe && currentIndex === maxIndex) {
+      setCurrentIndex(0); // 순환
+    } else if (isRightSwipe && currentIndex === 0) {
+      setCurrentIndex(maxIndex); // 순환
     }
 
     setIsDragging(false);
@@ -256,15 +233,15 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
     setTimeout(() => setIsAutoPlaying(true), 3000);
   };
 
-  // 슬라이드 버튼 핸들러
+  // 슬라이드 버튼 핸들러 - totalPages 기준
   const slideLeft = () => {
-    setCurrentIndex(prevIndex => (prevIndex - 1 + banners.length) % banners.length);
+    setCurrentIndex(prevIndex => (prevIndex - 1 + totalPages) % totalPages);
     setIsAutoPlaying(false);
     setTimeout(() => setIsAutoPlaying(true), 3000);
   };
 
   const slideRight = () => {
-    setCurrentIndex(prevIndex => (prevIndex + 1) % banners.length);
+    setCurrentIndex(prevIndex => (prevIndex + 1) % totalPages);
     setIsAutoPlaying(false);
     setTimeout(() => setIsAutoPlaying(true), 3000);
   };
@@ -273,33 +250,29 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
     <div className="w-full mb-4 mt-4 md:mt-0">
       <div className="relative">
         {/* 데스크탑 슬라이딩 버튼 */}
-        {firstBanner.display_type === 'slide' && (
+        {firstBanner.display_type === 'slide' && totalPages > 1 && (
           <div className="hidden md:block">
-            {banners.length > itemsPerView && (
-              <>
-                {/* 왼쪽 버튼 */}
-                <button 
-                  onClick={slideLeft}
-                  className="absolute left-[-12px] top-1/2 -translate-y-1/2 z-20 rounded-full p-2 shadow-lg border transition-all duration-200 bg-white hover:bg-blue-50 hover:border-blue-300 border-gray-200 hover:scale-110 hover:shadow-xl cursor-pointer group"
-                  aria-label="이전 배너"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 transition-colors text-gray-600 group-hover:text-blue-600">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-                  </svg>
-                </button>
-                
-                {/* 오른쪽 버튼 */}
-                <button 
-                  onClick={slideRight}
-                  className="absolute right-[-12px] top-1/2 -translate-y-1/2 z-20 rounded-full p-2 shadow-lg border transition-all duration-200 bg-white hover:bg-blue-50 hover:border-blue-300 border-gray-200 hover:scale-110 hover:shadow-xl cursor-pointer group"
-                  aria-label="다음 배너"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 transition-colors text-gray-600 group-hover:text-blue-600">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                  </svg>
-                </button>
-              </>
-            )}
+            {/* 왼쪽 버튼 */}
+            <button 
+              onClick={slideLeft}
+              className="absolute left-[-12px] top-1/2 -translate-y-1/2 z-20 rounded-full p-2 shadow-lg border transition-all duration-200 bg-white hover:bg-blue-50 hover:border-blue-300 border-gray-200 hover:scale-110 hover:shadow-xl cursor-pointer group"
+              aria-label="이전 배너"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 transition-colors text-gray-600 group-hover:text-blue-600">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+              </svg>
+            </button>
+            
+            {/* 오른쪽 버튼 */}
+            <button 
+              onClick={slideRight}
+              className="absolute right-[-12px] top-1/2 -translate-y-1/2 z-20 rounded-full p-2 shadow-lg border transition-all duration-200 bg-white hover:bg-blue-50 hover:border-blue-300 border-gray-200 hover:scale-110 hover:shadow-xl cursor-pointer group"
+              aria-label="다음 배너"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 transition-colors text-gray-600 group-hover:text-blue-600">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+              </svg>
+            </button>
           </div>
         )}
         
@@ -320,14 +293,14 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
             style={{
-              width: `${banners.length * 100}%`,
-              transform: isDragging 
-                ? `translateX(calc(-${currentIndex * (100 / banners.length)}% - ${dragOffset * (100 / banners.length)}%))` 
-                : `translateX(-${currentIndex * (100 / banners.length)}%)`,
-              transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+              width: `${(100 * banners.length) / itemsPerView}%`,
+              transform: isDragging
+                ? `translateX(calc(-${currentIndex * 100}% - ${dragOffset}%))`
+                : `translateX(-${currentIndex * 100}%)`,
+              transition: isDragging ? 'none' : 'transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
             }}
           >
-            {/* 모든 배너를 같은 크기로 렌더링 */}
+            {/* 모든 배너를 itemsPerView 기준으로 렌더링 */}
             {banners.map((banner, index) => {
               const uniqueKey = `${banner.id}-${index}`;
               
@@ -343,7 +316,7 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
                   banner.link_url ? 'cursor-pointer' : ''
                 } border-gray-200`,
                 style: {
-                  width: `${100 / banners.length}%`,
+                  width: `${100 / (banners.length / itemsPerView)}%`,
                   height: '210px',
                   backgroundColor: banner.background_color || '#ffffff',
                   color: banner.text_color || '#000000',
@@ -353,7 +326,7 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
                   WebkitTapHighlightColor: 'transparent',
                   touchAction: 'manipulation' as const,
                   flexShrink: 0,
-                  margin: isMobile ? '0 6px' : '0 6px'
+                  margin: '0 6px'
                 },
                 onDragStart: (e: React.DragEvent) => e.preventDefault()
               };
@@ -400,11 +373,11 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
           </div>
         </div>
         
-        {/* 인디케이터 */}
-        {firstBanner.display_type === 'slide' && banners.length > 1 && (
+        {/* 인디케이터 - totalPages 기준 */}
+        {firstBanner.display_type === 'slide' && totalPages > 1 && (
           <div className="flex justify-center mt-3">
             <div className="flex space-x-2">
-              {Array.from({ length: banners.length }).map((_, index) => (
+              {Array.from({ length: totalPages }).map((_, index) => (
                 <button
                   key={index}
                   className={`w-2 h-2 rounded-full transition-all duration-300 ${
