@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { createClient, createServerActionClient } from '@/shared/api/supabaseServer';
 import { revalidatePath } from 'next/cache';
 import { cache } from 'react';
 import { ReportResponse } from '@/domains/reports/types';
@@ -14,9 +14,12 @@ export interface SupportComment {
   content: string;
   team_type: TeamType;
   likes_count: number;
+  dislikes_count?: number;
   created_at: string | null;
   user_id: string;
   is_liked?: boolean;
+  is_disliked?: boolean;
+  userAction?: 'like' | 'dislike' | null;
   is_hidden?: boolean;
   is_deleted?: boolean;
   user_profile?: {
@@ -86,7 +89,7 @@ export const getSupportComments = cache(async (matchId: string) => {
         .eq('user_id', user.id)
         .in('comment_id', commentIds);
       
-      likedCommentIds = new Set(likes?.map(like => like.comment_id) || []);
+      likedCommentIds = new Set(likes?.map(l => l.comment_id) || []);
     }
 
     // 프로필 정보를 맵으로 변환
@@ -96,7 +99,7 @@ export const getSupportComments = cache(async (matchId: string) => {
     const commentsWithProfiles: SupportComment[] = comments.map(comment => {
       const profile = profileMap.get(comment.user_id);
       
-      // 댓글 내용을 기반으로 상태 판단하거나 실제 DB 값 사용
+      // 댓글 내용을 기반으로 상태 판단
       let isHidden = false;
       let isDeleted = false;
       
@@ -106,12 +109,6 @@ export const getSupportComments = cache(async (matchId: string) => {
       } else if (comment.content === '신고에 의해 일시 숨김처리 되었습니다. 7일 후 다시 확인됩니다.') {
         isHidden = true;
         isDeleted = false;
-      } else {
-        // 실제 데이터베이스 값 사용
-        const dbHidden = (comment as Record<string, unknown>).is_hidden as boolean;
-        const dbDeleted = (comment as Record<string, unknown>).is_deleted as boolean;
-        isHidden = dbHidden || false;
-        isDeleted = dbDeleted || false;
       }
       
       return {
@@ -122,6 +119,8 @@ export const getSupportComments = cache(async (matchId: string) => {
         created_at: comment.created_at,
         user_id: comment.user_id,
         is_liked: likedCommentIds.has(comment.id),
+        is_disliked: false, // dislike 상태는 별도로 확인
+        userAction: null, // 사용자 액션은 별도로 확인
         is_hidden: isHidden,
         is_deleted: isDeleted,
         user_profile: profile ? {
@@ -149,7 +148,7 @@ export async function createSupportComment(
   content: string
 ) {
   try {
-    const supabase = await createClient();
+    const supabase = await createServerActionClient();
     
     // 현재 사용자 확인
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -158,7 +157,7 @@ export async function createSupportComment(
       return { success: false, error: '로그인이 필요합니다.' };
     }
 
-    // 댓글 작성
+    // 댓글 작성 (조인 없이 단순 insert)
     const { data, error } = await supabase
       .from('match_support_comments')
       .insert({
@@ -168,22 +167,7 @@ export async function createSupportComment(
         user_id: user.id,
         likes_count: 0
       })
-      .select(`
-        id,
-        content,
-        team_type,
-        likes_count,
-        created_at,
-        user_id,
-        profiles:user_id (
-          username,
-          nickname,
-          icon_id,
-          shop_items:icon_id (
-            image_url
-          )
-        )
-      `)
+      .select()
       .single();
 
     if (error) {
@@ -201,106 +185,241 @@ export async function createSupportComment(
   }
 }
 
+// 응원 댓글 응답 타입
+export interface MatchCommentLikeResponse {
+  success: boolean;
+  likes_count?: number;
+  dislikes_count?: number;
+  userAction?: 'like' | 'dislike' | null;
+  error?: string;
+}
+
 // 응원 댓글 좋아요/취소 (별칭 함수 추가)
 export async function toggleCommentLike(commentId: string) {
-  return await toggleSupportCommentLike(commentId);
-    }
+  return await likeMatchComment(commentId);
+}
 
-// 응원 댓글 좋아요/취소
-export async function toggleSupportCommentLike(commentId: string) {
+// 응원 댓글 좋아요
+export async function likeMatchComment(commentId: string): Promise<MatchCommentLikeResponse> {
   try {
-    const supabase = await createClient();
+    const supabase = await createServerActionClient();
+
+    // 인증된 사용자 확인
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    // 현재 사용자 확인
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError || !user) {
-      return { success: false, error: '로그인이 필요합니다.' };
+    if (authError || !user) {
+      return {
+        success: false,
+        error: '로그인이 필요합니다.'
+      };
     }
-
-    // 기존 좋아요 확인
-    const { data: existingLike } = await supabase
-      .from('match_comment_likes')
-      .select('id')
-      .eq('comment_id', commentId)
-      .eq('user_id', user.id)
+    
+    // 현재 댓글 정보 가져오기
+    const { data: currentComment, error: commentFetchError } = await supabase
+      .from('match_support_comments')
+      .select('likes_count, dislikes_count')
+      .eq('id', commentId)
       .single();
+    
+    if (commentFetchError) {
+      return {
+        success: false,
+        error: `댓글 조회 오류: ${commentFetchError.message}`
+      };
+    }
+    
+    // 현재 좋아요/싫어요 수
+    let likesCount = currentComment.likes_count || 0;
+    let dislikesCount = currentComment.dislikes_count || 0;
+    
+    // 현재 사용자의 기존 액션 확인
+    const { data: existingLikes } = await supabase
+      .from('match_comment_likes')
+      .select('*')
+      .eq('comment_id', commentId)
+      .eq('user_id', user.id);
 
+    const existingLike = existingLikes?.[0];
+    let userAction: 'like' | 'dislike' | null = null;
+    
     if (existingLike) {
-      // 좋아요 취소
-      const { error: deleteError } = await supabase
-        .from('match_comment_likes')
-        .delete()
-        .eq('id', existingLike.id);
-
-      if (deleteError) {
-        return { success: false, error: deleteError.message };
-      }
-
-      // 댓글의 좋아요 수 감소
-      const { data: currentComment } = await supabase
-        .from('match_support_comments')
-        .select('likes_count')
-        .eq('id', commentId)
-        .single();
+      // 기존 기록이 있는 경우
+      const currentType = existingLike.type || 'like';
       
-      if (currentComment) {
-        const currentLikes = currentComment.likes_count || 0;
-        const { error: updateError } = await supabase
-          .from('match_support_comments')
-          .update({ likes_count: Math.max(0, currentLikes - 1) })
-          .eq('id', commentId);
-
-        if (updateError) {
-          return { success: false, error: updateError.message };
-        }
+      if (currentType === 'like') {
+        // 이미 좋아요인 경우 취소
+        await supabase
+          .from('match_comment_likes')
+          .delete()
+          .eq('id', existingLike.id);
+        
+        likesCount = Math.max(0, likesCount - 1);
+        userAction = null;
+      } else {
+        // 싫어요 → 좋아요 변경
+        await supabase
+          .from('match_comment_likes')
+          .update({ type: 'like' })
+          .eq('id', existingLike.id);
+        
+        dislikesCount = Math.max(0, dislikesCount - 1);
+        likesCount = likesCount + 1;
+        userAction = 'like';
       }
-
-      return { success: true, liked: false };
     } else {
-      // 좋아요 추가
-      const { error: insertError } = await supabase
+      // 새로운 좋아요 추가
+      await supabase
         .from('match_comment_likes')
         .insert({
           comment_id: commentId,
-          user_id: user.id
+          user_id: user.id,
+          type: 'like'
         });
-
-      if (insertError) {
-        return { success: false, error: insertError.message };
-      }
-
-      // 댓글의 좋아요 수 증가
-      const { data: currentComment } = await supabase
-        .from('match_support_comments')
-        .select('likes_count')
-        .eq('id', commentId)
-        .single();
       
-      if (currentComment) {
-        const currentLikes = currentComment.likes_count || 0;
-        const { error: updateError } = await supabase
-          .from('match_support_comments')
-          .update({ likes_count: currentLikes + 1 })
-          .eq('id', commentId);
-
-        if (updateError) {
-          return { success: false, error: updateError.message };
-        }
-      }
-
-      return { success: true, liked: true };
+      likesCount = likesCount + 1;
+      userAction = 'like';
     }
+    
+    // 댓글 정보 업데이트
+    await supabase
+      .from('match_support_comments')
+      .update({ 
+        likes_count: Math.max(0, likesCount),
+        dislikes_count: Math.max(0, dislikesCount)
+      })
+      .eq('id', commentId);
+
+    return {
+      success: true,
+      likes_count: Math.max(0, likesCount),
+      dislikes_count: Math.max(0, dislikesCount),
+      userAction
+    };
+    
   } catch (error) {
-    console.error('댓글 좋아요 토글 중 예외 발생:', error);
-    return { success: false, error: '좋아요 처리 중 오류가 발생했습니다.' };
+    console.error('좋아요 처리 오류:', error);
+    return {
+      success: false,
+      error: '좋아요 처리 중 오류가 발생했습니다.'
+    };
   }
+}
+
+// 응원 댓글 싫어요
+export async function dislikeMatchComment(commentId: string): Promise<MatchCommentLikeResponse> {
+  try {
+    const supabase = await createServerActionClient();
+
+    // 인증된 사용자 확인
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return {
+        success: false,
+        error: '로그인이 필요합니다.'
+      };
+    }
+    
+    // 현재 댓글 정보 가져오기
+    const { data: currentComment, error: commentFetchError } = await supabase
+      .from('match_support_comments')
+      .select('likes_count, dislikes_count')
+      .eq('id', commentId)
+      .single();
+    
+    if (commentFetchError) {
+      return {
+        success: false,
+        error: `댓글 조회 오류: ${commentFetchError.message}`
+      };
+    }
+    
+    // 현재 좋아요/싫어요 수
+    let likesCount = currentComment.likes_count || 0;
+    let dislikesCount = currentComment.dislikes_count || 0;
+    
+    // 현재 사용자의 기존 액션 확인
+    const { data: existingLikes } = await supabase
+      .from('match_comment_likes')
+      .select('*')
+      .eq('comment_id', commentId)
+      .eq('user_id', user.id);
+
+    const existingLike = existingLikes?.[0];
+    let userAction: 'like' | 'dislike' | null = null;
+    
+    if (existingLike) {
+      // 기존 기록이 있는 경우
+      const currentType = existingLike.type || 'like';
+      
+      if (currentType === 'dislike') {
+        // 이미 싫어요인 경우 취소
+        await supabase
+          .from('match_comment_likes')
+          .delete()
+          .eq('id', existingLike.id);
+        
+        dislikesCount = Math.max(0, dislikesCount - 1);
+        userAction = null;
+      } else {
+        // 좋아요 → 싫어요 변경
+        await supabase
+          .from('match_comment_likes')
+          .update({ type: 'dislike' })
+          .eq('id', existingLike.id);
+        
+        likesCount = Math.max(0, likesCount - 1);
+        dislikesCount = dislikesCount + 1;
+        userAction = 'dislike';
+      }
+    } else {
+      // 새로운 싫어요 추가
+      await supabase
+        .from('match_comment_likes')
+        .insert({
+          comment_id: commentId,
+          user_id: user.id,
+          type: 'dislike'
+        });
+      
+      dislikesCount = dislikesCount + 1;
+      userAction = 'dislike';
+    }
+    
+    // 댓글 정보 업데이트
+    await supabase
+      .from('match_support_comments')
+      .update({ 
+        likes_count: Math.max(0, likesCount),
+        dislikes_count: Math.max(0, dislikesCount)
+      })
+      .eq('id', commentId);
+
+    return {
+      success: true,
+      likes_count: Math.max(0, likesCount),
+      dislikes_count: Math.max(0, dislikesCount),
+      userAction
+    };
+    
+  } catch (error) {
+    console.error('싫어요 처리 오류:', error);
+    return {
+      success: false,
+      error: '싫어요 처리 중 오류가 발생했습니다.'
+    };
+  }
+}
+
+// 응원 댓글 좋아요/취소 (기존 함수명 유지)
+export async function toggleSupportCommentLike(commentId: string) {
+  return await likeMatchComment(commentId);
 }
 
 // 응원 댓글 삭제
 export async function deleteSupportComment(commentId: string) {
   try {
-    const supabase = await createClient();
+    const supabase = await createServerActionClient();
     
     // 현재 사용자 확인
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -351,7 +470,7 @@ export async function reportSupportComment(
   description?: string
 ): Promise<ReportResponse> {
   try {
-    const supabase = await createClient();
+    const supabase = await createServerActionClient();
     
     // 현재 사용자 확인
     const { data: { user }, error: userError } = await supabase.auth.getUser();

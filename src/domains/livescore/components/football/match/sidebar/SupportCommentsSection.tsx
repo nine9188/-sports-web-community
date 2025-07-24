@@ -8,6 +8,7 @@ import {
   createSupportComment,
   getSupportComments,
   toggleCommentLike,
+  dislikeMatchComment,
   type TeamType,
   type SupportComment
 } from '@/domains/livescore/actions/match/supportComments';
@@ -36,11 +37,13 @@ interface MatchDataType {
 function CommentItem({ 
   comment, 
   onLike,
+  onDislike,
   currentUserId,
   isLoggedIn
 }: { 
   comment: SupportComment;
   onLike: (commentId: string) => void;
+  onDislike: (commentId: string) => void;
   currentUserId?: string;
   isLoggedIn: boolean;
 }) {
@@ -167,20 +170,35 @@ function CommentItem({
             {comment.content}
           </p>
 
-          {/* 좋아요 버튼 (댓글 내용 아래로 이동, 크기 축소) */}
-          <button
-            onClick={() => onLike(comment.id)}
-            className={`flex items-center space-x-1 text-xs transition-all hover:scale-105 ${
-              comment.is_liked 
-                ? 'text-red-500' 
-                : 'text-gray-400 hover:text-red-400'
-            }`}
-          >
-            <span className="text-xs">좋아요</span>
-            {comment.likes_count > 0 && (
-              <span className="font-medium text-xs">{comment.likes_count}</span>
-            )}
-          </button>
+          {/* 좋아요/싫어요 버튼 (댓글 내용 아래로 이동, 크기 축소) */}
+          <div className="flex items-center space-x-1 text-xs transition-all">
+            <button
+              onClick={() => onLike(comment.id)}
+              className={`flex items-center space-x-1 ${
+                comment.is_liked 
+                  ? 'text-red-500' 
+                  : 'text-gray-400 hover:text-red-400'
+              }`}
+            >
+              <span className="text-xs">좋아요</span>
+              {comment.likes_count > 0 && (
+                <span className="font-medium text-xs">{comment.likes_count}</span>
+              )}
+            </button>
+            <button
+              onClick={() => onDislike(comment.id)}
+              className={`flex items-center space-x-1 ${
+                comment.is_disliked 
+                  ? 'text-red-500' 
+                  : 'text-gray-400 hover:text-red-400'
+              }`}
+            >
+              <span className="text-xs">싫어요</span>
+              {(comment.dislikes_count && comment.dislikes_count > 0) && (
+                <span className="font-medium text-xs">{comment.dislikes_count}</span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -315,6 +333,11 @@ export default function SupportCommentsSection({
 
   // 댓글 좋아요 토글
   const handleLikeComment = async (commentId: string) => {
+    if (!isLoggedIn) {
+      toast.error('로그인이 필요합니다.');
+      return;
+    }
+
     try {
       const result = await toggleCommentLike(commentId);
       
@@ -323,19 +346,54 @@ export default function SupportCommentsSection({
           if (comment.id === commentId) {
             return {
               ...comment,
-              is_liked: !comment.is_liked,
-              likes_count: comment.is_liked 
-                ? comment.likes_count - 1 
-                : comment.likes_count + 1
+              is_liked: result.userAction === 'like',
+              is_disliked: result.userAction === 'dislike',
+              userAction: result.userAction,
+              likes_count: result.likes_count || 0,
+              dislikes_count: result.dislikes_count || 0
             };
           }
           return comment;
         }));
       } else {
-        toast.error(result.error);
+        toast.error(result.error || '좋아요 처리 중 오류가 발생했습니다.');
       }
-    } catch {
+    } catch (error) {
+      console.error('좋아요 처리 오류:', error);
       toast.error('좋아요 처리 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 댓글 싫어요 토글
+  const handleDislikeComment = async (commentId: string) => {
+    if (!isLoggedIn) {
+      toast.error('로그인이 필요합니다.');
+      return;
+    }
+
+    try {
+      const result = await dislikeMatchComment(commentId);
+      
+      if (result.success) {
+        setAllComments(prev => prev.map(comment => {
+          if (comment.id === commentId) {
+            return {
+              ...comment,
+              is_liked: result.userAction === 'like',
+              is_disliked: result.userAction === 'dislike',
+              userAction: result.userAction,
+              likes_count: result.likes_count || 0,
+              dislikes_count: result.dislikes_count || 0
+            };
+          }
+          return comment;
+        }));
+      } else {
+        toast.error(result.error || '싫어요 처리 중 오류가 발생했습니다.');
+      }
+    } catch (error) {
+      console.error('싫어요 처리 오류:', error);
+      toast.error('싫어요 처리 중 오류가 발생했습니다.');
     }
   };
 
@@ -525,6 +583,7 @@ export default function SupportCommentsSection({
                 key={comment.id}
                 comment={comment}
                 onLike={handleLikeComment}
+                onDislike={handleDislikeComment}
                 currentUserId={currentUserId}
                 isLoggedIn={isLoggedIn}
               />

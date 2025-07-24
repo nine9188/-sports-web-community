@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instanciate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.3 (519615d)"
+  }
   public: {
     Tables: {
       application_logs: {
@@ -72,6 +77,72 @@ export type Database = {
           status_code?: number | null
           user_agent?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      banners: {
+        Row: {
+          auto_slide_interval: number | null
+          background_color: string | null
+          created_at: string | null
+          desktop_per_row: number | null
+          display_order: number | null
+          display_type: string | null
+          html_content: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          link_url: string | null
+          mobile_per_row: number | null
+          position: string
+          sort_type: string | null
+          subtitle: string | null
+          text_color: string | null
+          title: string | null
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          auto_slide_interval?: number | null
+          background_color?: string | null
+          created_at?: string | null
+          desktop_per_row?: number | null
+          display_order?: number | null
+          display_type?: string | null
+          html_content?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          link_url?: string | null
+          mobile_per_row?: number | null
+          position: string
+          sort_type?: string | null
+          subtitle?: string | null
+          text_color?: string | null
+          title?: string | null
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          auto_slide_interval?: number | null
+          background_color?: string | null
+          created_at?: string | null
+          desktop_per_row?: number | null
+          display_order?: number | null
+          display_type?: string | null
+          html_content?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          link_url?: string | null
+          mobile_per_row?: number | null
+          position?: string
+          sort_type?: string | null
+          subtitle?: string | null
+          text_color?: string | null
+          title?: string | null
+          type?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -273,6 +344,117 @@ export type Database = {
           },
         ]
       }
+      football_teams: {
+        Row: {
+          api_data: Json | null
+          code: string | null
+          country: string
+          country_code: string | null
+          country_ko: string | null
+          created_at: string | null
+          current_position: number | null
+          current_season: number | null
+          display_name: string
+          founded: number | null
+          id: number
+          is_active: boolean | null
+          is_winner: boolean | null
+          last_api_sync: string | null
+          league_id: number
+          league_logo_url: string | null
+          league_name: string
+          league_name_ko: string | null
+          logo_cached_url: string | null
+          logo_url: string | null
+          name: string
+          name_ko: string | null
+          popularity_score: number | null
+          search_keywords: string[] | null
+          search_vector: unknown | null
+          short_name: string | null
+          team_id: number
+          updated_at: string | null
+          venue_address: string | null
+          venue_capacity: number | null
+          venue_city: string | null
+          venue_id: number | null
+          venue_name: string | null
+          venue_surface: string | null
+        }
+        Insert: {
+          api_data?: Json | null
+          code?: string | null
+          country: string
+          country_code?: string | null
+          country_ko?: string | null
+          created_at?: string | null
+          current_position?: number | null
+          current_season?: number | null
+          display_name: string
+          founded?: number | null
+          id?: number
+          is_active?: boolean | null
+          is_winner?: boolean | null
+          last_api_sync?: string | null
+          league_id: number
+          league_logo_url?: string | null
+          league_name: string
+          league_name_ko?: string | null
+          logo_cached_url?: string | null
+          logo_url?: string | null
+          name: string
+          name_ko?: string | null
+          popularity_score?: number | null
+          search_keywords?: string[] | null
+          search_vector?: unknown | null
+          short_name?: string | null
+          team_id: number
+          updated_at?: string | null
+          venue_address?: string | null
+          venue_capacity?: number | null
+          venue_city?: string | null
+          venue_id?: number | null
+          venue_name?: string | null
+          venue_surface?: string | null
+        }
+        Update: {
+          api_data?: Json | null
+          code?: string | null
+          country?: string
+          country_code?: string | null
+          country_ko?: string | null
+          created_at?: string | null
+          current_position?: number | null
+          current_season?: number | null
+          display_name?: string
+          founded?: number | null
+          id?: number
+          is_active?: boolean | null
+          is_winner?: boolean | null
+          last_api_sync?: string | null
+          league_id?: number
+          league_logo_url?: string | null
+          league_name?: string
+          league_name_ko?: string | null
+          logo_cached_url?: string | null
+          logo_url?: string | null
+          name?: string
+          name_ko?: string | null
+          popularity_score?: number | null
+          search_keywords?: string[] | null
+          search_vector?: unknown | null
+          short_name?: string | null
+          team_id?: number
+          updated_at?: string | null
+          venue_address?: string | null
+          venue_capacity?: number | null
+          venue_city?: string | null
+          venue_id?: number | null
+          venue_name?: string | null
+          venue_surface?: string | null
+        }
+        Relationships: []
+      }
       icon_purchases: {
         Row: {
           icon_id: number
@@ -294,6 +476,45 @@ export type Database = {
           price?: number
           purchased_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      image_cache: {
+        Row: {
+          cache_key: string
+          cached_url: string | null
+          created_at: string | null
+          error_message: string | null
+          expires_at: string | null
+          id: number
+          image_url: string
+          last_attempt: string | null
+          retry_count: number | null
+          status: string | null
+        }
+        Insert: {
+          cache_key: string
+          cached_url?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          expires_at?: string | null
+          id?: number
+          image_url: string
+          last_attempt?: string | null
+          retry_count?: number | null
+          status?: string | null
+        }
+        Update: {
+          cache_key?: string
+          cached_url?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          expires_at?: string | null
+          id?: number
+          image_url?: string
+          last_attempt?: string | null
+          retry_count?: number | null
+          status?: string | null
         }
         Relationships: []
       }
@@ -380,23 +601,110 @@ export type Database = {
         }
         Relationships: []
       }
+      match_ai_predictions: {
+        Row: {
+          ai_analysis: string
+          api_calls_count: number | null
+          away_team_id: number
+          away_team_name: string
+          away_team_stats: Json | null
+          betting_odds: Json | null
+          created_at: string | null
+          data_sources: Json | null
+          expires_at: string | null
+          fixture_id: number
+          generation_cost_usd: number | null
+          home_team_id: number
+          home_team_name: string
+          home_team_stats: Json | null
+          id: string
+          is_active: boolean | null
+          last_updated: string | null
+          league_id: number
+          league_name: string
+          match_context: Json | null
+          match_date: string
+          popularity_score: number | null
+          prediction_summary: Json
+          updated_at: string | null
+          view_count: number | null
+        }
+        Insert: {
+          ai_analysis: string
+          api_calls_count?: number | null
+          away_team_id: number
+          away_team_name: string
+          away_team_stats?: Json | null
+          betting_odds?: Json | null
+          created_at?: string | null
+          data_sources?: Json | null
+          expires_at?: string | null
+          fixture_id: number
+          generation_cost_usd?: number | null
+          home_team_id: number
+          home_team_name: string
+          home_team_stats?: Json | null
+          id?: string
+          is_active?: boolean | null
+          last_updated?: string | null
+          league_id: number
+          league_name: string
+          match_context?: Json | null
+          match_date: string
+          popularity_score?: number | null
+          prediction_summary: Json
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          ai_analysis?: string
+          api_calls_count?: number | null
+          away_team_id?: number
+          away_team_name?: string
+          away_team_stats?: Json | null
+          betting_odds?: Json | null
+          created_at?: string | null
+          data_sources?: Json | null
+          expires_at?: string | null
+          fixture_id?: number
+          generation_cost_usd?: number | null
+          home_team_id?: number
+          home_team_name?: string
+          home_team_stats?: Json | null
+          id?: string
+          is_active?: boolean | null
+          last_updated?: string | null
+          league_id?: number
+          league_name?: string
+          match_context?: Json | null
+          match_date?: string
+          popularity_score?: number | null
+          prediction_summary?: Json
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Relationships: []
+      }
       match_comment_likes: {
         Row: {
           comment_id: string
           created_at: string | null
           id: string
+          type: string
           user_id: string
         }
         Insert: {
           comment_id: string
           created_at?: string | null
           id?: string
+          type?: string
           user_id: string
         }
         Update: {
           comment_id?: string
           created_at?: string | null
           id?: string
+          type?: string
           user_id?: string
         }
         Relationships: [
@@ -467,7 +775,12 @@ export type Database = {
         Row: {
           content: string
           created_at: string | null
+          dislikes_count: number
+          hidden_reason: string | null
+          hidden_until: string | null
           id: string
+          is_deleted: boolean | null
+          is_hidden: boolean | null
           likes_count: number | null
           match_id: string
           team_type: string
@@ -477,7 +790,12 @@ export type Database = {
         Insert: {
           content: string
           created_at?: string | null
+          dislikes_count?: number
+          hidden_reason?: string | null
+          hidden_until?: string | null
           id?: string
+          is_deleted?: boolean | null
+          is_hidden?: boolean | null
           likes_count?: number | null
           match_id: string
           team_type: string
@@ -487,12 +805,65 @@ export type Database = {
         Update: {
           content?: string
           created_at?: string | null
+          dislikes_count?: number
+          hidden_reason?: string | null
+          hidden_until?: string | null
           id?: string
+          is_deleted?: boolean | null
+          is_hidden?: boolean | null
           likes_count?: number | null
           match_id?: string
           team_type?: string
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      player_images: {
+        Row: {
+          content_type: string | null
+          created_at: string | null
+          file_size: number | null
+          id: number
+          is_processed: boolean | null
+          last_updated: string | null
+          original_url: string | null
+          player_id: number
+          player_name: string
+          storage_path: string | null
+          storage_url: string | null
+          team_id: number | null
+          team_name: string | null
+        }
+        Insert: {
+          content_type?: string | null
+          created_at?: string | null
+          file_size?: number | null
+          id?: number
+          is_processed?: boolean | null
+          last_updated?: string | null
+          original_url?: string | null
+          player_id: number
+          player_name: string
+          storage_path?: string | null
+          storage_url?: string | null
+          team_id?: number | null
+          team_name?: string | null
+        }
+        Update: {
+          content_type?: string | null
+          created_at?: string | null
+          file_size?: number | null
+          id?: number
+          is_processed?: boolean | null
+          last_updated?: string | null
+          original_url?: string | null
+          player_id?: number
+          player_name?: string
+          storage_path?: string | null
+          storage_url?: string | null
+          team_id?: number | null
+          team_name?: string | null
         }
         Relationships: []
       }
@@ -552,6 +923,42 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      post_boards: {
+        Row: {
+          board_id: string
+          created_at: string | null
+          id: string
+          post_id: string
+        }
+        Insert: {
+          board_id: string
+          created_at?: string | null
+          id?: string
+          post_id: string
+        }
+        Update: {
+          board_id?: string
+          created_at?: string | null
+          id?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_boards_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_boards_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       post_files: {
         Row: {
@@ -622,6 +1029,13 @@ export type Database = {
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -713,6 +1127,42 @@ export type Database = {
           },
         ]
       }
+      prediction_automation_logs: {
+        Row: {
+          created_at: string | null
+          details: Json | null
+          error_message: string | null
+          execution_time_ms: number | null
+          id: string
+          matches_processed: number | null
+          posts_created: number | null
+          status: string
+          trigger_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          details?: Json | null
+          error_message?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          matches_processed?: number | null
+          posts_created?: number | null
+          status: string
+          trigger_type: string
+        }
+        Update: {
+          created_at?: string | null
+          details?: Json | null
+          error_message?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          matches_processed?: number | null
+          posts_created?: number | null
+          status?: string
+          trigger_type?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           email: string | null
@@ -762,7 +1212,15 @@ export type Database = {
           updated_at?: string | null
           username?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_icon_id_fkey"
+            columns: ["icon_id"]
+            isOneToOne: false
+            referencedRelation: "shop_items"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reports: {
         Row: {
@@ -820,6 +1278,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      rss_automation_logs: {
+        Row: {
+          created_at: string | null
+          details: Json | null
+          error_message: string | null
+          execution_time_ms: number | null
+          feeds_processed: number | null
+          id: string
+          posts_imported: number | null
+          status: string
+          trigger_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          details?: Json | null
+          error_message?: string | null
+          execution_time_ms?: number | null
+          feeds_processed?: number | null
+          id?: string
+          posts_imported?: number | null
+          status: string
+          trigger_type: string
+        }
+        Update: {
+          created_at?: string | null
+          details?: Json | null
+          error_message?: string | null
+          execution_time_ms?: number | null
+          feeds_processed?: number | null
+          id?: string
+          posts_imported?: number | null
+          status?: string
+          trigger_type?: string
+        }
+        Relationships: []
       }
       rss_feeds: {
         Row: {
@@ -918,6 +1412,51 @@ export type Database = {
           },
         ]
       }
+      search_logs: {
+        Row: {
+          clicked_result_id: string | null
+          clicked_result_type: string | null
+          created_at: string | null
+          id: string
+          ip_address: unknown | null
+          results_count: number | null
+          search_duration_ms: number | null
+          search_query: string
+          search_type: string
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          clicked_result_id?: string | null
+          clicked_result_type?: string | null
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          results_count?: number | null
+          search_duration_ms?: number | null
+          search_query: string
+          search_type: string
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          clicked_result_id?: string | null
+          clicked_result_type?: string | null
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          results_count?: number | null
+          search_duration_ms?: number | null
+          search_query?: string
+          search_type?: string
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       shop_categories: {
         Row: {
           created_at: string | null
@@ -1009,30 +1548,36 @@ export type Database = {
       teams: {
         Row: {
           country: string | null
+          country_ko: string | null
           founded: number | null
           id: number
           logo: string | null
           name: string
+          name_ko: string | null
           venue_capacity: number | null
           venue_city: string | null
           venue_name: string | null
         }
         Insert: {
           country?: string | null
+          country_ko?: string | null
           founded?: number | null
           id: number
           logo?: string | null
           name: string
+          name_ko?: string | null
           venue_capacity?: number | null
           venue_city?: string | null
           venue_name?: string | null
         }
         Update: {
           country?: string | null
+          country_ko?: string | null
           founded?: number | null
           id?: number
           logo?: string | null
           name?: string
+          name_ko?: string | null
           venue_capacity?: number | null
           venue_city?: string | null
           venue_name?: string | null
@@ -1127,37 +1672,37 @@ export type Database = {
       }
       verification_codes: {
         Row: {
-          id: string
-          email: string
           code: string
-          type: string
-          token: string | null
+          created_at: string | null
+          email: string
           expires_at: string
+          id: string
+          token: string | null
+          type: string
+          updated_at: string | null
           used_at: string | null
-          created_at: string
-          updated_at: string
         }
         Insert: {
-          id?: string
-          email: string
           code: string
-          type: string
-          token?: string | null
+          created_at?: string | null
+          email: string
           expires_at: string
+          id?: string
+          token?: string | null
+          type: string
+          updated_at?: string | null
           used_at?: string | null
-          created_at?: string
-          updated_at?: string
         }
         Update: {
-          id?: string
-          email?: string
           code?: string
-          type?: string
-          token?: string | null
+          created_at?: string | null
+          email?: string
           expires_at?: string
+          id?: string
+          token?: string | null
+          type?: string
+          updated_at?: string | null
           used_at?: string | null
-          created_at?: string
-          updated_at?: string
         }
         Relationships: []
       }
@@ -1215,7 +1760,19 @@ export type Database = {
           comment_count: number | null
           match_id: string | null
           team_type: string | null
+          total_dislikes: number | null
           total_likes: number | null
+        }
+        Relationships: []
+      }
+      popular_searches: {
+        Row: {
+          avg_results: number | null
+          last_searched: string | null
+          search_count: number | null
+          search_query: string | null
+          search_type: string | null
+          unique_users: number | null
         }
         Relationships: []
       }
@@ -1247,11 +1804,23 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      cleanup_expired_predictions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cleanup_old_logs: {
+        Args: { days_to_keep?: number }
+        Returns: undefined
+      }
       create_youtube_channels_table: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
       delete_current_user: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      delete_expired_verification_codes: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
@@ -1263,9 +1832,113 @@ export type Database = {
         Args: { user_uuid: string }
         Returns: undefined
       }
+      get_application_logs: {
+        Args: {
+          p_level?: string
+          p_category?: string
+          p_action?: string
+          p_user_id?: string
+          p_start_date?: string
+          p_end_date?: string
+          p_search?: string
+          p_page?: number
+          p_limit?: number
+        }
+        Returns: {
+          id: string
+          level: string
+          category: string
+          action: string
+          message: string
+          user_id: string
+          session_id: string
+          ip_address: string
+          user_agent: string
+          request_id: string
+          endpoint: string
+          method: string
+          status_code: number
+          response_time_ms: number
+          metadata: Json
+          error_code: string
+          error_details: string
+          stack_trace: string
+          created_at: string
+          updated_at: string
+        }[]
+      }
+      get_application_logs_count: {
+        Args: {
+          p_level?: string
+          p_category?: string
+          p_action?: string
+          p_user_id?: string
+          p_start_date?: string
+          p_end_date?: string
+          p_search?: string
+        }
+        Returns: number
+      }
+      get_auth_users_info: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          email: string
+          last_sign_in_at: string
+          created_at: string
+        }[]
+      }
+      get_comment_with_counts: {
+        Args: { comment_id: string }
+        Returns: {
+          likes_count: number
+          dislikes_count: number
+        }[]
+      }
+      get_log_statistics: {
+        Args: { p_period?: string }
+        Returns: Json
+      }
+      get_match_prediction: {
+        Args: { p_fixture_id: number }
+        Returns: {
+          id: string
+          fixture_id: number
+          home_team_id: number
+          home_team_name: string
+          away_team_id: number
+          away_team_name: string
+          match_date: string
+          league_id: number
+          league_name: string
+          prediction_summary: Json
+          ai_analysis: string
+          home_team_stats: Json
+          away_team_stats: Json
+          match_context: Json
+          data_sources: Json
+          api_calls_count: number
+          generation_cost_usd: number
+          is_active: boolean
+          expires_at: string
+          last_updated: string
+          popularity_score: number
+          view_count: number
+          created_at: string
+          updated_at: string
+        }[]
+      }
       get_post_detail: {
         Args: { board_slug: string; post_num: number }
         Returns: Json
+      }
+      get_user_last_sign_in: {
+        Args: { user_id: string }
+        Returns: string
+      }
+      get_user_last_signin: {
+        Args: { user_id: string }
+        Returns: string
       }
       get_user_profile_direct: {
         Args: { user_id: string }
@@ -1276,17 +1949,114 @@ export type Database = {
           exp: number
         }[]
       }
+      get_users_with_last_access: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          email: string
+          nickname: string
+          full_name: string
+          is_admin: boolean
+          updated_at: string
+          is_suspended: boolean
+          suspended_until: string
+          suspended_reason: string
+          last_sign_in_at: string
+          auth_created_at: string
+        }[]
+      }
       increment_post_view: {
         Args: { post_id: string }
+        Returns: undefined
+      }
+      increment_prediction_views: {
+        Args: { p_fixture_id: number }
         Returns: undefined
       }
       increment_view_count: {
         Args: { post_id: string }
         Returns: undefined
       }
+      insert_application_log: {
+        Args: {
+          p_level: string
+          p_category: string
+          p_action: string
+          p_message: string
+          p_user_id?: string
+          p_session_id?: string
+          p_ip_address?: string
+          p_user_agent?: string
+          p_request_id?: string
+          p_endpoint?: string
+          p_method?: string
+          p_status_code?: number
+          p_response_time_ms?: number
+          p_metadata?: Json
+          p_error_code?: string
+          p_error_details?: string
+          p_stack_trace?: string
+        }
+        Returns: undefined
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      log_api_request: {
+        Args: {
+          p_endpoint: string
+          p_method: string
+          p_status_code: number
+          p_response_time_ms: number
+          p_user_id?: string
+          p_ip_address?: string
+          p_user_agent?: string
+          p_request_id?: string
+          p_metadata?: Json
+        }
+        Returns: undefined
+      }
+      log_error: {
+        Args: {
+          p_category: string
+          p_action: string
+          p_message: string
+          p_error_code?: string
+          p_error_details?: string
+          p_stack_trace?: string
+          p_user_id?: string
+          p_metadata?: Json
+        }
+        Returns: undefined
+      }
+      log_event: {
+        Args: {
+          p_level: string
+          p_category: string
+          p_action: string
+          p_message: string
+          p_user_id?: string
+          p_metadata?: Json
+        }
+        Returns: undefined
+      }
+      log_system_event: {
+        Args: { p_action: string; p_message: string; p_metadata?: Json }
+        Returns: undefined
+      }
+      log_user_action: {
+        Args: {
+          p_action: string
+          p_message: string
+          p_user_id: string
+          p_metadata?: Json
+        }
+        Returns: undefined
+      }
+      populate_football_teams_from_leagues: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       purchase_item: {
         Args: { p_user_id: string; p_item_id: number }
@@ -1295,6 +2065,47 @@ export type Database = {
       purchase_profile_icon: {
         Args: { p_user_id: string; p_icon_id: number }
         Returns: boolean
+      }
+      save_match_prediction: {
+        Args: {
+          p_fixture_id: number
+          p_home_team_id: number
+          p_home_team_name: string
+          p_away_team_id: number
+          p_away_team_name: string
+          p_match_date: string
+          p_league_id: number
+          p_league_name: string
+          p_prediction_summary: Json
+          p_ai_analysis: string
+          p_home_team_stats?: Json
+          p_away_team_stats?: Json
+          p_match_context?: Json
+          p_data_sources?: Json
+          p_api_calls_count?: number
+          p_generation_cost_usd?: number
+        }
+        Returns: {
+          id: string
+          fixture_id: number
+          created_at: string
+        }[]
+      }
+      toggle_post_dislike: {
+        Args: { post_id: string; user_id: string }
+        Returns: boolean
+      }
+      toggle_post_like: {
+        Args: { post_id: string; user_id: string }
+        Returns: boolean
+      }
+      update_match_prediction_stats: {
+        Args: { p_match_id: string }
+        Returns: undefined
+      }
+      update_post_like_count: {
+        Args: { post_id: string }
+        Returns: undefined
       }
       update_post_with_board: {
         Args: {
@@ -1325,21 +2136,25 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -1357,14 +2172,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
@@ -1380,14 +2197,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
@@ -1403,14 +2222,16 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
@@ -1418,14 +2239,16 @@ export type Enums<
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never

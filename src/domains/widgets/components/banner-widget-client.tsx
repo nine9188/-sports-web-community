@@ -15,7 +15,10 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // 서버사이드 기본값을 모바일로 설정하여 깜빡임 방지
   const [isMobile, setIsMobile] = useState(true);
@@ -206,31 +209,50 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
     );
   }
 
-  // 터치 이벤트 핸들러
+  // 부드러운 터치 이벤트 핸들러
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
+    setIsDragging(true);
+    setDragOffset(0);
     setIsAutoPlaying(false);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
+    if (!touchStart || !isDragging) return;
+    
+    const currentTouch = e.targetTouches[0].clientX;
+    const diff = touchStart - currentTouch;
+    const containerWidth = containerRef.current?.offsetWidth || 0;
+    
+    // 드래그 거리를 컨테이너 너비의 비율로 계산
+    const dragRatio = diff / containerWidth;
+    setDragOffset(dragRatio * 100); // 백분율로 변환
+    setTouchEnd(currentTouch);
   };
 
   const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
+    if (!touchStart || !touchEnd || !isDragging) {
+      setIsDragging(false);
+      setDragOffset(0);
+      return;
+    }
     
     const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
+    const containerWidth = containerRef.current?.offsetWidth || 0;
+    const threshold = containerWidth * 0.2; // 20% 이상 드래그 시 슬라이드
+    
+    const isLeftSwipe = distance > threshold;
+    const isRightSwipe = distance < -threshold;
 
     if (isLeftSwipe) {
       setCurrentIndex(prevIndex => (prevIndex + 1) % banners.length);
-    }
-    if (isRightSwipe) {
+    } else if (isRightSwipe) {
       setCurrentIndex(prevIndex => (prevIndex - 1 + banners.length) % banners.length);
     }
 
+    setIsDragging(false);
+    setDragOffset(0);
     setTimeout(() => setIsAutoPlaying(true), 3000);
   };
 
@@ -249,7 +271,7 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
 
   return (
     <div className="w-full mb-4 mt-4 md:mt-0">
-      <div className="relative">
+      <div className="relative overflow-hidden">
         {/* 데스크탑 슬라이딩 버튼 */}
         {firstBanner.display_type === 'slide' && (
           <div className="hidden md:block">
@@ -282,7 +304,8 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
         )}
         
         <div 
-          className="flex gap-3 w-full transition-all duration-300 ease-in-out select-none"
+          ref={containerRef}
+          className="flex w-full select-none"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
@@ -291,19 +314,15 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
             WebkitUserSelect: 'none',
             WebkitTouchCallout: 'none',
             WebkitTapHighlightColor: 'transparent',
-            touchAction: 'pan-y pinch-zoom'
+            touchAction: 'pan-y pinch-zoom',
+            transform: isDragging ? `translateX(-${dragOffset}%)` : `translateX(-${currentIndex * (100 / itemsPerView)}%)`,
+            transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+            width: `${banners.length * (100 / itemsPerView)}%`
           }}
         >
-          {/* 현재 보여줄 배너들 - 순환 슬라이싱으로 항상 itemsPerView 개수 보장 */}
-          {(() => {
-            const displayBanners = [];
-            for (let i = 0; i < itemsPerView; i++) {
-              const index = (currentIndex + i) % banners.length;
-              displayBanners.push(banners[index]);
-            }
-            return displayBanners;
-          })().map((banner, i) => {
-            const uniqueKey = `${banner.id}-${i}`;
+          {/* 모든 배너를 렌더링하고 CSS transform으로 슬라이드 */}
+          {banners.map((banner, index) => {
+            const uniqueKey = `${banner.id}-${index}`;
             
             // 내부/외부 링크 구분
             const isExternalLink = banner.link_url && (
@@ -313,10 +332,11 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
             );
             
             const commonProps = {
-              className: `flex-1 min-w-0 border rounded-lg transition-all shadow-sm group hover:translate-y-[-2px] hover:shadow-md hover:border-blue-300 touch-manipulation active:scale-[0.99] transform-gpu select-none relative overflow-hidden ${
+              className: `border rounded-lg transition-all shadow-sm group hover:translate-y-[-2px] hover:shadow-md hover:border-blue-300 touch-manipulation active:scale-[0.99] transform-gpu select-none relative overflow-hidden mx-1.5 ${
                 banner.link_url ? 'cursor-pointer' : ''
               } border-gray-200`,
               style: {
+                width: `${100 / banners.length}%`,
                 height: '210px',
                 backgroundColor: banner.background_color || '#ffffff',
                 color: banner.text_color || '#000000',
@@ -324,7 +344,8 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
                 WebkitUserSelect: 'none' as const,
                 WebkitTouchCallout: 'none' as const,
                 WebkitTapHighlightColor: 'transparent',
-                touchAction: 'manipulation' as const
+                touchAction: 'manipulation' as const,
+                flexShrink: 0
               },
               onDragStart: (e: React.DragEvent) => e.preventDefault()
             };
