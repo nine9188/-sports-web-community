@@ -60,16 +60,12 @@ export default function BannerCarousel({ banners, isMobile = false }: BannerCaro
     // 속도 설정
     speed: 300,
 
-    // 반응형 설정
+    // 반응형 설정 (데스크탑만)
     ...(isMobile ? {} : {
       breakpoints: {
-        768: {
-          slidesPerView: 1,
-          spaceBetween: 8,
-        },
         1024: {
           slidesPerView: banners.length >= 2 ? 2 : 1,
-          spaceBetween: 8,
+          spaceBetween: 12,
         },
       },
     }),
