@@ -32,7 +32,7 @@ export default function BannerCarousel({ banners, isMobile = false }: BannerCaro
     spaceBetween: 12,
     slidesPerView: isMobile ? 1 : (banners.length >= 2 ? 2 : 1),
     centeredSlides: false,
-    loop: !isMobile && banners.length > 1,
+    loop: banners.length > 1,
     
     // 자동 재생 설정
     autoplay: banners.length > 1 ? {
@@ -49,14 +49,8 @@ export default function BannerCarousel({ banners, isMobile = false }: BannerCaro
 
     // 페이지네이션 설정
     pagination: banners.length > 1 ? {
-      el: '.swiper-pagination-custom',
       clickable: true,
-      bulletActiveClass: 'swiper-pagination-bullet-active-custom',
-      bulletClass: 'swiper-pagination-bullet-custom',
-      dynamicBullets: false,
-      renderBullet: function (index: number, className: string) {
-        return '<span class="' + className + '"></span>';
-      },
+      type: 'bullets' as const,
     } : false,
 
     // 터치 설정
@@ -85,8 +79,8 @@ export default function BannerCarousel({ banners, isMobile = false }: BannerCaro
     },
   };
 
-  return (
-    <div className={`relative w-full ${isMobile ? 'mt-4' : ''}`}>
+     return (
+     <div className={`relative w-full ${isMobile ? 'mt-3 mb-3' : 'mb-3'}`}>
       {/* 메인 Swiper */}
       <Swiper
         {...swiperConfig}
@@ -146,12 +140,7 @@ export default function BannerCarousel({ banners, isMobile = false }: BannerCaro
         </>
       )}
 
-      {/* 커스텀 페이지네이션 */}
-      {banners.length > 1 && (
-        <div className={`swiper-pagination-custom flex justify-center ${isMobile ? 'mt-4' : 'mt-3'}`}>
-          {/* Swiper가 자동으로 bullet을 생성합니다 */}
-        </div>
-      )}
+      
 
              <style jsx>{`
          .banner-carousel {
@@ -162,26 +151,25 @@ export default function BannerCarousel({ banners, isMobile = false }: BannerCaro
             width: calc(50% - 4px) !important;
           }
 
-        .swiper-pagination-bullet-custom {
-          width: 8px;
-          height: 8px;
-          background: rgba(0, 0, 0, 0.3);
-          border-radius: 50%;
-          margin: 0 4px;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          opacity: 1;
-        }
+                 /* Swiper 기본 페이지네이션 스타일 커스터마이징 */
+         .banner-carousel .swiper-pagination {
+           position: relative !important;
+           margin-top: ${isMobile ? '16px' : '12px'} !important;
+           bottom: auto !important;
+         }
 
-        .swiper-pagination-bullet-active-custom {
-          background: #3b82f6;
-          transform: scale(1.2);
-        }
+         .banner-carousel .swiper-pagination-bullet {
+           width: 8px !important;
+           height: 8px !important;
+           background: rgba(0, 0, 0, 0.3) !important;
+           margin: 0 4px !important;
+           transition: all 0.3s ease !important;
+         }
 
-        .swiper-pagination-bullet-custom:hover {
-          background: #3b82f6;
-          transform: scale(1.1);
-        }
+         .banner-carousel .swiper-pagination-bullet-active {
+           background: #3b82f6 !important;
+           transform: scale(1.2) !important;
+         }
 
                  /* 모바일에서 스와이프 영역 확장 */
          .mobile.banner-carousel {
