@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { BannerWidgetProps, MOBILE_BREAKPOINT } from './types';
-import MobileBannerWidget from './MobileBannerWidget';
-import DesktopBannerWidget from './DesktopBannerWidget';
+import BannerCarousel from './BannerCarousel';
 import BannerWrapper, { renderBannerContent } from './BannerWrapper';
 
 export default function BannerWidget({ banners }: BannerWidgetProps) {
@@ -45,10 +44,6 @@ export default function BannerWidget({ banners }: BannerWidgetProps) {
     );
   }
 
-  // 마운트 후 디바이스에 따라 적절한 컴포넌트 렌더링
-  return isMobile ? (
-    <MobileBannerWidget banners={banners} />
-  ) : (
-    <DesktopBannerWidget banners={banners} />
-  );
+  // 마운트 후 Swiper 캐러셀 렌더링
+  return <BannerCarousel banners={banners} isMobile={isMobile} />;
 } 

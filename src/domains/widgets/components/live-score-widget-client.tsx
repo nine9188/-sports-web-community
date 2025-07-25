@@ -300,7 +300,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
   };
 
   return (
-    <div className="w-full mb-4 mt-4 md:mt-0">
+    <div className="w-full">
       {error ? (
         <div className="flex flex-col justify-center items-center h-40 text-center">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 mb-2 text-red-500">
