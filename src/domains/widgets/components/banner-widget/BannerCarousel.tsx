@@ -48,7 +48,7 @@ export default function BannerCarousel({ banners, isMobile = false }: BannerCaro
     } : false,
 
     // 페이지네이션 설정
-    pagination: banners.length > 1 ? {
+    pagination: isMobile ? {
       clickable: true,
       type: 'bullets' as const,
     } : false,
@@ -147,7 +147,7 @@ export default function BannerCarousel({ banners, isMobile = false }: BannerCaro
             width: calc(50% - 4px) !important;
           }
 
-                 /* Swiper 기본 페이지네이션 스타일 커스터마이징 */
+                 /* Swiper 기본 페이지네이션 스타일 커스터마이징 (모바일만) */
          .banner-carousel .swiper-pagination {
            position: relative !important;
            margin-top: ${isMobile ? '16px' : '12px'} !important;
@@ -165,6 +165,13 @@ export default function BannerCarousel({ banners, isMobile = false }: BannerCaro
          .banner-carousel .swiper-pagination-bullet-active {
            background: #3b82f6 !important;
            transform: scale(1.2) !important;
+         }
+
+         /* 데스크탑에서 페이지네이션 숨김 */
+         @media (min-width: 1024px) {
+           .banner-carousel .swiper-pagination {
+             display: none !important;
+           }
          }
 
                  /* 모바일에서 스와이프 영역 확장 */

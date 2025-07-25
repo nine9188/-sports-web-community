@@ -14,7 +14,7 @@ export default function BannerWidgetClient({ banners }: BannerWidgetClientProps)
 
   useEffect(() => {
     setIsMounted(true);
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);

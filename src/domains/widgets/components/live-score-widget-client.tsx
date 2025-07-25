@@ -2,12 +2,19 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation } from 'swiper/modules';
+import type { Swiper as SwiperType } from 'swiper';
+
+// Swiper 스타일
+import 'swiper/css';
+import 'swiper/css/navigation';
+
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { fetchMultiDayMatches, MatchData as FootballMatchData } from '@/domains/livescore/actions/footballApi';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
-
 
 // 타입 확장 (displayDate 포함)
 interface EnhancedMatchData extends FootballMatchData {
@@ -54,87 +61,44 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
   });
   const [error, setError] = useState<string | null>(null);
   
-  // 🔧 슬라이딩 인덱스 상태 추가 (시작 인덱스)
-  const [startIndex, setStartIndex] = useState(0);
-  
   // API 호출 추적을 위한 ref
   const fetchingRef = useRef<boolean>(false);
   
-  // 카드 참조를 위한 ref
-  const cardRefs = useRef<(HTMLAnchorElement | null)[]>([]);
-  
-  // 🔧 터치 슬라이드를 위한 ref와 상태
-  const touchStartXRef = useRef<number | null>(null);
-  const touchEndXRef = useRef<number | null>(null);
+  // Swiper 참조
+  const swiperRef = useRef<SwiperType>();
 
-  // 🔧 스와이프 힌트 상태 (처음에만 보여주기)
-  const [showSwipeHint, setShowSwipeHint] = useState(true);
-  
-  // 🔧 오버레이 힌트 상태 (모바일 전용)
-  const [showOverlayHint, setShowOverlayHint] = useState(false);
-  
-  // 🔧 터치 이벤트 핸들러 (모바일 전용)
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartXRef.current = e.touches[0].clientX;
-    touchEndXRef.current = null;
-    // 기본 동작 방지 (텍스트 선택, 드래그 등)
-    e.preventDefault();
-    // 🔧 터치 시작하면 힌트 숨기기
-    setShowSwipeHint(false);
-    setShowOverlayHint(false);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    touchEndXRef.current = e.touches[0].clientX;
-    // 스크롤 방지 (수평 스와이프 중)
-    if (touchStartXRef.current !== null) {
-      const touchDiff = Math.abs(touchStartXRef.current - e.touches[0].clientX);
-      if (touchDiff > 10) { // 10px 이상 움직이면 스와이프로 간주
-        e.preventDefault();
-      }
-    }
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartXRef.current === null || touchEndXRef.current === null) return;
+  // 🔧 Swiper 설정
+  const swiperConfig = {
+    modules: [Navigation],
+    spaceBetween: 12,
+    slidesPerView: 2 as const,
+    loop: matches.length > 2, // 3개 이상일 때 무한 루프
     
-    const touchDiff = touchStartXRef.current - touchEndXRef.current;
-    const minSwipeDistance = 50; // 최소 스와이프 거리
+    // 네비게이션 설정 (데스크탑만)
+    navigation: matches.length > 2 ? {
+      nextEl: '.livescore-swiper-button-next',
+      prevEl: '.livescore-swiper-button-prev',
+    } : false,
+
+    // 터치 설정
+    touchRatio: 1,
+    threshold: 10,
     
-    if (Math.abs(touchDiff) > minSwipeDistance) {
-      e.preventDefault(); // 기본 동작 방지
-      if (touchDiff > 0) {
-        // 왼쪽으로 스와이프 = 다음 카드
-        slideRight();
-      } else {
-        // 오른쪽으로 스와이프 = 이전 카드
-        slideLeft();
-      }
-    }
-    
-    touchStartXRef.current = null;
-    touchEndXRef.current = null;
-  };
+    // 속도 설정
+    speed: 300,
 
-  // 🔧 슬라이딩 함수 - CSS 기반으로 단순화
-  const slideLeft = () => {
-    setStartIndex(prev => Math.max(0, prev - 1));
-  };
+    // 반응형 설정
+    breakpoints: {
+      768: {
+        slidesPerView: matches.length >= 4 ? 4 : matches.length,
+        spaceBetween: 12,
+      },
+    },
 
-  const slideRight = () => {
-    // 🔧 CSS 미디어 쿼리 기반으로 카드 수 계산
-    const cardsToShow = window.innerWidth < 768 ? 2 : 4;
-    const maxStartIndex = Math.max(0, matches.length - cardsToShow);
-    setStartIndex(prev => Math.min(maxStartIndex, prev + 1));
+    onBeforeInit: (swiper: SwiperType) => {
+      swiperRef.current = swiper;
+    },
   };
-
-  // 🔧 초기 오버레이 힌트 설정
-  useEffect(() => {
-    // 모바일에서만 오버레이 힌트 표시
-    if (window.innerWidth < 768 && matches.length > 2) {
-      setShowOverlayHint(true);
-    }
-  }, [matches.length]);
 
   useEffect(() => {
     // 5분마다 데이터 갱신
@@ -213,15 +177,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
             return 0;
           });
           
-          // 🔧 이미지 캐시 워밍업 제거 - 개별 컴포넌트에서 필요시에만 로드
-          
           setMatches(sortedMatches);
-          
-          // 🔧 데이터 업데이트 시 인덱스 범위 확인
-          if (filteredMatches.length > 0 && startIndex >= filteredMatches.length) {
-            setStartIndex(0);
-          }
-          
           setError(null);
         } else {
           // 🔧 성능 최적화: 에러 발생 시에도 기존 데이터 유지
@@ -243,18 +199,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
     }, 5 * 60 * 1000);
     
     return () => clearInterval(interval);
-  }, [startIndex]);
-
-  // 🔧 모바일 오버레이 힌트 자동 제거 (5초 후)
-  useEffect(() => {
-    if (showOverlayHint) {
-      const timeout = setTimeout(() => {
-        setShowOverlayHint(false);
-      }, 5000); // 5초 후 자동 사라짐
-
-      return () => clearTimeout(timeout);
-    }
-  }, [showOverlayHint]);
+  }, []);
 
   // 🔧 경기 시간 포맷팅 함수
   const formatMatchTime = (match: FootballMatchData) => {
@@ -299,98 +244,12 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
     }
   };
 
-  return (
-    <div className="w-full">
-      {error ? (
-        <div className="flex flex-col justify-center items-center h-40 text-center">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 mb-2 text-red-500">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-          </svg>
-          <p className="text-red-500">{error}</p>
-          <p className="text-xs mt-1 text-gray-500">새로고침하거나 잠시 후 다시 시도해주세요</p>
-        </div>
-      ) : (
-        <div className="w-full">
-          {/* 🔧 반응형 레이아웃 컨테이너 */}
-          <div className="relative">
-            {/* 🔧 데스크탑 슬라이딩 버튼 - CSS 미디어 쿼리로 제어 */}
-            <div className="hidden md:block">
-              {matches.length > 4 && (
-                <>
-                  {/* 왼쪽 버튼 */}
-                  <button 
-                    onClick={slideLeft}
-                    className={`absolute left-[-12px] top-1/2 -translate-y-1/2 z-20 rounded-full p-2 shadow-lg border transition-all duration-200 ${
-                      startIndex > 0
-                        ? 'bg-white hover:bg-blue-50 hover:border-blue-300 border-gray-200 hover:scale-110 hover:shadow-xl cursor-pointer group' 
-                        : 'bg-gray-100 border-gray-100 cursor-not-allowed opacity-50'
-                    }`}
-                    aria-label="이전 경기"
-                    disabled={startIndex === 0}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={`w-5 h-5 transition-colors ${
-                      startIndex > 0
-                        ? 'text-gray-600 group-hover:text-blue-600' 
-                        : 'text-gray-300'
-                    }`}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-                    </svg>
-                  </button>
-                  
-                  {/* 오른쪽 버튼 */}
-                  <button 
-                    onClick={slideRight}
-                    className={`absolute right-[-12px] top-1/2 -translate-y-1/2 z-20 rounded-full p-2 shadow-lg border transition-all duration-200 ${
-                      startIndex < matches.length - 4
-                        ? 'bg-white hover:bg-blue-50 hover:border-blue-300 border-gray-200 hover:scale-110 hover:shadow-xl cursor-pointer group' 
-                        : 'bg-gray-100 border-gray-100 cursor-not-allowed opacity-50'
-                    }`}
-                    aria-label="다음 경기"
-                    disabled={startIndex >= matches.length - 4}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={`w-5 h-5 transition-colors ${
-                      startIndex < matches.length - 4
-                        ? 'text-gray-600 group-hover:text-blue-600' 
-                        : 'text-gray-300'
-                    }`}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                    </svg>
-                  </button>
-                </>
-              )}
-            </div>
-            
-            {/* 🔧 CSS 미디어 쿼리 기반 반응형 카드 컨테이너 */}
-            <div 
-              className="flex gap-3 w-full transition-all duration-300 ease-in-out select-none"
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-              style={{
-                userSelect: 'none',
-                WebkitUserSelect: 'none',
-                WebkitTouchCallout: 'none',
-                WebkitTapHighlightColor: 'transparent',
-                touchAction: 'pan-y pinch-zoom'
-              }}
-            >
-              {/* 🔧 모바일 오버레이 힌트 */}
-              {showOverlayHint && matches.length > 2 && (
-                <div className="absolute inset-0 z-20 bg-gray-100/70 pointer-events-none select-none flex items-center justify-center animate-pulse rounded-lg md:hidden">
-                  <div className="text-sm text-gray-700 flex items-center gap-2 bg-white/90 px-4 py-2 rounded-full shadow-lg">
-                    <svg className="w-5 h-5 animate-bounce" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                    </svg>
-                    <span className="font-medium">← 슬라이드해서 확인하세요</span>
-                    <svg className="w-5 h-5 animate-bounce" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </div>
-              )}
-              
-              {/* 🔧 CSS 기반 반응형 경기 카드들 */}
-              {matches.slice(startIndex, startIndex + 4).map((match, index) => {
+  // 렌더링할 슬라이드 생성 (빈 슬롯 포함)
+  const renderSlides = () => {
+    const slides = [];
+    
+    // 실제 경기 데이터 슬라이드
+    matches.forEach((match, index) => {
                 const leagueInfo = match.league?.id ? getLeagueById(match.league.id) : null;
                 const homeTeamInfo = match.teams?.home?.id ? getTeamById(match.teams.home.id) : null;
                 const awayTeamInfo = match.teams?.away?.id ? getTeamById(match.teams.away.id) : null;
@@ -399,16 +258,11 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                 const awayTeamNameKo = String(awayTeamInfo?.name_ko || match.teams?.away?.name || '원정팀');
                 const leagueNameKo = String(leagueInfo?.nameKo || match.league?.name || '리그 정보 없음');
                 
-                return (
+      slides.push(
+        <SwiperSlide key={`match-${match.id || index}`}>
                   <Link 
-                    key={`match-${match.id || index}-${startIndex}-${index}`} 
                     href={match.id ? `/livescore/football/match/${match.id}` : '#'}
-                    className={`flex-1 min-w-0 border rounded-lg p-2 transition-all h-[140px] shadow-sm cursor-pointer group hover:translate-y-[-2px] hover:shadow-md hover:border-blue-300 touch-manipulation active:scale-[0.99] bg-white border-gray-200 transform-gpu select-none
-                      ${index >= 2 ? 'hidden md:flex' : 'flex'} flex-col`}
-                    ref={el => {
-                      if (!cardRefs.current) cardRefs.current = [];
-                      cardRefs.current[index] = el;
-                    }}
+            className="block w-full h-[140px] border rounded-lg p-2 transition-all shadow-sm cursor-pointer group hover:translate-y-[-2px] hover:shadow-md hover:border-blue-300 touch-manipulation bg-white border-gray-200"
                     style={{
                       userSelect: 'none',
                       WebkitUserSelect: 'none',
@@ -418,20 +272,26 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                     }}
                     onDragStart={(e) => e.preventDefault()}
                   >
-                    <div className="flex items-center gap-0.5 mb-1 text-gray-700">
-                      {match.league?.logo && match.league?.id && (
-                        <ApiSportsImage 
-                          imageId={match.league.id}
-                          imageType={ImageType.Leagues}
-                          alt={String(leagueNameKo)} 
-                          width={16} 
-                          height={16}
-                          style={{ width: '16px', height: '16px', objectFit: 'contain' }}
-                          className="rounded-full flex-shrink-0"
-                        />
-                      )}
-                      <span className="text-xs font-medium truncate">{leagueNameKo}</span>
-                    </div>
+            <div className="flex flex-col h-full">
+                                         <div className="flex items-center justify-between mb-1 text-gray-700">
+                       <div className="flex items-center gap-0.5 flex-1 min-w-0">
+                         {match.league?.logo && match.league?.id && (
+                           <ApiSportsImage 
+                             imageId={match.league.id}
+                             imageType={ImageType.Leagues}
+                             alt={String(leagueNameKo)} 
+                             width={16} 
+                             height={16}
+                             style={{ width: '16px', height: '16px', objectFit: 'contain' }}
+                             className="rounded-full flex-shrink-0"
+                           />
+                         )}
+                         <span className="text-xs font-medium truncate">{leagueNameKo}</span>
+                       </div>
+                       <span className="text-[10px] text-gray-400 font-medium ml-2 flex-shrink-0">
+                         {index + 1}/{matches.length}
+                       </span>
+                     </div>
                     
                     <div className="grid grid-cols-3 gap-1 flex-1">
                       {/* 홈팀 */}
@@ -475,19 +335,22 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                           />
                         )}
                         <span className="text-[10px] text-center truncate w-full group-hover:text-blue-600 transition-colors">{awayTeamNameKo}</span>
+                </div>
                       </div>
                     </div>
                   </Link>
-                );
-              })}
-              
-              {/* 🔧 빈 슬롯 카드들 - CSS로 반응형 제어 */}
-              {matches.length < 4 && Array.from({ length: 4 - matches.length }).map((_, index) => (
-                <div 
-                  key={`empty-slot-${index}`}
-                  className={`flex-1 min-w-0 border-2 border-dashed border-gray-200 rounded-lg p-2 h-[140px] bg-gray-50/50
-                    ${(matches.length + index) >= 2 ? 'hidden md:flex' : 'flex'} flex-col justify-center items-center`}
-                >
+        </SwiperSlide>
+      );
+    });
+    
+    // 빈 슬롯 추가 (최소 4개 유지)
+    const minSlides = 4;
+    const emptySlots = Math.max(0, minSlides - matches.length);
+    
+    for (let i = 0; i < emptySlots; i++) {
+      slides.push(
+        <SwiperSlide key={`empty-slot-${i}`}>
+          <div className="w-full h-[140px] border-2 border-dashed border-gray-200 rounded-lg p-2 bg-gray-50/50 flex flex-col justify-center items-center">
                   <div className="text-center">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-8 h-8 mb-2 text-gray-300 mx-auto">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
@@ -496,41 +359,62 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                     <p className="text-sm text-gray-400">기다리는 중...</p>
                   </div>
                 </div>
-              ))}
+        </SwiperSlide>
+      );
+    }
+    
+    return slides;
+  };
+
+  return (
+    <div className="w-full mb-4">
+      {error ? (
+        <div className="flex flex-col justify-center items-center h-40 text-center">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 mb-2 text-red-500">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+          </svg>
+          <p className="text-red-500">{error}</p>
+          <p className="text-xs mt-1 text-gray-500">새로고침하거나 잠시 후 다시 시도해주세요</p>
             </div>
-          </div>
-          
-          {/* 🔧 모바일 스와이프 힌트 - CSS 미디어 쿼리로 제어 */}
-          <div className="mt-3 flex flex-col items-center gap-2 md:hidden">
-            {matches.length > 2 && (
-              <>
-                {/* 진행 표시 */}
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span>{startIndex + 1}-{Math.min(startIndex + 2, matches.length)}</span>
-                  <span>/</span>
-                  <span>{matches.length}</span>
-                  <div className="w-16 h-1 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-blue-500 transition-all duration-300 rounded-full"
-                      style={{ 
-                        width: `${((startIndex + 2) / matches.length) * 100}%` 
-                      }}
-                    />
-                  </div>
-                </div>
-                
-                {/* 스와이프 힌트 */}
-                {showSwipeHint && (
-                  <div className="flex items-center gap-1 text-xs text-gray-500 animate-pulse">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 animate-bounce">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+      ) : (
+        <div className="w-full relative">
+          {/* Swiper 컨테이너 */}
+          <Swiper
+            {...swiperConfig}
+            className="livescore-carousel"
+          >
+            {renderSlides()}
+          </Swiper>
+
+          {/* 커스텀 네비게이션 버튼 (데스크탑만) */}
+          {matches.length > 4 && (
+            <>
+              <button 
+                className="livescore-swiper-button-prev hidden md:flex absolute left-[-12px] top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white rounded-full shadow-lg border border-gray-200 items-center justify-center transition-all duration-200 hover:bg-blue-50 hover:border-blue-300 hover:scale-110 hover:shadow-xl group"
+                aria-label="이전 경기"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-600 group-hover:text-blue-600">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                </svg>
+              </button>
+              
+              <button 
+                className="livescore-swiper-button-next hidden md:flex absolute right-[-12px] top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white rounded-full shadow-lg border border-gray-200 items-center justify-center transition-all duration-200 hover:bg-blue-50 hover:border-blue-300 hover:scale-110 hover:shadow-xl group"
+                aria-label="다음 경기"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-600 group-hover:text-blue-600">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                     </svg>
-                    <span>← 좌우로 넘겨보세요</span>
-                  </div>
-                )}
+              </button>
               </>
             )}
-          </div>
+
+          {/* 스타일 */}
+          <style jsx>{`
+            .livescore-carousel {
+              padding: 0 4px;
+            }
+          `}</style>
         </div>
       )}
     </div>
