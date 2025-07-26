@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
-import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 import { LeagueTeam } from '@/domains/livescore/actions/footballApi';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 
@@ -15,9 +14,6 @@ export default function TeamCard({ team }: TeamCardProps) {
   // 한국어 팀명 매핑
   const teamInfo = getTeamById(team.id);
   const displayName = teamInfo?.name_ko || team.name;
-
-  // 스토리지에서 바로 이미지 URL 생성 (캐싱된 이미지 우선)
-  const teamLogoUrl = getSupabaseStorageUrl(ImageType.Teams, team.id);
 
   return (
     <Link 
@@ -39,14 +35,12 @@ export default function TeamCard({ team }: TeamCardProps) {
         {/* 팀 로고 */}
         <div className="relative w-8 h-8 lg:w-16 lg:h-16 flex-shrink-0">
           <ApiSportsImage
-            src={teamLogoUrl}
             imageId={team.id}
             imageType={ImageType.Teams}
             alt={`${displayName} 로고`}
             width={64}
             height={64}
             className="object-contain group-hover:scale-105 transition-transform duration-200 w-8 h-8 lg:w-16 lg:h-16"
-            
           />
         </div>
 

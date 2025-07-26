@@ -105,34 +105,86 @@ export async function fetchPlayerData(id: string): Promise<PlayerData> {
     const month = now.getMonth();
     const currentSeason = month >= 6 ? year : year - 1;
 
-    // API 호출
-    const response = await fetch(
-      `https://v3.football.api-sports.io/players?id=${id}&season=${currentSeason}`,
-      {
-        headers: {
-          'x-rapidapi-host': 'v3.football.api-sports.io',
-          'x-rapidapi-key': process.env.FOOTBALL_API_KEY || '',
-        },
-        cache: 'no-store'
+    // 여러 시즌에서 선수 데이터 시도
+    const seasonsToTry = [currentSeason, currentSeason - 1, currentSeason + 1];
+    
+    for (const season of seasonsToTry) {
+      try {
+        // API 호출
+        const response = await fetch(
+          `https://v3.football.api-sports.io/players?id=${id}&season=${season}`,
+          {
+            headers: {
+              'x-rapidapi-host': 'v3.football.api-sports.io',
+              'x-rapidapi-key': process.env.FOOTBALL_API_KEY || '',
+            },
+            cache: 'no-store'
+          }
+        );
+
+        if (!response.ok) {
+          console.warn(`API 응답 오류 (시즌 ${season}): ${response.status}`);
+          continue;
+        }
+
+        const playerData = await response.json();
+
+        // 데이터 존재 확인
+        if (playerData?.response?.[0]) {
+          console.log(`선수 데이터 발견: ID ${id}, 시즌 ${season}`);
+          return formatPlayerData(playerData.response[0], season);
+        }
+      } catch (seasonError) {
+        console.warn(`시즌 ${season}에서 선수 ${id} 데이터 가져오기 실패:`, seasonError);
+        continue;
       }
-    );
-
-    if (!response.ok) {
-      throw new Error(`API 응답 오류: ${response.status}`);
     }
 
-    const playerData = await response.json();
-
-    // 데이터 존재 확인
-    if (!playerData?.response?.[0]) {
-      throw new Error('선수 정보를 찾을 수 없습니다.');
-    }
-
-    // 데이터 포맷 변환
-    return formatPlayerData(playerData.response[0], currentSeason);
+    // 모든 시즌에서 실패한 경우 - 기본 데이터 반환
+    console.warn(`선수 ID ${id}의 데이터를 찾을 수 없어 기본 데이터 반환`);
+    return {
+      info: {
+        id: parseInt(id),
+        name: `선수 ${id}`,
+        firstname: '알수없음',
+        lastname: '',
+        age: 0,
+        birth: {
+          date: '알수없음',
+          place: '알수없음',
+          country: '알수없음'
+        },
+        nationality: '알수없음',
+        height: '알수없음',
+        weight: '알수없음',
+        injured: false,
+        photo: ''
+      },
+      statistics: []
+    };
   } catch (error) {
     console.error('선수 데이터 가져오기 오류:', error);
-    throw error;
+    // 에러 발생 시에도 기본 데이터 반환
+    return {
+      info: {
+        id: parseInt(id),
+        name: `선수 ${id}`,
+        firstname: '알수없음',
+        lastname: '',
+        age: 0,
+        birth: {
+          date: '알수없음',
+          place: '알수없음',
+          country: '알수없음'
+        },
+        nationality: '알수없음',
+        height: '알수없음',
+        weight: '알수없음',
+        injured: false,
+        photo: ''
+      },
+      statistics: []
+    };
   }
 }
 

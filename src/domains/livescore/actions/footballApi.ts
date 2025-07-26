@@ -478,9 +478,8 @@ async function isSeasonCompleted(leagueId: string, season: string = '2024'): Pro
 // 리그 소속 팀 목록 가져오기 (우승팀 정보 포함)
 export async function fetchLeagueTeams(leagueId: string): Promise<LeagueTeam[]> {
   try {
-    // K리그는 2025 시즌, 다른 리그는 2024 시즌 사용
-    const kLeagueIds = ['292', '293', '294']; // K리그 1, K리그 2, K리그 3
-    const season = kLeagueIds.includes(leagueId) ? '2025' : '2024';
+    // 모든 리그 2024 시즌으로 통일 (데이터 일관성 유지)
+    const season = '2024';
     
     // 시즌 완료 여부 확인
     const seasonCompleted = await isSeasonCompleted(leagueId, season);

@@ -38,7 +38,7 @@ export default async function LeaguePage({ params }: LeaguePageProps) {
 
 
   return (
-    <div className="container mx-auto px-4 mt-4 lg:mt-0">
+    <div className="mt-4 lg:mt-0">
       <div className="space-y-4">
         <LeagueHeader league={league} />
         <LeagueTeamsList teams={teams} />

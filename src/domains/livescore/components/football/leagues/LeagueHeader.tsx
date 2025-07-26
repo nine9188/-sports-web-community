@@ -36,7 +36,6 @@ export default function LeagueHeader({ league }: LeagueHeaderProps) {
         {league.logo && (
           <div className="relative w-12 h-12 flex-shrink-0">
             <ApiSportsImage
-              src={league.logo}
               imageId={league.id}
               imageType={ImageType.Leagues}
               alt={`${displayName} 로고`}

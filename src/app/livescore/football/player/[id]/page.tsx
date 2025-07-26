@@ -80,7 +80,7 @@ export default async function PlayerPage({
     }
     
     // 기본 데이터 로드 실패 시 404 페이지로 이동
-    if (!initialData.success || !initialData.playerData) {
+    if (!initialData.success) {
       return notFound();
     }
     
