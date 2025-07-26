@@ -1,5 +1,6 @@
 'use server';
 
+import { cache } from 'react';
 import { StandingsData } from '../types';
 import { MAJOR_LEAGUE_IDS } from '@/domains/livescore/constants/league-mappings';
 
@@ -14,8 +15,9 @@ const LEAGUE_IDS: Record<string, number> = {
 
 /**
  * 축구 리그 순위 데이터를 가져오는 서버 액션
+ * React cache로 래핑하여 중복 요청 방지
  */
-export async function fetchStandingsData(leagueId: string = 'premier'): Promise<StandingsData | null> {
+export const fetchStandingsData = cache(async (leagueId: string = 'premier'): Promise<StandingsData | null> => {
   try {
     // 리그 ID 확인
     const apiLeagueId = LEAGUE_IDS[leagueId];
@@ -112,4 +114,4 @@ export async function fetchStandingsData(leagueId: string = 'premier'): Promise<
   } catch {
     return null;
   }
-} 
+}); 

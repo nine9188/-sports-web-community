@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
@@ -17,6 +17,15 @@ const LEAGUES: League[] = [
   { id: 'serieA', name: '세리에A', fullName: '세리에 A', apiId: MAJOR_LEAGUE_IDS.SERIE_A },
   { id: 'ligue1', name: '리그앙', fullName: '리그 1', apiId: MAJOR_LEAGUE_IDS.LIGUE_1 },
 ];
+
+// 클라이언트 사이드 메모리 캐시 (컴포넌트 외부에 정의하여 인스턴스 간 공유)
+const clientCache = new Map<string, {
+  data: StandingsData;
+  timestamp: number;
+}>();
+
+// 캐시 유효 시간 (10분)
+const CACHE_DURATION = 10 * 60 * 1000;
 
 // 팀 이름 짧게 표시 (최대 8자)
 const shortenTeamName = (name: string) => {
@@ -46,6 +55,17 @@ export default function LeagueStandings({
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const [isMobile, setIsMobile] = useState(false);
+  const loadingRef = useRef<Record<string, boolean>>({});
+
+  // 초기 데이터가 있으면 캐시에 저장
+  useEffect(() => {
+    if (initialStandings && initialLeague) {
+      clientCache.set(initialLeague, {
+        data: initialStandings,
+        timestamp: Date.now()
+      });
+    }
+  }, [initialLeague, initialStandings]);
 
   // 모바일 환경 체크
   useEffect(() => {
@@ -61,18 +81,40 @@ export default function LeagueStandings({
     };
   }, []);
 
+  // 캐시에서 데이터 가져오기
+  const getCachedData = (leagueId: string): StandingsData | null => {
+    const cached = clientCache.get(leagueId);
+    if (!cached) return null;
+    
+    // 캐시 유효성 검사
+    if (Date.now() - cached.timestamp > CACHE_DURATION) {
+      clientCache.delete(leagueId);
+      return null;
+    }
+    
+    return cached.data;
+  };
+
   // 리그 선택 시 데이터 가져오기
   useEffect(() => {
     if (isMobile) return;
 
-    // 만약 activeLeague가 initialLeague와 같고 초기 데이터가 있으면 요청하지 않음
-    if (activeLeague === initialLeague && initialStandings) {
-      setStandings(initialStandings);
+    // 이미 로딩 중인지 확인
+    if (loadingRef.current[activeLeague]) return;
+
+    // 캐시에서 먼저 확인
+    const cachedData = getCachedData(activeLeague);
+    if (cachedData) {
+      setStandings(cachedData);
       return;
     }
 
     async function loadStandings() {
       try {
+        // 중복 요청 방지
+        if (loadingRef.current[activeLeague]) return;
+        loadingRef.current[activeLeague] = true;
+        
         setLoading(true);
         setError(null);
         
@@ -80,6 +122,11 @@ export default function LeagueStandings({
         const data = await fetchStandingsData(activeLeague);
         
         if (data) {
+          // 캐시에 저장
+          clientCache.set(activeLeague, {
+            data,
+            timestamp: Date.now()
+          });
           setStandings(data);
         } else {
           setError('데이터를 불러올 수 없습니다.');
@@ -89,11 +136,12 @@ export default function LeagueStandings({
         setError('데이터를 불러오는데 실패했습니다.');
       } finally {
         setLoading(false);
+        loadingRef.current[activeLeague] = false;
       }
     }
     
     loadStandings();
-  }, [activeLeague, initialLeague, initialStandings, isMobile]);
+  }, [activeLeague, isMobile]);
 
   // 모바일에서는 렌더링하지 않음
   if (isMobile) {
@@ -133,7 +181,6 @@ export default function LeagueStandings({
           {standings?.league?.logo && (
             <div className="w-5 h-5 relative">
               <ApiSportsImage
-                src={standings.league.logo}
                 imageId={standings.league.id}
                 imageType={ImageType.Leagues}
                 alt={standings.league.name}
@@ -204,7 +251,6 @@ export default function LeagueStandings({
                       <div className="flex items-center gap-1">
                         <div className="w-5 h-5 relative flex-shrink-0">
                           <ApiSportsImage
-                            src={team.team.logo}
                             imageId={team.team.team_id}
                             imageType={ImageType.Teams}
                             alt={team.team.name}
