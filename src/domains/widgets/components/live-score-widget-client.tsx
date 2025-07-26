@@ -73,6 +73,10 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
     spaceBetween: 12,
     slidesPerView: 2 as const,
     loop: matches.length > 2, // 3개 이상일 때 무한 루프
+    centeredSlides: false,
+    watchOverflow: true,
+    slidesOffsetBefore: 0,
+    slidesOffsetAfter: 0,
     
     // 네비게이션 설정 (데스크탑만)
     navigation: matches.length > 2 ? {
@@ -92,6 +96,9 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
       768: {
         slidesPerView: matches.length >= 4 ? 4 : matches.length,
         spaceBetween: 12,
+        centeredSlides: false,
+        slidesOffsetBefore: 0,
+        slidesOffsetAfter: 0,
       },
     },
 
@@ -375,17 +382,32 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
           </svg>
           <p className="text-red-500">{error}</p>
           <p className="text-xs mt-1 text-gray-500">새로고침하거나 잠시 후 다시 시도해주세요</p>
-            </div>
+        </div>
       ) : (
-        <div className="w-full relative" style={{ paddingTop: '4px' }}>
-          {/* Swiper 컨테이너 */}
-          <Swiper
-            {...swiperConfig}
-            className="livescore-carousel"
-            style={{ overflowX: 'hidden', overflowY: 'visible' }}
+        <div 
+          className="w-full relative" 
+          style={{ 
+            overflow: 'visible',
+          }}
+        >
+          {/* 클리핑 컨테이너 */}
+          <div 
+            className="relative"
+            style={{ 
+              overflow: 'hidden',
+              paddingTop: '4px',
+              paddingBottom: '4px',
+            }}
           >
-            {renderSlides()}
-          </Swiper>
+            {/* Swiper 컨테이너 */}
+            <Swiper
+              {...swiperConfig}
+              className="livescore-carousel"
+              style={{ overflow: 'visible' }}
+            >
+              {renderSlides()}
+            </Swiper>
+          </div>
 
           {/* 커스텀 네비게이션 버튼 (데스크탑만) */}
           {matches.length > 4 && (
@@ -405,24 +427,36 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-600 group-hover:text-blue-600">
                   <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                    </svg>
+                </svg>
               </button>
-              </>
-            )}
+            </>
+          )}
 
           {/* 스타일 */}
           <style jsx>{`
             .livescore-carousel {
               padding: 0 4px;
-              overflow-x: hidden !important;
-              overflow-y: visible !important;
+              overflow: visible !important;
             }
             .livescore-carousel .swiper-wrapper {
-              overflow-x: hidden !important;
-              overflow-y: visible !important;
+              overflow: visible !important;
             }
             .livescore-carousel .swiper-slide {
               overflow: visible !important;
+              position: relative;
+            }
+            
+            /* 호버 애니메이션이 잘리지 않도록 상위 컨테이너도 visible로 설정 */
+            .livescore-carousel .swiper-slide > * {
+              overflow: visible !important;
+              position: relative;
+              z-index: 1;
+              transition: all 0.3s ease;
+            }
+            
+            /* 호버 시 z-index 증가 */
+            .livescore-carousel .swiper-slide > *:hover {
+              z-index: 10;
             }
           `}</style>
         </div>

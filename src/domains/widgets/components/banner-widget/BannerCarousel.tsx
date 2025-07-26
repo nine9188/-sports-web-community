@@ -32,6 +32,7 @@ export default function BannerCarousel({ banners, isMobile = false }: BannerCaro
     spaceBetween: 12,
     slidesPerView: isMobile ? 1 : (banners.length >= 2 ? 2 : 1),
     centeredSlides: false,
+    watchOverflow: true,
     loop: banners.length > 1,
     
     // 자동 재생 설정
@@ -66,6 +67,7 @@ export default function BannerCarousel({ banners, isMobile = false }: BannerCaro
         1024: {
           slidesPerView: banners.length >= 2 ? 2 : 1,
           spaceBetween: 12,
+          centeredSlides: false,
         },
       },
     }),
@@ -76,29 +78,39 @@ export default function BannerCarousel({ banners, isMobile = false }: BannerCaro
   };
 
      return (
-     <div className={`relative w-full ${isMobile ? 'mt-3 mb-3' : 'mb-3'}`} style={{ paddingTop: '4px' }}>
-      {/* 메인 Swiper */}
-      <Swiper
-        {...swiperConfig}
-        className={`banner-carousel ${isMobile ? 'mobile' : 'desktop'}`}
-        style={{ overflowX: 'hidden', overflowY: 'visible' }}
+     <div className={`relative w-full ${isMobile ? 'mt-3 mb-3' : 'mb-3'}`} style={{ overflow: 'visible' }}>
+      {/* 클리핑 컨테이너 */}
+      <div 
+        className="relative"
+        style={{ 
+          overflow: 'hidden',
+          paddingTop: '4px',
+          paddingBottom: '4px',
+        }}
       >
-        {banners.map((banner, index) => (
-          <SwiperSlide 
-            key={`${banner.id}-${index}`}
-            className={isMobile ? '' : 'banner-slide-desktop'}
-          >
-            <div 
-              className="relative w-full"
-              style={{ height: BANNER_HEIGHT, overflow: 'visible' }}
+        {/* 메인 Swiper */}
+        <Swiper
+          {...swiperConfig}
+          className={`banner-carousel ${isMobile ? 'mobile' : 'desktop'}`}
+          style={{ overflow: 'visible' }}
+        >
+          {banners.map((banner, index) => (
+            <SwiperSlide 
+              key={`${banner.id}-${index}`}
+              className={isMobile ? '' : 'banner-slide-desktop'}
             >
-              <BannerWrapper banner={banner} index={index}>
-                {renderBannerContent(banner)}
-              </BannerWrapper>
-            </div>
-          </SwiperSlide>
-        ))}
-      </Swiper>
+              <div 
+                className="relative w-full"
+                style={{ height: BANNER_HEIGHT, overflow: 'visible' }}
+              >
+                <BannerWrapper banner={banner} index={index}>
+                  {renderBannerContent(banner)}
+                </BannerWrapper>
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </div>
 
       {/* 커스텀 네비게이션 버튼 (데스크탑만) */}
       {!isMobile && banners.length > 1 && (
@@ -142,6 +154,7 @@ export default function BannerCarousel({ banners, isMobile = false }: BannerCaro
              <style jsx>{`
          .banner-carousel {
            padding: 0 4px;
+           overflow: visible !important;
          }
 
                                    .banner-slide-desktop {
@@ -194,17 +207,26 @@ export default function BannerCarousel({ banners, isMobile = false }: BannerCaro
             margin-right: 0;
           }
 
-          /* 호버 애니메이션 잘림 방지 - 상하만 visible */
-          .banner-carousel {
-            overflow-x: hidden !important;
-            overflow-y: visible !important;
-          }
+          /* 호버 애니메이션 잘림 방지 */
           .banner-carousel .swiper-wrapper {
-            overflow-x: hidden !important;
-            overflow-y: visible !important;
+            overflow: visible !important;
           }
           .banner-carousel .swiper-slide {
             overflow: visible !important;
+            position: relative;
+          }
+          
+          /* 호버 애니메이션이 잘리지 않도록 상위 컨테이너도 visible로 설정 */
+          .banner-carousel .swiper-slide > * {
+            overflow: visible !important;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s ease;
+          }
+          
+          /* 호버 시 z-index 증가 */
+          .banner-carousel .swiper-slide > *:hover {
+            z-index: 10;
           }
       `}</style>
     </div>
