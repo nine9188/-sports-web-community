@@ -29,8 +29,8 @@ export default function BannerCarousel({ banners, isMobile = false }: BannerCaro
   // 모바일과 데스크탑 설정
   const swiperConfig = {
     modules: [Navigation, Pagination, Autoplay, EffectFade],
-    spaceBetween: 12,
-    slidesPerView: isMobile ? 1 : (banners.length >= 2 ? 2 : 1),
+    spaceBetween: 0,
+    slidesPerView: 1,
     centeredSlides: false,
     loop: banners.length > 1,
     
@@ -60,15 +60,21 @@ export default function BannerCarousel({ banners, isMobile = false }: BannerCaro
     // 속도 설정
     speed: 300,
 
-    // 반응형 설정 (데스크탑만)
-    ...(isMobile ? {} : {
-      breakpoints: {
-        1024: {
-          slidesPerView: banners.length >= 2 ? 2 : 1,
-          spaceBetween: 12,
-        },
+    // 반응형 설정 - 모든 화면에서 한 개씩만 표시
+    breakpoints: {
+      320: {
+        slidesPerView: 1,
+        spaceBetween: 0,
       },
-    }),
+      768: {
+        slidesPerView: 1,
+        spaceBetween: 0,
+      },
+      1024: {
+        slidesPerView: 1,
+        spaceBetween: 0,
+      },
+    },
 
     onBeforeInit: (swiper: SwiperType) => {
       swiperRef.current = swiper;
@@ -76,11 +82,12 @@ export default function BannerCarousel({ banners, isMobile = false }: BannerCaro
   };
 
      return (
-     <div className={`relative w-full ${isMobile ? 'mt-3 mb-3' : 'mb-3'}`}>
+     <div className={`relative w-full ${isMobile ? 'mt-3 mb-3' : 'mb-3'}`} style={{ paddingTop: '4px' }}>
       {/* 메인 Swiper */}
       <Swiper
         {...swiperConfig}
         className={`banner-carousel ${isMobile ? 'mobile' : 'desktop'}`}
+        style={{ overflowX: 'hidden', overflowY: 'visible' }}
       >
         {banners.map((banner, index) => (
           <SwiperSlide 
@@ -88,8 +95,8 @@ export default function BannerCarousel({ banners, isMobile = false }: BannerCaro
             className={isMobile ? '' : 'banner-slide-desktop'}
           >
             <div 
-              className="relative w-full overflow-hidden"
-              style={{ height: BANNER_HEIGHT }}
+              className="relative w-full"
+              style={{ height: BANNER_HEIGHT, overflow: 'visible' }}
             >
               <BannerWrapper banner={banner} index={index}>
                 {renderBannerContent(banner)}
@@ -184,13 +191,22 @@ export default function BannerCarousel({ banners, isMobile = false }: BannerCaro
            padding: 0 4px;
          }
 
-                   /* 데스크탑에서 슬라이드 간격 조정 */
-          .desktop.banner-carousel .swiper-slide {
-            margin-right: 8px;
+                   /* 슬라이드 간격 제거 - 한 개씩만 표시 */
+          .banner-carousel .swiper-slide {
+            margin-right: 0;
           }
 
-          .desktop.banner-carousel .swiper-slide:last-child {
-            margin-right: 0;
+          /* 호버 애니메이션 잘림 방지 - 상하만 visible */
+          .banner-carousel {
+            overflow-x: hidden !important;
+            overflow-y: visible !important;
+          }
+          .banner-carousel .swiper-wrapper {
+            overflow-x: hidden !important;
+            overflow-y: visible !important;
+          }
+          .banner-carousel .swiper-slide {
+            overflow: visible !important;
           }
       `}</style>
     </div>

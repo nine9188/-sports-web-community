@@ -377,11 +377,12 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
           <p className="text-xs mt-1 text-gray-500">새로고침하거나 잠시 후 다시 시도해주세요</p>
             </div>
       ) : (
-        <div className="w-full relative">
+        <div className="w-full relative" style={{ paddingTop: '4px' }}>
           {/* Swiper 컨테이너 */}
           <Swiper
             {...swiperConfig}
             className="livescore-carousel"
+            style={{ overflow: 'visible' }}
           >
             {renderSlides()}
           </Swiper>
@@ -413,6 +414,13 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
           <style jsx>{`
             .livescore-carousel {
               padding: 0 4px;
+              overflow: visible !important;
+            }
+            .livescore-carousel .swiper-wrapper {
+              overflow: visible !important;
+            }
+            .livescore-carousel .swiper-slide {
+              overflow: visible !important;
             }
           `}</style>
         </div>
