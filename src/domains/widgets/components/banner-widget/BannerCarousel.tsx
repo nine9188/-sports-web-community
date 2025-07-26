@@ -29,8 +29,8 @@ export default function BannerCarousel({ banners, isMobile = false }: BannerCaro
   // 모바일과 데스크탑 설정
   const swiperConfig = {
     modules: [Navigation, Pagination, Autoplay, EffectFade],
-    spaceBetween: 0,
-    slidesPerView: 1,
+    spaceBetween: 12,
+    slidesPerView: isMobile ? 1 : (banners.length >= 2 ? 2 : 1),
     centeredSlides: false,
     loop: banners.length > 1,
     
@@ -60,21 +60,15 @@ export default function BannerCarousel({ banners, isMobile = false }: BannerCaro
     // 속도 설정
     speed: 300,
 
-    // 반응형 설정 - 모든 화면에서 한 개씩만 표시
-    breakpoints: {
-      320: {
-        slidesPerView: 1,
-        spaceBetween: 0,
+    // 반응형 설정 (데스크탑만)
+    ...(isMobile ? {} : {
+      breakpoints: {
+        1024: {
+          slidesPerView: banners.length >= 2 ? 2 : 1,
+          spaceBetween: 12,
+        },
       },
-      768: {
-        slidesPerView: 1,
-        spaceBetween: 0,
-      },
-      1024: {
-        slidesPerView: 1,
-        spaceBetween: 0,
-      },
-    },
+    }),
 
     onBeforeInit: (swiper: SwiperType) => {
       swiperRef.current = swiper;
@@ -191,8 +185,12 @@ export default function BannerCarousel({ banners, isMobile = false }: BannerCaro
            padding: 0 4px;
          }
 
-                   /* 슬라이드 간격 제거 - 한 개씩만 표시 */
-          .banner-carousel .swiper-slide {
+                   /* 데스크탑에서 슬라이드 간격 조정 */
+          .desktop.banner-carousel .swiper-slide {
+            margin-right: 8px;
+          }
+
+          .desktop.banner-carousel .swiper-slide:last-child {
             margin-right: 0;
           }
 

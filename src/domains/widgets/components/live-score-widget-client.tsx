@@ -382,7 +382,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
           <Swiper
             {...swiperConfig}
             className="livescore-carousel"
-            style={{ overflow: 'visible' }}
+            style={{ overflowX: 'hidden', overflowY: 'visible' }}
           >
             {renderSlides()}
           </Swiper>
@@ -414,10 +414,12 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
           <style jsx>{`
             .livescore-carousel {
               padding: 0 4px;
-              overflow: visible !important;
+              overflow-x: hidden !important;
+              overflow-y: visible !important;
             }
             .livescore-carousel .swiper-wrapper {
-              overflow: visible !important;
+              overflow-x: hidden !important;
+              overflow-y: visible !important;
             }
             .livescore-carousel .swiper-slide {
               overflow: visible !important;
