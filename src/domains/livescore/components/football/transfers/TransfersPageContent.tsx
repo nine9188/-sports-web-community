@@ -1,15 +1,14 @@
-'use client';
-
-import { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { cache } from 'react';
 import { fetchLatestTransfers, TransferMarketData } from '@/domains/livescore/actions/transfers';
 import { formatTransferType, getTransferTypeColor } from '@/domains/livescore/types/transfers';
 import { TransferFilters } from '@/domains/livescore/components/football/transfers';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { Button } from '@/shared/ui';
+import { memo } from 'react';
 
 // 팀 로고 컴포넌트 - Standings와 동일한 방식으로 메모이제이션
 const TeamLogo = memo(({ teamName, teamId, size = 20 }: { teamName: string; teamId?: number; size?: number }) => {
@@ -37,46 +36,134 @@ const TeamLogo = memo(({ teamName, teamId, size = 20 }: { teamName: string; team
 
 TeamLogo.displayName = 'TeamLogo';
 
-// 이적 데이터 메모리 캐시
-const transfersCache = new Map<string, TransferMarketData[]>();
-
-// 주요 리그 ID들
-const MAJOR_LEAGUES = [39, 140, 135, 78, 61]; // 프리미어리그, 라리가, 세리에A, 분데스리가, 리그1
-
-// 이적 데이터 미리 로딩 함수
-const preloadTransfersData = async () => {
-  if (transfersCache.size > 0) return; // 이미 로딩된 경우 스킵
+// 서버 사이드 캐싱된 이적 데이터 로딩 함수
+const getTransfersData = cache(async (filters: {
+  league?: number;
+  team?: number;
+  season?: number;
+  type?: 'in' | 'out';
+}, currentPage: number, itemsPerPage: number) => {
+  console.log('🚀 서버 캐시: 이적 데이터 로딩 시작...', { filters, currentPage });
   
-  console.log('🚀 주요 리그 이적 데이터 미리 로딩 시작...');
+  const serverFilters = {
+    league: filters.league,
+    team: filters.team,
+    season: filters.season,
+    type: filters.type
+  };
   
-  try {
-    const loadPromises = MAJOR_LEAGUES.map(async (leagueId) => {
-      try {
-        const cacheKey = `transfers-${leagueId}-all-all-2025-1000`;
-        const transfers = await fetchLatestTransfers({ league: leagueId }, 1000);
-        transfersCache.set(cacheKey, transfers);
-        console.log(`✅ 리그 ${leagueId} 이적 데이터 로딩 완료 (${transfers.length}건)`);
-      } catch (error) {
-        console.error(`❌ 리그 ${leagueId} 이적 데이터 로딩 실패:`, error);
-      }
-    });
-    
-    // 전체 리그 데이터도 미리 로딩
-    try {
-      const allLeaguesCacheKey = 'transfers-all-all-all-2025-1000';
-      const allTransfers = await fetchLatestTransfers({}, 1000);
-      transfersCache.set(allLeaguesCacheKey, allTransfers);
-      console.log(`✅ 전체 리그 이적 데이터 로딩 완료 (${allTransfers.length}건)`);
-    } catch (error) {
-      console.error('❌ 전체 리그 이적 데이터 로딩 실패:', error);
-    }
-    
-    await Promise.all(loadPromises);
-    console.log('🎉 모든 이적 데이터 미리 로딩 완료!');
-  } catch (error) {
-    console.error('❌ 이적 데이터 미리 로딩 실패:', error);
+  // 데이터 로드 제한 설정
+  let loadLimit;
+  if (filters.team) {
+    loadLimit = 1000; // 특정 팀: 모든 데이터
+  } else {
+    loadLimit = Math.max(1000, currentPage * itemsPerPage + 500); // 전체: 페이지에 따라 동적
   }
-};
+  
+  const data = await fetchLatestTransfers(serverFilters, loadLimit);
+  const filtered = filterTransfers(data);
+  
+  console.log(`✅ 서버 캐시: 필터링 완료 ${filtered.length}건`);
+  return filtered;
+});
+
+// 날짜 형식 검증 함수 (서버에서 실행)
+function isValidDateFormat(dateString: string): boolean {
+  if (!dateString) return false;
+  
+  // YYYY-MM-DD 형식 정규식 검증
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(dateString)) {
+    return false;
+  }
+  
+  // 실제 날짜 유효성 검증
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) {
+    return false;
+  }
+  
+  // 합리적인 범위 검증 (1990년 ~ 2030년)
+  const year = date.getFullYear();
+  if (year < 1990 || year > 2030) {
+    return false;
+  }
+  
+  return true;
+}
+
+// 클라이언트 사이드 필터링 함수 (서버에서 실행)
+function filterTransfers(transfers: TransferMarketData[]): TransferMarketData[] {
+  const seen = new Set<string>();
+  
+  return transfers.filter(transfer => {
+    // 1. 기본 데이터 검증
+    if (!transfer.player?.id || transfer.player.id <= 0 || !transfer.player?.name) {
+      return false;
+    }
+
+    // 2. 이적 정보 필수 검증
+    if (!transfer.transfers?.[0] || !transfer.transfers[0].date) {
+      return false;
+    }
+
+    const transferData = transfer.transfers[0];
+
+    // 3. 날짜 형식 검증 - YYYY-MM-DD 형식이 아니면 제외
+    if (!isValidDateFormat(transferData.date)) {
+      return false;
+    }
+
+    // 4. 팀 정보 검증
+    if (!transferData.teams?.in?.id || !transferData.teams?.out?.id) {
+      return false;
+    }
+
+    // 5. 팀 이름 검증
+    const teamInName = transferData.teams.in.name;
+    const teamOutName = transferData.teams.out.name;
+    
+    if (!teamInName || !teamOutName) {
+      return false;
+    }
+
+    // 6. 비정상적인 팀 이름 필터링
+    // 팀 이름이 숫자로만 이루어져 있는 경우 제외
+    if (/^[0-9]+$/.test(teamInName.trim()) || /^[0-9]+$/.test(teamOutName.trim())) {
+      return false;
+    }
+
+    // 팀 이름이 "0"으로 시작하는 경우 제외
+    if (teamInName.trim().startsWith('0') || teamOutName.trim().startsWith('0')) {
+      return false;
+    }
+
+    // 팀 이름에 "0 " 또는 "==0" 포함된 경우 제외
+    if (teamInName.includes('0 ') || teamOutName.includes('0 ') || 
+        teamInName.includes('==0') || teamOutName.includes('==0')) {
+      return false;
+    }
+
+    // 팀 이름이 너무 짧은 경우 제외
+    if (teamInName.trim().length < 2 || teamOutName.trim().length < 2) {
+      return false;
+    }
+
+    // 팀 ID가 0이거나 음수인 경우 제외
+    if (transferData.teams.in.id <= 0 || transferData.teams.out.id <= 0) {
+      return false;
+    }
+
+    // 7. 중복 제거 (선수 ID + 날짜 + 팀 조합으로 고유성 확인)
+    const uniqueKey = `${transfer.player.id}-${transferData.date}-${transferData.teams.in.id}-${transferData.teams.out.id}`;
+    if (seen.has(uniqueKey)) {
+      return false;
+    }
+    seen.add(uniqueKey);
+
+    return true;
+  });
+}
 
 interface TransfersPageContentProps {
   league?: string;
@@ -88,30 +175,28 @@ interface TransfersPageContentProps {
 
 
 
-export default function TransfersPageContent({
+export default async function TransfersPageContent({
   league,
   team,
   season,
   type = 'all',
   page = '1'
 }: TransfersPageContentProps) {
-  const [transfers, setTransfers] = useState<TransferMarketData[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [totalCount, setTotalCount] = useState(0);
-
-  // URL 파라미터를 필터 객체로 변환 (useMemo로 최적화)
-  const filters = useMemo(() => ({
+  console.log('🚀 서버에서 이적 데이터 로딩 시작...');
+  
+  // URL 파라미터를 필터 객체로 변환
+  const filters = {
     league: league ? parseInt(league) : undefined,
     team: team ? parseInt(team) : undefined,
     season: season ? parseInt(season) : undefined,
     type: type !== 'all' ? type : undefined
-  }), [league, team, season, type]);
+  };
 
   const currentPage = parseInt(page);
   const itemsPerPage = 20;
 
   // 페이지 링크 생성 함수
-  const getPageLink = useCallback((page: number) => {
+  const getPageLink = (page: number) => {
     const params = new URLSearchParams();
     if (filters.league) params.set('league', filters.league.toString());
     if (filters.team) params.set('team', filters.team.toString());
@@ -120,189 +205,29 @@ export default function TransfersPageContent({
     params.set('page', page.toString());
     
     return `/transfers?${params.toString()}`;
-  }, [filters]);
+  };
 
+  // 서버에서 캐싱된 데이터 로드
+  let transfers: TransferMarketData[] = [];
+  let error: string | null = null;
 
+  try {
+    // 캐싱된 함수로 데이터 로드
+    transfers = await getTransfersData(filters, currentPage, itemsPerPage);
+  } catch (err) {
+    console.error('❌ 서버에서 이적 데이터 로딩 실패:', err);
+    error = '이적 정보를 불러오는데 실패했습니다.';
+  }
 
-  // 날짜 형식 검증 함수
-  const isValidDateFormat = useCallback((dateString: string): boolean => {
-    if (!dateString) return false;
-    
-    // YYYY-MM-DD 형식 정규식 검증
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(dateString)) {
-      return false;
-    }
-    
-    // 실제 날짜 유효성 검증
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) {
-      return false;
-    }
-    
-    // 합리적인 범위 검증 (1990년 ~ 2030년)
-    const year = date.getFullYear();
-    if (year < 1990 || year > 2030) {
-      return false;
-    }
-    
-    return true;
-  }, []);
-
-  // 클라이언트 사이드 필터링 함수 (useCallback으로 최적화)
-     const filterTransfers = useCallback((transfers: TransferMarketData[]) => {
-     const seen = new Set<string>();
-     
-     return transfers.filter(transfer => {
-       // 1. 기본 데이터 검증
-       if (!transfer.player?.id || transfer.player.id <= 0 || !transfer.player?.name) {
-         return false;
-       }
-
-       // 2. 이적 정보 필수 검증
-       if (!transfer.transfers?.[0] || !transfer.transfers[0].date) {
-         return false;
-       }
-
-       const transferData = transfer.transfers[0];
-
-       // 3. 날짜 형식 검증 - YYYY-MM-DD 형식이 아니면 제외
-       if (!isValidDateFormat(transferData.date)) {
-         console.log(`❌ 클라이언트: 날짜 형식 불량으로 제외: ${transfer.player.name} - ${transferData.date}`);
-         return false;
-       }
-
-       // 4. 팀 정보 검증
-       if (!transferData.teams?.in?.id || !transferData.teams?.out?.id) {
-         return false;
-       }
-
-       // 5. 팀 이름 검증
-       const teamInName = transferData.teams.in.name;
-       const teamOutName = transferData.teams.out.name;
-       
-       if (!teamInName || !teamOutName) {
-         return false;
-       }
-
-       // 6. 비정상적인 팀 이름 필터링
-       // 팀 이름이 숫자로만 이루어져 있는 경우 제외
-       if (/^[0-9]+$/.test(teamInName.trim()) || /^[0-9]+$/.test(teamOutName.trim())) {
-         return false;
-       }
-
-       // 팀 이름이 "0"으로 시작하는 경우 제외
-       if (teamInName.trim().startsWith('0') || teamOutName.trim().startsWith('0')) {
-         return false;
-       }
-
-       // 팀 이름에 "0 " 또는 "==0" 포함된 경우 제외
-       if (teamInName.includes('0 ') || teamOutName.includes('0 ') || 
-           teamInName.includes('==0') || teamOutName.includes('==0')) {
-         return false;
-       }
-
-       // 팀 이름이 너무 짧은 경우 제외
-       if (teamInName.trim().length < 2 || teamOutName.trim().length < 2) {
-         return false;
-       }
-
-       // 팀 ID가 0이거나 음수인 경우 제외
-       if (transferData.teams.in.id <= 0 || transferData.teams.out.id <= 0) {
-         return false;
-       }
-
-       // 7. 중복 제거 (선수 ID + 날짜 + 팀 조합으로 고유성 확인)
-       const uniqueKey = `${transfer.player.id}-${transferData.date}-${transferData.teams.in.id}-${transferData.teams.out.id}`;
-       if (seen.has(uniqueKey)) {
-         return false;
-       }
-       seen.add(uniqueKey);
-
-       return true;
-     });
-   }, [isValidDateFormat]);
-
-  // 이적 데이터 로드 (캐싱 적용)
-  const loadTransfers = useCallback(async () => {
-    try {
-      setError(null);
-      
-      // 서버에서 기본 필터링된 데이터 가져오기 (리그, 팀, 시즌, 타입)
-      const serverFilters = {
-        league: filters.league,
-        team: filters.team,
-        season: filters.season,
-        type: filters.type
-      };
-      
-      // 전체 리그의 경우 더 많은 데이터 로드, 특정 팀의 경우 적당한 양
-      let loadLimit;
-      if (filters.team) {
-        // 특정 팀 선택 시: 해당 팀의 모든 이적 데이터
-        loadLimit = 1000;
-      } else {
-        // 전체 리그의 경우: 페이지에 따라 동적으로 증가 + 충분한 여유분
-        loadLimit = Math.max(1000, currentPage * itemsPerPage + 500);
-      }
-      
-      // 캐시 키 생성
-      const cacheKey = `transfers-${filters.league || 'all'}-${filters.team || 'all'}-${filters.type || 'all'}-${filters.season || 2025}-${loadLimit}`;
-      
-      console.log(`📄 페이지 ${currentPage}: ${loadLimit}개 데이터 로드 요청`);
-      console.log(`🔍 필터 정보:`, serverFilters);
-      console.log(`🔑 캐시 키: ${cacheKey}`);
-      
-      let data: TransferMarketData[];
-      
-      // 캐시에서 먼저 확인
-      if (transfersCache.has(cacheKey)) {
-        console.log(`⚡ 캐시에서 즉시 이적 데이터 로드`);
-        data = transfersCache.get(cacheKey)!;
-      } else {
-        console.log(`📡 API에서 이적 데이터 로드`);
-        const startTime = performance.now();
-        data = await fetchLatestTransfers(serverFilters, loadLimit);
-        const endTime = performance.now();
-        
-        // 캐시에 저장 (주요 데이터만)
-        if (!filters.team && loadLimit >= 1000) {
-          transfersCache.set(cacheKey, data);
-          console.log(`💾 이적 데이터 캐시 저장 완료`);
-        }
-        
-        console.log(`⏱️ 데이터 로드 시간: ${(endTime - startTime).toFixed(2)}ms`);
-      }
-      
-      console.log(`📊 받은 데이터 수: ${data.length}건`);
-      
-      // 클라이언트 사이드에서 추가 필터링 (검색, 포지션, 국적)
-      const filteredData = filterTransfers(data);
-      
-      setTransfers(filteredData);
-      setTotalCount(filteredData.length);
-    } catch {
-      setError('이적 정보를 불러오는데 실패했습니다.');
-    }
-  }, [filters, itemsPerPage, filterTransfers, currentPage]);
-
-  // 컴포넌트 마운트 시 이적 데이터 미리 로딩
-  useEffect(() => {
-    preloadTransfersData();
-  }, []);
-
-  useEffect(() => {
-    loadTransfers();
-  }, [league, team, season, type, page, loadTransfers]);
-
-  // 페이지네이션용 데이터 슬라이싱
+  // 페이지네이션용 데이터 슬라이싱 (서버에서 계산)
+  const totalCount = transfers.length;
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedTransfers = transfers.slice(startIndex, endIndex);
   const totalPages = Math.ceil(totalCount / itemsPerPage);
 
-  // 페이지 번호 배열 생성 (현재 페이지 주변의 5개 페이지만 표시)
-  const generatePageNumbers = useCallback(() => {
+  // 페이지 번호 배열 생성 (서버에서 계산)
+  const generatePageNumbers = () => {
     const pageNumbers = [];
     const maxPagesToShow = 5;
     
@@ -319,7 +244,7 @@ export default function TransfersPageContent({
     }
     
     return pageNumbers;
-  }, [currentPage, totalPages]);
+  };
 
 
 
@@ -332,12 +257,12 @@ export default function TransfersPageContent({
           </svg>
           <h3 className="text-lg font-medium text-red-800 mb-2">오류가 발생했습니다</h3>
           <p className="text-red-600 mb-4">{error}</p>
-          <button
-            onClick={loadTransfers}
-            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+          <Link
+            href="/transfers"
+            className="inline-block bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
           >
             다시 시도
-          </button>
+          </Link>
         </div>
       </div>
     );
@@ -348,7 +273,6 @@ export default function TransfersPageContent({
       {/* 필터 섹션 */}
       <TransferFilters 
         currentFilters={filters}
-        onFiltersChange={loadTransfers}
       />
 
       {/* 이적 목록 */}
@@ -436,9 +360,12 @@ export default function TransfersPageContent({
                           )}
                         </div>
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
+                          <Link
+                            href={`/livescore/football/player/${transfer.player.id}`}
+                            className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors"
+                          >
                             {transfer.player.name}
-                          </div>
+                          </Link>
                           <div className="text-sm text-gray-500">
                             {transfer.player.nationality}
                           </div>
@@ -456,9 +383,12 @@ export default function TransfersPageContent({
                             teamId={transfer.transfers[0]?.teams?.out?.id}
                             size={20}
                           />
-                          <span className="text-sm text-gray-600 truncate">
+                          <Link
+                            href={`/livescore/football/team/${transfer.transfers[0]?.teams?.out?.id}`}
+                            className="text-sm text-gray-600 hover:text-blue-600 transition-colors truncate"
+                          >
                             {transfer.transfers[0]?.teams?.out?.name || 'Unknown'}
-                          </span>
+                          </Link>
                         </div>
 
                         {/* 화살표 */}
@@ -475,9 +405,12 @@ export default function TransfersPageContent({
                             teamId={transfer.transfers[0]?.teams?.in?.id}
                             size={20}
                           />
-                          <span className="text-sm text-gray-900 truncate font-medium">
+                          <Link
+                            href={`/livescore/football/team/${transfer.transfers[0]?.teams?.in?.id}`}
+                            className="text-sm text-gray-900 hover:text-blue-600 transition-colors truncate font-medium"
+                          >
                             {transfer.transfers[0]?.teams?.in?.name || 'Unknown'}
-                          </span>
+                          </Link>
                         </div>
                       </div>
                     </td>
@@ -501,7 +434,7 @@ export default function TransfersPageContent({
                 ))}
               </tbody>
             </table>
-          </div>
+        </div>
 
           {/* 모바일 2줄 레이아웃 */}
           <div className="block md:hidden divide-y divide-gray-200">
@@ -546,9 +479,12 @@ export default function TransfersPageContent({
                       </div>
                       
                       {/* 선수 이름 */}
-                      <span className="text-sm font-semibold text-gray-900 truncate">
+                      <Link
+                        href={`/livescore/football/player/${transfer.player.id}`}
+                        className="text-sm font-semibold text-gray-900 hover:text-blue-600 transition-colors truncate"
+                      >
                         {transfer.player.name}
-                      </span>
+                      </Link>
                       
                       {/* 국적 */}
                       {transfer.player.nationality && (
@@ -574,9 +510,12 @@ export default function TransfersPageContent({
                           teamId={latestTransfer.teams.out.id}
                           size={16}
                         />
-                        <span className="text-xs text-gray-700 truncate">
+                        <Link
+                          href={`/livescore/football/team/${latestTransfer.teams.out.id}`}
+                          className="text-xs text-gray-700 hover:text-blue-600 transition-colors truncate"
+                        >
                           {latestTransfer.teams.out.name}
-                        </span>
+                        </Link>
                       </div>
 
                       {/* 화살표 */}
@@ -591,9 +530,12 @@ export default function TransfersPageContent({
                           teamId={latestTransfer.teams.in.id}
                           size={16}
                         />
-                        <span className="text-xs text-gray-700 truncate">
+                        <Link
+                          href={`/livescore/football/team/${latestTransfer.teams.in.id}`}
+                          className="text-xs text-gray-700 hover:text-blue-600 transition-colors truncate"
+                        >
                           {latestTransfer.teams.in.name}
-                        </span>
+                        </Link>
                       </div>
                     </div>
 

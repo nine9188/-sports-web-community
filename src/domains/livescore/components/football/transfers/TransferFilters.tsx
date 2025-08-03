@@ -41,7 +41,6 @@ interface TransferFiltersProps {
     season?: number | string;
     type?: 'in' | 'out';
   };
-  onFiltersChange: () => void;
 }
 
 export default function TransferFilters({ currentFilters }: TransferFiltersProps) {
