@@ -163,6 +163,17 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
             라이브스코어
           </Link>
           
+          {/* 이적시장 링크 */}
+          <Link 
+            href="/transfers" 
+            className="px-2 py-1 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1 shrink-0 whitespace-nowrap snap-center"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+              <path d="M16 3h5v5M16 8l5-5m-1 10v5h-5m-8-5l-5 5v-5h5m8-8v5h5m-5-5l5 5"/>
+            </svg>
+            이적시장
+          </Link>
+          
           {/* 데이터센터 링크 */}
           <Link 
             href="/livescore/football/leagues" 
@@ -247,6 +258,16 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
               <polygon points="10 8 16 12 10 16 10 8"></polygon>
             </svg>
             라이브
+          </Link>
+          
+          <Link 
+            href="/transfers" 
+            className="px-2 py-1.5 text-xs font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1 shrink-0"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
+              <path d="M16 3h5v5M16 8l5-5m-1 10v5h-5m-8-5l-5 5v-5h5m8-8v5h5m-5-5l5 5"/>
+            </svg>
+            이적
           </Link>
           
           <Link 

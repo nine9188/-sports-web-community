@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import Link from 'next/link';
 import { Board } from '../../types/board';
@@ -24,6 +24,13 @@ const MegaDropdownMenu = React.memo(function MegaDropdownMenu({
     // 초기값으로 첫 번째 2차 메뉴 선택
     return board.children && board.children.length > 0 ? board.children[0] : null;
   });
+
+  // board가 변경될 때마다 첫 번째 2차 메뉴로 리셋
+  useEffect(() => {
+    setSelectedSecondLevel(
+      board.children && board.children.length > 0 ? board.children[0] : null
+    );
+  }, [board]);
 
   // 3차 메뉴를 5x4 그리드로 나누기
   const getGridItems = (items: Board[]) => {
