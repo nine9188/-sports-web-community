@@ -43,7 +43,7 @@ const getTransfersData = cache(async (filters: {
   season?: number;
   type?: 'in' | 'out';
 }, currentPage: number, itemsPerPage: number) => {
-  console.log('🚀 서버 캐시: 이적 데이터 로딩 시작...', { filters, currentPage });
+
   
   const serverFilters = {
     league: filters.league,
@@ -63,7 +63,7 @@ const getTransfersData = cache(async (filters: {
   const data = await fetchLatestTransfers(serverFilters, loadLimit);
   const filtered = filterTransfers(data);
   
-  console.log(`✅ 서버 캐시: 필터링 완료 ${filtered.length}건`);
+
   return filtered;
 });
 
@@ -182,7 +182,6 @@ export default async function TransfersPageContent({
   type = 'all',
   page = '1'
 }: TransfersPageContentProps) {
-  console.log('🚀 서버에서 이적 데이터 로딩 시작...');
   
   // URL 파라미터를 필터 객체로 변환
   const filters = {
@@ -214,8 +213,7 @@ export default async function TransfersPageContent({
   try {
     // 캐싱된 함수로 데이터 로드
     transfers = await getTransfersData(filters, currentPage, itemsPerPage);
-  } catch (err) {
-    console.error('❌ 서버에서 이적 데이터 로딩 실패:', err);
+  } catch {
     error = '이적 정보를 불러오는데 실패했습니다.';
   }
 

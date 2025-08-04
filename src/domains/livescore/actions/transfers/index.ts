@@ -99,15 +99,14 @@ interface ApiTransferResponse {
  * @returns 팀의 영입/방출 이적 정보
  */
 export const fetchTeamTransfers = cache(async (
-  teamId: number, 
-  season?: number
+  teamId: number
 ): Promise<TeamTransfersData | null> => {
   try {
     if (!teamId) {
       return null;
     }
 
-    console.log(`🔍 API 호출: team=${teamId}, season=${season || 'all'}`);
+  
     
     // 캐싱된 API 호출 함수
     const cachedApiCall = unstable_cache(
@@ -134,31 +133,13 @@ export const fetchTeamTransfers = cache(async (
     );
 
     const data = await cachedApiCall(teamId);
-    console.log(`📊 원본 API 응답:`, {
-      total: data.response?.length || 0,
-      results: data.results || 0,
-      paging: data.paging || {},
-      errors: data.errors || []
-    });
 
-    // 상세 로깅: 첫 3개 선수 정보 확인
-    if (data.response && data.response.length > 0) {
-      console.log(`🔍 첫 3개 선수 샘플:`, data.response.slice(0, 3).map((player: ApiTransferResponse) => ({
-        id: player.player?.id,
-        name: player.player?.name,
-        transfersCount: player.transfers?.length || 0,
-        firstTransfer: player.transfers?.[0] ? {
-          date: player.transfers[0].date,
-          type: player.transfers[0].type,
-          from: player.transfers[0].teams?.out?.name,
-          to: player.transfers[0].teams?.in?.name
-        } : null
-      })));
-    }
+
+
 
     // player/transfers.ts와 동일한 검증 로직
     if (!data.response || !Array.isArray(data.response) || data.response.length === 0) {
-      console.log('❌ 응답 데이터가 비어있음 - 정상적인 경우일 수 있음');
+
       return {
         team: { id: teamId, name: '', logo: '' },
         transfers: { in: [], out: [] }
@@ -229,7 +210,7 @@ function processTeamTransferData(
   data: { response: ApiTransferResponse[] }, 
   teamId: number
 ): TeamTransfersData {
-  console.log(`🔄 데이터 처리 시작: ${data.response.length}명의 선수, 타겟팀=${teamId}`);
+
   
   // 시즌 필터링 제거 - 모든 이적 데이터 사용
   const filteredData = data.response;
@@ -237,7 +218,7 @@ function processTeamTransferData(
   // 팀 정보
     const teamData = data.response[0];
   const teamInfo = teamData?.team || { id: teamId, name: '', logo: '' };
-  console.log(`👕 팀 정보: ${teamInfo.name} (ID: ${teamInfo.id})`);
+
     
     // 영입/방출 분류
     const transfersIn: TransferMarketData[] = [];
@@ -249,7 +230,7 @@ function processTeamTransferData(
     transfer.transfers.forEach((t) => {
         // 날짜 형식 검증 - YYYY-MM-DD 형식이 아니면 제외
         if (!isValidDateFormat(t.date || '')) {
-          console.log(`❌ 날짜 형식 불량으로 제외: ${transfer.player?.name} - ${t.date}`);
+
           return;
         }
 
@@ -283,15 +264,15 @@ function processTeamTransferData(
         // 영입/방출 분류
         if (t.teams?.in?.id === teamId) {
           transfersIn.push(transferData);
-          console.log(`📈 영입: ${transfer.player?.name} <- ${t.teams?.out?.name}`);
+
         } else if (t.teams?.out?.id === teamId) {
           transfersOut.push(transferData);
-          console.log(`📉 방출: ${transfer.player?.name} -> ${t.teams?.in?.name}`);
+
         }
       });
     });
 
-    console.log(`✅ 분류 완료: 영입 ${transfersIn.length}명, 방출 ${transfersOut.length}명`);
+
 
     return {
       team: {
@@ -364,11 +345,11 @@ export const fetchLeagueTransfers = cache(async (
 
     // 더 많은 팀 처리 (12개)하여 데이터 누락 방지
     const teamIds = teamsData.response.slice(0, 12).map((team: { team: { id: number } }) => team.team.id);
-    console.log(`📋 처리할 팀 목록: ${teamIds.join(', ')}`);
+
     
     const transferPromises = teamIds.map(async (teamId: number) => {
       try {
-        const teamTransfers = await fetchTeamTransfers(teamId, season);
+        const teamTransfers = await fetchTeamTransfers(teamId);
         if (teamTransfers) {
           return [...teamTransfers.transfers.in, ...teamTransfers.transfers.out];
         }
@@ -381,15 +362,14 @@ export const fetchLeagueTransfers = cache(async (
     const results = await Promise.all(transferPromises);
     results.forEach(transfers => allTransfers.push(...transfers));
 
-    console.log(`✅ 리그 ${leagueId}에서 총 ${allTransfers.length}건의 이적 정보 수집`);
+
 
     // 최신 순으로 정렬하고 제한
     return allTransfers
       .sort((a, b) => new Date(b.transfers[0].date).getTime() - new Date(a.transfers[0].date).getTime())
       .slice(0, limit);
 
-  } catch (error) {
-    console.log(`❌ fetchLeagueTransfers 에러:`, error);
+  } catch {
     return [];
   }
 });
@@ -491,7 +471,7 @@ const cachedFetchLatestTransfers = async (filters: TransferFilters = {}, limit: 
     `limit-${limit}`
   ];
 
-  console.log(`🔑 캐시 키: ${cacheKey.join('-')}`);
+
 
   const cachedFunction = unstable_cache(
     async (): Promise<TransferMarketData[]> => {
@@ -511,10 +491,10 @@ const cachedFetchLatestTransfers = async (filters: TransferFilters = {}, limit: 
 
         // 특정 팀이 지정된 경우 - 순수 팀 이적 데이터만 사용
     if (filters.team) {
-      console.log(`🎯 팀 이적 데이터 검색: teamId=${filters.team}`);
+  
 
       // 팀 이적 API 호출
-      const directTeamTransfers = await fetchTeamTransfers(filters.team, targetSeason);
+      const directTeamTransfers = await fetchTeamTransfers(filters.team);
       
       if (!directTeamTransfers) {
         return [];
@@ -531,7 +511,7 @@ const cachedFetchLatestTransfers = async (filters: TransferFilters = {}, limit: 
         teamBasedTransfers = [...directTeamTransfers.transfers.in, ...directTeamTransfers.transfers.out];
       }
 
-      console.log(`📊 팀 API 결과: ${teamBasedTransfers.length}건`);
+
 
       // 최신 순으로 정렬하고 제한
       return teamBasedTransfers
@@ -742,7 +722,7 @@ export async function getDetailedTeamTransfers(
 }> {
   try {
     const targetSeason = season || 2025;
-    const teamTransfers = await fetchTeamTransfers(teamId, targetSeason);
+            const teamTransfers = await fetchTeamTransfers(teamId);
     
     if (!teamTransfers) {
       throw new Error('팀 이적 데이터를 찾을 수 없습니다');

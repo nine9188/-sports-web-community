@@ -14,23 +14,22 @@ const MAJOR_LEAGUES = [39, 140, 135, 78, 61]; // 프리미어리그, 라리가, 
 const preloadTeamsData = async () => {
   if (teamsCache.size > 0) return; // 이미 로딩된 경우 스킵
   
-  console.log('🚀 주요 리그 팀 데이터 미리 로딩 시작...');
+
   
   try {
     const loadPromises = MAJOR_LEAGUES.map(async (leagueId) => {
       try {
         const teams = await fetchLeagueTeams(leagueId.toString());
         teamsCache.set(leagueId.toString(), teams);
-        console.log(`✅ 리그 ${leagueId} 팀 데이터 로딩 완료 (${teams.length}개 팀)`);
-      } catch (error) {
-        console.error(`❌ 리그 ${leagueId} 팀 데이터 로딩 실패:`, error);
+
+      } catch {
+        // 개별 리그 로딩 실패 시 무시하고 계속 진행
       }
     });
     
     await Promise.all(loadPromises);
-    console.log('🎉 모든 주요 리그 팀 데이터 미리 로딩 완료!');
-  } catch (error) {
-    console.error('❌ 팀 데이터 미리 로딩 실패:', error);
+  } catch {
+    // 전체 로딩 실패 시 무시하고 계속 진행
   }
 };
 
@@ -67,22 +66,19 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
       
       // 캐시에서 먼저 확인 (대부분 이미 로딩되어 있을 것)
       if (teamsCache.has(leagueId)) {
-        console.log(`⚡ 캐시에서 즉시 팀 데이터 로드: 리그 ${leagueId}`);
         setAvailableTeams(teamsCache.get(leagueId)!);
         setLoadingTeams(false);
         return;
       }
 
       // 캐시에 없는 경우에만 API 호출 (마이너 리그)
-      console.log(`📡 마이너 리그 팀 데이터 로드: 리그 ${leagueId}`);
       setLoadingTeams(true);
       try {
         const teams = await fetchLeagueTeams(leagueId);
         teamsCache.set(leagueId, teams);
         setAvailableTeams(teams);
-        console.log(`✅ 리그 ${leagueId} 팀 데이터 캐시 저장 완료 (${teams.length}개 팀)`);
-      } catch (error) {
-        console.error('팀 목록 로딩 실패:', error);
+      } catch {
+        // 팀 목록 로딩 실패 시 빈 배열 표시
         setAvailableTeams([]);
       } finally {
         setLoadingTeams(false);
@@ -95,9 +91,10 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
   const updateFilter = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     
-    // 리그가 변경되는 경우 팀 선택을 초기화
+    // 리그가 변경되는 경우 팀과 이적 유형 선택을 초기화
     if (key === 'league') {
       params.delete('team');
+      params.delete('type'); // 리그 변경 시 이적 유형도 초기화
     }
     
     if (value && value !== 'all') {
@@ -190,11 +187,24 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
           <select
             value={currentFilters.type || 'all'}
             onChange={(e) => updateFilter('type', e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            disabled={!currentFilters.league || currentFilters.league === 'all'}
+            className={`w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+              !currentFilters.league || currentFilters.league === 'all' 
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                : ''
+            }`}
           >
-            <option value="all">전체</option>
-            <option value="in">영입</option>
-            <option value="out">방출</option>
+            <option value="all">
+              {!currentFilters.league || currentFilters.league === 'all' 
+                ? '먼저 리그를 선택하세요' 
+                : '전체'}
+            </option>
+            {currentFilters.league && currentFilters.league !== 'all' && (
+              <>
+                <option value="in">영입</option>
+                <option value="out">방출</option>
+              </>
+            )}
           </select>
         </div>
       </div>
@@ -230,7 +240,7 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
                 </button>
               </span>
             )}
-            {currentFilters.type && (
+            {currentFilters.type && currentFilters.league && currentFilters.league !== 'all' && (
               <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">
                 {currentFilters.type === 'in' ? '영입' : '방출'}
                 <button
