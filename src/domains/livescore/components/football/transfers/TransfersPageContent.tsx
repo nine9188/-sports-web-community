@@ -48,6 +48,7 @@ const formatTransferTypeMobile = (type: string): string => {
   if (lowerType === 'permanent') return '완전';
   if (lowerType === 'transfer') return '이적';
   if (lowerType === 'return') return '복귀';
+  if (lowerType === 'back from loan') return '임대복귀';
   
   return originalType;
 };
