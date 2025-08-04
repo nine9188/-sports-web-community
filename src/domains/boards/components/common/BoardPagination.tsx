@@ -57,7 +57,7 @@ export default function BoardPagination({
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex justify-center items-center gap-1 my-4">
+    <div className="flex justify-center items-center gap-1">
       {/* 처음 페이지 버튼 */}
       {currentPage > 1 && (
         <Link href={getPageLink(1)} passHref>

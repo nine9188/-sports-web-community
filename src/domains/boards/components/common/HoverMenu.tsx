@@ -296,7 +296,7 @@ export default function HoverMenu({
 
   // 메뉴 UI 렌더링
   return (
-    <div className="bg-white border rounded-lg shadow-sm mb-4">
+    <div className="bg-white border rounded-lg mb-4">
       <div className="px-4 py-2 relative" ref={containerRef}>
         {/* 네비게이션 바 */}
         <nav className="flex items-center" ref={navRef}>
@@ -304,27 +304,25 @@ export default function HoverMenu({
           <Link
             href={`/boards/${rootBoardSlug || rootBoardId}`}
             data-board="all"
-            className={`px-2 py-1 text-sm font-medium whitespace-nowrap hover:bg-gray-50 rounded-md ${
+            className={`px-2 py-1 text-sm font-medium whitespace-nowrap hover:bg-gray-50 rounded-md flex items-center ${
               !currentBoardId ? 'bg-gray-100 text-blue-600' : 'text-gray-500'
             }`}
           >
-            <span className="inline-flex items-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 mr-1"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                />
-              </svg>
-              전체
-            </span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 mr-1"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+              />
+            </svg>
+            전체
           </Link>
 
           {/* 보이는 상위 게시판들 */}
@@ -511,6 +509,13 @@ export default function HoverMenu({
                   {/* 콘텐츠 */}
                   <div className="p-4 max-h-96 overflow-y-auto">
                     <div className="space-y-2">
+                      <Link
+                        href={`/boards/${sortedTopBoards.find(board => board.id === hoveredBoard)?.slug || hoveredBoard}`}
+                        className="block px-4 py-3 text-base font-bold hover:bg-gray-50 rounded-lg border border-gray-300 text-blue-600"
+                        onClick={() => setHoveredBoard(null)}
+                      >
+                        {`${sortedTopBoards.find(board => board.id === hoveredBoard)?.name} 전체`}
+                      </Link>
                       {getChildBoards(hoveredBoard)
                         .sort((a, b) => (a.display_order !== b.display_order ? a.display_order - b.display_order : a.name.localeCompare(b.name)))
                         .map((childBoard: ChildBoard) => (

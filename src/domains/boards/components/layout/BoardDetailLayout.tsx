@@ -124,7 +124,7 @@ export default function BoardDetailLayout({
   if (!hasMounted) {
     return (
       <div className="container mx-auto">
-        <div className="sm:mt-0 mt-2">
+        <div className="sm:mt-0 mt-4">
           <MemoizedBoardBreadcrumbs breadcrumbs={breadcrumbs} />
         </div>
         
@@ -142,7 +142,7 @@ export default function BoardDetailLayout({
 
   return (
     <div className="container mx-auto">
-      <div className="sm:mt-0 mt-2">
+      <div className="sm:mt-0 mt-4">
         <MemoizedBoardBreadcrumbs breadcrumbs={breadcrumbs} />
       </div>
 
@@ -191,7 +191,7 @@ export default function BoardDetailLayout({
           emptyMessage="아직 작성된 게시글이 없습니다."
         />
         
-        <div className="flex justify-center mt-2">
+        <div className="flex justify-center mt-2 mb-4">
           <MemoizedBoardPagination 
             currentPage={currentPage} 
             totalPages={Math.ceil((boardData.views || 0) / 20)}
