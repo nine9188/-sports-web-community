@@ -24,7 +24,7 @@ export default async function TransfersPage({ searchParams }: TransfersPageProps
   return (
     <div className="min-h-screen bg-white">
       {/* 헤더 섹션 */}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden mt-4 md:mt-0">
         <div className="px-4 py-4">
           <div className="flex items-center justify-between">
             <div>

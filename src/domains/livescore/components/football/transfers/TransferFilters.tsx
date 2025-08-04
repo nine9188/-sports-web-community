@@ -215,7 +215,7 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
           <div className="flex items-center flex-wrap gap-2">
             <span className="text-sm text-gray-500">활성 필터:</span>
             {currentFilters.league && (
-              <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full">
+              <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
                 {currentFilters.league?.toString() === '39' ? '프리미어리그' :
                  currentFilters.league?.toString() === '140' ? '라리가' :
                  currentFilters.league?.toString() === '135' ? '세리에A' :
@@ -223,40 +223,40 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
                  currentFilters.league?.toString() === '61' ? '리그1' : '선택된 리그'}
                 <button
                   onClick={() => updateFilter('league', 'all')}
-                  className="ml-2 text-purple-600 hover:text-purple-800"
+                  className="ml-2 text-gray-500 hover:text-gray-700"
                 >
                   ×
                 </button>
               </span>
             )}
             {currentFilters.team && (
-              <span className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+              <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
                 {availableTeams.find(t => t.id === parseInt(currentFilters.team?.toString() || '0'))?.name || '선택된 팀'}
                 <button
                   onClick={() => updateFilter('team', 'all')}
-                  className="ml-2 text-blue-600 hover:text-blue-800"
+                  className="ml-2 text-gray-500 hover:text-gray-700"
                 >
                   ×
                 </button>
               </span>
             )}
             {currentFilters.type && currentFilters.league && currentFilters.league !== 'all' && (
-              <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">
+              <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
                 {currentFilters.type === 'in' ? '영입' : '방출'}
                 <button
                   onClick={() => updateFilter('type', 'all')}
-                  className="ml-2 text-green-600 hover:text-green-800"
+                  className="ml-2 text-gray-500 hover:text-gray-700"
                 >
                   ×
                 </button>
               </span>
             )}
             {currentFilters.season && currentFilters.season !== 2025 && (
-              <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-800 text-sm rounded-full">
+              <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
                 {currentFilters.season}
                 <button
                   onClick={() => updateFilter('season', '2025')}
-                  className="ml-2 text-gray-600 hover:text-gray-800"
+                  className="ml-2 text-gray-500 hover:text-gray-700"
                 >
                   ×
                 </button>

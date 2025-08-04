@@ -3,7 +3,54 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { cache } from 'react';
 import { fetchLatestTransfers, TransferMarketData } from '@/domains/livescore/actions/transfers';
-import { formatTransferType, getTransferTypeColor } from '@/domains/livescore/types/transfers';
+import { formatTransferType } from '@/domains/livescore/types/transfers';
+
+// 모바일용 간단한 이적 타입 포맷터
+const formatTransferTypeMobile = (type: string): string => {
+  if (!type || type === 'N/A') return '정보없음';
+  
+  const originalType = type.trim();
+  const lowerType = originalType.toLowerCase();
+  
+  // 자유이적
+  if (lowerType === 'free transfer' || lowerType === 'free') {
+    return '자유';
+  }
+  
+  // 금액이 포함된 경우 - 금액만 표시
+  if (originalType.match(/[€$£¥₩]/)) {
+    // 유로화
+    if (originalType.includes('€')) {
+      const euroMatch = originalType.match(/€\s*([\d.,]+)\s*M?/i);
+      if (euroMatch) {
+        return `€${euroMatch[1]}M`;
+      }
+    }
+    // 달러화
+    else if (originalType.includes('$')) {
+      const dollarMatch = originalType.match(/\$\s*([\d.,]+)\s*M?/i);
+      if (dollarMatch) {
+        return `$${dollarMatch[1]}M`;
+      }
+    }
+    // 파운드화
+    else if (originalType.includes('£')) {
+      const poundMatch = originalType.match(/£\s*([\d.,]+)\s*M?/i);
+      if (poundMatch) {
+        return `£${poundMatch[1]}M`;
+      }
+    }
+    return originalType; // 기타 통화는 원본
+  }
+  
+  // 금액 없는 타입들 - 짧게
+  if (lowerType === 'loan') return '임대';
+  if (lowerType === 'permanent') return '완전';
+  if (lowerType === 'transfer') return '이적';
+  if (lowerType === 'return') return '복귀';
+  
+  return originalType;
+};
 import { TransferFilters } from '@/domains/livescore/components/football/transfers';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
@@ -267,7 +314,7 @@ export default async function TransfersPageContent({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-4 md:pb-0">
       {/* 필터 섹션 */}
       <TransferFilters 
         currentFilters={filters}
@@ -416,9 +463,7 @@ export default async function TransfersPageContent({
                     {/* 이적료/타입 */}
                     <td className="px-4 py-4 whitespace-nowrap">
                       {transfer.transfers[0]?.type && (
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                          getTransferTypeColor(transfer.transfers[0].type)
-                        }`}>
+                        <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700">
                           {formatTransferType(transfer.transfers[0].type)}
                         </span>
                       )}
@@ -500,9 +545,9 @@ export default async function TransfersPageContent({
 
                   {/* 두 번째 줄: 팀 > 팀 */}
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3 flex-1 min-w-0">
-                      {/* 이전 팀 */}
-                      <div className="flex items-center space-x-1.5 min-w-0">
+                    <div className="grid grid-cols-7 gap-1 items-center flex-1">
+                      {/* 이전 팀 (3컬럼) */}
+                      <div className="col-span-3 flex items-center space-x-1 min-w-0">
                         <TeamLogo
                           teamName={latestTransfer.teams.out.name}
                           teamId={latestTransfer.teams.out.id}
@@ -511,18 +556,21 @@ export default async function TransfersPageContent({
                         <Link
                           href={`/livescore/football/team/${latestTransfer.teams.out.id}`}
                           className="text-xs text-gray-700 hover:text-blue-600 transition-colors truncate"
+                          title={latestTransfer.teams.out.name}
                         >
                           {latestTransfer.teams.out.name}
                         </Link>
                       </div>
 
-                      {/* 화살표 */}
-                      <svg className="w-3 h-3 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
+                      {/* 화살표 (1컬럼) */}
+                      <div className="col-span-1 flex justify-center">
+                        <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
 
-                      {/* 새 팀 */}
-                      <div className="flex items-center space-x-1.5 min-w-0">
+                      {/* 새 팀 (3컬럼) */}
+                      <div className="col-span-3 flex items-center space-x-1 min-w-0">
                         <TeamLogo
                           teamName={latestTransfer.teams.in.name}
                           teamId={latestTransfer.teams.in.id}
@@ -531,6 +579,7 @@ export default async function TransfersPageContent({
                         <Link
                           href={`/livescore/football/team/${latestTransfer.teams.in.id}`}
                           className="text-xs text-gray-700 hover:text-blue-600 transition-colors truncate"
+                          title={latestTransfer.teams.in.name}
                         >
                           {latestTransfer.teams.in.name}
                         </Link>
@@ -538,12 +587,10 @@ export default async function TransfersPageContent({
                     </div>
 
                     {/* 이적 타입 */}
-                    <div className="text-xs flex-shrink-0">
+                    <div className="text-xs flex-shrink-0 ml-2 w-16 flex justify-end">
                       {latestTransfer.type && latestTransfer.type !== 'N/A' && (
-                        <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${
-                          getTransferTypeColor(latestTransfer.type)
-                        }`}>
-                          {formatTransferType(latestTransfer.type)}
+                        <span className="px-1.5 py-0.5 rounded-full text-xs font-medium text-center min-w-0 bg-gray-100 text-gray-700">
+                          {formatTransferTypeMobile(latestTransfer.type)}
                         </span>
                       )}
                     </div>
@@ -558,7 +605,7 @@ export default async function TransfersPageContent({
 
       {/* 페이지네이션 */}
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-1 my-4">
+        <div className="flex justify-center items-center gap-1 my-4 mb-4">
           {/* 처음 페이지 버튼 */}
           {currentPage > 1 && (
             <Link href={getPageLink(1)} passHref>
