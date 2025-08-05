@@ -62,14 +62,13 @@ export default function PostFooter({
 
   // 작성자 여부에 따라 버튼 구성 결정
   const showWriteButton = isLoggedIn;
-  const showEditButton = isAuthor && postNumber;
-  const showDeleteButton = isAuthor && postNumber;
   const showReportButton = !isAuthor && isLoggedIn && postId;
 
-  // 표시할 버튼들의 배열 생성
-  const buttons = [
-    // 글쓰기 버튼 (로그인 시에만)
-    ...(showWriteButton ? [{
+  const buttonSlots = [];
+
+  if (isAuthor) {
+    // Author view: Write, Edit, Delete
+    buttonSlots.push({
       key: 'write',
       element: (
         <Link 
@@ -80,9 +79,8 @@ export default function PostFooter({
           <span>글쓰기</span>
         </Link>
       )
-    }] : []),
-    // 수정 버튼 (작성자만)
-    ...(showEditButton ? [{
+    });
+    buttonSlots.push({
       key: 'edit',
       element: (
         <Link 
@@ -93,9 +91,8 @@ export default function PostFooter({
           <span>수정</span>
         </Link>
       )
-    }] : []),
-    // 삭제 버튼 (작성자만)
-    ...(showDeleteButton ? [{
+    });
+    buttonSlots.push({
       key: 'delete',
       element: (
         <button 
@@ -107,9 +104,25 @@ export default function PostFooter({
           <span>{isDeleting ? '삭제 중...' : '삭제'}</span>
         </button>
       )
-    }] : []),
-    // 신고 버튼 (작성자가 아니고 로그인한 경우)
-    ...(showReportButton ? [{
+    });
+  } else {
+    // Non-author view: Write, Placeholder, Report
+    buttonSlots.push(showWriteButton ? {
+      key: 'write',
+      element: (
+        <Link 
+          href={`/boards/${boardSlug}/create`}
+          className="inline-flex flex-col sm:flex-row items-center justify-center py-1 px-1 sm:py-2 sm:px-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+        >
+          <PenLine className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+          <span>글쓰기</span>
+        </Link>
+      )
+    } : { key: 'placeholder-1', element: <div /> });
+
+    buttonSlots.push({ key: 'placeholder-2', element: <div /> });
+
+    buttonSlots.push(showReportButton ? {
       key: 'report',
       element: (
         <ReportButton
@@ -117,22 +130,24 @@ export default function PostFooter({
           targetId={postId!}
           variant="ghost"
           size="sm"
-          showText={false}
-          className="py-2 px-3"
+          showText={true}
+          className="inline-flex flex-col sm:flex-row items-center justify-center py-1 px-1 sm:py-2 sm:px-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
         />
       )
-    }] : [])
-  ];
+    } : { key: 'placeholder-3', element: <div /> });
+  }
 
-  if (!isLoggedIn) {
+  const hasContent = buttonSlots.some(slot => slot.element.type !== 'div');
+
+  if (!isLoggedIn || !hasContent) {
     return null;
   }
 
   return (
     <div className="bg-white rounded-lg border shadow-sm mb-4">
       <div className="flex flex-row items-center justify-around px-1 py-2">
-        {buttons.map((button) => (
-          <div key={button.key} className="text-center sm:flex-1">
+        {buttonSlots.map((button) => (
+          <div key={button.key} className="flex-1 text-center">
             {button.element}
           </div>
         ))}
