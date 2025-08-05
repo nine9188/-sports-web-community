@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ListOrdered, PenLine, Edit, Trash } from 'lucide-react';
+import { PenLine, Edit, Trash } from 'lucide-react';
 import { deletePost } from '@/domains/boards/actions/posts/index';
 import ReportButton from '@/domains/reports/components/ReportButton';
 
