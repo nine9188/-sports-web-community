@@ -68,29 +68,16 @@ export default function PostFooter({
 
   // 표시할 버튼들의 배열 생성
   const buttons = [
-    // 목록 버튼 (항상 표시)
-    {
-      key: 'list',
-      element: (
-        <Link 
-          href={`/boards/${boardSlug}`}
-          className="inline-flex items-center justify-center py-2 px-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-        >
-          <ListOrdered className="h-4 w-4 mr-1" />
-          <span className="hidden sm:inline">목록</span>
-        </Link>
-      )
-    },
     // 글쓰기 버튼 (로그인 시에만)
     ...(showWriteButton ? [{
       key: 'write',
       element: (
         <Link 
           href={`/boards/${boardSlug}/create`}
-          className="inline-flex items-center justify-center py-2 px-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+          className="inline-flex flex-col sm:flex-row items-center justify-center py-1 px-1 sm:py-2 sm:px-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
         >
-          <PenLine className="h-4 w-4 mr-1" />
-          <span className="hidden sm:inline">글쓰기</span>
+          <PenLine className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+          <span>글쓰기</span>
         </Link>
       )
     }] : []),
@@ -100,10 +87,10 @@ export default function PostFooter({
       element: (
         <Link 
           href={`/boards/${boardSlug}/${postNumber}/edit`}
-          className="inline-flex items-center justify-center py-2 px-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+          className="inline-flex flex-col sm:flex-row items-center justify-center py-1 px-1 sm:py-2 sm:px-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
         >
-          <Edit className="h-4 w-4 mr-1" />
-          <span className="hidden sm:inline">수정</span>
+          <Edit className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+          <span>수정</span>
         </Link>
       )
     }] : []),
@@ -114,10 +101,10 @@ export default function PostFooter({
         <button 
           onClick={handleDelete}
           disabled={isDeleting}
-          className="inline-flex items-center justify-center py-2 px-3 text-sm text-red-500 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
+          className="inline-flex flex-col sm:flex-row items-center justify-center py-1 px-1 sm:py-2 sm:px-3 text-xs sm:text-sm text-red-500 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
         >
-          <Trash className="h-4 w-4 mr-1" />
-          <span className="hidden sm:inline">{isDeleting ? '삭제 중...' : '삭제'}</span>
+          <Trash className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+          <span>{isDeleting ? '삭제 중...' : '삭제'}</span>
         </button>
       )
     }] : []),
@@ -137,11 +124,15 @@ export default function PostFooter({
     }] : [])
   ];
 
+  if (!isLoggedIn) {
+    return null;
+  }
+
   return (
     <div className="bg-white rounded-lg border shadow-sm mb-4">
-      <div className="flex flex-row items-center justify-between px-2 py-2">
+      <div className="flex flex-row items-center justify-around px-1 py-2">
         {buttons.map((button) => (
-          <div key={button.key} className="flex-1 text-center">
+          <div key={button.key} className="text-center sm:flex-1">
             {button.element}
           </div>
         ))}
