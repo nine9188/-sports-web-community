@@ -60,6 +60,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
     });
   });
   const [error, setError] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
   
   // API 호출 추적을 위한 ref
   const fetchingRef = useRef<boolean>(false);
@@ -71,7 +72,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
   const swiperConfig = {
     modules: [Navigation],
     spaceBetween: 12,
-    slidesPerView: 2 as const,
+    slidesPerView: 2 as const, // 모바일 기본값
     loop: matches.length > 2, // 3개 이상일 때 무한 루프
     centeredSlides: false,
     watchOverflow: true,
@@ -91,7 +92,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
     // 속도 설정
     speed: 300,
 
-    // 반응형 설정
+    // 반응형 설정 (768px 이상에서 4열)
     breakpoints: {
       768: {
         slidesPerView: matches.length >= 4 ? 4 : matches.length,
@@ -108,6 +109,8 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
   };
 
   useEffect(() => {
+    setIsMounted(true);
+    
     // 5분마다 데이터 갱신
     const fetchLiveScores = async () => {
       // 이미 가져오는 중이면 중복 요청 방지
@@ -267,85 +270,82 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                 
       slides.push(
         <SwiperSlide key={`match-${match.id || index}`}>
-                  <Link 
-                    href={match.id ? `/livescore/football/match/${match.id}` : '#'}
-            className="block w-full h-[140px] border rounded-lg p-2 transition-all shadow-sm cursor-pointer group hover:translate-y-[-2px] hover:shadow-md hover:border-blue-300 touch-manipulation bg-white border-gray-200"
-                    style={{
-                      userSelect: 'none',
-                      WebkitUserSelect: 'none',
-                      WebkitTouchCallout: 'none',
-                      WebkitTapHighlightColor: 'transparent',
-                      touchAction: 'manipulation'
-                    }}
-                    onDragStart={(e) => e.preventDefault()}
-                  >
+          <Link 
+            href={match.id ? `/livescore/football/match/${match.id}` : '#'}
+            className="block w-full h-[140px] border rounded-lg p-2 bg-white border-gray-200 transition-all shadow-sm cursor-pointer group hover:translate-y-[-2px] hover:shadow-md hover:border-blue-300 touch-manipulation"
+            style={{
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              WebkitTouchCallout: 'none',
+              WebkitTapHighlightColor: 'transparent',
+              touchAction: 'manipulation'
+            }}
+            onDragStart={(e) => e.preventDefault()}
+          >
             <div className="flex flex-col h-full">
-                                         <div className="flex items-center justify-between mb-1 text-gray-700">
-                       <div className="flex items-center gap-0.5 flex-1 min-w-0">
-                         {match.league?.logo && match.league?.id && (
-                           <ApiSportsImage 
-                             imageId={match.league.id}
-                             imageType={ImageType.Leagues}
-                             alt={String(leagueNameKo)} 
-                             width={16} 
-                             height={16}
-                             style={{ width: '16px', height: '16px', objectFit: 'contain' }}
-                             className="rounded-full flex-shrink-0"
-                           />
-                         )}
-                         <span className="text-xs font-medium truncate">{leagueNameKo}</span>
-                       </div>
-                       <span className="text-[10px] text-gray-400 font-medium ml-2 flex-shrink-0">
-                         {index + 1}/{matches.length}
-                       </span>
-                     </div>
-                    
-                    <div className="grid grid-cols-3 gap-1 flex-1">
-                      {/* 홈팀 */}
-                      <div className="flex flex-col items-center justify-center gap-0">
-                        {match.teams?.home?.logo && match.teams?.home?.id && (
-                          <ApiSportsImage 
-                            imageId={match.teams.home.id}
-                            imageType={ImageType.Teams}
-                            alt={String(homeTeamNameKo)} 
-                            width={40} 
-                            height={40}
-                            style={{ width: '40px', height: '40px', objectFit: 'contain' }}
-                            className="mb-0.5 group-hover:scale-110 transition-transform"
-                          />
-                        )}
-                        <span className="text-[10px] text-center truncate w-full group-hover:text-blue-600 transition-colors">{homeTeamNameKo}</span>
-                      </div>
-                      
-                      {/* 중앙 (vs 및 시간) */}
-                      <div className="flex flex-col items-center justify-center gap-0.5">
-                        <span className="font-bold text-base text-center">{match.status?.code !== 'NS' ? `${match.goals?.home ?? 0} - ${match.goals?.away ?? 0}` : 'vs'}</span>
-                        <div className="flex flex-col items-center">
-                          <span className="text-xs font-medium group-hover:text-blue-600 transition-colors">{formatMatchTime(match)}</span>
-                          {match.status?.code === 'NS' && match.displayDate && (
-                            <span className="text-[9px] text-gray-500 mt-0.5">{String(match.displayDate)}</span>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {/* 원정팀 */}
-                      <div className="flex flex-col items-center justify-center gap-0">
-                        {match.teams?.away?.logo && match.teams?.away?.id && (
-                          <ApiSportsImage 
-                            imageId={match.teams.away.id}
-                            imageType={ImageType.Teams}
-                            alt={String(awayTeamNameKo)} 
-                            width={40} 
-                            height={40}
-                            style={{ width: '40px', height: '40px', objectFit: 'contain' }}
-                            className="mb-0.5 group-hover:scale-110 transition-transform"
-                          />
-                        )}
-                        <span className="text-[10px] text-center truncate w-full group-hover:text-blue-600 transition-colors">{awayTeamNameKo}</span>
+              <div className="flex items-center justify-between mb-1 text-gray-700">
+                <div className="flex items-center gap-0.5 flex-1 min-w-0">
+                  {match.league?.logo && match.league?.id && (
+                    <ApiSportsImage 
+                      imageId={match.league.id}
+                      imageType={ImageType.Leagues}
+                      alt={String(leagueNameKo)} 
+                      width={16} 
+                      height={16}
+                      style={{ width: '16px', height: '16px', objectFit: 'contain' }}
+                      className="rounded-full flex-shrink-0"
+                    />
+                  )}
+                  <span className="text-xs font-medium truncate">{leagueNameKo}</span>
                 </div>
-                      </div>
-                    </div>
-                  </Link>
+                <span className="text-[10px] text-gray-400 font-medium ml-2 flex-shrink-0">
+                  {index + 1}/{matches.length}
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-1 flex-1">
+                <div className="flex flex-col items-center justify-center gap-0">
+                  {match.teams?.home?.logo && match.teams?.home?.id && (
+                    <ApiSportsImage 
+                      imageId={match.teams.home.id}
+                      imageType={ImageType.Teams}
+                      alt={String(homeTeamNameKo)} 
+                      width={40} 
+                      height={40}
+                      style={{ width: '40px', height: '40px', objectFit: 'contain' }}
+                      className="mb-0.5 group-hover:scale-110 transition-transform"
+                    />
+                  )}
+                  <span className="text-[10px] text-center truncate w-full group-hover:text-blue-600 transition-colors">{homeTeamNameKo}</span>
+                </div>
+                
+                <div className="flex flex-col items-center justify-center gap-0.5">
+                  <span className="font-bold text-base text-center">{match.status?.code !== 'NS' ? `${match.goals?.home ?? 0} - ${match.goals?.away ?? 0}` : 'vs'}</span>
+                  <div className="flex flex-col items-center">
+                    <span className="text-xs font-medium group-hover:text-blue-600 transition-colors">{formatMatchTime(match)}</span>
+                    {match.status?.code === 'NS' && match.displayDate && (
+                      <span className="text-[9px] text-gray-500 mt-0.5">{String(match.displayDate)}</span>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex flex-col items-center justify-center gap-0">
+                  {match.teams?.away?.logo && match.teams?.away?.id && (
+                    <ApiSportsImage 
+                      imageId={match.teams.away.id}
+                      imageType={ImageType.Teams}
+                      alt={String(awayTeamNameKo)} 
+                      width={40} 
+                      height={40}
+                      style={{ width: '40px', height: '40px', objectFit: 'contain' }}
+                      className="mb-0.5 group-hover:scale-110 transition-transform"
+                    />
+                  )}
+                  <span className="text-[10px] text-center truncate w-full group-hover:text-blue-600 transition-colors">{awayTeamNameKo}</span>
+                </div>
+              </div>
+            </div>
+          </Link>
         </SwiperSlide>
       );
     });
@@ -372,6 +372,106 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
     
     return slides;
   };
+
+  // 로딩 스켈레톤
+  if (!isMounted) {
+    const displayMatches = matches.slice(0, 4);
+    
+    return (
+      <div className="w-full mb-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {displayMatches.map((match, index) => {
+            const leagueInfo = match.league?.id ? getLeagueById(match.league.id) : null;
+            const homeTeamInfo = match.teams?.home?.id ? getTeamById(match.teams.home.id) : null;
+            const awayTeamInfo = match.teams?.away?.id ? getTeamById(match.teams.away.id) : null;
+            
+            const homeTeamNameKo = String(homeTeamInfo?.name_ko || match.teams?.home?.name || '홈팀');
+            const awayTeamNameKo = String(awayTeamInfo?.name_ko || match.teams?.away?.name || '원정팀');
+            const leagueNameKo = String(leagueInfo?.nameKo || match.league?.name || '리그 정보 없음');
+            
+            return (
+              <div key={`static-${match.id || index}`} className="w-full h-[140px] border rounded-lg p-2 bg-white border-gray-200">
+                <div className="flex flex-col h-full">
+                  <div className="flex items-center justify-between mb-1 text-gray-700">
+                    <div className="flex items-center gap-0.5 flex-1 min-w-0">
+                      {match.league?.logo && match.league?.id && (
+                        <img 
+                          src={`https://media.api-sports.io/football/leagues/${match.league.id}.png`}
+                          alt={leagueNameKo}
+                          width={16}
+                          height={16}
+                          className="rounded-full flex-shrink-0"
+                          loading="eager"
+                        />
+                      )}
+                      <span className="text-xs font-medium truncate">{leagueNameKo}</span>
+                    </div>
+                    <span className="text-[10px] text-gray-400 font-medium ml-2 flex-shrink-0">
+                      {index + 1}/{displayMatches.length}
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-1 flex-1">
+                    <div className="flex flex-col items-center justify-center gap-0">
+                      {match.teams?.home?.logo && match.teams?.home?.id && (
+                        <img 
+                          src={`https://media.api-sports.io/football/teams/${match.teams.home.id}.png`}
+                          alt={homeTeamNameKo}
+                          width={40}
+                          height={40}
+                          className="mb-0.5"
+                          loading="eager"
+                        />
+                      )}
+                      <span className="text-[10px] text-center truncate w-full">{homeTeamNameKo}</span>
+                    </div>
+                    
+                    <div className="flex flex-col items-center justify-center gap-0.5">
+                      <span className="font-bold text-base text-center">
+                        {match.status?.code !== 'NS' ? `${match.goals?.home ?? 0} - ${match.goals?.away ?? 0}` : 'vs'}
+                      </span>
+                      <div className="flex flex-col items-center">
+                        <span className="text-xs font-medium">{formatMatchTime(match)}</span>
+                        {match.status?.code === 'NS' && match.displayDate && (
+                          <span className="text-[9px] text-gray-500 mt-0.5">{String(match.displayDate)}</span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col items-center justify-center gap-0">
+                      {match.teams?.away?.logo && match.teams?.away?.id && (
+                        <img 
+                          src={`https://media.api-sports.io/football/teams/${match.teams.away.id}.png`}
+                          alt={awayTeamNameKo}
+                          width={40}
+                          height={40}
+                          className="mb-0.5"
+                          loading="eager"
+                        />
+                      )}
+                      <span className="text-[10px] text-center truncate w-full">{awayTeamNameKo}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          
+          {displayMatches.length < 4 && Array.from({ length: 4 - displayMatches.length }, (_, i) => (
+            <div key={`empty-static-${i}`} className="w-full h-[140px] border-2 border-dashed border-gray-200 rounded-lg p-2 bg-gray-50/50 flex flex-col justify-center items-center">
+              <div className="text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-8 h-8 mb-2 text-gray-300 mx-auto">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
+                </svg>
+                <p className="text-sm text-gray-400 mb-1">다음 경기를</p>
+                <p className="text-sm text-gray-400">기다리는 중...</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full mb-4">
@@ -435,7 +535,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
           {/* 스타일 */}
           <style jsx>{`
             .livescore-carousel {
-              padding: 0 4px;
+              padding: 0;
               overflow: visible !important;
             }
             .livescore-carousel .swiper-wrapper {

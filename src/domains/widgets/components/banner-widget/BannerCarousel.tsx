@@ -78,7 +78,7 @@ export default function BannerCarousel({ banners, isMobile = false }: BannerCaro
   };
 
      return (
-     <div className={`relative w-full ${isMobile ? 'mt-3 mb-3' : 'mb-3'}`} style={{ overflow: 'visible' }}>
+     <div className={`relative w-full ${isMobile ? 'mt-3 mb-4' : 'mb-4'}`} style={{ overflow: 'visible' }}>
       {/* 클리핑 컨테이너 */}
       <div 
         className="relative"
@@ -153,7 +153,7 @@ export default function BannerCarousel({ banners, isMobile = false }: BannerCaro
 
              <style jsx>{`
          .banner-carousel {
-           padding: 0 4px;
+           padding: 0;
            overflow: visible !important;
          }
 
