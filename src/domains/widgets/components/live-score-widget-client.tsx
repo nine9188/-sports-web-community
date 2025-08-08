@@ -210,7 +210,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
   // 정적 그리드 없이 바로 캐러셀 렌더링
 
   return (
-    <div className="w-full">
+    <div className="relative z-10 w-full">
       {error ? (
         <div className="flex flex-col justify-center items-center h-40 text-center">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 mb-2 text-red-500">
@@ -235,7 +235,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                     <div key={`match-${match.id || index}`} className="shrink-0 basis-1/2 md:basis-1/2 lg:basis-1/4 px-1">
                       <Link 
                         href={match.id ? `/livescore/football/match/${match.id}` : '#'}
-                        className="block w-full h-[140px] border rounded-lg p-2 bg-white border-gray-200 transition-all shadow-sm cursor-pointer group hover:translate-y-[-2px] hover:shadow-md hover:border-blue-300 touch-manipulation"
+                        className="block w-full h-[140px] border rounded-lg p-2 bg-white border-gray-200 transition-all shadow-sm cursor-pointer group hover:shadow-md hover:border-blue-300 touch-manipulation"
                         style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none', WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                         onDragStart={(e) => e.preventDefault()}
                       >

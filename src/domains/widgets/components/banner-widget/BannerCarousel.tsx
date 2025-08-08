@@ -28,12 +28,12 @@ export default function BannerCarousel({ banners }: BannerCarouselProps) {
   if (!banners?.length) return null;
 
   return (
-    <div className="relative w-full" style={{ overflow: 'visible' }}>
-      <div className="relative" style={{ overflow: 'hidden', paddingTop: '4px', paddingBottom: '4px' }}>
+    <div className="relative z-20 w-full" style={{ overflow: 'visible' }}>
+      <div className="relative overflow-hidden py-0 lg:py-1">
         <div className="embla" ref={viewportRef}>
-          <div className="embla__container flex -mx-1">
+          <div className="embla__container flex -mx-0 lg:-mx-1">
             {banners.map((banner, index) => (
-              <div key={`${banner.id}-${index}`} className={`embla__slide shrink-0 basis-full lg:basis-1/2 px-1`}>
+              <div key={`${banner.id}-${index}`} className={`embla__slide shrink-0 basis-full lg:basis-1/2 px-0 lg:px-1`}>
                 <div className="relative w-full" style={{ height: BANNER_HEIGHT, overflow: 'visible' }}>
                   <BannerWrapper banner={banner} index={index}>
                     {renderBannerContent(banner)}

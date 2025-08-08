@@ -64,7 +64,7 @@ export default function BannerWrapper({ banner, children, index }: BannerWrapper
   );
   
   const commonProps = {
-    className: `w-full border transition-all shadow-sm group hover:translate-y-[-2px] hover:shadow-md hover:border-blue-300 touch-manipulation active:scale-[0.99] transform-gpu select-none relative overflow-hidden ${
+    className: `w-full border transition-all shadow-sm group hover:shadow-md hover:border-blue-300 touch-manipulation active:scale-[0.99] transform-gpu select-none relative overflow-hidden ${
       banner.link_url ? 'cursor-pointer' : ''
     } border-gray-200 md:rounded-lg`,
     style: {
