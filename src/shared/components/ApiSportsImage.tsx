@@ -105,12 +105,16 @@ export default function ApiSportsImage({
 
   // 스토리지 URL이 확인된 경우에만 이미지 렌더링
   return (
-      <Image
-        {...props}
+    <Image
+      {...props}
       src={src}
       alt={alt}
-        onError={handleImageError}
-        unoptimized // 외부 이미지이므로 최적화 비활성화
-      />
+      onError={handleImageError}
+      unoptimized
+      // 기본값을 설정하되, 전달받은 값이 있으면 그대로 사용
+      loading={(props as unknown as { loading?: 'eager' | 'lazy' }).loading ?? 'eager'}
+      fetchPriority={(props as unknown as { fetchPriority?: 'high' | 'low' | 'auto' }).fetchPriority ?? 'high'}
+      priority={(props as unknown as { priority?: boolean }).priority ?? true}
+    />
   );
 } 

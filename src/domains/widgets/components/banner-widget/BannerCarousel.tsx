@@ -1,234 +1,87 @@
 'use client';
 
-import React, { useRef } from 'react';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination, Autoplay, EffectFade } from 'swiper/modules';
-import type { Swiper as SwiperType } from 'swiper';
-
-// Swiper 스타일
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
-import 'swiper/css/autoplay';
-import 'swiper/css/effect-fade';
-
+import React, { useCallback, useEffect, useState } from 'react';
+import useEmblaCarousel from 'embla-carousel-react';
 import { BannerWidgetProps, BANNER_HEIGHT } from './types';
 import BannerWrapper, { renderBannerContent } from './BannerWrapper';
 
-interface BannerCarouselProps extends BannerWidgetProps {
-  isMobile?: boolean;
-}
+type BannerCarouselProps = BannerWidgetProps;
 
-export default function BannerCarousel({ banners, isMobile = false }: BannerCarouselProps) {
-  const swiperRef = useRef<SwiperType>();
+export default function BannerCarousel({ banners }: BannerCarouselProps) {
+  // 가장자리에 딱 맞추고 루프 이음매 간격 유지
+  const [viewportRef, emblaApi] = useEmblaCarousel({ loop: banners.length > 1, align: 'start', containScroll: 'trimSnaps' });
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [scrollSnaps, setScrollSnaps] = useState<number[]>([]);
 
-  if (!banners?.length) {
-    return null;
-  }
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setSelectedIndex(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
 
-  // 모바일과 데스크탑 설정
-  const swiperConfig = {
-    modules: [Navigation, Pagination, Autoplay, EffectFade],
-    spaceBetween: 12,
-    slidesPerView: isMobile ? 1 : (banners.length >= 2 ? 2 : 1),
-    centeredSlides: false,
-    watchOverflow: true,
-    loop: banners.length > 1,
-    
-    // 자동 재생 설정
-    autoplay: banners.length > 1 ? {
-      delay: 5000,
-      disableOnInteraction: false,
-      pauseOnMouseEnter: true,
-    } : false,
+  useEffect(() => {
+    if (!emblaApi) return;
+    onSelect();
+    setScrollSnaps(emblaApi.scrollSnapList());
+    emblaApi.on('select', onSelect);
+  }, [emblaApi, onSelect]);
 
-    // 네비게이션 설정 (데스크탑만)
-    navigation: !isMobile && banners.length > 1 ? {
-      nextEl: '.swiper-button-next-custom',
-      prevEl: '.swiper-button-prev-custom',
-    } : false,
+  if (!banners?.length) return null;
 
-    // 페이지네이션 설정
-    pagination: isMobile ? {
-      clickable: true,
-      type: 'bullets' as const,
-    } : false,
-
-    // 터치 설정
-    touchRatio: isMobile ? 1 : 0.5,
-    threshold: 10,
-    
-    // 속도 설정
-    speed: 300,
-
-    // 반응형 설정 (데스크탑만)
-    ...(isMobile ? {} : {
-      breakpoints: {
-        1024: {
-          slidesPerView: banners.length >= 2 ? 2 : 1,
-          spaceBetween: 12,
-          centeredSlides: false,
-        },
-      },
-    }),
-
-    onBeforeInit: (swiper: SwiperType) => {
-      swiperRef.current = swiper;
-    },
-  };
-
-     return (
-     <div className={`relative w-full ${isMobile ? 'mt-3 mb-4' : 'mb-4'}`} style={{ overflow: 'visible' }}>
-      {/* 클리핑 컨테이너 */}
-      <div 
-        className="relative"
-        style={{ 
-          overflow: 'hidden',
-          paddingTop: '4px',
-          paddingBottom: '4px',
-        }}
-      >
-        {/* 메인 Swiper */}
-        <Swiper
-          {...swiperConfig}
-          className={`banner-carousel ${isMobile ? 'mobile' : 'desktop'}`}
-          style={{ overflow: 'visible' }}
-        >
-          {banners.map((banner, index) => (
-            <SwiperSlide 
-              key={`${banner.id}-${index}`}
-              className={isMobile ? '' : 'banner-slide-desktop'}
-            >
-              <div 
-                className="relative w-full"
-                style={{ height: BANNER_HEIGHT, overflow: 'visible' }}
-              >
-                <BannerWrapper banner={banner} index={index}>
-                  {renderBannerContent(banner)}
-                </BannerWrapper>
+  return (
+    <div className="relative w-full" style={{ overflow: 'visible' }}>
+      <div className="relative" style={{ overflow: 'hidden', paddingTop: '4px', paddingBottom: '4px' }}>
+        <div className="embla" ref={viewportRef}>
+          <div className="embla__container flex -mx-1">
+            {banners.map((banner, index) => (
+              <div key={`${banner.id}-${index}`} className={`embla__slide shrink-0 basis-full lg:basis-1/2 px-1`}>
+                <div className="relative w-full" style={{ height: BANNER_HEIGHT, overflow: 'visible' }}>
+                  <BannerWrapper banner={banner} index={index}>
+                    {renderBannerContent(banner)}
+                  </BannerWrapper>
+                </div>
               </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* 커스텀 네비게이션 버튼 (데스크탑만) */}
-      {!isMobile && banners.length > 1 && (
+      {/* 데스크탑 네비게이션 */}
+      {banners.length > 1 && (
         <>
-                     <button 
-             className="swiper-button-prev-custom absolute left-[-12px] top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center transition-all duration-200 hover:bg-blue-50 hover:border-blue-300 hover:scale-110 hover:shadow-xl group"
-             aria-label="이전 배너"
-           >
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              strokeWidth={2} 
-              stroke="currentColor" 
-              className="w-5 h-5 text-gray-600 group-hover:text-blue-600"
-            >
+          <button
+            onClick={() => emblaApi?.scrollPrev()}
+            className="absolute left-[-12px] top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white rounded-full shadow-lg border border-gray-200 hidden lg:flex items-center justify-center transition-all duration-200 hover:bg-blue-50 hover:border-blue-300 hover:scale-110 hover:shadow-xl group"
+            aria-label="이전 배너"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-600 group-hover:text-blue-600">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
             </svg>
           </button>
-          
-                     <button 
-             className="swiper-button-next-custom absolute right-[-12px] top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center transition-all duration-200 hover:bg-blue-50 hover:border-blue-300 hover:scale-110 hover:shadow-xl group"
-             aria-label="다음 배너"
-           >
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              strokeWidth={2} 
-              stroke="currentColor" 
-              className="w-5 h-5 text-gray-600 group-hover:text-blue-600"
-            >
+          <button
+            onClick={() => emblaApi?.scrollNext()}
+            className="absolute right-[-12px] top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white rounded-full shadow-lg border border-gray-200 hidden lg:flex items-center justify-center transition-all duration-200 hover:bg-blue-50 hover:border-blue-300 hover:scale-110 hover:shadow-xl group"
+            aria-label="다음 배너"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-600 group-hover:text-blue-600">
               <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
             </svg>
           </button>
         </>
       )}
 
-      
-
-             <style jsx>{`
-         .banner-carousel {
-           padding: 0;
-           overflow: visible !important;
-         }
-
-                                   .banner-slide-desktop {
-            width: calc(50% - 4px) !important;
-          }
-
-                 /* Swiper 기본 페이지네이션 스타일 커스터마이징 (모바일만) */
-         .banner-carousel .swiper-pagination {
-           position: relative !important;
-           margin-top: ${isMobile ? '16px' : '12px'} !important;
-           bottom: auto !important;
-         }
-
-         .banner-carousel .swiper-pagination-bullet {
-           width: 8px !important;
-           height: 8px !important;
-           background: rgba(0, 0, 0, 0.3) !important;
-           margin: 0 4px !important;
-           transition: all 0.3s ease !important;
-         }
-
-         .banner-carousel .swiper-pagination-bullet-active {
-           background: #3b82f6 !important;
-           transform: scale(1.2) !important;
-         }
-
-         /* 데스크탑에서 페이지네이션 숨김 */
-         @media (min-width: 1024px) {
-           .banner-carousel .swiper-pagination {
-             display: none !important;
-           }
-         }
-
-                 /* 모바일에서 스와이프 영역 확장 */
-         .mobile.banner-carousel {
-           margin: 0 -4px;
-           padding: 0 4px;
-         }
-
-         .mobile .swiper-slide {
-           padding: 0 4px;
-         }
-
-                   /* 데스크탑에서 슬라이드 간격 조정 */
-          .desktop.banner-carousel .swiper-slide {
-            margin-right: 8px;
-          }
-
-          .desktop.banner-carousel .swiper-slide:last-child {
-            margin-right: 0;
-          }
-
-          /* 호버 애니메이션 잘림 방지 */
-          .banner-carousel .swiper-wrapper {
-            overflow: visible !important;
-          }
-          .banner-carousel .swiper-slide {
-            overflow: visible !important;
-            position: relative;
-          }
-          
-          /* 호버 애니메이션이 잘리지 않도록 상위 컨테이너도 visible로 설정 */
-          .banner-carousel .swiper-slide > * {
-            overflow: visible !important;
-            position: relative;
-            z-index: 1;
-            transition: all 0.3s ease;
-          }
-          
-          /* 호버 시 z-index 증가 */
-          .banner-carousel .swiper-slide > *:hover {
-            z-index: 10;
-          }
-      `}</style>
+      {/* 모바일 페이징 점 */}
+      {scrollSnaps.length > 1 && (
+        <div className="absolute bottom-2 left-0 right-0 flex justify-center lg:hidden">
+          {scrollSnaps.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => emblaApi?.scrollTo(i)}
+              className={`mx-1 h-2 w-2 rounded-full transition-all ${selectedIndex === i ? 'bg-blue-500 scale-110' : 'bg-black/30'}`}
+              aria-label={`배너 ${i + 1}`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
-} 
+}

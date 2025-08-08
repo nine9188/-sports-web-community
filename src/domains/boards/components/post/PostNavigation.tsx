@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, ListOrdered, PenLine } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ListOrdered } from 'lucide-react';
 
 interface PostNavigationProps {
   boardSlug: string;
@@ -9,7 +9,7 @@ interface PostNavigationProps {
   isLoggedIn?: boolean;
 }
 
-export default function PostNavigation({ boardSlug, prevPost, nextPost, isLoggedIn = false }: PostNavigationProps) {
+export default function PostNavigation({ boardSlug, prevPost, nextPost }: PostNavigationProps) {
   // 표시할 버튼들의 배열 생성
   const buttons = [
     // 이전글 버튼 (항상 표시)
