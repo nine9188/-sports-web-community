@@ -18,7 +18,22 @@ interface Board {
   level?: number; // 계층 레벨 (UI 표시용)
   children?: Board[]; // 하위 게시판 타입 명시
   team_id?: number | null; // 추가
+  view_type?: 'list' | 'image-table' | null;
 }
+
+// Supabase boards 행 타입 (선택 필드 포함)
+type DbBoardRow = {
+  id: string;
+  name: string;
+  slug: string | null;
+  description: string | null;
+  access_level: string | null;
+  parent_id: string | null;
+  views: number | null;
+  display_order: number | null;
+  team_id: number | null;
+  view_type?: 'list' | 'image-table' | null;
+};
 
 export default function BoardsAdminPage() {
   const [boards, setBoards] = useState<Board[]>([]);
@@ -32,7 +47,8 @@ export default function BoardsAdminPage() {
     access_level: 'public',
     parent_id: '',
     display_order: 0,
-    team_id: null as number | null // 추가
+    team_id: null as number | null, // 추가
+    view_type: 'list' as 'list' | 'image-table'
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUpdatingOrder, setIsUpdatingOrder] = useState(false);
@@ -53,7 +69,8 @@ export default function BoardsAdminPage() {
       }
       
       // API 응답 데이터를 Board 타입으로 변환
-      const boardsData = (data || []).map(item => ({
+      const rows: DbBoardRow[] = (data || []) as DbBoardRow[];
+      const boardsData = rows.map((item) => ({
         id: item.id,
         name: item.name,
         slug: item.slug,
@@ -62,7 +79,8 @@ export default function BoardsAdminPage() {
         parent_id: item.parent_id,
         views: item.views,
         display_order: item.display_order || 0,
-        team_id: item.team_id
+        team_id: item.team_id,
+        view_type: (item.view_type as 'list' | 'image-table' | null) ?? 'list'
       })) as Board[];
       
       setBoards(boardsData);
@@ -267,7 +285,8 @@ export default function BoardsAdminPage() {
         access_level: formData.access_level,
         parent_id: formData.parent_id || null,
         display_order: newDisplayOrder,
-        team_id: formData.team_id // 추가
+        team_id: formData.team_id, // 추가
+        view_type: formData.view_type
       };
       
       if (editingBoard) {
@@ -297,7 +316,8 @@ export default function BoardsAdminPage() {
         access_level: 'public',
         parent_id: '',
         display_order: 0,
-        team_id: null
+        team_id: null,
+        view_type: 'list'
       });
       setEditingBoard(null);
       
@@ -322,7 +342,8 @@ export default function BoardsAdminPage() {
       access_level: board.access_level || 'public',
       parent_id: board.parent_id || '',
       display_order: board.display_order || 0,
-      team_id: board.team_id || null // 추가
+      team_id: board.team_id || null, // 추가
+      view_type: (board.view_type as 'list' | 'image-table' | null) ?? 'list'
     });
   };
 
@@ -378,7 +399,8 @@ export default function BoardsAdminPage() {
       access_level: 'public',
       parent_id: '',
       display_order: 0,
-      team_id: null
+      team_id: null,
+      view_type: 'list'
     });
   };
 
@@ -550,6 +572,23 @@ export default function BoardsAdminPage() {
               <option value="members">회원 전용</option>
               <option value="admin">관리자 전용</option>
             </select>
+          </div>
+
+          <div>
+            <label htmlFor="view_type" className="block text-sm font-medium text-gray-700">
+              게시판 유형
+            </label>
+            <select
+              id="view_type"
+              value={formData.view_type}
+              onChange={(e) => setFormData(prev => ({ ...prev, view_type: e.target.value as 'list' | 'image-table' }))}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2
+                         focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            >
+              <option value="list">일반 목록</option>
+              <option value="image-table">이미지형 테이블</option>
+            </select>
+            <p className="mt-1 text-xs text-gray-500">이미지형 테이블: 우측 썸네일이 포함된 목록 UI</p>
           </div>
           
           <div>

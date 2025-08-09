@@ -35,11 +35,13 @@ export default function BoardTeamInfo({ teamData, boardId, boardSlug, isLoggedIn
         <div className="flex justify-between">
           <p>팀 정보를 불러올 수 없습니다.</p>
           {isLoggedIn && (
-            <Link href={`/boards/${boardSlug || boardId}/create`}>
-              <button className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-white py-2 px-3 rounded-md text-sm font-medium border border-slate-700 transition-colors">
-                <PenLine className="h-4 w-4" />
-                <span>글쓰기</span>
-              </button>
+            <Link
+              href={`/boards/${boardSlug || boardId}/create`}
+              aria-label="글쓰기"
+              title="글쓰기"
+              className="p-2 rounded-full hover:bg-slate-100 border border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+            >
+              <PenLine className="h-4 w-4" />
             </Link>
           )}
         </div>
@@ -51,7 +53,37 @@ export default function BoardTeamInfo({ teamData, boardId, boardSlug, isLoggedIn
 
   return (
     <div className={`bg-white border rounded-md shadow-sm p-4 ${className}`}>
-      <div className="flex items-center gap-4">
+      {/* 모바일: 로고 + 팀 이름 + 글쓰기 아이콘 (한 줄) */}
+      <div className="md:hidden flex items-center justify-between">
+        <div className="flex items-center gap-2 min-w-0">
+          {/* 팀 로고 (작게) */}
+          <div className="relative w-6 h-6">
+            {team.logo && (
+              <Image
+                src={team.logo}
+                alt={`${team.name} logo`}
+                fill
+                className="object-contain"
+                sizes="24px"
+              />
+            )}
+          </div>
+          <span className="text-sm font-semibold truncate">{team.name}</span>
+        </div>
+        {isLoggedIn && (
+          <Link
+            href={`/boards/${boardSlug || boardId}/create`}
+            aria-label="글쓰기"
+            title="글쓰기"
+            className="p-2 rounded-full hover:bg-slate-100 border border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+          >
+            <PenLine className="h-4 w-4" />
+          </Link>
+        )}
+      </div>
+
+      {/* 데스크톱: 기존 상세 레이아웃 */}
+      <div className="hidden md:flex items-center gap-4">
         {/* 팀 로고 */}
         <div className="relative w-20 h-20">
           {team.logo && (
@@ -77,11 +109,13 @@ export default function BoardTeamInfo({ teamData, boardId, boardSlug, isLoggedIn
               </div>
             </div>
             {isLoggedIn && (
-              <Link href={`/boards/${boardSlug || boardId}/create`}>
-                <button className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-white py-2 px-3 rounded-md text-sm font-medium border border-slate-700 transition-colors">
-                  <PenLine className="h-4 w-4" />
-                  <span>글쓰기</span>
-                </button>
+              <Link
+                href={`/boards/${boardSlug || boardId}/create`}
+                aria-label="글쓰기"
+                title="글쓰기"
+                className="p-2 rounded-full hover:bg-slate-100 border border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+              >
+                <PenLine className="h-4 w-4" />
               </Link>
             )}
           </div>

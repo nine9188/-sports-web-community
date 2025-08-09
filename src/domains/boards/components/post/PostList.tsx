@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { FixedSizeList as List } from 'react-window';
 import { ScrollArea } from '@/shared/ui/scroll-area';
-import { Image as ImageIcon, Link as LinkIcon, Video as VideoIcon, Youtube as YoutubeIcon } from 'lucide-react';
+import { Image as ImageIcon, Link as LinkIcon, Video as VideoIcon, Youtube as YoutubeIcon, Calendar as CalendarIcon, Eye as EyeIcon } from 'lucide-react';
 import UserIconComponent from '@/shared/components/UserIcon';
 
 // 게시글 타입 정의
@@ -47,6 +47,8 @@ interface PostListProps {
   maxHeight?: string;
   currentBoardId: string;
   boardNameMaxWidth?: string;
+  // 게시판 목록 렌더링 변형: 기본 텍스트, 이미지형 테이블 지원
+  variant?: 'text' | 'image-table';
 }
 
 // 가상화된 리스트 아이템 컴포넌트
@@ -66,9 +68,11 @@ const VirtualizedPostItem = React.memo(function VirtualizedPostItem({
     renderContentTypeIcons: (post: Post) => React.ReactNode;
     renderAuthor: (post: Post, size: number, containerClass: string) => React.ReactNode;
     renderBoardLogo: (post: Post) => React.ReactNode;
+    variant: 'text' | 'image-table';
+    extractFirstImageUrl: (content?: string) => string | null;
   };
 }) {
-  const { posts, currentPostId, currentBoardId, showBoard, isMobile, renderContentTypeIcons, renderAuthor, renderBoardLogo } = data;
+  const { posts, currentPostId, currentBoardId, showBoard, isMobile, renderContentTypeIcons, renderAuthor, renderBoardLogo, variant, extractFirstImageUrl } = data;
   const post = posts[index];
   
   // 🔧 안전한 날짜 포맷팅 - Hydration 불일치 방지
@@ -86,30 +90,40 @@ const VirtualizedPostItem = React.memo(function VirtualizedPostItem({
       <div style={style} className={`py-2 px-3 border-b ${isCurrentPost ? 'bg-blue-50' : ''}`}>
         <Link href={href} prefetch={false}>
           <div className="space-y-1">
-            <div>
-              <div className="flex flex-wrap items-center">
-                <span className={`text-sm ${isCurrentPost ? 'text-blue-600 font-medium' : ''} ${post.is_deleted ? 'text-red-500' : post.is_hidden ? 'text-gray-500' : ''}`}>
+            <div className="flex items-center">
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center">
+                  <span className={`text-sm line-clamp-1 ${isCurrentPost ? 'text-blue-600 font-medium' : ''} ${post.is_deleted ? 'text-red-500' : post.is_hidden ? 'text-gray-500' : ''}`}>
                   {post.is_deleted ? '[삭제된 게시글]' : post.is_hidden ? '[숨김 처리된 게시글]' : String(post?.title || '제목 없음')}
                 </span>
                 {renderContentTypeIcons(post)}
               </div>
             </div>
-            
+              {variant === 'image-table' && (
+                <div className="ml-3 flex-shrink-0">
+                  {(() => {
+                    const url = extractFirstImageUrl(post.content);
+                    if (!url) return null;
+                    return (
+                      <div className="relative w-28 h-16 rounded overflow-hidden border">
+                        <Image src={url} alt="썸네일" fill sizes="192px" className="object-cover" loading="lazy" />
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
             <div className="flex text-[11px] text-gray-500">
-              <div className="w-full grid grid-cols-[1fr_auto] gap-2">
+              <div className="w-full flex items-center justify-between gap-2">
                 <div className="flex items-center overflow-hidden whitespace-nowrap">
-                  {showBoard && (
-                    <span className="truncate max-w-[100px] inline-block">{post.board_name}</span>
-                  )}
+                  {renderAuthor(post, 20, "justify-start")}
                   <span className="mx-1 flex-shrink-0">|</span>
                   <span className="flex-shrink-0 flex items-center">
-                    {renderAuthor(post, 20, "justify-start")}
+                    <CalendarIcon className="w-3 h-3 mr-0.5" />{formattedDate}
                   </span>
-                  <span className="mx-1 flex-shrink-0">|</span>
-                  <span className="flex-shrink-0">{formattedDate}</span>
                 </div>
                 <div className="flex items-center justify-end space-x-2 flex-shrink-0">
-                  <span>조회 {post.views || 0}</span>
+                  <span className="flex items-center"><EyeIcon className="w-3 h-3 mr-0.5" />{post.views || 0}</span>
                   <span>추천 {post.likes || 0}</span>
                 </div>
               </div>
@@ -127,13 +141,24 @@ const VirtualizedPostItem = React.memo(function VirtualizedPostItem({
           {renderBoardLogo(post)}
         </div>
       )}
-      <div className="py-2 px-4 flex-1 flex items-center">
+      <div className="py-2 px-4 flex-1">
         <Link href={href} className="block w-full" prefetch={false}>
           <div className="flex items-center">
             <span className={`text-sm line-clamp-1 ${isCurrentPost ? 'text-blue-600 font-medium' : ''} ${post.is_deleted ? 'text-red-500' : post.is_hidden ? 'text-gray-500' : 'hover:text-blue-600'}`}>
               {post.is_deleted ? '[삭제된 게시글]' : post.is_hidden ? '[숨김 처리된 게시글]' : String(post?.title || '제목 없음')}
             </span>
             {renderContentTypeIcons(post)}
+          </div>
+          <div className="mt-1 flex items-center justify-between text-[11px] text-gray-500">
+            <div className="flex items-center overflow-hidden whitespace-nowrap">
+              {renderAuthor(post, 20, "justify-start")}
+              <span className="mx-1 flex-shrink-0">|</span>
+              <span className="flex-shrink-0 flex items-center"><CalendarIcon className="w-3 h-3 mr-0.5" />{formattedDate}</span>
+            </div>
+            <div className="flex items-center space-x-2 flex-shrink-0">
+              <span className="flex items-center"><EyeIcon className="w-3 h-3 mr-0.5" />{post.views || 0}</span>
+              <span>추천 {post.likes || 0}</span>
+            </div>
           </div>
         </Link>
       </div>
@@ -149,6 +174,19 @@ const VirtualizedPostItem = React.memo(function VirtualizedPostItem({
       <div className="py-2 px-1 flex items-center justify-center" style={{ width: '60px' }}>
         <span className="text-xs text-gray-500">{post.likes || 0}</span>
       </div>
+      {variant === 'image-table' && (
+        <div className="py-2 px-2 flex items-center justify-center" style={{ width: '96px' }}>
+          {(() => {
+            const url = extractFirstImageUrl(post.content);
+            if (!url) return null;
+            return (
+              <div className="relative w-16 h-16 rounded overflow-hidden border">
+                <Image src={url} alt="썸네일" fill sizes="64px" className="object-cover" loading="lazy" />
+              </div>
+            );
+          })()}
+        </div>
+      )}
     </div>
   );
 });
@@ -163,7 +201,9 @@ const PostItem = React.memo(function PostItem({
   isMobile,
   renderContentTypeIcons,
   renderAuthor,
-  renderBoardLogo
+  renderBoardLogo,
+  variant,
+  extractFirstImageUrl
 }: {
   post: Post;
   isLast: boolean;
@@ -174,6 +214,8 @@ const PostItem = React.memo(function PostItem({
   renderContentTypeIcons: (post: Post) => React.ReactNode;
   renderAuthor: (post: Post, size: number, containerClass: string) => React.ReactNode;
   renderBoardLogo: (post: Post) => React.ReactNode;
+  variant: 'text' | 'image-table';
+  extractFirstImageUrl: (content?: string) => string | null;
 }) {
   const isCurrentPost = post.id === currentPostId;
   const href = `/boards/${post.board_slug}/${post.post_number}?from=${currentBoardId}`;
@@ -188,33 +230,93 @@ const PostItem = React.memo(function PostItem({
       <div className={`py-2 px-3 ${!isLast ? 'border-b' : ''} ${isCurrentPost ? 'bg-blue-50' : ''}`}>
         <Link href={href} prefetch={false}>
           <div className="space-y-1">
-            <div>
+            <div className="flex items-center">
+              <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center">
-                <span className={`text-sm ${isCurrentPost ? 'text-blue-600 font-medium' : ''} ${post.is_deleted ? 'text-red-500' : post.is_hidden ? 'text-gray-500' : ''}`}>
+                <span className={`text-sm line-clamp-1 ${isCurrentPost ? 'text-blue-600 font-medium' : ''} ${post.is_deleted ? 'text-red-500' : post.is_hidden ? 'text-gray-500' : ''}`}>
                   {post.is_deleted ? '[삭제된 게시글]' : post.is_hidden ? '[숨김 처리된 게시글]' : String(post?.title || '제목 없음')}
                 </span>
                 {renderContentTypeIcons(post)}
               </div>
-            </div>
-            
-            <div className="flex text-[11px] text-gray-500">
-              <div className="w-full grid grid-cols-[1fr_auto] gap-2">
+                <div className="mt-1 flex items-center justify-between text-[11px] text-gray-500">
                 <div className="flex items-center overflow-hidden whitespace-nowrap">
-                  {showBoard && (
-                    <span className="truncate max-w-[100px] inline-block">{post.board_name}</span>
-                  )}
-                  <span className="mx-1 flex-shrink-0">|</span>
-                  <span className="flex-shrink-0 flex items-center">
                     {renderAuthor(post, 20, "justify-start")}
-                  </span>
                   <span className="mx-1 flex-shrink-0">|</span>
-                  <span className="flex-shrink-0">{formattedDate}</span>
+                    <span className="flex-shrink-0 flex items-center"><CalendarIcon className="w-3 h-3 mr-0.5" />{formattedDate}</span>
                 </div>
-                <div className="flex items-center justify-end space-x-2 flex-shrink-0">
-                  <span>조회 {post.views || 0}</span>
+                  <div className="flex items-center space-x-2 flex-shrink-0">
+                    <span className="flex items-center"><EyeIcon className="w-3 h-3 mr-0.5" />{post.views || 0}</span>
                   <span>추천 {post.likes || 0}</span>
+                  </div>
                 </div>
               </div>
+              {variant === 'image-table' && (
+                <div className="ml-3 flex-shrink-0">
+                  {(() => {
+                    const url = extractFirstImageUrl(post.content);
+                    if (!url) return null;
+                    return (
+                      <div className="relative w-28 h-16 rounded overflow-hidden border">
+                        <Image src={url} alt="썸네일" fill sizes="192px" className="object-cover" loading="lazy" />
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
+          </div>
+        </Link>
+      </div>
+    );
+  }
+
+  // 데스크톱 - 이미지형은 제목 아래 메타 + 우측 썸네일(헤더 없음)
+  if (variant === 'image-table') {
+    return (
+      <div className={`py-2 px-3 ${!isLast ? 'border-b' : ''} ${isCurrentPost ? 'bg-blue-50' : ''}`}>
+        <Link href={href} prefetch={false}>
+          <div className="flex items-center justify-between gap-1">
+            {/* 좌측 영역: 세로 정렬 (아이콘 / 숫자 / 추천) */}
+            <div className="py-1 px-0.5 hidden sm:flex justify-center text-gray-600" style={{ width: '60px' }}>
+              <div className="flex flex-col items-center text-xs leading-none space-y-1">
+                <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
+                  <path fill="currentColor" d="M12 4 L20 12 H4 Z" />
+                  <rect x="10" y="12" width="4" height="6" rx="1" fill="currentColor" />
+                </svg>
+                <span>{post.likes || 0}</span>
+                <span>추천</span>
+              </div>
+            </div>
+            <div className="flex-1 min-w-0 flex flex-col justify-center">
+              <div className="flex items-center">
+                <span className={`text-sm line-clamp-1 ${isCurrentPost ? 'text-blue-600 font-medium' : ''} ${post.is_deleted ? 'text-red-500' : post.is_hidden ? 'text-gray-500' : 'hover:text-blue-600'}`}>
+                  {post.is_deleted ? '[삭제된 게시글]' : post.is_hidden ? '[숨김 처리된 게시글]' : String(post?.title || '제목 없음')}
+                </span>
+                {renderContentTypeIcons(post)}
+              </div>
+              <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
+                {/* 제목 아래: 게시판 이름 노출 */}
+                <span className="inline-flex items-center max-w-[140px] truncate rounded bg-gray-100 px-1.5 py-0.5 text-gray-700">
+                  {post.board_name}
+                </span>
+                <span className="text-gray-300">|</span>
+                {renderAuthor(post, 20, 'justify-start')}
+                <span className="text-gray-300">|</span>
+                <span className="flex items-center"><CalendarIcon className="w-3 h-3 mr-0.5" />{formattedDate}</span>
+                <span className="text-gray-300">|</span>
+                <span className="flex items-center"><EyeIcon className="w-3 h-3 mr-0.5" />{post.views || 0}</span>
+              </div>
+            </div>
+            <div className="flex-shrink-0">
+              {(() => {
+                const url = extractFirstImageUrl(post.content);
+                if (!url) return null;
+                return (
+                  <div className="relative w-36 h-20 rounded overflow-hidden border">
+                    <Image src={url} alt="썸네일" fill sizes="240px" className="object-cover" loading="lazy" />
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </Link>
@@ -251,6 +353,7 @@ const PostItem = React.memo(function PostItem({
       <td className="py-2 px-1 text-center text-xs text-gray-500 align-middle">
         {post.likes || 0}
       </td>
+      {/* 텍스트형에서는 추가 이미지 셀 없음 */}
     </tr>
   );
 });
@@ -286,7 +389,8 @@ export default function PostList({
   className = "",
   maxHeight,
   currentBoardId,
-  boardNameMaxWidth = "100px"
+  boardNameMaxWidth = "100px",
+  variant = 'text'
 }: PostListProps) {
   const [isMobile, setIsMobile] = useState(false);
   
@@ -539,6 +643,39 @@ export default function PostList({
     }
   }, []);
 
+  // (삭제) 개별 배지 렌더러는 사용하지 않음
+
+  // 콘텐츠에서 첫 이미지 URL 추출(간단 버전). 공용 유틸로 추출 예정.
+  const extractFirstImageUrl = useCallback((content?: string): string | null => {
+    if (!content) return null;
+    try {
+      if (content.trim().startsWith('{')) {
+        try {
+          const obj = JSON.parse(content);
+          if (obj?.type === 'doc' && Array.isArray(obj.content)) {
+            for (const node of obj.content) {
+              if (node?.type === 'image' && node?.attrs?.src) return node.attrs.src as string;
+              if (node?.type === 'paragraph' && Array.isArray(node.content)) {
+                for (const sub of node.content) {
+                  if (sub?.type === 'image' && sub?.attrs?.src) return sub.attrs.src as string;
+                }
+              }
+            }
+          }
+          if (obj?.imageUrl) return obj.imageUrl as string;
+          if (obj?.image_url) return obj.image_url as string;
+        } catch {}
+      }
+      const imgTag = content.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i);
+      if (imgTag?.[1]) return imgTag[1];
+      const mdImg = content.match(/!\[[^\]]*\]\(([^)]+)\)/i);
+      if (mdImg?.[1]) return mdImg[1];
+      const url = content.match(/(https?:\/\/[^\s"'<>)]+\.(?:jpg|jpeg|png|gif|webp))/i);
+      if (url?.[1]) return url[1];
+    } catch {}
+    return null;
+  }, []);
+
   // 가상화 사용 여부 결정 (30개 이상일 때 가상화 적용) - deferredPosts 사용
   const useVirtualization = deferredPosts.length > 30;
   
@@ -551,8 +688,10 @@ export default function PostList({
     isMobile,
     renderContentTypeIcons,
     renderAuthor,
-    renderBoardLogo
-  }), [deferredPosts, currentPostId, currentBoardId, showBoard, isMobile, renderContentTypeIcons, renderAuthor, renderBoardLogo]);
+    renderBoardLogo,
+    variant,
+    extractFirstImageUrl
+  }), [deferredPosts, currentPostId, currentBoardId, showBoard, isMobile, renderContentTypeIcons, renderAuthor, renderBoardLogo, variant, extractFirstImageUrl]);
 
   // 가상화된 모바일 뷰 렌더링
   const virtualizedMobileContent = useMemo(() => {
@@ -648,12 +787,14 @@ export default function PostList({
               renderContentTypeIcons={renderContentTypeIcons}
               renderAuthor={renderAuthor}
               renderBoardLogo={renderBoardLogo}
+              variant={variant}
+              extractFirstImageUrl={extractFirstImageUrl}
             />
           ))}
         </div>
       </div>
     );
-  }, [isMobile, useVirtualization, deferredPosts, currentPostId, currentBoardId, showBoard, renderContentTypeIcons, renderAuthor, renderBoardLogo]);
+  }, [isMobile, useVirtualization, deferredPosts, currentPostId, currentBoardId, showBoard, renderContentTypeIcons, renderAuthor, renderBoardLogo, extractFirstImageUrl, variant]);
 
   // 일반 데스크톱 뷰 렌더링 - 메모이제이션 + deferredPosts 사용
   const desktopContent = useMemo(() => {
@@ -661,6 +802,27 @@ export default function PostList({
     
     return (
       <div className="hidden sm:block overflow-x-auto">
+        {/* 이미지형 테이블은 헤더 제거, 텍스트형은 기존 테이블 유지 */}
+        {variant === 'image-table' ? (
+          <div>
+            {deferredPosts.map((post, index) => (
+              <PostItem
+                key={post.id}
+                post={post}
+                isLast={index === deferredPosts.length - 1}
+                currentPostId={currentPostId}
+                currentBoardId={currentBoardId}
+                showBoard={showBoard}
+                isMobile={false}
+                renderContentTypeIcons={renderContentTypeIcons}
+                renderAuthor={renderAuthor}
+                renderBoardLogo={renderBoardLogo}
+                variant={variant}
+                extractFirstImageUrl={extractFirstImageUrl}
+              />
+            ))}
+          </div>
+        ) : (
         <table className="w-full border-collapse">
           <thead>
             <tr className="border-b bg-gray-50">
@@ -687,13 +849,16 @@ export default function PostList({
                 renderContentTypeIcons={renderContentTypeIcons}
                 renderAuthor={renderAuthor}
                 renderBoardLogo={renderBoardLogo}
+                  variant={variant}
+                  extractFirstImageUrl={extractFirstImageUrl}
               />
             ))}
           </tbody>
         </table>
+        )}
       </div>
     );
-  }, [isMobile, useVirtualization, deferredPosts, showBoard, boardNameMaxWidth, currentPostId, currentBoardId, renderContentTypeIcons, renderAuthor, renderBoardLogo]);
+  }, [isMobile, useVirtualization, deferredPosts, showBoard, boardNameMaxWidth, currentPostId, currentBoardId, renderContentTypeIcons, renderAuthor, renderBoardLogo, extractFirstImageUrl, variant]);
 
   return (
     <div className={`mb-4 bg-white rounded-lg border overflow-hidden ${className}`}>

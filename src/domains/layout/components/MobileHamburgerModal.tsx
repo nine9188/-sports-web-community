@@ -114,6 +114,17 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
               </svg>
               <span className="text-sm font-medium">라이브스코어</span>
             </Link>
+
+            <Link 
+              href="/transfers"
+              onClick={onClose}
+              className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-lg"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 3h5v5M16 8l5-5m-1 10v5h-5m-8-5l-5 5v-5h5m8-8v5h5m-5-5l5 5"/>
+              </svg>
+              <span className="text-sm font-medium">이적시장</span>
+            </Link>
             
             <Link 
               href="/livescore/football/leagues"

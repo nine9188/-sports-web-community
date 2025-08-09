@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo, useState, useEffect } from 'react';
+import React, { memo } from 'react';
 import BoardBreadcrumbs from '../common/BoardBreadcrumbs';
 import BoardTeamInfo from '../board/BoardTeamInfo';
 import LeagueInfo from '../board/LeagueInfo';
@@ -113,32 +113,8 @@ export default function BoardDetailLayout({
   topBoards,
   hoverChildBoardsMap
 }: BoardDetailLayoutProps) {
-  // 최초 렌더링 후 한번만 실행될 상태
-  const [hasMounted, setHasMounted] = useState(false);
-
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
-
-  // SSR 초기 렌더링에서는 일부 큰 컴포넌트 지연 로딩
-  if (!hasMounted) {
-    return (
-      <div className="container mx-auto">
-        <div className="sm:mt-0 mt-4">
-          <MemoizedBoardBreadcrumbs breadcrumbs={breadcrumbs} />
-        </div>
-        
-        {/* 로딩 스켈레톤 */}
-        <div className="mt-4 rounded-lg bg-white border overflow-hidden">
-          <div className="p-4 space-y-2">
-            {Array(10).fill(0).map((_, i) => (
-              <div key={i} className="h-5 bg-gray-100 rounded animate-pulse"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // view_type이 타입에 없더라도 안전하게 읽어서 분기
+  const viewType = (boardData as unknown as { view_type?: 'list' | 'image-table' })?.view_type;
 
   return (
     <div className="container mx-auto">
@@ -181,7 +157,7 @@ export default function BoardDetailLayout({
       )}
 
       <div className="mt-2 rounded-lg">
-        {/* 미리 로드된 게시글 데이터로 PostList 렌더링 */}
+        {/* 게시판 유형(view_type)에 따라 PostList 렌더링 분기 - 초기 스켈레톤 없이 바로 렌더 */}
         <MemoizedPostList
           posts={posts}
           loading={false}
@@ -189,6 +165,7 @@ export default function BoardDetailLayout({
           showBoard={true}
           className="mb-4"
           emptyMessage="아직 작성된 게시글이 없습니다."
+          variant={viewType === 'image-table' ? 'image-table' : 'text'}
         />
         
         <div className="flex justify-center mt-2 mb-4">

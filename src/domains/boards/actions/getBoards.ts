@@ -245,7 +245,7 @@ export async function getBoards(): Promise<BoardsResponse> {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from('boards')
-      .select('id, name, parent_id, display_order, slug, team_id, league_id, description, access_level, logo, views')
+      .select('id, name, parent_id, display_order, slug, team_id, league_id, description, access_level, logo, views, view_type')
       .order('display_order', { ascending: true })
       .order('name');
 
