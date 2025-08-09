@@ -73,11 +73,9 @@ export default function ClientUserProfile({ profileData }: ClientUserProfileProp
           </div>
           
           {/* 포인트 정보 */}
-          <div className="flex items-center mt-2 justify-between">
-            <div className="flex items-center gap-1">
-              <Coins className="h-3 w-3 text-yellow-500" />
-              <span className="text-xs font-medium">포인트</span>
-            </div>
+          <div className="flex items-center mt-2 gap-1.5">
+            <Coins className="h-3 w-3 text-yellow-500" />
+            <span className="text-xs font-medium">포인트</span>
             <span className="text-xs font-semibold text-yellow-600">{profileData.points} P</span>
           </div>
         </div>

@@ -116,12 +116,7 @@ export default function ProfileDropdown() {
                 <span className="text-sm">프로필 설정</span>
               </div>
             </Link>
-            <Link href="/settings/icons" className="block px-4 py-2 hover:bg-gray-100">
-              <div className="flex items-center">
-                <FontAwesomeIcon icon={faCog} className="h-3.5 w-3.5 mr-2" />
-                <span className="text-sm">아이콘 설정</span>
-              </div>
-            </Link>
+            {/* 아이콘 설정 제거 */}
             <button
               onClick={handleLogout}
               className="w-full text-left px-4 py-2 hover:bg-gray-100"

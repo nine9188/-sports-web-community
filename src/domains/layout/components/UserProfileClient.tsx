@@ -3,7 +3,7 @@
 import { useCallback, useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faSignOutAlt, faCog, faChevronDown } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faSignOutAlt, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/shared/context/AuthContext';
 import { useIcon } from '@/shared/context/IconContext';
@@ -100,14 +100,7 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
                 <FontAwesomeIcon icon={faUser} className="h-4 w-4 mr-2" />
                 프로필 설정
               </Link>
-              <Link
-                href="/settings"
-                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => setIsDropdownOpen(false)}
-              >
-                <FontAwesomeIcon icon={faCog} className="h-4 w-4 mr-2" />
-                설정
-              </Link>
+              {/* 일반 설정 메뉴 제거 */}
               <button
                 data-testid="logout-button"
                 onClick={handleLogout}
