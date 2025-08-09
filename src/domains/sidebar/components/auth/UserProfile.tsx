@@ -38,9 +38,10 @@ interface ProfileData {
 
 interface UserProfileProps {
   profileData: ProfileData | null;
+  showActions?: boolean;
 }
 
-export default function UserProfile({ profileData: initialProfileData }: UserProfileProps) {
+export default function UserProfile({ profileData: initialProfileData, showActions = true }: UserProfileProps) {
   const { user } = useAuth();
   const [profileData, setProfileData] = useState<ProfileData | null>(initialProfileData);
   const [hasImageError, setHasImageError] = useState(false);
@@ -259,7 +260,7 @@ export default function UserProfile({ profileData: initialProfileData }: UserPro
         postCount={profileData.postCount} 
         commentCount={profileData.commentCount} 
       />
-      <ProfileActions />
+      {showActions && <ProfileActions />}
     </div>
   );
 } 

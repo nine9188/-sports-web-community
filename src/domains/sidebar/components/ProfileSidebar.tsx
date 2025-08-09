@@ -1,6 +1,6 @@
 'use client';
 
-import { X, User, Settings, LogOut, UserCog } from 'lucide-react';
+import { X, User, LogOut, UserCog } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { useAuth } from '@/shared/context/AuthContext';
 import { useIcon } from '@/shared/context/IconContext';
@@ -167,7 +167,9 @@ export default function ProfileSidebar({
                     <p className="text-sm text-gray-500">프로필 로딩 중...</p>
                   </div>
                 ) : (
-                  <UserProfile profileData={profileData} />
+                  <>
+                    <UserProfile profileData={profileData} showActions={false} />
+                  </>
                 )}
               </div>
 
@@ -182,14 +184,7 @@ export default function ProfileSidebar({
                   <span className="text-sm font-medium">프로필 설정</span>
                 </Link>
                 
-                <Link 
-                  href="/settings/icons" 
-                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 transition-colors"
-                  onClick={handleMenuClick}
-                >
-                  <Settings className="h-5 w-5 text-gray-600" />
-                  <span className="text-sm font-medium">아이콘 설정</span>
-                </Link>
+                {/* 아이콘 설정 항목 제거 */}
                 
                 <button
                   onClick={handleLogout}
