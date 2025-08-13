@@ -6,4 +6,4 @@ export const openai = new OpenAI({
 })
 
 // 비용 절약을 위한 최신 nano 모델 사용
-export const DEFAULT_MODEL = 'gpt-4.1-nano-2025-04-14'
+export const DEFAULT_MODEL = 'gpt-5-nano'

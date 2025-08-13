@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import SettingsTabs from '@/domains/settings/components/common/SettingsTabs';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/domains/auth/actions';
+import SettingsAuthGuardClient from '@/domains/settings/components/common/SettingsAuthGuardClient';
 
 export const metadata: Metadata = {
   title: '설정 - SPORTS 커뮤니티',
@@ -32,6 +33,8 @@ export default async function SettingsLayout({
           
           {/* 컨텐츠 영역 */}
           <div>
+            {/* 클라이언트 가드: 세션 만료/로그아웃 시 즉시 이탈 */}
+            <SettingsAuthGuardClient />
             {children}
           </div>
         </div>

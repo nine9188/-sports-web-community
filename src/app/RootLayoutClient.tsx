@@ -13,6 +13,7 @@ import { HeaderUserData } from '@/domains/layout/types/header';
 import { Board } from '@/domains/layout/types/board';
 
 import { Session } from '@supabase/supabase-js';
+import SupportWidget from '@/domains/chatbot/components/SupportWidget';
 
 interface RootLayoutClientProps {
   children: React.ReactNode;
@@ -43,6 +44,7 @@ export default function RootLayoutClient({
 }: RootLayoutClientProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isSupportOpen, setIsSupportOpen] = useState(false);
   const pathname = usePathname();
   const prevPathnameRef = useRef<string>('');
   
@@ -56,10 +58,13 @@ export default function RootLayoutClient({
     
     // 인증 관련 경로들 (라우트 그룹 (auth) 사용)
     const authPaths = ['/signin', '/signup', '/social-signup'];
+    // 독립 레이아웃이 필요한 단일 경로들
+    const standaloneRoots = ['/terms', '/privacy'];
     
     return pathname.startsWith('/auth/') || 
            pathname.startsWith('/admin') ||  // /admin과 /admin/로 시작하는 모든 경로
            pathname.startsWith('/help/') ||
+           standaloneRoots.some(root => pathname === root || pathname.startsWith(`${root}/`)) ||
            authPaths.includes(pathname);
   }, [pathname]);
 
@@ -106,6 +111,15 @@ export default function RootLayoutClient({
       setIsProfileOpen(false);
     });
   }, []);
+
+  // 고객지원 챗봇 상태는 SupportWidget에서 관리하므로, 여기선 닫기만 유지(페이지 전환 시)
+  const closeSupport = useCallback(() => {
+    startTransition(() => {
+      setIsSupportOpen(false);
+    });
+  }, []);
+
+  // 챗봇 상태는 전용 위젯 컴포넌트에서 관리
   
   // 페이지 전환 감지 및 스크롤 복원 관리 - 디바운스 적용 + startTransition
   useEffect(() => {
@@ -121,6 +135,11 @@ export default function RootLayoutClient({
           if (isProfileOpen) {
             setIsProfileOpen(false);
           }
+
+          // 고객지원 챗봇 닫기
+          if (isSupportOpen) {
+            setIsSupportOpen(false);
+          }
           
           // 스크롤 위치 복원
           window.scrollTo(0, 0);
@@ -132,7 +151,20 @@ export default function RootLayoutClient({
       
       return () => clearTimeout(timeoutId);
     }
-  }, [pathname, isOpen, isProfileOpen]);
+  }, [pathname, isOpen, isProfileOpen, isSupportOpen]);
+
+  // ESC로 고객지원 챗봇 닫기
+  useEffect(() => {
+    if (!isSupportOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        closeSupport();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isSupportOpen, closeSupport]);
 
   // ToastContainer 설정을 메모이제이션
   const toastConfig = useMemo(() => ({
@@ -173,6 +205,9 @@ export default function RootLayoutClient({
           )}
             
           <ToastContainer {...toastConfig} />
+
+          {/* 고객지원 플로팅 버튼 및 패널 (독립 레이아웃에서는 숨김) */}
+          {!isIndependentLayout && <SupportWidget />}
         </IconProvider>
       </AuthProvider>
       <ReactQueryDevtools initialIsOpen={false} />

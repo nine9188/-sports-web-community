@@ -214,6 +214,113 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_chip_intents: {
+        Row: {
+          id: string
+          intent: string
+          title: string
+          response_text: string
+          is_active: boolean | null
+          display_order: number | null
+          updated_at: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          intent: string
+          title: string
+          response_text: string
+          is_active?: boolean | null
+          display_order?: number | null
+          updated_at?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          intent?: string
+          title?: string
+          response_text?: string
+          is_active?: boolean | null
+          display_order?: number | null
+          updated_at?: string | null
+          created_at?: string | null
+        }
+        Relationships: []
+      }
+      chat_chip_patterns: {
+        Row: {
+          id: string
+          intent_id: string
+          pattern_regex: string
+          is_active: boolean | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          intent_id: string
+          pattern_regex: string
+          is_active?: boolean | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          intent_id?: string
+          pattern_regex?: string
+          is_active?: boolean | null
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_chip_patterns_intent_id_fkey",
+            columns: ["intent_id"],
+            isOneToOne: false,
+            referencedRelation: "chat_chip_intents",
+            referencedColumns: ["id"],
+          },
+        ]
+      }
+      chat_messages: {
+        Row: {
+          id: string
+          session_id: string | null
+          role: string | null
+          content_json: Json | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          session_id?: string | null
+          role?: string | null
+          content_json?: Json | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          session_id?: string | null
+          role?: string | null
+          content_json?: Json | null
+          created_at?: string | null
+        }
+        Relationships: []
+      }
+      chat_sessions: {
+        Row: {
+          id: string
+          created_at: string | null
+          last_seen_assistant_count: number | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string | null
+          last_seen_assistant_count?: number | null
+        }
+        Update: {
+          id?: string
+          created_at?: string | null
+          last_seen_assistant_count?: number | null
+        }
+        Relationships: []
+      }
       comment_likes: {
         Row: {
           comment_id: string

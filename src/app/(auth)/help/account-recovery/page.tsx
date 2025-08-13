@@ -523,6 +523,12 @@ function AccountRecoveryContent() {
             </Link>
           </p>
         </div>
+
+        {/* 약관/개인정보 링크 */}
+        <div className="mt-8 flex justify-center space-x-4 text-sm text-gray-500">
+          <Link href="/terms" className="hover:text-gray-700">이용약관</Link>
+          <Link href="/privacy" className="hover:text-gray-700">개인정보처리방침</Link>
+        </div>
       </div>
     </div>
   );

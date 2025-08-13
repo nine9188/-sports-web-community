@@ -232,28 +232,17 @@ function LoginContent() {
           )}
         </div>
         
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <input
-              id="remember-username"
-              type="checkbox"
-              checked={rememberUsername}
-              onChange={() => setRememberUsername(!rememberUsername)}
-              className="h-4 w-4 text-slate-600 border-gray-300 rounded focus:ring-slate-500"
-            />
-            <label htmlFor="remember-username" className="ml-2 block text-sm text-gray-700">
-              아이디 기억하기
-            </label>
-          </div>
-          
-          <div className="flex flex-col items-end space-y-1">
-            <Link href="/help/account-recovery?tab=id" className="text-xs text-gray-500 hover:text-slate-600 hover:underline">
-              아이디 찾기
-            </Link>
-            <Link href="/help/account-recovery?tab=password" className="text-sm text-slate-600 hover:text-slate-800 hover:underline">
-              비밀번호 찾기
-            </Link>
-          </div>
+        <div className="flex items-center">
+          <input
+            id="remember-username"
+            type="checkbox"
+            checked={rememberUsername}
+            onChange={() => setRememberUsername(!rememberUsername)}
+            className="h-4 w-4 text-slate-600 border-gray-300 rounded focus:ring-slate-500"
+          />
+          <label htmlFor="remember-username" className="ml-2 block text-sm text-gray-700">
+            아이디 기억하기
+          </label>
         </div>
         
         <button
@@ -293,6 +282,17 @@ function LoginContent() {
             </Link>
           </p>
         </div>
+
+        {/* 아이디/비밀번호 찾기 - 회원가입 아래로 이동 */}
+        <div className="mt-4 text-center text-gray-600">
+          <Link href="/help/account-recovery?tab=id" className="hover:text-slate-800 hover:underline text-sm">
+            아이디 찾기
+          </Link>
+          <span className="mx-2">ㅣ</span>
+          <Link href="/help/account-recovery?tab=password" className="hover:text-slate-800 hover:underline text-sm">
+            비밀번호 찾기
+          </Link>
+        </div>
       </div>
     </div>
   );
@@ -300,21 +300,27 @@ function LoginContent() {
 
 export default function SignInPage() {
   return (
-    <Suspense fallback={
-      <div className="max-w-md w-full">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-48 mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-3/4 mb-8"></div>
-          <div className="space-y-4">
-            <div className="h-12 bg-gray-200 rounded"></div>
-            <div className="h-12 bg-gray-200 rounded"></div>
-            <div className="h-12 bg-gray-200 rounded"></div>
+    <div className="flex flex-col justify-center items-center min-h-[calc(100vh-120px)]">
+      <Suspense fallback={
+        <div className="max-w-md w-full">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-48 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-3/4 mb-8"></div>
+            <div className="space-y-4">
+              <div className="h-12 bg-gray-200 rounded"></div>
+              <div className="h-12 bg-gray-200 rounded"></div>
+              <div className="h-12 bg-gray-200 rounded"></div>
+            </div>
           </div>
         </div>
+      }>
+        <LoginContent />
+      </Suspense>
+      <div className="mt-8 flex space-x-4 text-sm text-gray-500">
+        <Link href="/terms" className="hover:text-gray-700">이용약관</Link>
+        <Link href="/privacy" className="hover:text-gray-700">개인정보처리방침</Link>
       </div>
-    }>
-      <LoginContent />
-    </Suspense>
+    </div>
   );
 } 

@@ -17,6 +17,8 @@
     "test:all": "npm run test:run && npm run test:e2e"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^2.0.8",
+    "@ai-sdk/react": "^2.0.8",
     "@emotion/react": "^11.14.0",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
@@ -44,6 +46,7 @@
     "@types/react-datepicker": "^6.2.0",
     "@types/react-window": "^1.8.8",
     "@xmldom/xmldom": "^0.9.8",
+    "ai": "^5.0.8",
     "axios": "^1.7.9",
     "chart.js": "^4.5.0",
     "class-variance-authority": "^0.7.1",
@@ -70,7 +73,8 @@
     "recharts": "^2.15.1",
     "resend": "^4.6.0",
     "tailwind-merge": "^2.6.0",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@playwright/test": "^1.52.0",
