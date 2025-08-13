@@ -1,8 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { usePathname } from 'next/navigation'
-import { MessageCircle, ChevronDown } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
+import { MessageCircle, ChevronDown, ArrowLeft } from 'lucide-react'
 import ChatWindow from '@/domains/chatbot/components/ChatWindow'
 import ChatSessionList from '@/domains/chatbot/components/ChatSessionList'
 import { ensureChatSession, getChatSessionCreatedAt, getChatSessionsOverview as fetchChatSessionsOverview } from '@/domains/chatbot/actions'
@@ -11,7 +11,11 @@ type ChatSessionsOverview = Awaited<ReturnType<typeof fetchChatSessionsOverview>
 
 export default function SupportWidget({ initialDbSessions }: { initialDbSessions?: ChatSessionsOverview }) {
   const pathname = usePathname()
+  const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
+  const [isOpening, setIsOpening] = useState(false)
   const [isListing, setIsListing] = useState(false)
   const [forcedNew, setForcedNew] = useState(false)
   const [activeSid, setActiveSid] = useState<string | null>(null)
@@ -19,8 +23,41 @@ export default function SupportWidget({ initialDbSessions }: { initialDbSessions
   const [createdAtIso, setCreatedAtIso] = useState<string | null>(null)
   const [totalUnread, setTotalUnread] = useState(0)
 
-  const toggle = useCallback(() => setIsOpen((v) => !v), [])
-  const close = useCallback(() => setIsOpen(false), [])
+  const toggle = useCallback(() => {
+    if (!isOpen && isMobile) {
+      // 모바일에서 열기
+      setIsOpening(true)
+      setIsOpen(true)
+      setTimeout(() => {
+        setIsOpening(false)
+      }, 50) // 애니메이션 시작을 위한 짧은 딜레이
+    } else {
+      setIsOpen((v) => !v)
+    }
+  }, [isOpen, isMobile])
+  
+  const close = useCallback(() => {
+    if (isMobile && isOpen) {
+      setIsClosing(true)
+      setTimeout(() => {
+        setIsOpen(false)
+        setIsClosing(false)
+      }, 300) // 애니메이션 시간과 동일
+    } else {
+      setIsOpen(false)
+    }
+  }, [isMobile, isOpen])
+  
+  // 모바일 감지
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // 라우트 변경 시 자동 닫기
   const prevPath = useRef<string | null>(null)
@@ -186,18 +223,111 @@ export default function SupportWidget({ initialDbSessions }: { initialDbSessions
         </button>
       </div>
 
-      {/* 패널 */}
-      <div 
-        className={`fixed bottom-24 right-4 z-[59] w-[min(420px,90vw)] h-[min(70vh,500px)] bg-white border rounded-lg shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ease-in-out ${
-          isOpen 
-            ? 'translate-y-0 opacity-100 pointer-events-auto' 
-            : 'translate-y-4 opacity-0 pointer-events-none'
-        }`}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="chat-dialog-title"
-        aria-describedby="chat-dialog-description"
-      >
+      {/* 모바일 전체화면 */}
+      {isMobile && isOpen && (
+        <div className={`fixed inset-0 bg-white z-[60] flex flex-col transition-transform duration-300 ease-in-out ${
+          isClosing ? 'translate-y-full' : isOpening ? 'translate-y-full' : 'translate-y-0'
+        }`}>
+          {/* 모바일 헤더 */}
+          <header className="flex items-center justify-between px-4 py-3 border-b bg-white">
+            <div className="relative flex-1 min-w-0 h-8 flex items-center">
+              {/* 목록 타이틀 */}
+              <div
+                className={`absolute inset-0 flex items-center gap-3 transition-all duration-300 ${
+                  isListing ? 'translate-x-0 opacity-100' : '-translate-x-2 opacity-0 pointer-events-none'
+                }`}
+                aria-hidden={!isListing}
+              >
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center ml-2">
+                  <MessageCircle size={18} className="text-blue-600" />
+                </div>
+                <h1 className="font-semibold text-lg">고객지원 챗봇</h1>
+              </div>
+
+              {/* 대화 타이틀 + 뒤로가기 */}
+              <div
+                className={`absolute inset-0 flex items-center gap-3 transition-all duration-300 ${
+                  !isListing ? 'translate-x-0 opacity-100' : 'translate-x-2 opacity-0 pointer-events-none'
+                }`}
+                aria-hidden={isListing}
+              >
+                <button
+                  onClick={() => setIsListing(true)}
+                  className="p-2 hover:bg-gray-100 rounded-full -ml-2"
+                  aria-label="대화 목록으로 돌아가기"
+                >
+                  <ArrowLeft size={20} />
+                </button>
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                  <MessageCircle size={18} className="text-blue-600" />
+                </div>
+                <div>
+                  <h1 className="font-semibold text-lg truncate" title={conversationTitle}>
+                    {conversationTitle}
+                  </h1>
+                  <p className="text-xs text-gray-500">온라인</p>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={close}
+              className="p-2 hover:bg-gray-100 rounded-full text-gray-600"
+              aria-label="챗봇 닫기"
+            >
+              <ChevronDown size={20} />
+            </button>
+          </header>
+
+          {/* 메인 콘텐츠 */}
+          <main className="flex-1 overflow-hidden">
+            <div 
+              id="chat-dialog-description" 
+              className="sr-only"
+            >
+              {isListing 
+                ? '이전 대화 목록을 보거나 새 대화를 시작할 수 있습니다.'
+                : '고객지원 대화 창입니다. 메시지를 입력하거나 빠른 메뉴를 사용할 수 있습니다.'
+              }
+            </div>
+            <div className="h-full overflow-hidden">
+              {isListing ? (
+                <ChatSessionList
+                  initialDbSessions={initialDbSessions}
+                  onSelect={(id) => {
+                    setActiveSid(id)
+                    setForcedNew(false)
+                    setIsListing(false)
+                  }}
+                  onNew={() => {
+                    setForcedNew(true)
+                    setActiveSid(null)
+                    setIsListing(false)
+                  }}
+                />
+              ) : (
+                <div className="h-full overflow-auto" role="log" aria-live="polite" aria-label="대화 내용">
+                  <ChatWindow activeSessionId={activeSid} forceNew={forcedNew} onReadStatusChanged={refreshUnreadCount} />
+                </div>
+              )}
+            </div>
+          </main>
+        </div>
+      )}
+
+      {/* 데스크톱 패널 */}
+      {!isMobile && (
+        <div 
+          className={`fixed bottom-24 right-4 z-[59] w-[min(420px,90vw)] h-[min(70vh,500px)] bg-white border rounded-lg shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ease-in-out ${
+            isOpen 
+              ? 'translate-y-0 opacity-100 pointer-events-auto' 
+              : 'translate-y-4 opacity-0 pointer-events-none'
+          }`}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="chat-dialog-title"
+          aria-describedby="chat-dialog-description"
+        >
           <header className="flex items-center justify-between px-2 py-2 border-b bg-neutral-50">
             <div className="relative flex-1 min-w-0 h-8">
               {/* 목록 타이틀 */}
@@ -265,6 +395,7 @@ export default function SupportWidget({ initialDbSessions }: { initialDbSessions
             </div>
           </main>
         </div>
+      )}
     </>
   )
 }

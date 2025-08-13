@@ -116,7 +116,7 @@ export default function ChatSessionList(props: {
             const unread = Math.max(0, s.unreadAssistantCount ?? 0)
             // 마지막 어시스턴트 답변 시간 (정렬/우측 최신시간 표시에 사용)
             return (
-              <li key={s.id} className="p-3">
+              <li key={s.id} className="p-3 hover:bg-gray-50 transition-colors duration-150">
                 <button type="button" onClick={() => props.onSelect(s.id)} className="w-full text-left">
                   <div className="flex items-center justify-between gap-2">
                     <div className="font-medium truncate">{createdLabel}</div>
@@ -138,7 +138,7 @@ export default function ChatSessionList(props: {
         </ul>
       </div>
       <div className="p-2 border-t bg-white">
-        <button type="button" onClick={props.onNew} className="w-full px-4 py-2 rounded bg-black text-white text-sm">새 대화</button>
+        <button type="button" onClick={props.onNew} className="w-full px-4 py-2 rounded bg-black text-white text-sm hover:bg-gray-800 transition-colors duration-150">새 대화</button>
       </div>
     </div>
   )
