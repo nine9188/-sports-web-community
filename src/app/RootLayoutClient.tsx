@@ -14,6 +14,7 @@ import { Board } from '@/domains/layout/types/board';
 
 import { Session } from '@supabase/supabase-js';
 import SupportWidget from '@/domains/chatbot/components/SupportWidget';
+import { FloatingButtonProvider } from '@/domains/chatbot/contexts/FloatingButtonContext';
 
 interface RootLayoutClientProps {
   children: React.ReactNode;
@@ -183,6 +184,7 @@ export default function RootLayoutClient({
     <QueryClientProvider client={queryClient}>
       <AuthProvider initialSession={initialSession}>
         <IconProvider initialIconUrl={initialIconUrl} initialIconName={initialIconName}>
+          <FloatingButtonProvider>
           {isIndependentLayout ? (
             children
           ) : (
@@ -206,8 +208,9 @@ export default function RootLayoutClient({
             
           <ToastContainer {...toastConfig} />
 
-          {/* 고객지원 플로팅 버튼 및 패널 (독립 레이아웃에서는 숨김) */}
-          {!isIndependentLayout && <SupportWidget />}
+            {/* 고객지원 플로팅 버튼 및 패널 (독립 레이아웃에서는 숨김) */}
+            {!isIndependentLayout && <SupportWidget />}
+          </FloatingButtonProvider>
         </IconProvider>
       </AuthProvider>
       <ReactQueryDevtools initialIsOpen={false} />

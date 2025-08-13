@@ -6,12 +6,14 @@ import { MessageCircle, ChevronDown, ArrowLeft } from 'lucide-react'
 import ChatWindow from '@/domains/chatbot/components/ChatWindow'
 import ChatSessionList from '@/domains/chatbot/components/ChatSessionList'
 import { ensureChatSession, getChatSessionCreatedAt, getChatSessionsOverview as fetchChatSessionsOverview } from '@/domains/chatbot/actions'
+import { useFloatingButton } from '@/domains/chatbot/contexts/FloatingButtonContext'
 
 type ChatSessionsOverview = Awaited<ReturnType<typeof fetchChatSessionsOverview>>
 
 export default function SupportWidget({ initialDbSessions }: { initialDbSessions?: ChatSessionsOverview }) {
   const pathname = usePathname()
   const router = useRouter()
+  const { isVisible, shouldOpenPanel } = useFloatingButton()
   const [isOpen, setIsOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
@@ -58,6 +60,23 @@ export default function SupportWidget({ initialDbSessions }: { initialDbSessions
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
+
+  // Footer에서 문의하기 클릭 시 패널 자동 열기
+  useEffect(() => {
+    if (shouldOpenPanel && isVisible && !isOpen) {
+      if (isMobile) {
+        // 모바일에서 열기 애니메이션
+        setIsOpening(true)
+        setIsOpen(true)
+        setTimeout(() => {
+          setIsOpening(false)
+        }, 50)
+      } else {
+        // 데스크톱에서 바로 열기
+        setIsOpen(true)
+      }
+    }
+  }, [shouldOpenPanel, isVisible, isOpen, isMobile])
 
   // 라우트 변경 시 자동 닫기
   const prevPath = useRef<string | null>(null)
@@ -179,6 +198,11 @@ export default function SupportWidget({ initialDbSessions }: { initialDbSessions
   })()
 
   const conversationTitle = formatKoreanDateTime(createdAtIso ?? activeSessionMeta?.createdAt ?? undefined)
+
+  // 플로팅 버튼이 보이지 않으면 아무것도 렌더링하지 않음
+  if (!isVisible) {
+    return null
+  }
 
   return (
     <>
