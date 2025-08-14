@@ -84,7 +84,7 @@ export default function ChatWindow(props: { activeSessionId?: string | null; for
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const quickSuggestions = useMemo(
     () => [
-      { label: '커뮤니티 규정 문의', intent: 'community_guidelines' },
+      { label: '이용약관 및 개인정보처리방침', intent: 'community_guidelines' },
       { label: '의견 제안하기', intent: 'suggestion' },
       { label: '회원 신고하기', intent: 'report_member' },
       { label: '커뮤니티 이용 문의', intent: 'usage_inquiry' },
@@ -351,15 +351,16 @@ export default function ChatWindow(props: { activeSessionId?: string | null; for
         // 서버 저장은 비동기로 수행하고, UI는 타이핑 → 텍스트로 순차 노출
         void addAssistantBundle({
           sessionId: activeId,
-          mainText: '커뮤니티 규정은 공지사항에서 확인하실 수 있어요. 특정 사례가 있다면 링크와 함께 알려주세요.',
-          includeFollowUp: true,
+          mainText: '이용약관과 개인정보처리방침을 확인하실 수 있어요. 필요한 내용을 선택해 주세요.',
+          includeFollowUp: false,
         })
         setShowQuickMenu(false)
         setShowFollowUp(false)
         runTypingSequence({
-          mainText: '커뮤니티 규정은 공지사항에서 확인하실 수 있어요. 특정 사례가 있다면 링크와 함께 알려주세요.',
-          followUpText: '도움이 되셨나요?',
-          onFollowUpDone: () => { setShowFollowUp(true); void syncSeen() },
+          mainText: '이용약관과 개인정보처리방침을 확인하실 수 있어요. 필요한 내용을 선택해 주세요.',
+          onMainDone: () => {
+            void syncSeen()
+          }
         })
       })()
       setShowQuickMenu(false)
@@ -402,13 +403,39 @@ export default function ChatWindow(props: { activeSessionId?: string | null; for
     })
   }, [activeId, runTypingSequence, syncSeen, enqueueTimeout])
 
+  const handlePolicyClick = useCallback((url: string, label: string) => {
+    if (!activeId) return
+    
+    // 새 창에서 링크 열기
+    window.open(url, '_blank')
+    
+    // 사용자 메시지 추가
+    const now = Date.now()
+    setThread((prev) => [...prev, { id: generateId(), role: 'user', type: 'text', text: `${label} 확인`, createdAt: now }])
+    void saveClientMessage({ sessionId: activeId, role: 'user', text: `${label} 확인`, createdAt: now })
+    
+    // 새창 이동 멘트와 후속 질문
+    runTypingSequence({
+      mainText: `${label} 페이지가 새 창에서 열렸습니다.`,
+      followUpText: '도움이 되셨나요?',
+      onMainDone: () => void syncSeen(),
+      onFollowUpDone: () => { setShowFollowUp(true); void syncSeen() },
+    })
+    
+    void addAssistantBundle({
+      sessionId: activeId,
+      mainText: `${label} 페이지가 새 창에서 열렸습니다.`,
+      includeFollowUp: true,
+    })
+  }, [activeId, runTypingSequence, syncSeen])
+
   const handleFollowUp = useCallback((action: FollowUpAction) => {
     if (!activeId) return
     if (action === 'more_help') {
       ;(async () => {
         void addAssistantBundle({ sessionId: activeId, mainText: '어떤 도움이 필요하신가요?', includeFollowUp: false })
       setShowFollowUp(false)
-        runTypingSequence({ mainText: '어떤 도움이 필요하신가요?', onMainDone: () => { setShowQuickMenu(true); void syncSeen() } })
+        runTypingSequence({ mainText: '어떤 도움이 필요하신가요?', onMainDone: () => { setShowQuickMenu(true); setShowFollowUp(false); void syncSeen() } })
       })()
       return
     }
@@ -554,6 +581,35 @@ export default function ChatWindow(props: { activeSessionId?: string | null; for
                   {item.text}
                 </div>
               </div>
+                  {!isUser && item.text === '이용약관과 개인정보처리방침을 확인하실 수 있어요. 필요한 내용을 선택해 주세요.' && (
+                    <div className="mt-3 w-full">
+                      <div className="overflow-x-auto pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                        <div className="flex gap-3 pr-4" style={{ width: 'max-content' }}>
+                          {/* 이용약관 카드 */}
+                          <div 
+                            onClick={() => handlePolicyClick('/terms', '이용약관')}
+                            className="flex-shrink-0 w-40 p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md cursor-pointer transition-all duration-200 ease-out hover:scale-[1.02] active:scale-95"
+                          >
+                            <div className="flex flex-col">
+                              <div className="text-sm font-semibold text-gray-900 mb-1">이용약관</div>
+                              <div className="text-xs text-gray-500">서비스 이용 기본 규정</div>
+                            </div>
+                          </div>
+
+                          {/* 개인정보처리방침 카드 */}
+                          <div 
+                            onClick={() => handlePolicyClick('/privacy', '개인정보처리방침')}
+                            className="flex-shrink-0 w-40 p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md cursor-pointer transition-all duration-200 ease-out hover:scale-[1.02] active:scale-95"
+                          >
+                            <div className="flex flex-col">
+                              <div className="text-sm font-semibold text-gray-900 mb-1">개인정보처리방침</div>
+                              <div className="text-xs text-gray-500">개인정보 수집 이용 정책</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   {!isUser && idx === lastAssistantIndex && (
                     <div className="mt-1 flex justify-start">
                       <span className="text-[11px] text-neutral-400">{formatTime(item.createdAt)}</span>
@@ -635,6 +691,7 @@ export default function ChatWindow(props: { activeSessionId?: string | null; for
           </div>
         )}
 
+
         {showFollowUp && !isClosed && (
           <div className="mt-2 flex flex-wrap gap-2 animate-in slide-in-from-bottom-2 fade-in duration-300 ease-out">
             <button className="px-3 py-1 rounded-full border bg-white hover:bg-neutral-50 active:scale-95 text-sm transition-all duration-200 ease-out hover:shadow-md" onClick={() => handleFollowUp('more_help' as const)}>더 필요해요</button>
@@ -643,7 +700,7 @@ export default function ChatWindow(props: { activeSessionId?: string | null; for
         )}
       </div>
     ),
-    [thread, handleQuickSend, quickSuggestions, renderForm, showQuickMenu, handleFollowUp, isClosed, showFollowUp]
+    [thread, handleQuickSend, quickSuggestions, renderForm, showQuickMenu, handleFollowUp, isClosed, showFollowUp, handlePolicyClick]
   )
 
   return (

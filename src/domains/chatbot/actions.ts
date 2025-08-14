@@ -176,7 +176,7 @@ export async function handleChatViaServerAction(payload: { messages: UIMessage[]
   await logIncomingMessages({ sessionId, messages: payload.messages })
 
   const canned: Record<string, string> = {
-    community_guidelines: '커뮤니티 규정은 공지사항에서 확인하실 수 있어요. 특정 사례가 있다면 링크와 함께 알려주세요.',
+    community_guidelines: '이용약관과 개인정보처리방침을 확인하실 수 있어요. 필요한 내용을 선택해 주세요.',
     suggestion: '좋은 의견 감사합니다! 제안하실 내용을 구체적으로 남겨주시면 제품팀에 전달하겠습니다.',
     report_member: '신고하고자 하는 회원/게시글 링크를 알려주세요. 확인 후 조치하겠습니다.',
     usage_inquiry: '이용 중 불편하신 점이나 궁금한 점을 자세히 적어주세요. 도와드릴게요.',
@@ -186,7 +186,7 @@ export async function handleChatViaServerAction(payload: { messages: UIMessage[]
 
   // 칩 기반 라우팅 규칙 (키워드 → 특정 칩 의도)
   const chipRoutingRules: Array<{ intent: keyof typeof canned; patterns: RegExp[] }> = [
-    { intent: 'community_guidelines', patterns: [/규정|가이드|가이드라인|커뮤니티\s*규정/] },
+    { intent: 'community_guidelines', patterns: [/규정|가이드|가이드라인|커뮤니티\s*규정|이용약관|개인정보|처리방침|약관/] },
     { intent: 'suggestion', patterns: [/제안|건의|개선|피드백|의견/] },
     { intent: 'report_member', patterns: [/신고|허위|스팸|욕설|비방|규정\s*위반|부적절/] },
     { intent: 'usage_inquiry', patterns: [/문의|사용법|이용|어떻게|방법|안내/] },
