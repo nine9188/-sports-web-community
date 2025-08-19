@@ -7,6 +7,7 @@ import Header from '@/domains/layout/components/Header';
 import Footer from '@/shared/components/Footer';
 import Sidebar from '@/domains/sidebar/components/Sidebar';
 import ProfileSidebar from '@/domains/sidebar/components/ProfileSidebar';
+import { UniversalChatbot } from '@/domains/chatbot/components/UniversalChatbot';
 import { HeaderUserData } from '@/domains/layout/types/header';
 import { Board } from '@/domains/layout/types/board';
 
@@ -80,6 +81,9 @@ const AuthStateManager = React.memo(function AuthStateManager({
         {!isMatchPage && rightSidebar}
       </div>
       <Footer />
+      
+      {/* 챗봇 - 모든 사용자에게 표시 (로그인/비로그인 자동 감지) */}
+      <UniversalChatbot />
     </div>
   );
 });

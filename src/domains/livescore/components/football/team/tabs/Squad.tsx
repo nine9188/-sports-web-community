@@ -7,8 +7,8 @@ import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 
-// 상수 정의
-const POSITION_ORDER = ['Goalkeeper', 'Defender', 'Midfielder', 'Attacker', 'Coach'];
+// 상수 정의 - 감독을 최상단으로 노출
+const POSITION_ORDER = ['Coach', 'Goalkeeper', 'Defender', 'Midfielder', 'Attacker'];
 const POSITION_NAMES = {
   Coach: '감독',
   Goalkeeper: '골키퍼',

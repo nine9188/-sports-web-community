@@ -109,15 +109,48 @@ export async function fetchTeamSquad(teamId: string): Promise<SquadResponse> {
     
     if (coachResponse.ok) {
       const coachData = await coachResponse.json();
-      
-      if (coachData?.response?.[0]) {
-        coach = {
-          id: coachData.response[0].id,
-          name: coachData.response[0].name,
-          age: coachData.response[0].age,
-          photo: coachData.response[0].photo,
-          position: 'Coach'
-        };
+      const coaches = Array.isArray(coachData?.response) ? coachData.response : [];
+      const numericTeamId = Number(teamId);
+
+      if (coaches.length > 0) {
+        // 1) 해당 팀 커리어의 최신 start가 가장 최근인 감독 선택
+        const candidates = coaches.filter((c: any) => Array.isArray(c?.career) && c.career.some((car: any) => car?.team?.id === numericTeamId && typeof car?.start === 'string'));
+
+        let selected: any | null = null;
+        if (candidates.length > 0) {
+          const best = candidates
+            .map((c: any) => {
+              const latestStartMs = c.career
+                .filter((car: any) => car?.team?.id === numericTeamId && typeof car?.start === 'string')
+                .reduce((max: number, car: any) => {
+                  const ms = Date.parse(car.start || '');
+                  return Number.isFinite(ms) ? Math.max(max, ms) : max;
+                }, -Infinity);
+              return { coach: c, latestStartMs };
+            })
+            .sort((a: any, b: any) => b.latestStartMs - a.latestStartMs)[0];
+          if (best && Number.isFinite(best.latestStartMs)) {
+            selected = best.coach;
+          }
+        }
+
+        // 2) 후보가 없으면 응답 team.id 일치 항목으로 폴백
+        if (!selected) {
+          selected = coaches.find((c: any) => c?.team?.id === numericTeamId) || null;
+        }
+
+        // 3) 그래도 없으면 첫 번째 항목 폴백
+        const finalCoach = selected || coaches[0];
+
+        if (finalCoach) {
+          coach = {
+            id: finalCoach.id,
+            name: finalCoach.name,
+            age: finalCoach.age,
+            photo: finalCoach.photo,
+            position: 'Coach'
+          };
+        }
       }
     }
     
