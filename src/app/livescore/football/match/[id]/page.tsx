@@ -42,9 +42,9 @@ export default async function MatchPage({
   try {
     // URL에서 ID 및 탭 가져오기 - params와 searchParams를 await으로 처리
     const { id: matchId } = await params;
-    const { tab = 'events' } = await searchParams;
+    const { tab } = await searchParams;
     
-    const initialTab = tab;
+    const initialTab = tab || null;
     
     // 캐시 키 생성
     const cacheKey = `match-${matchId}-${initialTab}`;
@@ -64,8 +64,9 @@ export default async function MatchPage({
         fetchEvents: initialTab === 'events' || initialTab === 'lineups',
         fetchLineups: initialTab === 'lineups',
         fetchStats: initialTab === 'stats',
-        fetchStandings: initialTab === 'standings',
-        fetchPlayersStats: initialTab === 'lineups' // 라인업 탭일 때 선수 통계 데이터도 함께 가져오기
+        fetchStandings: initialTab === 'standings' || initialTab === 'power', // power 탭도 standings 데이터 필요
+        fetchPlayersStats: initialTab === 'lineups', // 라인업 탭일 때 선수 통계 데이터도 함께 가져오기
+        fetchPower: initialTab === 'power' || !initialTab // power 탭이거나 기본 탭일 때
       };
       
       // 초기 데이터 로드 - 서버에서 필요한 데이터만 프리로드

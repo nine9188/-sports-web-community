@@ -5,10 +5,11 @@ import Events from './tabs/Events';
 import Lineups from './tabs/lineups/Lineups';
 import Stats from './tabs/Stats';
 import Standings from './tabs/Standings';
+import Power from './tabs/Power';
 import MatchPredictionClient from './sidebar/MatchPredictionClient';
 import SupportCommentsSection from './sidebar/SupportCommentsSection';
 import { LoadingState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
-import { useMatchData, TabType, isLineupsTabData } from './context/MatchDataContext';
+import { useMatchData, TabType, isLineupsTabData, isPowerTabData } from './context/MatchDataContext';
 import { Team, MatchEvent, TeamLineup, TeamStats, StandingsData } from '@/domains/livescore/types/match';
 import { PlayerStats } from '@/domains/livescore/actions/match/playerStats';
 
@@ -153,9 +154,18 @@ export default function TabContent() {
     const hasLineupsData = tab === 'lineups' && lineupsData && lineupsData.response;
     const hasStatsData = tab === 'stats' && statsData && statsData.length > 0;
     const hasStandingsData = tab === 'standings' && standingsData;
+    const hasPowerData = tab === 'power' && tabsData.power;
     
     // 필요한 데이터가 없을 때만 로드
-    if (!hasEventsData && !hasLineupsData && !hasStatsData && !hasStandingsData) {
+    const needsDataLoad = (
+      (tab === 'events' && !hasEventsData) ||
+      (tab === 'lineups' && !hasLineupsData) ||
+      (tab === 'stats' && !hasStatsData) ||
+      (tab === 'standings' && !hasStandingsData) ||
+      (tab === 'power' && !hasPowerData)
+    );
+
+    if (needsDataLoad) {
       setIsTabChanging(true);
       loadMatchData(matchId, tab as TabType);
     } else {
@@ -169,7 +179,7 @@ export default function TabContent() {
     }, 1000);
     
     return () => clearTimeout(timerId);
-  }, [matchId, tab, eventsData, lineupsData, statsData, standingsData, loadMatchData]);
+  }, [matchId, tab, eventsData, lineupsData, statsData, standingsData, tabsData.power, loadMatchData]);
 
   // 탭 변경이 완료되면 로딩 상태 해제
   useEffect(() => {
@@ -180,12 +190,16 @@ export default function TabContent() {
 
   // 현재 탭에 따라 컴포넌트 렌더링
   const renderTabContent = useMemo(() => {
+    console.log(`TabContent - 현재 탭: ${tab}`); // 디버깅 로그
+    
     // 전체 로딩 상태일 때
     if (isLoading || isTabChanging) {
       return <LoadingState message={`${tab === 'events' ? '이벤트' : 
                                       tab === 'lineups' ? '라인업' : 
                                       tab === 'stats' ? '통계' : 
-                                      tab === 'standings' ? '순위' : '경기'} 데이터를 불러오는 중...`} />;
+                                      tab === 'standings' ? '순위' : 
+                                      tab === 'power' ? '전력' : 
+                                      tab === 'support' ? '응원' : '경기'} 데이터를 불러오는 중...`} />;
     }
 
     // 매치 ID 없는 경우 처리
@@ -272,6 +286,25 @@ export default function TabContent() {
           </Suspense>
         ) : (
           <NoDataState tabName="standings" />
+        );
+      }
+
+      case 'power': {
+        const powerData = tabsData.power;
+        return powerData && isPowerTabData(powerData) ? (
+          <Suspense fallback={<LoadingState message="전력 데이터를 불러오는 중..." />}>
+            <Power 
+              matchId={matchId}
+              homeTeam={homeTeam as unknown as Team}
+              awayTeam={awayTeam as unknown as Team}
+              data={{ 
+                ...powerData, 
+                standings: standingsData 
+              }}
+            />
+          </Suspense>
+        ) : (
+          <NoDataState tabName="power" />
         );
       }
 

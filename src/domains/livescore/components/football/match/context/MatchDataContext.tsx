@@ -7,10 +7,11 @@ import { TeamLineup } from '@/domains/livescore/actions/match/lineupData';
 import { TeamStats } from '@/domains/livescore/actions/match/statsData';
 import { StandingsData } from '@/domains/livescore/types/match';
 import { PlayerStats } from '@/domains/livescore/actions/match/playerStats';
+import { HeadToHeadTestData } from '@/domains/livescore/actions/match/headtohead';
 import { toast } from 'react-hot-toast';
 
 // 탭 타입 정의
-export type TabType = 'events' | 'lineups' | 'stats' | 'standings' | 'support';
+export type TabType = 'events' | 'lineups' | 'stats' | 'standings' | 'power' | 'support';
 
 // 각 탭의 데이터 타입 정의 (support 제외)
 interface TabDataTypes {
@@ -32,6 +33,7 @@ interface TabDataTypes {
   standings: {
     standings: StandingsData | null;
   };
+  power: HeadToHeadTestData;
 }
 
 // 탭 데이터 유니온 타입 (support 제외)
@@ -52,6 +54,17 @@ export function isStatsTabData(data: TabData): data is TabDataTypes['stats'] {
 
 export function isStandingsTabData(data: TabData): data is TabDataTypes['standings'] {
   return 'standings' in data;
+}
+
+// power 탭 타입 가드
+export function isPowerTabData(data: TabData): data is TabDataTypes['power'] {
+  return (
+    typeof (data as any)?.teamA === 'number' &&
+    typeof (data as any)?.teamB === 'number' &&
+    'h2h' in (data as any) &&
+    'recent' in (data as any) &&
+    'topPlayers' in (data as any)
+  );
 }
 
 // 컨텍스트에서 제공할 데이터 타입 정의
@@ -123,7 +136,7 @@ interface MatchDataProviderProps {
 export function MatchDataProvider({ 
   children, 
   initialMatchId, 
-  initialTab = 'events',
+  initialTab = 'support',
   initialData = {}
 }: MatchDataProviderProps) {
   const [matchId, setMatchId] = useState<string | null>(initialMatchId || null);
@@ -152,23 +165,26 @@ export function MatchDataProvider({
     // 초기 데이터를 기반으로 캐시 초기화
     const initialTabsData: Partial<Record<TabType, TabData>> = {};
     
-    // 초기 탭에 대한 데이터 설정
-    if (initialTab === 'events' && initialData.events) {
-      initialTabsData['events'] = {
-        events: initialData.events
-      };
-    } else if (initialTab === 'lineups' && initialData.lineups) {
-      initialTabsData['lineups'] = {
-        lineups: initialData.lineups
-      };
-    } else if (initialTab === 'stats' && initialData.stats) {
-      initialTabsData['stats'] = {
-        stats: initialData.stats
-      };
-    } else if (initialTab === 'standings' && initialData.standings) {
-      initialTabsData['standings'] = {
-        standings: initialData.standings
-      };
+    // support 탭은 별도 데이터가 필요 없으므로 스킵
+    if (initialTab !== 'support') {
+      // 초기 탭에 대한 데이터 설정
+      if (initialTab === 'events' && initialData.events) {
+        initialTabsData['events'] = {
+          events: initialData.events
+        };
+      } else if (initialTab === 'lineups' && initialData.lineups) {
+        initialTabsData['lineups'] = {
+          lineups: initialData.lineups
+        };
+      } else if (initialTab === 'stats' && initialData.stats) {
+        initialTabsData['stats'] = {
+          stats: initialData.stats
+        };
+      } else if (initialTab === 'standings' && initialData.standings) {
+        initialTabsData['standings'] = {
+          standings: initialData.standings
+        };
+      }
     }
     
     return initialTabsData as Record<TabType, TabData | undefined>;
@@ -185,8 +201,13 @@ export function MatchDataProvider({
     // 초기 데이터를 기반으로 어떤 탭이 이미 로드되었는지 체크
     const initialTabsLoaded: Record<string, boolean> = {};
     
-    // 초기 tab에 대한 로딩 상태 설정
-    initialTabsLoaded[initialTab] = true;
+    // support 탭은 별도 데이터 로딩이 필요 없으므로 항상 로드됨으로 표시
+    if (initialTab === 'support') {
+      initialTabsLoaded['support'] = true;
+    } else {
+      // 초기 tab에 대한 로딩 상태 설정
+      initialTabsLoaded[initialTab] = true;
+    }
     
     // 초기 데이터가 있는 탭에 대해서도 로딩 완료 상태로 설정
     if (initialData.events && initialData.events.length > 0) {
@@ -222,6 +243,9 @@ export function MatchDataProvider({
         return { fetchStats: true };
       case 'standings':
         return { fetchStandings: true };
+      case 'power':
+        // 전력 탭: 순위 정보도 함께 필요
+        return { fetchStandings: true };
       default:
         return { fetchEvents: true };
     }
@@ -247,6 +271,11 @@ export function MatchDataProvider({
     // 아니면 데이터 확인
     const options = getOptionsForTab(tab);
     
+    // 전력 탭은 tabsData.power가 없으면 데이터 필요로 판단
+    if (tab === 'power') {
+      return Boolean(tabsData['power']);
+    }
+
     const hasData = (
       (options.fetchEvents ? eventsData.length > 0 : true) &&
       (options.fetchLineups ? lineupsData && lineupsData.response : true) &&
@@ -358,6 +387,17 @@ export function MatchDataProvider({
           // 전역 상태 업데이트
           if (fullData.events) setEventsData(fullData.events);
           break;
+        case 'power': {
+          // 전력 데이터: H2H/최근 폼/탑 플레이어
+          const { getHeadToHeadTestData } = await import('@/domains/livescore/actions/match/headtohead');
+          const homeId = fullData.homeTeam?.id || 0;
+          const awayId = fullData.awayTeam?.id || 0;
+          const power = homeId && awayId ? await getHeadToHeadTestData(homeId, awayId, 5) : null;
+          if (!power) return null;
+          // Power 탭은 HeadToHeadTestData를 그대로 저장
+          tabData = power as TabData;
+          break;
+        }
           
         case 'lineups':
           tabData = {
@@ -457,8 +497,11 @@ export function MatchDataProvider({
     // 마운트 ID 증가 (기존 비동기 작업 취소)
     mountIdRef.current += 1;
     
-    // 탭 변경을 즉시 반영 - 사용자 경험 향상을 위해 데이터 로드보다 UI 변경을 먼저 처리
-    setCurrentTab(typedTab);
+    // 탭 변경을 즉시 반영 - 단, 현재 탭과 다를 때만 변경
+    if (currentTab !== typedTab) {
+      console.log(`loadMatchData에서 탭 변경: ${currentTab} -> ${typedTab}`);
+      setCurrentTab(typedTab);
+    }
     
     // 새로운 경기라면 이전 데이터 초기화
     if (id !== matchId) {
@@ -637,6 +680,7 @@ export function MatchDataProvider({
   
   // setCurrentTab 함수 - 단순히 상태만 변경
   const handleSetCurrentTab = useCallback((tab: string) => {
+    console.log(`MatchDataContext - setCurrentTab 호출됨: ${tab}`);
     setCurrentTab(tab as TabType);
   }, []);
 
