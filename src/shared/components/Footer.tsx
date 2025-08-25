@@ -10,9 +10,21 @@ export default function Footer() {
           <div className="text-sm text-muted-foreground">
             © 2024 SPORTS Community. All rights reserved.
           </div>
-          <div className="flex gap-6 text-sm text-muted-foreground">
+          <div className="flex gap-6 text-sm text-muted-foreground items-center">
             <Link href="/terms" className="hover:text-foreground">이용약관</Link>
             <Link href="/privacy" className="hover:text-foreground">개인정보처리방침</Link>
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('open-chatbot', { detail: { mode: 'auto' } }))
+                }
+              }}
+              className="hover:text-foreground"
+              aria-label="문의하기"
+            >
+              문의하기
+            </button>
           </div>
         </div>
       </div>

@@ -1,22 +1,7 @@
 'use client';
-
-import { useEffect, useState } from 'react';
 import { cn } from '@/shared/utils/cn';
 
 export function ChatTypingBubble() {
-  const [dots, setDots] = useState('');
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setDots(prev => {
-        if (prev === '...') return '';
-        return prev + '.';
-      });
-    }, 500);
-
-    return () => clearInterval(interval);
-  }, []);
-
   return (
     <div className="flex items-start space-x-3 animate-in fade-in-0 slide-in-from-left-2 duration-300">
       {/* Bot Avatar */}
@@ -37,11 +22,6 @@ export function ChatTypingBubble() {
             <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
             <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
           </div>
-          
-          {/* Text dots */}
-          <span className="text-gray-500 ml-2 font-mono text-sm">
-            {dots}
-          </span>
         </div>
       </div>
     </div>

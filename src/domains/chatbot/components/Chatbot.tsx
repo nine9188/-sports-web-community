@@ -127,7 +127,6 @@ export function Chatbot({ userId }: ChatbotProps) {
       <ChatModal
         isOpen={chatbot.isOpen}
         onClose={chatbot.toggleChat}
-        chatState={chatbot}
       >
         {/* Header */}
         <ChatHeader

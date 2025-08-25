@@ -143,17 +143,14 @@ export default function LeagueStandings({
     loadStandings();
   }, [activeLeague, isMobile]);
 
-  // 모바일에서는 렌더링하지 않음
-  if (isMobile) {
-    return null;
-  }
+  // SSR 일관성을 위해 모바일에서도 마크업은 유지하고 CSS로 숨김 처리 (hidden md:block)
 
   const handleTeamClick = (teamId: number) => {
     router.push(`/livescore/football/team/${teamId}?tab=overview`);
   };
 
   return (
-    <div className="league-standings border rounded-md overflow-hidden">
+    <div className="league-standings border rounded-md overflow-hidden hidden md:block">
       <div className="standings-header py-2 px-3 text-sm font-medium bg-slate-800 text-white">
         축구 팀순위
       </div>
@@ -210,7 +207,7 @@ export default function LeagueStandings({
             {error}
           </div>
         ) : standings && standings.standings && standings.standings.length > 0 ? (
-          <div className="border-b">
+          <div>
             <table className="w-full text-xs border-collapse table-fixed">
               <colgroup>
                 {/* 순위 */}

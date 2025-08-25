@@ -244,8 +244,8 @@ export function MatchDataProvider({
       case 'standings':
         return { fetchStandings: true };
       case 'power':
-        // 전력 탭: 순위 정보도 함께 필요
-        return { fetchStandings: true };
+        // 전력 탭: 순위 + 이벤트도 함께 필요 (헤더 득점 정보 등)
+        return { fetchStandings: true, fetchEvents: true };
       default:
         return { fetchEvents: true };
     }
@@ -394,6 +394,8 @@ export function MatchDataProvider({
           const awayId = fullData.awayTeam?.id || 0;
           const power = homeId && awayId ? await getHeadToHeadTestData(homeId, awayId, 5) : null;
           if (!power) return null;
+          // 이벤트 데이터가 함께 왔다면 전역 상태에도 반영 (헤더 등에서 사용)
+          if (fullData.events) setEventsData(fullData.events);
           // Power 탭은 HeadToHeadTestData를 그대로 저장
           tabData = power as TabData;
           break;

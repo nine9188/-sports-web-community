@@ -518,12 +518,26 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                 <tr>
                   <td className="py-2 px-4 border-r border-gray-200">
                     <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <div className="w-10 h-10 flex items-center justify-center text-gray-700 font-bold text-sm bg-gray-100 rounded-full border-2 border-gray-200">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-label="감독 기본 아이콘">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
-                        </div>
+                      <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200 flex items-center justify-center">
+                        {/* 기본 아이콘 (이미지 로드 실패 시 표시) */}
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-label="감독 기본 아이콘">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        {/* 감독 이미지 */}
+                        {homeLineup.coach?.id ? (
+                          <Image
+                            src={homeLineup.coach.photo || `https://media.api-sports.io/football/coachs/${homeLineup.coach.id}.png`}
+                            alt={`${homeLineup.coach?.name || '감독'} 사진`}
+                            fill
+                            sizes="40px"
+                            className="object-cover"
+                            unoptimized
+                            onError={(e) => {
+                              const target = e.currentTarget as HTMLImageElement;
+                              target.style.display = 'none';
+                            }}
+                          />
+                        ) : null}
                       </div>
                       <div className="flex-1">
                         <div className="text-sm font-medium">{homeLineup.coach?.name || '정보 없음'}</div>
@@ -533,12 +547,26 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                   </td>
                   <td className="py-2 px-4">
                     <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <div className="w-10 h-10 flex items-center justify-center text-gray-700 font-bold text-sm bg-gray-100 rounded-full border-2 border-gray-200">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-label="감독 기본 아이콘">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
-                        </div>
+                      <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200 flex items-center justify-center">
+                        {/* 기본 아이콘 (이미지 로드 실패 시 표시) */}
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-label="감독 기본 아이콘">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        {/* 감독 이미지 */}
+                        {awayLineup.coach?.id ? (
+                          <Image
+                            src={awayLineup.coach.photo || `https://media.api-sports.io/football/coachs/${awayLineup.coach.id}.png`}
+                            alt={`${awayLineup.coach?.name || '감독'} 사진`}
+                            fill
+                            sizes="40px"
+                            className="object-cover"
+                            unoptimized
+                            onError={(e) => {
+                              const target = e.currentTarget as HTMLImageElement;
+                              target.style.display = 'none';
+                            }}
+                          />
+                        ) : null}
                       </div>
                       <div className="flex-1">
                         <div className="text-sm font-medium">{awayLineup.coach?.name || '정보 없음'}</div>

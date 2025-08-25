@@ -1,16 +1,15 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useChatUser } from '../hooks/useChatUser';
 import { useChatbot } from '../hooks/useChatbot';
 import { useLocalChatbot } from '../hooks/useLocalChatbot';
 import { useReadStatus } from '../hooks/useReadStatus';
-import { ChatFloatingButton } from './ChatFloatingButton';
 import { ChatModal } from './ChatModal';
+import { ChatFloatingButton } from './ChatFloatingButton';
 import { ChatHeader } from './ChatHeader';
 import { ChatConversationList } from './ChatConversationList';
 import { ChatMessageList } from './ChatMessageList';
-import { ChatChipButtons, SingleChipButton } from './ChatChipButtons';
-import { ChatFormRenderer } from './ChatFormRenderer';
 import { ChatInput } from './ChatInput';
 import { localChatStorage } from '../actions/localStorageActions';
 
@@ -24,13 +23,63 @@ export function UniversalChatbot() {
   // 로컬 사용자용 훅
   const localChatbot = useLocalChatbot();
 
+  // 인증 상태에 따라 적절한 훅 선택
+  const chatbot = chatUser?.isAuthenticated ? authenticatedChatbot : localChatbot;
+
+  // 문의하기 클릭 후 런처(플로팅 버튼) 노출 여부
+  const [launcherVisible, setLauncherVisible] = useState(false);
+
+  // 전역 이벤트로 챗봇 열기
+  useEffect(() => {
+    const handleOpen = (e: Event) => {
+      const custom = e as CustomEvent<{ mode?: 'new' | 'list' | 'auto' }>;
+      const mode = custom.detail?.mode || 'auto';
+      if (!launcherVisible) {
+        setLauncherVisible(true);
+      }
+      if (!chatbot.isOpen) {
+        chatbot.toggleChat();
+      }
+      // 모드별 시작 상태
+      if (mode === 'new') {
+        chatbot.startNewConversation();
+        chatbot.switchView('chat');
+      } else if (mode === 'list') {
+        chatbot.switchView('conversations');
+      } else {
+        // auto 규칙
+        // 1) 대화가 하나도 없으면 새 대화 시작
+        // 2) 진행중(active) 대화가 있으면 그 대화로 시작
+        // 3) 진행중이 없고 완료된 대화만 있으면 목록으로
+        const conversations = chatbot.conversations;
+        if (!conversations || conversations.length === 0) {
+          chatbot.startNewConversation();
+          chatbot.switchView('chat');
+        } else {
+          const activeConv = conversations.find((c) => c.status === 'active');
+          if (activeConv) {
+            chatbot.selectConversation(activeConv.id);
+            chatbot.switchView('chat');
+          } else {
+            chatbot.switchView('conversations');
+          }
+        }
+      }
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('open-chatbot', handleOpen as EventListener);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('open-chatbot', handleOpen as EventListener);
+      }
+    };
+  }, [chatbot, launcherVisible]);
+
   // 로딩 중이면 아무것도 렌더링하지 않음
   if (userLoading || !chatUser) {
     return null;
   }
-
-  // 인증 상태에 따라 적절한 훅 선택
-  const chatbot = chatUser.isAuthenticated ? authenticatedChatbot : localChatbot;
 
   const activeConversation = chatbot.conversations.find(
     conv => conv.id === chatbot.activeConversation
@@ -40,7 +89,7 @@ export function UniversalChatbot() {
     ? chatbot.messages[chatbot.activeConversation] || []
     : [];
 
-  // 읽지 않은 메시지 수 계산
+  // 읽지 않은 메시지 수 계산 (플로팅 버튼 배지)
   const totalUnreadCount = chatUser.isAuthenticated 
     ? chatbot.conversations.reduce((total, conv) => {
         return total + readStatus.getUnreadCount(conv.id);
@@ -81,7 +130,13 @@ export function UniversalChatbot() {
           onMessageRead={handleMessageRead}
           onFormSubmit={chatbot.handleFormSubmit}
           onChipClick={chatbot.handleChipClick}
-          isFormSubmitting={chatbot.isFormSubmitting}
+          isFormSubmitting={(function () {
+            type MaybeFormSubmitting = { isFormSubmitting: boolean };
+            const guard = (obj: unknown): obj is MaybeFormSubmitting => {
+              return !!obj && typeof (obj as Record<string, unknown>).isFormSubmitting === 'boolean';
+            };
+            return guard(chatbot) ? chatbot.isFormSubmitting : false;
+          })()}
         />
 
 
@@ -97,18 +152,19 @@ export function UniversalChatbot() {
 
   return (
     <>
-      {/* Floating Button */}
-      <ChatFloatingButton
-        onClick={chatbot.toggleChat}
-        isOpen={chatbot.isOpen}
-        unreadCount={totalUnreadCount}
-      />
+      {/* Floating Button: 문의하기 클릭 후 노출 */}
+      {launcherVisible && (
+        <ChatFloatingButton
+          onClick={chatbot.toggleChat}
+          isOpen={chatbot.isOpen}
+          unreadCount={totalUnreadCount}
+        />
+      )}
 
       {/* Chat Modal */}
       <ChatModal
         isOpen={chatbot.isOpen}
         onClose={chatbot.toggleChat}
-        chatState={chatbot}
       >
         {/* Header */}
         <ChatHeader

@@ -17,6 +17,7 @@ interface UseChatbotReturn extends ChatState {
   handleChipClick: (chip: ChipButton) => Promise<void>;
   handleFormSubmit: (formData: Record<string, any>) => Promise<void>;
   isLoading: boolean;
+  isFormSubmitting: boolean;
   error: string | null;
 }
 

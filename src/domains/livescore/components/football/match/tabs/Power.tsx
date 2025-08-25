@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { Team } from '@/domains/livescore/types/match';
@@ -65,16 +66,14 @@ export default function Power({ data }: PowerProps) {
   const avgForB = data.recent.teamB.summary.goalsFor / gamesB
   const avgAgainstB = data.recent.teamB.summary.goalsAgainst / gamesB
 
-  // 바 차트 너비 정규화
-  const maxFor = Math.max(avgForA, avgForB) || 1
-  const maxAgainst = Math.max(avgAgainstA, avgAgainstB) || 1
+  // 바 차트 너비 정규화는 각 섹션에서 상대 비교로 처리
 
   return (
     <>
       {/* 팀 비교(모바일 우선) */}
       <section className="bg-white rounded-lg border p-4 mb-4">
         {/* 1) VS행: 팀명, 순위, 승무패 */}
-        <div className="grid grid-cols-[2fr_1fr_2fr] items-center gap-1">
+        <div className="grid grid-cols-[3fr_1fr_3fr] items-center gap-1">
           <div className="text-right px-1">
             <div className="flex items-center justify-end gap-2 mb-1">
               <div className="font-semibold truncate text-right">{teamAMeta.name}</div>
@@ -130,13 +129,13 @@ export default function Power({ data }: PowerProps) {
 
         {/* 2) 최근경기행: W/D/L */}
         <div className="mt-3">
-          <div className="grid grid-cols-[2fr_1fr_2fr] items-center gap-1 text-xs">
+          <div className="grid grid-cols-[3fr_1fr_3fr] items-center gap-1 text-xs">
             <div className="flex gap-1 justify-end px-1">
               {data.recent.teamA.items.slice(0, 5).map((it) => (
                 <span key={it.fixtureId} className={`w-6 h-6 flex items-center justify-center text-xs font-medium ${it.result === 'W' ? 'bg-emerald-100 text-emerald-700' : it.result === 'D' ? 'bg-gray-100 text-gray-700' : 'bg-rose-100 text-rose-700'}`}>{it.result}</span>
               ))}
             </div>
-            <div className="text-center text-gray-600 text-xs px-1">최근경기</div>
+            <div className="text-center text-gray-600 text-xs px-1 whitespace-nowrap">최근경기</div>
             <div className="flex gap-1 justify-start px-1">
               {data.recent.teamB.items.slice(0, 5).map((it) => (
                 <span key={it.fixtureId} className={`w-6 h-6 flex items-center justify-center text-xs font-medium ${it.result === 'W' ? 'bg-emerald-100 text-emerald-700' : it.result === 'D' ? 'bg-gray-100 text-gray-700' : 'bg-rose-100 text-rose-700'}`}>{it.result}</span>
@@ -145,39 +144,59 @@ export default function Power({ data }: PowerProps) {
           </div>
         </div>
 
-        {/* 3) 평균득점행 */}
+        {/* 3) 평균득점행 (최근 양팀 맞대결 UI와 동일 처리) */}
         <div className="mt-4">
-          <div className="grid grid-cols-[2fr_1fr_2fr] items-center gap-1 text-sm">
+          <div className="grid grid-cols-[3fr_1fr_3fr] items-center gap-1 text-sm">
             <div className="flex items-center justify-end px-1 gap-2">
               <div className="h-2 flex-1 bg-gray-100 rounded relative">
-                <div className="h-2 bg-red-500 rounded absolute right-0" style={{ width: `${(avgForA / maxFor) * 100}%` }} />
+                {avgForA > 0 && (
+                  <div
+                    className="h-2 bg-red-500 rounded absolute right-0"
+                    style={{ width: `${Math.min((avgForA / Math.max(avgForA, avgForB)) * 100, 100)}%` }}
+                  />
+                )}
               </div>
               <span className="font-semibold min-w-8">{avgForA.toFixed(2)}</span>
             </div>
-            <div className="text-center text-gray-600 text-xs px-1">평균득점</div>
+            <div className="text-center text-gray-600 text-xs px-1 whitespace-nowrap">평균득점</div>
             <div className="flex items-center justify-start px-1 gap-2">
               <span className="font-semibold min-w-8">{avgForB.toFixed(2)}</span>
               <div className="h-2 flex-1 bg-gray-100 rounded">
-                <div className="h-2 bg-red-500 rounded" style={{ width: `${(avgForB / maxFor) * 100}%` }} />
+                {avgForB > 0 && (
+                  <div
+                    className="h-2 bg-red-500 rounded"
+                    style={{ width: `${Math.min((avgForB / Math.max(avgForA, avgForB)) * 100, 100)}%` }}
+                  />
+                )}
               </div>
             </div>
           </div>
         </div>
 
-        {/* 4) 평균실점행 */}
+        {/* 4) 평균실점행 (최근 양팀 맞대결 UI와 동일 처리) */}
         <div className="mt-3">
-          <div className="grid grid-cols-[2fr_1fr_2fr] items-center gap-1 text-sm">
+          <div className="grid grid-cols-[3fr_1fr_3fr] items-center gap-1 text-sm">
             <div className="flex items-center justify-end px-1 gap-2">
               <div className="h-2 flex-1 bg-gray-100 rounded relative">
-                <div className="h-2 bg-blue-500 rounded absolute right-0" style={{ width: `${(avgAgainstA / maxAgainst) * 100}%` }} />
+                {avgAgainstA > 0 && (
+                  <div
+                    className="h-2 bg-blue-500 rounded absolute right-0"
+                    style={{ width: `${Math.min((avgAgainstA / Math.max(avgAgainstA, avgAgainstB)) * 100, 100)}%` }}
+                  />
+                )}
               </div>
               <span className="font-semibold min-w-8">{avgAgainstA.toFixed(2)}</span>
             </div>
-            <div className="text-center text-gray-600 text-xs px-1">평균실점</div>
+            <div className="text-center text-gray-600 text-xs px-1 whitespace-nowrap">평균실점</div>
             <div className="flex items-center justify-start px-1 gap-2">
               <span className="font-semibold min-w-8">{avgAgainstB.toFixed(2)}</span>
               <div className="h-2 flex-1 bg-gray-100 rounded">
-                <div className="h-2 bg-blue-500 rounded" style={{ width: `${(avgAgainstB / maxAgainst) * 100}%` }} />
+                {avgAgainstB > 0 && (
+                  <div
+                    className="h-2 bg-blue-500 rounded"
+                    style={{ width: `${Math.min((avgAgainstB / Math.max(avgAgainstA, avgAgainstB)) * 100, 100)}%` }}
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -209,7 +228,7 @@ export default function Power({ data }: PowerProps) {
                   <span className="font-semibold">{aScore}</span>
                 </div>
                 <div className="text-center text-gray-600 px-1">
-                  <div className="text-xs whitespace-nowrap">{new Date(m.utcDate).toLocaleDateString('ko-KR', { year: '2-digit', month: 'numeric', day: 'numeric' }).replace(/\./g, '. ')}</div>
+                  <div className="text-xs whitespace-nowrap">{new Date(m.utcDate).toLocaleDateString('ko-KR', { year: '2-digit', month: 'numeric', day: 'numeric', timeZone: 'Asia/Seoul' }).replace(/\./g, '. ')}</div>
                   <div className="text-xs truncate">{m.league.name}</div>
                 </div>
                 <div className="flex items-center justify-start px-1 gap-2">
@@ -259,21 +278,21 @@ export default function Power({ data }: PowerProps) {
             <div className="flex items-center justify-end px-1 gap-2">
               <div className="h-2 flex-1 bg-gray-100 rounded relative">
                 {data.h2h.last > 0 && data.h2h.resultSummary.teamA.goalsFor > 0 && (
-                  <div className="h-2 bg-orange-500 rounded absolute right-0" style={{ width: `${Math.min((data.h2h.resultSummary.teamA.goalsFor / data.h2h.last) / Math.max((data.h2h.resultSummary.teamA.goalsFor / data.h2h.last), (data.h2h.resultSummary.teamB.goalsFor / data.h2h.last)) * 100, 100)}%` }} />
+                  <div className="h-2 bg-red-500 rounded absolute right-0" style={{ width: `${Math.min((data.h2h.resultSummary.teamA.goalsFor / data.h2h.last) / Math.max((data.h2h.resultSummary.teamA.goalsFor / data.h2h.last), (data.h2h.resultSummary.teamB.goalsFor / data.h2h.last)) * 100, 100)}%` }} />
                 )}
               </div>
-              <span className={`font-medium ${data.h2h.last > 0 ? 'text-orange-600' : 'text-gray-400'}`}>
-                {data.h2h.last > 0 ? (data.h2h.resultSummary.teamA.goalsFor / data.h2h.last).toFixed(1) : '0.0'}
+              <span className="font-semibold min-w-8">
+                {data.h2h.last > 0 ? (data.h2h.resultSummary.teamA.goalsFor / data.h2h.last).toFixed(2) : '0.00'}
               </span>
             </div>
             <div className="text-center text-gray-600 text-xs">평균득점</div>
             <div className="flex items-center justify-start px-1 gap-2">
-              <span className={`font-medium ${data.h2h.last > 0 ? 'text-orange-600' : 'text-gray-400'}`}>
-                {data.h2h.last > 0 ? (data.h2h.resultSummary.teamB.goalsFor / data.h2h.last).toFixed(1) : '0.0'}
+              <span className="font-semibold min-w-8">
+                {data.h2h.last > 0 ? (data.h2h.resultSummary.teamB.goalsFor / data.h2h.last).toFixed(2) : '0.00'}
               </span>
               <div className="h-2 flex-1 bg-gray-100 rounded">
                 {data.h2h.last > 0 && data.h2h.resultSummary.teamB.goalsFor > 0 && (
-                  <div className="h-2 bg-orange-500 rounded" style={{ width: `${Math.min((data.h2h.resultSummary.teamB.goalsFor / data.h2h.last) / Math.max((data.h2h.resultSummary.teamA.goalsFor / data.h2h.last), (data.h2h.resultSummary.teamB.goalsFor / data.h2h.last)) * 100, 100)}%` }} />
+                  <div className="h-2 bg-red-500 rounded" style={{ width: `${Math.min((data.h2h.resultSummary.teamB.goalsFor / data.h2h.last) / Math.max((data.h2h.resultSummary.teamA.goalsFor / data.h2h.last), (data.h2h.resultSummary.teamB.goalsFor / data.h2h.last)) * 100, 100)}%` }} />
                 )}
               </div>
             </div>
@@ -286,11 +305,11 @@ export default function Power({ data }: PowerProps) {
                   <div className="h-2 bg-blue-500 rounded absolute right-0" style={{ width: `${Math.min((data.h2h.resultSummary.teamA.goalsAgainst / Math.max(data.h2h.last, 1)) / Math.max((data.h2h.resultSummary.teamA.goalsAgainst / Math.max(data.h2h.last, 1)), (data.h2h.resultSummary.teamB.goalsAgainst / Math.max(data.h2h.last, 1))) * 100, 100)}%` }} />
                 )}
               </div>
-              <span className="text-blue-600 font-medium">{(data.h2h.resultSummary.teamA.goalsAgainst / Math.max(data.h2h.last, 1)).toFixed(1)}</span>
+              <span className="font-semibold min-w-8">{(data.h2h.resultSummary.teamA.goalsAgainst / Math.max(data.h2h.last, 1)).toFixed(2)}</span>
             </div>
             <div className="text-center text-gray-600 text-xs">평균실점</div>
             <div className="flex items-center justify-start px-1 gap-2">
-              <span className="text-blue-600 font-medium">{(data.h2h.resultSummary.teamB.goalsAgainst / Math.max(data.h2h.last, 1)).toFixed(1)}</span>
+              <span className="font-semibold min-w-8">{(data.h2h.resultSummary.teamB.goalsAgainst / Math.max(data.h2h.last, 1)).toFixed(2)}</span>
               <div className="h-2 flex-1 bg-gray-100 rounded">
                 {data.h2h.last > 0 && data.h2h.resultSummary.teamB.goalsAgainst > 0 && (
                   <div className="h-2 bg-blue-500 rounded" style={{ width: `${Math.min((data.h2h.resultSummary.teamB.goalsAgainst / Math.max(data.h2h.last, 1)) / Math.max((data.h2h.resultSummary.teamA.goalsAgainst / Math.max(data.h2h.last, 1)), (data.h2h.resultSummary.teamB.goalsAgainst / Math.max(data.h2h.last, 1))) * 100, 100)}%` }} />
@@ -306,7 +325,7 @@ export default function Power({ data }: PowerProps) {
         <h3 className="text-base font-semibold mb-3">팀 탑 플레이어</h3>
         
         {/* 테이블 헤더 */}
-        <div className="grid grid-cols-[4fr_1fr_4fr] md:grid-cols-[3fr_1fr_3fr] gap-1 mb-3 text-sm font-medium text-gray-600 border-b pb-2">
+        <div className="grid grid-cols-[3fr_1fr_3fr] gap-1 mb-3 text-sm font-medium text-gray-600 border-b pb-2">
           <div className="flex items-center justify-end gap-2 px-1">
             <span>{teamAMeta.name}</span>
             <ApiSportsImage
@@ -318,7 +337,7 @@ export default function Power({ data }: PowerProps) {
               className="w-4 h-4 object-contain"
             />
           </div>
-          <div className="text-center px-1">구분</div>
+          <div className="text-center px-1 border-x border-gray-200">구분</div>
           <div className="flex items-center justify-start gap-2 px-1">
             <ApiSportsImage
               imageId={data.teamB}
@@ -334,9 +353,9 @@ export default function Power({ data }: PowerProps) {
         
         {/* 탑 스코어러 */}
         <div className="mb-4">
-          <div className="grid grid-cols-[4fr_1fr_4fr] md:grid-cols-[3fr_1fr_3fr] gap-1 items-center mb-2">
+          <div className="grid grid-cols-[3fr_1fr_3fr] gap-1 items-center mb-2">
             <div></div>
-            <div className="text-center text-sm font-medium text-gray-700">득점</div>
+            <div className="text-center text-sm font-medium text-gray-700 border-x border-gray-200">득점</div>
             <div></div>
           </div>
           
@@ -345,27 +364,27 @@ export default function Power({ data }: PowerProps) {
             const playerB = data.topPlayers.teamB.topScorers[index]
             
             return (
-              <div key={`scorer-${index}`} className="grid grid-cols-[4fr_1fr_4fr] md:grid-cols-[3fr_1fr_3fr] gap-1 items-center py-1 text-sm">
-                <div className="flex items-center gap-2 justify-end px-1">
+              <div key={`scorer-${index}`} className="grid grid-cols-[3fr_1fr_3fr] gap-1 items-center py-2 text-sm border-b border-gray-100 last:border-b-0">
+                <div className="flex items-center gap-3 justify-end px-1">
                   {playerA && (
                     <>
-                      <span className="truncate ">{playerA.name || `#${playerA.playerId}`}</span>
-                      <div className="relative w-6 h-6 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
-                        <img src={`https://media.api-sports.io/football/players/${playerA.playerId}.png`} alt="player" className="w-full h-full object-cover" />
+                      <span className="text-sm sm:text-base leading-snug line-clamp-2 max-w-[160px] text-right">{playerA.name || `#${playerA.playerId}`}</span>
+                      <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
+                        <Image src={`https://media.api-sports.io/football/players/${playerA.playerId}.png`} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                       </div>
-                      <span className="text-orange-600 font-medium  flex-shrink-0">{playerA.goals}</span>
+                      <span className="text-orange-600 font-semibold flex-shrink-0 text-base">{playerA.goals}</span>
                     </>
                   )}
                 </div>
-                <div></div>
-                <div className="flex items-center gap-2 justify-start px-1">
+                <div className="border-x border-gray-200 h-full" />
+                <div className="flex items-center gap-3 justify-start px-1">
                   {playerB && (
                     <>
-                      <span className="text-orange-600 font-medium  flex-shrink-0">{playerB.goals}</span>
-                      <div className="relative w-6 h-6 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
-                        <img src={`https://media.api-sports.io/football/players/${playerB.playerId}.png`} alt="player" className="w-full h-full object-cover" />
+                      <span className="text-orange-600 font-semibold flex-shrink-0 text-base">{playerB.goals}</span>
+                      <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
+                        <Image src={`https://media.api-sports.io/football/players/${playerB.playerId}.png`} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                       </div>
-                      <span className="truncate ">{playerB.name || `#${playerB.playerId}`}</span>
+                      <span className="text-sm sm:text-base leading-snug line-clamp-2 max-w-[160px]">{playerB.name || `#${playerB.playerId}`}</span>
                     </>
                   )}
                 </div>
@@ -376,9 +395,9 @@ export default function Power({ data }: PowerProps) {
         
         {/* 탑 어시스터 */}
         <div>
-          <div className="grid grid-cols-[4fr_1fr_4fr] md:grid-cols-[3fr_1fr_3fr] gap-1 items-center mb-2">
+          <div className="grid grid-cols-[3fr_1fr_3fr] gap-1 items-center mb-2">
             <div></div>
-            <div className="text-center text-sm font-medium text-gray-700">도움</div>
+            <div className="text-center text-sm font-medium text-gray-700 border-x border-gray-200">도움</div>
             <div></div>
           </div>
           
@@ -387,27 +406,27 @@ export default function Power({ data }: PowerProps) {
             const playerB = data.topPlayers.teamB.topAssist[index]
             
             return (
-              <div key={`assist-${index}`} className="grid grid-cols-[4fr_1fr_4fr] md:grid-cols-[3fr_1fr_3fr] gap-1 items-center py-1 text-sm">
-                <div className="flex items-center gap-2 justify-end px-1">
+              <div key={`assist-${index}`} className="grid grid-cols-[3fr_1fr_3fr] gap-1 items-center py-2 text-sm border-b border-gray-100 last:border-b-0">
+                <div className="flex items-center gap-3 justify-end px-1">
                   {playerA && (
                     <>
-                      <span className="truncate ">{playerA.name || `#${playerA.playerId}`}</span>
-                      <div className="relative w-6 h-6 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
-                        <img src={`https://media.api-sports.io/football/players/${playerA.playerId}.png`} alt="player" className="w-full h-full object-cover" />
+                      <span className="text-sm sm:text-base leading-snug line-clamp-2 max-w-[160px] text-right">{playerA.name || `#${playerA.playerId}`}</span>
+                      <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
+                        <Image src={`https://media.api-sports.io/football/players/${playerA.playerId}.png`} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                       </div>
-                      <span className="text-blue-600 font-medium  flex-shrink-0">{playerA.assists}</span>
+                      <span className="text-blue-600 font-semibold flex-shrink-0 text-base">{playerA.assists}</span>
                     </>
                   )}
                 </div>
-                <div></div>
-                <div className="flex items-center gap-2 justify-start px-1">
+                <div className="border-x border-gray-200 h-full" />
+                <div className="flex items-center gap-3 justify-start px-1">
                   {playerB && (
                     <>
-                      <span className="text-blue-600 font-medium  flex-shrink-0">{playerB.assists}</span>
-                      <div className="relative w-6 h-6 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
-                        <img src={`https://media.api-sports.io/football/players/${playerB.playerId}.png`} alt="player" className="w-full h-full object-cover" />
+                      <span className="text-blue-600 font-semibold flex-shrink-0 text-base">{playerB.assists}</span>
+                      <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
+                        <Image src={`https://media.api-sports.io/football/players/${playerB.playerId}.png`} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                       </div>
-                      <span className="truncate ">{playerB.name || `#${playerB.playerId}`}</span>
+                      <span className="text-sm sm:text-base leading-snug line-clamp-2 max-w-[160px]">{playerB.name || `#${playerB.playerId}`}</span>
                     </>
                   )}
                 </div>

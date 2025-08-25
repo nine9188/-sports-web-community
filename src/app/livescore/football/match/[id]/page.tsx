@@ -61,7 +61,8 @@ export default async function MatchPage({
       
       // 각 탭에 필요한 데이터만 선별적으로 로드
       const options = {
-        fetchEvents: initialTab === 'events' || initialTab === 'lineups',
+        // power 또는 기본 탭(null)에서도 이벤트를 프리로드하여 헤더 득점 정보 표시 보장
+        fetchEvents: initialTab === 'events' || initialTab === 'lineups' || initialTab === 'power' || !initialTab,
         fetchLineups: initialTab === 'lineups',
         fetchStats: initialTab === 'stats',
         fetchStandings: initialTab === 'standings' || initialTab === 'power', // power 탭도 standings 데이터 필요

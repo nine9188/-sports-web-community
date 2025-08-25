@@ -20,6 +20,10 @@ const NoDataState = memo(function NoDataState({ tabName }: { tabName: string }) 
       title: '이벤트 데이터가 없습니다',
       message: '이 경기의 이벤트 데이터를 찾을 수 없습니다.'
     },
+    power: {
+      title: '전력 데이터가 없습니다',
+      message: '이 경기의 전력 데이터를 찾을 수 없습니다.'
+    },
     lineups: {
       title: '라인업 정보가 없습니다',
       message: '이 경기의 라인업 정보를 찾을 수 없습니다.'
@@ -173,12 +177,8 @@ export default function TabContent() {
       setIsTabChanging(false);
     }
     
-    // 최대 1초 후에는 강제로 로딩 상태 해제 (UX 향상)
-    const timerId = setTimeout(() => {
-      setIsTabChanging(false);
-    }, 1000);
-    
-    return () => clearTimeout(timerId);
+    // 로딩은 실제 데이터 도착에 의해 해제되도록 타임아웃 제거
+    return () => {};
   }, [matchId, tab, eventsData, lineupsData, statsData, standingsData, tabsData.power, loadMatchData]);
 
   // 탭 변경이 완료되면 로딩 상태 해제
