@@ -228,7 +228,8 @@ const MatchItem = React.memo(function MatchItem({
               <div className="text-sm text-gray-600 mb-1">
                 {match.time?.date ? new Date(match.time.date).toLocaleTimeString('ko-KR', {
                   hour: '2-digit',
-                  minute: '2-digit'
+                  minute: '2-digit',
+                  timeZone: 'Asia/Seoul'
                 }) : '--:--'}
               </div>
               <div className={`text-xs px-2 py-1 rounded-full ${getMatchStatusStyle(match.status?.code || '')}`}>

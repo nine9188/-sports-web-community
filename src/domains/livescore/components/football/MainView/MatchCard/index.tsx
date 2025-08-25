@@ -52,7 +52,7 @@ export default function MatchCard({ match: initialMatch }: MatchCardProps) {
     }
     
     // 나머지는 모두 경기 시작 시간 표시
-    return new Date(match.time?.date || Date.now()).toLocaleTimeString('ko-KR', { 
+    return new Date(match.time?.date ?? 0).toLocaleTimeString('ko-KR', { 
       hour: '2-digit', 
       minute: '2-digit',
       hour12: false,

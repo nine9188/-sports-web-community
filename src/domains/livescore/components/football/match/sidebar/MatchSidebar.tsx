@@ -226,7 +226,8 @@ export function MatchInfoSection({
                     month: 'short', 
                     day: 'numeric',
                     hour: '2-digit',
-                    minute: '2-digit'
+                    minute: '2-digit',
+                    timeZone: 'Asia/Seoul'
                   })}
                 </span>
               </div>
