@@ -11,31 +11,31 @@
  */
 export function formatDate(dateString?: string | null): string {
   if (!dateString) return '';
-  
   try {
     const date = new Date(dateString);
-    
-    if (isNaN(date.getTime())) {
-      return '';
-    }
-    
+    if (isNaN(date.getTime())) return '';
+
+    // KST 기준 날짜/시간 파츠 추출
+    const kstFormatter = new Intl.DateTimeFormat('ko-KR', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const targetDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    
-    // 오늘인지 확인
-    if (targetDate.getTime() === today.getTime()) {
-      // 오늘이면 시간만 표시 (HH:mm)
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      return `${hours}:${minutes}`;
-    } else {
-      // 어제 이전이면 날짜만 표시 (YYYY.MM.DD)
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}.${month}.${day}`;
+    const [yNow, mNow, dNow] = extractYMD(kstFormatter, now);
+    const [yTar, mTar, dTar] = extractYMD(kstFormatter, date);
+
+    // 오늘이면 HH:mm, 아니면 YYYY.MM.DD
+    if (yNow === yTar && mNow === mTar && dNow === dTar) {
+      const [, , , hh, mm] = extractYMDHM(kstFormatter, date);
+      return `${hh}:${mm}`;
     }
+    return `${yTar}.${mTar}.${dTar}`;
   } catch (error) {
     console.error('날짜 포맷 오류:', error);
     return '';
@@ -50,26 +50,26 @@ export function formatDate(dateString?: string | null): string {
  */
 export function formatDateBasic(dateString: string, includeTime = false): string {
   if (!dateString) return '';
-  
   try {
     const date = new Date(dateString);
-    
-    if (isNaN(date.getTime())) {
-      return '';
-    }
-    
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    
+    if (isNaN(date.getTime())) return '';
+
+    const kstFormatter = new Intl.DateTimeFormat('ko-KR', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: includeTime ? '2-digit' : undefined,
+      minute: includeTime ? '2-digit' : undefined,
+      hour12: false,
+    });
+
     if (!includeTime) {
-      return `${year}-${month}-${day}`;
+      const [y, m, d] = extractYMD(kstFormatter, date);
+      return `${y}-${m}-${d}`;
     }
-    
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    
-    return `${year}-${month}-${day} ${hours}:${minutes}`;
+    const [y, m, d, hh, mm] = extractYMDHM(kstFormatter, date);
+    return `${y}-${m}-${d} ${hh}:${mm}`;
   } catch (error) {
     console.error('날짜 포맷 오류:', error);
     return '';
@@ -85,10 +85,13 @@ export function getRelativeTimeFromNow(dateString: string): string {
   if (!dateString) return '';
   
   try {
+    // KST 기준의 현재/대상 시각으로 계산 (서버/클라이언트 일관)
     const date = new Date(dateString);
     const now = new Date();
-    
-    const diffInMs = now.getTime() - date.getTime();
+    const dateMs = getKSTTimestamp(date);
+    const nowMs = getKSTTimestamp(now);
+
+    const diffInMs = nowMs - dateMs;
     const diffInSec = Math.floor(diffInMs / 1000);
     const diffInMin = Math.floor(diffInSec / 60);
     const diffInHour = Math.floor(diffInMin / 60);
@@ -110,3 +113,42 @@ export function getRelativeTimeFromNow(dateString: string): string {
     return '';
   }
 } 
+
+// 내부 유틸: KST 기준 Y, M, D 추출
+function extractYMD(formatter: Intl.DateTimeFormat, date: Date): [string, string, string] {
+  const parts = formatter.formatToParts(date);
+  const year = parts.find(p => p.type === 'year')?.value ?? '';
+  const month = parts.find(p => p.type === 'month')?.value ?? '';
+  const day = parts.find(p => p.type === 'day')?.value ?? '';
+  return [year, month, day];
+}
+
+// 내부 유틸: KST 기준 Y, M, D, H, m 추출
+function extractYMDHM(formatter: Intl.DateTimeFormat, date: Date): [string, string, string, string, string] {
+  const parts = formatter.formatToParts(date);
+  const year = parts.find(p => p.type === 'year')?.value ?? '';
+  const month = parts.find(p => p.type === 'month')?.value ?? '';
+  const day = parts.find(p => p.type === 'day')?.value ?? '';
+  const hour = parts.find(p => p.type === 'hour')?.value ?? '00';
+  const minute = parts.find(p => p.type === 'minute')?.value ?? '00';
+  return [year, month, day, hour, minute];
+}
+
+// 내부 유틸: KST 기준 타임스탬프(ms) 계산
+function getKSTTimestamp(date: Date): number {
+  // Intl로 KST의 Y/M/D/H/m/s를 얻어 UTC로 다시 생성
+  const formatter = new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+  });
+  const parts = formatter.formatToParts(date);
+  const y = Number(parts.find(p => p.type === 'year')?.value ?? '1970');
+  const m = Number(parts.find(p => p.type === 'month')?.value ?? '01');
+  const d = Number(parts.find(p => p.type === 'day')?.value ?? '01');
+  const hh = Number(parts.find(p => p.type === 'hour')?.value ?? '00');
+  const mm = Number(parts.find(p => p.type === 'minute')?.value ?? '00');
+  const ss = Number(parts.find(p => p.type === 'second')?.value ?? '00');
+  // UTC로 간주되는 Date.UTC 사용 (로컬 타임존 영향 제거)
+  return Date.UTC(y, m - 1, d, hh, mm, ss);
+}
