@@ -235,30 +235,29 @@ export const formatDate = (dateString: string) => {
   
   try {
     const date = new Date(dateString);
-    
-    // 유효하지 않은 날짜 체크
-    if (isNaN(date.getTime())) {
-      return '-';
-    }
-    
+    if (isNaN(date.getTime())) return '-';
+
+    const kst = new Intl.DateTimeFormat('ko-KR', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', hour12: false,
+    });
     const now = new Date();
-    
-    // 오늘 00:00:00 기준으로 비교
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const postDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    
-    // 오늘 글이면 시간만 표시 (HH:mm)
-    if (postDate.getTime() === todayStart.getTime()) {
-      const hours = date.getHours().toString().padStart(2, '0');
-      const minutes = date.getMinutes().toString().padStart(2, '0');
-      return `${hours}:${minutes}`;
+    const partsNow = kst.formatToParts(now);
+    const partsDate = kst.formatToParts(date);
+    const yNow = partsNow.find(p => p.type === 'year')?.value;
+    const mNow = partsNow.find(p => p.type === 'month')?.value;
+    const dNow = partsNow.find(p => p.type === 'day')?.value;
+    const y = partsDate.find(p => p.type === 'year')?.value;
+    const m = partsDate.find(p => p.type === 'month')?.value;
+    const d = partsDate.find(p => p.type === 'day')?.value;
+    const hh = partsDate.find(p => p.type === 'hour')?.value ?? '00';
+    const mm = partsDate.find(p => p.type === 'minute')?.value ?? '00';
+
+    if (y === yNow && m === mNow && d === dNow) {
+      return `${hh}:${mm}`;
     }
-    
-    // 어제 이전 글이면 날짜 표시 (YYYY.MM.DD)
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}.${month}.${day}`;
+    return `${y}.${m}.${d}`;
   } catch (error) {
     console.warn('날짜 포맷팅 오류:', error);
     return '-';

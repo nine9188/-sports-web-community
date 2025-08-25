@@ -172,19 +172,15 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
       const statusCode = match.status.code || '';
       
       if (statusCode === 'NS') {
-        if (!match.time.date) {
-          return '-';
-        }
-        
+        if (!match.time.date) return '-';
         const matchTime = new Date(match.time.date);
-        
-        if (isNaN(matchTime.getTime())) {
-          return '-';
-        }
-        
-        const hours = matchTime.getHours();
-        const minutes = matchTime.getMinutes();
-        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        if (isNaN(matchTime.getTime())) return '-';
+        return matchTime.toLocaleTimeString('ko-KR', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false,
+          timeZone: 'Asia/Seoul',
+        });
       } 
       else if (statusCode === 'HT') {
         return 'HT';
