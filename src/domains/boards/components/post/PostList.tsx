@@ -434,7 +434,6 @@ export default function PostList({
       let contentToCheck = content;
       let hasSpecialContent = false;
       
-      // 디버깅: 콘텐츠 타입 확인
       const isJSON = content.startsWith('{') || content.startsWith('[');
       
       // JSON 형태의 콘텐츠인지 확인하고 파싱
@@ -538,7 +537,6 @@ export default function PostList({
       
       return { hasImage, hasVideo, hasYoutube, hasLink };
     } catch (error) {
-      console.warn('콘텐츠 타입 확인 중 오류:', error);
       return { hasImage: false, hasVideo: false, hasYoutube: false, hasLink: false };
     }
   }, []);

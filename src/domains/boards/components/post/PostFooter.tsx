@@ -44,7 +44,6 @@ export default function PostFooter({
       const response = await deletePost(postId, userId);
       
       if (!response.success) {
-        console.error('게시글 삭제 중 오류:', response.error);
         alert(`게시글 삭제 중 오류가 발생했습니다: ${response.error}`);
         setIsDeleting(false);
         return;
@@ -54,7 +53,6 @@ export default function PostFooter({
       router.push(`/boards/${response.boardSlug || boardSlug}`);
       router.refresh();
     } catch (error) {
-      console.error('게시글 삭제 중 오류:', error);
       alert(`게시글 삭제 중 오류가 발생했습니다.`);
       setIsDeleting(false);
     }

@@ -64,19 +64,15 @@ interface PostContentProps {
 // 텍스트에서 경기 통계를 추출하는 함수
 const parseMatchStatsFromText = (text: string) => {
   try {
-    console.log('🔍 텍스트 파싱 시작:', text.substring(0, 500));
     
     // 홈팀과 원정팀 데이터 추출
     const homeTeamMatch = text.match(/【\s*홈팀\s+(.+?)\s+시즌\s+통계\s*】([\s\S]*?)(?=【|$)/);
     const awayTeamMatch = text.match(/【\s*어웨이팀\s+(.+?)\s+시즌\s+통계\s*】([\s\S]*?)(?=【|$)/);
     const oddsMatch = text.match(/【\s*배당률\s+정보\s*】([\s\S]*?)(?=【|$)/);
     
-    console.log('🏠 홈팀 매치:', homeTeamMatch?.[1]);
-    console.log('✈️ 어웨이팀 매치:', awayTeamMatch?.[1]);
-    console.log('💰 배당률 매치:', oddsMatch?.[1]);
+    
     
     if (!homeTeamMatch || !awayTeamMatch) {
-      console.log('❌ 팀 데이터 추출 실패');
       return null;
     }
 
@@ -108,17 +104,7 @@ const parseMatchStatsFromText = (text: string) => {
     
     const homeInjuries = parseInt(homeTeamData.match(/부상자\s*수:\s*(\d+)\s*명/)?.[1] || '0');
 
-    console.log('🏠 홈팀 파싱 결과:', {
-      name: homeTeamName,
-      matches: homeMatches,
-      wins: homeWins,
-      draws: homeDraws,
-      losses: homeLosses,
-      winRate: homeWinRate,
-      goals: homeGoals,
-      conceded: homeConceded,
-      form: homeForm
-    });
+    
 
     // 어웨이팀 데이터 파싱 (실제 데이터 형식에 맞게 수정)
     // "- 경기수: 20경기 - 승부 기록: 5승 4무 11패 - 원정 승률: 25. 0%" 형식
@@ -142,17 +128,7 @@ const parseMatchStatsFromText = (text: string) => {
     
     const awayInjuries = parseInt(awayTeamData.match(/부상자\s*수:\s*(\d+)\s*명/)?.[1] || '0');
 
-    console.log('✈️ 어웨이팀 파싱 결과:', {
-      name: awayTeamName,
-      matches: awayMatches,
-      wins: awayWins,
-      draws: awayDraws,
-      losses: awayLosses,
-      winRate: awayWinRate,
-      goals: awayGoals,
-      conceded: awayConceded,
-      form: awayForm
-    });
+    
 
     // 새로운 인터페이스에 맞는 데이터 구조
     const homeTeam = {
@@ -195,7 +171,7 @@ const parseMatchStatsFromText = (text: string) => {
       const drawOdd = drawOddMatch ? parseFloat(drawOddMatch[1].replace(/\s+/g, '')) : 0;
       const awayOdd = awayOddMatch ? parseFloat(awayOddMatch[1].replace(/\s+/g, '')) : 0;
       
-      console.log('💰 배당률 파싱 결과:', { homeOdd, drawOdd, awayOdd });
+      
       
       if (homeOdd > 0 && drawOdd > 0 && awayOdd > 0) {
         bettingOdds = {
@@ -206,7 +182,7 @@ const parseMatchStatsFromText = (text: string) => {
       }
     }
 
-    console.log('✅ 파싱 완료:', { homeTeam, awayTeam, bettingOdds });
+    
 
     return {
       homeTeam,
@@ -214,7 +190,6 @@ const parseMatchStatsFromText = (text: string) => {
       bettingOdds
     };
   } catch (error) {
-    console.error('❌ 텍스트 데이터 파싱 오류:', error);
     return null;
   }
 };
@@ -276,14 +251,12 @@ export default function PostContent({ content, meta }: PostContentProps) {
         if ('type' in content && content.type === 'doc' && 'content' in content && Array.isArray((content as TipTapDoc).content)) {
           const tipTapDoc = content as TipTapDoc;
           
-          console.log('🔍 TipTap 문서 처리 중:', tipTapDoc);
-          
           tipTapDoc.content.forEach((node, nodeIndex) => {
-            console.log(`📝 노드 ${nodeIndex}:`, node);
+            
             
             if (node.type === 'matchCard' && node.attrs) {
               // 매치 카드 노드 처리
-              console.log('🏟️ 매치 카드 노드 발견:', node.attrs);
+              
               const { matchId, matchData } = node.attrs;
               
               if (matchData && typeof matchData === 'object') {
@@ -390,7 +363,7 @@ export default function PostContent({ content, meta }: PostContentProps) {
               htmlContent += '<hr class="my-6 border-gray-300" />';
             } else if (node.type === 'image' && node.attrs && node.attrs.src) {
               // 이미지 노드 처리 (paragraph보다 먼저)
-              console.log('🖼️ 이미지 노드 발견:', node.attrs.src);
+              
               htmlContent += `
                 <div class="my-6 text-center">
                   <img 
@@ -468,7 +441,7 @@ export default function PostContent({ content, meta }: PostContentProps) {
 
             } else if (node.type === 'matchCard' && node.attrs) {
               // 매치 카드 노드 처리
-              console.log('🏟️ 매치 카드 노드 발견:', node.attrs);
+              
               const { matchId, matchData } = node.attrs;
               
               if (matchData && typeof matchData === 'object') {
@@ -571,7 +544,7 @@ export default function PostContent({ content, meta }: PostContentProps) {
                 `;
               }
             } else {
-              console.log('❓ 알 수 없는 노드 타입:', node.type);
+              
             }
           });
         } else {
@@ -595,7 +568,6 @@ export default function PostContent({ content, meta }: PostContentProps) {
         htmlContent += '</div>';
         return htmlContent;
       } catch (error) {
-        console.error('JSON content 처리 오류:', error);
         return `<div class="text-red-500">오류: 게시글 내용을 표시할 수 없습니다.</div>`;
       }
     }
@@ -614,12 +586,10 @@ export default function PostContent({ content, meta }: PostContentProps) {
       if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
         try {
           const parsedContent = JSON.parse(content);
-          console.log('🔍 JSON 파싱 성공:', parsedContent);
           
           // 파싱된 객체를 처리
           return processObjectContent(parsedContent);
         } catch (error) {
-          console.warn('JSON 파싱 실패, 문자열로 처리:', error);
           return content; // 파싱 실패시 원본 문자열 반환
         }
       }
@@ -638,17 +608,15 @@ export default function PostContent({ content, meta }: PostContentProps) {
     // 0. 차트 데이터 확인 및 렌더링 (meta 데이터 또는 텍스트 파싱)
     let chartDataToRender = null;
     
-    console.log('🔍 차트 데이터 확인 시작');
-    console.log('📊 meta 데이터:', meta);
+    
     
     // meta 데이터에서 차트 데이터 확인
     if (meta && meta.chart_data && Array.isArray(meta.chart_data)) {
-      console.log('📊 원본 meta 차트 데이터:', meta.chart_data);
-      console.log('📊 첫 번째 차트 데이터 상세:', meta.chart_data[0]);
+      
       
       // 기존 구조를 새로운 인터페이스로 변환
       chartDataToRender = meta.chart_data.map((data: Record<string, unknown>) => {
-        console.log('🔄 데이터 변환 중:', data);
+        
         
         const homeTeam = data.homeTeam as Record<string, unknown> | undefined;
         const awayTeam = data.awayTeam as Record<string, unknown> | undefined;
@@ -658,8 +626,7 @@ export default function PostContent({ content, meta }: PostContentProps) {
         const homeStats = homeTeam?.stats as Record<string, unknown> | undefined;
         const awayStats = awayTeam?.stats as Record<string, unknown> | undefined;
         
-        console.log('🏠 홈팀 stats:', homeStats);
-        console.log('✈️ 원정팀 stats:', awayStats);
+        
         
         // 홈팀과 원정팀의 실제 데이터 추출
         const homeMatches = (homeStats?.homePlayed as number) || 0;
@@ -676,8 +643,7 @@ export default function PostContent({ content, meta }: PostContentProps) {
         const homeWinRate = homeMatches > 0 ? Math.round((homeWins / homeMatches) * 100 * 10) / 10 : 0;
         const awayWinRate = awayMatches > 0 ? Math.round((awayWins / awayMatches) * 100 * 10) / 10 : 0;
         
-        console.log(`🏠 홈팀 승률 계산: ${homeWins}승 / ${homeMatches}경기 = ${homeWinRate}%`);
-        console.log(`✈️ 원정팀 승률 계산: ${awayWins}승 / ${awayMatches}경기 = ${awayWinRate}%`);
+        
         
         // 기존 구조에서 새로운 구조로 변환
         const convertedData = {
@@ -720,18 +686,14 @@ export default function PostContent({ content, meta }: PostContentProps) {
           } : null
         };
         
-        console.log('✅ 변환된 데이터:', convertedData);
+        
         return convertedData;
       });
       
-      console.log('✅ meta에서 차트 데이터 발견 및 변환 완료:', chartDataToRender);
+      
     } else {
       // meta 데이터가 없으면 텍스트에서 파싱 시도
       const textContent = rootElement.textContent || '';
-              console.log('📝 텍스트 내용 길이:', textContent.length);
-        console.log('📝 텍스트 샘플 (첫 200자):', textContent.substring(0, 200));
-        console.log('📝 텍스트 샘플 (중간 200자):', textContent.substring(Math.floor(textContent.length/2), Math.floor(textContent.length/2) + 200));
-        console.log('📝 텍스트 샘플 (마지막 200자):', textContent.substring(Math.max(0, textContent.length - 200)));
       
       // 더 광범위한 조건으로 파싱 시도
       const hasMatchData = textContent.includes('【') || 
@@ -743,22 +705,15 @@ export default function PostContent({ content, meta }: PostContentProps) {
                           (textContent.includes('Gimcheon') && textContent.includes('Jeonbuk'));
       
       if (hasMatchData) {
-        console.log('🎯 텍스트 파싱 조건 충족, 파싱 시도');
         const parsedData = parseMatchStatsFromText(textContent);
         if (parsedData) {
           chartDataToRender = [parsedData];
-          console.log('✅ 텍스트에서 차트 데이터 파싱 성공:', parsedData);
+          
         } else {
-          console.log('❌ 텍스트 파싱 실패');
+          
         }
       } else {
-        console.log('❌ 텍스트 파싱 조건 불충족');
-        console.log('🔍 텍스트에서 찾은 키워드들:');
-        console.log('- 【:', textContent.includes('【'));
-        console.log('- 홈팀:', textContent.includes('홈팀'));
-        console.log('- 어웨이팀:', textContent.includes('어웨이팀'));
-        console.log('- Gimcheon:', textContent.includes('Gimcheon'));
-        console.log('- Jeonbuk:', textContent.includes('Jeonbuk'));
+        
       }
     }
     
@@ -791,11 +746,10 @@ export default function PostContent({ content, meta }: PostContentProps) {
                                headerText.includes('】');
           
           if (!isMatchHeader) {
-            console.log('🚫 차트 삽입 조건 불충족:', headerText);
             return;
           }
           
-          console.log('✅ 차트 삽입 조건 충족:', headerText);
+          
           
           // 차트 컨테이너 생성
           const chartContainer = document.createElement('div');
@@ -812,7 +766,6 @@ export default function PostContent({ content, meta }: PostContentProps) {
               })
             );
           }).catch(error => {
-            console.error('차트 컴포넌트 로드 오류:', error);
             chartContainer.innerHTML = `
               <div class="match-stats-chart-container my-8 p-6 bg-red-50 border border-red-200 rounded-xl">
                 <div class="text-center text-red-600">
@@ -1047,7 +1000,6 @@ export default function PostContent({ content, meta }: PostContentProps) {
           }
         }
       } catch (error) {
-        console.error('소셜 임베드 처리 중 오류 발생:', error);
         element.innerHTML = `<div class="p-4 border rounded bg-red-50 text-red-600">
           소셜 미디어 콘텐츠를 로드하는 중 오류가 발생했습니다.
         </div>`;

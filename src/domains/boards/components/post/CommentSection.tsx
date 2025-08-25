@@ -55,10 +55,10 @@ export default function CommentSection({
       if (response && response.success && response.comments && response.comments.length >= 0) {
         setComments(response.comments);
       } else {
-        console.error('댓글 업데이트 실패:', response?.error || '응답이 없습니다');
+        
       }
     } catch (error) {
-      console.error("댓글 실시간 업데이트 중 오류:", error);
+      
     }
   }, [postId]);
 
@@ -91,7 +91,6 @@ export default function CommentSection({
           setCurrentUserId(null);
         }
       } catch (error) {
-        console.error('사용자 정보 가져오기 실패:', error);
         setCurrentUserId(null);
       }
     };
@@ -160,7 +159,6 @@ export default function CommentSection({
       }
       
     } catch (error) {
-      console.error('댓글 작성 중 오류:', error);
       const message = error instanceof Error ? error.message : '댓글 작성 중 오류가 발생했습니다.';
       setErrorMessage(message);
       alert(message);
@@ -196,7 +194,6 @@ export default function CommentSection({
         await updateComments();
       }
     } catch (error) {
-      console.error('댓글 수정 중 오류:', error);
       throw error;
     }
   }, [updateComments]);
@@ -221,7 +218,6 @@ export default function CommentSection({
         prevComments.filter(comment => comment.id !== commentId)
       );
     } catch (error) {
-      console.error('댓글 삭제 중 오류:', error);
       alert(error instanceof Error ? error.message : '댓글 삭제 중 오류가 발생했습니다.');
     }
   }, []);

@@ -46,7 +46,6 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
       await onUpdate(comment.id, editContent.trim());
       setIsEditing(false);
     } catch (error) {
-      console.error('댓글 수정 실패:', error);
       alert('댓글 수정에 실패했습니다.');
     }
   };
@@ -64,7 +63,7 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
       setDislikes(result.dislikes || 0);
       setUserAction(result.userAction || null);
     } catch (error) {
-      console.error('좋아요 예외:', error);
+      
     } finally {
       setIsLiking(false);
     }
@@ -83,7 +82,7 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
       setDislikes(result.dislikes || 0);
       setUserAction(result.userAction || null);
     } catch (error) {
-      console.error('싫어요 예외:', error);
+      
     } finally {
       setIsDisliking(false);
     }
