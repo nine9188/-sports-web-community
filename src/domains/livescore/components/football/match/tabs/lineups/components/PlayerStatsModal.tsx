@@ -51,8 +51,8 @@ export default function PlayerStatsModal({
 
   // 데이터 로드 함수 - 성능 최적화
   const loadPlayerStats = useCallback(async () => {
-    // 이미 데이터가 있으면 스킵
-    if (playerStats && playerStats.success) return;
+    // 현재 선택된 선수의 데이터가 이미 있으면 스킵
+    if (playerStats?.success && playerStats.response?.player?.id === playerId) return;
     
     // 1. 미리 로드된 데이터가 있으면 바로 사용
     if (preloadedStats && preloadedStats.response && preloadedStats.response.length > 0) {
@@ -66,22 +66,20 @@ export default function PlayerStatsModal({
       return;
     }
 
-    // 2. 데이터가 없으면 서버에서 가져오기
-    if (!isLoading) {
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        const data = await fetchCachedPlayerStats(matchId, playerId);
-        setPlayerStats(data);
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류';
-        setError(`선수 통계를 가져오는 중 오류가 발생했습니다: ${errorMessage}`);
-      } finally {
-        setIsLoading(false);
-      }
+    // 2. 데이터가 없으면 서버에서 가져오기 (isLoading 여부와 무관하게 실행)
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const data = await fetchCachedPlayerStats(matchId, playerId);
+      setPlayerStats(data);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류';
+      setError(`선수 통계를 가져오는 중 오류가 발생했습니다: ${errorMessage}`);
+    } finally {
+      setIsLoading(false);
     }
-  }, [matchId, playerId, preloadedStats, playerStats, isLoading]);
+  }, [matchId, playerId, preloadedStats, playerStats]);
 
   // 모달이 열릴 때 데이터 확인
   useEffect(() => {
