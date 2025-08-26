@@ -302,12 +302,28 @@ export default function LiveScoreModal({ isOpen, onClose }: LiveScoreModalProps)
       const result = await fetchMultiDayMatches() as MultiDayMatchesResponse;
       
       if (result.success && result.data) {
+        // 정렬 함수: 예정(NS/TBD) ↑, 진행중(LIVE/1H/2H/HT) →, 종료/연기/취소 ↓
+        const sortByStatus = (a: MatchData, b: MatchData) => {
+          const codeOf = (m?: MatchData) => (m?.status?.code || '').toUpperCase();
+          const rankOf = (code: string) => {
+            if (code === 'NS' || code === 'TBD') return 0; // 예정 최상단
+            if (code === 'LIVE' || code === '1H' || code === '2H' || code === 'HT') return 1; // 진행중 중간
+            if (code === 'FT' || code === 'AET' || code === 'PEN') return 3; // 종료 하단
+            if (code === 'PST' || code === 'CANC' || code === 'SUSP') return 4; // 연기/취소 더 하단
+            return 2; // 기타 상태는 중간 그룹
+          };
+          const ra = rankOf(codeOf(a));
+          const rb = rankOf(codeOf(b));
+          if (ra !== rb) return ra - rb;
+          return 0;
+        };
+        
         // 어제 경기
         const yesterdayMatches = Array.isArray(result.data.yesterday?.matches) 
           ? result.data.yesterday.matches.map((match: MatchData) => ({
               ...match,
               displayDate: '어제'
-            }))
+            })).sort(sortByStatus)
           : [];
         
         // 오늘 경기
@@ -315,7 +331,7 @@ export default function LiveScoreModal({ isOpen, onClose }: LiveScoreModalProps)
           ? result.data.today.matches.map((match: MatchData) => ({
               ...match,
               displayDate: '오늘'
-            }))
+            })).sort(sortByStatus)
           : [];
           
         // 내일 경기
@@ -323,7 +339,7 @@ export default function LiveScoreModal({ isOpen, onClose }: LiveScoreModalProps)
           ? result.data.tomorrow.matches.map((match: MatchData) => ({
               ...match,
               displayDate: '내일'
-            }))
+            })).sort(sortByStatus)
           : [];
         
         setAllMatches({

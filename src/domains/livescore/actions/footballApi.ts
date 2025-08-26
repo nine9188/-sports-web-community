@@ -268,25 +268,17 @@ import { cache } from 'react';
 
 // 어제, 오늘, 내일 경기 데이터를 한 번에 가져오기 - cache 적용
 export const fetchMultiDayMatches = cache(async (): Promise<MultiDayMatchesResult> => {
-  // 날짜 포맷팅 함수
-  const formatDate = (date: Date) => {
-    return date.toISOString().split('T')[0];
+  // KST 기준 날짜 문자열 생성 유틸 (yyyy-MM-dd)
+  const toKstDateString = (baseUtc: Date) => {
+    const kst = new Date(baseUtc.getTime() + 9 * 60 * 60 * 1000);
+    return kst.toISOString().split('T')[0];
   };
 
-  // 오늘 날짜 계산
-  const today = new Date();
-  
-  // 어제 날짜 계산
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-  
-  // 내일 날짜 계산
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-
-  const yesterdayFormatted = formatDate(yesterday);
-  const todayFormatted = formatDate(today);
-  const tomorrowFormatted = formatDate(tomorrow);
+  // 서버 시간(UTC) 기준으로 KST 날짜 문자열 산출
+  const nowUtc = new Date();
+  const yesterdayFormatted = toKstDateString(new Date(nowUtc.getTime() - 24 * 60 * 60 * 1000));
+  const todayFormatted = toKstDateString(nowUtc);
+  const tomorrowFormatted = toKstDateString(new Date(nowUtc.getTime() + 24 * 60 * 60 * 1000));
 
   try {
     // 병렬로 3일치 데이터 가져오기

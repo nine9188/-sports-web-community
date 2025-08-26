@@ -42,15 +42,18 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
   // 🔧 성능 최적화: 초기 데이터로 즉시 렌더링 (연기된 경기는 뒤로 정렬)
   const [matches, setMatches] = useState<EnhancedMatchData[]>(() => {
     return initialMatches.sort((a, b) => {
-      const aIsPostponed = a.status.code === 'PST';
-      const bIsPostponed = b.status.code === 'PST';
-      
-      // 연기된 경기는 뒤로
-      if (aIsPostponed && !bIsPostponed) return 1;
-      if (!aIsPostponed && bIsPostponed) return -1;
-      
-      // 둘 다 연기되지 않았거나 둘 다 연기된 경우 기존 순서 유지
-      return 0;
+      const aCode = a.status?.code || '';
+      const bCode = b.status?.code || '';
+      const isFinished = (code: string) => ['FT', 'AET', 'PEN'].includes(code);
+      const aFinished = isFinished(aCode);
+      const bFinished = isFinished(bCode);
+      if (aFinished !== bFinished) return aFinished ? 1 : -1; // 종료 경기는 뒤로
+
+      const aIsPostponed = aCode === 'PST';
+      const bIsPostponed = bCode === 'PST';
+      if (aIsPostponed !== bIsPostponed) return aIsPostponed ? 1 : -1; // 연기도 뒤로
+
+      return 0; // 그 외 기존 순서 유지
     });
   });
   const [error, setError] = useState<string | null>(null);
@@ -120,22 +123,20 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
             ...processTomorrowMatches
           ] as EnhancedMatchData[];
           
-          // 종료된 경기 필터링 (FT, AET, PEN 상태 제외)
-          const filteredMatches = combinedMatches.filter(match => 
-            !['FT', 'AET', 'PEN'].includes(match.status.code)
-          );
-          
-          // 연기된 경기를 제일 뒤로 정렬
-          const sortedMatches = filteredMatches.sort((a, b) => {
-            const aIsPostponed = a.status.code === 'PST';
-            const bIsPostponed = b.status.code === 'PST';
-            
-            // 연기된 경기는 뒤로
-            if (aIsPostponed && !bIsPostponed) return 1;
-            if (!aIsPostponed && bIsPostponed) return -1;
-            
-            // 둘 다 연기되지 않았거나 둘 다 연기된 경우 기존 순서 유지
-            return 0;
+          // 종료 경기/연기 경기를 뒤로 보내는 정렬
+          const sortedMatches = combinedMatches.sort((a, b) => {
+            const aCode = a.status?.code || '';
+            const bCode = b.status?.code || '';
+            const isFinished = (code: string) => ['FT', 'AET', 'PEN'].includes(code);
+            const aFinished = isFinished(aCode);
+            const bFinished = isFinished(bCode);
+            if (aFinished !== bFinished) return aFinished ? 1 : -1; // 종료 경기는 뒤로
+
+            const aIsPostponed = aCode === 'PST';
+            const bIsPostponed = bCode === 'PST';
+            if (aIsPostponed !== bIsPostponed) return aIsPostponed ? 1 : -1; // 연기도 뒤로
+
+            return 0; // 그 외 기존 순서 유지
           });
           
           setMatches(sortedMatches);

@@ -1,4 +1,3 @@
-import { format } from 'date-fns';
 import { fetchMatchesByDate, MatchData } from '@/domains/livescore/actions/footballApi';
 import LiveScoreView from '@/domains/livescore/components/football/MainView/LiveScoreView';
 import { getTeamById } from '@/domains/livescore/constants/teams/index';
@@ -7,6 +6,13 @@ import { Match } from '@/domains/livescore/types/match';
 
 // 기본 이미지 URL - 로고가 없을 때 사용
 const DEFAULT_TEAM_LOGO = 'https://cdn.sportmonks.com/images/soccer/team_placeholder.png';
+
+// KST 기준의 현재 날짜(yyyy-MM-dd) 문자열 생성
+const getKstDateString = (): string => {
+  const nowUtc = new Date();
+  const kstNow = new Date(nowUtc.getTime() + 9 * 60 * 60 * 1000);
+  return kstNow.toISOString().split('T')[0];
+};
 
 // 서버 컴포넌트로 변경 - Server Action을 직접 호출
 // searchParams 타입을 Promise로 감싸도록 수정
@@ -19,9 +25,8 @@ export default async function FootballLiveScorePage({
   const searchParams = await searchParamsPromise;
 
   // 요청된 날짜 파라미터를 사용하거나 현재 날짜를 기본값으로 사용
-  const currentDate = new Date();
-  // 옵셔널 체이닝과 nullish coalescing으로 안전하게 dateParam 추출
-  const dateParam = searchParams?.date ?? format(currentDate, 'yyyy-MM-dd');
+  // KST 기준으로 기본 날짜를 생성
+  const dateParam = searchParams?.date ?? getKstDateString();
   
   try {
     // Server Action을 직접 호출하여 데이터 가져오기

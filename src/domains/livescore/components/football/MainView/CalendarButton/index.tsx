@@ -13,10 +13,10 @@ export default function CalendarButton({ onDateChange }: CalendarButtonProps) {
   const handleChange = (date: Date | null) => {
     if (!date) return;
     
-    const utcDate = new Date(date);
-    utcDate.setHours(0, 0, 0, 0);
-    utcDate.setHours(utcDate.getHours() + 9);
-    onDateChange(utcDate);
+    // 선택한 날짜를 로컬 기준으로 00:00 정규화만 수행 (타임존 보정 제거)
+    const normalized = new Date(date);
+    normalized.setHours(0, 0, 0, 0);
+    onDateChange(normalized);
   };
 
   return (

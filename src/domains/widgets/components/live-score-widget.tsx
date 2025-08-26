@@ -59,13 +59,21 @@ export default async function LiveScoreWidget() {
         ...processTomorrowMatches
       ];
       
-      // 종료된 경기 필터링 (FT, AET, PEN 상태 제외)
-      const filteredMatches = combinedMatches.filter(match => {
-        const statusCode = match.status?.code;
-        return statusCode && !['FT', 'AET', 'PEN'].includes(statusCode);
+      // 종료 경기/연기 경기를 뒤로 보내는 정렬
+      matches = combinedMatches.sort((a, b) => {
+        const aCode = a.status?.code || '';
+        const bCode = b.status?.code || '';
+        const isFinished = (code: string) => ['FT', 'AET', 'PEN'].includes(code);
+        const aFinished = isFinished(aCode);
+        const bFinished = isFinished(bCode);
+        if (aFinished !== bFinished) return aFinished ? 1 : -1; // 종료 경기는 뒤로
+
+        const aIsPostponed = aCode === 'PST';
+        const bIsPostponed = bCode === 'PST';
+        if (aIsPostponed !== bIsPostponed) return aIsPostponed ? 1 : -1; // 연기도 뒤로
+
+        return 0; // 그 외 기존 순서 유지
       });
-      
-      matches = filteredMatches;
       
       console.log(`✅ LiveScoreWidget: ${matches.length}개 경기 데이터 로드 완료`);
     } else {

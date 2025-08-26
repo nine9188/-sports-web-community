@@ -122,6 +122,31 @@ export default function LiveScoreView({
     }
   }, []);
 
+  // KST 자정 롤오버: 자정(KST) 도달 시 자동으로 오늘로 갱신
+  useEffect(() => {
+    const scheduleNextKstMidnight = () => {
+      const nowUtc = new Date();
+      const kstNow = new Date(nowUtc.getTime() + 9 * 60 * 60 * 1000);
+      const nextKstMidnight = new Date(kstNow);
+      nextKstMidnight.setHours(24, 0, 0, 0); // KST 기준 다음 자정
+      const msUntilNext = nextKstMidnight.getTime() - kstNow.getTime();
+
+      const timeoutId = setTimeout(() => {
+        // 자정 도달 시 오늘 날짜로 변경 (로컬 now 사용, 포맷은 하위에서 처리)
+        setSelectedDate(new Date());
+        // 다음 날 자정 다시 예약
+        scheduleNextKstMidnight();
+      }, msUntilNext);
+
+      return timeoutId;
+    };
+
+    const id = scheduleNextKstMidnight();
+    return () => {
+      clearTimeout(id as unknown as number);
+    };
+  }, []);
+
   // 날짜가 변경될 때 데이터 다시 불러오기 (개선된 버전)
   useEffect(() => {
     // 날짜가 변경되었을 때마다 항상 fetchMatches 호출
