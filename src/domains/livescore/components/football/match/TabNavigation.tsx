@@ -57,7 +57,6 @@ export default function TabNavigation({ activeTab }: TabNavigationProps) {
   // activeTab이 변경되면 currentTabUI와 isChangingTab 상태를 업데이트
   useEffect(() => {
     const tabToUse = activeTab || (isMobile ? 'support' : 'power');
-    console.log(`TabNavigation - 탭 설정: ${tabToUse}, 모바일: ${isMobile}, activeTab: ${activeTab}`); // 디버깅 로그
     setCurrentTab(tabToUse);
     setCurrentTabUI(tabToUse);
     setIsChangingTab(false);

@@ -190,7 +190,6 @@ export default function TabContent() {
 
   // 현재 탭에 따라 컴포넌트 렌더링
   const renderTabContent = useMemo(() => {
-    console.log(`TabContent - 현재 탭: ${tab}`); // 디버깅 로그
     
     // 전체 로딩 상태일 때
     if (isLoading || isTabChanging) {

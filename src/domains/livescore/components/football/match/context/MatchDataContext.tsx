@@ -503,7 +503,6 @@ export function MatchDataProvider({
     
     // 탭 변경을 즉시 반영 - 단, 현재 탭과 다를 때만 변경
     if (currentTab !== typedTab) {
-      console.log(`loadMatchData에서 탭 변경: ${currentTab} -> ${typedTab}`);
       setCurrentTab(typedTab);
     }
     
@@ -706,7 +705,6 @@ export function MatchDataProvider({
   
   // setCurrentTab 함수 - 단순히 상태만 변경
   const handleSetCurrentTab = useCallback((tab: string) => {
-    console.log(`MatchDataContext - setCurrentTab 호출됨: ${tab}`);
     setCurrentTab(tab as TabType);
   }, []);
 
