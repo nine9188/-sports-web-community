@@ -72,6 +72,7 @@ export default function usePlayerStats(
   // 로딩 상태를 추적하기 위한 ref
   const loadingRef = useRef(false);
   const loadedMatchRef = useRef<string>('');
+  const lastFetchTsRef = useRef<number>(0);
 
   // 선수 통계 데이터 로드
   useEffect(() => {
@@ -86,24 +87,42 @@ export default function usePlayerStats(
       const playerIds = extractPlayerIds(lineups.home, lineups.away);
       if (playerIds.length === 0) return;
       
-      // 캐시 키 생성 (경기 ID 기반)
+      // 캐시 키 및 라인업 지문 생성
       const cacheKey = `match-${matchId}-players-stats`;
+      const fingerprint = playerIds.slice().sort((a, b) => a - b).join(',');
       
       // 세션 스토리지에서 캐시된 데이터 확인
       try {
-        const cachedData = sessionStorage.getItem(cacheKey);
-        
-        if (cachedData) {
-          const parsedData = JSON.parse(cachedData);
-          setPlayersStatsData(parsedData);
-          loadedMatchRef.current = matchId;
-          return;
+        const cachedRaw = sessionStorage.getItem(cacheKey);
+        if (cachedRaw) {
+          type PlayersStatsCachePayload = {
+            data: Record<number, { response: PlayerStats[] }>;
+            ts: number;
+            ttlMs: number;
+            fingerprint: string;
+          };
+          const cached: PlayersStatsCachePayload = JSON.parse(cachedRaw);
+          const notExpired = Date.now() - cached.ts < (cached.ttlMs || 0);
+          const sameFingerprint = cached.fingerprint === fingerprint;
+          if (notExpired && sameFingerprint) {
+            setPlayersStatsData(cached.data || {});
+            loadedMatchRef.current = matchId;
+            return;
+          } else if (!sameFingerprint) {
+            // 라인업 변경 시 캐시 무효화
+            sessionStorage.removeItem(cacheKey);
+          }
         }
       } catch (error) {
         // 캐시 파싱 오류 무시하고 계속 진행
         console.error('캐시 데이터 파싱 오류:', error);
       }
       
+      // 과도한 재요청 방지 (최소 간격 8초)
+      const now = Date.now();
+      if (now - lastFetchTsRef.current < 8000) return;
+      lastFetchTsRef.current = now;
+
       loadingRef.current = true;
       setIsLoading(true);
       setError(null);
@@ -116,7 +135,14 @@ export default function usePlayerStats(
         
         // 세션 스토리지에 데이터 캐싱
         try {
-          sessionStorage.setItem(cacheKey, JSON.stringify(stats));
+          const ttlMs = Object.keys(stats || {}).length > 0 ? 120000 : 20000; // 유효 2분, 빈 데이터 20초
+          const payload = {
+            data: stats,
+            ts: Date.now(),
+            ttlMs,
+            fingerprint
+          };
+          sessionStorage.setItem(cacheKey, JSON.stringify(payload));
         } catch (err) {
           // 스토리지 용량 초과 등의 오류 무시
           console.error('세션 스토리지 캐싱 오류:', err);

@@ -48,6 +48,7 @@ export default function PlayerStatsModal({
     return !(preloadedStats && preloadedStats.response && preloadedStats.response.length > 0);
   });
   const [error, setError] = useState<string | null>(null);
+  const [lastRetryTs, setLastRetryTs] = useState<number>(0);
 
   // 데이터 로드 함수 - 성능 최적화
   const loadPlayerStats = useCallback(async () => {
@@ -158,7 +159,12 @@ export default function PlayerStatsModal({
             </div>
             <p className="text-gray-700">{error}</p>
             <button 
-              onClick={loadPlayerStats}
+              onClick={() => {
+                const now = Date.now();
+                if (now - lastRetryTs < 5000) return; // 5초 쓰로틀
+                setLastRetryTs(now);
+                loadPlayerStats();
+              }}
               className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
             >
               다시 시도

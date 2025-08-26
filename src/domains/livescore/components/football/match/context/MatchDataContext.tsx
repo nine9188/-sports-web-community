@@ -231,6 +231,8 @@ export function MatchDataProvider({
 
   // 현재 마운트 ID - 비동기 작업 취소를 위한 메커니즘
   const mountIdRef = useRef<number>(0);
+  const lastStatusRef = useRef<string | null>(null);
+  const lastInvalidationTsRef = useRef<number>(0);
   
   // 탭별 필요한 데이터 매핑
   const getOptionsForTab = useCallback((tab: string) => {
@@ -679,6 +681,28 @@ export function MatchDataProvider({
     }
     // initialData가 충분하면 추가 API 호출 불필요
   }, [initialMatchId]);
+  
+  // 경기 상태 변화 시 세션 캐시 무효화 (NS -> LIVE/FT 등)
+  useEffect(() => {
+    try {
+      if (!matchId || !matchData || typeof window === 'undefined') return;
+      const statusCode = (matchData as any)?.fixture?.status?.short as string | undefined;
+      if (!statusCode) return;
+      const prev = lastStatusRef.current;
+      const now = Date.now();
+      const started = prev === 'NS' && statusCode !== 'NS';
+      const finished = statusCode === 'FT';
+      const shouldInvalidate = started || finished;
+      if (shouldInvalidate && now - lastInvalidationTsRef.current > 10000) { // 10초 쿨다운
+        const cacheKey = `match-${matchId}-players-stats`;
+        sessionStorage.removeItem(cacheKey);
+        lastInvalidationTsRef.current = now;
+      }
+      lastStatusRef.current = statusCode;
+    } catch {
+      // no-op
+    }
+  }, [matchData, matchId]);
   
   // setCurrentTab 함수 - 단순히 상태만 변경
   const handleSetCurrentTab = useCallback((tab: string) => {

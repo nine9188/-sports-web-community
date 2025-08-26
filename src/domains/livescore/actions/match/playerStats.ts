@@ -489,5 +489,39 @@ export async function fetchMultiplePlayerStats(matchId: string, playerIds: numbe
 }
 
 // 캐싱 적용 함수들
-export const fetchCachedPlayerStats = cache(fetchPlayerStats);
-export const fetchCachedMultiplePlayerStats = cache(fetchMultiplePlayerStats); 
+// 커스텀 TTL 캐시 (빈 결과는 짧게, 유효 데이터는 길게)
+const singleStatsCache = new Map<string, { ts: number; data: PlayerStatsResponse }>();
+const multiStatsCache = new Map<string, { ts: number; data: MultiplePlayerStatsResponse }>();
+
+const TTL_VALID_MS = 2 * 60 * 1000; // 유효 데이터 2분
+const TTL_EMPTY_MS = 20 * 1000; // 빈 데이터 20초 (짧게)
+
+function isExpired(ts: number, hasData: boolean): boolean {
+  const ttl = hasData ? TTL_VALID_MS : TTL_EMPTY_MS;
+  return Date.now() - ts > ttl;
+}
+
+export async function fetchCachedPlayerStats(matchId: string, playerId: number): Promise<PlayerStatsResponse> {
+  const key = `${matchId}:${playerId}`;
+  const cached = singleStatsCache.get(key);
+  if (cached && !isExpired(cached.ts, !!cached.data?.response)) {
+    return cached.data;
+  }
+  const fresh = await fetchPlayerStats(matchId, playerId);
+  singleStatsCache.set(key, { ts: Date.now(), data: fresh });
+  return fresh;
+}
+
+export async function fetchCachedMultiplePlayerStats(matchId: string, playerIds: number[]): Promise<MultiplePlayerStatsResponse> {
+  const sortedIds = [...playerIds].sort((a, b) => a - b);
+  const key = `${matchId}:${sortedIds.join(',')}`;
+  const cached = multiStatsCache.get(key);
+  const hasData = cached ? Object.keys(cached.data || {}).length > 0 : false;
+  if (cached && !isExpired(cached.ts, hasData)) {
+    return cached.data;
+  }
+  const fresh = await fetchMultiplePlayerStats(matchId, sortedIds);
+  const hasFresh = Object.keys(fresh || {}).length > 0;
+  multiStatsCache.set(key, { ts: Date.now(), data: fresh });
+  return fresh;
+}
