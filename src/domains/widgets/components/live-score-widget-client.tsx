@@ -279,7 +279,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                               <span className="font-bold text-base text-center">{match.status?.code !== 'NS' ? `${match.goals?.home ?? 0} - ${match.goals?.away ?? 0}` : 'vs'}</span>
                               <div className="flex flex-col items-center">
                                 <span className="text-xs font-medium group-hover:text-blue-600 transition-colors">{formatMatchTime(match)}</span>
-                                {match.status?.code === 'NS' && match.displayDate && (
+                                {(['NS','FT','AET','PEN'].includes(match.status?.code || '') && match.displayDate) && (
                                   <span className="text-[9px] text-gray-500 mt-0.5">{String(match.displayDate)}</span>
                                 )}
                               </div>

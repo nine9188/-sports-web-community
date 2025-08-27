@@ -136,10 +136,20 @@ const getStatusText = (statusCode: string, statusDescription: string, elapsed?: 
       return '하프타임';
     case 'FT':
       return '종료';
+    case 'AET':
+      return '연장 종료';
+    case 'PEN':
+      return '승부차기 종료';
     case 'NS':
       return '예정';
     case 'TBD':
       return '미정';
+    case 'CANC':
+      return '취소됨';
+    case 'PST':
+      return '연기됨';
+    case 'SUSP':
+      return '중단됨';
     default:
       return statusDescription || statusCode;
   }
