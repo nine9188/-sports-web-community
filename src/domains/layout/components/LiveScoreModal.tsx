@@ -50,23 +50,16 @@ const SafeImage = React.memo(function SafeImage({
   size?: number;
 }) {
   const [hasError, setHasError] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
+  const [loaded, setLoaded] = useState(false);
 
-  // src가 변경될 때마다 에러 상태 초기화
+  // src가 변경될 때마다 상태 초기화
   useEffect(() => {
     setHasError(false);
-    setRetryCount(0);
+    setLoaded(false);
   }, [src]);
 
   const handleImageError = () => {
-    if (retryCount < 2) {
-      // 최대 2번까지 재시도
-      setTimeout(() => {
-        setRetryCount(prev => prev + 1);
-      }, 500);
-    } else {
-      setHasError(true);
-    }
+    setHasError(true);
   };
 
   // 이미지가 없거나 에러가 발생한 경우 아이콘 표시
@@ -84,13 +77,13 @@ const SafeImage = React.memo(function SafeImage({
   return (
     <div className={`relative ${className}`} style={{ width: size, height: size }}>
       <Image
-        key={`${src}-${retryCount}`}
         src={src}
         alt={alt}
         fill
         sizes={`${size}px`}
-        className="object-contain rounded"
+        className={`object-contain rounded transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
         onError={handleImageError}
+        onLoad={() => setLoaded(true)}
         priority={false}
         unoptimized={true} // 외부 이미지이므로 최적화 비활성화
       />
@@ -158,11 +151,9 @@ const getStatusText = (statusCode: string, statusDescription: string, elapsed?: 
 // 개별 경기 컴포넌트
 const MatchItem = React.memo(function MatchItem({ 
   match, 
-  forceReload, 
   onClose 
 }: { 
   match: MatchData; 
-  forceReload: number;
   onClose: () => void;
 }) {
   const isLive = ['LIVE', '1H', '2H', 'HT'].includes(match.status?.code || '');
@@ -182,14 +173,21 @@ const MatchItem = React.memo(function MatchItem({
       {/* 리그 정보 */}
       {match.league && (
         <div className="flex items-center gap-2 mb-3 text-xs text-gray-600">
-          <SafeImage 
-            key={`league-${match.id}-${forceReload}`}
-            src={match.league.logo} 
-            alt={match.league.name || '리그'}
-            className="object-contain rounded"
-            fallbackIcon={Trophy}
-            size={16}
-          />
+          {match.league.id ? (
+            <ApiSportsImage 
+              imageId={match.league.id}
+              imageType={ImageType.Leagues}
+              alt={match.league.name || '리그'}
+              width={16}
+              height={16}
+              className="object-contain rounded"
+              loading="eager"
+              priority
+              fetchPriority="high"
+            />
+          ) : (
+            <Trophy className="w-4 h-4 text-gray-400" />
+          )}
           <span className="truncate">{match.league.name || '알 수 없는 리그'}</span>
           {match.displayDate && (
             <span className="ml-auto text-gray-500">{match.displayDate}</span>
@@ -203,7 +201,6 @@ const MatchItem = React.memo(function MatchItem({
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {match.teams?.home?.logo ? (
             <ApiSportsImage 
-              key={`home-${match.id}-${forceReload}`}
               src={match.teams.home.logo} 
               imageId={match.teams.home.id}
               imageType={ImageType.Teams}
@@ -256,7 +253,6 @@ const MatchItem = React.memo(function MatchItem({
           </span>
           {match.teams?.away?.logo ? (
             <ApiSportsImage 
-              key={`away-${match.id}-${forceReload}`}
               src={match.teams.away.logo} 
               imageId={match.teams.away.id}
               imageType={ImageType.Teams}
@@ -288,7 +284,7 @@ export default function LiveScoreModal({ isOpen, onClose }: LiveScoreModalProps)
   });
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<'yesterday' | 'today' | 'tomorrow'>('today');
-  const [forceReload, setForceReload] = useState(0);
+  // 강제 리로드 제거로 재마운트 유발을 방지
 
   // 모달이 열릴 때 데이터 로드
   useEffect(() => {
@@ -300,10 +296,6 @@ export default function LiveScoreModal({ isOpen, onClose }: LiveScoreModalProps)
   // 탭 변경 시 이미지 강제 리로드
   const handleTabChange = (newDate: 'yesterday' | 'today' | 'tomorrow') => {
     setSelectedDate(newDate);
-    // 약간의 지연 후 이미지 강제 리로드
-    setTimeout(() => {
-      setForceReload(prev => prev + 1);
-    }, 100);
   };
 
   const loadMatches = async () => {
@@ -358,10 +350,7 @@ export default function LiveScoreModal({ isOpen, onClose }: LiveScoreModalProps)
           tomorrow: tomorrowMatches
         });
         
-        // 데이터 로드 후 이미지 강제 리로드
-        setTimeout(() => {
-          setForceReload(prev => prev + 1);
-        }, 200);
+        // 강제 리로드 제거 (이미지 페이드인으로 전환)
         
       } else {
         console.error('라이브스코어 데이터 로드 실패:', result.error);
@@ -444,7 +433,7 @@ export default function LiveScoreModal({ isOpen, onClose }: LiveScoreModalProps)
           ) : currentMatches.length > 0 ? (
             <div className="p-4 space-y-3">
               {currentMatches.map(match => (
-                <MatchItem key={`${match.id}-${selectedDate}`} match={match} forceReload={forceReload} onClose={onClose} />
+                <MatchItem key={`match-${match.id}`} match={match} onClose={onClose} />
               ))}
             </div>
           ) : (
