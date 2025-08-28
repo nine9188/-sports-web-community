@@ -1,123 +1,95 @@
-# 🎨 배너 관리 시스템 사용 가이드
+## 🛠 작업 목적
+- 배너위젯에서 로딩중 없이 데이터 즉시 노출
+- 라이브스코어 위젯에서 로딩중 없이 데이터 즉시 노출 
+- 불필요한 로딩으로 인한 사용자 이용 불편
 
-## 📋 개요
-와플보드 스타일의 배너 관리 시스템이 구현되었습니다. 관리자가 쉽게 배너를 관리할 수 있고, 다양한 위치와 타입을 지원합니다.
+## 🎯 작업 목표
+- .불필요한 로딩중 제거 
+- 서버액션 + 서버컴포넌트로 데이터 빠르게 로딩허고있음을 검토하기
+- 불필요한 코드 점검 후 리팩토링
+- 배너위젯 / pc 2열 모바일 1열
+- 라이브스코어위젯 / pc 4열 모바일 2열
+- 불필여한 ui ux 재정리 
+- 라이브스코어에서 사용하고 있는 src/domains/livescore/actions/footballApi.ts 서버액션이 다른곳에서도 쓰이고 있을 확율이 많음 위젯만의 서버액션이 아니기때문에 수정할 때 조심해야함
 
-## 🚀 시작하기
+## 📁 관련 파일 목록
+- 123/1234 공통
+- src/domains/widgets/components/live-score-widget.tsx
+- src/domains/widgets/components/live-score-widget-client.tsx
+- src/domains/widgets/components/banner-widget-client.tsx
+- src/domains/widgets/components/banner-widget.tsx
+- src/domains/widgets/components/banner-widget 
+- src/domains/widgets/components/banner-widget/BannerCarousel.tsx
+- src/domains/widgets/components/banner-widget/BannerWrapper.tsx
+- src/domains/livescore/actions/footballApi.ts
 
-### 1. 데이터베이스 테이블 생성
-먼저 배너 테이블을 생성해야 합니다:
+## 📌 세부 지시 사항
+- 일정한 레이아웃 유지 
 
-1. **관리자 권한으로 로그인**
-2. `/admin/banners/init` 페이지 접속
-3. 제공된 SQL 스크립트를 **Supabase Dashboard > SQL Editor**에서 실행
+## 🧪 테스트 기준
 
-### 2. 배너 관리
-테이블 생성 후:
+- [ ] 데스크탑 모바일  그리드 형태 테스트
+ㄴ배너 데스크 2 모바일 1
+ㄴ라이브스코어 데스크4 모바일 2
+- [ ] ESLint/Prettier 통과, 타입 에러 없음
 
-1. `/admin/banners` 페이지에서 배너 관리
-2. 다양한 배너 타입 추가 가능:
-   - 🖼️ **이미지 배너**: 이미지 URL + 링크
-   - 📝 **HTML 배너**: 구글 애드센스 등 HTML 코드
-   - 📋 **빈 배너**: 플레이스홀더 상태
-   - 🗳️ **투표 배너**: 추후 확장 예정
+## 🗣 참고 메시지 (선택)
+무문제점 
+이 현상은 초기 렌더링 시 Swiper의 slidesPerView가 matches.length > 2 조건만 보고 2로 시작한 다음, window 크기를 감지한 이후에야 breakpoints가 적용되기 때문에 발생합니다.
 
-### 3. 배너 위치
-다양한 위치에 배너 배치 가능:
-- 헤더, 메인 상단/하단
-- 본문 상단/하단
-- 사이드바 상단/하단
-- 좌우 여백, 팝업 등
+즉, SSR(서버 측 렌더링) 또는 hydration 시점에는 breakpoints가 적용되지 않아서 모바일/PC 모두 처음엔 slidesPerView: 2 (기본값)으로 렌더되었다가, 클라이언트에서 re-hydration 후에야 적절히 4/2열로 전환됩니다.
 
-## 💡 사용 방법
 
-### 새 배너 위젯 사용하기
-```tsx
-import { BannerWidgetNew } from '@/domains/widgets/components';
 
-// 메인 페이지 상단 배너
-<BannerWidgetNew position="main_top" />
+해결법
+1. Swiper 초기 slidesPerView를 화면 크기 기준으로 동적으로 설정
 
-// 사이드바 배너
-<BannerWidgetNew position="sidebar_top" />
+클라이언트 사이드에서 isMobile 여부를 먼저 판단해 slidesPerView를 동적으로 바꾸는 방법입니다.
+
+
+3. matchMedia로 초기 slidesPerView 결정 + Swiper config에서 breakpoints 유지
+
+이 방법은 위 1번과 비슷하지만 breakpoints는 유지하고, Swiper config에 초기값만 반영합니다:
+✅ 추천 방법
+
+1번 + 3번 혼합 방식 추천합니다. 이유는:
+	•	SSR 시점에서는 안전한 기본값을 제공하고
+	•	클라이언트 사이드에서 정확한 열 수로 보정 가능
+	•	동적 import가 필요 없고 CSR 방식으로만 동작 가능
+
+⸻
+
+🔧 부가 팁
+	1.	slidesPerView: 'auto'도 쓸 수 있지만 고정된 레이아웃이 아닐 경우 UI 깨짐 우려 있음미디어 쿼리로 깔끔한 반응형 구현
+✅ **hydration 문제 없음**: 서버와 클라이언트 렌더링 결과 일치
+
+### 마이그레이션 단계
+
+#### 1단계: 패키지 설치 및 설정
+```bash
+npm install keen-slider
+npm uninstall swiper
 ```
 
-### 기존 배너 위젯에서 전환
-현재는 안정성을 위해 기존 배너 위젯을 사용하고 있습니다.
-새 배너 위젯으로 전환하려면:
+#### 2단계: 배너 위젯 마이그레이션
+- `BannerCarousel.tsx` Swiper → keen-slider 변경
+- CSS 기반 반응형 구현 (1024px 브레이크포인트)
+- 자동 슬라이드, 네비게이션 버튼 유지
 
-1. 배너 테이블 생성 완료
-2. 테스트 후 `src/domains/widgets/components/index.ts`에서 export 변경:
-   ```ts
-   export { default as BannerWidget } from './banner-widget'; // 새 위젯
-   ```
+#### 3단계: 라이브스코어 위젯 마이그레이션  
+- `live-score-widget-client.tsx` Swiper → keen-slider 변경
+- CSS 기반 반응형 구현 (768px 브레이크포인트)
+- 네비게이션 버튼, 빈 슬롯 로직 유지
 
-## 🔧 주요 기능
+#### 4단계: 테스트 및 최적화
+- [ ] 데스크탑 모바일 그리드 형태 테스트
+- [ ] 자동 슬라이드, 네비게이션 동작 테스트
+- [ ] 성능 측정 (번들 크기, 렌더링 속도)
 
-### 관리자 기능
-- ✅ 배너 추가/수정/삭제
-- ✅ 위치별 배너 관리
-- ✅ 실시간 미리보기
-- ✅ 활성화/비활성화 토글
-- ✅ 순서 변경
+### 예상 개발 시간
+- 1단계: 5분
+- 2단계: 30분 (배너 위젯)
+- 3단계: 30분 (라이브스코어 위젯)
+- 4단계: 15분 (테스트)
+- **총 예상 시간: 1시간 20분**
 
-### 사용자 기능
-- ✅ 반응형 슬라이딩 배너
-- ✅ 터치/스와이프 지원
-- ✅ 자동 슬라이드 (8초 간격)
-- ✅ 인디케이터 및 네비게이션
-- ✅ 빈 배너 상태 표시
-
-## 🛠️ 문제 해결
-
-### 오류: "배너 조회 실패"
-- **원인**: 배너 테이블이 생성되지 않음
-- **해결**: `/admin/banners/init` 페이지에서 SQL 실행
-
-### 오류: "중복 키"
-- **원인**: 같은 키를 가진 배너 컴포넌트 중복
-- **해결**: 이미 수정됨 (고유 키 생성)
-
-### 관리자 권한 없음
-- **원인**: 사용자가 관리자가 아님
-- **해결**: `profiles` 테이블에서 `is_admin = true` 설정
-
-## 📊 데이터베이스 구조
-
-```sql
--- 배너 테이블
-CREATE TABLE banners (
-  id UUID PRIMARY KEY,
-  position TEXT NOT NULL,  -- 배너 위치
-  type TEXT NOT NULL,      -- 배너 타입
-  title TEXT NOT NULL,     -- 제목
-  subtitle TEXT,           -- 부제목
-  image_url TEXT,          -- 이미지 URL
-  link_url TEXT,           -- 링크 URL
-  html_content TEXT,       -- HTML 코드
-  background_color TEXT,   -- 배경색
-  text_color TEXT,         -- 텍스트 색상
-  is_active BOOLEAN,       -- 활성화 여부
-  display_order INTEGER,   -- 표시 순서
-  -- 기타 설정 필드들...
-);
-```
-
-## 🎯 향후 계획
-
-- [ ] 드래그 앤 드롭 순서 변경
-- [ ] 배너 통계 및 클릭률 추적
-- [ ] 배너 스케줄링 (시간별 표시)
-- [ ] 더 많은 배너 타입 지원
-- [ ] 배너 템플릿 시스템
-
-## 📞 지원
-
-문제가 발생하면:
-1. 브라우저 콘솔에서 에러 메시지 확인
-2. Supabase Dashboard에서 테이블 상태 확인
-3. 관리자 권한 설정 확인
-
----
-
-**즐거운 배너 관리 되세요! 🎉** 

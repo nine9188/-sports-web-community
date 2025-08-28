@@ -3,7 +3,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { format } from 'date-fns';
 import DateSelector from './DateSelector/index';
-import CalendarButton from './CalendarButton/index';
 import NavigationBar from './NavigationBar/index';
 import LeagueMatchList from './LeagueMatchList/index';
 import { Match } from '../../../types/match';
@@ -194,12 +193,9 @@ export default function LiveScoreView({
   return (
     <div className="min-h-screen bg-white space-y-4">
       <div className="rounded-lg border border-gray-200 overflow-hidden mt-4 md:mt-0">
-        <div className="flex w-full items-center h-[60px]">
+        <div className="flex w-full items-center">
           <div className="flex flex-1">
             <DateSelector selectedDate={selectedDate} onDateChange={handleDateChange} />
-          </div>
-          <div className="border-l border-gray-200">
-            <CalendarButton onDateChange={handleDateChange} />
           </div>
         </div>
       </div>

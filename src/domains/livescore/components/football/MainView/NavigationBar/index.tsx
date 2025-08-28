@@ -1,5 +1,7 @@
 'use client';
 
+import CalendarButton from '../CalendarButton/index';
+
 interface NavigationBarProps {
   searchKeyword: string;
   showLiveOnly: boolean;
@@ -26,7 +28,7 @@ export default function NavigationBar({
     <div className="flex items-center gap-2 md:gap-4">
       <button
         onClick={handleLiveClick}
-        className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg font-medium transition-colors ${
+        className={`h-10 flex items-center gap-2 px-3 md:px-4 rounded-lg font-medium text-sm md:text-base transition-colors ${
           showLiveOnly
             ? 'border border-red-500 text-red-500 bg-red-50 hover:bg-red-100'
             : 'border border-gray-200 text-gray-700 hover:bg-gray-50'
@@ -49,10 +51,14 @@ export default function NavigationBar({
         <input
           type="text"
           placeholder="경기 찾기"
-          className="w-full px-4 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+          className="w-full h-10 px-3 md:px-4 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors text-sm md:text-base"
           value={searchKeyword}
           onChange={(e) => onSearchChange(e.target.value)}
         />
+      </div>
+
+      <div>
+        <CalendarButton onDateChange={onDateChange} />
       </div>
     </div>
   );

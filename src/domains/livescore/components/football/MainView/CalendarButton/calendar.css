@@ -1,0 +1,65 @@
+/* Custom Calendar Modal Styles */
+.calendar-modal {
+  width: 320px;
+  height: 360px;
+}
+
+@media (min-width: 640px) {
+  .calendar-modal {
+    width: 360px;
+  }
+}
+
+/* Grid cell hover states */
+.calendar-cell {
+  transition: all 0.15s ease;
+}
+
+.calendar-cell:hover:not(:disabled) {
+  background-color: #f3f4f6;
+}
+
+.calendar-cell:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: -1px;
+}
+
+/* Today indicator */
+.calendar-today {
+  position: relative;
+}
+
+.calendar-today::after {
+  content: '';
+  position: absolute;
+  bottom: 1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  background-color: #3b82f6;
+  border-radius: 50%;
+}
+
+/* Selected state */
+.calendar-selected {
+  background-color: #2563eb !important;
+  color: white !important;
+}
+
+/* Disabled state */
+.calendar-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Outside month dates */
+.calendar-outside-month {
+  color: #9ca3af;
+  opacity: 0.6;
+}
+
+/* Weekend styling */
+.calendar-weekend {
+  color: #ef4444;
+}

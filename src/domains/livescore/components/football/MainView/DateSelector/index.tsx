@@ -2,6 +2,7 @@
 
 import { format, addDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 interface DateSelectorProps {
   selectedDate: Date;
@@ -9,14 +10,17 @@ interface DateSelectorProps {
 }
 
 export default function DateSelector({ selectedDate, onDateChange }: DateSelectorProps) {
+  const isMdUp = useMediaQuery('(min-width: 768px)');
+  const daysToShow = isMdUp ? 7 : 5;
+  const middleIndex = Math.floor(daysToShow / 2);
   const normalizeDate = (date: Date) => {
     const normalized = new Date(date);
     normalized.setHours(0, 0, 0, 0);
     return normalized;
   };
 
-  const dates = Array.from({ length: 5 }, (_, i) => {
-    const offsetFromMiddle = i - 2;
+  const dates = Array.from({ length: daysToShow }, (_, i) => {
+    const offsetFromMiddle = i - middleIndex;
     const date = addDays(selectedDate, offsetFromMiddle);
     const normalizedDate = normalizeDate(date);
     
@@ -41,7 +45,7 @@ export default function DateSelector({ selectedDate, onDateChange }: DateSelecto
         <button
           key={date.toISOString()}
           onClick={() => handleDateClick(date)}
-          className={`flex-1 py-3 text-center border-b-2 ${
+          className={`flex-1 py-3 md:py-4 text-center border-b-2 ${
             isSelected
               ? 'border-blue-500 bg-gray-50 text-blue-600'
               : 'border-transparent hover:bg-gray-50 text-gray-700'
