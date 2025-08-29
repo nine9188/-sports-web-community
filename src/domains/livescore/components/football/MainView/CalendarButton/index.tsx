@@ -53,7 +53,7 @@ export default function CalendarButton({ onDateChange }: CalendarButtonProps) {
       >
         <div className="flex items-center gap-2">
           <Calendar className="h-4 w-4 md:h-6 md:w-6" />
-          <span className="hidden md:inline">캘린더</span>
+        <span className="hidden md:inline">캘린더</span>
         </div>
       </button>
 
@@ -98,7 +98,7 @@ export default function CalendarButton({ onDateChange }: CalendarButtonProps) {
                   const yearStart = Math.floor(visibleDate.getFullYear() / 12) * 12;
                   return `${yearStart} ~ ${yearStart + 11}`;
                 })()}
-              </button>
+                    </button>
               
               <button 
                 type="button" 
@@ -113,8 +113,8 @@ export default function CalendarButton({ onDateChange }: CalendarButtonProps) {
                 className="w-12 h-12 flex items-center justify-center hover:bg-gray-100 rounded"
               >
                 <ChevronRight className="w-5 h-5 md:w-4 md:h-4" />
-              </button>
-            </div>
+                    </button>
+                  </div>
 
             {/* Body - flexible height */}
             <div className="flex-1 p-3">
@@ -137,19 +137,19 @@ export default function CalendarButton({ onDateChange }: CalendarButtonProps) {
                   onYearSelect={(year) => { setVisibleDate(year); setViewMode('month'); }}
                 />
               )}
-            </div>
+                </div>
 
             {/* Footer - expanded touch targets */}
             <div className="h-12 flex items-center justify-between px-3 border-t">
               <button 
                 onClick={handleToday}
-                className="text-blue-600 hover:bg-blue-50 px-3 py-2 rounded text-sm md:text-base"
+                className="px-4 py-3 text-sm font-medium text-blue-600 hover:text-blue-700 focus:outline-none"
               >
                 오늘
               </button>
               <div className="flex gap-2">
-                <button onClick={handleCancel} className="text-gray-600 hover:bg-gray-50 px-4 py-2 rounded text-sm md:text-base">취소</button>
-                <button onClick={handleConfirm} className="text-blue-600 font-medium hover:bg-blue-50 px-4 py-2 rounded text-sm md:text-base">확인</button>
+                <button onClick={handleCancel} className="px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-800 focus:outline-none">취소</button>
+                <button onClick={handleConfirm} className="px-4 py-3 text-sm font-semibold text-blue-600 hover:text-blue-700 focus:outline-none">확인</button>
               </div>
             </div>
           </div>

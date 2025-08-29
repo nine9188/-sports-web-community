@@ -40,15 +40,15 @@ export default function DateSelector({ selectedDate, onDateChange }: DateSelecto
   };
 
   return (
-    <div className="flex flex-1">
+    <div className="flex flex-1 h-full">
       {dates.map(({ date, formattedDate, isSelected, isToday }) => (
         <button
           key={date.toISOString()}
           onClick={() => handleDateClick(date)}
-          className={`flex-1 py-3 md:py-4 text-center border-b-2 ${
+          className={`flex-1 h-full flex items-center justify-center text-center relative ${
             isSelected
-              ? 'border-blue-500 bg-gray-50 text-blue-600'
-              : 'border-transparent hover:bg-gray-50 text-gray-700'
+              ? "text-blue-600 after:content-[''] after:block after:absolute after:inset-x-0 after:bottom-0 after:h-[2px] after:bg-blue-500"
+              : 'hover:bg-gray-50 text-gray-700'
           }`}
         >
           <div className="flex flex-col items-center">
@@ -61,7 +61,7 @@ export default function DateSelector({ selectedDate, onDateChange }: DateSelecto
                 </span>
               </>
             ) : (
-              <span className="text-xs">{formattedDate}</span>
+              <span className="text-[11px] md:text-xs">{formattedDate}</span>
             )}
           </div>
         </button>

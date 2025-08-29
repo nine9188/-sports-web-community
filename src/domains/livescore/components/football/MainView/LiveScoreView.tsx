@@ -193,7 +193,7 @@ export default function LiveScoreView({
   return (
     <div className="min-h-screen bg-white space-y-4">
       <div className="rounded-lg border border-gray-200 overflow-hidden mt-4 md:mt-0">
-        <div className="flex w-full items-center">
+        <div className="flex w-full items-stretch h-12 md:h-[60px]">
           <div className="flex flex-1">
             <DateSelector selectedDate={selectedDate} onDateChange={handleDateChange} />
           </div>
