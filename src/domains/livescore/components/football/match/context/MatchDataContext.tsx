@@ -91,6 +91,8 @@ interface MatchDataContextType {
   tabsLoaded: Record<string, boolean>;
   tabsData: Record<TabType, TabData | undefined>;
   getTabData: (tab: TabType) => Promise<TabData | null>;
+  // 탭 새로고침 기능
+  refreshCurrentTab: () => Promise<void>;
   // 탭 컴포넌트용 간소화된 추가 프로퍼티
   tabData: TabData | undefined;
   isTabLoading: boolean;
@@ -115,6 +117,7 @@ const MatchDataContext = createContext<MatchDataContextType>({
   tabsLoaded: {},
   tabsData: {} as Record<TabType, TabData | undefined>,
   getTabData: async () => null,
+  refreshCurrentTab: async () => {},
   // 탭 컴포넌트용 간소화된 기본값
   tabData: undefined,
   isTabLoading: false,
@@ -412,6 +415,64 @@ export function MatchDataProvider({
           // 전역 상태 업데이트
           if (fullData.lineups) {
             setLineupsData(fullData.lineups);
+            
+            // 서버 사전 배치 캐싱 실행 (라인업 진입 시)
+            try {
+              const { batchCacheMatchImages } = await import('@/shared/actions/batch-image-cache');
+              const { response } = fullData.lineups;
+              
+              if (response && (response.home || response.away)) {
+                const playerIds: number[] = [];
+                const teamIds: number[] = [];
+                const coachIds: number[] = [];
+                
+                // 홈팀 선수 및 교체 선수 ID 수집
+                if (response.home) {
+                  response.home.startXI?.forEach(item => {
+                    const playerId = 'player' in item ? item.player.id : item.id;
+                    if (playerId) playerIds.push(playerId);
+                  });
+                  response.home.substitutes?.forEach(item => {
+                    const playerId = 'player' in item ? item.player.id : item.id;
+                    if (playerId) playerIds.push(playerId);
+                  });
+                  
+                  if (response.home.team?.id) teamIds.push(response.home.team.id);
+                  if (response.home.coach?.id) coachIds.push(response.home.coach.id);
+                }
+                
+                // 어웨이팀 선수 및 교체 선수 ID 수집
+                if (response.away) {
+                  response.away.startXI?.forEach(item => {
+                    const playerId = 'player' in item ? item.player.id : item.id;
+                    if (playerId) playerIds.push(playerId);
+                  });
+                  response.away.substitutes?.forEach(item => {
+                    const playerId = 'player' in item ? item.player.id : item.id;
+                    if (playerId) playerIds.push(playerId);
+                  });
+                  
+                  if (response.away.team?.id) teamIds.push(response.away.team.id);
+                  if (response.away.coach?.id) coachIds.push(response.away.coach.id);
+                }
+                
+                // 홈/어웨이팀 기본 팀 ID도 추가 (헤더용)
+                if (fullData.homeTeam?.id) teamIds.push(fullData.homeTeam.id);
+                if (fullData.awayTeam?.id) teamIds.push(fullData.awayTeam.id);
+                
+                // 배치 이미지 캐싱 실행 (백그라운드에서 실행, 결과를 기다리지 않음)
+                batchCacheMatchImages({
+                  playerIds: [...new Set(playerIds)], // 중복 제거
+                  teamIds: [...new Set(teamIds)],     // 중복 제거
+                  coachIds: [...new Set(coachIds)]    // 중복 제거
+                }).catch(error => {
+                  console.warn('배치 이미지 캐싱 실패:', error);
+                  // 캐싱 실패는 치명적이지 않으므로 무시
+                });
+              }
+            } catch (error) {
+              console.warn('배치 이미지 캐싱 모듈 로드 실패:', error);
+            }
           }
           
           break;
@@ -708,6 +769,38 @@ export function MatchDataProvider({
     setCurrentTab(tab as TabType);
   }, []);
 
+  // 현재 탭 새로고침 함수
+  const refreshCurrentTab = useCallback(async () => {
+    if (!matchId) return;
+    
+    const typedCurrentTab = currentTab as TabType;
+    
+    // 현재 탭의 캐시 데이터 초기화
+    setTabsData(prev => ({
+      ...prev,
+      [typedCurrentTab]: undefined
+    }));
+    
+    // 현재 탭의 로딩 상태 초기화
+    setTabsLoaded(prev => ({
+      ...prev,
+      [typedCurrentTab]: false
+    }));
+    
+    // 메모리 캐시 초기화 (라인업 탭인 경우)
+    if (typedCurrentTab === 'lineups') {
+      const cacheKey = `match-${matchId}-tab-${typedCurrentTab}`;
+      lineupsMemoryCache.current[cacheKey] = undefined;
+    }
+    
+    // 현재 탭 데이터 다시 로드
+    try {
+      await getTabData(typedCurrentTab);
+    } catch (error) {
+      console.error('탭 새로고침 중 오류 발생:', error);
+    }
+  }, [matchId, currentTab, getTabData]);
+
   // 컨텍스트 값 정의 - useMemo로 최적화
   const contextValue = useMemo(() => ({
     matchId,
@@ -726,6 +819,7 @@ export function MatchDataProvider({
     tabsLoaded,
     tabsData,
     getTabData,
+    refreshCurrentTab,
     // 탭 컴포넌트용 간소화된 프로퍼티
     tabData: tabsData[currentTab as TabType],
     isTabLoading: isLoading,
@@ -733,7 +827,7 @@ export function MatchDataProvider({
   }), [
     matchId, matchData, eventsData, lineupsData, statsData, standingsData,
     homeTeam, awayTeam, isLoading, error, loadMatchData, currentTab,
-    handleSetCurrentTab, tabsLoaded, tabsData, getTabData
+    handleSetCurrentTab, tabsLoaded, tabsData, getTabData, refreshCurrentTab
   ]);
 
   // 컨텍스트 제공

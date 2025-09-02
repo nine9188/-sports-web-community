@@ -1,7 +1,7 @@
 'use client';
 
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { format, addMonths, subMonths, addYears, subYears, startOfMonth, endOfMonth, getDay, addDays, subDays, isSameDay, isToday } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import "./calendar.css";

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, memo, useEffect, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { useMatchData, isStatsTabData } from '@/domains/livescore/components/football/match/context/MatchDataContext';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
@@ -41,10 +42,11 @@ const TeamLogo = memo(({ name, teamId }: { name: string; teamId?: number }) => {
 TeamLogo.displayName = 'TeamLogo';
 
 // 통계 항목 렌더링 함수 - 메모이제이션
-const StatItem = memo(({ homeValue, awayValue, koreanLabel }: { 
+const StatItem = memo(({ homeValue, awayValue, koreanLabel, index = 0 }: { 
   homeValue: string | number | null; 
   awayValue: string | number | null; 
-  koreanLabel: string 
+  koreanLabel: string;
+  index?: number;
 }) => {
   // 숫자 값으로 변환 (퍼센트 기호 제거)
   const homeNum = parseFloat(String(homeValue || '0').replace('%', '')) || 0;
@@ -70,7 +72,17 @@ const StatItem = memo(({ homeValue, awayValue, koreanLabel }: {
   }
   
   return (
-    <div className="mb-3">
+    <motion.div 
+      className="mb-3"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px", root: null }}
+      transition={{ 
+        duration: 0.5, 
+        delay: index * 0.1,
+        ease: "easeOut"
+      }}
+    >
       {/* 통계 제목 */}
       <div className="text-center text-xs font-semibold mb-1 uppercase tracking-wide text-gray-700">
         {koreanLabel}
@@ -86,31 +98,45 @@ const StatItem = memo(({ homeValue, awayValue, koreanLabel }: {
           <div className="absolute left-1/2 top-0 h-full w-0"></div>
           
           {/* 왼쪽 팀 바 (파란색) - 중앙에서 왼쪽으로 */}
-          <div 
+          <motion.div 
             className="absolute top-0 h-full"
             style={{ 
-              width: `${homeWidth}%`,
               backgroundColor: '#0ea5e9',
-              right: '50%', // 중앙에서 왼쪽으로 확장
-              transform: 'translateX(-0%)' // 바를 오른쪽에서 왼쪽으로 채우기
+              right: '50%',
+              transform: 'translateX(-0%)'
+            }}
+            initial={{ width: 0 }}
+            whileInView={{ width: `${homeWidth}%` }}
+            viewport={{ once: true, root: null }}
+            transition={{ 
+              duration: 0.8, 
+              delay: index * 0.1 + 0.3,
+              ease: "easeOut"
             }}
           />
           
           {/* 오른쪽 팀 바 (녹색) - 중앙에서 오른쪽으로 */}
-          <div 
+          <motion.div 
             className="absolute top-0 h-full"
             style={{ 
-              width: `${awayWidth}%`,
               backgroundColor: '#84cc16',
-              left: '50%', // 중앙에서 오른쪽으로 확장
-              transform: 'translateX(0%)' // 바를 왼쪽에서 오른쪽으로 채우기
+              left: '50%',
+              transform: 'translateX(0%)'
+            }}
+            initial={{ width: 0 }}
+            whileInView={{ width: `${awayWidth}%` }}
+            viewport={{ once: true, root: null }}
+            transition={{ 
+              duration: 0.8, 
+              delay: index * 0.1 + 0.3,
+              ease: "easeOut"
             }}
           />
         </div>
         
         <span className="font-medium text-sm w-8 text-left ml-2">{awayValue || '0'}</span>
       </div>
-    </div>
+    </motion.div>
   );
 });
 
@@ -286,7 +312,7 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
   };
 
   // 통계 항목 렌더링 함수
-  const renderStat = (keyType: string, displayLabel: string) => {
+  const renderStat = (keyType: string, displayLabel: string, index: number) => {
     const homeValue = findStat(dataHomeTeam, keyType);
     const awayValue = findStat(dataAwayTeam, keyType);
     
@@ -295,38 +321,78 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
         key={keyType}
         homeValue={homeValue} 
         awayValue={awayValue} 
-        koreanLabel={displayLabel} 
+        koreanLabel={displayLabel}
+        index={index}
       />
     );
   };
 
   return (
-    <div className="p-0 min-h-[400px]">
-      <div className="space-y-2">
+    <div className="p-0" style={{ overflow: 'visible' }}>
+      <motion.div 
+        className="space-y-2"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        style={{ overflow: 'visible' }}
+      >
         {/* 슈팅 통계 */}
-        <div className="bg-white rounded-lg border">
+        <motion.div 
+          className="bg-white rounded-lg border"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px", root: null }}
+          transition={{ 
+            duration: 0.6, 
+            delay: 0.1,
+            ease: "easeOut"
+          }}
+          style={{ overflow: 'visible' }}
+        >
           {renderCategoryHeader('shooting', true)}
           <div className="p-3">
-            {categoryGroups.shooting.map(({ key, label }) => renderStat(key, label))}
+            {categoryGroups.shooting.map(({ key, label }, index) => renderStat(key, label, index))}
           </div>
-        </div>
+        </motion.div>
         
         {/* 기본 통계 */}
-        <div className="bg-white rounded-lg border">
+        <motion.div 
+          className="bg-white rounded-lg border"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px", root: null }}
+          transition={{ 
+            duration: 0.6, 
+            delay: 0.2,
+            ease: "easeOut"
+          }}
+          style={{ overflow: 'visible' }}
+        >
           {renderCategoryHeader('basic')}
           <div className="p-3">
-            {categoryGroups.basic.map(({ key, label }) => renderStat(key, label))}
+            {categoryGroups.basic.map(({ key, label }, index) => renderStat(key, label, index))}
           </div>
-        </div>
+        </motion.div>
         
         {/* 패스 통계 */}
-        <div className="bg-white rounded-lg border">
+        <motion.div 
+          className="bg-white rounded-lg border"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px", root: null }}
+          transition={{ 
+            duration: 0.6, 
+            delay: 0.3,
+            ease: "easeOut"
+          }}
+          style={{ overflow: 'visible' }}
+        >
           {renderCategoryHeader('passing')}
           <div className="p-3">
-            {categoryGroups.passing.map(({ key, label }) => renderStat(key, label))}
+            {categoryGroups.passing.map(({ key, label }, index) => renderStat(key, label, index))}
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 });

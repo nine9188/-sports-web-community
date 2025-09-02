@@ -32,11 +32,12 @@ export default function ApiSportsImage({
   imageId,
   imageType,
   alt,
+  loading = 'lazy',
+  priority = false,
   ...props 
 }: ApiSportsImageProps) {
   // src 상태값 - 최초엔 null, 비동기로 스토리지 확인 후 URL 설정
   const [src, setSrc] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [hasTriedServerAction, setHasTriedServerAction] = useState(false);
 
   useEffect(() => {
@@ -46,7 +47,6 @@ export default function ApiSportsImage({
     if (urlCache.has(cacheKey)) {
       const cachedUrl = urlCache.get(cacheKey);
       setSrc(cachedUrl || null);
-      setIsLoading(false);
       return;
     }
 
@@ -54,7 +54,6 @@ export default function ApiSportsImage({
     const directStorageUrl = getSupabaseStorageUrl(imageType, imageId);
     urlCache.set(cacheKey, directStorageUrl);
     setSrc(directStorageUrl);
-    setIsLoading(false);
   }, [imageId, imageType]);
 
   // 이미지 로드 에러 시 서버 액션으로 캐싱 시도
@@ -89,18 +88,9 @@ export default function ApiSportsImage({
         }
       };
       
-  // 로딩 중이거나 src가 null이면 빈 영역 반환
-  if (isLoading || !src) {
-    return (
-      <div 
-        className={props.className} 
-        style={{ 
-          width: props.width || 'auto', 
-          height: props.height || 'auto',
-          display: 'inline-block'
-        }} 
-      />
-    );
+  // src가 없으면 아무것도 렌더링하지 않음
+  if (!src) {
+    return null;
   }
 
   // 스토리지 URL이 확인된 경우에만 이미지 렌더링
@@ -110,11 +100,15 @@ export default function ApiSportsImage({
       src={src}
       alt={alt}
       onError={handleImageError}
-      unoptimized
-      // 기본값을 설정하되, 전달받은 값이 있으면 그대로 사용
-      loading={(props as unknown as { loading?: 'eager' | 'lazy' }).loading ?? 'eager'}
-      fetchPriority={(props as unknown as { fetchPriority?: 'high' | 'low' | 'auto' }).fetchPriority ?? 'high'}
-      priority={(props as unknown as { priority?: boolean }).priority ?? true}
+      // priority가 true이면 loading 속성을 제거하고, 아니면 lazy loading 사용
+      {...(priority ? { priority: true } : { loading: loading })}
+      className={`${props.className} transition-opacity duration-300 opacity-0 animate-fade-in`}
+      onLoad={(e) => {
+        // 이미지 로드 완료 시 페이드인 효과
+        const target = e.target as HTMLImageElement;
+        target.classList.remove('opacity-0');
+        target.classList.add('opacity-100');
+      }}
     />
   );
 } 

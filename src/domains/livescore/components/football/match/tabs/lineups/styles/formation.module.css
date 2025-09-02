@@ -98,3 +98,5 @@
     aspect-ratio: 16/9;
   }
 }
+
+/* playerFadeIn / playerPulse / imageSlideIn 키프레임은 전역(globals.css)로 이동 */

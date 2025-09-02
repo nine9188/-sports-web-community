@@ -5,7 +5,7 @@
 import { ImageType } from '@/shared/types/image';
 
 // 클라이언트 메모리 캐시 (중복 요청 방지)
-const imageUrlCache = new Map<string, string>();
+const imageUrlCache = new Map<string, string | null>();
 
 // API-Sports.io 기본 URL
 const API_SPORTS_BASE_URL = 'https://media.api-sports.io/football';
@@ -43,14 +43,21 @@ export function getSupabaseStorageUrl(type: ImageType, id: string | number): str
  * 
  * @param type - 이미지 타입
  * @param id - 이미지 ID
- * @returns 캐시된 이미지 URL 또는 직접 URL
+ * @param options - 옵션 (strict: 외부 URL 폴백 차단)
+ * @returns 캐시된 이미지 URL 또는 폴백 URL
  */
-export async function getCachedImageUrl(type: ImageType, id: string | number): Promise<string> {
+export async function getCachedImageUrl(
+  type: ImageType, 
+  id: string | number, 
+  options?: { strict?: boolean }
+): Promise<string | null> {
   const cacheKey = `${type}-${id}`;
+  const { strict = false } = options || {};
   
   // 메모리 캐시에서 먼저 확인
   if (imageUrlCache.has(cacheKey)) {
-    return imageUrlCache.get(cacheKey)!;
+    const cached = imageUrlCache.get(cacheKey);
+    return cached || null;
   }
   
   try {
@@ -58,8 +65,8 @@ export async function getCachedImageUrl(type: ImageType, id: string | number): P
     const { getCachedImageFromStorage } = await import('@/shared/actions/image-storage-actions');
     const result = await getCachedImageFromStorage(type as 'players' | 'teams' | 'leagues' | 'coachs', id);
     
-    if (result.success && result.url) {
-      // 메모리 캐시에 저장
+    if (result.success && result.url && result.url.includes('supabase.co')) {
+      // Supabase Storage URL만 캐시하고 반환
       imageUrlCache.set(cacheKey, result.url);
       return result.url;
     }
@@ -67,7 +74,12 @@ export async function getCachedImageUrl(type: ImageType, id: string | number): P
     console.error('Failed to get cached image:', error);
   }
   
-  // 캐시 실패 시 직접 API-Sports URL 반환 (메모리 캐시에도 저장)
+  // Strict 모드: 외부 URL 폴백 금지
+  if (strict) {
+    return null;
+  }
+  
+  // Non-strict 모드: 외부 URL 폴백 허용
   const fallbackUrl = getApiSportsImageUrl(type, id);
   imageUrlCache.set(cacheKey, fallbackUrl);
   return fallbackUrl;
@@ -79,7 +91,7 @@ export async function getCachedImageUrl(type: ImageType, id: string | number): P
  * @param playerId - 선수 ID
  * @returns 선수 이미지 URL (Promise)
  */
-export async function getPlayerImageUrlCached(playerId: string | number): Promise<string> {
+export async function getPlayerImageUrlCached(playerId: string | number): Promise<string | null> {
   return getCachedImageUrl(ImageType.Players, playerId);
 }
 
@@ -89,7 +101,7 @@ export async function getPlayerImageUrlCached(playerId: string | number): Promis
  * @param teamId - 팀 ID
  * @returns 팀 로고 URL (Promise)
  */
-export async function getTeamLogoUrlCached(teamId: string | number): Promise<string> {
+export async function getTeamLogoUrlCached(teamId: string | number): Promise<string | null> {
   return getCachedImageUrl(ImageType.Teams, teamId);
 }
 
@@ -99,7 +111,7 @@ export async function getTeamLogoUrlCached(teamId: string | number): Promise<str
  * @param leagueId - 리그 ID
  * @returns 리그 로고 URL (Promise)
  */
-export async function getLeagueLogoUrlCached(leagueId: string | number): Promise<string> {
+export async function getLeagueLogoUrlCached(leagueId: string | number): Promise<string | null> {
   return getCachedImageUrl(ImageType.Leagues, leagueId);
 }
 
@@ -109,7 +121,7 @@ export async function getLeagueLogoUrlCached(leagueId: string | number): Promise
  * @param coachId - 감독 ID
  * @returns 감독 이미지 URL (Promise)
  */
-export async function getCoachImageUrlCached(coachId: string | number): Promise<string> {
+export async function getCoachImageUrlCached(coachId: string | number): Promise<string | null> {
   return getCachedImageUrl(ImageType.Coachs, coachId);
 }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { memo } from 'react';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 
 interface PlayerImageProps {
@@ -9,8 +9,10 @@ interface PlayerImageProps {
   className?: string;
   playerId?: number;
   priority?: boolean;
-  width?: number;
-  height?: number;
+  width?: string; // "w-8", "w-10" 등 Tailwind 클래스
+  height?: string;
+  playerName?: string;
+  playerNumber?: number;
 }
 
 export default memo(function PlayerImage({ 
@@ -18,25 +20,44 @@ export default memo(function PlayerImage({
   className = '', 
   playerId,
   priority = false,
-  width = 40,
-  height = 40
+  width = "w-8",
+  height = "h-8",
+  playerName,
+  playerNumber
 }: PlayerImageProps) {
-  return (
-    <div className={`relative overflow-hidden rounded-full ${className}`} style={{ width: `${width}px`, height: `${height}px` }}>
-      {playerId && playerId > 0 ? (
-      <ApiSportsImage
-        imageId={playerId}
-        imageType={ImageType.Players}
-        alt={alt}
-        width={width}
-        height={height}
-        className="object-cover w-full h-full rounded-full"
-        priority={priority}
-      />
-      ) : (
-        // playerId가 없으면 빈 영역 표시
-        <div className="w-full h-full bg-gray-200 rounded-full" />
-      )}
+  // width 클래스에서 size 추출
+  const sizeMap: { [key: string]: 'sm' | 'md' | 'lg' | 'xl' } = {
+    'w-6': 'sm',
+    'w-8': 'md', 
+    'w-10': 'lg',
+    'w-12': 'xl'
+  };
+  
+  const size = sizeMap[width] || 'md';
+  
+  // 폴백 콘텐츠: 선수 번호 또는 이름 첫글자
+  const fallbackContent = playerNumber ? (
+    <div className="text-xs font-bold text-gray-600">{playerNumber}</div>
+  ) : playerName ? (
+    <div className="text-xs font-bold text-gray-600">{playerName.charAt(0)}</div>
+  ) : undefined;
+
+  return playerId && playerId > 0 ? (
+    <UnifiedSportsImage
+      imageId={playerId}
+      imageType={ImageType.Players}
+      alt={alt}
+      size={size}
+      variant="circle"
+      priority={priority}
+      loading="lazy"
+      strict={true}
+      className={className}
+      fallbackContent={fallbackContent}
+    />
+  ) : (
+    <div className={`${width} ${height} bg-gray-200 rounded-full flex items-center justify-center ${className}`}>
+      {fallbackContent}
     </div>
   );
 }); 

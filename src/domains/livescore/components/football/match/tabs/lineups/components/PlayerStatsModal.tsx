@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { fetchCachedPlayerStats, PlayerStats, PlayerStatsResponse } from '@/domains/livescore/actions/match/playerStats';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 
 
@@ -233,24 +233,24 @@ export default function PlayerStatsModal({
           <div className="relative w-28 h-28 mx-auto mb-4">
             <div className="relative w-28 h-28">
               <div className="absolute inset-0 rounded-full border-4 border-white shadow-lg"></div>
-              <ApiSportsImage
+              <UnifiedSportsImage
                 imageId={playerId}
                 imageType={ImageType.Players}
                 alt={playerInfo.name}
-                width={112}
-                height={112}
-                className="w-full h-full rounded-full object-cover"
+                size="xl"
+                variant="circle"
+                className="w-full h-full"
               />
             </div>
             {stats.team?.id && (
               <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center">
-                <ApiSportsImage
+                <UnifiedSportsImage
                   imageId={stats.team.id}
                   imageType={ImageType.Teams}
                   alt={stats.team?.name || '팀 로고'}
-                  width={32}
-                  height={32}
-                  className="w-8 h-8 object-contain"
+                  size="md"
+                  variant="square"
+                  className="w-8 h-8"
                 />
               </div>
             )}

@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import Field from './components/Field';
 import Player from './components/Player';
+import { useMatchData } from '@/domains/livescore/components/football/match/context/MatchDataContext';
 
 // 미디어 쿼리 커스텀 훅
 function useMediaQuery(query: string) {
@@ -61,6 +63,12 @@ interface FormationProps {
 
 export default function Formation({ homeTeamData, awayTeamData }: FormationProps) {
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const { refreshCurrentTab } = useMatchData();
+  
+  // 탭 새로고침 핸들러 (페이지 전체 새로고침 대신 탭만 새로고침)
+  const handleRefresh = () => {
+    refreshCurrentTab();
+  };
   
   // 기본 팀 색상
   const defaultColors = useMemo(() => ({
@@ -103,19 +111,29 @@ export default function Formation({ homeTeamData, awayTeamData }: FormationProps
   const processedAwayTeam = useMemo(() => processTeamData(awayTeamData), [processTeamData, awayTeamData]);
 
   return (
-    <div style={{ 
-      borderRadius: '12px', 
-      overflow: 'hidden', 
-      maxWidth: '100%',
-      aspectRatio: isMobile ? '9/16' : '16/9',
-      margin: '0 auto'
-    }}>
-      <Field>
+    <motion.div 
+      style={{ 
+        borderRadius: '12px', 
+        overflow: 'hidden', 
+        maxWidth: '100%',
+        aspectRatio: isMobile ? '9/16' : '16/9',
+        margin: '0 auto'
+      }}
+      initial={{ opacity: 0, scale: 0.95 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: true, margin: "-100px", root: null }}
+      transition={{ 
+        duration: 0.8,
+        ease: "easeOut"
+      }}
+    >
+      <Field isMobile={isMobile} onRefresh={handleRefresh}>
         <Player
+          isMobile={isMobile}
           homeTeamData={processedHomeTeam}
           awayTeamData={processedAwayTeam}
         />
       </Field>
-    </div>
+    </motion.div>
   );
 }

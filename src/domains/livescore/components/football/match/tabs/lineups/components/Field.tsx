@@ -26,9 +26,16 @@ function useMediaQuery(query: string) {
   return matches;
 }
 
-const Field = ({ children }: { children?: React.ReactNode }) => {
+interface FieldProps {
+  isMobile?: boolean;
+  children?: React.ReactNode;
+  onRefresh?: () => void;
+}
+
+const Field = ({ isMobile: isMobileProp, children, onRefresh }: FieldProps) => {
   // 모바일 여부 확인 (768px 이하면 모바일로 간주)
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isMobileCalculated = useMediaQuery('(max-width: 768px)');
+  const isMobile = isMobileProp ?? isMobileCalculated;
   
   // 화면 크기에 따라 viewBox 설정
   const viewBox = isMobile ? "0 0 56 100" : "0 0 100 56";
@@ -405,7 +412,52 @@ const Field = ({ children }: { children?: React.ReactNode }) => {
             </g>
           )}
 
-          {/* Player 컴포넌트를 여기서 렌더링 */}
+          {/* 새로고침 버튼 - 경기장 오른쪽 상단 끝에 배치 */}
+          {onRefresh && (
+            <g>
+              {/* 배경 원 */}
+              <circle
+                cx={isMobile ? "52.5" : "96.5"}
+                cy={isMobile ? "4" : "4"}
+                r="1.5"
+                fill="rgba(255, 255, 255, 0.95)"
+                stroke="rgba(0, 100, 0, 0.3)"
+                strokeWidth="0.2"
+                className="cursor-pointer hover:fill-white hover:stroke-green-600 transition-all duration-200"
+                onClick={onRefresh}
+              />
+              {/* 새로고침 아이콘 */}
+              <g
+                transform={`translate(${isMobile ? "52.5" : "96.5"}, ${isMobile ? "4" : "4"}) scale(0.06)`}
+                className="cursor-pointer"
+                onClick={onRefresh}
+                fill="rgba(0, 100, 0, 0.8)"
+              >
+                <path
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                  transform="translate(-12, -12)"
+                />
+              </g>
+              {/* 안내 텍스트 - 아이콘 바로 왼쪽에 배치 */}
+              <text
+                x={isMobile ? "50.5" : "94.5"}
+                y={isMobile ? "4.5" : "4.5"}
+                fill="rgba(0, 100, 0, 0.8)"
+                fontSize="1.2"
+                fontWeight="600"
+                textAnchor="end"
+                className="pointer-events-none select-none"
+              >
+                새로고침
+              </text>
+            </g>
+          )}
+          
           <g className={styles.playersLayer}>
             {children}
           </g>

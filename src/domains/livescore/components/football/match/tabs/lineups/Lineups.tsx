@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import Image from 'next/image';
 import Formation from './Formation';
 import PlayerImage from './components/PlayerImage';
 import PlayerEvents from './components/PlayerEvents';
@@ -11,6 +10,8 @@ import useTeamCache from './hooks/useTeamCache';
 import { TeamLineup, MatchEvent } from '@/domains/livescore/types/match';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import { PlayerStats } from '@/domains/livescore/actions/match/playerStats';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
+import { ImageType } from '@/shared/types/image';
 
 // 프리미어리그 팀 선수 데이터 import
 import { 
@@ -115,7 +116,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
   } | null>(null);
   
   // 팀 정보 캐시 훅 사용
-  const { getTeamDisplayName, getTeamLogoUrl } = useTeamCache(
+  const { getTeamDisplayName } = useTeamCache(
     matchData?.homeTeam,
     matchData?.awayTeam
   );
@@ -254,40 +255,28 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
             <tr>
               <th scope="col" className="w-1/2 py-3 px-4 text-left text-sm font-medium text-gray-500 border-r border-gray-200">
                 <div className="flex items-center gap-1 mb-1">
-                  <div className="w-6 h-6 relative flex-shrink-0 overflow-hidden">
-                    <Image
-                      src={getTeamLogoUrl(homeTeam.id, homeTeam.logo)}
-                      alt={`${getTeamDisplayName(homeTeam.id, homeTeam.name)} 로고`}
-                      width={24}
-                      height={24}
-                      className="w-full h-full object-contain"
-                      unoptimized
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                      }}
-                    />
-                  </div>
+                  <UnifiedSportsImage
+                    imageId={homeTeam.id}
+                    imageType={ImageType.Teams}
+                    alt={`${getTeamDisplayName(homeTeam.id, homeTeam.name)} 로고`}
+                    size="sm"
+                    variant="square"
+                    priority={true}
+                  />
                   <span className="font-medium">{getTeamDisplayName(homeTeam.id, homeTeam.name)}</span>
                 </div>
                 <div className="text-xs text-gray-500">포메이션: {homeLineup.formation}</div>
               </th>
               <th scope="col" className="w-1/2 py-3 px-4 text-left text-sm font-medium text-gray-500">
                 <div className="flex items-center gap-1 mb-1">
-                  <div className="w-6 h-6 relative flex-shrink-0 overflow-hidden">
-                    <Image
-                      src={getTeamLogoUrl(awayTeam.id, awayTeam.logo)}
-                      alt={`${getTeamDisplayName(awayTeam.id, awayTeam.name)} 로고`}
-                      width={24}
-                      height={24}
-                      className="w-full h-full object-contain"
-                      unoptimized
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                      }}
-                    />
-                  </div>
+                  <UnifiedSportsImage
+                    imageId={awayTeam.id}
+                    imageType={ImageType.Teams}
+                    alt={`${getTeamDisplayName(awayTeam.id, awayTeam.name)} 로고`}
+                    size="sm"
+                    variant="square"
+                    priority={true}
+                  />
                   <span className="font-medium">{getTeamDisplayName(awayTeam.id, awayTeam.name)}</span>
                 </div>
                 <div className="text-xs text-gray-500">포메이션: {awayLineup.formation}</div>
@@ -324,8 +313,8 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                             alt={`${homeLineup.startXI[index].player.name} 선수 사진`}
                             playerId={homeLineup.startXI[index].player.id}
                             priority={index < 5} // 처음 5명은 우선 로딩
-                            width={40}
-                            height={40}
+                            width={"w-10"}
+                            height={"h-10"}
                             className="border-2 border-gray-200"
                           />
                         ) : (
@@ -371,8 +360,8 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                             alt={`${awayLineup.startXI[index].player.name} 선수 사진`}
                             playerId={awayLineup.startXI[index].player.id}
                             priority={index < 5} // 처음 5명은 우선 로딩
-                            width={40}
-                            height={40}
+                            width={"w-10"}
+                            height={"h-10"}
                             className="border-2 border-gray-200"
                           />
                         ) : (
@@ -518,27 +507,21 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                 <tr>
                   <td className="py-2 px-4 border-r border-gray-200">
                     <div className="flex items-center gap-3">
-                      <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200 flex items-center justify-center">
-                        {/* 기본 아이콘 (이미지 로드 실패 시 표시) */}
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-label="감독 기본 아이콘">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                        {/* 감독 이미지 */}
-                        {homeLineup.coach?.id ? (
-                          <Image
-                            src={homeLineup.coach.photo || `https://media.api-sports.io/football/coachs/${homeLineup.coach.id}.png`}
-                            alt={`${homeLineup.coach?.name || '감독'} 사진`}
-                            fill
-                            sizes="40px"
-                            className="object-cover"
-                            unoptimized
-                            onError={(e) => {
-                              const target = e.currentTarget as HTMLImageElement;
-                              target.style.display = 'none';
-                            }}
-                          />
-                        ) : null}
-                      </div>
+                      {homeLineup.coach?.id ? (
+                        <UnifiedSportsImage
+                          imageId={homeLineup.coach.id}
+                          imageType={ImageType.Coachs}
+                          alt={`${homeLineup.coach?.name || '감독'} 사진`}
+                          size="lg"
+                          variant="circle"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gray-100 border-2 border-gray-200 flex items-center justify-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                        </div>
+                      )}
                       <div className="flex-1">
                         <div className="text-sm font-medium">{homeLineup.coach?.name || '정보 없음'}</div>
                         <div className="text-xs text-gray-500">감독</div>
@@ -547,27 +530,21 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                   </td>
                   <td className="py-2 px-4">
                     <div className="flex items-center gap-3">
-                      <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200 flex items-center justify-center">
-                        {/* 기본 아이콘 (이미지 로드 실패 시 표시) */}
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-label="감독 기본 아이콘">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                        {/* 감독 이미지 */}
-                        {awayLineup.coach?.id ? (
-                          <Image
-                            src={awayLineup.coach.photo || `https://media.api-sports.io/football/coachs/${awayLineup.coach.id}.png`}
-                            alt={`${awayLineup.coach?.name || '감독'} 사진`}
-                            fill
-                            sizes="40px"
-                            className="object-cover"
-                            unoptimized
-                            onError={(e) => {
-                              const target = e.currentTarget as HTMLImageElement;
-                              target.style.display = 'none';
-                            }}
-                          />
-                        ) : null}
-                      </div>
+                      {awayLineup.coach?.id ? (
+                        <UnifiedSportsImage
+                          imageId={awayLineup.coach.id}
+                          imageType={ImageType.Coachs}
+                          alt={`${awayLineup.coach?.name || '감독'} 사진`}
+                          size="lg"
+                          variant="circle"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gray-100 border-2 border-gray-200 flex items-center justify-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                        </div>
+                      )}
                       <div className="flex-1">
                         <div className="text-sm font-medium">{awayLineup.coach?.name || '정보 없음'}</div>
                         <div className="text-xs text-gray-500">감독</div>
