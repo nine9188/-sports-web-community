@@ -225,88 +225,78 @@ const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, away
     return map;
   }, []);
 
+  // 라인 앵커(주축 좌표) 계산: GK 포함 totalLines만큼 균등 분할
+  const computeLineAnchors = (
+    isMobileLayout: boolean,
+    isHomeTeam: boolean,
+    totalLines: number
+  ) => {
+    // 최소 2줄(GK + 한 줄) 보장, 과도한 라인 수 상한
+    const lines = Math.max(2, Math.min(8, totalLines));
+    
+    if (isMobileLayout) {
+      // 모바일: 주축은 y (아래로 증가)
+      // 원래 값으로 복원: 겹침 방지 (이전 안정 배치)
+      // 홈: 하단 골대 근처(93) → 중앙 쪽(54)
+      // 원정: 상단 골대 근처(5)  → 중앙 쪽(45)
+      const start = isHomeTeam ? 93 : 5;
+      const end = isHomeTeam ? 54 : 45;
+      const step = (end - start) / (lines - 1);
+      return Array.from({ length: lines }, (_, i) => start + step * i);
+    } else {
+      // 데스크탑: 주축은 x (오른쪽으로 증가)
+      // 홈: 좌측 골대 근처(5) → 중앙 쪽(45)
+      // 원정: 우측 골대 근처(95) → 중앙 쪽(55)
+      const start = isHomeTeam ? 5 : 95;
+      const end = isHomeTeam ? 45 : 55;
+      const step = (end - start) / (lines - 1);
+      return Array.from({ length: lines }, (_, i) => start + step * i);
+    }
+  };
+
   // 포지션 계산 함수
   const getPositionFromGrid = (grid: string | null, isHome: boolean, formation: string) => {
+    // 기본 폴백 위치(센터 근처)
     if (!grid) return isMobile ? { x: 28, y: 50 } : { x: 50, y: 28 };
 
-    const [line, position] = grid.split(':').map(Number);
-    const formationArray = formation.split('-').map(Number);
-    
-    const getPosition = (line: number, isHome: boolean) => {
-      if (isMobile) {
-        if (isHome) {
-          switch(line) {
-            case 1: return { x: 28, y: 93 };
-            case 2: return { x: 28, y: 84 };
-            case 3: return { x: 28, y: 74 };
-            case 4: return { x: 28, y: 64 };
-            case 5: return { x: 28, y: 54 };
-            default: return { x: 28, y: 50 };
-          }
-        } else {
-          switch(line) {
-            case 1: return { x: 28, y: 5 };
-            case 2: return { x: 28, y: 15 };
-            case 3: return { x: 28, y: 25 };
-            case 4: return { x: 28, y: 35 };
-            case 5: return { x: 28, y: 45 };
-            default: return { x: 28, y: 50 };
-          }
-        }
-      } else {
-        if (isHome) {
-          switch(line) {
-            case 1: return { x: 5, y: 28 };
-            case 2: return { x: 15, y: 28 };
-            case 3: return { x: 25, y: 28 };
-            case 4: return { x: 35, y: 28 };
-            case 5: return { x: 45, y: 28 };
-            default: return { x: 50, y: 28 };
-          }
-        } else {
-          switch(line) {
-            case 1: return { x: 95, y: 28 };
-            case 2: return { x: 85, y: 28 };
-            case 3: return { x: 75, y: 28 };
-            case 4: return { x: 65, y: 28 };
-            case 5: return { x: 55, y: 28 };
-            default: return { x: 50, y: 28 };
-          }
-        }
-      }
-    };
+    // grid 파싱과 안전장치
+    const parts = grid.split(':');
+    const lineRaw = Number(parts[0]);
+    const positionRaw = Number(parts[1]);
+    const segments = formation?.split?.('-')?.map(Number).filter(n => Number.isFinite(n) && n >= 0) || [];
+    const totalLines = 1 + Math.max(segments.length, 1); // GK + 세그먼트(최소 1)
 
-    const basePosition = getPosition(line, isHome);
+    const line = Math.min(Math.max(1, lineRaw), totalLines);
     const getLinePlayerCount = (lineNum: number) => {
-      switch(lineNum) {
-        case 2: return formationArray[0];
-        case 3: return formationArray[1];
-        case 4: return formationArray[2];
-        case 5: return formationArray[3] || 0;
-        default: return 1;
-      }
+      if (lineNum === 1) return 1; // GK
+      const idx = lineNum - 2;
+      return Math.max(0, segments[idx] ?? 0);
     };
+    const totalInLine = getLinePlayerCount(line) || 1;
+    const position = Math.min(Math.max(1, positionRaw || 1), totalInLine);
 
-    const totalInLine = getLinePlayerCount(line);
+    // 라인 앵커 계산(주축 좌표들)
+    const anchors = computeLineAnchors(isMobile, isHome, totalLines);
+    const primary = anchors[Math.min(line - 1, anchors.length - 1)] ?? (isMobile ? 50 : 50);
+
+    // 보조축 오프셋 계산
     const offset = calculateOffset(position, totalInLine);
+    const centerX = 28; // 모바일 기준 x 중앙
+    const centerY = 28; // 데스크탑 기준 y 중앙
 
     if (isMobile) {
-      return {
-        x: basePosition.x + offset,
-        y: basePosition.y
-      };
-    } else {
-      return {
-        x: basePosition.x,
-        y: basePosition.y + offset
-      };
+      // 모바일: y가 라인 앵커, x는 보조축 오프셋
+      return { x: centerX + offset, y: primary };
     }
+    // 데스크탑: x가 라인 앵커, y는 보조축 오프셋
+    return { x: primary, y: centerY + offset };
   };
 
   const calculateOffset = (position: number, totalInLine: number) => {
     if (totalInLine === 1) return 0;
     
-    const totalSpace = 52;
+    // 세로 분산(데스크탑 기준) 폭을 추가 확대
+    const totalSpace = 62;
     const spacing = totalSpace / (totalInLine + 1);
     const centerPosition = (totalInLine + 1) / 2;
     const offset = (position - centerPosition) * spacing;

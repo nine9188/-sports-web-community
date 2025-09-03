@@ -443,18 +443,29 @@ const Field = ({ isMobile: isMobileProp, children, onRefresh }: FieldProps) => {
                   transform="translate(-12, -12)"
                 />
               </g>
-              {/* 안내 텍스트 - 아이콘 바로 왼쪽에 배치 */}
-              <text
-                x={isMobile ? "50.5" : "94.5"}
-                y={isMobile ? "4.5" : "4.5"}
-                fill="rgba(0, 100, 0, 0.8)"
-                fontSize="1.2"
-                fontWeight="600"
-                textAnchor="end"
-                className="pointer-events-none select-none"
-              >
-                새로고침
-              </text>
+              {/* 안내 텍스트 - 아이콘 바로 왼쪽에 배치 (두 줄) */}
+              <g className="pointer-events-none select-none" fill="white">
+                {/* 1행: 안내 문구 */}
+                <text
+                  x={isMobile ? "50.5" : "94.5"}
+                  y={isMobile ? "3.6" : "3.6"}
+                  fontSize="1.0"
+                  fontWeight="600"
+                  textAnchor="end"
+                >
+                  이미지가 손상되었을 경우 새로고침해주세요
+                </text>
+                {/* 2행: 버튼 타이틀 */}
+                <text
+                  x={isMobile ? "50.5" : "94.5"}
+                  y={isMobile ? "5.0" : "5.0"}
+                  fontSize="1.2"
+                  fontWeight="600"
+                  textAnchor="end"
+                >
+                  새로고침
+                </text>
+              </g>
             </g>
           )}
           
