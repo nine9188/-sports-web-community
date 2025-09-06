@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { ShopItem } from '../types'
 import ItemGrid from '@/domains/shop/components/ItemGrid'
+import Tabs, { TabItem } from '@/shared/ui/tabs'
 
 interface CategoryFilterProps {
   items: ShopItem[]
@@ -29,33 +30,23 @@ export default function CategoryFilter({
     return items.filter(item => item.category_id?.toString() === activeCategory)
   }, [items, activeCategory])
 
+  const tabs: TabItem[] = useMemo(() => {
+    const base: TabItem[] = [{ id: 'all', label: '전체' }]
+    const catTabs: TabItem[] = categories.map(c => ({ id: c.id.toString(), label: c.name }))
+    return [...base, ...catTabs]
+  }, [categories])
+
+  const handleTabChange = useCallback((tabId: string) => {
+    setActiveCategory(tabId)
+  }, [])
+
   return (
     <div>
-      <div className="flex flex-wrap gap-2 mb-4">
-        <button
-          onClick={() => setActiveCategory('all')}
-          className={`px-4 py-2 rounded-lg transition-colors ${
-            activeCategory === 'all' 
-              ? 'bg-blue-500 text-white' 
-              : 'bg-gray-100 hover:bg-gray-200'
-          }`}
-        >
-          전체
-        </button>
-        {categories.map(category => (
-          <button
-            key={category.id}
-            onClick={() => setActiveCategory(category.id.toString())}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              activeCategory === category.id.toString()
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 hover:bg-gray-200'
-            }`}
-          >
-            {category.name}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        tabs={tabs}
+        activeTab={activeCategory}
+        onTabChange={handleTabChange}
+      />
 
       <ItemGrid
         items={filteredItems}

@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import { Metadata } from 'next'
 import { createClient } from '@/shared/api/supabaseServer'
 import { 
@@ -65,33 +64,24 @@ export default async function CategoryPage({ params }: Props) {
     const userItems = await getUserItems(user?.id)
 
     return (
-      <div className="container mx-auto py-6 px-4">
-        <div className="mb-6">
-          <Link 
-            href="/shop" 
-            className="inline-flex items-center text-blue-600 hover:text-blue-800"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-1">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
-            </svg>
-            상점으로 돌아가기
-          </Link>
-        </div>
+      <div className="container mx-auto">
         
-        <div className="mb-6">
+        <div className="mt-4 sm:mt-0 mb-4 rounded-md border border-gray-200 p-4">
           <h1 className="text-2xl font-bold">{currentCategory.name}</h1>
           {currentCategory.description && (
             <p className="text-gray-600 mt-2">{currentCategory.description}</p>
           )}
         </div>
 
-        <CategoryFilter 
-          items={items}
-          userItems={userItems}
-          userPoints={userPoints}
-          userId={user?.id}
-          categories={[currentCategory, ...(currentCategory.subcategories || [])]}
-        />
+        <div className="mb-4">
+          <CategoryFilter 
+            items={items}
+            userItems={userItems}
+            userPoints={userPoints}
+            userId={user?.id}
+            categories={[currentCategory, ...(currentCategory.subcategories || [])]}
+          />
+        </div>
       </div>
     )
   } catch (error) {

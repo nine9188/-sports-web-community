@@ -273,6 +273,12 @@ const MatchItem = React.memo(function MatchItem({
 });
 
 export default function LiveScoreModal({ isOpen, onClose }: LiveScoreModalProps) {
+  // SSR 보호: 포털은 클라이언트 마운트 후에만 사용
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const [allMatches, setAllMatches] = useState<{
     yesterday: MatchData[];
     today: MatchData[];
@@ -375,7 +381,7 @@ export default function LiveScoreModal({ isOpen, onClose }: LiveScoreModalProps)
   // 선택된 날짜의 경기 목록
   const currentMatches = allMatches[selectedDate] || [];
 
-  if (!isOpen) return null;
+  if (!isOpen || !isMounted) return null;
 
   return ReactDOM.createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden">
@@ -460,6 +466,6 @@ export default function LiveScoreModal({ isOpen, onClose }: LiveScoreModalProps)
         </div>
       </div>
     </div>,
-    document.body
+    typeof document !== 'undefined' ? document.body : null
   );
 } 

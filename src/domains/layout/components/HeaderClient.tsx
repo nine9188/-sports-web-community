@@ -4,8 +4,8 @@ import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faBars, faFutbol } from '@fortawesome/free-solid-svg-icons';
-import { ChevronDown, ShoppingBag, X, Search } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { ChevronDown, ShoppingBag, X, Search, ArrowLeft } from 'lucide-react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import BoardNavigationClient from './BoardNavigationClient';
 import { HeaderUserData } from '@/domains/layout/types/header';
 import { useIcon } from '@/shared/context/IconContext';
@@ -83,7 +83,13 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
     setExpandedBoards(newExpanded);
   };
 
-  if (!isOpen) return null;
+  // SSR 보호: 클라이언트 마운트 후에만 포털 사용
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isOpen || !isMounted) return null;
 
   return ReactDOM.createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden">
@@ -271,7 +277,7 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
         </div>
       </div>
     </div>,
-    document.body
+    typeof document !== 'undefined' ? document.body : null
   );
 });
 
@@ -285,13 +291,14 @@ const SearchModal = React.memo(function SearchModal({
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery('');
-      onClose();
+      // 현재 /search 방문 기록을 대체해 뒤로가기가 원래 페이지로 가도록 유지
+      router.replace(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      // 모바일에서는 검색 결과 페이지로 이동해도 패널 유지
     }
   };
 
@@ -301,67 +308,67 @@ const SearchModal = React.memo(function SearchModal({
     }
   };
 
+  // SSR 보호: 클라이언트 마운트 체크
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
+      // URL 쿼리를 입력창과 동기화 (모바일 전용)
+      const current = searchParams?.get('q') || '';
+      setSearchQuery(current);
     }
 
-    return () => {
+    // 데스크탑 스크롤 잠금 비활성화 (모바일만 사용)
+    if (typeof document !== 'undefined') {
       document.body.style.overflow = 'unset';
+    }
+    return () => {
+      if (typeof document !== 'undefined') {
+        document.body.style.overflow = 'unset';
+      }
     };
-  }, [isOpen]);
+  }, [isOpen, searchParams]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !isMounted) return null;
 
   return ReactDOM.createPortal(
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center pt-20 px-0 lg:px-8">
-      <div className="bg-white rounded-none lg:rounded-lg shadow-xl w-full lg:max-w-lg p-4 sm:p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base sm:text-lg font-semibold">검색</h2>
+    <div className="fixed inset-0 z-50 md:hidden pointer-events-none">
+      {/* 모바일: 상단 검색 패널만 고정 */}
+      <div className="fixed top-0 left-0 right-0 bg-white border-b p-3 pointer-events-auto">
+        <form onSubmit={handleSearch} className="flex items-center gap-2">
           <button 
-            onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded-full"
+            type="button"
+            onClick={() => router.back()}
+            className="p-2 rounded-full active:bg-gray-100"
           >
-            <X className="h-4 w-4 sm:h-5 sm:w-5" />
+            <ArrowLeft className="h-4 w-4" />
           </button>
-        </div>
-        
-        <form onSubmit={handleSearch}>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
               placeholder="게시글, 뉴스, 팀 검색..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="w-full pl-10 pr-16 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               autoFocus
             />
-            <button
-              type="submit"
-              disabled={!searchQuery.trim()}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-            >
-              검색
-            </button>
           </div>
+          <button
+            type="submit"
+            disabled={!searchQuery.trim()}
+            className="px-3 py-2 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+          >
+            검색
+          </button>
         </form>
-        
-        {/* 검색 팁 - 모바일에서는 간소화 */}
-        <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t text-xs text-gray-500">
-          <p className="hidden sm:block">💡 검색 팁:</p>
-          <ul className="mt-1 space-y-1 text-xs sm:text-xs">
-            <li className="hidden sm:block">• 게시글 제목, 내용, 작성자로 검색 가능</li>
-            <li className="hidden sm:block">• 팀명이나 선수명으로도 검색할 수 있어요</li>
-            <li className="sm:hidden text-center">게시글, 팀, 선수 검색 가능</li>
-          </ul>
-        </div>
       </div>
     </div>,
-    document.body
+    typeof document !== 'undefined' ? document.body : null
   );
 });
 
@@ -374,8 +381,10 @@ export default function HeaderClient({
 }: HeaderClientProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLiveScoreOpen, setIsLiveScoreOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { iconUrl, updateUserIconState } = useIcon();
+  const router = useRouter();
+  const pathname = usePathname();
+  const isSearchPage = (pathname || '').startsWith('/search');
   
   // 서버에서 전달받은 사용자 데이터 사용
   const userData = initialUserData;
@@ -408,10 +417,10 @@ export default function HeaderClient({
     setIsLiveScoreOpen(!isLiveScoreOpen);
   }, [isLiveScoreOpen]);
 
-  // 검색 모달 토글
-  const toggleSearch = useCallback(() => {
-    setIsSearchOpen(!isSearchOpen);
-  }, [isSearchOpen]);
+  // 모바일 검색: 검색 페이지로 이동하여 모달 노출
+  const goToSearchPage = useCallback(() => {
+    router.push('/search');
+  }, [router]);
 
   // 인증 상태에 따른 렌더링 결정
   const renderAuthState = useMemo(() => {
@@ -476,7 +485,7 @@ export default function HeaderClient({
             <div className="flex items-center space-x-2">
               {/* 검색 아이콘 - 모바일에서만 표시 */}
               <button 
-                onClick={toggleSearch}
+                onClick={goToSearchPage}
                 className="md:hidden flex items-center justify-center w-9 h-9 rounded-full active:bg-gray-200 transition-colors duration-150"
                 style={{ WebkitTapHighlightColor: 'transparent' }}
               >
@@ -517,11 +526,13 @@ export default function HeaderClient({
         onClose={() => setIsLiveScoreOpen(false)}
       />
 
-      {/* 검색 모달 */}
-      <SearchModal
-        isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
-      />
+      {/* 검색 모달: 검색 결과 페이지에서만 표시 */}
+      {isSearchPage && (
+        <SearchModal
+          isOpen={true}
+          onClose={() => router.back()}
+        />
+      )}
     </header>
   );
 } 

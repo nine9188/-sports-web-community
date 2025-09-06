@@ -43,17 +43,17 @@ export default function ItemGrid({
           onConfirm={handlePurchase}
           canAfford={points >= selectedItem.price}
           userPoints={points}
+          isLoggedIn={Boolean(userId)}
         />
       )}
       
       {/* 아이템 그리드 */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
         {items.map(item => (
           <ItemCard
             key={item.id}
             item={item}
             isOwned={userItems.includes(item.id)}
-            canAfford={points >= item.price}
             onPurchase={() => handleSelectItem(item)}
           />
         ))}
