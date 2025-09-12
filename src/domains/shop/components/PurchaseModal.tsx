@@ -33,7 +33,6 @@ export default function PurchaseModal({
       <div className="relative w-full md:max-w-md bg-white rounded-t-2xl md:rounded-lg shadow-xl grid grid-rows-[auto,1fr,auto] min-h-[50vh] max-h-[70vh] md:min-h-fit md:max-h-fit md:h-auto overflow-hidden">
         {/* Header */}
         <div className="p-4 md:p-6 border-b relative">
-          <div className="mx-auto mb-2 h-1.5 w-12 rounded-full bg-gray-300 md:hidden" />
           <h2 id="purchase-title" className="text-base md:text-lg font-bold text-center md:text-left">구매 확인</h2>
           <button
             type="button"
@@ -73,14 +72,14 @@ export default function PurchaseModal({
               <div className="bg-gray-50 p-4 rounded-lg space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">보유한 내 포인트</span>
-                  <span className="text-base font-semibold tabular-nums">
+                  <span className="text-base font-semibold tabular-nums text-gray-800">
                     {userPoints.toLocaleString()} P
                   </span>
                 </div>
                 
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">상품 가격</span>
-                  <span className="text-base font-semibold tabular-nums text-red-600">
+                  <span className="text-base font-semibold tabular-nums text-gray-800">
                     - {item.price.toLocaleString()} P
                   </span>
                 </div>
@@ -89,11 +88,11 @@ export default function PurchaseModal({
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-gray-700">{canAfford ? '남는 포인트' : '부족한 포인트'}</span>
                     <div className="flex items-center gap-2">
-                      <span className={`text-lg font-bold tabular-nums ${canAfford ? 'text-green-600' : 'text-red-600'}`}>
+                      <span className={`text-lg font-bold tabular-nums ${canAfford ? 'text-gray-900' : 'text-red-600'}`}>
                         {(canAfford ? remainingPoints : lackingPoints).toLocaleString()} P
                       </span>
                       {!canAfford && (
-                        <span className="text-xs text-red-700 bg-red-50 px-2 py-1 rounded">부족</span>
+                        <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">부족</span>
                       )}
                     </div>
                   </div>

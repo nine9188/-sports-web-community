@@ -66,22 +66,20 @@ export default async function CategoryPage({ params }: Props) {
     return (
       <div className="container mx-auto">
         
-        <div className="mt-4 sm:mt-0 mb-4 rounded-md border border-gray-200 p-4">
+        <div className="mb-4 rounded-md border border-gray-200 p-4">
           <h1 className="text-2xl font-bold">{currentCategory.name}</h1>
           {currentCategory.description && (
             <p className="text-gray-600 mt-2">{currentCategory.description}</p>
           )}
         </div>
 
-        <div className="mb-4">
-          <CategoryFilter 
-            items={items}
-            userItems={userItems}
-            userPoints={userPoints}
-            userId={user?.id}
-            categories={[currentCategory, ...(currentCategory.subcategories || [])]}
-          />
-        </div>
+        <CategoryFilter 
+          items={items}
+          userItems={userItems}
+          userPoints={userPoints}
+          userId={user?.id}
+          categories={currentCategory.subcategories || []}
+        />
       </div>
     )
   } catch (error) {

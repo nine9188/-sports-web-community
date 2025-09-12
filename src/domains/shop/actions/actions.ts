@@ -117,8 +117,8 @@ export async function purchaseItem(itemId: number) {
     // 트랜잭션 처리를 위한 RPC 호출
     // Supabase 함수를 호출하여 DB 트랜잭션 수행 (포인트 차감 + 아이템 추가)
     const { data, error } = await supabase.rpc('purchase_item', {
-      p_item_id: itemId,
-      p_user_id: user.id
+      p_user_id: user.id,
+      p_item_id: itemId
     })
     
     if (error) throw new Error(error.message || '아이템 구매에 실패했습니다')

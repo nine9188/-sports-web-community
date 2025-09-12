@@ -1,8 +1,9 @@
 'use client'
 
-import Image from 'next/image'
 import { useTransition } from 'react'
 import { ShopItem } from '../types'
+import ApiSportsImage from '@/shared/components/ApiSportsImage'
+import { ImageType } from '@/shared/types/image'
 
 interface ItemCardProps {
   item: ShopItem
@@ -12,18 +13,25 @@ interface ItemCardProps {
 
 export default function ItemCard({ item, isOwned, onPurchase }: ItemCardProps) {
   const [isPending, startTransition] = useTransition()
+  
+  // API-Sports 팀 ID 추출 (URL에서 팀 ID 파싱)
+  const getTeamId = (imageUrl: string): string => {
+    const match = imageUrl.match(/\/teams\/(\d+)\.png/)
+    return match ? match[1] : '0'
+  }
 
   return (
     <div className="border rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow flex flex-col">
-      {/* 이미지 영역: 고정 높이, 가운데 정렬, object-contain */}
-      <div className="p-2 flex justify-center">
-        <div className="h-16 w-full flex items-center justify-center">
-          <Image 
-            src={item.image_url} 
+      {/* 이미지 영역: 고정 크기, 가운데 정렬, 균일한 크기 */}
+      <div className="p-3 flex justify-center">
+        <div className="h-12 w-12 flex items-center justify-center">
+          <ApiSportsImage
+            imageId={getTeamId(item.image_url)}
+            imageType={ImageType.Teams}
             alt={item.name}
-            width={40}
-            height={40}
-            className="object-contain"
+            width={48}
+            height={48}
+            className="object-contain max-w-full max-h-full"
           />
         </div>
       </div>
@@ -31,16 +39,19 @@ export default function ItemCard({ item, isOwned, onPurchase }: ItemCardProps) {
       <div className="p-3 border-t mt-auto">
         <h3 className="text-sm font-medium truncate text-center" title={item.name}>{item.name}</h3>
         <div className="mt-2">
-          {/* 배지/가격 슬롯: 고정 높이, 배지는 invisible로 자리 예약 */}
-          <div className="flex items-center gap-2 h-5">
-            <span className={`text-xs px-2 py-0.5 bg-gray-100 rounded whitespace-nowrap ${isOwned ? '' : 'invisible'}`}>보유 중</span>
-            <span className="text-xs whitespace-nowrap ml-auto tabular-nums">
+          {/* 가격 슬롯 */}
+          <div className="flex items-center justify-center h-5">
+            <span className="text-xs whitespace-nowrap tabular-nums">
               {item.is_default ? '기본' : `${item.price} P`}
             </span>
           </div>
-          {/* 버튼 슬롯: 모바일 풀폭, md+ 우측 정렬, 버튼 없어도 높이 유지 */}
+          {/* 버튼/배지 슬롯: 모바일 풀폭, md+ 우측 정렬, 버튼 없어도 높이 유지 */}
           <div className="mt-2 md:flex md:justify-end h-9 md:h-7 md:items-center">
-            {!isOwned && (
+            {isOwned ? (
+              <span className="w-full md:w-auto h-9 md:h-7 px-3 text-xs bg-gray-600 text-white rounded whitespace-nowrap text-center flex items-center justify-center">
+                보유 중
+              </span>
+            ) : (
               <button
                 onClick={() => startTransition(() => onPurchase())}
                 className={`w-full md:w-auto h-9 md:h-7 px-3 text-xs rounded whitespace-nowrap text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-900 transition-colors ${

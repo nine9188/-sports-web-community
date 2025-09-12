@@ -470,8 +470,8 @@ async function isSeasonCompleted(leagueId: string, season: string = '2024'): Pro
 // 리그 소속 팀 목록 가져오기 (우승팀 정보 포함)
 export async function fetchLeagueTeams(leagueId: string): Promise<LeagueTeam[]> {
   try {
-    // 모든 리그 2024 시즌으로 통일 (데이터 일관성 유지)
-    const season = '2024';
+    // 모든 리그 2025 시즌으로 통일 (데이터 일관성 유지)
+    const season = '2025';
     
     // 시즌 완료 여부 확인
     const seasonCompleted = await isSeasonCompleted(leagueId, season);
