@@ -197,7 +197,56 @@ export const CHAMPIONSHIP_TEAMS: TeamMapping[] = [
     country_ko: '잉글랜드',
     country_en: 'England',
     code: 'PLY'
+  },
+  {
+    id: 46,
+    name_ko: '레스터 시티',
+    name_en: 'Leicester',
+    country_ko: '잉글랜드',
+    country_en: 'England',
+    code: 'LEI'
+  },
+  {
+    id: 54,
+    name_ko: '버밍엄 시티',
+    name_en: 'Birmingham',
+    country_ko: '잉글랜드',
+    country_en: 'England',
+    code: 'BIR'
+  },
+  {
+    id: 57,
+    name_ko: '입스위치 타운',
+    name_en: 'Ipswich',
+    country_ko: '잉글랜드',
+    country_en: 'England',
+    code: 'IPS'
+  },
+  {
+    id: 41,
+    name_ko: '사우샘프턴',
+    name_en: 'Southampton',
+    country_ko: '잉글랜드',
+    country_en: 'England',
+    code: 'SOU'
+  },
+  {
+    id: 1335,
+    name_ko: '찰턴 애슬레틱',
+    name_en: 'Charlton',
+    country_ko: '잉글랜드',
+    country_en: 'England',
+    code: 'CHA'
+  },
+  {
+    id: 1837,
+    name_ko: '렉섬',
+    name_en: 'Wrexham',
+    country_ko: '웨일스',
+    country_en: 'Wales',
+    code: 'WRE'
   }
+  
 ];
 
 // 팀 ID로 챔피언십 팀 정보 가져오기

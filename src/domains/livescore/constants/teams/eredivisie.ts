@@ -16,7 +16,7 @@ export const EREDIVISIE_TEAMS: TeamMapping[] = [
   },
   {
     id: 197,
-    name_ko: 'PSV',
+    name_ko: 'PSV 아인트호벤벤',
     name_en: 'PSV Eindhoven',
     country_ko: '네덜란드',
     country_en: 'Netherlands',
@@ -48,7 +48,7 @@ export const EREDIVISIE_TEAMS: TeamMapping[] = [
   },
   {
     id: 201,
-    name_ko: 'AZ',
+    name_ko: 'AZ 알크마르',
     name_en: 'AZ Alkmaar',
     country_ko: '네덜란드',
     country_en: 'Netherlands',
@@ -149,7 +149,32 @@ export const EREDIVISIE_TEAMS: TeamMapping[] = [
     country_ko: '네덜란드',
     country_en: 'Netherlands',
     code: 'ALM'
+  },
+  {
+    id: 416,
+    name_ko: '폴렌담',
+    name_en: 'FC Volendam',
+    country_ko: '네덜란드',
+    country_en: 'Netherlands',
+    code: 'VOL'
+  },
+  {
+    id: 427,
+    name_ko: '텔스타',
+    name_en: 'Telstar',
+    country_ko: '네덜란드',
+    country_en: 'Netherlands',
+    code: 'TEL'
+  },
+  {
+    id: 196,
+    name_ko: '엑셀시오르',
+    name_en: 'Excelsior',
+    country_ko: '네덜란드',
+    country_en: 'Netherlands',
+    code: 'EXC'
   }
+  
 ];
 
 // 팀 ID로 에레디비시 팀 정보 가져오기

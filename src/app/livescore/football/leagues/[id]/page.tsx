@@ -41,7 +41,7 @@ export default async function LeaguePage({ params }: LeaguePageProps) {
     <div className="mt-4 lg:mt-0">
       <div className="space-y-4">
         <LeagueHeader league={league} />
-        <LeagueTeamsList teams={teams} />
+        <LeagueTeamsList teams={teams} leagueId={league.id} />
       </div>
     </div>
   );

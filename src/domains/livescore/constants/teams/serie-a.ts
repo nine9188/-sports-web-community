@@ -165,7 +165,32 @@ export const SERIE_A_TEAMS: TeamMapping[] = [
     country_ko: '이탈리아',
     country_en: 'Italy',
     code: 'MON'
+  },
+  {
+    id: 520,
+    name_ko: '크레모네세',
+    name_en: 'Cremonese',
+    country_ko: '이탈리아',
+    country_en: 'Italy',
+    code: 'CRE'
+  },
+  {
+    id: 488,
+    name_ko: '사수올로',
+    name_en: 'Sassuolo',
+    country_ko: '이탈리아',
+    country_en: 'Italy',
+    code: 'SAS'
+  },
+  {
+    id: 801,
+    name_ko: '피사',
+    name_en: 'Pisa',
+    country_ko: '이탈리아',
+    country_en: 'Italy',
+    code: 'PIS'
   }
+  
 ];
 
 // 팀 ID로 세리에 A 팀 정보 가져오기

@@ -101,7 +101,23 @@ export const SCOTTISH_PREMIERSHIP_TEAMS: TeamMapping[] = [
     country_ko: '스코틀랜드',
     country_en: 'Scotland',
     code: 'JOH'
-  }
+  },
+  {
+    id: 255,
+    name_ko: '리빙스턴',
+    name_en: 'Livingston',
+    country_ko: '스코틀랜드',
+    country_en: 'Scotland',
+    code: 'LIV'
+  },
+  {
+    id: 1389,
+    name_ko: '폴커크',
+    name_en: 'Falkirk',
+    country_ko: '스코틀랜드',
+    country_en: 'Scotland',
+    code: 'FAL'
+  }  
 ];
 
 // 팀 ID로 스코티시 프리미어십 팀 정보 가져오기

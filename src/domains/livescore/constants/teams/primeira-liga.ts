@@ -149,7 +149,24 @@ export const PRIMEIRA_LIGA_TEAMS: TeamMapping[] = [
     country_ko: '포르투갈',
     country_en: 'Portugal',
     code: undefined
+  },
+  {
+    id: 4724,
+    name_ko: '알베르카',
+    name_en: 'Alverca',
+    country_ko: '포르투갈',
+    country_en: 'Portugal',
+    code: 'ALV'
+  },
+  {
+    id: 218,
+    name_ko: '톤델라',
+    name_en: 'Tondela',
+    country_ko: '포르투갈',
+    country_en: 'Portugal',
+    code: 'TON'
   }
+  
 ];
 
 // 팀 ID로 프리메이라 리가 팀 정보 가져오기

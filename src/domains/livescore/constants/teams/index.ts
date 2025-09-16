@@ -30,12 +30,17 @@ export * from './scottish-premiership';
 export * from './primeira-liga';
 // 한국 K리그 팀 모듈 내보내기
 export * from './k-league';
+// 일본 J리그 팀 모듈 내보내기
+export * from './j-league';
 // 덴마크 수페르리가 팀 모듈 내보내기
 export * from './danish-superliga';
 // MLS 팀 모듈 내보내기
 export * from './mls';
 // 사우디 프로리그 팀 모듈 내보내기
 export * from './saudi-pro-league';
+export * from './chinese-super-league';
+export * from './brasileirao';
+export * from './liga-mx';
 // UEFA 컨퍼런스 리그 팀 모듈 내보내기
 export * from './conference-league';
 // UEFA 유로파리그 팀 모듈 내보내기
@@ -54,9 +59,13 @@ import { CHAMPIONSHIP_TEAMS } from './championship';
 import { SCOTTISH_PREMIERSHIP_TEAMS } from './scottish-premiership';
 import { PRIMEIRA_LIGA_TEAMS } from './primeira-liga';
 import { K_LEAGUE_TEAMS } from './k-league';
+import { J_LEAGUE_TEAMS } from './j-league';
 import { DANISH_SUPERLIGA_TEAMS } from './danish-superliga';
 import { MLS_TEAMS } from './mls';
 import { SAUDI_PRO_LEAGUE_TEAMS } from './saudi-pro-league';
+import { CHINESE_SUPER_LEAGUE_TEAMS } from './chinese-super-league';
+import { BRASILEIRAO_TEAMS } from './brasileirao';
+import { LIGA_MX_TEAMS } from './liga-mx';
 import { CONFERENCE_LEAGUE_TEAMS } from './conference-league';
 import { EUROPA_LEAGUE_TEAMS } from './europa-league';
 import { CHAMPIONS_LEAGUE_TEAMS } from './champions-league';
@@ -73,9 +82,13 @@ export const ALL_TEAMS: TeamMapping[] = [
   ...SCOTTISH_PREMIERSHIP_TEAMS,
   ...PRIMEIRA_LIGA_TEAMS,
   ...K_LEAGUE_TEAMS,
+  ...J_LEAGUE_TEAMS,
   ...DANISH_SUPERLIGA_TEAMS,
   ...MLS_TEAMS,
   ...SAUDI_PRO_LEAGUE_TEAMS,
+  ...CHINESE_SUPER_LEAGUE_TEAMS,
+  ...BRASILEIRAO_TEAMS,
+  ...LIGA_MX_TEAMS,
   ...CONFERENCE_LEAGUE_TEAMS,
   ...EUROPA_LEAGUE_TEAMS,
   ...CHAMPIONS_LEAGUE_TEAMS
@@ -103,12 +116,20 @@ export const LEAGUE_TEAM_MAPPINGS = {
   94: PRIMEIRA_LIGA_TEAMS,
   // K리그 (292)
   292: K_LEAGUE_TEAMS,
+  // J리그 (98)
+  98: J_LEAGUE_TEAMS,
   // 덴마크 수페르리가 (119)
   119: DANISH_SUPERLIGA_TEAMS,
   // MLS (253)
   253: MLS_TEAMS,
   // 사우디 프로리그 (307)
   307: SAUDI_PRO_LEAGUE_TEAMS,
+  // 중국 슈퍼리그 (169)
+  169: CHINESE_SUPER_LEAGUE_TEAMS,
+  // 브라질 세리에 A (71)
+  71: BRASILEIRAO_TEAMS,
+  // 리가 MX (262)
+  262: LIGA_MX_TEAMS,
   // UEFA 컨퍼런스 리그 (848)
   848: CONFERENCE_LEAGUE_TEAMS,
   // UEFA 유로파리그 (3)

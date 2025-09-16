@@ -149,7 +149,24 @@ export const BUNDESLIGA_TEAMS: TeamMapping[] = [
     country_ko: '독일',
     country_en: 'Germany',
     code: 'HOL'
+  },
+  {
+    id: 192,
+    name_ko: 'FC 쾰른',
+    name_en: '1.FC Köln',
+    country_ko: '독일',
+    country_en: 'Germany',
+    code: 'KOE'
+  },
+  {
+    id: 175,
+    name_ko: '함부르크 SV',
+    name_en: 'Hamburger SV',
+    country_ko: '독일',
+    country_en: 'Germany',
+    code: 'HSV'
   }
+  
 ];
 
 // 팀 ID로 분데스리가 팀 정보 가져오기

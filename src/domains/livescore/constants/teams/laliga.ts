@@ -165,6 +165,30 @@ export const LALIGA_TEAMS: TeamMapping[] = [
     country_ko: '스페인',
     country_en: 'Spain',
     code: 'VAL'
+  },
+  {
+    id: 797,
+    name_ko: '엘체',
+    name_en: 'Elche',
+    country_ko: '스페인',
+    country_en: 'Spain',
+    code: 'ELC'
+  },
+  {
+    id: 539,
+    name_ko: '레반테',
+    name_en: 'Levante',
+    country_ko: '스페인',
+    country_en: 'Spain',
+    code: 'LEV'
+  },
+  {
+    id: 718,
+    name_ko: '오비에도',
+    name_en: 'Oviedo',
+    country_ko: '스페인',
+    country_en: 'Spain',
+    code: 'OVI'
   }
 ];
 

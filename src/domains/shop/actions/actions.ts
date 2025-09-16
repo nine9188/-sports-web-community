@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/shared/api/supabaseServer'
+import type { ShopCategory } from '@/domains/shop/types'
 import { revalidatePath } from 'next/cache'
 import { checkSuspensionGuard } from '@/shared/utils/suspension-guard'
 import { logUserAction } from '@/shared/actions/log-actions'
@@ -30,12 +31,32 @@ export async function getShopCategory(slug: string) {
   const { data, error } = await supabase
     .from('shop_categories')
     .select(`
-      *,
+      id,
+      slug,
+      name,
+      description,
+      image_url,
+      display_order,
+      is_active,
+      created_at,
+      parent_id,
       subcategories:shop_categories(
         id,
         name,
         slug,
-        description
+        description,
+        image_url,
+        display_order,
+        parent_id,
+        subcategories:shop_categories(
+          id,
+          name,
+          slug,
+          description,
+          image_url,
+          display_order,
+          parent_id
+        )
       )
     `)
     .eq('slug', slug)
@@ -43,6 +64,16 @@ export async function getShopCategory(slug: string) {
     .single()
   
   if (error) return null
+  // 서브카테고리 정렬 보장 (display_order 우선, 다음 이름)
+  if (data?.subcategories) {
+    const level2 = (data.subcategories as unknown as ShopCategory[])
+      .sort((a, b) => (a.display_order ?? 9999) - (b.display_order ?? 9999) || a.name.localeCompare(b.name))
+      .map((c) => ({
+        ...c,
+        subcategories: (c.subcategories ?? []).sort((a, b) => (a.display_order ?? 9999) - (b.display_order ?? 9999) || a.name.localeCompare(b.name))
+      }))
+    ;(data as unknown as ShopCategory).subcategories = level2
+  }
   return data
 }
 

@@ -163,6 +163,15 @@ export const MLS_TEAMS: (TeamMapping & { conference: MLSConference })[] = [
     conference: MLSConference.WEST
   },
   {
+    id: 25484,
+    name_ko: '샌디에이고 FC',
+    name_en: 'San Diego',
+    country_ko: '미국',
+    country_en: 'USA',
+    code: 'SDG',
+    conference: MLSConference.WEST
+  },  
+  {
     id: 1611,
     name_ko: '스포팅 캔자스시티',
     name_en: 'Sporting Kansas City',

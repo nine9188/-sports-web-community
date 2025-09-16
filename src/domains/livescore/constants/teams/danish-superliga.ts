@@ -101,7 +101,24 @@ export const DANISH_SUPERLIGA_TEAMS: TeamMapping[] = [
     country_ko: '덴마크',
     country_en: 'Denmark',
     code: 'VEJ'
+  },
+  {
+    id: 405,
+    name_ko: '오덴세 BK',
+    name_en: 'Odense',
+    country_ko: '덴마크',
+    country_en: 'Denmark',
+    code: 'OBK'
+  },
+  {
+    id: 2061,
+    name_ko: 'FC 프레데리시아',
+    name_en: 'FC Fredericia',
+    country_ko: '덴마크',
+    country_en: 'Denmark',
+    code: 'FRE'
   }
+  
 ];
 
 // 팀 ID로 덴마크 수페르리가 팀 정보 가져오기

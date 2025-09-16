@@ -173,6 +173,30 @@ export const PREMIER_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '잉글랜드',
     country_en: 'England',
     code: 'IPS'
+  },
+  {
+    id: 44,
+    name_ko: '번리',
+    name_en: 'Burnley',
+    country_ko: '잉글랜드',
+    country_en: 'England',
+    code: 'BUR'
+  },
+  {
+    id: 63,
+    name_ko: '리즈 유나이티드',
+    name_en: 'Leeds',
+    country_ko: '잉글랜드',
+    country_en: 'England',
+    code: 'LEE'
+  },
+  {
+    id: 746,
+    name_ko: '선덜랜드',
+    name_en: 'Sunderland',
+    country_ko: '잉글랜드',
+    country_en: 'England',
+    code: 'SUN'
   }
 ];
 

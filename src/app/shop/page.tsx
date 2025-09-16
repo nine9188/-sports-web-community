@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
-import { getShopCategories, getUserPoints } from '@/domains/shop/actions/actions';
-import ShopCategoryCard from '@/domains/shop/components/ShopCategoryCard';
 import { createClient } from '@/shared/api/supabaseServer';
+import { getCategoryItems, getUserItems, getUserPoints, getShopCategories } from '@/domains/shop/actions/actions';
+import CategoryFilter from '@/domains/shop/components/CategoryFilter';
 
 // 동적 렌더링 강제 설정 추가
 export const dynamic = 'force-dynamic';
@@ -13,20 +13,55 @@ export const metadata: Metadata = {
 
 export default async function ShopPage() {
   const supabase = await createClient();
-  
-  // 활성화된 카테고리 목록 가져오기
-  const categories = await getShopCategories();
-  
-  // 사용자 정보 가져오기
+
+  // 활성 카테고리 전체 조회
+  const categoriesAll = await getShopCategories();
+  const activeCategories = (categoriesAll || []).filter((c) => c.is_active);
+
+  // 루트/자식 분리
+  const rootCategoriesRaw = activeCategories
+    .filter((c) => c.parent_id == null)
+    .sort((a, b) => (a.display_order ?? 9999) - (b.display_order ?? 9999) || a.name.localeCompare(b.name));
+
+  const childrenByParent = new Map<number, { id: number; name: string }[]>();
+  activeCategories
+    .filter((c) => c.parent_id != null)
+    .forEach((c) => {
+      const parentId = c.parent_id as unknown as number;
+      const arr = childrenByParent.get(parentId) ?? [];
+      arr.push({ id: c.id, name: c.name });
+      childrenByParent.set(parentId, arr);
+    });
+
+  // 필터 탭 데이터: 루트 + (있다면) 하위 카테고리
+  const filterCategories = rootCategoriesRaw.map((c) => ({
+    id: c.id,
+    name: c.name,
+    subcategories: (childrenByParent.get(c.id) ?? []).sort((a, b) => a.name.localeCompare(b.name)),
+  }));
+
+  // 초기 아이템: 루트 + 모든 하위 카테고리 아이디 포함
+  const initialCategoryIds = [
+    ...rootCategoriesRaw.map((c) => c.id),
+    ...Array.from(childrenByParent.values()).flat().map((c) => c.id),
+  ];
+
+  // 사용자 정보
   const { data: { user }, error } = await supabase.auth.getUser();
-  
-  // 사용자 포인트 가져오기
+
+  // 아이템 로드
+  const items = initialCategoryIds.length > 0 ? await getCategoryItems(initialCategoryIds) : [];
+
+  // 사용자 포인트/보유 아이템
   const userPoints = user && !error ? await getUserPoints(user.id) : 0;
+  const userItems = user && !error ? await getUserItems(user.id) : [];
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-6">상점</h1>
-      
+    <div className="container mx-auto">
+      <div className="mb-4 rounded-md border border-gray-200 p-4">
+        <h1 className="text-2xl font-bold">상점</h1>
+      </div>
+
       {/* 포인트 표시 */}
       {user && !error && (
         <div className="bg-white shadow-sm rounded-lg p-4 mb-6 border border-gray-100">
@@ -43,32 +78,27 @@ export default async function ShopPage() {
           </div>
         </div>
       )}
-      
-      {/* 카테고리 설명 */}
-      <p className="text-gray-600 mb-8">
-        포인트를 사용하여 다양한 아이템을 구매하고 프로필을 꾸며보세요.
-      </p>
-      
-      {/* 카테고리 그리드 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {categories?.map(category => (
-          <ShopCategoryCard key={category.id} category={category} />
-        ))}
-      </div>
-      
-      {/* 카테고리가 없을 경우 */}
-      {(!categories || categories.length === 0) && (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
+
+      {/* 상세형 상점: 탭 + 그리드 */}
+      <CategoryFilter 
+        items={items}
+        userItems={userItems}
+        userPoints={userPoints}
+        userId={user?.id}
+        categories={filterCategories}
+      />
+
+      {/* 루트 카테고리가 없을 경우 */}
+      {(!rootCategoriesRaw || rootCategoriesRaw.length === 0) && (
+        <div className="text-center py-12 bg-gray-50 rounded-lg mt-6">
           <p className="text-gray-500">현재 이용 가능한 상점 카테고리가 없습니다.</p>
         </div>
       )}
-      
-      {/* 로그인 안 된 경우 안내 */}
+
+      {/* 로그인 안내 */}
       {(!user || error) && (
         <div className="mt-8 p-4 bg-blue-50 rounded-lg text-center">
-          <p className="text-blue-700">
-            아이템을 구매하고 사용하려면 로그인이 필요합니다.
-          </p>
+          <p className="text-blue-700">아이템을 구매하고 사용하려면 로그인이 필요합니다.</p>
           <a href="/login" className="mt-2 inline-block px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
             로그인하기
           </a>

@@ -482,27 +482,15 @@ export default function HoverMenu({
                 <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-lg z-50 animate-slide-up">
                   {/* 헤더 */}
                   <div className="flex justify-between items-center p-4 border-b border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-base font-semibold text-gray-900">
                       {sortedTopBoards.find(board => board.id === hoveredBoard)?.name || '게시판 이동'}
                     </h3>
                     <button
                       onClick={() => setHoveredBoard(null)}
                       className="p-2 hover:bg-gray-100 rounded-full"
+                      aria-label="닫기"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-6 w-6 text-gray-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
+                      ×
                     </button>
                   </div>
                   
@@ -511,10 +499,10 @@ export default function HoverMenu({
                     <div className="space-y-2">
                       <Link
                         href={`/boards/${sortedTopBoards.find(board => board.id === hoveredBoard)?.slug || hoveredBoard}`}
-                        className="block px-4 py-3 text-base font-bold hover:bg-gray-50 rounded-lg border border-gray-300 text-blue-600"
+                        className="w-full text-left px-4 py-3 text-sm font-medium hover:bg-gray-50 rounded-lg border border-gray-300 text-blue-600 block"
                         onClick={() => setHoveredBoard(null)}
                       >
-                        {`${sortedTopBoards.find(board => board.id === hoveredBoard)?.name} 전체`}
+                        전체 보기
                       </Link>
                       {getChildBoards(hoveredBoard)
                         .sort((a, b) => (a.display_order !== b.display_order ? a.display_order - b.display_order : a.name.localeCompare(b.name)))
@@ -522,7 +510,7 @@ export default function HoverMenu({
                           <Link
                             href={`/boards/${childBoard.slug || childBoard.id}`}
                             key={childBoard.id}
-                            className={`block px-4 py-3 text-base hover:bg-gray-50 rounded-lg border ${
+                            className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 rounded-lg border block ${
                               childBoard.id === currentBoardId
                                 ? 'bg-blue-50 text-blue-600 border-blue-200'
                                 : 'border-gray-200'

@@ -135,7 +135,7 @@ const MobileBoardModal = React.memo(function MobileBoardModal({
             </Link>
             
             <Link 
-              href="/shop/profile-icons"
+              href="/shop"
               onClick={onClose}
               className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-lg"
             >

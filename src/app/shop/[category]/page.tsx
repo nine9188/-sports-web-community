@@ -46,11 +46,16 @@ export default async function CategoryPage({ params }: Props) {
       notFound()
     }
 
-    // 모든 관련 카테고리 ID 수집
-    const allCategoryIds = [
-      currentCategory.id,
-      ...(currentCategory.subcategories?.map((sub) => sub.id) || [])
-    ]
+    // 모든 관련 카테고리 ID 수집 (자식 + 손자 포함)
+    const allCategoryIdsSet = new Set<number>()
+    allCategoryIdsSet.add(currentCategory.id)
+    ;(currentCategory.subcategories || []).forEach((child) => {
+      allCategoryIdsSet.add(child.id)
+      ;(child.subcategories || []).forEach((grandchild) => {
+        allCategoryIdsSet.add(grandchild.id)
+      })
+    })
+    const allCategoryIds = Array.from(allCategoryIdsSet)
 
     // 사용자 정보 및 아이템 가져오기
     const supabase = await createClient()

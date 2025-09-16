@@ -149,7 +149,32 @@ export const LIGUE_1_TEAMS: TeamMapping[] = [
     country_ko: '프랑스',
     country_en: 'France',
     code: 'MON'
+  },
+  {
+    id: 114,
+    name_ko: '파리 FC',
+    name_en: 'Paris FC',
+    country_ko: '프랑스',
+    country_en: 'France',
+    code: 'PFC'
+  },
+  {
+    id: 97,
+    name_ko: '로리앙',
+    name_en: 'Lorient',
+    country_ko: '프랑스',
+    country_en: 'France',
+    code: 'LOR'
+  },
+  {
+    id: 112,
+    name_ko: '메스',
+    name_en: 'Metz',
+    country_ko: '프랑스',
+    country_en: 'France',
+    code: 'MET'
   }
+  
 ];
 
 // 팀 ID로 리그 1 팀 정보 가져오기

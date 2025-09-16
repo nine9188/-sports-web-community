@@ -188,7 +188,7 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
           
           {/* 아이콘샵 링크 */}
           <Link 
-            href="/shop/profile-icons" 
+            href="/shop" 
             className="px-2 py-1 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1 shrink-0 whitespace-nowrap snap-center"
           >
             <ShoppingBag className="h-3.5 w-3.5" />
@@ -282,7 +282,7 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
           </Link>
           
           <Link 
-            href="/shop/profile-icons" 
+            href="/shop" 
             className="px-2 py-1.5 text-xs font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1 shrink-0"
           >
             <ShoppingBag className="h-3 w-3" />

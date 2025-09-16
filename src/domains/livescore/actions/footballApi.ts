@@ -505,19 +505,24 @@ export async function fetchLeagueTeams(leagueId: string): Promise<LeagueTeam[]> 
       return [];
     }
 
-    // 순위 정보 처리
+    // 순위 정보 처리 (MLS와 같이 컨퍼런스별 다중 그룹 지원)
     const standingsMap = new Map<number, number>();
     if (standingsResponse.ok) {
       try {
         const standingsData = await standingsResponse.json();
-        
         if (standingsData.response && Array.isArray(standingsData.response)) {
-          const standings = standingsData.response[0]?.league?.standings?.[0];
-          if (Array.isArray(standings)) {
-            standings.forEach((standing: { team?: { id?: number }; rank?: number }) => {
-              if (standing.team?.id && standing.rank) {
-                standingsMap.set(standing.team.id, standing.rank);
-              }
+          const leagueStandings = standingsData.response[0]?.league?.standings;
+          // 구조가 [ [groupA...], [groupB...] ] 형태일 수 있음
+          if (Array.isArray(leagueStandings)) {
+            // leagueStandings가 2중 배열인지 확인 후 플랫하게 순회
+            const groups = Array.isArray(leagueStandings[0]) ? leagueStandings : [leagueStandings];
+            groups.forEach((group: any) => {
+              const rows = Array.isArray(group) ? group : [];
+              rows.forEach((standing: { team?: { id?: number }; rank?: number }) => {
+                if (standing?.team?.id && standing?.rank) {
+                  standingsMap.set(standing.team.id, standing.rank);
+                }
+              });
             });
           }
         }

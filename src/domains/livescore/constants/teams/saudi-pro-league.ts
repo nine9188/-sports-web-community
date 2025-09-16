@@ -149,7 +149,32 @@ export const SAUDI_PRO_LEAGUE_TEAMS: TeamMapping[] = [
     country_ko: '사우디아라비아',
     country_en: 'Saudi-Arabia',
     code: undefined
+  },
+  {
+    id: 2945,
+    name_ko: '알 하즘',
+    name_en: 'Al-Hazm',
+    country_ko: '사우디아라비아',
+    country_en: 'Saudi-Arabia',
+    code: 'HAZ'
+  },
+  {
+    id: 2992,
+    name_ko: '알 나즈마',
+    name_en: 'Al Najma',
+    country_ko: '사우디아라비아',
+    country_en: 'Saudi-Arabia',
+    code: 'NAJ'
+  },
+  {
+    id: 10513,
+    name_ko: '네옴',
+    name_en: 'NEOM',
+    country_ko: '사우디아라비아',
+    country_en: 'Saudi-Arabia',
+    code: 'NEO'
   }
+  
 ];
 
 // 팀 ID로 사우디 프로리그 팀 정보 가져오기
