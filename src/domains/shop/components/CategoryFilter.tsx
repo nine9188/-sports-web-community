@@ -41,6 +41,7 @@ export default function CategoryFilter({
   const navRef = useRef<HTMLDivElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   const menuItemsRef = useRef<Record<number, HTMLElement | null>>({})
+  const bottomSheetRef = useRef<HTMLDivElement>(null)
   const [menuPosition, setMenuPosition] = useState<{ left: number }>({ left: 0 })
   
   const filteredItems = useMemo(() => {
@@ -123,11 +124,15 @@ export default function CategoryFilter({
 
   // 외부 클릭 시 닫기
   const handleOutsideClick = useCallback((event: MouseEvent) => {
-    if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-      setHoveredCategory(null)
-      setMobileDropdownOpen(false)
-      setBottomSheetCategory(null)
-    }
+    const target = event.target as Node
+    // 컨테이너 내부 클릭은 무시
+    if (containerRef.current?.contains(target)) return
+    // 바텀시트 내부 클릭은 무시 (포털로 분리되어 있어 별도 예외 처리)
+    if (bottomSheetRef.current?.contains(target)) return
+
+    setHoveredCategory(null)
+    setMobileDropdownOpen(false)
+    setBottomSheetCategory(null)
   }, [])
 
   useEffect(() => {
@@ -412,7 +417,7 @@ export default function CategoryFilter({
             onClick={() => setBottomSheetCategory(null)}
           />
           {/* 바텀시트 */}
-          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-lg z-50">
+          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-lg z-50" ref={bottomSheetRef}>
             {/* 헤더 */}
             <div className="flex justify-between items-center p-4 border-b border-gray-200">
               <h3 className="text-base font-semibold text-gray-900">
@@ -431,6 +436,7 @@ export default function CategoryFilter({
               <div className="space-y-2">
                 <button
                   onClick={() => {
+                    if (bottomSheetCategory == null) return
                     setActiveCategory(bottomSheetCategory.toString())
                     setBottomSheetCategory(null)
                   }}
