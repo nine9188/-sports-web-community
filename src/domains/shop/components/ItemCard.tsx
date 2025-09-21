@@ -2,6 +2,7 @@
 
 import { useTransition } from 'react'
 import { ShopItem } from '../types'
+import { getTeamDisplayName, searchTeamsByName } from '@teams'
 import ApiSportsImage from '@/shared/components/ApiSportsImage'
 import { ImageType } from '@/shared/types/image'
 
@@ -20,6 +21,37 @@ export default function ItemCard({ item, isOwned, onPurchase }: ItemCardProps) {
     return match ? match[1] : '0'
   }
 
+  const teamIdNum = Number(getTeamId(item.image_url))
+
+  // DB 이름에서 접두사/영문명 추출
+  const parseNameWithPrefix = (dbName: string): { prefix?: string; english?: string; hasPlusSeparator: boolean } => {
+    if (!dbName) return { hasPlusSeparator: false }
+    const plusIndex = dbName.indexOf('+')
+    if (plusIndex !== -1) {
+      return {
+        prefix: dbName.slice(0, plusIndex).trim(),
+        english: dbName.slice(plusIndex + 1).trim(),
+        hasPlusSeparator: true
+      }
+    }
+    const m = dbName.match(/^([가-힣0-9]+)\s+(.+)$/)
+    if (m) {
+      return { prefix: m[1].trim(), english: m[2].trim(), hasPlusSeparator: false }
+    }
+    return { hasPlusSeparator: false }
+  }
+
+  const { prefix, english, hasPlusSeparator } = parseNameWithPrefix(item.name)
+
+  // 영어명만 한글 매핑 (우선순위: 팀 ID → 이름 검색)
+  const mappedKoName = teamIdNum > 0
+    ? getTeamDisplayName(teamIdNum, { language: 'ko' })
+    : (english ? (searchTeamsByName(english)[0]?.name_ko ?? undefined) : undefined)
+
+  const displayName = prefix
+    ? `${prefix}${hasPlusSeparator ? ' + ' : ' '}${mappedKoName ?? english ?? item.name}`
+    : (teamIdNum > 0 ? getTeamDisplayName(teamIdNum, { language: 'ko' }) : item.name)
+
   return (
     <div className="border rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow flex flex-col">
       {/* 이미지 영역: 고정 크기, 가운데 정렬, 균일한 크기 */}
@@ -28,16 +60,16 @@ export default function ItemCard({ item, isOwned, onPurchase }: ItemCardProps) {
           <ApiSportsImage
             imageId={getTeamId(item.image_url)}
             imageType={ImageType.Teams}
-            alt={item.name}
+            alt={displayName}
             width={48}
             height={48}
-            className="object-contain max-w-full max-h-full"
+            className="w-full h-full object-contain"
           />
         </div>
       </div>
       
       <div className="p-3 border-t mt-auto">
-        <h3 className="text-sm font-medium truncate text-center" title={item.name}>{item.name}</h3>
+        <h3 className="text-sm font-medium truncate text-center" title={displayName}>{displayName}</h3>
         <div className="mt-2">
           {/* 가격 슬롯 */}
           <div className="flex items-center justify-center h-5">

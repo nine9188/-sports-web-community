@@ -19,7 +19,9 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@teams": ["./src/domains/livescore/constants/teams/index.ts"],
+      "@teams/*": ["./src/domains/livescore/constants/teams/*"]
     },
     "baseUrl": ".",
     "types": ["node"]

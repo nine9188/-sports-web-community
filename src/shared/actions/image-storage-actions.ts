@@ -22,26 +22,26 @@ export async function getCachedImageFromStorage(
 ): Promise<ImageCacheResult> {
   try {
     const supabase = await createClient()
-    const fileName = `${id}.png`
+    // 우선순위: gif → png (스토리지 캐시 확인 시 둘 다 확인)
+    const pngName = `${id}.png`
+    const gifName = `${id}.gif`
     
     // 1. Storage에서 이미지 존재 여부 확인
-    const { data: existingFile, error: listError } = await supabase.storage
-      .from(type)
-      .list('', {
-        search: fileName
-      })
-    
-    if (!listError && existingFile && existingFile.length > 0) {
-      // 이미 존재하는 경우 Storage URL 반환
-      const { data } = supabase.storage
-        .from(type)
-        .getPublicUrl(fileName)
-      
-      return {
-        success: true,
-        url: data.publicUrl,
-        cached: true
-      }
+    const checkExists = async (name: string) => {
+      const { data: list, error } = await supabase.storage.from(type).list('', { search: name })
+      return !error && list && list.length > 0
+    }
+
+    const gifExists = await checkExists(gifName)
+    if (gifExists) {
+      const { data } = supabase.storage.from(type).getPublicUrl(gifName)
+      return { success: true, url: data.publicUrl, cached: true }
+    }
+
+    const pngExists = await checkExists(pngName)
+    if (pngExists) {
+      const { data } = supabase.storage.from(type).getPublicUrl(pngName)
+      return { success: true, url: data.publicUrl, cached: true }
     }
     
     // 2. Storage에 없는 경우 API-Sports에서 다운로드하여 저장
@@ -63,12 +63,12 @@ export async function getCachedImageFromStorage(
       }
       
       const imageBuffer = await response.arrayBuffer()
-      const imageFile = new File([imageBuffer], fileName, { type: 'image/png' })
+      const imageFile = new File([imageBuffer], pngName, { type: 'image/png' })
       
       // Supabase Storage에 업로드
       const { error: uploadError } = await supabase.storage
         .from(type)
-        .upload(fileName, imageFile, {
+        .upload(pngName, imageFile, {
           contentType: 'image/png',
           cacheControl: '31536000', // 1년 캐시
           upsert: true
@@ -88,7 +88,7 @@ export async function getCachedImageFromStorage(
       // 업로드 성공 시 Storage URL 반환
       const { data } = supabase.storage
         .from(type)
-        .getPublicUrl(fileName)
+        .getPublicUrl(pngName)
       
       return {
         success: true,

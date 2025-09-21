@@ -206,3 +206,12 @@ export function getImageTypeFromUrl(url: string): ImageType | null {
   if (url.includes('/coachs/')) return ImageType.Coachs;
   return null;
 } 
+
+/**
+ * API-Sports URL에서 이미지 ID 추출
+ */
+export function getImageIdFromUrl(url: string): string | null {
+  if (!url) return null;
+  const match = url.match(/\/(players|teams|leagues|coachs|venues)\/(\d+)\.(png|gif)$/);
+  return match ? match[2] : null;
+}

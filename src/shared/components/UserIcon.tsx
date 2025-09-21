@@ -4,6 +4,9 @@ import React, { useState, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { getFallbackIconUrl } from '@/shared/utils/user-icons';
 import { getLevelIconUrl } from '@/shared/utils/level-icons';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { getImageIdFromUrl, getImageTypeFromUrl, isApiSportsUrl } from '@/shared/utils/image-proxy';
+import { ImageType } from '@/shared/types/image';
 
 interface UserIconProps {
   iconUrl?: string | null;
@@ -37,12 +40,8 @@ const UserIcon = React.memo(function UserIcon({
 
   // 아이콘 URL 결정 로직 메모이제이션
   const src = useMemo(() => {
-    if (error) {
-      return getFallbackIconUrl(level);
-    }
-    if (!iconUrl) {
-      return getLevelIconUrl(level);
-    }
+    if (error) return getFallbackIconUrl(level);
+    if (!iconUrl) return getLevelIconUrl(level);
     return iconUrl;
   }, [error, iconUrl, level]);
 
@@ -55,22 +54,43 @@ const UserIcon = React.memo(function UserIcon({
   // sizes 속성 메모이제이션
   const imageSizes = useMemo(() => `${size}px`, [size]);
 
+  const tryRenderApiSports = () => {
+    if (!src || !isApiSportsUrl(src)) return null;
+    const type = getImageTypeFromUrl(src);
+    const id = getImageIdFromUrl(src);
+    if (!type || !id) return null;
+    return (
+      <ApiSportsImage
+        imageId={id}
+        imageType={type as ImageType}
+        alt={alt || '유저 아이콘'}
+        width={size}
+        height={size}
+        loading={priority ? 'eager' : 'lazy'}
+        priority={priority}
+        className="w-full h-full object-contain"
+      />
+    );
+  };
+
   return (
     <div 
       className={`relative rounded-full overflow-hidden ${className}`}
       style={containerStyle}
     >
-      <Image
-        src={src}
-        alt={alt || '유저 아이콘'}
-        width={size}
-        height={size}
-        sizes={imageSizes}
-        className="object-contain"
-        onError={handleError}
-        priority={priority}
-        loading={priority ? undefined : "lazy"}
-      />
+      {tryRenderApiSports() || (
+        <Image
+          src={src}
+          alt={alt || '유저 아이콘'}
+          width={size}
+          height={size}
+          sizes={imageSizes}
+          className="w-full h-full object-contain"
+          onError={handleError}
+          priority={priority}
+          loading={priority ? undefined : "lazy"}
+        />
+      )}
     </div>
   );
 });

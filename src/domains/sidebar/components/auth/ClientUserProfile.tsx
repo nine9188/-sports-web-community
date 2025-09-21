@@ -3,6 +3,9 @@
 import { useMemo } from 'react';
 import { Coins } from 'lucide-react';
 import Image from 'next/image';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { isApiSportsUrl, getImageIdFromUrl, getImageTypeFromUrl } from '@/shared/utils/image-proxy';
+import { ImageType } from '@/shared/types/image';
 import UserStats from './UserStats';
 import ProfileActions from './ProfileActions';
 import { SidebarUserProfile } from '../../actions/userProfile';
@@ -34,15 +37,27 @@ export default function ClientUserProfile({ profileData }: ClientUserProfileProp
       <div className="py-3 px-4 flex items-start gap-3 bg-muted/50 rounded-md">
         <div className="flex-shrink-0">
           <div className="w-10 h-10 relative rounded-full overflow-hidden">
-            <Image 
-              src={displayIconUrl}
-              alt={`${profileData.nickname || '사용자'} 프로필`}
-              width={40}
-              height={40}
-              className="object-cover rounded-full"
-              {...profileImageProps}
-              title={displayIconName}
-            />
+            {isApiSportsUrl(displayIconUrl) ? (
+              <ApiSportsImage
+                imageId={getImageIdFromUrl(displayIconUrl) as string}
+                imageType={getImageTypeFromUrl(displayIconUrl) as ImageType}
+                alt={`${profileData.nickname || '사용자'} 프로필`}
+                width={40}
+                height={40}
+                loading="lazy"
+                className="w-full h-full object-contain rounded-full"
+              />
+            ) : (
+              <Image 
+                src={displayIconUrl}
+                alt={`${profileData.nickname || '사용자'} 프로필`}
+                width={40}
+                height={40}
+                className="w-full h-full object-contain rounded-full"
+                {...profileImageProps}
+                title={displayIconName}
+              />
+            )}
           </div>
         </div>
         

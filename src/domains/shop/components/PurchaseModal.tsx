@@ -1,6 +1,9 @@
 'use client'
 
 import Image from 'next/image'
+import ApiSportsImage from '@/shared/components/ApiSportsImage'
+import { getImageIdFromUrl, getImageTypeFromUrl, isApiSportsUrl } from '@/shared/utils/image-proxy'
+import { ImageType } from '@/shared/types/image'
 import { ShopItem } from '../types'
 
 interface PurchaseModalProps {
@@ -51,13 +54,25 @@ export default function PurchaseModal({
 
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 relative flex-shrink-0">
-              <Image 
-                src={item.image_url} 
-                alt={item.name}
-                width={48}
-                height={48}
-                className="object-contain"
-              />
+              {isApiSportsUrl(item.image_url) ? (
+                <ApiSportsImage
+                  imageId={getImageIdFromUrl(item.image_url) as string}
+                  imageType={getImageTypeFromUrl(item.image_url) as ImageType}
+                  alt={item.name}
+                  width={48}
+                  height={48}
+                  className="w-full h-full object-contain"
+                  loading="eager"
+                />
+              ) : (
+                <Image 
+                  src={item.image_url} 
+                  alt={item.name}
+                  width={48}
+                  height={48}
+                  className="w-full h-full object-contain"
+                />
+              )}
             </div>
             
             <div>

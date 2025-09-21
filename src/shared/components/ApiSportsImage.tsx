@@ -42,7 +42,7 @@ export default function ApiSportsImage({
 
   useEffect(() => {
     const cacheKey = `${imageType}-${imageId}`;
-    
+
     // 메모리 캐시에서 먼저 확인
     if (urlCache.has(cacheKey)) {
       const cachedUrl = urlCache.get(cacheKey);
@@ -50,10 +50,29 @@ export default function ApiSportsImage({
       return;
     }
 
-    // 1단계: 직접 스토리지 URL 시도 (POST 요청 없음)
-    const directStorageUrl = getSupabaseStorageUrl(imageType, imageId);
-    urlCache.set(cacheKey, directStorageUrl);
-    setSrc(directStorageUrl);
+    // 확장자 우선순위: gif → png
+    // public storage URL은 .png 형태이므로 .gif 후보도 함께 구성하여 HEAD로 존재 여부 확인
+    const tryResolveUrl = async () => {
+      const pngUrl = getSupabaseStorageUrl(imageType, imageId);
+      const gifUrl = pngUrl.replace('.png', '.gif');
+
+      const exists = async (url: string) => {
+        try {
+          const res = await fetch(url, { method: 'HEAD' });
+          return res.ok;
+        } catch {
+          return false;
+        }
+      };
+
+      const useGif = await exists(gifUrl);
+      const finalUrl = useGif ? gifUrl : pngUrl;
+      urlCache.set(cacheKey, finalUrl);
+      setSrc(finalUrl);
+    };
+
+    // 비동기로 실제 존재하는 확장자를 결정
+    tryResolveUrl();
   }, [imageId, imageType]);
 
   // 이미지 로드 에러 시 서버 액션으로 캐싱 시도

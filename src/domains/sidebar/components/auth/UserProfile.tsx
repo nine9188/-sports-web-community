@@ -8,6 +8,9 @@ import { useAuth } from '@/shared/context/AuthContext';
 import { useIcon } from '@/shared/context/IconContext';
 import Image from 'next/image';
 import { getUserIconInfo } from '@/shared/utils/level-icons';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { isApiSportsUrl, getImageIdFromUrl, getImageTypeFromUrl } from '@/shared/utils/image-proxy';
+import { ImageType } from '@/shared/types/image';
 import { 
   LEVEL_EXP_REQUIREMENTS, 
   calculateLevelProgress,
@@ -207,16 +210,29 @@ export default function UserProfile({ profileData: initialProfileData, showActio
       <div className="py-3 px-4 flex items-start gap-3 bg-muted/50 rounded-md">
         <div className="flex-shrink-0">
           <div className="w-10 h-10 relative rounded-full overflow-hidden">
-            <Image 
-              src={displayIconUrl}
-              alt={`${profileData.nickname || '사용자'} 프로필`}
-              width={40}
-              height={40}
-              className="object-cover rounded-full"
-              {...profileImageProps}
-              onError={handleImageError}
-              title={displayIconName}
-            />
+            {isApiSportsUrl(displayIconUrl) ? (
+              <ApiSportsImage 
+                imageId={getImageIdFromUrl(displayIconUrl) as string}
+                imageType={getImageTypeFromUrl(displayIconUrl) as ImageType}
+                alt={`${profileData.nickname || '사용자'} 프로필`}
+                width={40}
+                height={40}
+                loading="lazy"
+                className="w-full h-full object-contain rounded-full"
+                priority={false}
+              />
+            ) : (
+              <Image 
+                src={displayIconUrl}
+                alt={`${profileData.nickname || '사용자'} 프로필`}
+                width={40}
+                height={40}
+                className="w-full h-full object-contain rounded-full"
+                {...profileImageProps}
+                onError={handleImageError}
+                title={displayIconName}
+              />
+            )}
           </div>
         </div>
         
