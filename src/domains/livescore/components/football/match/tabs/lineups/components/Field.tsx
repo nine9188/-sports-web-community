@@ -42,7 +42,7 @@ const Field = ({ isMobile: isMobileProp, children, onRefresh }: FieldProps) => {
   
   return (
     <div 
-      className={`${styles.fieldWrapper} mb-4 bg-white rounded-lg border`}
+      className={`${styles.fieldWrapper} mb-4 bg-white rounded-lg`}
       style={{ 
         overflow: 'hidden',
         aspectRatio: isMobile ? '9/16' : '16/9' // 모바일과 데스크탑에 따라 비율 변경
@@ -84,11 +84,12 @@ const Field = ({ isMobile: isMobileProp, children, onRefresh }: FieldProps) => {
                 stroke="white" 
                 strokeLinecap="square"
                 fill="transparent" 
-                strokeWidth="0.25" 
-                x="0" 
-                y="0" 
-                width="56" 
-                height="100"
+                strokeWidth="0.4"
+                vectorEffect="non-scaling-stroke"
+                x="0.2" 
+                y="0.2" 
+                width="55.6" 
+                height="99.6"
               />
 
               {/* 중앙선 */}
@@ -260,11 +261,12 @@ const Field = ({ isMobile: isMobileProp, children, onRefresh }: FieldProps) => {
                 stroke="white" 
                 strokeLinecap="square"
                 fill="transparent" 
-                strokeWidth="0.25" 
-                x="0" 
-                y="0" 
-                width="100" 
-                height="56"
+                strokeWidth="0.4"
+                vectorEffect="non-scaling-stroke"
+                x="0.2" 
+                y="0.2" 
+                width="99.6" 
+                height="55.6"
               />
 
               {/* 중앙선 */}

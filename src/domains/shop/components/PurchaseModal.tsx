@@ -53,14 +53,14 @@ export default function PurchaseModal({
         <div className="px-4 md:px-6 py-4 md:py-4 overflow-y-auto">
 
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 relative flex-shrink-0">
+            <div className="w-5 h-5 relative flex-shrink-0">
               {isApiSportsUrl(item.image_url) ? (
                 <ApiSportsImage
                   imageId={getImageIdFromUrl(item.image_url) as string}
                   imageType={getImageTypeFromUrl(item.image_url) as ImageType}
                   alt={item.name}
-                  width={48}
-                  height={48}
+                  width={20}
+                  height={20}
                   className="w-full h-full object-contain"
                   loading="eager"
                 />
@@ -68,8 +68,8 @@ export default function PurchaseModal({
                 <Image 
                   src={item.image_url} 
                   alt={item.name}
-                  width={48}
-                  height={48}
+                  width={20}
+                  height={20}
                   className="w-full h-full object-contain"
                 />
               )}

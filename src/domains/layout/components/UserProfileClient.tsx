@@ -75,11 +75,11 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
           onClick={toggleDropdown}
           className="flex items-center space-x-1 px-3 py-2 rounded hover:bg-gray-100"
         >
-          <div className="w-6 h-6 relative rounded-full overflow-hidden">
+          <div className="w-5 h-5 relative rounded-full overflow-hidden">
             <UserIcon 
               iconUrl={userData?.iconInfo?.iconUrl || iconUrl}
               level={userLevel}
-              size={24}
+              size={20}
               alt={userData?.iconInfo?.iconName || iconName || '프로필 이미지'}
               className="object-cover"
             />

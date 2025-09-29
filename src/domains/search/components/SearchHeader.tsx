@@ -19,12 +19,12 @@ export default function SearchHeader({
 }: SearchHeaderProps) {
 
   const trimmedQuery = (initialQuery || '').trim()
-  const heading = trimmedQuery ? `${trimmedQuery} 검색결과` : title
+  const heading = trimmedQuery ? `"${trimmedQuery}" 에 대한 검색결과` : title
 
   return (
-    <div className={`bg-white rounded-lg border shadow-sm mb-4 ${className}`}>
+    <div className={`bg-white rounded-lg border mb-4 ${className}`}>
       {/* 헤더 섹션 */}
-      <div className="px-4 py-4 sm:px-6 border-b">
+      <div className="px-4 py-4 sm:px-6">
         <div>
           <h1 className="text-lg font-medium text-gray-900">{heading}</h1>
           {!trimmedQuery && (

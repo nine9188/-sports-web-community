@@ -10,7 +10,7 @@ import { getComments } from './comments/index';
 /**
  * 게시글 상세 페이지에 필요한 모든 데이터를 가져옵니다.
  */
-export async function getPostPageData(slug: string, postNumber: string, fromBoardId?: string) {
+export async function getPostPageData(slug: string, postNumber: string, fromBoardId?: string, pageParam?: number) {
   try {
     const postNum = parseInt(postNumber, 10);
     if (isNaN(postNum) || postNum <= 0) {
@@ -144,9 +144,9 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       childBoardsMap
     );
     
-    // 7. 현재 페이지 게시글 가져오기 (첫 페이지만) - 병렬 처리
+    // 7. 현재 페이지 게시글 가져오기 - 전달된 페이지 사용
     const pageSize = 20;
-    const page = 1;
+    const page = typeof pageParam === 'number' && Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
     
     // 필터링 조건 설정
     let boardFilter;

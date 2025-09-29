@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react'
+import React, { useState, useMemo, useRef, useEffect, useCallback, useTransition } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import ReactDOM from 'react-dom'
 import { ShopItem } from '../types'
 import ItemGrid from '@/domains/shop/components/ItemGrid'
@@ -18,6 +19,8 @@ interface CategoryFilterProps {
       name: string
     }[]
   }[]
+  loginNotice?: React.ReactNode
+  initialActiveCategory?: string
 }
 
 
@@ -26,9 +29,14 @@ export default function CategoryFilter({
   userItems, 
   userPoints, 
   userId, 
-  categories 
+  categories,
+  loginNotice,
+  initialActiveCategory
 }: CategoryFilterProps) {
-  const [activeCategory, setActiveCategory] = useState<string>('all')
+  const searchParams = useSearchParams()
+  const pathname = usePathname()
+  const router = useRouter()
+  const [activeCategory, setActiveCategory] = useState<string>(initialActiveCategory ?? (searchParams.get('cat') ?? 'all'))
   const [hoveredCategory, setHoveredCategory] = useState<number | null>(null)
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -43,6 +51,7 @@ export default function CategoryFilter({
   const menuItemsRef = useRef<Record<number, HTMLElement | null>>({})
   const bottomSheetRef = useRef<HTMLDivElement>(null)
   const [menuPosition, setMenuPosition] = useState<{ left: number }>({ left: 0 })
+  const [isNavigating, startTransition] = useTransition()
   
   const filteredItems = useMemo(() => {
     if (activeCategory === 'all') return items
@@ -55,6 +64,29 @@ export default function CategoryFilter({
     }
     return items.filter(item => item.category_id != null && allowedIds.has(item.category_id as number))
   }, [items, activeCategory, categories])
+
+  // URL 변화에 따라 내부 상태 동기화 (뒤로가기 등)
+  useEffect(() => {
+    const catFromUrl = searchParams.get('cat') ?? 'all'
+    if (catFromUrl !== activeCategory) {
+      setActiveCategory(catFromUrl)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
+
+  const updateUrlCategory = (next: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+    // 페이지 초기화
+    params.delete('page')
+    if (next === 'all') {
+      params.delete('cat')
+    } else {
+      params.set('cat', next)
+    }
+    const query = params.toString()
+    const href = query ? `${pathname}?${query}` : pathname
+    startTransition(() => router.push(href))
+  }
 
   // 타이머 정리 함수
   const clearTimers = () => {
@@ -233,8 +265,12 @@ export default function CategoryFilter({
       <div className="bg-white border rounded-lg mb-4">
         <div className="px-4 py-2 relative" ref={containerRef}>
           <nav className="flex items-center" ref={navRef}>
+            {/* 좌측: 카테고리 탭 */}
             <button
-              onClick={() => setActiveCategory('all')}
+              onClick={() => {
+                setActiveCategory('all')
+                updateUrlCategory('all')
+              }}
               className={`px-2 py-1 text-sm font-medium whitespace-nowrap hover:bg-gray-50 rounded-md flex items-center ${
                 activeCategory === 'all'
                   ? 'bg-gray-100 text-blue-600'
@@ -259,7 +295,9 @@ export default function CategoryFilter({
                     if (isMobile && category.subcategories && category.subcategories.length > 0) {
                       setBottomSheetCategory(category.id)
                     } else {
-                      setActiveCategory(category.id.toString())
+                      const id = category.id.toString()
+                      setActiveCategory(id)
+                      updateUrlCategory(id)
                     }
                   }}
                   className={`px-2 py-1 text-sm font-medium whitespace-nowrap hover:bg-gray-50 rounded-md flex items-center ${
@@ -336,7 +374,9 @@ export default function CategoryFilter({
                         if (category.subcategories && category.subcategories.length > 0) {
                           setBottomSheetCategory(category.id)
                         } else {
-                          setActiveCategory(category.id.toString())
+                          const id = category.id.toString()
+                          setActiveCategory(id)
+                          updateUrlCategory(id)
                         }
                         setMobileDropdownOpen(false)
                       }}
@@ -388,7 +428,9 @@ export default function CategoryFilter({
             <button
               key={sub.id}
               onClick={() => {
-                setActiveCategory(sub.id.toString())
+                const id = sub.id.toString()
+                setActiveCategory(id)
+                updateUrlCategory(id)
                 closeDropdown()
               }}
                           className={`inline-block px-3 py-2 text-sm hover:bg-gray-50 rounded-md whitespace-nowrap ${
@@ -405,6 +447,13 @@ export default function CategoryFilter({
           )}
         </div>
       </div>
+
+  {/* 로그인 안내가 있을 경우, 탭 바로 아래에 표시 */}
+  {loginNotice && (
+    <div className="mb-3">
+      {loginNotice}
+    </div>
+  )}
 
       {/* 데스크톱 드롭다운 제거: HoverMenu 스타일 상단 패널로 대체됨 */}
 
@@ -437,7 +486,9 @@ export default function CategoryFilter({
                 <button
                   onClick={() => {
                     if (bottomSheetCategory == null) return
-                    setActiveCategory(bottomSheetCategory.toString())
+                    const id = bottomSheetCategory.toString()
+                    setActiveCategory(id)
+                    updateUrlCategory(id)
                     setBottomSheetCategory(null)
                   }}
                   className="w-full text-left px-4 py-3 text-sm font-medium hover:bg-gray-50 rounded-lg border border-gray-300 text-blue-600"
@@ -448,7 +499,9 @@ export default function CategoryFilter({
                   <button
                     key={sub.id}
                     onClick={() => {
-                      setActiveCategory(sub.id.toString())
+                      const id = sub.id.toString()
+                      setActiveCategory(id)
+                      updateUrlCategory(id)
                       setBottomSheetCategory(null)
                     }}
                     className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 rounded-lg border ${
@@ -472,6 +525,8 @@ export default function CategoryFilter({
         userItems={userItems}
         userPoints={userPoints}
         userId={userId}
+        viewMode={'compact'}
+        isLoading={isNavigating}
       />
     </div>
   )

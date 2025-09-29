@@ -56,6 +56,7 @@ import { TransferFilters } from '@/domains/livescore/components/football/transfe
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { Button } from '@/shared/ui';
+import ShopPagination from '@/domains/shop/components/ShopPagination';
 import { memo } from 'react';
 
 // 팀 로고 컴포넌트 - Standings와 동일한 방식으로 메모이제이션
@@ -242,17 +243,7 @@ export default async function TransfersPageContent({
   const currentPage = parseInt(page);
   const itemsPerPage = 20;
 
-  // 페이지 링크 생성 함수
-  const getPageLink = (page: number) => {
-    const params = new URLSearchParams();
-    if (filters.league) params.set('league', filters.league.toString());
-    if (filters.team) params.set('team', filters.team.toString());
-    if (filters.season) params.set('season', filters.season.toString());
-    if (filters.type) params.set('type', filters.type);
-    params.set('page', page.toString());
-    
-    return `/transfers?${params.toString()}`;
-  };
+  // 페이지 링크는 ShopPagination이 처리하므로 별도 함수 불필요
 
   // 서버에서 캐싱된 데이터 로드
   let transfers: TransferMarketData[] = [];
@@ -272,25 +263,7 @@ export default async function TransfersPageContent({
   const paginatedTransfers = transfers.slice(startIndex, endIndex);
   const totalPages = Math.ceil(totalCount / itemsPerPage);
 
-  // 페이지 번호 배열 생성 (서버에서 계산)
-  const generatePageNumbers = () => {
-    const pageNumbers = [];
-    const maxPagesToShow = 5;
-    
-    let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
-    const endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
-    
-    // 페이지가 적은 경우 시작 페이지 조정
-    if (endPage - startPage + 1 < maxPagesToShow) {
-      startPage = Math.max(1, endPage - maxPagesToShow + 1);
-    }
-    
-    for (let i = startPage; i <= endPage; i++) {
-      pageNumbers.push(i);
-    }
-    
-    return pageNumbers;
-  };
+  // 페이지 번호 생성은 ShopPagination 내부 로직 사용
 
 
 
@@ -606,59 +579,13 @@ export default async function TransfersPageContent({
 
       {/* 페이지네이션 */}
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-1 my-4 mb-4">
-          {/* 처음 페이지 버튼 */}
-          {currentPage > 1 && (
-            <Link href={getPageLink(1)} passHref>
-              <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-                &lt;&lt;
-              </Button>
-            </Link>
-          )}
-          
-          {/* 이전 페이지 버튼 */}
-          {currentPage > 1 && (
-            <Link href={getPageLink(currentPage - 1)} passHref>
-              <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-                &lt;
-              </Button>
-            </Link>
-          )}
-          
-          {/* 페이지 번호 */}
-          {generatePageNumbers().map((page) => (
-            <Link key={page} href={getPageLink(page)} passHref>
-              <Button
-                variant={currentPage === page ? "default" : "outline"}
-                size="sm"
-                className={`h-8 w-8 p-0 ${
-                  currentPage === page
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : ""
-                }`}
-              >
-                {page}
-              </Button>
-            </Link>
-          ))}
-          
-          {/* 다음 페이지 버튼 */}
-          {currentPage < totalPages && (
-            <Link href={getPageLink(currentPage + 1)} passHref>
-              <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-                &gt;
-              </Button>
-            </Link>
-          )}
-          
-          {/* 마지막 페이지 버튼 */}
-          {currentPage < totalPages && (
-            <Link href={getPageLink(totalPages)} passHref>
-              <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-                &gt;&gt;
-              </Button>
-            </Link>
-          )}
+        <div className="px-4 sm:px-6">
+          <ShopPagination
+            page={currentPage}
+            pageSize={itemsPerPage}
+            total={totalCount}
+            withMargin={false}
+          />
         </div>
       )}
 

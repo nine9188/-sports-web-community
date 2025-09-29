@@ -98,11 +98,11 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
   return (
     <div className="border-b py-3 px-4 transition-colors hover:bg-gray-50">
       <div className="flex space-x-2">
-        <div className="w-6 h-6 relative rounded-full overflow-hidden flex-shrink-0">
+        <div className="w-5 h-5 relative rounded-full overflow-hidden flex-shrink-0">
           <UserIcon 
             iconUrl={comment.profiles?.icon_url || null}
             level={comment.profiles?.level || 1}
-            size={24}
+            size={20}
             alt={comment.profiles?.nickname || '사용자'}
             className="object-cover"
             priority

@@ -38,10 +38,10 @@ export default function PostHeader({
       {/* PC */}
       <div className="hidden md:flex flex-wrap items-center justify-between text-xs text-gray-500">
         <div className="flex items-center flex-shrink-0">
-          <div className="w-6 h-6 mr-1.5 relative rounded-full overflow-hidden flex-shrink-0">
+          <div className="w-5 h-5 mr-1.5 relative rounded-full overflow-hidden flex-shrink-0">
             <UserIcon 
               iconUrl={author.icon_url}
-              size={24}
+              size={20}
               alt={author.nickname || '사용자'}
               className="object-cover"
               priority

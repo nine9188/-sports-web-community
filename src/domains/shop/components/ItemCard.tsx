@@ -52,46 +52,75 @@ export default function ItemCard({ item, isOwned, onPurchase }: ItemCardProps) {
     ? `${prefix}${hasPlusSeparator ? ' + ' : ' '}${mappedKoName ?? english ?? item.name}`
     : (teamIdNum > 0 ? getTeamDisplayName(teamIdNum, { language: 'ko' }) : item.name)
 
+  // 컴팩트 스타일 클래스 세트 (상위에서 data-compact로 제어 가능)
+  const cardPadding = 'p-3'
+  const bodyPadding = 'p-3'
+
+  const isDisabled = isPending || !!item.is_default || isOwned
+
+  const handleActivate = () => {
+    if (isDisabled) return
+    startTransition(() => onPurchase())
+  }
+
+  const handleKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (e) => {
+    if (isDisabled) return
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      startTransition(() => onPurchase())
+    }
+  }
+
   return (
-    <div className="border rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow flex flex-col">
-      {/* 이미지 영역: 고정 크기, 가운데 정렬, 균일한 크기 */}
-      <div className="p-3 flex justify-center">
-        <div className="h-12 w-12 flex items-center justify-center">
+    <div
+      tabIndex={isDisabled ? -1 : 0}
+      role="button"
+      aria-disabled={isDisabled}
+      onClick={handleActivate}
+      onKeyDown={handleKeyDown}
+      className={`group border rounded-md overflow-hidden bg-white shadow-sm hover:shadow-md transition-all flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 ${
+        isDisabled ? 'cursor-default' : 'cursor-pointer hover:border-blue-300'
+      }`}
+    >
+      {/* 이미지 영역: 20x20 고정 */}
+      <div className={`${cardPadding} sm:p-3 p-2 flex justify-center`}> 
+        <div className="h-5 w-5 flex items-center justify-center">
           <ApiSportsImage
             imageId={getTeamId(item.image_url)}
             imageType={ImageType.Teams}
             alt={displayName}
-            width={48}
-            height={48}
+            width={20}
+            height={20}
             className="w-full h-full object-contain"
           />
         </div>
       </div>
       
-      <div className="p-3 border-t mt-auto">
-        <h3 className="text-sm font-medium truncate text-center" title={displayName}>{displayName}</h3>
-        <div className="mt-2">
-          {/* 가격 슬롯 */}
-          <div className="flex items-center justify-center h-5">
-            <span className="text-xs whitespace-nowrap tabular-nums">
+      <div className={`${bodyPadding} sm:p-3 p-2 border-t mt-auto`}>
+        {/* 제목: 두 줄 허용, 폰트 한 단계 축소 (모바일 더 축소) */}
+        <h3 className="sm:text-[13px] text-[12px] font-medium text-center leading-5 line-clamp-2 min-h-[36px] sm:min-h-[40px] text-gray-900 group-hover:text-blue-600 transition-colors" title={displayName}>{displayName}</h3>
+
+        {/* 가격/구매: 좌측 가격, 우측 구매 버튼 정렬 */}
+        <div className="mt-1.5 sm:mt-2 flex items-center justify-between">
+          <div className="flex items-center h-5">
+            <span className="sm:text-[11px] text-[10px] whitespace-nowrap tabular-nums">
               {item.is_default ? '기본' : `${item.price} P`}
             </span>
           </div>
-          {/* 버튼/배지 슬롯: 모바일 풀폭, md+ 우측 정렬, 버튼 없어도 높이 유지 */}
-          <div className="mt-2 md:flex md:justify-end h-9 md:h-7 md:items-center">
+          <div className="flex items-center">
             {isOwned ? (
-              <span className="w-full md:w-auto h-9 md:h-7 px-3 text-xs bg-gray-600 text-white rounded whitespace-nowrap text-center flex items-center justify-center">
+              <span className="h-7 sm:h-8 px-2 sm:text-[11px] text-[10px] bg-gray-600 text-white rounded whitespace-nowrap inline-flex items-center justify-center">
                 보유 중
               </span>
             ) : (
               <button
-                onClick={() => startTransition(() => onPurchase())}
-                className={`w-full md:w-auto h-9 md:h-7 px-3 text-xs rounded whitespace-nowrap text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-900 transition-colors ${
+                onClick={(e) => { e.stopPropagation(); startTransition(() => onPurchase()) }}
+                className={`h-7 sm:h-8 px-2 text-[11px] sm:text-[12px] font-medium rounded whitespace-nowrap text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-300 transition-colors ${
                   isPending
-                    ? 'bg-gray-300 text-gray-800 cursor-wait'
+                    ? 'bg-gray-300 text-gray-900 cursor-wait'
                     : item.is_default
                       ? 'bg-gray-300 text-gray-700 cursor-not-allowed'
-                      : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                      : 'bg-gray-200 text-gray-900 hover:bg-gray-300 hover:text-blue-700 focus-visible:text-blue-700 group-hover:text-blue-700'
                 }`}
                 disabled={isPending || !!item.is_default}
                 aria-busy={isPending}

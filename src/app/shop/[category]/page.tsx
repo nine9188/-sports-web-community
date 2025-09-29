@@ -3,11 +3,12 @@ import { Metadata } from 'next'
 import { createClient } from '@/shared/api/supabaseServer'
 import { 
   getShopCategory, 
-  getCategoryItems, 
+  getCategoryItemsPaginated, 
   getUserPoints, 
   getUserItems 
 } from '@/domains/shop/actions/actions'
 import CategoryFilter from '@/domains/shop/components/CategoryFilter'
+import ShopPagination from '@/domains/shop/components/ShopPagination'
 
 // 동적 렌더링 강제 설정 추가
 export const dynamic = 'force-dynamic'
@@ -16,6 +17,7 @@ interface Props {
   params: Promise<{
     category: string
   }>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -35,9 +37,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function CategoryPage({ params }: Props) {
+export default async function CategoryPage({ params, searchParams }: Props) {
   try {
     const { category } = await params
+    const sp = await (searchParams ?? Promise.resolve({} as Record<string, string | string[] | undefined>))
+    const pageParam = Array.isArray(sp['page']) ? sp['page'][0] : sp['page']
+    const catParam = Array.isArray(sp['cat']) ? sp['cat'][0] : sp['cat']
+    const page = Math.max(1, Number(pageParam ?? '1') || 1)
+    const pageSize = 24
     
     // 현재 카테고리와 하위 카테고리 정보 가져오기
     const currentCategory = await getShopCategory(category)
@@ -61,8 +68,20 @@ export default async function CategoryPage({ params }: Props) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     
-    // 모든 아이템 가져오기
-    const items = await getCategoryItems(allCategoryIds)
+    // catParam이 있으면 해당 카테고리로 범위 축소 (루트=자식 포함, 서브=해당 서브만)
+    let categoryIdsForFetch = allCategoryIds
+    if (catParam && catParam !== 'all') {
+      const catId = Number(catParam)
+      if (!Number.isNaN(catId)) {
+        if (catId === currentCategory.id) {
+          categoryIdsForFetch = allCategoryIds
+        } else if (allCategoryIdsSet.has(catId)) {
+          categoryIdsForFetch = [catId]
+        }
+      }
+    }
+
+    const { items, total } = await getCategoryItemsPaginated(categoryIdsForFetch, page, pageSize)
     
     // 사용자 포인트 및 보유 아이템 가져오기
     const userPoints = await getUserPoints(user?.id)
@@ -84,7 +103,10 @@ export default async function CategoryPage({ params }: Props) {
           userPoints={userPoints}
           userId={user?.id}
           categories={currentCategory.subcategories || []}
+          initialActiveCategory={catParam ?? 'all'}
         />
+
+        <ShopPagination page={page} pageSize={pageSize} total={total} />
       </div>
     )
   } catch (error) {

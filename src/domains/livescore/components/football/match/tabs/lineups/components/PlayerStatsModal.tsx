@@ -237,7 +237,7 @@ export default function PlayerStatsModal({
                 imageId={playerId}
                 imageType={ImageType.Players}
                 alt={playerInfo.name}
-                size="xl"
+                size="xxl"
                 variant="circle"
                 className="w-full h-full"
               />
@@ -250,6 +250,7 @@ export default function PlayerStatsModal({
                   alt={stats.team?.name || '팀 로고'}
                   size="md"
                   variant="square"
+                  fit="contain"
                   className="w-8 h-8"
                 />
               </div>

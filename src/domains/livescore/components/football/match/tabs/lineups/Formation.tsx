@@ -121,7 +121,7 @@ export default function Formation({ homeTeamData, awayTeamData }: FormationProps
       }}
       initial={{ opacity: 0, scale: 0.95 }}
       whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ once: true, margin: "-100px", root: null }}
+      viewport={{ once: true, margin: "-100px" }}
       transition={{ 
         duration: 0.8,
         ease: "easeOut"

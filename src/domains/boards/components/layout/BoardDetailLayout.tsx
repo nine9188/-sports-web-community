@@ -6,7 +6,7 @@ import BoardTeamInfo from '../board/BoardTeamInfo';
 import LeagueInfo from '../board/LeagueInfo';
 import ClientHoverMenu from '../common/ClientHoverMenu';
 import PostList from '../post/PostList';
-import BoardPagination from '../common/BoardPagination';
+import ShopPagination from '@/domains/shop/components/ShopPagination';
 import { Breadcrumb } from '../../types/board/data';
 import { Board } from '../../types/board';
 
@@ -91,13 +91,19 @@ interface BoardDetailLayoutProps {
   // HoverMenu를 위한 데이터
   topBoards?: TopBoard[];
   hoverChildBoardsMap?: Record<string, ChildBoard[]>;
+  // 페이지네이션 메타
+  pagination?: {
+    totalItems: number;
+    itemsPerPage: number;
+    currentPage: number;
+  };
 }
 
 // 메모이제이션된 컴포넌트들
 const MemoizedBoardBreadcrumbs = memo(BoardBreadcrumbs);
 const MemoizedPostList = memo(PostList);
-const MemoizedBoardPagination = memo(BoardPagination);
 const MemoizedClientHoverMenu = memo(ClientHoverMenu);
+const MemoizedShopPagination = memo(ShopPagination);
 
 export default function BoardDetailLayout({
   boardData,
@@ -111,13 +117,14 @@ export default function BoardDetailLayout({
   rootBoardSlug,
   posts,
   topBoards,
-  hoverChildBoardsMap
+  hoverChildBoardsMap,
+  pagination
 }: BoardDetailLayoutProps) {
   // view_type이 타입에 없더라도 안전하게 읽어서 분기
   const viewType = (boardData as unknown as { view_type?: 'list' | 'image-table' })?.view_type;
 
   return (
-    <div className="container mx-auto">
+    <div className="container mx-auto" data-current-page={currentPage}>
       <div className="sm:mt-0 mt-4">
         <MemoizedBoardBreadcrumbs breadcrumbs={breadcrumbs} />
       </div>
@@ -167,14 +174,16 @@ export default function BoardDetailLayout({
           emptyMessage="아직 작성된 게시글이 없습니다."
           variant={viewType === 'image-table' ? 'image-table' : 'text'}
         />
-        
-        <div className="flex justify-center mt-2 mb-4">
-          <MemoizedBoardPagination 
-            currentPage={currentPage} 
-            totalPages={Math.ceil((boardData.views || 0) / 20)}
-            boardSlug={slug}
-          />
-        </div>
+        {pagination && (
+          <div className="flex justify-center mb-4">
+            <MemoizedShopPagination 
+              page={pagination.currentPage}
+              pageSize={pagination.itemsPerPage}
+              total={pagination.totalItems}
+              withMargin={false}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -22,8 +22,11 @@ export default async function PostDetailPage({
       searchParams
     ]);
     
-    // 이제 resolvedSearchParams에서 from 값 추출
+    // 이제 resolvedSearchParams에서 from/page 값 추출
     const fromBoardId = resolvedSearchParams?.from;
+    const pageFromQuery = resolvedSearchParams?.page;
+    const parsedPage = pageFromQuery ? Number(pageFromQuery) : undefined;
+    const safePage = parsedPage && Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
     
     // 특수 케이스 처리: 'undefined'가 문자열로 전달된 경우
     const normalizedFromBoardId = fromBoardId === 'undefined' ? undefined : fromBoardId;
@@ -32,8 +35,8 @@ export default async function PostDetailPage({
       return notFound();
     }
     
-    // 서버 액션을 통해 모든 데이터 로드
-    const result = await getPostPageData(slug, postNumber, normalizedFromBoardId);
+    // 서버 액션을 통해 모든 데이터 로드 (page 전달)
+    const result = await getPostPageData(slug, postNumber, normalizedFromBoardId, safePage);
     
     if (!result.success) {
       return (
@@ -182,7 +185,6 @@ export default async function PostDetailPage({
         rootBoardSlug={result.rootBoardSlug || undefined}
         totalPages={result.totalPages || 1}
         currentPage={result.currentPage || 1}
-        normalizedFromBoardId={result.normalizedFromBoardId}
         postUserAction={result.postUserAction || null}
         slug={slug}
         postNumber={postNumber}

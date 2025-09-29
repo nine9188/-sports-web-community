@@ -81,7 +81,7 @@ export default function ProfileDropdown() {
           <UserIcon 
             iconUrl={iconUrl}
             level={userLevel}
-            size={24}
+            size={20}
             alt="프로필 이미지"
             className="rounded-full object-cover"
           />
@@ -91,11 +91,11 @@ export default function ProfileDropdown() {
           <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-[100]">
             <div className="px-4 py-2 border-b border-gray-100">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 relative rounded-full overflow-hidden">
+                <div className="w-5 h-5 relative rounded-full overflow-hidden">
                   <UserIcon 
                     iconUrl={iconUrl}
                     level={userLevel}
-                    size={32}
+                    size={20}
                     alt="프로필 이미지"
                     className="object-cover"
                   />

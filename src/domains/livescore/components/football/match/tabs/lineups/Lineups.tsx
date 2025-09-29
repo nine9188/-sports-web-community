@@ -262,6 +262,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                     size="sm"
                     variant="square"
                     priority={true}
+                    fit="contain"
                   />
                   <span className="font-medium">{getTeamDisplayName(homeTeam.id, homeTeam.name)}</span>
                 </div>
@@ -276,6 +277,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                     size="sm"
                     variant="square"
                     priority={true}
+                    fit="contain"
                   />
                   <span className="font-medium">{getTeamDisplayName(awayTeam.id, awayTeam.name)}</span>
                 </div>

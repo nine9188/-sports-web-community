@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import type { CommentSearchResult } from '../types'
 import { trackSearchResultClick } from '../actions/searchLogs'
-import Pagination from './Pagination'
 import { formatDate } from '@/shared/utils/date'
 
 interface CommentSearchResultsProps {
@@ -59,7 +58,8 @@ export default function CommentSearchResults({
   }
 
   return (
-    <div className="overflow-hidden rounded-lg">
+    <>
+      <div className="overflow-hidden rounded-lg">
       {/* 헤더 */}
       <div className="px-4 py-3 bg-gray-50 border-b">
         <h3 className="text-sm font-medium text-gray-900">
@@ -111,6 +111,17 @@ export default function CommentSearchResults({
           </div>
         ))}
       </div>
+
+        {/* 요약 문구 */}
+        {pagination && currentType === 'comments' && (
+          <div className="px-4 sm:px-6 py-3 border-t">
+            <p className="text-sm text-gray-700">
+              총 <span className="font-medium">{pagination.totalItems}</span>개 중{' '}
+              <span className="font-medium">{(pagination.currentPage - 1) * pagination.itemsPerPage + 1}</span>-
+              <span className="font-medium">{Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)}</span>개 표시
+            </p>
+          </div>
+        )}
       
       {/* 더보기 버튼 (전체 탭에서만 표시) */}
       {showMoreButton && currentType === 'all' && comments.length >= 5 && (
@@ -124,18 +135,9 @@ export default function CommentSearchResults({
         </div>
       )}
       
-      {/* 페이지네이션 (개별 탭에서만 표시) */}
-      {pagination && currentType === 'comments' && (
-        <Pagination
-          currentPage={pagination.currentPage}
-          totalItems={pagination.totalItems}
-          itemsPerPage={pagination.itemsPerPage}
-          query={query}
-          type="comments"
-          sort={pagination.sort}
-        />
-      )}
-    </div>
+      </div>
+
+    </>
   )
 }
 

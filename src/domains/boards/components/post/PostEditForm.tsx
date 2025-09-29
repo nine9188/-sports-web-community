@@ -215,7 +215,7 @@ export default function PostEditForm({
       
       if (userError || !userData.user) {
         toast.error('로그인이 필요합니다.');
-        router.push('/login');
+        router.push('/signin');
         return;
       }
       

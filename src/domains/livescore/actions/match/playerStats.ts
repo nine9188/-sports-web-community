@@ -93,6 +93,7 @@ export interface PlayerStatistics {
   fouls: PlayerFouls;
   cards: PlayerCards;
   penalty: PlayerPenalty;
+  [key: string]: any; // 응답에 존재하는 모든 추가 필드를 허용
 }
 
 export interface PlayerStats {
@@ -218,76 +219,25 @@ export async function fetchPlayerStats(matchId: string, playerId: number): Promi
         };
       }
       
-      // 응답 데이터 구성
+      // 응답 데이터 구성 - statistics는 원본을 그대로 전달
       const formattedPlayerStats: PlayerStats = {
         player: {
           id: playerData.player.id,
           name: playerData.player.name,
           photo: playerData.player.photo,
-          number: playerData.statistics[0].games?.number,
-          pos: playerData.statistics[0].games?.position
+          number: playerData.statistics?.[0]?.games?.number,
+          pos: playerData.statistics?.[0]?.games?.position
         },
-        statistics: [{
-          team: {
+        // 일부 응답에서 statistics[].team 이 비어있는 케이스가 있어 팀 정보를 폴백 주입
+        statistics: (playerData.statistics || []).map((stat: any) => ({
+          ...stat,
+          team: stat?.team ?? {
             id: teamData.team.id,
             name: teamData.team.name,
             logo: teamData.team.logo,
             update: teamData.team.update
-          },
-          games: {
-            minutes: playerData.statistics[0].games?.minutes || 0,
-            number: playerData.statistics[0].games?.number,
-            position: playerData.statistics[0].games?.position,
-            rating: playerData.statistics[0].games?.rating || '-',
-            captain: playerData.statistics[0].games?.captain || false,
-            substitute: playerData.statistics[0].games?.substitute || false
-          },
-          offsides: playerData.statistics[0].offsides,
-          shots: {
-            total: playerData.statistics[0].shots?.total || 0,
-            on: playerData.statistics[0].shots?.on || 0
-          },
-          goals: {
-            total: playerData.statistics[0].goals?.total || 0,
-            conceded: playerData.statistics[0].goals?.conceded,
-            assists: playerData.statistics[0].goals?.assists || 0,
-            saves: playerData.statistics[0].goals?.saves
-          },
-          passes: {
-            total: playerData.statistics[0].passes?.total || 0,
-            key: playerData.statistics[0].passes?.key || 0,
-            accuracy: playerData.statistics[0].passes?.accuracy || '0'
-          },
-          tackles: {
-            total: playerData.statistics[0].tackles?.total || 0,
-            blocks: playerData.statistics[0].tackles?.blocks || 0,
-            interceptions: playerData.statistics[0].tackles?.interceptions || 0
-          },
-          duels: {
-            total: playerData.statistics[0].duels?.total || 0,
-            won: playerData.statistics[0].duels?.won || 0
-          },
-          dribbles: {
-            attempts: playerData.statistics[0].dribbles?.attempts || 0,
-            success: playerData.statistics[0].dribbles?.success || 0,
-            past: playerData.statistics[0].dribbles?.past
-          },
-          fouls: {
-            drawn: playerData.statistics[0].fouls?.drawn || 0,
-            committed: playerData.statistics[0].fouls?.committed || 0
-          },
-          cards: {
-            yellow: playerData.statistics[0].cards?.yellow || 0,
-            red: playerData.statistics[0].cards?.red || 0
-          },
-          penalty: {
-            won: playerData.statistics[0].penalty?.won || 0,
-            committed: playerData.statistics[0].penalty?.committed || 0,
-            scored: playerData.statistics[0].penalty?.scored || 0,
-            missed: playerData.statistics[0].penalty?.missed || 0,
-            saved: playerData.statistics[0].penalty?.saved || 0
           }
-        }]
+        }))
       };
       
       // console.log('선수 통계 데이터 파싱 완료');
@@ -407,70 +357,19 @@ export async function fetchMultiplePlayerStats(matchId: string, playerIds: numbe
               id: player.player.id,
               name: player.player.name,
               photo: player.player.photo,
-              number: player.statistics[0].games.number,
-              pos: player.statistics[0].games.position
+              number: player.statistics?.[0]?.games?.number,
+              pos: player.statistics?.[0]?.games?.position
             },
-            statistics: [{
-              team: {
+            // 팀 통계 응답 루트(teamStats.team)를 각 statistics 항목에 폴백으로 병합
+            statistics: (player.statistics || []).map((stat: any) => ({
+              ...stat,
+              team: stat?.team ?? {
                 id: teamStats.team.id,
                 name: teamStats.team.name,
                 logo: teamStats.team.logo,
                 update: teamStats.team.update
-              },
-              games: {
-                minutes: player.statistics[0].games.minutes || 0,
-                number: player.statistics[0].games.number,
-                position: player.statistics[0].games.position,
-                rating: player.statistics[0].games.rating || '-',
-                captain: player.statistics[0].games.captain || false,
-                substitute: player.statistics[0].games.substitute || false
-              },
-              offsides: player.statistics[0].offsides,
-              shots: {
-                total: player.statistics[0].shots?.total || 0,
-                on: player.statistics[0].shots?.on || 0
-              },
-              goals: {
-                total: player.statistics[0].goals?.total || 0,
-                conceded: player.statistics[0].goals?.conceded,
-                assists: player.statistics[0].goals?.assists || 0,
-                saves: player.statistics[0].goals?.saves
-              },
-              passes: {
-                total: player.statistics[0].passes?.total || 0,
-                key: player.statistics[0].passes?.key || 0,
-                accuracy: player.statistics[0].passes?.accuracy || '0'
-              },
-              tackles: {
-                total: player.statistics[0].tackles?.total || 0,
-                blocks: player.statistics[0].tackles?.blocks || 0,
-                interceptions: player.statistics[0].tackles?.interceptions || 0
-              },
-              duels: {
-                total: player.statistics[0].duels?.total || 0,
-                won: player.statistics[0].duels?.won || 0
-              },
-              dribbles: {
-                attempts: player.statistics[0].dribbles?.attempts || 0,
-                success: player.statistics[0].dribbles?.success || 0,
-                past: player.statistics[0].dribbles?.past
-              },
-              fouls: {
-                drawn: player.statistics[0].fouls?.drawn || 0,
-                committed: player.statistics[0].fouls?.committed || 0
-              },
-              cards: {
-                yellow: player.statistics[0].cards?.yellow || 0,
-                red: player.statistics[0].cards?.red || 0
-              },
-              penalty: {
-                won: player.statistics[0].penalty?.won || 0,
-                committed: player.statistics[0].penalty?.committed || 0,
-                scored: player.statistics[0].penalty?.scored || 0,
-                missed: player.statistics[0].penalty?.missed || 0,
-                saved: player.statistics[0].penalty?.saved || 0
               }
-            }]
+            }))
           };
           
           // 선수 ID를 키로 사용하여 결과 객체에 저장

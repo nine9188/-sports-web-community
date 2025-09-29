@@ -37,8 +37,7 @@ export type { PostsResponse } from './actions';
 
 // 공통 컴포넌트 내보내기
 export { default as BoardBreadcrumbs } from './components/common/BoardBreadcrumbs';
-export { default as Pagination } from './components/common/Pagination';
-export { default as BoardPagination } from './components/common/BoardPagination';
+// Deprecated: Pagination components are replaced by ShopPagination in shop domain
 export { default as HoverMenu } from './components/common/HoverMenu';
 export { default as ServerHoverMenu } from './components/common/ServerHoverMenu';
 export { default as ClientHoverMenu } from './components/common/ClientHoverMenu';

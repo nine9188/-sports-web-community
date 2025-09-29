@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { PostSearchResults, CommentSearchResults, TeamSearchResults } from '@/domains/search'
 import type { PostSearchResult, CommentSearchResult, TeamSearchResult } from '@/domains/search/types'
 import Tabs, { TabItem } from '@/shared/ui/tabs'
+import Pagination from './Pagination'
 
 interface SearchResultsContainerProps {
   query: string
@@ -78,6 +79,11 @@ export default function SearchResultsContainer({
             currentType={type}
             query={query}
             totalCount={pagination.teams.total}
+            pagination={type === 'teams' ? {
+              currentPage: page,
+              totalItems: pagination.teams.total,
+              itemsPerPage: 20
+            } : undefined}
           />
         </Suspense>
       )
@@ -214,10 +220,41 @@ export default function SearchResultsContainer({
       
       {/* 각 검색 결과 섹션들 (별도 테이블로 분리) */}
       {resultSections.map((section) => (
-        <div key={section.key} className="bg-white rounded-lg border shadow-sm">
+        <div key={section.key} className="bg-white rounded-lg border shadow-sm overflow-hidden">
           {section.component}
         </div>
       ))}
+
+      {/* 카드 목록 하단 공통 페이지네이션 (posts/comments 전용) */}
+      {query && type === 'posts' && pagination.posts.total > 0 && (
+        <div className="mt-3">
+          <Pagination
+            currentPage={page}
+            totalItems={pagination.posts.total}
+            itemsPerPage={20}
+          />
+        </div>
+      )}
+
+      {query && type === 'comments' && pagination.comments.total > 0 && (
+        <div className="mt-3">
+          <Pagination
+            currentPage={page}
+            totalItems={pagination.comments.total}
+            itemsPerPage={20}
+          />
+        </div>
+      )}
+
+      {query && type === 'teams' && pagination.teams.total > 0 && (
+        <div className="mt-3">
+          <Pagination
+            currentPage={page}
+            totalItems={pagination.teams.total}
+            itemsPerPage={20}
+          />
+        </div>
+      )}
     </div>
   )
 } 

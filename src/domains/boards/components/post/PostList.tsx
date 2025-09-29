@@ -163,7 +163,7 @@ const VirtualizedPostItem = React.memo(function VirtualizedPostItem({
         </Link>
       </div>
       <div className="py-2 px-2 flex items-center justify-center" style={{ width: '120px' }}>
-        {renderAuthor(post, 24, "justify-start")}
+            {renderAuthor(post, 20, "justify-start")}
       </div>
       <div className="py-2 px-1 flex items-center justify-center" style={{ width: '80px' }}>
         <span className="text-xs text-gray-500">{formattedDate}</span>
@@ -342,7 +342,7 @@ const PostItem = React.memo(function PostItem({
         </Link>
       </td>
       <td className="py-2 px-2 text-center text-xs text-gray-500 align-middle">
-        {renderAuthor(post, 24, "justify-start")}
+        {renderAuthor(post, 20, "justify-start")}
       </td>
       <td className="py-2 px-1 text-center text-xs text-gray-500 align-middle">
         {formattedDate}

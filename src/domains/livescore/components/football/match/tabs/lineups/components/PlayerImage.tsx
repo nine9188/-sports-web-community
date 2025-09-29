@@ -51,7 +51,6 @@ export default memo(function PlayerImage({
       variant="circle"
       priority={priority}
       loading="lazy"
-      strict={true}
       className={className}
       fallbackContent={fallbackContent}
     />

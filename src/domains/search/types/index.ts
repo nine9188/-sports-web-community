@@ -65,6 +65,7 @@ export interface TeamSearchResult {
   league_name: string
   league_name_ko: string
   country: string
+  country_ko?: string
   venue_name: string | null
   venue_city: string | null
   current_position: number | null

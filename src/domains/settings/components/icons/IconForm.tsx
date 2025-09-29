@@ -108,12 +108,12 @@ export default function IconForm({
         
         <div className="p-4">
           <div className="flex items-center">
-            {/* 현재 아이콘 표시 */}
-            <div className="rounded-full overflow-hidden border-2 border-gray-200 bg-gray-50 w-12 h-12 flex items-center justify-center mr-3">
+            {/* 현재 아이콘 표시 - 20px 통일 */}
+            <div className="rounded-full overflow-hidden border-2 border-gray-200 bg-gray-50 w-5 h-5 flex items-center justify-center mr-3">
               <UserIcon 
                 iconUrl={displayIconUrl}
                 level={userLevel}
-                size={32}
+                size={20}
                 alt="현재 아이콘"
                 className="object-contain"
               />
@@ -146,7 +146,7 @@ export default function IconForm({
               레벨별 기본 아이콘을 확인하세요. 현재 레벨: <strong>Lv.{userLevel}</strong>
             </p>
             
-            {/* 모바일용 그리드 */}
+            {/* 모바일용 그리드 (20px) */}
             <div className="grid grid-cols-5 gap-2 md:hidden">
               {Array.from({ length: Math.min(50, LEVEL_EXP_REQUIREMENTS.length) }, (_, i) => {
                 const level = i + 1;
@@ -162,11 +162,11 @@ export default function IconForm({
                       ${isCurrentLevel ? 'bg-blue-50 border-blue-200' : 'bg-white'}
                     `}
                   >
-                    <div className="relative w-6 h-6 mb-1">
+                    <div className="relative w-5 h-5 mb-1">
                       <UserIcon
                         iconUrl={iconUrl}
                         level={level}
-                        size={24}
+                        size={20}
                         alt={`레벨 ${level} 아이콘`}
                         className="object-contain"
                       />
@@ -180,7 +180,7 @@ export default function IconForm({
               })}
             </div>
             
-            {/* 데스크탑용 그리드 */}
+            {/* 데스크탑용 그리드 (20px) */}
             <div className="hidden md:grid grid-cols-10 gap-2">
               {Array.from({ length: Math.min(50, LEVEL_EXP_REQUIREMENTS.length) }, (_, i) => {
                 const level = i + 1;
@@ -196,16 +196,16 @@ export default function IconForm({
                       ${isCurrentLevel ? 'bg-blue-50 border-blue-200' : 'bg-white'}
                     `}
                   >
-                    <div className="relative w-10 h-10 mb-1">
+                    <div className="relative w-5 h-5 mb-1">
                       <UserIcon
                         iconUrl={iconUrl}
                         level={level}
-                        size={40}
+                        size={20}
                         alt={`레벨 ${level} 아이콘`}
                         className="object-contain"
                       />
                     </div>
-                    <div className="font-medium text-sm">Lv.{level}</div>
+                    <div className="font-medium text-xs">Lv.{level}</div>
                     <div className="text-xs text-gray-500">
                       {expRequired.toLocaleString()}~
                     </div>
@@ -239,18 +239,18 @@ export default function IconForm({
             <button
               onClick={() => handleIconSelect(null)}
               disabled={isLoading}
-              className={`relative p-2 rounded-lg border-2 transition-all ${
+              className={`relative p-2 rounded-lg border-2 transition-all aspect-square flex items-center justify-center ${
                 selectedIconId === null 
                   ? 'border-blue-500 bg-blue-50' 
                   : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
               }`}
               title={`레벨 ${userLevel} 기본 아이콘`}
             >
-              <div className="rounded-full overflow-hidden bg-gray-50 w-12 h-12 mx-auto flex items-center justify-center">
+              <div className="rounded-full overflow-hidden bg-gray-50 w-5 h-5 mx-auto flex items-center justify-center">
                 <UserIcon
                   iconUrl={levelIconUrl}
                   level={userLevel}
-                  size={32}
+                  size={20}
                   alt={`레벨 ${userLevel} 기본 아이콘`}
                   className="object-contain"
                 />
@@ -276,18 +276,18 @@ export default function IconForm({
                   key={icon.id}
                   onClick={() => handleIconSelect(icon.id)}
                   disabled={isLoading}
-                  className={`relative p-2 rounded-lg border-2 transition-all ${
+                  className={`relative p-2 rounded-lg border-2 transition-all aspect-square flex items-center justify-center ${
                     selectedIconId === icon.id 
                       ? 'border-blue-500 bg-blue-50' 
                       : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                   }`}
                   title={icon.name}
                 >
-                  <div className="rounded-full overflow-hidden bg-gray-50 w-12 h-12 mx-auto flex items-center justify-center">
+                  <div className="rounded-full overflow-hidden bg-gray-50 w-5 h-5 mx-auto flex items-center justify-center">
                     <UserIcon
                       iconUrl={icon.image_url}
                       level={userLevel}
-                      size={32}
+                      size={20}
                       alt={icon.name}
                       className="object-contain"
                     />

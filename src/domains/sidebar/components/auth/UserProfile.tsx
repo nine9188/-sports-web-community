@@ -8,9 +8,7 @@ import { useAuth } from '@/shared/context/AuthContext';
 import { useIcon } from '@/shared/context/IconContext';
 import Image from 'next/image';
 import { getUserIconInfo } from '@/shared/utils/level-icons';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
-import { isApiSportsUrl, getImageIdFromUrl, getImageTypeFromUrl } from '@/shared/utils/image-proxy';
-import { ImageType } from '@/shared/types/image';
+import UserIcon from '@/shared/components/UserIcon';
 import { 
   LEVEL_EXP_REQUIREMENTS, 
   calculateLevelProgress,
@@ -207,39 +205,25 @@ export default function UserProfile({ profileData: initialProfileData, showActio
 
   return (
     <div className="space-y-3">
-      <div className="py-3 px-4 flex items-start gap-3 bg-muted/50 rounded-md">
-        <div className="flex-shrink-0">
-          <div className="w-10 h-10 relative rounded-full overflow-hidden">
-            {isApiSportsUrl(displayIconUrl) ? (
-              <ApiSportsImage 
-                imageId={getImageIdFromUrl(displayIconUrl) as string}
-                imageType={getImageTypeFromUrl(displayIconUrl) as ImageType}
-                alt={`${profileData.nickname || '사용자'} 프로필`}
-                width={40}
-                height={40}
-                loading="lazy"
-                className="w-full h-full object-contain rounded-full"
-                priority={false}
-              />
-            ) : (
-              <Image 
-                src={displayIconUrl}
-                alt={`${profileData.nickname || '사용자'} 프로필`}
-                width={40}
-                height={40}
-                className="w-full h-full object-contain rounded-full"
-                {...profileImageProps}
-                onError={handleImageError}
-                title={displayIconName}
-              />
-            )}
+      <div className="py-3 px-4 bg-muted/50 rounded-md">
+        {/* 닉네임 행: 아이콘 + 닉네임을 같은 라인에 배치 */}
+        <div className="flex items-center gap-2 mb-1.5">
+          <div className="w-5 h-5 relative rounded-full overflow-hidden flex-shrink-0">
+            <UserIcon
+              iconUrl={displayIconUrl}
+              level={userLevel}
+              size={20}
+              alt={`${profileData.nickname || '사용자'} 프로필`}
+              className="object-cover"
+              priority={false}
+            />
           </div>
-        </div>
-        
-        <div className="flex-1">
-          <p className="font-medium text-sm">
+          <p className="font-medium text-sm leading-5">
             {profileData.nickname || '사용자'}
           </p>
+        </div>
+
+        <div>
           
           {/* 레벨 정보 */}
           <div className="flex items-center gap-1 mb-1 mt-1">

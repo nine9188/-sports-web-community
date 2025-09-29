@@ -341,5 +341,9 @@ export default function TabContent() {
     matchData
   ]);
 
-  return renderTabContent;
+  return (
+    <div className="mb-4 md:mb-0">
+      {renderTabContent}
+    </div>
+  );
 } 

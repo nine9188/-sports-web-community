@@ -13,7 +13,7 @@ import PostHeader from '../post/PostHeader';
 import PostContent from '../post/PostContent';
 import PostActions from '../post/PostActions';
 import PostFooter from '../post/PostFooter';
-import Pagination from '../common/Pagination';
+import ShopPagination from '@/domains/shop/components/ShopPagination';
 import CommentSection from '../post/CommentSection';
 import PostList from '../post/PostList';
 
@@ -29,7 +29,7 @@ const MemoizedPostHeader = memo(PostHeader);
 const MemoizedPostNavigation = memo(PostNavigation);
 const MemoizedPostActions = memo(PostActions);
 const MemoizedPostFooter = memo(PostFooter);
-const MemoizedPagination = memo(Pagination);
+const MemoizedShopPagination = memo(ShopPagination);
 const MemoizedCommentSection = memo(CommentSection);
 const MemoizedPostList = memo(PostList);
 
@@ -105,7 +105,6 @@ interface PostDetailLayoutProps {
   rootBoardSlug?: string;
   totalPages: number;
   currentPage: number;
-  normalizedFromBoardId?: string;
   postUserAction: 'like' | 'dislike' | null;
   slug: string;
   postNumber: string;
@@ -127,7 +126,6 @@ export default function PostDetailLayout({
   rootBoardSlug,
   totalPages,
   currentPage,
-  normalizedFromBoardId,
   postUserAction,
   slug,
   postNumber
@@ -373,11 +371,11 @@ export default function PostDetailLayout({
       <div className="mb-4">
         {totalPages > 1 && (
           <div className="px-4 sm:px-6">
-            <MemoizedPagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              boardSlug={slug}
-              fromBoardId={normalizedFromBoardId}
+            <MemoizedShopPagination
+              page={currentPage}
+              pageSize={20}
+              total={totalPages * 20}
+              withMargin={false}
             />
           </div>
         )}

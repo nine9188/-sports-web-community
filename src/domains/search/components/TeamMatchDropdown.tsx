@@ -4,6 +4,8 @@ import Image from 'next/image'
 import { useState, useCallback } from 'react'
 import type { TeamSearchResult } from '../types'
 import { getTeamMatches, type TeamMatch } from '../actions/teamMatches'
+import { getLeagueName } from '@/domains/livescore/constants/league-mappings'
+import { getTeamById } from '@/domains/livescore/constants/teams'
 
 // 캐시 유효성 검사 (5분)
 const CACHE_DURATION = 5 * 60 * 1000 // 5분
@@ -155,7 +157,7 @@ export function TeamMatchExpandedRow({
   return (
     <tr key={`${team.team_id}-matches`}>
       <td colSpan={1} className="p-0 bg-gray-50 border-t sm:hidden">
-        <div className="p-3 space-y-3">
+        <div className="p-3 space-y-3 w-full">
           <h4 className="font-medium text-gray-900 text-sm">최근 경기</h4>
           
           {loading ? (
@@ -164,7 +166,7 @@ export function TeamMatchExpandedRow({
               <span className="ml-2 text-sm text-gray-600">로딩중...</span>
             </div>
           ) : matches.length > 0 ? (
-            <div className="space-y-2 max-h-64 overflow-y-auto">
+            <div className="space-y-2 w-full">
               {matches.slice(0, 5).map((match) => (
                 <MatchItem key={match.fixture.id} match={match} teamId={team.team_id} />
               ))}
@@ -175,7 +177,7 @@ export function TeamMatchExpandedRow({
         </div>
       </td>
       <td colSpan={5} className="hidden sm:table-cell px-4 py-4 bg-gray-50 border-t">
-        <div className="space-y-3">
+        <div className="space-y-3 w-full">
           <h4 className="font-medium text-gray-900 text-sm">최근 경기</h4>
           
           {loading ? (
@@ -184,7 +186,7 @@ export function TeamMatchExpandedRow({
               <span className="ml-2 text-sm text-gray-600">경기 정보 로딩중...</span>
             </div>
           ) : matches.length > 0 ? (
-            <div className="space-y-2 max-h-80 overflow-y-auto">
+            <div className="space-y-2 w-full">
               {matches.slice(0, 5).map((match) => (
                 <MatchItem key={match.fixture.id} match={match} teamId={team.team_id} />
               ))}
@@ -207,6 +209,9 @@ function MatchItem({ match, teamId }: { match: TeamMatch; teamId: number }) {
   const opponent = isHome ? match.teams.away : match.teams.home
   const teamScore = isHome ? match.goals.home : match.goals.away
   const opponentScore = isHome ? match.goals.away : match.goals.home
+  const localizedLeagueName = getLeagueName(match.league.id) || match.league.name
+  const mappedOpponent = getTeamById(opponent.id)
+  const opponentDisplayName = mappedOpponent?.name_ko || opponent.name
   
   // 경기 상태에 따른 표시
   const getMatchStatus = () => {
@@ -250,10 +255,10 @@ function MatchItem({ match, teamId }: { match: TeamMatch; teamId: number }) {
             />
             <div className="min-w-0 flex-1">
               <div className="font-medium text-gray-900 text-sm truncate">
-                vs {opponent.name}
+                vs {opponentDisplayName}
               </div>
               <div className="text-xs text-gray-500 truncate mt-0.5">
-                {match.league.name}
+                {localizedLeagueName}
               </div>
             </div>
           </div>
@@ -286,10 +291,10 @@ function MatchItem({ match, teamId }: { match: TeamMatch; teamId: number }) {
           />
           <div className="min-w-0">
             <div className="font-medium text-gray-900 truncate">
-              vs {opponent.name}
+              vs {opponentDisplayName}
             </div>
             <div className="text-xs text-gray-500 truncate">
-              {match.league.name} • {formatDate(match.fixture.date)}
+              {localizedLeagueName} • {formatDate(match.fixture.date)}
             </div>
           </div>
         </div>

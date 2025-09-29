@@ -8,7 +8,7 @@ import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 // 메모리 캐시 - 이미 확인된 URL들을 저장하여 중복 요청 방지
 export const urlCache = new Map<string, string | null>();
 
-type SizeVariant = 'sm' | 'md' | 'lg' | 'xl';
+type SizeVariant = 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
 type ShapeVariant = 'square' | 'circle';
 
 interface UnifiedSportsImageProps extends Omit<ImageProps, 'src' | 'width' | 'height'> {
@@ -21,7 +21,7 @@ interface UnifiedSportsImageProps extends Omit<ImageProps, 'src' | 'width' | 'he
   fallbackContent?: React.ReactNode;
   loading?: 'lazy' | 'eager';
   priority?: boolean;
-  strict?: boolean; // Strict 모드: 외부 URL 폴백 금지
+  fit?: 'cover' | 'contain';
 }
 
 /**
@@ -43,8 +43,8 @@ export default function UnifiedSportsImage({
   fallbackContent,
   loading = 'lazy',
   priority = false,
-  strict = false, // 기본값: false (호환성 유지)
   className = '',
+  fit = 'cover',
   ...props
 }: UnifiedSportsImageProps) {
   // 상태 관리
@@ -56,14 +56,16 @@ export default function UnifiedSportsImage({
     sm: 'w-6 h-6',    // 24px - 팀 로고
     md: 'w-8 h-8',    // 32px - 선수
     lg: 'w-10 h-10',  // 40px - 감독
-    xl: 'w-12 h-12'   // 48px - 큰 아바타
+    xl: 'w-12 h-12',  // 48px - 큰 아바타
+    xxl: 'w-28 h-28'  // 112px - 모달 대형 아바타
   };
 
   const sizeValues = {
     sm: { width: 24, height: 24 },
     md: { width: 32, height: 32 },
     lg: { width: 40, height: 40 },
-    xl: { width: 48, height: 48 }
+    xl: { width: 48, height: 48 },
+    xxl: { width: 112, height: 112 }
   };
 
   // 모양 맵핑
@@ -126,7 +128,7 @@ export default function UnifiedSportsImage({
     'relative',
     'flex-shrink-0',
     'overflow-hidden',
-    'bg-gray-100',
+    'bg-transparent',
     variant === 'circle' ? 'border-2 border-gray-200' : '',
     className
   ].filter(Boolean).join(' ');
@@ -151,7 +153,7 @@ export default function UnifiedSportsImage({
         onError={handleImageError}
         // priority가 true이면 priority만, 아니면 loading만 설정
         {...(priority ? { priority: true } : { loading: loading })}
-        className={`w-full h-full object-cover transition-opacity duration-300 opacity-0 animate-fade-in`}
+        className={`w-full h-full ${fit === 'contain' ? 'object-contain' : 'object-cover'} transition-opacity duration-300 opacity-0 animate-fade-in`}
         onLoad={(e) => {
           // 이미지 로드 완료 시 페이드인 효과
           const target = e.target as HTMLImageElement;

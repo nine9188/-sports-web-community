@@ -5,6 +5,24 @@ import { getLeagueName } from '@/domains/livescore/constants/league-mappings'
 import { getTeamById, searchTeamsByName } from '@/domains/livescore/constants/teams'
 import type { TeamSearchResult } from '../types'
 
+// 허용 리그 ID: 주요 유럽 리그, 유럽 2군 리그, 유럽컵 대회, FA/EFL컵, 아시아, 아메리카, 기타
+const ALLOWED_LEAGUE_IDS = [
+  // 주요 유럽 리그 (Top 5)
+  39, 140, 78, 61, 135,
+  // 유럽 2군 리그
+  40, 179, 88, 94,
+  // 유럽 컵 대회
+  2, 3, 848, 531,
+  // FA, EFL 컵
+  45, 48,
+  // 아시아
+  292, 98, 169, 17, 307,
+  // 아메리카
+  253, 71, 262,
+  // 기타
+  119,
+]
+
 export interface TeamSearchOptions {
   query: string
   leagueId?: number
@@ -56,6 +74,7 @@ export async function searchTeams(options: TeamSearchOptions): Promise<{
         popularity_score
       `)
       .eq('is_active', true)
+      .in('league_id', ALLOWED_LEAGUE_IDS)
 
     // 검색 조건: 기존 텍스트 검색 + 한국어 매핑 팀 ID 검색
     if (mappedTeamIds.length > 0) {
@@ -87,6 +106,7 @@ export async function searchTeams(options: TeamSearchOptions): Promise<{
       .from('football_teams')
       .select('*', { count: 'exact', head: true })
       .eq('is_active', true)
+      .in('league_id', ALLOWED_LEAGUE_IDS)
 
     // 검색 조건 동일하게 적용
     let finalCountQuery
@@ -127,6 +147,7 @@ export async function searchTeams(options: TeamSearchOptions): Promise<{
           // 한국어 매핑 정보 추가
           name_ko: mappedTeam?.name_ko,
           name_en: mappedTeam?.name_en || team.name,
+          country_ko: mappedTeam?.country_ko,
           // 한국어 매핑에서 찾은 팀인지 표시 (정렬 우선순위용)
           is_korean_mapped: !!mappedTeam
         }
@@ -223,7 +244,8 @@ export async function getPopularTeams(limit: number = 12): Promise<TeamSearchRes
         league_name_ko: getLeagueName(team.league_id),
         display_name: mappedTeam?.name_ko || team.display_name,
         name_ko: mappedTeam?.name_ko,
-        name_en: mappedTeam?.name_en || team.name
+        name_en: mappedTeam?.name_en || team.name,
+        country_ko: mappedTeam?.country_ko
       }
     })
 

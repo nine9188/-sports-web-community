@@ -1,10 +1,13 @@
 'use client';
 
-import { useState, memo, useEffect, useMemo } from 'react';
+import { useState, memo, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useMatchData, isStatsTabData } from '@/domains/livescore/components/football/match/context/MatchDataContext';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
+import { fetchCachedMatchLineups } from '@/domains/livescore/actions/match/lineupData';
+import { fetchCachedMultiplePlayerStats, type MultiplePlayerStatsResponse } from '@/domains/livescore/actions/match/playerStats';
 
 import { TeamStats, Team } from '@/domains/livescore/types/match';
 
@@ -41,6 +44,49 @@ const TeamLogo = memo(({ name, teamId }: { name: string; teamId?: number }) => {
 
 TeamLogo.displayName = 'TeamLogo';
 
+// 가로 스크롤 힌트 컨테이너
+const HorizontalScrollContainer = ({ children }: { children: React.ReactNode }) => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const update = () => {
+      setCanScrollLeft(el.scrollLeft > 0);
+      setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+    };
+    update();
+    const onScroll = () => {
+      update();
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', update);
+    return () => {
+      el.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', update);
+    };
+  }, []);
+
+  return (
+    <div className="relative">
+      {/* 모바일 전용 1회성 힌트 */}
+      <div className="md:hidden px-3 pb-1 text-[11px] text-gray-500 flex items-center gap-1">
+        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        좌우로 스와이프
+        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </div>
+      <div ref={containerRef} className="overflow-x-auto w-full">
+        {children}
+      </div>
+      {/* 엣지 페이드 오버레이 */}
+      <div className={`pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-white to-transparent ${canScrollLeft ? '' : 'hidden'}`}></div>
+      <div className={`pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-white to-transparent ${canScrollRight ? '' : 'hidden'}`}></div>
+    </div>
+  );
+};
+
 // 통계 항목 렌더링 함수 - 메모이제이션
 const StatItem = memo(({ homeValue, awayValue, koreanLabel, index = 0 }: { 
   homeValue: string | number | null; 
@@ -76,7 +122,7 @@ const StatItem = memo(({ homeValue, awayValue, koreanLabel, index = 0 }: {
       className="mb-3"
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px", root: null }}
+      viewport={{ once: true, margin: "-50px" }}
       transition={{ 
         duration: 0.5, 
         delay: index * 0.1,
@@ -107,7 +153,7 @@ const StatItem = memo(({ homeValue, awayValue, koreanLabel, index = 0 }: {
             }}
             initial={{ width: 0 }}
             whileInView={{ width: `${homeWidth}%` }}
-            viewport={{ once: true, root: null }}
+            viewport={{ once: true }}
             transition={{ 
               duration: 0.8, 
               delay: index * 0.1 + 0.3,
@@ -125,7 +171,7 @@ const StatItem = memo(({ homeValue, awayValue, koreanLabel, index = 0 }: {
             }}
             initial={{ width: 0 }}
             whileInView={{ width: `${awayWidth}%` }}
-            viewport={{ once: true, root: null }}
+            viewport={{ once: true }}
             transition={{ 
               duration: 0.8, 
               delay: index * 0.1 + 0.3,
@@ -151,6 +197,15 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
   const [awayTeam, setAwayTeam] = useState<Team | undefined>(propsMatchData?.awayTeam);
   const [loading, setLoading] = useState(isTabLoading || !propsMatchData?.stats?.length);
   const [error, setError] = useState<string | null>(tabLoadError || null);
+
+  // 선수 종합 테이블 상태
+  // 플레이어 통계 로딩 상태 제거 (테이블 선렌더링)
+  const [homeTeamId, setHomeTeamId] = useState<number | null>(null);
+  const [awayTeamId, setAwayTeamId] = useState<number | null>(null);
+  const [homeTeamName, setHomeTeamName] = useState<string>('');
+  const [awayTeamName, setAwayTeamName] = useState<string>('');
+  const [playerIds, setPlayerIds] = useState<number[]>([]);
+  const [playersStats, setPlayersStats] = useState<MultiplePlayerStatsResponse>({});
 
   // props로 받은 데이터 업데이트
   useEffect(() => {
@@ -186,6 +241,40 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
     setLoading(isTabLoading);
     if (tabLoadError) setError(tabLoadError);
   }, [isTabLoading, tabLoadError]);
+
+  // 라인업 기반 선수 ID 수집 및 다중 통계 로드
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        if (!matchData || !('fixture' in (matchData as Record<string, unknown>)) || !(matchData as { fixture?: { id?: number } }).fixture?.id) return;
+        const fixtureId = String((matchData as { fixture: { id: number } }).fixture.id);
+        const lineups = await fetchCachedMatchLineups(fixtureId);
+        if (!mounted || !lineups?.success || !lineups.response) return;
+        const { home, away } = lineups.response;
+        setHomeTeamId(home?.team?.id ?? null);
+        setAwayTeamId(away?.team?.id ?? null);
+        setHomeTeamName(home?.team?.name ?? '홈팀');
+        setAwayTeamName(away?.team?.name ?? '원정팀');
+        const ids = [
+          ...(home.startXI || []).map((i: { player: { id: number } }) => i.player.id),
+          ...(home.substitutes || []).map((i: { player: { id: number } }) => i.player.id),
+          ...(away.startXI || []).map((i: { player: { id: number } }) => i.player.id),
+          ...(away.substitutes || []).map((i: { player: { id: number } }) => i.player.id),
+        ].filter((id: number) => Number.isFinite(id) && id > 0) as number[];
+        const uniqueIds = Array.from(new Set(ids));
+        setPlayerIds(uniqueIds);
+        if (uniqueIds.length === 0) { setPlayersStats({}); return; }
+        const agg = await fetchCachedMultiplePlayerStats(fixtureId, uniqueIds);
+        if (!mounted) return;
+        setPlayersStats(agg || {});
+      } catch {
+        if (mounted) setPlayersStats({});
+      } finally {}
+    };
+    load();
+    return () => { mounted = false; };
+  }, [matchData]);
 
   // 통계 항목 매핑 (API에서 사용하는 키값 -> 표시 레이블)
   const statMappings = useMemo(() => [
@@ -336,12 +425,12 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
         transition={{ duration: 0.5 }}
         style={{ overflow: 'visible' }}
       >
-        {/* 슈팅 통계 */}
+        {/* 기본 통계 */}
         <motion.div 
           className="bg-white rounded-lg border"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px", root: null }}
+          viewport={{ once: true, margin: "-100px" }}
           transition={{ 
             duration: 0.6, 
             delay: 0.1,
@@ -349,18 +438,18 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
           }}
           style={{ overflow: 'visible' }}
         >
-          {renderCategoryHeader('shooting', true)}
+          {renderCategoryHeader('basic', true)}
           <div className="p-3">
-            {categoryGroups.shooting.map(({ key, label }, index) => renderStat(key, label, index))}
+            {categoryGroups.basic.map(({ key, label }, index) => renderStat(key, label, index))}
           </div>
         </motion.div>
         
-        {/* 기본 통계 */}
+        {/* 슈팅 통계 */}
         <motion.div 
           className="bg-white rounded-lg border"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px", root: null }}
+          viewport={{ once: true, margin: "-100px" }}
           transition={{ 
             duration: 0.6, 
             delay: 0.2,
@@ -368,9 +457,9 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
           }}
           style={{ overflow: 'visible' }}
         >
-          {renderCategoryHeader('basic')}
+          {renderCategoryHeader('shooting')}
           <div className="p-3">
-            {categoryGroups.basic.map(({ key, label }, index) => renderStat(key, label, index))}
+            {categoryGroups.shooting.map(({ key, label }, index) => renderStat(key, label, index))}
           </div>
         </motion.div>
         
@@ -379,7 +468,7 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
           className="bg-white rounded-lg border"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px", root: null }}
+          viewport={{ once: true, margin: "-100px" }}
           transition={{ 
             duration: 0.6, 
             delay: 0.3,
@@ -393,6 +482,145 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
           </div>
         </motion.div>
       </motion.div>
+
+      {/* 선수 종합 통계 (라인업 기반) - 홈/원정 분리 카드 */}
+      <div className="space-y-2 mt-2">
+        <motion.div 
+          className="bg-white rounded-lg border"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+          style={{ overflow: 'visible' }}
+        >
+          <div className="px-3 py-2 border-b">
+            <div className="flex items-center gap-2">
+              {homeTeamId ? (
+                <UnifiedSportsImage imageId={homeTeamId} imageType={ImageType.Teams} alt={homeTeamName || '홈팀'} size="sm" variant="square" fit="contain" />
+              ) : null}
+              <span className="text-sm font-bold text-gray-800">{homeTeamName || '홈팀'}</span>
+            </div>
+          </div>
+          <div className="p-3">
+            <HorizontalScrollContainer>
+              <table className="min-w-max divide-y divide-gray-200 text-sm">
+                <thead className="bg-gray-50 whitespace-nowrap">
+                    <tr>
+                    <th className="px-3 py-2 text-left font-medium text-gray-700">선수</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">분</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">평점</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">골</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">도움</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">슈팅(유효)</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">패스(키, 성공률)</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">드리블</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">듀얼</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">파울</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">카드</th>
+                    </tr>
+                  </thead>
+                <tbody className="divide-y divide-gray-100 bg-white whitespace-nowrap">
+                    {playerIds.filter((pid) => {
+                      const entry = playersStats?.[pid]?.response?.[0];
+                      const teamId = entry?.statistics?.[0]?.team?.id ?? null;
+                      return teamId && homeTeamId && teamId === homeTeamId;
+                    }).map((pid) => {
+                      const entry = playersStats?.[pid]?.response?.[0];
+                      const p = entry?.player;
+                      const s = entry?.statistics?.[0];
+                      return (
+                        <tr key={`home-${pid}`} className="hover:bg-gray-50">
+                        <td className="px-3 py-2 whitespace-nowrap">
+                            {p?.name || pid}
+                            <span className="ml-1 text-xs text-gray-500">{s?.games?.position || p?.pos || '-'}</span>
+                          </td>
+                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.games?.minutes ?? 0}</td>
+                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.games?.rating || '-'}</td>
+                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.goals?.total ?? 0}</td>
+                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.goals?.assists ?? 0}</td>
+                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.shots?.total ?? 0} ({s?.shots?.on ?? 0})</td>
+                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.passes?.total ?? 0} ({s?.passes?.key ?? 0}, {(s?.passes?.accuracy ?? '0')}%)</td>
+                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.dribbles?.success ?? 0}/{s?.dribbles?.attempts ?? 0}</td>
+                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.duels?.won ?? 0}/{s?.duels?.total ?? 0}</td>
+                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.fouls?.committed ?? 0}</td>
+                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.cards?.yellow ?? 0}/{s?.cards?.red ?? 0}</td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </HorizontalScrollContainer>
+          </div>
+        </motion.div>
+
+        <motion.div 
+          className="bg-white rounded-lg border mb-4 md:mb-0"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
+          style={{ overflow: 'visible' }}
+        >
+          <div className="px-3 py-2 border-b">
+            <div className="flex items-center gap-2">
+              {awayTeamId ? (
+                <UnifiedSportsImage imageId={awayTeamId} imageType={ImageType.Teams} alt={awayTeamName || '원정팀'} size="sm" variant="square" fit="contain" />
+              ) : null}
+              <span className="text-sm font-bold text-gray-800">{awayTeamName || '원정팀'}</span>
+            </div>
+          </div>
+          <div className="p-3">
+            <HorizontalScrollContainer>
+              <table className="min-w-max divide-y divide-gray-200 text-sm">
+                <thead className="bg-gray-50 whitespace-nowrap">
+                    <tr>
+                    <th className="px-3 py-2 text-left font-medium text-gray-700">선수</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">분</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">평점</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">골</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">도움</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">슈팅(유효)</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">패스(키, 성공률)</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">드리블</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">듀얼</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">파울</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">카드</th>
+                    </tr>
+                  </thead>
+                <tbody className="divide-y divide-gray-100 bg-white whitespace-nowrap">
+                    {playerIds.filter((pid) => {
+                      const entry = playersStats?.[pid]?.response?.[0];
+                      const teamId = entry?.statistics?.[0]?.team?.id ?? null;
+                      return teamId && awayTeamId && teamId === awayTeamId;
+                    }).map((pid) => {
+                      const entry = playersStats?.[pid]?.response?.[0];
+                      const p = entry?.player;
+                      const s = entry?.statistics?.[0];
+                      return (
+                        <tr key={`away-${pid}`} className="hover:bg-gray-50">
+                        <td className="px-3 py-2 whitespace-nowrap">
+                            {p?.name || pid}
+                            <span className="ml-1 text-xs text-gray-500">{s?.games?.position || p?.pos || '-'}</span>
+                          </td>
+                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.games?.minutes ?? 0}</td>
+                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.games?.rating || '-'}</td>
+                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.goals?.total ?? 0}</td>
+                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.goals?.assists ?? 0}</td>
+                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.shots?.total ?? 0} ({s?.shots?.on ?? 0})</td>
+                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.passes?.total ?? 0} ({s?.passes?.key ?? 0}, {(s?.passes?.accuracy ?? '0')}%)</td>
+                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.dribbles?.success ?? 0}/{s?.dribbles?.attempts ?? 0}</td>
+                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.duels?.won ?? 0}/{s?.duels?.total ?? 0}</td>
+                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.fouls?.committed ?? 0}</td>
+                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.cards?.yellow ?? 0}/{s?.cards?.red ?? 0}</td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </HorizontalScrollContainer>
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 });

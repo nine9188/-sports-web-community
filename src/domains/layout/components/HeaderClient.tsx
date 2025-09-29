@@ -441,7 +441,7 @@ export default function HeaderClient({
               <UserIcon 
                 iconUrl={userData?.iconInfo?.iconUrl || iconUrl}
                 level={userLevel}
-                size={24}
+                size={20}
                 alt="프로필 이미지"
                 className="rounded-full object-cover"
               />

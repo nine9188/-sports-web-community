@@ -184,6 +184,11 @@ export default async function BoardDetailPage({
         posts={layoutPosts}
         topBoards={topBoards}
         hoverChildBoardsMap={hoverChildBoardsMap}
+        pagination={{
+          totalItems: postsData.meta.totalItems,
+          itemsPerPage: postsData.meta.itemsPerPage,
+          currentPage: postsData.meta.currentPage
+        }}
       />
     );
   } catch (error) {

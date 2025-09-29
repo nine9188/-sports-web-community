@@ -31,6 +31,11 @@ interface TeamSearchResultsProps {
   currentType?: 'all' | 'posts' | 'comments' | 'teams'
   query?: string
   totalCount?: number
+  pagination?: {
+    currentPage: number
+    totalItems: number
+    itemsPerPage: number
+  }
 }
 
 export default function TeamSearchResults({
@@ -42,7 +47,8 @@ export default function TeamSearchResults({
   showMoreButton = true,
   currentType: propCurrentType = 'teams',
   query: propQuery = '',
-  totalCount = 0
+  totalCount = 0,
+  pagination
 }: TeamSearchResultsProps) {
   const searchParams = useSearchParams()
   const query = propQuery || searchParams?.get('q') || ''
@@ -179,8 +185,8 @@ export default function TeamSearchResults({
 
   return (
     <div className="space-y-4">
-      {/* 팀 테이블 */}
-      <div className="rounded-lg border border-gray-200 overflow-hidden">
+      {/* 팀 테이블: 외부 카드 래퍼가 테두리/그림자를 가지므로 내부는 overflow만 처리 */}
+      <div className="overflow-hidden">
         <div className="overflow-x-hidden">
           <table className="w-full bg-white table-fixed">
             <thead className="bg-gray-50">
@@ -214,7 +220,28 @@ export default function TeamSearchResults({
                 />
               ))}
             </tbody>
-            {/* 더보기 버튼을 테이블 푸터로 추가 */}
+          {/* 요약 문구 (teams 탭 전용) */}
+          {pagination && (propCurrentType === 'teams' || currentType === 'teams') && (
+            <tfoot>
+              <tr>
+                <td colSpan={1} className="px-4 py-3 border-t bg-gray-50 sm:hidden">
+                  <p className="text-sm text-gray-700">
+                    총 <span className="font-medium">{pagination.totalItems}</span>개 중{' '}
+                    <span className="font-medium">{(pagination.currentPage - 1) * pagination.itemsPerPage + 1}</span>-
+                    <span className="font-medium">{Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)}</span>개 표시
+                  </p>
+                </td>
+                <td colSpan={5} className="hidden sm:table-cell px-6 py-3 border-t bg-gray-50">
+                  <p className="text-sm text-gray-700">
+                    총 <span className="font-medium">{pagination.totalItems}</span>개 중{' '}
+                    <span className="font-medium">{(pagination.currentPage - 1) * pagination.itemsPerPage + 1}</span>-
+                    <span className="font-medium">{Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)}</span>개 표시
+                  </p>
+                </td>
+              </tr>
+            </tfoot>
+          )}
+          {/* 더보기 버튼을 테이블 푸터로 추가 */}
             {showMoreButton && currentType === 'all' && teams.length >= 5 && (
               <tfoot>
                 <tr>
@@ -350,7 +377,7 @@ function TeamRowWithMatches({
                 <div className="text-xs text-gray-500 flex items-center space-x-1 overflow-hidden">
                   <span className="text-gray-600 flex-shrink-0 truncate max-w-20">{team.league_name_ko}</span>
                   <span className="text-gray-400 flex-shrink-0">|</span>
-                  <span className="flex-shrink-0 truncate max-w-16">{team.country}</span>
+                  <span className="flex-shrink-0 truncate max-w-16">{team.country_ko ?? team.country}</span>
                   {team.venue_name && (
                     <>
                       <span className="text-gray-400 flex-shrink-0">|</span>
@@ -381,7 +408,7 @@ function TeamRowWithMatches({
 
         {/* 국가 */}
         <td className="hidden md:table-cell px-4 py-4 text-sm text-gray-900">
-          {team.country}
+          {team.country_ko ?? team.country}
         </td>
 
         {/* 홈구장 */}

@@ -95,6 +95,39 @@ export async function getCategoryItems(categoryIds: number[]) {
 }
 
 /**
+ * 카테고리 아이템 페이지네이션 조회
+ */
+export async function getCategoryItemsPaginated(
+  categoryIds: number[],
+  page: number,
+  pageSize: number
+) {
+  const supabase = await createClient()
+
+  const currentPage = Number.isFinite(page) && page > 0 ? page : 1
+  const limit = Number.isFinite(pageSize) && pageSize > 0 ? pageSize : 24
+  const from = (currentPage - 1) * limit
+  const to = from + limit - 1
+
+  const { data, error, count } = await supabase
+    .from('shop_items')
+    .select('*, category:shop_categories(name)', { count: 'exact' })
+    .in('category_id', categoryIds)
+    .eq('is_active', true)
+    .order('price', { ascending: true })
+    .range(from, to)
+
+  if (error) throw new Error('아이템 목록 조회 실패')
+
+  return {
+    items: data || [],
+    total: count || 0,
+    page: currentPage,
+    pageSize: limit
+  }
+}
+
+/**
  * 사용자 포인트 조회
  */
 export async function getUserPoints(userId: string | undefined): Promise<number> {
