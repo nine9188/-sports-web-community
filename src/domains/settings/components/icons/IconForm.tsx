@@ -99,18 +99,18 @@ export default function IconForm({
   };
   
   return (
-    <div>
+    <div className="space-y-4">
       {/* 현재 아이콘 정보 */}
       <div className="bg-white rounded-lg border overflow-hidden">
         <div className="px-4 py-3 bg-gray-50 border-b">
           <h3 className="text-base font-medium text-gray-900">현재 사용 중인 아이콘</h3>
         </div>
-        
+
         <div className="p-4">
           <div className="flex items-center">
             {/* 현재 아이콘 표시 - 20px 통일 */}
             <div className="rounded-full overflow-hidden border-2 border-gray-200 bg-gray-50 w-5 h-5 flex items-center justify-center mr-3">
-              <UserIcon 
+              <UserIcon
                 iconUrl={displayIconUrl}
                 level={userLevel}
                 size={20}
@@ -118,17 +118,17 @@ export default function IconForm({
                 className="object-contain"
               />
             </div>
-            
+
             <div>
               <div className="font-medium text-gray-700">{displayIconName}</div>
             </div>
           </div>
         </div>
       </div>
-      
+
       {/* 레벨별 아이콘 가이드 */}
       <div className="bg-white rounded-lg border overflow-hidden">
-        <button 
+        <button
           onClick={() => setIsLevelGuideOpen(!isLevelGuideOpen)}
           className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 border-b focus:outline-none"
         >
@@ -139,13 +139,13 @@ export default function IconForm({
             <ChevronDown className="h-5 w-5 text-gray-500" />
           )}
         </button>
-        
+
         {isLevelGuideOpen && (
           <div className="p-4">
             <p className="text-sm text-gray-600 mb-4">
               레벨별 기본 아이콘을 확인하세요. 현재 레벨: <strong>Lv.{userLevel}</strong>
             </p>
-            
+
             {/* 모바일용 그리드 (20px) */}
             <div className="grid grid-cols-5 gap-2 md:hidden">
               {Array.from({ length: Math.min(50, LEVEL_EXP_REQUIREMENTS.length) }, (_, i) => {
@@ -153,9 +153,9 @@ export default function IconForm({
                 const expRequired = LEVEL_EXP_REQUIREMENTS[level - 1];
                 const iconUrl = getLevelIconUrl(level);
                 const isCurrentLevel = level === userLevel;
-                
+
                 return (
-                  <div 
+                  <div
                     key={level}
                     className={`
                       flex flex-col items-center p-2 rounded-lg border text-center
@@ -179,7 +179,7 @@ export default function IconForm({
                 );
               })}
             </div>
-            
+
             {/* 데스크탑용 그리드 (20px) */}
             <div className="hidden md:grid grid-cols-10 gap-2">
               {Array.from({ length: Math.min(50, LEVEL_EXP_REQUIREMENTS.length) }, (_, i) => {
@@ -187,9 +187,9 @@ export default function IconForm({
                 const expRequired = LEVEL_EXP_REQUIREMENTS[level - 1];
                 const iconUrl = getLevelIconUrl(level);
                 const isCurrentLevel = level === userLevel;
-                
+
                 return (
-                  <div 
+                  <div
                     key={level}
                     className={`
                       flex flex-col items-center p-2 rounded-lg border text-center
@@ -216,12 +216,12 @@ export default function IconForm({
           </div>
         )}
       </div>
-      
+
       {/* 아이콘 선택 영역 */}
       <div className="bg-white rounded-lg border overflow-hidden">
         <div className="px-4 py-3 bg-gray-50 border-b flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <h3 className="text-base font-medium text-gray-900">아이콘 선택</h3>
-          
+
           {/* 저장 버튼 */}
           <button
             onClick={handleSaveIcon}
@@ -232,7 +232,7 @@ export default function IconForm({
             아이콘 저장
           </button>
         </div>
-        
+
         <div className="p-4">
           <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-4">
             {/* 기본 레벨 아이콘 */}
@@ -240,8 +240,8 @@ export default function IconForm({
               onClick={() => handleIconSelect(null)}
               disabled={isLoading}
               className={`relative p-2 rounded-lg border-2 transition-all aspect-square flex items-center justify-center ${
-                selectedIconId === null 
-                  ? 'border-blue-500 bg-blue-50' 
+                selectedIconId === null
+                  ? 'border-blue-500 bg-blue-50'
                   : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
               }`}
               title={`레벨 ${userLevel} 기본 아이콘`}
@@ -255,7 +255,7 @@ export default function IconForm({
                   className="object-contain"
                 />
               </div>
-              
+
               {selectedIconId === null && (
                 <div className="absolute top-1 right-1 bg-blue-500 rounded-full p-1">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
@@ -264,7 +264,7 @@ export default function IconForm({
                 </div>
               )}
             </button>
-            
+
             {/* 구매한 아이콘 목록 */}
             {userIcons.length === 0 ? (
               <div className="col-span-full p-4 text-center text-gray-500">
@@ -277,8 +277,8 @@ export default function IconForm({
                   onClick={() => handleIconSelect(icon.id)}
                   disabled={isLoading}
                   className={`relative p-2 rounded-lg border-2 transition-all aspect-square flex items-center justify-center ${
-                    selectedIconId === icon.id 
-                      ? 'border-blue-500 bg-blue-50' 
+                    selectedIconId === icon.id
+                      ? 'border-blue-500 bg-blue-50'
                       : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                   }`}
                   title={icon.name}
@@ -292,7 +292,7 @@ export default function IconForm({
                       className="object-contain"
                     />
                   </div>
-                  
+
                   {selectedIconId === icon.id && (
                     <div className="absolute top-1 right-1 bg-blue-500 rounded-full p-1">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
@@ -306,19 +306,19 @@ export default function IconForm({
           </div>
         </div>
       </div>
-      
+
       {/* 상점 안내 */}
       <div className="bg-white rounded-lg border overflow-hidden">
         <div className="px-4 py-3 bg-gray-50 border-b">
           <h3 className="text-base font-medium text-gray-900">새로운 아이콘</h3>
         </div>
-        
+
         <div className="p-4">
           <p className="text-gray-600 text-sm mb-4">
             다양한 프로필 아이콘을 포인트 상점에서 구매할 수 있습니다.
           </p>
-          <Link 
-            href="/shop" 
+          <Link
+            href="/shop"
             className="inline-block px-4 py-2 bg-slate-800 text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 rounded-md"
           >
             포인트 상점 방문하기

@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/shared/api/supabaseServer';
 import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
 
 /**
  * 사용자 인증을 확인하고, 인증되지 않은 경우 지정된 경로로 리다이렉트하는 함수
@@ -31,7 +32,8 @@ export async function checkUserAuth(redirectTo = '/auth/signin') {
  */
 export async function changePassword(
   currentPassword: string,
-  newPassword: string
+  newPassword: string,
+  turnstileToken: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // 필드 검증
@@ -47,6 +49,29 @@ export async function changePassword(
     // 현재 비밀번호와 새 비밀번호가 같은지 검증
     if (currentPassword === newPassword) {
       return { success: false, error: '새 비밀번호는 현재 비밀번호와 달라야 합니다.' };
+    }
+
+    // Turnstile 토큰 검증
+    if (!turnstileToken) {
+      return { success: false, error: '봇 검증을 완료해주세요.' };
+    }
+    const secret = process.env.TURNSTILE_SECRET_KEY || process.env.TURNSTILE_SECRET;
+    if (!secret) {
+      return { success: false, error: '서버 설정 오류: 캡차 비밀키가 없습니다.' };
+    }
+    const ip = headers().get('x-forwarded-for')?.split(',')[0]?.trim();
+    const body = new URLSearchParams({
+      secret,
+      response: turnstileToken,
+    });
+    if (ip) body.set('remoteip', ip);
+    const resp = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      body,
+    });
+    const verify = await resp.json();
+    if (!verify?.success) {
+      return { success: false, error: '봇 검증에 실패했습니다. 새로고침 후 다시 시도해주세요.' };
     }
 
     // Supabase 클라이언트 생성

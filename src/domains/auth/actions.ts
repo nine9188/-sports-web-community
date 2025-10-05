@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient, createServerActionClient } from '@/shared/api/supabaseServer'
+import { headers } from 'next/headers'
 import { logAuthEvent, logSecurityEvent, logError } from '@/shared/actions/log-actions'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
@@ -192,8 +193,25 @@ async function clearLoginAttempts(username: string): Promise<void> {
 /**
  * 사용자 회원가입 처리 서버 액션
  */
-export async function signUp(email: string, password: string, metadata?: Record<string, unknown>) {
+export async function signUp(email: string, password: string, metadata?: Record<string, unknown>, turnstileToken?: string) {
   try {
+    // Turnstile 검증 (필요 시 강제)
+    const secret = process.env.TURNSTILE_SECRET_KEY || process.env.TURNSTILE_SECRET
+    if (!secret) {
+      return { error: '서버 설정 오류: 캡차 비밀키가 없습니다.' }
+    }
+    if (!turnstileToken) {
+      return { error: '보안 확인이 필요합니다.' }
+    }
+    const ip = headers().get('x-forwarded-for')?.split(',')[0]?.trim()
+    const body = new URLSearchParams({ secret, response: turnstileToken })
+    if (ip) body.set('remoteip', ip)
+    const resp = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', { method: 'POST', body })
+    const verify = await resp.json()
+    if (!verify?.success) {
+      return { error: '보안 확인에 실패했습니다. 새로고침 후 다시 시도해주세요.' }
+    }
+
     const supabase = await createServerActionClient()
     
     const { data, error } = await supabase.auth.signUp({

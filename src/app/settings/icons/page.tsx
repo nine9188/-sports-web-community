@@ -53,14 +53,14 @@ export default async function IconSettingsPage() {
     <div className="space-y-4">
       <div className="bg-white rounded-lg border overflow-hidden p-4">
         <h2 className="text-xl font-semibold mb-1">아이콘 설정</h2>
-        <p className="text-gray-500 text-sm mb-4">
+        <p className="text-gray-500 text-sm">
           프로필에 표시될 아이콘을 선택하고 관리합니다.
         </p>
-        
-        <Suspense fallback={<IconSettingsLoading />}>
-          <IconSettingsContent userId={user.id} userLevel={userLevel} />
-        </Suspense>
       </div>
+
+      <Suspense fallback={<IconSettingsLoading />}>
+        <IconSettingsContent userId={user.id} userLevel={userLevel} />
+      </Suspense>
     </div>
   );
 }

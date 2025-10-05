@@ -16,7 +16,7 @@ function RightSidebarSkeleton() {
   return (
     <aside className="hidden xl:block w-[300px] shrink-0">
       <div className="h-full pt-4">
-        <div className="mb-4 bg-white rounded-lg border animate-pulse">
+        <div className="bg-white rounded-lg border animate-pulse">
           <div className="px-3 py-2 border-b">
             <div className="h-5 bg-gray-200 rounded w-24"></div>
           </div>
@@ -94,7 +94,10 @@ export default async function RootLayout({
 
   return (
     <html lang="ko" className={`w-full h-full ${inter.className}`} suppressHydrationWarning>
-      <head />
+      <head>
+        <link rel="preconnect" href="https://challenges.cloudflare.com" crossOrigin="" />
+        <link rel="dns-prefetch" href="https://challenges.cloudflare.com" />
+      </head>
       <body className="w-full h-full overflow-x-hidden">
         <RootLayoutClient 
           boardNavigation={boardNav}

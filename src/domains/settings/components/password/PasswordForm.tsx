@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { changePassword } from '@/domains/settings';
+import TurnstileWidget from '@/shared/components/TurnstileWidget';
 
 interface PasswordFormProps {
   isOAuthAccount?: boolean;
@@ -26,6 +27,7 @@ export default function PasswordForm({ isOAuthAccount = false }: PasswordFormPro
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -77,12 +79,18 @@ export default function PasswordForm({ isOAuthAccount = false }: PasswordFormPro
       return;
     }
 
+    if (!captchaToken) {
+      toast.error('봇 검증을 완료해주세요.');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const result = await changePassword(
         formData.currentPassword,
-        formData.newPassword
+        formData.newPassword,
+        captchaToken
       );
 
       if (!result.success) {
@@ -98,6 +106,7 @@ export default function PasswordForm({ isOAuthAccount = false }: PasswordFormPro
         newPassword: '',
         confirmPassword: '',
       });
+      setCaptchaToken(null);
     } catch (error) {
       console.error('비밀번호 변경 오류:', error);
       toast.error(error instanceof Error ? error.message : '비밀번호 변경에 실패했습니다. 다시 시도해주세요.');
@@ -109,6 +118,16 @@ export default function PasswordForm({ isOAuthAccount = false }: PasswordFormPro
   return (
     <div>
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* 봇 검증 */}
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-gray-700">봇 검증</label>
+          <TurnstileWidget
+            siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY as string}
+            onToken={setCaptchaToken}
+            className="w-full"
+          />
+          <p className="text-xs text-gray-500">보안을 위해 자동 입력 방지를 확인합니다.</p>
+        </div>
         {/* 현재 비밀번호 필드 */}
         <div className="space-y-1">
           <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">

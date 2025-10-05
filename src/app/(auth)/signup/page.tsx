@@ -9,11 +9,13 @@ import { createClient } from '@/shared/api/supabase';
 import { signUp } from '@/domains/auth/actions';
 import { AlertCircle, Check, Eye, EyeOff } from 'lucide-react';
 import KakaoLoginButton from '@/domains/auth/components/KakaoLoginButton';
+import TurnstileWidget from '@/shared/components/TurnstileWidget';
 
 export default function SignupPage() {
   const router = useRouter();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   
   // 단계 표시 상태
   const [showNameStep, setShowNameStep] = useState(false);
@@ -371,6 +373,10 @@ export default function SignupPage() {
       toast.error('닉네임 중복 확인을 해주세요.');
       return;
     }
+    if (!captchaToken) {
+      toast.error('봇 검증을 완료해주세요.');
+      return;
+    }
     
     try {
       setIsLoading(true);
@@ -379,7 +385,7 @@ export default function SignupPage() {
         username,
         full_name: fullName,
         nickname
-      });
+      }, captchaToken);
       
       if (result.success) {
         toast.success('회원가입이 완료되었습니다! 이메일을 확인해주세요.');
@@ -423,6 +429,16 @@ export default function SignupPage() {
         <div className="min-h-[400px]">
         
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* 봇 검증 - 이메일 위 */}
+          <div className="space-y-2">
+            <label className="block text-gray-700 mb-1 text-sm font-medium">봇 검증</label>
+            <TurnstileWidget
+              siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY as string}
+              onToken={setCaptchaToken}
+              className="w-full"
+            />
+          </div>
+
           {/* 이메일 입력 단계 */}
           <div className="space-y-4">
             <div>
@@ -462,7 +478,7 @@ export default function SignupPage() {
                   <button
                     type="button"
                     onClick={handleEmailSubmit}
-                    disabled={!emailValid || isLoading}
+                    disabled={!emailValid || isLoading || !captchaToken}
                     className="w-full py-3 px-4 bg-slate-700 hover:bg-slate-800 text-white rounded-md transition-colors disabled:opacity-50"
                   >
                     {isLoading ? '처리 중...' : '계속하기'}
