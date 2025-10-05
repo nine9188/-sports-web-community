@@ -118,16 +118,18 @@ export default function PasswordForm({ isOAuthAccount = false }: PasswordFormPro
   return (
     <div>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* 봇 검증 */}
-        <div className="space-y-1">
-          <label className="block text-sm font-medium text-gray-700">봇 검증</label>
-          <TurnstileWidget
-            siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY as string}
-            onToken={setCaptchaToken}
-            className="w-full"
-          />
-          <p className="text-xs text-gray-500">보안을 위해 자동 입력 방지를 확인합니다.</p>
-        </div>
+        {/* 봇 검증 (소셜 로그인 계정은 표시하지 않음) */}
+        {!isOAuthAccount && (
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">봇 검증</label>
+            <TurnstileWidget
+              siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY as string}
+              onToken={setCaptchaToken}
+              className="w-full"
+            />
+            <p className="text-xs text-gray-500">보안을 위해 자동 입력 방지를 확인합니다.</p>
+          </div>
+        )}
         {/* 현재 비밀번호 필드 */}
         <div className="space-y-1">
           <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">
