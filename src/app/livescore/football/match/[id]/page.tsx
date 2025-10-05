@@ -44,7 +44,7 @@ export default async function MatchPage({
     const { id: matchId } = await params;
     const { tab } = await searchParams;
     
-    const initialTab = tab || null;
+    const initialTab: string | undefined = tab ?? undefined;
     
     // 캐시 키 생성
     const cacheKey = `match-${matchId}-${initialTab}`;
@@ -93,7 +93,7 @@ export default async function MatchPage({
       <div className="container">
         <MatchDataProvider
           initialMatchId={matchId}
-          initialTab={initialTab}
+          initialTab={initialTab ?? undefined}
           initialData={matchData}
         >
           <div className="flex gap-4">

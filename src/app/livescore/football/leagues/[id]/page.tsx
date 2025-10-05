@@ -38,8 +38,8 @@ export default async function LeaguePage({ params }: LeaguePageProps) {
 
 
   return (
-    <div className="mt-4 lg:mt-0">
-      <div className="space-y-4">
+    <div>
+      <div className="space-y-0">
         <LeagueHeader league={league} />
         <LeagueTeamsList teams={teams} leagueId={league.id} />
       </div>

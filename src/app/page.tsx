@@ -22,11 +22,6 @@ export default function HomePage() {
 
       {/* 뉴스 위젯 - 즉시 렌더링 */}
       <NewsWidget />
-
-      {/* 배너 위젯 - 메인 하단 (상단 여백 없음, 하단 간격 최소화) */}
-      <div className="mb-2" style={{ overflow: 'visible' }}>
-        <BannerWidget position="main_bottom" />
-      </div>
     </main>
   );
 }

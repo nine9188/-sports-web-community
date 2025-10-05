@@ -55,7 +55,6 @@ const formatTransferTypeMobile = (type: string): string => {
 import { TransferFilters } from '@/domains/livescore/components/football/transfers';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
-import { Button } from '@/shared/ui';
 import ShopPagination from '@/domains/shop/components/ShopPagination';
 import { memo } from 'react';
 
@@ -288,7 +287,7 @@ export default async function TransfersPageContent({
   }
 
   return (
-    <div className="space-y-4 pb-4 md:pb-0">
+    <div className="space-y-4 pb-0">
       {/* 필터 섹션 */}
       <TransferFilters 
         currentFilters={filters}
@@ -579,7 +578,7 @@ export default async function TransfersPageContent({
 
       {/* 페이지네이션 */}
       {totalPages > 1 && (
-        <div className="px-4 sm:px-6">
+        <div className="-mt-4 md:mt-0">
           <ShopPagination
             page={currentPage}
             pageSize={itemsPerPage}

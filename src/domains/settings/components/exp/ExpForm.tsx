@@ -43,7 +43,7 @@ export default function ExpForm({
   const currentLevelExp = userExp - (userLevel > 1 ? getExpForNextLevel(userLevel - 1) : 0);
   
   return (
-    <div className="space-y-6">
+    <div>
       {/* 현재 레벨 및 경험치 정보 */}
       <div className="bg-white">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
@@ -91,7 +91,7 @@ export default function ExpForm({
  */
 function ExpRewardsGuide() {
   return (
-    <div className="p-0 mt-6">
+    <div className="p-0 mt-4">
       <h3 className="font-medium text-gray-900 mb-2">경험치 획득 방법</h3>
       <p className="text-gray-600 text-sm mb-4">
         다양한 활동을 통해 경험치를 획득하고 레벨을 올릴 수 있습니다.

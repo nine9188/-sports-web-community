@@ -63,7 +63,7 @@ export default function AccountDeleteForm({ email, nickname }: AccountDeleteForm
   };
 
   return (
-    <div className="space-y-6">
+    <div>
       {/* 계정 정보 확인 */}
       <div className="space-y-1">
         <div className="flex items-center text-sm">

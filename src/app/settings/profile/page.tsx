@@ -32,14 +32,14 @@ export default async function ProfileSettingsPage() {
   };
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* 계정 정지 상태 표시 */}
       {isSuspended && suspensionInfo && (
         <SuspensionNotice suspensionInfo={suspensionInfo} />
       )}
       
       <div className="bg-white rounded-lg border overflow-hidden p-4">
-        <h2 className="text-xl font-semibold mb-6">기본 정보</h2>
+        <h2 className="text-xl font-semibold mb-4">기본 정보</h2>
         
         <ProfileForm 
           initialData={{

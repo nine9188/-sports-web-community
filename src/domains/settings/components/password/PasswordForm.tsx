@@ -5,7 +5,11 @@ import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { changePassword } from '@/domains/settings';
 
-export default function PasswordForm() {
+interface PasswordFormProps {
+  isOAuthAccount?: boolean;
+}
+
+export default function PasswordForm({ isOAuthAccount = false }: PasswordFormProps) {
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -62,26 +66,32 @@ export default function PasswordForm() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
+    // OAuth 계정은 비밀번호 변경 불가
+    if (isOAuthAccount) {
+      toast.error('소셜 로그인 계정은 비밀번호를 변경할 수 없습니다.');
+      return;
+    }
+
     if (!validateForm()) {
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
       const result = await changePassword(
         formData.currentPassword,
         formData.newPassword
       );
-      
+
       if (!result.success) {
         throw new Error(result.error);
       }
-      
+
       // 성공 메시지 표시
       toast.success('비밀번호가 성공적으로 변경되었습니다.');
-      
+
       // 폼 초기화
       setFormData({
         currentPassword: '',
@@ -97,7 +107,7 @@ export default function PasswordForm() {
   };
 
   return (
-    <div className="space-y-6">
+    <div>
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* 현재 비밀번호 필드 */}
         <div className="space-y-1">
@@ -111,8 +121,8 @@ export default function PasswordForm() {
               name="currentPassword"
               value={formData.currentPassword}
               onChange={handleChange}
-              disabled={isLoading}
-              className={`w-full px-3 py-2 border ${errors.currentPassword ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+              disabled={isLoading || isOAuthAccount}
+              className={`w-full px-3 py-2 border ${errors.currentPassword ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed`}
             />
             <button 
               type="button" 
@@ -139,8 +149,8 @@ export default function PasswordForm() {
               name="newPassword"
               value={formData.newPassword}
               onChange={handleChange}
-              disabled={isLoading}
-              className={`w-full px-3 py-2 border ${errors.newPassword ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+              disabled={isLoading || isOAuthAccount}
+              className={`w-full px-3 py-2 border ${errors.newPassword ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed`}
             />
             <button 
               type="button" 
@@ -169,8 +179,8 @@ export default function PasswordForm() {
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleChange}
-              disabled={isLoading}
-              className={`w-full px-3 py-2 border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+              disabled={isLoading || isOAuthAccount}
+              className={`w-full px-3 py-2 border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed`}
             />
             <button 
               type="button" 
@@ -189,8 +199,8 @@ export default function PasswordForm() {
         <div className="pt-4">
           <button
             type="submit"
-            disabled={isLoading}
-            className="px-4 py-2 bg-slate-800 text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:opacity-50 flex items-center rounded-md"
+            disabled={isLoading || isOAuthAccount}
+            className="px-4 py-2 bg-slate-800 text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center rounded-md"
             >
             {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             비밀번호 변경

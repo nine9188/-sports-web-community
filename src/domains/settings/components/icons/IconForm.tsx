@@ -99,7 +99,7 @@ export default function IconForm({
   };
   
   return (
-    <div className="space-y-6">
+    <div>
       {/* 현재 아이콘 정보 */}
       <div className="bg-white rounded-lg border overflow-hidden">
         <div className="px-4 py-3 bg-gray-50 border-b">

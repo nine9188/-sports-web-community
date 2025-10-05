@@ -237,7 +237,7 @@ const MatchHeader = memo(() => {
   return (
     <div className="w-full md:max-w-screen-xl md:mx-auto">
       {/* 통합된 매치 헤더 카드 */}
-      <div className="mt-4 md:mt-0 mb-4 bg-white rounded-lg border overflow-hidden">
+      <div className="mb-4 bg-white rounded-lg border overflow-hidden">
         {/* 리그 정보 및 경기 상태 */}
         <div className="flex flex-col md:flex-row md:items-center border-b">
           {/* 리그 정보 - 왼쪽 1/3 차지 */}

@@ -41,12 +41,12 @@ export default async function AccountDeletePage() {
     <div className="space-y-4">
       <div className="mb-4 bg-white rounded-lg border overflow-hidden p-4">
         <h2 className="text-xl font-semibold mb-1">회원 탈퇴</h2>
-        <p className="text-gray-500 text-sm mb-6">
+        <p className="text-gray-500 text-sm mb-4">
           계정을 삭제하고 모든 데이터를 영구적으로 제거합니다.
         </p>
         
         {/* 회원 탈퇴 주의사항 */}
-        <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+        <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">

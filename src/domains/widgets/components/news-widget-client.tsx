@@ -83,7 +83,7 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
   }
 
   return (
-    <div className="mb-4">
+    <div className="">
       {/* 뉴스 레이아웃 - 메인 뉴스 왼쪽, 작은 뉴스 오른쪽 2x2 그리드 */}
       <div className="flex flex-col md:flex-row gap-3 md:gap-4 min-h-[300px] md:min-h-[420px]">
         {/* 메인 뉴스 (첫 번째 뉴스) - 왼쪽 배치 */}

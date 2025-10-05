@@ -93,7 +93,7 @@ export default async function ShopPage({ searchParams }: Props) {
 
   return (
     <div className="container mx-auto">
-      <div className="mt-4 md:mt-0 mb-4 rounded-md border border-gray-200 p-4 flex items-center justify-between">
+      <div className="mb-4 rounded-md border border-gray-200 p-4 flex items-center justify-between">
         <h1 className="text-xl font-bold">포인트 상점</h1>
         {user && !error && (
           <div className="flex items-center gap-2 text-sm">

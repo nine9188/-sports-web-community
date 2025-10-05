@@ -132,7 +132,7 @@ export default function TeamHeader({ team, teamId, isLoading: externalLoading, e
 
 
   return (
-    <div className="mb-4 bg-white rounded-lg border overflow-hidden  mt-4 md:mt-0">
+    <div className="mb-4 bg-white rounded-lg border overflow-hidden">
       <div className="flex flex-col md:flex-row items-start">
         {/* 팀 로고 및 기본 정보 */}
         <div className="flex items-center p-2 md:p-4 md:w-96 flex-shrink-0">

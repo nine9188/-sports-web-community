@@ -13,11 +13,7 @@ interface LeagueTeamsListProps {
 export default function LeagueTeamsList({ teams, isLoading = false, leagueId }: LeagueTeamsListProps) {
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg border p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">소속 팀</h2>
-          <div className="h-6 w-16 bg-gray-200 rounded animate-pulse"></div>
-        </div>
+      <div className="bg-white rounded-lg pt-4">
         <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-3 gap-2 lg:gap-4">
           {Array.from({ length: 8 }).map((_, index) => (
             <div
@@ -41,13 +37,7 @@ export default function LeagueTeamsList({ teams, isLoading = false, leagueId }: 
 
   if (teams.length === 0) {
     return (
-      <div className="bg-white rounded-lg border p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">소속 팀</h2>
-          <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-            0개 팀
-          </span>
-        </div>
+      <div className="bg-white rounded-lg pt-4">
         <div className="text-center py-12">
           <div className="text-gray-500 text-lg mb-2">
             소속 팀 정보를 찾을 수 없습니다
@@ -85,21 +75,14 @@ export default function LeagueTeamsList({ teams, isLoading = false, leagueId }: 
   }
 
   return (
-    <div className="bg-white rounded-lg border p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-gray-900">소속 팀</h2>
-        <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-          총 {teams.length}개 팀
-        </span>
-      </div>
+    <div className="bg-white rounded-lg pt-4">
 
       {isMLS ? (
         <div className="space-y-6">
           {/* WEST */}
           <div>
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center mb-2">
               <h3 className="text-base font-semibold text-purple-700">서부 컨퍼런스 (WEST)</h3>
-              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{westTeams.length}팀</span>
             </div>
             <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-3 gap-2 lg:gap-4">
               {westTeams.map((team) => (
@@ -110,9 +93,8 @@ export default function LeagueTeamsList({ teams, isLoading = false, leagueId }: 
 
           {/* EAST */}
           <div>
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center mb-2">
               <h3 className="text-base font-semibold text-indigo-700">동부 컨퍼런스 (EAST)</h3>
-              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{eastTeams.length}팀</span>
             </div>
             <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-3 gap-2 lg:gap-4">
               {eastTeams.map((team) => (

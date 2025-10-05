@@ -62,14 +62,7 @@ export default function TabNavigation({ activeTab }: TabNavigationProps) {
     setIsChangingTab(false);
   }, [activeTab, setCurrentTab, isMobile]);
   
-  // 탭 새로고침 처리
-  const handleTabRefresh = useCallback(() => {
-    // 현재 탭의 캐시를 강제로 초기화하고 다시 로드
-    if (typeof window !== 'undefined') {
-      // 페이지 새로고침으로 모든 캐시 초기화
-      window.location.reload();
-    }
-  }, []);
+  // (removed) handleTabRefresh – 미사용
 
   // 탭 변경 처리 - useCallback으로 최적화
   const handleTabChange = useCallback((tabId: string) => {

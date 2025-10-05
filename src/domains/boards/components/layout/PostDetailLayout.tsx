@@ -242,7 +242,7 @@ export default function PostDetailLayout({
   return (
     <div className="container mx-auto">
       {/* 1. 게시판 경로 - BoardBreadcrumbs 컴포넌트 사용 */}
-      <div className="overflow-x-auto sm:mt-0 mt-4">
+      <div className="overflow-x-auto">
         <MemoizedBoardBreadcrumbs breadcrumbs={breadcrumbs} />
       </div>
       
@@ -368,7 +368,7 @@ export default function PostDetailLayout({
       </div>
       
       {/* 10. 페이지네이션 */}
-      <div className="mb-4">
+      <div>
         {totalPages > 1 && (
           <div className="px-4 sm:px-6">
             <MemoizedShopPagination

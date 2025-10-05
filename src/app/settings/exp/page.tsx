@@ -36,7 +36,7 @@ export default async function ExpPage() {
     <div className="space-y-4">
       <div className="mb-4 bg-white rounded-lg border overflow-hidden p-4">
         <h2 className="text-xl font-semibold mb-1">경험치 및 레벨</h2>
-        <p className="text-gray-500 text-sm mb-6">
+        <p className="text-gray-500 text-sm mb-4">
           현재 레벨과 경험치 획득 내역을 확인합니다.
         </p>
         {/* 경험치 정보 컴포넌트 */}

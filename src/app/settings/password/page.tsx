@@ -15,27 +15,34 @@ export default async function PasswordSettingsPage() {
   const user = await checkUserAuth('/auth/signin');
   
   // OAuth 계정인 경우 비밀번호 변경 불가
-  const isOAuthAccount = user.app_metadata?.provider && 
-    user.app_metadata.provider !== 'email';
+  const provider = user.app_metadata?.provider;
+  const isOAuthAccount: boolean = !!provider && provider !== 'email';
   
   return (
-    <div className="mb-4 bg-white rounded-lg border overflow-hidden p-4">
+    <div className="bg-white rounded-lg border overflow-hidden p-4">
       <h2 className="text-xl font-semibold mb-1">비밀번호 변경</h2>
-      <p className="text-gray-500 text-sm mb-6">
+      <p className="text-gray-500 text-sm mb-4">
         계정 보안을 위해 주기적으로 비밀번호를 변경하는 것이 좋습니다.
       </p>
-      
-      {isOAuthAccount ? (
-        <div className="bg-yellow-50 border border-yellow-200 rounded p-4 text-yellow-800">
+      <div className="bg-blue-50 border border-blue-200 rounded p-3 text-blue-700 text-sm mb-3">
+        <p className="font-medium">안전한 비밀번호로 내정보를 보호하세요</p>
+        <ul className="list-disc pl-5 mt-2 space-y-1">
+          <li>다른 아이디/사이트에서 사용한 적 없는 비밀번호</li>
+          <li>이전에 사용한 적 없는 비밀번호가 안전합니다.</li>
+        </ul>
+      </div>
+
+      {isOAuthAccount && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded p-4 text-yellow-800 mb-4">
           <p className="text-sm font-medium">소셜 로그인(OAuth) 계정입니다.</p>
           <p className="text-sm mt-1">
-            소셜 로그인으로 가입한 계정은 이 페이지에서 비밀번호를 변경할 수 없습니다.
+            소셜 로그인으로 가입한 계정은 비밀번호를 변경할 수 없습니다.
             해당 소셜 계정의 비밀번호를 변경하려면 해당 서비스에서 변경해주세요.
           </p>
         </div>
-      ) : (
-        <PasswordForm />
       )}
+
+      <PasswordForm isOAuthAccount={isOAuthAccount} />
     </div>
   );
 } 

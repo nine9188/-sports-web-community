@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
-import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 
 interface LeagueCardProps {
   leagueId: number;
@@ -34,57 +33,57 @@ export default function LeagueCard({ leagueId, name }: LeagueCardProps) {
   };
 
   const leagueInfo = getLeagueInfo(leagueId);
+  const hasInfo = Boolean(leagueInfo.country || leagueInfo.type || leagueInfo.teams);
 
-  // 스토리지에서 바로 이미지 URL 생성 (API 호출 없음)
-  const leagueLogoUrl = getSupabaseStorageUrl(ImageType.Leagues, leagueId);
+  // 이미지 URL은 ApiSportsImage 내부에서 해석
 
   return (
     <Link
       href={`/livescore/football/leagues/${leagueId}`}
-      className="group block bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200 p-2 lg:p-4"
+      className="group block bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200 p-2 lg:p-4 h-full min-h-[140px] lg:min-h-[180px]"
     >
-      <div className="flex flex-col items-center text-center space-y-1 lg:space-y-3">
+      <div className={`flex flex-col items-center text-center space-y-1 lg:space-y-3 h-full ${hasInfo ? 'justify-between' : 'justify-center'}`}>
         {/* 리그 로고 */}
         <div className="relative w-8 h-8 lg:w-12 lg:h-12 flex-shrink-0">
           <ApiSportsImage
-            src={leagueLogoUrl}
             imageId={leagueId}
             imageType={ImageType.Leagues}
             alt={`${name} 로고`}
             width={48}
             height={48}
             className="object-contain group-hover:scale-105 transition-transform duration-200 w-8 h-8 lg:w-12 lg:h-12"
-            
           />
         </div>
 
         {/* 리그 정보 */}
-        <div className="w-full">
+        <div className="w-full flex flex-col">
           {/* 리그 이름 */}
-          <h3 className={`${name.length >= 8 ? 'text-[10px] lg:text-xs' : 'text-xs lg:text-sm'} font-medium lg:font-semibold text-gray-900 group-hover:text-blue-600 transition-colors leading-tight truncate mb-1 lg:mb-2`}>
+          <h3 className={`${name.length >= 8 ? 'text-[9px] lg:text-[11px]' : 'text-[11px] lg:text-sm'} font-medium lg:font-semibold text-gray-900 group-hover:text-blue-600 transition-colors leading-tight line-clamp-2 mb-1 lg:mb-2`}>
             {name}
           </h3>
           
           {/* PC에서만 표시되는 추가 정보 */}
-          <div className="hidden lg:block space-y-1">
-            {leagueInfo.country && (
-              <p className="text-xs text-gray-500">
-                {leagueInfo.country}
-              </p>
-            )}
-            
-            {leagueInfo.type && (
-              <p className="text-xs text-gray-400">
-                {leagueInfo.type}
-              </p>
-            )}
-            
-            {leagueInfo.teams && (
-              <p className="text-xs text-blue-600 font-medium">
-                {leagueInfo.teams}개 팀
-              </p>
-            )}
-          </div>
+          {hasInfo && (
+            <div className="block space-y-1 text-[10px] lg:text-xs mt-1 lg:mt-0">
+              {leagueInfo.country && (
+                <p className="text-xs text-gray-500">
+                  {leagueInfo.country}
+                </p>
+              )}
+              
+              {leagueInfo.type && (
+                <p className="text-xs text-gray-400">
+                  {leagueInfo.type}
+                </p>
+              )}
+              
+              {leagueInfo.teams && (
+                <p className="text-xs text-blue-600 font-medium">
+                  {leagueInfo.teams}개 팀
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </Link>

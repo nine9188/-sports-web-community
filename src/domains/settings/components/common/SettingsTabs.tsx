@@ -45,7 +45,6 @@ export default function SettingsTabs() {
       activeTab={pathname}
       onTabChange={handleTabChange}
       isChangingTab={isChangingTab}
-      className="mt-4 md:mt-0"
     />
   );
 } 

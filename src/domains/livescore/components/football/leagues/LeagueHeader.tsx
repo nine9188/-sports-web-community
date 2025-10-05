@@ -17,7 +17,7 @@ export default function LeagueHeader({ league }: LeagueHeaderProps) {
   const displayName = leagueInfo?.nameKo || league.name;
 
   return (
-    <div className="mt-4 lg:mt-0 mb-4 bg-white rounded-lg border p-3">
+    <div className="bg-white rounded-lg border p-3">
       {/* 상단 네비게이션 */}
       <div className="flex items-center justify-between mb-3">
         <Link 
@@ -48,35 +48,36 @@ export default function LeagueHeader({ league }: LeagueHeaderProps) {
 
         {/* 리그 정보 */}
         <div className="flex-1">
-          <div className="flex items-center space-x-2 mb-1">
-            <h1 className="text-xl font-bold text-gray-900">
-              {displayName}
-            </h1>
-            
-            {/* 국가 플래그 */}
-            {league.flag && (
-              <div className="relative w-6 h-4 flex-shrink-0">
-                <Image
-                  src={league.flag}
-                  alt={`${league.country} 국기`}
-                  fill
-                  className="object-cover rounded-sm"
-                  sizes="24px"
-                />
-              </div>
-            )}
-          </div>
+          <div className="flex items-center flex-wrap gap-x-3 gap-y-1">
+            <div className="flex items-center space-x-2">
+              <h1 className="text-xl font-bold text-gray-900">
+                {displayName}
+              </h1>
+              {/* 국가 플래그 */}
+              {league.flag && (
+                <div className="relative w-6 h-4 flex-shrink-0">
+                  <Image
+                    src={league.flag}
+                    alt={`${league.country} 국기`}
+                    fill
+                    className="object-cover rounded-sm"
+                    sizes="24px"
+                  />
+                </div>
+              )}
+            </div>
 
-          <div className="flex items-center space-x-3 text-sm text-gray-600">
-            <span className="font-medium">{league.country}</span>
-            <span>•</span>
-            <span className="font-medium">{league.season} 시즌</span>
-            {league.type && (
-              <>
-                <span>•</span>
-                <span className="capitalize font-medium">{league.type}</span>
-              </>
-            )}
+            <div className="flex items-center text-sm text-gray-600">
+              <span className="font-medium">{league.country}</span>
+              <span className="mx-1">•</span>
+              <span className="font-medium">{league.season} 시즌</span>
+              {league.type && (
+                <>
+                  <span className="mx-1">•</span>
+                  <span className="capitalize font-medium">{league.type}</span>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>

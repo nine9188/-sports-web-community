@@ -73,7 +73,7 @@ const PlayerHeader = memo(function PlayerHeader() {
   const mainTeamStats = playerStats?.team ? { team: playerStats.team } : null;
 
   return (
-    <div className="mb-4 bg-white rounded-lg border overflow-hidden mt-4 md:mt-0">
+    <div className="mb-4 bg-white rounded-lg border overflow-hidden">
       <div className="flex flex-col md:flex-row items-stretch p-4 md:p-6">
         {/* 선수 사진 및 기본 정보 */}
         <div className="flex flex-row items-center gap-4 md:gap-6 md:w-1/3">

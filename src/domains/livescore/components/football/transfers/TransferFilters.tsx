@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { fetchLeagueTeams, LeagueTeam } from '@/domains/livescore/actions/footballApi';
@@ -47,10 +48,19 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
   const searchParams = useSearchParams();
   const [availableTeams, setAvailableTeams] = useState<LeagueTeam[]>([]);
   const [loadingTeams, setLoadingTeams] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
 
   // 컴포넌트 마운트 시 주요 리그들의 팀 데이터 미리 로딩
   useEffect(() => {
     preloadTeamsData();
+  }, []);
+
+  // 모바일에서는 접힌 상태로 시작, 데스크탑에서는 펼친 상태로 시작
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const isMobile = window.innerWidth < 768;
+      setIsOpen(!isMobile);
+    }
   }, []);
 
   // 선택된 리그에 따라 팀 목록 로드 (미리 로딩된 캐시 사용)
@@ -119,16 +129,36 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-4 overflow-hidden">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-semibold text-gray-900">필터</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-gray-900">필터</h3>
           <button
-            onClick={clearAllFilters}
-            className="text-sm text-gray-500 hover:text-gray-700"
+            type="button"
+            onClick={() => setIsOpen(prev => !prev)}
+            className="md:hidden inline-flex items-center text-sm text-gray-600 hover:text-gray-800"
+            aria-expanded={isOpen}
+            aria-controls="transfer-filters-body"
           >
-            전체 초기화
+            <svg
+              className={`w-4 h-4 mr-1 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.108l3.71-3.878a.75.75 0 111.08 1.04l-4.25 4.44a.75.75 0 01-1.08 0l-4.25-4.44a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+            </svg>
+            {isOpen ? '접기' : '펼치기'}
           </button>
+        </div>
+        <button
+          onClick={clearAllFilters}
+          className="text-sm text-gray-500 hover:text-gray-700"
+        >
+          전체 초기화
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div id="transfer-filters-body" className={`${isOpen ? 'block' : 'hidden'} md:block`}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {/* 리그 선택 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -207,64 +237,65 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
             )}
           </select>
         </div>
-      </div>
 
-      {/* 활성 필터 표시 */}
-      {(currentFilters.league || currentFilters.team || currentFilters.type || currentFilters.season !== 2025) && (
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          <div className="flex items-center flex-wrap gap-2">
-            <span className="text-sm text-gray-500">활성 필터:</span>
-            {currentFilters.league && (
-              <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
-                {currentFilters.league?.toString() === '39' ? '프리미어리그' :
-                 currentFilters.league?.toString() === '140' ? '라리가' :
-                 currentFilters.league?.toString() === '135' ? '세리에A' :
-                 currentFilters.league?.toString() === '78' ? '분데스리가' :
-                 currentFilters.league?.toString() === '61' ? '리그1' : '선택된 리그'}
-                <button
-                  onClick={() => updateFilter('league', 'all')}
-                  className="ml-2 text-gray-500 hover:text-gray-700"
-                >
-                  ×
-                </button>
-              </span>
-            )}
-            {currentFilters.team && (
-              <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
-                {availableTeams.find(t => t.id === parseInt(currentFilters.team?.toString() || '0'))?.name || '선택된 팀'}
-                <button
-                  onClick={() => updateFilter('team', 'all')}
-                  className="ml-2 text-gray-500 hover:text-gray-700"
-                >
-                  ×
-                </button>
-              </span>
-            )}
-            {currentFilters.type && currentFilters.league && currentFilters.league !== 'all' && (
-              <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
-                {currentFilters.type === 'in' ? '영입' : '방출'}
-                <button
-                  onClick={() => updateFilter('type', 'all')}
-                  className="ml-2 text-gray-500 hover:text-gray-700"
-                >
-                  ×
-                </button>
-              </span>
-            )}
-            {currentFilters.season && currentFilters.season !== 2025 && (
-              <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
-                {currentFilters.season}
-                <button
-                  onClick={() => updateFilter('season', '2025')}
-                  className="ml-2 text-gray-500 hover:text-gray-700"
-                >
-                  ×
-                </button>
-              </span>
-            )}
+        {/* 활성 필터 표시 */}
+        {(currentFilters.league || currentFilters.team || currentFilters.type || currentFilters.season !== 2025) && (
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="flex items-center flex-wrap gap-2">
+              <span className="text-sm text-gray-500">활성 필터:</span>
+              {currentFilters.league && (
+                <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
+                  {currentFilters.league?.toString() === '39' ? '프리미어리그' :
+                   currentFilters.league?.toString() === '140' ? '라리가' :
+                   currentFilters.league?.toString() === '135' ? '세리에A' :
+                   currentFilters.league?.toString() === '78' ? '분데스리가' :
+                   currentFilters.league?.toString() === '61' ? '리그1' : '선택된 리그'}
+                  <button
+                    onClick={() => updateFilter('league', 'all')}
+                    className="ml-2 text-gray-500 hover:text-gray-700"
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
+              {currentFilters.team && (
+                <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
+                  {availableTeams.find(t => t.id === parseInt(currentFilters.team?.toString() || '0'))?.name || '선택된 팀'}
+                  <button
+                    onClick={() => updateFilter('team', 'all')}
+                    className="ml-2 text-gray-500 hover:text-gray-700"
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
+              {currentFilters.type && currentFilters.league && currentFilters.league !== 'all' && (
+                <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
+                  {currentFilters.type === 'in' ? '영입' : '방출'}
+                  <button
+                    onClick={() => updateFilter('type', 'all')}
+                    className="ml-2 text-gray-500 hover:text-gray-700"
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
+              {currentFilters.season && currentFilters.season !== 2025 && (
+                <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
+                  {currentFilters.season}
+                  <button
+                    onClick={() => updateFilter('season', '2025')}
+                    className="ml-2 text-gray-500 hover:text-gray-700"
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+      </div>
     </div>
   );
 }

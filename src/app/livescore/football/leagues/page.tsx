@@ -70,7 +70,7 @@ export default async function LeaguesPage() {
     <div className="bg-white min-h-screen w-full">
       <div className="container mx-auto w-full">
         {/* 페이지 헤더 */}
-        <div className="mt-4 lg:mt-0 mb-4 bg-white rounded-lg border p-4">
+        <div className="mb-4 bg-white rounded-lg border p-4">
           <h1 className="text-xl font-bold text-gray-900 mb-2">축구 리그</h1>
           <p className="text-gray-600">원하는 리그를 선택하여 소속 팀과 경기 정보를 확인하세요</p>
         </div>
@@ -97,14 +97,12 @@ export default async function LeaguesPage() {
 
         <div className="space-y-4">
           {Object.entries(LEAGUE_CATEGORIES).map(([category, leagueIds]) => (
-            <div key={category} className="bg-white rounded-lg border p-4">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                {category}
-                <span className="ml-2 text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                  {leagueIds.length}개
-                </span>
-              </h2>
-              
+            <div key={category} className="space-y-2">
+              <div className="bg-white rounded-md border p-3">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  {category}
+                </h2>
+              </div>
               <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 lg:gap-4">
                 {leagueIds.map((leagueId) => (
                   <LeagueCard

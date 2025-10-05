@@ -125,7 +125,7 @@ export default function BoardDetailLayout({
 
   return (
     <div className="container mx-auto" data-current-page={currentPage}>
-      <div className="sm:mt-0 mt-4">
+      <div>
         <MemoizedBoardBreadcrumbs breadcrumbs={breadcrumbs} />
       </div>
 
@@ -175,7 +175,7 @@ export default function BoardDetailLayout({
           variant={viewType === 'image-table' ? 'image-table' : 'text'}
         />
         {pagination && (
-          <div className="flex justify-center mb-4">
+          <div className="flex justify-center">
             <MemoizedShopPagination 
               page={pagination.currentPage}
               pageSize={pagination.itemsPerPage}

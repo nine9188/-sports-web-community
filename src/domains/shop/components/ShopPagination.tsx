@@ -44,7 +44,7 @@ export default function ShopPagination({ page, pageSize, total, withMargin = tru
   for (let i = start; i <= end; i++) pages.push(i)
 
   return (
-    <nav className={`flex items-center justify-center gap-1 ${withMargin ? 'mt-4 mb-4' : ''}`} aria-label="페이지네이션">
+    <nav className={`flex items-center justify-center gap-1 ${withMargin ? 'mt-4' : ''}`} aria-label="페이지네이션">
       <Link
         href={buildHref(1)}
         aria-label="첫 페이지"

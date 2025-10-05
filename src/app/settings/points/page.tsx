@@ -24,7 +24,7 @@ export default async function PointsPage() {
       <div className="space-y-4">
         <div className="mb-4 bg-white rounded-lg border overflow-hidden p-4">
           <h2 className="text-xl font-semibold mb-1">포인트 관리</h2>
-          <p className="text-gray-500 text-sm mb-6">
+          <p className="text-gray-500 text-sm mb-4">
             보유한 포인트와 사용 내역을 확인합니다.
           </p>
           {/* 포인트 정보 컴포넌트 */}

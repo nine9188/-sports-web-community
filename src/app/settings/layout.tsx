@@ -25,7 +25,7 @@ export default async function SettingsLayout({
   }
 
   return (
-    <div className="min-h-screen">
+    <div>
       <div className="max-w-4xl mx-auto">
         <div>
           {/* 탭 네비게이션 */}
