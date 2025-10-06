@@ -1,7 +1,8 @@
 'use server'
 
-import { createClient } from '@/shared/api/supabaseServer'
-import { getMajorLeagueIds, getLeagueName } from '@/domains/livescore/constants/league-mappings'
+import { createAdminClient } from '@/shared/api/supabaseServer'
+import { getLeagueName } from '@/domains/livescore/constants/league-mappings'
+import { CUP_LEAGUE_IDS, LEAGUE_IDS } from '@/domains/search/constants/leagues'
 
 const API_BASE_URL = 'https://v3.football.api-sports.io'
 const API_KEY = process.env.FOOTBALL_API_KEY!
@@ -189,14 +190,19 @@ export async function syncAllFootballTeamsFromApi(): Promise<{
   errors: string[]
   summary: string
 }> {
-  const supabase = await createClient()
-  const allLeagueIds = getMajorLeagueIds() // 테스트 페이지와 동일
+  const supabase = createAdminClient() // 관리자 클라이언트 사용 (RLS 우회)
+
+  // 컵 대회를 먼저, 리그를 나중에 동기화 (리그 데이터가 우선)
+  const allLeagueIds = [...CUP_LEAGUE_IDS, ...LEAGUE_IDS]
+
   const errors: string[] = []
   let totalTeams = 0
   let successfulLeagues = 0
 
   try {
     console.log(`🚀 ${allLeagueIds.length}개 리그의 팀 데이터 동기화 시작...`)
+    console.log(`   📌 컵 대회 ${CUP_LEAGUE_IDS.length}개 먼저 동기화`)
+    console.log(`   📌 리그 ${LEAGUE_IDS.length}개 나중에 동기화 (우선순위)`)
 
     // 기존 데이터 삭제
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -302,7 +308,7 @@ export async function getFootballTeams(options?: {
   limit?: number
   offset?: number
 }) {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase as any)

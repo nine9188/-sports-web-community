@@ -4,24 +4,7 @@ import { createClient } from '@/shared/api/supabaseServer'
 import { getLeagueName } from '@/domains/livescore/constants/league-mappings'
 import { getTeamById, searchTeamsByName } from '@/domains/livescore/constants/teams'
 import type { TeamSearchResult } from '../types'
-
-// 허용 리그 ID: 주요 유럽 리그, 유럽 2군 리그, 유럽컵 대회, FA/EFL컵, 아시아, 아메리카, 기타
-const ALLOWED_LEAGUE_IDS = [
-  // 주요 유럽 리그 (Top 5)
-  39, 140, 78, 61, 135,
-  // 유럽 2군 리그
-  40, 179, 88, 94,
-  // 유럽 컵 대회
-  2, 3, 848, 531,
-  // FA, EFL 컵
-  45, 48,
-  // 아시아
-  292, 98, 169, 17, 307,
-  // 아메리카
-  253, 71, 262,
-  // 기타
-  119,
-]
+import { ALLOWED_LEAGUE_IDS } from '../constants/leagues'
 
 export interface TeamSearchOptions {
   query: string
@@ -76,13 +59,13 @@ export async function searchTeams(options: TeamSearchOptions): Promise<{
       .eq('is_active', true)
       .in('league_id', ALLOWED_LEAGUE_IDS)
 
-    // 검색 조건: 기존 텍스트 검색 + 한국어 매핑 팀 ID 검색
+    // 검색 조건: 기존 텍스트 검색 + 한국어 매핑 팀 ID 검색 + 리그명 검색
     if (mappedTeamIds.length > 0) {
       // 한국어 매핑에서 찾은 팀들과 기존 텍스트 검색 결합
-      searchQuery = searchQuery.or(`team_id.in.(${mappedTeamIds.join(',')}),name.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%,short_name.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%,venue_city.ilike.%${searchTerm}%`)
+      searchQuery = searchQuery.or(`team_id.in.(${mappedTeamIds.join(',')}),name.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%,short_name.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%,venue_city.ilike.%${searchTerm}%,league_name.ilike.%${searchTerm}%`)
     } else {
       // 한국어 매핑에서 찾지 못한 경우 기존 텍스트 검색만
-      searchQuery = searchQuery.or(`name.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%,short_name.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%,venue_city.ilike.%${searchTerm}%`)
+      searchQuery = searchQuery.or(`name.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%,short_name.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%,venue_city.ilike.%${searchTerm}%,league_name.ilike.%${searchTerm}%`)
     }
 
     // 필터 조건 추가
@@ -111,9 +94,9 @@ export async function searchTeams(options: TeamSearchOptions): Promise<{
     // 검색 조건 동일하게 적용
     let finalCountQuery
     if (mappedTeamIds.length > 0) {
-      finalCountQuery = countQuery.or(`team_id.in.(${mappedTeamIds.join(',')}),name.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%,short_name.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%,venue_city.ilike.%${searchTerm}%`)
+      finalCountQuery = countQuery.or(`team_id.in.(${mappedTeamIds.join(',')}),name.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%,short_name.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%,venue_city.ilike.%${searchTerm}%,league_name.ilike.%${searchTerm}%`)
     } else {
-      finalCountQuery = countQuery.or(`name.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%,short_name.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%,venue_city.ilike.%${searchTerm}%`)
+      finalCountQuery = countQuery.or(`name.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%,short_name.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%,venue_city.ilike.%${searchTerm}%,league_name.ilike.%${searchTerm}%`)
     }
     
     if (leagueId) {

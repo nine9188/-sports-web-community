@@ -58,7 +58,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   }
 
   return (
-    <div className="container mx-auto mt-4 md:mt-0">
+    <div className="container mx-auto">
       {/* 검색 헤더 섹션 */}
       <SearchHeader 
         initialQuery={query}

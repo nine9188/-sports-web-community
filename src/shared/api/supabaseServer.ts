@@ -118,17 +118,33 @@ export const getInitialSession = async () => {
 export const getServerUser = async () => {
   try {
     const supabase = await createClient()
-    
+
     const { data: { user }, error } = await supabase.auth.getUser()
-    
+
     if (error) {
       console.error('서버에서 사용자 정보 가져오기 실패:', error)
       return null
     }
-    
+
     return user
   } catch (error) {
     console.error('서버 사용자 정보 로드 오류:', error)
     return null
   }
+}
+
+// 관리자용 Supabase 클라이언트 (서비스 역할 키 사용, RLS 우회)
+export const createAdminClient = () => {
+  const { createClient: createSupabaseClient } = require('@supabase/supabase-js')
+
+  return createSupabaseClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    }
+  )
 }

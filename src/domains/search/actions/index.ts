@@ -7,6 +7,7 @@ import { searchTeams, getPopularTeams, getTeamCountByLeague } from './searchTeam
 import { createSearchLog } from './searchLogs'
 import { createClient } from '@/shared/api/supabaseServer'
 import { searchTeamsByName } from '@/domains/livescore/constants/teams'
+import { ALLOWED_LEAGUE_IDS } from '../constants/leagues'
 
 /**
  * 통합 검색 서버 액션 (성능 최적화)
@@ -248,28 +249,29 @@ async function getTeamsCount(query: string): Promise<number> {
   try {
     const supabase = await createClient()
     if (!supabase) return 0
-    
+
     const searchTerm = query.trim().toLowerCase()
-    
+
     // 한국어 매핑에서 검색하여 해당하는 팀 ID들 찾기 (searchTeams와 동일한 로직)
     const mappedTeams = searchTeamsByName(query)
     const mappedTeamIds = mappedTeams.map(team => team.id)
-    
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let countQuery = (supabase as any)
       .from('football_teams')
       .select('*', { count: 'exact', head: true })
       .eq('is_active', true)
-      
-    // 검색 조건: searchTeams와 동일한 로직
+      .in('league_id', ALLOWED_LEAGUE_IDS) // 리그 필터 추가
+
+    // 검색 조건: searchTeams와 동일한 로직 (리그명 검색 포함)
     if (mappedTeamIds.length > 0) {
-      countQuery = countQuery.or(`team_id.in.(${mappedTeamIds.join(',')}),name.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%,short_name.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%,venue_city.ilike.%${searchTerm}%`)
+      countQuery = countQuery.or(`team_id.in.(${mappedTeamIds.join(',')}),name.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%,short_name.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%,venue_city.ilike.%${searchTerm}%,league_name.ilike.%${searchTerm}%`)
     } else {
-      countQuery = countQuery.or(`name.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%,short_name.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%,venue_city.ilike.%${searchTerm}%`)
+      countQuery = countQuery.or(`name.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%,short_name.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%,venue_city.ilike.%${searchTerm}%,league_name.ilike.%${searchTerm}%`)
     }
-    
+
     const { count } = await countQuery
-    
+
     return count || 0
   } catch {
     return 0
