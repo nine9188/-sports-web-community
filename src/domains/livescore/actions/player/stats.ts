@@ -125,6 +125,30 @@ export async function fetchPlayerSeasons(playerId: number): Promise<number[]> {
 }
 
 /**
+ * 리그 우선순위 정의 (숫자가 작을수록 우선순위가 높음)
+ */
+function getLeaguePriority(leagueId: number): number {
+  // 메이저 리그 (Top 5)
+  const majorLeagues = [39, 140, 78, 135, 61]; // 프리미어, 라리가, 분데스, 세리에A, 리그1
+  if (majorLeagues.includes(leagueId)) return 1;
+
+  // 2군 유럽 리그
+  const secondTierLeagues = [40, 179, 88, 94, 119]; // 챔피언십, 스코틀랜드, 에레디비지에, 프리메이라, 슈퍼리가
+  if (secondTierLeagues.includes(leagueId)) return 2;
+
+  // 주요 아시아/아메리카 리그
+  const otherMajorLeagues = [292, 98, 253, 307, 71, 262, 169]; // K리그, J리그, MLS, 사우디, 브라질, 리가MX, 중국
+  if (otherMajorLeagues.includes(leagueId)) return 3;
+
+  // 유럽 컵 대회
+  const europeanCups = [2, 3, 848]; // 챔스, 유로파, 컨퍼런스
+  if (europeanCups.includes(leagueId)) return 4;
+
+  // 기타 컵 대회 (최하위 우선순위)
+  return 5;
+}
+
+/**
  * 선수 통계 데이터 가져오기
  * @param playerId 선수 ID
  * @param season 시즌
@@ -238,7 +262,19 @@ export async function fetchPlayerStats(playerId: number, season: number): Promis
       },
     }));
 
-    return stats;
+    // 리그 우선순위로 정렬
+    return stats.sort((a, b) => {
+      const priorityA = getLeaguePriority(a.league.id);
+      const priorityB = getLeaguePriority(b.league.id);
+
+      // 우선순위가 다르면 우선순위로 정렬
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB;
+      }
+
+      // 같은 우선순위면 출전 경기 수로 정렬 (많은 것이 우선)
+      return (b.games.appearences || 0) - (a.games.appearences || 0);
+    });
   } catch {
     return [];
   }

@@ -10,56 +10,13 @@ import { MatchEvent } from '@/domains/livescore/types/match';
 import { getTeamById, TeamMapping } from '@/domains/livescore/constants/teams';
 import { mapEventToKoreanText } from '@/domains/livescore/constants/event-mappings';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
-// 프리미어리그 팀 선수 데이터 불러오기
-import { liverpoolPlayers, NottinghamForestPlayers, Arsenalplayers, NewcastleUnitedplayers, Chelseaplayers, ManchesterCityplayers, AstonVillaplayers, Bournemouthplayers, Fulhamplayers, Brightonplayers } from '@/domains/livescore/constants/teams/premier-league/premier-teams';
+import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 
 
 interface EventsProps {
   matchId?: string;
   events?: MatchEvent[];
 }
-
-// 선수 데이터 타입 정의
-type PremierLeaguePlayer = 
-  | { id: number; name: string; koreanName: string; } 
-  | { id?: number; name: string; role?: string; korean_name: string; } 
-  | { id: number; english_name: string; korean_name: string; }
-  | { id: number; englishName: string; koreanName: string; };
-
-// 선수 이름 매핑 함수
-const getPlayerKoreanName = (playerId: number): string | null => {
-  if (!playerId) return null;
-
-  // ID 기반으로 선수 찾기 및 한국어 이름 반환 로직
-  const findPlayerById = (players: PremierLeaguePlayer[]) => {
-    return players.find(player => 'id' in player && player.id === playerId);
-  };
-
-  // 각 팀별로 찾기 (ID가 확실한 선수들만)
-  const player = 
-    findPlayerById(liverpoolPlayers as PremierLeaguePlayer[]) || 
-    findPlayerById(Arsenalplayers as PremierLeaguePlayer[]) || 
-    findPlayerById(NewcastleUnitedplayers as PremierLeaguePlayer[]) || 
-    findPlayerById(Chelseaplayers as PremierLeaguePlayer[]) || 
-    findPlayerById(ManchesterCityplayers as PremierLeaguePlayer[]) || 
-    findPlayerById(AstonVillaplayers as PremierLeaguePlayer[]) || 
-    findPlayerById(Bournemouthplayers as PremierLeaguePlayer[]) || 
-    findPlayerById(Fulhamplayers as PremierLeaguePlayer[]) || 
-    findPlayerById(Brightonplayers as PremierLeaguePlayer[]) ||
-    findPlayerById(NottinghamForestPlayers as PremierLeaguePlayer[]);
-
-  if (!player) return null;
-
-  // 다양한 형태의 한국어 이름 속성 반환
-  if ('koreanName' in player && player.koreanName) return player.koreanName;
-  if ('korean_name' in player && player.korean_name) return player.korean_name;
-  
-  // 추가 속성 체크 (영어 이름과 함께 있는 경우)
-  if ('english_name' in player && 'korean_name' in player) return player.korean_name;
-  if ('englishName' in player && 'koreanName' in player) return player.koreanName;
-  
-  return null;
-};
 
 // 메모이제이션을 적용하여 불필요한 리렌더링 방지
 function Events({ events: propsEvents }: EventsProps) {
@@ -173,7 +130,7 @@ function Events({ events: propsEvents }: EventsProps) {
   });
 
   return (
-    <div className="mb-4 bg-white rounded-lg border p-4">
+    <div className="bg-white rounded-lg border p-4">
       <div className="-ml-4 md:ml-0 space-y-1 md:space-y-2">
         {sortedEvents.map((event, index) => {
           // 이벤트를 한국어 문장으로 변환

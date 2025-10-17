@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
+import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
 
 // 매치 타입 정의
 export interface Match {
@@ -108,13 +109,19 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
         <div>
           <h4 className="text-sm font-medium p-2 border-b border-gray-200">최근 경기</h4>
           <div className="overflow-hidden">
-            <table className="w-full">
+            <table className="w-full table-fixed">
+              <colgroup>
+                <col className="w-14 md:w-20" />
+                <col className="w-8 md:w-32" />
+                <col />
+                <col className="w-12 md:w-20" />
+              </colgroup>
               <thead className="bg-gray-50">
                 <tr className="h-10">
-                  <th className="p-0 md:p-2 text-left text-xs font-medium text-gray-500 w-10 md:w-16">날짜</th>
-                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500 w-8 md:w-32">리그</th>
+                  <th className="p-0 md:p-2 text-left text-xs font-medium text-gray-500">날짜</th>
+                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500">리그</th>
                   <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500">경기</th>
-                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500 w-10 md:w-16">결과</th>
+                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500">결과</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -124,12 +131,12 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                     className="h-12 hover:bg-gray-50 cursor-pointer"
                     onClick={() => handleMatchClick(match.fixture.id)}
                   >
-                    <td className="p-0 md:px-2 text-xs whitespace-nowrap w-10 md:w-16">
+                    <td className="p-0 md:px-2 text-xs whitespace-nowrap">
                       {format(new Date(match.fixture.date), 'MM.dd', { locale: ko })}
                     </td>
-                    <td className="p-0 md:px-2 w-8 md:w-32">
-                      <div className="flex justify-center items-center md:gap-2">
-                        <div className="w-5 h-5 relative">
+                    <td className="p-0 md:px-2">
+                      <div className="flex justify-start items-center gap-1 md:gap-2">
+                        <div className="w-5 h-5 relative flex-shrink-0">
                           <ApiSportsImage
                             imageId={match.league.id}
                             imageType={ImageType.Leagues}
@@ -139,8 +146,8 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                             className="object-contain w-full h-full"
                           />
                         </div>
-                        <span className="hidden md:block text-xs whitespace-nowrap">
-                          {match.league.name}
+                        <span className="hidden md:block text-xs">
+                          {getLeagueKoreanName(match.league.name)}
                         </span>
                       </div>
                     </td>
@@ -213,11 +220,16 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
         <div>
           <h4 className="text-sm font-medium p-2 border-b border-gray-200">예정된 경기</h4>
           <div className="overflow-hidden">
-            <table className="w-full">
+            <table className="w-full table-fixed">
+              <colgroup>
+                <col className="w-20 md:w-28" />
+                <col className="w-8 md:w-32" />
+                <col />
+              </colgroup>
               <thead className="bg-gray-50">
                 <tr className="h-10">
-                  <th className="p-0 md:p-2 text-left text-xs font-medium text-gray-500 w-16 md:w-20">날짜</th>
-                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500 w-8 md:w-32">리그</th>
+                  <th className="p-0 md:p-2 text-left text-xs font-medium text-gray-500">날짜</th>
+                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500">리그</th>
                   <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500">경기</th>
                 </tr>
               </thead>
@@ -228,12 +240,12 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                     className="h-12 hover:bg-gray-50 cursor-pointer"
                     onClick={() => handleMatchClick(match.fixture.id)}
                   >
-                    <td className="p-0 md:px-2 text-xs whitespace-nowrap w-16 md:w-20">
+                    <td className="p-0 md:px-2 text-xs whitespace-nowrap">
                       {format(new Date(match.fixture.date), 'MM.dd HH:mm', { locale: ko })}
                     </td>
-                    <td className="p-0 md:px-2 w-8 md:w-32">
-                      <div className="flex justify-center items-center md:gap-2">
-                        <div className="w-5 h-5 relative">
+                    <td className="p-0 md:px-2">
+                      <div className="flex justify-start items-center gap-1 md:gap-2">
+                        <div className="w-5 h-5 relative flex-shrink-0">
                           <ApiSportsImage
                             imageId={match.league.id}
                             imageType={ImageType.Leagues}
@@ -243,8 +255,8 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                             className="object-contain w-full h-full"
                           />
                         </div>
-                        <span className="hidden md:block text-xs whitespace-nowrap">
-                          {match.league.name}
+                        <span className="hidden md:block text-xs">
+                          {getLeagueKoreanName(match.league.name)}
                         </span>
                       </div>
                     </td>

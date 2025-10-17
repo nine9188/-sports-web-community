@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, memo, useEffect, useMemo, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { useState, memo, useEffect, useMemo, useRef, useCallback } from 'react';
+import { motion, useInView } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
 import { useMatchData, isStatsTabData } from '@/domains/livescore/components/football/match/context/MatchDataContext';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { fetchCachedMatchLineups } from '@/domains/livescore/actions/match/lineupData';
-import { fetchCachedMultiplePlayerStats, type MultiplePlayerStatsResponse } from '@/domains/livescore/actions/match/playerStats';
+import { fetchCachedMultiplePlayerStats } from '@/domains/livescore/actions/match/playerStats';
+import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 
 import { TeamStats, Team } from '@/domains/livescore/types/match';
 
@@ -199,13 +201,57 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
   const [error, setError] = useState<string | null>(tabLoadError || null);
 
   // 선수 종합 테이블 상태
-  // 플레이어 통계 로딩 상태 제거 (테이블 선렌더링)
   const [homeTeamId, setHomeTeamId] = useState<number | null>(null);
   const [awayTeamId, setAwayTeamId] = useState<number | null>(null);
   const [homeTeamName, setHomeTeamName] = useState<string>('');
   const [awayTeamName, setAwayTeamName] = useState<string>('');
-  const [playerIds, setPlayerIds] = useState<number[]>([]);
-  const [playersStats, setPlayersStats] = useState<MultiplePlayerStatsResponse>({});
+
+  // 스크롤 힌트 표시 여부 추적
+  const [hasScrolled, setHasScrolled] = useState(false);
+
+  // matchId 추출
+  const fixtureId = useMemo(() => {
+    if (!matchData || !('fixture' in (matchData as Record<string, unknown>))) return null;
+    return String((matchData as { fixture: { id: number } }).fixture?.id);
+  }, [matchData]);
+
+  // React Query로 라인업 데이터 가져오기
+  const { data: lineupsData } = useQuery({
+    queryKey: ['lineups', fixtureId],
+    queryFn: () => fixtureId ? fetchCachedMatchLineups(fixtureId) : null,
+    enabled: !!fixtureId,
+    staleTime: 2 * 60 * 1000, // 2분
+    gcTime: 10 * 60 * 1000, // 10분
+  });
+
+  // 라인업에서 선수 ID 추출
+  const playerIds = useMemo(() => {
+    if (!lineupsData?.success || !lineupsData.response) return [];
+    const { home, away } = lineupsData.response;
+
+    setHomeTeamId(home?.team?.id ?? null);
+    setAwayTeamId(away?.team?.id ?? null);
+    setHomeTeamName(home?.team?.name ?? '홈팀');
+    setAwayTeamName(away?.team?.name ?? '원정팀');
+
+    const ids = [
+      ...(home.startXI || []).map((i: { player: { id: number } }) => i.player.id),
+      ...(home.substitutes || []).map((i: { player: { id: number } }) => i.player.id),
+      ...(away.startXI || []).map((i: { player: { id: number } }) => i.player.id),
+      ...(away.substitutes || []).map((i: { player: { id: number } }) => i.player.id),
+    ].filter((id: number) => Number.isFinite(id) && id > 0) as number[];
+
+    return Array.from(new Set(ids));
+  }, [lineupsData]);
+
+  // React Query로 선수 통계 가져오기
+  const { data: playersStats = {} } = useQuery({
+    queryKey: ['playerStats', fixtureId, playerIds],
+    queryFn: () => fixtureId && playerIds.length > 0 ? fetchCachedMultiplePlayerStats(fixtureId, playerIds) : {},
+    enabled: !!fixtureId && playerIds.length > 0,
+    staleTime: 2 * 60 * 1000, // 2분
+    gcTime: 10 * 60 * 1000, // 10분
+  });
 
   // props로 받은 데이터 업데이트
   useEffect(() => {
@@ -214,67 +260,45 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
         setStats(propsMatchData.stats);
         setLoading(false);
       }
-      
+
       if (propsMatchData.homeTeam) {
         setHomeTeam(propsMatchData.homeTeam);
       }
-      
+
       if (propsMatchData.awayTeam) {
         setAwayTeam(propsMatchData.awayTeam);
       }
     } else if (tabData && isStatsTabData(tabData) && tabData.stats && tabData.stats.length > 0) {
       setStats(tabData.stats);
       setLoading(false);
-      
+
       if (matchData) {
         const homeTeamData = (matchData as { teams?: { home?: Team } })?.teams?.home;
         const awayTeamData = (matchData as { teams?: { away?: Team } })?.teams?.away;
-        
+
         if (homeTeamData) setHomeTeam(homeTeamData);
         if (awayTeamData) setAwayTeam(awayTeamData);
       }
     }
   }, [propsMatchData, tabData, matchData, isTabLoading]);
-  
+
   // 로딩, 에러 상태 업데이트
   useEffect(() => {
     setLoading(isTabLoading);
     if (tabLoadError) setError(tabLoadError);
   }, [isTabLoading, tabLoadError]);
 
-  // 라인업 기반 선수 ID 수집 및 다중 통계 로드
+  // 스크롤 이벤트 감지 - 한 번이라도 스크롤하면 힌트 숨김
   useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      try {
-        if (!matchData || !('fixture' in (matchData as Record<string, unknown>)) || !(matchData as { fixture?: { id?: number } }).fixture?.id) return;
-        const fixtureId = String((matchData as { fixture: { id: number } }).fixture.id);
-        const lineups = await fetchCachedMatchLineups(fixtureId);
-        if (!mounted || !lineups?.success || !lineups.response) return;
-        const { home, away } = lineups.response;
-        setHomeTeamId(home?.team?.id ?? null);
-        setAwayTeamId(away?.team?.id ?? null);
-        setHomeTeamName(home?.team?.name ?? '홈팀');
-        setAwayTeamName(away?.team?.name ?? '원정팀');
-        const ids = [
-          ...(home.startXI || []).map((i: { player: { id: number } }) => i.player.id),
-          ...(home.substitutes || []).map((i: { player: { id: number } }) => i.player.id),
-          ...(away.startXI || []).map((i: { player: { id: number } }) => i.player.id),
-          ...(away.substitutes || []).map((i: { player: { id: number } }) => i.player.id),
-        ].filter((id: number) => Number.isFinite(id) && id > 0) as number[];
-        const uniqueIds = Array.from(new Set(ids));
-        setPlayerIds(uniqueIds);
-        if (uniqueIds.length === 0) { setPlayersStats({}); return; }
-        const agg = await fetchCachedMultiplePlayerStats(fixtureId, uniqueIds);
-        if (!mounted) return;
-        setPlayersStats(agg || {});
-      } catch {
-        if (mounted) setPlayersStats({});
-      } finally {}
+    const handleScroll = () => {
+      if (!hasScrolled && window.scrollY > 10) {
+        setHasScrolled(true);
+      }
     };
-    load();
-    return () => { mounted = false; };
-  }, [matchData]);
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [hasScrolled]);
 
   // 통계 항목 매핑 (API에서 사용하는 키값 -> 표시 레이블)
   const statMappings = useMemo(() => [
@@ -416,9 +440,22 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
     );
   };
 
+  // 각 섹션의 ref와 inView 상태 관리
+  const basicRef = useRef(null);
+  const shootingRef = useRef(null);
+  const passingRef = useRef(null);
+  const homePlayersRef = useRef(null);
+  const awayPlayersRef = useRef(null);
+
+  const basicInView = useInView(basicRef, { amount: 0.5 });
+  const shootingInView = useInView(shootingRef, { amount: 0.5 });
+  const passingInView = useInView(passingRef, { amount: 0.5 });
+  const homePlayersInView = useInView(homePlayersRef, { amount: 0.5 });
+  const awayPlayersInView = useInView(awayPlayersRef, { amount: 0.5 });
+
   return (
-    <div className="p-0" style={{ overflow: 'visible' }}>
-      <motion.div 
+    <div className="p-0 relative" style={{ overflow: 'visible' }}>
+      <motion.div
         className="space-y-2"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -426,13 +463,14 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
         style={{ overflow: 'visible' }}
       >
         {/* 기본 통계 */}
-        <motion.div 
+        <motion.div
+          ref={basicRef}
           className="bg-white rounded-lg border"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
-          transition={{ 
-            duration: 0.6, 
+          transition={{
+            duration: 0.6,
             delay: 0.1,
             ease: "easeOut"
           }}
@@ -443,15 +481,34 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
             {categoryGroups.basic.map(({ key, label }, index) => renderStat(key, label, index))}
           </div>
         </motion.div>
+
+        {/* 기본 통계 하단 힌트 */}
+        {basicInView && !shootingInView && !hasScrolled && (
+          <motion.div
+            className="flex justify-center items-center py-3 text-gray-400"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-xs">아래로 스크롤하세요</span>
+              <svg className="w-4 h-4 animate-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+          </motion.div>
+        )}
         
         {/* 슈팅 통계 */}
-        <motion.div 
+        <motion.div
+          ref={shootingRef}
           className="bg-white rounded-lg border"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
-          transition={{ 
-            duration: 0.6, 
+          transition={{
+            duration: 0.6,
             delay: 0.2,
             ease: "easeOut"
           }}
@@ -462,15 +519,34 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
             {categoryGroups.shooting.map(({ key, label }, index) => renderStat(key, label, index))}
           </div>
         </motion.div>
+
+        {/* 슈팅 통계 하단 힌트 */}
+        {shootingInView && !passingInView && !hasScrolled && (
+          <motion.div
+            className="flex justify-center items-center py-3 text-gray-400"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-xs">아래로 스크롤하세요</span>
+              <svg className="w-4 h-4 animate-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+          </motion.div>
+        )}
         
         {/* 패스 통계 */}
-        <motion.div 
+        <motion.div
+          ref={passingRef}
           className="bg-white rounded-lg border"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
-          transition={{ 
-            duration: 0.6, 
+          transition={{
+            duration: 0.6,
             delay: 0.3,
             ease: "easeOut"
           }}
@@ -481,11 +557,28 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
             {categoryGroups.passing.map(({ key, label }, index) => renderStat(key, label, index))}
           </div>
         </motion.div>
-      </motion.div>
 
-      {/* 선수 종합 통계 (라인업 기반) - 홈/원정 분리 카드 */}
-      <div className="space-y-2 mt-2">
-        <motion.div 
+        {/* 패스 통계 하단 힌트 */}
+        {passingInView && !homePlayersInView && !hasScrolled && (
+          <motion.div
+            className="flex justify-center items-center py-3 text-gray-400"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-xs">아래로 스크롤하세요</span>
+              <svg className="w-4 h-4 animate-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+          </motion.div>
+        )}
+
+        {/* 선수 종합 통계 (라인업 기반) - 홈/원정 분리 카드 */}
+        <motion.div
+          ref={homePlayersRef}
           className="bg-white rounded-lg border"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -503,7 +596,7 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
           </div>
           <div className="p-3">
             <HorizontalScrollContainer>
-              <table className="min-w-max divide-y divide-gray-200 text-sm">
+              <table className="w-full min-w-max divide-y divide-gray-200 text-sm">
                 <thead className="bg-gray-50 whitespace-nowrap">
                     <tr>
                     <th className="px-3 py-2 text-left font-medium text-gray-700">선수</th>
@@ -524,14 +617,20 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
                       const entry = playersStats?.[pid]?.response?.[0];
                       const teamId = entry?.statistics?.[0]?.team?.id ?? null;
                       return teamId && homeTeamId && teamId === homeTeamId;
+                    }).sort((a, b) => {
+                      const aMinutes = playersStats?.[a]?.response?.[0]?.statistics?.[0]?.games?.minutes ?? 0;
+                      const bMinutes = playersStats?.[b]?.response?.[0]?.statistics?.[0]?.games?.minutes ?? 0;
+                      return bMinutes - aMinutes; // 출전 시간 내림차순 정렬
                     }).map((pid) => {
                       const entry = playersStats?.[pid]?.response?.[0];
                       const p = entry?.player;
                       const s = entry?.statistics?.[0];
+                      const koreanName = getPlayerKoreanName(pid);
+                      const displayName = koreanName || p?.name || String(pid);
                       return (
                         <tr key={`home-${pid}`} className="hover:bg-gray-50">
                         <td className="px-3 py-2 whitespace-nowrap">
-                            {p?.name || pid}
+                            {displayName}
                             <span className="ml-1 text-xs text-gray-500">{s?.games?.position || p?.pos || '-'}</span>
                           </td>
                         <td className="px-3 py-2 text-right whitespace-nowrap">{s?.games?.minutes ?? 0}</td>
@@ -553,8 +652,27 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
           </div>
         </motion.div>
 
-        <motion.div 
-          className="bg-white rounded-lg border mb-4 md:mb-0"
+        {/* 홈팀 선수 하단 힌트 */}
+        {homePlayersInView && !awayPlayersInView && !hasScrolled && (
+          <motion.div
+            className="flex justify-center items-center py-3 text-gray-400"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-xs">아래로 스크롤하세요</span>
+              <svg className="w-4 h-4 animate-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+          </motion.div>
+        )}
+
+        <motion.div
+          ref={awayPlayersRef}
+          className="bg-white rounded-lg border"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
@@ -571,7 +689,7 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
           </div>
           <div className="p-3">
             <HorizontalScrollContainer>
-              <table className="min-w-max divide-y divide-gray-200 text-sm">
+              <table className="w-full min-w-max divide-y divide-gray-200 text-sm">
                 <thead className="bg-gray-50 whitespace-nowrap">
                     <tr>
                     <th className="px-3 py-2 text-left font-medium text-gray-700">선수</th>
@@ -592,14 +710,20 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
                       const entry = playersStats?.[pid]?.response?.[0];
                       const teamId = entry?.statistics?.[0]?.team?.id ?? null;
                       return teamId && awayTeamId && teamId === awayTeamId;
+                    }).sort((a, b) => {
+                      const aMinutes = playersStats?.[a]?.response?.[0]?.statistics?.[0]?.games?.minutes ?? 0;
+                      const bMinutes = playersStats?.[b]?.response?.[0]?.statistics?.[0]?.games?.minutes ?? 0;
+                      return bMinutes - aMinutes; // 출전 시간 내림차순 정렬
                     }).map((pid) => {
                       const entry = playersStats?.[pid]?.response?.[0];
                       const p = entry?.player;
                       const s = entry?.statistics?.[0];
+                      const koreanName = getPlayerKoreanName(pid);
+                      const displayName = koreanName || p?.name || String(pid);
                       return (
                         <tr key={`away-${pid}`} className="hover:bg-gray-50">
                         <td className="px-3 py-2 whitespace-nowrap">
-                            {p?.name || pid}
+                            {displayName}
                             <span className="ml-1 text-xs text-gray-500">{s?.games?.position || p?.pos || '-'}</span>
                           </td>
                         <td className="px-3 py-2 text-right whitespace-nowrap">{s?.games?.minutes ?? 0}</td>
@@ -620,7 +744,7 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
             </HorizontalScrollContainer>
           </div>
         </motion.div>
-      </div>
+      </motion.div>
     </div>
   );
 });

@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import styles from '../styles/formation.module.css';
 import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 import { ImageType } from '@/shared/types/image';
-import { liverpoolPlayers, NottinghamForestPlayers, Arsenalplayers, NewcastleUnitedplayers, Chelseaplayers, ManchesterCityplayers, AstonVillaplayers, Bournemouthplayers, Fulhamplayers, Brightonplayers } from '@/domains/livescore/constants/teams/premier-league/premier-teams';
+import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 import { urlCache } from '@/shared/components/UnifiedSportsImage';
 
 
@@ -201,29 +201,6 @@ const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, away
   
   // viewBox는 상위 Field에서만 사용하므로 제거
   
-  // 한국어 이름 매핑 메모이제이션
-  const koreanNameMap = useMemo(() => {
-    const map = new Map<number, string>();
-    const allPlayers = [
-      ...liverpoolPlayers, ...NottinghamForestPlayers, ...Arsenalplayers,
-      ...NewcastleUnitedplayers, ...Chelseaplayers, ...ManchesterCityplayers,
-      ...AstonVillaplayers, ...Bournemouthplayers, ...Fulhamplayers, ...Brightonplayers
-    ];
-    
-    allPlayers.forEach(player => {
-      if ('id' in player && player.id) {
-        let koreanName = '';
-        if ('koreanName' in player && player.koreanName) koreanName = player.koreanName;
-        else if ('korean_name' in player && player.korean_name) koreanName = player.korean_name;
-        
-        if (koreanName) {
-          map.set(player.id, koreanName);
-        }
-      }
-    });
-    
-    return map;
-  }, []);
 
   // 라인 앵커(주축 좌표) 계산: GK 포함 totalLines만큼 균등 분할
   const computeLineAnchors = (
@@ -334,8 +311,8 @@ const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, away
       
       // 이미지 URL 처리 - 스토리지 URL 생성
       const photoUrl = player.photo || getSupabaseStorageUrl(ImageType.Players, player.id);
-      
-      const koreanName = koreanNameMap.get(player.id);
+
+      const koreanName = getPlayerKoreanName(player.id);
       const displayName = koreanName || player.name;
       
       // 애니메이션 지연 계산 (포지션별 순차 등장)

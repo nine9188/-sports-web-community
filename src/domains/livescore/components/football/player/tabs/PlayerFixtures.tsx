@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useMemo } from 'react';
 import { FixtureData } from '@/domains/livescore/types/player';
 import { EmptyState } from '@/domains/livescore/components/common/CommonComponents';
+import { getTeamById } from '@/domains/livescore/constants/teams';
 
 // 페이지네이션 버튼 컴포넌트
 const PaginationButton = ({ 
@@ -417,7 +418,7 @@ export default function PlayerFixtures({
                   <td className="py-3 pr-1 text-right">
                     <div className="flex items-center justify-end space-x-1">
                       <span className={`max-w-[150px] truncate ${playerTeamId === fixture.teams.home.id ? 'font-bold' : ''}`}>
-                        {fixture.teams.home.name}
+                        {getTeamById(fixture.teams.home.id)?.name_ko || fixture.teams.home.name}
                       </span>
                       <TeamLogo
                         name={fixture.teams.home.name}
@@ -435,7 +436,7 @@ export default function PlayerFixtures({
                         teamId={fixture.teams.away.id}
                       />
                       <span className={`max-w-[150px] truncate ${playerTeamId === fixture.teams.away.id ? 'font-bold' : ''}`}>
-                        {fixture.teams.away.name}
+                        {getTeamById(fixture.teams.away.id)?.name_ko || fixture.teams.away.name}
                       </span>
                     </div>
                   </td>
@@ -511,7 +512,7 @@ export default function PlayerFixtures({
                   {/* 홈팀 */}
                   <div className="flex-1 flex items-center justify-end space-x-1 overflow-hidden">
                     <span className={`text-xs truncate ${playerTeamId === fixture.teams.home.id ? 'font-bold' : ''}`}>
-                      {fixture.teams.home.name}
+                      {getTeamById(fixture.teams.home.id)?.name_ko || fixture.teams.home.name}
                     </span>
                     <TeamLogo
                       name={fixture.teams.home.name}
@@ -531,7 +532,7 @@ export default function PlayerFixtures({
                       teamId={fixture.teams.away.id}
                     />
                     <span className={`text-xs truncate ${playerTeamId === fixture.teams.away.id ? 'font-bold' : ''}`}>
-                      {fixture.teams.away.name}
+                      {getTeamById(fixture.teams.away.id)?.name_ko || fixture.teams.away.name}
                     </span>
                   </div>
                   

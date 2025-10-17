@@ -6,6 +6,9 @@ import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { Team } from '@/domains/livescore/types/match';
 import { StandingsData } from '@/domains/livescore/types/match';
+import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
+import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
+import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
 
 interface PowerProps {
   matchId: string;
@@ -45,14 +48,20 @@ export default function Power({ data }: PowerProps) {
   // 팀 메타 추출 (로고/이름)
   const findTeamMeta = (id: number) => {
     const item = data.h2h.items.find((m) => (m.teams.home?.id === id) || (m.teams.away?.id === id))
+    const originalName = item ? (item.teams.home?.id === id ? item.teams.home?.name : item.teams.away?.name) : undefined
+
+    // 한국어 매핑 시도, 없으면 원래 영어 이름 사용
+    const koreanName = getTeamDisplayName(id, { language: 'ko' })
+    const displayName = koreanName.startsWith('팀 ') ? (originalName || `#${id}`) : koreanName
+
     if (item) {
       const t = item.teams.home?.id === id ? item.teams.home : item.teams.away
       return {
-        name: t?.name || `#${id}`,
+        name: displayName,
         logo: t?.logo || `https://media.api-sports.io/football/teams/${id}.png`
       }
     }
-    return { name: `#${id}`, logo: `https://media.api-sports.io/football/teams/${id}.png` }
+    return { name: displayName, logo: `https://media.api-sports.io/football/teams/${id}.png` }
   }
 
   const teamAMeta = findTeamMeta(data.teamA)
@@ -71,7 +80,7 @@ export default function Power({ data }: PowerProps) {
   return (
     <>
       {/* 팀 비교(모바일 우선) */}
-      <section className="bg-white rounded-lg border p-4 mb-4">
+      <section className="bg-white rounded-lg border p-4">
         {/* 1) VS행: 팀명, 순위, 승무패 */}
         <div className="grid grid-cols-[3fr_1fr_3fr] items-center gap-1">
           <div className="text-right px-1">
@@ -229,7 +238,7 @@ export default function Power({ data }: PowerProps) {
                 </div>
                 <div className="text-center text-gray-600 px-1">
                   <div className="text-xs whitespace-nowrap">{new Date(m.utcDate).toLocaleDateString('ko-KR', { year: '2-digit', month: 'numeric', day: 'numeric', timeZone: 'Asia/Seoul' }).replace(/\./g, '. ')}</div>
-                  <div className="text-xs truncate">{m.league.name}</div>
+                  <div className="text-xs truncate">{getLeagueKoreanName(m.league.name)}</div>
                 </div>
                 <div className="flex items-center justify-start px-1 gap-2">
                   <span className="font-semibold">{bScore}</span>
@@ -321,7 +330,7 @@ export default function Power({ data }: PowerProps) {
       </section>
 
       {/* 탑 플레이어 테이블 */}
-      <section className="bg-white rounded-lg border p-4 mb-4">
+      <section className="bg-white rounded-lg border p-4">
         <h3 className="text-base font-semibold mb-3">팀 탑 플레이어</h3>
         
         {/* 테이블 헤더 */}
@@ -362,13 +371,18 @@ export default function Power({ data }: PowerProps) {
           {Array.from({ length: Math.max(data.topPlayers.teamA.topScorers.length, data.topPlayers.teamB.topScorers.length) }).map((_, index) => {
             const playerA = data.topPlayers.teamA.topScorers[index]
             const playerB = data.topPlayers.teamB.topScorers[index]
-            
+
+            const playerAKoreanName = playerA ? getPlayerKoreanName(playerA.playerId) : null;
+            const playerADisplayName = playerAKoreanName || playerA?.name || `#${playerA?.playerId}`;
+            const playerBKoreanName = playerB ? getPlayerKoreanName(playerB.playerId) : null;
+            const playerBDisplayName = playerBKoreanName || playerB?.name || `#${playerB?.playerId}`;
+
             return (
               <div key={`scorer-${index}`} className="grid grid-cols-[3fr_1fr_3fr] gap-1 items-center py-2 text-sm border-b border-gray-100 last:border-b-0">
                 <div className="flex items-center gap-3 justify-end px-1">
                   {playerA && (
                     <>
-                      <span className="text-sm sm:text-base leading-snug line-clamp-2 max-w-[160px] text-right">{playerA.name || `#${playerA.playerId}`}</span>
+                      <span className="text-sm sm:text-base leading-snug line-clamp-2 max-w-[160px] text-right">{playerADisplayName}</span>
                       <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
                         <Image src={`https://media.api-sports.io/football/players/${playerA.playerId}.png`} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                       </div>
@@ -384,7 +398,7 @@ export default function Power({ data }: PowerProps) {
                       <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
                         <Image src={`https://media.api-sports.io/football/players/${playerB.playerId}.png`} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                       </div>
-                      <span className="text-sm sm:text-base leading-snug line-clamp-2 max-w-[160px]">{playerB.name || `#${playerB.playerId}`}</span>
+                      <span className="text-sm sm:text-base leading-snug line-clamp-2 max-w-[160px]">{playerBDisplayName}</span>
                     </>
                   )}
                 </div>
@@ -404,13 +418,18 @@ export default function Power({ data }: PowerProps) {
           {Array.from({ length: Math.max(data.topPlayers.teamA.topAssist.length, data.topPlayers.teamB.topAssist.length) }).map((_, index) => {
             const playerA = data.topPlayers.teamA.topAssist[index]
             const playerB = data.topPlayers.teamB.topAssist[index]
-            
+
+            const playerAKoreanName = playerA ? getPlayerKoreanName(playerA.playerId) : null;
+            const playerADisplayName = playerAKoreanName || playerA?.name || `#${playerA?.playerId}`;
+            const playerBKoreanName = playerB ? getPlayerKoreanName(playerB.playerId) : null;
+            const playerBDisplayName = playerBKoreanName || playerB?.name || `#${playerB?.playerId}`;
+
             return (
               <div key={`assist-${index}`} className="grid grid-cols-[3fr_1fr_3fr] gap-1 items-center py-2 text-sm border-b border-gray-100 last:border-b-0">
                 <div className="flex items-center gap-3 justify-end px-1">
                   {playerA && (
                     <>
-                      <span className="text-sm sm:text-base leading-snug line-clamp-2 max-w-[160px] text-right">{playerA.name || `#${playerA.playerId}`}</span>
+                      <span className="text-sm sm:text-base leading-snug line-clamp-2 max-w-[160px] text-right">{playerADisplayName}</span>
                       <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
                         <Image src={`https://media.api-sports.io/football/players/${playerA.playerId}.png`} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                       </div>
@@ -426,7 +445,7 @@ export default function Power({ data }: PowerProps) {
                       <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
                         <Image src={`https://media.api-sports.io/football/players/${playerB.playerId}.png`} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                       </div>
-                      <span className="text-sm sm:text-base leading-snug line-clamp-2 max-w-[160px]">{playerB.name || `#${playerB.playerId}`}</span>
+                      <span className="text-sm sm:text-base leading-snug line-clamp-2 max-w-[160px]">{playerBDisplayName}</span>
                     </>
                   )}
                 </div>

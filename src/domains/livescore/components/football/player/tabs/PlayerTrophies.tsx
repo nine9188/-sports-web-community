@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { EmptyState } from '@/domains/livescore/components/common';
 import { TrophyData } from '@/domains/livescore/types/player';
+import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
 
 interface PlayerTrophiesProps {
   playerId: number;
@@ -115,7 +116,9 @@ export default function PlayerTrophies({
                       />
                     </div>
                   )}
-                  <p className="text-sm font-medium truncate">{trophy.league}</p>
+                  <p className="text-sm font-medium truncate">
+                    {getLeagueKoreanName(trophy.league) || trophy.league}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-600">
                   <span>{trophy.country}</span>

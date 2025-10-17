@@ -2,6 +2,8 @@
 
 import Image from 'next/image';
 import { InjuryData } from '@/domains/livescore/types/player';
+import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
+import { getTeamById } from '@/domains/livescore/constants/teams';
 
 interface PlayerInjuriesProps {
   playerId: number;
@@ -47,7 +49,7 @@ export default function PlayerInjuries({
                 <div className="flex items-center text-xs text-gray-500 mb-1">
                   <div className="mr-1">{formatDate(injury.fixture.date)}</div>
                   <div>•</div>
-                  <div className="ml-1">{injury.league.name}</div>
+                  <div className="ml-1">{getLeagueKoreanName(injury.league.name) || injury.league.name}</div>
                 </div>
                 
                 <div className="flex items-center gap-2">
@@ -65,7 +67,9 @@ export default function PlayerInjuries({
                       }}
                     />
                   </div>
-                  <div className="text-sm font-medium truncate">{injury.team.name}</div>
+                  <div className="text-sm font-medium truncate">
+                    {getTeamById(injury.team.id)?.name_ko || injury.team.name}
+                  </div>
                 </div>
                 
                 <div className="mt-1.5 p-1.5 bg-red-50 rounded-md text-xs">

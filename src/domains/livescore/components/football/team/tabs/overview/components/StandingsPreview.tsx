@@ -6,6 +6,7 @@ import { ImageType } from '@/shared/types/image';
 import { StandingDisplay } from '@/domains/livescore/types/standings';
 import { findTeamStanding, getDisplayStandings, getLeagueInfo, getLeagueForStandings } from '../utils/standingUtils';
 import FormDisplay from './FormDisplay';
+import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
 
 interface StandingsPreviewProps {
   standings: StandingDisplay[] | undefined;
@@ -59,7 +60,9 @@ export default function StandingsPreview({ standings, teamId, safeLeague, onTabC
             className="object-contain w-6 h-6"
           />
         </div>
-        <h4 className="text-sm font-medium">{displayLeagueInfo?.name || leagueInfo.name || safeLeague.name || '리그 순위'}</h4>
+        <h4 className="text-sm font-medium">
+          {getLeagueKoreanName(displayLeagueInfo?.name || leagueInfo.name || safeLeague.name) || '리그 순위'}
+        </h4>
       </div>
       <div className="overflow-hidden">
         <table className="w-full">

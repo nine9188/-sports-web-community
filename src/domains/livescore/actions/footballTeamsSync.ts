@@ -76,13 +76,13 @@ interface ApiStanding {
 }
 
 // Supabase 클라이언트 타입
-type SupabaseClient = Awaited<ReturnType<typeof createClient>>
+type SupabaseClient = Awaited<ReturnType<typeof createAdminClient>>
 
-// 실제 API에서 리그 데이터 가져오기 (테스트 페이지와 동일한 로직)
+// 실제 API에서 리그 데이터 가져오기 (2025/26 시즌)
 async function fetchRawLeagueData(leagueId: number) {
   try {
-    const kLeagueIds = [292, 293, 294]
-    const season = kLeagueIds.includes(leagueId) ? '2025' : '2024'
+    // 2025/26 시즌 = 2025
+    const season = '2025'
 
     const [teamsResponse, standingsResponse] = await Promise.all([
       fetch(`${API_BASE_URL}/teams?league=${leagueId}&season=${season}`, {
@@ -117,7 +117,7 @@ async function fetchRawLeagueData(leagueId: number) {
   } catch (error) {
     return {
       leagueId,
-      season: '2024',
+      season: '2025',
       error: error instanceof Error ? error.message : '알 수 없는 오류',
       teams: [],
       standings: []
@@ -241,7 +241,7 @@ export async function syncAllFootballTeamsFromApi(): Promise<{
         // 각 팀 저장
         for (const team of rawData.teams) {
           const standing = standingsMap.get(team.team.id)
-          await saveTeamToDatabase(supabase, team, leagueId, rawData.season || '2024', standing)
+          await saveTeamToDatabase(supabase, team, leagueId, rawData.season || '2025', standing)
         }
 
         totalTeams += rawData.teams.length

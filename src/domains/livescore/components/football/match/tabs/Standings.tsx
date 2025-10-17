@@ -6,6 +6,8 @@ import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { useMatchData, isStandingsTabData } from '@/domains/livescore/components/football/match/context/MatchDataContext';
 import { Standing, StandingsData, Team } from '@/domains/livescore/types/match';
+import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
+import { getLeagueName } from '@/domains/livescore/constants/league-mappings';
 
 // Props 타입 정의
 interface StandingsProps {
@@ -43,7 +45,7 @@ TeamLogo.displayName = 'TeamLogo';
 
 // 테이블 스타일 정의 개선
 const tableStyles = {
-  container: "mb-4 bg-white rounded-lg border overflow-hidden",
+  container: "mb-4 last:mb-0 bg-white rounded-lg border overflow-hidden",
   header: "px-1 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider",
   cell: "px-1 py-2 whitespace-nowrap text-sm text-gray-900 text-center",
   smallCol: "w-8", // 너비 감소
@@ -189,7 +191,12 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
                     className="object-contain w-6 h-6"
                 />
                 </div>
-                <h2 className="text-sm font-medium text-gray-800">{leagueData.name || '리그 정보'}</h2>
+                <h2 className="text-sm font-medium text-gray-800">
+                  {(() => {
+                    const koreanName = getLeagueName(leagueData.id);
+                    return koreanName === '알 수 없는 리그' ? (leagueData.name || '리그 정보') : koreanName;
+                  })()}
+                </h2>
               </div>
             ) : (
               leagueData.standings.length > 1 && (
@@ -286,7 +293,11 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
                           />
                           <div className="flex items-center max-w-[calc(100%-30px)]">
                             <span className="block truncate text-ellipsis overflow-hidden max-w-full pr-1">
-                              {standing.team.name || '팀 이름 없음'}
+                              {(() => {
+                                const koreanName = getTeamDisplayName(standing.team.id, { language: 'ko' });
+                                // 매핑이 없으면 (팀 {id} 형식) 원래 영어 이름 사용
+                                return koreanName.startsWith('팀 ') ? (standing.team.name || '팀 이름 없음') : koreanName;
+                              })()}
                             </span>
                             {(isHomeTeam || isAwayTeam) && (
                               <span className={`text-[10px] md:text-xs font-bold px-0.5 md:px-1.5 md:py-0.5 ml-0.5 md:ml-2 rounded inline-block flex-shrink-0 ${

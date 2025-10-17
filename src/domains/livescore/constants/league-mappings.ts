@@ -175,12 +175,74 @@ export const getLeagueName = (leagueId: number): string => {
 // 리그 ID로 리그 정보 가져오기
 export const getLeagueById = (leagueId: number): { id: number; nameKo: string } | null => {
   if (!leagueId) return null;
-  
+
   const nameKo = LEAGUE_NAMES_MAP[leagueId];
   if (!nameKo) return null;
-  
+
   return {
     id: leagueId,
     nameKo
   };
+};
+
+// 영어 리그 이름 -> 한글 매핑 (역매핑)
+const ENGLISH_TO_KOREAN_LEAGUE_MAP: Record<string, string> = {
+  'Premier League': '프리미어 리그',
+  'La Liga': '라리가',
+  'LaLiga': '라리가',
+  'Bundesliga': '분데스리가',
+  'Serie A': '세리에 A',
+  'Ligue 1': '리그앙',
+  'Championship': '챔피언십',
+  'Scottish Premiership': '스코틀랜드 프리미어십',
+  'Eredivisie': '에레디비지에',
+  'Primeira Liga': '프리메이라 리가',
+  'UEFA Champions League': '챔피언스 리그',
+  'UEFA Europa League': '유로파 리그',
+  'UEFA Europa Conference League': '컨퍼런스 리그',
+  'UEFA Conference League': '컨퍼런스 리그',
+  'UEFA Super Cup': 'UEFA 슈퍼컵',
+  'Super Cup': '슈퍼컵',
+  'World Cup - Qualification Europe': '월드컵 유럽예선',
+  'World Cup - Qualification Asia': '월드컵 아시아예선',
+  'Friendlies': '국가대표 친선경기',
+  'International Friendly': '국가대표 친선경기',
+  'Friendlies Clubs': '클럽 친선경기',
+  'Club Friendlies': '클럽 친선경기',
+  'Emirates Cup': '에미레이트 컵',
+  'MLS All-Star': 'MLS 올스타',
+  'Florida Cup': '플로리다 컵',
+  'UEFA Nations League': 'UEFA 네이션스리그',
+  'European Championship': '유럽선수권대회',
+  'Copa America': '코파 아메리카',
+  'FIFA Club World Cup': 'FIFA 클럽 월드컵',
+  'FIFA Intercontinental Cup': 'FIFA 인터컨티넨털컵',
+  'Community Shield': '커뮤니티 실드',
+  'FA Community Shield': '커뮤니티 실드',
+  'Premier League 2': '프리미어 리그 2',
+  'FA Cup': 'FA컵',
+  'EFL Cup': 'EFL컵',
+  'League Cup': 'EFL컵',
+  'Copa del Rey': '코파 델 레이',
+  'Coppa Italia': '코파 이탈리아',
+  'Coupe de France': '쿠프 드 프랑스',
+  'DFB Pokal': 'DFB 포칼',
+  'K League 1': 'K리그1',
+  'J1 League': 'J1 리그',
+  'Chinese Super League': '중국 슈퍼리그',
+  'AFC Champions League': 'AFC 챔피언스 리그',
+  'Saudi Pro League': '사우디 프로리그',
+  'Saudi Professional League': '사우디 프로리그',
+  'MLS': 'MLS',
+  'Major League Soccer': 'MLS',
+  'Brasileirao': '브라질레이로',
+  'Serie A - Brazil': '브라질레이로',
+  'Liga MX': '리가 MX',
+  'Danish Superliga': '덴마크 수페르리가',
+};
+
+// 영어 리그 이름으로 한글 이름 찾기
+export const getLeagueKoreanName = (englishName: string | undefined): string => {
+  if (!englishName) return '';
+  return ENGLISH_TO_KOREAN_LEAGUE_MAP[englishName] || englishName;
 }; 

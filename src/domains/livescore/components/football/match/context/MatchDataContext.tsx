@@ -58,12 +58,14 @@ export function isStandingsTabData(data: TabData): data is TabDataTypes['standin
 
 // power 탭 타입 가드
 export function isPowerTabData(data: TabData): data is TabDataTypes['power'] {
+  if (typeof data !== 'object' || data === null) return false;
+  const d = data as Partial<HeadToHeadTestData>;
   return (
-    typeof (data as any)?.teamA === 'number' &&
-    typeof (data as any)?.teamB === 'number' &&
-    'h2h' in (data as any) &&
-    'recent' in (data as any) &&
-    'topPlayers' in (data as any)
+    typeof d.teamA === 'number' &&
+    typeof d.teamB === 'number' &&
+    typeof d.h2h === 'object' &&
+    typeof d.recent === 'object' &&
+    typeof d.topPlayers === 'object'
   );
 }
 
@@ -243,7 +245,8 @@ export function MatchDataProvider({
       case 'events':
         return { fetchEvents: true };
       case 'lineups':
-        return { fetchLineups: true, fetchEvents: true, fetchPlayersStats: true };
+        // playersStats는 선수 클릭 시에만 필요하므로 제거
+        return { fetchLineups: true, fetchEvents: true };
       case 'stats':
         return { fetchStats: true };
       case 'standings':
@@ -429,11 +432,11 @@ export function MatchDataProvider({
                 // 홈팀 선수 및 교체 선수 ID 수집
                 if (response.home) {
                   response.home.startXI?.forEach(item => {
-                    const playerId = 'player' in item ? item.player.id : item.id;
+                    const playerId = item.player?.id;
                     if (playerId) playerIds.push(playerId);
                   });
                   response.home.substitutes?.forEach(item => {
-                    const playerId = 'player' in item ? item.player.id : item.id;
+                    const playerId = item.player?.id;
                     if (playerId) playerIds.push(playerId);
                   });
                   
@@ -444,11 +447,11 @@ export function MatchDataProvider({
                 // 어웨이팀 선수 및 교체 선수 ID 수집
                 if (response.away) {
                   response.away.startXI?.forEach(item => {
-                    const playerId = 'player' in item ? item.player.id : item.id;
+                    const playerId = item.player?.id;
                     if (playerId) playerIds.push(playerId);
                   });
                   response.away.substitutes?.forEach(item => {
-                    const playerId = 'player' in item ? item.player.id : item.id;
+                    const playerId = item.player?.id;
                     if (playerId) playerIds.push(playerId);
                   });
                   
@@ -746,7 +749,10 @@ export function MatchDataProvider({
   useEffect(() => {
     try {
       if (!matchId || !matchData || typeof window === 'undefined') return;
-      const statusCode = (matchData as any)?.fixture?.status?.short as string | undefined;
+      type FixtureLike = { fixture?: { status?: { short?: string } } };
+      const statusCode = typeof matchData === 'object' && matchData !== null
+        ? (matchData as FixtureLike).fixture?.status?.short
+        : undefined;
       if (!statusCode) return;
       const prev = lastStatusRef.current;
       const now = Date.now();
@@ -790,7 +796,7 @@ export function MatchDataProvider({
     // 메모리 캐시 초기화 (라인업 탭인 경우)
     if (typedCurrentTab === 'lineups') {
       const cacheKey = `match-${matchId}-tab-${typedCurrentTab}`;
-      lineupsMemoryCache.current[cacheKey] = undefined;
+      delete lineupsMemoryCache.current[cacheKey];
     }
     
     // 현재 탭 데이터 다시 로드

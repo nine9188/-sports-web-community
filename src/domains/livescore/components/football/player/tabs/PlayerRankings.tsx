@@ -6,6 +6,8 @@ import { FaMedal } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import { EmptyState } from '@/domains/livescore/components/common';
 import { RankingsData, PlayerRanking } from '@/domains/livescore/types/player';
+import { getTeamById } from '@/domains/livescore/constants/teams';
+import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 
 interface PlayerRankingsProps {
   playerId?: number;
@@ -126,7 +128,9 @@ export default function PlayerRankings({
                   />
                 </div>
                 <div className="text-center">
-                  <div className="font-bold text-sm">{player.player.name}</div>
+                  <div className="font-bold text-sm">
+                    {getPlayerKoreanName(player.player.id) || player.player.name}
+                  </div>
                   <div className="flex items-center justify-center gap-1 mt-1">
                     <div className="relative w-4 h-4">
                       <Image
@@ -142,7 +146,9 @@ export default function PlayerRankings({
                         unoptimized
                       />
                     </div>
-                    <span className="text-xs text-gray-600">{player.statistics[0].team.name}</span>
+                    <span className="text-xs text-gray-600">
+                      {getTeamById(player.statistics[0].team.id)?.name_ko || player.statistics[0].team.name}
+                    </span>
                   </div>
                   <div className="mt-1 text-base font-semibold text-gray-900">
                     {getRankingValue(player, rankingType)}
@@ -201,7 +207,7 @@ export default function PlayerRankings({
                       </div>
                       <div className="ml-2 sm:ml-3 overflow-hidden">
                         <div className="text-xs sm:text-sm font-medium text-gray-900 truncate max-w-full">
-                          {player.player.name}
+                          {getPlayerKoreanName(player.player.id) || player.player.name}
                         </div>
                       </div>
                     </div>
@@ -224,7 +230,7 @@ export default function PlayerRankings({
                       </div>
                       <div className="ml-1 sm:ml-2 overflow-hidden">
                         <div className="text-xs sm:text-sm text-gray-900 truncate">
-                          {player.statistics[0].team.name}
+                          {getTeamById(player.statistics[0].team.id)?.name_ko || player.statistics[0].team.name}
                         </div>
                       </div>
                     </div>

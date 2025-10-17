@@ -6,6 +6,7 @@ import { EmptyState } from '@/domains/livescore/components/common';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { TransferData } from '@/domains/livescore/types/player';
+import { getTeamById } from '@/domains/livescore/constants/teams';
 
 interface PlayerTransfersProps {
   playerId: number;
@@ -79,12 +80,14 @@ export default function PlayerTransfers({
             <div className="flex items-center">
               {/* 이전 팀 */}
               <div className="flex-1 flex flex-col items-center">
-                <TeamLogo 
-                  logo={transfer.teams.from.logo} 
-                  name={transfer.teams.from.name} 
+                <TeamLogo
+                  logo={transfer.teams.from.logo}
+                  name={transfer.teams.from.name}
                   teamId={transfer.teams.from.id}
                 />
-                <p className="mt-1 text-sm font-medium text-center text-gray-800 max-w-[120px] truncate">{transfer.teams.from.name || '알 수 없는 팀'}</p>
+                <p className="mt-1 text-sm font-medium text-center text-gray-800 max-w-[120px] truncate">
+                  {getTeamById(transfer.teams.from.id)?.name_ko || transfer.teams.from.name || '알 수 없는 팀'}
+                </p>
               </div>
 
               {/* 이적 정보 */}
@@ -113,12 +116,14 @@ export default function PlayerTransfers({
 
               {/* 새로운 팀 */}
               <div className="flex-1 flex flex-col items-center">
-                <TeamLogo 
-                  logo={transfer.teams.to.logo} 
-                  name={transfer.teams.to.name} 
+                <TeamLogo
+                  logo={transfer.teams.to.logo}
+                  name={transfer.teams.to.name}
                   teamId={transfer.teams.to.id}
                 />
-                <p className="mt-1 text-sm font-medium text-center text-gray-800 max-w-[120px] truncate">{transfer.teams.to.name || '알 수 없는 팀'}</p>
+                <p className="mt-1 text-sm font-medium text-center text-gray-800 max-w-[120px] truncate">
+                  {getTeamById(transfer.teams.to.id)?.name_ko || transfer.teams.to.name || '알 수 없는 팀'}
+                </p>
               </div>
             </div>
           </div>

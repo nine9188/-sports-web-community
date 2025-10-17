@@ -204,7 +204,7 @@ export default function TabContent() {
     // 매치 ID 없는 경우 처리
     if (!matchId) {
       return (
-        <div className="mb-4 bg-white rounded-lg border p-4">
+        <div className="bg-white rounded-lg border p-4">
           <div className="flex justify-center items-center py-8">
             <p className="text-gray-600">경기 정보가 없습니다.</p>
           </div>

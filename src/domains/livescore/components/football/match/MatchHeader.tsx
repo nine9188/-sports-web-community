@@ -8,6 +8,7 @@ import { useMatchData } from '@/domains/livescore/components/football/match/cont
 import { formatDateToKorean } from '@/domains/livescore/utils/dateUtils';
 import { ErrorState, LoadingState } from '@/domains/livescore/components/common/CommonComponents';
 import { MatchEvent } from '@/domains/livescore/types/match';
+import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 
 // MatchData 타입 정의
 interface MatchDataType {
@@ -60,50 +61,6 @@ interface MatchDataType {
       away?: number | null;
     };
   };
-}
-
-// 프리미어리그 팀 선수 데이터 불러오기
-import { 
-  liverpoolPlayers, 
-  NottinghamForestPlayers, 
-  Arsenalplayers, 
-  NewcastleUnitedplayers, 
-  Chelseaplayers, 
-  ManchesterCityplayers, 
-  AstonVillaplayers, 
-  Bournemouthplayers, 
-  Fulhamplayers, 
-  Brightonplayers 
-} from '@/domains/livescore/constants/teams/premier-league/premier-teams';
-
-// 모든 프리미어리그 선수 데이터를 통합
-const allPremierLeaguePlayers = [
-  ...liverpoolPlayers,
-  ...NottinghamForestPlayers,
-  ...Arsenalplayers,
-  ...NewcastleUnitedplayers,
-  ...Chelseaplayers,
-  ...ManchesterCityplayers,
-  ...AstonVillaplayers,
-  ...Bournemouthplayers,
-  ...Fulhamplayers,
-  ...Brightonplayers
-];
-
-// 선수 ID로 한국어 이름을 찾는 함수
-function getKoreanPlayerName(playerId: number): string | null {
-  const player = allPremierLeaguePlayers.find(p => {
-    // 다양한 ID 속성 형태 처리
-    return p.id === playerId;
-  });
-
-  if (!player) return null;
-
-  // 다양한 한국어 이름 속성 형태 처리
-  if ('koreanName' in player) return player.koreanName;
-  if ('korean_name' in player) return player.korean_name;
-  
-  return null;
 }
 
 const MatchHeader = memo(() => {
@@ -311,7 +268,7 @@ const MatchHeader = memo(() => {
                 {displayInfo.scoreDisplay}
               </div>
               <div className="text-xs md:text-sm text-gray-500">
-                {fixture?.status?.long}
+                {displayInfo.statusText}
               </div>
             </div>
 
@@ -364,16 +321,18 @@ const MatchHeader = memo(() => {
                   {goalEvents
                     .filter((event: MatchEvent) => event.team?.id === homeTeam?.id)
                     .map((event: MatchEvent, index: number) => {
-                      const koreanName = getKoreanPlayerName(event.player?.id || 0);
+                      const koreanName = event.player?.id ? getPlayerKoreanName(event.player.id) : null;
                       const displayName = koreanName || event.player?.name || '알 수 없음';
-                      
+                      const assistKoreanName = event.assist?.id ? getPlayerKoreanName(event.assist.id) : null;
+                      const assistDisplayName = assistKoreanName || event.assist?.name;
+
                       return (
                         <div key={index} className="text-sm text-gray-700">
                           <span className="font-medium">{displayName}</span>
                           <span className="text-gray-500 ml-1">{event.time?.elapsed}&apos;</span>
-                          {event.assist?.name && (
+                          {assistDisplayName && (
                             <div className="text-xs text-gray-500 ml-4">
-                              어시스트: {event.assist.name}
+                              어시스트: {assistDisplayName}
                             </div>
                           )}
                         </div>
@@ -411,16 +370,18 @@ const MatchHeader = memo(() => {
                   {goalEvents
                     .filter((event: MatchEvent) => event.team?.id === awayTeam?.id)
                     .map((event: MatchEvent, index: number) => {
-                      const koreanName = getKoreanPlayerName(event.player?.id || 0);
+                      const koreanName = event.player?.id ? getPlayerKoreanName(event.player.id) : null;
                       const displayName = koreanName || event.player?.name || '알 수 없음';
-                      
+                      const assistKoreanName = event.assist?.id ? getPlayerKoreanName(event.assist.id) : null;
+                      const assistDisplayName = assistKoreanName || event.assist?.name;
+
                       return (
                         <div key={index} className="text-sm text-gray-700">
                           <span className="font-medium">{displayName}</span>
                           <span className="text-gray-500 ml-1">{event.time?.elapsed}&apos;</span>
-                          {event.assist?.name && (
+                          {assistDisplayName && (
                             <div className="text-xs text-gray-500 ml-4">
-                              어시스트: {event.assist.name}
+                              어시스트: {assistDisplayName}
                             </div>
                           )}
                         </div>

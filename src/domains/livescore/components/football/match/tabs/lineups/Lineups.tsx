@@ -12,40 +12,7 @@ import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/compon
 import { PlayerStats } from '@/domains/livescore/actions/match/playerStats';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
-
-// 프리미어리그 팀 선수 데이터 import
-import { 
-  liverpoolPlayers, 
-  NottinghamForestPlayers, 
-  Arsenalplayers, 
-  NewcastleUnitedplayers,
-  Chelseaplayers, 
-  ManchesterCityplayers, 
-  AstonVillaplayers, 
-  Bournemouthplayers, 
-  Fulhamplayers, 
-  Brightonplayers 
-} from '@/domains/livescore/constants/teams/premier-league/premier-teams';
-
-// 선수 데이터 타입
-type PremierLeaguePlayer = 
-  | { id: number; name: string; koreanName: string; } 
-  | { id?: number; name: string; role?: string; korean_name: string; } 
-  | { id: number; english_name: string; korean_name: string; }
-  | { id: number; englishName: string; koreanName: string; };
-
-type PremierLeagueTeamPlayers = {
-  liverpoolPlayers: PremierLeaguePlayer[];
-  NottinghamForestPlayers: PremierLeaguePlayer[];
-  Arsenalplayers: PremierLeaguePlayer[];
-  NewcastleUnitedplayers: PremierLeaguePlayer[];
-  Chelseaplayers: PremierLeaguePlayer[];
-  ManchesterCityplayers: PremierLeaguePlayer[];
-  AstonVillaplayers: PremierLeaguePlayer[];
-  Bournemouthplayers: PremierLeaguePlayer[];
-  Fulhamplayers: PremierLeaguePlayer[];
-  Brightonplayers: PremierLeaguePlayer[];
-};
+import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 
 interface Player {
   id: number;
@@ -80,20 +47,6 @@ interface LineupsProps {
     playersStats?: Record<number, { response: PlayerStats[] }>;
   };
 }
-
-// 모든 프리미어리그 팀 선수 데이터 합치기
-const teamPlayersData: PremierLeagueTeamPlayers = {
-  liverpoolPlayers,
-  NottinghamForestPlayers,
-  Arsenalplayers,
-  NewcastleUnitedplayers,
-  Chelseaplayers,
-  ManchesterCityplayers,
-  AstonVillaplayers,
-  Bournemouthplayers,
-  Fulhamplayers,
-  Brightonplayers
-};
 
 export default function Lineups({ matchId, matchData }: LineupsProps) {
   // 상태 관리
@@ -166,27 +119,6 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
     };
   }, []);
   
-  // 한국어 이름 매핑 메모이제이션
-  const koreanNameMap = useMemo(() => {
-    const map = new Map<number, string>();
-    
-    // 모든 팀 데이터를 순회하여 한국어 이름 매핑 생성
-    Object.values(teamPlayersData).forEach(teamPlayers => {
-      teamPlayers.forEach(player => {
-        if ('id' in player && player.id) {
-          let koreanName = '';
-          if ('koreanName' in player && player.koreanName) koreanName = player.koreanName;
-          else if ('korean_name' in player && player.korean_name) koreanName = player.korean_name;
-          
-          if (koreanName) {
-            map.set(player.id, koreanName);
-          }
-        }
-      });
-    });
-    
-    return map;
-  }, []);
 
   // 선수 클릭 핸들러 - 성능 최적화
   const handlePlayerClick = useCallback((player: Player, teamId: number, teamName: string) => {
@@ -249,7 +181,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
       )}
       
       {/* 통합된 테이블 구조 */}
-      <div className="mb-4 bg-white rounded-lg border overflow-hidden">
+      <div className="bg-white rounded-lg border overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -333,7 +265,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                       <div className="flex-1">
                         <div className="text-sm font-medium">
                           {/* 선수 한국어 이름 매핑 */}
-                          {koreanNameMap.get(homeLineup.startXI[index].player.id) || homeLineup.startXI[index].player.name}
+                          {getPlayerKoreanName(homeLineup.startXI[index].player.id) || homeLineup.startXI[index].player.name}
                           {homeLineup.startXI[index].player.captain && (
                             <span className="ml-1 text-xs text-yellow-600 font-semibold">(주장)</span>
                           )}
@@ -380,7 +312,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                       <div className="flex-1">
                         <div className="text-sm font-medium">
                           {/* 선수 한국어 이름 매핑 */}
-                          {koreanNameMap.get(awayLineup.startXI[index].player.id) || awayLineup.startXI[index].player.name}
+                          {getPlayerKoreanName(awayLineup.startXI[index].player.id) || awayLineup.startXI[index].player.name}
                           {awayLineup.startXI[index].player.captain && (
                             <span className="ml-1 text-xs text-yellow-600 font-semibold">(주장)</span>
                           )}
@@ -439,7 +371,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                       <div className="flex-1">
                         <div className="text-sm font-medium">
                           {/* 선수 한국어 이름 매핑 */}
-                          {koreanNameMap.get(homeLineup.substitutes[index].player.id) || homeLineup.substitutes[index].player.name}
+                          {getPlayerKoreanName(homeLineup.substitutes[index].player.id) || homeLineup.substitutes[index].player.name}
                           {homeLineup.substitutes[index].player.captain && (
                             <span className="ml-1 text-xs text-yellow-600 font-semibold">(주장)</span>
                           )}
@@ -482,7 +414,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                       <div className="flex-1">
                         <div className="text-sm font-medium">
                           {/* 선수 한국어 이름 매핑 */}
-                          {koreanNameMap.get(awayLineup.substitutes[index].player.id) || awayLineup.substitutes[index].player.name}
+                          {getPlayerKoreanName(awayLineup.substitutes[index].player.id) || awayLineup.substitutes[index].player.name}
                           {awayLineup.substitutes[index].player.captain && (
                             <span className="ml-1 text-xs text-yellow-600 font-semibold">(주장)</span>
                           )}
@@ -568,7 +500,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
           playerId={selectedPlayer.id}
           matchId={matchId}
           playerInfo={{
-            name: koreanNameMap.get(selectedPlayer.id) || selectedPlayer.name,
+            name: getPlayerKoreanName(selectedPlayer.id) || selectedPlayer.name,
             number: selectedPlayer.number,
             pos: selectedPlayer.pos,
             team: {

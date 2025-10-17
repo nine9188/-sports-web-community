@@ -3,6 +3,7 @@
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
 import FormDisplay from './FormDisplay';
+import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
 
 // 타입 정의
 interface LeagueInfo {
@@ -126,7 +127,7 @@ export default function StatsCards({ stats, onTabChange }: StatsCardsProps) {
               />
             </div>
             <div>
-              <p className="font-medium text-sm">{safeLeague.name || '정보 없음'}</p>
+              <p className="font-medium text-sm">{getLeagueKoreanName(safeLeague.name) || '정보 없음'}</p>
               <p className="text-xs text-gray-600">시즌: {safeLeague.season || '정보 없음'}</p>
               <p className="text-xs text-gray-600">국가: {safeLeague.country || '정보 없음'}</p>
             </div>

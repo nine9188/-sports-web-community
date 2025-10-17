@@ -2,9 +2,17 @@
 
 import { useState } from 'react'
 
+interface SyncResult {
+  totalLeagues: number
+  successfulLeagues: number
+  totalTeams: number
+  errors?: string[]
+  summary: string
+}
+
 export default function SyncTeamsPage() {
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<any>(null)
+  const [result, setResult] = useState<SyncResult | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const handleSync = async () => {
@@ -35,10 +43,13 @@ export default function SyncTeamsPage() {
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="bg-white rounded-lg border p-6 space-y-6">
         <div>
-          <h1 className="text-2xl font-bold mb-2">팀 데이터 동기화</h1>
+          <h1 className="text-2xl font-bold mb-2">팀 데이터 동기화 (2025/26 시즌)</h1>
           <p className="text-gray-600">
             ALLOWED_LEAGUE_IDS에 정의된 리그의 팀 데이터를 Football API에서 가져와 DB에 저장합니다.
           </p>
+          <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-blue-50 border border-blue-200 rounded-lg">
+            <span className="text-sm font-medium text-blue-700">시즌: 2025 (2025/26)</span>
+          </div>
         </div>
 
         <div className="border-t pt-6">
@@ -120,9 +131,10 @@ export default function SyncTeamsPage() {
         <div className="border-t pt-6">
           <h3 className="font-semibold mb-2">참고 사항</h3>
           <ul className="text-sm text-gray-600 space-y-1">
+            <li>• <strong className="text-blue-600">2025/26 시즌</strong> 데이터로 동기화됩니다</li>
             <li>• 기존 데이터는 자동으로 삭제되고 새로 저장됩니다</li>
             <li>• API 요청 제한으로 인해 리그당 약 0.1초씩 딜레이가 있습니다</li>
-            <li>• 동기화 후 <a href="/test" className="text-blue-600 hover:underline">/test</a> 페이지에서 결과를 확인하세요</li>
+            <li>• 동기화 후 <a href="/test" className="text-blue-600 hover:underline">/test</a> 페이지에서 한글명을 업데이트하세요</li>
           </ul>
         </div>
       </div>

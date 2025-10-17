@@ -5,6 +5,9 @@ import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { ErrorState, PlayerProfileLoadingState } from '@/domains/livescore/components/common/CommonComponents';
 import { usePlayerData } from './context/PlayerDataContext';
+import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
+import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
+import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
 
 // 필요한 타입 정의
 interface TeamData {
@@ -29,24 +32,36 @@ interface StatisticsData {
   games: GamesData;
 }
 
+// 포지션 한글 매핑
+const POSITION_MAP: Record<string, string> = {
+  'Goalkeeper': '골키퍼',
+  'Defender': '수비수',
+  'Midfielder': '미드필더',
+  'Attacker': '공격수',
+};
+
+const getPositionKorean = (position: string): string => {
+  return POSITION_MAP[position] || position;
+};
+
 // 메모이제이션으로 불필요한 리렌더링 방지
 const PlayerHeader = memo(function PlayerHeader() {
   // 컨텍스트에서 선수 데이터 가져오기
   const { playerData, isLoading, error } = usePlayerData();
-  
+
   // 데이터가 없고 로딩 중일 때만 로딩 UI 표시
   if (!playerData && isLoading) {
     return <PlayerProfileLoadingState />;
   }
-  
+
   if (error) {
     return <ErrorState message={error} />;
   }
-  
+
   if (!playerData || !playerData.info) {
     return <ErrorState message="선수 정보를 불러올 수 없습니다." />;
   }
-  
+
   // 생년월일 포맷팅
   const formatBirthDate = (dateString: string) => {
     if (!dateString) return '정보 없음';
@@ -105,13 +120,20 @@ const PlayerHeader = memo(function PlayerHeader() {
           </div>
           
           <div className="text-left flex-1">
-            <h1 className="text-md md:text-base font-bold truncate max-w-[200px] md:max-w-full">{playerData.info.name}</h1>
+            <h1 className="text-md md:text-base font-bold truncate max-w-[200px] md:max-w-full">
+              {getPlayerKoreanName(playerData.info.id) || playerData.info.name}
+            </h1>
             {mainTeamStats?.team && (
-              <p className="text-sm text-gray-600 truncate max-w-[200px]">{mainTeamStats.team.name}</p>
+              <p className="text-sm text-gray-600 truncate max-w-[200px]">
+                {(() => {
+                  const koreanName = getTeamDisplayName(mainTeamStats.team.id, { language: 'ko' });
+                  return koreanName.startsWith('팀 ') ? mainTeamStats.team.name : koreanName;
+                })()}
+              </p>
             )}
             {position && (
               <span className="mt-1 inline-block px-2 py-0.5 md:px-3 md:py-1 bg-blue-100 text-blue-800 rounded-full text-xs md:text-sm">
-                {position}
+                {getPositionKorean(position)}
               </span>
             )}
           </div>
@@ -161,16 +183,23 @@ const PlayerHeader = memo(function PlayerHeader() {
             <div className="overflow-hidden">
               <p className="text-xs md:text-sm text-gray-500">포지션</p>
               <p className="font-medium text-xs md:text-sm whitespace-nowrap text-ellipsis overflow-hidden">
-                {position || '정보 없음'}
+                {position ? getPositionKorean(position) : '정보 없음'}
               </p>
             </div>
-            
+
             {playerStats?.team && playerStats?.league && (
               <div className="md:col-span-2 lg:col-span-2 overflow-hidden">
                 <p className="text-xs md:text-sm text-gray-500">소속팀</p>
                 <div className="flex items-center gap-1 whitespace-nowrap text-ellipsis overflow-hidden">
-                  <p className="font-medium text-xs md:text-sm">{playerStats.team.name}</p>
-                  <span className="text-xs text-gray-500 truncate">({playerStats.league.name}, {playerStats.league.country})</span>
+                  <p className="font-medium text-xs md:text-sm">
+                    {(() => {
+                      const koreanName = getTeamDisplayName(playerStats.team.id, { language: 'ko' });
+                      return koreanName.startsWith('팀 ') ? playerStats.team.name : koreanName;
+                    })()}
+                  </p>
+                  <span className="text-xs text-gray-500 truncate">
+                    ({getLeagueKoreanName(playerStats.league.name)}, {playerStats.league.country})
+                  </span>
                 </div>
               </div>
             )}

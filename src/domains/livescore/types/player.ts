@@ -168,6 +168,7 @@ export interface InjuryData {
     season: string;
   };
   team: {
+    id: number;
     name: string;
     logo: string;
   };

@@ -1,48 +1,15 @@
 'use client';
 
-// 선수 데이터 타입 정의
-type PremierLeaguePlayer = 
-  | { id: number; name: string; koreanName: string; } 
-  | { id?: number; name: string; role?: string; korean_name: string; } 
-  | { id: number; english_name: string; korean_name: string; }
-  | { id: number; englishName: string; koreanName: string; };
+import { getPlayerKoreanName as getPlayerKoreanNameFromConstants } from '@/domains/livescore/constants/players';
 
 /**
  * 선수 ID로 한국어 이름을 찾는 함수
+ * 통합 선수 데이터베이스를 사용합니다.
  * @param playerId 선수 ID
- * @param teamPlayers 팀 선수 데이터
  * @returns 한국어 이름 또는 null
  */
-export function getPlayerKoreanName(
-  playerId: number, 
-  teamPlayers: Record<string, PremierLeaguePlayer[]>
-): string | null {
-  if (!playerId) return null;
-
-  // ID 기반으로 선수 찾기 및 한국어 이름 반환 로직
-  const findPlayerById = (players: PremierLeaguePlayer[]) => {
-    return players.find(player => 'id' in player && player.id === playerId);
-  };
-
-  // 모든 팀에서 선수 찾기
-  let player: PremierLeaguePlayer | undefined;
-  
-  for (const team in teamPlayers) {
-    player = findPlayerById(teamPlayers[team]);
-    if (player) break;
-  }
-
-  if (!player) return null;
-
-  // 다양한 형태의 한국어 이름 속성 반환
-  if ('koreanName' in player && player.koreanName) return player.koreanName;
-  if ('korean_name' in player && player.korean_name) return player.korean_name;
-  
-  // 추가 속성 체크 (영어 이름과 함께 있는 경우)
-  if ('english_name' in player && 'korean_name' in player) return player.korean_name;
-  if ('englishName' in player && 'koreanName' in player) return player.koreanName;
-  
-  return null;
+export function getPlayerKoreanName(playerId: number): string | null {
+  return getPlayerKoreanNameFromConstants(playerId);
 }
 
 /**

@@ -18,7 +18,7 @@ interface ProfileFormProps {
 export default function ProfileForm({ initialData }: ProfileFormProps) {
 
   return (
-    <div>
+    <div className="space-y-4">
       {/* 이메일 필드 */}
       <div className="space-y-1">
         <label htmlFor="email" className="block text-sm font-medium text-gray-700">

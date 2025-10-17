@@ -6,6 +6,7 @@ import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { Standing } from '@/domains/livescore/actions/teams/standings';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
+import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
 
 // Standing을 import한 타입 사용
 type StandingItem = Standing["league"]["standings"][0][0];
@@ -81,31 +82,38 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
       router.push(`/livescore/football/team/${clickedTeamId}`);
     }
   }, [router, teamId]);
-  
-  // 로딩 상태 처리
-  if (externalLoading) {
-    return <LoadingState message="순위 데이터를 불러오는 중..." />;
-  }
 
-  // 에러 상태 처리
-  if (externalError) {
-    return <ErrorState message={externalError || '순위 데이터를 불러올 수 없습니다'} />;
-  }
+  // 리그 우선순위 정의
+  const getLeaguePriority = useCallback((leagueId: number): number => {
+    // 메이저 리그 (Top 5)
+    const majorLeagues = [39, 140, 78, 135, 61]; // 프리미어, 라리가, 분데스, 세리에A, 리그1
+    if (majorLeagues.includes(leagueId)) return 1;
 
-  // 데이터가 없는 경우
-  if (!initialStandings || initialStandings.length === 0) {
-    return <EmptyState title="순위 데이터가 없습니다" message="현재 이 팀의 리그 순위 정보를 제공할 수 없습니다." />;
-  }
+    // 2군 유럽 리그
+    const secondTierLeagues = [40, 179, 88, 94, 119]; // 챔피언십, 스코틀랜드, 에레디비지에, 프리메이라, 슈퍼리가
+    if (secondTierLeagues.includes(leagueId)) return 2;
+
+    // 주요 아시아/아메리카 리그
+    const otherMajorLeagues = [292, 98, 253, 307, 71, 262, 169]; // K리그, J리그, MLS, 사우디, 브라질, 리가MX, 중국
+    if (otherMajorLeagues.includes(leagueId)) return 3;
+
+    // 유럽 컵 대회
+    const europeanCups = [2, 3, 848]; // 챔스, 유로파, 컨퍼런스
+    if (europeanCups.includes(leagueId)) return 4;
+
+    // 기타 컵 대회 (최하위 우선순위)
+    return 5;
+  }, []);
 
   // MLS 리그 특별 처리 함수
-  const processMlsStandings = (standings: Standing[]) => {
+  const processMlsStandings = useCallback((standings: Standing[]) => {
     const mlsLeague = standings.find(league => league.league?.id === 253);
     if (!mlsLeague) return standings;
 
     // 현재 팀이 속한 컨퍼런스 찾기
     let teamConference = null;
     const standingsGroups = mlsLeague.league?.standings || [];
-    
+
     for (let i = 0; i < standingsGroups.length; i++) {
       const group = standingsGroups[i];
       if (Array.isArray(group)) {
@@ -126,17 +134,36 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
           standings: [mlsLeague.league.standings[teamConference]]
         }
       };
-      
-      return standings.map(league => 
+
+      return standings.map(league =>
         league.league?.id === 253 ? filteredMlsLeague : league
       );
     }
 
     return standings;
-  };
+  }, [teamId]);
 
-  // MLS 리그 처리 적용
-  const processedStandings = processMlsStandings(initialStandings);
+  // 로딩 상태 처리
+  if (externalLoading) {
+    return <LoadingState message="순위 데이터를 불러오는 중..." />;
+  }
+
+  // 에러 상태 처리
+  if (externalError) {
+    return <ErrorState message={externalError || '순위 데이터를 불러올 수 없습니다'} />;
+  }
+
+  // 데이터가 없는 경우
+  if (!initialStandings || initialStandings.length === 0) {
+    return <EmptyState title="순위 데이터가 없습니다" message="현재 이 팀의 리그 순위 정보를 제공할 수 없습니다." />;
+  }
+
+  // MLS 리그 처리 적용 후 우선순위로 정렬
+  const processedStandings = processMlsStandings(initialStandings).sort((a, b) => {
+    const priorityA = getLeaguePriority(a.league?.id || 0);
+    const priorityB = getLeaguePriority(b.league?.id || 0);
+    return priorityA - priorityB;
+  });
 
   return (
     <div className="space-y-4">
@@ -164,7 +191,9 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
                     />
                   </div>
                 )}
-                <h4 className="text-sm font-medium text-gray-800">{leagueInfo.name || '리그 순위'}</h4>
+                <h4 className="text-sm font-medium text-gray-800">
+                  {getLeagueKoreanName(leagueInfo.name) || '리그 순위'}
+                </h4>
               </div>
             </div>
 

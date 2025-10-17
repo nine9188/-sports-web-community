@@ -6,6 +6,7 @@ import { PlayerStats } from '@/domains/livescore/actions/teams/player-stats';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
+import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 
 // 상수 정의 - 감독을 최상단으로 노출
 const POSITION_ORDER = ['Coach', 'Goalkeeper', 'Defender', 'Midfielder', 'Attacker'];
@@ -73,15 +74,28 @@ export default function Squad({ initialSquad, initialStats, isLoading: externalL
   // 선수단 정렬 로직을 useMemo로 최적화
   const sortedPlayers = useMemo(() => {
     if (squad.length === 0) return [];
-    
-    return [...squad].sort((a, b) => {
+
+    // 포지션 정보가 있는 선수만 필터링
+    const validPlayers = squad.filter(member => {
+      // 포지션이 없거나 유효하지 않은 경우 제외
+      if (!member.position || member.position.trim() === '') return false;
+
+      // 정의된 포지션이 아닌 경우 제외
+      if (!POSITION_ORDER.includes(member.position)) return false;
+
+      return true;
+    });
+
+    return validPlayers.sort((a, b) => {
       const posA = POSITION_ORDER.indexOf(a.position);
       const posB = POSITION_ORDER.indexOf(b.position);
-      
+
       if (posA !== posB) return posA - posB;
-      
-      // 같은 포지션 내에서는 이름 순으로 정렬
-      return a.name.localeCompare(b.name);
+
+      // 같은 포지션 내에서는 이름 순으로 정렬 (한글 이름 우선)
+      const nameA = getPlayerKoreanName(a.id) || a.name;
+      const nameB = getPlayerKoreanName(b.id) || b.name;
+      return nameA.localeCompare(nameB);
     });
   }, [squad]);
 
@@ -172,7 +186,7 @@ export default function Squad({ initialSquad, initialStats, isLoading: externalL
                     </td>
                     <td className="px-2 sm:px-4 md:px-6 py-1">
                       <div className="font-medium text-xs md:text-sm truncate max-w-[100px] md:max-w-none">
-                        {member.name}
+                        {getPlayerKoreanName(member.id) || member.name}
                       </div>
                     </td>
                     <td className="px-1 sm:px-2 md:px-6 py-1 text-xs text-center whitespace-nowrap">

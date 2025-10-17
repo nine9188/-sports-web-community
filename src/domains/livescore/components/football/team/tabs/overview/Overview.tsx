@@ -7,6 +7,7 @@ import StandingsPreview from './components/StandingsPreview';
 import MatchItems from './components/MatchItems';
 import { Match } from './components/MatchItems';
 import { StandingDisplay } from '@/domains/livescore/types/standings';
+import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
 
 // 팀 정보 타입
 interface Team {
@@ -117,7 +118,7 @@ export default function Overview({
 
   // 안전한 리그 정보 설정
   const safeLeague = {
-    name: stats?.league?.name || '',
+    name: getLeagueKoreanName(stats?.league?.name) || '',
     logo: stats?.league?.logo || ''
   };
 

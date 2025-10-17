@@ -4,7 +4,7 @@ import React from 'react';
 // 로딩 상태 표시 공통 컴포넌트
 export const LoadingState = memo(({ message = '데이터를 불러오는 중...' }: { message?: string }) => {
   return (
-    <div className="flex justify-center items-center py-8 bg-white rounded-lg border p-4 mb-4">
+    <div className="flex justify-center items-center py-8 bg-white rounded-lg border p-4">
       <div className="text-center">
         <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500 mx-auto mb-2"></div>
         <p className="text-sm text-gray-600">{message}</p>
@@ -18,7 +18,7 @@ LoadingState.displayName = 'LoadingState';
 // 에러 상태 표시 공통 컴포넌트
 export const ErrorState = memo(({ message = '오류가 발생했습니다.' }: { message?: string }) => {
   return (
-    <div className="text-center py-8 bg-white rounded-lg border border-red-100 p-4 mb-4">
+    <div className="text-center py-8 bg-white rounded-lg border border-red-100 p-4">
       <div className="text-red-500 mb-2">
         <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -35,7 +35,7 @@ ErrorState.displayName = 'ErrorState';
 // 데이터 없음 상태 표시 공통 컴포넌트
 export const EmptyState = memo(({ title = '데이터가 없습니다', message = '현재 이 정보를 제공할 수 없습니다.' }: { title?: string; message?: string }) => {
   return (
-    <div className="text-center py-8 bg-white rounded-lg border p-4 mb-4">
+    <div className="text-center py-8 bg-white rounded-lg border p-4">
       <div className="text-gray-500 mb-2">
         <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
@@ -52,7 +52,7 @@ EmptyState.displayName = 'EmptyState';
 // 플레이어 프로필 로딩 컴포넌트 (애니메이션 추가)
 export const PlayerProfileLoadingState = memo(() => {
   return (
-    <div className="animate-pulse bg-white rounded-lg border overflow-hidden mt-4 md:mt-0 mb-4">
+    <div className="animate-pulse bg-white rounded-lg border overflow-hidden mt-4 md:mt-0">
       <div className="flex flex-col md:flex-row items-stretch p-4 md:p-6">
         <div className="flex flex-row items-center gap-4 md:gap-6 md:w-1/3">
           <div className="w-20 h-20 md:w-28 md:h-28 bg-gray-300 rounded-full"></div>

@@ -129,6 +129,7 @@ export async function fetchPlayerInjuries(playerId: number): Promise<InjuryData[
       
       return {
         team: {
+          id: injury.team?.id || 0,
           name: injury.team?.name || '',
           logo: injury.team?.logo || '',
         },

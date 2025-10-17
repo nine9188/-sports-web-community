@@ -189,9 +189,49 @@ export async function fetchPlayerData(id: string): Promise<PlayerData> {
 }
 
 /**
+ * 리그 우선순위 정의 (숫자가 작을수록 우선순위가 높음)
+ */
+function getLeaguePriority(leagueId: number): number {
+  // 메이저 리그 (Top 5)
+  const majorLeagues = [39, 140, 78, 135, 61]; // 프리미어, 라리가, 분데스, 세리에A, 리그1
+  if (majorLeagues.includes(leagueId)) return 1;
+
+  // 2군 유럽 리그
+  const secondTierLeagues = [40, 179, 88, 94, 119]; // 챔피언십, 스코틀랜드, 에레디비지에, 프리메이라, 슈퍼리가
+  if (secondTierLeagues.includes(leagueId)) return 2;
+
+  // 주요 아시아/아메리카 리그
+  const otherMajorLeagues = [292, 98, 253, 307, 71, 262, 169]; // K리그, J리그, MLS, 사우디, 브라질, 리가MX, 중국
+  if (otherMajorLeagues.includes(leagueId)) return 3;
+
+  // 유럽 컵 대회
+  const europeanCups = [2, 3, 848]; // 챔스, 유로파, 컨퍼런스
+  if (europeanCups.includes(leagueId)) return 4;
+
+  // 기타 컵 대회 (최하위 우선순위)
+  return 5;
+}
+
+/**
  * API 응답을 내부 타입으로 변환
  */
 function formatPlayerData(player: ApiPlayerResponse, season: number): PlayerData {
+  // 통계 데이터를 리그 우선순위로 정렬
+  const sortedStatistics = player?.statistics?.sort((a, b) => {
+    const priorityA = getLeaguePriority(a.league?.id || 0);
+    const priorityB = getLeaguePriority(b.league?.id || 0);
+
+    // 우선순위가 다르면 우선순위로 정렬
+    if (priorityA !== priorityB) {
+      return priorityA - priorityB;
+    }
+
+    // 같은 우선순위면 출전 경기 수로 정렬 (많은 것이 우선)
+    const appearencesA = a.games?.appearences || 0;
+    const appearencesB = b.games?.appearences || 0;
+    return appearencesB - appearencesA;
+  }) || [];
+
   return {
     info: {
       id: player.player?.id || 0,
@@ -210,7 +250,7 @@ function formatPlayerData(player: ApiPlayerResponse, season: number): PlayerData
       injured: player.player?.injured || false,
       photo: player.player?.photo || '',
     },
-    statistics: player?.statistics?.map((stat) => ({
+    statistics: sortedStatistics.map((stat) => ({
       team: {
         id: stat.team?.id || 0,
         name: stat.team?.name || '',

@@ -342,9 +342,12 @@ export const fetchPlayerFullData = async (
         }
         
         if (loadOptions.fetchRankings) {
-          // 기본 리그 ID로 프리미어리그(39) 사용, 데이터가 있으면 첫 번째 리그 ID 사용
-          const defaultLeagueId = 39;
-          apiPromises.rankings = fetchPlayerRankings(playerIdNum, defaultLeagueId);
+          // 선수의 현재 리그 ID를 가져오기 위해 먼저 선수 데이터를 기다림
+          apiPromises.rankings = apiPromises.playerData!.then(async (playerData) => {
+            // 선수의 최근 통계에서 리그 ID 추출
+            const currentLeagueId = playerData?.statistics?.[0]?.league?.id || 39; // 기본값: 프리미어리그
+            return fetchPlayerRankings(playerIdNum, currentLeagueId);
+          });
         }
         
         // 병렬로 모든 API 호출 처리

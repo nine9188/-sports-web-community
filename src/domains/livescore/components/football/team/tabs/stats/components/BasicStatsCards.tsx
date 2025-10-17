@@ -4,6 +4,7 @@ import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
 
 import { TeamStatsData, LeagueData } from '@/domains/livescore/types/stats';
+import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
 
 // 컴포넌트 Props 타입
 interface BasicStatsCardsProps {
@@ -61,7 +62,7 @@ export default function BasicStatsCards({ stats }: BasicStatsCardsProps) {
               </div>
             </div>
             <div>
-              <p className="font-medium text-sm">{safeLeague.name || ''}</p>
+              <p className="font-medium text-sm">{getLeagueKoreanName(safeLeague.name) || ''}</p>
               <p className="text-xs text-gray-600">시즌: {safeLeague.season || ''}</p>
               <p className="text-xs text-gray-600">국가: {safeLeague.country || ''}</p>
             </div>
