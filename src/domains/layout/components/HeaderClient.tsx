@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faBars, faFutbol } from '@fortawesome/free-solid-svg-icons';
 import { ChevronDown, ShoppingBag, X, Search, ArrowLeft } from 'lucide-react';
@@ -470,7 +471,14 @@ export default function HeaderClient({
         <div className="flex h-16 items-center px-4">
           <div className="flex items-center space-x-2">
             <Link href="/" className="flex items-center space-x-2">
-              <span className="font-bold text-2xl text-primary">SPORTS</span>
+              <Image 
+                src="/logo/4590 로고2 이미지크기 275X200 누끼제거 버전.png"
+                alt="SPORTS 로고"
+                width={124}
+                height={60}
+                priority
+                className="h-14 w-auto"
+              />
             </Link>
             {/* 라이브스코어 버튼 - 로고 옆으로 이동 */}
             <button 

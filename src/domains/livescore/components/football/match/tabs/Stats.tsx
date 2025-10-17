@@ -288,18 +288,6 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
     if (tabLoadError) setError(tabLoadError);
   }, [isTabLoading, tabLoadError]);
 
-  // 스크롤 이벤트 감지 - 한 번이라도 스크롤하면 힌트 숨김
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!hasScrolled && window.scrollY > 10) {
-        setHasScrolled(true);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasScrolled]);
-
   // 통계 항목 매핑 (API에서 사용하는 키값 -> 표시 레이블)
   const statMappings = useMemo(() => [
     // 슈팅 관련 통계
@@ -453,15 +441,59 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
   const homePlayersInView = useInView(homePlayersRef, { amount: 0.5 });
   const awayPlayersInView = useInView(awayPlayersRef, { amount: 0.5 });
 
+  // 스크롤 이벤트 감지 - 슈팅 통계가 화면에 보이기 시작하면 힌트 숨김
+  useEffect(() => {
+    // 슈팅 통계 섹션이 화면에 보이기 시작하면 힌트 숨김 (기본 통계는 유지)
+    if (!hasScrolled && shootingInView) {
+      setHasScrolled(true);
+    }
+  }, [hasScrolled, shootingInView]);
+
+  // 힌트 자동 숨김 타이머 - 2.5초 후 자동으로 사라짐
+  useEffect(() => {
+    if (!hasScrolled) {
+      const timer = setTimeout(() => {
+        setHasScrolled(true);
+      }, 2500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [hasScrolled]);
+
   return (
     <div className="p-0 relative" style={{ overflow: 'visible' }}>
       <motion.div
-        className="space-y-2"
+        className="space-y-2 relative"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
         style={{ overflow: 'visible' }}
       >
+        {/* 모바일 전용: 기본 통계 위 오버레이 힌트 */}
+        {!hasScrolled && (
+          <motion.div
+            className="md:hidden absolute top-0 left-0 right-0 z-10 pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+          >
+            <div className="relative">
+              {/* 그라데이션 배경 */}
+              <div className="absolute inset-0 bg-gradient-to-b from-white/95 via-white/70 to-transparent h-32 backdrop-blur-sm" />
+
+              {/* 힌트 텍스트 */}
+              <div className="relative flex flex-col items-center pt-6 pb-8">
+                <div className="flex flex-col items-center gap-1.5 text-gray-600">
+                  <svg className="w-5 h-5 animate-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                  <span className="text-sm font-medium drop-shadow-sm">아래로 스크롤하여 더 많은 통계 보기</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
         {/* 기본 통계 */}
         <motion.div
           ref={basicRef}
@@ -482,10 +514,10 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
           </div>
         </motion.div>
 
-        {/* 기본 통계 하단 힌트 */}
+        {/* PC 전용: 기본 통계 하단 힌트 */}
         {basicInView && !shootingInView && !hasScrolled && (
           <motion.div
-            className="flex justify-center items-center py-3 text-gray-400"
+            className="hidden md:flex justify-center items-center py-3 text-gray-400"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
