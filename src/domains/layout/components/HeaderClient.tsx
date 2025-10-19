@@ -278,7 +278,7 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
         </div>
       </div>
     </div>,
-    typeof document !== 'undefined' ? document.body : null
+    document.body
   );
 });
 
@@ -369,7 +369,7 @@ const SearchModal = React.memo(function SearchModal({
         </form>
       </div>
     </div>,
-    typeof document !== 'undefined' ? document.body : null
+    document.body
   );
 });
 

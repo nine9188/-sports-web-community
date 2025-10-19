@@ -77,8 +77,9 @@ export const ALL_PLAYERS: PlayerMapping[] = [
 ];
 
 // 선수 ID로 한글명 찾기
-export function getPlayerKoreanName(playerId: number): string | null {
-  const player = ALL_PLAYERS.find(p => p.id === playerId);
+export function getPlayerKoreanName(playerId: number | string): string | null {
+  const numericId = typeof playerId === 'string' ? parseInt(playerId, 10) : playerId;
+  const player = ALL_PLAYERS.find(p => p.id === numericId);
   return player?.korean_name || null;
 }
 
