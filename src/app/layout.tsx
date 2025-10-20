@@ -9,6 +9,7 @@ import LeagueStandings from '@/domains/sidebar/components/league/LeagueStandings
 import { RightSidebar } from '@/domains/sidebar/components';
 import { getInitialSession } from '@/shared/api/supabaseServer';
 import { getHeaderUserData, getBoardsForNavigation } from '@/domains/layout/actions';
+import { fetchMultiDayMatches } from '@/domains/livescore/actions/footballApi';
 import { Suspense } from 'react';
 
 // 로딩 스켈레톤 컴포넌트
@@ -86,10 +87,11 @@ export default async function RootLayout({
   // 리그 순위 컴포넌트 생성
   const leagueStandingsComponent = <LeagueStandings initialLeague="premier" initialStandings={standingsData} />;
 
-  // 헤더 데이터 가져오기
-  const [headerUserData, headerBoardsData] = await Promise.all([
+  // 헤더 데이터 및 라이브스코어 데이터 가져오기
+  const [headerUserData, headerBoardsData, liveScoreData] = await Promise.all([
     getHeaderUserData(),
-    getBoardsForNavigation()
+    getBoardsForNavigation(),
+    fetchMultiDayMatches().catch(() => ({ success: false, data: null }))
   ]);
 
   return (
@@ -99,7 +101,7 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://challenges.cloudflare.com" />
       </head>
       <body className="w-full h-full overflow-x-hidden">
-        <RootLayoutClient 
+        <RootLayoutClient
           boardNavigation={boardNav}
           rightSidebar={
             <Suspense fallback={<RightSidebarSkeleton />}>
@@ -112,6 +114,7 @@ export default async function RootLayout({
           headerUserData={headerUserData}
           headerBoards={headerBoardsData.boardData}
           headerIsAdmin={headerBoardsData.isAdmin}
+          liveScoreData={liveScoreData}
         >
           {children}
         </RootLayoutClient>

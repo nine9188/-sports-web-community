@@ -57,6 +57,8 @@ import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
 import ShopPagination from '@/domains/shop/components/ShopPagination';
 import { memo } from 'react';
+import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
+import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
 
 // 팀 로고 컴포넌트 - Standings와 동일한 방식으로 메모이제이션
 const TeamLogo = memo(({ teamName, teamId, size = 20 }: { teamName: string; teamId?: number; size?: number }) => {
@@ -382,7 +384,7 @@ export default async function TransfersPageContent({
                             href={`/livescore/football/player/${transfer.player.id}`}
                             className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors"
                           >
-                            {transfer.player.name}
+                            {getPlayerKoreanName(transfer.player.id) || transfer.player.name}
                           </Link>
                           <div className="text-sm text-gray-500">
                             {transfer.player.nationality}
@@ -405,7 +407,11 @@ export default async function TransfersPageContent({
                             href={`/livescore/football/team/${transfer.transfers[0]?.teams?.out?.id}`}
                             className="text-sm text-gray-600 hover:text-blue-600 transition-colors truncate"
                           >
-                            {transfer.transfers[0]?.teams?.out?.name || 'Unknown'}
+                            {(() => {
+                              const teamId = transfer.transfers[0]?.teams?.out?.id || 0;
+                              const displayName = getTeamDisplayName(teamId);
+                              return displayName.startsWith('팀 ') ? transfer.transfers[0]?.teams?.out?.name || 'Unknown' : displayName;
+                            })()}
                           </Link>
                         </div>
 
@@ -427,7 +433,11 @@ export default async function TransfersPageContent({
                             href={`/livescore/football/team/${transfer.transfers[0]?.teams?.in?.id}`}
                             className="text-sm text-gray-900 hover:text-blue-600 transition-colors truncate font-medium"
                           >
-                            {transfer.transfers[0]?.teams?.in?.name || 'Unknown'}
+                            {(() => {
+                              const teamId = transfer.transfers[0]?.teams?.in?.id || 0;
+                              const displayName = getTeamDisplayName(teamId);
+                              return displayName.startsWith('팀 ') ? transfer.transfers[0]?.teams?.in?.name || 'Unknown' : displayName;
+                            })()}
                           </Link>
                         </div>
                       </div>
@@ -499,7 +509,7 @@ export default async function TransfersPageContent({
                         href={`/livescore/football/player/${transfer.player.id}`}
                         className="text-sm font-semibold text-gray-900 hover:text-blue-600 transition-colors truncate"
                       >
-                        {transfer.player.name}
+                        {getPlayerKoreanName(transfer.player.id) || transfer.player.name}
                       </Link>
                       
                       {/* 국적 */}
@@ -531,7 +541,10 @@ export default async function TransfersPageContent({
                           className="text-xs text-gray-700 hover:text-blue-600 transition-colors truncate"
                           title={latestTransfer.teams.out.name}
                         >
-                          {latestTransfer.teams.out.name}
+                          {(() => {
+                            const displayName = getTeamDisplayName(latestTransfer.teams.out.id);
+                            return displayName.startsWith('팀 ') ? latestTransfer.teams.out.name : displayName;
+                          })()}
                         </Link>
                       </div>
 
@@ -554,7 +567,10 @@ export default async function TransfersPageContent({
                           className="text-xs text-gray-700 hover:text-blue-600 transition-colors truncate"
                           title={latestTransfer.teams.in.name}
                         >
-                          {latestTransfer.teams.in.name}
+                          {(() => {
+                            const displayName = getTeamDisplayName(latestTransfer.teams.in.id);
+                            return displayName.startsWith('팀 ') ? latestTransfer.teams.in.name : displayName;
+                          })()}
                         </Link>
                       </div>
                     </div>

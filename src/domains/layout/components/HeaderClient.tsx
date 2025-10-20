@@ -13,8 +13,9 @@ import { useIcon } from '@/shared/context/IconContext';
 import UserIcon from '@/shared/components/UserIcon';
 import { Board } from '../types/board';
 import ReactDOM from 'react-dom';
-import LiveScoreModal from './LiveScoreModal';
+import LiveScoreModal from './livescoremodal';
 import UserProfileClient from './UserProfileClient';
+import { MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
 
 type HeaderClientProps = {
   onProfileClick: () => void;
@@ -23,6 +24,7 @@ type HeaderClientProps = {
   boards: Board[];
   isAdmin?: boolean;
   renderMode?: 'full' | 'logo-and-mobile' | 'navigation';
+  liveScoreData?: MultiDayMatchesResult;
 };
 
 // 모바일 햄버거 메뉴 모달 컴포넌트
@@ -373,12 +375,13 @@ const SearchModal = React.memo(function SearchModal({
   );
 });
 
-export default function HeaderClient({ 
-  onProfileClick, 
-  isSidebarOpen, 
+export default function HeaderClient({
+  onProfileClick,
+  isSidebarOpen,
   initialUserData,
   boards,
-  isAdmin = false
+  isAdmin = false,
+  liveScoreData
 }: HeaderClientProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLiveScoreOpen, setIsLiveScoreOpen] = useState(false);
@@ -532,6 +535,7 @@ export default function HeaderClient({
       <LiveScoreModal
         isOpen={isLiveScoreOpen}
         onClose={() => setIsLiveScoreOpen(false)}
+        initialData={liveScoreData}
       />
 
       {/* 검색 모달: 검색 결과 페이지에서만 표시 */}

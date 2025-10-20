@@ -11,6 +11,7 @@ import { IconProvider } from '@/shared/context/IconContext';
 import AuthStateManager from '@/shared/components/AuthStateManager';
 import { HeaderUserData } from '@/domains/layout/types/header';
 import { Board } from '@/domains/layout/types/board';
+import { MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
 
 import { Session } from '@supabase/supabase-js';
 
@@ -26,11 +27,12 @@ interface RootLayoutClientProps {
   initialIconUrl?: string;
   initialIconName?: string;
   initialSession?: Session | null;
+  liveScoreData?: MultiDayMatchesResult;
 }
 
-export default function RootLayoutClient({ 
-  children, 
-  boardNavigation, 
+export default function RootLayoutClient({
+  children,
+  boardNavigation,
   rightSidebar,
   authSection,
   leagueStandingsComponent,
@@ -39,7 +41,8 @@ export default function RootLayoutClient({
   headerIsAdmin,
   initialIconUrl = '',
   initialIconName = '',
-  initialSession = null
+  initialSession = null,
+  liveScoreData
 }: RootLayoutClientProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -161,7 +164,7 @@ export default function RootLayoutClient({
           {isIndependentLayout ? (
             children
           ) : (
-            <AuthStateManager 
+            <AuthStateManager
               authSection={authSection}
               boardNavigation={boardNavigation}
               leagueStandingsComponent={leagueStandingsComponent}
@@ -169,6 +172,7 @@ export default function RootLayoutClient({
               headerUserData={headerUserData}
               headerBoards={headerBoards}
               headerIsAdmin={headerIsAdmin}
+              liveScoreData={liveScoreData}
               isOpen={deferredIsOpen}
               onClose={closeSidebar}
               isProfileOpen={deferredIsProfileOpen}

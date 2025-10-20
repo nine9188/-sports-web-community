@@ -139,7 +139,7 @@ const API_BASE_URL = 'https://v3.football.api-sports.io';
 const API_KEY = process.env.FOOTBALL_API_KEY || '';
 
 // MultiDayMatches 결과 타입 정의
-interface MultiDayMatchesResult {
+export interface MultiDayMatchesResult {
   success: boolean;
   dates?: {
     yesterday: string;

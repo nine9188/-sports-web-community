@@ -10,6 +10,7 @@ import ProfileSidebar from '@/domains/sidebar/components/ProfileSidebar';
 import { UniversalChatbot } from '@/domains/chatbot/components/UniversalChatbot';
 import { HeaderUserData } from '@/domains/layout/types/header';
 import { Board } from '@/domains/layout/types/board';
+import { MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
 
 // AuthStateManager를 React.memo로 최적화
 const AuthStateManager = React.memo(function AuthStateManager({
@@ -21,6 +22,7 @@ const AuthStateManager = React.memo(function AuthStateManager({
   headerUserData,
   headerBoards,
   headerIsAdmin,
+  liveScoreData,
   isOpen,
   onClose,
   isProfileOpen,
@@ -35,6 +37,7 @@ const AuthStateManager = React.memo(function AuthStateManager({
   headerUserData?: HeaderUserData | null,
   headerBoards?: Board[],
   headerIsAdmin?: boolean,
+  liveScoreData?: MultiDayMatchesResult,
   isOpen: boolean,
   onClose: () => void,
   isProfileOpen: boolean,
@@ -55,11 +58,12 @@ const AuthStateManager = React.memo(function AuthStateManager({
   
   return (
     <div className="flex flex-col min-h-screen w-full">
-      <Header 
+      <Header
         onProfileClick={onProfileClick}
         initialUserData={headerUserData}
         boards={headerBoards}
         isAdmin={headerIsAdmin}
+        liveScoreData={liveScoreData}
       />
       <div className="flex flex-1 w-full md:max-w-screen-2xl md:mx-auto">
         <Sidebar 

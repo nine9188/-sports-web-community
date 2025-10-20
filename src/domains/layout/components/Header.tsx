@@ -3,30 +3,34 @@
 import HeaderClient from './HeaderClient';
 import { HeaderUserData } from '../types/header';
 import { Board } from '../types/board';
+import { MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
 
 interface HeaderProps {
   onProfileClick?: () => void;
   initialUserData?: HeaderUserData | null;
   boards?: Board[];
   isAdmin?: boolean;
+  liveScoreData?: MultiDayMatchesResult;
 }
 
 /**
  * 헤더 컴포넌트 - props로 데이터를 받아서 바로 렌더링
  */
-export default function Header({ 
+export default function Header({
   onProfileClick = () => {},
   initialUserData = null,
   boards = [],
-  isAdmin = false
+  isAdmin = false,
+  liveScoreData
 }: HeaderProps) {
   return (
-    <HeaderClient 
+    <HeaderClient
       onProfileClick={onProfileClick}
       isSidebarOpen={false}
       initialUserData={initialUserData}
       boards={boards}
       isAdmin={isAdmin}
+      liveScoreData={liveScoreData}
     />
   );
 } 
