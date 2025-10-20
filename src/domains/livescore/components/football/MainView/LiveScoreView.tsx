@@ -230,15 +230,11 @@ export default function LiveScoreView({
   return (
     <div className="min-h-screen bg-white space-y-4">
       <div className="rounded-lg border border-gray-200 overflow-hidden">
-        <div className="flex w-full items-stretch h-auto">
-          <div className="flex flex-1">
-            <DateSelector
-              selectedDate={selectedDate}
-              onDateChange={handleDateChange}
-              datesWithMatches={datesWithMatches}
-            />
-          </div>
-        </div>
+        <DateSelector
+          selectedDate={selectedDate}
+          onDateChange={handleDateChange}
+          datesWithMatches={datesWithMatches}
+        />
       </div>
 
       <div>
@@ -261,19 +257,19 @@ export default function LiveScoreView({
         
       <div>
         {loading ? (
-          <div className="space-y-4">
-            {/* 스켈레톤 - 리그 섹션 */}
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            {/* 스켈레톤 - 여러 리그와 매치 */}
             {[1, 2, 3].map((section) => (
-              <div key={section} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div key={section}>
                 {/* 리그 헤더 스켈레톤 */}
-                <div className="bg-gray-50 px-4 py-3 flex items-center gap-3 border-b border-gray-200">
+                <div className="bg-gray-50 px-4 py-3 flex items-center gap-3 border-b border-gray-100">
                   <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
                   <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
                 </div>
 
                 {/* 매치 카드 스켈레톤 */}
                 {[1, 2, 3].map((match) => (
-                  <div key={match} className="px-4 py-3 border-b border-gray-100 last:border-b-0">
+                  <div key={match} className="px-4 py-3 border-b border-gray-100">
                     <div className="flex items-center gap-4">
                       {/* 시간 */}
                       <div className="w-12 h-4 bg-gray-200 rounded animate-pulse"></div>

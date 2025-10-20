@@ -99,8 +99,9 @@ export default function DateSelector({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '8px 0',
-        gap: '8px'
+        padding: '12px 0 8px',
+        gap: '8px',
+        borderBottom: '1px solid #e5e7eb'
       }}>
         <button
           onClick={handlePrevMonth}
@@ -115,7 +116,7 @@ export default function DateSelector({
         >
           <ChevronLeft size={20} color="black" />
         </button>
-        <span style={{ fontSize: '16px', fontWeight: 'bold', color: 'black' }}>
+        <span style={{ fontSize: '16px', fontWeight: 'bold', color: 'black', minWidth: '100px', textAlign: 'center' }}>
           {format(currentMonth, 'yyyy M월', { locale: ko })}
         </span>
         <button
@@ -133,28 +134,8 @@ export default function DateSelector({
         </button>
       </div>
 
-      {/* 요일 헤더 */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-around',
-        padding: '4px 0',
-        borderBottom: '1px solid #e5e7eb'
-      }}>
-        {weekDays.map((day) => (
-          <div key={day} style={{
-            width: '14.28%',
-            textAlign: 'center',
-            fontSize: '12px',
-            color: '#6b7280',
-            fontWeight: '500'
-          }}>
-            {day}
-          </div>
-        ))}
-      </div>
-
       {/* 날짜 캐러셀 */}
-      <div style={{ position: 'relative' }}>
+      <div style={{ position: 'relative', width: '100%' }}>
         {/* PC용 좌측 버튼 */}
         <button
           onClick={scrollPrev}
@@ -180,8 +161,8 @@ export default function DateSelector({
         </button>
 
         {/* Embla Carousel */}
-        <div ref={emblaRef} style={{ overflow: 'hidden', padding: '12px 0' }}>
-          <div style={{ display: 'flex', touchAction: 'pan-y' }}>
+        <div ref={emblaRef} style={{ overflow: 'hidden', padding: '12px 0', width: '100%' }}>
+          <div style={{ display: 'flex', touchAction: 'pan-y', width: '100%' }}>
             {dates.map((date) => {
               const isSelected = isSameDay(date, selectedDate);
               const isToday = isSameDay(date, today);
@@ -191,8 +172,9 @@ export default function DateSelector({
                 <div
                   key={date.toISOString()}
                   style={{
-                    flex: '0 0 14.28%',
-                    minWidth: '14.28%'
+                    flex: '0 0 auto',
+                    width: 'calc(100% / 7)',
+                    minWidth: '60px'
                   }}
                 >
                   <button
@@ -203,43 +185,53 @@ export default function DateSelector({
                       flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '4px',
-                      padding: '8px',
+                      gap: '6px',
+                      padding: '12px 4px',
                       border: 'none',
                       background: 'transparent',
                       cursor: 'pointer',
                       position: 'relative'
                     }}
                   >
-                  {/* 파란 점 (경기 있는 날) */}
-                  {hasMatch && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '2px',
-                      width: '4px',
-                      height: '4px',
-                      borderRadius: '50%',
-                      backgroundColor: isSelected ? 'white' : '#3b82f6'
-                    }} />
-                  )}
+                  {/* 요일 표시 */}
+                  <div style={{
+                    fontSize: '11px',
+                    color: isSelected ? '#1f2937' : '#9ca3af',
+                    fontWeight: isSelected ? '600' : '500'
+                  }}>
+                    {weekDays[date.getDay()]}
+                  </div>
 
                   {/* 날짜 원 */}
                   <div
                     style={{
-                      width: '40px',
-                      height: '40px',
+                      width: '44px',
+                      height: '44px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       borderRadius: '50%',
-                      fontSize: '14px',
+                      fontSize: '15px',
                       fontWeight: isSelected ? 'bold' : 'normal',
                       backgroundColor: isSelected ? '#1f2937' : isToday ? '#e5e7eb' : 'transparent',
-                      color: isSelected ? 'white' : '#6b7280',
-                      transition: 'all 0.2s'
+                      color: isSelected ? 'white' : '#374151',
+                      transition: 'all 0.2s',
+                      position: 'relative'
                     }}
                   >
                     {format(date, 'd')}
+
+                    {/* 파란 점 (경기 있는 날) - 날짜 아래에 표시 */}
+                    {hasMatch && (
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '4px',
+                        width: '5px',
+                        height: '5px',
+                        borderRadius: '50%',
+                        backgroundColor: isSelected ? 'white' : '#3b82f6'
+                      }} />
+                    )}
                   </div>
                 </button>
               </div>
