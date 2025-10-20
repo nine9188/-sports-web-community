@@ -385,6 +385,12 @@ export interface LeagueTeam {
   isWinner?: boolean; // 컵대회 우승팀 여부 (옵셔널)
 }
 
+// standings API row 타입 (any 사용 금지)
+type StandingRow = {
+  team?: { id?: number };
+  rank?: number;
+};
+
 // 리그 상세 정보 가져오기
 export async function fetchLeagueDetails(leagueId: string): Promise<LeagueDetails | null> {
   try {
@@ -516,9 +522,9 @@ export async function fetchLeagueTeams(leagueId: string): Promise<LeagueTeam[]> 
           if (Array.isArray(leagueStandings)) {
             // leagueStandings가 2중 배열인지 확인 후 플랫하게 순회
             const groups = Array.isArray(leagueStandings[0]) ? leagueStandings : [leagueStandings];
-            groups.forEach((group: any) => {
+            groups.forEach((group: StandingRow[]) => {
               const rows = Array.isArray(group) ? group : [];
-              rows.forEach((standing: { team?: { id?: number }; rank?: number }) => {
+              rows.forEach((standing: StandingRow) => {
                 if (standing?.team?.id && standing?.rank) {
                   standingsMap.set(standing.team.id, standing.rank);
                 }

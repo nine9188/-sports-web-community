@@ -9,6 +9,7 @@ import { Match } from '../../../types/match';
 import { fetchMatchesByDate, MatchData } from '../../../actions/footballApi';
 import { getTeamById } from '../../../constants/teams/index';
 import { getLeagueById } from '../../../constants/league-mappings';
+import { fetchMonthMatchDates } from './actions';
 
 // 기본 이미지 URL - 로고가 없을 때 사용
 const DEFAULT_TEAM_LOGO = 'https://cdn.sportmonks.com/images/soccer/team_placeholder.png';
@@ -33,6 +34,7 @@ export default function LiveScoreView({
   const [searchKeyword, setSearchKeyword] = useState('');
   const [showLiveOnly, setShowLiveOnly] = useState(false);
   const [liveMatchCount, setLiveMatchCount] = useState(0);
+  const [allMatchDates, setAllMatchDates] = useState<Date[]>([]); // 모든 경기 날짜 저장
 
   // 전체 경기 데이터에서 현재 진행 중인 경기 수를 계산
   const calculateLiveMatchCount = (matches: Match[]) => {
@@ -49,6 +51,33 @@ export default function LiveScoreView({
   useEffect(() => {
     setLiveMatchCount(calculateLiveMatchCount(initialMatches));
   }, [initialMatches]);
+
+  // 현재 월 경기 날짜 로드
+  useEffect(() => {
+    const loadCurrentMonth = async () => {
+      const year = selectedDate.getFullYear();
+      const month = selectedDate.getMonth();
+
+      try {
+        // 현재 달만 로드
+        const currentMonthDates = await fetchMonthMatchDates(year, month);
+
+        // Date 객체로 변환
+        const matchDates = currentMonthDates.map(dateStr => {
+          const date = new Date(dateStr);
+          date.setHours(0, 0, 0, 0);
+          return date;
+        });
+
+        setAllMatchDates(matchDates);
+      } catch (error) {
+        console.error('Failed to load month match dates:', error);
+        setAllMatchDates([]);
+      }
+    };
+
+    loadCurrentMonth();
+  }, [selectedDate]);
 
   // 날짜 변경 시 Server Action 호출
   const fetchMatches = useCallback(async (date: Date) => {
@@ -190,12 +219,24 @@ export default function LiveScoreView({
     }
   };
 
+  // 경기가 있는 날짜 목록: allMatchDates 사용 (한 달 전체)
+  const datesWithMatches = allMatchDates;
+
+  // CalendarButton에서 월 변경 시 호출
+  const handleMonthChange = useCallback((year: number, month: number) => {
+    setSelectedDate(new Date(year, month, 1));
+  }, []);
+
   return (
     <div className="min-h-screen bg-white space-y-4">
       <div className="rounded-lg border border-gray-200 overflow-hidden">
-        <div className="flex w-full items-stretch h-12 md:h-[60px]">
+        <div className="flex w-full items-stretch h-auto">
           <div className="flex flex-1">
-            <DateSelector selectedDate={selectedDate} onDateChange={handleDateChange} />
+            <DateSelector
+              selectedDate={selectedDate}
+              onDateChange={handleDateChange}
+              datesWithMatches={datesWithMatches}
+            />
           </div>
         </div>
       </div>
@@ -213,13 +254,53 @@ export default function LiveScoreView({
             }
           }}
           onDateChange={handleDateChange}
+          datesWithMatches={datesWithMatches}
+          onMonthChange={handleMonthChange}
         />
       </div>
         
       <div>
         {loading ? (
-          <div className="flex justify-center items-center min-h-[200px]">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          <div className="space-y-4">
+            {/* 스켈레톤 - 리그 섹션 */}
+            {[1, 2, 3].map((section) => (
+              <div key={section} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                {/* 리그 헤더 스켈레톤 */}
+                <div className="bg-gray-50 px-4 py-3 flex items-center gap-3 border-b border-gray-200">
+                  <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+
+                {/* 매치 카드 스켈레톤 */}
+                {[1, 2, 3].map((match) => (
+                  <div key={match} className="px-4 py-3 border-b border-gray-100 last:border-b-0">
+                    <div className="flex items-center gap-4">
+                      {/* 시간 */}
+                      <div className="w-12 h-4 bg-gray-200 rounded animate-pulse"></div>
+
+                      {/* 홈팀 */}
+                      <div className="flex-1 flex items-center gap-2">
+                        <div className="w-6 h-6 bg-gray-200 rounded-full animate-pulse"></div>
+                        <div className="h-4 flex-1 bg-gray-200 rounded animate-pulse"></div>
+                      </div>
+
+                      {/* 스코어 */}
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+                      </div>
+
+                      {/* 원정팀 */}
+                      <div className="flex-1 flex items-center gap-2 justify-end">
+                        <div className="h-4 flex-1 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="w-6 h-6 bg-gray-200 rounded-full animate-pulse"></div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
           </div>
         ) : (
           <LeagueMatchList matches={filteredMatches} />

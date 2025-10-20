@@ -168,10 +168,10 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
     if (!match || !match.id || !match.status || !match.time) {
       return '-';
     }
-    
+
     try {
       const statusCode = match.status.code || '';
-      
+
       if (statusCode === 'NS') {
         if (!match.time.date) return '-';
         const matchTime = new Date(match.time.date);
@@ -182,20 +182,32 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
           hour12: false,
           timeZone: 'Asia/Seoul',
         });
-      } 
+      }
       else if (statusCode === 'HT') {
-        return 'HT';
-      } 
-      else if (statusCode === 'FT' || statusCode === 'AET' || statusCode === 'PEN') {
-        return statusCode;
-      } 
-      else if (statusCode === 'CANC' || statusCode === 'PST' || statusCode === 'SUSP') {
-        return statusCode === 'CANC' ? '취소됨' : statusCode === 'PST' ? '연기됨' : '중단됨';
+        return '하프타임';
+      }
+      else if (statusCode === 'FT') {
+        return '종료';
+      }
+      else if (statusCode === 'AET') {
+        return '연장 종료';
+      }
+      else if (statusCode === 'PEN') {
+        return '승부차기';
+      }
+      else if (statusCode === 'CANC') {
+        return '취소됨';
+      }
+      else if (statusCode === 'PST') {
+        return '연기됨';
+      }
+      else if (statusCode === 'SUSP') {
+        return '중단됨';
       }
       else if (match.status.elapsed !== undefined && match.status.elapsed !== null) {
         return `${match.status.elapsed}'`;
       }
-      
+
       return statusCode || '-';
     } catch {
       return '-';
@@ -240,13 +252,13 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                           <div className="flex items-center justify-between mb-1 text-gray-700">
                             <div className="flex items-center gap-0.5 flex-1 min-w-0">
                               {match.league?.logo && match.league?.id && (
-                                <ApiSportsImage 
-                                  imageId={match.league.id} 
-                                  imageType={ImageType.Leagues} 
-                                  alt={String(leagueNameKo)} 
-                                  width={16} 
-                                  height={16} 
-                                  style={{ width: '16px', height: '16px', objectFit: 'contain' }} 
+                                <ApiSportsImage
+                                  imageId={match.league.id}
+                                  imageType={ImageType.Leagues}
+                                  alt={String(leagueNameKo)}
+                                  width={16}
+                                  height={16}
+                                  style={{ width: '16px', height: '16px', objectFit: 'contain' }}
                                   className="rounded-full flex-shrink-0"
                                   loading="eager"
                                   priority={index < 4}
@@ -254,6 +266,12 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                                 />
                               )}
                               <span className="text-xs font-medium truncate">{leagueNameKo}</span>
+                              {match.status?.code && !['NS', 'FT', 'AET', 'PEN', 'CANC', 'PST', 'SUSP'].includes(match.status.code) && (
+                                <span className="relative flex h-2 w-2 ml-1 flex-shrink-0">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                </span>
+                              )}
                             </div>
                             <span className="text-[10px] text-gray-400 font-medium ml-2 flex-shrink-0">{index + 1}/{matches.length}</span>
                           </div>

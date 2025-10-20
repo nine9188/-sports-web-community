@@ -264,11 +264,12 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
       player?: {
         name?: string;
         pos?: string;
+        number?: number;
         [key: string]: unknown;
       };
       statistics?: Array<{
         team?: { id?: number; [key: string]: unknown };
-        games?: { minutes?: number; position?: string; rating?: string | number; [key: string]: unknown };
+        games?: { minutes?: number; position?: string; rating?: string | number; number?: number; [key: string]: unknown };
         goals?: { total?: number; assists?: number; [key: string]: unknown };
         shots?: { total?: number; on?: number; [key: string]: unknown };
         passes?: { total?: number; key?: number; accuracy?: number | string; [key: string]: unknown };
@@ -669,7 +670,7 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
               <table className="w-full min-w-max divide-y divide-gray-200 text-sm">
                 <thead className="bg-gray-50 whitespace-nowrap">
                     <tr>
-                    <th className="sticky left-0 z-10 bg-gray-50 px-2 py-2 text-left font-medium text-gray-700 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-24 min-w-[6rem] max-w-[6rem]">선수</th>
+                    <th className="sticky left-0 z-10 bg-gray-50 px-2 py-2 text-left font-medium text-gray-700 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-32 min-w-[8rem] max-w-[8rem]">선수</th>
                     <th className="px-3 py-2 text-center font-medium text-gray-700">포지션</th>
                     <th className="px-3 py-2 text-right font-medium text-gray-700">분</th>
                     <th className="px-3 py-2 text-right font-medium text-gray-700">평점</th>
@@ -698,10 +699,14 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
                       const s = entry?.statistics?.[0];
                       const koreanName = getPlayerKoreanName(pid);
                       const displayName = koreanName || p?.name || String(pid);
+                      const playerNumber = s?.games?.number ?? p?.number;
                       return (
                         <tr key={`home-${pid}`} className="hover:bg-gray-50">
-                        <td className="sticky left-0 z-10 bg-white px-2 py-2 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-24 min-w-[6rem] max-w-[6rem]">
-                            <div className="truncate text-sm font-medium">{displayName}</div>
+                        <td className="sticky left-0 z-10 bg-white px-2 py-2 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-32 min-w-[8rem] max-w-[8rem]">
+                            <div className="flex items-center gap-1.5">
+                              {playerNumber && <span className="text-xs text-gray-500 font-medium min-w-[1.5rem]">{playerNumber}</span>}
+                              <div className="truncate text-sm font-medium">{displayName}</div>
+                            </div>
                           </td>
                         <td className="px-3 py-2 text-center whitespace-nowrap"><span className="text-xs text-gray-600">{s?.games?.position || p?.pos || '-'}</span></td>
                         <td className="px-3 py-2 text-right whitespace-nowrap">{s?.games?.minutes ?? 0}</td>
@@ -763,7 +768,7 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
               <table className="w-full min-w-max divide-y divide-gray-200 text-sm">
                 <thead className="bg-gray-50 whitespace-nowrap">
                     <tr>
-                    <th className="sticky left-0 z-10 bg-gray-50 px-2 py-2 text-left font-medium text-gray-700 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-24 min-w-[6rem] max-w-[6rem]">선수</th>
+                    <th className="sticky left-0 z-10 bg-gray-50 px-2 py-2 text-left font-medium text-gray-700 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-32 min-w-[8rem] max-w-[8rem]">선수</th>
                     <th className="px-3 py-2 text-center font-medium text-gray-700">포지션</th>
                     <th className="px-3 py-2 text-right font-medium text-gray-700">분</th>
                     <th className="px-3 py-2 text-right font-medium text-gray-700">평점</th>
@@ -792,10 +797,14 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
                       const s = entry?.statistics?.[0];
                       const koreanName = getPlayerKoreanName(pid);
                       const displayName = koreanName || p?.name || String(pid);
+                      const playerNumber = s?.games?.number ?? p?.number;
                       return (
                         <tr key={`away-${pid}`} className="hover:bg-gray-50">
-                        <td className="sticky left-0 z-10 bg-white px-2 py-2 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-24 min-w-[6rem] max-w-[6rem]">
-                            <div className="truncate text-sm font-medium">{displayName}</div>
+                        <td className="sticky left-0 z-10 bg-white px-2 py-2 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-32 min-w-[8rem] max-w-[8rem]">
+                            <div className="flex items-center gap-1.5">
+                              {playerNumber && <span className="text-xs text-gray-500 font-medium min-w-[1.5rem]">{playerNumber}</span>}
+                              <div className="truncate text-sm font-medium">{displayName}</div>
+                            </div>
                           </td>
                         <td className="px-3 py-2 text-center whitespace-nowrap"><span className="text-xs text-gray-600">{s?.games?.position || p?.pos || '-'}</span></td>
                         <td className="px-3 py-2 text-right whitespace-nowrap">{s?.games?.minutes ?? 0}</td>

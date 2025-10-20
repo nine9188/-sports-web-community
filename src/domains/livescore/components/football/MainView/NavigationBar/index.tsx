@@ -9,6 +9,8 @@ interface NavigationBarProps {
   onSearchChange: (value: string) => void;
   onLiveClick: () => void;  // LIVE 버튼 클릭 핸들러
   onDateChange: (date: Date) => void;  // 날짜 변경 props 추가
+  datesWithMatches?: Date[]; // 경기가 있는 날짜 목록
+  onMonthChange?: (year: number, month: number) => void; // 월 변경 콜백
 }
 
 export default function NavigationBar({
@@ -18,6 +20,8 @@ export default function NavigationBar({
   onSearchChange,
   onLiveClick,
   onDateChange,
+  datesWithMatches = [],
+  onMonthChange,
 }: NavigationBarProps) {
   const handleLiveClick = () => {
     onLiveClick();
@@ -58,7 +62,7 @@ export default function NavigationBar({
       </div>
 
       <div>
-        <CalendarButton onDateChange={onDateChange} />
+        <CalendarButton onDateChange={onDateChange} datesWithMatches={datesWithMatches} onMonthChange={onMonthChange} />
       </div>
     </div>
   );
