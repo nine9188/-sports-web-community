@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faBars, faFutbol } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faBars } from '@fortawesome/free-solid-svg-icons';
 import { ChevronDown, ShoppingBag, X, Search, ArrowLeft } from 'lucide-react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import BoardNavigationClient from './BoardNavigationClient';
@@ -16,6 +16,7 @@ import ReactDOM from 'react-dom';
 import LiveScoreModal from './livescoremodal';
 import UserProfileClient from './UserProfileClient';
 import { MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
+import { usePublicSiteSettings } from '@/domains/site-config/hooks/useSiteSettings';
 
 type HeaderClientProps = {
   onProfileClick: () => void;
@@ -389,7 +390,11 @@ export default function HeaderClient({
   const router = useRouter();
   const pathname = usePathname();
   const isSearchPage = (pathname || '').startsWith('/search');
-  
+
+  // 사이트 설정 가져오기 (로고 URL 등)
+  const { settings } = usePublicSiteSettings();
+  const logoUrl = settings.logo_url || '/logo/4590 로고2 이미지크기 275X200 누끼제거 버전.png';
+
   // 서버에서 전달받은 사용자 데이터 사용
   const userData = initialUserData;
   
@@ -420,6 +425,13 @@ export default function HeaderClient({
   const toggleLiveScore = useCallback(() => {
     setIsLiveScoreOpen(!isLiveScoreOpen);
   }, [isLiveScoreOpen]);
+
+  // 오늘 경기 유무 확인
+  const hasTodayMatches = useMemo(() => {
+    if (!liveScoreData?.success || !liveScoreData.data) return false;
+    const todayMatches = liveScoreData.data.today?.matches || [];
+    return todayMatches.length > 0;
+  }, [liveScoreData]);
 
   // 모바일 검색: 검색 페이지로 이동하여 모달 노출
   const goToSearchPage = useCallback(() => {
@@ -474,8 +486,8 @@ export default function HeaderClient({
         <div className="flex h-16 items-center px-4">
           <div className="flex items-center space-x-2">
             <Link href="/" className="flex items-center space-x-2">
-              <Image 
-                src="/logo/4590 로고2 이미지크기 275X200 누끼제거 버전.png"
+              <Image
+                src={logoUrl}
                 alt="SPORTS 로고"
                 width={124}
                 height={60}
@@ -484,16 +496,26 @@ export default function HeaderClient({
               />
             </Link>
             {/* 라이브스코어 버튼 - 로고 옆으로 이동 */}
-            <button 
+            <button
               onClick={toggleLiveScore}
-              className="md:hidden flex items-center justify-center w-9 h-9 rounded-full active:bg-gray-200 transition-colors duration-150"
+              className="md:hidden flex items-center gap-1.5 px-2 py-1.5 rounded-lg active:bg-gray-100 transition-colors duration-150"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
-              <FontAwesomeIcon icon={faFutbol} className="h-4 w-4 text-green-600" />
+              <span className={`relative flex h-2 w-2 ${hasTodayMatches ? '' : 'opacity-50'}`}>
+                {hasTodayMatches ? (
+                  <>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                  </>
+                ) : (
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                )}
+              </span>
+              <span className="text-xs text-gray-700 font-medium whitespace-nowrap">경기일정</span>
             </button>
           </div>
           <div className="flex flex-1 items-center justify-end space-x-4">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1">
               {/* 검색 아이콘 - 모바일에서만 표시 */}
               <button 
                 onClick={goToSearchPage}

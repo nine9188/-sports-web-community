@@ -10,6 +10,7 @@ import { RightSidebar } from '@/domains/sidebar/components';
 import { getInitialSession } from '@/shared/api/supabaseServer';
 import { getHeaderUserData, getBoardsForNavigation } from '@/domains/layout/actions';
 import { fetchMultiDayMatches } from '@/domains/livescore/actions/footballApi';
+import { generatePageMetadata } from '@/shared/utils/metadata';
 import { Suspense } from 'react';
 
 // 로딩 스켈레톤 컴포넌트
@@ -49,11 +50,13 @@ export const revalidate = 0;
 // Inter 폰트 정의를 전역 CSS 클래스로 사용
 const inter = Inter({ subsets: ['latin'] });
 
-// 메타데이터 설정
-export const metadata = {
-  title: 'SPORTS 커뮤니티',
-  description: '스포츠 팬들을 위한 커뮤니티 플랫폼',
-};
+// 동적 메타데이터 생성
+export async function generateMetadata() {
+  return await generatePageMetadata('/', {
+    title: 'SPORTS 커뮤니티',
+    description: '스포츠 팬들을 위한 커뮤니티 플랫폼',
+  });
+}
 
 // 뷰포트 설정 - 모바일에서 확대/축소 방지
 export const viewport = {
