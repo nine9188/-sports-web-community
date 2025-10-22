@@ -31,10 +31,77 @@ export default async function BrandingPage() {
         </ul>
       </div>
 
-      {/* 미리보기 (추후 구현) */}
+      {/* 파비콘 상태 확인 */}
       <div className="bg-white shadow rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">미리보기</h3>
-        <p className="text-sm text-gray-500">브랜딩 미리보기 기능은 곧 추가됩니다.</p>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">파비콘 상태</h3>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-3">
+              <img src="/favicon.ico" alt="favicon" className="w-8 h-8" />
+              <div>
+                <p className="text-sm font-medium text-gray-900">favicon.ico</p>
+                <p className="text-xs text-gray-500">/public/favicon.ico</p>
+              </div>
+            </div>
+            <span className="text-xs text-green-600 font-medium">✓ 적용됨</span>
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-3">
+              <img src="/apple-icon.png" alt="apple-icon" className="w-8 h-8 rounded" />
+              <div>
+                <p className="text-sm font-medium text-gray-900">Apple Touch Icon</p>
+                <p className="text-xs text-gray-500">/public/apple-icon.png</p>
+              </div>
+            </div>
+            <span className="text-xs text-green-600 font-medium">✓ 적용됨</span>
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-3">
+              <img src="/icon-192.png" alt="icon-192" className="w-8 h-8 rounded" />
+              <div>
+                <p className="text-sm font-medium text-gray-900">Web App Icon (192x192)</p>
+                <p className="text-xs text-gray-500">/public/icon-192.png</p>
+              </div>
+            </div>
+            <span className="text-xs text-green-600 font-medium">✓ 적용됨</span>
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-3">
+              <img src="/icon-512.png" alt="icon-512" className="w-8 h-8 rounded" />
+              <div>
+                <p className="text-sm font-medium text-gray-900">Web App Icon (512x512)</p>
+                <p className="text-xs text-gray-500">/public/icon-512.png</p>
+              </div>
+            </div>
+            <span className="text-xs text-green-600 font-medium">✓ 적용됨</span>
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div>
+              <p className="text-sm font-medium text-gray-900">Web App Manifest</p>
+              <p className="text-xs text-gray-500">/public/site.webmanifest</p>
+            </div>
+            <a
+              href="/site.webmanifest"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+            >
+              확인 →
+            </a>
+          </div>
+        </div>
+
+        <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+          <p className="text-xs text-blue-800">
+            <strong>💡 확인 방법:</strong> 브라우저 탭에서 파비콘이 표시되는지 확인하거나,
+            <code className="mx-1 px-1 bg-blue-100 rounded">npx realfavicon check 3000</code>
+            명령어로 검증할 수 있습니다.
+          </p>
+        </div>
       </div>
     </div>
   );
