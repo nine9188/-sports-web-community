@@ -52,10 +52,30 @@ const inter = Inter({ subsets: ['latin'] });
 
 // 동적 메타데이터 생성
 export async function generateMetadata() {
-  return await generatePageMetadata('/', {
+  const metadata = await generatePageMetadata('/', {
     title: 'SPORTS 커뮤니티',
     description: '스포츠 팬들을 위한 커뮤니티 플랫폼',
   });
+
+  // iOS 및 PWA용 추가 메타데이터
+  return {
+    ...metadata,
+    icons: {
+      icon: [
+        { url: '/favicon.ico', sizes: '48x48', type: 'image/x-icon' },
+        { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+        { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+      ],
+      apple: '/apple-icon.png',
+      shortcut: '/favicon.ico',
+    },
+    manifest: '/site.webmanifest',
+    appleWebApp: {
+      capable: true,
+      title: '4590',
+      statusBarStyle: 'default',
+    },
+  };
 }
 
 // 뷰포트 설정 - 모바일에서 확대/축소 방지
@@ -100,12 +120,6 @@ export default async function RootLayout({
   return (
     <html lang="ko" className={`w-full h-full ${inter.className}`} suppressHydrationWarning>
       <head>
-        <meta name="apple-mobile-web-app-title" content="4590" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/apple-icon.png" />
-        <link rel="manifest" href="/site.webmanifest" />
         <link rel="preconnect" href="https://challenges.cloudflare.com" crossOrigin="" />
         <link rel="dns-prefetch" href="https://challenges.cloudflare.com" />
       </head>
