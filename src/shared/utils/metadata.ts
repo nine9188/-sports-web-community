@@ -18,8 +18,9 @@ export async function generatePageMetadata(
 
     // 기본값 설정
     const siteName = siteSettings.site_name || 'SPORTS 커뮤니티';
-    const siteUrl = siteSettings.site_url || process.env.NEXT_PUBLIC_SITE_URL || 'https://yourdomain.com';
-    // OG 이미지는 /og-image.png로 고정 (DB 설정 무시)
+    // NEXT_PUBLIC_SITE_URL을 우선 사용 (Vercel에서 자동 설정됨)
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || siteSettings.site_url || 'https://sports-web-community.vercel.app';
+    // OG 이미지는 절대 URL로 고정
     const defaultOgImage = `${siteUrl}/og-image.png`;
 
     // 페이지 메타데이터가 있으면 우선 사용
