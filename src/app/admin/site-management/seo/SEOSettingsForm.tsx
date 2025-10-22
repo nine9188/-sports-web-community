@@ -112,22 +112,20 @@ export default function SEOSettingsForm({ initialSettings }: SEOSettingsFormProp
             />
           </div>
 
-          {/* OG 기본 이미지 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              기본 OG 이미지
-              <span className="ml-2 text-xs text-blue-600">(공개)</span>
-            </label>
-            <p className="text-xs text-gray-500 mb-2">
-              SNS 공유 시 표시될 이미지 URL (1200x630px 권장)
+          {/* OG 이미지 안내 */}
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <h4 className="text-sm font-semibold text-green-900 mb-2">📱 OG 이미지 (SNS 공유용)</h4>
+            <p className="text-xs text-green-800 mb-2">
+              OG 이미지는 <code className="px-1 bg-green-100 rounded">/public/og-image.png</code> 파일로 고정되어 있습니다.
             </p>
-            <input
-              type="text"
-              value={formData.og_default_image || ''}
-              onChange={(e) => handleChange('og_default_image', e.target.value)}
-              placeholder="/branding/og/og-default.jpg"
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
+            <ul className="text-xs text-green-800 space-y-1">
+              <li>• <strong>권장 크기:</strong> 1200x630px</li>
+              <li>• <strong>파일 경로:</strong> /public/og-image.png</li>
+              <li>• <strong>용도:</strong> 페이스북, 트위터, 카카오톡 등 SNS 링크 공유 시 표시</li>
+            </ul>
+            <p className="text-xs text-green-700 mt-2">
+              이미지를 변경하려면 <code className="px-1 bg-green-100 rounded">/public/og-image.png</code> 파일을 교체하세요.
+            </p>
           </div>
 
           {/* 트위터 핸들 */}

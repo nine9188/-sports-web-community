@@ -19,11 +19,8 @@ export async function generatePageMetadata(
     // 기본값 설정
     const siteName = siteSettings.site_name || 'SPORTS 커뮤니티';
     const siteUrl = siteSettings.site_url || process.env.NEXT_PUBLIC_SITE_URL || 'https://yourdomain.com';
-    const defaultOgImagePath = siteSettings.og_default_image || '/og-image.png';
-    // OG 이미지는 절대 URL이 필요함
-    const defaultOgImage = defaultOgImagePath.startsWith('http')
-      ? defaultOgImagePath
-      : `${siteUrl}${defaultOgImagePath}`;
+    // OG 이미지는 /og-image.png로 고정 (DB 설정 무시)
+    const defaultOgImage = `${siteUrl}/og-image.png`;
 
     // 페이지 메타데이터가 있으면 우선 사용
     if (pageMetadata) {

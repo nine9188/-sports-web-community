@@ -58,6 +58,7 @@ export async function generateMetadata() {
   });
 
   // iOS 및 PWA용 추가 메타데이터
+  // 참고: OG 이미지는 metadata.ts에서 /og-image.png로 설정됨
   return {
     ...metadata,
     icons: {
@@ -117,7 +118,7 @@ export default async function RootLayout({
   const [headerUserData, headerBoardsData, liveScoreData] = await Promise.all([
     getHeaderUserData(),
     getBoardsForNavigation(),
-    fetchMultiDayMatches().catch(() => ({ success: false, data: null }))
+    fetchMultiDayMatches().catch(() => undefined)
   ]);
 
   return (
