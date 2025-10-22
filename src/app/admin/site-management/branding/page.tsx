@@ -37,10 +37,21 @@ export default async function BrandingPage() {
         <div className="space-y-3">
           <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
             <div className="flex items-center gap-3">
+              <img src="/favicon.svg" alt="favicon-svg" className="w-8 h-8" />
+              <div>
+                <p className="text-sm font-medium text-gray-900">favicon.svg (SVG)</p>
+                <p className="text-xs text-gray-500">/public/favicon.svg - 모던 브라우저용</p>
+              </div>
+            </div>
+            <span className="text-xs text-green-600 font-medium">✓ 적용됨</span>
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-3">
               <img src="/favicon.ico" alt="favicon" className="w-8 h-8" />
               <div>
                 <p className="text-sm font-medium text-gray-900">favicon.ico</p>
-                <p className="text-xs text-gray-500">/public/favicon.ico</p>
+                <p className="text-xs text-gray-500">/public/favicon.ico - 레거시 브라우저용</p>
               </div>
             </div>
             <span className="text-xs text-green-600 font-medium">✓ 적용됨</span>
@@ -50,8 +61,19 @@ export default async function BrandingPage() {
             <div className="flex items-center gap-3">
               <img src="/apple-icon.png" alt="apple-icon" className="w-8 h-8 rounded" />
               <div>
-                <p className="text-sm font-medium text-gray-900">Apple Touch Icon</p>
-                <p className="text-xs text-gray-500">/public/apple-icon.png</p>
+                <p className="text-sm font-medium text-gray-900">Apple Touch Icon (180x180)</p>
+                <p className="text-xs text-gray-500">/public/apple-icon.png - iOS 홈 화면용</p>
+              </div>
+            </div>
+            <span className="text-xs text-green-600 font-medium">✓ 적용됨</span>
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-3">
+              <img src="/icon-96.png" alt="icon-96" className="w-8 h-8 rounded" />
+              <div>
+                <p className="text-sm font-medium text-gray-900">Desktop Icon (96x96)</p>
+                <p className="text-xs text-gray-500">/public/icon-96.png - 데스크톱 바로가기용</p>
               </div>
             </div>
             <span className="text-xs text-green-600 font-medium">✓ 적용됨</span>
@@ -62,7 +84,7 @@ export default async function BrandingPage() {
               <img src="/icon-192.png" alt="icon-192" className="w-8 h-8 rounded" />
               <div>
                 <p className="text-sm font-medium text-gray-900">Web App Icon (192x192)</p>
-                <p className="text-xs text-gray-500">/public/icon-192.png</p>
+                <p className="text-xs text-gray-500">/public/icon-192.png - PWA용</p>
               </div>
             </div>
             <span className="text-xs text-green-600 font-medium">✓ 적용됨</span>
@@ -73,7 +95,18 @@ export default async function BrandingPage() {
               <img src="/icon-512.png" alt="icon-512" className="w-8 h-8 rounded" />
               <div>
                 <p className="text-sm font-medium text-gray-900">Web App Icon (512x512)</p>
-                <p className="text-xs text-gray-500">/public/icon-512.png</p>
+                <p className="text-xs text-gray-500">/public/icon-512.png - PWA 고해상도용</p>
+              </div>
+            </div>
+            <span className="text-xs text-green-600 font-medium">✓ 적용됨</span>
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-3">
+              <img src="/og-image.png" alt="og-image" className="w-16 h-8 rounded object-cover" />
+              <div>
+                <p className="text-sm font-medium text-gray-900">OG Image (1200x630)</p>
+                <p className="text-xs text-gray-500">/public/og-image.png - SNS 공유용</p>
               </div>
             </div>
             <span className="text-xs text-green-600 font-medium">✓ 적용됨</span>

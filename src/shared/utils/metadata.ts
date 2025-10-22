@@ -21,8 +21,12 @@ export async function generatePageMetadata(
 
     // 기본값 설정
     const siteName = siteSettings.site_name || 'SPORTS 커뮤니티';
-    const siteUrl = siteSettings.site_url || 'https://yourdomain.com';
-    const defaultOgImage = siteSettings.og_default_image || '/og-default.jpg';
+    const siteUrl = siteSettings.site_url || process.env.NEXT_PUBLIC_SITE_URL || 'https://yourdomain.com';
+    const defaultOgImagePath = siteSettings.og_default_image || '/og-image.png';
+    // OG 이미지는 절대 URL이 필요함
+    const defaultOgImage = defaultOgImagePath.startsWith('http')
+      ? defaultOgImagePath
+      : `${siteUrl}${defaultOgImagePath}`;
 
     // 파비콘 및 아이콘 설정
     const icons: Metadata['icons'] = {
@@ -86,8 +90,16 @@ function buildMetadata(
   siteUrl: string,
   defaultOgImage: string
 ): Metadata {
-  const ogImage = pageMetadata.og_image || defaultOgImage;
-  const twitterImage = pageMetadata.twitter_image || ogImage;
+  // OG 이미지를 절대 URL로 변환
+  const ogImagePath = pageMetadata.og_image || defaultOgImage;
+  const ogImage = ogImagePath.startsWith('http')
+    ? ogImagePath
+    : `${siteUrl}${ogImagePath}`;
+
+  const twitterImagePath = pageMetadata.twitter_image || ogImagePath;
+  const twitterImage = twitterImagePath.startsWith('http')
+    ? twitterImagePath
+    : `${siteUrl}${twitterImagePath}`;
 
   return {
     title: pageMetadata.title || siteName,
