@@ -13,11 +13,8 @@ export async function generatePageMetadata(
     // 페이지별 메타데이터 가져오기
     const pageMetadata = await getPageMetadataByPath(pagePath);
 
-    // 공개 사이트 설정 및 브랜딩 가져오기
-    const [siteSettings, brandingConfig] = await Promise.all([
-      getPublicSiteSettings(),
-      getBrandingConfig(),
-    ]);
+    // 공개 사이트 설정 가져오기
+    const siteSettings = await getPublicSiteSettings();
 
     // 기본값 설정
     const siteName = siteSettings.site_name || 'SPORTS 커뮤니티';
@@ -28,18 +25,9 @@ export async function generatePageMetadata(
       ? defaultOgImagePath
       : `${siteUrl}${defaultOgImagePath}`;
 
-    // 파비콘 및 아이콘 설정
-    const icons: Metadata['icons'] = {
-      icon: brandingConfig.favicon || '/favicon.ico',
-      apple: brandingConfig.appleIcon || '/apple-touch-icon.png',
-    };
-
     // 페이지 메타데이터가 있으면 우선 사용
     if (pageMetadata) {
-      return {
-        ...buildMetadata(pageMetadata, siteName, siteUrl, defaultOgImage),
-        icons,
-      };
+      return buildMetadata(pageMetadata, siteName, siteUrl, defaultOgImage);
     }
 
     // 없으면 fallback 사용
@@ -47,7 +35,6 @@ export async function generatePageMetadata(
       title: fallback?.title || siteName,
       description: fallback?.description || siteSettings.site_description,
       keywords: fallback?.keywords || siteSettings.site_keywords,
-      icons,
       openGraph: {
         title: fallback?.title as string || siteName,
         description: fallback?.description as string || siteSettings.site_description,

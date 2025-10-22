@@ -166,24 +166,19 @@ export default function BrandingSettingsForm({ initialSettings }: BrandingSettin
             />
           </div>
 
-          {/* 파비콘 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              파비콘 URL
-              <span className="ml-2 text-xs text-blue-600">(공개)</span>
-            </label>
-            <p className="text-xs text-gray-500 mb-2">
-              브라우저 탭에 표시될 아이콘 (16x16, 32x32)
+          {/* 파비콘 안내 */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 className="text-sm font-semibold text-blue-900 mb-2">ℹ️ 파비콘 관리</h4>
+            <p className="text-xs text-blue-800 mb-2">
+              파비콘은 <code className="px-1 bg-blue-100 rounded">/public</code> 폴더에서 직접 관리됩니다.
             </p>
-            <input
-              type="text"
-              value={formData.favicon_url || ''}
-              onChange={(e) => handleChange('favicon_url', e.target.value)}
-              placeholder="/favicon.ico"
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              💡 변경 후 브라우저 캐시를 지워야 반영됩니다
+            <ul className="text-xs text-blue-800 space-y-1">
+              <li>• <strong>favicon.ico</strong>: 브라우저 탭 아이콘</li>
+              <li>• <strong>apple-icon.png</strong>: iOS 홈 화면 아이콘</li>
+              <li>• <strong>icon-192.png, icon-512.png</strong>: PWA 아이콘</li>
+            </ul>
+            <p className="text-xs text-blue-700 mt-2">
+              파비콘 상태는 아래 "파비콘 상태" 섹션에서 확인할 수 있습니다.
             </p>
           </div>
         </div>
