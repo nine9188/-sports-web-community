@@ -103,6 +103,81 @@ export default async function BrandingPage() {
           </p>
         </div>
       </div>
+
+      {/* 배포 환경 테스트 도구 */}
+      <div className="bg-white shadow rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">🧪 배포 환경 테스트</h3>
+        <div className="space-y-4">
+          <div>
+            <h4 className="text-sm font-semibold text-gray-800 mb-2">파비콘 테스트</h4>
+            <div className="space-y-2">
+              <a
+                href="https://realfavicongenerator.net/favicon_checker"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block px-4 py-2 text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg border border-blue-200 transition-colors"
+              >
+                🔍 RealFaviconGenerator Checker - 모든 플랫폼 파비콘 확인
+              </a>
+              <p className="text-xs text-gray-600 ml-4">
+                • 배포 URL 입력하여 모든 기기/브라우저에서 파비콘 확인
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-sm font-semibold text-gray-800 mb-2">OG 이미지 & 메타데이터 테스트</h4>
+            <div className="space-y-2">
+              <a
+                href="https://www.opengraph.xyz/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block px-4 py-2 text-sm bg-green-50 hover:bg-green-100 text-green-700 rounded-lg border border-green-200 transition-colors"
+              >
+                📱 OpenGraph.xyz - OG 이미지 미리보기
+              </a>
+              <a
+                href="https://cards-dev.twitter.com/validator"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block px-4 py-2 text-sm bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-lg border border-sky-200 transition-colors"
+              >
+                🐦 Twitter Card Validator - 트위터 카드 확인
+              </a>
+              <a
+                href="https://developers.facebook.com/tools/debug/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block px-4 py-2 text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg border border-blue-200 transition-colors"
+              >
+                📘 Facebook Debugger - 페이스북 공유 미리보기
+              </a>
+              <a
+                href="https://www.linkedin.com/post-inspector/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block px-4 py-2 text-sm bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg border border-indigo-200 transition-colors"
+              >
+                💼 LinkedIn Post Inspector - 링크드인 공유 확인
+              </a>
+              <p className="text-xs text-gray-600 ml-4">
+                • 배포 URL 입력하여 각 플랫폼에서 어떻게 보이는지 확인<br />
+                • OG 이미지가 1200x630px인지, 제대로 로드되는지 확인
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <h4 className="text-sm font-semibold text-yellow-900 mb-2">⚠️ 주의사항</h4>
+            <ul className="space-y-1 text-xs text-yellow-800">
+              <li>• <strong>캐시 문제:</strong> SNS는 OG 이미지를 캐싱하므로, 이미지 변경 시 위 도구에서 캐시를 강제로 갱신해야 합니다</li>
+              <li>• <strong>절대 URL:</strong> OG 이미지는 반드시 절대 경로로 설정 (예: https://yourdomain.com/og-image.png)</li>
+              <li>• <strong>HTTPS 필수:</strong> 대부분의 SNS는 HTTPS URL만 지원합니다</li>
+              <li>• <strong>파일 크기:</strong> OG 이미지는 8MB 이하 권장 (일부 플랫폼 제한)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
