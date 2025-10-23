@@ -50,12 +50,9 @@ export const revalidate = 0;
 // Inter 폰트 정의를 전역 CSS 클래스로 사용
 const inter = Inter({ subsets: ['latin'] });
 
-// 동적 메타데이터 생성
+// 동적 메타데이터 생성 (DB에서 설정값 가져옴)
 export async function generateMetadata() {
-  const metadata = await generatePageMetadata('/', {
-    title: 'SPORTS 커뮤니티',
-    description: '스포츠 팬들을 위한 커뮤니티 플랫폼',
-  });
+  const metadata = await generatePageMetadata('/');
 
   // iOS 및 PWA용 추가 메타데이터
   // 참고: OG 이미지는 metadata.ts에서 /og-image.png로 설정됨

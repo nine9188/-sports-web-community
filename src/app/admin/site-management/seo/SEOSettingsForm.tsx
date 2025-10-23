@@ -73,6 +73,42 @@ export default function SEOSettingsForm({ initialSettings }: SEOSettingsFormProp
         </div>
 
         <div className="px-6 py-4 space-y-6">
+          {/* 사이트명 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              사이트명
+              <span className="ml-2 text-xs text-blue-600">(공개)</span>
+            </label>
+            <p className="text-xs text-gray-500 mb-2">
+              메타 태그 및 SEO에 사용되는 사이트 이름
+            </p>
+            <input
+              type="text"
+              value={formData.site_name || ''}
+              onChange={(e) => handleChange('site_name', e.target.value)}
+              placeholder="SPORTS 커뮤니티"
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          {/* 사이트 URL */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              사이트 URL
+              <span className="ml-2 text-xs text-blue-600">(공개)</span>
+            </label>
+            <p className="text-xs text-gray-500 mb-2">
+              기본 도메인 URL (https:// 포함)
+            </p>
+            <input
+              type="url"
+              value={formData.site_url || ''}
+              onChange={(e) => handleChange('site_url', e.target.value)}
+              placeholder="https://sports-web-community.vercel.app"
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
           {/* 사이트 설명 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">

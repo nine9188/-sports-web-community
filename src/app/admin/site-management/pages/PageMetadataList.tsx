@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { PageMetadata } from '@/domains/site-config/types';
-import { togglePageMetadataActive } from '@/domains/site-config/actions';
-import { Eye, EyeOff, ExternalLink } from 'lucide-react';
+import { togglePageMetadataActive, createPageMetadata } from '@/domains/site-config/actions';
+import { Eye, EyeOff, ExternalLink, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface PageMetadataListProps {
@@ -14,6 +14,14 @@ interface PageMetadataListProps {
 export default function PageMetadataList({ pages }: PageMetadataListProps) {
   const router = useRouter();
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [newPageData, setNewPageData] = useState({
+    page_path: '',
+    page_type: 'custom' as const,
+    title: '',
+    description: '',
+  });
 
   const handleToggleActive = async (id: string, currentStatus: boolean) => {
     setTogglingId(id);
@@ -34,6 +42,32 @@ export default function PageMetadataList({ pages }: PageMetadataListProps) {
     }
   };
 
+  const handleAddPage = async () => {
+    if (!newPageData.page_path || !newPageData.title) {
+      toast.error('페이지 경로와 제목은 필수입니다');
+      return;
+    }
+
+    setIsAdding(true);
+    try {
+      const result = await createPageMetadata(newPageData);
+
+      if (result.success) {
+        toast.success('페이지가 추가되었습니다');
+        setShowAddModal(false);
+        setNewPageData({ page_path: '', page_type: 'custom', title: '', description: '' });
+        router.refresh();
+      } else {
+        toast.error(result.error || '페이지 추가에 실패했습니다');
+      }
+    } catch (error) {
+      console.error('페이지 추가 오류:', error);
+      toast.error('페이지 추가 중 오류가 발생했습니다');
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
   const getTypeColor = (type: string) => {
     const colors: Record<string, string> = {
       default: 'bg-gray-100 text-gray-800',
@@ -47,7 +81,106 @@ export default function PageMetadataList({ pages }: PageMetadataListProps) {
   };
 
   return (
-    <div className="bg-white shadow rounded-lg overflow-hidden">
+    <>
+      {/* 추가 버튼 */}
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          새 페이지 추가
+        </button>
+      </div>
+
+      {/* 추가 모달 */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">새 페이지 메타데이터 추가</h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  페이지 경로 *
+                </label>
+                <input
+                  type="text"
+                  value={newPageData.page_path}
+                  onChange={(e) => setNewPageData({ ...newPageData, page_path: e.target.value })}
+                  placeholder="/example"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  페이지 타입
+                </label>
+                <select
+                  value={newPageData.page_type}
+                  onChange={(e) => setNewPageData({ ...newPageData, page_type: e.target.value as any })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                >
+                  <option value="custom">Custom</option>
+                  <option value="boards">Boards</option>
+                  <option value="livescore">Livescore</option>
+                  <option value="shop">Shop</option>
+                  <option value="post">Post</option>
+                  <option value="default">Default</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  제목 *
+                </label>
+                <input
+                  type="text"
+                  value={newPageData.title}
+                  onChange={(e) => setNewPageData({ ...newPageData, title: e.target.value })}
+                  placeholder="페이지 제목"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  설명
+                </label>
+                <textarea
+                  value={newPageData.description}
+                  onChange={(e) => setNewPageData({ ...newPageData, description: e.target.value })}
+                  placeholder="페이지 설명"
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowAddModal(false);
+                  setNewPageData({ page_path: '', page_type: 'custom', title: '', description: '' });
+                }}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleAddPage}
+                disabled={isAdding}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+              >
+                {isAdding ? '추가 중...' : '추가'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white shadow rounded-lg overflow-hidden">
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
@@ -161,6 +294,7 @@ export default function PageMetadataList({ pages }: PageMetadataListProps) {
           </p>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
