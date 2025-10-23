@@ -40,22 +40,30 @@ export default function SEOSettingsForm({ initialSettings }: SEOSettingsFormProp
     setIsLoading(true);
 
     try {
+      console.log('=== SEO 설정 저장 시작 ===');
+      console.log('저장할 데이터:', formData);
+
       const settings = Object.entries(formData).map(([key, value]) => ({
         key,
         value,
       }));
 
+      console.log('변환된 설정:', settings);
+
       const result = await updateMultipleSiteSettings(settings);
 
+      console.log('서버 응답:', result);
+
       if (result.success) {
-        toast.success('SEO 설정이 저장되었습니다');
+        toast.success('✅ SEO 설정이 저장되었습니다');
         router.refresh();
       } else {
-        toast.error(result.error || '설정 저장에 실패했습니다');
+        console.error('저장 실패:', result.error);
+        toast.error(`❌ ${result.error || '설정 저장에 실패했습니다'}`);
       }
     } catch (error) {
       console.error('설정 저장 오류:', error);
-      toast.error('설정 저장 중 오류가 발생했습니다');
+      toast.error('❌ 설정 저장 중 오류가 발생했습니다');
     } finally {
       setIsLoading(false);
     }
