@@ -10,7 +10,7 @@ import { RightSidebar } from '@/domains/sidebar/components';
 import { getInitialSession } from '@/shared/api/supabaseServer';
 import { getHeaderUserData, getBoardsForNavigation } from '@/domains/layout/actions';
 import { fetchMultiDayMatches } from '@/domains/livescore/actions/footballApi';
-import { generatePageMetadata } from '@/shared/utils/metadata';
+import { generatePageMetadata } from '@/shared/utils/metadataNew';
 import { Suspense } from 'react';
 
 // 로딩 스켈레톤 컴포넌트
@@ -54,8 +54,6 @@ const inter = Inter({ subsets: ['latin'] });
 export async function generateMetadata() {
   const metadata = await generatePageMetadata('/');
 
-  // iOS 및 PWA용 추가 메타데이터
-  // 참고: OG 이미지는 metadata.ts에서 /og-image.png로 설정됨
   return {
     ...metadata,
     icons: {

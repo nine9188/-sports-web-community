@@ -16,7 +16,6 @@ import ReactDOM from 'react-dom';
 import LiveScoreModal from './livescoremodal';
 import UserProfileClient from './UserProfileClient';
 import { MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
-import { usePublicSiteSettings } from '@/domains/site-config/hooks/useSiteSettings';
 
 type HeaderClientProps = {
   onProfileClick: () => void;
@@ -391,9 +390,8 @@ export default function HeaderClient({
   const pathname = usePathname();
   const isSearchPage = (pathname || '').startsWith('/search');
 
-  // 사이트 설정 가져오기 (로고 URL 등)
-  const { settings } = usePublicSiteSettings();
-  const logoUrl = settings.logo_url || '/logo/4590 로고2 이미지크기 275X200 누끼제거 버전.png';
+  // 기본 로고 URL 사용
+  const logoUrl = '/logo/4590 로고2 이미지크기 275X200 누끼제거 버전.png';
 
   // 서버에서 전달받은 사용자 데이터 사용
   const userData = initialUserData;

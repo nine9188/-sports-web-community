@@ -2,7 +2,6 @@ import Link from 'next/link';
 import {
   Settings,
   Search,
-  FileText,
   Palette,
   BarChart3,
   ExternalLink
@@ -10,31 +9,17 @@ import {
 
 export const metadata = {
   title: '사이트 관리 | 관리자',
-  description: 'SEO, 브랜딩, 메타데이터 통합 관리',
+  description: 'SEO, 브랜딩 통합 관리',
 };
 
 export default function SiteManagementDashboard() {
   const managementSections = [
     {
-      title: '일반 설정',
-      description: '사이트명, 연락처, 공지사항 등 기본 설정',
-      icon: Settings,
-      href: '/admin/site-management/general',
-      color: 'bg-blue-500',
-    },
-    {
       title: 'SEO 설정',
-      description: '메타데이터, OG 이미지, 키워드 관리',
+      description: '사이트 전체 및 페이지별 메타데이터, OG 이미지, 키워드 관리',
       icon: Search,
-      href: '/admin/site-management/seo',
+      href: '/admin/site-management/seo-v2',
       color: 'bg-green-500',
-    },
-    {
-      title: '페이지별 메타데이터',
-      description: '개별 페이지 SEO 및 메타데이터 설정',
-      icon: FileText,
-      href: '/admin/site-management/pages',
-      color: 'bg-purple-500',
     },
     {
       title: '브랜딩 관리',
@@ -56,7 +41,7 @@ export default function SiteManagementDashboard() {
       <div>
         <h1 className="text-3xl font-bold text-gray-900">사이트 관리</h1>
         <p className="mt-2 text-gray-600">
-          SEO, 브랜딩, 메타데이터를 한 곳에서 관리하세요
+          SEO, 브랜딩을 한 곳에서 관리하세요
         </p>
       </div>
 
@@ -109,9 +94,7 @@ export default function SiteManagementDashboard() {
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h4 className="font-semibold text-blue-900 mb-2">💡 사용 안내</h4>
         <ul className="space-y-1 text-sm text-blue-800">
-          <li>• <strong>일반 설정</strong>: 사이트 전반의 기본 정보를 관리합니다</li>
-          <li>• <strong>SEO 설정</strong>: 검색 엔진 최적화를 위한 기본 메타데이터를 설정합니다</li>
-          <li>• <strong>페이지별 메타데이터</strong>: 각 페이지마다 다른 SEO 설정을 적용할 수 있습니다</li>
+          <li>• <strong>SEO 설정</strong>: 전역 SEO 설정 및 페이지별 메타데이터를 관리합니다 (제목, 설명, 키워드, OG 이미지)</li>
           <li>• <strong>브랜딩 관리</strong>: 로고, 파비콘 등 시각적 요소를 업로드하고 관리합니다</li>
         </ul>
       </div>
