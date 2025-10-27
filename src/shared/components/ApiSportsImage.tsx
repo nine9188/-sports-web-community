@@ -36,8 +36,8 @@ export default function ApiSportsImage({
   priority = false,
   ...props 
 }: ApiSportsImageProps) {
-  // src 상태값 - 최초엔 null, 비동기로 스토리지 확인 후 URL 설정
-  const [src, setSrc] = useState<string | null>(null);
+  // src 상태값 - 초기값을 스토리지 PNG URL로 설정하여 즉시 요청 시작
+  const [src, setSrc] = useState<string | null>(() => getSupabaseStorageUrl(imageType, imageId));
   const [hasTriedServerAction, setHasTriedServerAction] = useState(false);
 
   useEffect(() => {
@@ -121,13 +121,7 @@ export default function ApiSportsImage({
       onError={handleImageError}
       // priority가 true이면 loading 속성을 제거하고, 아니면 lazy loading 사용
       {...(priority ? { priority: true } : { loading: loading })}
-      className={`${props.className} transition-opacity duration-300 opacity-0 animate-fade-in`}
-      onLoad={(e) => {
-        // 이미지 로드 완료 시 페이드인 효과
-        const target = e.target as HTMLImageElement;
-        target.classList.remove('opacity-0');
-        target.classList.add('opacity-100');
-      }}
+      className={props.className}
     />
   );
 } 
