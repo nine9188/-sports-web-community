@@ -31,7 +31,7 @@ export const getBoardsData = cache(async (): Promise<BoardNavigationData> => {
       .select('*')
       .order('display_order', { ascending: true })
       .order('name', { ascending: true })
-      .abortSignal(AbortSignal.timeout(5000)); // 5초 타임아웃
+      .abortSignal(AbortSignal.timeout(15000)); // 15초 타임아웃
       
     if (error) {
       console.error('게시판 데이터 불러오기 오류:', error.message);

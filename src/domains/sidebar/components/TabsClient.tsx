@@ -20,14 +20,17 @@ export function TopicTabsClient({ postsData }: TopicTabsClientProps) {
   };
 
   // 게시글 내용에서 특수 항목(이미지, 비디오 등) 감지
-  const checkContentType = (content?: string) => {
+  const checkContentType = (content?: string | object) => {
     if (!content) return { hasImage: false, hasVideo: false, hasYoutube: false, hasLink: false };
-    
-    const hasImage = content.includes('<img') || content.includes('data-type="image"');
-    const hasVideo = content.includes('<video') || content.includes('data-type="video"');
-    
+
+    // content를 문자열로 변환
+    const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
+
+    const hasImage = contentStr.includes('<img') || contentStr.includes('data-type="image"');
+    const hasVideo = contentStr.includes('<video') || contentStr.includes('data-type="video"');
+
     const urlPattern = /https?:\/\/[^\s<>"']+/g;
-    const urls = content.match(urlPattern) || [];
+    const urls = contentStr.match(urlPattern) || [];
     
     let foundYoutubeUrl = false;
     let foundNonYoutubeUrl = false;
@@ -42,18 +45,18 @@ export function TopicTabsClient({ postsData }: TopicTabsClientProps) {
       if (foundYoutubeUrl && foundNonYoutubeUrl) break;
     }
     
-    if (!foundNonYoutubeUrl && content.includes('<a href')) {
+    if (!foundNonYoutubeUrl && contentStr.includes('<a href')) {
       foundNonYoutubeUrl = !(
-        content.includes('<a href="https://youtube.com') || 
-        content.includes('<a href="https://www.youtube.com') || 
-        content.includes('<a href="https://youtu.be')
+        contentStr.includes('<a href="https://youtube.com') ||
+        contentStr.includes('<a href="https://www.youtube.com') ||
+        contentStr.includes('<a href="https://youtu.be')
       );
     }
-    
-    const hasYoutube = foundYoutubeUrl || 
-                       content.includes('data-type="youtube"') ||
-                       content.includes('youtube-video') ||
-                       (content.includes('<iframe') && (content.includes('youtube.com') || content.includes('youtu.be')));
+
+    const hasYoutube = foundYoutubeUrl ||
+                       contentStr.includes('data-type="youtube"') ||
+                       contentStr.includes('youtube-video') ||
+                       (contentStr.includes('<iframe') && (contentStr.includes('youtube.com') || contentStr.includes('youtu.be')));
     
     const hasLink = foundNonYoutubeUrl;
     

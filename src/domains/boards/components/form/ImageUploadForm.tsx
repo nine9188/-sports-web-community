@@ -184,25 +184,30 @@ export default function ImageUploadForm({
           </div>
         </div>
         
-        <div className="flex justify-end space-x-2 mt-4">
-          <Button
+        <div className="flex justify-end space-x-2 mt-4 relative z-10">
+          <button
             type="button"
-            variant="outline"
-            size="sm"
-            onClick={onCancel}
-            className="text-xs py-1 px-2 h-6"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onCancel();
+            }}
+            className="text-xs py-1 px-3 h-7 rounded border border-gray-300 bg-white hover:bg-gray-100"
           >
             취소
-          </Button>
-          <Button
+          </button>
+          <button
             type="button"
-            size="sm"
-            onClick={handleSubmit}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleSubmit();
+            }}
             disabled={(activeTab === 'file' && !selectedFile) || (activeTab === 'link' && !imageUrl)}
-            className="text-xs py-1 px-2 h-6"
+            className="text-xs py-1 px-3 h-7 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             확인
-          </Button>
+          </button>
         </div>
       </div>
     </>

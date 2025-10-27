@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { ChevronRight } from 'lucide-react';
 import { fetchPosts } from '@/domains/boards/actions';
 import { CardTitle } from '@/shared/ui/card';
 import PostList from '@/domains/boards/components/post/PostList';
@@ -14,19 +15,16 @@ export default async function AllPostsWidget() {
       // boardIds를 지정하지 않으면 모든 게시판에서 가져옴
     });
 
-    // 헤더 컨텐츠 렌더링
+    // 헤더 컨텐츠 렌더링 - 오른쪽에 > 아이콘 추가
     const headerContent = (
-      <CardTitle className="text-lg">최신 게시글</CardTitle>
-    );
-
-    // 푸터 컨텐츠 렌더링
-    const footerContent = (
-      <div className="px-6 py-3 border-t bg-gray-50">
-        <Link 
-          href="/boards/soccer" 
-          className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+      <div className="flex items-center justify-between">
+        <CardTitle className="text-lg">최신 게시글</CardTitle>
+        <Link
+          href="/boards/soccer"
+          className="text-gray-400 hover:text-gray-600 transition-colors"
+          aria-label="더 많은 게시글 보기"
         >
-          더 많은 게시글 보기 →
+          <ChevronRight className="w-5 h-5" />
         </Link>
       </div>
     );
@@ -38,11 +36,10 @@ export default async function AllPostsWidget() {
           loading={false} // 로딩 상태는 항상 false (서버 컴포넌트에서 데이터 로드 완료 후 렌더링)
           emptyMessage="표시할 게시글이 없습니다."
           headerContent={headerContent}
-          footerContent={footerContent}
           showBoard={true}
           // 🔧 높이 제한 완전 제거 - 모든 게시글이 완전히 보이도록
           currentBoardId="all" // 모든 게시판을 의미하는 ID
-          className="h-full"
+          className="!mb-2 h-full"
         />
       </div>
     );

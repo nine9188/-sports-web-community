@@ -78,7 +78,7 @@ const AuthStateManager = React.memo(function AuthStateManager({
           isOpen={isProfileOpen}
           onClose={onProfileClose}
         />
-        <main className="flex-1 mt-4 mb-4 md:px-4 w-full box-border" style={{ overflow: isMatchPage ? 'visible' : 'auto' }}>
+        <main className="flex-1 mt-2 mb-2 md:px-4 w-full box-border" style={{ overflow: isMatchPage ? 'visible' : 'auto' }}>
           {children}
         </main>
         {/* 매치 페이지일 때는 사이드바 없음, 아니면 기본 사이드바 */}

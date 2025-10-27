@@ -536,7 +536,7 @@ export default function PostList({
                      hasMatchCard;
       
       return { hasImage, hasVideo, hasYoutube, hasLink };
-    } catch (error) {
+    } catch {
       return { hasImage: false, hasVideo: false, hasYoutube: false, hasLink: false };
     }
   }, []);

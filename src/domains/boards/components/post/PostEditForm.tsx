@@ -399,6 +399,7 @@ export default function PostEditForm({
   const handleAddImage = (url: string, caption?: string) => {
     if (editor) {
       editor.chain().focus().setImage({ src: url, alt: caption || "" }).run();
+      setShowImageModal(false);
     }
   };
   
