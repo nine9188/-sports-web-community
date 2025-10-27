@@ -197,7 +197,7 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
                 style={CARD_STYLES.transform}
               >
                 <div className="flex flex-col h-full">
-                  <div className="relative w-full flex-1 transform transition-transform group-hover:scale-[1.02]">
+                  <div className="relative w-full aspect-[4/3] md:aspect-auto md:flex-1 transform transition-transform group-hover:scale-[1.02]">
                     <NewsImage
                       item={item}
                       index={index + 1}
@@ -233,7 +233,7 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
                 style={CARD_STYLES.transform}
               >
                 <div className="flex flex-col h-full">
-                  <div className="relative w-full flex-1 transform transition-transform group-hover:scale-[1.02]">
+                  <div className="relative w-full aspect-[4/3] md:aspect-auto md:flex-1 transform transition-transform group-hover:scale-[1.02]">
                     <NewsImage
                       item={item}
                       index={index + 3}
@@ -287,7 +287,7 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
                 </div>
 
                 {/* 이미지 영역 (오른쪽) */}
-                <div className="relative w-20 md:w-24 h-full flex-shrink-0 transform transition-transform group-hover:scale-[1.02]">
+                <div className="relative w-20 md:w-24 aspect-[1/1] md:aspect-auto md:h-auto flex-shrink-0 transform transition-transform group-hover:scale-[1.02]">
                   <NewsImage
                     item={item}
                     index={index + 5}
