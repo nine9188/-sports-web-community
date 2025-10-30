@@ -1,15 +1,14 @@
 import React from 'react';
-import { AllPostsWidget, NewsWidget, LiveScoreWidget, BannerWidget, BoardCollectionWidget } from '@/domains/widgets/components';
+import { AllPostsWidget, NewsWidget, LiveScoreWidget, BoardCollectionWidget, BoardQuickLinksWidget } from '@/domains/widgets/components';
 
 // 메인 페이지 컴포넌트 - 모든 로딩 제거하고 즉시 렌더링
 export default function HomePage() {
   return (
     <main style={{ overflow: 'visible' }}>
-      {/* 배너 위젯 - 메인 상단 (상단 여백 없음, 하단 간격 최소화) */}
-      <div className="mb-2" style={{ overflow: 'visible' }}>
-        <BannerWidget position="main_top" />
+      {/* 게시판 바로가기 아이콘 - 라이브스코어 상단 */}
+      <div className="mb-2 mt-2" style={{ overflow: 'visible' }}>
+        <BoardQuickLinksWidget />
       </div>
-
       {/* LiveScore 위젯 - 상단 여백 없음, 하단 mb-4 */}
       <div className="mb-2" style={{ overflow: 'visible' }}>
         <LiveScoreWidget />

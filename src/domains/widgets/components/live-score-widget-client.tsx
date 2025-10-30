@@ -63,6 +63,16 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
   
   // Embla 설정: 루프 + 트림 스냅으로 가장자리/이음매 간격 보장
   const [viewportRef, emblaApi] = useEmblaCarousel({ loop: matches.length > 4, align: 'start', containScroll: 'trimSnaps' });
+  const [isHovered, setIsHovered] = useState(false);
+
+  // 자동 스크롤 (약 8초마다 한 칸)
+  useEffect(() => {
+    if (!emblaApi || matches.length <= 1) return;
+    const intervalId = window.setInterval(() => {
+      if (!isHovered) emblaApi.scrollNext();
+    }, 8000);
+    return () => window.clearInterval(intervalId);
+  }, [emblaApi, isHovered, matches.length]);
 
   useEffect(() => {
     // 5분마다 데이터 갱신
@@ -229,7 +239,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
           <p className="text-xs mt-1 text-gray-500">새로고침하거나 잠시 후 다시 시도해주세요</p>
         </div>
       ) : (
-        <div className="w-full relative" style={{ overflow: 'visible' }}>
+        <div className="w-full relative group/embla" style={{ overflow: 'visible' }} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
           <div className="relative" style={{ overflow: 'hidden' }}>
             <div className="embla" ref={viewportRef}>
               <div className="flex -mx-1">
@@ -332,12 +342,12 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
           {/* 데스크탑 네비게이션 버튼 */}
           {matches.length > 4 && (
             <>
-              <button onClick={() => emblaApi?.scrollPrev()} className="hidden md:flex absolute left-[-12px] top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white rounded-full shadow-lg border border-gray-200 items-center justify-center transition-all duration-200 hover:bg-blue-50 hover:border-blue-300 hover:scale-110 hover:shadow-xl group" aria-label="이전 경기">
+              <button onClick={() => emblaApi?.scrollPrev()} className="hidden md:flex absolute left-[-12px] top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white rounded-full shadow-lg border border-gray-200 items-center justify-center transition-all duration-200 opacity-30 pointer-events-none group-hover/embla:opacity-100 group-hover/embla:pointer-events-auto hover:bg-blue-50 hover:border-blue-300 hover:scale-110 hover:shadow-xl" aria-label="이전 경기">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-600 group-hover:text-blue-600">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
                 </svg>
               </button>
-              <button onClick={() => emblaApi?.scrollNext()} className="hidden md:flex absolute right-[-12px] top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white rounded-full shadow-lg border border-gray-200 items-center justify-center transition-all duration-200 hover:bg-blue-50 hover:border-blue-300 hover:scale-110 hover:shadow-xl group" aria-label="다음 경기">
+              <button onClick={() => emblaApi?.scrollNext()} className="hidden md:flex absolute right-[-12px] top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white rounded-full shadow-lg border border-gray-200 items-center justify-center transition-all duration-200 opacity-30 pointer-events-none group-hover/embla:opacity-100 group-hover/embla:pointer-events-auto hover:bg-blue-50 hover:border-blue-300 hover:scale-110 hover:shadow-xl" aria-label="다음 경기">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-600 group-hover:text-blue-600">
                   <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                 </svg>
