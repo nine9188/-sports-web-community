@@ -10,7 +10,7 @@ declare global {
   }
 }
 
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import Tabs, { TabItem } from '@/shared/ui/tabs';
 import { Loader2, RefreshCw, Check, X, Target } from 'lucide-react';
 import { formatDate } from '@/shared/utils/date';

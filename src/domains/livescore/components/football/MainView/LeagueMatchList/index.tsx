@@ -79,7 +79,7 @@ export default function LeagueMatchList({ matches }: LeagueMatchListProps) {
                     <div className="relative w-6 h-6 mr-2">
                       {/* 우선순위: 1. 리그 로고, 2. 국가 플래그, 3. 기본 이미지 */}
                       {group.logo ? (
-                        <ApiSportsImage 
+                        <ApiSportsImage
                           src={getSupabaseStorageUrl(ImageType.Leagues, group.leagueId)}
                           imageId={group.leagueId}
                           imageType={ImageType.Leagues}
@@ -87,7 +87,7 @@ export default function LeagueMatchList({ matches }: LeagueMatchListProps) {
                           width={24}
                           height={24}
                           className="object-contain w-6 h-6"
-                          
+
                         />
                       ) : (
                         <div className="w-6 h-6 bg-gray-200 flex items-center justify-center text-gray-400 text-xs rounded">

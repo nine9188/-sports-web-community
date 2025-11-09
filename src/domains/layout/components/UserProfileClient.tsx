@@ -121,13 +121,13 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
     <div className="hidden md:flex space-x-2">
       <Link
         href="/signin"
-        className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+        className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors"
       >
         로그인
       </Link>
       <Link
         href="/signup"
-        className="px-3 py-2 text-sm font-medium bg-slate-800 text-white rounded hover:bg-slate-700"
+        className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors"
       >
         회원가입
       </Link>

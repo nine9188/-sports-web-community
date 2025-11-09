@@ -1,106 +1,15 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { createClient } from '@/shared/api/supabase';
-import { toast } from 'react-toastify';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Coins, TrendingUp, Users, Home, LayoutDashboard, ShoppingBag, Rss, Youtube, AlertTriangle, Target, Image as ImageIcon, FileText, Settings, Grid3x3 } from 'lucide-react';
-import { User } from '@supabase/supabase-js';
 
 interface AdminLayoutClientProps {
   children: React.ReactNode;
-  user: User;
 }
 
-export default function AdminLayoutClient({ children, user }: AdminLayoutClientProps) {
-  const router = useRouter();
+export default function AdminLayoutClient({ children }: AdminLayoutClientProps) {
   const pathname = usePathname();
-  const supabase = createClient();
-  const [mounted, setMounted] = useState(false);
-  const [isAdminChecked, setIsAdminChecked] = useState(false);
-  const isAdminConfirmed = useRef(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // 관리자 권한 확인 및 초기 라우팅
-  useEffect(() => {
-    const checkAdminAccess = async () => {
-      // 이미 관리자 권한 확인이 완료되었으면 다시 검사하지 않음
-      if (isAdminConfirmed.current) {
-        setIsAdminChecked(true);
-        return;
-      }
-      
-      if (!user) {
-        toast.error('로그인이 필요합니다.');
-        router.push('/signin');
-        return;
-      }
-
-      try {
-        const { data: profiles, error } = await supabase
-          .from('profiles')
-          .select('is_admin')
-          .eq('id', user.id)
-          .single();
-
-        if (error) {
-          console.error('관리자 권한 확인 오류:', error);
-          toast.error('권한을 확인하는 중 오류가 발생했습니다.');
-          router.push('/');
-          return;
-        }
-
-        if (!profiles || !profiles.is_admin) {
-          toast.error('관리자 권한이 필요합니다.');
-          router.push('/');
-          return;
-        }
-
-        // 관리자 권한 확인됨
-        isAdminConfirmed.current = true;
-        setIsAdminChecked(true);
-      } catch (error) {
-        console.error('권한 확인 오류:', error);
-        toast.error('권한을 확인하는 중 오류가 발생했습니다.');
-        router.push('/');
-      }
-    };
-
-    if (mounted && user) {
-      checkAdminAccess();
-    } else if (mounted && !user) {
-      // 사용자가 로그인하지 않은 경우
-      toast.error('로그인이 필요합니다.');
-      router.push('/signin');
-    }
-  }, [user, router, supabase, mounted]);
-
-  if (!mounted || !user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="p-8 text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-          <p>로그인 정보를 확인하는 중입니다...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // 관리자 확인이 아직 안됐고, 이미 확인 중이 아닌 경우
-  if (!isAdminChecked && !isAdminConfirmed.current) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="p-8 text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-          <p>관리자 권한을 확인하는 중입니다...</p>
-        </div>
-      </div>
-    );
-  }
 
   // 관리자 메뉴 항목
   const menuItems = [
@@ -132,9 +41,6 @@ export default function AdminLayoutClient({ children, user }: AdminLayoutClientP
               <p className="text-sm text-gray-600">시스템 관리 및 설정을 위한 관리자 전용 페이지입니다.</p>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
-                관리자: {user.email}
-              </span>
               <Link
                 href="/"
                 className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"

@@ -317,6 +317,56 @@ export const fetchMultiDayMatches = cache(async (): Promise<MultiDayMatchesResul
   }
 });
 
+// 위젯용 빅매치 필터링 함수
+export const fetchBigMatches = cache(async (): Promise<MultiDayMatchesResult> => {
+  const result = await fetchMultiDayMatches();
+
+  if (!result.success || !result.data) {
+    return result;
+  }
+
+  // 빅매치 리그 ID - 유럽 Top 5 리그 + 유럽 컵대회 + FA컵 + K리그1
+  const bigMatchLeagues = [
+    39,  // 프리미어 리그
+    140, // 라리가
+    78,  // 분데스리가
+    135, // 세리에 A
+    61,  // 리그앙
+    2,   // 챔피언스 리그
+    3,   // 유로파 리그
+    848, // 컨퍼런스 리그
+    531, // UEFA 슈퍼컵
+    45,  // FA컵
+    292, // K리그1
+  ];
+
+  const filterMatches = (matches: MatchData[]) => {
+    return matches.filter(match =>
+      bigMatchLeagues.includes(match.league?.id || 0)
+    );
+  };
+
+  const filteredData = {
+    yesterday: { matches: filterMatches(result.data.yesterday.matches) },
+    today: { matches: filterMatches(result.data.today.matches) },
+    tomorrow: { matches: filterMatches(result.data.tomorrow.matches) }
+  };
+
+  const totalMatches =
+    filteredData.yesterday.matches.length +
+    filteredData.today.matches.length +
+    filteredData.tomorrow.matches.length;
+
+  return {
+    success: true,
+    dates: result.dates,
+    meta: {
+      totalMatches
+    },
+    data: filteredData
+  };
+});
+
 // 특정 경기 상세 정보 가져오기
 export async function fetchMatchDetails(matchId: string) {
   try {

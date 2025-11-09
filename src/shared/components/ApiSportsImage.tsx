@@ -2,11 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import Image, { ImageProps } from 'next/image';
+import { useTheme } from 'next-themes';
 import { ImageType } from '@/shared/types/image';
 import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 
 // 메모리 캐시 - 이미 확인된 URL들을 저장하여 중복 요청 방지
 const urlCache = new Map<string, string | null>();
+
+// 다크모드용 이미지가 있는 리그 ID들
+const DARK_MODE_LEAGUE_IDS = [39, 2, 3, 848, 179, 88, 119, 98, 292, 66, 13];
 
 interface ApiSportsImageProps extends Omit<ImageProps, 'src'> {
   imageId: string | number; // 필수값
@@ -28,20 +32,34 @@ interface ApiSportsImageProps extends Omit<ImageProps, 'src'> {
  * @param alt - 대체 텍스트 (필수)
  * @param props - 나머지 Image 컴포넌트 props
  */
-export default function ApiSportsImage({ 
+export default function ApiSportsImage({
   imageId,
   imageType,
   alt,
   loading = 'lazy',
   priority = false,
-  ...props 
+  ...props
 }: ApiSportsImageProps) {
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // 클라이언트에서만 테마 확인 (hydration 에러 방지)
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = mounted && resolvedTheme === 'dark';
+
+  // 다크모드이고 리그 이미지이며 다크모드 이미지가 있는 경우
+  const useDarkImage = isDark && imageType === ImageType.Leagues && DARK_MODE_LEAGUE_IDS.includes(Number(imageId));
+  const effectiveImageId = useDarkImage ? `${imageId}-1` : imageId;
+
   // src 상태값 - 초기값을 스토리지 PNG URL로 설정하여 즉시 요청 시작
   const [src, setSrc] = useState<string | null>(() => getSupabaseStorageUrl(imageType, imageId));
   const [hasTriedServerAction, setHasTriedServerAction] = useState(false);
 
   useEffect(() => {
-    const cacheKey = `${imageType}-${imageId}`;
+    const cacheKey = `${imageType}-${effectiveImageId}`;
 
     // 메모리 캐시에서 먼저 확인
     if (urlCache.has(cacheKey)) {
@@ -53,7 +71,7 @@ export default function ApiSportsImage({
     // 확장자 우선순위: gif → png
     // public storage URL은 .png 형태이므로 .gif 후보도 함께 구성하여 HEAD로 존재 여부 확인
     const tryResolveUrl = async () => {
-      const pngUrl = getSupabaseStorageUrl(imageType, imageId);
+      const pngUrl = getSupabaseStorageUrl(imageType, effectiveImageId);
       const gifUrl = pngUrl.replace('.png', '.gif');
 
       const exists = async (url: string) => {
@@ -73,7 +91,7 @@ export default function ApiSportsImage({
 
     // 비동기로 실제 존재하는 확장자를 결정
     tryResolveUrl();
-  }, [imageId, imageType]);
+  }, [imageId, imageType, effectiveImageId, isDark]);
 
   // 이미지 로드 에러 시 서버 액션으로 캐싱 시도
   const handleImageError = async () => {
@@ -88,13 +106,13 @@ export default function ApiSportsImage({
         try {
           const { getCachedImageFromStorage } = await import('@/shared/actions/image-storage-actions');
       const result = await getCachedImageFromStorage(
-        imageType as 'players' | 'teams' | 'leagues' | 'coachs' | 'venues', 
-        imageId
+        imageType as 'players' | 'teams' | 'leagues' | 'coachs' | 'venues',
+        effectiveImageId
       );
-      
+
       if (result.success && result.url && result.url.includes('supabase.co')) {
         // 서버 액션으로 캐싱 성공
-        const cacheKey = `${imageType}-${imageId}`;
+        const cacheKey = `${imageType}-${effectiveImageId}`;
         urlCache.set(cacheKey, result.url);
         setSrc(result.url);
       } else {
@@ -102,7 +120,7 @@ export default function ApiSportsImage({
         setSrc(null);
       }
         } catch (error) {
-      console.debug(`이미지 서버 액션 실패: ${imageType}/${imageId}`, error);
+      console.debug(`이미지 서버 액션 실패: ${imageType}/${effectiveImageId}`, error);
       setSrc(null);
         }
       };

@@ -6,7 +6,7 @@ import useEmblaCarousel from 'embla-carousel-react';
 
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
-import { fetchMultiDayMatches, MatchData as FootballMatchData } from '@/domains/livescore/actions/footballApi';
+import { fetchBigMatches, MatchData as FootballMatchData } from '@/domains/livescore/actions/footballApi';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
 
@@ -83,8 +83,8 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
       try {
         fetchingRef.current = true;
         
-        // 서버 액션을 사용하여 경기 데이터 가져오기
-        const result = await fetchMultiDayMatches() as MultiDayMatchesResponse;
+        // 서버 액션을 사용하여 빅매치 데이터 가져오기
+        const result = await fetchBigMatches() as MultiDayMatchesResponse;
         
         if (result.success && result.data) {
           // 어제 경기
@@ -229,17 +229,34 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
   // 정적 그리드 없이 바로 캐러셀 렌더링
 
   return (
-    <div className="relative z-10 w-full">
-      {error ? (
-        <div className="flex flex-col justify-center items-center h-40 text-center">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 mb-2 text-red-500">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+    <div className="h-full widget-container">
+      {/* 헤더 */}
+      <div className="px-4 py-2 flex items-center justify-between">
+        <h2 className="text-lg font-semibold">오늘의 빅매치</h2>
+        <Link
+          href="/livescore/football"
+          className="text-xs text-gray-500 hover:text-gray-700 transition-colors flex items-center gap-1"
+        >
+          전체 경기 보기
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+            <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
           </svg>
-          <p className="text-red-500">{error}</p>
-          <p className="text-xs mt-1 text-gray-500">새로고침하거나 잠시 후 다시 시도해주세요</p>
-        </div>
-      ) : (
-        <div className="w-full relative group/embla" style={{ overflow: 'visible' }} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+        </Link>
+      </div>
+
+      {/* 컨텐츠 */}
+      <div className="px-4 pb-4">
+        <div className="relative z-10 w-full">
+          {error ? (
+            <div className="flex flex-col justify-center items-center h-40 text-center">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 mb-2 text-red-500">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+              </svg>
+              <p className="text-red-500">{error}</p>
+              <p className="text-xs mt-1 text-gray-500">새로고침하거나 잠시 후 다시 시도해주세요</p>
+            </div>
+          ) : (
+            <div className="w-full relative group/embla" style={{ overflow: 'visible' }} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
           <div className="relative" style={{ overflow: 'hidden' }}>
             <div className="embla" ref={viewportRef}>
               <div className="flex -mx-1">
@@ -254,7 +271,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                     <div key={`match-${match.id || index}`} className="shrink-0 basis-1/2 md:basis-1/2 lg:basis-1/4 px-1">
                       <Link 
                         href={match.id ? `/livescore/football/match/${match.id}` : '#'}
-                        className="block w-full h-[140px] border rounded-lg p-2 bg-white border-gray-200 transition-all shadow-sm cursor-pointer group hover:shadow-md hover:border-blue-300 touch-manipulation"
+                        className="block w-full h-[140px] border rounded-lg p-2 bg-white dark:bg-[rgb(var(--bg-secondary))] border-gray-200 dark:border-[rgb(var(--border-primary))] transition-all shadow-sm cursor-pointer group hover:shadow-md hover:border-blue-300 touch-manipulation"
                         style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none', WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                         onDragStart={(e) => e.preventDefault()}
                       >
@@ -342,12 +359,12 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
           {/* 데스크탑 네비게이션 버튼 */}
           {matches.length > 4 && (
             <>
-              <button onClick={() => emblaApi?.scrollPrev()} className="hidden md:flex absolute left-[-12px] top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white rounded-full shadow-lg border border-gray-200 items-center justify-center transition-all duration-200 opacity-30 pointer-events-none group-hover/embla:opacity-100 group-hover/embla:pointer-events-auto hover:bg-blue-50 hover:border-blue-300 hover:scale-110 hover:shadow-xl" aria-label="이전 경기">
+              <button onClick={() => emblaApi?.scrollPrev()} className="hidden md:flex absolute left-[-12px] top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white dark:bg-[rgb(var(--bg-secondary))] rounded-full shadow-lg border border-gray-200 dark:border-[rgb(var(--border-primary))] items-center justify-center transition-all duration-200 opacity-30 pointer-events-none group-hover/embla:opacity-100 group-hover/embla:pointer-events-auto hover:bg-blue-50 hover:border-blue-300 hover:scale-110 hover:shadow-xl" aria-label="이전 경기">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-600 group-hover:text-blue-600">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
                 </svg>
               </button>
-              <button onClick={() => emblaApi?.scrollNext()} className="hidden md:flex absolute right-[-12px] top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white rounded-full shadow-lg border border-gray-200 items-center justify-center transition-all duration-200 opacity-30 pointer-events-none group-hover/embla:opacity-100 group-hover/embla:pointer-events-auto hover:bg-blue-50 hover:border-blue-300 hover:scale-110 hover:shadow-xl" aria-label="다음 경기">
+              <button onClick={() => emblaApi?.scrollNext()} className="hidden md:flex absolute right-[-12px] top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white dark:bg-[rgb(var(--bg-secondary))] rounded-full shadow-lg border border-gray-200 dark:border-[rgb(var(--border-primary))] items-center justify-center transition-all duration-200 opacity-30 pointer-events-none group-hover/embla:opacity-100 group-hover/embla:pointer-events-auto hover:bg-blue-50 hover:border-blue-300 hover:scale-110 hover:shadow-xl" aria-label="다음 경기">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-600 group-hover:text-blue-600">
                   <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                 </svg>
@@ -355,7 +372,9 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
             </>
           )}
         </div>
-      )}
+          )}
+        </div>
+      </div>
     </div>
   );
 } 

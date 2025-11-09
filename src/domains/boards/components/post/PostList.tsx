@@ -87,13 +87,13 @@ const VirtualizedPostItem = React.memo(function VirtualizedPostItem({
   
   if (isMobile) {
     return (
-      <div style={style} className={`py-2 px-3 border-b ${isCurrentPost ? 'bg-blue-50' : ''}`}>
+      <div style={style} className={`py-2 px-3 border-b border-black/5 dark:border-white/10 ${isCurrentPost ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
         <Link href={href} prefetch={false}>
           <div className="space-y-1">
             <div className="flex items-center">
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center">
-                  <span className={`text-sm line-clamp-1 ${isCurrentPost ? 'text-blue-600 font-medium' : ''} ${post.is_deleted ? 'text-red-500' : post.is_hidden ? 'text-gray-500' : ''}`}>
+                  <span className={`text-sm line-clamp-1 ${isCurrentPost ? 'text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-900 dark:text-[#F0F0F0]'} ${post.is_deleted ? 'text-red-500 dark:text-red-400' : post.is_hidden ? 'text-gray-500 dark:text-gray-400' : ''}`}>
                   {post.is_deleted ? '[삭제된 게시글]' : post.is_hidden ? '[숨김 처리된 게시글]' : String(post?.title || '제목 없음')}
                 </span>
                 {renderContentTypeIcons(post)}
@@ -113,7 +113,7 @@ const VirtualizedPostItem = React.memo(function VirtualizedPostItem({
                 </div>
               )}
             </div>
-            <div className="flex text-[11px] text-gray-500">
+            <div className="flex text-[11px] text-gray-500 dark:text-gray-400">
               <div className="w-full flex items-center justify-between gap-2">
                 <div className="flex items-center overflow-hidden whitespace-nowrap">
                   {renderAuthor(post, 20, "justify-start")}
@@ -135,7 +135,7 @@ const VirtualizedPostItem = React.memo(function VirtualizedPostItem({
   }
 
   return (
-    <div style={style} className={`flex border-b hover:bg-gray-50 ${isCurrentPost ? 'bg-blue-50' : ''}`}>
+    <div style={style} className={`flex border-b border-black/5 dark:border-white/10 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors ${isCurrentPost ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
       {showBoard && (
         <div className="py-2 px-3 flex items-center" style={{ width: '120px' }}>
           {renderBoardLogo(post)}
@@ -144,12 +144,12 @@ const VirtualizedPostItem = React.memo(function VirtualizedPostItem({
       <div className="py-2 px-4 flex-1">
         <Link href={href} className="block w-full" prefetch={false}>
           <div className="flex items-center">
-            <span className={`text-sm line-clamp-1 ${isCurrentPost ? 'text-blue-600 font-medium' : ''} ${post.is_deleted ? 'text-red-500' : post.is_hidden ? 'text-gray-500' : 'hover:text-blue-600'}`}>
+            <span className={`text-sm line-clamp-1 ${isCurrentPost ? 'text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-900 dark:text-[#F0F0F0]'} ${post.is_deleted ? 'text-red-500 dark:text-red-400' : post.is_hidden ? 'text-gray-500 dark:text-gray-400' : ''}`}>
               {post.is_deleted ? '[삭제된 게시글]' : post.is_hidden ? '[숨김 처리된 게시글]' : String(post?.title || '제목 없음')}
             </span>
             {renderContentTypeIcons(post)}
           </div>
-          <div className="mt-1 flex items-center justify-between text-[11px] text-gray-500">
+          <div className="mt-1 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
             <div className="flex items-center overflow-hidden whitespace-nowrap">
               {renderAuthor(post, 20, "justify-start")}
               <span className="mx-1 flex-shrink-0">|</span>
@@ -166,13 +166,13 @@ const VirtualizedPostItem = React.memo(function VirtualizedPostItem({
             {renderAuthor(post, 20, "justify-start")}
       </div>
       <div className="py-2 px-1 flex items-center justify-center" style={{ width: '80px' }}>
-        <span className="text-xs text-gray-500">{formattedDate}</span>
+        <span className="text-xs text-gray-500 dark:text-gray-400">{formattedDate}</span>
       </div>
       <div className="py-2 px-1 flex items-center justify-center" style={{ width: '60px' }}>
-        <span className="text-xs text-gray-500">{post.views || 0}</span>
+        <span className="text-xs text-gray-500 dark:text-gray-400">{post.views || 0}</span>
       </div>
       <div className="py-2 px-1 flex items-center justify-center" style={{ width: '60px' }}>
-        <span className="text-xs text-gray-500">{post.likes || 0}</span>
+        <span className="text-xs text-gray-500 dark:text-gray-400">{post.likes || 0}</span>
       </div>
       {variant === 'image-table' && (
         <div className="py-2 px-2 flex items-center justify-center" style={{ width: '96px' }}>
@@ -227,18 +227,18 @@ const PostItem = React.memo(function PostItem({
   
   if (isMobile) {
     return (
-      <div className={`py-2 px-3 ${!isLast ? 'border-b' : ''} ${isCurrentPost ? 'bg-blue-50' : ''}`}>
+      <div className={`py-2 px-3 ${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''} ${isCurrentPost ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
         <Link href={href} prefetch={false}>
           <div className="space-y-1">
             <div className="flex items-center">
               <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center">
-                <span className={`text-sm line-clamp-1 ${isCurrentPost ? 'text-blue-600 font-medium' : ''} ${post.is_deleted ? 'text-red-500' : post.is_hidden ? 'text-gray-500' : ''}`}>
+                <span className={`text-sm line-clamp-1 ${isCurrentPost ? 'text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-900 dark:text-[#F0F0F0]'} ${post.is_deleted ? 'text-red-500 dark:text-red-400' : post.is_hidden ? 'text-gray-500 dark:text-gray-400' : ''}`}>
                   {post.is_deleted ? '[삭제된 게시글]' : post.is_hidden ? '[숨김 처리된 게시글]' : String(post?.title || '제목 없음')}
                 </span>
                 {renderContentTypeIcons(post)}
               </div>
-                <div className="mt-1 flex items-center justify-between text-[11px] text-gray-500">
+                <div className="mt-1 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
                 <div className="flex items-center overflow-hidden whitespace-nowrap">
                     {renderAuthor(post, 20, "justify-start")}
                   <span className="mx-1 flex-shrink-0">|</span>
@@ -273,11 +273,11 @@ const PostItem = React.memo(function PostItem({
   // 데스크톱 - 이미지형은 제목 아래 메타 + 우측 썸네일(헤더 없음)
   if (variant === 'image-table') {
     return (
-      <div className={`py-2 px-3 ${!isLast ? 'border-b' : ''} ${isCurrentPost ? 'bg-blue-50' : ''}`}>
+      <div className={`py-2 px-3 ${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''} ${isCurrentPost ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
         <Link href={href} prefetch={false}>
           <div className="flex items-center justify-between gap-1">
             {/* 좌측 영역: 세로 정렬 (아이콘 / 숫자 / 추천) */}
-            <div className="py-1 px-0.5 hidden sm:flex justify-center text-gray-600" style={{ width: '60px' }}>
+            <div className="py-1 px-0.5 hidden sm:flex justify-center text-gray-600 dark:text-gray-400" style={{ width: '60px' }}>
               <div className="flex flex-col items-center text-xs leading-none space-y-1">
                 <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
                   <path fill="currentColor" d="M12 4 L20 12 H4 Z" />
@@ -289,21 +289,21 @@ const PostItem = React.memo(function PostItem({
             </div>
             <div className="flex-1 min-w-0 flex flex-col justify-center">
               <div className="flex items-center">
-                <span className={`text-sm line-clamp-1 ${isCurrentPost ? 'text-blue-600 font-medium' : ''} ${post.is_deleted ? 'text-red-500' : post.is_hidden ? 'text-gray-500' : 'hover:text-blue-600'}`}>
+                <span className={`text-sm line-clamp-1 ${isCurrentPost ? 'text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-900 dark:text-[#F0F0F0]'} ${post.is_deleted ? 'text-red-500 dark:text-red-400' : post.is_hidden ? 'text-gray-500 dark:text-gray-400' : ''}`}>
                   {post.is_deleted ? '[삭제된 게시글]' : post.is_hidden ? '[숨김 처리된 게시글]' : String(post?.title || '제목 없음')}
                 </span>
                 {renderContentTypeIcons(post)}
               </div>
-              <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
+              <div className="mt-1 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                 {/* 제목 아래: 게시판 이름 노출 */}
-                <span className="inline-flex items-center max-w-[140px] truncate rounded bg-gray-100 px-1.5 py-0.5 text-gray-700">
+                <span className="inline-flex items-center max-w-[140px] truncate rounded bg-[#F5F5F5] dark:bg-[#262626] px-1.5 py-0.5 text-gray-700 dark:text-gray-300">
                   {post.board_name}
                 </span>
-                <span className="text-gray-300">|</span>
+                <span className="text-gray-300 dark:text-gray-600">|</span>
                 {renderAuthor(post, 20, 'justify-start')}
-                <span className="text-gray-300">|</span>
+                <span className="text-gray-300 dark:text-gray-600">|</span>
                 <span className="flex items-center"><CalendarIcon className="w-3 h-3 mr-0.5" />{formattedDate}</span>
-                <span className="text-gray-300">|</span>
+                <span className="text-gray-300 dark:text-gray-600">|</span>
                 <span className="flex items-center"><EyeIcon className="w-3 h-3 mr-0.5" />{post.views || 0}</span>
               </div>
             </div>
@@ -325,7 +325,7 @@ const PostItem = React.memo(function PostItem({
   }
 
   return (
-    <tr className={`${!isLast ? 'border-b' : ''} hover:bg-gray-50 ${isCurrentPost ? 'bg-blue-50' : ''}`}>
+    <tr className={`${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''} hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors ${isCurrentPost ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
       {showBoard && (
         <td className="py-2 px-3 align-middle">
           {renderBoardLogo(post)}
@@ -334,23 +334,23 @@ const PostItem = React.memo(function PostItem({
       <td className="py-2 px-4 align-middle">
         <Link href={href} className="block w-full" prefetch={false}>
           <div className="flex items-center">
-            <span className={`text-sm line-clamp-1 ${isCurrentPost ? 'text-blue-600 font-medium' : ''} ${post.is_deleted ? 'text-red-500' : post.is_hidden ? 'text-gray-500' : 'hover:text-blue-600'}`}>
+            <span className={`text-sm line-clamp-1 ${isCurrentPost ? 'text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-900 dark:text-[#F0F0F0]'} ${post.is_deleted ? 'text-red-500 dark:text-red-400' : post.is_hidden ? 'text-gray-500 dark:text-gray-400' : ''}`}>
               {post.is_deleted ? '[삭제된 게시글]' : post.is_hidden ? '[숨김 처리된 게시글]' : String(post?.title || '제목 없음')}
             </span>
             {renderContentTypeIcons(post)}
           </div>
         </Link>
       </td>
-      <td className="py-2 px-2 text-center text-xs text-gray-500 align-middle">
+      <td className="py-2 px-2 text-center text-xs text-gray-500 dark:text-gray-400 align-middle">
         {renderAuthor(post, 20, "justify-start")}
       </td>
-      <td className="py-2 px-1 text-center text-xs text-gray-500 align-middle">
+      <td className="py-2 px-1 text-center text-xs text-gray-500 dark:text-gray-400 align-middle">
         {formattedDate}
       </td>
-      <td className="py-2 px-1 text-center text-xs text-gray-500 align-middle">
+      <td className="py-2 px-1 text-center text-xs text-gray-500 dark:text-gray-400 align-middle">
         {post.views || 0}
       </td>
-      <td className="py-2 px-1 text-center text-xs text-gray-500 align-middle">
+      <td className="py-2 px-1 text-center text-xs text-gray-500 dark:text-gray-400 align-middle">
         {post.likes || 0}
       </td>
       {/* 텍스트형에서는 추가 이미지 셀 없음 */}
@@ -363,7 +363,7 @@ const LoadingSkeleton = React.memo(function LoadingSkeleton() {
   return (
     <div className="p-4 space-y-2">
       {Array(10).fill(0).map((_, i) => (
-        <div key={i} className="h-5 bg-gray-100 rounded animate-pulse"></div>
+        <div key={i} className="h-5 bg-[#F5F5F5] dark:bg-[#262626] rounded animate-pulse"></div>
       ))}
     </div>
   );
@@ -373,7 +373,7 @@ const LoadingSkeleton = React.memo(function LoadingSkeleton() {
 const EmptyState = React.memo(function EmptyState({ message }: { message: string }) {
   return (
     <div className="p-6 text-center">
-      <p className="text-gray-500">{message}</p>
+      <p className="text-gray-500 dark:text-gray-400">{message}</p>
     </div>
   );
 });
@@ -598,8 +598,8 @@ export default function PostList({
             alt={post.author_nickname || '익명'}
           />
         </div>
-        <span className="truncate text-xs text-gray-600" 
-              title={post.author_nickname || '익명'} 
+        <span className="truncate text-xs text-gray-600 dark:text-gray-400"
+              title={post.author_nickname || '익명'}
               style={{maxWidth: size === 20 ? '100px' : '100px'}}>
           {post.author_nickname || '익명'}
         </span>
@@ -613,7 +613,7 @@ export default function PostList({
       return (
         <div className="flex items-center">
           <div className="relative w-5 h-5 mr-1">
-            <Image 
+            <Image
               src={post.team_logo || post.league_logo || ''}
               alt={post.board_name}
               fill
@@ -623,8 +623,8 @@ export default function PostList({
               priority={false}
             />
           </div>
-          <span className="text-xs text-gray-700 truncate" 
-                title={post.board_name} 
+          <span className="text-xs text-gray-700 dark:text-gray-300 truncate"
+                title={post.board_name}
                 style={{maxWidth: '85px'}}>
             {post.board_name}
           </span>
@@ -632,8 +632,8 @@ export default function PostList({
       );
     } else {
       return (
-        <span className="inline-block text-xs bg-gray-100 px-1.5 py-0.5 rounded-full truncate" 
-              title={post.board_name} 
+        <span className="inline-block text-xs bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 px-1.5 py-0.5 rounded-full truncate"
+              title={post.board_name}
               style={{maxWidth: '90px'}}>
           {post.board_name}
         </span>
@@ -740,15 +740,15 @@ export default function PostList({
     return (
       <div className="hidden sm:block">
         {/* 테이블 헤더 */}
-        <div className="flex border-b bg-gray-50">
+        <div className="flex border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
           {showBoard && (
-            <div className="py-2 px-3 text-center text-sm font-medium text-gray-500" style={{ width: '120px' }}>게시판</div>
+            <div className="py-2 px-3 text-center text-sm font-medium text-gray-500 dark:text-gray-400" style={{ width: '120px' }}>게시판</div>
           )}
-          <div className="py-2 px-4 text-center text-sm font-medium text-gray-500 flex-1">제목</div>
-          <div className="py-2 px-3 text-center text-sm font-medium text-gray-500" style={{ width: '120px' }}>글쓴이</div>
-          <div className="py-2 px-1 text-center text-sm font-medium text-gray-500" style={{ width: '80px' }}>날짜</div>
-          <div className="py-2 px-1 text-center text-sm font-medium text-gray-500" style={{ width: '60px' }}>조회</div>
-          <div className="py-2 px-1 text-center text-sm font-medium text-gray-500" style={{ width: '60px' }}>추천</div>
+          <div className="py-2 px-4 text-center text-sm font-medium text-gray-500 dark:text-gray-400 flex-1">제목</div>
+          <div className="py-2 px-3 text-center text-sm font-medium text-gray-500 dark:text-gray-400" style={{ width: '120px' }}>글쓴이</div>
+          <div className="py-2 px-1 text-center text-sm font-medium text-gray-500 dark:text-gray-400" style={{ width: '80px' }}>날짜</div>
+          <div className="py-2 px-1 text-center text-sm font-medium text-gray-500 dark:text-gray-400" style={{ width: '60px' }}>조회</div>
+          <div className="py-2 px-1 text-center text-sm font-medium text-gray-500 dark:text-gray-400" style={{ width: '60px' }}>추천</div>
         </div>
         
         {/* 가상화된 리스트 */}
@@ -823,15 +823,15 @@ export default function PostList({
         ) : (
         <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b bg-gray-50">
+            <tr className="border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
               {showBoard && (
-                <th className={`py-2 px-3 text-center w-[${boardNameMaxWidth}] text-sm font-medium text-gray-500`}>게시판</th>
+                <th className={`py-2 px-3 text-center w-[${boardNameMaxWidth}] text-sm font-medium text-gray-500 dark:text-gray-400`}>게시판</th>
               )}
-              <th className="py-2 px-4 text-center text-sm font-medium text-gray-500">제목</th>
-              <th className={`py-2 px-3 text-center w-[${boardNameMaxWidth}] text-sm font-medium text-gray-500`}>글쓴이</th>
-              <th className="py-2 px-1 text-center w-16 text-sm font-medium text-gray-500">날짜</th>
-              <th className="py-2 px-1 text-center w-12 text-sm font-medium text-gray-500">조회</th>
-              <th className="py-2 px-1 text-center w-12 text-sm font-medium text-gray-500">추천</th>
+              <th className="py-2 px-4 text-center text-sm font-medium text-gray-500 dark:text-gray-400">제목</th>
+              <th className={`py-2 px-3 text-center w-[${boardNameMaxWidth}] text-sm font-medium text-gray-500 dark:text-gray-400`}>글쓴이</th>
+              <th className="py-2 px-1 text-center w-16 text-sm font-medium text-gray-500 dark:text-gray-400">날짜</th>
+              <th className="py-2 px-1 text-center w-12 text-sm font-medium text-gray-500 dark:text-gray-400">조회</th>
+              <th className="py-2 px-1 text-center w-12 text-sm font-medium text-gray-500 dark:text-gray-400">추천</th>
             </tr>
           </thead>
           <tbody>
@@ -859,9 +859,9 @@ export default function PostList({
   }, [isMobile, useVirtualization, deferredPosts, showBoard, boardNameMaxWidth, currentPostId, currentBoardId, renderContentTypeIcons, renderAuthor, renderBoardLogo, extractFirstImageUrl, variant]);
 
   return (
-    <div className={`mb-4 bg-white rounded-lg border overflow-hidden ${className}`}>
+    <div className={`mb-4 bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden ${className}`}>
       {headerContent && (
-        <div className="px-6 py-4">
+        <div className="bg-[#F5F5F5] dark:bg-[#262626] px-4 py-3 border-b border-black/7 dark:border-white/10">
           {headerContent}
         </div>
       )}

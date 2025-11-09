@@ -8,6 +8,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from '@/shared/context/AuthContext';
 import { IconProvider } from '@/shared/context/IconContext';
+import { ThemeProvider } from '@/shared/context/ThemeContext';
 import AuthStateManager from '@/shared/components/AuthStateManager';
 import { HeaderUserData } from '@/domains/layout/types/header';
 import { Board } from '@/domains/layout/types/board';
@@ -159,33 +160,40 @@ export default function RootLayoutClient({
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider initialSession={initialSession}>
-        <IconProvider initialIconUrl={initialIconUrl} initialIconName={initialIconName}>
-          {isIndependentLayout ? (
-            children
-          ) : (
-            <AuthStateManager
-              authSection={authSection}
-              boardNavigation={boardNavigation}
-              leagueStandingsComponent={leagueStandingsComponent}
-              rightSidebar={rightSidebar}
-              headerUserData={headerUserData}
-              headerBoards={headerBoards}
-              headerIsAdmin={headerIsAdmin}
-              liveScoreData={liveScoreData}
-              isOpen={deferredIsOpen}
-              onClose={closeSidebar}
-              isProfileOpen={deferredIsProfileOpen}
-              onProfileClose={closeProfileSidebar}
-              onProfileClick={toggleProfileSidebar}
-            >
-              {children}
-            </AuthStateManager>
-          )}
-            
-          <ToastContainer {...toastConfig} />
-        </IconProvider>
-      </AuthProvider>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
+      >
+        <AuthProvider initialSession={initialSession}>
+          <IconProvider initialIconUrl={initialIconUrl} initialIconName={initialIconName}>
+            {isIndependentLayout ? (
+              children
+            ) : (
+              <AuthStateManager
+                authSection={authSection}
+                boardNavigation={boardNavigation}
+                leagueStandingsComponent={leagueStandingsComponent}
+                rightSidebar={rightSidebar}
+                headerUserData={headerUserData}
+                headerBoards={headerBoards}
+                headerIsAdmin={headerIsAdmin}
+                liveScoreData={liveScoreData}
+                isOpen={deferredIsOpen}
+                onClose={closeSidebar}
+                isProfileOpen={deferredIsProfileOpen}
+                onProfileClose={closeProfileSidebar}
+                onProfileClick={toggleProfileSidebar}
+              >
+                {children}
+              </AuthStateManager>
+            )}
+
+            <ToastContainer {...toastConfig} />
+          </IconProvider>
+        </AuthProvider>
+      </ThemeProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );

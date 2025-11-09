@@ -137,13 +137,13 @@ export default function ProfileSidebar({
       
       {/* 프로필 사이드바 (좌측에서 열림) */}
       <div
-        className={`fixed top-0 left-0 h-full w-full max-w-sm 
+        className={`fixed top-0 left-0 h-full w-full max-w-sm
           bg-white transform transition-transform duration-300 ease-in-out z-[1000]
           ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:hidden`}
       >
         {/* 헤더 */}
-        <div className="flex items-center justify-between h-14 border-b px-4">
-          <span className="font-medium">
+        <div className="flex items-center justify-between h-14 border-b border-gray-200 px-4">
+          <span className="font-medium text-gray-900">
             {user ? '프로필' : '로그인'}
           </span>
           <Button
@@ -151,7 +151,7 @@ export default function ProfileSidebar({
             size="icon"
             onClick={onClose}
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5 text-gray-600" />
           </Button>
         </div>
 
@@ -161,7 +161,7 @@ export default function ProfileSidebar({
             // 로그인된 사용자
             <>
               {/* 사용자 프로필 정보 섹션 */}
-              <div className="p-4 border-b">
+              <div className="p-4 border-b border-gray-200">
                 {isLoading ? (
                   <div className="text-center py-4">
                     <p className="text-sm text-gray-500">프로필 로딩 중...</p>
@@ -175,17 +175,17 @@ export default function ProfileSidebar({
 
               {/* 메뉴 섹션 */}
               <div className="p-4 space-y-2">
-                <Link 
-                  href="/settings/profile" 
-                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 transition-colors"
+                <Link
+                  href="/settings/profile"
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 transition-colors text-gray-900"
                   onClick={handleMenuClick}
                 >
                   <UserCog className="h-5 w-5 text-gray-600" />
                   <span className="text-sm font-medium">프로필 설정</span>
                 </Link>
-                
+
                 {/* 아이콘 설정 항목 제거 */}
-                
+
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 transition-colors text-left"
@@ -202,23 +202,23 @@ export default function ProfileSidebar({
                 <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
                   <User className="h-8 w-8 text-gray-400" />
                 </div>
-                <h3 className="text-lg font-medium mb-2">로그인이 필요합니다</h3>
+                <h3 className="text-lg font-medium mb-2 text-gray-900">로그인이 필요합니다</h3>
                 <p className="text-sm text-gray-500 mb-6">
                   더 많은 기능을 이용하려면 로그인해주세요
                 </p>
-                
+
                 <div className="space-y-3">
-                  <Link 
+                  <Link
                     href="/signin"
-                    className="block w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                    className="block w-full bg-slate-800 text-white py-3 px-4 rounded-lg font-medium hover:bg-slate-700 transition-colors"
                     onClick={handleMenuClick}
                   >
                     로그인
                   </Link>
-                  
-                  <Link 
+
+                  <Link
                     href="/signup"
-                    className="block w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                    className="block w-full border border-gray-200 text-gray-900 py-3 px-4 rounded-lg font-medium hover:bg-gray-50 transition-colors"
                     onClick={handleMenuClick}
                   >
                     회원가입

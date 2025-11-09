@@ -14,7 +14,7 @@ export interface NewsItem {
 }
 
 interface NewsWidgetProps {
-  boardSlug?: string;
+  boardSlug?: string | string[];
 }
 
 // 이미지 URL 유효성 검사 함수 (타임아웃 방지)
@@ -143,7 +143,13 @@ async function getBoardPosts(boardSlug: string): Promise<NewsItem[]> {
       .single();
 
     if (boardError) {
-      console.error("게시판 정보 조회 오류:", boardError);
+      console.error(`게시판 정보 조회 오류 (slug: ${boardSlug}):`, boardError);
+      // 게시판을 찾지 못한 경우 빈 배열 반환 (에러를 throw하지 않음)
+      return [];
+    }
+    
+    if (!boardData) {
+      console.warn(`게시판을 찾을 수 없습니다 (slug: ${boardSlug})`);
       return [];
     }
 
@@ -211,9 +217,26 @@ async function getBoardPosts(boardSlug: string): Promise<NewsItem[]> {
   }
 }
 
-export default async function NewsWidget({ boardSlug = 'sports-news' }: NewsWidgetProps) {
-  // 서버에서 데이터 가져오기
-  const news = await getBoardPosts(boardSlug);
+export default async function NewsWidget({ boardSlug }: NewsWidgetProps) {
+  // 기본값: foreign-news와 domestic-news 두 게시판 사용
+  const boardSlugs = boardSlug 
+    ? (Array.isArray(boardSlug) ? boardSlug : [boardSlug])
+    : ['foreign-news', 'domestic-news'];
   
-  return <NewsWidgetClient initialNews={news} />;
+  // 여러 게시판에서 데이터 가져오기
+  const newsArrays = await Promise.all(
+    boardSlugs.map(slug => getBoardPosts(slug))
+  );
+  
+  // 모든 뉴스를 합치고 날짜순으로 정렬
+  const allNews = newsArrays
+    .flat()
+    .sort((a, b) => {
+      const dateA = new Date(a.publishedAt).getTime();
+      const dateB = new Date(b.publishedAt).getTime();
+      return dateB - dateA; // 최신순
+    })
+    .slice(0, 15); // 최대 15개만 표시
+  
+  return <NewsWidgetClient initialNews={allNews} />;
 } 

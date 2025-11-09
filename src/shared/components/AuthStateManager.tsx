@@ -65,8 +65,8 @@ const AuthStateManager = React.memo(function AuthStateManager({
         isAdmin={headerIsAdmin}
         liveScoreData={liveScoreData}
       />
-      <div className="flex flex-1 w-full md:max-w-screen-2xl md:mx-auto">
-        <Sidebar 
+      <div className="flex flex-1 w-full md:max-w-[1400px] md:mx-auto bg-transparent">
+        <Sidebar
           isOpen={isOpen}
           onClose={onClose}
           leagueStandingsComponent={leagueStandingsComponent}
@@ -78,14 +78,14 @@ const AuthStateManager = React.memo(function AuthStateManager({
           isOpen={isProfileOpen}
           onClose={onProfileClose}
         />
-        <main className="flex-1 mt-2 mb-2 md:px-4 w-full box-border" style={{ overflow: isMatchPage ? 'visible' : 'auto' }}>
+        <main className="flex-1 mt-4 mb-4 md:px-4 w-full box-border bg-transparent" style={{ overflow: isMatchPage ? 'visible' : 'auto' }}>
           {children}
         </main>
         {/* 매치 페이지일 때는 사이드바 없음, 아니면 기본 사이드바 */}
         {!isMatchPage && rightSidebar}
       </div>
       <Footer />
-      
+
       {/* 챗봇 - 모든 사용자에게 표시 (로그인/비로그인 자동 감지) */}
       <UniversalChatbot />
     </div>

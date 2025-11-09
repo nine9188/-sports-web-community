@@ -8,7 +8,7 @@ import { TeamStats } from '@/domains/livescore/actions/match/statsData';
 import { StandingsData } from '@/domains/livescore/types/match';
 import { PlayerStats } from '@/domains/livescore/actions/match/playerStats';
 import { HeadToHeadTestData } from '@/domains/livescore/actions/match/headtohead';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 
 // 탭 타입 정의
 export type TabType = 'events' | 'lineups' | 'stats' | 'standings' | 'power' | 'support';

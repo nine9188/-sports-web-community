@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '@/shared/ui/button';
 import { toast } from 'react-toastify';
 import { createClient } from '@/shared/api/supabase';
@@ -52,19 +52,26 @@ export default function BoardsAdminPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUpdatingOrder, setIsUpdatingOrder] = useState(false);
-  const supabase = createClient();
+  
+  // Supabase 클라이언트를 useMemo로 안정화
+  const supabase = useMemo(() => createClient(), []);
 
   // 게시판 목록 불러오기 - useCallback 사용
   const fetchBoards = useCallback(async () => {
     try {
       setIsLoading(true);
+      console.log('게시판 목록 조회 시작...');
+      
       const { data, error } = await supabase
         .from('boards')
         .select('*')
         .order('display_order', { ascending: true })
         .order('name', { ascending: true });
       
+      console.log('게시판 조회 결과:', { data, error });
+      
       if (error) {
+        console.error('Supabase 에러:', error);
         throw error;
       }
       
@@ -83,6 +90,8 @@ export default function BoardsAdminPage() {
         view_type: (item.view_type as 'list' | 'image-table' | null) ?? 'list'
       })) as Board[];
       
+      console.log('변환된 게시판 데이터:', boardsData);
+      
       setBoards(boardsData);
       
       // 계층 구조로 데이터 변환
@@ -91,11 +100,12 @@ export default function BoardsAdminPage() {
       
     } catch (error) {
       console.error('게시판 목록 조회 오류:', error);
-      toast.error('게시판 목록을 불러오는데 실패했습니다.');
+      const errorMessage = error instanceof Error ? error.message : '게시판 목록을 불러오는데 실패했습니다.';
+      toast.error(`게시판 목록 조회 실패: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
-  }, [supabase]); // supabase 클라이언트만 의존성으로 추가
+  }, [supabase]);
 
   // 계층 구조로 게시판 데이터 변환
   const createBoardStructure = (boardsData: Board[]): Board[] => {

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { Plus, Trash2, Save } from 'lucide-react';
 import {
   SeoSettings,

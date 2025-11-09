@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo, useRef } from 'react';
 import { fetchPlayerFullData, PlayerFullDataResponse } from '@/domains/livescore/actions/player/data';
 import { PlayerData, PlayerStatistic, FixtureData, TransferData, InjuryData, TrophyData, RankingsData } from '@/domains/livescore/types/player';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 
 // 탭 타입 정의
 export type TabType = 'stats' | 'fixtures' | 'trophies' | 'transfers' | 'injuries' | 'rankings';

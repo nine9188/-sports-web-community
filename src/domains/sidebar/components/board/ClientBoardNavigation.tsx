@@ -26,23 +26,22 @@ const BoardCategoryItem = ({
   const isActive = pathname === `/boards/${board.slug}`;
   const hasChildren = board.children && board.children.length > 0;
   const isExpanded = expandedCategories.has(board.id);
-  
-  // 깊이에 따른 패딩 계산
-  const paddingLeft = `${depth * 12 + 8}px`;
-  
+
   return (
     <div key={board.id}>
-      <div className="mb-1">
-        <div 
-          className={`flex items-center text-sm py-1.5 px-2 rounded-md ${
-            isActive ? 'bg-slate-100 text-slate-900 font-medium' : 'hover:bg-gray-50'
+      <div>
+        <div
+          className={`flex items-center text-sm py-2 px-4 transition-colors ${
+            isActive
+              ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] font-medium'
+              : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]'
           }`}
-          style={{ paddingLeft }}
+          style={{ paddingLeft: `${depth * 12 + 16}px` }}
         >
           {hasChildren ? (
-            <button 
+            <button
               onClick={() => toggleCategory(board.id)}
-              className="mr-1.5 flex-shrink-0 text-gray-400"
+              className="mr-1.5 flex-shrink-0 text-gray-400 dark:text-gray-500"
             >
               {isExpanded ? (
                 <ChevronDown className="h-4 w-4" />
@@ -53,7 +52,7 @@ const BoardCategoryItem = ({
           ) : (
             <div className="w-5 h-5 mr-1.5"></div>
           )}
-          
+
           <Link
             href={`/boards/${board.slug}`}
             className="flex-1 truncate"
@@ -110,7 +109,7 @@ export default function ClientBoardNavigation({
   };
   
   return (
-    <div className="space-y-1">
+    <div>
       {initialData.rootBoards.map((board) => (
         <BoardCategoryItem
           key={board.id}

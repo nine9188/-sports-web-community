@@ -11,27 +11,35 @@ interface TopLevelBoardProps {
   onClick: (board: Board) => void;
 }
 
-const TopLevelBoard = React.memo(function TopLevelBoard({ 
+const TopLevelBoard = React.memo(function TopLevelBoard({
   board,
   onHover,
   onLeave,
   onClick
 }: TopLevelBoardProps) {
   const ref = useRef<HTMLDivElement>(null);
-  
+  const hasChildren = board.children && board.children.length > 0;
+
+  const handleClick = () => {
+    // 하위 게시판이 없는 경우에만 클릭 시 이동
+    if (!hasChildren) {
+      onClick(board);
+    }
+  };
+
   return (
-    <div 
+    <div
       ref={ref}
       className="relative shrink-0 snap-center"
-      onMouseEnter={() => ref.current && onHover(board.id, ref.current)}
+      onMouseEnter={() => ref.current && hasChildren && onHover(board.id, ref.current)}
       onMouseLeave={onLeave}
     >
-      <div 
-        className="px-2 py-1 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1 cursor-pointer whitespace-nowrap"
-        onClick={() => onClick(board)}
+      <div
+        className="px-2 py-1 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded flex items-center gap-1 cursor-pointer whitespace-nowrap transition-colors"
+        onClick={handleClick}
       >
         {board.name || '게시판'}
-        {board.children && board.children.length > 0 && (
+        {hasChildren && (
           <ChevronDown className="h-3.5 w-3.5" />
         )}
       </div>

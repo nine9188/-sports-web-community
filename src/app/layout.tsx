@@ -12,6 +12,8 @@ import { getHeaderUserData, getBoardsForNavigation } from '@/domains/layout/acti
 import { fetchMultiDayMatches } from '@/domains/livescore/actions/footballApi';
 import { generatePageMetadata } from '@/shared/utils/metadataNew';
 import { Suspense } from 'react';
+import { getUIThemeSettings } from '@/domains/ui-theme/actions';
+import Script from 'next/script';
 
 // 로딩 스켈레톤 컴포넌트
 function RightSidebarSkeleton() {
@@ -109,12 +111,29 @@ export default async function RootLayout({
   // 리그 순위 컴포넌트 생성
   const leagueStandingsComponent = <LeagueStandings initialLeague="premier" initialStandings={standingsData} />;
 
-  // 헤더 데이터 및 라이브스코어 데이터 가져오기
-  const [headerUserData, headerBoardsData, liveScoreData] = await Promise.all([
+  // 헤더 데이터 및 라이브스코어 데이터, UI 테마 설정 가져오기
+  const [headerUserData, headerBoardsData, liveScoreData, uiTheme] = await Promise.all([
     getHeaderUserData(),
     getBoardsForNavigation(),
-    fetchMultiDayMatches().catch(() => undefined)
+    fetchMultiDayMatches().catch(() => undefined),
+    getUIThemeSettings()
   ]);
+
+  // Tailwind 클래스를 CSS Variable 값으로 변환
+  const borderRadiusMap: Record<string, string> = {
+    'rounded-none': '0',
+    'rounded-sm': '0.125rem',
+    'rounded': '0.25rem',
+    'rounded-md': '0.375rem',
+    'rounded-lg': '0.5rem',
+    'rounded-xl': '0.75rem',
+    'rounded-2xl': '1rem',
+    'rounded-3xl': '1.5rem',
+    'rounded-full': '9999px'
+  };
+
+  const desktopRadius = borderRadiusMap[uiTheme.borderRadiusDesktop] || '0.5rem';
+  const mobileRadius = borderRadiusMap[uiTheme.borderRadiusMobile] || '0';
 
   return (
     <html lang="ko" className={`w-full h-full ${inter.className}`} suppressHydrationWarning>
@@ -123,6 +142,17 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://challenges.cloudflare.com" />
       </head>
       <body className="w-full h-full overflow-x-hidden">
+        {/* UI 테마 CSS Variables 적용 */}
+        <Script
+          id="ui-theme-vars"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              document.documentElement.style.setProperty('--border-radius-desktop', '${desktopRadius}');
+              document.documentElement.style.setProperty('--border-radius-mobile', '${mobileRadius}');
+            `
+          }}
+        />
         <RootLayoutClient
           boardNavigation={boardNav}
           rightSidebar={

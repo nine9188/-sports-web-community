@@ -45,7 +45,7 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
     try {
       await onUpdate(comment.id, editContent.trim());
       setIsEditing(false);
-    } catch (error) {
+    } catch {
       alert('댓글 수정에 실패했습니다.');
     }
   };
@@ -62,8 +62,8 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
       setLikes(result.likes || 0);
       setDislikes(result.dislikes || 0);
       setUserAction(result.userAction || null);
-    } catch (error) {
-      
+    } catch {
+      alert('좋아요 처리 중 오류가 발생했습니다.');
     } finally {
       setIsLiking(false);
     }
@@ -81,8 +81,8 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
       setLikes(result.likes || 0);
       setDislikes(result.dislikes || 0);
       setUserAction(result.userAction || null);
-    } catch (error) {
-      
+    } catch {
+      alert('싫어요 처리 중 오류가 발생했습니다.');
     } finally {
       setIsDisliking(false);
     }

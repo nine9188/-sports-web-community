@@ -10,9 +10,8 @@ import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import BoardSelector from '@/domains/boards/components/createnavigation/BoardSelector';
 import EditorToolbar from '@/domains/boards/components/createnavigation/EditorToolbar';
-import { rewardUserActivity, getActivityTypeValues } from '@/shared/actions/activity-actions';
 import { MatchData } from '@/domains/livescore/actions/footballApi';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { createPost, updatePost } from '@/domains/boards/actions/posts/index';
 import { Board } from '@/domains/boards/types/board';
 import { generateMatchCardHTML } from '@/shared/utils/matchCardRenderer';
@@ -190,159 +189,126 @@ export default function PostEditForm({
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    // 중복 제출 방지
+    if (isSubmitting) {
+      return;
+    }
+
+    // 입력값 검증
     if (!title.trim()) {
       setError('제목을 입력해주세요.');
       return;
     }
-    
+
     if (!content || content === '<p></p>') {
       setError('내용을 입력해주세요.');
       return;
     }
-    
+
     if (isCreateMode && !categoryId) {
       setError('게시판을 선택해주세요.');
       return;
     }
-    
+
     setIsSubmitting(true);
     setError(null);
-    
+
     try {
-      // 사용자 인증 정보 확인
+      // 게시글 생성 모드
+      if (isCreateMode) {
+        // FormData 생성
+        const formData = new FormData();
+        formData.append('title', title.trim());
+        formData.append('content', content);
+        formData.append('boardId', categoryId);
+
+        // 서버 액션 실행 (모든 비즈니스 로직 서버에서 처리)
+        const result = await createPost(formData);
+
+        // 실패 케이스
+        if (!result.success) {
+          const errorMsg = result.error || '게시글 작성에 실패했습니다.';
+
+          // 로그인 필요 에러인 경우 로그인 페이지로 이동
+          if (errorMsg.includes('로그인') || errorMsg.includes('인증')) {
+            toast.error('로그인이 필요합니다.');
+            router.push('/signin');
+            return;
+          }
+
+          setError(errorMsg);
+          toast.error(errorMsg);
+          setIsSubmitting(false);
+          return;
+        }
+
+        // 성공 케이스
+        if (!result.post) {
+          throw new Error('게시글 데이터를 받아오지 못했습니다.');
+        }
+
+        const { post } = result;
+
+        // boardSlug 찾기
+        const boardSlug = post.board?.slug || allBoardsFlat.find(b => b.id === categoryId)?.slug || categoryId;
+
+        // 성공 메시지 표시
+        toast.success('게시글이 작성되었습니다.');
+
+        // 페이지 이동 (Toast가 보이도록 약간의 딜레이)
+        setTimeout(() => {
+          router.push(`/boards/${boardSlug}/${post.post_number}`);
+        }, 500);
+
+        return;
+      } 
+
+
+      // 게시글 수정 모드
+      if (!postId) {
+        throw new Error('게시글 ID가 제공되지 않았습니다.');
+      }
+
+      // 사용자 인증 확인
       const { data: userData, error: userError } = await supabase.auth.getUser();
-      
+
       if (userError || !userData.user) {
         toast.error('로그인이 필요합니다.');
         router.push('/signin');
         return;
       }
-      
-      // 게시글 생성 모드
-      if (isCreateMode) {
-        if (!categoryId) {
-          throw new Error('게시판 ID가 필요합니다.');
-        }
-        
-        try {
-          // FormData 객체 생성
-          const formData = new FormData();
-          formData.append('title', title);
-          formData.append('content', content);
-          formData.append('boardId', categoryId);
-          
-          // 서버 액션으로 게시글 생성 실행
-          const result = await createPost(formData);
-          
-          if (!result) {
-            throw new Error('서버에서 응답이 없습니다.');
-          }
-          
-          if (result.success && result.post) {
-            // 게시글 정보 추출
-            const postId = result.post.id;
-            const postNumber = result.post.post_number;
-            const boardSlug = result.post.board?.slug || allBoardsFlat.find(b => b.id === categoryId)?.slug;
-            
-            if (!boardSlug) {
-              throw new Error('게시판 정보를 찾을 수 없습니다.');
-            }
-            
-            // 활동 보상 지급 시도 - 실패해도 게시글 이동은 처리
-            try {
-              const activityTypes = await getActivityTypeValues();
-              await rewardUserActivity(userData.user.id, activityTypes.POST_CREATION, postId);
-            } catch (rewardError) {
-              console.error('보상 지급 오류:', rewardError);
-              // 오류가 있어도 게시글 이동은 진행
-            }
-            
-            // 게시글 생성 성공 메시지
-            toast.success('게시글이 작성되었습니다.');
-            
-            // 페이지 이동 전 약간의 지연 추가 (토스트 메시지 표시 및 상태 업데이트 위함)
-            setTimeout(() => {
-              router.push(`/boards/${boardSlug}/${postNumber}`);
-              router.refresh();
-            }, 300);
-            
-            return; // 성공적으로 처리 완료
-          } else if (result.error) {
-            console.error('게시글 생성 실패:', result.error);
-            // 서버에서 온 정확한 오류 메시지를 그대로 사용
-            setError(result.error);
-            toast.error(result.error);
-            return; // 여기서 함수 종료
-          } else {
-            const errorMsg = '게시글 생성에 실패했습니다. 다시 시도해주세요.';
-            setError(errorMsg);
-            toast.error(errorMsg);
-            return; // 여기서 함수 종료
-          }
-        } catch (createError) {
-          console.error('게시글 생성 과정 중 오류:', createError);
-          const errorMsg = createError instanceof Error ? createError.message : '게시글 작성 중 오류가 발생했습니다.';
-          setError(errorMsg);
-          toast.error(errorMsg);
-          return; // 여기서 함수 종료
-        }
-      } 
-      // 게시글 수정 모드
-      else {
-        if (!postId) {
-          throw new Error('게시글 ID가 제공되지 않았습니다.');
-        }
-        
-        
-        try {
-          // 서버 액션으로 게시글 수정
-          const result = await updatePost(
-            postId,
-            title,
-            content,
-            userData.user.id
-          );
-          
-          
-          if (!result) {
-            throw new Error('서버에서 응답이 없습니다.');
-          }
-          
-          if (result.success && result.boardSlug && result.postNumber) {
-            // 게시글 수정 성공 메시지
-            toast.success('게시글이 수정되었습니다.');
-            
-            // 페이지 이동 전 약간의 지연 추가
-            setTimeout(() => {
-              router.push(`/boards/${result.boardSlug}/${result.postNumber}`);
-              router.refresh();
-            }, 300);
-            
-            return; // 성공적으로 처리 완료
-          } else {
-            console.error('게시글 수정 실패:', result.error || '알 수 없는 오류');
-            // 서버에서 온 정확한 오류 메시지를 그대로 사용
-            const errorMsg = result.error || '게시글 수정에 실패했습니다. 다시 시도해주세요.';
-            setError(errorMsg);
-            toast.error(errorMsg);
-            return; // 여기서 함수 종료
-          }
-        } catch (updateError) {
-          console.error('게시글 수정 과정 중 오류:', updateError);
-          const errorMsg = updateError instanceof Error ? updateError.message : '게시글 수정 중 오류가 발생했습니다.';
-          setError(errorMsg);
-          toast.error(errorMsg);
-          return; // 여기서 함수 종료
-        }
+
+      // 서버 액션 실행
+      const result = await updatePost(postId, title.trim(), content, userData.user.id);
+
+      // 실패 케이스
+      if (!result.success) {
+        const errorMsg = result.error || '게시글 수정에 실패했습니다.';
+        setError(errorMsg);
+        toast.error(errorMsg);
+        setIsSubmitting(false);
+        return;
       }
-    } catch (error: unknown) {
-      // 이 블록은 위에서 처리되지 않은 예외적인 경우에만 실행됨
-      console.error('예상치 못한 오류:', error);
-      const errorMessage = error instanceof Error ? error.message : `게시글 ${isCreateMode ? '작성' : '수정'} 중 예상치 못한 오류가 발생했습니다.`;
-      setError(errorMessage);
-      toast.error(errorMessage);
-    } finally {
+
+      // 성공 케이스
+      if (!result.boardSlug || !result.postNumber) {
+        throw new Error('게시글 정보를 받아오지 못했습니다.');
+      }
+
+      toast.success('게시글이 수정되었습니다.');
+
+      // 페이지 이동 (Toast가 보이도록 약간의 딜레이)
+      setTimeout(() => {
+        router.push(`/boards/${result.boardSlug}/${result.postNumber}`);
+      }, 500);
+
+    } catch (error) {
+      const errorMsg = error instanceof Error
+        ? error.message
+        : `게시글 ${isCreateMode ? '작성' : '수정'} 중 오류가 발생했습니다.`;
+      setError(errorMsg);
+      toast.error(errorMsg);
       setIsSubmitting(false);
     }
   };

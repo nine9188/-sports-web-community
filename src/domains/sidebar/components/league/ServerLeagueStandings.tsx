@@ -5,7 +5,7 @@ import LeagueStandings from './LeagueStandings';
 // 로딩 중 표시할 스켈레톤 UI
 function LeagueStandingsSkeleton() {
   return (
-    <div className="border rounded-md overflow-hidden animate-pulse">
+    <div className="border rounded-lg overflow-hidden animate-pulse">
       <div className="bg-slate-800 text-white py-2 px-3 text-sm font-medium">
         축구 팀순위
       </div>
@@ -16,7 +16,7 @@ function LeagueStandingsSkeleton() {
       </div>
       <div className="p-3 space-y-2">
         {[...Array(10)].map((_, i) => (
-          <div key={i} className="h-5 w-full bg-gray-200 rounded"></div>
+          <div key={i} className="h-5 w-full bg-gray-200 rounded-lg"></div>
         ))}
       </div>
     </div>

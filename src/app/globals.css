@@ -34,6 +34,20 @@
     --ring: 215 20.2% 65.1%;
 
     --radius: 0.5rem;
+
+    /* UI 테마 설정 - 동적으로 변경 가능 */
+    --border-radius-desktop: 0.5rem; /* rounded-lg */
+    --border-radius-mobile: 0; /* rounded-none */
+
+    /* 자주 사용되는 색상 변수 추가 */
+    --bg-primary: 248 249 250; /* #F8F9FA - 배경 */
+    --bg-secondary: 252 252 252; /* #FCFCFC - 컨테이너 */
+    --bg-tertiary: 243 244 246; /* gray-100 */
+    --text-primary: 17 24 39; /* gray-900 */
+    --text-secondary: 75 85 99; /* gray-600 */
+    --text-tertiary: 107 114 128; /* gray-500 */
+    --border-primary: 229 231 235; /* gray-200 */
+    --border-secondary: 209 213 219; /* gray-300 */
   }
 
   .dark {
@@ -65,6 +79,18 @@
     --destructive-foreground: 0 85.7% 97.3%;
 
     --ring: 217.2 32.6% 17.5%;
+
+    /* 커스텀 다크모드 색상 팔레트 */
+    --bg-primary: 0 0 0; /* #000000 - 배경 메인 */
+    --bg-secondary: 29 29 29; /* #1D1D1D - 컨테이너 */
+    --bg-tertiary: 26 26 26; /* #1A1A1A - 헤더 */
+    --bg-container-header: 38 38 38; /* #262626 - 컨테이너 헤더 */
+    --text-primary: 240 240 240; /* #F0F0F0 - 텍스트 주색상 */
+    --text-secondary: 180 180 180; /* 중간 회색 */
+    --text-tertiary: 140 140 140; /* 연한 회색 */
+    --border-primary: 50 50 50; /* 어두운 테두리 */
+    --border-secondary: 60 60 60; /* 중간 테두리 */
+    --accent-blue: 74 144 226; /* #4A90E2 - 링크/액센트 */
   }
 
   * {
@@ -84,21 +110,26 @@
   }
 
   body {
-    @apply bg-white text-gray-900;
+    @apply bg-[#F8F9FA] text-gray-900;
     /* 모바일에서 배경 확대 방지 */
     background-attachment: fixed;
     background-size: 100% 100%;
     background-repeat: no-repeat;
   }
 
-  @media (max-width: 768px) {
-    body.dark {
-      @apply bg-slate-950;
-    }
+  .dark body {
+    @apply bg-black text-[rgb(var(--text-primary))];
   }
 }
 
 @layer components {
+  /* 동적 테마 클래스 */
+  .widget-container,
+  .card-container,
+  .panel-container {
+    @apply border bg-white dark:bg-slate-900 dark:border-gray-800 rounded-dynamic-mobile md:rounded-dynamic;
+  }
+
   .header-background {
     @apply bg-white dark:bg-slate-950;
     backdrop-filter: blur(8px);
@@ -117,6 +148,64 @@
   [role="menuitem"]:hover {
     @apply bg-gray-100 dark:bg-gray-800 !important;
   }
+}
+
+/* 최상위 컨테이너만 반응형 테두리 적용 (내부 요소는 원래대로) */
+@layer utilities {
+  /* 모바일: 모든 rounded 변형에 테마 적용 */
+  @media (max-width: 767px) {
+    /* rounded-lg 변형 */
+    .bg-white.border.rounded-lg,
+    .border.rounded-lg {
+      border-radius: var(--border-radius-mobile) !important;
+    }
+
+    /* rounded-md 변형 */
+    .bg-white.border.rounded-md,
+    .border.rounded-md {
+      border-radius: var(--border-radius-mobile) !important;
+    }
+
+    /* rounded 변형 */
+    .bg-white.border.rounded,
+    .border.rounded {
+      border-radius: var(--border-radius-mobile) !important;
+    }
+
+    /* rounded-sm 변형 */
+    .bg-white.border.rounded-sm,
+    .border.rounded-sm {
+      border-radius: var(--border-radius-mobile) !important;
+    }
+  }
+
+  /* 데스크탑: 모든 rounded 변형에 테마 적용 */
+  @media (min-width: 768px) {
+    /* rounded-lg 변형 */
+    .bg-white.border.rounded-lg,
+    .border.rounded-lg {
+      border-radius: var(--border-radius-desktop) !important;
+    }
+
+    /* rounded-md 변형 */
+    .bg-white.border.rounded-md,
+    .border.rounded-md {
+      border-radius: var(--border-radius-desktop) !important;
+    }
+
+    /* rounded 변형 */
+    .bg-white.border.rounded,
+    .border.rounded {
+      border-radius: var(--border-radius-desktop) !important;
+    }
+
+    /* rounded-sm 변형 */
+    .bg-white.border.rounded-sm,
+    .border.rounded-sm {
+      border-radius: var(--border-radius-desktop) !important;
+    }
+  }
+
 }
 
 /* 비디오 관련 스타일 추가 */

@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/shared/ui';
 import { createClient } from '@/shared/api/supabase';
 import { AlertCircle, FileVideo } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 
 interface VideoFormProps {
   onCancel: () => void;

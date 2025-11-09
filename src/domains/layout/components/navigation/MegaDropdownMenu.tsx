@@ -48,8 +48,8 @@ const MegaDropdownMenu = React.memo(function MegaDropdownMenu({
   const gridColumns = getGridItems(thirdLevelItems);
 
   return ReactDOM.createPortal(
-    <div 
-      className="fixed bg-white border-b border-gray-200 shadow-lg hidden md:block"
+    <div
+      className="fixed bg-white dark:bg-[#1D1D1D] border-b border-black/7 dark:border-0 shadow-lg hidden md:block"
       style={{
         top: `${position.top}px`,
         left: '0',
@@ -67,7 +67,7 @@ const MegaDropdownMenu = React.memo(function MegaDropdownMenu({
           <div className="flex gap-6">
             {/* 좌측: 2차 메뉴 리스트 */}
             <div className="w-56 flex-shrink-0">
-              <h3 className="text-sm font-medium text-gray-900 mb-3">
+              <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-3">
                 {board.name}
               </h3>
               <div className="space-y-1">
@@ -79,8 +79,8 @@ const MegaDropdownMenu = React.memo(function MegaDropdownMenu({
                         key={secondLevel.id}
                         className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
                           selectedSecondLevel?.id === secondLevel.id
-                            ? 'bg-blue-50 text-blue-700 font-medium'
-                            : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                            ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] font-medium'
+                            : 'text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
                         }`}
                         onMouseEnter={() => setSelectedSecondLevel(secondLevel)}
                         onClick={() => {
@@ -99,7 +99,7 @@ const MegaDropdownMenu = React.memo(function MegaDropdownMenu({
                       </button>
                     ))
                 ) : (
-                  <div className="px-3 py-2 text-sm text-gray-500">
+                  <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
                     하위 카테고리가 없습니다
                   </div>
                 )}
@@ -107,25 +107,25 @@ const MegaDropdownMenu = React.memo(function MegaDropdownMenu({
             </div>
 
             {/* 구분선 */}
-            <div className="w-px bg-gray-200"></div>
+            <div className="w-px bg-black/5 dark:bg-white/10"></div>
 
             {/* 우측: 3차 메뉴 그리드 */}
             <div className="flex-1 min-w-0">
               {selectedSecondLevel ? (
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-sm font-medium text-gray-900">
+                    <h4 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
                       {selectedSecondLevel.name}
                     </h4>
                     <Link
                       href={`/boards/${selectedSecondLevel.slug || selectedSecondLevel.id}`}
-                      className="text-xs text-blue-600 hover:text-blue-700"
+                      className="text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors"
                       onClick={onClose}
                     >
                       전체 보기 →
                     </Link>
                   </div>
-                  
+
                   {thirdLevelItems.length > 0 ? (
                     <div className="grid gap-4" style={{
                       gridTemplateColumns: `repeat(${Math.min(gridColumns.length, 5)}, 1fr)`
@@ -136,7 +136,7 @@ const MegaDropdownMenu = React.memo(function MegaDropdownMenu({
                             <Link
                               key={thirdLevel.id}
                               href={`/boards/${thirdLevel.slug || thirdLevel.id}`}
-                              className="block px-2 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded transition-colors"
+                              className="block px-2 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors"
                               onClick={onClose}
                             >
                               <span className="truncate">{thirdLevel.name}</span>
@@ -146,14 +146,14 @@ const MegaDropdownMenu = React.memo(function MegaDropdownMenu({
                       ))}
                     </div>
                   ) : (
-                    <div className="text-sm text-gray-500 py-8 text-center">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 py-8 text-center">
                       <div>게시판이 없습니다</div>
                       <div className="text-xs text-gray-400 mt-1">(대분류를 선택하세요)</div>
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="text-sm text-gray-500 py-8 text-center">
+                <div className="text-sm text-gray-500 dark:text-gray-400 py-8 text-center">
                   <div>카테고리를 선택해주세요</div>
                   <div className="text-xs text-gray-400 mt-1">(대분류를 선택하세요)</div>
                 </div>

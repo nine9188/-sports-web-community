@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
+import { Button } from '@/shared/components/ui';
 import ServerUserProfile from './ServerUserProfile';
 import { getSidebarUserProfile } from '../../actions/userProfile';
 
@@ -7,18 +8,21 @@ import { getSidebarUserProfile } from '../../actions/userProfile';
 function GuestAuthSection() {
   return (
     <>
-      <Link 
-        href="/signin" 
-        className="flex items-center justify-center bg-slate-800 text-white py-2 rounded-md font-medium w-full mb-2 hover:bg-slate-700 transition-colors"
+      <Button
+        variant="primary"
+        className="w-full mb-2"
+        asChild
       >
-        <span className="font-bold mr-1">SPORTS</span> 로그인
-      </Link>
-      <div className="flex justify-center gap-2 text-xs text-gray-500 mt-2">
-        <Link href="/help/account-recovery?tab=id" className="hover:underline">아이디 찾기</Link>
-        <span className="text-gray-300">|</span>
-        <Link href="/help/account-recovery?tab=password" className="hover:underline">비밀번호 찾기</Link>
-        <span className="text-gray-300">|</span>
-        <Link href="/signup" className="hover:underline">회원가입</Link>
+        <Link href="/signin">
+          <span className="font-bold mr-1">4590</span> 로그인
+        </Link>
+      </Button>
+      <div className="flex justify-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-2">
+        <Link href="/help/account-recovery?tab=id" className="hover:underline dark:hover:text-blue-400">아이디 찾기</Link>
+        <span className="text-gray-300 dark:text-gray-600">|</span>
+        <Link href="/help/account-recovery?tab=password" className="hover:underline dark:hover:text-blue-400">비밀번호 찾기</Link>
+        <span className="text-gray-300 dark:text-gray-600">|</span>
+        <Link href="/signup" className="hover:underline dark:hover:text-blue-400">회원가입</Link>
       </div>
     </>
   );

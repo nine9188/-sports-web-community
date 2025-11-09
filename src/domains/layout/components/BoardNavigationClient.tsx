@@ -152,9 +152,9 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
           ))}
           
           {/* 라이브스코어 링크 */}
-          <Link 
-            href="/livescore/football" 
-            className="px-2 py-1 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1 shrink-0 whitespace-nowrap snap-center"
+          <Link
+            href="/livescore/football"
+            className="px-2 py-1 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded flex items-center gap-1 shrink-0 whitespace-nowrap snap-center transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
               <circle cx="12" cy="12" r="10"></circle>
@@ -162,22 +162,22 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
             </svg>
             라이브스코어
           </Link>
-          
+
           {/* 이적시장 링크 */}
-          <Link 
-            href="/transfers" 
-            className="px-2 py-1 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1 shrink-0 whitespace-nowrap snap-center"
+          <Link
+            href="/transfers"
+            className="px-2 py-1 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded flex items-center gap-1 shrink-0 whitespace-nowrap snap-center transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
               <path d="M16 3h5v5M16 8l5-5m-1 10v5h-5m-8-5l-5 5v-5h5m8-8v5h5m-5-5l5 5"/>
             </svg>
             이적시장
           </Link>
-          
+
           {/* 데이터센터 링크 */}
-          <Link 
-            href="/livescore/football/leagues" 
-            className="px-2 py-1 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1 shrink-0 whitespace-nowrap snap-center"
+          <Link
+            href="/livescore/football/leagues"
+            className="px-2 py-1 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded flex items-center gap-1 shrink-0 whitespace-nowrap snap-center transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
               <path d="M3 3v18h18V3H3zm16 16H5V5h14v14z"/>
@@ -185,11 +185,11 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
             </svg>
             데이터센터
           </Link>
-          
+
           {/* 아이콘샵 링크 */}
-          <Link 
-            href="/shop" 
-            className="px-2 py-1 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1 shrink-0 whitespace-nowrap snap-center"
+          <Link
+            href="/shop"
+            className="px-2 py-1 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded flex items-center gap-1 shrink-0 whitespace-nowrap snap-center transition-colors"
           >
             <ShoppingBag className="h-3.5 w-3.5" />
             아이콘샵
@@ -197,9 +197,9 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
 
           {/* 관리자 페이지 링크 - 관리자에게만 표시 */}
           {isAdmin && (
-            <Link 
-              href="/admin" 
-              className="px-2 py-1 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1 shrink-0 whitespace-nowrap snap-center"
+            <Link
+              href="/admin"
+              className="px-2 py-1 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded flex items-center gap-1 shrink-0 whitespace-nowrap snap-center transition-colors"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
                 <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
@@ -243,15 +243,15 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
         <div className="flex items-center gap-1 overflow-x-auto min-w-0 flex-1">
           <button
             onClick={() => setIsMobileModalOpen(true)}
-            className="px-2 py-1.5 text-xs font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1 shrink-0"
+            className="px-2 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded flex items-center gap-1 shrink-0 transition-colors"
           >
             게시판
             <ChevronDown className="h-3 w-3" />
           </button>
-          
-          <Link 
-            href="/livescore/football" 
-            className="px-2 py-1.5 text-xs font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1 shrink-0"
+
+          <Link
+            href="/livescore/football"
+            className="px-2 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded flex items-center gap-1 shrink-0 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
               <circle cx="12" cy="12" r="10"></circle>
@@ -259,20 +259,20 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
             </svg>
             라이브
           </Link>
-          
-          <Link 
-            href="/transfers" 
-            className="px-2 py-1.5 text-xs font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1 shrink-0"
+
+          <Link
+            href="/transfers"
+            className="px-2 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded flex items-center gap-1 shrink-0 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
               <path d="M16 3h5v5M16 8l5-5m-1 10v5h-5m-8-5l-5 5v-5h5m8-8v5h5m-5-5l5 5"/>
             </svg>
             이적
           </Link>
-          
-          <Link 
-            href="/livescore/football/leagues" 
-            className="px-2 py-1.5 text-xs font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1 shrink-0"
+
+          <Link
+            href="/livescore/football/leagues"
+            className="px-2 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded flex items-center gap-1 shrink-0 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
               <path d="M3 3v18h18V3H3zm16 16H5V5h14v14z"/>
@@ -280,10 +280,10 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
             </svg>
             데이터
           </Link>
-          
-          <Link 
-            href="/shop" 
-            className="px-2 py-1.5 text-xs font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1 shrink-0"
+
+          <Link
+            href="/shop"
+            className="px-2 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded flex items-center gap-1 shrink-0 transition-colors"
           >
             <ShoppingBag className="h-3 w-3" />
             샵
@@ -291,9 +291,9 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
 
           {/* 관리자 페이지 링크 - 관리자에게만 표시 */}
           {isAdmin && (
-            <Link 
-              href="/admin" 
-              className="px-2 py-1.5 text-xs font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1 shrink-0"
+            <Link
+              href="/admin"
+              className="px-2 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded flex items-center gap-1 shrink-0 transition-colors"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
                 <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>

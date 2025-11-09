@@ -2,7 +2,7 @@
 
 // 게시글 관련 액션 훅
 import { useState, useCallback } from 'react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { useAuth } from '@/shared/context/AuthContext';
 import { likePost, dislikePost } from '@/domains/boards/actions/posts/index';
 

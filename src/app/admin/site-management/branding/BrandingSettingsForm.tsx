@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SiteSetting } from '@/domains/site-config/types';
 import { updateMultipleSiteSettings } from '@/domains/site-config/actions';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { Palette } from 'lucide-react';
 
 interface BrandingSettingsFormProps {

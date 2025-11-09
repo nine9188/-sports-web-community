@@ -33,11 +33,9 @@ export default function ShopPagination({ page, pageSize, total, withMargin = tru
   const prevPage = Math.max(1, currentPage - 1)
   const nextPage = Math.min(totalPages, currentPage + 1)
 
+  // 모바일/데스크탑 모두 7개 버튼 생성 (CSS로 일부 숨김 처리)
   const pages: number[] = []
-  // 모바일은 5개, md 이상은 7개 버튼
-  const isClient = typeof window !== 'undefined'
-  const isMobile = isClient ? window.innerWidth < 768 : false
-  const maxButtons = isMobile ? 5 : 7
+  const maxButtons = 7
   let start = Math.max(1, currentPage - Math.floor(maxButtons / 2))
   const end = Math.min(totalPages, start + maxButtons - 1)
   start = Math.max(1, end - maxButtons + 1)
@@ -60,16 +58,20 @@ export default function ShopPagination({ page, pageSize, total, withMargin = tru
         ‹
       </Link>
 
-      {pages.map(p => (
-        <Link
-          key={p}
-          href={buildHref(p)}
-          aria-current={p === currentPage ? 'page' : undefined}
-          className={`px-3 py-2 rounded border text-sm ${p === currentPage ? 'bg-blue-600 text-white border-blue-600' : 'hover:bg-gray-50'}`}
-        >
-          {p}
-        </Link>
-      ))}
+      {pages.map((p, index) => {
+        // 모바일에서는 가운데 5개만 표시 (양 끝 1개씩 숨김)
+        const hideOnMobile = pages.length === 7 && (index === 0 || index === 6)
+        return (
+          <Link
+            key={p}
+            href={buildHref(p)}
+            aria-current={p === currentPage ? 'page' : undefined}
+            className={`px-3 py-2 rounded border text-sm ${p === currentPage ? 'bg-blue-600 text-white border-blue-600' : 'hover:bg-gray-50'} ${hideOnMobile ? 'hidden md:flex' : 'flex'}`}
+          >
+            {p}
+          </Link>
+        )
+      })}
 
       <Link
         href={buildHref(nextPage)}

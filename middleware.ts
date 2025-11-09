@@ -69,9 +69,9 @@ export async function middleware(request: NextRequest) {
     }
 
     // 인증이 필요한 경로들
-    const protectedPaths = ['/admin', '/settings']
+    const protectedPaths = ['/settings'] // admin은 layout에서 체크하므로 제외
     const authPaths = ['/signin', '/signup', '/auth']
-    
+
     // 보호된 경로에 비로그인 사용자 접근 시 로그인 페이지로 리다이렉트 (우선 처리)
     if (protectedPaths.some(path => pathname.startsWith(path)) && !user) {
       const redirectUrl = new URL('/signin', request.url)
@@ -79,26 +79,8 @@ export async function middleware(request: NextRequest) {
       redirectUrl.searchParams.set('message', '로그인이 필요한 페이지입니다')
       return NextResponse.redirect(redirectUrl)
     }
-    
-    // Admin 경로에 대한 추가 권한 체크 (로그인된 사용자만)
-    if (pathname.startsWith('/admin') && user) {
-      try {
-        // 관리자 권한 확인 - 환경변수로 관리
-        const adminEmails = process.env.ADMIN_EMAILS?.split(',') || ['admin@example.com']
-        
-        if (!adminEmails.includes(user.email || '')) {
-          const redirectUrl = new URL('/', request.url)
-          redirectUrl.searchParams.set('message', '관리자 권한이 필요합니다')
-          return NextResponse.redirect(redirectUrl)
-        }
-      } catch (error) {
-        console.error('관리자 권한 확인 실패:', error)
-        const redirectUrl = new URL('/signin', request.url)
-        redirectUrl.searchParams.set('redirect', pathname)
-        redirectUrl.searchParams.set('message', '권한 확인 중 오류가 발생했습니다')
-        return NextResponse.redirect(redirectUrl)
-      }
-    }
+
+    // Admin 경로는 layout.tsx에서 체크하므로 여기서는 스킵 (성능 향상)
 
     // 로그인된 사용자가 인증 페이지 접근 시 홈으로 리다이렉트
     if (authPaths.some(path => pathname.startsWith(path)) && user) {

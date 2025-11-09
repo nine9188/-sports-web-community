@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/shared/ui';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 
 interface YoutubeFormProps {
   onCancel: () => void;

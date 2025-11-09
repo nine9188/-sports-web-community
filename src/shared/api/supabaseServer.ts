@@ -1,4 +1,4 @@
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { Database } from '@/shared/types/supabase'
 
@@ -7,43 +7,24 @@ import { Database } from '@/shared/types/supabase'
  * 서버 컴포넌트에서만 사용하며 쿠키 설정은 불가능합니다.
  */
 export const createClient = async () => {
-  try {
-    const cookieStore = await cookies();
-    
-    return createServerClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            try {
-              return cookieStore.getAll()
-            } catch (error) {
-              console.warn('쿠키 읽기 실패:', error);
-              return [];
-            }
-          },
-          setAll() {
-            // 서버 컴포넌트에서는 쿠키 설정 불가
-            // 이는 Next.js App Router의 제한사항임
-          },
+  const cookieStore = await cookies();
+
+  return createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
         },
-      }
-    )
-  } catch (error) {
-    console.error('Supabase 클라이언트 생성 실패:', error);
-    // 쿠키 없이 기본 클라이언트 생성
-    return createServerClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() { return []; },
-          setAll() { /* no-op */ },
+        setAll(cookiesToSet) {
+          // layout.tsx 같은 서버 컴포넌트에서는 쿠키 수정 불가
+          // Server Action이나 Route Handler에서만 가능
+          // 여기서는 아무 작업도 하지 않음 (읽기 전용)
         },
-      }
-    );
-  }
+      },
+    }
+  )
 }
 
 // 서버 액션용 Supabase 클라이언트 생성 (쿠키 수정 가능)

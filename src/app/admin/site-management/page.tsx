@@ -28,6 +28,13 @@ export default function SiteManagementDashboard() {
       href: '/admin/site-management/branding',
       color: 'bg-pink-500',
     },
+    {
+      title: 'UI 테마 설정',
+      description: 'PC/모바일 테두리 스타일 등 전역 UI 설정',
+      icon: Settings,
+      href: '/admin/site-management/ui-theme',
+      color: 'bg-purple-500',
+    },
   ];
 
   const quickLinks = [

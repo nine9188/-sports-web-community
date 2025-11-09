@@ -4,6 +4,7 @@ import React, { memo } from 'react';
 import BoardBreadcrumbs from '../common/BoardBreadcrumbs';
 import BoardTeamInfo from '../board/BoardTeamInfo';
 import LeagueInfo from '../board/LeagueInfo';
+import BoardInfo from '../board/BoardInfo';
 import ClientHoverMenu from '../common/ClientHoverMenu';
 import PostList from '../post/PostList';
 import ShopPagination from '@/domains/shop/components/ShopPagination';
@@ -142,6 +143,17 @@ export default function BoardDetailLayout({
       {leagueData && (
         <LeagueInfo 
           leagueData={leagueData}
+          boardId={boardData.id}
+          boardSlug={slug}
+          isLoggedIn={isLoggedIn}
+          className="mb-4"
+        />
+      )}
+
+      {/* 팀/리그 정보가 없는 게시판: 게시판 이름과 글쓰기 버튼만 표시 */}
+      {!teamData && !leagueData && (
+        <BoardInfo 
+          boardName={boardData.name}
           boardId={boardData.id}
           boardSlug={slug}
           isLoggedIn={isLoggedIn}

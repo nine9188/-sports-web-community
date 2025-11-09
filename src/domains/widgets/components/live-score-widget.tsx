@@ -1,5 +1,5 @@
 import React from 'react';
-import { fetchMultiDayMatches, MatchData as FootballMatchData } from '@/domains/livescore/actions/footballApi';
+import { fetchBigMatches, MatchData as FootballMatchData } from '@/domains/livescore/actions/footballApi';
 import LiveScoreWidgetClient from './live-score-widget-client';
 
 // 타입 확장 (displayDate 포함)
@@ -43,8 +43,8 @@ export default async function LiveScoreWidget() {
   let matches: EnhancedMatchData[] = [];
   
   try {
-    // 서버 액션을 사용하여 경기 데이터 가져오기
-    const result = await fetchMultiDayMatches() as MultiDayMatchesResponse;
+    // 서버 액션을 사용하여 빅매치 데이터 가져오기
+    const result = await fetchBigMatches() as MultiDayMatchesResponse;
     
     if (result.success && result.data) {
       // 🔧 안전한 데이터 처리

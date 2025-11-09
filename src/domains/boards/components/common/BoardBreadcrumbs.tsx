@@ -18,7 +18,7 @@ export default function BoardBreadcrumbs({ breadcrumbs }: BoardBreadcrumbsProps)
   }
 
   return (
-    <div className="bg-white border rounded-md mb-4">
+    <div className="bg-white border rounded-lg mb-4">
       <div className="px-4 py-2 overflow-x-auto">
         <div className="flex items-center text-sm text-gray-500 whitespace-nowrap min-w-max">
           {breadcrumbs.map((bc, index) => (

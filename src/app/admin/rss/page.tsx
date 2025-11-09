@@ -9,7 +9,7 @@ declare global {
   }
 }
 import { createClient } from '@/shared/api/supabase';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import Tabs, { TabItem } from '@/shared/ui/tabs';
 import { Loader2, RefreshCw, Plus, Trash2, Check, X, ExternalLink } from 'lucide-react';
 import { formatDate } from '@/shared/utils/date';

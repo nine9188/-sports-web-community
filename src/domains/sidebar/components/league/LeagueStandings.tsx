@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { StandingsData, League } from '../../types';
@@ -150,30 +151,30 @@ export default function LeagueStandings({
   };
 
   return (
-    <div className="league-standings border rounded-md overflow-hidden hidden md:block">
-      <div className="standings-header py-2 px-3 text-sm font-medium bg-slate-800 text-white">
-        축구 팀순위
-      </div>
-      
+    <Container className="hidden md:block">
+      <ContainerHeader>
+        <ContainerTitle>축구 팀순위</ContainerTitle>
+      </ContainerHeader>
+
       {/* 리그 선택 탭 */}
-      <div className="league-tabs flex border-b">
+      <div className="league-tabs flex border-b border-black/5 dark:border-white/10">
         {LEAGUES.map(league => (
-          <button 
+          <button
             key={league.id}
             onClick={() => setActiveLeague(league.id)}
-            className={`flex-1 text-xs py-2 px-1 ${
-              activeLeague === league.id 
-                ? 'bg-white border-b-2 border-slate-800 font-medium' 
-                : 'bg-gray-100'
+            className={`flex-1 text-xs py-2 px-1 transition-colors ${
+              activeLeague === league.id
+                ? 'bg-white dark:bg-[#1D1D1D] border-b-2 border-slate-800 dark:border-white font-medium text-gray-900 dark:text-[#F0F0F0]'
+                : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-400 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
             }`}
           >
             {league.name}
           </button>
         ))}
       </div>
-      
+
       {/* 선택된 리그 정보 */}
-      <div className="league-info px-3 py-2 border-b">
+      <div className="league-info px-3 py-2 border-b border-black/5 dark:border-white/10 bg-white dark:bg-[#1D1D1D]">
         <div className="flex items-center gap-2">
           {standings?.league?.logo && (
             <div className="w-5 h-5 relative">
@@ -188,22 +189,22 @@ export default function LeagueStandings({
               />
             </div>
           )}
-          <span className="text-sm font-medium">
+          <span className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
             {LEAGUES.find(l => l.id === activeLeague)?.fullName || ''}
           </span>
         </div>
       </div>
-      
+
       {/* 순위표 */}
-      <div className="py-1.5 pb-0 min-h-[200px]">
+      <div className="py-1.5 pb-0 min-h-[200px] bg-white dark:bg-[#1D1D1D]">
         {loading ? (
           <div className="p-3 space-y-2">
             {[...Array(10)].map((_, i) => (
-              <div key={i} className="h-5 w-full bg-gray-200 animate-pulse rounded"></div>
+              <div key={i} className="h-5 w-full bg-gray-200 dark:bg-[#262626] animate-pulse rounded-lg"></div>
             ))}
           </div>
         ) : error ? (
-          <div className="p-4 text-center text-red-500 text-sm">
+          <div className="p-4 text-center text-red-500 dark:text-red-400 text-sm">
             {error}
           </div>
         ) : standings && standings.standings && standings.standings.length > 0 ? (
@@ -226,7 +227,7 @@ export default function LeagueStandings({
                 <col className="w-[30px]" />
               </colgroup>
               <thead>
-                <tr className="border-b text-gray-500">
+                <tr className="border-b border-black/5 dark:border-white/10 text-gray-500 dark:text-gray-400">
                   <th className="text-center py-1 px-0 text-xs font-medium">순위</th>
                   <th className="text-left py-1 px-1 text-xs font-medium">팀</th>
                   <th className="text-center py-1 px-0 text-xs font-medium">경기</th>
@@ -238,9 +239,9 @@ export default function LeagueStandings({
               </thead>
               <tbody>
                 {standings.standings[0].map((team, index) => (
-                  <tr 
+                  <tr
                     key={team.team.team_id}
-                    className={`${index < standings.standings[0].length - 1 ? 'border-b' : ''} hover:bg-gray-50 cursor-pointer ${index < 4 ? 'text-blue-600' : ''}`}
+                    className={`${index < standings.standings[0].length - 1 ? 'border-b border-black/5 dark:border-white/10' : ''} hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors text-gray-900 dark:text-[#F0F0F0]`}
                     onClick={() => handleTeamClick(team.team.team_id)}
                   >
                     <td className="text-center py-1.5 px-0">{team.rank}</td>
@@ -257,7 +258,7 @@ export default function LeagueStandings({
                             style={{ width: '20px', height: '20px' }}
                           />
                         </div>
-                        <span className="truncate max-w-[100px] text-sm hover:text-blue-600 transition-colors">
+                        <span className="truncate max-w-[100px] text-sm">
                           {getKoreanTeamName(team.team.team_id, team.team.name)}
                         </span>
                       </div>
@@ -274,10 +275,10 @@ export default function LeagueStandings({
           </div>
         ) : (
           <div className="p-3">
-            <p className="text-xs text-gray-500">데이터가 없습니다.</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">데이터가 없습니다.</p>
           </div>
         )}
       </div>
-    </div>
+    </Container>
   );
 } 

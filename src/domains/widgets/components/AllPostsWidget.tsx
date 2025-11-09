@@ -2,7 +2,6 @@ import React from 'react';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { fetchPosts } from '@/domains/boards/actions';
-import { CardTitle } from '@/shared/ui/card';
 import PostList from '@/domains/boards/components/post/PostList';
 
 // 서버 컴포넌트로 변경 - 직접 데이터 로드
@@ -18,10 +17,10 @@ export default async function AllPostsWidget() {
     // 헤더 컨텐츠 렌더링 - 오른쪽에 > 아이콘 추가
     const headerContent = (
       <div className="flex items-center justify-between">
-        <CardTitle className="text-lg">최신 게시글</CardTitle>
+        <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">최신 게시글</h3>
         <Link
           href="/boards/soccer"
-          className="text-gray-400 hover:text-gray-600 transition-colors"
+          className="text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
           aria-label="더 많은 게시글 보기"
         >
           <ChevronRight className="w-5 h-5" />
@@ -45,15 +44,15 @@ export default async function AllPostsWidget() {
     );
   } catch (error) {
     console.error('AllPostsWidget 데이터 로딩 오류:', error);
-    
+
     // 오류 발생 시 기본 UI 표시
     return (
-      <div className="h-full bg-white rounded-lg border">
-        <div className="px-6 py-4">
-          <CardTitle className="text-lg">최신 게시글</CardTitle>
+      <div className="h-full bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0">
+        <div className="bg-[#F5F5F5] dark:bg-[#262626] px-4 py-3 border-b border-black/7 dark:border-white/10">
+          <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">최신 게시글</h3>
         </div>
         <div className="p-6 text-center">
-          <p className="text-gray-500">게시글을 불러오는 중 오류가 발생했습니다.</p>
+          <p className="text-gray-500 dark:text-gray-400">게시글을 불러오는 중 오류가 발생했습니다.</p>
         </div>
       </div>
     );
