@@ -68,8 +68,8 @@ export default function SearchResultsContainer({
       component: (
         <Suspense fallback={
           <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-            <p className="mt-2 text-gray-500">팀 정보 로딩 중...</p>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800 dark:border-[#F0F0F0]"></div>
+            <p className="mt-2 text-gray-500 dark:text-gray-400">팀 정보 로딩 중...</p>
           </div>
         }>
           <TeamSearchResults 
@@ -97,8 +97,8 @@ export default function SearchResultsContainer({
       component: (
         <Suspense fallback={
           <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-            <p className="mt-2 text-gray-500">게시글 로딩 중...</p>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800 dark:border-[#F0F0F0]"></div>
+            <p className="mt-2 text-gray-500 dark:text-gray-400">게시글 로딩 중...</p>
           </div>
         }>
           <PostSearchResults 
@@ -130,8 +130,8 @@ export default function SearchResultsContainer({
       component: (
         <Suspense fallback={
           <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-            <p className="mt-2 text-gray-500">댓글 로딩 중...</p>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800 dark:border-[#F0F0F0]"></div>
+            <p className="mt-2 text-gray-500 dark:text-gray-400">댓글 로딩 중...</p>
           </div>
         }>
           <CommentSearchResults 
@@ -182,15 +182,15 @@ export default function SearchResultsContainer({
 
       {/* 검색 결과가 없을 때 */}
       {query && !hasResults && (
-        <div className="bg-white rounded-lg border shadow-sm">
+        <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0">
           <div className="text-center py-16">
             <div className="mb-4">
               <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
               </svg>
             </div>
-            <div className="text-gray-500 text-lg mb-2">
-              &lsquo;<span className="font-medium text-gray-700">{query}</span>&rsquo;에 대한 검색 결과가 없습니다
+            <div className="text-gray-500 dark:text-gray-400 text-lg mb-2">
+              &lsquo;<span className="font-medium text-gray-700 dark:text-gray-300">{query}</span>&rsquo;에 대한 검색 결과가 없습니다
             </div>
             <div className="text-gray-400 text-sm">
               다른 검색어를 시도해보세요
@@ -201,14 +201,14 @@ export default function SearchResultsContainer({
       
       {/* 검색어가 없을 때 */}
       {!query && (
-        <div className="bg-white rounded-lg border shadow-sm">
+        <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0">
           <div className="text-center py-16">
             <div className="mb-4">
               <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
               </svg>
             </div>
-            <div className="text-gray-500 text-lg mb-2">
+            <div className="text-gray-500 dark:text-gray-400 text-lg mb-2">
               검색어를 입력해주세요
             </div>
             <div className="text-gray-400 text-sm">
@@ -220,7 +220,7 @@ export default function SearchResultsContainer({
       
       {/* 각 검색 결과 섹션들 (별도 테이블로 분리) */}
       {resultSections.map((section) => (
-        <div key={section.key} className="bg-white rounded-lg border shadow-sm overflow-hidden">
+        <div key={section.key} className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
           {section.component}
         </div>
       ))}

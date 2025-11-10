@@ -49,9 +49,9 @@ export default function Tabs({
     return true;
   });
 
-  const baseClasses = variant === 'minimal' 
-    ? 'flex border-b'
-    : 'bg-white rounded-lg border overflow-hidden flex sticky top-0 z-10 overflow-x-auto';
+  const baseClasses = variant === 'minimal'
+    ? 'flex border-b border-black/7 dark:border-white/10'
+    : 'bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden flex sticky top-0 z-10 overflow-x-auto';
 
   return (
     <div className={`mb-4 ${className}`}>
@@ -71,14 +71,14 @@ export default function Tabs({
           );
 
           const buttonClasses = variant === 'minimal'
-            ? `py-2 px-4 ${isActive 
-                ? 'border-b-2 border-blue-500 font-medium text-blue-600' 
-                : 'text-gray-500 hover:text-blue-500'
+            ? `py-2 px-4 ${isActive
+                ? 'border-b-2 border-slate-800 dark:border-white font-medium text-gray-900 dark:text-[#F0F0F0]'
+                : 'text-gray-700 dark:text-gray-300 hover:text-gray-600 dark:hover:text-gray-300'
               } ${tab.mobileOnly ? 'xl:hidden' : ''}`
             : `px-4 py-3 text-sm font-medium flex-1 whitespace-nowrap transition-colors ${
                 isActive
-                  ? 'text-blue-600 border-b-2 border-blue-600 font-semibold'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'text-gray-900 dark:text-[#F0F0F0] border-b-2 border-slate-800 dark:border-white font-semibold'
+                  : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0]'
               } ${tab.mobileOnly ? 'xl:hidden' : ''} ${
                 tab.disabled ? 'opacity-50 cursor-not-allowed' : ''
               }`;
@@ -93,7 +93,7 @@ export default function Tabs({
             >
               {tabLabel}
               {isChangingTab && isActive && (
-                <span className="ml-1 inline-block h-3 w-3 animate-pulse rounded-full bg-blue-200"></span>
+                <span className="ml-1 inline-block h-3 w-3 animate-pulse rounded-full bg-gray-300 dark:bg-gray-600"></span>
               )}
             </button>
           );

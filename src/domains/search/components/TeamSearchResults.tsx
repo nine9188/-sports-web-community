@@ -168,8 +168,8 @@ export default function TeamSearchResults({
   if (isLoading && teams.length === 0) {
     return (
       <div className="text-center py-8">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-        <p className="mt-2 text-gray-500">팀 정보 로딩 중...</p>
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800 dark:border-[#F0F0F0]"></div>
+        <p className="mt-2 text-gray-500 dark:text-gray-400">팀 정보 로딩 중...</p>
       </div>
     )
   }
@@ -186,12 +186,19 @@ export default function TeamSearchResults({
   return (
     <div className="space-y-4">
       {/* 팀 테이블: 외부 카드 래퍼가 테두리/그림자를 가지므로 내부는 overflow만 처리 */}
-      <div className="overflow-hidden">
+      <div className="overflow-hidden rounded-lg">
+        {/* 헤더 */}
+        <div className="px-4 py-3 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10">
+          <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+            팀 ({pagination?.totalItems || totalCount || teams.length}개)
+          </h3>
+        </div>
+
         <div className="overflow-x-hidden">
-          <table className="w-full bg-white table-fixed">
-            <thead className="bg-gray-50">
+          <table className="w-full bg-white dark:bg-[#1D1D1D] border-0 dark:border-0 table-fixed">
+            <thead className="bg-[#F5F5F5] dark:bg-[#262626]">
               <tr>
-                <th className="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-full sm:w-auto">
+                <th className="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-full sm:w-auto">
                   팀 정보
                 </th>
                 <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -208,7 +215,7 @@ export default function TeamSearchResults({
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-black/5 dark:divide-white/10">
               {teams.map((team) => (
                 <TeamRowWithMatches 
                   key={team.team_id} 
@@ -224,15 +231,15 @@ export default function TeamSearchResults({
           {pagination && (propCurrentType === 'teams' || currentType === 'teams') && (
             <tfoot>
               <tr>
-                <td colSpan={1} className="px-4 py-3 border-t bg-gray-50 sm:hidden">
-                  <p className="text-sm text-gray-700">
+                <td colSpan={1} className="px-4 py-3 border-t border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] sm:hidden">
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
                     총 <span className="font-medium">{pagination.totalItems}</span>개 중{' '}
                     <span className="font-medium">{(pagination.currentPage - 1) * pagination.itemsPerPage + 1}</span>-
                     <span className="font-medium">{Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)}</span>개 표시
                   </p>
                 </td>
-                <td colSpan={5} className="hidden sm:table-cell px-6 py-3 border-t bg-gray-50">
-                  <p className="text-sm text-gray-700">
+                <td colSpan={5} className="hidden sm:table-cell px-6 py-3 border-t border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
                     총 <span className="font-medium">{pagination.totalItems}</span>개 중{' '}
                     <span className="font-medium">{(pagination.currentPage - 1) * pagination.itemsPerPage + 1}</span>-
                     <span className="font-medium">{Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)}</span>개 표시
@@ -245,18 +252,18 @@ export default function TeamSearchResults({
             {showMoreButton && currentType === 'all' && teams.length >= 5 && (
               <tfoot>
                 <tr>
-                  <td colSpan={1} className="px-4 py-3 border-t bg-gray-50 sm:hidden">
+                  <td colSpan={1} className="px-4 py-3 border-t border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] sm:hidden">
                     <Link
                       href={`/search?q=${encodeURIComponent(query)}&type=teams`}
-                      className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                      className="text-sm text-gray-900 dark:text-[#F0F0F0] hover:underline font-medium transition-colors"
                     >
                       더 많은 팀 보기 ({totalCount}개) →
                     </Link>
                   </td>
-                  <td colSpan={5} className="hidden sm:table-cell px-6 py-3 border-t bg-gray-50">
+                  <td colSpan={5} className="hidden sm:table-cell px-6 py-3 border-t border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
                     <Link
                       href={`/search?q=${encodeURIComponent(query)}&type=teams`}
-                      className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                      className="text-sm text-gray-900 dark:text-[#F0F0F0] hover:underline font-medium transition-colors"
                     >
                       더 많은 팀 보기 ({totalCount}개) →
                     </Link>
@@ -277,8 +284,8 @@ export default function TeamSearchResults({
             className={`
               px-6 py-3 rounded-lg font-medium transition-colors
               ${isLoading
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
+                ? 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-400 cursor-not-allowed'
+                : 'bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A]'
               }
             `}
           >
@@ -329,10 +336,10 @@ function TeamRowWithMatches({
   return (
     <>
       {/* 팀 정보 행 */}
-      <tr 
+      <tr
         className={`
-          hover:bg-gray-50 transition-colors
-          ${isExpanded ? 'bg-blue-50' : ''}
+          hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors
+          ${isExpanded ? 'bg-[#F5F5F5] dark:bg-[#262626]' : ''}
         `}
       >
         {/* 팀 정보 */}
@@ -347,18 +354,18 @@ function TeamRowWithMatches({
                 className="w-6 h-6 sm:w-7 sm:h-7 object-contain flex-shrink-0"
               />
             ) : (
-              <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-200 rounded flex items-center justify-center flex-shrink-0">
-                <span className="text-gray-500 text-xs font-bold">
+              <div className="w-6 h-6 sm:w-7 sm:h-7 bg-[#F5F5F5] dark:bg-[#262626] rounded flex items-center justify-center flex-shrink-0">
+                <span className="text-gray-500 dark:text-gray-400 text-xs font-bold">
                   {team.code || team.name.charAt(0)}
                 </span>
               </div>
             )}
             <div className="min-w-0 flex-1 overflow-hidden">
-              <div className="font-medium text-gray-900 flex items-center text-xs sm:text-sm min-w-0">
+              <div className="font-medium text-gray-900 dark:text-[#F0F0F0] flex items-center text-xs sm:text-sm min-w-0">
                 {/* 팀 이름 - 클릭 시 팀 페이지로 이동 */}
                 <button
                   onClick={handleTeamPageClick}
-                  className="truncate hover:text-blue-600 transition-colors text-left min-w-0 flex-1"
+                  className="truncate hover:underline transition-colors text-left min-w-0 flex-1"
                 >
                   {team.display_name}
                 </button>
@@ -374,8 +381,8 @@ function TeamRowWithMatches({
               {/* 모바일에서 추가 정보 표시 */}
               <div className="sm:hidden mt-1">
                 {/* 리그 | 국가 | 홈구장 가로 배치 */}
-                <div className="text-xs text-gray-500 flex items-center space-x-1 overflow-hidden">
-                  <span className="text-gray-600 flex-shrink-0 truncate max-w-20">{team.league_name_ko}</span>
+                <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center space-x-1 overflow-hidden">
+                  <span className="text-gray-700 dark:text-gray-300 flex-shrink-0 truncate max-w-20">{team.league_name_ko}</span>
                   <span className="text-gray-400 flex-shrink-0">|</span>
                   <span className="flex-shrink-0 truncate max-w-16">{team.country_ko ?? team.country}</span>
                   {team.venue_name && (
@@ -400,19 +407,19 @@ function TeamRowWithMatches({
         </td>
 
         {/* 리그 */}
-        <td className="hidden sm:table-cell px-4 py-4 text-sm text-gray-900">
+        <td className="hidden sm:table-cell px-4 py-4 text-sm text-gray-900 dark:text-[#F0F0F0]">
           <div className="truncate max-w-32" title={team.league_name_ko}>
             {team.league_name_ko}
           </div>
         </td>
 
         {/* 국가 */}
-        <td className="hidden md:table-cell px-4 py-4 text-sm text-gray-900">
+        <td className="hidden md:table-cell px-4 py-4 text-sm text-gray-900 dark:text-[#F0F0F0]">
           {team.country_ko ?? team.country}
         </td>
 
         {/* 홈구장 */}
-        <td className="hidden lg:table-cell px-4 py-4 text-sm text-gray-900">
+        <td className="hidden lg:table-cell px-4 py-4 text-sm text-gray-900 dark:text-[#F0F0F0]">
           <div className="max-w-40">
             {team.venue_name && (
               <div className="font-medium truncate" title={team.venue_name}>
@@ -420,7 +427,7 @@ function TeamRowWithMatches({
               </div>
             )}
             {team.venue_city && (
-              <div className="text-gray-500 truncate" title={team.venue_city}>
+              <div className="text-gray-500 dark:text-gray-400 truncate" title={team.venue_city}>
                 {team.venue_city}
               </div>
             )}
@@ -430,7 +437,7 @@ function TeamRowWithMatches({
         {/* 코드 */}
         <td className="hidden sm:table-cell px-2 sm:px-4 py-4 text-center w-16 sm:w-20">
           {team.code ? (
-            <span className="font-mono text-xs bg-gray-100 px-1 sm:px-2 py-0.5 sm:py-1 rounded text-gray-700">
+            <span className="font-mono text-xs bg-[#F5F5F5] dark:bg-[#262626] px-1 sm:px-2 py-0.5 sm:py-1 rounded text-gray-700 dark:text-gray-300">
               {team.code}
             </span>
           ) : (

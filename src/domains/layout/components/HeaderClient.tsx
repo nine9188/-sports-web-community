@@ -358,14 +358,14 @@ const SearchModal = React.memo(function SearchModal({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="w-full pl-10 pr-3 py-2 border border-black/7 dark:border-white/10 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-[#F0F0F0] focus:border-transparent text-sm bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0]"
+              className="w-full pl-10 pr-3 py-2 border border-black/7 dark:border-white/10 rounded-md outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] text-sm bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors"
               autoFocus
             />
           </div>
           <button
             type="submit"
             disabled={!searchQuery.trim()}
-            className="px-3 py-2 text-sm font-medium bg-gray-900 dark:bg-[#F0F0F0] text-white dark:text-gray-900 rounded-md hover:bg-gray-700 dark:hover:bg-gray-300 disabled:bg-[#EAEAEA] dark:disabled:bg-[#333333] disabled:text-gray-500 dark:disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+            className="px-3 py-2 text-sm font-medium bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#333333] disabled:bg-[#F5F5F5] dark:disabled:bg-[#262626] disabled:text-gray-500 dark:disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
           >
             검색
           </button>

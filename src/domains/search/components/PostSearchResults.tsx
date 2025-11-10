@@ -43,8 +43,8 @@ export default function PostSearchResults({
   if (isLoading) {
     return (
       <div className="text-center py-8">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-        <p className="mt-2 text-gray-500">게시글 로딩 중...</p>
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800 dark:border-[#F0F0F0]"></div>
+        <p className="mt-2 text-gray-500 dark:text-gray-400">게시글 로딩 중...</p>
       </div>
     )
   }
@@ -61,41 +61,41 @@ export default function PostSearchResults({
     <>
       <div className="overflow-hidden rounded-lg">
       {/* 헤더 */}
-      <div className="px-4 py-3 bg-gray-50 border-b">
-        <h3 className="text-sm font-medium text-gray-900">
+      <div className="px-4 py-3 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10">
+        <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
           게시글 ({pagination?.totalItems || posts.length}개)
         </h3>
       </div>
 
       {/* 게시글 목록 */}
-      <div className="divide-y divide-gray-200">
+      <div className="divide-y divide-black/5 dark:divide-white/10">
         {posts.map((post) => (
-          <div key={post.id} className="p-4 hover:bg-gray-50 transition-colors">
-            <Link 
+          <div key={post.id} className="p-4 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors">
+            <Link
               href={`/boards/${post.boards?.slug || 'unknown'}/${post.post_number}`}
               className="block"
               onClick={() => handlePostClick(post)}
             >
               {/* 제목 */}
-              <div className="text-sm font-medium text-gray-900 hover:text-blue-600 mb-2 transition-colors">
+              <div className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-2 transition-colors">
                 {highlightQuery(post.title, query)}
               </div>
-              
+
               {/* 내용 스니펫 */}
               {post.snippet && (
-                <div className="text-gray-600 text-xs mb-3 line-clamp-2">
+                <div className="text-gray-700 dark:text-gray-300 text-xs mb-3 line-clamp-2">
                   {highlightQuery(post.snippet, query)}
                 </div>
               )}
-              
+
               {/* 메타 정보 */}
-              <div className="flex items-center justify-between text-xs text-gray-500">
+              <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                 <div className="flex items-center space-x-3">
                   <span>{post.author_name || post.profiles?.nickname || '익명'}</span>
                   {(post.board_name || post.boards?.name) && (
                     <>
                       <span className="text-gray-400">|</span>
-                      <span className="text-gray-600">
+                      <span className="text-gray-700 dark:text-gray-300">
                         {post.board_name || post.boards?.name}
                       </span>
                     </>
@@ -114,21 +114,21 @@ export default function PostSearchResults({
 
         {/* 요약 문구 */}
         {pagination && currentType === 'posts' && (
-          <div className="px-4 sm:px-6 py-3 border-t">
-            <p className="text-sm text-gray-700">
+          <div className="px-4 sm:px-6 py-3 border-t border-black/7 dark:border-white/10">
+            <p className="text-sm text-gray-700 dark:text-gray-300">
               총 <span className="font-medium">{pagination.totalItems}</span>개 중{' '}
               <span className="font-medium">{(pagination.currentPage - 1) * pagination.itemsPerPage + 1}</span>-
               <span className="font-medium">{Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)}</span>개 표시
             </p>
           </div>
         )}
-      
+
       {/* 더보기 버튼 (전체 탭에서만 표시) */}
       {showMoreButton && currentType === 'all' && posts.length >= 5 && (
-        <div className="px-4 py-3 border-t bg-gray-50">
+        <div className="px-4 py-3 border-t border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
           <Link
             href={`/search?q=${encodeURIComponent(query)}&type=posts`}
-            className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+            className="text-sm text-gray-900 dark:text-[#F0F0F0] hover:underline font-medium transition-colors"
           >
             더 많은 게시글 보기 ({pagination?.totalItems || 0}개) →
           </Link>

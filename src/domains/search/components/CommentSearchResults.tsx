@@ -43,8 +43,8 @@ export default function CommentSearchResults({
   if (isLoading) {
     return (
       <div className="text-center py-8">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-        <p className="mt-2 text-gray-500">댓글 로딩 중...</p>
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800 dark:border-[#F0F0F0]"></div>
+        <p className="mt-2 text-gray-500 dark:text-gray-400">댓글 로딩 중...</p>
       </div>
     )
   }
@@ -61,42 +61,42 @@ export default function CommentSearchResults({
     <>
       <div className="overflow-hidden rounded-lg">
       {/* 헤더 */}
-      <div className="px-4 py-3 bg-gray-50 border-b">
-        <h3 className="text-sm font-medium text-gray-900">
+      <div className="px-4 py-3 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10">
+        <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
           댓글 ({pagination?.totalItems || comments.length}개)
         </h3>
       </div>
 
       {/* 댓글 목록 */}
-      <div className="divide-y divide-gray-200">
+      <div className="divide-y divide-black/5 dark:divide-white/10">
         {comments.map((comment) => (
-          <div key={comment.id} className="p-4 hover:bg-gray-50 transition-colors">
-            <Link 
+          <div key={comment.id} className="p-4 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors">
+            <Link
               href={`/boards/${comment.posts?.boards?.slug || 'unknown'}/${comment.posts?.post_number || 0}#comment-${comment.id}`}
               className="block"
               onClick={() => handleCommentClick(comment)}
             >
               {/* 댓글 내용 */}
-              <div className="text-sm font-medium text-gray-900 hover:text-blue-600 mb-2 transition-colors">
-                <span className="inline-block px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded mr-2">
+              <div className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-2 transition-colors">
+                <span className="inline-block px-2 py-0.5 text-xs bg-[#EAEAEA] dark:bg-[#333333] text-gray-700 dark:text-gray-300 rounded mr-2">
                   댓글
                 </span>
                 {highlightQuery(comment.snippet || '댓글 내용', query)}
               </div>
-              
+
               {/* 원글 제목 */}
-              <div className="text-gray-600 text-xs mb-3">
+              <div className="text-gray-700 dark:text-gray-300 text-xs mb-3">
                 원글: {comment.post_title || comment.posts?.title || '제목 없음'}
               </div>
-              
+
               {/* 메타 정보 */}
-              <div className="flex items-center justify-between text-xs text-gray-500">
+              <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                 <div className="flex items-center space-x-3">
                   <span>{comment.author_name || comment.profiles?.nickname || '익명'}</span>
                   {(comment.board_name || comment.posts?.boards?.name) && (
                     <>
                       <span className="text-gray-400">|</span>
-                      <span className="text-gray-600">
+                      <span className="text-gray-700 dark:text-gray-300">
                         {comment.board_name || comment.posts?.boards?.name}
                       </span>
                     </>
@@ -114,21 +114,21 @@ export default function CommentSearchResults({
 
         {/* 요약 문구 */}
         {pagination && currentType === 'comments' && (
-          <div className="px-4 sm:px-6 py-3 border-t">
-            <p className="text-sm text-gray-700">
+          <div className="px-4 sm:px-6 py-3 border-t border-black/7 dark:border-white/10">
+            <p className="text-sm text-gray-700 dark:text-gray-300">
               총 <span className="font-medium">{pagination.totalItems}</span>개 중{' '}
               <span className="font-medium">{(pagination.currentPage - 1) * pagination.itemsPerPage + 1}</span>-
               <span className="font-medium">{Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)}</span>개 표시
             </p>
           </div>
         )}
-      
+
       {/* 더보기 버튼 (전체 탭에서만 표시) */}
       {showMoreButton && currentType === 'all' && comments.length >= 5 && (
-        <div className="px-4 py-3 border-t bg-gray-50">
+        <div className="px-4 py-3 border-t border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
           <Link
             href={`/search?q=${encodeURIComponent(query)}&type=comments`}
-            className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+            className="text-sm text-gray-900 dark:text-[#F0F0F0] hover:underline font-medium transition-colors"
           >
             더 많은 댓글 보기 ({pagination?.totalItems || 0}개) →
           </Link>
