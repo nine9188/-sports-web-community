@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { X, Clock, Trophy } from 'lucide-react';
+import { X, Clock } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFutbol } from '@fortawesome/free-solid-svg-icons';
 import Link from 'next/link';
-import { MatchData, MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
+import { MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
 import LiveScoreContent from './LiveScoreContent';
 
 interface LiveScoreModalProps {
@@ -33,29 +33,29 @@ export default function LiveScoreModalClient({ isOpen, onClose, initialData }: L
 
   return ReactDOM.createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden">
-      <div className={`fixed top-0 right-0 h-full w-full max-w-md bg-white transform transition-transform duration-300 ease-in-out ${
+      <div className={`fixed top-0 right-0 h-full w-full max-w-md bg-white dark:bg-[#1D1D1D] transform transition-transform duration-300 ease-in-out ${
         isOpen ? 'translate-x-0' : 'translate-x-full'
       } flex flex-col`}>
 
         {/* 헤더 */}
-        <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center justify-between p-4 border-b border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
           <div className="flex items-center gap-2">
             <FontAwesomeIcon icon={faFutbol} className="h-4 w-4 text-green-600" />
             <div>
-              <h2 className="text-sm font-semibold">라이브스코어</h2>
-              <p className="text-xs text-gray-500">최근 3일간 주요 경기</p>
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0]">라이브스코어</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">최근 3일간 주요 경기</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full"
+            className="p-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-full transition-colors"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4 text-gray-900 dark:text-[#F0F0F0]" />
           </button>
         </div>
 
         {/* 날짜 선택 탭 */}
-        <div className="flex border-b bg-gray-50">
+        <div className="flex border-b border-black/7 dark:border-white/10">
           {[
             { key: 'yesterday', label: '어제' },
             { key: 'today', label: '오늘' },
@@ -66,8 +66,8 @@ export default function LiveScoreModalClient({ isOpen, onClose, initialData }: L
               onClick={() => handleTabChange(key as 'yesterday' | 'today' | 'tomorrow')}
               className={`flex-1 py-3 text-sm font-medium transition-colors ${
                 selectedDate === key
-                  ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
-                  : 'text-gray-600 hover:text-blue-600'
+                  ? 'bg-white dark:bg-[#1D1D1D] border-b-2 border-slate-800 dark:border-white text-gray-900 dark:text-[#F0F0F0]'
+                  : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
               }`}
             >
               {label}
@@ -85,15 +85,15 @@ export default function LiveScoreModalClient({ isOpen, onClose, initialData }: L
         </div>
 
         {/* 푸터 */}
-        <div className="p-4 border-t bg-gray-50 space-y-3">
+        <div className="p-4 border-t border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] space-y-3">
           <Link
             href="/livescore/football"
             onClick={onClose}
-            className="block w-full text-center py-2 px-4 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+            className="block w-full text-center py-2 px-4 bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-sm font-medium rounded-lg transition-colors"
           >
             전체 라이브스코어 보기
           </Link>
-          <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
+          <div className="flex items-center justify-center gap-2 text-xs text-gray-500 dark:text-gray-400">
             <Clock className="h-3 w-3" />
             <span>최신 경기 정보</span>
           </div>

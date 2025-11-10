@@ -38,7 +38,7 @@ export default async function AllPostsWidget() {
           showBoard={true}
           // 🔧 높이 제한 완전 제거 - 모든 게시글이 완전히 보이도록
           currentBoardId="all" // 모든 게시판을 의미하는 ID
-          className="!mb-2 h-full"
+          className="mb-2 sm:mb-4 h-full"
         />
       </div>
     );

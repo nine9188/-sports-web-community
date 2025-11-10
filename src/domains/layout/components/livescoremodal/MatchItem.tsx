@@ -20,16 +20,16 @@ const getMatchStatusStyle = (statusCode: string) => {
     case '1H':
     case '2H':
     case 'HT':
-      return 'bg-red-100 text-red-800 border border-red-200';
+      return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800';
     case 'FT':
     case 'AET':
     case 'PEN':
-      return 'bg-gray-100 text-gray-800 border border-gray-200';
+      return 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 border border-black/7 dark:border-white/10';
     case 'NS':
     case 'TBD':
-      return 'bg-blue-100 text-blue-800 border border-blue-200';
+      return 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-700 dark:text-gray-300 border border-black/7 dark:border-white/10';
     default:
-      return 'bg-gray-100 text-gray-600 border border-gray-200';
+      return 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-500 dark:text-gray-400 border border-black/7 dark:border-white/10';
   }
 };
 
@@ -88,12 +88,12 @@ const MatchItem = React.memo(function MatchItem({ match, onClose }: MatchItemPro
 
   return (
     <div
-      className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer hover:bg-gray-50"
+      className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-lg p-4 hover:bg-[#EAEAEA] dark:hover:bg-[#262626] transition-colors cursor-pointer"
       onClick={handleMatchClick}
     >
       {/* 리그 정보 */}
       {match.league && (
-        <div className="flex items-center gap-2 mb-3 text-xs text-gray-600">
+        <div className="flex items-center gap-2 mb-3 text-xs text-gray-500 dark:text-gray-400">
           {match.league.id ? (
             <ApiSportsImage
               imageId={match.league.id}
@@ -117,7 +117,7 @@ const MatchItem = React.memo(function MatchItem({ match, onClose }: MatchItemPro
             </span>
           )}
           {match.displayDate && (
-            <span className="ml-auto text-gray-500">{match.displayDate}</span>
+            <span className="ml-auto text-gray-500 dark:text-gray-400">{match.displayDate}</span>
           )}
         </div>
       )}
@@ -138,11 +138,11 @@ const MatchItem = React.memo(function MatchItem({ match, onClose }: MatchItemPro
               />
             </div>
           ) : (
-            <div className="flex items-center justify-center bg-gray-100 rounded w-6 h-6 flex-shrink-0">
+            <div className="flex items-center justify-center bg-[#F5F5F5] dark:bg-[#262626] rounded w-6 h-6 flex-shrink-0">
               <Users className="w-3 h-3 text-gray-400" />
             </div>
           )}
-          <span className="text-sm font-medium truncate">
+          <span className="text-sm font-medium truncate text-gray-900 dark:text-[#F0F0F0]">
             {homeTeamName}
           </span>
         </div>
@@ -151,7 +151,7 @@ const MatchItem = React.memo(function MatchItem({ match, onClose }: MatchItemPro
         <div className="flex items-center gap-2 mx-4 flex-shrink-0">
           {match.goals && (isLive || isFinished) ? (
             <div className="text-center">
-              <div className="text-lg font-bold text-gray-800 mb-1">
+              <div className="text-lg font-bold text-gray-900 dark:text-[#F0F0F0] mb-1">
                 {match.goals.home || 0} - {match.goals.away || 0}
               </div>
               <div className={`text-xs px-2 py-1 rounded-full ${getMatchStatusStyle(match.status?.code || '')}`}>
@@ -160,7 +160,7 @@ const MatchItem = React.memo(function MatchItem({ match, onClose }: MatchItemPro
             </div>
           ) : (
             <div className="text-center">
-              <div className="text-sm text-gray-600 mb-1">
+              <div className="text-sm text-gray-700 dark:text-gray-300 mb-1">
                 {match.time?.date ? new Date(match.time.date).toLocaleTimeString('ko-KR', {
                   hour: '2-digit',
                   minute: '2-digit',
@@ -176,7 +176,7 @@ const MatchItem = React.memo(function MatchItem({ match, onClose }: MatchItemPro
 
         {/* 원정팀 */}
         <div className="flex items-center gap-2 flex-1 justify-end min-w-0">
-          <span className="text-sm font-medium truncate">
+          <span className="text-sm font-medium truncate text-gray-900 dark:text-[#F0F0F0]">
             {awayTeamName}
           </span>
           {match.teams?.away?.logo ? (
@@ -191,7 +191,7 @@ const MatchItem = React.memo(function MatchItem({ match, onClose }: MatchItemPro
               />
             </div>
           ) : (
-            <div className="flex items-center justify-center bg-gray-100 rounded w-6 h-6 flex-shrink-0">
+            <div className="flex items-center justify-center bg-[#F5F5F5] dark:bg-[#262626] rounded w-6 h-6 flex-shrink-0">
               <Users className="w-3 h-3 text-gray-400" />
             </div>
           )}

@@ -265,13 +265,12 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
       {news.length > 5 && (
         <div className="mt-4 flex flex-col md:flex-row md:flex-wrap">
           {news.slice(5, 15).map((item, index) => {
-            const isLastRow = index >= 8;
             const isLeftColumn = index % 2 === 0;
             return (
               <Link
                 key={item.id}
                 href={item.url}
-                className={`${CARD_STYLES.base} w-full md:w-[calc(50%-8px)] ${isLeftColumn ? 'md:mr-4' : ''} ${isLastRow ? 'mb-0' : 'mb-4'}`}
+                className={`${CARD_STYLES.base} w-full md:w-[calc(50%-8px)] ${isLeftColumn ? 'md:mr-4' : ''} ${index === 9 ? 'mb-0' : 'mb-4'}`}
                 style={CARD_STYLES.transform}
               >
               <div className="flex h-full">
@@ -296,7 +295,7 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
                     onLoadStart={() => handleImageLoadStart(item.id)}
                     onError={() => handleImageError(item.id)}
                     sizes="100px"
-                    className="object-cover rounded-r-lg group-hover:brightness-75 transition-all"
+                    className="object-cover group-hover:brightness-75 transition-all"
                     spinnerSize="sm"
                   />
                 </div>
