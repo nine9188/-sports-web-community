@@ -859,7 +859,7 @@ export default function PostList({
   }, [isMobile, useVirtualization, deferredPosts, showBoard, boardNameMaxWidth, currentPostId, currentBoardId, renderContentTypeIcons, renderAuthor, renderBoardLogo, extractFirstImageUrl, variant]);
 
   return (
-    <div className={`mb-4 bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden ${className}`}>
+    <div className={`bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden ${className}`}>
       {headerContent && (
         <div className="bg-[#F5F5F5] dark:bg-[#262626] px-4 py-3 border-b border-black/7 dark:border-white/10">
           {headerContent}
