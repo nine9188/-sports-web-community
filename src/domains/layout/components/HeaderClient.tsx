@@ -101,7 +101,7 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
         isOpen ? 'translate-x-0' : 'translate-x-full'
       } flex flex-col`}>
         {/* 헤더 - 고정 */}
-        <div className="flex items-center justify-between p-4 border-b border-black/5 dark:border-white/10">
+        <div className="flex items-center justify-between p-4 border-b border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
           <h2 className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0]">게시판 선택</h2>
           <button
             onClick={onClose}
@@ -109,6 +109,12 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
           >
             <X className="h-4 w-4" />
           </button>
+        </div>
+
+        {/* 테마 토글 - 고정 */}
+        <div className="p-4 border-b border-black/7 dark:border-white/10 flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">테마 설정</span>
+          <ThemeToggle />
         </div>
 
         {/* 검색 - 고정 */}
@@ -262,7 +268,7 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
                                       <button
                                         key={grandChild.id}
                                         onClick={() => handleBoardClick(grandChild)}
-                                        className="w-full text-left px-4 py-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-sm text-gray-700 dark:text-gray-300 bg-[#F5F5F5] dark:bg-[#262626] transition-colors"
+                                        className="w-full text-left px-4 py-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-sm text-gray-900 dark:text-[#F0F0F0] transition-colors"
                                       >
                                         ┗ {grandChild.name}
                                       </button>

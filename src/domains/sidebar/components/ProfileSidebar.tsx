@@ -138,12 +138,12 @@ export default function ProfileSidebar({
       {/* 프로필 사이드바 (좌측에서 열림) */}
       <div
         className={`fixed top-0 left-0 h-full w-full max-w-sm
-          bg-white transform transition-transform duration-300 ease-in-out z-[1000]
+          bg-[#F8F9FA] dark:bg-black transform transition-transform duration-300 ease-in-out z-[1000]
           ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:hidden`}
       >
         {/* 헤더 */}
-        <div className="flex items-center justify-between h-14 border-b border-gray-200 px-4">
-          <span className="font-medium text-gray-900">
+        <div className="flex items-center justify-between h-14 border-b border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] px-4">
+          <span className="font-medium text-gray-900 dark:text-[#F0F0F0]">
             {user ? '프로필' : '로그인'}
           </span>
           <Button
@@ -151,20 +151,20 @@ export default function ProfileSidebar({
             size="icon"
             onClick={onClose}
           >
-            <X className="h-5 w-5 text-gray-600" />
+            <X className="h-5 w-5 text-gray-600 dark:text-gray-300" />
           </Button>
         </div>
 
         {/* 컨텐츠 영역 */}
-        <div className="h-[calc(100%-56px)] overflow-y-auto bg-white">
+        <div className="h-[calc(100%-56px)] overflow-y-auto bg-[#F8F9FA] dark:bg-black">
           {user ? (
             // 로그인된 사용자
             <>
               {/* 사용자 프로필 정보 섹션 */}
-              <div className="p-4 border-b border-gray-200">
+              <div className="p-4 border-b border-black/7 dark:border-white/10">
                 {isLoading ? (
                   <div className="text-center py-4">
-                    <p className="text-sm text-gray-500">프로필 로딩 중...</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">프로필 로딩 중...</p>
                   </div>
                 ) : (
                   <>
@@ -177,10 +177,10 @@ export default function ProfileSidebar({
               <div className="p-4 space-y-2">
                 <Link
                   href="/settings/profile"
-                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 transition-colors text-gray-900"
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]"
                   onClick={handleMenuClick}
                 >
-                  <UserCog className="h-5 w-5 text-gray-600" />
+                  <UserCog className="h-5 w-5 text-gray-600 dark:text-gray-300" />
                   <span className="text-sm font-medium">프로필 설정</span>
                 </Link>
 
@@ -188,7 +188,7 @@ export default function ProfileSidebar({
 
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 transition-colors text-left"
+                  className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-left"
                 >
                   <LogOut className="h-5 w-5 text-red-600" />
                   <span className="text-sm font-medium text-red-600">로그아웃</span>
@@ -199,18 +199,18 @@ export default function ProfileSidebar({
             // 로그인되지 않은 사용자
             <div className="p-4">
               <div className="text-center py-8">
-                <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                  <User className="h-8 w-8 text-gray-400" />
+                <div className="w-16 h-16 mx-auto mb-4 bg-[#F5F5F5] dark:bg-[#262626] rounded-full flex items-center justify-center">
+                  <User className="h-8 w-8 text-gray-400 dark:text-gray-500" />
                 </div>
-                <h3 className="text-lg font-medium mb-2 text-gray-900">로그인이 필요합니다</h3>
-                <p className="text-sm text-gray-500 mb-6">
+                <h3 className="text-lg font-medium mb-2 text-gray-900 dark:text-[#F0F0F0]">로그인이 필요합니다</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
                   더 많은 기능을 이용하려면 로그인해주세요
                 </p>
 
                 <div className="space-y-3">
                   <Link
                     href="/signin"
-                    className="block w-full bg-slate-800 text-white py-3 px-4 rounded-lg font-medium hover:bg-slate-700 transition-colors"
+                    className="block w-full bg-slate-800 dark:bg-[#3F3F3F] text-white py-3 px-4 rounded-lg font-medium hover:bg-slate-700 dark:hover:bg-[#4A4A4A] transition-colors"
                     onClick={handleMenuClick}
                   >
                     로그인
@@ -218,7 +218,7 @@ export default function ProfileSidebar({
 
                   <Link
                     href="/signup"
-                    className="block w-full border border-gray-200 text-gray-900 py-3 px-4 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                    className="block w-full bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] py-3 px-4 rounded-lg font-medium hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                     onClick={handleMenuClick}
                   >
                     회원가입

@@ -148,7 +148,7 @@ transition-colors
 ### 버튼
 ```tsx
 {/* Primary Button */}
-<button className="bg-gray-900 dark:bg-[#F0F0F0] text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300 px-4 py-2 rounded transition-colors">
+<button className="bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A] px-4 py-2 rounded transition-colors">
   확인
 </button>
 

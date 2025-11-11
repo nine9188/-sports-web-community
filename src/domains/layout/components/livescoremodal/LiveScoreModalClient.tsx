@@ -33,7 +33,7 @@ export default function LiveScoreModalClient({ isOpen, onClose, initialData }: L
 
   return ReactDOM.createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden">
-      <div className={`fixed top-0 right-0 h-full w-full max-w-md bg-white dark:bg-[#1D1D1D] transform transition-transform duration-300 ease-in-out ${
+      <div className={`fixed top-0 right-0 h-full w-full max-w-md bg-[#F8F9FA] dark:bg-black transform transition-transform duration-300 ease-in-out ${
         isOpen ? 'translate-x-0' : 'translate-x-full'
       } flex flex-col`}>
 
