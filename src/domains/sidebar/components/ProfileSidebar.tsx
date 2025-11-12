@@ -43,43 +43,46 @@ export default function ProfileSidebar({
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // 프로필 데이터 로드
+  // 프로필 데이터 로드 - user.id나 isOpen이 변경될 때마다 새로 로드
   useEffect(() => {
     const fetchProfileData = async () => {
-      if (!user || profileData) return;
-      
+      if (!user) {
+        setProfileData(null);
+        return;
+      }
+
       setIsLoading(true);
       try {
         const supabase = createClient();
-        
+
         // 프로필 정보 조회
         const { data: profile, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .single();
-        
+
         if (error) {
           console.error("프로필 정보 조회 중 오류 발생:", error);
           return;
         }
-        
+
         // 게시글 수 조회
         const { count: postCount } = await supabase
           .from('posts')
           .select('id', { count: 'exact', head: true })
           .eq('user_id', user.id);
-        
+
         // 댓글 수 조회
         const { count: commentCount } = await supabase
           .from('comments')
           .select('id', { count: 'exact', head: true })
           .eq('user_id', user.id);
-          
+
         // 아이콘 정보 추출
         const userMetadata = user.user_metadata || {};
         const icon_url = userMetadata.icon_url || null;
-        
+
         setProfileData({
           ...profile,
           postCount: postCount || 0,
@@ -92,11 +95,14 @@ export default function ProfileSidebar({
         setIsLoading(false);
       }
     };
-    
+
     if (isOpen && user) {
       fetchProfileData();
+    } else if (!user) {
+      // 로그아웃 시 프로필 데이터 초기화
+      setProfileData(null);
     }
-  }, [user, isOpen, profileData]);
+  }, [user?.id, isOpen]);
 
   // 로그아웃 처리
   const handleLogout = useCallback(async () => {

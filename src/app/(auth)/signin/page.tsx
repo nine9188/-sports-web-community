@@ -95,24 +95,24 @@ function LoginContent() {
   
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const isUsernameValid = validateUsername(username);
     const isPasswordValid = validatePassword(password);
-    
+
     if (!isUsernameValid || !isPasswordValid) {
       return;
     }
-    
+
     try {
       setLoading(true);
-      
+
       // 아이디 기억하기 처리
       if (rememberUsername) {
         localStorage.setItem('remembered-username', username);
       } else {
         localStorage.removeItem('remembered-username');
       }
-      
+
       // 서버 액션을 통한 로그인 (아이디로)
       const result = await signIn(username, password);
 
@@ -128,10 +128,10 @@ function LoginContent() {
       // 로그인 성공 플래그를 sessionStorage에 저장 (토스트용)
       sessionStorage.setItem('login-success', 'true');
 
-      // Next.js router 사용 (window.location 대신)
-      // AuthContext의 onAuthStateChange가 자동으로 user 상태 업데이트
-      router.push(redirectUrl);
-      
+      // 로그인 성공 - 페이지 새로고침으로 모든 상태를 확실하게 초기화
+      // router.push는 클라이언트 사이드 네비게이션이므로 AuthContext 업데이트 타이밍 이슈가 있을 수 있음
+      window.location.href = redirectUrl;
+
     } catch (error: unknown) {
       console.error('로그인 오류:', error);
       toast.error('로그인 중 오류가 발생했습니다');
