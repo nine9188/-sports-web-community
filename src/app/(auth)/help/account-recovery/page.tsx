@@ -256,30 +256,30 @@ function AccountRecoveryContent() {
     <div className="w-full">
       {/* 고정 헤더 */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-left mb-2">
+        <h2 className="text-2xl font-bold text-left mb-2 text-gray-900 dark:text-[#F0F0F0]">
           계정 찾기
         </h2>
-        <p className="text-gray-600 mb-6 text-left">
+        <p className="text-gray-600 dark:text-gray-400 mb-6 text-left">
           가입시 사용한 정보로 계정을 찾을 수 있습니다.
         </p>
-        
+
         {/* 탭 메뉴 */}
-        <div className="flex border-b border-gray-200 mb-6">
-          <button 
-            className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-all duration-200 ${
-              activeTab === 'id' 
-                ? 'border-slate-600 text-slate-800 bg-slate-50' 
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+        <div className="flex border-b border-black/7 dark:border-white/10 mb-6">
+          <button
+            className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'id'
+                ? 'border-slate-800 dark:border-white text-gray-900 dark:text-[#F0F0F0] bg-white dark:bg-[#1D1D1D]'
+                : 'border-transparent text-gray-700 dark:text-gray-300 bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
             }`}
             onClick={() => changeTab('id')}
           >
             아이디 찾기
           </button>
-          <button 
-            className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-all duration-200 ${
-              activeTab === 'password' 
-                ? 'border-slate-600 text-slate-800 bg-slate-50' 
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          <button
+            className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'password'
+                ? 'border-slate-800 dark:border-white text-gray-900 dark:text-[#F0F0F0] bg-white dark:bg-[#1D1D1D]'
+                : 'border-transparent text-gray-700 dark:text-gray-300 bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
             }`}
             onClick={() => changeTab('password')}
           >
@@ -294,12 +294,12 @@ function AccountRecoveryContent() {
       {/* 아이디 찾기 폼 */}
       {activeTab === 'id' && (
         <div>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
             가입시 사용한 이름과 이메일로 아이디를 찾을 수 있습니다.
           </p>
           <form onSubmit={handleFindId} className="space-y-6">
           <div>
-            <label htmlFor="fullName" className="block text-gray-700 mb-1 text-sm font-medium">
+            <label htmlFor="fullName" className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">
               이름
             </label>
             <div className="relative">
@@ -312,11 +312,11 @@ function AccountRecoveryContent() {
                   validateFullName(e.target.value);
                 }}
                 onBlur={() => validateFullName(fullName)}
-                className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 ${
-                  fullNameError ? 'border-red-500 focus:ring-red-300' : 
-                  fullNameValid ? 'border-green-500 focus:ring-green-300' : 
-                  'border-gray-300 focus:ring-slate-300'
-                } ${verificationSent ? 'bg-gray-100' : ''}`}
+                className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
+                  fullNameError ? 'border-red-500' :
+                  fullNameValid ? 'border-green-500' :
+                  'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
+                } ${verificationSent ? 'bg-gray-100 dark:bg-[#262626]' : ''}`}
                 placeholder="가입시 입력한 이름"
                 readOnly={verificationSent}
                 required
@@ -336,7 +336,7 @@ function AccountRecoveryContent() {
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-gray-700 mb-1 text-sm font-medium">
+            <label htmlFor="email" className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">
               이메일 주소
             </label>
             <div className="relative">
@@ -349,11 +349,11 @@ function AccountRecoveryContent() {
                   validateEmail(e.target.value);
                 }}
                 onBlur={() => validateEmail(email)}
-                className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 ${
-                  emailError ? 'border-red-500 focus:ring-red-300' : 
-                  emailValid ? 'border-green-500 focus:ring-green-300' : 
-                  'border-gray-300 focus:ring-slate-300'
-                } ${verificationSent ? 'bg-gray-100' : ''}`}
+                className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
+                  emailError ? 'border-red-500' :
+                  emailValid ? 'border-green-500' :
+                  'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
+                } ${verificationSent ? 'bg-gray-100 dark:bg-[#262626]' : ''}`}
                 placeholder="가입시 사용한 이메일"
                 readOnly={verificationSent}
                 required
@@ -383,7 +383,7 @@ function AccountRecoveryContent() {
                 type="button"
                 onClick={sendVerificationCode}
                 disabled={loading || !emailValid || !fullNameValid}
-                className="w-full py-3 px-4 bg-slate-700 hover:bg-slate-800 text-white font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? '발송중...' : '인증코드 받기'}
               </button>
@@ -392,7 +392,7 @@ function AccountRecoveryContent() {
           
           {verificationSent && (
             <div>
-              <label htmlFor="verification-code" className="block text-gray-700 mb-1 text-sm font-medium">
+              <label htmlFor="verification-code" className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">
                 인증 코드
               </label>
               <div className="relative">
@@ -405,10 +405,10 @@ function AccountRecoveryContent() {
                     validateCode(e.target.value);
                   }}
                   onBlur={() => validateCode(verificationCode)}
-                  className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 ${
-                    codeError ? 'border-red-500 focus:ring-red-300' : 
-                    codeValid ? 'border-green-500 focus:ring-green-300' : 
-                    'border-gray-300 focus:ring-slate-300'
+                  className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
+                    codeError ? 'border-red-500' :
+                    codeValid ? 'border-green-500' :
+                    'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
                   }`}
                   placeholder="6자리 인증코드"
                   maxLength={6}
@@ -426,7 +426,7 @@ function AccountRecoveryContent() {
                   {codeError}
                 </p>
               )}
-              <p className="text-xs text-gray-500 mt-2">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                 이메일로 받은 인증 코드를 입력해주세요. 인증 코드는 5분간 유효합니다.
               </p>
               <button
@@ -448,7 +448,7 @@ function AccountRecoveryContent() {
             <button
               type="submit"
               disabled={loading || !codeValid}
-              className="w-full py-3 px-4 bg-slate-700 hover:bg-slate-800 text-white font-medium rounded-md transition-colors disabled:opacity-50"
+              className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white font-medium rounded-md transition-colors disabled:opacity-50"
             >
               {loading ? '처리 중...' : '아이디 찾기'}
             </button>
@@ -460,12 +460,12 @@ function AccountRecoveryContent() {
       {/* 비밀번호 찾기 폼 */}
       {activeTab === 'password' && (
         <div>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
             아이디를 입력하시면 등록된 이메일로 재설정 링크를 보내드립니다.
           </p>
           <form onSubmit={handleResetPassword} className="space-y-6">
           <div>
-            <label htmlFor="username" className="block text-gray-700 mb-1 text-sm font-medium">
+            <label htmlFor="username" className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">
               아이디
             </label>
             <div className="relative">
@@ -478,10 +478,10 @@ function AccountRecoveryContent() {
                   validateUsername(e.target.value);
                 }}
                 onBlur={() => validateUsername(username)}
-                className={`w-full px-4 py-3 pl-12 border rounded-md focus:outline-none focus:ring-2 ${
-                  usernameError ? 'border-red-500 focus:ring-red-300' : 
-                  usernameValid ? 'border-green-500 focus:ring-green-300' : 
-                  'border-gray-300 focus:ring-slate-300'
+                className={`w-full px-4 py-3 pl-12 border rounded-md md:rounded-md max-md:rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
+                  usernameError ? 'border-red-500' :
+                  usernameValid ? 'border-green-500' :
+                  'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
                 }`}
                 placeholder="가입시 설정한 아이디"
                 required
@@ -499,7 +499,7 @@ function AccountRecoveryContent() {
                 {usernameError}
               </p>
             )}
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               등록된 이메일로 비밀번호 재설정 링크를 발송합니다.
             </p>
           </div>
@@ -507,7 +507,7 @@ function AccountRecoveryContent() {
           <button
             type="submit"
             disabled={loading || !usernameValid}
-            className="w-full py-3 px-4 bg-slate-700 hover:bg-slate-800 text-white font-medium rounded-md transition-colors disabled:opacity-50"
+            className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white font-medium rounded-md transition-colors disabled:opacity-50"
           >
             {loading ? '발송 중...' : '재설정 링크 받기'}
           </button>
@@ -516,18 +516,18 @@ function AccountRecoveryContent() {
       )}
       
         <div className="mt-8 text-center">
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             계정이 기억나셨나요?{' '}
-            <Link href="/signin" className="text-slate-600 hover:text-slate-800 hover:underline font-medium">
+            <Link href="/signin" className="text-slate-600 dark:text-gray-300 hover:text-slate-800 dark:hover:text-[#F0F0F0] hover:underline font-medium">
               로그인
             </Link>
           </p>
         </div>
 
         {/* 약관/개인정보 링크 */}
-        <div className="mt-8 flex justify-center space-x-4 text-sm text-gray-500">
-          <Link href="/terms" className="hover:text-gray-700">이용약관</Link>
-          <Link href="/privacy" className="hover:text-gray-700">개인정보처리방침</Link>
+        <div className="mt-8 flex justify-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+          <Link href="/terms" className="hover:text-gray-700 dark:hover:text-gray-300">이용약관</Link>
+          <Link href="/privacy" className="hover:text-gray-700 dark:hover:text-gray-300">개인정보처리방침</Link>
         </div>
       </div>
     </div>

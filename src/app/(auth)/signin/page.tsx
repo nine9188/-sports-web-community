@@ -145,11 +145,11 @@ function LoginContent() {
 
   return (
     <div className="max-w-md w-full">
-      {/* 고정 헤더 */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-left mb-2">SPORTS 멤버 로그인</h2>
-        <p className="text-gray-600 mb-8 text-left">
-          모든 게이머들을 위한 SPORTS 커뮤니티에 오신 것을 환영합니다.
+      {/* 헤더 */}
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">4590 멤버 로그인</h2>
+        <p className="text-gray-600 dark:text-gray-400 mb-8">
+          모든 축구팬을 위한 4590 커뮤니티에 오신 것을 환영합니다.
         </p>
       </div>
 
@@ -158,7 +158,7 @@ function LoginContent() {
       
       <form onSubmit={handleLogin} className="space-y-6">
         <div>
-          <label className="block text-gray-700 mb-1 text-sm font-medium">아이디</label>
+          <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">아이디</label>
           <div className="relative">
             <input
               id="username"
@@ -169,10 +169,10 @@ function LoginContent() {
                 validateUsername(e.target.value);
               }}
               onBlur={() => validateUsername(username)}
-              className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 ${
-                usernameError ? 'border-red-500 focus:ring-red-300' : 
-                usernameValid ? 'border-green-500 focus:ring-green-300' : 
-                'border-gray-300 focus:ring-blue-500'
+              className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
+                usernameError ? 'border-red-500' :
+                usernameValid ? 'border-green-500' :
+                'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
               }`}
               placeholder="아이디"
               required
@@ -190,9 +190,9 @@ function LoginContent() {
             </p>
           )}
         </div>
-        
+
         <div>
-          <label className="block text-gray-700 mb-1 text-sm font-medium">비밀번호</label>
+          <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">비밀번호</label>
           <div className="relative">
             <input
               id="password"
@@ -203,17 +203,17 @@ function LoginContent() {
                 validatePassword(e.target.value);
               }}
               onBlur={() => validatePassword(password)}
-              className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 ${
-                passwordError ? 'border-red-500 focus:ring-red-300' : 
-                passwordValid ? 'border-green-500 focus:ring-green-300' : 
-                'border-gray-300 focus:ring-blue-500'
+              className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
+                passwordError ? 'border-red-500' :
+                passwordValid ? 'border-green-500' :
+                'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
               }`}
               placeholder="비밀번호"
               required
             />
             <button
               type="button"
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400"
               onClick={handleTogglePassword}
               tabIndex={-1}
             >
@@ -238,17 +238,17 @@ function LoginContent() {
             type="checkbox"
             checked={rememberUsername}
             onChange={() => setRememberUsername(!rememberUsername)}
-            className="h-4 w-4 text-slate-600 border-gray-300 rounded focus:ring-slate-500"
+            className="h-4 w-4 text-slate-600 border-gray-300 dark:border-white/10 rounded focus:ring-slate-500"
           />
-          <label htmlFor="remember-username" className="ml-2 block text-sm text-gray-700">
+          <label htmlFor="remember-username" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
             아이디 기억하기
           </label>
         </div>
-        
+
         <button
           type="submit"
           disabled={loading || !usernameValid || !passwordValid}
-          className="w-full py-3 px-4 bg-slate-700 hover:bg-slate-800 text-white font-medium rounded-md transition-colors disabled:opacity-50"
+          className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white font-medium rounded-md transition-colors disabled:opacity-50"
         >
           {loading ? '로그인 중...' : '로그인'}
         </button>
@@ -258,10 +258,10 @@ function LoginContent() {
       <div className="mt-6 mb-6">
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300" />
+            <div className="w-full border-t border-black/7 dark:border-white/10" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-gray-50 text-gray-500">또는</span>
+            <span className="px-2 bg-[#F8F9FA] dark:bg-black text-gray-500 dark:text-gray-400">또는</span>
           </div>
         </div>
       </div>
@@ -275,21 +275,21 @@ function LoginContent() {
       </div>
       
         <div className="mt-8 text-center">
-          <p className="text-gray-600">
-            아직 SPORTS Member가 아니신가요?{' '}
-            <Link href="/signup" className="text-slate-600 hover:text-slate-800 hover:underline font-medium">
+          <p className="text-gray-600 dark:text-gray-400">
+            아직 4590 Football 회원이 아니신가요?{' '}
+            <Link href="/signup" className="text-slate-600 dark:text-gray-300 hover:text-slate-800 dark:hover:text-[#F0F0F0] hover:underline font-medium">
               회원가입
             </Link>
           </p>
         </div>
 
         {/* 아이디/비밀번호 찾기 - 회원가입 아래로 이동 */}
-        <div className="mt-4 text-center text-gray-600">
-          <Link href="/help/account-recovery?tab=id" className="hover:text-slate-800 hover:underline text-sm">
+        <div className="mt-4 text-center text-gray-600 dark:text-gray-400">
+          <Link href="/help/account-recovery?tab=id" className="hover:text-slate-800 dark:hover:text-[#F0F0F0] hover:underline text-sm">
             아이디 찾기
           </Link>
           <span className="mx-2">ㅣ</span>
-          <Link href="/help/account-recovery?tab=password" className="hover:text-slate-800 hover:underline text-sm">
+          <Link href="/help/account-recovery?tab=password" className="hover:text-slate-800 dark:hover:text-[#F0F0F0] hover:underline text-sm">
             비밀번호 찾기
           </Link>
         </div>
@@ -317,9 +317,9 @@ export default function SignInPage() {
       }>
         <LoginContent />
       </Suspense>
-      <div className="mt-8 flex space-x-4 text-sm text-gray-500">
-        <Link href="/terms" className="hover:text-gray-700">이용약관</Link>
-        <Link href="/privacy" className="hover:text-gray-700">개인정보처리방침</Link>
+      <div className="mt-8 flex space-x-4 text-sm text-gray-500 dark:text-gray-400">
+        <Link href="/terms" className="hover:text-gray-700 dark:hover:text-gray-300">이용약관</Link>
+        <Link href="/privacy" className="hover:text-gray-700 dark:hover:text-gray-300">개인정보처리방침</Link>
       </div>
     </div>
   );

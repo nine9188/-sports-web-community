@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/shared/context/AuthContext';
 import { createClient } from '@/shared/api/supabase';
 import { signUp } from '@/domains/auth/actions';
@@ -417,11 +418,11 @@ export default function SignupPage() {
   return (
     <div className="flex flex-col justify-center items-center min-h-[calc(100vh-120px)]">
       <div className="max-w-md w-full">
-        {/* 고정 헤더 */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-left mb-2">SPORTS 멤버 ID를 생성하세요.</h2>
-          <p className="text-gray-600 mb-8 text-left">
-            모든 게이머들을 위한 SPORTS 커뮤니티에 오신 것을 환영합니다.
+        {/* 헤더 */}
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">4590 멤버 ID를 생성하세요.</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-8">
+            모든 축구팬을 위한 4590 커뮤니티에 오신 것을 환영합니다.
           </p>
         </div>
 
@@ -431,7 +432,7 @@ export default function SignupPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* 봇 검증 - 이메일 위 */}
           <div className="space-y-2">
-            <label className="block text-gray-700 mb-1 text-sm font-medium">봇 검증</label>
+            <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">봇 검증</label>
             <TurnstileWidget
               siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY as string}
               onToken={setCaptchaToken}
@@ -442,7 +443,7 @@ export default function SignupPage() {
           {/* 이메일 입력 단계 */}
           <div className="space-y-4">
             <div>
-              <label className="block text-gray-700 mb-1 text-sm font-medium">이메일 주소</label>
+              <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">이메일 주소</label>
               <div className="relative">
                 <input
                   type="email"
@@ -452,10 +453,10 @@ export default function SignupPage() {
                     validateEmail(e.target.value);
                   }}
                   onBlur={() => validateEmail(email)}
-                  className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 ${
-                    emailError ? 'border-red-500 focus:ring-red-300' : 
-                    emailValid ? 'border-green-500 focus:ring-green-300' : 
-                    'border-gray-300 focus:ring-blue-500'
+                  className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none transition-colors ${
+                    emailError ? 'border-red-500 ' : 
+                    emailValid ? 'border-green-500 ' : 
+                    'border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
                   }`}
                   placeholder="이메일 주소"
                   required
@@ -479,7 +480,7 @@ export default function SignupPage() {
                     type="button"
                     onClick={handleEmailSubmit}
                     disabled={!emailValid || isLoading || !captchaToken}
-                    className="w-full py-3 px-4 bg-slate-700 hover:bg-slate-800 text-white rounded-md transition-colors disabled:opacity-50"
+                    className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md transition-colors disabled:opacity-50"
                   >
                     {isLoading ? '처리 중...' : '계속하기'}
                   </button>
@@ -492,12 +493,12 @@ export default function SignupPage() {
           {showNameStep && (
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-700 mb-1 text-sm font-medium">이름</label>
+                <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">이름</label>
                 <input
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 border border-black/7 dark:border-white/10 rounded-md md:rounded-md max-md:rounded-lg bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] focus:outline-none transition-colors focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]"
                   placeholder="이름"
                   required
                   disabled={showIdStep}
@@ -508,7 +509,7 @@ export default function SignupPage() {
                       type="button"
                       onClick={handleNameSubmit}
                       disabled={!fullName.trim() || isLoading}
-                      className="w-full py-3 px-4 bg-slate-700 hover:bg-slate-800 text-white rounded-md transition-colors disabled:opacity-50"
+                      className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md transition-colors disabled:opacity-50"
                     >
                       {isLoading ? '처리 중...' : '계속하기'}
                     </button>
@@ -522,8 +523,8 @@ export default function SignupPage() {
           {showIdStep && (
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-700 mb-1 text-sm font-medium">아이디</label>
-                <p className="mb-2 text-xs text-gray-500">
+                <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">아이디</label>
+                <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
                   *4-20자, 영문 소문자·숫자·밑줄(_)·마침표(.) 사용 가능
                 </p>
                 <div className="flex space-x-2">
@@ -544,10 +545,10 @@ export default function SignupPage() {
                         setUsernameMessage('');
                       }
                     }}
-                    className={`flex-1 p-3 border rounded-md bg-white focus:outline-none focus:ring-2 ${
-                      usernameChecked && !usernameAvailable ? 'border-red-500 focus:ring-red-300' : 
-                      usernameChecked && usernameAvailable ? 'border-green-500 focus:ring-green-300' : 
-                      'border-gray-300 focus:ring-blue-500'
+                    className={`flex-1 p-3 border rounded-md bg-white focus:outline-none transition-colors ${
+                      usernameChecked && !usernameAvailable ? 'border-red-500 ' : 
+                      usernameChecked && usernameAvailable ? 'border-green-500 ' : 
+                      'border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
                     }`}
                     placeholder="아이디"
                     required
@@ -557,7 +558,7 @@ export default function SignupPage() {
                     type="button"
                     onClick={checkUsername}
                     disabled={isCheckingUsername || !username || validateUsername(username) !== '' || showNicknameStep}
-                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-md disabled:opacity-50"
+                    className="px-4 py-2 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md disabled:opacity-50"
                   >
                     {isCheckingUsername ? '확인 중...' : '중복 확인'}
                   </button>
@@ -579,7 +580,7 @@ export default function SignupPage() {
                       type="button"
                       onClick={handleIdSubmit}
                       disabled={!usernameChecked || !usernameAvailable || isLoading}
-                      className="w-full py-3 px-4 bg-slate-700 hover:bg-slate-800 text-white rounded-md transition-colors disabled:opacity-50"
+                      className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md transition-colors disabled:opacity-50"
                     >
                       {isLoading ? '처리 중...' : '계속하기'}
                     </button>
@@ -593,8 +594,8 @@ export default function SignupPage() {
           {showNicknameStep && (
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-700 mb-1 text-sm font-medium">닉네임</label>
-                <p className="mb-2 text-xs text-gray-500">
+                <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">닉네임</label>
+                <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
                   *2-16자, 한글·영문·숫자·밑줄(_)·하이픈(-) 사용 가능
                 </p>
                 <div className="flex space-x-2">
@@ -615,10 +616,10 @@ export default function SignupPage() {
                         setNicknameMessage('');
                       }
                     }}
-                    className={`flex-1 p-3 border rounded-md bg-white focus:outline-none focus:ring-2 ${
-                      nicknameChecked && !nicknameAvailable ? 'border-red-500 focus:ring-red-300' : 
-                      nicknameChecked && nicknameAvailable ? 'border-green-500 focus:ring-green-300' : 
-                      'border-gray-300 focus:ring-blue-500'
+                    className={`flex-1 p-3 border rounded-md bg-white focus:outline-none transition-colors ${
+                      nicknameChecked && !nicknameAvailable ? 'border-red-500 ' : 
+                      nicknameChecked && nicknameAvailable ? 'border-green-500 ' : 
+                      'border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
                     }`}
                     placeholder="닉네임"
                     required
@@ -628,7 +629,7 @@ export default function SignupPage() {
                     type="button"
                     onClick={checkNickname}
                     disabled={isCheckingNickname || !nickname || validateNickname(nickname) !== '' || showPasswordStep}
-                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-md disabled:opacity-50"
+                    className="px-4 py-2 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md disabled:opacity-50"
                   >
                     {isCheckingNickname ? '확인 중...' : '중복 확인'}
                   </button>
@@ -650,7 +651,7 @@ export default function SignupPage() {
                       type="button"
                       onClick={handleNicknameSubmit}
                       disabled={!nicknameChecked || !nicknameAvailable || isLoading}
-                      className="w-full py-3 px-4 bg-slate-700 hover:bg-slate-800 text-white rounded-md transition-colors disabled:opacity-50"
+                      className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md transition-colors disabled:opacity-50"
                     >
                       {isLoading ? '처리 중...' : '계속하기'}
                     </button>
@@ -664,7 +665,7 @@ export default function SignupPage() {
           {showPasswordStep && (
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-700 mb-1 text-sm font-medium">비밀번호</label>
+                <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">비밀번호</label>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
@@ -675,17 +676,17 @@ export default function SignupPage() {
                       if (confirmPassword) validateConfirmPassword(confirmPassword);
                     }}
                     onBlur={() => validatePassword(password)}
-                    className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 ${
-                      passwordError ? 'border-red-500 focus:ring-red-300' : 
-                      passwordValid ? 'border-green-500 focus:ring-green-300' : 
-                      'border-gray-300 focus:ring-blue-500'
+                    className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none transition-colors ${
+                      passwordError ? 'border-red-500 ' : 
+                      passwordValid ? 'border-green-500 ' : 
+                      'border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
                     }`}
                     placeholder="비밀번호"
                     required
                   />
                   <button
                     type="button"
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400"
                     onClick={() => setShowPassword(!showPassword)}
                     tabIndex={-1}
                   >
@@ -694,7 +695,7 @@ export default function SignupPage() {
                 </div>
                 
                 {/* 비밀번호 안내 메시지 */}
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   *10자 이상, 특수문자 포함
                 </p>
                 
@@ -737,7 +738,7 @@ export default function SignupPage() {
               </div>
               
               <div>
-                <label className="block text-gray-700 mb-1 text-sm font-medium">비밀번호 확인</label>
+                <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">비밀번호 확인</label>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
@@ -747,10 +748,10 @@ export default function SignupPage() {
                       validateConfirmPassword(e.target.value);
                     }}
                     onBlur={() => validateConfirmPassword(confirmPassword)}
-                    className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 ${
-                      confirmPasswordError ? 'border-red-500 focus:ring-red-300' : 
-                      confirmPasswordValid ? 'border-green-500 focus:ring-green-300' : 
-                      'border-gray-300 focus:ring-blue-500'
+                    className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none transition-colors ${
+                      confirmPasswordError ? 'border-red-500 ' : 
+                      confirmPasswordValid ? 'border-green-500 ' : 
+                      'border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
                     }`}
                     placeholder="비밀번호 확인"
                     required
@@ -770,7 +771,7 @@ export default function SignupPage() {
                 <button 
                   type="submit"
                   disabled={isLoading || !passwordValid || !confirmPasswordValid || !emailValid || !usernameChecked || !usernameAvailable || !nicknameChecked || !nicknameAvailable}
-                  className="w-full p-3 bg-slate-800 hover:bg-slate-700 text-white rounded-md transition-colors disabled:opacity-50 mt-4"
+                  className="w-full p-3 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md transition-colors disabled:opacity-50 mt-4"
                 >
                   {isLoading ? '처리 중...' : '계정 생성하기'}
                 </button>
@@ -784,10 +785,10 @@ export default function SignupPage() {
         <div className="mt-6 mb-6">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
+              <div className="w-full border-t border-black/7 dark:border-white/10" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gray-50 text-gray-500">또는</span>
+              <span className="px-2 bg-[#F8F9FA] dark:bg-black text-gray-500 dark:text-gray-400">또는</span>
             </div>
           </div>
         </div>
@@ -801,19 +802,19 @@ export default function SignupPage() {
         </div>
         
           <div className="mt-8 text-center">
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-400">
               이미 계정이 있으신가요?{' '}
-              <Link href="/signin" className="text-blue-600 hover:underline">
+              <Link href="/signin" className="text-slate-600 dark:text-gray-300 hover:text-slate-800 dark:hover:text-[#F0F0F0] hover:underline">
                 로그인
               </Link>
             </p>
           </div>
         </div>
       </div>
-      
-      <div className="mt-8 flex space-x-4 text-sm text-gray-500">
-        <Link href="/terms" className="hover:text-gray-700">이용약관</Link>
-        <Link href="/privacy" className="hover:text-gray-700">개인정보처리방침</Link>
+
+      <div className="mt-8 flex space-x-4 text-sm text-gray-500 dark:text-gray-400">
+        <Link href="/terms" className="hover:text-gray-700 dark:hover:text-gray-300">이용약관</Link>
+        <Link href="/privacy" className="hover:text-gray-700 dark:hover:text-gray-300">개인정보처리방침</Link>
       </div>
     </div>
   );

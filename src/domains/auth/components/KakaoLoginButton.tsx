@@ -53,11 +53,11 @@ export default function KakaoLoginButton({
       onClick={handleKakaoLogin}
       disabled={loading || disabled}
       className={`
-        w-full flex items-center justify-center px-4 py-3 
-        bg-[#FEE500] hover:bg-[#FFEB00] 
+        w-full flex items-center justify-center px-4 py-3
+        bg-[#FEE500] hover:bg-[#FFEB00]
         border border-[#FEE500] hover:border-[#FFEB00]
-        rounded-md font-medium text-[#000000] 
-        transition-all duration-200 
+        rounded-md md:rounded-md max-md:rounded-lg font-medium text-[#000000]
+        transition-all duration-200
         disabled:opacity-50 disabled:cursor-not-allowed
         ${loading || disabled ? 'cursor-not-allowed' : 'cursor-pointer'}
         ${className}

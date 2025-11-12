@@ -155,26 +155,26 @@
   /* 모바일: 모든 rounded 변형에 테마 적용 */
   @media (max-width: 767px) {
     /* rounded-lg 변형 */
-    .bg-white.border.rounded-lg,
-    .border.rounded-lg {
+    .bg-white.border.rounded-lg:not(input):not(textarea):not(button),
+    .border.rounded-lg:not(input):not(textarea):not(button) {
       border-radius: var(--border-radius-mobile) !important;
     }
 
     /* rounded-md 변형 */
-    .bg-white.border.rounded-md,
-    .border.rounded-md {
+    .bg-white.border.rounded-md:not(input):not(textarea):not(button),
+    .border.rounded-md:not(input):not(textarea):not(button) {
       border-radius: var(--border-radius-mobile) !important;
     }
 
     /* rounded 변형 */
-    .bg-white.border.rounded,
-    .border.rounded {
+    .bg-white.border.rounded:not(input):not(textarea):not(button),
+    .border.rounded:not(input):not(textarea):not(button) {
       border-radius: var(--border-radius-mobile) !important;
     }
 
     /* rounded-sm 변형 */
-    .bg-white.border.rounded-sm,
-    .border.rounded-sm {
+    .bg-white.border.rounded-sm:not(input):not(textarea):not(button),
+    .border.rounded-sm:not(input):not(textarea):not(button) {
       border-radius: var(--border-radius-mobile) !important;
     }
   }

@@ -2,6 +2,7 @@ import React from 'react';
 import { Metadata } from 'next';
 import '../globals.css';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export const metadata: Metadata = {
   title: 'SPORTS 인증',
@@ -18,13 +19,20 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F8F9FA] dark:bg-[#0A0A0A]">
       <div className="px-4 py-6 sm:p-6">
         <div className="mb-6 sm:mb-8">
           <Link href="/" className="inline-block">
-            <div className="flex items-center">
-              <span className="text-2xl sm:text-3xl font-bold">SPORTS</span>
-              <span className="ml-1 px-2 py-1 bg-gray-200 text-xs font-semibold rounded">Member</span>
+            <div className="flex items-center gap-2">
+              <Image
+                src="/logo/4590 로고2 이미지크기 275X200 누끼제거 버전.png"
+                alt="로고"
+                width={124}
+                height={60}
+                priority
+                className="h-14 w-auto dark:invert"
+              />
+              <span className="ml-1 px-2 py-1 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-xs font-semibold rounded border border-black/7 dark:border-transparent">Member</span>
             </div>
           </Link>
         </div>
