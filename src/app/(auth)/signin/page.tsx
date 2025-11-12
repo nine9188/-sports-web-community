@@ -115,7 +115,7 @@ function LoginContent() {
       
       // 서버 액션을 통한 로그인 (아이디로)
       const result = await signIn(username, password);
-      
+
       if (result.error) {
         if (result.error.includes('Invalid login credentials')) {
           toast.error('아이디 또는 비밀번호가 올바르지 않습니다');
@@ -124,16 +124,13 @@ function LoginContent() {
         }
         return;
       }
-      
-      // 로그인 성공 플래그를 sessionStorage에 저장 (새로고침 후 토스트용)
+
+      // 로그인 성공 플래그를 sessionStorage에 저장 (토스트용)
       sessionStorage.setItem('login-success', 'true');
-      
-      // 로그인 성공 후 즉시 페이지 새로고침으로 AuthContext 업데이트 보장
-      if (redirectUrl && redirectUrl !== window.location.pathname) {
-        window.location.href = redirectUrl;
-      } else {
-        window.location.reload();
-      }
+
+      // Next.js router 사용 (window.location 대신)
+      // AuthContext의 onAuthStateChange가 자동으로 user 상태 업데이트
+      router.push(redirectUrl);
       
     } catch (error: unknown) {
       console.error('로그인 오류:', error);
