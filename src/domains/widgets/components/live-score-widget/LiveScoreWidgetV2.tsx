@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronsDown, ChevronsUp } from 'lucide-react';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
 
@@ -62,16 +62,92 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
     });
   };
 
+  // 전체 펼치기/접기
+  const toggleAll = () => {
+    if (expandedLeagues.size === leagues.length) {
+      // 모두 펼쳐져 있으면 모두 접기
+      setExpandedLeagues(new Set());
+    } else {
+      // 하나라도 접혀있으면 모두 펼치기
+      setExpandedLeagues(new Set(leagues.map(l => l.id)));
+    }
+  };
+
+  const allExpanded = leagues.length > 0 && expandedLeagues.size === leagues.length;
+
+  // 경기가 없을 때
+  if (leagues.length === 0) {
+    return (
+      <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
+        {/* 위젯 헤더 */}
+        <div className="h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10">
+          <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
+            중요 경기
+          </span>
+          <Link
+            href="/livescore/football"
+            className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+          >
+            전체 경기
+          </Link>
+        </div>
+        {/* Empty State */}
+        <div className="h-14 flex items-center justify-center px-4 text-center">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            오늘은 중요 경기가 없습니다
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      {leagues.map(league => {
+      {/* 리그 목록 */}
+      {leagues.map((league, index) => {
         const isExpanded = expandedLeagues.has(league.id);
+        const isFirst = index === 0;
 
         return (
           <div
             key={league.id}
             className="bg-white dark:bg-[#1D1D1D] rounded-lg overflow-hidden border border-black/7 dark:border-0"
           >
+            {/* 첫 번째 리그일 때만 위젯 헤더 표시 */}
+            {isFirst && (
+              <div className="h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10">
+                <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
+                  중요 경기
+                </span>
+                <div className="flex items-center gap-3">
+                  {/* 전체 펼치기/접기 버튼 */}
+                  <button
+                    onClick={toggleAll}
+                    className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1"
+                    title={allExpanded ? '모두 접기' : '모두 펼치기'}
+                  >
+                    {allExpanded ? (
+                      <>
+                        <ChevronsUp className="w-3.5 h-3.5" />
+                        <span>접기</span>
+                      </>
+                    ) : (
+                      <>
+                        <ChevronsDown className="w-3.5 h-3.5" />
+                        <span>펼치기</span>
+                      </>
+                    )}
+                  </button>
+                  <Link
+                    href="/livescore/football"
+                    className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  >
+                    전체 경기
+                  </Link>
+                </div>
+              </div>
+            )}
+
             {/* 리그 헤더 */}
             <button
               onClick={() => toggleLeague(league.id)}
@@ -121,9 +197,15 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
                   >
                     {/* 경기 상태 */}
                     <div className="w-12 flex-shrink-0">
-                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400 bg-[#F5F5F5] dark:bg-[#262626] px-2 py-1 rounded">
-                        {match.status}
-                      </span>
+                      {match.status === 'LIVE' || match.status === 'HT' ? (
+                        <span className="text-xs font-bold text-white bg-red-500 px-2 py-1 rounded animate-pulse">
+                          LIVE
+                        </span>
+                      ) : (
+                        <span className="text-xs font-medium text-gray-600 dark:text-gray-400 bg-[#F5F5F5] dark:bg-[#262626] px-2 py-1 rounded">
+                          {match.status}
+                        </span>
+                      )}
                     </div>
 
                     {/* 홈팀 정보 */}

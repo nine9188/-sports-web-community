@@ -126,7 +126,7 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
               placeholder="게시판 검색..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-black/7 dark:border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-[#F0F0F0] text-sm bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0]"
+              className="w-full pl-10 pr-4 py-2 border border-black/7 dark:border-white/10 rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] transition-colors duration-200 text-sm bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] placeholder-gray-500 dark:placeholder-gray-400"
             />
           </div>
         </div>

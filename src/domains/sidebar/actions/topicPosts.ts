@@ -14,21 +14,22 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
     const supabase = await createClient();
     
     // 1. 글 목록 가져오기 (정렬 기준에 따라)
+    // 최종적으로 20개만 보여주므로 50개만 가져와서 처리 (성능 최적화)
     let query = supabase
       .from('posts')
       .select(`
-        id, 
-        title, 
-        created_at, 
+        id,
+        title,
+        created_at,
         board_id,
         views,
         likes,
-        post_number, 
+        post_number,
         content,
         is_hidden,
         is_deleted
       `)
-      .limit(200);
+      .limit(50);
       
     // 정렬 기준 적용
     if (type === 'views') {
@@ -135,29 +136,31 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
       if (league.id) leagueLogoMap[league.id] = league.logo || '';
     });
     
-    // 6. 댓글 수 구하기
+    // 6. 댓글 수 구하기 - 최적화된 단일 쿼리
     const commentCounts: Record<string, number> = {};
-    
-    if (type === 'comments') {
-      // 댓글 정렬 시에는 모든 게시물의 댓글 수를 먼저 계산
-      // 각 게시물의 댓글 수를 개별적으로 가져오기
-      await Promise.all(
-        validPosts.map(async (post) => {
-          const { count } = await supabase
-            .from('comments')
-            .select('*', { count: 'exact', head: true })
-            .eq('post_id', post.id)
-            .neq('is_hidden', true)
-            .neq('is_deleted', true);
-          
-          commentCounts[post.id] = count || 0;
-        })
-      );
-    } else {
-      // 다른 정렬 방식에서는 게시물 20개로 제한하고 나서 댓글 수 가져오기
-      // 우선 데이터 처리를 위해 0으로 초기화
+    const postIds = validPosts.map(post => post.id);
+
+    if (postIds.length > 0) {
+      // 모든 게시물의 댓글을 한 번에 가져와서 그룹화
+      const { data: commentsData } = await supabase
+        .from('comments')
+        .select('post_id')
+        .in('post_id', postIds)
+        .neq('is_hidden', true)
+        .neq('is_deleted', true);
+
+      // 게시물별 댓글 수 계산
+      if (commentsData) {
+        commentsData.forEach((comment: { post_id: string }) => {
+          commentCounts[comment.post_id] = (commentCounts[comment.post_id] || 0) + 1;
+        });
+      }
+
+      // 댓글이 없는 게시물은 0으로 초기화
       validPosts.forEach(post => {
-        commentCounts[post.id] = 0;
+        if (!(post.id in commentCounts)) {
+          commentCounts[post.id] = 0;
+        }
       });
     }
     

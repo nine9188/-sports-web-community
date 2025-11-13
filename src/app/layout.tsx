@@ -11,39 +11,8 @@ import { getInitialSession } from '@/shared/api/supabaseServer';
 import { getHeaderUserData, getBoardsForNavigation } from '@/domains/layout/actions';
 import { fetchMultiDayMatches } from '@/domains/livescore/actions/footballApi';
 import { generatePageMetadata } from '@/shared/utils/metadataNew';
-import { Suspense } from 'react';
 import { getUIThemeSettings } from '@/domains/ui-theme/actions';
 import Script from 'next/script';
-
-// 로딩 스켈레톤 컴포넌트
-function RightSidebarSkeleton() {
-  return (
-    <aside className="hidden xl:block w-[300px] shrink-0">
-      <div className="h-full pt-4">
-        <div className="bg-white rounded-lg border animate-pulse">
-          <div className="px-3 py-2 border-b">
-            <div className="h-5 bg-gray-200 rounded w-24"></div>
-          </div>
-          <div className="px-3 py-2 border-b">
-            <div className="flex space-x-2">
-              <div className="h-6 bg-gray-200 rounded w-16"></div>
-              <div className="h-6 bg-gray-200 rounded w-16"></div>
-              <div className="h-6 bg-gray-200 rounded w-16"></div>
-            </div>
-          </div>
-          <div className="p-3">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex items-center py-2">
-                <div className="w-6 h-6 bg-gray-200 rounded-full mr-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-full"></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </aside>
-  );
-}
 
 // 동적 렌더링 설정
 export const dynamic = 'force-dynamic';
@@ -155,11 +124,7 @@ export default async function RootLayout({
         />
         <RootLayoutClient
           boardNavigation={boardNav}
-          rightSidebar={
-            <Suspense fallback={<RightSidebarSkeleton />}>
-              <RightSidebar />
-            </Suspense>
-          }
+          rightSidebar={<RightSidebar />}
           authSection={authSection}
           leagueStandingsComponent={leagueStandingsComponent}
           initialSession={initialSession}

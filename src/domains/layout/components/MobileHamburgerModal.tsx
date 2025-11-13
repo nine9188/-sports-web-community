@@ -86,15 +86,15 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
         </div>
 
         {/* 검색 - 고정 */}
-        <div className="p-4 border-b">
+        <div className="p-4 border-b border-black/7 dark:border-white/10">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400" />
             <input
               type="text"
               placeholder="게시판 검색..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              className="w-full pl-10 pr-4 py-2 border border-black/7 dark:border-white/10 rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] transition-colors duration-200 text-sm bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] placeholder-gray-500 dark:placeholder-gray-400"
             />
           </div>
         </div>
@@ -188,14 +188,14 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
               <div className="p-2">
                 {boards.map(board => (
                   <div key={board.id} className="mb-2">
-                    {/* 1단계: 크기 줄임, 다른 버튼들과 동일한 크기 */}
+                    {/* 1단계 */}
                     <button
                       onClick={() => handleBoardClick(board)}
-                      className="w-full text-left p-2 bg-gray-50 hover:bg-gray-100 rounded-lg mb-1"
+                      className="w-full text-left p-2 bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-lg mb-1 transition-colors"
                     >
-                      <div className="font-semibold text-blue-600 text-sm">{board.name}</div>
+                      <div className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0]">{board.name}</div>
                     </button>
-                    
+
                     {/* 2단계: 항상 표시됨 */}
                     {board.children && board.children.length > 0 && (
                       <div className="ml-4 space-y-1">
@@ -203,25 +203,25 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
                           .sort((a, b) => a.display_order - b.display_order)
                           .map(child => (
                             <div key={child.id}>
-                              <div className="flex items-center bg-white rounded">
+                              <div className="flex items-center bg-white dark:bg-[#1D1D1D] rounded">
                                 {/* 2단계 게시판 이름 */}
                                 <button
                                   onClick={() => handleBoardClick(child)}
-                                  className="flex-1 text-left p-2 hover:bg-gray-50 rounded-l text-sm"
+                                  className="flex-1 text-left p-2 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] rounded-l transition-colors"
                                 >
-                                  {child.name}
+                                  <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">{child.name}</span>
                                 </button>
-                                
+
                                 {/* 3단계 하위 메뉴가 있는 경우에만 펼치기/접기 버튼 */}
                                 {child.children && child.children.length > 0 && (
                                   <button
                                     onClick={() => toggleExpanded(child.id)}
-                                    className="p-2 hover:bg-gray-50 rounded-r border-l border-gray-200"
+                                    className="p-2 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] rounded-r border-l border-black/7 dark:border-white/10 transition-colors text-gray-900 dark:text-[#F0F0F0]"
                                   >
-                                    <ChevronDown 
+                                    <ChevronDown
                                       className={`h-3 w-3 transition-transform ${
                                         expandedBoards.has(child.id) ? 'rotate-180' : ''
-                                      }`} 
+                                      }`}
                                     />
                                   </button>
                                 )}
@@ -236,9 +236,9 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
                                       <button
                                         key={grandChild.id}
                                         onClick={() => handleBoardClick(grandChild)}
-                                        className="w-full text-left p-2 hover:bg-gray-50 rounded text-sm text-gray-600 bg-gray-50"
+                                        className="w-full text-left p-2 bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors"
                                       >
-                                        ┗ {grandChild.name}
+                                        <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">┗ {grandChild.name}</span>
                                       </button>
                                     ))}
                                 </div>

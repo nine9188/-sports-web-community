@@ -1,207 +1,223 @@
-import { createClient } from '@/shared/api/supabaseServer'
-import { ALL_TEAMS } from '@/domains/livescore/constants/teams'
-import { UpdateButton } from './UpdateButton'
+import LiveScoreWidgetV2 from '@/domains/widgets/components/live-score-widget/LiveScoreWidgetV2';
 
-export default async function TestPage() {
-  const supabase = await createClient()
-
-  // football_teams 테이블의 모든 팀 조회
-  const { data: dbTeams, error: fetchError } = await supabase
-    .from('football_teams')
-    .select('id, team_id, name, name_ko, country, country_ko, league_id, league_name, league_name_ko, display_name')
-    .order('league_id', { ascending: true })
-    .order('team_id', { ascending: true })
-
-  if (fetchError) {
-    return (
-      <div className="container mx-auto px-4 py-6">
-        <h1 className="text-2xl font-bold mb-4">팀 매핑 업데이트</h1>
-        <div className="text-red-600">
-          오류 발생: {fetchError.message}
-        </div>
-      </div>
-    )
-  }
-
-  // 매핑 데이터 생성
-  const mappingData = dbTeams?.map(dbTeam => {
-    const mapping = ALL_TEAMS.find(t => t.id === dbTeam.team_id)
-    return {
-      ...dbTeam,
-      mapping_name_ko: mapping?.name_ko || null,
-      mapping_country_ko: mapping?.country_ko || null,
-      has_mapping: !!mapping,
-    }
-  })
-
-  // 통계
-  const stats = {
-    total: mappingData?.length || 0,
-    withMapping: mappingData?.filter(t => t.has_mapping).length || 0,
-    withoutMapping: mappingData?.filter(t => !t.has_mapping).length || 0,
-    needsUpdate: mappingData?.filter(t => 
-      t.has_mapping && (
-        t.name_ko !== t.mapping_name_ko || 
-        t.country_ko !== t.mapping_country_ko
-      )
-    ).length || 0,
-  }
-
-  // 리그별로 그룹화
-  const byLeague = mappingData?.reduce((acc, team) => {
-    const leagueKey = `${team.league_id}_${team.league_name}`
-    if (!acc[leagueKey]) {
-      acc[leagueKey] = {
-        league_id: team.league_id,
-        league_name: team.league_name,
-        league_name_ko: team.league_name_ko,
-        teams: []
+// 임시 테스트 데이터
+const mockLeagues = [
+  {
+    id: 'premier-league',
+    name: '프리미어리그',
+    leagueIdNumber: 39,
+    logo: 'https://media.api-sports.io/football/leagues/39.png',
+    matches: [
+      {
+        id: '1',
+        homeTeam: {
+          id: 33,
+          name: '맨체스터 유나이티드',
+          logo: 'https://media.api-sports.io/football/teams/33.png'
+        },
+        awayTeam: {
+          id: 34,
+          name: '뉴캐슬',
+          logo: 'https://media.api-sports.io/football/teams/34.png'
+        },
+        score: {
+          home: 2,
+          away: 1
+        },
+        status: 'FT'
+      },
+      {
+        id: '2',
+        homeTeam: {
+          id: 40,
+          name: '리버풀',
+          logo: 'https://media.api-sports.io/football/teams/40.png'
+        },
+        awayTeam: {
+          id: 50,
+          name: '맨체스터 시티',
+          logo: 'https://media.api-sports.io/football/teams/50.png'
+        },
+        score: {
+          home: 1,
+          away: 1
+        },
+        status: 'LIVE'
+      },
+      {
+        id: '3',
+        homeTeam: {
+          id: 49,
+          name: '첼시',
+          logo: 'https://media.api-sports.io/football/teams/49.png'
+        },
+        awayTeam: {
+          id: 42,
+          name: '아스널',
+          logo: 'https://media.api-sports.io/football/teams/42.png'
+        },
+        score: {
+          home: 0,
+          away: 0
+        },
+        status: 'NS'
       }
-    }
-    acc[leagueKey].teams.push(team)
-    return acc
-  }, {} as Record<string, { league_id: number, league_name: string, league_name_ko: string | null, teams: typeof mappingData }>)
+    ]
+  },
+  {
+    id: 'la-liga',
+    name: '라리가',
+    leagueIdNumber: 140,
+    logo: 'https://media.api-sports.io/football/leagues/140.png',
+    matches: [
+      {
+        id: '4',
+        homeTeam: {
+          id: 529,
+          name: '바르셀로나',
+          logo: 'https://media.api-sports.io/football/teams/529.png'
+        },
+        awayTeam: {
+          id: 541,
+          name: '레알 마드리드',
+          logo: 'https://media.api-sports.io/football/teams/541.png'
+        },
+        score: {
+          home: 2,
+          away: 3
+        },
+        status: 'FT'
+      },
+      {
+        id: '5',
+        homeTeam: {
+          id: 530,
+          name: '아틀레티코 마드리드',
+          logo: 'https://media.api-sports.io/football/teams/530.png'
+        },
+        awayTeam: {
+          id: 728,
+          name: '레알 소시에다드',
+          logo: 'https://media.api-sports.io/football/teams/728.png'
+        },
+        score: {
+          home: 1,
+          away: 0
+        },
+        status: 'HT'
+      }
+    ]
+  },
+  {
+    id: 'serie-a',
+    name: '세리에A',
+    leagueIdNumber: 135,
+    logo: 'https://media.api-sports.io/football/leagues/135.png',
+    matches: [
+      {
+        id: '6',
+        homeTeam: {
+          id: 489,
+          name: '유벤투스',
+          logo: 'https://media.api-sports.io/football/teams/489.png'
+        },
+        awayTeam: {
+          id: 487,
+          name: '인테르',
+          logo: 'https://media.api-sports.io/football/teams/487.png'
+        },
+        score: {
+          home: 0,
+          away: 2
+        },
+        status: 'FT'
+      }
+    ]
+  },
+  {
+    id: 'k-league',
+    name: 'K리그1',
+    icon: '⚽',
+    matches: [
+      {
+        id: '7',
+        homeTeam: {
+          id: 2817,
+          name: '울산 HD',
+          logo: 'https://media.api-sports.io/football/teams/2817.png'
+        },
+        awayTeam: {
+          id: 2820,
+          name: '전북 현대',
+          logo: 'https://media.api-sports.io/football/teams/2820.png'
+        },
+        score: {
+          home: 3,
+          away: 3
+        },
+        status: 'FT'
+      },
+      {
+        id: '8',
+        homeTeam: {
+          id: 2832,
+          name: '포항 스틸러스',
+          logo: 'https://media.api-sports.io/football/teams/2832.png'
+        },
+        awayTeam: {
+          id: 2830,
+          name: 'FC 서울',
+          logo: 'https://media.api-sports.io/football/teams/2830.png'
+        },
+        score: {
+          home: 1,
+          away: 2
+        },
+        status: 'LIVE'
+      }
+    ]
+  }
+];
 
-  const leagueGroups = Object.values(byLeague || {}).sort((a, b) => a.league_id - b.league_id)
-
+export default function TestPage() {
   return (
-    <div className="container mx-auto px-4 py-6 space-y-6">
-      {/* 헤더 */}
-      <div className="bg-white rounded-lg border p-6">
-        <h1 className="text-2xl font-bold mb-4">팀 한글명 매핑 업데이트</h1>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="p-3 bg-gray-50 rounded">
-            <div className="text-sm text-gray-600">전체 팀</div>
-            <div className="text-2xl font-bold">{stats.total}</div>
-          </div>
-          <div className="p-3 bg-green-50 rounded">
-            <div className="text-sm text-green-600">매핑 있음</div>
-            <div className="text-2xl font-bold text-green-600">{stats.withMapping}</div>
-          </div>
-          <div className="p-3 bg-red-50 rounded">
-            <div className="text-sm text-red-600">매핑 없음</div>
-            <div className="text-2xl font-bold text-red-600">{stats.withoutMapping}</div>
-          </div>
-          <div className="p-3 bg-yellow-50 rounded">
-            <div className="text-sm text-yellow-600">업데이트 필요</div>
-            <div className="text-2xl font-bold text-yellow-600">{stats.needsUpdate}</div>
-          </div>
-        </div>
+    <div className="container mx-auto px-4 py-6 space-y-8">
+      <h1 className="text-2xl font-bold mb-6">라이브스코어 위젯 V2 테스트</h1>
+
+      {/* 정상 데이터 있을 때 */}
+      <div className="max-w-2xl mx-auto">
+        <h2 className="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-300">1. 경기 있을 때</h2>
+        <LiveScoreWidgetV2 leagues={mockLeagues} />
       </div>
 
-      {/* 업데이트 버튼 섹션 */}
-      <div className="bg-white rounded-lg border p-6">
-        <h2 className="text-xl font-semibold mb-4">일괄 업데이트</h2>
-        <UpdateButton count={stats.needsUpdate} />
+      {/* 경기 없을 때 */}
+      <div className="max-w-2xl mx-auto">
+        <h2 className="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-300">2. 경기 없을 때</h2>
+        <LiveScoreWidgetV2 leagues={[]} />
       </div>
 
-      {/* 리그별 업데이트 필요한 팀 목록 */}
-      {leagueGroups
-        .filter(league => league.teams.some(t => 
-          t.has_mapping && (
-            t.name_ko !== t.mapping_name_ko || 
-            t.country_ko !== t.mapping_country_ko
-          )
-        ))
-        .map(league => {
-          const needUpdateTeams = league.teams.filter(t => 
-            t.has_mapping && (
-              t.name_ko !== t.mapping_name_ko || 
-              t.country_ko !== t.mapping_country_ko
-            )
-          )
-          
-          return (
-        <div key={league.league_id} className="bg-white rounded-lg border overflow-hidden">
-          <div className="bg-gray-50 border-b px-6 py-3">
-            <h3 className="text-lg font-semibold">
-                  {league.league_name_ko || league.league_name} (ID: {league.league_id})
-            </h3>
-            <div className="text-sm text-gray-600">
-                  업데이트 필요: {needUpdateTeams.length}개 팀
-            </div>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                      <th className="px-4 py-2 text-left font-medium text-gray-700">Team ID</th>
-                      <th className="px-4 py-2 text-left font-medium text-gray-700">영문명</th>
-                      <th className="px-4 py-2 text-left font-medium text-gray-700">현재 한글명</th>
-                      <th className="px-4 py-2 text-left font-medium text-gray-700">→</th>
-                      <th className="px-4 py-2 text-left font-medium text-gray-700">매핑 한글명</th>
-                      <th className="px-4 py-2 text-left font-medium text-gray-700">현재 국가</th>
-                      <th className="px-4 py-2 text-left font-medium text-gray-700">→</th>
-                      <th className="px-4 py-2 text-left font-medium text-gray-700">매핑 국가</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 bg-white">
-                    {needUpdateTeams.map((team) => (
-                      <tr key={team.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-2 text-gray-900">{team.team_id}</td>
-                        <td className="px-4 py-2 font-medium text-gray-900">{team.name}</td>
-                        <td className={`px-4 py-2 ${team.name_ko !== team.mapping_name_ko ? 'text-red-600' : 'text-gray-600'}`}>
-                          {team.name_ko || '(없음)'}
-                        </td>
-                        <td className="px-4 py-2 text-center text-blue-600">→</td>
-                        <td className="px-4 py-2 text-green-600 font-medium">{team.mapping_name_ko}</td>
-                        <td className={`px-4 py-2 ${team.country_ko !== team.mapping_country_ko ? 'text-red-600' : 'text-gray-600'}`}>
-                          {team.country_ko || '(없음)'}
-                        </td>
-                        <td className="px-4 py-2 text-center text-blue-600">→</td>
-                        <td className="px-4 py-2 text-green-600 font-medium">{team.mapping_country_ko || '-'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )
-        })}
-
-      {/* 리그별 매핑 없는 팀 목록 */}
-      {stats.withoutMapping > 0 && leagueGroups
-        .filter(league => league.teams.some(t => !t.has_mapping))
-        .map(league => {
-          const noMappingTeams = league.teams.filter(t => !t.has_mapping)
-          
-          return (
-            <div key={`no-mapping-${league.league_id}`} className="bg-white rounded-lg border overflow-hidden">
-              <div className="bg-red-50 border-b px-6 py-3">
-                <h3 className="text-lg font-semibold text-red-900">
-                  {league.league_name_ko || league.league_name} (ID: {league.league_id})
-                </h3>
-                <div className="text-sm text-red-600">
-                  매핑 없음: {noMappingTeams.length}개 팀
-                </div>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 text-sm">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-2 text-left font-medium text-gray-700">Team ID</th>
-                      <th className="px-4 py-2 text-left font-medium text-gray-700">영문명</th>
-                  <th className="px-4 py-2 text-left font-medium text-gray-700">국가</th>
-                      <th className="px-4 py-2 text-left font-medium text-gray-700">현재 한글명</th>
-                      <th className="px-4 py-2 text-left font-medium text-gray-700">현재 국가(한글)</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 bg-white">
-                    {noMappingTeams.map((team) => (
-                  <tr key={team.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-2 text-gray-900">{team.team_id}</td>
-                        <td className="px-4 py-2 font-medium text-gray-900">{team.name}</td>
-                    <td className="px-4 py-2 text-gray-600">{team.country}</td>
-                        <td className="px-4 py-2 text-gray-600">{team.name_ko || '(없음)'}</td>
-                        <td className="px-4 py-2 text-gray-600">{team.country_ko || '(없음)'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-          )
-        })}
+      {/* 빈 경기 리그 */}
+      <div className="max-w-2xl mx-auto">
+        <h2 className="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-300">3. 리그는 있지만 경기 없을 때</h2>
+        <LiveScoreWidgetV2
+          leagues={[
+            {
+              id: 'empty-premier',
+              name: '프리미어리그',
+              leagueIdNumber: 39,
+              logo: 'https://media.api-sports.io/football/leagues/39.png',
+              matches: []
+            },
+            {
+              id: 'empty-laliga',
+              name: '라리가',
+              leagueIdNumber: 140,
+              logo: 'https://media.api-sports.io/football/leagues/140.png',
+              matches: []
+            }
+          ]}
+        />
+      </div>
     </div>
-  )
+  );
 }

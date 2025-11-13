@@ -39,69 +39,69 @@ export default function ProfileSidebar({
   onClose,
 }: ProfileSidebarProps) {
   const { user, logoutUser } = useAuth();
-  const { updateUserIconState } = useIcon();
+  const { iconUrl, updateUserIconState } = useIcon();
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
-  // 프로필 데이터 로드 - user.id나 isOpen이 변경될 때마다 새로 로드
+  // user가 있으면 즉시 기본 프로필 데이터 설정 (IconContext 활용)
   useEffect(() => {
-    const fetchProfileData = async () => {
-      if (!user) {
-        setProfileData(null);
-        return;
-      }
+    if (user) {
+      const userMetadata = user.user_metadata || {};
+      setProfileData({
+        id: user.id,
+        username: userMetadata.username || null,
+        email: user.email || null,
+        nickname: userMetadata.nickname || null,
+        full_name: userMetadata.full_name || null,
+        avatar_url: userMetadata.avatar_url || null,
+        level: userMetadata.level || null,
+        exp: userMetadata.exp || null,
+        points: userMetadata.points || null,
+        icon_url: iconUrl || null,
+        is_admin: userMetadata.is_admin || false,
+        postCount: 0,
+        commentCount: 0,
+      });
+    } else {
+      setProfileData(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, iconUrl]);
 
-      setIsLoading(true);
+  // 프로필 데이터 추가 로드 (게시글/댓글 수) - 백그라운드에서 실행
+  useEffect(() => {
+    const fetchAdditionalData = async () => {
+      if (!user || !isOpen) return;
+
       try {
         const supabase = createClient();
 
-        // 프로필 정보 조회
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
+        // 게시글 수와 댓글 수만 조회 (병렬 처리)
+        const [{ count: postCount }, { count: commentCount }] = await Promise.all([
+          supabase
+            .from('posts')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id),
+          supabase
+            .from('comments')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+        ]);
 
-        if (error) {
-          console.error("프로필 정보 조회 중 오류 발생:", error);
-          return;
-        }
-
-        // 게시글 수 조회
-        const { count: postCount } = await supabase
-          .from('posts')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id);
-
-        // 댓글 수 조회
-        const { count: commentCount } = await supabase
-          .from('comments')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id);
-
-        // 아이콘 정보 추출
-        const userMetadata = user.user_metadata || {};
-        const icon_url = userMetadata.icon_url || null;
-
-        setProfileData({
-          ...profile,
+        // 기존 profileData에 카운트만 업데이트
+        setProfileData(prev => prev ? {
+          ...prev,
           postCount: postCount || 0,
           commentCount: commentCount || 0,
-          icon_url
-        });
+        } : null);
       } catch (error) {
-        console.error('프로필 데이터 가져오기 오류:', error);
-      } finally {
-        setIsLoading(false);
+        console.error('게시글/댓글 수 가져오기 오류:', error);
       }
     };
 
     if (isOpen && user) {
-      fetchProfileData();
-    } else if (!user) {
-      // 로그아웃 시 프로필 데이터 초기화
-      setProfileData(null);
+      fetchAdditionalData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, isOpen]);
 
   // 로그아웃 처리
@@ -168,15 +168,7 @@ export default function ProfileSidebar({
             <>
               {/* 사용자 프로필 정보 섹션 */}
               <div className="p-4 border-b border-black/7 dark:border-white/10">
-                {isLoading ? (
-                  <div className="text-center py-4">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">프로필 로딩 중...</p>
-                  </div>
-                ) : (
-                  <>
-                    <UserProfile profileData={profileData} showActions={false} />
-                  </>
-                )}
+                <UserProfile profileData={profileData} showActions={false} />
               </div>
 
               {/* 메뉴 섹션 */}
