@@ -73,10 +73,10 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
         <button
           data-testid="user-menu"
           onClick={toggleDropdown}
-          className="flex items-center space-x-1 px-3 py-2 rounded hover:bg-gray-100"
+          className="flex items-center space-x-1 px-3 py-2 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
         >
           <div className="w-5 h-5 relative rounded-full overflow-hidden">
-            <UserIcon 
+            <UserIcon
               iconUrl={userData?.iconInfo?.iconUrl || iconUrl}
               level={userLevel}
               size={20}
@@ -84,32 +84,33 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
               className="object-cover"
             />
           </div>
-          <span className="text-sm">{userData.nickname || '사용자'}</span>
-          <FontAwesomeIcon icon={faChevronDown} className="h-3 w-3" />
+          <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">{userData.nickname || '사용자'}</span>
+          <FontAwesomeIcon icon={faChevronDown} className="h-3 w-3 text-gray-900 dark:text-[#F0F0F0]" />
         </button>
 
         {/* 드롭다운 메뉴 */}
         {isDropdownOpen && (
-          <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border z-50">
-            <div className="py-1">
-              <Link
-                href="/settings/profile"
-                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => setIsDropdownOpen(false)}
-              >
-                <FontAwesomeIcon icon={faUser} className="h-4 w-4 mr-2" />
-                프로필 설정
-              </Link>
-              {/* 일반 설정 메뉴 제거 */}
-              <button
-                data-testid="logout-button"
-                onClick={handleLogout}
-                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                <FontAwesomeIcon icon={faSignOutAlt} className="h-4 w-4 mr-2" />
-                로그아웃
-              </button>
-            </div>
+          <div
+            className="absolute right-0 mt-2 w-48 bg-[#F5F5F5] dark:bg-[#262626] shadow-lg border border-black/7 dark:border-0 z-50"
+            style={{ borderRadius: '0.5rem' }}
+          >
+            <Link
+              href="/settings/profile"
+              className="flex items-center px-4 py-2 text-sm text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors rounded-t-lg"
+              onClick={() => setIsDropdownOpen(false)}
+            >
+              <FontAwesomeIcon icon={faUser} className="h-4 w-4 mr-2" />
+              프로필 설정
+            </Link>
+            {/* 일반 설정 메뉴 제거 */}
+            <button
+              data-testid="logout-button"
+              onClick={handleLogout}
+              className="flex items-center w-full px-4 py-2 text-sm text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors rounded-b-lg"
+            >
+              <FontAwesomeIcon icon={faSignOutAlt} className="h-4 w-4 mr-2" />
+              로그아웃
+            </button>
           </div>
         )}
       </div>

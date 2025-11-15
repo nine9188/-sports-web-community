@@ -52,7 +52,7 @@ export default function PostFooter({
       alert('게시글이 삭제되었습니다.');
       router.push(`/boards/${response.boardSlug || boardSlug}`);
       router.refresh();
-    } catch (error) {
+    } catch {
       alert(`게시글 삭제 중 오류가 발생했습니다.`);
       setIsDeleting(false);
     }
@@ -69,11 +69,11 @@ export default function PostFooter({
     buttonSlots.push({
       key: 'write',
       element: (
-        <Link 
+        <Link
           href={`/boards/${boardSlug}/create`}
-          className="inline-flex flex-col sm:flex-row items-center justify-center py-1 px-1 sm:py-2 sm:px-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+          className="inline-flex flex-row items-center justify-center text-xs sm:text-sm text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md transition-colors px-2 py-1 gap-1"
         >
-          <PenLine className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+          <PenLine className="h-3 w-3 sm:h-4 sm:w-4" />
           <span>글쓰기</span>
         </Link>
       )
@@ -81,11 +81,11 @@ export default function PostFooter({
     buttonSlots.push({
       key: 'edit',
       element: (
-        <Link 
+        <Link
           href={`/boards/${boardSlug}/${postNumber}/edit`}
-          className="inline-flex flex-col sm:flex-row items-center justify-center py-1 px-1 sm:py-2 sm:px-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+          className="inline-flex flex-row items-center justify-center text-xs sm:text-sm text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md transition-colors px-2 py-1 gap-1"
         >
-          <Edit className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+          <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
           <span>수정</span>
         </Link>
       )
@@ -93,12 +93,12 @@ export default function PostFooter({
     buttonSlots.push({
       key: 'delete',
       element: (
-        <button 
+        <button
           onClick={handleDelete}
           disabled={isDeleting}
-          className="inline-flex flex-col sm:flex-row items-center justify-center py-1 px-1 sm:py-2 sm:px-3 text-xs sm:text-sm text-red-500 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
+          className="inline-flex flex-row items-center justify-center text-xs sm:text-sm text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-md transition-colors disabled:opacity-50 px-2 py-1 gap-1"
         >
-          <Trash className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+          <Trash className="h-3 w-3 sm:h-4 sm:w-4" />
           <span>{isDeleting ? '삭제 중...' : '삭제'}</span>
         </button>
       )
@@ -108,11 +108,11 @@ export default function PostFooter({
     buttonSlots.push(showWriteButton ? {
       key: 'write',
       element: (
-        <Link 
+        <Link
           href={`/boards/${boardSlug}/create`}
-          className="inline-flex flex-col sm:flex-row items-center justify-center py-1 px-1 sm:py-2 sm:px-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+          className="inline-flex flex-row items-center justify-center text-xs sm:text-sm text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md transition-colors px-2 py-1 gap-1"
         >
-          <PenLine className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+          <PenLine className="h-3 w-3 sm:h-4 sm:w-4" />
           <span>글쓰기</span>
         </Link>
       )
@@ -129,7 +129,7 @@ export default function PostFooter({
           variant="ghost"
           size="sm"
           showText={true}
-          className="inline-flex flex-col sm:flex-row items-center justify-center py-1 px-1 sm:py-2 sm:px-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+          className="inline-flex flex-row items-center justify-center text-xs sm:text-sm text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md transition-colors px-2 py-1 gap-1"
         />
       )
     } : { key: 'placeholder-3', element: <div /> });
@@ -142,8 +142,8 @@ export default function PostFooter({
   }
 
   return (
-    <div className="bg-white rounded-lg border shadow-sm mb-4">
-      <div className="flex flex-row items-center justify-around px-1 py-2">
+    <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 mb-4">
+      <div className="flex flex-row items-center justify-around px-4 py-2.5">
         {buttonSlots.map((button) => (
           <div key={button.key} className="flex-1 text-center">
             {button.element}

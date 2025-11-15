@@ -55,10 +55,10 @@ export default function CommentSection({
       if (response && response.success && response.comments && response.comments.length >= 0) {
         setComments(response.comments);
       } else {
-        
+
       }
-    } catch (error) {
-      
+    } catch {
+
     }
   }, [postId]);
 
@@ -90,7 +90,7 @@ export default function CommentSection({
         } else {
           setCurrentUserId(null);
         }
-      } catch (error) {
+      } catch {
         setCurrentUserId(null);
       }
     };
@@ -241,36 +241,36 @@ export default function CommentSection({
         />
       ))
     ) : (
-      <div className="px-4 py-8 text-center text-sm text-gray-500">
+      <div className="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
         아직 댓글이 없습니다. 첫 댓글을 남겨보세요!
       </div>
     );
   }, [comments, currentUserId, handleUpdate, handleDelete, postOwnerId]);
 
   return (
-    <div className="bg-white rounded-lg border shadow-sm overflow-hidden mb-4">
+    <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden mb-4">
       {/* 댓글 헤더 */}
-      <div className="px-4 py-3 border-b bg-gray-50">
-        <h3 className="font-medium text-sm text-gray-900">
-          댓글 <span className="text-blue-600">{comments.length}</span>개
+      <div className="h-12 px-4 flex items-center bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10">
+        <h3 className="font-bold text-sm text-gray-900 dark:text-[#F0F0F0]">
+          댓글 <span className="text-gray-900 dark:text-[#F0F0F0]">{comments.length}</span>개
         </h3>
       </div>
-      
+
       {/* 댓글 목록 */}
-      <div className="divide-y divide-gray-100">
+      <div className="divide-y divide-gray-100 dark:divide-white/10">
         {commentsList}
       </div>
 
       {/* 댓글 작성 폼 */}
-      <div className="px-4 py-4 border-t bg-gray-50">
+      <div className="px-4 py-4 border-t border-black/7 dark:border-white/10">
         {errorMessage && (
-          <div className="mb-3 p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">
+          <div className="mb-3 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-md text-sm">
             {errorMessage}
           </div>
         )}
         <form className="space-y-3" onSubmit={handleCommentSubmit}>
-          <textarea 
-            className="w-full px-3 py-3 border border-gray-300 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+          <textarea
+            className="w-full px-3 py-3 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg text-sm placeholder-gray-500 dark:placeholder-gray-500 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors duration-200 resize-none"
             rows={3}
             placeholder="댓글을 작성해주세요..."
             value={content}
@@ -279,10 +279,10 @@ export default function CommentSection({
             disabled={isSubmitting}
           />
           <div className="flex justify-end">
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
+              variant="primary"
               disabled={isSubmitting || !content.trim()}
-              className="px-4 py-2 text-sm font-medium"
             >
               {isSubmitting ? '작성 중...' : '댓글 작성'}
             </Button>

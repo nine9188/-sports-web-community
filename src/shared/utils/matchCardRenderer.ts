@@ -1,15 +1,62 @@
 import { MatchData } from '@/domains/livescore/actions/footballApi';
 
 /**
- * Storage URL을 우선 시도하는 이미지 URL 생성 함수
+ * Supabase Storage 이미지 URL 생성 (다크모드 지원)
  */
-function getOptimizedImageUrl(originalUrl: string, type: 'teams' | 'leagues', id?: number): string {
-  if (id && originalUrl.includes('api-sports.io')) {
-    // Storage URL 우선 시도
-    const storageUrl = `https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/${type}/${id}.png`;
-    return `${storageUrl}" onerror="this.onerror=null;this.src='${originalUrl}';this.onerror=function(){this.src='/placeholder.png';}`;
+function getImageUrls(originalUrl: string, type: 'teams' | 'leagues', id?: number): { light: string; dark: string; dataAttrs: string } {
+  const DARK_MODE_LEAGUE_IDS = [39, 2, 3, 848, 179, 88, 119, 98, 292, 66, 13];
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://vnjjfhsuzoxcljqqwwvx.supabase.co';
+
+  // ID가 있는 경우 - Supabase Storage URL 사용
+  if (id) {
+    const lightUrl = `${supabaseUrl}/storage/v1/object/public/${type}/${id}.png`;
+
+    // 리그이고 다크모드 이미지가 있는 경우만 -1 추가
+    const hasDarkImage = type === 'leagues' && DARK_MODE_LEAGUE_IDS.includes(id);
+    const darkUrl = hasDarkImage
+      ? `${supabaseUrl}/storage/v1/object/public/${type}/${id}-1.png`
+      : lightUrl;
+
+    return {
+      light: lightUrl,
+      dark: darkUrl,
+      dataAttrs: `data-light-src="${lightUrl}" data-dark-src="${darkUrl}"`
+    };
   }
-  return `${originalUrl}" onerror="this.onerror=null;this.src='/placeholder.png';`;
+
+  // URL이 이미 있는 경우
+  if (originalUrl) {
+    // Supabase Storage URL인 경우
+    if (originalUrl.includes('supabase.co')) {
+      const lightUrl = originalUrl.replace(/-1\.png$/, '.png');
+      const leagueIdMatch = lightUrl.match(/\/leagues\/(\d+)\.png$/);
+      const leagueId = leagueIdMatch ? parseInt(leagueIdMatch[1]) : null;
+      const hasDarkImage = type === 'leagues' && leagueId && DARK_MODE_LEAGUE_IDS.includes(leagueId);
+      const darkUrl = hasDarkImage ? lightUrl.replace(/\.png$/, '-1.png') : lightUrl;
+
+      return {
+        light: lightUrl,
+        dark: darkUrl,
+        dataAttrs: `data-light-src="${lightUrl}" data-dark-src="${darkUrl}"`
+      };
+    }
+
+    // API Sports URL인 경우 - Supabase Storage로 변환
+    if (originalUrl.includes('media.api-sports.io')) {
+      const idMatch = originalUrl.match(/\/(teams|leagues)\/(\d+)\.png$/);
+      if (idMatch) {
+        const imageId = parseInt(idMatch[2]);
+        return getImageUrls(originalUrl, type, imageId);
+      }
+    }
+  }
+
+  // 그 외의 경우
+  return {
+    light: originalUrl || '/placeholder.png',
+    dark: originalUrl || '/placeholder.png',
+    dataAttrs: `data-light-src="${originalUrl || '/placeholder.png'}" data-dark-src="${originalUrl || '/placeholder.png'}"`
+  };
 }
 
 /**
@@ -26,9 +73,14 @@ export function generateMatchCardHTML(matchData: MatchData, matchId?: string | n
   const leagueData = league || { name: '알 수 없는 리그', logo: '/placeholder.png' };
   const homeScore = typeof goals?.home === 'number' ? goals.home : '-';
   const awayScore = typeof goals?.away === 'number' ? goals.away : '-';
-  
+
   // 매치 ID 결정 - matchData에 id가 있으면 우선 사용
   const actualMatchId = matchData.id || matchId || 'unknown';
+
+  // 이미지 URL 생성 (라이트/다크 모드 모두)
+  const leagueImages = getImageUrls(leagueData.logo, 'leagues', league?.id);
+  const homeTeamImages = getImageUrls(homeTeam.logo, 'teams', teams?.home?.id);
+  const awayTeamImages = getImageUrls(awayTeam.logo, 'teams', teams?.away?.id);
   
   // 경기 상태 텍스트 설정
   let statusText = '경기 결과';
@@ -79,9 +131,11 @@ export function generateMatchCardHTML(matchData: MatchData, matchId?: string | n
           height: 40px;
         ">
           <div style="display: flex; align-items: center;">
-            <img 
-              src="${getOptimizedImageUrl(leagueData.logo, 'leagues', league?.id)}" 
-              alt="${leagueData.name}" 
+            <img
+              src="${leagueImages.light}"
+              ${leagueImages.dataAttrs}
+              alt="${leagueData.name}"
+              class="league-logo"
               style="
                 width: 24px;
                 height: 24px;
@@ -89,6 +143,7 @@ export function generateMatchCardHTML(matchData: MatchData, matchId?: string | n
                 margin-right: 8px;
                 flex-shrink: 0;
               "
+              onerror="this.onerror=null;this.src='/placeholder.png';"
             />
             <span style="
               font-size: 14px;
@@ -115,9 +170,11 @@ export function generateMatchCardHTML(matchData: MatchData, matchId?: string | n
             align-items: center;
             width: 40%;
           ">
-            <img 
-              src="${getOptimizedImageUrl(homeTeam.logo, 'teams', teams?.home?.id)}" 
-              alt="${homeTeam.name}" 
+            <img
+              src="${homeTeamImages.light}"
+              ${homeTeamImages.dataAttrs}
+              alt="${homeTeam.name}"
+              class="team-logo"
               style="
                 width: 48px;
                 height: 48px;
@@ -125,6 +182,7 @@ export function generateMatchCardHTML(matchData: MatchData, matchId?: string | n
                 margin-bottom: 8px;
                 flex-shrink: 0;
               "
+              onerror="this.onerror=null;this.src='/placeholder.png';"
             />
             <span style="
               font-size: 14px;
@@ -185,9 +243,11 @@ export function generateMatchCardHTML(matchData: MatchData, matchId?: string | n
             align-items: center;
             width: 40%;
           ">
-            <img 
-              src="${getOptimizedImageUrl(awayTeam.logo, 'teams', teams?.away?.id)}" 
-              alt="${awayTeam.name}" 
+            <img
+              src="${awayTeamImages.light}"
+              ${awayTeamImages.dataAttrs}
+              alt="${awayTeam.name}"
+              class="team-logo"
               style="
                 width: 48px;
                 height: 48px;
@@ -195,6 +255,7 @@ export function generateMatchCardHTML(matchData: MatchData, matchId?: string | n
                 margin-bottom: 8px;
                 flex-shrink: 0;
               "
+              onerror="this.onerror=null;this.src='/placeholder.png';"
             />
             <span style="
               font-size: 14px;

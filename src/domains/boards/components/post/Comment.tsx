@@ -96,7 +96,7 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
   }
   
   return (
-    <div className="border-b py-3 px-4 transition-colors hover:bg-gray-50">
+    <div className="border-b border-gray-100 dark:border-white/10 py-3 px-4 transition-colors hover:bg-gray-50 dark:hover:bg-[#252525]">
       <div className="flex space-x-2">
         <div className="w-5 h-5 relative rounded-full overflow-hidden flex-shrink-0">
           <UserIcon 
@@ -112,29 +112,29 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center space-x-2 min-w-0">
-              <span className={`font-medium text-sm truncate ${isPostOwner && isCommentOwner ? 'text-blue-600' : 'text-gray-900'}`}>
+              <span className="font-medium text-sm truncate text-gray-900 dark:text-[#F0F0F0]">
                 {comment.profiles?.nickname || '알 수 없음'}
               </span>
               {isPostOwner && isCommentOwner && (
-                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">작성자</span>
+                <span className="text-xs bg-gray-100 dark:bg-[#333333] text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full">작성자</span>
               )}
             </div>
-            <span className="text-xs text-gray-500 flex-shrink-0 ml-2">{formatDate(comment.created_at || '')}</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-2">{formatDate(comment.created_at || '')}</span>
           </div>
 
           {!isEditing ? (
-            <div className="text-sm text-gray-800 mb-2 break-words">{comment.content}</div>
+            <div className="text-sm text-gray-800 dark:text-gray-200 mb-2 break-words">{comment.content}</div>
           ) : (
             <div className="mb-3">
               <textarea
-                className="w-full px-3 py-2 border rounded-md text-sm resize-none"
+                className="w-full px-3 py-2 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-md text-sm resize-none outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors duration-200"
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
                 rows={3}
               />
               <div className="flex justify-end space-x-2 mt-2">
-                <button onClick={handleCancel} className="px-3 py-1 text-xs text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200">취소</button>
-                <button onClick={handleSave} className="px-3 py-1 text-xs text-white bg-blue-600 rounded-md hover:bg-blue-700" disabled={!editContent.trim()}>저장</button>
+                <button onClick={handleCancel} className="px-3 py-1 text-xs text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-[#333333] rounded-md hover:bg-gray-200 dark:hover:bg-[#404040]">취소</button>
+                <button onClick={handleSave} className="px-3 py-1 text-xs text-white bg-slate-800 dark:bg-[#3F3F3F] rounded-md hover:bg-slate-700 dark:hover:bg-[#4A4A4A]" disabled={!editContent.trim()}>저장</button>
               </div>
             </div>
           )}
@@ -151,8 +151,8 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
               )}
               {isCommentOwner && !isEditing && (
                 <>
-                  <button onClick={handleEdit} className="text-xs text-gray-500 hover:text-gray-700">수정</button>
-                  <button onClick={() => onDelete(comment.id)} className="text-xs text-red-500 hover:text-red-700">삭제</button>
+                  <button onClick={handleEdit} className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">수정</button>
+                  <button onClick={() => onDelete(comment.id)} className="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300">삭제</button>
                 </>
               )}
             </div>
@@ -165,9 +165,9 @@ export default function Comment({ comment, currentUserId, onUpdate, onDelete, is
 
 function DeletedCommentUI() {
   return (
-    <div className="border-b py-3 px-4 bg-red-50">
+    <div className="border-b border-gray-100 dark:border-white/10 py-3 px-4 bg-red-50 dark:bg-red-950/20">
       <div className="flex items-center justify-center py-4">
-        <div className="flex items-center text-sm text-red-600 font-medium">
+        <div className="flex items-center text-sm text-red-600 dark:text-red-400 font-medium">
           <svg className="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
           </svg>
@@ -192,16 +192,16 @@ function HiddenCommentUI({ hiddenUntil }: { hiddenUntil?: string }) {
   };
 
   return (
-    <div className="border-b py-3 px-4 bg-gray-50">
+    <div className="border-b border-gray-100 dark:border-white/10 py-3 px-4 bg-gray-50 dark:bg-[#252525]">
       <div className="flex items-center justify-center py-4 text-center">
         <div>
-          <div className="flex items-center justify-center mb-2 text-sm text-gray-600 font-medium">
+          <div className="flex items-center justify-center mb-2 text-sm text-gray-600 dark:text-gray-400 font-medium">
             <svg className="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
             </svg>
             신고에 의해 일시 숨김처리 되었습니다
           </div>
-          <p className="text-xs text-gray-500">{calculateRemainingDays()} 후 다시 검토됩니다</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{calculateRemainingDays()} 후 다시 검토됩니다</p>
         </div>
       </div>
     </div>
@@ -215,13 +215,12 @@ function ActionButton({ action, active, count, onClick, disabled }: {
   onClick: () => void;
   disabled: boolean;
 }) {
-  const color = action === 'like' ? 'blue' : 'red';
   const label = action === 'like' ? '좋아요' : '싫어요';
 
   return (
     <button
       className={`flex items-center text-xs space-x-1 ${
-        active ? `text-${color}-600 font-medium` : 'text-gray-500 hover:text-gray-700'
+        active ? 'text-gray-900 dark:text-[#F0F0F0] font-medium' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
       } transition-colors disabled:opacity-50`}
       onClick={onClick}
       disabled={disabled}

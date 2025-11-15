@@ -173,7 +173,7 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
                 />
               </div>
               <div className="p-3 bg-white dark:bg-[#1D1D1D] flex-grow">
-                <h3 className="text-sm md:text-base font-semibold line-clamp-2 text-gray-900 dark:text-[#F0F0F0] group-hover:underline transition-colors">
+                <h3 className="text-xs md:text-sm font-semibold line-clamp-2 text-gray-900 dark:text-[#F0F0F0] group-hover:underline transition-colors">
                   {String(news[0]?.title || '제목 없음')}
                 </h3>
                 <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400 mt-2">
@@ -210,7 +210,7 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
                     />
                   </div>
                   <div className="p-1.5 md:p-2">
-                    <h3 className="text-xs md:text-sm font-medium line-clamp-2 text-gray-900 dark:text-[#F0F0F0] group-hover:underline transition-colors">
+                    <h3 className="text-[11px] md:text-xs font-medium line-clamp-2 text-gray-900 dark:text-[#F0F0F0] group-hover:underline transition-colors">
                       {String(item?.title || '제목 없음')}
                     </h3>
                     <div className="flex justify-between items-center text-[10px] md:text-xs text-gray-500 dark:text-gray-400 mt-2">
@@ -246,7 +246,7 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
                     />
                   </div>
                   <div className="p-1.5 md:p-2">
-                    <h3 className="text-xs md:text-sm font-medium line-clamp-2 text-gray-900 dark:text-[#F0F0F0] group-hover:underline transition-colors">
+                    <h3 className="text-[11px] md:text-xs font-medium line-clamp-2 text-gray-900 dark:text-[#F0F0F0] group-hover:underline transition-colors">
                       {String(item?.title || '제목 없음')}
                     </h3>
                     <div className="flex justify-between items-center text-[10px] md:text-xs text-gray-500 dark:text-gray-400 mt-2">
@@ -270,13 +270,13 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
               <Link
                 key={item.id}
                 href={item.url}
-                className={`${CARD_STYLES.base} w-full md:w-[calc(50%-8px)] ${isLeftColumn ? 'md:mr-4' : ''} ${index === 9 ? 'mb-0' : 'mb-4'}`}
+                className={`${CARD_STYLES.base} w-full md:w-[calc(50%-8px)] ${isLeftColumn ? 'md:mr-4' : ''} ${index >= 8 ? 'mb-0' : 'mb-4'}`}
                 style={CARD_STYLES.transform}
               >
               <div className="flex h-full">
                 {/* 텍스트 영역 (왼쪽) */}
                 <div className="flex-1 p-3 flex flex-col justify-between">
-                  <h4 className="text-sm md:text-base font-medium line-clamp-2 text-gray-900 dark:text-[#F0F0F0] group-hover:underline transition-colors mb-2">
+                  <h4 className="text-xs md:text-sm font-medium line-clamp-2 text-gray-900 dark:text-[#F0F0F0] group-hover:underline transition-colors mb-2">
                     {String(item?.title || '제목 없음')}
                   </h4>
                   <div className="flex flex-col text-xs text-gray-500 dark:text-gray-400">

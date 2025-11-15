@@ -18,17 +18,17 @@ export default function PostNavigation({ boardSlug, prevPost, nextPost }: PostNa
       element: prevPost ? (
         <Link 
           href={`/boards/${boardSlug}/${prevPost.post_number}`}
-          className="inline-flex flex-col sm:flex-row items-center justify-center py-1 px-1 sm:py-2 sm:px-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+          className="inline-flex flex-row items-center justify-center text-xs sm:text-sm text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md transition-colors px-2 py-1 gap-1"
         >
-          <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+          <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
           <span>이전글</span>
         </Link>
       ) : (
         <button 
           disabled
-          className="inline-flex flex-col sm:flex-row items-center justify-center py-1 px-1 sm:py-2 sm:px-3 text-xs sm:text-sm text-gray-400 cursor-not-allowed"
+          className="inline-flex flex-row items-center justify-center text-xs sm:text-sm text-gray-400 dark:text-gray-600 cursor-not-allowed px-2 py-1 gap-1"
         >
-          <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+          <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
           <span>이전글</span>
         </button>
       )
@@ -39,9 +39,9 @@ export default function PostNavigation({ boardSlug, prevPost, nextPost }: PostNa
       element: (
         <Link 
           href={`/boards/${boardSlug}`}
-          className="inline-flex flex-col sm:flex-row items-center justify-center py-1 px-1 sm:py-2 sm:px-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+          className="inline-flex flex-row items-center justify-center text-xs sm:text-sm text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md transition-colors px-2 py-1 gap-1"
         >
-          <ListOrdered className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+          <ListOrdered className="h-3 w-3 sm:h-4 sm:w-4" />
           <span>목록</span>
         </Link>
       )
@@ -52,26 +52,26 @@ export default function PostNavigation({ boardSlug, prevPost, nextPost }: PostNa
       element: nextPost ? (
         <Link 
           href={`/boards/${boardSlug}/${nextPost.post_number}`}
-          className="inline-flex flex-col sm:flex-row items-center justify-center py-1 px-1 sm:py-2 sm:px-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+          className="inline-flex flex-row items-center justify-center text-xs sm:text-sm text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md transition-colors px-2 py-1 gap-1"
         >
-          <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 sm:order-last sm:ml-1" />
-          <span className="sm:order-first">다음글</span>
+          <span>다음글</span>
+          <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
         </Link>
       ) : (
         <button 
           disabled
-          className="inline-flex flex-col sm:flex-row items-center justify-center py-1 px-1 sm:py-2 sm:px-3 text-xs sm:text-sm text-gray-400 cursor-not-allowed"
+          className="inline-flex flex-row items-center justify-center text-xs sm:text-sm text-gray-400 dark:text-gray-600 cursor-not-allowed px-2 py-1 gap-1"
         >
-          <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 sm:order-last sm:ml-1" />
-          <span className="sm:order-first">다음글</span>
+          <span>다음글</span>
+          <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
         </button>
       )
     }
   ];
 
   return (
-    <div className="bg-white rounded-lg border shadow-sm mb-4">
-      <div className="flex flex-row items-center justify-around px-1 py-2">
+    <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 mb-4">
+      <div className="flex flex-row items-center justify-around px-4 py-2.5">
         {buttons.map((button) => (
           <div key={button.key} className="flex-1 text-center">
             {button.element}

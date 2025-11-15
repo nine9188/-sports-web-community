@@ -3,6 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/types/image';
 
 interface MatchTeam {
   id?: number | string;
@@ -88,67 +90,100 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
 
   const CardContent = () => (
     <>
-      <div className="py-3 px-3 bg-gray-50 border-b flex items-center h-10">
+      <div className="py-3 px-3 bg-gray-50 dark:bg-[#262626] border-b border-black/5 dark:border-white/10 flex items-center h-10">
         <div className="flex items-center">
-          <Image 
-            src={league.logo || '/placeholder.png'} 
-            alt={league.name} 
-            width={24}
-            height={24}
-            className="w-6 h-6 object-contain mr-2"
-            onError={(e) => {
-              e.currentTarget.src = '/placeholder.png';
-            }}
-          />
-          <span className="text-sm font-medium text-gray-600 truncate">{league.name}</span>
+          {league.id ? (
+            <ApiSportsImage
+              imageId={league.id}
+              imageType={ImageType.Leagues}
+              alt={league.name}
+              width={24}
+              height={24}
+              className="w-6 h-6 object-contain mr-2"
+            />
+          ) : (
+            <Image
+              src={league.logo || '/placeholder.png'}
+              alt={league.name}
+              width={24}
+              height={24}
+              className="w-6 h-6 object-contain mr-2"
+              onError={(e) => {
+                e.currentTarget.src = '/placeholder.png';
+              }}
+            />
+          )}
+          <span className="text-sm font-medium text-gray-600 dark:text-gray-300 truncate">{league.name}</span>
         </div>
       </div>
 
       <div className="py-3 px-3 flex items-center justify-between">
         <div className="flex flex-col items-center w-[40%]">
-          <Image 
-            src={homeTeam.logo || '/placeholder.png'} 
-            alt={homeTeam.name} 
-            width={48}
-            height={48}
-            className="w-12 h-12 object-contain mb-2"
-            onError={(e) => {
-              e.currentTarget.src = '/placeholder.png';
-            }}
-          />
-          <span className={`text-sm font-medium text-center line-clamp-2 ${homeTeam.winner ? 'text-blue-600' : ''}`}>
+          {homeTeam.id ? (
+            <ApiSportsImage
+              imageId={homeTeam.id}
+              imageType={ImageType.Teams}
+              alt={homeTeam.name}
+              width={48}
+              height={48}
+              className="w-12 h-12 object-contain mb-2"
+            />
+          ) : (
+            <Image
+              src={homeTeam.logo || '/placeholder.png'}
+              alt={homeTeam.name}
+              width={48}
+              height={48}
+              className="w-12 h-12 object-contain mb-2"
+              onError={(e) => {
+                e.currentTarget.src = '/placeholder.png';
+              }}
+            />
+          )}
+          <span className={`text-sm font-medium text-center line-clamp-2 text-gray-900 dark:text-[#F0F0F0] ${homeTeam.winner ? 'text-blue-600 dark:text-blue-400' : ''}`}>
             {homeTeam.name}
           </span>
         </div>
 
         <div className="text-center flex-shrink-0 w-[20%]">
           <div className="flex items-center justify-center mb-2">
-            <span className="text-2xl font-bold min-w-[1.5rem] text-center">{homeScore}</span>
-            <span className="text-gray-400 mx-1">-</span>
-            <span className="text-2xl font-bold min-w-[1.5rem] text-center">{awayScore}</span>
+            <span className="text-2xl font-bold min-w-[1.5rem] text-center text-gray-900 dark:text-[#F0F0F0]">{homeScore}</span>
+            <span className="text-gray-400 dark:text-gray-500 mx-1">-</span>
+            <span className="text-2xl font-bold min-w-[1.5rem] text-center text-gray-900 dark:text-[#F0F0F0]">{awayScore}</span>
           </div>
-          <div className={`text-xs ${statusClass}`}>{statusText}</div>
+          <div className={`text-xs ${statusClass || 'text-gray-600 dark:text-gray-400'}`}>{statusText}</div>
         </div>
 
         <div className="flex flex-col items-center w-[40%]">
-          <Image 
-            src={awayTeam.logo || '/placeholder.png'} 
-            alt={awayTeam.name} 
-            width={48}
-            height={48}
-            className="w-12 h-12 object-contain mb-2"
-            onError={(e) => {
-              e.currentTarget.src = '/placeholder.png';
-            }}
-          />
-          <span className={`text-sm font-medium text-center line-clamp-2 ${awayTeam.winner ? 'text-blue-600' : ''}`}>
+          {awayTeam.id ? (
+            <ApiSportsImage
+              imageId={awayTeam.id}
+              imageType={ImageType.Teams}
+              alt={awayTeam.name}
+              width={48}
+              height={48}
+              className="w-12 h-12 object-contain mb-2"
+            />
+          ) : (
+            <Image
+              src={awayTeam.logo || '/placeholder.png'}
+              alt={awayTeam.name}
+              width={48}
+              height={48}
+              className="w-12 h-12 object-contain mb-2"
+              onError={(e) => {
+                e.currentTarget.src = '/placeholder.png';
+              }}
+            />
+          )}
+          <span className={`text-sm font-medium text-center line-clamp-2 text-gray-900 dark:text-[#F0F0F0] ${awayTeam.winner ? 'text-blue-600 dark:text-blue-400' : ''}`}>
             {awayTeam.name}
           </span>
         </div>
       </div>
 
-      <div className="py-2 px-3 bg-gray-50 border-t text-center flex items-center justify-center">
-        <span className="text-xs text-blue-600 hover:underline">
+      <div className="py-2 px-3 bg-gray-50 dark:bg-[#262626] border-t border-black/5 dark:border-white/10 text-center flex items-center justify-center">
+        <span className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
           매치 상세 정보
         </span>
       </div>
@@ -156,7 +191,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
   );
 
   return (
-    <div className="match-card border rounded-lg overflow-hidden shadow-sm my-3 w-full">
+    <div className="match-card bg-white dark:bg-[#1D1D1D] border border-black/5 dark:border-white/10 rounded-lg overflow-hidden shadow-sm my-3 w-full">
       {isEditable ? (
         <div className="cursor-default">
           <CardContent />

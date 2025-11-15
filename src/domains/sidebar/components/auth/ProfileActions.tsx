@@ -33,13 +33,13 @@ export default function ProfileActions() {
       <div className="grid grid-cols-2 gap-2 text-xs">
         <Link
           href="/settings/profile"
-          className="bg-slate-100 hover:bg-slate-200 transition-colors rounded-md py-2 text-center"
+          className="bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors rounded-md py-2 text-center text-gray-900 dark:text-[#F0F0F0] font-medium"
         >
           프로필 관리
         </Link>
         <button
           onClick={handleLogout}
-          className="bg-slate-100 hover:bg-slate-200 transition-colors rounded-md py-2 text-center"
+          className="bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors rounded-md py-2 text-center text-gray-900 dark:text-[#F0F0F0] font-medium"
         >
           로그아웃
         </button>

@@ -150,12 +150,12 @@ export function createBreadcrumbs(
   // 게시판 계층 구조를 따라 브레드크럼 생성
   const boardBreadcrumbs = generateBoardBreadcrumbs(board, boardsMap);
   
-  // 게시글 제목 추가
+  // 게시글 번호 추가
   const breadcrumbs = [
     ...boardBreadcrumbs,
     {
       id: 'post',
-      name: `${postTitle} (${postNumber})`,
+      name: `#${postNumber}`,
       slug: '#'
     }
   ];

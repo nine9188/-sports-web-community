@@ -18,9 +18,9 @@ import CommentSection from '../post/CommentSection';
 import PostList from '../post/PostList';
 
 // 호버 메뉴만 지연 로딩 (덜 중요한 컴포넌트)
-const HoverMenu = dynamic(() => import('../common/HoverMenu'), { 
+const HoverMenu = dynamic(() => import('../common/HoverMenu'), {
   ssr: false,
-  loading: () => <div className="h-10 bg-gray-100 rounded animate-pulse mb-4"></div>
+  loading: () => <div className="h-10 bg-[#F5F5F5] dark:bg-[#262626] rounded animate-pulse mb-4"></div>
 });
 
 // 메모이제이션 적용
@@ -192,16 +192,16 @@ export default function PostDetailLayout({
         </div>
         
         {/* 삭제된 게시글 메시지 */}
-        <div className="bg-red-50 rounded-lg border border-red-200 p-8 text-center">
+        <div className="bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-900/50 p-8 text-center">
           <div className="flex items-center justify-center mb-4">
-            <svg className="w-12 h-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-12 h-12 text-red-400 dark:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-red-800 mb-2">신고에 의해 삭제된 게시글</h2>
-          <p className="text-red-600">이 게시글은 신고 처리로 인해 삭제되었습니다.</p>
+          <h2 className="text-xl font-semibold text-red-800 dark:text-red-400 mb-2">신고에 의해 삭제된 게시글</h2>
+          <p className="text-red-600 dark:text-red-500">이 게시글은 신고 처리로 인해 삭제되었습니다.</p>
           <div className="mt-6">
-            <Link href={`/boards/${slug}`} className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
+            <Link href={`/boards/${slug}`} className="inline-flex items-center px-4 py-2 bg-red-600 dark:bg-red-700 text-white rounded-md hover:bg-red-700 dark:hover:bg-red-800 transition-colors">
               게시판으로 돌아가기
             </Link>
           </div>
@@ -220,17 +220,17 @@ export default function PostDetailLayout({
         </div>
         
         {/* 숨김 처리된 게시글 메시지 */}
-        <div className="bg-gray-50 rounded-lg border border-gray-200 p-8 text-center">
+        <div className="bg-[#F5F5F5] dark:bg-[#262626] rounded-lg border border-black/7 dark:border-0 p-8 text-center">
           <div className="flex items-center justify-center mb-4">
-            <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-12 h-12 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">신고에 의해 숨김 처리된 게시글</h2>
-          <p className="text-gray-600 mb-2">이 게시글은 신고 처리로 인해 일시적으로 숨김 처리되었습니다.</p>
-          <p className="text-sm text-gray-500">7일 후 다시 검토됩니다.</p>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-[#F0F0F0] mb-2">신고에 의해 숨김 처리된 게시글</h2>
+          <p className="text-gray-700 dark:text-gray-300 mb-2">이 게시글은 신고 처리로 인해 일시적으로 숨김 처리되었습니다.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">7일 후 다시 검토됩니다.</p>
           <div className="mt-6">
-            <Link href={`/boards/${slug}`} className="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors">
+            <Link href={`/boards/${slug}`} className="inline-flex items-center px-4 py-2 bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A] rounded-md transition-colors">
               게시판으로 돌아가기
             </Link>
           </div>
@@ -249,7 +249,7 @@ export default function PostDetailLayout({
       
       
       {/* 2. 게시글 본문 (상세 정보) */}
-      <div className="bg-white rounded-lg border shadow-sm overflow-hidden mb-4">
+      <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 shadow-sm overflow-hidden mb-4">
         {/* 게시글 헤더 컴포넌트 */}
         <MemoizedPostHeader 
           title={post.title}
@@ -265,7 +265,7 @@ export default function PostDetailLayout({
         <PostContent content={post.content || ''} meta={post.meta || null} />
         
         {/* 3. 추천/비추천 버튼 및 게시글 액션 */}
-        <div className="px-4 sm:px-6 py-4 border-t">
+        <div className="px-4 sm:px-6 py-4 border-t border-black/5 dark:border-white/10">
           <div className="flex flex-col space-y-4">
             {/* 추천/비추천 버튼 */}
             <MemoizedPostActions 
@@ -280,14 +280,14 @@ export default function PostDetailLayout({
         
         {/* 첨부파일 섹션 (있는 경우) */}
         {post.files && post.files.length > 0 && (
-          <div className="px-4 sm:px-6 py-4 border-t">
-            <h3 className="text-sm font-medium mb-2">첨부파일</h3>
+          <div className="px-4 sm:px-6 py-4 border-t border-black/5 dark:border-white/10">
+            <h3 className="text-sm font-medium mb-2 text-gray-900 dark:text-[#F0F0F0]">첨부파일</h3>
             <ul className="space-y-1">
               {post.files.map((file, index) => (
                 <li key={index} className="text-sm">
-                  <a 
-                    href={file.url} 
-                    className="text-blue-600 hover:underline flex items-center"
+                  <a
+                    href={file.url}
+                    className="text-gray-700 dark:text-gray-300 hover:text-gray-600 dark:hover:text-gray-400 hover:underline flex items-center transition-colors"
                     download
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">

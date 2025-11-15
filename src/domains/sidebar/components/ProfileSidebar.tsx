@@ -188,8 +188,8 @@ export default function ProfileSidebar({
                   onClick={handleLogout}
                   className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-left"
                 >
-                  <LogOut className="h-5 w-5 text-red-600" />
-                  <span className="text-sm font-medium text-red-600">로그아웃</span>
+                  <LogOut className="h-5 w-5 text-red-600 dark:text-red-400" />
+                  <span className="text-sm font-medium text-red-600 dark:text-red-400">로그아웃</span>
                 </button>
               </div>
             </>

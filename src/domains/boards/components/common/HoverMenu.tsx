@@ -253,42 +253,36 @@ export default function HoverMenu({
 
   // 하위 메뉴 그리드로 나누기
   const createGridLayout = useCallback((childBoards: ChildBoard[]) => {
-    const ITEMS_PER_ROW = isMobile ? 2 : 5; // 모바일에서는 2개씩, 데스크톱에서는 5개씩
     const sortedChildBoards = [...childBoards].sort((a: ChildBoard, b: ChildBoard) =>
       a.display_order !== b.display_order
         ? a.display_order - b.display_order
         : a.name.localeCompare(b.name)
     );
 
-    // 행 단위로 분할
-    const rows: ChildBoard[][] = [];
-    for (let i = 0; i < sortedChildBoards.length; i += ITEMS_PER_ROW) {
-      rows.push(sortedChildBoards.slice(i, i + ITEMS_PER_ROW));
-    }
+    // 카테고리 개수에 따라 그리드 열 수 결정 (최대 5개)
+    const gridCols = Math.min(sortedChildBoards.length, 5);
+    const gridColsClass = `grid-cols-${gridCols}`;
 
     return (
-      <div className="grid gap-2">
-        {rows.map((row, rowIndex) => (
-          <div key={rowIndex} className={`flex gap-1 ${isMobile ? 'flex-col' : ''}`}>
-            {row.map((childBoard: ChildBoard) => (
-              <Link
-                href={`/boards/${childBoard.slug || childBoard.id}`}
-                key={childBoard.id}
-                className={`inline-block px-3 py-2 text-sm hover:bg-gray-50 rounded-md whitespace-nowrap ${
-                  childBoard.id === currentBoardId
-                    ? 'bg-blue-50 text-blue-600'
-                    : ''
-                }`}
-                onClick={() => setHoveredBoard(null)}
-              >
-                {childBoard.name}
-              </Link>
-            ))}
-          </div>
+      <div className={`grid ${gridColsClass} gap-0`}>
+        {sortedChildBoards.map((childBoard: ChildBoard) => (
+          <Link
+            href={`/boards/${childBoard.slug || childBoard.id}`}
+            key={childBoard.id}
+            className={`px-2 py-2 text-[10px] sm:text-xs text-center transition-colors text-gray-900 dark:text-[#F0F0F0] whitespace-nowrap overflow-hidden text-ellipsis ${
+              childBoard.id === currentBoardId
+                ? 'bg-[#EAEAEA] dark:bg-[#333333]'
+                : 'bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
+            }`}
+            onClick={() => setHoveredBoard(null)}
+            title={childBoard.name}
+          >
+            {childBoard.name}
+          </Link>
         ))}
       </div>
     );
-  }, [currentBoardId, isMobile]);
+  }, [currentBoardId]);
 
   const getChildBoards = useCallback((boardId: string) => {
     return childBoardsMap[boardId] || [];
@@ -296,21 +290,21 @@ export default function HoverMenu({
 
   // 메뉴 UI 렌더링
   return (
-    <div className="bg-white border rounded-lg mb-4">
-      <div className="px-4 py-2 relative" ref={containerRef}>
+    <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 rounded-lg mb-4">
+      <div className="px-4 py-2.5 relative" ref={containerRef}>
         {/* 네비게이션 바 */}
         <nav className="flex items-center" ref={navRef}>
           {/* 전체 버튼 - 최상위 게시판으로 이동하도록 수정 */}
           <Link
             href={`/boards/${rootBoardSlug || rootBoardId}`}
             data-board="all"
-            className={`px-2 py-1 text-sm font-medium whitespace-nowrap hover:bg-gray-50 rounded-md flex items-center ${
-              !currentBoardId ? 'bg-gray-100 text-blue-600' : 'text-gray-500'
+            className={`px-2 py-1 text-xs sm:text-sm whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 ${
+              !currentBoardId ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
             }`}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4 mr-1"
+              className="h-3 w-3 sm:h-4 sm:w-4"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -351,10 +345,10 @@ export default function HoverMenu({
             >
               <Link
                 href={`/boards/${topBoard.slug || topBoard.id}`}
-                className={`px-2 py-1 text-sm font-medium whitespace-nowrap hover:bg-gray-50 rounded-md flex items-center ${
+                className={`px-2 py-1 text-xs sm:text-sm whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 ${
                   topBoard.id === currentBoardId
-                    ? 'bg-gray-100 text-blue-600'
-                    : 'text-gray-500'
+                    ? 'bg-[#EAEAEA] dark:bg-[#333333]'
+                    : ''
                 }`}
                 onClick={handleMobileSubmenuClick(topBoard.id)}
               >
@@ -362,7 +356,7 @@ export default function HoverMenu({
                 {childBoardsMap[topBoard.id]?.length > 0 && (
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-3 w-3 ml-1"
+                    className="h-3 w-3"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -384,11 +378,11 @@ export default function HoverMenu({
             <button
               onClick={toggleMobileDropdown}
               data-dropdown-toggle
-              className="flex items-center px-2 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md ml-2"
+              className="flex items-center px-2 py-1 text-xs sm:text-sm text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md ml-2 transition-colors"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className={`h-4 w-4 transition-transform ${
+                className={`h-3 w-3 sm:h-4 sm:w-4 transition-transform ${
                   mobileDropdownOpen ? 'rotate-180' : ''
                 }`}
                 fill="none"
@@ -408,7 +402,7 @@ export default function HoverMenu({
 
         {/* 숨겨진 게시판들을 위한 드롭다운 메뉴 */}
         {mobileDropdownOpen && hiddenBoards.length > 0 && (
-          <div className="mt-2 pt-2 border-t border-gray-200">
+          <div className="mt-2 pt-2 border-t border-black/7 dark:border-white/10">
             <div className="flex flex-wrap gap-1">
               {hiddenBoards.map((topBoard) => (
                 <div
@@ -435,10 +429,10 @@ export default function HoverMenu({
                 >
                   <Link
                     href={`/boards/${topBoard.slug || topBoard.id}`}
-                    className={`px-2 py-1 text-sm font-medium whitespace-nowrap hover:bg-gray-50 rounded-md flex items-center ${
+                    className={`px-2 py-1 text-xs sm:text-sm whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 ${
                       topBoard.id === currentBoardId
-                        ? 'bg-gray-100 text-blue-600'
-                        : 'text-gray-500'
+                        ? 'bg-[#EAEAEA] dark:bg-[#333333]'
+                        : ''
                     }`}
                     onClick={handleMobileSubmenuClick(topBoard.id)}
                   >
@@ -446,7 +440,7 @@ export default function HoverMenu({
                     {childBoardsMap[topBoard.id]?.length > 0 && (
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        className="h-3 w-3 ml-1"
+                        className="h-3 w-3"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -479,27 +473,29 @@ export default function HoverMenu({
                 />
                 
                 {/* 바텀시트 */}
-                <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-lg z-50 animate-slide-up">
+                <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#1D1D1D] rounded-t-lg z-50 animate-slide-up">
                   {/* 헤더 */}
-                  <div className="flex justify-between items-center p-4 border-b border-gray-200">
-                    <h3 className="text-base font-semibold text-gray-900">
+                  <div className="flex justify-between items-center px-4 py-2.5 border-b border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
+                    <h3 className="text-xs sm:text-sm text-gray-900 dark:text-[#F0F0F0]">
                       {sortedTopBoards.find(board => board.id === hoveredBoard)?.name || '게시판 이동'}
                     </h3>
                     <button
                       onClick={() => setHoveredBoard(null)}
-                      className="p-2 hover:bg-gray-100 rounded-full"
+                      className="p-1 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors text-gray-700 dark:text-gray-300"
                       aria-label="닫기"
                     >
-                      ×
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
                     </button>
                   </div>
                   
                   {/* 콘텐츠 */}
                   <div className="p-4 max-h-96 overflow-y-auto">
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <Link
                         href={`/boards/${sortedTopBoards.find(board => board.id === hoveredBoard)?.slug || hoveredBoard}`}
-                        className="w-full text-left px-4 py-3 text-sm font-medium hover:bg-gray-50 rounded-lg border border-gray-300 text-blue-600 block"
+                        className="w-full text-left px-3 py-2 text-xs sm:text-sm bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md text-gray-900 dark:text-[#F0F0F0] block transition-colors"
                         onClick={() => setHoveredBoard(null)}
                       >
                         전체 보기
@@ -510,10 +506,10 @@ export default function HoverMenu({
                           <Link
                             href={`/boards/${childBoard.slug || childBoard.id}`}
                             key={childBoard.id}
-                            className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 rounded-lg border block ${
+                            className={`w-full text-left px-3 py-2 text-xs sm:text-sm rounded-md text-gray-900 dark:text-[#F0F0F0] block transition-colors ${
                               childBoard.id === currentBoardId
-                                ? 'bg-blue-50 text-blue-600 border-blue-200'
-                                : 'border-gray-200'
+                                ? 'bg-[#EAEAEA] dark:bg-[#333333]'
+                                : 'bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
                             }`}
                             onClick={() => setHoveredBoard(null)}
                           >
@@ -530,8 +526,14 @@ export default function HoverMenu({
                 ref={menuRef}
                 onMouseEnter={() => handleMenuEnter(hoveredBoard)}
                 onMouseLeave={() => handleMenuClose()}
-                className="absolute bg-white shadow-md border rounded-b-lg z-40 p-3 top-[100%] max-w-[600px] min-w-[300px] -mt-1"
-                style={{ left: `${menuPosition.left}px`, marginTop: '-7px' }}
+                className="absolute bg-white dark:bg-[#1D1D1D] shadow-lg border border-black/7 dark:border-0 z-40 top-[100%] -mt-1 overflow-hidden"
+                style={{ 
+                  left: `${menuPosition.left}px`, 
+                  marginTop: '-7px', 
+                  borderRadius: '0.5rem',
+                  minWidth: `${Math.min(getChildBoards(hoveredBoard).length, 5) * 100}px`,
+                  maxWidth: '700px'
+                }}
               >
                 {createGridLayout(getChildBoards(hoveredBoard))}
               </div>

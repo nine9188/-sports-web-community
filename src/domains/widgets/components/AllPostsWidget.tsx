@@ -16,7 +16,7 @@ export default async function AllPostsWidget() {
 
     // 헤더 컨텐츠 렌더링 - 오른쪽에 > 아이콘 추가
     const headerContent = (
-      <div className="flex items-center justify-between">
+      <div className="w-full h-full flex items-center justify-between">
         <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">최신 게시글</h3>
         <Link
           href="/boards/soccer"
@@ -48,7 +48,7 @@ export default async function AllPostsWidget() {
     // 오류 발생 시 기본 UI 표시
     return (
       <div className="h-full bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0">
-        <div className="bg-[#F5F5F5] dark:bg-[#262626] px-4 py-3 border-b border-black/7 dark:border-white/10">
+        <div className="h-12 px-4 flex items-center bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10">
           <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">최신 게시글</h3>
         </div>
         <div className="p-6 text-center">

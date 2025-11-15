@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Eye, ThumbsUp, MessageSquare, Image as ImageIcon, Link as LinkIcon, Video as VideoIcon, Youtube as YoutubeIcon } from 'lucide-react';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/types/image';
 import { TopicPostsData, TabType, TopicPost } from '../types';
 
 interface TopicTabsClientProps {
@@ -138,14 +139,15 @@ export function TopicTabsClient({ postsData }: TopicTabsClientProps) {
                     className="block px-3 py-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]"
                   >
                     <div className="flex items-center text-xs">
-                      {post.team_logo || post.league_logo ? (
+                      {post.team_id || post.league_id ? (
                         <div className="relative w-5 h-5 mr-1 flex-shrink-0">
-                          <Image
-                            src={post.team_logo || post.league_logo || ''}
+                          <ApiSportsImage
+                            imageId={post.team_id || post.league_id || 0}
+                            imageType={post.team_id ? ImageType.Teams : ImageType.Leagues}
                             alt={post.board_name}
-                            fill
-                            className="object-contain"
-                            sizes="20px"
+                            width={20}
+                            height={20}
+                            className="object-contain w-5 h-5"
                             loading="lazy"
                           />
                         </div>

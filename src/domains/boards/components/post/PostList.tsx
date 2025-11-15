@@ -6,6 +6,8 @@ import Image from 'next/image';
 import { FixedSizeList as List } from 'react-window';
 import { ScrollArea } from '@/shared/ui/scroll-area';
 import { Image as ImageIcon, Link as LinkIcon, Video as VideoIcon, Youtube as YoutubeIcon, Calendar as CalendarIcon, Eye as EyeIcon } from 'lucide-react';
+import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import { ImageType } from '@/shared/types/image';
 import UserIconComponent from '@/shared/components/UserIcon';
 
 // 게시글 타입 정의
@@ -87,13 +89,13 @@ const VirtualizedPostItem = React.memo(function VirtualizedPostItem({
   
   if (isMobile) {
     return (
-      <div style={style} className={`py-2 px-3 border-b border-black/5 dark:border-white/10 ${isCurrentPost ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
+      <div style={style} className={`py-2 px-3 border-b border-black/5 dark:border-white/10 ${isCurrentPost ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}>
         <Link href={href} prefetch={false}>
           <div className="space-y-1">
             <div className="flex items-center">
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center">
-                  <span className={`text-sm line-clamp-1 ${isCurrentPost ? 'text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-900 dark:text-[#F0F0F0]'} ${post.is_deleted ? 'text-red-500 dark:text-red-400' : post.is_hidden ? 'text-gray-500 dark:text-gray-400' : ''}`}>
+                  <span className={`text-xs line-clamp-1 ${isCurrentPost ? 'font-medium' : ''} text-gray-900 dark:text-[#F0F0F0] ${post.is_deleted ? 'text-red-500 dark:text-red-400' : post.is_hidden ? 'text-gray-500 dark:text-gray-400' : ''}`}>
                   {post.is_deleted ? '[삭제된 게시글]' : post.is_hidden ? '[숨김 처리된 게시글]' : String(post?.title || '제목 없음')}
                 </span>
                 {renderContentTypeIcons(post)}
@@ -135,7 +137,7 @@ const VirtualizedPostItem = React.memo(function VirtualizedPostItem({
   }
 
   return (
-    <div style={style} className={`flex border-b border-black/5 dark:border-white/10 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors ${isCurrentPost ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
+    <div style={style} className={`flex border-b border-black/5 dark:border-white/10 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors ${isCurrentPost ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}>
       {showBoard && (
         <div className="py-2 px-3 flex items-center" style={{ width: '120px' }}>
           {renderBoardLogo(post)}
@@ -144,7 +146,7 @@ const VirtualizedPostItem = React.memo(function VirtualizedPostItem({
       <div className="py-2 px-4 flex-1">
         <Link href={href} className="block w-full" prefetch={false}>
           <div className="flex items-center">
-            <span className={`text-sm line-clamp-1 ${isCurrentPost ? 'text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-900 dark:text-[#F0F0F0]'} ${post.is_deleted ? 'text-red-500 dark:text-red-400' : post.is_hidden ? 'text-gray-500 dark:text-gray-400' : ''}`}>
+            <span className={`text-xs line-clamp-1 ${isCurrentPost ? 'font-medium' : ''} text-gray-900 dark:text-[#F0F0F0] ${post.is_deleted ? 'text-red-500 dark:text-red-400' : post.is_hidden ? 'text-gray-500 dark:text-gray-400' : ''}`}>
               {post.is_deleted ? '[삭제된 게시글]' : post.is_hidden ? '[숨김 처리된 게시글]' : String(post?.title || '제목 없음')}
             </span>
             {renderContentTypeIcons(post)}
@@ -227,13 +229,13 @@ const PostItem = React.memo(function PostItem({
   
   if (isMobile) {
     return (
-      <div className={`py-2 px-3 ${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''} ${isCurrentPost ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
+      <div className={`py-2 px-3 ${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''} ${isCurrentPost ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}>
         <Link href={href} prefetch={false}>
           <div className="space-y-1">
             <div className="flex items-center">
               <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center">
-                <span className={`text-sm line-clamp-1 ${isCurrentPost ? 'text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-900 dark:text-[#F0F0F0]'} ${post.is_deleted ? 'text-red-500 dark:text-red-400' : post.is_hidden ? 'text-gray-500 dark:text-gray-400' : ''}`}>
+                <span className={`text-xs line-clamp-1 ${isCurrentPost ? 'font-medium' : ''} text-gray-900 dark:text-[#F0F0F0] ${post.is_deleted ? 'text-red-500 dark:text-red-400' : post.is_hidden ? 'text-gray-500 dark:text-gray-400' : ''}`}>
                   {post.is_deleted ? '[삭제된 게시글]' : post.is_hidden ? '[숨김 처리된 게시글]' : String(post?.title || '제목 없음')}
                 </span>
                 {renderContentTypeIcons(post)}
@@ -273,7 +275,7 @@ const PostItem = React.memo(function PostItem({
   // 데스크톱 - 이미지형은 제목 아래 메타 + 우측 썸네일(헤더 없음)
   if (variant === 'image-table') {
     return (
-      <div className={`py-2 px-3 ${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''} ${isCurrentPost ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
+      <div className={`py-2 px-3 ${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''} ${isCurrentPost ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}>
         <Link href={href} prefetch={false}>
           <div className="flex items-center justify-between gap-1">
             {/* 좌측 영역: 세로 정렬 (아이콘 / 숫자 / 추천) */}
@@ -289,7 +291,7 @@ const PostItem = React.memo(function PostItem({
             </div>
             <div className="flex-1 min-w-0 flex flex-col justify-center">
               <div className="flex items-center">
-                <span className={`text-sm line-clamp-1 ${isCurrentPost ? 'text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-900 dark:text-[#F0F0F0]'} ${post.is_deleted ? 'text-red-500 dark:text-red-400' : post.is_hidden ? 'text-gray-500 dark:text-gray-400' : ''}`}>
+                <span className={`text-xs line-clamp-1 ${isCurrentPost ? 'font-medium' : ''} text-gray-900 dark:text-[#F0F0F0] ${post.is_deleted ? 'text-red-500 dark:text-red-400' : post.is_hidden ? 'text-gray-500 dark:text-gray-400' : ''}`}>
                   {post.is_deleted ? '[삭제된 게시글]' : post.is_hidden ? '[숨김 처리된 게시글]' : String(post?.title || '제목 없음')}
                 </span>
                 {renderContentTypeIcons(post)}
@@ -325,7 +327,7 @@ const PostItem = React.memo(function PostItem({
   }
 
   return (
-    <tr className={`${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''} hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors ${isCurrentPost ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
+    <tr className={`${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''} hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors ${isCurrentPost ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}>
       {showBoard && (
         <td className="py-2 px-3 align-middle">
           {renderBoardLogo(post)}
@@ -334,7 +336,7 @@ const PostItem = React.memo(function PostItem({
       <td className="py-2 px-4 align-middle">
         <Link href={href} className="block w-full" prefetch={false}>
           <div className="flex items-center">
-            <span className={`text-sm line-clamp-1 ${isCurrentPost ? 'text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-900 dark:text-[#F0F0F0]'} ${post.is_deleted ? 'text-red-500 dark:text-red-400' : post.is_hidden ? 'text-gray-500 dark:text-gray-400' : ''}`}>
+            <span className={`text-xs line-clamp-1 ${isCurrentPost ? 'font-medium' : ''} text-gray-900 dark:text-[#F0F0F0] ${post.is_deleted ? 'text-red-500 dark:text-red-400' : post.is_hidden ? 'text-gray-500 dark:text-gray-400' : ''}`}>
               {post.is_deleted ? '[삭제된 게시글]' : post.is_hidden ? '[숨김 처리된 게시글]' : String(post?.title || '제목 없음')}
             </span>
             {renderContentTypeIcons(post)}
@@ -571,12 +573,12 @@ export default function PostList({
         )}
         {hasLink && (
           <div title="링크 포함">
-            <LinkIcon className="h-3 w-3 text-blue-500 flex-shrink-0" />
+            <LinkIcon className="h-3 w-3 text-gray-500 dark:text-gray-400 flex-shrink-0" />
           </div>
         )}
         {post.comment_count > 0 && (
-          <span 
-            className="text-xs text-orange-600 font-medium ml-0.5 flex-shrink-0"
+          <span
+            className="text-xs text-orange-600 dark:text-orange-400 font-medium flex-shrink-0"
             title={`댓글 ${post.comment_count}개`}
           >
             [{post.comment_count}]
@@ -609,16 +611,17 @@ export default function PostList({
 
   // 게시판 로고 렌더링 함수 (메모이제이션)
   const renderBoardLogo = useCallback((post: Post) => {
-    if (post.team_logo || post.league_logo) {
+    if (post.team_id || post.league_id) {
       return (
         <div className="flex items-center">
           <div className="relative w-5 h-5 mr-1">
-            <Image
-              src={post.team_logo || post.league_logo || ''}
+            <ApiSportsImage
+              imageId={post.team_id || post.league_id || 0}
+              imageType={post.team_id ? ImageType.Teams : ImageType.Leagues}
               alt={post.board_name}
-              fill
-              sizes="20px"
-              className="object-contain absolute inset-0"
+              width={20}
+              height={20}
+              className="object-contain w-5 h-5"
               loading="lazy"
               priority={false}
             />
@@ -861,7 +864,7 @@ export default function PostList({
   return (
     <div className={`bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden ${className}`}>
       {headerContent && (
-        <div className="bg-[#F5F5F5] dark:bg-[#262626] px-4 py-3 border-b border-black/7 dark:border-white/10">
+        <div className="h-12 px-4 flex items-center bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10">
           {headerContent}
         </div>
       )}

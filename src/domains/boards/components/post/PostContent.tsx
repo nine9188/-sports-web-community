@@ -18,6 +18,7 @@ declare global {
       };
       [key: string]: unknown;
     } | undefined;
+    handleMatchCardHover?: (element: HTMLElement, isEnter: boolean) => void;
   }
 }
 
@@ -189,10 +190,31 @@ const parseMatchStatsFromText = (text: string) => {
       awayTeam,
       bettingOdds
     };
-  } catch (error) {
+  } catch {
     return null;
   }
 };
+
+// 매치 카드 호버 효과를 위한 전역 함수
+if (typeof window !== 'undefined') {
+  window.handleMatchCardHover = function(element: HTMLElement, isEnter: boolean) {
+    const card = element.closest('.match-card, .processed-match-card') as HTMLElement | null;
+    if (!card) return;
+    
+    const isDark = document.documentElement.classList.contains('dark');
+    
+    if (isEnter) {
+      card.style.backgroundColor = isDark ? '#333333' : '#EAEAEA';
+      card.style.boxShadow = '0 4px 12px 0 rgba(0, 0, 0, 0.15)';
+      card.style.transform = 'translateY(-2px)';
+      card.style.transition = 'all 0.2s ease';
+    } else {
+      card.style.backgroundColor = isDark ? '#1D1D1D' : 'white';
+      card.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1)';
+      card.style.transform = 'translateY(0)';
+    }
+  };
+}
 
 export default function PostContent({ content, meta }: PostContentProps) {
   const contentRef = useRef<HTMLDivElement>(null);
@@ -233,14 +255,14 @@ export default function PostContent({ content, meta }: PostContentProps) {
                   />
                 </div>` : ''}
                 <div class="flex justify-between items-center mb-4">
-                  <a href="${sourceUrl}" target="_blank" rel="noopener noreferrer" 
-                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                  <a href="${sourceUrl}" target="_blank" rel="noopener noreferrer"
+                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-slate-800 dark:bg-[#3F3F3F] rounded-md hover:bg-slate-700 dark:hover:bg-[#4A4A4A] transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
                     원문 보기
                   </a>
-                  <span class="text-xs text-gray-500">출처: 풋볼리스트(FOOTBALLIST)</span>
+                  <span class="text-xs text-gray-500 dark:text-gray-400">출처: 풋볼리스트(FOOTBALLIST)</span>
                 </div>
               </div>
             `;
@@ -251,35 +273,81 @@ export default function PostContent({ content, meta }: PostContentProps) {
         if ('type' in content && content.type === 'doc' && 'content' in content && Array.isArray((content as TipTapDoc).content)) {
           const tipTapDoc = content as TipTapDoc;
           
-          tipTapDoc.content.forEach((node, nodeIndex) => {
+          tipTapDoc.content.forEach((node) => {
             
             
             if (node.type === 'matchCard' && node.attrs) {
               // 매치 카드 노드 처리
-              
+
               const { matchId, matchData } = node.attrs;
-              
+
               if (matchData && typeof matchData === 'object') {
                 const matchDataObj = matchData as Record<string, unknown>;
                 const teams = matchDataObj.teams as Record<string, unknown> | undefined;
                 const goals = matchDataObj.goals as Record<string, unknown> | undefined;
                 const league = matchDataObj.league as Record<string, unknown> | undefined;
                 const status = matchDataObj.status as Record<string, unknown> | undefined;
-                
+
                 const homeTeam = (teams?.home as Record<string, unknown>) || { name: '홈팀', logo: '/placeholder.png' };
                 const awayTeam = (teams?.away as Record<string, unknown>) || { name: '원정팀', logo: '/placeholder.png' };
                 const leagueData = league || { name: '알 수 없는 리그', logo: '/placeholder.png' };
                 const homeScore = typeof goals?.home === 'number' ? goals.home : '-';
                 const awayScore = typeof goals?.away === 'number' ? goals.away : '-';
                 const actualMatchId = matchDataObj.id || matchId || 'unknown';
-                
+
+                // Supabase Storage 이미지 URL 생성 함수 (다크모드 지원)
+                const DARK_MODE_LEAGUE_IDS = [39, 2, 3, 848, 179, 88, 119, 98, 292, 66, 13];
+                const supabaseUrl = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co';
+
+                const getImageUrls = (logoUrl: string | undefined, id: number | string | undefined, type: 'teams' | 'leagues') => {
+                  // 1. id가 있으면 Supabase Storage URL 생성
+                  if (id) {
+                    const lightUrl = `${supabaseUrl}/storage/v1/object/public/${type}/${id}.png`;
+                    const numericId = typeof id === 'string' ? parseInt(id) : id;
+                    const hasDarkImage = type === 'leagues' && DARK_MODE_LEAGUE_IDS.includes(numericId);
+                    const darkUrl = hasDarkImage ? `${supabaseUrl}/storage/v1/object/public/${type}/${id}-1.png` : lightUrl;
+                    return { light: lightUrl, dark: darkUrl };
+                  }
+
+                  // 2. logoUrl이 있으면 처리
+                  if (logoUrl) {
+                    // Supabase URL인 경우
+                    if (logoUrl.includes('supabase.co')) {
+                      const lightUrl = logoUrl.replace(/-1\.png$/, '.png');
+                      const leagueIdMatch = lightUrl.match(/\/leagues\/(\d+)\.png$/);
+                      const leagueId = leagueIdMatch ? parseInt(leagueIdMatch[1]) : null;
+                      const hasDarkImage = type === 'leagues' && leagueId && DARK_MODE_LEAGUE_IDS.includes(leagueId);
+                      const darkUrl = hasDarkImage ? lightUrl.replace(/\.png$/, '-1.png') : lightUrl;
+                      return { light: lightUrl, dark: darkUrl };
+                    }
+
+                    // API Sports URL인 경우 - Supabase Storage로 변환
+                    if (logoUrl.includes('media.api-sports.io')) {
+                      const idMatch = logoUrl.match(/\/(teams|leagues)\/(\d+)\.png$/);
+                      if (idMatch) {
+                        const imageId = parseInt(idMatch[2]);
+                        return getImageUrls(logoUrl, imageId, type);
+                      }
+                    }
+                  }
+
+                  // 3. 둘 다 없으면 같은 URL
+                  const fallback = logoUrl || '/placeholder.png';
+                  return { light: fallback, dark: fallback };
+                };
+
+                // 이미지 URL 생성
+                const leagueImages = getImageUrls(leagueData.logo as string, leagueData.id as number | string | undefined, 'leagues');
+                const homeTeamImages = getImageUrls(homeTeam.logo as string, homeTeam.id as number | string | undefined, 'teams');
+                const awayTeamImages = getImageUrls(awayTeam.logo as string, awayTeam.id as number | string | undefined, 'teams');
+
                 // 경기 상태 텍스트 설정
                 let statusText = '경기 결과';
                 let statusClass = '';
-                
+
                 if (status) {
                   const statusCode = (status.code as string) || '';
-                  
+
                   if (statusCode === 'FT') {
                     statusText = '경기 종료';
                   } else if (statusCode === 'NS') {
@@ -297,33 +365,39 @@ export default function PostContent({ content, meta }: PostContentProps) {
                     statusClass = 'live';
                   }
                 }
-                
+
                 htmlContent += `
                   <div class="match-card processed-match-card" data-type="match-card" data-match-id="${actualMatchId}" data-processed="true">
-                    <a href="/livescore/football/match/${actualMatchId}">
+                    <a href="/livescore/football/match/${actualMatchId}" 
+                       onmouseenter="if(window.handleMatchCardHover) window.handleMatchCardHover(this, true)"
+                       onmouseleave="if(window.handleMatchCardHover) window.handleMatchCardHover(this, false)">
                       <div class="league-header">
                         <div style="display: flex; align-items: center;">
-                          <img 
-                            src="${(leagueData.logo as string) || '/placeholder.png'}" 
-                            alt="${(leagueData.name as string) || '알 수 없는 리그'}" 
+                          <img
+                            src="${leagueImages.light}"
+                            data-light-src="${leagueImages.light}"
+                            data-dark-src="${leagueImages.dark}"
+                            alt="${(leagueData.name as string) || '알 수 없는 리그'}"
                             class="league-logo"
                             onerror="this.onerror=null;this.src='/placeholder.png';"
                           />
                           <span class="league-name">${(leagueData.name as string) || '알 수 없는 리그'}</span>
                         </div>
                       </div>
-                      
+
                       <div class="match-main">
                         <div class="team-info">
-                          <img 
-                            src="${(homeTeam.logo as string) || '/placeholder.png'}" 
-                            alt="${(homeTeam.name as string) || '홈팀'}" 
+                          <img
+                            src="${homeTeamImages.light}"
+                            data-light-src="${homeTeamImages.light}"
+                            data-dark-src="${homeTeamImages.dark}"
+                            alt="${(homeTeam.name as string) || '홈팀'}"
                             class="team-logo"
                             onerror="this.onerror=null;this.src='/placeholder.png';"
                           />
                           <span class="team-name${homeTeam.winner ? ' winner' : ''}">${(homeTeam.name as string) || '홈팀'}</span>
                         </div>
-                        
+
                         <div class="score-area">
                           <div class="score">
                             <span class="score-number">${homeScore}</span>
@@ -332,18 +406,20 @@ export default function PostContent({ content, meta }: PostContentProps) {
                           </div>
                           <div class="match-status${statusClass ? ' ' + statusClass : ''}">${statusText}</div>
                         </div>
-                        
+
                         <div class="team-info">
-                          <img 
-                            src="${(awayTeam.logo as string) || '/placeholder.png'}" 
-                            alt="${(awayTeam.name as string) || '원정팀'}" 
+                          <img
+                            src="${awayTeamImages.light}"
+                            data-light-src="${awayTeamImages.light}"
+                            data-dark-src="${awayTeamImages.dark}"
+                            alt="${(awayTeam.name as string) || '원정팀'}"
                             class="team-logo"
                             onerror="this.onerror=null;this.src='/placeholder.png';"
                           />
                           <span class="team-name${awayTeam.winner ? ' winner' : ''}">${(awayTeam.name as string) || '원정팀'}</span>
                         </div>
                       </div>
-                      
+
                       <div class="match-footer">
                         <span class="footer-link">매치 상세 정보</span>
                       </div>
@@ -353,7 +429,7 @@ export default function PostContent({ content, meta }: PostContentProps) {
               } else {
                 // 매치 데이터가 없는 경우 오류 표시
                 htmlContent += `
-                  <div class="p-3 border rounded-lg bg-red-50 text-red-500 my-4">
+                  <div class="p-3 border border-red-200 dark:border-red-900/50 rounded-lg bg-red-50 dark:bg-red-950/20 text-red-500 dark:text-red-400 my-4">
                     경기 결과 데이터를 불러올 수 없습니다.
                   </div>
                 `;
@@ -441,30 +517,76 @@ export default function PostContent({ content, meta }: PostContentProps) {
 
             } else if (node.type === 'matchCard' && node.attrs) {
               // 매치 카드 노드 처리
-              
+
               const { matchId, matchData } = node.attrs;
-              
+
               if (matchData && typeof matchData === 'object') {
                 const matchDataObj = matchData as Record<string, unknown>;
                 const teams = matchDataObj.teams as Record<string, unknown> | undefined;
                 const goals = matchDataObj.goals as Record<string, unknown> | undefined;
                 const league = matchDataObj.league as Record<string, unknown> | undefined;
                 const status = matchDataObj.status as Record<string, unknown> | undefined;
-                
+
                 const homeTeam = (teams?.home as Record<string, unknown>) || { name: '홈팀', logo: '/placeholder.png' };
                 const awayTeam = (teams?.away as Record<string, unknown>) || { name: '원정팀', logo: '/placeholder.png' };
                 const leagueData = league || { name: '알 수 없는 리그', logo: '/placeholder.png' };
                 const homeScore = typeof goals?.home === 'number' ? goals.home : '-';
                 const awayScore = typeof goals?.away === 'number' ? goals.away : '-';
                 const actualMatchId = matchDataObj.id || matchId || 'unknown';
-                
+
+                // Supabase Storage 이미지 URL 생성 함수 (다크모드 지원)
+                const DARK_MODE_LEAGUE_IDS = [39, 2, 3, 848, 179, 88, 119, 98, 292, 66, 13];
+                const supabaseUrl = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co';
+
+                const getImageUrls = (logoUrl: string | undefined, id: number | string | undefined, type: 'teams' | 'leagues') => {
+                  // 1. id가 있으면 Supabase Storage URL 생성
+                  if (id) {
+                    const lightUrl = `${supabaseUrl}/storage/v1/object/public/${type}/${id}.png`;
+                    const numericId = typeof id === 'string' ? parseInt(id) : id;
+                    const hasDarkImage = type === 'leagues' && DARK_MODE_LEAGUE_IDS.includes(numericId);
+                    const darkUrl = hasDarkImage ? `${supabaseUrl}/storage/v1/object/public/${type}/${id}-1.png` : lightUrl;
+                    return { light: lightUrl, dark: darkUrl };
+                  }
+
+                  // 2. logoUrl이 있으면 처리
+                  if (logoUrl) {
+                    // Supabase URL인 경우
+                    if (logoUrl.includes('supabase.co')) {
+                      const lightUrl = logoUrl.replace(/-1\.png$/, '.png');
+                      const leagueIdMatch = lightUrl.match(/\/leagues\/(\d+)\.png$/);
+                      const leagueId = leagueIdMatch ? parseInt(leagueIdMatch[1]) : null;
+                      const hasDarkImage = type === 'leagues' && leagueId && DARK_MODE_LEAGUE_IDS.includes(leagueId);
+                      const darkUrl = hasDarkImage ? lightUrl.replace(/\.png$/, '-1.png') : lightUrl;
+                      return { light: lightUrl, dark: darkUrl };
+                    }
+
+                    // API Sports URL인 경우 - Supabase Storage로 변환
+                    if (logoUrl.includes('media.api-sports.io')) {
+                      const idMatch = logoUrl.match(/\/(teams|leagues)\/(\d+)\.png$/);
+                      if (idMatch) {
+                        const imageId = parseInt(idMatch[2]);
+                        return getImageUrls(logoUrl, imageId, type);
+                      }
+                    }
+                  }
+
+                  // 3. 둘 다 없으면 같은 URL
+                  const fallback = logoUrl || '/placeholder.png';
+                  return { light: fallback, dark: fallback };
+                };
+
+                // 이미지 URL 생성
+                const leagueImages = getImageUrls(leagueData.logo as string, leagueData.id as number | string | undefined, 'leagues');
+                const homeTeamImages = getImageUrls(homeTeam.logo as string, homeTeam.id as number | string | undefined, 'teams');
+                const awayTeamImages = getImageUrls(awayTeam.logo as string, awayTeam.id as number | string | undefined, 'teams');
+
                 // 경기 상태 텍스트 설정
                 let statusText = '경기 결과';
                 let statusClass = '';
-                
+
                 if (status) {
                   const statusCode = (status.code as string) || '';
-                  
+
                   if (statusCode === 'FT') {
                     statusText = '경기 종료';
                   } else if (statusCode === 'NS') {
@@ -482,33 +604,39 @@ export default function PostContent({ content, meta }: PostContentProps) {
                     statusClass = 'live';
                   }
                 }
-                
+
                 htmlContent += `
                   <div class="match-card processed-match-card" data-type="match-card" data-match-id="${actualMatchId}" data-processed="true">
-                    <a href="/livescore/football/match/${actualMatchId}">
+                    <a href="/livescore/football/match/${actualMatchId}" 
+                       onmouseenter="if(window.handleMatchCardHover) window.handleMatchCardHover(this, true)"
+                       onmouseleave="if(window.handleMatchCardHover) window.handleMatchCardHover(this, false)">
                       <div class="league-header">
                         <div style="display: flex; align-items: center;">
-                          <img 
-                            src="${(leagueData.logo as string) || '/placeholder.png'}" 
-                            alt="${(leagueData.name as string) || '알 수 없는 리그'}" 
+                          <img
+                            src="${leagueImages.light}"
+                            data-light-src="${leagueImages.light}"
+                            data-dark-src="${leagueImages.dark}"
+                            alt="${(leagueData.name as string) || '알 수 없는 리그'}"
                             class="league-logo"
                             onerror="this.onerror=null;this.src='/placeholder.png';"
                           />
                           <span class="league-name">${(leagueData.name as string) || '알 수 없는 리그'}</span>
                         </div>
                       </div>
-                      
+
                       <div class="match-main">
                         <div class="team-info">
-                          <img 
-                            src="${(homeTeam.logo as string) || '/placeholder.png'}" 
-                            alt="${(homeTeam.name as string) || '홈팀'}" 
+                          <img
+                            src="${homeTeamImages.light}"
+                            data-light-src="${homeTeamImages.light}"
+                            data-dark-src="${homeTeamImages.dark}"
+                            alt="${(homeTeam.name as string) || '홈팀'}"
                             class="team-logo"
                             onerror="this.onerror=null;this.src='/placeholder.png';"
                           />
                           <span class="team-name${homeTeam.winner ? ' winner' : ''}">${(homeTeam.name as string) || '홈팀'}</span>
                         </div>
-                        
+
                         <div class="score-area">
                           <div class="score">
                             <span class="score-number">${homeScore}</span>
@@ -517,18 +645,20 @@ export default function PostContent({ content, meta }: PostContentProps) {
                           </div>
                           <div class="match-status${statusClass ? ' ' + statusClass : ''}">${statusText}</div>
                         </div>
-                        
+
                         <div class="team-info">
-                          <img 
-                            src="${(awayTeam.logo as string) || '/placeholder.png'}" 
-                            alt="${(awayTeam.name as string) || '원정팀'}" 
+                          <img
+                            src="${awayTeamImages.light}"
+                            data-light-src="${awayTeamImages.light}"
+                            data-dark-src="${awayTeamImages.dark}"
+                            alt="${(awayTeam.name as string) || '원정팀'}"
                             class="team-logo"
                             onerror="this.onerror=null;this.src='/placeholder.png';"
                           />
                           <span class="team-name${awayTeam.winner ? ' winner' : ''}">${(awayTeam.name as string) || '원정팀'}</span>
                         </div>
                       </div>
-                      
+
                       <div class="match-footer">
                         <span class="footer-link">매치 상세 정보</span>
                       </div>
@@ -538,7 +668,7 @@ export default function PostContent({ content, meta }: PostContentProps) {
               } else {
                 // 매치 데이터가 없는 경우 오류 표시
                 htmlContent += `
-                  <div class="p-3 border rounded-lg bg-red-50 text-red-500 my-4">
+                  <div class="p-3 border border-red-200 dark:border-red-900/50 rounded-lg bg-red-50 dark:bg-red-950/20 text-red-500 dark:text-red-400 my-4">
                     경기 결과 데이터를 불러올 수 없습니다.
                   </div>
                 `;
@@ -558,8 +688,8 @@ export default function PostContent({ content, meta }: PostContentProps) {
           } else {
             // 다른 형태의 JSON인 경우 - 가독성을 위해 스타일 적용된 형태로 출력
             htmlContent += `
-              <div class="bg-gray-50 p-4 rounded-md overflow-auto text-sm font-mono">
-                <pre>${JSON.stringify(content, null, 2)}</pre>
+              <div class="bg-[#F5F5F5] dark:bg-[#262626] p-4 rounded-md overflow-auto text-sm font-mono">
+                <pre class="text-gray-900 dark:text-[#F0F0F0]">${JSON.stringify(content, null, 2)}</pre>
               </div>
             `;
           }
@@ -567,7 +697,7 @@ export default function PostContent({ content, meta }: PostContentProps) {
         
         htmlContent += '</div>';
         return htmlContent;
-      } catch (error) {
+      } catch {
         return `<div class="text-red-500">오류: 게시글 내용을 표시할 수 없습니다.</div>`;
       }
     }
@@ -589,7 +719,7 @@ export default function PostContent({ content, meta }: PostContentProps) {
           
           // 파싱된 객체를 처리
           return processObjectContent(parsedContent);
-        } catch (error) {
+        } catch {
           return content; // 파싱 실패시 원본 문자열 반환
         }
       }
@@ -600,6 +730,157 @@ export default function PostContent({ content, meta }: PostContentProps) {
     return processObjectContent(content);
   }, [content, processObjectContent]);
   
+  // 다크모드 감지 및 이미지 URL 교체 함수
+  const updateMatchCardImages = useCallback(() => {
+    if (!contentRef.current) return;
+
+    const isDark = document.documentElement.classList.contains('dark');
+    const matchCards = contentRef.current.querySelectorAll('.match-card, .processed-match-card');
+    const DARK_MODE_LEAGUE_IDS = [39, 2, 3, 848, 179, 88, 119, 98, 292, 66, 13];
+
+    matchCards.forEach((card) => {
+      // 리그 로고 업데이트
+      const leagueImg = card.querySelector('.league-logo') as HTMLImageElement;
+      if (leagueImg) {
+        let lightSrc = leagueImg.getAttribute('data-light-src');
+        let darkSrc = leagueImg.getAttribute('data-dark-src');
+
+        // Fallback: data 속성이 없으면 현재 src에서 생성
+        if (!lightSrc || !darkSrc) {
+          const currentSrc = leagueImg.src;
+          const supabaseUrl = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co';
+
+          // URL에서 리그 ID 추출
+          let leagueId: number | null = null;
+          const leagueIdMatch = currentSrc.match(/\/leagues\/(\d+)\.png$/);
+          if (leagueIdMatch) {
+            leagueId = parseInt(leagueIdMatch[1]);
+          }
+
+          if (leagueId) {
+            // Supabase Storage URL로 변환
+            lightSrc = `${supabaseUrl}/storage/v1/object/public/leagues/${leagueId}.png`;
+
+            // 다크모드 이미지가 있는 리그만 -1 추가
+            if (DARK_MODE_LEAGUE_IDS.includes(leagueId)) {
+              darkSrc = `${supabaseUrl}/storage/v1/object/public/leagues/${leagueId}-1.png`;
+            } else {
+              darkSrc = lightSrc;
+            }
+
+            // data 속성에 저장
+            leagueImg.setAttribute('data-light-src', lightSrc);
+            leagueImg.setAttribute('data-dark-src', darkSrc);
+          }
+        }
+
+        if (lightSrc && darkSrc) {
+          const targetSrc = isDark ? darkSrc : lightSrc;
+          console.log('🖼️ Setting league image:', {
+            isDark,
+            lightSrc,
+            darkSrc,
+            targetSrc,
+            currentSrc: leagueImg.src
+          });
+          leagueImg.src = targetSrc;
+        }
+      }
+
+      // 팀 로고 업데이트 (팀은 다크모드 이미지 없음 - 같은 이미지 사용)
+      const teamLogos = card.querySelectorAll('.team-logo');
+      teamLogos.forEach((teamImg) => {
+        const img = teamImg as HTMLImageElement;
+        let lightSrc = img.getAttribute('data-light-src');
+        let darkSrc = img.getAttribute('data-dark-src');
+
+        // Fallback: data 속성이 없으면 현재 src에서 생성
+        if (!lightSrc || !darkSrc) {
+          const currentSrc = img.src;
+          const supabaseUrl = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co';
+
+          // URL에서 팀 ID 추출
+          const teamIdMatch = currentSrc.match(/\/teams\/(\d+)\.png$/);
+          if (teamIdMatch) {
+            const teamId = parseInt(teamIdMatch[1]);
+
+            // Supabase Storage URL로 변환
+            lightSrc = `${supabaseUrl}/storage/v1/object/public/teams/${teamId}.png`;
+            // 팀 로고는 다크모드 이미지가 없으므로 같은 이미지 사용
+            darkSrc = lightSrc;
+
+            // data 속성에 저장
+            img.setAttribute('data-light-src', lightSrc);
+            img.setAttribute('data-dark-src', darkSrc);
+          }
+        }
+
+        if (lightSrc && darkSrc) {
+          img.src = isDark ? darkSrc : lightSrc;
+        }
+      });
+    });
+  }, []);
+
+  // 매치 카드 호버 효과 적용 함수
+  const setupMatchCardHover = useCallback(() => {
+    if (!contentRef.current) return;
+    
+    const applyHoverToCards = () => {
+      const matchCards = contentRef.current?.querySelectorAll('.match-card, .processed-match-card') || [];
+      
+      matchCards.forEach((card) => {
+        const cardElement = card as HTMLElement;
+        const link = cardElement.querySelector('a') as HTMLAnchorElement | null;
+        
+        if (!link) return;
+        
+        // 이미 이벤트가 등록되어 있는지 확인
+        if ((link as unknown as { _hoverSetup?: boolean })._hoverSetup) return;
+        
+        const handleMouseEnter = () => {
+          const isDark = document.documentElement.classList.contains('dark');
+          cardElement.style.backgroundColor = isDark ? '#333333' : '#EAEAEA';
+          cardElement.style.boxShadow = '0 4px 12px 0 rgba(0, 0, 0, 0.15)';
+          cardElement.style.transform = 'translateY(-2px)';
+          cardElement.style.transition = 'all 0.2s ease';
+        };
+        
+        const handleMouseLeave = () => {
+          const isDark = document.documentElement.classList.contains('dark');
+          cardElement.style.backgroundColor = isDark ? '#1D1D1D' : 'white';
+          cardElement.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1)';
+          cardElement.style.transform = 'translateY(0)';
+        };
+        
+        link.addEventListener('mouseenter', handleMouseEnter);
+        link.addEventListener('mouseleave', handleMouseLeave);
+        
+        // 중복 등록 방지 플래그
+        (link as unknown as { _hoverSetup: boolean })._hoverSetup = true;
+        (link as unknown as { _hoverEnter: () => void })._hoverEnter = handleMouseEnter;
+        (link as unknown as { _hoverLeave: () => void })._hoverLeave = handleMouseLeave;
+      });
+    };
+    
+    // 즉시 적용
+    applyHoverToCards();
+    
+    // MutationObserver로 동적으로 추가되는 카드도 감지
+    const observer = new MutationObserver(() => {
+      applyHoverToCards();
+    });
+    
+    if (contentRef.current) {
+      observer.observe(contentRef.current, {
+        childList: true,
+        subtree: true
+      });
+    }
+    
+    return observer;
+  }, []);
+
   // 소셜 임베드와 매치카드 백업 처리 함수
   const processEmbeds = useCallback(() => {
     if (!contentRef.current || !isMounted) return;
@@ -765,7 +1046,7 @@ export default function PostContent({ content, meta }: PostContentProps) {
                 bettingOdds: chartData.bettingOdds || null
               })
             );
-          }).catch(error => {
+          }).catch(() => {
             chartContainer.innerHTML = `
               <div class="match-stats-chart-container my-8 p-6 bg-red-50 border border-red-200 rounded-xl">
                 <div class="text-center text-red-600">
@@ -803,33 +1084,66 @@ export default function PostContent({ content, meta }: PostContentProps) {
             const homeScore = typeof goals?.home === 'number' ? goals.home : '-';
             const awayScore = typeof goals?.away === 'number' ? goals.away : '-';
             const actualMatchId = matchData.id || matchId || 'unknown';
-            
+
+            // API Sports 이미지 URL 생성 (다크모드 지원)
+            const DARK_MODE_LEAGUE_IDS = [39, 2, 3, 848, 179, 88, 119, 98, 292, 66, 13];
+
+            const getImageUrls = (logoUrl: string | undefined, id: number | string | undefined, type: 'teams' | 'leagues') => {
+              if (id) {
+                const lightUrl = `https://media.api-sports.io/football/${type}/${id}.png`;
+                const numericId = typeof id === 'string' ? parseInt(id) : id;
+                const hasDarkImage = type === 'leagues' && DARK_MODE_LEAGUE_IDS.includes(numericId);
+                const darkUrl = hasDarkImage ? `https://media.api-sports.io/football/${type}/${id}-1.png` : lightUrl;
+                return { light: lightUrl, dark: darkUrl };
+              }
+              if (logoUrl && logoUrl.includes('media.api-sports.io')) {
+                const lightUrl = logoUrl.replace(/-1\.png$/, '.png');
+                const leagueIdMatch = lightUrl.match(/\/leagues\/(\d+)\.png$/);
+                const leagueId = leagueIdMatch ? parseInt(leagueIdMatch[1]) : null;
+                const hasDarkImage = type === 'leagues' && leagueId && DARK_MODE_LEAGUE_IDS.includes(leagueId);
+                const darkUrl = hasDarkImage ? lightUrl.replace(/\.png$/, '-1.png') : lightUrl;
+                return { light: lightUrl, dark: darkUrl };
+              }
+              const fallback = logoUrl || '/placeholder.png';
+              return { light: fallback, dark: fallback };
+            };
+
+            const leagueImages = getImageUrls(leagueData.logo, leagueData.id, 'leagues');
+            const homeTeamImages = getImageUrls(homeTeam.logo, homeTeam.id, 'teams');
+            const awayTeamImages = getImageUrls(awayTeam.logo, awayTeam.id, 'teams');
+
             const cardElement = element as HTMLElement;
             cardElement.innerHTML = `
-              <a href="/livescore/football/match/${actualMatchId}">
+              <a href="/livescore/football/match/${actualMatchId}" 
+                 onmouseenter="if(window.handleMatchCardHover) window.handleMatchCardHover(this, true)"
+                 onmouseleave="if(window.handleMatchCardHover) window.handleMatchCardHover(this, false)">
                 <div class="league-header">
                   <div style="display: flex; align-items: center;">
-                    <img 
-                      src="${leagueData.logo}" 
-                      alt="${leagueData.name}" 
+                    <img
+                      src="${leagueImages.light}"
+                      data-light-src="${leagueImages.light}"
+                      data-dark-src="${leagueImages.dark}"
+                      alt="${leagueData.name}"
                       class="league-logo"
                       onerror="this.onerror=null;this.src='/placeholder.png';"
                     />
                     <span class="league-name">${leagueData.name}</span>
                   </div>
                 </div>
-                
+
                 <div class="match-main">
                   <div class="team-info">
-                    <img 
-                      src="${homeTeam.logo}" 
-                      alt="${homeTeam.name}" 
+                    <img
+                      src="${homeTeamImages.light}"
+                      data-light-src="${homeTeamImages.light}"
+                      data-dark-src="${homeTeamImages.dark}"
+                      alt="${homeTeam.name}"
                       class="team-logo"
                       onerror="this.onerror=null;this.src='/placeholder.png';"
                     />
                     <span class="team-name">${homeTeam.name}</span>
                   </div>
-                  
+
                   <div class="score-area">
                     <div class="score">
                       <span class="score-number">${homeScore}</span>
@@ -838,18 +1152,20 @@ export default function PostContent({ content, meta }: PostContentProps) {
                     </div>
                     <div class="match-status">경기 결과</div>
                   </div>
-                  
+
                   <div class="team-info">
-                    <img 
-                      src="${awayTeam.logo}" 
-                      alt="${awayTeam.name}" 
+                    <img
+                      src="${awayTeamImages.light}"
+                      data-light-src="${awayTeamImages.light}"
+                      data-dark-src="${awayTeamImages.dark}"
+                      alt="${awayTeam.name}"
                       class="team-logo"
                       onerror="this.onerror=null;this.src='/placeholder.png';"
                     />
                     <span class="team-name">${awayTeam.name}</span>
                   </div>
                 </div>
-                
+
                 <div class="match-footer">
                   <span class="footer-link">매치 상세 정보</span>
                 </div>
@@ -875,7 +1191,7 @@ export default function PostContent({ content, meta }: PostContentProps) {
         const url = element.getAttribute('data-url');
         
         if (!platform || !url) {
-          element.innerHTML = `<div class="p-4 border rounded bg-red-50 text-red-600">
+          element.innerHTML = `<div class="p-4 border border-red-200 dark:border-red-900/50 rounded bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400">
             지원하지 않는 링크입니다.
           </div>`;
           return;
@@ -888,7 +1204,7 @@ export default function PostContent({ content, meta }: PostContentProps) {
           const videoId = match ? match[1] : null;
           
           if (!videoId) {
-            element.innerHTML = `<div class="p-4 border rounded bg-red-50 text-red-600">
+            element.innerHTML = `<div class="p-4 border border-red-200 dark:border-red-900/50 rounded bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400">
               지원하지 않는 YouTube 링크입니다.
             </div>`;
             return;
@@ -919,7 +1235,7 @@ export default function PostContent({ content, meta }: PostContentProps) {
           const tweetId = match ? match[1] : null;
           
           if (!tweetId) {
-            element.innerHTML = `<div class="p-4 border rounded bg-red-50 text-red-600">
+            element.innerHTML = `<div class="p-4 border border-red-200 dark:border-red-900/50 rounded bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400">
               지원하지 않는 트위터 링크입니다.
             </div>`;
             return;
@@ -950,7 +1266,7 @@ export default function PostContent({ content, meta }: PostContentProps) {
           const postId = match ? match[1] : null;
           
           if (!postId) {
-            element.innerHTML = `<div class="p-4 border rounded bg-red-50 text-red-600">
+            element.innerHTML = `<div class="p-4 border border-red-200 dark:border-red-900/50 rounded bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400">
               지원하지 않는 인스타그램 링크입니다.
             </div>`;
             return;
@@ -999,8 +1315,8 @@ export default function PostContent({ content, meta }: PostContentProps) {
             window.instgrm.Embeds.process();
           }
         }
-      } catch (error) {
-        element.innerHTML = `<div class="p-4 border rounded bg-red-50 text-red-600">
+      } catch {
+        element.innerHTML = `<div class="p-4 border border-red-200 dark:border-red-900/50 rounded bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400">
           소셜 미디어 콘텐츠를 로드하는 중 오류가 발생했습니다.
         </div>`;
       }
@@ -1019,14 +1335,58 @@ export default function PostContent({ content, meta }: PostContentProps) {
 
   // 소셜 임베드와 매치카드 백업 처리
   useEffect(() => {
-    if (!isMounted) return;
-    
+    if (!isMounted || !contentRef.current) return;
+
+    const currentRef = contentRef.current; // ref 값을 변수에 저장
+    let observer: MutationObserver | undefined;
+
     const timeoutId = setTimeout(() => {
       processEmbeds();
-    }, 100);
-    
-    return () => clearTimeout(timeoutId);
-  }, [isMounted, processEmbeds, content, meta]);
+      updateMatchCardImages(); // 초기 이미지 설정
+      observer = setupMatchCardHover(); // 호버 효과 설정
+    }, 200); // 타이밍을 조금 늘림
+
+    return () => {
+      clearTimeout(timeoutId);
+      // MutationObserver 정리
+      if (observer) {
+        observer.disconnect();
+      }
+      // 이벤트 리스너 정리
+      if (currentRef) {
+        const links = currentRef.querySelectorAll('.match-card a, .processed-match-card a');
+        links.forEach((link) => {
+          const linkWithHandlers = link as unknown as { _hoverEnter?: () => void; _hoverLeave?: () => void };
+          if (linkWithHandlers._hoverEnter) {
+            link.removeEventListener('mouseenter', linkWithHandlers._hoverEnter);
+          }
+          if (linkWithHandlers._hoverLeave) {
+            link.removeEventListener('mouseleave', linkWithHandlers._hoverLeave);
+          }
+        });
+      }
+    };
+  }, [isMounted, processEmbeds, updateMatchCardImages, setupMatchCardHover, content, meta]);
+
+  // 다크모드 변경 감지 및 이미지 업데이트
+  useEffect(() => {
+    if (!isMounted) return;
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          updateMatchCardImages();
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+
+    return () => observer.disconnect();
+  }, [isMounted, updateMatchCardImages]);
   
   return (
     <>
@@ -1034,7 +1394,7 @@ export default function PostContent({ content, meta }: PostContentProps) {
         /* 경기 카드 기본 스타일 */
         :global(.match-card),
         :global(.processed-match-card) {
-          border: 1px solid #e5e7eb !important;
+          border: 1px solid rgba(0, 0, 0, 0.07) !important;
           border-radius: 8px !important;
           overflow: hidden !important;
           box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
@@ -1043,6 +1403,13 @@ export default function PostContent({ content, meta }: PostContentProps) {
           width: 100% !important;
           max-width: 100% !important;
           display: block !important;
+          transition: all 0.2s ease !important;
+        }
+
+        :global(.dark .match-card),
+        :global(.dark .processed-match-card) {
+          background: #1D1D1D !important;
+          border: 1px solid rgba(255, 255, 255, 0.1) !important;
         }
         
         /* 경기 카드 링크 스타일 */
@@ -1051,6 +1418,38 @@ export default function PostContent({ content, meta }: PostContentProps) {
           display: block !important;
           text-decoration: none !important;
           color: inherit !important;
+          cursor: pointer !important;
+          transition: all 0.2s ease !important;
+        }
+
+        /* 경기 카드 호버 효과 (UI 가이드라인 준수) - 카드 자체에 호버 */
+        :global(.prose .match-card:hover),
+        :global(.prose .processed-match-card:hover),
+        :global(.match-card:hover),
+        :global(.processed-match-card:hover) {
+          background: #EAEAEA !important;
+          box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.15) !important;
+          transform: translateY(-2px) !important;
+        }
+
+        :global(.dark .prose .match-card:hover),
+        :global(.dark .prose .processed-match-card:hover),
+        :global(.dark .match-card:hover),
+        :global(.dark .processed-match-card:hover) {
+          background: #333333 !important;
+        }
+
+        /* 링크 호버 시 부모 카드에도 호버 효과 적용 (CSS :has() 사용) */
+        :global(.match-card:has(a:hover)),
+        :global(.processed-match-card:has(a:hover)) {
+          background: #EAEAEA !important;
+          box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.15) !important;
+          transform: translateY(-2px) !important;
+        }
+
+        :global(.dark .match-card:has(a:hover)),
+        :global(.dark .processed-match-card:has(a:hover)) {
+          background: #333333 !important;
         }
         
         /* 경기 카드 이미지 스타일 */
@@ -1066,10 +1465,16 @@ export default function PostContent({ content, meta }: PostContentProps) {
         :global(.processed-match-card .league-header) {
           padding: 12px !important;
           background-color: #f9fafb !important;
-          border-bottom: 1px solid #e5e7eb !important;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
           display: flex !important;
           align-items: center !important;
           height: 40px !important;
+        }
+
+        :global(.dark .match-card .league-header),
+        :global(.dark .processed-match-card .league-header) {
+          background-color: #262626 !important;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
         }
         
         /* 리그 로고 스타일 */
@@ -1091,6 +1496,11 @@ export default function PostContent({ content, meta }: PostContentProps) {
           white-space: nowrap !important;
           overflow: hidden !important;
           text-overflow: ellipsis !important;
+        }
+
+        :global(.dark .match-card .league-name),
+        :global(.dark .processed-match-card .league-name) {
+          color: #d1d5db !important;
         }
         
         /* 메인 경기 정보 스타일 */
@@ -1128,11 +1538,16 @@ export default function PostContent({ content, meta }: PostContentProps) {
           font-weight: 500 !important;
           text-align: center !important;
           line-height: 1.2 !important;
-          color: #000 !important;
+          color: #111827 !important;
           display: -webkit-box !important;
           -webkit-line-clamp: 2 !important;
           -webkit-box-orient: vertical !important;
           overflow: hidden !important;
+        }
+
+        :global(.dark .match-card .team-name),
+        :global(.dark .processed-match-card .team-name) {
+          color: #F0F0F0 !important;
         }
         
         /* 승리 팀 이름 스타일 */
@@ -1193,19 +1608,30 @@ export default function PostContent({ content, meta }: PostContentProps) {
         :global(.processed-match-card .match-footer) {
           padding: 8px 12px !important;
           background-color: #f9fafb !important;
-          border-top: 1px solid #e5e7eb !important;
+          border-top: 1px solid rgba(0, 0, 0, 0.05) !important;
           text-align: center !important;
           display: flex !important;
           align-items: center !important;
           justify-content: center !important;
         }
-        
+
+        :global(.dark .match-card .match-footer),
+        :global(.dark .processed-match-card .match-footer) {
+          background-color: #262626 !important;
+          border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
         /* 푸터 링크 스타일 */
         :global(.match-card .footer-link),
         :global(.processed-match-card .footer-link) {
           font-size: 12px !important;
-          color: #2563eb !important;
-          text-decoration: underline !important;
+          color: #6b7280 !important;
+          text-decoration: none !important;
+        }
+
+        :global(.dark .match-card .footer-link),
+        :global(.dark .processed-match-card .footer-link) {
+          color: #9ca3af !important;
         }
         
         /* 유튜브 임베드 스타일은 globals.css에서 관리 */
@@ -1304,9 +1730,9 @@ export default function PostContent({ content, meta }: PostContentProps) {
           display: block !important;
         }
       `}</style>
-    <div 
+    <div
       ref={contentRef}
-      className="prose prose-sm sm:prose-base lg:prose-lg max-w-none prose-headings:font-bold prose-img:rounded-lg prose-img:mx-auto p-4 sm:p-6"
+      className="prose prose-sm sm:prose-sm lg:prose-base max-w-none prose-headings:font-bold prose-img:rounded-lg prose-img:mx-auto dark:prose-invert p-4 sm:p-6"
       dangerouslySetInnerHTML={{ __html: isMounted ? processedContent : '' }}
     />
     </>
