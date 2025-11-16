@@ -9,7 +9,6 @@ import DatePicker from 'react-datepicker';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
 import "react-datepicker/dist/react-datepicker.css";
-import { Button } from '@/shared/ui';
 import { getMatchesByDate } from '@/domains/boards/actions/matches';
 import type { MatchData } from '@/domains/livescore/actions/footballApi';
 
@@ -376,15 +375,13 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
         </div>
         
         <div className="flex justify-end space-x-2 mt-4 border-t pt-3">
-          <Button
+          <button
             type="button"
-            variant="outline"
-            size="sm"
             onClick={onCancel}
-            className="text-xs py-1 px-2 h-6"
+            className="bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-3 py-1 rounded text-xs transition-colors h-6"
           >
             취소
-          </Button>
+          </button>
         </div>
       </div>
       

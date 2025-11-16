@@ -78,21 +78,19 @@ export default async function CreatePostPage({
 
     return (
       <div className="container mx-auto">
-        <div className="bg-white p-0 rounded-md">
-          <PostEditForm 
-            boardId={result.board.id}
-            _boardSlug={result.board.slug || result.board.id}
-            initialTitle=""
-            initialContent=""
-            boardName={result.board.name}
-            categoryId={result.board.id}
-            allBoardsFlat={(result.allBoards || []).map(board => ({
-              ...board,
-              slug: board.slug || board.id
-            }))}
-            isCreateMode={true}
-          />
-        </div>
+        <PostEditForm
+          boardId={result.board.id}
+          _boardSlug={result.board.slug || result.board.id}
+          initialTitle=""
+          initialContent=""
+          boardName={result.board.name}
+          categoryId={result.board.id}
+          allBoardsFlat={(result.allBoards || []).map(board => ({
+            ...board,
+            slug: board.slug || board.id
+          }))}
+          isCreateMode={true}
+        />
       </div>
     );
   } catch (error) {

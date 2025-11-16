@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Button } from '@/shared/ui';
 
 interface ImageUploadFormProps {
   onCancel: () => void;
@@ -184,27 +183,19 @@ export default function ImageUploadForm({
           </div>
         </div>
         
-        <div className="flex justify-end space-x-2 mt-4 relative z-10">
+        <div className="flex justify-end space-x-2 mt-4">
           <button
             type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onCancel();
-            }}
-            className="text-xs py-1 px-3 h-7 rounded border border-gray-300 bg-white hover:bg-gray-100"
+            onClick={onCancel}
+            className="bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-3 py-1 rounded text-xs transition-colors h-7"
           >
             취소
           </button>
           <button
             type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleSubmit();
-            }}
+            onClick={handleSubmit}
             disabled={(activeTab === 'file' && !selectedFile) || (activeTab === 'link' && !imageUrl)}
-            className="text-xs py-1 px-3 h-7 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A] px-3 py-1 rounded text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed h-7"
           >
             확인
           </button>

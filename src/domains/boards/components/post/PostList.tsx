@@ -502,9 +502,8 @@ export default function PostList({
         }
       }
       
-      // 소셜 임베드 및 특수 콘텐츠 확인
-      const hasSocialEmbed = contentToCheck.includes('data-type="social-embed"') ||
-                           contentToCheck.includes('twitter.com') ||
+      // 소셜 임베드 및 특수 콘텐츠 확인 (향후 재구현 예정)
+      const hasSocialEmbed = contentToCheck.includes('twitter.com') ||
                            contentToCheck.includes('instagram.com') ||
                            contentToCheck.includes('youtube.com/embed');
       

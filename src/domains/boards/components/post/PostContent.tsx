@@ -3,21 +3,9 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import MatchStatsChart from './MatchStatsChart';
 
-// 글로벌 타입 확장
+// 글로벌 타입 확장 (소셜 미디어는 중앙에서 관리)
 declare global {
   interface Window {
-    twttr: {
-      widgets: {
-        load: () => void;
-      };
-      [key: string]: unknown;
-    } | undefined;
-    instgrm: {
-      Embeds: {
-        process: () => void;
-      };
-      [key: string]: unknown;
-    } | undefined;
     handleMatchCardHover?: (element: HTMLElement, isEnter: boolean) => void;
   }
 }

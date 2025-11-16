@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Button } from '@/shared/ui';
 import { createClient } from '@/shared/api/supabase';
 import { AlertCircle, FileVideo } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -384,25 +383,22 @@ export default function VideoForm({
         )}
         
         <div className="flex justify-end space-x-2 mt-4">
-          <Button
+          <button
             type="button"
-            variant="outline"
-            size="sm"
             onClick={onCancel}
-            className="text-xs py-1 px-2 h-6"
             disabled={isUploading}
+            className="bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-3 py-1 rounded text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed h-6"
           >
             취소
-          </Button>
-          <Button
+          </button>
+          <button
             type="button"
-            size="sm"
             onClick={handleSubmit}
             disabled={!selectedFile || isUploading}
-            className="text-xs py-1 px-2 h-6"
+            className="bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A] px-3 py-1 rounded text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed h-6"
           >
             {isUploading ? '업로드 중...' : '확인'}
-          </Button>
+          </button>
         </div>
       </div>
     </>

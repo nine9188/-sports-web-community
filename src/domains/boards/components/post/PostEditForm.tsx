@@ -3,7 +3,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/shared/api/supabase';
-import { Button } from '@/shared/ui/button';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
@@ -15,6 +14,7 @@ import { toast } from 'react-toastify';
 import { createPost, updatePost } from '@/domains/boards/actions/posts/index';
 import { Board } from '@/domains/boards/types/board';
 import { generateMatchCardHTML } from '@/shared/utils/matchCardRenderer';
+import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui/container';
 
 // MatchCard 확장 로딩 함수
 const loadMatchCardExtension = async () => {
@@ -75,6 +75,7 @@ export default function PostEditForm({
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
+  const [showSocialModal, setShowSocialModal] = useState(false);
   
   // Supabase 클라이언트 - 한 번만 생성하여 재사용 (성능 최적화)
   const supabase = useMemo(() => createClient(), []);
@@ -102,10 +103,12 @@ export default function PostEditForm({
     const loadAdditionalExtensions = async () => {
       try {
         // 동적 확장 로드
-        const [YoutubeExtension, VideoExtension, MatchCardExt] = await Promise.all([
+        const [YoutubeExtension, VideoExtension, MatchCardExt, SocialEmbedExt, AutoSocialEmbedExt] = await Promise.all([
           import('@/shared/ui/tiptap/YoutubeExtension').then(mod => mod.YoutubeExtension),
           import('@/shared/ui/tiptap/VideoExtension').then(mod => mod.Video),
-          loadMatchCardExtension()
+          loadMatchCardExtension(),
+          import('@/shared/ui/tiptap/extensions/social-embeds').then(mod => mod.SocialEmbedExtension),
+          import('@/shared/ui/tiptap/extensions/social-embeds').then(mod => mod.AutoSocialEmbedExtension)
         ]);
 
         // 기본 확장에 추가 확장 병합
@@ -113,7 +116,9 @@ export default function PostEditForm({
           ...prev,
           YoutubeExtension,
           VideoExtension,
-          MatchCardExt
+          MatchCardExt,
+          SocialEmbedExt,
+          AutoSocialEmbedExt.configure({ enabled: true }) // 자동 임베드 활성화
         ]);
         setExtensionsLoaded(true);
       } catch (error) {
@@ -122,7 +127,7 @@ export default function PostEditForm({
         setExtensionsLoaded(true);
       }
     };
-    
+
     loadAdditionalExtensions();
   }, []);
   
@@ -479,16 +484,17 @@ export default function PostEditForm({
   };
   
   // 한 번에 하나의 드롭다운만 표시되도록 관리 (함수 수정)
-  const handleToggleDropdown = async (dropdown: 'match' | 'link' | 'video' | 'image' | 'youtube') => {
+  const handleToggleDropdown = async (dropdown: 'match' | 'link' | 'video' | 'image' | 'youtube' | 'social') => {
     // 현재 상태 확인
-    const currentState: Record<'image' | 'youtube' | 'video' | 'match' | 'link', boolean> = {
+    const currentState: Record<'image' | 'youtube' | 'video' | 'match' | 'link' | 'social', boolean> = {
       image: showImageModal,
       youtube: showYoutubeModal,
       video: showVideoModal,
       match: showMatchModal,
-      link: showLinkModal
+      link: showLinkModal,
+      social: showSocialModal
     };
-    
+
     // 이미 열려있는 모달이면 닫기
     if (currentState[dropdown]) {
       // 모든 모달 닫기
@@ -497,16 +503,18 @@ export default function PostEditForm({
       setShowVideoModal(false);
       setShowMatchModal(false);
       setShowLinkModal(false);
+      setShowSocialModal(false);
       return;
     }
-    
+
     // 모든 모달 닫기
     setShowImageModal(false);
     setShowYoutubeModal(false);
     setShowVideoModal(false);
     setShowMatchModal(false);
     setShowLinkModal(false);
-    
+    setShowSocialModal(false);
+
     // 선택된 드롭다운만 열기 (확장 로딩 제거)
     switch (dropdown) {
       case 'image':
@@ -523,6 +531,9 @@ export default function PostEditForm({
         break;
       case 'link':
         setShowLinkModal(true);
+        break;
+      case 'social':
+        setShowSocialModal(true);
         break;
     }
   };
@@ -554,13 +565,13 @@ export default function PostEditForm({
   // 링크 추가 핸들러 - 개선
   const handleAddLink = (url: string, text?: string) => {
     if (!editor || !url) return;
-    
+
     try {
-      
+
       // 현재 선택된 텍스트가 있는지 확인
       const { from, to } = editor.state.selection;
       const selectedText = editor.state.doc.textBetween(from, to);
-      
+
       if (selectedText) {
         // 선택된 텍스트가 있으면 링크로 변환
         editor.chain().focus().setLink({ href: url }).run();
@@ -569,37 +580,66 @@ export default function PostEditForm({
         const linkText = text || url;
         editor.chain().focus().insertContent(`<a href="${url}" target="_blank" rel="noopener noreferrer">${linkText}</a>`).run();
       }
-      
+
     } catch (error) {
       console.error('링크 추가 중 오류:', error);
       toast.error('링크를 추가하는데 실패했습니다.');
     }
   };
+
+  // 소셜 미디어 임베드 추가 핸들러
+  const handleAddSocialEmbed = (platform: string, url: string) => {
+    if (!editor || !extensionsLoaded) {
+      toast.error('에디터가 준비되지 않았습니다.');
+      return;
+    }
+
+    try {
+      // setSocialEmbed 명령어 사용
+      const commands = editor.commands as Record<string, (...args: unknown[]) => boolean>;
+      if ('setSocialEmbed' in commands) {
+        const success = commands.setSocialEmbed({ platform, url });
+        if (success) {
+          toast.success('소셜 미디어 임베드가 추가되었습니다.');
+          setShowSocialModal(false);
+        } else {
+          toast.error('임베드 추가에 실패했습니다.');
+        }
+      } else {
+        toast.error('소셜 임베드 기능이 로드되지 않았습니다.');
+      }
+    } catch (error) {
+      console.error('소셜 임베드 추가 중 오류:', error);
+      toast.error('소셜 미디어 임베드를 추가하는데 실패했습니다.');
+    }
+  };
   
   return (
-    <div className="bg-white rounded-md border overflow-hidden">
-      <div className="p-6">
-        <div className="mb-4">
-          <span className="inline-block px-3 py-1 text-xs rounded-full bg-blue-100 text-blue-700 mb-2">
-            {boardName}
-          </span>
-        </div>
-        
-        <form onSubmit={handleSubmit} className="space-y-6">
+    <Container className="mt-0">
+      {/* 헤더 */}
+      <ContainerHeader>
+        <ContainerTitle>
+          {isCreateMode ? '글쓰기' : '글 수정'} - {boardName}
+        </ContainerTitle>
+      </ContainerHeader>
+
+      {/* 컨텐츠 */}
+      <ContainerContent className="pt-4">
+        <form id="post-edit-form" onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
+            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-md text-sm">
               {error}
             </div>
           )}
-          
+
           <div className="space-y-2">
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700">제목</label>
+            <label htmlFor="title" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">제목</label>
             <input
               type="text"
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md"
+              className="w-full px-3 py-2 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-slate-800 dark:focus:ring-white/20"
               placeholder="제목을 입력하세요"
               maxLength={100}
               required
@@ -609,8 +649,8 @@ export default function PostEditForm({
           {/* 게시판 선택 필드 (생성 모드에서만 표시) */}
           {isCreateMode && (
             <div className="space-y-2">
-              <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700">
-                게시판 선택 <span className="text-red-500">*</span>
+              <label htmlFor="categoryId" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                게시판 선택 <span className="text-red-500 dark:text-red-400">*</span>
               </label>
               <BoardSelector 
                 boards={boardSelectorItems}
@@ -622,7 +662,7 @@ export default function PostEditForm({
           )}
           
           <div className="space-y-2">
-            <label htmlFor="content" className="block text-sm font-medium text-gray-700">내용</label>
+            <label htmlFor="content" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">내용</label>
             
             {/* 에디터 툴바 컴포넌트 */}
             <EditorToolbar
@@ -633,6 +673,7 @@ export default function PostEditForm({
               showYoutubeModal={showYoutubeModal}
               showVideoModal={showVideoModal}
               showMatchModal={showMatchModal}
+              showSocialModal={showSocialModal}
               handleToggleDropdown={handleToggleDropdown}
               handleFileUpload={handleFileUpload}
               handleAddImage={handleAddImage}
@@ -640,14 +681,20 @@ export default function PostEditForm({
               handleAddYoutube={handleAddYoutube}
               handleAddVideo={handleAddVideo}
               handleAddMatch={handleAddMatch}
+              handleAddSocialEmbed={handleAddSocialEmbed}
             />
             
             {/* 에디터 컨텐츠 영역 - 패딩 추가 */}
-            <div className="border rounded-b-md min-h-[500px]">
+            <div className="border border-black/7 dark:border-white/10 rounded-b-md min-h-[500px] bg-white dark:bg-[#262626]">
               <style jsx global>{`
                 .ProseMirror {
                   padding: 1rem;
                   min-height: 500px;
+                  color: #111827;
+                }
+                
+                .dark .ProseMirror {
+                  color: #F0F0F0;
                 }
                 
                 /* 경기 카드 스타일 */
@@ -655,11 +702,17 @@ export default function PostEditForm({
                   width: 100% !important;
                   max-width: 100% !important;
                   margin: 12px 0 !important;
-                  border: 1px solid #e5e7eb !important;
+                  border: 1px solid rgba(0, 0, 0, 0.07) !important;
                   border-radius: 8px !important;
                   overflow: hidden !important;
                   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
                   background: white !important;
+                }
+                
+                .dark .ProseMirror .match-card {
+                  border: 0 !important;
+                  background: #1D1D1D !important;
+                  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3) !important;
                 }
                 
                 .ProseMirror .match-card img {
@@ -757,25 +810,28 @@ export default function PostEditForm({
               <EditorContent editor={editor} />
             </div>
           </div>
-          
-          <div className="flex justify-end space-x-2">
-            <Button
+
+          {/* 버튼 영역 */}
+          <div className="flex justify-end space-x-2 mt-6">
+            <button
               type="button"
-              variant="outline"
               onClick={() => router.back()}
               disabled={isSubmitting}
+              className="bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-4 py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               취소
-            </Button>
-            <Button
+            </button>
+            <button
               type="submit"
               disabled={isSubmitting}
+              className="bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A] px-4 py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (isCreateMode ? '게시 중...' : '저장 중...') : (isCreateMode ? '게시하기' : '저장하기')}
-            </Button>
+            </button>
           </div>
+
         </form>
-      </div>
-    </div>
+      </ContainerContent>
+    </Container>
   );
 } 

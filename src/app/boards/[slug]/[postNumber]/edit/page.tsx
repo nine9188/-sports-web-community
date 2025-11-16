@@ -37,7 +37,7 @@ export default async function EditPostPage({ params }: { params: Promise<{ slug:
     
     return (
       <div className="container mx-auto">
-        <PostEditForm 
+        <PostEditForm
           postId={result.post.id}
           boardId={result.board.id}
           _boardSlug={slug}
