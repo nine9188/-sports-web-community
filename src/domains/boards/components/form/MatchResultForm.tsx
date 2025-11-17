@@ -152,77 +152,64 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
       />
       <div
         ref={dropdownRef}
-        className={`z-50 bg-white rounded-lg shadow-lg border p-4
-          fixed sm:absolute
-          left-1/2 top-1/2 sm:left-0 sm:top-full
-          -translate-x-1/2 -translate-y-1/2 sm:translate-x-0 sm:translate-y-0
-          w-[95vw] max-w-lg sm:w-[400px]
-        `}
+        className="z-50 bg-white dark:bg-[#1D1D1D] rounded-lg shadow-lg border border-black/7 dark:border-white/10 overflow-hidden fixed sm:absolute left-1/2 top-1/2 sm:left-0 sm:top-full -translate-x-1/2 -translate-y-1/2 sm:translate-x-0 sm:translate-y-0 w-[95vw] max-w-lg sm:w-[400px]"
         style={{ marginTop: '0.5rem' }}
       >
-        <div className="border-b mb-4">
-          <div className="flex justify-between items-center pb-2">
-            <div className="text-sm font-medium">경기 결과 선택</div>
-            <button
-              type="button"
-              onClick={onCancel}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              <X size={16} />
-            </button>
-          </div>
+        <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center">
+          <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">경기 결과 선택</h3>
         </div>
-        
-        <div className="mb-4">
-          <div className="flex space-x-2">
-            {/* 날짜 선택 버튼 */}
-            <div className="relative flex-1">
-              <button
-                type="button"
-                onClick={() => setCalendar(!calendar)}
-                className="w-full flex items-center px-3 py-1.5 border rounded-md bg-white text-xs"
-              >
-                <CalendarIcon className="mr-2 h-3 w-3 text-gray-500" />
-                <span>{format(selectedDate, 'PPP (eee)', { locale: ko })}</span>
-              </button>
-              
-              {calendar && (
-                <div className="absolute top-full left-0 mt-1 bg-white shadow-lg rounded-md border z-10">
-                  <div className="p-2">
-                    <DatePicker
-                      selected={selectedDate}
-                      onChange={handleDateChange}
-                      inline
-                      locale={ko}
-                      minDate={new Date(2024, 0, 1)}
-                      maxDate={new Date(2025, 11, 31)}
-                      showMonthDropdown
-                      showYearDropdown
-                      dropdownMode="select"
-                      calendarClassName="custom-datepicker"
-                    />
+        <div className="p-4">
+          <div className="space-y-4">
+            <div className="flex space-x-2">
+              {/* 날짜 선택 버튼 */}
+              <div className="relative flex-1">
+                <button
+                  type="button"
+                  onClick={() => setCalendar(!calendar)}
+                  className="w-full flex items-center px-3 py-1.5 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#1D1D1D] text-xs text-gray-900 dark:text-[#F0F0F0] hover:bg-[#F5F5F5] dark:hover:bg-[#262626] transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                >
+                  <CalendarIcon className="mr-2 h-3 w-3 text-gray-500 dark:text-gray-400" />
+                  <span>{format(selectedDate, 'PPP (eee)', { locale: ko })}</span>
+                </button>
+
+                {calendar && (
+                  <div className="absolute top-full left-0 mt-1 bg-white dark:bg-[#1D1D1D] shadow-lg rounded-md border border-black/7 dark:border-white/10 z-10">
+                    <div className="p-2">
+                      <DatePicker
+                        selected={selectedDate}
+                        onChange={handleDateChange}
+                        inline
+                        locale={ko}
+                        minDate={new Date(2024, 0, 1)}
+                        maxDate={new Date(2025, 11, 31)}
+                        showMonthDropdown
+                        showYearDropdown
+                        dropdownMode="select"
+                        calendarClassName="custom-datepicker"
+                      />
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-            
-            {/* 검색 입력 필드 */}
-            <div className="relative flex-1">
-              <div className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400">
-                <Search size={12} />
+                )}
               </div>
-              <input
-                type="text"
-                placeholder="리그 또는 팀 검색..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-7 pr-2 py-1.5 border rounded-md text-xs"
-              />
+              
+              {/* 검색 입력 필드 */}
+              <div className="relative flex-1">
+                <div className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400">
+                  <Search size={12} />
+                </div>
+                <input
+                  type="text"
+                  placeholder="리그 또는 팀 검색..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-7 pr-2 py-1.5 border border-black/7 dark:border-white/10 rounded-md text-xs bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors"
+                />
+              </div>
             </div>
           </div>
         </div>
         
-        <div className="max-h-[300px] overflow-y-auto">
+        <div className="max-h-[300px] overflow-y-auto px-4">
           {loading ? (
             <div className="flex justify-center items-center h-40">
               <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-gray-900"></div>
@@ -238,18 +225,18 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
                 <div key={group.league.id} className="space-y-1.5">
                   <div className="flex items-center mb-1">
                     <div className="w-5 h-5 relative mr-2 flex-shrink-0">
-                      <Image
+                      <ApiSportsImage
                         src={group.league.logo || '/placeholder.png'}
+                        imageId={group.league.id}
+                        imageType={ImageType.Leagues}
+                        fallbackType={ImageType.Leagues}
                         alt={group.league.name}
-                        fill
+                        width={20}
+                        height={20}
                         className="object-contain"
-                        sizes="20px"
-                        onError={(e) => {
-                          e.currentTarget.src = '/placeholder.png';
-                        }}
                       />
                     </div>
-                    <h3 className="font-medium text-xs">{group.league.name}</h3>
+                    <h3 className="font-medium text-xs text-gray-900 dark:text-[#F0F0F0]">{group.league.name}</h3>
                   </div>
                   
                   <div className="space-y-1.5">
@@ -300,11 +287,11 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
                           onMatchAdd(matchId, matchData);
                           onCancel();
                         }}
-                        className="w-full text-left border rounded-md p-2 hover:bg-gray-50 transition-colors"
+                        className="w-full text-left border border-black/7 dark:border-white/10 rounded-md p-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center flex-1 min-w-0">
-                            <div className="w-6 h-6 relative mr-2 flex-shrink-0">
+                            <div className="w-6 h-6 flex items-center justify-center mr-2 flex-shrink-0">
                               {match.teams.home.logo ? (
                                 <ApiSportsImage
                                   src={match.teams.home.logo}
@@ -313,28 +300,28 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
                                   alt={match.teams.home.name}
                                   width={24}
                                   height={24}
-                                  className="object-contain"
+                                  className="w-6 h-6 object-contain"
                                 />
                               ) : (
                                 <Image
                                   src="/placeholder-team.png"
                                   alt={match.teams.home.name}
-                                  fill
-                                  className="object-contain"
-                                  sizes="24px"
+                                  width={24}
+                                  height={24}
+                                  className="w-6 h-6 object-contain"
                                 />
                               )}
                             </div>
                             <span className="text-xs truncate">{match.teams.home.name}</span>
                           </div>
-                          
-                          <div className="mx-3 px-2 py-0.5 bg-gray-100 rounded text-xs font-semibold flex-shrink-0">
+
+                          <div className="mx-3 px-2 py-0.5 bg-[#EAEAEA] dark:bg-[#333333] rounded text-xs font-semibold flex-shrink-0 text-gray-900 dark:text-[#F0F0F0]">
                             {match.goals.home ?? '-'} - {match.goals.away ?? '-'}
                           </div>
-                          
+
                           <div className="flex items-center flex-1 justify-end min-w-0">
                             <span className="text-xs truncate">{match.teams.away.name}</span>
-                            <div className="w-6 h-6 relative ml-2 flex-shrink-0">
+                            <div className="w-6 h-6 flex items-center justify-center ml-2 flex-shrink-0">
                               {match.teams.away.logo ? (
                                 <ApiSportsImage
                                   src={match.teams.away.logo}
@@ -343,15 +330,15 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
                                   alt={match.teams.away.name}
                                   width={24}
                                   height={24}
-                                  className="object-contain"
+                                  className="w-6 h-6 object-contain"
                                 />
                               ) : (
                                 <Image
                                   src="/placeholder-team.png"
                                   alt={match.teams.away.name}
-                                  fill
-                                  className="object-contain"
-                                  sizes="24px"
+                                  width={24}
+                                  height={24}
+                                  className="w-6 h-6 object-contain"
                                 />
                               )}
                             </div>
@@ -374,14 +361,16 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
           )}
         </div>
         
-        <div className="flex justify-end space-x-2 mt-4 border-t pt-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-3 py-1 rounded text-xs transition-colors h-6"
-          >
-            취소
-          </button>
+        <div className="p-4 border-t border-black/7 dark:border-white/10">
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-3 py-1.5 rounded-md text-xs transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+            >
+              취소
+            </button>
+          </div>
         </div>
       </div>
       

@@ -266,32 +266,19 @@ export default function VideoForm({
       />
       <div
         ref={dropdownRef}
-        className={`z-50 bg-white rounded-lg shadow-lg border p-4
-          fixed sm:absolute
-          left-1/2 top-1/2 sm:left-0 sm:top-full
-          -translate-x-1/2 -translate-y-1/2 sm:translate-x-0 sm:translate-y-0
-          w-[90vw] max-w-sm sm:w-80
-        `}
+        className="z-50 bg-white dark:bg-[#1D1D1D] rounded-lg shadow-lg border border-black/7 dark:border-white/10 overflow-hidden fixed sm:absolute left-1/2 top-1/2 sm:left-0 sm:top-full -translate-x-1/2 -translate-y-1/2 sm:translate-x-0 sm:translate-y-0 w-[90vw] max-w-sm sm:w-80"
         style={{ marginTop: '0.5rem' }}
       >
-        <div className="h-auto">
-          <div className="border-b mb-4">
-            <div className="flex">
-              <button
-                type="button"
-                className="px-4 py-1 text-xs border-b-2 border-blue-500 text-blue-600 font-medium"
-              >
-                동영상 추가
-              </button>
-            </div>
-          </div>
-          
+        <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center">
+          <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">동영상 추가</h3>
+        </div>
+        <div className="p-4">
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <button
                 type="button"
                 onClick={handleFileButtonClick}
-                className="bg-gray-100 text-gray-700 px-3 py-2 text-xs rounded-md border border-gray-300 hover:bg-gray-200 flex-shrink-0 flex items-center"
+                className="bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] px-3 py-2 text-xs rounded-md border border-black/7 dark:border-white/10 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors flex-shrink-0 flex items-center outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                 disabled={isUploading}
               >
                 <FileVideo className="h-3 w-3 mr-1" />
@@ -304,101 +291,101 @@ export default function VideoForm({
                 className="hidden"
                 ref={fileInputRef}
               />
-              <div className="text-xs text-gray-600 truncate border border-gray-300 rounded-md px-3 py-2 flex-1 min-h-[28px] flex items-center">
+              <div className="text-xs text-gray-700 dark:text-gray-300 truncate border border-black/7 dark:border-white/10 rounded-md px-3 py-2 flex-1 min-h-[28px] flex items-center bg-[#EAEAEA] dark:bg-[#333333]">
                 {selectedFileName || '선택된 파일 없음'}
               </div>
             </div>
-            
+
             {fileSize && (
-              <div className="text-xs text-gray-600">
+              <div className="text-xs text-gray-700 dark:text-gray-300">
                 파일 크기: {fileSize}
               </div>
             )}
-            
+
             <div>
               <input
                 type="text"
                 value={caption}
                 onChange={(e) => setCaption(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-xs"
+                className="w-full border border-black/7 dark:border-white/10 rounded-md px-3 py-2 text-xs bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors"
                 placeholder="동영상 설명을 입력하세요 (선택사항)"
                 disabled={isUploading}
               />
             </div>
-            
-            <div className="text-xs text-gray-500">
+
+            <div className="text-xs text-gray-500 dark:text-gray-400">
               <p>최대 업로드 크기: 50MB</p>
               <p>지원 형식: MP4, WebM, MOV, AVI, MKV</p>
             </div>
-          </div>
-        </div>
-        
-        {error && (isUploading || retryCount >= 3) && (
-          <div className="my-2 text-xs text-red-500 flex items-center">
-            <AlertCircle className="h-3 w-3 mr-1" />
-            {error}
-            {retryCount >= 3 && (
-              <span className="ml-2 text-gray-500">(재시도 한도 초과)</span>
+
+            {error && (isUploading || retryCount >= 3) && (
+              <div className="text-xs text-red-500 flex items-center">
+                <AlertCircle className="h-3 w-3 mr-1" />
+                {error}
+                {retryCount >= 3 && (
+                  <span className="ml-2 text-gray-500 dark:text-gray-400">(재시도 한도 초과)</span>
+                )}
+              </div>
             )}
-          </div>
-        )}
-        
-        {isUploading && (
-          <div className="my-2">
-            <div className="w-full bg-gray-200 rounded-full h-2.5">
-              <div 
-                className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" 
-                style={{ width: `${uploadProgress}%` }}
-              ></div>
-            </div>
-            <div className="flex items-center justify-between mt-1">
-              <p className="text-xs text-gray-500">
-                업로드 중... {uploadProgress}%
-              </p>
+
+            {isUploading && (
+              <div>
+                <div className="w-full bg-[#EAEAEA] dark:bg-[#333333] rounded-full h-2.5">
+                  <div
+                    className="bg-slate-800 dark:bg-[#F0F0F0] h-2.5 rounded-full transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    업로드 중... {uploadProgress}%
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleCancelUpload}
+                    className="text-xs text-red-500 hover:text-red-700 underline outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                  >
+                    취소
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {error && !isUploading && retryCount < 3 && (
+              <div className="flex items-center justify-between">
+                <div className="text-xs text-red-500 flex items-center flex-1">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  <span className="flex-1">{error}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRetry}
+                  className="text-xs text-gray-900 dark:text-[#F0F0F0] hover:text-gray-700 dark:hover:text-gray-300 underline ml-2 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                >
+                  재시도
+                </button>
+              </div>
+            )}
+
+            <div className="flex justify-end space-x-2 pt-2">
               <button
                 type="button"
-                onClick={handleCancelUpload}
-                className="text-xs text-red-500 hover:text-red-700 underline"
+                onClick={onCancel}
+                disabled={isUploading}
+                className="bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-3 py-1.5 rounded-md text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
               >
                 취소
               </button>
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={!selectedFile || isUploading}
+                className="bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A] px-3 py-1.5 rounded-md text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              >
+                {isUploading ? '업로드 중...' : '확인'}
+              </button>
             </div>
           </div>
-        )}
-        
-        {error && !isUploading && retryCount < 3 && (
-          <div className="my-2 flex items-center justify-between">
-            <div className="text-xs text-red-500 flex items-center flex-1">
-              <AlertCircle className="h-3 w-3 mr-1" />
-              <span className="flex-1">{error}</span>
-            </div>
-            <button
-              type="button"
-              onClick={handleRetry}
-              className="text-xs text-blue-500 hover:text-blue-700 underline ml-2"
-            >
-              재시도
-            </button>
-          </div>
-        )}
-        
-        <div className="flex justify-end space-x-2 mt-4">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={isUploading}
-            className="bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-3 py-1 rounded text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed h-6"
-          >
-            취소
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={!selectedFile || isUploading}
-            className="bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A] px-3 py-1 rounded text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed h-6"
-          >
-            {isUploading ? '업로드 중...' : '확인'}
-          </button>
         </div>
       </div>
     </>

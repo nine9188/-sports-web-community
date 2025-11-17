@@ -117,6 +117,32 @@ transition-colors
 ```
 - 모든 색상 변화에 적용하여 부드러운 전환 효과
 
+### 포커스 스타일
+```css
+outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0
+```
+- **사용처**: 모든 인터랙티브 요소 (버튼, 입력 필드, 링크 등)
+- 기본 포커스 링을 제거하고 배경색/테두리 변화로 포커스 상태 표시
+- 포커스 시 배경색 변화와 조합하여 사용
+
+**입력 필드 예시:**
+```tsx
+<input
+  className="outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0
+    focus:bg-[#EAEAEA] dark:focus:bg-[#333333]"
+/>
+```
+
+**버튼 예시:**
+```tsx
+<button
+  className="outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0
+    hover:bg-[#EAEAEA] dark:hover:bg-[#333333]"
+>
+  클릭
+</button>
+```
+
 ## 컴포넌트별 가이드
 
 ### Container & Header

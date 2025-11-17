@@ -70,7 +70,9 @@ export default function EditorToolbar({
 
   // 명시적인 모달 닫기 핸들러 추가
   const closeModal = (type: string) => {
-    if (type === 'youtube') {
+    if (type === 'image') {
+      handleToggleDropdown('image');
+    } else if (type === 'youtube') {
       handleToggleDropdown('youtube');
     } else if (type === 'video') {
       handleToggleDropdown('video');

@@ -632,20 +632,6 @@ export default function PostEditForm({
             </div>
           )}
 
-          <div className="space-y-2">
-            <label htmlFor="title" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">제목</label>
-            <input
-              type="text"
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-slate-800 dark:focus:ring-white/20"
-              placeholder="제목을 입력하세요"
-              maxLength={100}
-              required
-            />
-          </div>
-          
           {/* 게시판 선택 필드 (생성 모드에서만 표시) */}
           {isCreateMode && (
             <div className="space-y-2">
@@ -660,6 +646,20 @@ export default function PostEditForm({
               />
             </div>
           )}
+
+          <div className="space-y-2">
+            <label htmlFor="title" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">제목</label>
+            <input
+              type="text"
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full px-3 py-2 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-slate-800 dark:focus:ring-white/20"
+              placeholder="제목을 입력하세요"
+              maxLength={100}
+              required
+            />
+          </div>
           
           <div className="space-y-2">
             <label htmlFor="content" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">내용</label>
