@@ -293,96 +293,99 @@ export default function HoverMenu({
     <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 rounded-lg mb-4">
       <div className="px-4 py-2.5 relative" ref={containerRef}>
         {/* 네비게이션 바 */}
-        <nav className="flex items-center" ref={navRef}>
-          {/* 전체 버튼 - 최상위 게시판으로 이동하도록 수정 */}
-          <Link
-            href={`/boards/${rootBoardSlug || rootBoardId}`}
-            data-board="all"
-            className={`px-2 py-1 text-xs sm:text-sm whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 ${
-              !currentBoardId ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
-            }`}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-3 w-3 sm:h-4 sm:w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+        <nav className="flex items-center justify-between gap-1" ref={navRef}>
+          {/* 게시판 목록 */}
+          <div className="flex items-center gap-1 flex-1 overflow-x-auto">
+            {/* 전체 버튼 - 최상위 게시판으로 이동하도록 수정 */}
+            <Link
+              href={`/boards/${rootBoardSlug || rootBoardId}`}
+              data-board="all"
+              className={`px-2 py-1 text-xs sm:text-sm whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 ${
+                !currentBoardId ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
+              }`}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-              />
-            </svg>
-            전체
-          </Link>
-
-          {/* 보이는 상위 게시판들 */}
-          {visibleBoards.map((topBoard) => (
-            <div
-              key={topBoard.id}
-              className="relative"
-              ref={(el) => {
-                menuItemsRef.current[topBoard.id] = el;
-              }}
-              onMouseEnter={() => !isMobile && handleMenuEnter(topBoard.id)}
-              onMouseLeave={(e) => {
-                if (isMobile) return;
-                
-                // dropdown 영역으로 진입하지 않으면 닫기
-                const relatedTarget = e.relatedTarget as Node;
-                if (
-                  menuRef.current && 
-                  (menuRef.current.contains(relatedTarget) || menuRef.current === relatedTarget)
-                ) {
-                  return;
-                }
-                
-                handleMenuClose();
-              }}
-            >
-              <Link
-                href={`/boards/${topBoard.slug || topBoard.id}`}
-                className={`px-2 py-1 text-xs sm:text-sm whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 ${
-                  topBoard.id === currentBoardId
-                    ? 'bg-[#EAEAEA] dark:bg-[#333333]'
-                    : ''
-                }`}
-                onClick={handleMobileSubmenuClick(topBoard.id)}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-3 w-3 sm:h-4 sm:w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                {topBoard.name}
-                {childBoardsMap[topBoard.id]?.length > 0 && (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-3 w-3"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                )}
-              </Link>
-            </div>
-          ))}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                />
+              </svg>
+              전체
+            </Link>
 
-          {/* 드롭다운 버튼 (숨겨진 게시판이 있을 때만) */}
+            {/* 보이는 상위 게시판들 */}
+            {visibleBoards.map((topBoard) => (
+              <div
+                key={topBoard.id}
+                className="relative"
+                ref={(el) => {
+                  menuItemsRef.current[topBoard.id] = el;
+                }}
+                onMouseEnter={() => !isMobile && handleMenuEnter(topBoard.id)}
+                onMouseLeave={(e) => {
+                  if (isMobile) return;
+                  
+                  // dropdown 영역으로 진입하지 않으면 닫기
+                  const relatedTarget = e.relatedTarget as Node;
+                  if (
+                    menuRef.current && 
+                    (menuRef.current.contains(relatedTarget) || menuRef.current === relatedTarget)
+                  ) {
+                    return;
+                  }
+                  
+                  handleMenuClose();
+                }}
+              >
+                <Link
+                  href={`/boards/${topBoard.slug || topBoard.id}`}
+                  className={`px-2 py-1 text-xs sm:text-sm whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 ${
+                    topBoard.id === currentBoardId
+                      ? 'bg-[#EAEAEA] dark:bg-[#333333]'
+                      : ''
+                  }`}
+                  onClick={handleMobileSubmenuClick(topBoard.id)}
+                >
+                  {topBoard.name}
+                  {childBoardsMap[topBoard.id]?.length > 0 && (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-3 w-3"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  )}
+                </Link>
+              </div>
+            ))}
+          </div>
+
+          {/* 드롭다운 버튼 (숨겨진 게시판이 있을 때만) - 오른쪽 고정 */}
           {hiddenBoards.length > 0 && (
             <button
               onClick={toggleMobileDropdown}
               data-dropdown-toggle
-              className="flex items-center px-2 py-1 text-xs sm:text-sm text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md ml-2 transition-colors"
+              className="flex items-center justify-center px-2 py-1 text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md transition-colors flex-shrink-0"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className={`h-3 w-3 sm:h-4 sm:w-4 transition-transform ${
+                className={`h-4 w-4 transition-transform ${
                   mobileDropdownOpen ? 'rotate-180' : ''
                 }`}
                 fill="none"
@@ -498,7 +501,7 @@ export default function HoverMenu({
                         className="w-full text-left px-3 py-2 text-xs sm:text-sm bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md text-gray-900 dark:text-[#F0F0F0] block transition-colors"
                         onClick={() => setHoveredBoard(null)}
                       >
-                        전체 보기
+                        {sortedTopBoards.find(board => board.id === hoveredBoard)?.name} 게시판 전체 보기
                       </Link>
                       {getChildBoards(hoveredBoard)
                         .sort((a, b) => (a.display_order !== b.display_order ? a.display_order - b.display_order : a.name.localeCompare(b.name)))

@@ -1,6 +1,8 @@
 'use client';
 
 import React, { memo } from 'react';
+import Link from 'next/link';
+import { PenLine } from 'lucide-react';
 import BoardBreadcrumbs from '../common/BoardBreadcrumbs';
 import BoardTeamInfo from '../board/BoardTeamInfo';
 import LeagueInfo from '../board/LeagueInfo';
@@ -185,16 +187,33 @@ export default function BoardDetailLayout({
         variant={viewType === 'image-table' ? 'image-table' : 'text'}
       />
 
-      {pagination && Math.ceil(pagination.totalItems / pagination.itemsPerPage) > 1 && (
-        <div className="flex justify-center mt-4">
-          <MemoizedShopPagination
-            page={pagination.currentPage}
-            pageSize={pagination.itemsPerPage}
-            total={pagination.totalItems}
-            withMargin={false}
-          />
+      {/* 페이지네이션 & 글쓰기 버튼 영역 */}
+      {(pagination && Math.ceil(pagination.totalItems / pagination.itemsPerPage) > 1) || isLoggedIn ? (
+        <div className="flex items-center justify-between mt-4 px-4 sm:px-0">
+          {/* 페이지네이션 (중앙) */}
+          <div className="flex-1 flex justify-center">
+            {pagination && Math.ceil(pagination.totalItems / pagination.itemsPerPage) > 1 && (
+              <MemoizedShopPagination
+                page={pagination.currentPage}
+                pageSize={pagination.itemsPerPage}
+                total={pagination.totalItems}
+                withMargin={false}
+              />
+            )}
+          </div>
+          
+          {/* 글쓰기 버튼 (오른쪽) */}
+          {isLoggedIn && (
+            <Link
+              href={`/boards/${slug}/create`}
+              className="flex items-center justify-center gap-1 px-3 py-2 border border-black/7 dark:border-0 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded text-sm transition-colors whitespace-nowrap ml-2 min-h-[36px]"
+            >
+              <PenLine className="h-4 w-4" />
+              <span className="hidden sm:inline">글쓰기</span>
+            </Link>
+          )}
         </div>
-      )}
+      ) : null}
     </div>
   );
 } 

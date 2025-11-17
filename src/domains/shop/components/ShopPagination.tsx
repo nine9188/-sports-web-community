@@ -46,14 +46,14 @@ export default function ShopPagination({ page, pageSize, total, withMargin = tru
       <Link
         href={buildHref(1)}
         aria-label="첫 페이지"
-        className={`px-3 py-2 rounded bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-sm transition-colors ${currentPage === 1 ? 'opacity-40 pointer-events-none' : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'}`}
+        className={`px-3 py-2 rounded border border-black/7 dark:border-0 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-sm transition-colors ${currentPage === 1 ? 'opacity-40 pointer-events-none' : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'}`}
       >
         «
       </Link>
       <Link
         href={buildHref(prevPage)}
         aria-label="이전 페이지"
-        className={`px-3 py-2 rounded bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-sm transition-colors ${currentPage === 1 ? 'opacity-40 pointer-events-none' : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'}`}
+        className={`px-3 py-2 rounded border border-black/7 dark:border-0 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-sm transition-colors ${currentPage === 1 ? 'opacity-40 pointer-events-none' : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'}`}
       >
         ‹
       </Link>
@@ -66,7 +66,7 @@ export default function ShopPagination({ page, pageSize, total, withMargin = tru
             key={p}
             href={buildHref(p)}
             aria-current={p === currentPage ? 'page' : undefined}
-            className={`px-3 py-2 rounded text-sm transition-colors ${p === currentPage ? 'bg-slate-800 dark:bg-[#3F3F3F] text-white' : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'} ${hideOnMobile ? 'hidden md:flex' : 'flex'}`}
+            className={`px-3 py-2 rounded border text-sm transition-colors ${p === currentPage ? 'border-black/7 dark:border-0 bg-slate-800 dark:bg-[#3F3F3F] text-white' : 'border-black/7 dark:border-0 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'} ${hideOnMobile ? 'hidden md:flex' : 'flex'}`}
           >
             {p}
           </Link>
@@ -76,14 +76,14 @@ export default function ShopPagination({ page, pageSize, total, withMargin = tru
       <Link
         href={buildHref(nextPage)}
         aria-label="다음 페이지"
-        className={`px-3 py-2 rounded bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-sm transition-colors ${currentPage === totalPages ? 'opacity-40 pointer-events-none' : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'}`}
+        className={`px-3 py-2 rounded border border-black/7 dark:border-0 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-sm transition-colors ${currentPage === totalPages ? 'opacity-40 pointer-events-none' : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'}`}
       >
         ›
       </Link>
       <Link
         href={buildHref(totalPages)}
         aria-label="마지막 페이지"
-        className={`px-3 py-2 rounded bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-sm transition-colors ${currentPage === totalPages ? 'opacity-40 pointer-events-none' : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'}`}
+        className={`px-3 py-2 rounded border border-black/7 dark:border-0 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-sm transition-colors ${currentPage === totalPages ? 'opacity-40 pointer-events-none' : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'}`}
       >
         »
       </Link>
