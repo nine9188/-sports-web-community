@@ -175,28 +175,26 @@ export default function BoardDetailLayout({
         />
       )}
 
-      <div className="mt-2 rounded-lg">
-        {/* 게시판 유형(view_type)에 따라 PostList 렌더링 분기 - 초기 스켈레톤 없이 바로 렌더 */}
-        <MemoizedPostList
-          posts={posts}
-          loading={false}
-          currentBoardId={boardData.id}
-          showBoard={true}
-          className="mb-4"
-          emptyMessage="아직 작성된 게시글이 없습니다."
-          variant={viewType === 'image-table' ? 'image-table' : 'text'}
-        />
-        {pagination && (
-          <div className="flex justify-center">
-            <MemoizedShopPagination 
-              page={pagination.currentPage}
-              pageSize={pagination.itemsPerPage}
-              total={pagination.totalItems}
-              withMargin={false}
-            />
-          </div>
-        )}
-      </div>
+      <MemoizedPostList
+        posts={posts}
+        loading={false}
+        currentBoardId={boardData.id}
+        showBoard={true}
+        className="mt-2"
+        emptyMessage="아직 작성된 게시글이 없습니다."
+        variant={viewType === 'image-table' ? 'image-table' : 'text'}
+      />
+
+      {pagination && Math.ceil(pagination.totalItems / pagination.itemsPerPage) > 1 && (
+        <div className="flex justify-center mt-4">
+          <MemoizedShopPagination
+            page={pagination.currentPage}
+            pageSize={pagination.itemsPerPage}
+            total={pagination.totalItems}
+            withMargin={false}
+          />
+        </div>
+      )}
     </div>
   );
 } 

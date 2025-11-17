@@ -14,6 +14,7 @@ interface PostFooterProps {
   isLoggedIn?: boolean;
   postId?: string;
   userId?: string;
+  withMargin?: boolean;
 }
 
 export default function PostFooter({ 
@@ -22,7 +23,8 @@ export default function PostFooter({
   isAuthor = false,
   isLoggedIn = false,
   postId,
-  userId
+  userId,
+  withMargin = true
 }: PostFooterProps) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -142,8 +144,8 @@ export default function PostFooter({
   }
 
   return (
-    <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 mb-4">
-      <div className="flex flex-row items-center justify-around px-4 py-2.5">
+    <div className={`bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 ${withMargin ? 'mb-4' : ''}`}>
+      <div className="h-12 px-4 flex flex-row items-center justify-around">
         {buttonSlots.map((button) => (
           <div key={button.key} className="flex-1 text-center">
             {button.element}

@@ -861,7 +861,7 @@ export default function PostList({
   }, [isMobile, useVirtualization, deferredPosts, showBoard, boardNameMaxWidth, currentPostId, currentBoardId, renderContentTypeIcons, renderAuthor, renderBoardLogo, extractFirstImageUrl, variant]);
 
   return (
-    <div className={`bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden ${className}`}>
+    <div className={`bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden p-0 m-0 ${className}`}>
       {headerContent && (
         <div className="h-12 px-4 flex items-center bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10">
           {headerContent}

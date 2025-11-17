@@ -71,7 +71,7 @@ export default function PostNavigation({ boardSlug, prevPost, nextPost }: PostNa
 
   return (
     <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 mb-4">
-      <div className="flex flex-row items-center justify-around px-4 py-2.5">
+      <div className="h-12 px-4 flex flex-row items-center justify-around">
         {buttons.map((button) => (
           <div key={button.key} className="flex-1 text-center">
             {button.element}

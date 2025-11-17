@@ -14,9 +14,8 @@ const Container = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "bg-white dark:bg-[#1D1D1D] rounded-lg",
       "border border-black/7 dark:border-0",
-      "overflow-hidden",
+      "md:rounded-lg overflow-hidden",
       className
     )}
     {...props}
@@ -42,7 +41,7 @@ const ContainerHeader = React.forwardRef<
     className={cn(
       "bg-[#F5F5F5] dark:bg-[#262626]",
       "h-12 px-4 flex items-center",
-      "rounded-t-lg",
+      "md:rounded-t-lg",
       className
     )}
     {...props}
@@ -78,7 +77,7 @@ const ContainerContent = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("px-4 py-3", className)}
+    className={cn("px-4 py-3 bg-white dark:bg-[#1D1D1D]", className)}
     {...props}
   />
 ))

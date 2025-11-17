@@ -303,16 +303,15 @@ export default function PostDetailLayout({
       </div>
       
       {/* 4. 게시글 하단 버튼 영역 */}
-      <div className="mb-4">
-        <MemoizedPostFooter 
-          boardSlug={slug}
-          postNumber={postNumber}
-          isAuthor={isAuthor}
-          isLoggedIn={isLoggedIn}
-          postId={post.id}
-          userId={post.user_id}
-        />
-      </div>
+      <MemoizedPostFooter 
+        boardSlug={slug}
+        postNumber={postNumber}
+        isAuthor={isAuthor}
+        isLoggedIn={isLoggedIn}
+        postId={post.id}
+        userId={post.user_id}
+        withMargin={true}
+      />
       
       {/* 5. 포스트 네비게이션 */}
       <div className="mb-4">
@@ -347,39 +346,36 @@ export default function PostDetailLayout({
       
       {/* 8. 같은 게시판의 다른 글 목록 - 즉시 로딩 */}
       <div className="mb-4">
-        <MemoizedPostList 
+        <MemoizedPostList
           posts={postsWithIcons}
           showBoard={true}
           currentBoardId={board.id}
           currentPostId={post.id}
         />
       </div>
-      
+
       {/* 9. 게시글 푸터 (중복) */}
-      <div className="mb-4">
-        <MemoizedPostFooter 
-          boardSlug={slug}
-          postNumber={postNumber}
-          isAuthor={isAuthor}
-          isLoggedIn={isLoggedIn}
-          postId={post.id}
-          userId={post.user_id}
-        />
-      </div>
-      
+      <MemoizedPostFooter
+        boardSlug={slug}
+        postNumber={postNumber}
+        isAuthor={isAuthor}
+        isLoggedIn={isLoggedIn}
+        postId={post.id}
+        userId={post.user_id}
+        withMargin={totalPages > 1}
+      />
+
       {/* 10. 페이지네이션 */}
-      <div>
-        {totalPages > 1 && (
-          <div className="px-4 sm:px-6">
-            <MemoizedShopPagination
-              page={currentPage}
-              pageSize={20}
-              total={totalPages * 20}
-              withMargin={false}
-            />
-          </div>
-        )}
-      </div>
+      {totalPages > 1 && (
+        <div className="px-4 sm:px-6">
+          <MemoizedShopPagination
+            page={currentPage}
+            pageSize={20}
+            total={totalPages * 20}
+            withMargin={false}
+          />
+        </div>
+      )}
     </div>
   );
 } 
