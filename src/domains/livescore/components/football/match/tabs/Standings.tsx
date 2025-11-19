@@ -137,8 +137,8 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
     return (
       <div className="flex justify-center items-center py-8">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500 mx-auto mb-2"></div>
-          <p className="text-sm text-gray-600">순위표 데이터를 불러오는 중...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-gray-900 dark:border-[#F0F0F0] mx-auto mb-2"></div>
+          <p className="text-sm text-gray-700 dark:text-gray-300">순위표 데이터를 불러오는 중...</p>
         </div>
       </div>
     );
@@ -148,24 +148,24 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
   if (error) {
     return (
       <div className="text-center py-8">
-        <div className="text-red-500 mb-2">
+        <div className="text-red-500 dark:text-red-400 mb-2">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <p className="text-sm text-gray-600">순위표 데이터를 불러오는 중 오류가 발생했습니다.</p>
-        <p className="text-xs text-gray-500 mt-1">{error}</p>
+        <p className="text-sm text-gray-700 dark:text-gray-300">순위표 데이터를 불러오는 중 오류가 발생했습니다.</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{error}</p>
       </div>
     );
   }
   
   // 데이터 없음 상태
-  if (!standings || !standings.standings || !standings.standings.league || 
+  if (!standings || !standings.standings || !standings.standings.league ||
       !standings.standings.league.standings || standings.standings.league.standings.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-sm text-gray-600">현재 리그 순위 데이터가 없습니다.</p>
-        <p className="text-xs text-gray-500 mt-1">시즌이 시작되지 않았거나 종료되었을 수 있습니다.</p>
+        <p className="text-sm text-gray-700 dark:text-gray-300">현재 리그 순위 데이터가 없습니다.</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">시즌이 시작되지 않았거나 종료되었을 수 있습니다.</p>
       </div>
     );
   }
@@ -223,7 +223,7 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
                   <col className="hidden md:table-column w-32" />
                 </colgroup>
 
-                <thead className="bg-gray-50 dark:bg-[#2D2D2D]">
+                <thead className="bg-[#F5F5F5] dark:bg-[#262626]">
                   <tr>
                     <th className="md:hidden px-1 py-1 text-center text-xs font-medium text-gray-500 dark:text-gray-400">#</th>
                     <th className="hidden md:table-cell px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">순위</th>
@@ -246,20 +246,20 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="divide-y divide-black/5 dark:divide-white/10">
                   {standingsGroup.map((standing: Standing) => {
                     // 홈팀 또는 원정팀인지 확인하여 하이라이트 처리
                     const isHomeTeam = String(standing.team.id) === String(homeTeamId);
                     const isAwayTeam = String(standing.team.id) === String(awayTeamId);
 
                     // 팀 행 스타일 설정
-                    let rowClass = 'cursor-pointer';
+                    let rowClass = 'cursor-pointer transition-colors';
                     if (isHomeTeam) {
                       rowClass += ' bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-800/50';
                     } else if (isAwayTeam) {
                       rowClass += ' bg-red-50 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-800/50';
                     } else {
-                      rowClass += ' hover:bg-gray-100 dark:hover:bg-gray-800';
+                      rowClass += ' hover:bg-[#EAEAEA] dark:hover:bg-[#333333]';
                     }
                   
                   // 강등권, 유로파, 챔스 등 구분
@@ -383,7 +383,7 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
             </div>
 
             {/* 구분선 */}
-            <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+            <div className="border-t border-black/5 dark:border-white/10 my-1"></div>
 
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700"></div>
