@@ -41,6 +41,7 @@ const ContainerHeader = React.forwardRef<
     className={cn(
       "bg-[#F5F5F5] dark:bg-[#262626]",
       "h-12 px-4 flex items-center",
+      "border-b border-black/5 dark:border-white/10",
       "md:rounded-t-lg",
       className
     )}

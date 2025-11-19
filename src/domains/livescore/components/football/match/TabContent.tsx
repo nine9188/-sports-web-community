@@ -204,9 +204,9 @@ export default function TabContent() {
     // 매치 ID 없는 경우 처리
     if (!matchId) {
       return (
-        <div className="bg-white rounded-lg border p-4">
+        <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 p-4">
           <div className="flex justify-center items-center py-8">
-            <p className="text-gray-600">경기 정보가 없습니다.</p>
+            <p className="text-gray-700 dark:text-gray-300">경기 정보가 없습니다.</p>
           </div>
         </div>
       );
@@ -321,8 +321,8 @@ export default function TabContent() {
 
       default:
         return (
-          <div className="p-4 text-center bg-white rounded-lg shadow-sm">
-            <p className="text-gray-700">존재하지 않는 탭입니다.</p>
+          <div className="p-4 text-center bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0">
+            <p className="text-gray-700 dark:text-gray-300">존재하지 않는 탭입니다.</p>
           </div>
         );
     }

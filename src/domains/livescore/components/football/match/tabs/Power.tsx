@@ -9,6 +9,7 @@ import { StandingsData } from '@/domains/livescore/types/match';
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
+import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 
 interface PowerProps {
   matchId: string;
@@ -67,6 +68,10 @@ export default function Power({ data }: PowerProps) {
   const teamAMeta = findTeamMeta(data.teamA)
   const teamBMeta = findTeamMeta(data.teamB)
 
+  // 데이터 확인용 콘솔 로그
+  console.log('Team A recent games:', data.recent.teamA.items.length, data.recent.teamA.items);
+  console.log('Team B recent games:', data.recent.teamB.items.length, data.recent.teamB.items);
+
   // 평균 득/실점 계산 (최근 폼 기준)
   const gamesA = Math.max(1, data.recent.teamA.last)
   const gamesB = Math.max(1, data.recent.teamB.last)
@@ -80,12 +85,16 @@ export default function Power({ data }: PowerProps) {
   return (
     <>
       {/* 팀 비교(모바일 우선) */}
-      <section className="bg-white rounded-lg border p-4">
+      <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
+        <ContainerHeader>
+          <ContainerTitle>팀 비교</ContainerTitle>
+        </ContainerHeader>
+        <ContainerContent>
         {/* 1) VS행: 팀명, 순위, 승무패 */}
         <div className="grid grid-cols-[3fr_1fr_3fr] items-center gap-1">
           <div className="text-right px-1">
             <div className="flex items-center justify-end gap-2 mb-1">
-              <div className="font-semibold truncate text-right">{teamAMeta.name}</div>
+              <div className="font-semibold truncate text-right text-gray-900 dark:text-[#F0F0F0]">{teamAMeta.name}</div>
               <ApiSportsImage
                 imageId={data.teamA}
                 imageType={ImageType.Teams}
@@ -100,7 +109,7 @@ export default function Power({ data }: PowerProps) {
                 const group = data.standings!.standings.league.standings[0] || []
                 const a = group.find(s => s.team.id === data.teamA)
                 return (
-                  <div className="text-[11px] text-gray-600">
+                  <div className="text-[11px] text-gray-500 dark:text-gray-400">
                     <span>{a?.rank ? `${a.rank}위` : '-'}·{a ? `${a.all.win}승 ${a.all.draw}무 ${a.all.lose}패` : '0승 0무 0패'}</span>
                   </div>
                 )
@@ -108,7 +117,7 @@ export default function Power({ data }: PowerProps) {
             ) : null}
           </div>
           <div className="text-center px-1">
-            <div className="text-lg font-extrabold">VS</div>
+            <div className="text-lg font-extrabold text-gray-900 dark:text-[#F0F0F0]">VS</div>
           </div>
           <div className="text-left px-1">
             <div className="flex items-center justify-start gap-2 mb-1">
@@ -120,14 +129,14 @@ export default function Power({ data }: PowerProps) {
                 height={32}
                 className="w-8 h-8 object-contain"
               />
-              <div className="font-semibold truncate">{teamBMeta.name}</div>
+              <div className="font-semibold truncate text-gray-900 dark:text-[#F0F0F0]">{teamBMeta.name}</div>
             </div>
             {data.standings?.standings?.league?.standings ? (
               (() => {
                 const group = data.standings!.standings.league.standings[0] || []
                 const b = group.find(s => s.team.id === data.teamB)
                 return (
-                  <div className="text-[11px] text-gray-600">
+                  <div className="text-[11px] text-gray-500 dark:text-gray-400">
                     <span>{b?.rank ? `${b.rank}위` : '-'}·{b ? `${b.all.win}승 ${b.all.draw}무 ${b.all.lose}패` : '0승 0무 0패'}</span>
                   </div>
                 )
@@ -136,28 +145,11 @@ export default function Power({ data }: PowerProps) {
           </div>
         </div>
 
-        {/* 2) 최근경기행: W/D/L */}
-        <div className="mt-3">
-          <div className="grid grid-cols-[3fr_1fr_3fr] items-center gap-1 text-xs">
-            <div className="flex gap-1 justify-end px-1">
-              {data.recent.teamA.items.slice(0, 5).map((it) => (
-                <span key={it.fixtureId} className={`w-6 h-6 flex items-center justify-center text-xs font-medium ${it.result === 'W' ? 'bg-emerald-100 text-emerald-700' : it.result === 'D' ? 'bg-gray-100 text-gray-700' : 'bg-rose-100 text-rose-700'}`}>{it.result}</span>
-              ))}
-            </div>
-            <div className="text-center text-gray-600 text-xs px-1 whitespace-nowrap">최근경기</div>
-            <div className="flex gap-1 justify-start px-1">
-              {data.recent.teamB.items.slice(0, 5).map((it) => (
-                <span key={it.fixtureId} className={`w-6 h-6 flex items-center justify-center text-xs font-medium ${it.result === 'W' ? 'bg-emerald-100 text-emerald-700' : it.result === 'D' ? 'bg-gray-100 text-gray-700' : 'bg-rose-100 text-rose-700'}`}>{it.result}</span>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* 3) 평균득점행 (최근 양팀 맞대결 UI와 동일 처리) */}
+        {/* 2) 평균득점행 (최근 양팀 맞대결 UI와 동일 처리) */}
         <div className="mt-4">
           <div className="grid grid-cols-[3fr_1fr_3fr] items-center gap-1 text-sm">
             <div className="flex items-center justify-end px-1 gap-2">
-              <div className="h-2 flex-1 bg-gray-100 rounded relative">
+              <div className="h-2 flex-1 bg-[#EAEAEA] dark:bg-[#333333] rounded relative">
                 {avgForA > 0 && (
                   <div
                     className="h-2 bg-red-500 rounded absolute right-0"
@@ -167,10 +159,10 @@ export default function Power({ data }: PowerProps) {
               </div>
               <span className="font-semibold min-w-8">{avgForA.toFixed(2)}</span>
             </div>
-            <div className="text-center text-gray-600 text-xs px-1 whitespace-nowrap">평균득점</div>
+            <div className="text-center text-gray-500 dark:text-gray-400 text-xs px-1 whitespace-nowrap">평균득점</div>
             <div className="flex items-center justify-start px-1 gap-2">
               <span className="font-semibold min-w-8">{avgForB.toFixed(2)}</span>
-              <div className="h-2 flex-1 bg-gray-100 rounded">
+              <div className="h-2 flex-1 bg-[#EAEAEA] dark:bg-[#333333] rounded">
                 {avgForB > 0 && (
                   <div
                     className="h-2 bg-red-500 rounded"
@@ -186,7 +178,7 @@ export default function Power({ data }: PowerProps) {
         <div className="mt-3">
           <div className="grid grid-cols-[3fr_1fr_3fr] items-center gap-1 text-sm">
             <div className="flex items-center justify-end px-1 gap-2">
-              <div className="h-2 flex-1 bg-gray-100 rounded relative">
+              <div className="h-2 flex-1 bg-[#EAEAEA] dark:bg-[#333333] rounded relative">
                 {avgAgainstA > 0 && (
                   <div
                     className="h-2 bg-blue-500 rounded absolute right-0"
@@ -196,10 +188,10 @@ export default function Power({ data }: PowerProps) {
               </div>
               <span className="font-semibold min-w-8">{avgAgainstA.toFixed(2)}</span>
             </div>
-            <div className="text-center text-gray-600 text-xs px-1 whitespace-nowrap">평균실점</div>
+            <div className="text-center text-gray-500 dark:text-gray-400 text-xs px-1 whitespace-nowrap">평균실점</div>
             <div className="flex items-center justify-start px-1 gap-2">
               <span className="font-semibold min-w-8">{avgAgainstB.toFixed(2)}</span>
-              <div className="h-2 flex-1 bg-gray-100 rounded">
+              <div className="h-2 flex-1 bg-[#EAEAEA] dark:bg-[#333333] rounded">
                 {avgAgainstB > 0 && (
                   <div
                     className="h-2 bg-blue-500 rounded"
@@ -210,11 +202,110 @@ export default function Power({ data }: PowerProps) {
             </div>
           </div>
         </div>
-      </section>
+        </ContainerContent>
+      </Container>
+
+      {/* 최근 경기 */}
+      <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
+        <ContainerHeader>
+          <ContainerTitle>최근 경기</ContainerTitle>
+        </ContainerHeader>
+        <ContainerContent>
+          <div className="grid grid-cols-[1fr_auto_1fr] gap-4">
+            {/* Team A 최근 경기 */}
+            <div>
+              <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 text-center">{teamAMeta.name}</div>
+              <div className="space-y-1.5">
+                {data.recent.teamA.items.slice(0, 5).map((it) => {
+                  const opponentName = it.opponent.name || `팀 #${it.opponent.id}`;
+                  const displayName = getTeamDisplayName(it.opponent.id || 0, { language: 'ko' });
+                  const finalName = displayName.startsWith('팀 ') ? opponentName : displayName;
+                  const bgColor = it.result === 'W'
+                    ? 'bg-green-100 dark:bg-green-900'
+                    : it.result === 'D'
+                    ? 'bg-yellow-100 dark:bg-yellow-900'
+                    : 'bg-red-100 dark:bg-red-900';
+                  const textColor = it.result === 'W'
+                    ? 'text-green-800 dark:text-green-200'
+                    : it.result === 'D'
+                    ? 'text-yellow-800 dark:text-yellow-200'
+                    : 'text-red-800 dark:text-red-200';
+
+                  // 홈 경기: TeamA vs 상대팀, 원정 경기: 상대팀 vs TeamA
+                  return (
+                    <div key={it.fixtureId} className="flex items-center gap-1.5 text-xs">
+                      {it.venue === 'home' ? (
+                        <>
+                          <span className="text-gray-900 dark:text-[#F0F0F0] truncate flex-1 text-right">{teamAMeta.name}</span>
+                          <span className={`px-2 py-1 rounded font-semibold flex-shrink-0 ${bgColor} ${textColor}`}>{it.score.for}-{it.score.against}</span>
+                          <span className="text-gray-900 dark:text-[#F0F0F0] truncate flex-1">{finalName}</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-gray-900 dark:text-[#F0F0F0] truncate flex-1 text-right">{finalName}</span>
+                          <span className={`px-2 py-1 rounded font-semibold flex-shrink-0 ${bgColor} ${textColor}`}>{it.score.against}-{it.score.for}</span>
+                          <span className="text-gray-900 dark:text-[#F0F0F0] truncate flex-1">{teamAMeta.name}</span>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 구분선 */}
+            <div className="w-px bg-black/5 dark:bg-white/10"></div>
+
+            {/* Team B 최근 경기 */}
+            <div>
+              <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 text-center">{teamBMeta.name}</div>
+              <div className="space-y-1.5">
+                {data.recent.teamB.items.slice(0, 5).map((it) => {
+                  const opponentName = it.opponent.name || `팀 #${it.opponent.id}`;
+                  const displayName = getTeamDisplayName(it.opponent.id || 0, { language: 'ko' });
+                  const finalName = displayName.startsWith('팀 ') ? opponentName : displayName;
+                  const bgColor = it.result === 'W'
+                    ? 'bg-green-100 dark:bg-green-900'
+                    : it.result === 'D'
+                    ? 'bg-yellow-100 dark:bg-yellow-900'
+                    : 'bg-red-100 dark:bg-red-900';
+                  const textColor = it.result === 'W'
+                    ? 'text-green-800 dark:text-green-200'
+                    : it.result === 'D'
+                    ? 'text-yellow-800 dark:text-yellow-200'
+                    : 'text-red-800 dark:text-red-200';
+
+                  // 홈 경기: TeamB vs 상대팀, 원정 경기: 상대팀 vs TeamB
+                  return (
+                    <div key={it.fixtureId} className="flex items-center gap-1.5 text-xs">
+                      {it.venue === 'home' ? (
+                        <>
+                          <span className="text-gray-900 dark:text-[#F0F0F0] truncate flex-1 text-right">{teamBMeta.name}</span>
+                          <span className={`px-2 py-1 rounded font-semibold flex-shrink-0 ${bgColor} ${textColor}`}>{it.score.for}-{it.score.against}</span>
+                          <span className="text-gray-900 dark:text-[#F0F0F0] truncate flex-1">{finalName}</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-gray-900 dark:text-[#F0F0F0] truncate flex-1 text-right">{finalName}</span>
+                          <span className={`px-2 py-1 rounded font-semibold flex-shrink-0 ${bgColor} ${textColor}`}>{it.score.against}-{it.score.for}</span>
+                          <span className="text-gray-900 dark:text-[#F0F0F0] truncate flex-1">{teamBMeta.name}</span>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </ContainerContent>
+      </Container>
 
       {/* 최근 맞대결 리스트: 중앙 기준 좌/우 분할 */}
-      <section className="bg-white rounded-lg border p-4 mb-4">
-        <h3 className="text-base font-semibold mb-3">최근 양팀 맞대결</h3>
+      <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
+        <ContainerHeader>
+          <ContainerTitle>최근 양팀 맞대결</ContainerTitle>
+        </ContainerHeader>
+        <ContainerContent>
         
         {/* 경기 결과 목록 */}
         <div className="space-y-1">
@@ -223,7 +314,7 @@ export default function Power({ data }: PowerProps) {
             const aScore = isTeamAHome ? m.score.home : m.score.away
             const bScore = isTeamAHome ? m.score.away : m.score.home
             return (
-              <div key={m.fixtureId} className="grid grid-cols-[3fr_1fr_3fr] gap-1 items-center py-2 border-b border-gray-100 last:border-b-0 text-sm">
+              <div key={m.fixtureId} className="grid grid-cols-[3fr_1fr_3fr] gap-1 items-center py-2 border-b border-black/5 dark:border-white/10 last:border-b-0 text-sm">
                 <div className="flex items-center justify-end px-1 gap-2">
                   <span className="text-sm">{teamAMeta.name}</span>
                   <ApiSportsImage
@@ -236,7 +327,7 @@ export default function Power({ data }: PowerProps) {
                   />
                   <span className="font-semibold">{aScore}</span>
                 </div>
-                <div className="text-center text-gray-600 px-1">
+                <div className="text-center text-gray-500 dark:text-gray-400 px-1">
                   <div className="text-xs whitespace-nowrap">{new Date(m.utcDate).toLocaleDateString('ko-KR', { year: '2-digit', month: 'numeric', day: 'numeric', timeZone: 'Asia/Seoul' }).replace(/\./g, '. ')}</div>
                   <div className="text-xs truncate">{getLeagueKoreanName(m.league.name)}</div>
                 </div>
@@ -264,19 +355,19 @@ export default function Power({ data }: PowerProps) {
             <div className="flex items-center justify-end px-1">
               <div className="flex items-center gap-2">
                 <div className="flex gap-1">
-                  <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">{data.h2h.resultSummary.teamA.win}W</span>
-                  <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium">{data.h2h.resultSummary.teamA.draw}D</span>
-                  <span className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-medium">{data.h2h.resultSummary.teamA.loss}L</span>
+                  <span className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded text-xs font-medium">{data.h2h.resultSummary.teamA.win}W</span>
+                  <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded text-xs font-medium">{data.h2h.resultSummary.teamA.draw}D</span>
+                  <span className="px-2 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded text-xs font-medium">{data.h2h.resultSummary.teamA.loss}L</span>
                 </div>
               </div>
             </div>
-            <div className="text-center text-gray-600 text-xs">승무패</div>
+            <div className="text-center text-gray-500 dark:text-gray-400 text-xs">승무패</div>
             <div className="flex items-center justify-start px-1">
               <div className="flex items-center gap-2">
                 <div className="flex gap-1">
-                  <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">{data.h2h.resultSummary.teamB.win}W</span>
-                  <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium">{data.h2h.resultSummary.teamB.draw}D</span>
-                  <span className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-medium">{data.h2h.resultSummary.teamB.loss}L</span>
+                  <span className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded text-xs font-medium">{data.h2h.resultSummary.teamB.win}W</span>
+                  <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded text-xs font-medium">{data.h2h.resultSummary.teamB.draw}D</span>
+                  <span className="px-2 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded text-xs font-medium">{data.h2h.resultSummary.teamB.loss}L</span>
                 </div>
               </div>
             </div>
@@ -285,7 +376,7 @@ export default function Power({ data }: PowerProps) {
           {/* 평균 득실점 통계 */}
           <div className="grid grid-cols-[3fr_1fr_3fr] gap-1 text-sm">
             <div className="flex items-center justify-end px-1 gap-2">
-              <div className="h-2 flex-1 bg-gray-100 rounded relative">
+              <div className="h-2 flex-1 bg-[#EAEAEA] dark:bg-[#333333] rounded relative">
                 {data.h2h.last > 0 && data.h2h.resultSummary.teamA.goalsFor > 0 && (
                   <div className="h-2 bg-red-500 rounded absolute right-0" style={{ width: `${Math.min((data.h2h.resultSummary.teamA.goalsFor / data.h2h.last) / Math.max((data.h2h.resultSummary.teamA.goalsFor / data.h2h.last), (data.h2h.resultSummary.teamB.goalsFor / data.h2h.last)) * 100, 100)}%` }} />
                 )}
@@ -294,12 +385,12 @@ export default function Power({ data }: PowerProps) {
                 {data.h2h.last > 0 ? (data.h2h.resultSummary.teamA.goalsFor / data.h2h.last).toFixed(2) : '0.00'}
               </span>
             </div>
-            <div className="text-center text-gray-600 text-xs">평균득점</div>
+            <div className="text-center text-gray-500 dark:text-gray-400 text-xs">평균득점</div>
             <div className="flex items-center justify-start px-1 gap-2">
               <span className="font-semibold min-w-8">
                 {data.h2h.last > 0 ? (data.h2h.resultSummary.teamB.goalsFor / data.h2h.last).toFixed(2) : '0.00'}
               </span>
-              <div className="h-2 flex-1 bg-gray-100 rounded">
+              <div className="h-2 flex-1 bg-[#EAEAEA] dark:bg-[#333333] rounded">
                 {data.h2h.last > 0 && data.h2h.resultSummary.teamB.goalsFor > 0 && (
                   <div className="h-2 bg-red-500 rounded" style={{ width: `${Math.min((data.h2h.resultSummary.teamB.goalsFor / data.h2h.last) / Math.max((data.h2h.resultSummary.teamA.goalsFor / data.h2h.last), (data.h2h.resultSummary.teamB.goalsFor / data.h2h.last)) * 100, 100)}%` }} />
                 )}
@@ -309,17 +400,17 @@ export default function Power({ data }: PowerProps) {
           
           <div className="grid grid-cols-[3fr_1fr_3fr] gap-1 text-sm">
             <div className="flex items-center justify-end px-1 gap-2">
-              <div className="h-2 flex-1 bg-gray-100 rounded relative">
+              <div className="h-2 flex-1 bg-[#EAEAEA] dark:bg-[#333333] rounded relative">
                 {data.h2h.last > 0 && data.h2h.resultSummary.teamA.goalsAgainst > 0 && (
                   <div className="h-2 bg-blue-500 rounded absolute right-0" style={{ width: `${Math.min((data.h2h.resultSummary.teamA.goalsAgainst / Math.max(data.h2h.last, 1)) / Math.max((data.h2h.resultSummary.teamA.goalsAgainst / Math.max(data.h2h.last, 1)), (data.h2h.resultSummary.teamB.goalsAgainst / Math.max(data.h2h.last, 1))) * 100, 100)}%` }} />
                 )}
               </div>
               <span className="font-semibold min-w-8">{(data.h2h.resultSummary.teamA.goalsAgainst / Math.max(data.h2h.last, 1)).toFixed(2)}</span>
             </div>
-            <div className="text-center text-gray-600 text-xs">평균실점</div>
+            <div className="text-center text-gray-500 dark:text-gray-400 text-xs">평균실점</div>
             <div className="flex items-center justify-start px-1 gap-2">
               <span className="font-semibold min-w-8">{(data.h2h.resultSummary.teamB.goalsAgainst / Math.max(data.h2h.last, 1)).toFixed(2)}</span>
-              <div className="h-2 flex-1 bg-gray-100 rounded">
+              <div className="h-2 flex-1 bg-[#EAEAEA] dark:bg-[#333333] rounded">
                 {data.h2h.last > 0 && data.h2h.resultSummary.teamB.goalsAgainst > 0 && (
                   <div className="h-2 bg-blue-500 rounded" style={{ width: `${Math.min((data.h2h.resultSummary.teamB.goalsAgainst / Math.max(data.h2h.last, 1)) / Math.max((data.h2h.resultSummary.teamA.goalsAgainst / Math.max(data.h2h.last, 1)), (data.h2h.resultSummary.teamB.goalsAgainst / Math.max(data.h2h.last, 1))) * 100, 100)}%` }} />
                 )}
@@ -327,14 +418,18 @@ export default function Power({ data }: PowerProps) {
             </div>
           </div>
         </div>
-      </section>
+        </ContainerContent>
+      </Container>
 
       {/* 탑 플레이어 테이블 */}
-      <section className="bg-white rounded-lg border p-4">
-        <h3 className="text-base font-semibold mb-3">팀 탑 플레이어</h3>
+      <Container className="bg-white dark:bg-[#1D1D1D]">
+        <ContainerHeader>
+          <ContainerTitle>팀 탑 플레이어</ContainerTitle>
+        </ContainerHeader>
+        <ContainerContent>
         
         {/* 테이블 헤더 */}
-        <div className="grid grid-cols-[3fr_1fr_3fr] gap-1 mb-3 text-sm font-medium text-gray-600 border-b pb-2">
+        <div className="grid grid-cols-[3fr_1fr_3fr] gap-1 mb-3 text-sm font-medium text-gray-700 dark:text-gray-300 border-b border-black/5 dark:border-white/10 pb-2">
           <div className="flex items-center justify-end gap-2 px-1">
             <span>{teamAMeta.name}</span>
             <ApiSportsImage
@@ -346,7 +441,7 @@ export default function Power({ data }: PowerProps) {
               className="w-4 h-4 object-contain"
             />
           </div>
-          <div className="text-center px-1 border-x border-gray-200">구분</div>
+          <div className="text-center px-1 border-x border-black/5 dark:border-white/10">구분</div>
           <div className="flex items-center justify-start gap-2 px-1">
             <ApiSportsImage
               imageId={data.teamB}
@@ -364,7 +459,7 @@ export default function Power({ data }: PowerProps) {
         <div className="mb-4">
           <div className="grid grid-cols-[3fr_1fr_3fr] gap-1 items-center mb-2">
             <div></div>
-            <div className="text-center text-sm font-medium text-gray-700 border-x border-gray-200">득점</div>
+            <div className="text-center text-sm font-medium text-gray-700 dark:text-gray-300 border-x border-black/5 dark:border-white/10">득점</div>
             <div></div>
           </div>
           
@@ -378,24 +473,24 @@ export default function Power({ data }: PowerProps) {
             const playerBDisplayName = playerBKoreanName || playerB?.name || `#${playerB?.playerId}`;
 
             return (
-              <div key={`scorer-${index}`} className="grid grid-cols-[3fr_1fr_3fr] gap-1 items-center py-2 text-sm border-b border-gray-100 last:border-b-0">
+              <div key={`scorer-${index}`} className="grid grid-cols-[3fr_1fr_3fr] gap-1 items-center py-2 text-sm border-b border-black/5 dark:border-white/10 last:border-b-0">
                 <div className="flex items-center gap-3 justify-end px-1">
                   {playerA && (
                     <>
                       <span className="text-sm sm:text-base leading-snug line-clamp-2 max-w-[160px] text-right">{playerADisplayName}</span>
-                      <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
+                      <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
                         <Image src={`https://media.api-sports.io/football/players/${playerA.playerId}.png`} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                       </div>
                       <span className="text-orange-600 font-semibold flex-shrink-0 text-base">{playerA.goals}</span>
                     </>
                   )}
                 </div>
-                <div className="border-x border-gray-200 h-full" />
+                <div className="border-x border-black/5 dark:border-white/10 h-full" />
                 <div className="flex items-center gap-3 justify-start px-1">
                   {playerB && (
                     <>
                       <span className="text-orange-600 font-semibold flex-shrink-0 text-base">{playerB.goals}</span>
-                      <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
+                      <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
                         <Image src={`https://media.api-sports.io/football/players/${playerB.playerId}.png`} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                       </div>
                       <span className="text-sm sm:text-base leading-snug line-clamp-2 max-w-[160px]">{playerBDisplayName}</span>
@@ -411,7 +506,7 @@ export default function Power({ data }: PowerProps) {
         <div>
           <div className="grid grid-cols-[3fr_1fr_3fr] gap-1 items-center mb-2">
             <div></div>
-            <div className="text-center text-sm font-medium text-gray-700 border-x border-gray-200">도움</div>
+            <div className="text-center text-sm font-medium text-gray-700 dark:text-gray-300 border-x border-black/5 dark:border-white/10">도움</div>
             <div></div>
           </div>
           
@@ -425,24 +520,24 @@ export default function Power({ data }: PowerProps) {
             const playerBDisplayName = playerBKoreanName || playerB?.name || `#${playerB?.playerId}`;
 
             return (
-              <div key={`assist-${index}`} className="grid grid-cols-[3fr_1fr_3fr] gap-1 items-center py-2 text-sm border-b border-gray-100 last:border-b-0">
+              <div key={`assist-${index}`} className="grid grid-cols-[3fr_1fr_3fr] gap-1 items-center py-2 text-sm border-b border-black/5 dark:border-white/10 last:border-b-0">
                 <div className="flex items-center gap-3 justify-end px-1">
                   {playerA && (
                     <>
                       <span className="text-sm sm:text-base leading-snug line-clamp-2 max-w-[160px] text-right">{playerADisplayName}</span>
-                      <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
+                      <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
                         <Image src={`https://media.api-sports.io/football/players/${playerA.playerId}.png`} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                       </div>
                       <span className="text-blue-600 font-semibold flex-shrink-0 text-base">{playerA.assists}</span>
                     </>
                   )}
                 </div>
-                <div className="border-x border-gray-200 h-full" />
+                <div className="border-x border-black/5 dark:border-white/10 h-full" />
                 <div className="flex items-center gap-3 justify-start px-1">
                   {playerB && (
                     <>
                       <span className="text-blue-600 font-semibold flex-shrink-0 text-base">{playerB.assists}</span>
-                      <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
+                      <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
                         <Image src={`https://media.api-sports.io/football/players/${playerB.playerId}.png`} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                       </div>
                       <span className="text-sm sm:text-base leading-snug line-clamp-2 max-w-[160px]">{playerBDisplayName}</span>
@@ -453,7 +548,8 @@ export default function Power({ data }: PowerProps) {
             )
           })}
         </div>
-      </section>
+        </ContainerContent>
+      </Container>
     </>
   );
 }

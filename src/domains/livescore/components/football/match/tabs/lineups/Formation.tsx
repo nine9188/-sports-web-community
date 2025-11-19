@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import Field from './components/Field';
 import Player from './components/Player';
-import { useMatchData } from '@/domains/livescore/components/football/match/context/MatchDataContext';
 
 // 미디어 쿼리 커스텀 훅
 function useMediaQuery(query: string) {
@@ -59,15 +58,18 @@ interface TeamData {
 interface FormationProps {
   homeTeamData: TeamData;
   awayTeamData: TeamData;
+  matchStatus?: string;
+  playersRatings?: Record<number, number>;
 }
 
-export default function Formation({ homeTeamData, awayTeamData }: FormationProps) {
+export default function Formation({ homeTeamData, awayTeamData, matchStatus, playersRatings }: FormationProps) {
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const { refreshCurrentTab } = useMatchData();
   
-  // 탭 새로고침 핸들러 (페이지 전체 새로고침 대신 탭만 새로고침)
+  // 페이지 전체 새로고침 핸들러
   const handleRefresh = () => {
-    refreshCurrentTab();
+    if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
   };
   
   // 기본 팀 색상
@@ -112,9 +114,8 @@ export default function Formation({ homeTeamData, awayTeamData }: FormationProps
 
   return (
     <motion.div 
+      className="max-md:rounded-none md:rounded-lg overflow-hidden"
       style={{ 
-        borderRadius: '12px', 
-        overflow: 'hidden', 
         maxWidth: '100%',
         aspectRatio: isMobile ? '9/16' : '16/9',
         margin: '0 auto'
@@ -132,6 +133,8 @@ export default function Formation({ homeTeamData, awayTeamData }: FormationProps
           isMobile={isMobile}
           homeTeamData={processedHomeTeam}
           awayTeamData={processedAwayTeam}
+          matchStatus={matchStatus}
+          playersRatings={playersRatings}
         />
       </Field>
     </motion.div>

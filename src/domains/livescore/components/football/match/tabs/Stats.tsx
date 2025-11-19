@@ -10,6 +10,7 @@ import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { fetchCachedMatchLineups } from '@/domains/livescore/actions/match/lineupData';
 import { fetchCachedMultiplePlayerStats } from '@/domains/livescore/actions/match/playerStats';
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
+import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 
 import { TeamStats, Team } from '@/domains/livescore/types/match';
 
@@ -132,16 +133,16 @@ const StatItem = memo(({ homeValue, awayValue, koreanLabel, index = 0 }: {
       }}
     >
       {/* 통계 제목 */}
-      <div className="text-center text-xs font-semibold mb-1 uppercase tracking-wide text-gray-700">
+      <div className="text-center text-xs font-semibold mb-1 uppercase tracking-wide text-gray-700 dark:text-gray-300">
         {koreanLabel}
       </div>
-      
+
       {/* 통계 값 및 바 */}
       <div className="flex items-center">
-        <span className="font-medium text-sm w-8 text-right mr-2">{homeValue || '0'}</span>
-        
+        <span className="font-medium text-sm w-8 text-right mr-2 text-gray-900 dark:text-[#F0F0F0]">{homeValue || '0'}</span>
+
         {/* 그래프 컨테이너 - 회색 배경에 컬러 바 */}
-        <div className="w-full bg-gray-200 relative" style={{ height: '4px' }}>
+        <div className="w-full bg-gray-200 dark:bg-gray-700 relative" style={{ height: '4px' }}>
           {/* 중앙 기준점 (보이지 않는 구분선) */}
           <div className="absolute left-1/2 top-0 h-full w-0"></div>
           
@@ -181,8 +182,8 @@ const StatItem = memo(({ homeValue, awayValue, koreanLabel, index = 0 }: {
             }}
           />
         </div>
-        
-        <span className="font-medium text-sm w-8 text-left ml-2">{awayValue || '0'}</span>
+
+        <span className="font-medium text-sm w-8 text-left ml-2 text-gray-900 dark:text-[#F0F0F0]">{awayValue || '0'}</span>
       </div>
     </motion.div>
   );
@@ -398,35 +399,6 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
     return groups;
   }, [statMappings]);
 
-  // 카테고리별 헤더 렌더링
-  const renderCategoryHeader = (category: string, isFirst = false) => {
-    const titles: Record<string, string> = {
-      'shooting': '슈팅',
-      'basic': '기본 통계',
-      'passing': '패스'
-    };
-    
-    return (
-      <div className="px-3 py-2 border-b">
-        <div className="flex justify-between items-center">
-          <h3 className="text-sm font-bold text-gray-800">{titles[category]}</h3>
-          
-          {isFirst && homeTeam && awayTeam && (
-            <div className="flex items-center gap-4 text-xs">
-              <div className="flex items-center gap-2">
-                <TeamLogo name={homeTeam.name} teamId={homeTeam.id} />
-                <div className="w-3 h-3 bg-blue-500 rounded-sm"></div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-green-500 rounded-sm"></div>
-                <TeamLogo name={awayTeam.name} teamId={awayTeam.id} />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
 
   // 로딩 상태 표시
   if (loading) {
@@ -538,19 +510,35 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
         {/* 기본 통계 */}
         <motion.div
           ref={basicRef}
-          className="bg-white rounded-lg border"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{
             duration: 0.3,
             ease: "easeOut"
           }}
-          style={{ overflow: 'visible' }}
         >
-          {renderCategoryHeader('basic', true)}
-          <div className="p-3">
-            {categoryGroups.basic.map(({ key, label }, index) => renderStat(key, label, index))}
-          </div>
+          <Container className="bg-white dark:bg-[#1D1D1D]">
+            <ContainerHeader>
+              <div className="flex items-center justify-between w-full">
+                <ContainerTitle>기본 통계</ContainerTitle>
+                {homeTeam && awayTeam && (
+                  <div className="flex items-center gap-4 text-xs">
+                    <div className="flex items-center gap-2">
+                      <TeamLogo name={homeTeam.name} teamId={homeTeam.id} />
+                      <div className="w-3 h-3 bg-blue-500 rounded-sm"></div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-green-500 rounded-sm"></div>
+                      <TeamLogo name={awayTeam.name} teamId={awayTeam.id} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </ContainerHeader>
+            <ContainerContent>
+              {categoryGroups.basic.map(({ key, label }, index) => renderStat(key, label, index))}
+            </ContainerContent>
+          </Container>
         </motion.div>
 
         {/* PC 전용: 기본 통계 하단 힌트 */}
@@ -574,7 +562,6 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
         {/* 슈팅 통계 */}
         <motion.div
           ref={shootingRef}
-          className="bg-white rounded-lg border"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
@@ -583,12 +570,15 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
             delay: 0.2,
             ease: "easeOut"
           }}
-          style={{ overflow: 'visible' }}
         >
-          {renderCategoryHeader('shooting')}
-          <div className="p-3">
-            {categoryGroups.shooting.map(({ key, label }, index) => renderStat(key, label, index))}
-          </div>
+          <Container className="bg-white dark:bg-[#1D1D1D]">
+            <ContainerHeader>
+              <ContainerTitle>슈팅</ContainerTitle>
+            </ContainerHeader>
+            <ContainerContent>
+              {categoryGroups.shooting.map(({ key, label }, index) => renderStat(key, label, index))}
+            </ContainerContent>
+          </Container>
         </motion.div>
 
         {/* 슈팅 통계 하단 힌트 - PC 전용 */}
@@ -612,7 +602,6 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
         {/* 패스 통계 */}
         <motion.div
           ref={passingRef}
-          className="bg-white rounded-lg border"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
@@ -621,12 +610,15 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
             delay: 0.3,
             ease: "easeOut"
           }}
-          style={{ overflow: 'visible' }}
         >
-          {renderCategoryHeader('passing')}
-          <div className="p-3">
-            {categoryGroups.passing.map(({ key, label }, index) => renderStat(key, label, index))}
-          </div>
+          <Container className="bg-white dark:bg-[#1D1D1D]">
+            <ContainerHeader>
+              <ContainerTitle>패스</ContainerTitle>
+            </ContainerHeader>
+            <ContainerContent>
+              {categoryGroups.passing.map(({ key, label }, index) => renderStat(key, label, index))}
+            </ContainerContent>
+          </Container>
         </motion.div>
 
         {/* 패스 통계 하단 힌트 - PC 전용 */}
@@ -650,22 +642,21 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
         {/* 선수 종합 통계 (라인업 기반) - 홈/원정 분리 카드 */}
         <motion.div
           ref={homePlayersRef}
-          className="bg-white rounded-lg border"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
-          style={{ overflow: 'visible' }}
         >
-          <div className="px-3 py-2 border-b">
-            <div className="flex items-center gap-2">
-              {homeTeamId ? (
-                <UnifiedSportsImage imageId={homeTeamId} imageType={ImageType.Teams} alt={homeTeamName || '홈팀'} size="sm" variant="square" fit="contain" />
-              ) : null}
-              <span className="text-sm font-bold text-gray-800">{homeTeamName || '홈팀'}</span>
-            </div>
-          </div>
-          <div className="p-3">
+          <Container className="bg-white dark:bg-[#1D1D1D]">
+            <ContainerHeader>
+              <div className="flex items-center gap-2">
+                {homeTeamId ? (
+                  <UnifiedSportsImage imageId={homeTeamId} imageType={ImageType.Teams} alt={homeTeamName || '홈팀'} size="sm" variant="square" fit="contain" />
+                ) : null}
+                <ContainerTitle>{homeTeamName || '홈팀'}</ContainerTitle>
+              </div>
+            </ContainerHeader>
+            <ContainerContent>
             <HorizontalScrollContainer>
               <table className="w-full min-w-max divide-y divide-gray-200 text-sm">
                 <thead className="bg-gray-50 whitespace-nowrap">
@@ -725,7 +716,8 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
                 </tbody>
               </table>
             </HorizontalScrollContainer>
-          </div>
+            </ContainerContent>
+          </Container>
         </motion.div>
 
         {/* 홈팀 선수 하단 힌트 - PC 전용 */}
@@ -748,22 +740,21 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
 
         <motion.div
           ref={awayPlayersRef}
-          className="bg-white rounded-lg border"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
-          style={{ overflow: 'visible' }}
         >
-          <div className="px-3 py-2 border-b">
-            <div className="flex items-center gap-2">
-              {awayTeamId ? (
-                <UnifiedSportsImage imageId={awayTeamId} imageType={ImageType.Teams} alt={awayTeamName || '원정팀'} size="sm" variant="square" fit="contain" />
-              ) : null}
-              <span className="text-sm font-bold text-gray-800">{awayTeamName || '원정팀'}</span>
-            </div>
-          </div>
-          <div className="p-3">
+          <Container className="bg-white dark:bg-[#1D1D1D]">
+            <ContainerHeader>
+              <div className="flex items-center gap-2">
+                {awayTeamId ? (
+                  <UnifiedSportsImage imageId={awayTeamId} imageType={ImageType.Teams} alt={awayTeamName || '원정팀'} size="sm" variant="square" fit="contain" />
+                ) : null}
+                <ContainerTitle>{awayTeamName || '원정팀'}</ContainerTitle>
+              </div>
+            </ContainerHeader>
+            <ContainerContent>
             <HorizontalScrollContainer>
               <table className="w-full min-w-max divide-y divide-gray-200 text-sm">
                 <thead className="bg-gray-50 whitespace-nowrap">
@@ -823,7 +814,8 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
                 </tbody>
               </table>
             </HorizontalScrollContainer>
-          </div>
+            </ContainerContent>
+          </Container>
         </motion.div>
       </motion.div>
     </div>

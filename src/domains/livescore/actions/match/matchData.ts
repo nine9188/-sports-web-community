@@ -207,9 +207,10 @@ export async function fetchMatchFullData(
     }
     
     if (options.fetchStandings && response.match?.league?.id) {
-      // 리그 ID를 사용하여 순위 데이터 가져오기
+      // 리그 ID와 시즌을 사용하여 순위 데이터 가져오기
+      const season = data.league.season;
       promises.push(
-        fetchCachedLeagueStandings(response.match.league.id)
+        fetchCachedLeagueStandings(response.match.league.id, season)
           .then(standings => { 
             if (standings.success && standings.data && standings.data.league) {
               // 순위 데이터를 StandingsData 형식으로 변환하고 타입 안전성 확보

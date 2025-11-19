@@ -37,9 +37,9 @@ export default memo(function PlayerImage({
   
   // 폴백 콘텐츠: 선수 번호 또는 이름 첫글자
   const fallbackContent = playerNumber ? (
-    <div className="text-xs font-bold text-gray-600">{playerNumber}</div>
+    <div className="text-xs font-bold text-gray-600 dark:text-gray-400">{playerNumber}</div>
   ) : playerName ? (
-    <div className="text-xs font-bold text-gray-600">{playerName.charAt(0)}</div>
+    <div className="text-xs font-bold text-gray-600 dark:text-gray-400">{playerName.charAt(0)}</div>
   ) : undefined;
 
   return playerId && playerId > 0 ? (
@@ -55,7 +55,7 @@ export default memo(function PlayerImage({
       fallbackContent={fallbackContent}
     />
   ) : (
-    <div className={`${width} ${height} bg-gray-200 rounded-full flex items-center justify-center ${className}`}>
+    <div className={`${width} ${height} bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center ${className}`}>
       {fallbackContent}
     </div>
   );

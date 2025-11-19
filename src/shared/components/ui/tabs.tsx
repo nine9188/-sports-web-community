@@ -36,35 +36,40 @@ interface TabButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 const TabButton = React.forwardRef<
   HTMLButtonElement,
   TabButtonProps
->(({ className, active = false, variant = 'default', ...props }, ref) => (
-  <button
-    ref={ref}
-    className={cn(
-      "font-medium transition-colors whitespace-nowrap",
-      variant === 'underline' ? (
-        // Underline 스타일: 활성 탭은 하단 테두리만
-        "text-sm flex-shrink-0",
-        active
-          ? "text-gray-900 dark:text-[#F0F0F0] border-b-2 border-gray-900 dark:border-[#F0F0F0] pb-1"
-          : "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] pb-1"
-      ) : variant === 'fill' ? (
-        // Fill 스타일: 공간을 꽉 채우는 탭 (여백 없음)
-        "flex-1 text-xs py-2 px-1",
-        active
-          ? "bg-white dark:bg-[#1D1D1D] border-b-2 border-slate-800 dark:border-white text-gray-900 dark:text-[#F0F0F0]"
-          : "bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-400 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]"
-      ) : (
-        // Default 스타일: 비활성 탭은 배경색 + 호버, 활성 탭은 진한 배경
-        "text-sm flex-shrink-0",
-        active
-          ? "bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] px-3 py-1.5 rounded"
-          : "bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-3 py-1.5 rounded"
-      ),
-      className
-    )}
-    {...props}
-  />
-))
+>(({ className, active = false, variant = 'default', ...props }, ref) => {
+  const underlineClasses = cn(
+    "text-sm flex-shrink-0",
+    active
+      ? "text-gray-900 dark:text-[#F0F0F0] border-b-2 border-gray-900 dark:border-[#F0F0F0] pb-1"
+      : "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] pb-1"
+  );
+
+  const fillClasses = cn(
+    "flex-1 text-xs py-2 px-1",
+    active
+      ? "bg-white dark:bg-[#1D1D1D] border-b-2 border-slate-800 dark:border-white text-gray-900 dark:text-[#F0F0F0]"
+      : "bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-400 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]"
+  );
+
+  const defaultClasses = cn(
+    "text-sm flex-shrink-0",
+    active
+      ? "bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] px-3 py-1.5 rounded"
+      : "bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-3 py-1.5 rounded"
+  );
+
+  return (
+    <button
+      ref={ref}
+      className={cn(
+        "font-medium transition-colors whitespace-nowrap",
+        variant === 'underline' ? underlineClasses : variant === 'fill' ? fillClasses : defaultClasses,
+        className
+      )}
+      {...props}
+    />
+  );
+})
 TabButton.displayName = "TabButton"
 
 export {

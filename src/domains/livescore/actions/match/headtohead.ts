@@ -200,36 +200,10 @@ export async function fetchHeadToHead(teamA: TeamId, teamB: TeamId, last: number
 }
 
 export async function fetchTeamRecentForm(teamId: TeamId, last: number = 5): Promise<TeamRecentFormSummary> {
-	// 현재 시즌 계산 (7월 기준 시즌 전환)
-	const now = new Date()
-	const year = now.getFullYear()
-	const month = now.getMonth() + 1
-	const season = month >= 7 ? year : year - 1
-
-	// 팀의 메인 리그 식별 (국내 리그 우선)
-	const leaguesData = await fetchFromFootballApi('leagues', { team: teamId, season })
-	let mainLeagueId: number | null = null
-	if (leaguesData?.response && Array.isArray(leaguesData.response)) {
-		// type === 'League' 이면서 국제대회 제외
-		const leagues = leaguesData.response as Array<{ league?: { id?: number; name?: string; type?: string } }>
-		const domestic = leagues.find((l) => {
-			const type = l?.league?.type || ''
-			const name = (l?.league?.name || '').toLowerCase()
-			return (
-				type === 'League' &&
-				!name.includes('champions') &&
-				!name.includes('europa') &&
-				!name.includes('conference')
-			)
-		})
-		mainLeagueId = domestic?.league?.id ?? leagues[0]?.league?.id ?? null
-	}
-
-	// 해당 시즌 + 메인 리그 경기만 조회
+	// 모든 리그, 모든 시즌에서 완료된 경기만 조회
 	const fixturesData = await fetchFromFootballApi('fixtures', {
 		team: teamId,
-		season,
-		...(mainLeagueId ? { league: mainLeagueId } : {}),
+		last: last * 2,  // 넉넉하게 가져오기
 		status: 'FT'
 	})
 

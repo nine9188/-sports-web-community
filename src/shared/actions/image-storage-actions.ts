@@ -58,8 +58,8 @@ export async function getCachedImageFromStorage(
       // API-Sports에서 이미지 다운로드
       const response = await fetch(apiUrl)
       if (!response.ok) {
-        console.warn(`이미지 다운로드 실패 (${response.status}): ${apiUrl}`)
-        return null // 404는 에러가 아닌 정상적인 상황으로 처리
+        // 404/500은 정상적인 상황 (이미지가 없을 수 있음)
+        return null
       }
       
       const imageBuffer = await response.arrayBuffer()

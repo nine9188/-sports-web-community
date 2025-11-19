@@ -143,7 +143,11 @@ export async function fetchMatchData(matchId: string): Promise<MatchResponse> {
     );
 
     if (!response.ok) {
-      throw new Error(`API 응답 오류: ${response.status}`);
+      console.error(`API-Sports 응답 오류 (${response.status}):`, matchId);
+      return {
+        success: false,
+        error: `외부 API 서버 오류 (${response.status}). 잠시 후 다시 시도해주세요.`
+      };
     }
 
     const data = await response.json();

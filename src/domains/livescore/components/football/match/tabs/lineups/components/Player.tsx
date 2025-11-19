@@ -75,6 +75,8 @@ interface PlayerProps {
   isMobile?: boolean;
   homeTeamData: TeamData;
   awayTeamData: TeamData;
+  matchStatus?: string; // 경기 상태 (예: 'FT', 'LIVE', 'NS')
+  playersRatings?: Record<number, number>; // 선수 ID별 평점 (예: { 123: 8.5, 456: 7.2 })
 }
 
 // SVG 내부에서 사용할 최적화된 선수 이미지 컴포넌트
@@ -186,7 +188,7 @@ const SVGPlayerImage = memo(function SVGPlayerImage({ playerId, photoUrl, teamId
   return null;
 });
 
-const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, awayTeamData }: PlayerProps) {
+const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, awayTeamData, playersRatings }: PlayerProps) {
   const textRefs = useRef<{[key: string]: SVGTextElement | null}>({});
   const rectRefs = useRef<{[key: string]: SVGRectElement | null}>({});
   const isMobileCalculated = useMediaQuery('(max-width: 768px)');
@@ -213,11 +215,10 @@ const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, away
     
     if (isMobileLayout) {
       // 모바일: 주축은 y (아래로 증가)
-      // 원래 값으로 복원: 겹침 방지 (이전 안정 배치)
-      // 홈: 하단 골대 근처(93) → 중앙 쪽(54)
-      // 원정: 상단 골대 근처(5)  → 중앙 쪽(45)
-      const start = isHomeTeam ? 93 : 5;
-      const end = isHomeTeam ? 54 : 45;
+      // 홈: 상단 골대 근처(4) → 중앙 쪽(44)
+      // 원정: 하단 골대 근처(93) → 중앙 쪽(54)
+      const start = isHomeTeam ? 4 : 93;
+      const end = isHomeTeam ? 44 : 54;
       const step = (end - start) / (lines - 1);
       return Array.from({ length: lines }, (_, i) => start + step * i);
     } else {
@@ -315,6 +316,18 @@ const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, away
       const koreanName = getPlayerKoreanName(player.id);
       const displayName = koreanName || player.name;
       
+      // 평점 가져오기 - 평점 데이터가 있으면 무조건 표시
+      const playerRating = playersRatings?.[playerId];
+      const hasRating = playerRating != null && playerRating > 0;
+      
+      // 평점에 따른 색상 결정
+      const getRatingColor = (rating: number) => {
+        if (rating >= 8.0) return '#10b981'; // green-500 (우수)
+        if (rating >= 7.0) return '#3b82f6'; // blue-500 (좋음)
+        if (rating >= 6.0) return '#eab308'; // yellow-500 (보통)
+        return '#ef4444'; // red-500 (부진)
+      };
+      
       // 애니메이션 지연 계산 (포지션별 순차 등장)
       const animationDelay = `${index * 0.1 + (isHome ? 0 : 0.5)}s`;
       
@@ -366,6 +379,35 @@ const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, away
               onImageLoad={() => {}}
               onImageError={() => {}}
             />
+          )}
+          
+          {/* 평점 배지 - 평점 데이터가 있으면 표시 */}
+          {hasRating && playerRating && (
+            <g className={styles.playerRating}>
+              {/* 평점 배경 사각형 (둥근 모서리) - 크기 증가 */}
+              <rect
+                x="-2.1"
+                y="-3.6"
+                width="4.2"
+                height="1.6"
+                rx="0.8"
+                ry="0.8"
+                fill={getRatingColor(playerRating)}
+                opacity="0.9"
+              />
+              {/* 평점 텍스트 */}
+              <text
+                x="0"
+                y="-2.6"
+                fill="white"
+                fontSize="1.3"
+                fontWeight="bold"
+                textAnchor="middle"
+                dominantBaseline="middle"
+              >
+                {playerRating.toFixed(1)}
+              </text>
+            </g>
           )}
           
           {/* 선수 번호와 이름 */}

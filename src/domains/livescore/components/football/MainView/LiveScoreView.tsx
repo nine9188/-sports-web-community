@@ -2,14 +2,12 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { format } from 'date-fns';
-import DateSelector from './DateSelector/index';
 import NavigationBar from './NavigationBar/index';
 import LeagueMatchList from './LeagueMatchList/index';
 import { Match } from '../../../types/match';
 import { fetchMatchesByDate, MatchData } from '../../../actions/footballApi';
 import { getTeamById } from '../../../constants/teams/index';
 import { getLeagueById } from '../../../constants/league-mappings';
-import { fetchMonthMatchDates } from './actions';
 
 // 기본 이미지 URL - 로고가 없을 때 사용
 const DEFAULT_TEAM_LOGO = 'https://cdn.sportmonks.com/images/soccer/team_placeholder.png';
@@ -34,7 +32,7 @@ export default function LiveScoreView({
   const [searchKeyword, setSearchKeyword] = useState('');
   const [showLiveOnly, setShowLiveOnly] = useState(false);
   const [liveMatchCount, setLiveMatchCount] = useState(0);
-  const [allMatchDates, setAllMatchDates] = useState<Date[]>([]); // 모든 경기 날짜 저장
+  const [allExpanded, setAllExpanded] = useState(true);
 
   // 전체 경기 데이터에서 현재 진행 중인 경기 수를 계산
   const calculateLiveMatchCount = (matches: Match[]) => {
@@ -52,39 +50,16 @@ export default function LiveScoreView({
     setLiveMatchCount(calculateLiveMatchCount(initialMatches));
   }, [initialMatches]);
 
-  // 현재 월 경기 날짜 로드
-  useEffect(() => {
-    const loadCurrentMonth = async () => {
-      const year = selectedDate.getFullYear();
-      const month = selectedDate.getMonth();
-
-      try {
-        // 현재 달만 로드
-        const currentMonthDates = await fetchMonthMatchDates(year, month);
-
-        // Date 객체로 변환
-        const matchDates = currentMonthDates.map(dateStr => {
-          const date = new Date(dateStr);
-          date.setHours(0, 0, 0, 0);
-          return date;
-        });
-
-        setAllMatchDates(matchDates);
-      } catch (error) {
-        console.error('Failed to load month match dates:', error);
-        setAllMatchDates([]);
-      }
-    };
-
-    loadCurrentMonth();
-  }, [selectedDate]);
-
   // 날짜 변경 시 Server Action 호출
-  const fetchMatches = useCallback(async (date: Date) => {
-    setLoading(true);
+  const fetchMatches = useCallback(async (date: Date, keepPreviousData = false) => {
+    // 이전 데이터 유지 옵션이 false일 때만 로딩 표시
+    if (!keepPreviousData) {
+      setLoading(true);
+    }
+
     try {
       const formattedDate = format(date, 'yyyy-MM-dd');
-      
+
       // Server Action 직접 호출
       const matchesData = await fetchMatchesByDate(formattedDate);
       
@@ -177,15 +152,38 @@ export default function LiveScoreView({
 
   // 날짜가 변경될 때 데이터 다시 불러오기 (개선된 버전)
   useEffect(() => {
-    // 날짜가 변경되었을 때마다 항상 fetchMatches 호출
-    fetchMatches(selectedDate);
-    
+    // 날짜가 변경되었을 때마다 항상 fetchMatches 호출 (이전 데이터 유지하면서 백그라운드 업데이트)
+    fetchMatches(selectedDate, true);
+
   }, [selectedDate, fetchMatches, initialDate]);
+
+  // 인접 날짜 데이터 프리페칭 (백그라운드에서 미리 로드)
+  useEffect(() => {
+    const prefetchAdjacentDates = async () => {
+      const yesterday = new Date(selectedDate);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      const tomorrow = new Date(selectedDate);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      // 백그라운드에서 어제/내일 데이터 캐시에 미리 로드
+      Promise.all([
+        fetchMatchesByDate(format(yesterday, 'yyyy-MM-dd')),
+        fetchMatchesByDate(format(tomorrow, 'yyyy-MM-dd'))
+      ]).catch(() => {
+        // 프리페칭 실패는 무시 (사용자 경험에 영향 없음)
+      });
+    };
+
+    // 현재 날짜 데이터 로드 완료 후 인접 날짜 프리페칭
+    const timer = setTimeout(prefetchAdjacentDates, 500);
+    return () => clearTimeout(timer);
+  }, [selectedDate]);
 
   // 실시간 경기만 보기 토글 시 현재 날짜로 설정
   useEffect(() => {
     if (showLiveOnly) {
-      fetchMatches(new Date());
+      fetchMatches(new Date(), false); // LIVE 모드는 즉시 로딩 표시
     }
   }, [showLiveOnly, fetchMatches]);
 
@@ -219,24 +217,8 @@ export default function LiveScoreView({
     }
   };
 
-  // 경기가 있는 날짜 목록: allMatchDates 사용 (한 달 전체)
-  const datesWithMatches = allMatchDates;
-
-  // CalendarButton에서 월 변경 시 호출
-  const handleMonthChange = useCallback((year: number, month: number) => {
-    setSelectedDate(new Date(year, month, 1));
-  }, []);
-
   return (
-    <div className="min-h-screen bg-white space-y-4">
-      <div className="rounded-lg border border-gray-200 overflow-hidden">
-        <DateSelector
-          selectedDate={selectedDate}
-          onDateChange={handleDateChange}
-          datesWithMatches={datesWithMatches}
-        />
-      </div>
-
+    <div className="min-h-screen space-y-4">
       <div>
         <NavigationBar
           searchKeyword={searchKeyword}
@@ -250,11 +232,12 @@ export default function LiveScoreView({
             }
           }}
           onDateChange={handleDateChange}
-          datesWithMatches={datesWithMatches}
-          onMonthChange={handleMonthChange}
+          allExpanded={allExpanded}
+          onToggleExpandAll={() => setAllExpanded(!allExpanded)}
+          selectedDate={selectedDate}
         />
       </div>
-        
+
       <div>
         {loading ? (
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -299,7 +282,7 @@ export default function LiveScoreView({
             ))}
           </div>
         ) : (
-          <LeagueMatchList matches={filteredMatches} />
+          <LeagueMatchList matches={filteredMatches} allExpanded={allExpanded} />
         )}
       </div>
     </div>

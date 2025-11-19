@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import styles from '../styles/formation.module.css';
+import { Container, ContainerContent } from '@/shared/components/ui';
 
 // 미디어 쿼리를 사용하기 위한 커스텀 훅
 function useMediaQuery(query: string) {
@@ -41,23 +42,24 @@ const Field = ({ isMobile: isMobileProp, children, onRefresh }: FieldProps) => {
   const viewBox = isMobile ? "0 0 56 100" : "0 0 100 56";
   
   return (
-    <div 
-      className={`${styles.fieldWrapper} mb-4 bg-white rounded-lg`}
-      style={{ 
-        overflow: 'hidden',
-        aspectRatio: isMobile ? '9/16' : '16/9' // 모바일과 데스크탑에 따라 비율 변경
-      }}
-    >
-      <div 
-        className={styles.fieldContent}
-        style={{ borderRadius: '12px', overflow: 'hidden' }}
-      >
-        <svg 
-          viewBox={viewBox}
-          className={styles.fieldSvg}
-          preserveAspectRatio="xMidYMid meet"
-          style={{ borderRadius: '12px' }}
+    <Container className="bg-white dark:bg-[#1D1D1D] mb-4 max-md:rounded-none md:rounded-lg overflow-hidden">
+      <ContainerContent className="p-0">
+        <div
+          className={styles.fieldWrapper}
+          style={{
+            overflow: 'hidden',
+            aspectRatio: isMobile ? '9/16' : '16/9' // 모바일과 데스크탑에 따라 비율 변경
+          }}
         >
+          <div 
+            className={styles.fieldContent}
+            style={{ overflow: 'hidden' }}
+          >
+            <svg 
+              viewBox={viewBox}
+              className={styles.fieldSvg}
+              preserveAspectRatio="xMidYMid meet"
+            >
           {isMobile ? (
             // 모바일(세로형) 필드 레이아웃
             <g>
@@ -192,7 +194,7 @@ const Field = ({ isMobile: isMobileProp, children, onRefresh }: FieldProps) => {
                 strokeLinecap="round"
                 fill="transparent" 
                 strokeWidth="0.25" 
-                d="M0 98 A2,2 0 0 0 2,100"
+                d="M2 100 A2,2 0 0 0 0,98"
               />
 
               {/* 코너킥 아크 (오른쪽 하단) */}
@@ -201,7 +203,7 @@ const Field = ({ isMobile: isMobileProp, children, onRefresh }: FieldProps) => {
                 strokeLinecap="round"
                 fill="transparent" 
                 strokeWidth="0.25" 
-                d="M56 98 A2,2 0 0 1 54,100"
+                d="M54 100 A2,2 0 0 1 56,98"
               />
 
               {/* 센터 점 */}
@@ -422,18 +424,15 @@ const Field = ({ isMobile: isMobileProp, children, onRefresh }: FieldProps) => {
                 cx={isMobile ? "52.5" : "96.5"}
                 cy={isMobile ? "4" : "4"}
                 r="1.5"
-                fill="rgba(255, 255, 255, 0.95)"
-                stroke="rgba(0, 100, 0, 0.3)"
+                className="cursor-pointer transition-all duration-200 fill-white dark:fill-[#2D2D2D] stroke-green-600 dark:stroke-green-500 hover:fill-gray-100 dark:hover:fill-[#3D3D3D] hover:stroke-green-700 dark:hover:stroke-green-400"
                 strokeWidth="0.2"
-                className="cursor-pointer hover:fill-white hover:stroke-green-600 transition-all duration-200"
                 onClick={onRefresh}
               />
               {/* 새로고침 아이콘 */}
               <g
                 transform={`translate(${isMobile ? "52.5" : "96.5"}, ${isMobile ? "4" : "4"}) scale(0.06)`}
-                className="cursor-pointer"
+                className="cursor-pointer fill-green-600 dark:fill-green-500"
                 onClick={onRefresh}
-                fill="rgba(0, 100, 0, 0.8)"
               >
                 <path
                   d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
@@ -446,7 +445,7 @@ const Field = ({ isMobile: isMobileProp, children, onRefresh }: FieldProps) => {
                 />
               </g>
               {/* 안내 텍스트 - 아이콘 바로 왼쪽에 배치 (두 줄) */}
-              <g className="pointer-events-none select-none" fill="white">
+              <g className="pointer-events-none select-none fill-gray-700 dark:fill-gray-300">
                 {/* 1행: 안내 문구 */}
                 <text
                   x={isMobile ? "50.5" : "94.5"}
@@ -477,6 +476,8 @@ const Field = ({ isMobile: isMobileProp, children, onRefresh }: FieldProps) => {
         </svg>
       </div>
     </div>
+      </ContainerContent>
+    </Container>
   );
 };
 

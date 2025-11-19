@@ -138,6 +138,10 @@ interface ApiPlayer {
 const API_BASE_URL = 'https://v3.football.api-sports.io';
 const API_KEY = process.env.FOOTBALL_API_KEY || '';
 
+// 메모리 캐시
+const matchesCache = new Map<string, { data: MatchData[]; timestamp: number }>();
+const CACHE_TTL = 60 * 1000; // 1분
+
 // MultiDayMatches 결과 타입 정의
 export interface MultiDayMatchesResult {
   success: boolean;
@@ -203,6 +207,14 @@ export const fetchFromFootballApi = async (endpoint: string, params: Record<stri
 // 특정 날짜의 경기 정보 가져오기
 export async function fetchMatchesByDate(date: string): Promise<MatchData[]> {
   try {
+    // 캐시 확인
+    const cacheKey = `matches-${date}`;
+    const cached = matchesCache.get(cacheKey);
+
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return cached.data;
+    }
+
     // 타임존은 fetchFromFootballApi에서 자동으로 추가되므로 여기서는 제거
     const data = await fetchFromFootballApi('fixtures', { date });
     
@@ -253,11 +265,16 @@ export async function fetchMatchesByDate(date: string): Promise<MatchData[]> {
             }
           };
         });
-      
+
       // JSON 직렬화로 안전한 객체 보장
-      return JSON.parse(JSON.stringify(filteredMatches));
+      const safeData = JSON.parse(JSON.stringify(filteredMatches));
+
+      // 캐시에 저장
+      matchesCache.set(cacheKey, { data: safeData, timestamp: Date.now() });
+
+      return safeData;
     }
-    
+
     return [];
   } catch {
     return [];

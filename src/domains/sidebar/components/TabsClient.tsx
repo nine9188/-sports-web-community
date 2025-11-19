@@ -96,7 +96,7 @@ export function TopicTabsClient({ postsData }: TopicTabsClientProps) {
   
   return (
     <div className="mb-4 bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0">
-      <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center rounded-t-lg">
+      <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center border-b border-black/5 dark:border-white/10 rounded-t-lg">
         <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">인기글</h3>
         <span className="text-xs text-gray-500 dark:text-gray-400 ml-auto">최근 24시간 기준</span>
       </div>

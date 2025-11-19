@@ -11,6 +11,7 @@ import { getTeamById, TeamMapping } from '@/domains/livescore/constants/teams';
 import { mapEventToKoreanText } from '@/domains/livescore/constants/event-mappings';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
+import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 
 
 interface EventsProps {
@@ -130,76 +131,78 @@ function Events({ events: propsEvents }: EventsProps) {
   });
 
   return (
-    <div className="bg-white rounded-lg border p-4">
-      <div className="-ml-4 md:ml-0 space-y-1 md:space-y-2">
-        {sortedEvents.map((event, index) => {
-          // 이벤트를 한국어 문장으로 변환
-          const koreanText = mapEventToKoreanText(event);
-          
-          // 원래 텍스트에서 선수 이름만 한국어 이름으로 교체
-          let eventText = koreanText.split(' ').slice(1).join(' ');
-          
-          // 선수 ID가 있을 경우 한국어 이름으로 변경
-          if (event.player?.id) {
-            const koreanName = getPlayerKoreanName(event.player.id);
-            if (koreanName) {
-              // 원본 텍스트에서 영어 이름을 한국어 이름으로 교체
-              eventText = eventText.replace(event.player.name, koreanName);
+    <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
+      <ContainerHeader>
+        <ContainerTitle>경기 이벤트</ContainerTitle>
+      </ContainerHeader>
+      <ContainerContent>
+        <div className="space-y-2">
+          {sortedEvents.map((event, index) => {
+            // 이벤트를 한국어 문장으로 변환
+            const koreanText = mapEventToKoreanText(event);
+
+            // 원래 텍스트에서 선수 이름만 한국어 이름으로 교체
+            let eventText = koreanText.split(' ').slice(1).join(' ');
+
+            // 선수 ID가 있을 경우 한국어 이름으로 변경
+            if (event.player?.id) {
+              const koreanName = getPlayerKoreanName(event.player.id);
+              if (koreanName) {
+                // 원본 텍스트에서 영어 이름을 한국어 이름으로 교체
+                eventText = eventText.replace(event.player.name, koreanName);
+              }
             }
-          }
-          
-          // 어시스트 선수 ID가 있을 경우 한국어 이름으로 변경
-          if (event.assist?.id) {
-            const koreanName = getPlayerKoreanName(event.assist.id);
-            if (koreanName && event.assist.name) {
-              // 원본 텍스트에서 영어 이름을 한국어 이름으로 교체
-              eventText = eventText.replace(event.assist.name, koreanName);
+
+            // 어시스트 선수 ID가 있을 경우 한국어 이름으로 변경
+            if (event.assist?.id) {
+              const koreanName = getPlayerKoreanName(event.assist.id);
+              if (koreanName && event.assist.name) {
+                // 원본 텍스트에서 영어 이름을 한국어 이름으로 교체
+                eventText = eventText.replace(event.assist.name, koreanName);
+              }
             }
-          }
-          
-          return (
-            <div 
-              key={`${event.time?.elapsed || 0}-${index}`}
-              className="flex items-start gap-1 md:gap-2 px-1 md:px-3 py-1 md:py-2 mb-1 md:mb-2 border-b last:border-b-0 last:mb-0"
-              title={koreanText} // 마우스 오버 시 한국어 설명 표시
-            >
-              <div className="w-10 md:w-12 flex items-center justify-end text-sm text-gray-600 flex-shrink-0">
-                <span>
-                  {event.time?.elapsed || 0}
-                  {event.time?.extra && event.time.extra > 0 && `+${event.time.extra}`}′
-                </span>
-              </div>
-              
-              <div className="flex-1">
-                <div className="flex items-center gap-1 md:gap-2">
-                  <div className="flex-shrink-0 w-5 h-5 md:w-6 md:h-6 flex items-center justify-center">
-                    {renderEventIcon(event.type || '', event.detail || '')}
-                  </div>
-                  <TeamLogo 
-                    name={event.team?.name || ''} 
-                    teamId={event.team?.id}
-                  />
-                  <span className="text-sm text-gray-600">
-                    {event.team?.id && teamCache[event.team.id]?.name_ko ? 
-                      teamCache[event.team.id].name_ko : 
-                      event.team?.name || 'Unknown Team'
-                    }
+
+            return (
+              <div
+                key={`${event.time?.elapsed || 0}-${index}`}
+                className="flex items-start gap-2 py-2 border-b border-black/5 dark:border-white/10 last:border-b-0"
+                title={koreanText}
+              >
+                <div className="w-12 flex items-center justify-end text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">
+                  <span>
+                    {event.time?.elapsed || 0}
+                    {event.time?.extra && event.time.extra > 0 && `+${event.time.extra}`}′
                   </span>
                 </div>
-                <div className="mt-1.5 ml-5 md:ml-6">
-                  <div className="text-sm">
-                    {/* 한국어 텍스트 표시 (이름만 교체) */}
-                    <span className="text-gray-700">
+
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                      {renderEventIcon(event.type || '', event.detail || '')}
+                    </div>
+                    <TeamLogo
+                      name={event.team?.name || ''}
+                      teamId={event.team?.id}
+                    />
+                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                      {event.team?.id && teamCache[event.team.id]?.name_ko ?
+                        teamCache[event.team.id].name_ko :
+                        event.team?.name || 'Unknown Team'
+                      }
+                    </span>
+                  </div>
+                  <div className="mt-1.5 ml-8">
+                    <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">
                       {eventText}
                     </span>
                   </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+            );
+          })}
+        </div>
+      </ContainerContent>
+    </Container>
   );
 }
 

@@ -194,12 +194,12 @@ const MatchHeader = memo(() => {
   return (
     <div className="w-full md:max-w-screen-xl md:mx-auto">
       {/* 통합된 매치 헤더 카드 */}
-      <div className="mb-4 bg-white rounded-lg border overflow-hidden">
+      <div className="mb-4 bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
         {/* 리그 정보 및 경기 상태 */}
-        <div className="flex flex-col md:flex-row md:items-center border-b">
-          {/* 리그 정보 - 왼쪽 1/3 차지 */}
-          <div className="flex items-center gap-2 px-2 py-2 md:px-4 border-b md:border-b-0 md:border-r md:w-1/3">
-            <div className="relative w-6 h-6 flex items-center justify-center">
+        <div className="h-12 flex items-center justify-between border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] rounded-t-lg px-4">
+          {/* 리그 정보 - 모바일: 왼쪽 / 데스크톱: 왼쪽 1/3 */}
+          <div className="flex items-center gap-1.5 md:gap-2 md:w-1/3 md:border-r md:border-r-black/5 md:dark:border-r-white/10 md:pr-4">
+            <div className="relative w-4 h-4 md:w-6 md:h-6 flex items-center justify-center flex-shrink-0">
               {league?.id && (
                 <ApiSportsImage
                   imageId={league.id}
@@ -211,30 +211,26 @@ const MatchHeader = memo(() => {
                 />
               )}
             </div>
-            <span className="text-sm font-medium">
+            <span className="text-xs md:text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
               {/* 한국어 리그명 우선 표시, 없으면 일반 이름 */}
               {league?.name_ko || league?.name}
             </span>
           </div>
 
-          {/* 경기 상태 및 시간 - 중앙 1/3 차지 */}
-          <div className="flex flex-col items-center justify-center px-2 py-2 md:px-4 md:w-1/3 border-b md:border-b-0 md:border-r">
-            <div className="text-xs text-gray-500 mb-1">
+          {/* 경기 날짜 - 모바일: 중앙(1/3 너비) / 데스크톱: 중앙 1/3 */}
+          <div className="w-1/3 md:w-1/3 flex items-center justify-center md:border-r md:border-r-black/5 md:dark:border-r-white/10 md:px-4">
+            <div className="text-xs text-gray-500 dark:text-gray-400">
               {fixture?.date ? formatDateToKorean(new Date(fixture.date)) : '날짜 정보 없음'}
-            </div>
-            <div className="text-sm font-medium text-center">
-              {displayInfo.statusText}
             </div>
           </div>
 
-          {/* 경기장 정보 - 오른쪽 1/3 차지 */}
-          <div className="px-2 py-2 md:px-4 md:w-1/3 text-center">
-            {fixture?.venue?.name && (
-              <div className="text-xs text-gray-600">{fixture.venue.name}</div>
-            )}
-            {fixture?.venue?.city && (
-              <div className="text-xs text-gray-500">{fixture.venue.city}</div>
-            )}
+          {/* 경기장 정보 - 데스크톱에서만 표시 */}
+          <div className="hidden md:flex md:w-1/3 md:pl-4 items-center justify-center text-center">
+            <div className="text-xs text-gray-700 dark:text-gray-300">
+              {fixture?.venue?.name && fixture?.venue?.city
+                ? `${fixture.venue.name} - ${fixture.venue.city}`
+                : fixture?.venue?.name || fixture?.venue?.city || '정보 없음'}
+            </div>
           </div>
         </div>
 
@@ -256,18 +252,18 @@ const MatchHeader = memo(() => {
                 )}
               </div>
               {/* 한국어 팀명 우선 표시, 없으면 일반 이름 */}
-              <div className="font-bold text-sm md:text-base">{homeTeam?.name_ko || homeTeam?.name}</div>
+              <div className="font-bold text-sm md:text-base text-gray-900 dark:text-[#F0F0F0]">{homeTeam?.name_ko || homeTeam?.name}</div>
               {homeTeam?.formation && (
-                <div className="text-xs md:text-sm text-gray-600">{homeTeam.formation}</div>
+                <div className="text-xs md:text-sm text-gray-700 dark:text-gray-300">{homeTeam.formation}</div>
               )}
             </div>
 
             {/* 스코어 */}
             <div className="w-1/3 text-center">
-              <div className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">
+              <div className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-1">
                 {displayInfo.scoreDisplay}
               </div>
-              <div className="text-xs md:text-sm text-gray-500">
+              <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400">
                 {displayInfo.statusText}
               </div>
             </div>
@@ -287,20 +283,20 @@ const MatchHeader = memo(() => {
                 )}
               </div>
               {/* 한국어 팀명 우선 표시, 없으면 일반 이름 */}
-              <div className="font-bold text-sm md:text-base">{awayTeam?.name_ko || awayTeam?.name}</div>
+              <div className="font-bold text-sm md:text-base text-gray-900 dark:text-[#F0F0F0]">{awayTeam?.name_ko || awayTeam?.name}</div>
               {awayTeam?.formation && (
-                <div className="text-xs md:text-sm text-gray-600">{awayTeam.formation}</div>
+                <div className="text-xs md:text-sm text-gray-700 dark:text-gray-300">{awayTeam.formation}</div>
               )}
             </div>
           </div>
 
           {/* 득점자 목록 */}
           {goalEvents.length > 0 && (
-            <div className="flex flex-col md:flex-row mt-4 md:mt-6 border-t pt-4">
+            <div className="flex flex-col md:flex-row mt-4 md:mt-6 border-t border-black/5 dark:border-white/10 pt-4">
               {/* 홈팀 득점자 */}
               <div className="w-full md:w-1/3 relative pl-2 md:px-2 mb-4 md:mb-0 md:text-center">
                 {/* 홈팀 헤더 - 모바일에서만 표시 */}
-                <div className="md:hidden py-1 font-semibold mb-2 text-sm flex items-center">
+                <div className="md:hidden py-1 font-semibold mb-2 text-sm flex items-center text-gray-900 dark:text-[#F0F0F0]">
                   <div className="relative w-4 h-4 mr-2 flex items-center justify-center">
                     {homeTeam?.id && (
                       <ApiSportsImage
@@ -316,7 +312,7 @@ const MatchHeader = memo(() => {
                   {/* 한국어 팀명 우선 표시 */}
                   {homeTeam?.name_ko || homeTeam?.name}
                 </div>
-                
+
                 <div className="space-y-1">
                   {goalEvents
                     .filter((event: MatchEvent) => event.team?.id === homeTeam?.id)
@@ -327,11 +323,11 @@ const MatchHeader = memo(() => {
                       const assistDisplayName = assistKoreanName || event.assist?.name;
 
                       return (
-                        <div key={index} className="text-sm text-gray-700">
+                        <div key={index} className="text-sm text-gray-700 dark:text-gray-300">
                           <span className="font-medium">{displayName}</span>
-                          <span className="text-gray-500 ml-1">{event.time?.elapsed}&apos;</span>
+                          <span className="text-gray-500 dark:text-gray-400 ml-1">{event.time?.elapsed}&apos;</span>
                           {assistDisplayName && (
-                            <div className="text-xs text-gray-500 ml-4">
+                            <div className="text-xs text-gray-500 dark:text-gray-400 ml-4">
                               어시스트: {assistDisplayName}
                             </div>
                           )}
@@ -343,13 +339,13 @@ const MatchHeader = memo(() => {
 
               {/* 중앙 vs 구분선 */}
               <div className="hidden md:flex md:w-1/3 items-center justify-center">
-                <div className="text-gray-400 font-medium">득점자</div>
+                <div className="text-gray-500 dark:text-gray-400 font-medium">득점자</div>
               </div>
 
               {/* 원정팀 득점자 */}
               <div className="w-full md:w-1/3 relative pl-2 md:px-2 md:text-center">
                 {/* 원정팀 헤더 - 모바일에서만 표시 */}
-                <div className="md:hidden py-1 font-semibold mb-2 text-sm flex items-center">
+                <div className="md:hidden py-1 font-semibold mb-2 text-sm flex items-center text-gray-900 dark:text-[#F0F0F0]">
                   <div className="relative w-4 h-4 mr-2 flex items-center justify-center">
                     {awayTeam?.id && (
                       <ApiSportsImage
@@ -365,7 +361,7 @@ const MatchHeader = memo(() => {
                   {/* 한국어 팀명 우선 표시 */}
                   {awayTeam?.name_ko || awayTeam?.name}
                 </div>
-                
+
                 <div className="space-y-1">
                   {goalEvents
                     .filter((event: MatchEvent) => event.team?.id === awayTeam?.id)
@@ -376,11 +372,11 @@ const MatchHeader = memo(() => {
                       const assistDisplayName = assistKoreanName || event.assist?.name;
 
                       return (
-                        <div key={index} className="text-sm text-gray-700">
+                        <div key={index} className="text-sm text-gray-700 dark:text-gray-300">
                           <span className="font-medium">{displayName}</span>
-                          <span className="text-gray-500 ml-1">{event.time?.elapsed}&apos;</span>
+                          <span className="text-gray-500 dark:text-gray-400 ml-1">{event.time?.elapsed}&apos;</span>
                           {assistDisplayName && (
-                            <div className="text-xs text-gray-500 ml-4">
+                            <div className="text-xs text-gray-500 dark:text-gray-400 ml-4">
                               어시스트: {assistDisplayName}
                             </div>
                           )}

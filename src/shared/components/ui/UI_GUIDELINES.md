@@ -53,7 +53,7 @@ text-gray-500 dark:text-gray-400
 
 #### Primary Border (기본 테두리)
 ```css
-border-black/7 dark:border-white/10
+border-black/7 dark:border-white/0
 ```
 - 컨테이너 외곽선
 - 섹션 구분선
@@ -146,13 +146,40 @@ outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 
 ## 컴포넌트별 가이드
 
 ### Container & Header
+
+**⚠️ 중요: 모든 컴포넌트 헤더는 반드시 `ContainerHeader` 컴포넌트를 사용해야 합니다.**
+
 ```tsx
-<Container className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0">
-  <ContainerHeader className="bg-[#F5F5F5] dark:bg-[#262626]">
+import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
+
+{/* ✅ 올바른 예시 - ContainerHeader 사용 */}
+<Container className="bg-white dark:bg-[#1D1D1D]">
+  <ContainerHeader>
     <ContainerTitle>제목</ContainerTitle>
   </ContainerHeader>
+  <div className="px-4 py-3">
+    내용...
+  </div>
 </Container>
+
+{/* ❌ 잘못된 예시 - 직접 div로 작성 */}
+<div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0">
+  <div className="h-12 flex items-center px-4 border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] rounded-t-lg">
+    <h3 className="font-semibold text-sm text-gray-900 dark:text-[#F0F0F0]">제목</h3>
+  </div>
+</div>
 ```
+
+**ContainerHeader 기본 스타일:**
+- 높이: `h-12` (48px) - 모든 헤더 고정 높이
+- 배경: `bg-[#F5F5F5] dark:bg-[#262626]` (Secondary Container)
+- 구분선: `border-b border-black/5 dark:border-white/10` (Secondary Border)
+- 정렬: `flex items-center px-4`
+- 라운드: `md:rounded-t-lg`
+
+**ContainerTitle 기본 스타일:**
+- 폰트: `text-sm font-bold`
+- 색상: `text-gray-900 dark:text-[#F0F0F0]` (Primary Text)
 
 ### 리스트 아이템 (클릭 가능)
 ```tsx
@@ -185,6 +212,8 @@ outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 
 ```
 
 ### 탭 버튼
+
+**⚠️ 중요: 모든 탭 버튼의 높이는 `h-12` (48px)로 통일합니다.**
 
 프로젝트에는 세 가지 탭 스타일이 있습니다:
 

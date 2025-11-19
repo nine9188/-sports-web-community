@@ -56,20 +56,21 @@ function getCurrentSeason() {
 /**
  * 특정 리그의 순위 데이터를 가져오는 서버 액션
  * @param leagueId 리그 ID
+ * @param season 시즌 (옵션, 없으면 현재 시즌 사용)
  * @returns 리그 순위 데이터 및 상태
  */
-export async function fetchLeagueStandings(leagueId: number): Promise<StandingsDataResponse> {
+export async function fetchLeagueStandings(leagueId: number, season?: number): Promise<StandingsDataResponse> {
   try {
-    // 현재 시즌 계산
-    const currentSeason = getCurrentSeason();
-    
+    // 시즌이 제공되지 않으면 현재 시즌 계산
+    const targetSeason = season || getCurrentSeason();
+
     if (!leagueId) {
       throw new Error('리그 ID가 필요합니다');
     }
 
     // API 요청
     const response = await fetch(
-      `https://v3.football.api-sports.io/standings?league=${leagueId}&season=${currentSeason}`,
+      `https://v3.football.api-sports.io/standings?league=${leagueId}&season=${targetSeason}`,
       {
         headers: {
           'x-rapidapi-host': 'v3.football.api-sports.io',

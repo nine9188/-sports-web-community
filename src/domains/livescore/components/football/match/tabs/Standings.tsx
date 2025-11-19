@@ -8,6 +8,7 @@ import { useMatchData, isStandingsTabData } from '@/domains/livescore/components
 import { Standing, StandingsData, Team } from '@/domains/livescore/types/match';
 import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
 import { getLeagueName } from '@/domains/livescore/constants/league-mappings';
+import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 
 // Props 타입 정의
 interface StandingsProps {
@@ -45,14 +46,13 @@ TeamLogo.displayName = 'TeamLogo';
 
 // 테이블 스타일 정의 개선
 const tableStyles = {
-  container: "mb-4 last:mb-0 bg-white rounded-lg border overflow-hidden",
-  header: "px-1 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider",
-  cell: "px-1 py-2 whitespace-nowrap text-sm text-gray-900 text-center",
-  smallCol: "w-8", // 너비 감소
-  mediumCol: "w-10", // 너비 감소
-  formBadgeWin: "bg-green-100 text-green-800",
-  formBadgeDraw: "bg-yellow-100 text-yellow-800",
-  formBadgeLoss: "bg-red-100 text-red-800"
+  header: "px-1 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider",
+  cell: "px-1 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center",
+  smallCol: "w-8",
+  mediumCol: "w-10",
+  formBadgeWin: "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200",
+  formBadgeDraw: "bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200",
+  formBadgeLoss: "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200"
 };
 
 const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
@@ -174,13 +174,13 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
   const leagueData = standings.standings.league;
   
   return (
-    <div className="w-full">
+    <div className="w-full space-y-4">
       {/* 그룹별 순위표 */}
       {leagueData.standings.map((standingsGroup, groupIndex) => (
-        <div key={groupIndex} className={`${tableStyles.container}`}>
-          <div className="px-3 py-2 border-b bg-gray-50">
+        <Container key={groupIndex} className="bg-white dark:bg-[#1D1D1D]">
+          <ContainerHeader>
             {groupIndex === 0 ? (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 w-full">
                 <div className="w-6 h-6 relative flex-shrink-0">
                   <ApiSportsImage
                     imageId={leagueData.id}
@@ -191,77 +191,76 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
                     className="object-contain w-6 h-6"
                 />
                 </div>
-                <h2 className="text-sm font-medium text-gray-800">
+                <ContainerTitle>
                   {(() => {
                     const koreanName = getLeagueName(leagueData.id);
                     return koreanName === '알 수 없는 리그' ? (leagueData.name || '리그 정보') : koreanName;
                   })()}
-                </h2>
+                </ContainerTitle>
               </div>
             ) : (
               leagueData.standings.length > 1 && (
-                <h3 className="text-sm font-medium text-gray-800">
-                  {`Group ${groupIndex + 1}`}
-                </h3>
+                <ContainerTitle>{`Group ${groupIndex + 1}`}</ContainerTitle>
               )
             )}
-          </div>
-          
-          <div className="overflow-x-auto">
-            <table className="min-w-full w-full border-collapse" style={{ tableLayout: 'fixed' }}>
-              <colgroup>
-                <col className="md:hidden w-8" />
-                <col className="hidden md:table-column w-12" />
-                <col className="w-[140px] md:w-[180px]" />
-                <col className="hidden md:table-column w-12" />
-                <col className="w-8" />
-                <col className="w-8" />
-                <col className="w-8" />
-                <col className="hidden md:table-column w-12" />
-                <col className="hidden md:table-column w-12" />
-                <col className="hidden md:table-column w-14" />
-                <col className="w-10" />
-                <col className="hidden md:table-column w-32" />
-              </colgroup>
-              
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="md:hidden px-1 py-1 text-center text-xs font-medium text-gray-500">#</th>
-                  <th className="hidden md:table-cell px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">순위</th>
-                  
-                  <th className="px-2 py-2 md:px-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">팀</th>
-                  
-                  <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">경기</th>
-                  
-                  <th className={`${tableStyles.header}`}>승</th>
-                  <th className={`${tableStyles.header}`}>무</th>
-                  <th className={`${tableStyles.header}`}>패</th>
-                  
-                  <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">득점</th>
-                  <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">실점</th>
-                  <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">득실차</th>
-                  
-                  <th className={`${tableStyles.header}`}>승점</th>
-                  
-                  <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">최근 5경기</th>
-                </tr>
-              </thead>
-              
-              <tbody className="divide-y divide-gray-200">
-                {standingsGroup.map((standing: Standing) => {
-                  // 홈팀 또는 원정팀인지 확인하여 하이라이트 처리
-                  const isHomeTeam = String(standing.team.id) === String(homeTeamId);
-                  const isAwayTeam = String(standing.team.id) === String(awayTeamId);
-                  
-                  // 팀 행 스타일 설정
-                  let rowClass = 'cursor-pointer';
-                  if (isHomeTeam) {
-                    rowClass += ' bg-blue-50 hover:bg-blue-200';
-                  } else if (isAwayTeam) {
-                    rowClass += ' bg-red-50 hover:bg-red-200';
-                  } else {
-                    rowClass += ' hover:bg-gray-100';
-                  }
+          </ContainerHeader>
+
+          <ContainerContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="min-w-full w-full border-collapse" style={{ tableLayout: 'fixed' }}>
+                <colgroup>
+                  <col className="md:hidden w-8" />
+                  <col className="hidden md:table-column w-12" />
+                  <col className="w-[140px] md:w-[180px]" />
+                  <col className="hidden md:table-column w-12" />
+                  <col className="w-8" />
+                  <col className="w-8" />
+                  <col className="w-8" />
+                  <col className="hidden md:table-column w-12" />
+                  <col className="hidden md:table-column w-12" />
+                  <col className="hidden md:table-column w-14" />
+                  <col className="w-10" />
+                  <col className="hidden md:table-column w-32" />
+                </colgroup>
+
+                <thead className="bg-gray-50 dark:bg-[#2D2D2D]">
+                  <tr>
+                    <th className="md:hidden px-1 py-1 text-center text-xs font-medium text-gray-500 dark:text-gray-400">#</th>
+                    <th className="hidden md:table-cell px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">순위</th>
+
+                    <th className="px-2 py-2 md:px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">팀</th>
+
+                    <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">경기</th>
+
+                    <th className={`${tableStyles.header}`}>승</th>
+                    <th className={`${tableStyles.header}`}>무</th>
+                    <th className={`${tableStyles.header}`}>패</th>
+
+                    <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">득점</th>
+                    <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">실점</th>
+                    <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">득실차</th>
+
+                    <th className={`${tableStyles.header}`}>승점</th>
+
+                    <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">최근 5경기</th>
+                  </tr>
+                </thead>
+
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {standingsGroup.map((standing: Standing) => {
+                    // 홈팀 또는 원정팀인지 확인하여 하이라이트 처리
+                    const isHomeTeam = String(standing.team.id) === String(homeTeamId);
+                    const isAwayTeam = String(standing.team.id) === String(awayTeamId);
+
+                    // 팀 행 스타일 설정
+                    let rowClass = 'cursor-pointer';
+                    if (isHomeTeam) {
+                      rowClass += ' bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-800/50';
+                    } else if (isAwayTeam) {
+                      rowClass += ' bg-red-50 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-800/50';
+                    } else {
+                      rowClass += ' hover:bg-gray-100 dark:hover:bg-gray-800';
+                    }
                   
                   // 강등권, 유로파, 챔스 등 구분
                   const statusColor = getStatusColor(standing.description || '');
@@ -275,17 +274,17 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
                       {/* 모바일용 축약된 순위 */}
                       <td className="md:hidden px-1 py-1 text-center text-xs relative w-8">
                         <div className={`absolute inset-y-0 left-0 w-1 ${statusColor}`} />
-                        <span className="pl-1">{standing.rank}</span>
+                        <span className="pl-1 text-gray-900 dark:text-gray-100">{standing.rank}</span>
                       </td>
-                      
+
                       {/* 데스크톱용 순위 */}
-                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 relative">
+                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 relative">
                         <div className={`absolute inset-y-0 left-0 w-1 ${statusColor}`} />
                         <span className="pl-2">{standing.rank}</span>
                       </td>
-                      
+
                       {/* 팀 정보 - 고정 너비 사용 */}
-                      <td className="px-2 py-2 md:px-3 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-2 py-2 md:px-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                         <div className="flex items-center gap-1 md:gap-2">
                           <TeamLogo
                             teamName={standing.team.name || ''}
@@ -301,7 +300,9 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
                             </span>
                             {(isHomeTeam || isAwayTeam) && (
                               <span className={`text-[10px] md:text-xs font-bold px-0.5 md:px-1.5 md:py-0.5 ml-0.5 md:ml-2 rounded inline-block flex-shrink-0 ${
-                                isHomeTeam ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'
+                                isHomeTeam
+                                  ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
+                                  : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
                               }`}>
                                 {isHomeTeam ? '홈' : '원정'}
                               </span>
@@ -309,9 +310,9 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
                           </div>
                         </div>
                       </td>
-                      
+
                       {/* 경기 수 - 모바일에서는 숨김 */}
-                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
+                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center">
                         {standing.all?.played || 0}
                       </td>
                       
@@ -319,27 +320,29 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
                       <td className={`${tableStyles.cell} text-xs md:text-sm px-0 md:px-1`}>{standing.all?.win || 0}</td>
                       <td className={`${tableStyles.cell} text-xs md:text-sm px-0 md:px-1`}>{standing.all?.draw || 0}</td>
                       <td className={`${tableStyles.cell} text-xs md:text-sm px-0 md:px-1`}>{standing.all?.lose || 0}</td>
-                      
+
+
                       {/* 득점, 실점, 득실차 - 모바일에서는 숨김 */}
-                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
+                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center">
                         {standing.all?.goals?.for || 0}
                       </td>
-                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
+                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center">
                         {standing.all?.goals?.against || 0}
                       </td>
-                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
+                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center">
                         {standing.goalsDiff > 0 ? `+${standing.goalsDiff}` : standing.goalsDiff || 0}
                       </td>
-                      
+
                       {/* 승점 - 모바일에서도 표시 */}
                       <td className={`${tableStyles.cell} text-xs md:text-sm font-semibold`}>{standing.points || 0}</td>
-                      
+
+
                       {/* 최근 5경기 - 모바일에서는 숨김 */}
-                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
+                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center">
                         <div className="flex justify-center gap-1">
                           {standing.form?.split('').map((result, idx) => (
-                            <div 
-                              key={idx} 
+                            <div
+                              key={idx}
                               className={`w-6 h-6 flex items-center justify-center ${getFormStyle(result)} text-xs font-bold`}
                               title={result === 'W' ? '승리' : result === 'D' ? '무승부' : '패배'}
                             >
@@ -351,46 +354,48 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
                     </tr>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                </tbody>
+              </table>
+            </div>
+          </ContainerContent>
+        </Container>
       ))}
-      
+
+
       {/* 범례 */}
-      <div className={`${tableStyles.container}`}>
-        <div className="px-3 py-2 border-b bg-gray-50">
-          <h3 className="text-sm font-medium text-gray-800">범례</h3>
-        </div>
-        <div className="p-3">
+      <Container className="bg-white dark:bg-[#1D1D1D]">
+        <ContainerHeader>
+          <ContainerTitle>범례</ContainerTitle>
+        </ContainerHeader>
+        <ContainerContent>
           <div className="flex flex-col space-y-2">
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-green-400"></div>
-              <span className="text-sm">챔피언스리그 진출</span>
+              <span className="text-sm text-gray-900 dark:text-gray-100">챔피언스리그 진출</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-blue-400"></div>
-              <span className="text-sm">유로파리그 진출</span>
+              <span className="text-sm text-gray-900 dark:text-gray-100">유로파리그 진출</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-red-400"></div>
-              <span className="text-sm">강등권</span>
+              <span className="text-sm text-gray-900 dark:text-gray-100">강등권</span>
             </div>
-            
+
             {/* 구분선 */}
-            <div className="border-t border-gray-200 my-1"></div>
-            
+            <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-blue-50 border border-blue-200"></div>
-              <span className="text-sm">홈 팀</span>
+              <div className="w-4 h-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700"></div>
+              <span className="text-sm text-gray-900 dark:text-gray-100">홈 팀</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-red-50 border border-red-200"></div>
-              <span className="text-sm">원정 팀</span>
+              <div className="w-4 h-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700"></div>
+              <span className="text-sm text-gray-900 dark:text-gray-100">원정 팀</span>
             </div>
           </div>
-        </div>
-      </div>
+        </ContainerContent>
+      </Container>
     </div>
   );
 });

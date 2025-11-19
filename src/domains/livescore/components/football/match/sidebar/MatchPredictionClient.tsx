@@ -47,16 +47,16 @@ const PredictionButton: React.FC<PredictionButtonProps> = ({
     <button
       onClick={onClick}
       disabled={isLoading || !canPredict}
-      className={`p-4 rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center relative ${
+      className={`p-4 rounded-lg border-2 transition-colors flex flex-col items-center justify-center relative outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
         isActive
-          ? 'border-blue-500 bg-blue-50'
-          : 'border-gray-200 hover:border-gray-300'
+          ? 'border-slate-800 dark:border-[#F0F0F0] bg-[#EAEAEA] dark:bg-[#333333]'
+          : 'border-black/7 dark:border-white/10 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
       } ${isLoading || !canPredict ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
     >
       <div className="relative w-8 h-8 mb-1">
         {type === 'draw' ? (
-          <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-            <span className="text-gray-600 font-bold text-lg">D</span>
+          <div className="w-8 h-8 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg flex items-center justify-center">
+            <span className="text-gray-700 dark:text-gray-300 font-bold text-lg">D</span>
           </div>
         ) : teamId ? (
           <ApiSportsImage
@@ -68,19 +68,19 @@ const PredictionButton: React.FC<PredictionButtonProps> = ({
             className="object-contain w-full h-full"
           />
         ) : (
-          <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-            <span className="text-gray-400 text-xs">로고</span>
+          <div className="w-8 h-8 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg flex items-center justify-center">
+            <span className="text-gray-500 dark:text-gray-400 text-xs">로고</span>
           </div>
         )}
       </div>
       {percentage !== undefined && (
-        <div className="text-xs text-gray-600 font-medium">
+        <div className="text-xs text-gray-700 dark:text-gray-300 font-medium">
           {percentage}%
         </div>
       )}
       {isActive && (
-        <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-          <span className="text-white text-xs">✓</span>
+        <div className="absolute -top-1 -right-1 w-4 h-4 bg-slate-800 dark:bg-[#F0F0F0] rounded-full flex items-center justify-center">
+          <span className="text-white dark:text-[#1D1D1D] text-xs">✓</span>
         </div>
       )}
     </button>
@@ -320,27 +320,16 @@ export default function MatchPredictionClient({
   const statusMessage = getMatchStatusMessage();
   
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-3">
+    <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 mb-3">
       {/* 헤더 */}
-      <div className="px-4 py-3 border-b border-gray-100">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-sm text-gray-800">승부 예측</h3>
-          {canPredict ? (
-            <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
-              10점 적립
-            </span>
-          ) : (
-            <span className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded-full">
-              {isMatchFinished() ? '경기 종료' : '경기 진행중'}
-            </span>
-          )}
-        </div>
+      <div className="h-12 flex items-center px-4 border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] rounded-t-lg">
+        <h3 className="font-semibold text-sm text-gray-900 dark:text-[#F0F0F0]">승부 예측</h3>
       </div>
-      
+
       {/* 상태 메시지 */}
       {statusMessage && (
-        <div className="px-4 py-2 bg-yellow-50 border-b border-yellow-100">
-          <p className="text-xs text-yellow-700 text-center">
+        <div className="px-4 py-2 bg-yellow-50 dark:bg-yellow-900/20 border-b border-black/5 dark:border-white/10">
+          <p className="text-xs text-yellow-700 dark:text-yellow-400 text-center">
             {statusMessage}
           </p>
         </div>
@@ -365,24 +354,24 @@ export default function MatchPredictionClient({
           <button
             onClick={() => handlePrediction('draw')}
             disabled={isLoading || !canPredict}
-            className={`p-3 rounded-lg border-2 transition-all duration-200 relative ${
+            className={`p-3 rounded-lg border-2 transition-colors relative outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
               prediction === 'draw'
-                ? 'border-blue-500 bg-blue-50 text-blue-700'
-                : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                ? 'border-slate-800 dark:border-[#F0F0F0] bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]'
+                : 'border-black/7 dark:border-white/10 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-700 dark:text-gray-300'
             } ${isLoading || !canPredict ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
           >
             <div className="text-center">
               <div className="text-xs font-medium mb-1">무승부</div>
-              <div className="text-xs text-gray-500">DRAW</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">DRAW</div>
               {stats && stats.total_votes > 0 && (
-                <div className="text-xs text-gray-600 font-medium mt-1">
+                <div className="text-xs text-gray-700 dark:text-gray-300 font-medium mt-1">
                   {stats.draw_percentage}%
                 </div>
               )}
             </div>
             {prediction === 'draw' && (
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-xs">✓</span>
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-slate-800 dark:bg-[#F0F0F0] rounded-full flex items-center justify-center">
+                <span className="text-white dark:text-[#1D1D1D] text-xs">✓</span>
               </div>
             )}
           </button>
@@ -402,9 +391,9 @@ export default function MatchPredictionClient({
         
         {/* 예측 결과 */}
         {prediction && (
-          <div className="mt-3 p-2 bg-gray-50 rounded-lg">
-            <div className="text-xs text-center text-gray-600">
-              내 예측: <span className="font-medium text-gray-800">
+          <div className="mt-3 p-2 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
+            <div className="text-xs text-center text-gray-700 dark:text-gray-300">
+              내 예측: <span className="font-medium text-gray-900 dark:text-[#F0F0F0]">
                 {prediction === 'home' && `${homeTeam?.name_ko || homeTeam?.name || '홈팀'} 승리`}
                 {prediction === 'draw' && '무승부'}
                 {prediction === 'away' && `${awayTeam?.name_ko || awayTeam?.name || '원정팀'} 승리`}
@@ -415,8 +404,8 @@ export default function MatchPredictionClient({
 
         {/* 전체 통계 표시 */}
         {stats && stats.total_votes > 0 && (
-          <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-            <div className="text-xs text-gray-600 mb-2 text-center">
+          <div className="mt-3 p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
+            <div className="text-xs text-gray-700 dark:text-gray-300 mb-2 text-center">
               총 {stats.total_votes}명이 예측했습니다
             </div>
             
@@ -436,33 +425,33 @@ export default function MatchPredictionClient({
                     />
                   )}
                 </div>
-                <div className="flex-1 bg-gray-200 rounded-full h-2 mr-2">
-                  <div 
-                    className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                <div className="flex-1 bg-[#EAEAEA] dark:bg-[#333333] rounded-full h-2 mr-2">
+                  <div
+                    className="bg-slate-800 dark:bg-[#F0F0F0] h-2 rounded-full transition-all duration-300"
                     style={{ width: `${stats.home_percentage}%` }}
                   ></div>
                 </div>
-                <span className="font-medium text-gray-700 w-8 text-right">
+                <span className="font-medium text-gray-900 dark:text-[#F0F0F0] w-8 text-right">
                   {stats.home_percentage}%
                 </span>
               </div>
-              
+
               {/* 무승부 */}
               <div className="flex items-center text-xs">
                 <div className="w-8 h-4 mr-2 flex items-center justify-center">
-                  <span className="text-gray-500 font-bold text-xs">D</span>
+                  <span className="text-gray-500 dark:text-gray-400 font-bold text-xs">D</span>
                 </div>
-                <div className="flex-1 bg-gray-200 rounded-full h-2 mr-2">
-                  <div 
-                    className="bg-gray-500 h-2 rounded-full transition-all duration-300"
+                <div className="flex-1 bg-[#EAEAEA] dark:bg-[#333333] rounded-full h-2 mr-2">
+                  <div
+                    className="bg-gray-600 dark:bg-gray-400 h-2 rounded-full transition-all duration-300"
                     style={{ width: `${stats.draw_percentage}%` }}
                   ></div>
                 </div>
-                <span className="font-medium text-gray-700 w-8 text-right">
+                <span className="font-medium text-gray-900 dark:text-[#F0F0F0] w-8 text-right">
                   {stats.draw_percentage}%
                 </span>
               </div>
-              
+
               {/* 원정팀 */}
               <div className="flex items-center text-xs">
                 <div className="w-8 h-4 relative mr-2">
@@ -477,13 +466,13 @@ export default function MatchPredictionClient({
                     />
                   )}
                 </div>
-                <div className="flex-1 bg-gray-200 rounded-full h-2 mr-2">
-                  <div 
-                    className="bg-red-500 h-2 rounded-full transition-all duration-300"
+                <div className="flex-1 bg-[#EAEAEA] dark:bg-[#333333] rounded-full h-2 mr-2">
+                  <div
+                    className="bg-slate-800 dark:bg-[#F0F0F0] h-2 rounded-full transition-all duration-300"
                     style={{ width: `${stats.away_percentage}%` }}
                   ></div>
                 </div>
-                <span className="font-medium text-gray-700 w-8 text-right">
+                <span className="font-medium text-gray-900 dark:text-[#F0F0F0] w-8 text-right">
                   {stats.away_percentage}%
                 </span>
               </div>

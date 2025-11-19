@@ -53,16 +53,16 @@ export default function PlayerEvents({ player, events }: PlayerEventsProps) {
           if (event.player?.id === player.id) {
             // 골
             return (
-              <span key={`goal-${index}`} className="inline-flex items-center text-xs bg-green-100 text-green-800 rounded px-1">
-                <FaFutbol className="text-green-600 mr-0.5" />
+              <span key={`goal-${index}`} className="inline-flex items-center text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 rounded px-1">
+                <FaFutbol className="text-green-600 dark:text-green-500 mr-0.5" />
                 {timeStr}
               </span>
             );
           } else if (event.assist?.id === player.id) {
             // 어시스트
             return (
-              <span key={`assist-${index}`} className="inline-flex items-center text-xs bg-blue-100 text-blue-800 rounded px-1">
-                <FaShoePrints className="text-blue-600 mr-0.5" />
+              <span key={`assist-${index}`} className="inline-flex items-center text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 rounded px-1">
+                <FaShoePrints className="text-blue-600 dark:text-blue-500 mr-0.5" />
                 {timeStr}
               </span>
             );
@@ -72,16 +72,16 @@ export default function PlayerEvents({ player, events }: PlayerEventsProps) {
             if (event.detail === 'Yellow Card') {
               // 옐로카드
               return (
-                <span key={`yellow-${index}`} className="inline-flex items-center text-xs bg-yellow-100 text-yellow-800 rounded px-1">
-                  <BsCardText className="text-yellow-500 mr-0.5" />
+                <span key={`yellow-${index}`} className="inline-flex items-center text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 rounded px-1">
+                  <BsCardText className="text-yellow-500 dark:text-yellow-500 mr-0.5" />
                   {timeStr}
                 </span>
               );
             } else if (event.detail === 'Red Card') {
               // 레드카드
               return (
-                <span key={`red-${index}`} className="inline-flex items-center text-xs bg-red-100 text-red-800 rounded px-1">
-                  <BsCardHeading className="text-red-600 mr-0.5" />
+                <span key={`red-${index}`} className="inline-flex items-center text-xs bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 rounded px-1">
+                  <BsCardHeading className="text-red-600 dark:text-red-500 mr-0.5" />
                   {timeStr}
                 </span>
               );
@@ -116,15 +116,15 @@ export default function PlayerEvents({ player, events }: PlayerEventsProps) {
           
           if (isIn) {
             return (
-              <span key={`in-${index}`} className="inline-flex items-center text-xs bg-green-100 text-green-800 rounded px-1">
-                <IoMdSwap className="text-green-600 mr-0.5" />
+              <span key={`in-${index}`} className="inline-flex items-center text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 rounded px-1">
+                <IoMdSwap className="text-green-600 dark:text-green-500 mr-0.5" />
                 IN {timeStr}
               </span>
             );
           } else if (isOut) {
             return (
-              <span key={`out-${index}`} className="inline-flex items-center text-xs bg-red-100 text-red-800 rounded px-1">
-                <IoMdSwap className="text-red-600 mr-0.5 rotate-180" />
+              <span key={`out-${index}`} className="inline-flex items-center text-xs bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 rounded px-1">
+                <IoMdSwap className="text-red-600 dark:text-red-500 mr-0.5 rotate-180" />
                 OUT {timeStr}
               </span>
             );

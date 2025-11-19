@@ -68,66 +68,50 @@ export default function ApiSportsImage({
       return;
     }
 
-    // 확장자 우선순위: gif → png
-    // public storage URL은 .png 형태이므로 .gif 후보도 함께 구성하여 HEAD로 존재 여부 확인
-    const tryResolveUrl = async () => {
-      const pngUrl = getSupabaseStorageUrl(imageType, effectiveImageId);
-      const gifUrl = pngUrl.replace('.png', '.gif');
-
-      const exists = async (url: string) => {
-        try {
-          const res = await fetch(url, { method: 'HEAD' });
-          return res.ok;
-        } catch {
-          return false;
-        }
-      };
-
-      const useGif = await exists(gifUrl);
-      const finalUrl = useGif ? gifUrl : pngUrl;
-      urlCache.set(cacheKey, finalUrl);
-      setSrc(finalUrl);
-    };
-
-    // 비동기로 실제 존재하는 확장자를 결정
-    tryResolveUrl();
+    // PNG만 사용 (GIF 체크 제거)
+    const pngUrl = getSupabaseStorageUrl(imageType, effectiveImageId);
+    urlCache.set(cacheKey, pngUrl);
+    setSrc(pngUrl);
   }, [imageId, imageType, effectiveImageId, isDark]);
 
-  // 이미지 로드 에러 시 서버 액션으로 캐싱 시도
+  // 이미지 로드 에러 시 API-Sports URL로 fallback
   const handleImageError = async () => {
     if (hasTriedServerAction) {
-      // 서버 액션도 실패했으면 빈 영역으로 처리
-      setSrc(null);
+      // 이미 fallback을 시도했으면 API-Sports 직접 URL 사용
+      const apiSportsUrl = `https://media.api-sports.io/football/${imageType}/${effectiveImageId}.png`;
+      setSrc(apiSportsUrl);
       return;
     }
 
     setHasTriedServerAction(true);
-    
-        try {
-          const { getCachedImageFromStorage } = await import('@/shared/actions/image-storage-actions');
+
+    try {
+      const { getCachedImageFromStorage } = await import('@/shared/actions/image-storage-actions');
       const result = await getCachedImageFromStorage(
         imageType as 'players' | 'teams' | 'leagues' | 'coachs' | 'venues',
         effectiveImageId
       );
 
-      if (result.success && result.url && result.url.includes('supabase.co')) {
-        // 서버 액션으로 캐싱 성공
+      if (result && result.url) {
+        // 서버 액션 성공 (Supabase 또는 API-Sports URL)
         const cacheKey = `${imageType}-${effectiveImageId}`;
         urlCache.set(cacheKey, result.url);
         setSrc(result.url);
       } else {
-        // 서버 액션도 실패 시 빈 영역 처리
-        setSrc(null);
+        // 서버 액션 실패 시 API-Sports 직접 URL
+        const apiSportsUrl = `https://media.api-sports.io/football/${imageType}/${effectiveImageId}.png`;
+        setSrc(apiSportsUrl);
       }
-        } catch (error) {
-      console.debug(`이미지 서버 액션 실패: ${imageType}/${effectiveImageId}`, error);
-      setSrc(null);
-        }
-      };
-      
-  // src가 없으면 아무것도 렌더링하지 않음
+    } catch {
+      // 에러 발생 시 API-Sports 직접 URL
+      const apiSportsUrl = `https://media.api-sports.io/football/${imageType}/${effectiveImageId}.png`;
+      setSrc(apiSportsUrl);
+    }
+  };
+
+  // src가 없으면 fallback 이미지 또는 빈 공간
   if (!src) {
-    return null;
+    return <div className={props.className} style={{ width: props.width, height: props.height }} />;
   }
 
   // 스토리지 URL이 확인된 경우에만 이미지 렌더링
