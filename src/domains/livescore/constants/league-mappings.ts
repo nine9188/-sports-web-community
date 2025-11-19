@@ -191,7 +191,7 @@ const ENGLISH_TO_KOREAN_LEAGUE_MAP: Record<string, string> = {
   'La Liga': '라리가',
   'LaLiga': '라리가',
   'Bundesliga': '분데스리가',
-  'Serie A': '세리에 A',
+  'Serie A': '세리에 A',  // 이탈리아 세리에 A
   'Ligue 1': '리그앙',
   'Championship': '챔피언십',
   'Scottish Premiership': '스코틀랜드 프리미어십',

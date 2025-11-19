@@ -5,7 +5,7 @@ import { Trophy, Users } from 'lucide-react';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { MatchData } from '@/domains/livescore/actions/footballApi';
-import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
+import { getLeagueKoreanName, getLeagueName } from '@/domains/livescore/constants/league-mappings';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 
 interface MatchItemProps {
@@ -72,8 +72,10 @@ const MatchItem = React.memo(function MatchItem({ match, onClose }: MatchItemPro
   const isLive = ['LIVE', '1H', '2H', 'HT'].includes(match.status?.code || '');
   const isFinished = ['FT', 'AET', 'PEN'].includes(match.status?.code || '');
 
-  // 한국어 매핑
-  const leagueNameKo = getLeagueKoreanName(match.league?.name);
+  // 한국어 매핑 - 리그 ID 우선 사용
+  const leagueNameKo = match.league?.id
+    ? getLeagueName(match.league.id)
+    : getLeagueKoreanName(match.league?.name);
   const homeTeam = getTeamById(match.teams?.home?.id || 0);
   const awayTeam = getTeamById(match.teams?.away?.id || 0);
 

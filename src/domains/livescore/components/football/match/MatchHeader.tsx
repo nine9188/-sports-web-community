@@ -9,6 +9,7 @@ import { formatDateToKorean } from '@/domains/livescore/utils/dateUtils';
 import { ErrorState, LoadingState } from '@/domains/livescore/components/common/CommonComponents';
 import { MatchEvent } from '@/domains/livescore/types/match';
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
+import { getLeagueName } from '@/domains/livescore/constants/league-mappings';
 
 // MatchData 타입 정의
 interface MatchDataType {
@@ -212,8 +213,8 @@ const MatchHeader = memo(() => {
               )}
             </div>
             <span className="text-xs md:text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
-              {/* 한국어 리그명 우선 표시, 없으면 일반 이름 */}
-              {league?.name_ko || league?.name}
+              {/* 리그 ID로 한국어 이름 가져오기 */}
+              {league?.id ? getLeagueName(league.id) : (league?.name_ko || league?.name)}
             </span>
           </div>
 
