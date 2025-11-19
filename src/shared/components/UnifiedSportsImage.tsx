@@ -129,7 +129,7 @@ export default function UnifiedSportsImage({
     'flex-shrink-0',
     'overflow-hidden',
     'bg-transparent',
-    variant === 'circle' ? 'border-2 border-gray-200' : '',
+    variant === 'circle' ? 'border-2 border-gray-200 dark:border-gray-700' : '',
     className
   ].filter(Boolean).join(' ');
 
