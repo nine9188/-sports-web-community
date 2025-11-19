@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { fetchCachedPlayerStats, PlayerStats, PlayerStatsResponse } from '@/domains/livescore/actions/match/playerStats';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
+import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 
 
 interface PlayerStatsModalProps {
@@ -222,8 +223,8 @@ export default function PlayerStatsModal({
 
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-[#1D1D1D] rounded-xl w-full max-w-md max-h-[80vh] flex flex-col shadow-xl border border-black/7 dark:border-0">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-black rounded-xl w-full max-w-md max-h-[80vh] flex flex-col shadow-xl border border-black/7 dark:border-0">
         {/* 닫기 버튼 */}
         <div className="flex-shrink-0 flex items-center justify-between h-12 px-3 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10 rounded-t-xl">
           <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">선수 개인 통계</h3>
@@ -237,223 +238,227 @@ export default function PlayerStatsModal({
             </svg>
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto bg-white dark:bg-black">
 
         {/* 선수 기본 정보 */}
-        <div className="px-6 pt-3 pb-6 text-center">
-          <div className="relative w-28 h-28 mx-auto mb-4">
-            <div className="relative w-28 h-28">
-              <div className="absolute inset-0 rounded-full border-4 border-white dark:border-[#1D1D1D] shadow-lg"></div>
-              <UnifiedSportsImage
-                imageId={playerId}
-                imageType={ImageType.Players}
-                alt={playerInfo.name}
-                size="xxl"
-                variant="circle"
-                className="w-full h-full"
-              />
-            </div>
-            {stats.team?.id && (
-              <div 
-                className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full shadow-lg flex items-center justify-center"
-                style={{ backgroundColor: '#ffffff' }}
-              >
-                <UnifiedSportsImage
-                  imageId={stats.team.id}
-                  imageType={ImageType.Teams}
-                  alt={stats.team?.name || '팀 로고'}
-                  size="md"
-                  variant="square"
-                  fit="contain"
-                  className="w-8 h-8"
-                />
+        <div className="px-4 pt-3">
+          <Container className="mb-4">
+            <ContainerContent className="text-center">
+              <div className="relative w-28 h-28 mx-auto mb-4">
+                <div className="relative w-28 h-28">
+                  <div className="absolute inset-0 rounded-full border-4 border-white dark:border-[#1D1D1D] shadow-lg"></div>
+                  <UnifiedSportsImage
+                    imageId={playerId}
+                    imageType={ImageType.Players}
+                    alt={playerInfo.name}
+                    size="xxl"
+                    variant="circle"
+                    className="w-full h-full"
+                  />
+                </div>
+                {stats.team?.id && (
+                  <div
+                    className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full shadow-lg flex items-center justify-center"
+                    style={{ backgroundColor: '#ffffff' }}
+                  >
+                    <UnifiedSportsImage
+                      imageId={stats.team.id}
+                      imageType={ImageType.Teams}
+                      alt={stats.team?.name || '팀 로고'}
+                      size="md"
+                      variant="square"
+                      fit="contain"
+                      className="w-8 h-8"
+                    />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <h2 className="text-xl font-bold mb-1 text-gray-900 dark:text-[#F0F0F0]">{playerInfo.name}</h2>
-          <div className="flex items-center justify-center gap-4 text-sm text-gray-700 dark:text-gray-300">
-            <span>#{playerInfo.number}</span>
-            <span>{playerInfo.pos}</span>
-            {stats.games?.captain && (
-              <span className="px-2 py-0.5 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded text-xs">
-                주장
-              </span>
-            )}
-          </div>
+              <h2 className="text-xl font-bold mb-1 text-gray-900 dark:text-[#F0F0F0]">{playerInfo.name}</h2>
+              <div className="flex items-center justify-center gap-4 text-sm text-gray-700 dark:text-gray-300">
+                <span>#{playerInfo.number}</span>
+                <span>{playerInfo.pos}</span>
+                {stats.games?.captain && (
+                  <span className="px-2 py-0.5 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded text-xs">
+                    주장
+                  </span>
+                )}
+              </div>
+            </ContainerContent>
+          </Container>
         </div>
 
         {/* 통계 테이블 */}
         <div className="px-4 pb-8">
           {/* 기본 정보 */}
-          <table className="w-full border-collapse mb-4">
-            <thead>
-              <tr className="bg-[#F5F5F5] dark:bg-[#262626]">
-                <th colSpan={2} className="px-4 py-2 text-left font-bold text-gray-900 dark:text-[#F0F0F0] border-b border-black/5 dark:border-white/10">
-                  기본 정보
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b border-black/5 dark:border-white/10">
-                <td className="px-4 py-2 text-gray-700 dark:text-gray-300">평점</td>
-                <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.games?.rating || '-'}</td>
-              </tr>
-              <tr className="border-b border-black/5 dark:border-white/10">
-                <td className="px-4 py-2 text-gray-700 dark:text-gray-300">출전시간</td>
-                <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.games?.minutes || 0}&apos;</td>
-              </tr>
-            </tbody>
-          </table>
+          <Container className="mb-4">
+            <ContainerHeader>
+              <ContainerTitle>기본 정보</ContainerTitle>
+            </ContainerHeader>
+            <ContainerContent className="p-0">
+              <table className="w-full border-collapse">
+                <tbody>
+                  <tr className="border-b border-black/5 dark:border-white/10">
+                    <td className="px-4 py-2 text-gray-700 dark:text-gray-300">평점</td>
+                    <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.games?.rating || '-'}</td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-2 text-gray-700 dark:text-gray-300">출전시간</td>
+                    <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.games?.minutes || 0}&apos;</td>
+                  </tr>
+                </tbody>
+              </table>
+            </ContainerContent>
+          </Container>
 
           {/* 필드 플레이어 전용 스탯 */}
           {playerInfo.pos !== 'G' && (
             <>
               {/* 공격 스탯 */}
-              <table className="w-full border-collapse mb-4">
-                <thead>
-                  <tr className="bg-[#F5F5F5] dark:bg-[#262626]">
-                    <th colSpan={2} className="px-4 py-2 text-left font-bold text-gray-900 dark:text-[#F0F0F0] border-b border-black/5 dark:border-white/10">
-                      공격 스탯
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-b border-black/5 dark:border-white/10">
-                    <td className="px-4 py-2 text-gray-700 dark:text-gray-300">득점</td>
-                    <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.goals?.total || 0}</td>
-                  </tr>
-                  <tr className="border-b border-black/5 dark:border-white/10">
-                    <td className="px-4 py-2 text-gray-700 dark:text-gray-300">도움</td>
-                    <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.goals?.assists || 0}</td>
-                  </tr>
-                  <tr className="border-b border-black/5 dark:border-white/10">
-                    <td className="px-4 py-2 text-gray-700 dark:text-gray-300">슈팅</td>
-                    <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.shots?.total || 0}</td>
-                  </tr>
-                  <tr className="border-b border-black/5 dark:border-white/10">
-                    <td className="px-4 py-2 text-gray-700 dark:text-gray-300">유효슈팅</td>
-                    <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.shots?.on || 0}</td>
-                  </tr>
-                </tbody>
-              </table>
+              <Container className="mb-4">
+                <ContainerHeader>
+                  <ContainerTitle>공격 스탯</ContainerTitle>
+                </ContainerHeader>
+                <ContainerContent className="p-0">
+                  <table className="w-full border-collapse">
+                    <tbody>
+                      <tr className="border-b border-black/5 dark:border-white/10">
+                        <td className="px-4 py-2 text-gray-700 dark:text-gray-300">득점</td>
+                        <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.goals?.total || 0}</td>
+                      </tr>
+                      <tr className="border-b border-black/5 dark:border-white/10">
+                        <td className="px-4 py-2 text-gray-700 dark:text-gray-300">도움</td>
+                        <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.goals?.assists || 0}</td>
+                      </tr>
+                      <tr className="border-b border-black/5 dark:border-white/10">
+                        <td className="px-4 py-2 text-gray-700 dark:text-gray-300">슈팅</td>
+                        <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.shots?.total || 0}</td>
+                      </tr>
+                      <tr>
+                        <td className="px-4 py-2 text-gray-700 dark:text-gray-300">유효슈팅</td>
+                        <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.shots?.on || 0}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </ContainerContent>
+              </Container>
 
               {/* 드리블 & 듀얼 */}
-              <table className="w-full border-collapse mb-4">
-                <thead>
-                  <tr className="bg-[#F5F5F5] dark:bg-[#262626]">
-                    <th colSpan={2} className="px-4 py-2 text-left font-bold text-gray-900 dark:text-[#F0F0F0] border-b border-black/5 dark:border-white/10">
-                      드리블 & 듀얼
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-b border-black/5 dark:border-white/10">
-                    <td className="px-4 py-2 text-gray-700 dark:text-gray-300">드리블 시도</td>
-                    <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.dribbles?.attempts || 0}</td>
-                  </tr>
-                  <tr className="border-b border-black/5 dark:border-white/10">
-                    <td className="px-4 py-2 text-gray-700 dark:text-gray-300">드리블 성공</td>
-                    <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.dribbles?.success || 0}</td>
-                  </tr>
-                  <tr className="border-b border-black/5 dark:border-white/10">
-                    <td className="px-4 py-2 text-gray-700 dark:text-gray-300">듀얼 시도</td>
-                    <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.duels?.total || 0}</td>
-                  </tr>
-                  <tr className="border-b border-black/5 dark:border-white/10">
-                    <td className="px-4 py-2 text-gray-700 dark:text-gray-300">듀얼 성공</td>
-                    <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.duels?.won || 0}</td>
-                  </tr>
-                </tbody>
-              </table>
+              <Container className="mb-4">
+                <ContainerHeader>
+                  <ContainerTitle>드리블 & 듀얼</ContainerTitle>
+                </ContainerHeader>
+                <ContainerContent className="p-0">
+                  <table className="w-full border-collapse">
+                    <tbody>
+                      <tr className="border-b border-black/5 dark:border-white/10">
+                        <td className="px-4 py-2 text-gray-700 dark:text-gray-300">드리블 시도</td>
+                        <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.dribbles?.attempts || 0}</td>
+                      </tr>
+                      <tr className="border-b border-black/5 dark:border-white/10">
+                        <td className="px-4 py-2 text-gray-700 dark:text-gray-300">드리블 성공</td>
+                        <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.dribbles?.success || 0}</td>
+                      </tr>
+                      <tr className="border-b border-black/5 dark:border-white/10">
+                        <td className="px-4 py-2 text-gray-700 dark:text-gray-300">듀얼 시도</td>
+                        <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.duels?.total || 0}</td>
+                      </tr>
+                      <tr>
+                        <td className="px-4 py-2 text-gray-700 dark:text-gray-300">듀얼 성공</td>
+                        <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.duels?.won || 0}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </ContainerContent>
+              </Container>
             </>
           )}
 
           {/* 패스 */}
-          <table className="w-full border-collapse mb-4">
-            <thead>
-              <tr className="bg-[#F5F5F5] dark:bg-[#262626]">
-                <th colSpan={2} className="px-4 py-2 text-left font-bold text-gray-900 dark:text-[#F0F0F0] border-b border-black/5 dark:border-white/10">
-                  패스
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b border-black/5 dark:border-white/10">
-                <td className="px-4 py-2 text-gray-700 dark:text-gray-300">총 패스</td>
-                <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.passes?.total || 0}</td>
-              </tr>
-              <tr className="border-b border-black/5 dark:border-white/10">
-                <td className="px-4 py-2 text-gray-700 dark:text-gray-300">키패스</td>
-                <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.passes?.key || 0}</td>
-              </tr>
-              <tr className="border-b border-black/5 dark:border-white/10">
-                <td className="px-4 py-2 text-gray-700 dark:text-gray-300">패스 성공률</td>
-                <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.passes?.accuracy || 0}%</td>
-              </tr>
-            </tbody>
-          </table>
+          <Container className="mb-4">
+            <ContainerHeader>
+              <ContainerTitle>패스</ContainerTitle>
+            </ContainerHeader>
+            <ContainerContent className="p-0">
+              <table className="w-full border-collapse">
+                <tbody>
+                  <tr className="border-b border-black/5 dark:border-white/10">
+                    <td className="px-4 py-2 text-gray-700 dark:text-gray-300">총 패스</td>
+                    <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.passes?.total || 0}</td>
+                  </tr>
+                  <tr className="border-b border-black/5 dark:border-white/10">
+                    <td className="px-4 py-2 text-gray-700 dark:text-gray-300">키패스</td>
+                    <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.passes?.key || 0}</td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-2 text-gray-700 dark:text-gray-300">패스 성공률</td>
+                    <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.passes?.accuracy || 0}%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </ContainerContent>
+          </Container>
 
           {/* 파울 & 카드 */}
-          <table className="w-full border-collapse mb-4">
-            <thead>
-              <tr className="bg-[#F5F5F5] dark:bg-[#262626]">
-                <th colSpan={2} className="px-4 py-2 text-left font-bold text-gray-900 dark:text-[#F0F0F0] border-b border-black/5 dark:border-white/10">
-                  파울 & 카드
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b border-black/5 dark:border-white/10">
-                <td className="px-4 py-2 text-gray-700 dark:text-gray-300">파울 얻음</td>
-                <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.fouls?.drawn || 0}</td>
-              </tr>
-              <tr className="border-b border-black/5 dark:border-white/10">
-                <td className="px-4 py-2 text-gray-700 dark:text-gray-300">파울 범함</td>
-                <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.fouls?.committed || 0}</td>
-              </tr>
-              <tr className="border-b border-black/5 dark:border-white/10">
-                <td className="px-4 py-2 text-gray-700 dark:text-gray-300">옐로카드</td>
-                <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.cards?.yellow || 0}</td>
-              </tr>
-              <tr className="border-b border-black/5 dark:border-white/10">
-                <td className="px-4 py-2 text-gray-700 dark:text-gray-300">레드카드</td>
-                <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.cards?.red || 0}</td>
-              </tr>
-            </tbody>
-          </table>
+          <Container className="mb-4">
+            <ContainerHeader>
+              <ContainerTitle>파울 & 카드</ContainerTitle>
+            </ContainerHeader>
+            <ContainerContent className="p-0">
+              <table className="w-full border-collapse">
+                <tbody>
+                  <tr className="border-b border-black/5 dark:border-white/10">
+                    <td className="px-4 py-2 text-gray-700 dark:text-gray-300">파울 얻음</td>
+                    <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.fouls?.drawn || 0}</td>
+                  </tr>
+                  <tr className="border-b border-black/5 dark:border-white/10">
+                    <td className="px-4 py-2 text-gray-700 dark:text-gray-300">파울 범함</td>
+                    <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.fouls?.committed || 0}</td>
+                  </tr>
+                  <tr className="border-b border-black/5 dark:border-white/10">
+                    <td className="px-4 py-2 text-gray-700 dark:text-gray-300">옐로카드</td>
+                    <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.cards?.yellow || 0}</td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-2 text-gray-700 dark:text-gray-300">레드카드</td>
+                    <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.cards?.red || 0}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </ContainerContent>
+          </Container>
 
           {/* 골키퍼 전용 스탯 */}
           {playerInfo.pos === 'G' && (
-            <table className="w-full border-collapse mb-4">
-              <thead>
-                <tr className="bg-[#F5F5F5] dark:bg-[#262626]">
-                  <th colSpan={2} className="px-4 py-2 text-left font-bold text-gray-900 dark:text-[#F0F0F0] border-b border-black/5 dark:border-white/10">
-                    골키퍼 스탯
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b border-black/5 dark:border-white/10">
-                  <td className="px-4 py-2 text-gray-700 dark:text-gray-300">실점</td>
-                  <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.goals?.conceded || 0}</td>
-                </tr>
-                <tr className="border-b border-black/5 dark:border-white/10">
-                  <td className="px-4 py-2 text-gray-700 dark:text-gray-300">선방</td>
-                  <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.goals?.saves || 0}</td>
-                </tr>
-                <tr className="border-b border-black/5 dark:border-white/10">
-                  <td className="px-4 py-2 text-gray-700 dark:text-gray-300">막아낸 PK</td>
-                  <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.penalty?.saved || 0}</td>
-                </tr>
-              </tbody>
-            </table>
+            <Container className="mb-4">
+              <ContainerHeader>
+                <ContainerTitle>골키퍼 스탯</ContainerTitle>
+              </ContainerHeader>
+              <ContainerContent className="p-0">
+                <table className="w-full border-collapse">
+                  <tbody>
+                    <tr className="border-b border-black/5 dark:border-white/10">
+                      <td className="px-4 py-2 text-gray-700 dark:text-gray-300">실점</td>
+                      <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.goals?.conceded || 0}</td>
+                    </tr>
+                    <tr className="border-b border-black/5 dark:border-white/10">
+                      <td className="px-4 py-2 text-gray-700 dark:text-gray-300">선방</td>
+                      <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.goals?.saves || 0}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 text-gray-700 dark:text-gray-300">막아낸 PK</td>
+                      <td className="px-4 py-2 font-medium text-gray-900 dark:text-[#F0F0F0]">{stats.penalty?.saved || 0}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </ContainerContent>
+            </Container>
           )}
 
           {/* 선수 상세 정보 페이지로 이동하는 버튼 */}
-          <div className="mt-6 mb-4 text-center px-2">
+          <div className="mt-4 mb-4">
             <Link
               href={`/livescore/football/player/${playerId}`}
-              className="inline-block w-full py-3 px-3 bg-slate-800 dark:bg-[#3F3F3F] text-white font-medium rounded-lg shadow hover:bg-slate-700 dark:hover:bg-[#4A4A4A] transition-colors text-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0"
+              className="block w-full py-3 px-3 bg-slate-800 dark:bg-[#3F3F3F] text-white font-medium rounded-lg shadow hover:bg-slate-700 dark:hover:bg-[#4A4A4A] transition-colors text-lg text-center outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0"
             >
               선수 정보 더보기
             </Link>
