@@ -47,7 +47,7 @@ const AuthStateManager = React.memo(function AuthStateManager({
   const { user } = useAuth();
   const pathname = usePathname();
   
-  // 매치 페이지인지 확인
+  // 매치 페이지인지 확인 (사이드바 숨김용)
   const isMatchPage = pathname?.includes('/livescore/football/match/');
   
   // 인증 상태 변경 감지 및 리다이렉트 처리 - 불필요한 refresh 제거
@@ -78,7 +78,7 @@ const AuthStateManager = React.memo(function AuthStateManager({
           isOpen={isProfileOpen}
           onClose={onProfileClose}
         />
-        <main className="flex-1 mt-4 mb-4 md:px-4 w-full box-border bg-transparent" style={{ overflow: isMatchPage ? 'visible' : 'auto' }}>
+        <main className="flex-1 mt-4 mb-4 md:px-4 w-full min-w-0 box-border bg-transparent">
           {children}
         </main>
         {/* 매치 페이지일 때는 사이드바 없음, 아니면 기본 사이드바 */}

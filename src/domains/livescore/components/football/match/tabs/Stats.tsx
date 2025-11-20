@@ -74,18 +74,23 @@ const HorizontalScrollContainer = ({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="relative">
-      {/* 모바일 전용 1회성 힌트 */}
-      <div className="md:hidden px-3 pb-1 text-[11px] text-gray-500 flex items-center gap-1">
-        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-        좌우로 스와이프
-        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-      </div>
+      {/* Left Shadow */}
+      <div
+        className={`absolute top-0 bottom-0 left-0 w-6 bg-gradient-to-r from-white dark:from-[#1D1D1D] to-transparent pointer-events-none transition-opacity duration-300 z-20 ${
+          canScrollLeft ? 'opacity-100' : 'opacity-0'
+        }`}
+      />
+
       <div ref={containerRef} className="overflow-x-auto w-full">
         {children}
       </div>
-      {/* 엣지 페이드 오버레이 */}
-      <div className={`pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-white to-transparent ${canScrollLeft ? '' : 'hidden'}`}></div>
-      <div className={`pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-white to-transparent ${canScrollRight ? '' : 'hidden'}`}></div>
+
+      {/* Right Shadow */}
+      <div
+        className={`absolute top-0 bottom-0 right-0 w-6 bg-gradient-to-l from-white dark:from-[#1D1D1D] to-transparent pointer-events-none transition-opacity duration-300 z-20 ${
+          canScrollRight ? 'opacity-100' : 'opacity-0'
+        }`}
+      />
     </div>
   );
 };
@@ -402,14 +407,7 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
 
   // 로딩 상태 표시
   if (loading) {
-    return (
-      <div className="flex justify-center items-center py-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500 mx-auto mb-2"></div>
-          <p className="text-sm text-gray-600">통계 데이터를 불러오는 중...</p>
-        </div>
-      </div>
-    );
+    return null; // 상위 컴포넌트(TabContent)에서 로딩 상태를 처리하므로 여기서는 아무것도 렌더링하지 않음
   }
   
   // 에러 상태 표시
@@ -469,13 +467,12 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
   };
 
   return (
-    <div className="p-0 relative" style={{ overflow: 'visible' }}>
+    <div className="p-0 relative">
       <motion.div
         className="space-y-2 relative"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        style={{ overflow: 'visible' }}
       >
         {/* 모바일 전용: 기본 통계 위 오버레이 힌트 */}
         {showHint && !hasScrolled && (
@@ -649,16 +646,19 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
         >
           <Container className="bg-white dark:bg-[#1D1D1D]">
             <ContainerHeader>
-              <div className="flex items-center gap-2">
-                {homeTeamId ? (
-                  <UnifiedSportsImage imageId={homeTeamId} imageType={ImageType.Teams} alt={homeTeamName || '홈팀'} size="sm" variant="square" fit="contain" />
-                ) : null}
-                <ContainerTitle>{homeTeamName || '홈팀'}</ContainerTitle>
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-2">
+                  {homeTeamId ? (
+                    <UnifiedSportsImage imageId={homeTeamId} imageType={ImageType.Teams} alt={homeTeamName || '홈팀'} size="sm" variant="square" fit="contain" />
+                  ) : null}
+                  <ContainerTitle>{homeTeamName || '홈팀'}</ContainerTitle>
+                </div>
+                <span className="text-xs text-gray-500 dark:text-gray-400 font-normal">좌우로 스크롤하세요</span>
               </div>
             </ContainerHeader>
             <ContainerContent>
             <HorizontalScrollContainer>
-              <table className="w-full min-w-max divide-y divide-gray-200 text-sm">
+              <table className="min-w-max divide-y divide-gray-200 text-sm">
                 <thead className="bg-gray-50 whitespace-nowrap">
                     <tr>
                     <th className="sticky left-0 z-10 bg-gray-50 px-2 py-2 text-left font-medium text-gray-700 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-32 min-w-[8rem] max-w-[8rem]">선수</th>
@@ -747,16 +747,19 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
         >
           <Container className="bg-white dark:bg-[#1D1D1D]">
             <ContainerHeader>
-              <div className="flex items-center gap-2">
-                {awayTeamId ? (
-                  <UnifiedSportsImage imageId={awayTeamId} imageType={ImageType.Teams} alt={awayTeamName || '원정팀'} size="sm" variant="square" fit="contain" />
-                ) : null}
-                <ContainerTitle>{awayTeamName || '원정팀'}</ContainerTitle>
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-2">
+                  {awayTeamId ? (
+                    <UnifiedSportsImage imageId={awayTeamId} imageType={ImageType.Teams} alt={awayTeamName || '원정팀'} size="sm" variant="square" fit="contain" />
+                  ) : null}
+                  <ContainerTitle>{awayTeamName || '원정팀'}</ContainerTitle>
+                </div>
+                <span className="text-xs text-gray-500 dark:text-gray-400 font-normal">좌우로 스크롤하세요</span>
               </div>
             </ContainerHeader>
             <ContainerContent>
             <HorizontalScrollContainer>
-              <table className="w-full min-w-max divide-y divide-gray-200 text-sm">
+              <table className="min-w-max divide-y divide-gray-200 text-sm">
                 <thead className="bg-gray-50 whitespace-nowrap">
                     <tr>
                     <th className="sticky left-0 z-10 bg-gray-50 px-2 py-2 text-left font-medium text-gray-700 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-32 min-w-[8rem] max-w-[8rem]">선수</th>

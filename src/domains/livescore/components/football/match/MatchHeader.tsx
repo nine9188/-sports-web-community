@@ -1,6 +1,7 @@
 'use client';
 
 import React, { memo, useMemo } from 'react';
+import Link from 'next/link';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
 
@@ -240,22 +241,44 @@ const MatchHeader = memo(() => {
           <div className="flex items-center justify-between">
             {/* 홈팀 */}
             <div className="w-1/3 md:w-1/3 text-center">
-              <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-1 md:mb-2 flex items-center justify-center">
-                {homeTeam?.id && (
-                  <ApiSportsImage
-                    imageId={homeTeam.id}
-                    imageType={ImageType.Teams}
-                    alt={homeTeam.name || ''}
-                    width={48}
-                    height={48}
-                    className="object-contain w-full h-full"
-                  />
-                )}
-              </div>
-              {/* 한국어 팀명 우선 표시, 없으면 일반 이름 */}
-              <div className="font-bold text-sm md:text-base text-gray-900 dark:text-[#F0F0F0]">{homeTeam?.name_ko || homeTeam?.name}</div>
-              {homeTeam?.formation && (
-                <div className="text-xs md:text-sm text-gray-700 dark:text-gray-300">{homeTeam.formation}</div>
+              {homeTeam?.id ? (
+                <Link href={`/livescore/football/team/${homeTeam.id}`} className="group">
+                  <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-1 md:mb-2 flex items-center justify-center">
+                    <ApiSportsImage
+                      imageId={homeTeam.id}
+                      imageType={ImageType.Teams}
+                      alt={homeTeam.name || ''}
+                      width={48}
+                      height={48}
+                      className="object-contain w-full h-full group-hover:brightness-75 transition-all"
+                    />
+                  </div>
+                  {/* 한국어 팀명 우선 표시, 없으면 일반 이름 */}
+                  <div className="font-bold text-sm md:text-base text-gray-900 dark:text-[#F0F0F0] group-hover:underline transition-colors">{homeTeam?.name_ko || homeTeam?.name}</div>
+                  {homeTeam?.formation && (
+                    <div className="text-xs md:text-sm text-gray-700 dark:text-gray-300">{homeTeam.formation}</div>
+                  )}
+                </Link>
+              ) : (
+                <>
+                  <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-1 md:mb-2 flex items-center justify-center">
+                    {homeTeam?.id && (
+                      <ApiSportsImage
+                        imageId={homeTeam.id}
+                        imageType={ImageType.Teams}
+                        alt={homeTeam.name || ''}
+                        width={48}
+                        height={48}
+                        className="object-contain w-full h-full"
+                      />
+                    )}
+                  </div>
+                  {/* 한국어 팀명 우선 표시, 없으면 일반 이름 */}
+                  <div className="font-bold text-sm md:text-base text-gray-900 dark:text-[#F0F0F0]">{homeTeam?.name_ko || homeTeam?.name}</div>
+                  {homeTeam?.formation && (
+                    <div className="text-xs md:text-sm text-gray-700 dark:text-gray-300">{homeTeam.formation}</div>
+                  )}
+                </>
               )}
             </div>
 
@@ -271,22 +294,44 @@ const MatchHeader = memo(() => {
 
             {/* 원정팀 */}
             <div className="w-1/3 md:w-1/3 text-center">
-              <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-1 md:mb-2 flex items-center justify-center">
-                {awayTeam?.id && (
-                  <ApiSportsImage
-                    imageId={awayTeam.id}
-                    imageType={ImageType.Teams}
-                    alt={awayTeam.name || ''}
-                    width={48}
-                    height={48}
-                    className="object-contain w-full h-full"
-                  />
-                )}
-              </div>
-              {/* 한국어 팀명 우선 표시, 없으면 일반 이름 */}
-              <div className="font-bold text-sm md:text-base text-gray-900 dark:text-[#F0F0F0]">{awayTeam?.name_ko || awayTeam?.name}</div>
-              {awayTeam?.formation && (
-                <div className="text-xs md:text-sm text-gray-700 dark:text-gray-300">{awayTeam.formation}</div>
+              {awayTeam?.id ? (
+                <Link href={`/livescore/football/team/${awayTeam.id}`} className="group">
+                  <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-1 md:mb-2 flex items-center justify-center">
+                    <ApiSportsImage
+                      imageId={awayTeam.id}
+                      imageType={ImageType.Teams}
+                      alt={awayTeam.name || ''}
+                      width={48}
+                      height={48}
+                      className="object-contain w-full h-full group-hover:brightness-75 transition-all"
+                    />
+                  </div>
+                  {/* 한국어 팀명 우선 표시, 없으면 일반 이름 */}
+                  <div className="font-bold text-sm md:text-base text-gray-900 dark:text-[#F0F0F0] group-hover:underline transition-colors">{awayTeam?.name_ko || awayTeam?.name}</div>
+                  {awayTeam?.formation && (
+                    <div className="text-xs md:text-sm text-gray-700 dark:text-gray-300">{awayTeam.formation}</div>
+                  )}
+                </Link>
+              ) : (
+                <>
+                  <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-1 md:mb-2 flex items-center justify-center">
+                    {awayTeam?.id && (
+                      <ApiSportsImage
+                        imageId={awayTeam.id}
+                        imageType={ImageType.Teams}
+                        alt={awayTeam.name || ''}
+                        width={48}
+                        height={48}
+                        className="object-contain w-full h-full"
+                      />
+                    )}
+                  </div>
+                  {/* 한국어 팀명 우선 표시, 없으면 일반 이름 */}
+                  <div className="font-bold text-sm md:text-base text-gray-900 dark:text-[#F0F0F0]">{awayTeam?.name_ko || awayTeam?.name}</div>
+                  {awayTeam?.formation && (
+                    <div className="text-xs md:text-sm text-gray-700 dark:text-gray-300">{awayTeam.formation}</div>
+                  )}
+                </>
               )}
             </div>
           </div>

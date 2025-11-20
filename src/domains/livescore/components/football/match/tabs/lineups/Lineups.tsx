@@ -1,18 +1,15 @@
-'use client';
-
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import Formation from './Formation';
 import PlayerImage from './components/PlayerImage';
 import PlayerEvents from './components/PlayerEvents';
 import PlayerStatsModal from './components/PlayerStatsModal';
 import usePlayerStats from './hooks/usePlayerStats';
-import useTeamCache from './hooks/useTeamCache';
 import { TeamLineup, MatchEvent } from '@/domains/livescore/types/match';
-import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
-import { PlayerStats } from '@/domains/livescore/actions/match/playerStats';
+import { EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
+import { getTeamById } from '@/domains/livescore/constants/teams';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 
 interface Player {
@@ -45,7 +42,6 @@ interface LineupsProps {
       name: string;
       logo: string;
     };
-    playersStats?: Record<number, { response: PlayerStats[] }>;
     fixture?: {
       status?: {
         short?: string;
@@ -55,37 +51,29 @@ interface LineupsProps {
 }
 
 export default function Lineups({ matchId, matchData }: LineupsProps) {
-  // 상태 관리
-  const [loading] = useState(!matchData?.lineups);
-  const [lineups] = useState<{home: TeamLineup; away: TeamLineup} | null>(
-    matchData?.lineups?.response || null
-  );
-  const [events] = useState<MatchEvent[]>(matchData?.events || []);
-  const [error] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<{
     id: number;
     name: string;
     number: string;
     pos: string;
+    photo?: string;
     team: {
       id: number;
       name: string;
     };
   } | null>(null);
-  
-  // 팀 정보 캐시 훅 사용
-  const { getTeamDisplayName } = useTeamCache(
-    matchData?.homeTeam,
-    matchData?.awayTeam
-  );
-  
-  // 선수 통계 데이터 로드 훅 사용
-  const { playersStatsData } = usePlayerStats(
-    matchId,
-    lineups,
-    matchData?.playersStats
-  );
+
+  const { playersRatings } = usePlayerStats(matchId);
+
+  const lineups = matchData?.lineups?.response || null;
+  const events = matchData?.events || [];
+
+  // 팀 이름 헬퍼 함수
+  const getTeamDisplayName = (id: number, fallbackName: string): string => {
+    const teamInfo = getTeamById(id);
+    return teamInfo?.name_ko || fallbackName;
+  };
 
   // 포메이션 데이터를 가공하는 함수
   const prepareFormationData = useCallback((teamLineup: TeamLineup) => {
@@ -126,65 +114,24 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
   }, []);
   
 
-  // 선수 클릭 핸들러 - 성능 최적화
   const handlePlayerClick = useCallback((player: Player, teamId: number, teamName: string) => {
-    // 선수 정보를 먼저 설정
-    const playerInfo = {
+    setSelectedPlayer({
       id: player.id,
       name: player.name,
       number: player.number.toString(),
       pos: player.pos || '',
-      team: {
-        id: teamId,
-        name: teamName
-      }
-    };
-    
-    setSelectedPlayer(playerInfo);
-    // 선수 정보 설정 후 모달 열기
+      photo: player.photo,
+      team: { id: teamId, name: teamName }
+    });
     setIsModalOpen(true);
   }, []);
-  
-  // 모달 닫기 핸들러
+
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
   }, []);
 
-  // 경기 상태 및 선수 평점 데이터 추출 - early return 전에 위치해야 함
   const matchStatus = matchData?.fixture?.status?.short;
-  const playersRatings = useMemo(() => {
-    const ratings: Record<number, number> = {};
-    
-    if (playersStatsData && Object.keys(playersStatsData).length > 0) {
-      Object.entries(playersStatsData).forEach(([, playerData]) => {
-        if (playerData?.response && Array.isArray(playerData.response) && playerData.response.length > 0) {
-          const stats = playerData.response[0];
-          if (stats?.player?.id && stats?.statistics?.[0]?.games?.rating) {
-            const ratingValue = stats.statistics[0].games.rating;
-            // 문자열일 수도 있으므로 변환
-            const rating = typeof ratingValue === 'string' ? parseFloat(ratingValue) : Number(ratingValue);
-            if (!isNaN(rating) && rating > 0) {
-              ratings[stats.player.id] = rating;
-            }
-          }
-        }
-      });
-    }
-    
-    return ratings;
-  }, [playersStatsData]);
 
-  // 로딩 중이면 로딩 표시
-  if (loading) {
-    return <LoadingState message="라인업 데이터를 불러오는 중..." />;
-  }
-  
-  // 오류 표시
-  if (error) {
-    return <ErrorState message={error} />;
-  }
-
-  // 라인업 데이터가 없는 경우 처리
   if (!lineups) {
     return <EmptyState title="라인업 정보가 없습니다" message="현재 이 경기에 대한 라인업 정보를 제공할 수 없습니다." />;
   }
@@ -862,17 +809,14 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
             name: getPlayerKoreanName(selectedPlayer.id) || selectedPlayer.name,
             number: selectedPlayer.number,
             pos: selectedPlayer.pos,
+            photo: selectedPlayer.photo,
             team: {
               id: selectedPlayer.team.id,
               name: getTeamDisplayName(selectedPlayer.team.id, selectedPlayer.team.name)
             }
           }}
-          preloadedStats={playersStatsData[selectedPlayer.id]}
         />
       )}
     </div>
   );
-}
-
-// 성능 디버깅을 위한 displayName 추가
-Lineups.displayName = 'Lineups'; 
+} 

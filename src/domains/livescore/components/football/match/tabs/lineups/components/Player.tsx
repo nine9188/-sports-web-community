@@ -89,103 +89,50 @@ interface SVGPlayerImageProps {
 }
 
 const SVGPlayerImage = memo(function SVGPlayerImage({ playerId, photoUrl, teamId, onImageLoad, onImageError }: SVGPlayerImageProps) {
-  const [cachedImageUrl, setCachedImageUrl] = useState<string | null>(null);
-  const [isWaitingForCache, setIsWaitingForCache] = useState(true);
-  
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
   const cacheKey = `${ImageType.Players}-${playerId}`;
-  
-  // 캐시 상태 감지
+
+  // 캐시 확인 및 URL 설정 - 폴링 제거
   useEffect(() => {
     if (!playerId) {
-      // playerId가 없으면 photoUrl 사용
-      setCachedImageUrl(photoUrl || null);
-      setIsWaitingForCache(false);
+      setImageUrl(photoUrl || null);
       return;
     }
-    
-    // 초기 캐시 확인
-    const checkCache = () => {
-      const cachedUrl = urlCache?.get?.(cacheKey);
-      if (cachedUrl) {
-        setCachedImageUrl(cachedUrl);
-        setIsWaitingForCache(false);
-      } else {
-        // 캐시에 없으면 주기적으로 확인 (테이블에서 저장 완료될 때까지)
-        const interval = setInterval(() => {
-          const url = urlCache?.get?.(cacheKey);
-          if (url) {
-            setCachedImageUrl(url);
-            setIsWaitingForCache(false);
-            clearInterval(interval);
-          }
-        }, 500); // 0.5초마다 확인
-        
-        // 10초 후 타임아웃
-        setTimeout(() => {
-          clearInterval(interval);
-          setIsWaitingForCache(false);
-        }, 10000);
-        
-        return () => clearInterval(interval);
-      }
-    };
-    
-    checkCache();
+
+    // 1. 캐시 확인
+    const cachedUrl = urlCache?.get?.(cacheKey);
+    if (cachedUrl) {
+      setImageUrl(cachedUrl);
+      return;
+    }
+
+    // 2. 캐시에 없으면 직접 URL 생성하고 저장
+    const url = photoUrl || getSupabaseStorageUrl(ImageType.Players, playerId);
+    urlCache.set(cacheKey, url);
+    setImageUrl(url);
   }, [playerId, photoUrl, cacheKey]);
-  
-  // 로딩 중이면 스피너 표시
-  if (isWaitingForCache) {
-    return (
-      <g>
-        {/* 스켈레톤 배경 */}
-        <circle
-          r="2.5"
-          fill="#f3f4f6"
-          stroke="#e5e7eb"
-          strokeWidth="0.15"
-          opacity="0.7"
-        />
-        {/* 로딩 스피너 */}
-        <circle
-          r="1"
-          fill="none"
-          stroke="#3b82f6"
-          strokeWidth="0.2"
-          strokeDasharray="3.14"
-          strokeDashoffset="3.14"
-          opacity="0.8"
-        >
-          <animateTransform
-            attributeName="transform"
-            type="rotate"
-            values="0;360"
-            dur="1s"
-            repeatCount="indefinite"
-          />
-        </circle>
-      </g>
-    );
-  }
-  
-  // 캐시된 이미지 URL이 있으면 표시
-  if (cachedImageUrl) {
-    return (
-      <image
-        x="-2.5"
-        y="-2.5"
-        width="5"
-        height="5"
-        href={cachedImageUrl}
-        clipPath={`url(#clip-${teamId}-${playerId})`}
-        role="img"
-        aria-labelledby={`player-name-${teamId}-${playerId}`}
-        onLoad={onImageLoad}
-        onError={onImageError}
-      />
-    );
+
+  // 이미지 URL이 없으면 null 반환
+  if (!imageUrl) {
+    return null;
   }
 
-  return null;
+  // 이미지 렌더링
+  return (
+    <image
+      x="-2.5"
+      y="-2.5"
+      width="5"
+      height="5"
+      href={imageUrl}
+      clipPath={`url(#clip-${teamId}-${playerId})`}
+      role="img"
+      aria-labelledby={`player-name-${teamId}-${playerId}`}
+      onLoad={onImageLoad}
+      onError={onImageError}
+    />
+  );
 });
 
 const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, awayTeamData, playersRatings }: PlayerProps) {

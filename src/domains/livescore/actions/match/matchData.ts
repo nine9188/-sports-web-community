@@ -8,7 +8,7 @@ import { fetchMatchStats } from './statsData';
 import { fetchCachedLeagueStandings } from './standingsData';
 import { TeamLineup } from './lineupData';
 import { TeamStats } from './statsData';
-import { PlayerStats, fetchCachedMultiplePlayerStats } from './playerStats';
+// PlayerStats import 제거: 평점은 fetchPlayerRatings(), 풀 데이터는 fetchCachedPlayerStats() 사용
 import { cache } from 'react';
 
 // 매치 상세 데이터 응답 타입
@@ -24,7 +24,7 @@ export interface MatchFullDataResponse {
   };
   stats?: TeamStats[];
   standings?: StandingsData;
-  playersStats?: Record<number, { response: PlayerStats[] }>;
+  // playersStats 제거: 평점은 fetchPlayerRatings(), 풀 데이터는 fetchCachedPlayerStats() 사용
   message?: string;
   error?: string;
   homeTeam?: { id: number; name: string; logo: string };
@@ -40,7 +40,7 @@ export async function fetchMatchFullData(
     fetchLineups?: boolean;
     fetchStats?: boolean;
     fetchStandings?: boolean;
-    fetchPlayersStats?: boolean;
+    // fetchPlayersStats 제거: 평점은 fetchPlayerRatings(), 풀 데이터는 fetchCachedPlayerStats() 사용
   } = {}
 ): Promise<MatchFullDataResponse> {
   try {
@@ -132,64 +132,10 @@ export async function fetchMatchFullData(
               response.lineups = {
                 response: lineups.response
               };
-              
-              // 선수 통계 데이터 가져오기 옵션이 활성화된 경우
-              if (options.fetchPlayersStats) {
-                try {
-                  // 라인업에서 모든 선수 ID 추출
-                  const playerIds: number[] = [];
-                  
-                  // 홈팀 선발 선수
-                  if (lineups.response.home?.startXI) {
-                    lineups.response.home.startXI.forEach(item => {
-                      if (item.player?.id) {
-                        playerIds.push(item.player.id);
-                      }
-                    });
-                  }
-                  
-                  // 홈팀 교체 선수
-                  if (lineups.response.home?.substitutes) {
-                    lineups.response.home.substitutes.forEach(item => {
-                      if (item.player?.id) {
-                        playerIds.push(item.player.id);
-                      }
-                    });
-                  }
-                  
-                  // 원정팀 선발 선수
-                  if (lineups.response.away?.startXI) {
-                    lineups.response.away.startXI.forEach(item => {
-                      if (item.player?.id) {
-                        playerIds.push(item.player.id);
-                      }
-                    });
-                  }
-                  
-                  // 원정팀 교체 선수
-                  if (lineups.response.away?.substitutes) {
-                    lineups.response.away.substitutes.forEach(item => {
-                      if (item.player?.id) {
-                        playerIds.push(item.player.id);
-                      }
-                    });
-                  }
-                  
-                  // 중복 제거 및 유효한 ID만 필터링
-                  const uniquePlayerIds = [...new Set(playerIds)].filter(id => id > 0);
-                  
-                  if (uniquePlayerIds.length > 0) {
-                    // 선수 통계 데이터 가져오기
-                    const playersStatsData = await fetchCachedMultiplePlayerStats(matchId, uniquePlayerIds);
-                    if (playersStatsData && Object.keys(playersStatsData).length > 0) {
-                      response.playersStats = playersStatsData;
-                    }
-                  }
-                } catch (error) {
-                  console.error('선수 통계 데이터 로드 오류:', error);
-                  // 선수 통계 로드 실패는 전체 데이터 로드에 영향을 주지 않도록 함
-                }
-              }
+
+              // 선수 통계 데이터는 더 이상 사전 로드하지 않음
+              // - 평점: fetchPlayerRatings()로 경량 로드 (usePlayerStats 훅)
+              // - 풀 데이터: fetchCachedPlayerStats()로 개별 로드 (모달 클릭 시)
             }
           })
       );

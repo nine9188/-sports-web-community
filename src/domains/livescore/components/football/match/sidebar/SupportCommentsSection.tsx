@@ -422,7 +422,7 @@ export default function SupportCommentsSection({
               onClick={() => setSelectedTeam('home')}
               className={`flex-1 px-2 py-1 text-xs rounded transition-colors whitespace-nowrap outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
                 selectedTeam === 'home'
-                  ? 'bg-slate-800 dark:bg-[#F0F0F0] text-white dark:text-[#1D1D1D]'
+                  ? 'bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A]'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
               }`}
             >
@@ -437,7 +437,7 @@ export default function SupportCommentsSection({
               onClick={() => setSelectedTeam('away')}
               className={`flex-1 px-2 py-1 text-xs rounded transition-colors whitespace-nowrap outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
                 selectedTeam === 'away'
-                  ? 'bg-slate-800 dark:bg-[#F0F0F0] text-white dark:text-[#1D1D1D]'
+                  ? 'bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A]'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
               }`}
             >
@@ -452,7 +452,7 @@ export default function SupportCommentsSection({
               onClick={() => setSelectedTeam('neutral')}
               className={`flex-1 px-2 py-1 text-xs rounded transition-colors whitespace-nowrap outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
                 selectedTeam === 'neutral'
-                  ? 'bg-slate-800 dark:bg-[#F0F0F0] text-white dark:text-[#1D1D1D]'
+                  ? 'bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A]'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
               }`}
             >
@@ -497,7 +497,7 @@ export default function SupportCommentsSection({
             onClick={() => handleTabChange('all')}
             className={`px-2 py-1 text-xs rounded transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
               activeTab === 'all'
-                ? 'bg-slate-800 dark:bg-[#F0F0F0] text-white dark:text-[#1D1D1D]'
+                ? 'bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A]'
                 : 'text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
             }`}
           >
@@ -507,7 +507,7 @@ export default function SupportCommentsSection({
             onClick={() => handleTabChange('home')}
             className={`px-2 py-1 text-xs rounded transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
               activeTab === 'home'
-                ? 'bg-slate-800 dark:bg-[#F0F0F0] text-white dark:text-[#1D1D1D]'
+                ? 'bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A]'
                 : 'text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
             }`}
           >
@@ -517,7 +517,7 @@ export default function SupportCommentsSection({
             onClick={() => handleTabChange('away')}
             className={`px-2 py-1 text-xs rounded transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
               activeTab === 'away'
-                ? 'bg-slate-800 dark:bg-[#F0F0F0] text-white dark:text-[#1D1D1D]'
+                ? 'bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A]'
                 : 'text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
             }`}
           >
@@ -527,7 +527,7 @@ export default function SupportCommentsSection({
             onClick={() => handleTabChange('neutral')}
             className={`px-2 py-1 text-xs rounded transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
               activeTab === 'neutral'
-                ? 'bg-slate-800 dark:bg-[#F0F0F0] text-white dark:text-[#1D1D1D]'
+                ? 'bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A]'
                 : 'text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
             }`}
           >
