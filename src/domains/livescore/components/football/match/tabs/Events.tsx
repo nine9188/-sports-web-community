@@ -1,11 +1,9 @@
 'use client';
 
 import { memo, useState, useEffect } from 'react';
-import { FaFutbol } from 'react-icons/fa';
+import Link from 'next/link';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
-import { BsCardText, BsCardHeading } from "react-icons/bs";
-import { IoMdSwap } from 'react-icons/io';
 import { MatchEvent } from '@/domains/livescore/types/match';
 import { getTeamById, TeamMapping } from '@/domains/livescore/constants/teams';
 import { mapEventToKoreanText } from '@/domains/livescore/constants/event-mappings';
@@ -25,8 +23,80 @@ function Events({ events: propsEvents }: EventsProps) {
   const [loading, setLoading] = useState(false);
   const [error] = useState<string | null>(null);
   const [teamCache, setTeamCache] = useState<Record<number, TeamMapping>>({});
-  
-  const iconClass = "text-xl";
+
+  // 이벤트 텍스트 내 선수 이름에 링크를 적용하는 헬퍼 함수
+  const renderEventTextWithPlayerLinks = (event: MatchEvent) => {
+    const originalText = mapEventToKoreanText(event); // "Lionel Messi 골 (Sergio Busquets 어시스트)"와 같은 형식
+
+    let currentElements: (string | JSX.Element)[] = [originalText];
+
+    // 선수 (player) 이름에 링크 적용
+    if (event.player?.id && event.player.name) {
+      const koreanPlayerName = getPlayerKoreanName(event.player.id) || event.player.name;
+      const englishPlayerName = event.player.name;
+      
+      const newElements: (string | JSX.Element)[] = [];
+      currentElements.forEach((element, i) => {
+        if (typeof element === 'string') {
+          // 문자열인 경우에만 분리 및 링크 적용
+          // 정규 표현식으로 영어 선수 이름을 찾고, 괄호로 감싸서 구분자도 결과 배열에 포함
+          const parts = element.split(new RegExp(`(\\b${englishPlayerName}\\b)`, 'g'));
+          parts.forEach((part, idx) => {
+            if (part === englishPlayerName) {
+              newElements.push(
+                <Link
+                  key={`player-link-${event.player.id}-${i}-${idx}`} // 고유한 key 추가
+                  href={`/livescore/football/player/${event.player.id}`}
+                  className="hover:underline transition-all"
+                >
+                  {koreanPlayerName}
+                </Link>
+              );
+            } else {
+              newElements.push(part);
+            }
+          });
+        } else {
+          newElements.push(element); // 이미 JSX 엘리먼트인 경우 그대로 유지
+        }
+      });
+      currentElements = newElements;
+    }
+
+    // 어시스트 (assist) 이름에 링크 적용
+    if (event.assist?.id && event.assist.name) {
+      const assistId = event.assist.id;
+      const koreanAssistName = getPlayerKoreanName(assistId) || event.assist.name;
+      const englishAssistName = event.assist.name;
+
+      const newElements: (string | JSX.Element)[] = [];
+      currentElements.forEach((element, i) => {
+        if (typeof element === 'string') {
+          const parts = element.split(new RegExp(`(\\b${englishAssistName}\\b)`, 'g'));
+          parts.forEach((part, idx) => {
+            if (part === englishAssistName) {
+              newElements.push(
+                <Link
+                  key={`assist-link-${assistId}-${i}-${idx}`}
+                  href={`/livescore/football/player/${assistId}`}
+                  className="hover:underline transition-all"
+                >
+                  {koreanAssistName}
+                </Link>
+              );
+            } else {
+              newElements.push(part);
+            }
+          });
+        } else {
+          newElements.push(element); // 이미 JSX 엘리먼트인 경우 그대로 유지
+        }
+      });
+      currentElements = newElements;
+    }
+
+    return currentElements;
+  };
 
   // matchData prop이 변경될 때 이벤트 데이터 업데이트
   useEffect(() => {
@@ -66,22 +136,6 @@ function Events({ events: propsEvents }: EventsProps) {
     }
   }, [events, teamCache]);
 
-  // 이벤트 타입에 따른 아이콘 렌더링
-  const renderEventIcon = (type: string, detail: string) => {
-    switch (type) {
-      case 'Goal':
-        return <FaFutbol className={`${iconClass} text-green-600`} title="골" />;
-      case 'Card':
-        return detail === 'Red Card' || detail.includes('Red Card') 
-          ? <BsCardHeading className={`${iconClass} text-red-600`} title="레드카드" />
-          : <BsCardText className={`${iconClass} text-yellow-400`} title="옐로카드" />;
-      case 'subst':
-        return <IoMdSwap className={`${iconClass} text-blue-500`} title="선수교체" />;
-      default:
-        // 아이콘이 없는 경우 빈 div를 반환하여 공간 유지
-        return <div className={`${iconClass} w-5 h-5`}></div>;
-    }
-  };
 
   // 팀 로고 컴포넌트 수정
   const TeamLogo = ({ name, teamId }: { name: string; teamId?: number }) => {
@@ -98,7 +152,7 @@ function Events({ events: propsEvents }: EventsProps) {
             alt={teamName}
             width={24}
             height={24}
-            className="w-full h-full object-contain"
+            className="w-full h-full object-contain group-hover:brightness-75 transition-all"
           />
         ) : (
           <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 text-xs">
@@ -138,29 +192,13 @@ function Events({ events: propsEvents }: EventsProps) {
       <ContainerContent>
         <div className="space-y-2">
           {sortedEvents.map((event, index) => {
-            // 이벤트를 한국어 문장으로 변환
+            // 이벤트를 한국어 문장으로 변환 (renderEventTextWithPlayerLinks 함수 내에서 다시 사용됨)
             const koreanText = mapEventToKoreanText(event);
 
-            // 원래 텍스트에서 선수 이름만 한국어 이름으로 교체
-            let eventText = koreanText.split(' ').slice(1).join(' ');
-
-            // 선수 ID가 있을 경우 한국어 이름으로 변경
-            if (event.player?.id) {
-              const koreanName = getPlayerKoreanName(event.player.id);
-              if (koreanName) {
-                // 원본 텍스트에서 영어 이름을 한국어 이름으로 교체
-                eventText = eventText.replace(event.player.name, koreanName);
-              }
-            }
-
-            // 어시스트 선수 ID가 있을 경우 한국어 이름으로 변경
-            if (event.assist?.id) {
-              const koreanName = getPlayerKoreanName(event.assist.id);
-              if (koreanName && event.assist.name) {
-                // 원본 텍스트에서 영어 이름을 한국어 이름으로 교체
-                eventText = eventText.replace(event.assist.name, koreanName);
-              }
-            }
+            // 기존 선수 이름 교체 로직은 더 이상 필요 없음
+            // let eventText = koreanText.split(' ').slice(1).join(' ');
+            // if (event.player?.id) { ... }
+            // if (event.assist?.id) { ... }
 
             return (
               <div
@@ -171,29 +209,26 @@ function Events({ events: propsEvents }: EventsProps) {
                 <div className="w-12 flex items-center justify-end text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">
                   <span>
                     {event.time?.elapsed || 0}
-                    {event.time?.extra && event.time.extra > 0 && `+${event.time.extra}`}′
+                    {event.time?.extra && event.time.extra > 0 && `+${event.time.extra}`}
                   </span>
                 </div>
 
                 <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
-                      {renderEventIcon(event.type || '', event.detail || '')}
-                    </div>
+                  <Link href={`/livescore/football/team/${event.team.id}`} className="flex items-center gap-2 group">
                     <TeamLogo
                       name={event.team?.name || ''}
                       teamId={event.team?.id}
                     />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                    <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:underline">
                       {event.team?.id && teamCache[event.team.id]?.name_ko ?
                         teamCache[event.team.id].name_ko :
                         event.team?.name || 'Unknown Team'
                       }
                     </span>
-                  </div>
+                  </Link>
                   <div className="mt-1.5 ml-8">
                     <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">
-                      {eventText}
+                      {renderEventTextWithPlayerLinks(event)} {/* 헬퍼 함수 호출 */}
                     </span>
                   </div>
                 </div>

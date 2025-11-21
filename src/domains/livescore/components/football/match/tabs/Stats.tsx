@@ -3,13 +3,14 @@
 import { useState, memo, useEffect, useMemo, useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
 import { useMatchData, isStatsTabData } from '@/domains/livescore/components/football/match/context/MatchDataContext';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { fetchCachedMatchLineups } from '@/domains/livescore/actions/match/lineupData';
-import { fetchCachedMultiplePlayerStats } from '@/domains/livescore/actions/match/playerStats';
+import { fetchMatchPlayerStats } from '@/domains/livescore/actions/match/matchPlayerStats';
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
+import { getTeamById } from '@/domains/livescore/constants/teams';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 
 import { TeamStats, Team } from '@/domains/livescore/types/match';
@@ -47,50 +48,11 @@ const TeamLogo = memo(({ name, teamId }: { name: string; teamId?: number }) => {
 
 TeamLogo.displayName = 'TeamLogo';
 
-// 가로 스크롤 힌트 컨테이너
+// 가로 스크롤 컨테이너 (힌트 제거)
 const HorizontalScrollContainer = ({ children }: { children: React.ReactNode }) => {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const update = () => {
-      setCanScrollLeft(el.scrollLeft > 0);
-      setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
-    };
-    update();
-    const onScroll = () => {
-      update();
-    };
-    el.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', update);
-    return () => {
-      el.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', update);
-    };
-  }, []);
-
   return (
-    <div className="relative">
-      {/* Left Shadow */}
-      <div
-        className={`absolute top-0 bottom-0 left-0 w-6 bg-gradient-to-r from-white dark:from-[#1D1D1D] to-transparent pointer-events-none transition-opacity duration-300 z-20 ${
-          canScrollLeft ? 'opacity-100' : 'opacity-0'
-        }`}
-      />
-
-      <div ref={containerRef} className="overflow-x-auto w-full">
-        {children}
-      </div>
-
-      {/* Right Shadow */}
-      <div
-        className={`absolute top-0 bottom-0 right-0 w-6 bg-gradient-to-l from-white dark:from-[#1D1D1D] to-transparent pointer-events-none transition-opacity duration-300 z-20 ${
-          canScrollRight ? 'opacity-100' : 'opacity-0'
-        }`}
-      />
+    <div className="overflow-x-auto w-full">
+      {children}
     </div>
   );
 };
@@ -196,6 +158,27 @@ const StatItem = memo(({ homeValue, awayValue, koreanLabel, index = 0 }: {
 
 StatItem.displayName = 'StatItem';
 
+// 정렬 아이콘 컴포넌트
+const SortIcon = ({ field, currentField, direction }: { field: string; currentField: string; direction: 'asc' | 'desc' }) => {
+  if (field !== currentField) {
+    return (
+      <svg className="w-3 h-3 ml-1 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+      </svg>
+    );
+  }
+  
+  return direction === 'asc' ? (
+    <svg className="w-3 h-3 ml-1 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+    </svg>
+  ) : (
+    <svg className="w-3 h-3 ml-1 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+    </svg>
+  );
+};
+
 const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
   const { tabData, isTabLoading, tabLoadError, matchData } = useMatchData();
   
@@ -206,15 +189,17 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
   const [loading, setLoading] = useState(isTabLoading || !propsMatchData?.stats?.length);
   const [error, setError] = useState<string | null>(tabLoadError || null);
 
-  // 선수 종합 테이블 상태
-  const [homeTeamId, setHomeTeamId] = useState<number | null>(null);
-  const [awayTeamId, setAwayTeamId] = useState<number | null>(null);
-  const [homeTeamName, setHomeTeamName] = useState<string>('');
-  const [awayTeamName, setAwayTeamName] = useState<string>('');
-
   // 스크롤 힌트 표시 여부 추적
   const [hasScrolled, setHasScrolled] = useState(false);
   const [showHint, setShowHint] = useState(false);
+
+  // 정렬 상태 관리 (홈팀)
+  const [homeSortField, setHomeSortField] = useState<string>('minutes');
+  const [homeSortDirection, setHomeSortDirection] = useState<'asc' | 'desc'>('desc');
+
+  // 정렬 상태 관리 (원정팀)
+  const [awaySortField, setAwaySortField] = useState<string>('minutes');
+  const [awaySortDirection, setAwaySortDirection] = useState<'asc' | 'desc'>('desc');
 
   // 각 섹션의 ref와 inView 상태 관리 (hooks는 항상 최상단에 위치)
   const basicRef = useRef(null);
@@ -235,66 +220,11 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
     return String((matchData as { fixture: { id: number } }).fixture?.id);
   }, [matchData]);
 
-  // React Query로 라인업 데이터 가져오기
-  const { data: lineupsData } = useQuery({
-    queryKey: ['lineups', fixtureId],
-    queryFn: () => fixtureId ? fetchCachedMatchLineups(fixtureId) : null,
+  // React Query로 선수 통계 가져오기 (새로운 통합 액션 사용)
+  const { data: playerStatsData } = useQuery({
+    queryKey: ['matchPlayerStats', fixtureId],
+    queryFn: () => fixtureId ? fetchMatchPlayerStats(fixtureId) : null,
     enabled: !!fixtureId,
-    staleTime: 2 * 60 * 1000, // 2분
-    gcTime: 10 * 60 * 1000, // 10분
-  });
-
-  // 라인업에서 선수 ID 추출
-  const playerIds = useMemo(() => {
-    if (!lineupsData?.success || !lineupsData.response) return [];
-    const { home, away } = lineupsData.response;
-
-    setHomeTeamId(home?.team?.id ?? null);
-    setAwayTeamId(away?.team?.id ?? null);
-    setHomeTeamName(home?.team?.name ?? '홈팀');
-    setAwayTeamName(away?.team?.name ?? '원정팀');
-
-    const ids = [
-      ...(home.startXI || []).map((i: { player: { id: number } }) => i.player.id),
-      ...(home.substitutes || []).map((i: { player: { id: number } }) => i.player.id),
-      ...(away.startXI || []).map((i: { player: { id: number } }) => i.player.id),
-      ...(away.substitutes || []).map((i: { player: { id: number } }) => i.player.id),
-    ].filter((id: number) => Number.isFinite(id) && id > 0) as number[];
-
-    return Array.from(new Set(ids));
-  }, [lineupsData]);
-
-  // 선수 통계 타입 정의
-  type PlayerStats = {
-    response?: Array<{
-      player?: {
-        name?: string;
-        pos?: string;
-        number?: number;
-        [key: string]: unknown;
-      };
-      statistics?: Array<{
-        team?: { id?: number; [key: string]: unknown };
-        games?: { minutes?: number; position?: string; rating?: string | number; number?: number; [key: string]: unknown };
-        goals?: { total?: number; assists?: number; [key: string]: unknown };
-        shots?: { total?: number; on?: number; [key: string]: unknown };
-        passes?: { total?: number; key?: number; accuracy?: number | string; [key: string]: unknown };
-        dribbles?: { attempts?: number; success?: number; [key: string]: unknown };
-        duels?: { total?: number; won?: number; [key: string]: unknown };
-        fouls?: { committed?: number; [key: string]: unknown };
-        cards?: { yellow?: number; red?: number; [key: string]: unknown };
-        [key: string]: unknown;
-      }>;
-      [key: string]: unknown;
-    }>;
-    [key: string]: unknown;
-  };
-
-  // React Query로 선수 통계 가져오기
-  const { data: playersStats = {} } = useQuery<Record<number, PlayerStats>>({
-    queryKey: ['playerStats', fixtureId, playerIds],
-    queryFn: () => fixtureId && playerIds.length > 0 ? fetchCachedMultiplePlayerStats(fixtureId, playerIds) : {},
-    enabled: !!fixtureId && playerIds.length > 0,
     staleTime: 2 * 60 * 1000, // 2분
     gcTime: 10 * 60 * 1000, // 10분
   });
@@ -407,7 +337,14 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
 
   // 로딩 상태 표시
   if (loading) {
-    return null; // 상위 컴포넌트(TabContent)에서 로딩 상태를 처리하므로 여기서는 아무것도 렌더링하지 않음
+    return (
+      <div className="flex justify-center items-center py-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500 mx-auto mb-2"></div>
+          <p className="text-sm text-gray-600">통계 데이터를 불러오는 중...</p>
+        </div>
+      </div>
+    );
   }
   
   // 에러 상태 표시
@@ -448,6 +385,55 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
   const findStat = (team: TeamStats, type: string) => {
     const stat = team.statistics?.find(s => s.type === type);
     return stat ? stat.value : null;
+  };
+
+  // 정렬 핸들러 (홈팀)
+  const handleHomeSort = (field: string) => {
+    if (homeSortField === field) {
+      setHomeSortDirection(homeSortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setHomeSortField(field);
+      setHomeSortDirection('desc');
+    }
+  };
+
+  // 정렬 핸들러 (원정팀)
+  const handleAwaySort = (field: string) => {
+    if (awaySortField === field) {
+      setAwaySortDirection(awaySortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setAwaySortField(field);
+      setAwaySortDirection('desc');
+    }
+  };
+
+  // 선수 데이터 정렬 함수
+  const sortPlayers = <T extends Record<string, unknown>>(players: T[], sortField: string, sortDirection: 'asc' | 'desc') => {
+    return [...players].sort((a, b) => {
+      let aValue: string | number = a[sortField] as string | number;
+      let bValue: string | number = b[sortField] as string | number;
+
+      // 포지션은 문자열로 정렬
+      if (sortField === 'position') {
+        const aStr = String(aValue || '');
+        const bStr = String(bValue || '');
+        return sortDirection === 'asc' 
+          ? aStr.localeCompare(bStr)
+          : bStr.localeCompare(aStr);
+      }
+
+      // 평점은 문자열을 숫자로 변환
+      if (sortField === 'rating') {
+        aValue = parseFloat(String(aValue)) || 0;
+        bValue = parseFloat(String(bValue)) || 0;
+      } else {
+        // 나머지는 숫자로 처리
+        aValue = Number(aValue) || 0;
+        bValue = Number(bValue) || 0;
+      }
+
+      return sortDirection === 'asc' ? (aValue as number) - (bValue as number) : (bValue as number) - (aValue as number);
+    });
   };
 
   // 통계 항목 렌더링 함수
@@ -636,89 +622,198 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
           </motion.div>
         )}
 
-        {/* 선수 종합 통계 (라인업 기반) - 홈/원정 분리 카드 */}
-        <motion.div
-          ref={homePlayersRef}
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
-        >
-          <Container className="bg-white dark:bg-[#1D1D1D]">
-            <ContainerHeader>
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center gap-2">
-                  {homeTeamId ? (
-                    <UnifiedSportsImage imageId={homeTeamId} imageType={ImageType.Teams} alt={homeTeamName || '홈팀'} size="sm" variant="square" fit="contain" />
-                  ) : null}
-                  <ContainerTitle>{homeTeamName || '홈팀'}</ContainerTitle>
+        {/* 선수 종합 통계 - 홈팀 */}
+        {playerStatsData?.success && playerStatsData.data?.homeTeam && (
+          <motion.div
+            ref={homePlayersRef}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+          >
+            <Container className="bg-white dark:bg-[#1D1D1D]">
+              <ContainerHeader>
+                <div className="flex items-center justify-between w-full">
+                  <Link 
+                    href={`/livescore/football/team/${playerStatsData.data.homeTeam.id}`}
+                    className="flex items-center gap-2 group hover:opacity-80 transition-opacity"
+                  >
+                    <UnifiedSportsImage 
+                      imageId={playerStatsData.data.homeTeam.id} 
+                      imageType={ImageType.Teams} 
+                      alt={playerStatsData.data.homeTeam.name} 
+                      size="sm" 
+                      variant="square" 
+                      fit="contain" 
+                    />
+                    <ContainerTitle className="group-hover:underline">
+                      {getTeamById(playerStatsData.data.homeTeam.id)?.name_ko || playerStatsData.data.homeTeam.name}
+                    </ContainerTitle>
+                  </Link>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">← 스크롤하세요 →</span>
                 </div>
-                <span className="text-xs text-gray-500 dark:text-gray-400 font-normal">좌우로 스크롤하세요</span>
-              </div>
-            </ContainerHeader>
-            <ContainerContent>
-            <HorizontalScrollContainer>
-              <table className="min-w-max divide-y divide-gray-200 text-sm">
-                <thead className="bg-gray-50 whitespace-nowrap">
-                    <tr>
-                    <th className="sticky left-0 z-10 bg-gray-50 px-2 py-2 text-left font-medium text-gray-700 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-32 min-w-[8rem] max-w-[8rem]">선수</th>
-                    <th className="px-3 py-2 text-center font-medium text-gray-700">포지션</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-700">분</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-700">평점</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-700">골</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-700">도움</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-700">슈팅(유효)</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-700">패스(키, 성공률)</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-700">드리블</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-700">듀얼</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-700">파울</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-700">카드</th>
-                    </tr>
-                  </thead>
-                <tbody className="divide-y divide-gray-100 bg-white whitespace-nowrap">
-                    {playerIds.filter((pid) => {
-                      const entry = playersStats?.[pid]?.response?.[0];
-                      const teamId = entry?.statistics?.[0]?.team?.id ?? null;
-                      return teamId && homeTeamId && teamId === homeTeamId;
-                    }).sort((a, b) => {
-                      const aMinutes = playersStats?.[a]?.response?.[0]?.statistics?.[0]?.games?.minutes ?? 0;
-                      const bMinutes = playersStats?.[b]?.response?.[0]?.statistics?.[0]?.games?.minutes ?? 0;
-                      return bMinutes - aMinutes; // 출전 시간 내림차순 정렬
-                    }).map((pid) => {
-                      const entry = playersStats?.[pid]?.response?.[0];
-                      const p = entry?.player;
-                      const s = entry?.statistics?.[0];
-                      const koreanName = getPlayerKoreanName(pid);
-                      const displayName = koreanName || p?.name || String(pid);
-                      const playerNumber = s?.games?.number ?? p?.number;
-                      return (
-                        <tr key={`home-${pid}`} className="hover:bg-gray-50">
-                        <td className="sticky left-0 z-10 bg-white px-2 py-2 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-32 min-w-[8rem] max-w-[8rem]">
-                            <div className="flex items-center gap-1.5">
-                              {playerNumber && <span className="text-xs text-gray-500 font-medium min-w-[1.5rem]">{playerNumber}</span>}
-                              <div className="truncate text-sm font-medium">{displayName}</div>
-                            </div>
-                          </td>
-                        <td className="px-3 py-2 text-center whitespace-nowrap"><span className="text-xs text-gray-600">{s?.games?.position || p?.pos || '-'}</span></td>
-                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.games?.minutes ?? 0}</td>
-                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.games?.rating || '-'}</td>
-                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.goals?.total ?? 0}</td>
-                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.goals?.assists ?? 0}</td>
-                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.shots?.total ?? 0} ({s?.shots?.on ?? 0})</td>
-                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.passes?.total ?? 0} ({s?.passes?.key ?? 0}, {(s?.passes?.accuracy ?? '0')}%)</td>
-                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.dribbles?.success ?? 0}/{s?.dribbles?.attempts ?? 0}</td>
-                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.duels?.won ?? 0}/{s?.duels?.total ?? 0}</td>
-                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.fouls?.committed ?? 0}</td>
-                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.cards?.yellow ?? 0}/{s?.cards?.red ?? 0}</td>
-                        </tr>
-                      );
-                    })}
-                </tbody>
-              </table>
-            </HorizontalScrollContainer>
-            </ContainerContent>
-          </Container>
-        </motion.div>
+              </ContainerHeader>
+              <ContainerContent>
+                <HorizontalScrollContainer>
+                  <table className="min-w-max divide-y divide-gray-200 text-sm">
+                    <thead className="bg-gray-50 dark:bg-[#262626] whitespace-nowrap">
+                      <tr>
+                        <th className="sticky left-0 z-10 bg-gray-50 dark:bg-[#262626] px-2 py-2 text-left font-medium text-gray-700 dark:text-gray-300 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-32 min-w-[8rem] max-w-[8rem]">선수</th>
+                        <th 
+                          className="px-3 py-2 text-center font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
+                          onClick={() => handleHomeSort('position')}
+                        >
+                          <div className="flex items-center justify-center">
+                            포지션
+                            <SortIcon field="position" currentField={homeSortField} direction={homeSortDirection} />
+                          </div>
+                        </th>
+                        <th 
+                          className="px-3 py-2 text-right font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
+                          onClick={() => handleHomeSort('minutes')}
+                        >
+                          <div className="flex items-center justify-end">
+                            분
+                            <SortIcon field="minutes" currentField={homeSortField} direction={homeSortDirection} />
+                          </div>
+                        </th>
+                        <th 
+                          className="px-3 py-2 text-right font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
+                          onClick={() => handleHomeSort('rating')}
+                        >
+                          <div className="flex items-center justify-end">
+                            평점
+                            <SortIcon field="rating" currentField={homeSortField} direction={homeSortDirection} />
+                          </div>
+                        </th>
+                        <th 
+                          className="px-3 py-2 text-right font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
+                          onClick={() => handleHomeSort('goals')}
+                        >
+                          <div className="flex items-center justify-end">
+                            골
+                            <SortIcon field="goals" currentField={homeSortField} direction={homeSortDirection} />
+                          </div>
+                        </th>
+                        <th 
+                          className="px-3 py-2 text-right font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
+                          onClick={() => handleHomeSort('assists')}
+                        >
+                          <div className="flex items-center justify-end">
+                            도움
+                            <SortIcon field="assists" currentField={homeSortField} direction={homeSortDirection} />
+                          </div>
+                        </th>
+                        <th 
+                          className="px-3 py-2 text-right font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
+                          onClick={() => handleHomeSort('shotsTotal')}
+                        >
+                          <div className="flex items-center justify-end">
+                            슈팅(유효)
+                            <SortIcon field="shotsTotal" currentField={homeSortField} direction={homeSortDirection} />
+                          </div>
+                        </th>
+                        <th 
+                          className="px-3 py-2 text-right font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
+                          onClick={() => handleHomeSort('passesTotal')}
+                        >
+                          <div className="flex items-center justify-end">
+                            패스(키, 성공률)
+                            <SortIcon field="passesTotal" currentField={homeSortField} direction={homeSortDirection} />
+                          </div>
+                        </th>
+                        <th 
+                          className="px-3 py-2 text-right font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
+                          onClick={() => handleHomeSort('dribblesSuccess')}
+                        >
+                          <div className="flex items-center justify-end">
+                            드리블
+                            <SortIcon field="dribblesSuccess" currentField={homeSortField} direction={homeSortDirection} />
+                          </div>
+                        </th>
+                        <th 
+                          className="px-3 py-2 text-right font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
+                          onClick={() => handleHomeSort('duelsWon')}
+                        >
+                          <div className="flex items-center justify-end">
+                            듀얼
+                            <SortIcon field="duelsWon" currentField={homeSortField} direction={homeSortDirection} />
+                          </div>
+                        </th>
+                        <th 
+                          className="px-3 py-2 text-right font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
+                          onClick={() => handleHomeSort('foulsCommitted')}
+                        >
+                          <div className="flex items-center justify-end">
+                            파울
+                            <SortIcon field="foulsCommitted" currentField={homeSortField} direction={homeSortDirection} />
+                          </div>
+                        </th>
+                        <th 
+                          className="px-3 py-2 text-right font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
+                          onClick={() => handleHomeSort('yellowCards')}
+                        >
+                          <div className="flex items-center justify-end">
+                            카드
+                            <SortIcon field="yellowCards" currentField={homeSortField} direction={homeSortDirection} />
+                          </div>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-[#1D1D1D] whitespace-nowrap">
+                      {sortPlayers(playerStatsData.data.homeTeam.players, homeSortField, homeSortDirection)
+                        .map((player) => {
+                          const koreanName = getPlayerKoreanName(player.playerId);
+                          const displayName = koreanName || player.playerName || String(player.playerId);
+                          
+                          return (
+                            <tr key={`home-${player.playerId}`} className="hover:bg-gray-50 dark:hover:bg-[#262626]">
+                              <td className="sticky left-0 z-10 bg-white dark:bg-[#1D1D1D] px-2 py-2 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-32 min-w-[8rem] max-w-[8rem]">
+                                <Link 
+                                  href={`/livescore/football/player/${player.playerId}`}
+                                  className="flex items-center gap-1.5 hover:underline transition-all"
+                                >
+                                  {player.playerNumber && (
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 font-medium min-w-[1.5rem]">
+                                      {player.playerNumber}
+                                    </span>
+                                  )}
+                                  <div className="truncate text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">{displayName}</div>
+                                </Link>
+                              </td>
+                              <td className="px-3 py-2 text-center whitespace-nowrap">
+                                <span className="text-xs text-gray-600 dark:text-gray-400">{player.position || '-'}</span>
+                              </td>
+                              <td className="px-3 py-2 text-right whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">{player.minutes ?? 0}</td>
+                              <td className="px-3 py-2 text-right whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">{player.rating || '-'}</td>
+                              <td className="px-3 py-2 text-right whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">{player.goals ?? 0}</td>
+                              <td className="px-3 py-2 text-right whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">{player.assists ?? 0}</td>
+                              <td className="px-3 py-2 text-right whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
+                                {player.shotsTotal ?? 0} ({player.shotsOn ?? 0})
+                              </td>
+                              <td className="px-3 py-2 text-right whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
+                                {player.passesTotal ?? 0} ({player.passesKey ?? 0}, {player.passesAccuracy ?? 0}%)
+                              </td>
+                              <td className="px-3 py-2 text-right whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
+                                {player.dribblesSuccess ?? 0}/{player.dribblesAttempts ?? 0}
+                              </td>
+                              <td className="px-3 py-2 text-right whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
+                                {player.duelsWon ?? 0}/{player.duelsTotal ?? 0}
+                              </td>
+                              <td className="px-3 py-2 text-right whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">{player.foulsCommitted ?? 0}</td>
+                              <td className="px-3 py-2 text-right whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
+                                {player.yellowCards ?? 0}/{player.redCards ?? 0}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </HorizontalScrollContainer>
+              </ContainerContent>
+            </Container>
+          </motion.div>
+        )}
 
         {/* 홈팀 선수 하단 힌트 - PC 전용 */}
         {homePlayersInView && !awayPlayersInView && !hasScrolled && (
@@ -738,88 +833,198 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
           </motion.div>
         )}
 
-        <motion.div
-          ref={awayPlayersRef}
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
-        >
-          <Container className="bg-white dark:bg-[#1D1D1D]">
-            <ContainerHeader>
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center gap-2">
-                  {awayTeamId ? (
-                    <UnifiedSportsImage imageId={awayTeamId} imageType={ImageType.Teams} alt={awayTeamName || '원정팀'} size="sm" variant="square" fit="contain" />
-                  ) : null}
-                  <ContainerTitle>{awayTeamName || '원정팀'}</ContainerTitle>
+        {/* 선수 종합 통계 - 원정팀 */}
+        {playerStatsData?.success && playerStatsData.data?.awayTeam && (
+          <motion.div
+            ref={awayPlayersRef}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
+          >
+            <Container className="bg-white dark:bg-[#1D1D1D]">
+              <ContainerHeader>
+                <div className="flex items-center justify-between w-full">
+                  <Link 
+                    href={`/livescore/football/team/${playerStatsData.data.awayTeam.id}`}
+                    className="flex items-center gap-2 group hover:opacity-80 transition-opacity"
+                  >
+                    <UnifiedSportsImage 
+                      imageId={playerStatsData.data.awayTeam.id} 
+                      imageType={ImageType.Teams} 
+                      alt={playerStatsData.data.awayTeam.name} 
+                      size="sm" 
+                      variant="square" 
+                      fit="contain" 
+                    />
+                    <ContainerTitle className="group-hover:underline">
+                      {getTeamById(playerStatsData.data.awayTeam.id)?.name_ko || playerStatsData.data.awayTeam.name}
+                    </ContainerTitle>
+                  </Link>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">← 스크롤하세요 →</span>
                 </div>
-                <span className="text-xs text-gray-500 dark:text-gray-400 font-normal">좌우로 스크롤하세요</span>
-              </div>
-            </ContainerHeader>
-            <ContainerContent>
-            <HorizontalScrollContainer>
-              <table className="min-w-max divide-y divide-gray-200 text-sm">
-                <thead className="bg-gray-50 whitespace-nowrap">
-                    <tr>
-                    <th className="sticky left-0 z-10 bg-gray-50 px-2 py-2 text-left font-medium text-gray-700 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-32 min-w-[8rem] max-w-[8rem]">선수</th>
-                    <th className="px-3 py-2 text-center font-medium text-gray-700">포지션</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-700">분</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-700">평점</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-700">골</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-700">도움</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-700">슈팅(유효)</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-700">패스(키, 성공률)</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-700">드리블</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-700">듀얼</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-700">파울</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-700">카드</th>
-                    </tr>
-                  </thead>
-                <tbody className="divide-y divide-gray-100 bg-white whitespace-nowrap">
-                    {playerIds.filter((pid) => {
-                      const entry = playersStats?.[pid]?.response?.[0];
-                      const teamId = entry?.statistics?.[0]?.team?.id ?? null;
-                      return teamId && awayTeamId && teamId === awayTeamId;
-                    }).sort((a, b) => {
-                      const aMinutes = playersStats?.[a]?.response?.[0]?.statistics?.[0]?.games?.minutes ?? 0;
-                      const bMinutes = playersStats?.[b]?.response?.[0]?.statistics?.[0]?.games?.minutes ?? 0;
-                      return bMinutes - aMinutes; // 출전 시간 내림차순 정렬
-                    }).map((pid) => {
-                      const entry = playersStats?.[pid]?.response?.[0];
-                      const p = entry?.player;
-                      const s = entry?.statistics?.[0];
-                      const koreanName = getPlayerKoreanName(pid);
-                      const displayName = koreanName || p?.name || String(pid);
-                      const playerNumber = s?.games?.number ?? p?.number;
-                      return (
-                        <tr key={`away-${pid}`} className="hover:bg-gray-50">
-                        <td className="sticky left-0 z-10 bg-white px-2 py-2 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-32 min-w-[8rem] max-w-[8rem]">
-                            <div className="flex items-center gap-1.5">
-                              {playerNumber && <span className="text-xs text-gray-500 font-medium min-w-[1.5rem]">{playerNumber}</span>}
-                              <div className="truncate text-sm font-medium">{displayName}</div>
-                            </div>
-                          </td>
-                        <td className="px-3 py-2 text-center whitespace-nowrap"><span className="text-xs text-gray-600">{s?.games?.position || p?.pos || '-'}</span></td>
-                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.games?.minutes ?? 0}</td>
-                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.games?.rating || '-'}</td>
-                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.goals?.total ?? 0}</td>
-                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.goals?.assists ?? 0}</td>
-                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.shots?.total ?? 0} ({s?.shots?.on ?? 0})</td>
-                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.passes?.total ?? 0} ({s?.passes?.key ?? 0}, {(s?.passes?.accuracy ?? '0')}%)</td>
-                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.dribbles?.success ?? 0}/{s?.dribbles?.attempts ?? 0}</td>
-                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.duels?.won ?? 0}/{s?.duels?.total ?? 0}</td>
-                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.fouls?.committed ?? 0}</td>
-                        <td className="px-3 py-2 text-right whitespace-nowrap">{s?.cards?.yellow ?? 0}/{s?.cards?.red ?? 0}</td>
-                        </tr>
-                      );
-                    })}
-                </tbody>
-              </table>
-            </HorizontalScrollContainer>
-            </ContainerContent>
-          </Container>
-        </motion.div>
+              </ContainerHeader>
+              <ContainerContent>
+                <HorizontalScrollContainer>
+                  <table className="min-w-max divide-y divide-gray-200 text-sm">
+                    <thead className="bg-gray-50 dark:bg-[#262626] whitespace-nowrap">
+                      <tr>
+                        <th className="sticky left-0 z-10 bg-gray-50 dark:bg-[#262626] px-2 py-2 text-left font-medium text-gray-700 dark:text-gray-300 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-32 min-w-[8rem] max-w-[8rem]">선수</th>
+                        <th 
+                          className="px-3 py-2 text-center font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
+                          onClick={() => handleAwaySort('position')}
+                        >
+                          <div className="flex items-center justify-center">
+                            포지션
+                            <SortIcon field="position" currentField={awaySortField} direction={awaySortDirection} />
+                          </div>
+                        </th>
+                        <th 
+                          className="px-3 py-2 text-right font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
+                          onClick={() => handleAwaySort('minutes')}
+                        >
+                          <div className="flex items-center justify-end">
+                            분
+                            <SortIcon field="minutes" currentField={awaySortField} direction={awaySortDirection} />
+                          </div>
+                        </th>
+                        <th 
+                          className="px-3 py-2 text-right font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
+                          onClick={() => handleAwaySort('rating')}
+                        >
+                          <div className="flex items-center justify-end">
+                            평점
+                            <SortIcon field="rating" currentField={awaySortField} direction={awaySortDirection} />
+                          </div>
+                        </th>
+                        <th 
+                          className="px-3 py-2 text-right font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
+                          onClick={() => handleAwaySort('goals')}
+                        >
+                          <div className="flex items-center justify-end">
+                            골
+                            <SortIcon field="goals" currentField={awaySortField} direction={awaySortDirection} />
+                          </div>
+                        </th>
+                        <th 
+                          className="px-3 py-2 text-right font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
+                          onClick={() => handleAwaySort('assists')}
+                        >
+                          <div className="flex items-center justify-end">
+                            도움
+                            <SortIcon field="assists" currentField={awaySortField} direction={awaySortDirection} />
+                          </div>
+                        </th>
+                        <th 
+                          className="px-3 py-2 text-right font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
+                          onClick={() => handleAwaySort('shotsTotal')}
+                        >
+                          <div className="flex items-center justify-end">
+                            슈팅(유효)
+                            <SortIcon field="shotsTotal" currentField={awaySortField} direction={awaySortDirection} />
+                          </div>
+                        </th>
+                        <th 
+                          className="px-3 py-2 text-right font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
+                          onClick={() => handleAwaySort('passesTotal')}
+                        >
+                          <div className="flex items-center justify-end">
+                            패스(키, 성공률)
+                            <SortIcon field="passesTotal" currentField={awaySortField} direction={awaySortDirection} />
+                          </div>
+                        </th>
+                        <th 
+                          className="px-3 py-2 text-right font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
+                          onClick={() => handleAwaySort('dribblesSuccess')}
+                        >
+                          <div className="flex items-center justify-end">
+                            드리블
+                            <SortIcon field="dribblesSuccess" currentField={awaySortField} direction={awaySortDirection} />
+                          </div>
+                        </th>
+                        <th 
+                          className="px-3 py-2 text-right font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
+                          onClick={() => handleAwaySort('duelsWon')}
+                        >
+                          <div className="flex items-center justify-end">
+                            듀얼
+                            <SortIcon field="duelsWon" currentField={awaySortField} direction={awaySortDirection} />
+                          </div>
+                        </th>
+                        <th 
+                          className="px-3 py-2 text-right font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
+                          onClick={() => handleAwaySort('foulsCommitted')}
+                        >
+                          <div className="flex items-center justify-end">
+                            파울
+                            <SortIcon field="foulsCommitted" currentField={awaySortField} direction={awaySortDirection} />
+                          </div>
+                        </th>
+                        <th 
+                          className="px-3 py-2 text-right font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
+                          onClick={() => handleAwaySort('yellowCards')}
+                        >
+                          <div className="flex items-center justify-end">
+                            카드
+                            <SortIcon field="yellowCards" currentField={awaySortField} direction={awaySortDirection} />
+                          </div>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-[#1D1D1D] whitespace-nowrap">
+                      {sortPlayers(playerStatsData.data.awayTeam.players, awaySortField, awaySortDirection)
+                        .map((player) => {
+                          const koreanName = getPlayerKoreanName(player.playerId);
+                          const displayName = koreanName || player.playerName || String(player.playerId);
+                          
+                          return (
+                            <tr key={`away-${player.playerId}`} className="hover:bg-gray-50 dark:hover:bg-[#262626]">
+                              <td className="sticky left-0 z-10 bg-white dark:bg-[#1D1D1D] px-2 py-2 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-32 min-w-[8rem] max-w-[8rem]">
+                                <Link 
+                                  href={`/livescore/football/player/${player.playerId}`}
+                                  className="flex items-center gap-1.5 hover:underline transition-all"
+                                >
+                                  {player.playerNumber && (
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 font-medium min-w-[1.5rem]">
+                                      {player.playerNumber}
+                                    </span>
+                                  )}
+                                  <div className="truncate text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">{displayName}</div>
+                                </Link>
+                              </td>
+                              <td className="px-3 py-2 text-center whitespace-nowrap">
+                                <span className="text-xs text-gray-600 dark:text-gray-400">{player.position || '-'}</span>
+                              </td>
+                              <td className="px-3 py-2 text-right whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">{player.minutes ?? 0}</td>
+                              <td className="px-3 py-2 text-right whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">{player.rating || '-'}</td>
+                              <td className="px-3 py-2 text-right whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">{player.goals ?? 0}</td>
+                              <td className="px-3 py-2 text-right whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">{player.assists ?? 0}</td>
+                              <td className="px-3 py-2 text-right whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
+                                {player.shotsTotal ?? 0} ({player.shotsOn ?? 0})
+                              </td>
+                              <td className="px-3 py-2 text-right whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
+                                {player.passesTotal ?? 0} ({player.passesKey ?? 0}, {player.passesAccuracy ?? 0}%)
+                              </td>
+                              <td className="px-3 py-2 text-right whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
+                                {player.dribblesSuccess ?? 0}/{player.dribblesAttempts ?? 0}
+                              </td>
+                              <td className="px-3 py-2 text-right whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
+                                {player.duelsWon ?? 0}/{player.duelsTotal ?? 0}
+                              </td>
+                              <td className="px-3 py-2 text-right whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">{player.foulsCommitted ?? 0}</td>
+                              <td className="px-3 py-2 text-right whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
+                                {player.yellowCards ?? 0}/{player.redCards ?? 0}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </HorizontalScrollContainer>
+              </ContainerContent>
+            </Container>
+          </motion.div>
+        )}
       </motion.div>
     </div>
   );

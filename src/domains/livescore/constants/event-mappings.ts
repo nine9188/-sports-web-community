@@ -267,14 +267,11 @@ export default EVENT_INFO_MAP;
  * 이벤트를 한국어 문장으로 매핑하는 함수
  */
 export function mapEventToKoreanText(event: MatchEvent): string {
-  const { type, detail, player, assist, time } = event;
+  const { type, detail, player, assist } = event;
   
   // 선수 이름
   const playerName = player?.name || '알 수 없는 선수';
   const assistName = assist?.name || '';
-  
-  // 시간 텍스트 (예: 90+3′)
-  const timeText = `${time.elapsed || 0}${time.extra ? '+' + time.extra : ''}′`;
   
   // 문장 생성
   let sentenceText = '';
@@ -416,8 +413,8 @@ export function mapEventToKoreanText(event: MatchEvent): string {
       sentenceText = `${playerName} ${detail || type}`;
   }
   
-  // 시간과 문장 조합
-  return `${timeText} ${sentenceText}`;
+  // 시간 없이 문장만 반환
+  return sentenceText;
 }
 
 /**

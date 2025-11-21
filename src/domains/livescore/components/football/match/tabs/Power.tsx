@@ -209,7 +209,17 @@ export default function Power({ data }: PowerProps) {
       {/* 최근 경기 - Team A (모바일) */}
       <Container className="bg-white dark:bg-[#1D1D1D] mb-4 md:hidden">
         <ContainerHeader>
-          <ContainerTitle>최근 경기 - {teamAMeta.name}</ContainerTitle>
+          <div className="flex items-center gap-2">
+            <ContainerTitle>최근 경기 - {teamAMeta.name}</ContainerTitle>
+            <ApiSportsImage
+              imageId={data.teamA}
+              imageType={ImageType.Teams}
+              alt={teamAMeta.name}
+              width={20}
+              height={20}
+              className="w-5 h-5 object-contain"
+            />
+          </div>
         </ContainerHeader>
         <ContainerContent>
           <div className="space-y-1.5">
@@ -259,7 +269,17 @@ export default function Power({ data }: PowerProps) {
       {/* 최근 경기 - Team B (모바일) */}
       <Container className="bg-white dark:bg-[#1D1D1D] mb-4 md:hidden">
         <ContainerHeader>
-          <ContainerTitle>최근 경기 - {teamBMeta.name}</ContainerTitle>
+          <div className="flex items-center gap-2">
+            <ContainerTitle>최근 경기 - {teamBMeta.name}</ContainerTitle>
+            <ApiSportsImage
+              imageId={data.teamB}
+              imageType={ImageType.Teams}
+              alt={teamBMeta.name}
+              width={20}
+              height={20}
+              className="w-5 h-5 object-contain"
+            />
+          </div>
         </ContainerHeader>
         <ContainerContent>
           <div className="space-y-1.5">
@@ -539,7 +559,17 @@ export default function Power({ data }: PowerProps) {
       {/* 팀 탑 플레이어 - Team A (모바일) */}
       <Container className="bg-white dark:bg-[#1D1D1D] mb-4 md:hidden">
         <ContainerHeader>
-          <ContainerTitle>팀 탑 플레이어 - {teamAMeta.name}</ContainerTitle>
+          <div className="flex items-center gap-2">
+            <ContainerTitle>{teamAMeta.name} 득점·도움 순위</ContainerTitle>
+            <ApiSportsImage
+              imageId={data.teamA}
+              imageType={ImageType.Teams}
+              alt={teamAMeta.name}
+              width={20}
+              height={20}
+              className="w-5 h-5 object-contain"
+            />
+          </div>
         </ContainerHeader>
         <ContainerContent>
           {/* 득점 헤더 */}
@@ -605,7 +635,17 @@ export default function Power({ data }: PowerProps) {
       {/* 팀 탑 플레이어 - Team B (모바일) */}
       <Container className="bg-white dark:bg-[#1D1D1D] md:hidden">
         <ContainerHeader>
-          <ContainerTitle>팀 탑 플레이어 - {teamBMeta.name}</ContainerTitle>
+          <div className="flex items-center gap-2">
+            <ApiSportsImage
+              imageId={data.teamB}
+              imageType={ImageType.Teams}
+              alt={teamBMeta.name}
+              width={20}
+              height={20}
+              className="w-5 h-5 object-contain"
+            />
+            <ContainerTitle>팀 탑 플레이어 - {teamBMeta.name}</ContainerTitle>
+          </div>
         </ContainerHeader>
         <ContainerContent>
           {/* 득점 헤더 */}
@@ -671,7 +711,7 @@ export default function Power({ data }: PowerProps) {
       {/* 팀 탑 플레이어 (데스크탑) */}
       <Container className="bg-white dark:bg-[#1D1D1D] hidden md:block">
         <ContainerHeader>
-          <ContainerTitle>팀 탑 플레이어</ContainerTitle>
+          <ContainerTitle>팀 득점·도움 순위</ContainerTitle>
         </ContainerHeader>
         <ContainerContent>
           <div className="grid grid-cols-[1fr_auto_1fr] gap-4">

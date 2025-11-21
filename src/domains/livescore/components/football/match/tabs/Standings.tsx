@@ -9,6 +9,7 @@ import { Standing, StandingsData, Team } from '@/domains/livescore/types/match';
 import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
 import { getLeagueName } from '@/domains/livescore/constants/league-mappings';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
+import { STANDINGS_LEGENDS, LEAGUE_IDS } from './constants/standings';
 
 // Props 타입 정의
 interface StandingsProps {
@@ -109,10 +110,56 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
     
     const desc = description.toLowerCase();
     
-    if (desc.includes('champions league')) return 'bg-green-400';
-    if (desc.includes('europa league')) return 'bg-blue-400';
-    if (desc.includes('conference league')) return 'bg-blue-400';
-    if (desc.includes('relegation')) return 'bg-red-400';
+    // 챔피언스리그 관련 (UEFA & AFC)
+    if (desc.includes('champions league') || desc.includes('afc champions')) {
+      if (desc.includes('1/8-finals') || desc.includes('16강')) return 'bg-green-600';
+      if (desc.includes('play-off') || desc.includes('플레이오프')) return 'bg-yellow-500';
+      return 'bg-green-600';
+    }
+    
+    // 유로파리그 관련
+    if (desc.includes('europa league')) {
+      if (desc.includes('1/8-finals') || desc.includes('16강')) return 'bg-blue-600';
+      if (desc.includes('play-off') || desc.includes('플레이오프')) return 'bg-yellow-500';
+      if (desc.includes('qualification')) return 'bg-blue-400';
+      return 'bg-blue-500';
+    }
+    
+    // 컨퍼런스리그 관련
+    if (desc.includes('conference league')) {
+      if (desc.includes('1/8-finals') || desc.includes('16강')) return 'bg-cyan-600';
+      if (desc.includes('play-off') || desc.includes('플레이오프')) return 'bg-yellow-500';
+      return 'bg-cyan-500';
+    }
+    
+    // 남미 대항전
+    if (desc.includes('copa libertadores') || desc.includes('libertadores')) return 'bg-green-600';
+    if (desc.includes('copa sudamericana') || desc.includes('sudamericana')) return 'bg-blue-500';
+    
+    // 승격 관련
+    if (desc.includes('promotion')) {
+      if (desc.includes('play-off') || desc.includes('플레이오프')) return 'bg-green-400';
+      return 'bg-green-600';
+    }
+    
+    // 강등 관련
+    if (desc.includes('relegation')) {
+      if (desc.includes('play-off') || desc.includes('플레이오프')) return 'bg-orange-500';
+      return 'bg-red-500';
+    }
+    
+    // MLS 컨퍼런스
+    if (desc.includes('eastern conference')) return 'bg-blue-500';
+    if (desc.includes('western conference')) return 'bg-red-500';
+    
+    // 플레이오프 (일반)
+    if (desc.includes('playoff')) return 'bg-green-500';
+    
+    // 탈락
+    if (desc.includes('elimination') || desc.includes('탈락')) return 'bg-gray-400';
+    
+    // 우승 관련
+    if (desc.includes('winner') || desc.includes('champion')) return 'bg-gold-500';
     
     return 'bg-transparent';
   }, []);
@@ -131,6 +178,79 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
   const handleRowClick = useCallback((teamId: number) => {
     router.push(`/livescore/football/team/${teamId}`);
   }, [router]);
+
+  // 리그 ID에 따라 적절한 범례 가져오기
+  const getLegendForLeague = useCallback((leagueId: number) => {
+    switch (leagueId) {
+      // 유럽 TOP 5 리그
+      case LEAGUE_IDS.PREMIER_LEAGUE:
+        return STANDINGS_LEGENDS.premierLeague;
+      case LEAGUE_IDS.LA_LIGA:
+        return STANDINGS_LEGENDS.laLiga;
+      case LEAGUE_IDS.BUNDESLIGA:
+        return STANDINGS_LEGENDS.bundesliga;
+      case LEAGUE_IDS.SERIE_A:
+        return STANDINGS_LEGENDS.serieA;
+      case LEAGUE_IDS.LIGUE_1:
+        return STANDINGS_LEGENDS.ligue1;
+      
+      // 유럽 기타 리그
+      case LEAGUE_IDS.SCOTTISH_PREMIERSHIP:
+        return STANDINGS_LEGENDS.scottishPremiership;
+      case LEAGUE_IDS.EREDIVISIE:
+        return STANDINGS_LEGENDS.eredivisie;
+      case LEAGUE_IDS.PRIMEIRA_LIGA:
+        return STANDINGS_LEGENDS.primeiraLiga;
+      
+      // 아시아 리그
+      case LEAGUE_IDS.K_LEAGUE_1:
+        return STANDINGS_LEGENDS.kLeague1;
+      case LEAGUE_IDS.J_LEAGUE_1:
+        return STANDINGS_LEGENDS.jLeague1;
+      case LEAGUE_IDS.CHINESE_SUPER_LEAGUE:
+        return STANDINGS_LEGENDS.chineseSuperLeague;
+      case LEAGUE_IDS.SAUDI_PRO_LEAGUE:
+        return STANDINGS_LEGENDS.saudiProLeague;
+      
+      // 미주 & 중남미
+      case LEAGUE_IDS.MLS:
+        return STANDINGS_LEGENDS.mls;
+      case LEAGUE_IDS.BRASILEIRAO:
+        return STANDINGS_LEGENDS.brasileirao;
+      case LEAGUE_IDS.LIGA_MX:
+        return STANDINGS_LEGENDS.ligaMX;
+      
+      // 하위리그
+      case LEAGUE_IDS.CHAMPIONSHIP:
+        return STANDINGS_LEGENDS.championship;
+      
+      // UEFA 클럽 대항전
+      case LEAGUE_IDS.CHAMPIONS_LEAGUE:
+        return STANDINGS_LEGENDS.championsLeague;
+      case LEAGUE_IDS.EUROPA_LEAGUE:
+        return STANDINGS_LEGENDS.europaLeague;
+      case LEAGUE_IDS.CONFERENCE_LEAGUE:
+        return STANDINGS_LEGENDS.conferenceLeague;
+      
+      // 국내 컵 대회
+      case LEAGUE_IDS.FA_CUP:
+        return STANDINGS_LEGENDS.faCup;
+      case LEAGUE_IDS.EFL_CUP:
+        return STANDINGS_LEGENDS.eflCup;
+      case LEAGUE_IDS.COPA_DEL_REY:
+        return STANDINGS_LEGENDS.copaDelRey;
+      case LEAGUE_IDS.COPPA_ITALIA:
+        return STANDINGS_LEGENDS.coppaItalia;
+      case LEAGUE_IDS.COUPE_DE_FRANCE:
+        return STANDINGS_LEGENDS.coupeDeFrance;
+      case LEAGUE_IDS.DFB_POKAL:
+        return STANDINGS_LEGENDS.dfbPokal;
+      
+      default:
+        // 기본 범례
+        return STANDINGS_LEGENDS.default;
+    }
+  }, []);
   
   // 로딩 상태 표시
   if (loading) {
@@ -369,28 +489,30 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
         </ContainerHeader>
         <ContainerContent>
           <div className="flex flex-col space-y-2">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-green-400"></div>
-              <span className="text-sm text-gray-900 dark:text-gray-100">챔피언스리그 진출</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-blue-400"></div>
-              <span className="text-sm text-gray-900 dark:text-gray-100">유로파리그 진출</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-red-400"></div>
-              <span className="text-sm text-gray-900 dark:text-gray-100">강등권</span>
-            </div>
+            {/* 순위 관련 범례 (리그 ID 기반) */}
+            {standings?.standings?.league && (() => {
+              const leagueId = standings.standings.league.id;
+              if (!leagueId) return null;
+              
+              const legend = getLegendForLeague(leagueId);
+              return legend.items.map((item, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <div className={`w-4 h-4 ${item.color} rounded-sm`}></div>
+                  <span className="text-sm text-gray-900 dark:text-gray-100">{item.label}</span>
+                </div>
+              ));
+            })()}
 
             {/* 구분선 */}
             <div className="border-t border-black/5 dark:border-white/10 my-1"></div>
 
+            {/* 팀 하이라이트 범례 */}
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700"></div>
+              <div className="w-4 h-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-sm"></div>
               <span className="text-sm text-gray-900 dark:text-gray-100">홈 팀</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700"></div>
+              <div className="w-4 h-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-sm"></div>
               <span className="text-sm text-gray-900 dark:text-gray-100">원정 팀</span>
             </div>
           </div>
