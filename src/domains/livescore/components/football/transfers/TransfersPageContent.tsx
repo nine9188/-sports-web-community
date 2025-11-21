@@ -4,6 +4,7 @@ import { ko } from 'date-fns/locale';
 import { cache } from 'react';
 import { fetchLatestTransfers, TransferMarketData } from '@/domains/livescore/actions/transfers';
 import { formatTransferType } from '@/domains/livescore/types/transfers';
+import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 
 // 모바일용 간단한 이적 타입 포맷터
 const formatTransferTypeMobile = (type: string): string => {
@@ -15,6 +16,21 @@ const formatTransferTypeMobile = (type: string): string => {
   // 자유이적
   if (lowerType === 'free transfer' || lowerType === 'free') {
     return '자유';
+  }
+  
+  // 자유계약
+  if (lowerType === 'free agent') {
+    return '자유계약';
+  }
+  
+  // 승격
+  if (lowerType === 'raise') {
+    return '승격';
+  }
+  
+  // 임대복귀
+  if (lowerType === 'return from loan' || lowerType.includes('return from loan')) {
+    return '임대복귀';
   }
   
   // 금액이 포함된 경우 - 금액만 표시
@@ -48,6 +64,9 @@ const formatTransferTypeMobile = (type: string): string => {
   if (lowerType === 'permanent') return '완전';
   if (lowerType === 'transfer') return '이적';
   if (lowerType === 'return') return '복귀';
+  if (lowerType === 'free agent') return '자유계약';
+  if (lowerType === 'raise') return '승격';
+  if (lowerType === 'return from loan' || lowerType.includes('return from loan')) return '임대복귀';
   if (lowerType === 'back from loan') return '임대복귀';
   
   return originalType;
@@ -297,58 +316,60 @@ export default async function TransfersPageContent({
 
       {/* 이적 목록 */}
       {transfers.length === 0 ? (
-        <div className="bg-white rounded-lg border overflow-hidden">
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">이적 목록</h2>
-            <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-              0건
-            </span>
-          </div>
-          <div className="text-center py-12">
-            <div className="text-gray-500 text-lg mb-2">
+        <Container>
+          <ContainerHeader>
+            <div className="flex items-center justify-between w-full">
+              <ContainerTitle>이적 목록</ContainerTitle>
+              <span className="text-xs text-gray-700 dark:text-gray-300 bg-[#F5F5F5] dark:bg-[#262626] px-2 py-1 rounded">
+                0건
+              </span>
+            </div>
+          </ContainerHeader>
+          <div className="text-center py-12 bg-white dark:bg-[#1D1D1D]">
+            <div className="text-gray-700 dark:text-gray-300 text-lg mb-2">
               이적 정보를 찾을 수 없습니다
             </div>
-            <div className="text-gray-400 text-sm">
+            <div className="text-gray-500 dark:text-gray-400 text-sm">
               필터를 조정하여 다시 시도해보세요
             </div>
           </div>
-        </div>
+        </Container>
       ) : (
-        <div className="bg-white rounded-lg border overflow-hidden">
+        <Container>
           {/* 헤더 */}
-          <div className="p-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">이적 목록</h2>
-              <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+          <ContainerHeader>
+            <div className="flex items-center justify-between w-full">
+              <ContainerTitle>이적 목록</ContainerTitle>
+              <span className="text-xs text-gray-700 dark:text-gray-300 bg-[#F5F5F5] dark:bg-[#262626] px-2 py-1 rounded">
                 총 {totalCount}건
               </span>
             </div>
-          </div>
+          </ContainerHeader>
 
           {/* 데스크탑 테이블 */}
-          <div className="hidden md:block overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto bg-white dark:bg-[#1D1D1D]">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                     선수
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                     이적 경로
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                     이적료/타입
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                     날짜
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-[#1D1D1D] divide-y divide-black/5 dark:divide-white/10">
           {paginatedTransfers.map((transfer, index) => (
                   <tr 
               key={`${transfer.player.id}-${index}`}
-                    className="hover:bg-gray-50 transition-colors duration-200"
+                    className="hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                   >
                     {/* 선수 정보 */}
                     <td className="px-4 py-4 whitespace-nowrap">
@@ -382,11 +403,11 @@ export default async function TransfersPageContent({
                         <div>
                           <Link
                             href={`/livescore/football/player/${transfer.player.id}`}
-                            className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors"
+                            className={`${(getPlayerKoreanName(transfer.player.id) || transfer.player.name).length > 15 ? 'text-xs' : 'text-sm'} font-medium text-gray-900 dark:text-[#F0F0F0] hover:underline transition-colors`}
                           >
                             {getPlayerKoreanName(transfer.player.id) || transfer.player.name}
                           </Link>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-gray-700 dark:text-gray-300">
                             {transfer.player.nationality}
                           </div>
                         </div>
@@ -405,7 +426,7 @@ export default async function TransfersPageContent({
                           />
                           <Link
                             href={`/livescore/football/team/${transfer.transfers[0]?.teams?.out?.id}`}
-                            className="text-sm text-gray-600 hover:text-blue-600 transition-colors truncate"
+                            className="text-sm text-gray-700 dark:text-gray-300 hover:underline transition-colors truncate"
                           >
                             {(() => {
                               const teamId = transfer.transfers[0]?.teams?.out?.id || 0;
@@ -431,7 +452,7 @@ export default async function TransfersPageContent({
                           />
                           <Link
                             href={`/livescore/football/team/${transfer.transfers[0]?.teams?.in?.id}`}
-                            className="text-sm text-gray-900 hover:text-blue-600 transition-colors truncate font-medium"
+                            className="text-sm text-gray-900 dark:text-[#F0F0F0] hover:underline transition-colors truncate font-medium"
                           >
                             {(() => {
                               const teamId = transfer.transfers[0]?.teams?.in?.id || 0;
@@ -446,14 +467,14 @@ export default async function TransfersPageContent({
                     {/* 이적료/타입 */}
                     <td className="px-4 py-4 whitespace-nowrap">
                       {transfer.transfers[0]?.type && (
-                        <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700">
+                        <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0]">
                           {formatTransferType(transfer.transfers[0].type)}
                         </span>
                       )}
                     </td>
 
                     {/* 날짜 */}
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
                       {transfer.transfers[0]?.date || 'N/A'}
                     </td>
                   </tr>
@@ -463,7 +484,7 @@ export default async function TransfersPageContent({
         </div>
 
           {/* 모바일 2줄 레이아웃 */}
-          <div className="block md:hidden divide-y divide-gray-200">
+          <div className="block md:hidden divide-y divide-black/5 dark:divide-white/10 bg-white dark:bg-[#1D1D1D]">
             {paginatedTransfers.map((transfer, index) => {
               const latestTransfer = transfer.transfers[0];
               const transferDate = new Date(latestTransfer.date);
@@ -471,7 +492,7 @@ export default async function TransfersPageContent({
               return (
                 <div 
                   key={`${transfer.player.id}-${index}`}
-                  className="p-3 hover:bg-gray-50 transition-colors duration-200"
+                  className="p-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                 >
                   {/* 첫 번째 줄: 이름, 날짜 */}
                   <div className="flex items-center justify-between mb-2">
@@ -507,21 +528,21 @@ export default async function TransfersPageContent({
                       {/* 선수 이름 */}
                       <Link
                         href={`/livescore/football/player/${transfer.player.id}`}
-                        className="text-sm font-semibold text-gray-900 hover:text-blue-600 transition-colors truncate"
+                        className={`${(getPlayerKoreanName(transfer.player.id) || transfer.player.name).length > 15 ? 'text-xs' : 'text-sm'} font-semibold text-gray-900 dark:text-[#F0F0F0] hover:underline transition-colors truncate`}
                       >
                         {getPlayerKoreanName(transfer.player.id) || transfer.player.name}
                       </Link>
                       
                       {/* 국적 */}
                       {transfer.player.nationality && (
-                        <span className="text-xs text-gray-500 flex-shrink-0">
+                        <span className="text-xs text-gray-700 dark:text-gray-300 flex-shrink-0">
                           {transfer.player.nationality}
                         </span>
                       )}
                     </div>
                     
                     {/* 날짜 */}
-                    <div className="text-xs text-gray-600 flex-shrink-0">
+                    <div className="text-xs text-gray-700 dark:text-gray-300 flex-shrink-0">
                       {format(transferDate, 'MM/dd', { locale: ko })}
                     </div>
                   </div>
@@ -538,7 +559,7 @@ export default async function TransfersPageContent({
                         />
                         <Link
                           href={`/livescore/football/team/${latestTransfer.teams.out.id}`}
-                          className="text-xs text-gray-700 hover:text-blue-600 transition-colors truncate"
+                          className="text-xs text-gray-700 dark:text-gray-300 hover:underline transition-colors truncate"
                           title={latestTransfer.teams.out.name}
                         >
                           {(() => {
@@ -564,7 +585,7 @@ export default async function TransfersPageContent({
                         />
                         <Link
                           href={`/livescore/football/team/${latestTransfer.teams.in.id}`}
-                          className="text-xs text-gray-700 hover:text-blue-600 transition-colors truncate"
+                          className="text-xs text-gray-900 dark:text-[#F0F0F0] hover:underline transition-colors truncate"
                           title={latestTransfer.teams.in.name}
                         >
                           {(() => {
@@ -578,7 +599,7 @@ export default async function TransfersPageContent({
                     {/* 이적 타입 */}
                     <div className="text-xs flex-shrink-0 ml-2 w-16 flex justify-end">
                       {latestTransfer.type && latestTransfer.type !== 'N/A' && (
-                        <span className="px-1.5 py-0.5 rounded-full text-xs font-medium text-center min-w-0 bg-gray-100 text-gray-700">
+                        <span className="px-1.5 py-0.5 rounded-full text-xs font-medium text-center min-w-0 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0]">
                           {formatTransferTypeMobile(latestTransfer.type)}
                         </span>
                       )}
@@ -589,7 +610,7 @@ export default async function TransfersPageContent({
             })}
           </div>
 
-        </div>
+        </Container>
       )}
 
       {/* 페이지네이션 */}

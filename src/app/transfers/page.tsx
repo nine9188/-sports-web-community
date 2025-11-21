@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { TransfersPageContent } from '@/domains/livescore/components/football/transfers';
+import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 
 export const metadata: Metadata = {
   title: '이적시장 | 축구 이적 소식',
@@ -22,26 +23,26 @@ export default async function TransfersPage({ searchParams }: TransfersPageProps
   const params = await searchParams;
   
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       {/* 헤더 섹션 */}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <div className="px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">이적시장</h1>
-              <p className="mt-1 text-gray-600 text-sm">
-                최신 축구 이적 소식과 선수 영입 정보를 확인하세요
-              </p>
-            </div>
-            <div className="hidden md:flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-sm text-gray-500">실시간 업데이트</span>
-              </div>
+      <Container>
+        <ContainerHeader>
+          <div className="flex items-center justify-between w-full">
+            <ContainerTitle>이적시장</ContainerTitle>
+            <div className="hidden md:flex items-center space-x-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-xs text-gray-700 dark:text-gray-300">실시간 업데이트</span>
             </div>
           </div>
+        </ContainerHeader>
+        
+        {/* 설명 섹션 */}
+        <div className="px-4 py-3 bg-white dark:bg-[#1D1D1D]">
+          <p className="text-sm text-gray-700 dark:text-gray-300">
+            최신 축구 이적 소식과 선수 영입 정보를 확인하세요
+          </p>
         </div>
-      </div>
+      </Container>
 
       {/* 메인 콘텐츠 */}
       <div className="mt-4">

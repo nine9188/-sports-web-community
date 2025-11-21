@@ -35,50 +35,48 @@ export default function LeagueCard({ leagueId, name }: LeagueCardProps) {
   const leagueInfo = getLeagueInfo(leagueId);
   const hasInfo = Boolean(leagueInfo.country || leagueInfo.type || leagueInfo.teams);
 
-  // 이미지 URL은 ApiSportsImage 내부에서 해석
-
   return (
     <Link
       href={`/livescore/football/leagues/${leagueId}`}
-      className="group block bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200 p-2 lg:p-4 h-full min-h-[140px] lg:min-h-[180px]"
+      className="group block bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors p-2 lg:p-3 h-full min-h-[110px] lg:min-h-[140px]"
     >
-      <div className={`flex flex-col items-center text-center space-y-1 lg:space-y-3 h-full ${hasInfo ? 'justify-between' : 'justify-center'}`}>
+      <div className={`flex flex-col items-center text-center space-y-1 lg:space-y-2 h-full ${hasInfo ? 'justify-between' : 'justify-center'}`}>
         {/* 리그 로고 */}
-        <div className="relative w-8 h-8 lg:w-12 lg:h-12 flex-shrink-0">
+        <div className="relative w-7 h-7 lg:w-10 lg:h-10 flex-shrink-0">
           <ApiSportsImage
             imageId={leagueId}
             imageType={ImageType.Leagues}
             alt={`${name} 로고`}
-            width={48}
-            height={48}
-            className="object-contain group-hover:scale-105 transition-transform duration-200 w-8 h-8 lg:w-12 lg:h-12"
+            width={40}
+            height={40}
+            className="object-contain w-7 h-7 lg:w-10 lg:h-10"
           />
         </div>
 
         {/* 리그 정보 */}
         <div className="w-full flex flex-col">
           {/* 리그 이름 */}
-          <h3 className={`${name.length >= 8 ? 'text-[9px] lg:text-[11px]' : 'text-[11px] lg:text-sm'} font-medium lg:font-semibold text-gray-900 group-hover:text-blue-600 transition-colors leading-tight line-clamp-2 mb-1 lg:mb-2`}>
+          <h3 className={`${name.length >= 8 ? 'text-[9px] lg:text-[10px]' : 'text-[10px] lg:text-xs'} font-medium text-gray-900 dark:text-[#F0F0F0] leading-tight line-clamp-2 mb-0.5 lg:mb-1`}>
             {name}
           </h3>
           
           {/* PC에서만 표시되는 추가 정보 */}
           {hasInfo && (
-            <div className="block space-y-1 text-[10px] lg:text-xs mt-1 lg:mt-0">
+            <div className="block space-y-0.5 text-[9px] lg:text-[10px] mt-0.5 lg:mt-1">
               {leagueInfo.country && (
-                <p className="text-xs text-gray-500">
+                <p className="text-gray-500 dark:text-gray-400">
                   {leagueInfo.country}
                 </p>
               )}
               
               {leagueInfo.type && (
-                <p className="text-xs text-gray-400">
+                <p className="text-gray-500 dark:text-gray-400">
                   {leagueInfo.type}
                 </p>
               )}
               
               {leagueInfo.teams && (
-                <p className="text-xs text-blue-600 font-medium">
+                <p className="text-gray-700 dark:text-gray-300 font-medium">
                   {leagueInfo.teams}개 팀
                 </p>
               )}

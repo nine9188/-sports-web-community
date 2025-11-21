@@ -81,6 +81,18 @@ export function formatTransferType(type: string): string {
     return '자유이적';
   }
   
+  if (lowerType === 'free agent') {
+    return '자유계약';
+  }
+  
+  if (lowerType === 'raise') {
+    return '승격';
+  }
+  
+  if (lowerType === 'return from loan' || lowerType.includes('return from loan')) {
+    return '임대복귀';
+  }
+  
   // 금액이 포함된 경우 (€, $, £ 등)
   if (originalType.match(/[€$£¥₩]/)) {
     const transferTypeText = '이적';
@@ -148,6 +160,9 @@ export function formatTransferType(type: string): string {
   if (lowerType === 'permanent') return '완전이적';
   if (lowerType === 'transfer') return '이적';
   if (lowerType === 'return') return '복귀';
+  if (lowerType === 'free agent') return '자유계약';
+  if (lowerType === 'raise') return '승격';
+  if (lowerType === 'return from loan' || lowerType.includes('return from loan')) return '임대복귀';
   if (lowerType.includes('end of loan')) return '임대 종료';
   if (lowerType.includes('loan')) return '임대';
   

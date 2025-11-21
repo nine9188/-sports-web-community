@@ -17,12 +17,12 @@ export default function LeagueHeader({ league }: LeagueHeaderProps) {
   const displayName = leagueInfo?.nameKo || league.name;
 
   return (
-    <div className="bg-white rounded-lg border p-3">
+    <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 p-3 mb-4">
       {/* 상단 네비게이션 */}
       <div className="flex items-center justify-between mb-3">
         <Link 
           href="/livescore/football/leagues"
-          className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition-colors group"
+          className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors group px-2 py-1 rounded"
         >
           <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -30,6 +30,9 @@ export default function LeagueHeader({ league }: LeagueHeaderProps) {
           <span className="font-medium">리그 선택</span>
         </Link>
       </div>
+
+      {/* 구분선 */}
+      <div className="border-t border-gray-200 dark:border-gray-700 mb-3"></div>
 
       <div className="flex items-center space-x-3">
         {/* 리그 로고 */}
@@ -50,7 +53,7 @@ export default function LeagueHeader({ league }: LeagueHeaderProps) {
         <div className="flex-1">
           <div className="flex items-center flex-wrap gap-x-3 gap-y-1">
             <div className="flex items-center space-x-2">
-              <h1 className="text-xl font-bold text-gray-900">
+              <h1 className="text-xl font-bold text-gray-900 dark:text-[#F0F0F0]">
                 {displayName}
               </h1>
               {/* 국가 플래그 */}
@@ -67,7 +70,7 @@ export default function LeagueHeader({ league }: LeagueHeaderProps) {
               )}
             </div>
 
-            <div className="flex items-center text-sm text-gray-600">
+            <div className="flex items-center text-sm text-gray-700 dark:text-gray-300">
               <span className="font-medium">{league.country}</span>
               <span className="mx-1">•</span>
               <span className="font-medium">{league.season} 시즌</span>
