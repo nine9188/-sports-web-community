@@ -7,6 +7,7 @@ import { StandingDisplay } from '@/domains/livescore/types/standings';
 import { findTeamStanding, getDisplayStandings, getLeagueInfo, getLeagueForStandings } from '../utils/standingUtils';
 import FormDisplay from './FormDisplay';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
+import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui/container';
 
 interface StandingsPreviewProps {
   standings: StandingDisplay[] | undefined;
@@ -39,8 +40,8 @@ export default function StandingsPreview({ standings, teamId, safeLeague, onTabC
   };
   
   // 공통 스타일
-  const tableHeaderStyle = "px-3 py-2 text-left text-xs font-medium text-gray-500";
-  const tableCellStyle = "px-3 py-2 text-sm";
+  const tableHeaderStyle = "px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400";
+  const tableCellStyle = "px-3 py-2 text-sm text-gray-900 dark:text-[#F0F0F0]";
   
   // 순위 데이터가 없으면 렌더링하지 않음
   if (displayStandings.length === 0 || !leagueInfo) {
@@ -48,8 +49,8 @@ export default function StandingsPreview({ standings, teamId, safeLeague, onTabC
   }
   
   return (
-    <div className="bg-white rounded-lg border overflow-hidden">
-      <div className="flex items-center p-2 border-b border-gray-200">
+    <Container className="bg-white dark:bg-[#1D1D1D]">
+      <ContainerHeader>
         <div className="w-6 h-6 relative flex-shrink-0 mr-2">
           <ApiSportsImage
             imageId={displayLeagueInfo?.id || leagueInfo.id}
@@ -60,10 +61,10 @@ export default function StandingsPreview({ standings, teamId, safeLeague, onTabC
             className="object-contain w-6 h-6"
           />
         </div>
-        <h4 className="text-sm font-medium">
+        <ContainerTitle>
           {getLeagueKoreanName(displayLeagueInfo?.name || leagueInfo.name || safeLeague.name) || '리그 순위'}
-        </h4>
-      </div>
+        </ContainerTitle>
+      </ContainerHeader>
       <div className="overflow-hidden">
         <table className="w-full">
           <colgroup>
@@ -79,7 +80,7 @@ export default function StandingsPreview({ standings, teamId, safeLeague, onTabC
             <col className="w-10"/>
             <col className="hidden md:table-column w-32"/>
           </colgroup>
-          <thead className="bg-gray-50">
+          <thead className="bg-[#F5F5F5] dark:bg-[#262626]">
             <tr>
               <th className={`${tableHeaderStyle} whitespace-nowrap`}>#</th>
               <th className={`${tableHeaderStyle} whitespace-nowrap`}>팀</th>
@@ -100,7 +101,7 @@ export default function StandingsPreview({ standings, teamId, safeLeague, onTabC
               return (
                 <tr 
                   key={`standings-preview-${standing.team.id}-${standing.rank}-${index}`}
-                  className={`border-b ${isCurrentTeam ? 'bg-blue-50' : ''} hover:bg-gray-50 cursor-pointer`}
+                  className={`border-b border-black/5 dark:border-white/10 ${isCurrentTeam ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''} hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors`}
                   onClick={() => standing.team.id !== teamId && handleTeamClick(standing.team.id)}
                 >
                   <td className={tableCellStyle}>{standing.rank}</td>
@@ -142,7 +143,7 @@ export default function StandingsPreview({ standings, teamId, safeLeague, onTabC
       {/* 전체 순위 보기 버튼 */}
       <button 
         onClick={() => onTabChange('standings')}
-        className="w-full p-2 text-blue-600 hover:text-blue-800 transition-colors border-t border-gray-200"
+        className="w-full p-2 text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors border-t border-black/5 dark:border-white/10 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
       >
         <div className="flex items-center justify-center gap-1">
           <span className="text-sm font-medium">전체 순위 보기</span>
@@ -161,6 +162,6 @@ export default function StandingsPreview({ standings, teamId, safeLeague, onTabC
           </svg>
         </div>
       </button>
-    </div>
+    </Container>
   );
 } 

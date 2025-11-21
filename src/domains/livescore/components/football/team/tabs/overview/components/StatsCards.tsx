@@ -4,6 +4,7 @@ import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
 import FormDisplay from './FormDisplay';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
+import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui/container';
 
 // 타입 정의
 interface LeagueInfo {
@@ -110,11 +111,16 @@ export default function StatsCards({ stats, onTabChange }: StatsCardsProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg border overflow-hidden">
+    <Container className="bg-white dark:bg-[#1D1D1D]">
+      <ContainerHeader>
+        <ContainerTitle>기본 통계</ContainerTitle>
+      </ContainerHeader>
       <div className="grid grid-cols-2 md:grid-cols-4">
         {/* 리그 정보 카드 */}
-        <div className="col-span-2 md:col-span-1 border-b md:border-b-0 md:border-r border-gray-200">
-          <h4 className="text-sm font-medium p-2 border-b border-gray-100">리그 정보</h4>
+        <div className="col-span-2 md:col-span-1 border-b md:border-b-0 md:border-r border-black/5 dark:border-white/10">
+          <ContainerHeader className="h-10 px-2 bg-[#F5F5F5] dark:bg-[#262626]">
+            <ContainerTitle className="text-xs">리그 정보</ContainerTitle>
+          </ContainerHeader>
           <div className="flex items-center p-2">
             <div className="w-6 h-6 relative flex-shrink-0 mr-3">
               <ApiSportsImage
@@ -127,63 +133,69 @@ export default function StatsCards({ stats, onTabChange }: StatsCardsProps) {
               />
             </div>
             <div>
-              <p className="font-medium text-sm">{getLeagueKoreanName(safeLeague.name) || '정보 없음'}</p>
-              <p className="text-xs text-gray-600">시즌: {safeLeague.season || '정보 없음'}</p>
-              <p className="text-xs text-gray-600">국가: {safeLeague.country || '정보 없음'}</p>
+              <p className="font-medium text-sm text-gray-900 dark:text-[#F0F0F0]">{getLeagueKoreanName(safeLeague.name) || '정보 없음'}</p>
+              <p className="text-xs text-gray-700 dark:text-gray-300">시즌: {safeLeague.season || '정보 없음'}</p>
+              <p className="text-xs text-gray-700 dark:text-gray-300">국가: {safeLeague.country || '정보 없음'}</p>
             </div>
           </div>
         </div>
 
         {/* 시즌 통계 카드 */}
-        <div className="border-b border-r md:border-b-0 md:border-r border-gray-200">
-          <h4 className="text-sm font-medium p-2 border-b border-gray-100">시즌 통계</h4>
+        <div className="border-b border-r md:border-b-0 md:border-r border-black/5 dark:border-white/10">
+          <ContainerHeader className="h-10 px-2 bg-[#F5F5F5] dark:bg-[#262626]">
+            <ContainerTitle className="text-xs">시즌 통계</ContainerTitle>
+          </ContainerHeader>
           <div className="grid grid-cols-3 p-2 text-center">
             <div>
-              <p className="text-base font-bold">{safeFixtures.wins.total || 0}</p>
-              <p className="text-xs text-gray-500">승</p>
+              <p className="text-base font-bold text-gray-900 dark:text-[#F0F0F0]">{safeFixtures.wins.total || 0}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">승</p>
             </div>
             <div>
-              <p className="text-base font-bold">{safeFixtures.draws.total || 0}</p>
-              <p className="text-xs text-gray-500">무</p>
+              <p className="text-base font-bold text-gray-900 dark:text-[#F0F0F0]">{safeFixtures.draws.total || 0}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">무</p>
             </div>
             <div>
-              <p className="text-base font-bold">{safeFixtures.loses.total || 0}</p>
-              <p className="text-xs text-gray-500">패</p>
+              <p className="text-base font-bold text-gray-900 dark:text-[#F0F0F0]">{safeFixtures.loses.total || 0}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">패</p>
             </div>
           </div>
         </div>
 
         {/* 득실 통계 카드 */}
-        <div className="border-b md:border-b-0 md:border-r border-gray-200">
-          <h4 className="text-sm font-medium p-2 border-b border-gray-100">득실 통계</h4>
+        <div className="border-b md:border-b-0 md:border-r border-black/5 dark:border-white/10">
+          <ContainerHeader className="h-10 px-2 bg-[#F5F5F5] dark:bg-[#262626]">
+            <ContainerTitle className="text-xs">득실 통계</ContainerTitle>
+          </ContainerHeader>
           <div className="grid grid-cols-3 p-2 text-center">
             <div>
-              <p className="text-base font-bold">
+              <p className="text-base font-bold text-gray-900 dark:text-[#F0F0F0]">
                 {getSafeGoalValue(safeGoals.for, 'total')}
               </p>
-              <p className="text-xs text-gray-500">득점</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">득점</p>
             </div>
             <div>
-              <p className="text-base font-bold">
+              <p className="text-base font-bold text-gray-900 dark:text-[#F0F0F0]">
                 {getSafeGoalValue(safeGoals.against, 'total')}
               </p>
-              <p className="text-xs text-gray-500">실점</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">실점</p>
             </div>
             <div>
-              <p className="text-base font-bold">{safeCleanSheet.total || 0}</p>
-              <p className="text-xs text-gray-500">클린시트</p>
+              <p className="text-base font-bold text-gray-900 dark:text-[#F0F0F0]">{safeCleanSheet.total || 0}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">클린시트</p>
             </div>
           </div>
         </div>
 
         {/* 최근 5경기 카드 */}
         <div className="col-span-2 md:col-span-1 flex flex-col">
-          <h4 className="text-sm font-medium p-2 border-b border-gray-100">최근 5경기</h4>
+          <ContainerHeader className="h-10 px-2 bg-[#F5F5F5] dark:bg-[#262626]">
+            <ContainerTitle className="text-xs">최근 5경기</ContainerTitle>
+          </ContainerHeader>
           <div className="flex-1 flex items-center justify-center py-3 px-2 my-1">
             {safeStats.form ? (
               <FormDisplay form={safeStats.form} maxLength={5} reverse={true} />
             ) : (
-              <p className="text-sm text-gray-500">데이터 없음</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">데이터 없음</p>
             )}
           </div>
         </div>
@@ -192,7 +204,7 @@ export default function StatsCards({ stats, onTabChange }: StatsCardsProps) {
       {/* 자세한 통계 보기 버튼 */}
       <button 
         onClick={() => onTabChange('stats')}
-        className="w-full p-2 text-blue-600 hover:text-blue-800 transition-colors border-t border-gray-200"
+        className="w-full p-2 text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors border-t border-black/5 dark:border-white/10 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
       >
         <div className="flex items-center justify-center gap-1">
           <span className="text-sm font-medium">자세한 통계 보기</span>
@@ -211,6 +223,6 @@ export default function StatsCards({ stats, onTabChange }: StatsCardsProps) {
           </svg>
         </div>
       </button>
-    </div>
+    </Container>
   );
 } 

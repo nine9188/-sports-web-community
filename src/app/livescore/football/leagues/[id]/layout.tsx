@@ -13,7 +13,7 @@ export default async function LeagueLayout({
 }: LeagueLayoutProps) {
   try {
     return (
-      <div className="bg-white min-h-screen w-full">
+      <div className="min-h-screen w-full">
         <div>
           {children}
         </div>

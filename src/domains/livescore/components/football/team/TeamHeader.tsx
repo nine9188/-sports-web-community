@@ -132,7 +132,7 @@ export default function TeamHeader({ team, teamId, isLoading: externalLoading, e
 
 
   return (
-    <div className="mb-4 bg-white rounded-lg border overflow-hidden">
+    <div className="mb-4 bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
       <div className="flex flex-col md:flex-row items-start">
         {/* 팀 로고 및 기본 정보 */}
         <div className="flex items-center p-2 md:p-4 md:w-96 flex-shrink-0">
@@ -147,16 +147,16 @@ export default function TeamHeader({ team, teamId, isLoading: externalLoading, e
             />
           </div>
           <div className="flex flex-col justify-center">
-            <h1 className="text-lg md:text-xl font-bold">{teamInfo.name || '팀명 없음'}</h1>
+            <h1 className="text-lg md:text-xl font-bold text-gray-900 dark:text-[#F0F0F0]">{teamInfo.name || '팀명 없음'}</h1>
             {teamInfo.country && (
-              <p className="text-gray-600 text-sm">{teamInfo.country}</p>
+              <p className="text-gray-700 dark:text-gray-300 text-sm">{teamInfo.country}</p>
             )}
             <div className="flex items-center flex-wrap gap-2 mt-1">
               {teamInfo.founded && teamInfo.founded > 0 && (
-                <p className="text-gray-500 text-xs">창단: {teamInfo.founded}년</p>
+                <p className="text-gray-500 dark:text-gray-400 text-xs">창단: {teamInfo.founded}년</p>
               )}
               {teamInfo.code && (
-                <div className="inline-block px-1 py-0.5 bg-gray-100 text-gray-700 text-xs font-medium rounded">
+                <div className="inline-block px-1 py-0.5 bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 text-xs font-medium rounded">
                   {teamInfo.code}
                 </div>
               )}
@@ -166,7 +166,7 @@ export default function TeamHeader({ team, teamId, isLoading: externalLoading, e
 
         {/* 홈구장 정보 */}
         {venue && (
-          <div className="border-t md:border-t-0 md:border-l border-gray-200 p-2 md:p-4 flex-1">
+          <div className="border-t md:border-t-0 md:border-l border-black/5 dark:border-white/10 p-2 md:p-4 flex-1">
             <div className="flex gap-3">
               <div className="relative w-24 h-16 md:w-36 md:h-24 rounded overflow-hidden flex-shrink-0">
                 {venue.image && (
@@ -196,21 +196,21 @@ export default function TeamHeader({ team, teamId, isLoading: externalLoading, e
                 )}
               </div>
               <div className="flex-1">
-                <h3 className="font-medium text-base">{venue.name}</h3>
-                <div className="text-xs text-gray-600">
+                <h3 className="font-medium text-base text-gray-900 dark:text-[#F0F0F0]">{venue.name}</h3>
+                <div className="text-xs text-gray-700 dark:text-gray-300">
                   {venue.city && <span className="block">{venue.city}</span>}
                   {venue.address && <span className="block">{venue.address}</span>}
                 </div>
                 <div className="mt-1 flex flex-wrap gap-3 text-xs">
                   {venue.capacity && venue.capacity > 0 && (
                     <div className="whitespace-nowrap">
-                      <span className="text-gray-500">수용 인원: </span>
+                      <span className="text-gray-500 dark:text-gray-400">수용 인원: </span>
                       <span className="font-medium">{venue.capacity.toLocaleString()}명</span>
                     </div>
                   )}
                   {venue.surface && (
                     <div className="whitespace-nowrap">
-                      <span className="text-gray-500">표면: </span>
+                      <span className="text-gray-500 dark:text-gray-400">표면: </span>
                       <span className="font-medium">{venue.surface}</span>
                     </div>
                   )}

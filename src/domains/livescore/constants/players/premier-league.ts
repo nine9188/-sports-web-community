@@ -266,14 +266,15 @@ export const LIVERPOOL_PLAYERS: PlayerMapping[] = [
 ];
 
 // ============================================
-// Arsenal (Team ID: 42) - 32명
+// Arsenal (Team ID: 42) - 33명
 // ============================================
 export const ARSENAL_PLAYERS: PlayerMapping[] = [
-  // Goalkeepers (4명)
+  // Goalkeepers (5명)
   { id: 19465, name: "David Raya", korean_name: "다비드 라야", team_id: 42, position: "Goalkeeper" },
   { id: 169295, name: "K. Hein", korean_name: "카를 하인", team_id: 42, position: "Goalkeeper" },
   { id: 2273, name: "Kepa", korean_name: "케파 아리사발라가", team_id: 42, position: "Goalkeeper" },
   { id: 342243, name: "T. Setford", korean_name: "토미 셋포드", team_id: 42, position: "Goalkeeper" },
+  { id: 337933, name: "Alexei Rojas Fedorushchenko", korean_name: "알렉세이 로자스-페도루첸코", team_id: 42, position: "Goalkeeper" },
 
   // Defenders (10명)
   { id: 22090, name: "W. Saliba", korean_name: "윌리엄 살리바", team_id: 42, position: "Defender" },

@@ -7,9 +7,10 @@ import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
+import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui/container';
 
-// 상수 정의 - 감독을 최상단으로 노출
-const POSITION_ORDER = ['Coach', 'Goalkeeper', 'Defender', 'Midfielder', 'Attacker'];
+// 상수 정의 - 감독을 최상단으로 노출, 그 다음 골키퍼, 공격수, 미드필더, 수비수 순
+const POSITION_ORDER = ['Coach', 'Goalkeeper', 'Attacker', 'Midfielder', 'Defender'];
 const POSITION_NAMES = {
   Coach: '감독',
   Goalkeeper: '골키퍼',
@@ -71,32 +72,37 @@ export default function Squad({ initialSquad, initialStats, isLoading: externalL
     });
   }, [initialSquad, initialStats]);
   
-  // 선수단 정렬 로직을 useMemo로 최적화
-  const sortedPlayers = useMemo(() => {
-    if (squad.length === 0) return [];
+  // 선수단을 포지션별로 그룹화하는 로직
+  const groupedPlayers = useMemo(() => {
+    if (squad.length === 0) return {};
 
     // 포지션 정보가 있는 선수만 필터링
     const validPlayers = squad.filter(member => {
-      // 포지션이 없거나 유효하지 않은 경우 제외
       if (!member.position || member.position.trim() === '') return false;
-
-      // 정의된 포지션이 아닌 경우 제외
       if (!POSITION_ORDER.includes(member.position)) return false;
-
       return true;
     });
 
-    return validPlayers.sort((a, b) => {
-      const posA = POSITION_ORDER.indexOf(a.position);
-      const posB = POSITION_ORDER.indexOf(b.position);
-
-      if (posA !== posB) return posA - posB;
-
-      // 같은 포지션 내에서는 이름 순으로 정렬 (한글 이름 우선)
-      const nameA = getPlayerKoreanName(a.id) || a.name;
-      const nameB = getPlayerKoreanName(b.id) || b.name;
-      return nameA.localeCompare(nameB);
+    // 포지션별로 그룹화
+    const grouped: Record<string, (Player | Coach)[]> = {};
+    
+    validPlayers.forEach(member => {
+      if (!grouped[member.position]) {
+        grouped[member.position] = [];
+      }
+      grouped[member.position].push(member);
     });
+
+    // 각 그룹 내에서 이름순 정렬
+    Object.keys(grouped).forEach(position => {
+      grouped[position].sort((a, b) => {
+        const nameA = getPlayerKoreanName(a.id) || a.name;
+        const nameB = getPlayerKoreanName(b.id) || b.name;
+        return nameA.localeCompare(nameB);
+      });
+    });
+
+    return grouped;
   }, [squad]);
 
   // 로딩 상태 처리
@@ -114,112 +120,115 @@ export default function Squad({ initialSquad, initialStats, isLoading: externalL
     return <EmptyState title="선수단 데이터가 없습니다" message="현재 이 팀에 대한 선수단 정보를 제공할 수 없습니다." />;
   }
 
-  // 렌더링에 사용할 현재 포지션 추적
-  let currentPosition = '';
-
   return (
-    <div className="mb-4 bg-white rounded-lg border overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <tbody className="divide-y divide-gray-100">
-            {sortedPlayers.map((member) => {
-              // 포지션 헤더 표시 여부 결정
-              const showPositionHeader = member.position !== currentPosition;
-              currentPosition = member.position;
-              
-              // 선수 통계 정보 접근
-              const playerStats = member.position !== 'Coach' ? (member as Player).stats : undefined;
-              const isPlayer = member.position !== 'Coach';
+    <div className="space-y-4">
+      {POSITION_ORDER.map(position => {
+        const members = groupedPlayers[position];
+        if (!members || members.length === 0) return null;
 
-              return (
-                <React.Fragment key={member.id}>
-                  {showPositionHeader && (
-                    <tr className="bg-gray-50 border-l-4">
-                      <td colSpan={3} className="px-2 sm:px-4 md:px-6 py-1">
-                        <h3 className="text-sm md:text-base font-medium flex items-center gap-1">
-                          <span>{POSITION_NAMES[member.position as keyof typeof POSITION_NAMES]}</span>
-                          <span className="text-xs text-gray-500">
-                            ({sortedPlayers.filter(p => p.position === member.position).length}명)
-                          </span>
-                        </h3>
-                      </td>
-                      <td className="px-1 sm:px-2 md:px-6 py-1 text-center text-xs font-medium whitespace-nowrap">나이</td>
-                      {isPlayer ? (
+        const isPlayer = position !== 'Coach';
+
+        return (
+          <Container key={position} className="bg-white dark:bg-[#1D1D1D]">
+            <ContainerHeader>
+              <ContainerTitle>
+                {POSITION_NAMES[position as keyof typeof POSITION_NAMES]}
+                <span className="text-xs font-normal text-gray-500 dark:text-gray-400 ml-2">
+                  ({members.length}명)
+                </span>
+              </ContainerTitle>
+            </ContainerHeader>
+            
+            <ContainerContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-[#F5F5F5] dark:bg-[#262626]">
+                    <tr>
+                      <th className="px-2 sm:px-4 md:px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">사진</th>
+                      <th className="px-2 sm:px-4 md:px-6 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">번호</th>
+                      <th className="px-2 sm:px-4 md:px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">이름</th>
+                      <th className="px-1 sm:px-2 md:px-6 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">나이</th>
+                      {isPlayer && (
                         <>
-                          <td className="px-1 sm:px-2 md:px-6 py-1 text-center text-xs font-medium whitespace-nowrap">출장</td>
-                          <td className="px-1 sm:px-2 md:px-6 py-1 text-center text-xs font-medium whitespace-nowrap">골</td>
-                          <td className="px-1 sm:px-2 md:px-6 py-1 text-center text-xs font-medium whitespace-nowrap">도움</td>
-                          <td className="px-1 sm:px-2 md:px-6 py-1 text-center text-xs font-medium whitespace-nowrap">
-                            <span className="inline-block w-3 h-3 bg-yellow-400 rounded-sm" title="경고"/>
-                          </td>
-                          <td className="px-1 sm:px-2 md:px-6 py-1 text-center text-xs font-medium whitespace-nowrap">
-                            <span className="inline-block w-3 h-3 bg-red-500 rounded-sm" title="퇴장"/>
-                          </td>
+                          <th className="px-1 sm:px-2 md:px-6 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">출장</th>
+                          <th className="px-1 sm:px-2 md:px-6 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">골</th>
+                          <th className="px-1 sm:px-2 md:px-6 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">도움</th>
+                          <th className="px-1 sm:px-2 md:px-6 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                            <span className="inline-block w-3 h-3 bg-yellow-400 dark:bg-yellow-500 rounded-sm" title="경고"/>
+                          </th>
+                          <th className="px-1 sm:px-2 md:px-6 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                            <span className="inline-block w-3 h-3 bg-red-500 dark:bg-red-600 rounded-sm" title="퇴장"/>
+                          </th>
                         </>
-                      ) : (
-                        <td colSpan={5} className="px-1 sm:px-2 md:px-6 py-1"></td>
                       )}
                     </tr>
-                  )}
-                  <tr 
-                    className={`hover:bg-gray-50 transition-colors ${isPlayer ? 'cursor-pointer' : ''}`}
-                    onClick={() => {
-                      if (isPlayer) {
-                        router.push(`/livescore/football/player/${member.id}`);
-                      }
-                    }}
-                  >
-                    <td className="px-2 sm:px-4 md:px-6 py-1">
-                      <div className="relative w-6 h-6 md:w-8 md:h-8 bg-gray-100 rounded-full overflow-hidden">
-                        <ApiSportsImage
-                          imageId={member.id}
-                          imageType={member.position === 'Coach' ? ImageType.Coachs : ImageType.Players}
-                          alt={member.name}
-                          width={32}
-                          height={32}
-                          className="object-cover w-full h-full rounded-full"
-                        />
-                      </div>
-                    </td>
-                    <td className="px-2 sm:px-4 md:px-6 py-1 text-sm md:text-base font-medium">
-                      {isPlayer ? (member as Player).number : ''}
-                    </td>
-                    <td className="px-2 sm:px-4 md:px-6 py-1">
-                      <div className="font-medium text-xs md:text-sm truncate max-w-[100px] md:max-w-none">
-                        {getPlayerKoreanName(member.id) || member.name}
-                      </div>
-                    </td>
-                    <td className="px-1 sm:px-2 md:px-6 py-1 text-xs text-center whitespace-nowrap">
-                      {member.age}세
-                    </td>
-                    {isPlayer ? (
-                      <>
-                        <td className="px-1 sm:px-2 md:px-6 py-1 text-xs text-center whitespace-nowrap">
-                          {playerStats?.appearances || 0}
-                        </td>
-                        <td className="px-1 sm:px-2 md:px-6 py-1 text-xs text-center whitespace-nowrap">
-                          {playerStats?.goals || 0}
-                        </td>
-                        <td className="px-1 sm:px-2 md:px-6 py-1 text-xs text-center whitespace-nowrap">
-                          {playerStats?.assists || 0}
-                        </td>
-                        <td className="px-1 sm:px-2 md:px-6 py-1 text-xs text-center whitespace-nowrap">
-                          {playerStats?.yellowCards || 0}
-                        </td>
-                        <td className="px-1 sm:px-2 md:px-6 py-1 text-xs text-center whitespace-nowrap">
-                          {playerStats?.redCards || 0}
-                        </td>
-                      </>
-                    ) : (
-                      <td colSpan={5} className="px-1 sm:px-2 md:px-6 py-1"></td>
-                    )}
-                  </tr>
-                </React.Fragment>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+                  </thead>
+                  <tbody className="divide-y divide-black/5 dark:divide-white/10">
+                    {members.map(member => {
+                      const playerStats = isPlayer ? (member as Player).stats : undefined;
+
+                      return (
+                        <tr 
+                          key={member.id}
+                          className={`hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors ${isPlayer ? 'cursor-pointer' : ''}`}
+                          onClick={() => {
+                            if (isPlayer) {
+                              router.push(`/livescore/football/player/${member.id}`);
+                            }
+                          }}
+                        >
+                          <td className="px-2 sm:px-4 md:px-6 py-2 whitespace-nowrap">
+                            <div className="relative w-8 h-8 md:w-10 md:h-10 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden flex-shrink-0">
+                              <ApiSportsImage
+                                imageId={member.id}
+                                imageType={position === 'Coach' ? ImageType.Coachs : ImageType.Players}
+                                alt={member.name}
+                                width={40}
+                                height={40}
+                                className="object-cover w-full h-full rounded-full"
+                              />
+                            </div>
+                          </td>
+                          <td className="px-2 sm:px-4 md:px-6 py-2 text-xs font-medium text-center text-gray-900 dark:text-[#F0F0F0] whitespace-nowrap">
+                            {isPlayer ? (member as Player).number : '-'}
+                          </td>
+                          <td className="px-2 sm:px-4 md:px-6 py-2 whitespace-nowrap">
+                            <div className="font-medium text-xs text-gray-900 dark:text-[#F0F0F0]">
+                              {getPlayerKoreanName(member.id) || member.name}
+                            </div>
+                          </td>
+                          <td className="px-1 sm:px-2 md:px-6 py-2 text-xs text-center whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
+                            {member.age}세
+                          </td>
+                          {isPlayer && (
+                            <>
+                              <td className="px-1 sm:px-2 md:px-6 py-2 text-xs text-center whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
+                                {playerStats?.appearances || 0}
+                              </td>
+                              <td className="px-1 sm:px-2 md:px-6 py-2 text-xs text-center whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
+                                {playerStats?.goals || 0}
+                              </td>
+                              <td className="px-1 sm:px-2 md:px-6 py-2 text-xs text-center whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
+                                {playerStats?.assists || 0}
+                              </td>
+                              <td className="px-1 sm:px-2 md:px-6 py-2 text-xs text-center whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
+                                {playerStats?.yellowCards || 0}
+                              </td>
+                              <td className="px-1 sm:px-2 md:px-6 py-2 text-xs text-center whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
+                                {playerStats?.redCards || 0}
+                              </td>
+                            </>
+                          )}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </ContainerContent>
+          </Container>
+        );
+      })}
     </div>
   );
 } 

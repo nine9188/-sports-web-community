@@ -2,6 +2,7 @@
 
 import { TeamStatsData } from '@/domains/livescore/types/stats';
 import { useFormationDisplay } from '../hooks/useFormationDisplay';
+import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui/container';
 
 interface FormationStatsProps {
   stats: TeamStatsData;
@@ -17,23 +18,23 @@ export default function FormationStats({ stats }: FormationStatsProps) {
   }
 
   return (
-    <div className="bg-white rounded-lg border overflow-hidden mb-4">
-      <h3 className="text-sm font-medium p-3 border-b border-gray-200">
-        주로 사용하는 포메이션
-      </h3>
-      <div className="p-4">
+    <Container className="mb-4">
+      <ContainerHeader>
+        <ContainerTitle>주로 사용하는 포메이션</ContainerTitle>
+      </ContainerHeader>
+      <ContainerContent>
         <div className="space-y-3">
           {visibleFormations.map((formation, index) => (
             <div key={index} className="flex items-center justify-between">
               <div className="flex-1">
-                <h4 className="text-sm font-medium">{formation.formation}</h4>
-                <p className="text-xs text-gray-500">{formation.played}경기 사용</p>
+                <h4 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">{formation.formation}</h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{formation.played}경기 사용</p>
               </div>
               
               <div className="w-3/5">
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                   <div 
-                    className="bg-blue-500 h-2 rounded-full" 
+                    className="bg-blue-500 dark:bg-blue-600 h-2 rounded-full" 
                     style={{ 
                       width: `${(formation.played / lineups[0].played) * 100}%`
                     }}
@@ -48,12 +49,12 @@ export default function FormationStats({ stats }: FormationStatsProps) {
         {lineups.length > 5 && (
           <button 
             onClick={toggleFormations}
-            className="mt-4 text-sm text-blue-600 hover:underline"
+            className="mt-4 text-sm text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-3 py-1 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 dark:focus:ring-gray-600"
           >
             {showAllFormations ? '접기' : '더 보기'}
           </button>
         )}
-      </div>
-    </div>
+      </ContainerContent>
+    </Container>
   );
 } 

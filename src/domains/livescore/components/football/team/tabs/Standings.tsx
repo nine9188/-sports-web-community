@@ -7,6 +7,7 @@ import { ImageType } from '@/shared/types/image';
 import { Standing } from '@/domains/livescore/actions/teams/standings';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
+import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui/container';
 
 // Standing을 import한 타입 사용
 type StandingItem = Standing["league"]["standings"][0][0];
@@ -42,11 +43,10 @@ TeamLogo.displayName = 'TeamLogo';
 
 // 테이블 스타일 정의 개선
 const tableStyles = {
-  header: "px-1 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider",
-  cell: "px-1 py-2 whitespace-nowrap text-sm text-gray-900 text-center",
+  header: "px-1 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider",
+  cell: "px-1 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-[#F0F0F0] text-center",
   smallCol: "w-8", // 너비 감소
   mediumCol: "w-10", // 너비 감소
-  container: "mb-4 bg-white rounded-lg border overflow-hidden" // will-change 제거
 };
 
 function Standings({ teamId, initialStandings, isLoading: externalLoading, error: externalError }: StandingsProps) {
@@ -55,10 +55,10 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
   // 폼 결과에 따른 스타일 설정 함수
   const getFormStyle = useCallback((result: string) => {
     switch(result) {
-      case 'W': return 'bg-green-100 text-green-800';
-      case 'D': return 'bg-yellow-100 text-yellow-800';
-      case 'L': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-200 text-gray-700';
+      case 'W': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400';
+      case 'D': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400';
+      case 'L': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400';
+      default: return 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300';
     }
   }, []);
 
@@ -175,9 +175,9 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
         if (!standingsData || standingsData.length === 0) return null;
         
         return (
-          <div key={leagueInfo.id || leagueIndex} className={tableStyles.container}>
+          <Container key={leagueInfo.id || leagueIndex} className="bg-white dark:bg-[#1D1D1D]">
             {/* 리그 정보 헤더 */}
-            <div className="px-3 py-2 border-b bg-gray-50">
+            <ContainerHeader>
               <div className="flex items-center gap-3">
                 {leagueInfo.id && (
                   <div className="w-6 h-6 relative flex-shrink-0">
@@ -191,14 +191,15 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
                     />
                   </div>
                 )}
-                <h4 className="text-sm font-medium text-gray-800">
+                <ContainerTitle>
                   {getLeagueKoreanName(leagueInfo.name) || '리그 순위'}
-                </h4>
+                </ContainerTitle>
               </div>
-            </div>
+            </ContainerHeader>
 
             {/* 순위표 */}
-            <div className="overflow-x-auto">
+            <ContainerContent className="p-0">
+              <div className="overflow-x-auto">
               <table className="min-w-full w-full border-collapse" style={{ tableLayout: 'fixed' }}>
                 <colgroup>
                   <col className="md:hidden w-8" />
@@ -215,30 +216,30 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
                   <col className="hidden md:table-column w-32" />
                 </colgroup>
                 
-                <thead className="bg-gray-50">
+                <thead className="bg-[#F5F5F5] dark:bg-[#262626]">
                   <tr>
-                    <th className="md:hidden px-1 py-1 text-center text-xs font-medium text-gray-500">#</th>
-                    <th className="hidden md:table-cell px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">순위</th>
+                    <th className="md:hidden px-1 py-1 text-center text-xs font-medium text-gray-500 dark:text-gray-400">#</th>
+                    <th className="hidden md:table-cell px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">순위</th>
                     
-                    <th className="px-2 py-2 md:px-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">팀</th>
+                    <th className="px-2 py-2 md:px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">팀</th>
                     
-                    <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">경기</th>
+                    <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">경기</th>
                     
                     <th className={tableStyles.header}>승</th>
                     <th className={tableStyles.header}>무</th>
                     <th className={tableStyles.header}>패</th>
                     
-                    <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">득점</th>
-                    <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">실점</th>
-                    <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">득실차</th>
+                    <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">득점</th>
+                    <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">실점</th>
+                    <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">득실차</th>
                     
                     <th className={tableStyles.header}>승점</th>
                     
-                    <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">최근 5경기</th>
+                    <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">최근 5경기</th>
                   </tr>
                 </thead>
                 
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-black/5 dark:divide-white/10">
                   {standingsData.map((standingGroup: StandingItem[], groupIndex: number) => 
                     standingGroup.map((standing: StandingItem) => {
                       // 현재 팀 여부 확인
@@ -246,8 +247,8 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
                       
                       // 팀 행 스타일 설정
                       const rowClass = isCurrentTeam 
-                        ? 'bg-blue-50 hover:bg-blue-100 cursor-pointer' 
-                        : 'hover:bg-gray-100 cursor-pointer';
+                        ? 'bg-[#EAEAEA] dark:bg-[#333333] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors' 
+                        : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors';
                       
                       return (
                         <tr 
@@ -258,17 +259,17 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
                           {/* 모바일용 축약된 순위 */}
                           <td className="md:hidden px-1 py-1 text-center text-xs relative w-8">
                             <div className={`absolute inset-y-0 left-0 w-1 ${getStatusColor(standing.description)}`} />
-                            <span className="pl-1">{standing.rank}</span>
+                            <span className="pl-1 text-gray-900 dark:text-[#F0F0F0]">{standing.rank}</span>
                           </td>
                           
                           {/* 데스크톱용 순위 */}
-                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 relative">
+                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-[#F0F0F0] relative">
                             <div className={`absolute inset-y-0 left-0 w-1 ${getStatusColor(standing.description)}`} />
                             <span className="pl-2">{standing.rank}</span>
                           </td>
                           
                           {/* 팀 정보 - 고정 너비 사용 */}
-                          <td className="px-2 py-2 md:px-3 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-2 py-2 md:px-3 whitespace-nowrap text-sm text-gray-900 dark:text-[#F0F0F0]">
                             <div className="flex items-center gap-1 md:gap-2">
                               <TeamLogo 
                                 teamName={standing.team.name}
@@ -279,7 +280,7 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
                                   {standing.team.name || '알 수 없음'}
                                 </span>
                                 {isCurrentTeam && (
-                                  <span className="text-[10px] md:text-xs font-bold px-0.5 md:px-1.5 md:py-0.5 ml-0.5 md:ml-2 rounded inline-block flex-shrink-0 bg-blue-100 text-blue-800">
+                                  <span className="text-[10px] md:text-xs font-bold px-0.5 md:px-1.5 md:py-0.5 ml-0.5 md:ml-2 rounded inline-block flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400">
                                     현재
                                   </span>
                                 )}
@@ -288,7 +289,7 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
                           </td>
                           
                           {/* 경기 수 - 모바일에서는 숨김 */}
-                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
+                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-[#F0F0F0] text-center">
                             {standing.all?.played || 0}
                           </td>
                           
@@ -298,13 +299,13 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
                           <td className={`${tableStyles.cell} text-xs md:text-sm px-0 md:px-1`}>{standing.all?.lose || 0}</td>
                           
                           {/* 득점, 실점, 득실차 - 모바일에서는 숨김 */}
-                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
+                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-[#F0F0F0] text-center">
                             {standing.all?.goals?.for || 0}
                           </td>
-                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
+                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-[#F0F0F0] text-center">
                             {standing.all?.goals?.against || 0}
                           </td>
-                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
+                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-[#F0F0F0] text-center">
                             {standing.goalsDiff || 0}
                           </td>
                           
@@ -312,7 +313,7 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
                           <td className={`${tableStyles.cell} text-xs md:text-sm font-semibold`}>{standing.points || 0}</td>
                           
                           {/* 최근 5경기 - 모바일에서는 숨김 */}
-                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
+                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-[#F0F0F0] text-center">
                             <div className="flex justify-center gap-1">
                               {standing.form?.split('').map((result, idx) => (
                                 <div 
@@ -332,40 +333,41 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
                 </tbody>
               </table>
             </div>
-          </div>
+            </ContainerContent>
+          </Container>
         );
       })}
       
       {/* 범례 */}
-      <div className={tableStyles.container}>
-        <div className="px-3 py-2 border-b bg-gray-50">
-          <h3 className="text-sm font-medium text-gray-800">범례</h3>
-        </div>
-        <div className="p-3">
+      <Container className="bg-white dark:bg-[#1D1D1D]">
+        <ContainerHeader>
+          <ContainerTitle>범례</ContainerTitle>
+        </ContainerHeader>
+        <ContainerContent>
           <div className="flex flex-col space-y-2">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-green-400"></div>
-              <span className="text-sm">챔피언스리그 진출</span>
+              <div className="w-4 h-4 bg-green-400 rounded-sm"></div>
+              <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">챔피언스리그 진출</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-blue-400"></div>
-              <span className="text-sm">유로파리그 진출</span>
+              <div className="w-4 h-4 bg-blue-400 rounded-sm"></div>
+              <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">유로파리그 진출</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-red-400"></div>
-              <span className="text-sm">강등권</span>
+              <div className="w-4 h-4 bg-red-400 rounded-sm"></div>
+              <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">강등권</span>
             </div>
             
             {/* 구분선 */}
-            <div className="border-t border-gray-200 my-1"></div>
+            <div className="border-t border-black/5 dark:border-white/10 my-1"></div>
             
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-blue-50 border border-blue-200"></div>
-              <span className="text-sm">현재 팀</span>
+              <div className="w-4 h-4 bg-[#EAEAEA] dark:bg-[#333333] border border-gray-300 dark:border-gray-600 rounded-sm"></div>
+              <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">현재 팀</span>
             </div>
           </div>
-        </div>
-      </div>
+        </ContainerContent>
+      </Container>
     </div>
   );
 }

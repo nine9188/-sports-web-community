@@ -22,20 +22,20 @@ export default function FormDisplay({ form, maxLength = 5, reverse = false }: Fo
         
         switch (result) {
           case 'W':
-            bgColor = 'bg-green-100';
-            textColor = 'text-green-800';
+            bgColor = 'bg-green-100 dark:bg-green-900/30';
+            textColor = 'text-green-800 dark:text-green-400';
             break;
           case 'D':
-            bgColor = 'bg-yellow-100';
-            textColor = 'text-yellow-800';
+            bgColor = 'bg-yellow-100 dark:bg-yellow-900/30';
+            textColor = 'text-yellow-800 dark:text-yellow-400';
             break;
           case 'L':
-            bgColor = 'bg-red-100';
-            textColor = 'text-red-800';
+            bgColor = 'bg-red-100 dark:bg-red-900/30';
+            textColor = 'text-red-800 dark:text-red-400';
             break;
           default:
-            bgColor = 'bg-gray-200';
-            textColor = 'text-gray-700';
+            bgColor = 'bg-gray-200 dark:bg-gray-700';
+            textColor = 'text-gray-700 dark:text-gray-300';
         }
         
         return (

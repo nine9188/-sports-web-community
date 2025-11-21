@@ -6,6 +6,7 @@ import { ko } from 'date-fns/locale';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
+import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui/container';
 
 // 매치 타입 정의
 export interface Match {
@@ -103,12 +104,13 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
     : [];
 
   return (
-    <div className="bg-white rounded-lg border overflow-hidden">
-      <div className="flex flex-col divide-y divide-gray-200">
-        {/* 최근 경기 결과 */}
-        <div>
-          <h4 className="text-sm font-medium p-2 border-b border-gray-200">최근 경기</h4>
-          <div className="overflow-hidden">
+    <div className="space-y-4">
+      {/* 최근 경기 결과 */}
+      <Container className="bg-white dark:bg-[#1D1D1D]">
+        <ContainerHeader>
+          <ContainerTitle>최근 경기</ContainerTitle>
+        </ContainerHeader>
+        <div className="overflow-hidden">
             <table className="w-full table-fixed">
               <colgroup>
                 <col className="w-14 md:w-20" />
@@ -116,22 +118,22 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                 <col />
                 <col className="w-12 md:w-20" />
               </colgroup>
-              <thead className="bg-gray-50">
+              <thead className="bg-[#F5F5F5] dark:bg-[#262626]">
                 <tr className="h-10">
-                  <th className="p-0 md:p-2 text-left text-xs font-medium text-gray-500">날짜</th>
-                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500">리그</th>
-                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500">경기</th>
-                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500">결과</th>
+                  <th className="p-0 md:p-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">날짜</th>
+                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">리그</th>
+                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">경기</th>
+                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">결과</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-black/5 dark:divide-white/10">
                 {recentMatches.length > 0 ? recentMatches.map(match => (
                   <tr 
                     key={match.fixture.id} 
-                    className="h-12 hover:bg-gray-50 cursor-pointer"
+                    className="h-12 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors"
                     onClick={() => handleMatchClick(match.fixture.id)}
                   >
-                    <td className="p-0 md:px-2 text-xs whitespace-nowrap">
+                    <td className="p-0 md:px-2 text-xs whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
                       {format(new Date(match.fixture.date), 'MM.dd', { locale: ko })}
                     </td>
                     <td className="p-0 md:px-2">
@@ -146,7 +148,7 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                             className="object-contain w-full h-full"
                           />
                         </div>
-                        <span className="hidden md:block text-xs">
+                        <span className="hidden md:block text-xs text-gray-900 dark:text-[#F0F0F0]">
                           {getLeagueKoreanName(match.league.name)}
                         </span>
                       </div>
@@ -154,7 +156,7 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                     <td className="p-0 md:px-2">
                       <div className="flex items-center justify-between">
                         <div className="flex-1 flex items-center justify-end gap-0 min-w-0">
-                          <span className={`truncate max-w-[100px] md:max-w-[180px] text-right mr-1 text-xs md:text-sm ${match.teams.home.id === teamId ? 'font-bold' : ''}`}>
+                          <span className={`truncate max-w-[100px] md:max-w-[180px] text-right mr-1 text-xs md:text-sm text-gray-900 dark:text-[#F0F0F0] ${match.teams.home.id === teamId ? 'font-bold' : ''}`}>
                             {match.teams.home.name}
                           </span>
                           <ApiSportsImage
@@ -167,7 +169,7 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                           />
                         </div>
 
-                        <div className="w-10 text-center font-medium mx-1 flex-shrink-0">
+                        <div className="w-10 text-center font-medium mx-1 flex-shrink-0 text-gray-900 dark:text-[#F0F0F0]">
                           {match.goals.home}-{match.goals.away}
                         </div>
 
@@ -180,7 +182,7 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                             height={20}
                             className="object-contain w-5 h-5 flex-shrink-0"
                           />
-                          <span className={`truncate max-w-[100px] md:max-w-[180px] text-left ml-1 text-xs md:text-sm ${match.teams.away.id === teamId ? 'font-bold' : ''}`}>
+                          <span className={`truncate max-w-[100px] md:max-w-[180px] text-left ml-1 text-xs md:text-sm text-gray-900 dark:text-[#F0F0F0] ${match.teams.away.id === teamId ? 'font-bold' : ''}`}>
                             {match.teams.away.name}
                           </span>
                         </div>
@@ -189,12 +191,12 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                     <td className="px-1 py-1 md:px-2 md:py-2 text-center w-10 md:w-16">
                       <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-medium
                         ${match.teams.home.id === teamId ? 
-                          (match.teams.home.winner ? 'bg-green-100 text-green-800' : 
-                            match.teams.away.winner ? 'bg-red-100 text-red-800' : 
-                            'bg-yellow-100 text-yellow-800') :
-                          (match.teams.away.winner ? 'bg-green-100 text-green-800' : 
-                            match.teams.home.winner ? 'bg-red-100 text-red-800' : 
-                            'bg-yellow-100 text-yellow-800')
+                          (match.teams.home.winner ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400' : 
+                            match.teams.away.winner ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400' : 
+                            'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400') :
+                          (match.teams.away.winner ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400' : 
+                            match.teams.home.winner ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400' : 
+                            'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400')
                         }`}
                       >
                         {match.teams.home.id === teamId ?
@@ -208,39 +210,41 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan={4} className="py-4 text-center text-gray-500">최근 경기 정보가 없습니다</td>
+                    <td colSpan={4} className="py-4 text-center text-gray-500 dark:text-gray-400">최근 경기 정보가 없습니다</td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
-        </div>
+      </Container>
 
-        {/* 예정된 경기 */}
-        <div>
-          <h4 className="text-sm font-medium p-2 border-b border-gray-200">예정된 경기</h4>
-          <div className="overflow-hidden">
+      {/* 예정된 경기 */}
+      <Container className="bg-white dark:bg-[#1D1D1D]">
+        <ContainerHeader>
+          <ContainerTitle>예정된 경기</ContainerTitle>
+        </ContainerHeader>
+        <div className="overflow-hidden">
             <table className="w-full table-fixed">
               <colgroup>
                 <col className="w-20 md:w-28" />
                 <col className="w-8 md:w-32" />
                 <col />
               </colgroup>
-              <thead className="bg-gray-50">
+              <thead className="bg-[#F5F5F5] dark:bg-[#262626]">
                 <tr className="h-10">
-                  <th className="p-0 md:p-2 text-left text-xs font-medium text-gray-500">날짜</th>
-                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500">리그</th>
-                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500">경기</th>
+                  <th className="p-0 md:p-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">날짜</th>
+                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">리그</th>
+                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">경기</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-black/5 dark:divide-white/10">
                 {upcomingMatches.length > 0 ? upcomingMatches.map(match => (
                   <tr 
                     key={match.fixture.id} 
-                    className="h-12 hover:bg-gray-50 cursor-pointer"
+                    className="h-12 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors"
                     onClick={() => handleMatchClick(match.fixture.id)}
                   >
-                    <td className="p-0 md:px-2 text-xs whitespace-nowrap">
+                    <td className="p-0 md:px-2 text-xs whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
                       {format(new Date(match.fixture.date), 'MM.dd HH:mm', { locale: ko })}
                     </td>
                     <td className="p-0 md:px-2">
@@ -255,7 +259,7 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                             className="object-contain w-full h-full"
                           />
                         </div>
-                        <span className="hidden md:block text-xs">
+                        <span className="hidden md:block text-xs text-gray-900 dark:text-[#F0F0F0]">
                           {getLeagueKoreanName(match.league.name)}
                         </span>
                       </div>
@@ -263,7 +267,7 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                     <td className="p-0 md:px-2">
                       <div className="flex items-center justify-between">
                         <div className="flex-1 flex items-center justify-end gap-0 min-w-0">
-                          <span className={`truncate max-w-[100px] md:max-w-[180px] text-right mr-1 text-xs md:text-sm ${match.teams.home.id === teamId ? 'font-bold' : ''}`}>
+                          <span className={`truncate max-w-[100px] md:max-w-[180px] text-right mr-1 text-xs md:text-sm text-gray-900 dark:text-[#F0F0F0] ${match.teams.home.id === teamId ? 'font-bold' : ''}`}>
                             {match.teams.home.name}
                           </span>
                           <ApiSportsImage
@@ -276,7 +280,7 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                           />
                         </div>
 
-                        <div className="w-10 text-center font-medium mx-1 flex-shrink-0">
+                        <div className="w-10 text-center font-medium mx-1 flex-shrink-0 text-gray-900 dark:text-[#F0F0F0]">
                           VS
                         </div>
 
@@ -289,7 +293,7 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                             height={20}
                             className="object-contain w-5 h-5 flex-shrink-0"
                           />
-                          <span className={`truncate max-w-[100px] md:max-w-[180px] text-left ml-1 text-xs md:text-sm ${match.teams.away.id === teamId ? 'font-bold' : ''}`}>
+                          <span className={`truncate max-w-[100px] md:max-w-[180px] text-left ml-1 text-xs md:text-sm text-gray-900 dark:text-[#F0F0F0] ${match.teams.away.id === teamId ? 'font-bold' : ''}`}>
                             {match.teams.away.name}
                           </span>
                         </div>
@@ -298,14 +302,13 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan={3} className="py-4 text-center text-gray-500">예정된 경기 정보가 없습니다</td>
+                    <td colSpan={3} className="py-4 text-center text-gray-500 dark:text-gray-400">예정된 경기 정보가 없습니다</td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
+      </Container>
     </div>
   );
 } 
