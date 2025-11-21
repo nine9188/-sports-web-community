@@ -58,8 +58,8 @@ export async function fetchPlayerRankings(
     const rankingTypes = [
       { type: 'topscorers', key: 'topScorers' },
       { type: 'topassists', key: 'topAssists' },
-      { type: 'yellowcards', key: 'topYellowCards' },
-      { type: 'redcards', key: 'topRedCards' }
+      { type: 'topyellowcards', key: 'topYellowCards' },
+      { type: 'topredcards', key: 'topRedCards' }
     ];
 
     // 모든 순위 데이터 병렬로 가져오기
@@ -97,40 +97,69 @@ export async function fetchPlayerRankings(
       
       if (response?.response && Array.isArray(response.response)) {
         // API 응답을 표준 형식으로 변환
-        const rankings = response.response.map((item: ApiRankingItem) => {
-          const ranking: PlayerRanking = {
-            player: {
-              id: item.player?.id || 0,
-              name: item.player?.name || '',
-              photo: item.player?.photo || '',
-            },
-            statistics: [{
-              team: {
-                id: item.statistics?.[0]?.team?.id || 0,
-                name: item.statistics?.[0]?.team?.name || '',
-                logo: item.statistics?.[0]?.team?.logo || '',
+        const rankings = response.response
+          .filter((item: ApiRankingItem) => item.player?.id) // 유효한 선수만 필터링
+          .slice(0, 20) // 상위 20명만 가져오기
+          .map((item: ApiRankingItem) => {
+            const ranking: PlayerRanking = {
+              player: {
+                id: item.player?.id || 0,
+                name: item.player?.name || '',
+                photo: item.player?.photo || '',
               },
-              goals: {
-                total: item.statistics?.[0]?.goals?.total,
-                assists: item.statistics?.[0]?.goals?.assists,
-              },
-              games: {
-                appearences: item.statistics?.[0]?.games?.appearences,
-                minutes: item.statistics?.[0]?.games?.minutes,
-              },
-              cards: {
-                yellow: item.statistics?.[0]?.cards?.yellow,
-                red: item.statistics?.[0]?.cards?.red,
-              }
-            }]
-          };
-          return ranking;
-        });
+              statistics: [{
+                team: {
+                  id: item.statistics?.[0]?.team?.id || 0,
+                  name: item.statistics?.[0]?.team?.name || '',
+                  logo: item.statistics?.[0]?.team?.logo || '',
+                },
+                goals: {
+                  total: item.statistics?.[0]?.goals?.total || 0,
+                  assists: item.statistics?.[0]?.goals?.assists || 0,
+                },
+                games: {
+                  appearences: item.statistics?.[0]?.games?.appearences || 0,
+                  minutes: item.statistics?.[0]?.games?.minutes || 0,
+                },
+                cards: {
+                  yellow: item.statistics?.[0]?.cards?.yellow || 0,
+                  red: item.statistics?.[0]?.cards?.red || 0,
+                }
+              }]
+            };
+            return ranking;
+          });
 
         // 키에 맞게 결과 저장
         result[key as keyof RankingsData] = rankings;
       }
     });
+
+    // mostGamesScored는 topScorers 데이터에서 출전 경기 수 기준으로 정렬
+    if (result.topScorers && result.topScorers.length > 0) {
+      const gamesSorted = [...result.topScorers]
+        .filter(player => (player.statistics[0].goals?.total || 0) > 0) // 득점이 있는 선수만
+        .sort((a, b) => {
+          const aGames = a.statistics[0].games?.appearences || 0;
+          const bGames = b.statistics[0].games?.appearences || 0;
+          return bGames - aGames;
+        })
+        .slice(0, 20);
+      result.mostGamesScored = gamesSorted;
+    }
+
+    // leastPlayTime은 topScorers 데이터에서 출전 시간 기준으로 정렬
+    if (result.topScorers && result.topScorers.length > 0) {
+      const timeSorted = [...result.topScorers]
+        .filter(player => (player.statistics[0].games?.minutes || 0) > 0)
+        .sort((a, b) => {
+          const aMinutes = a.statistics[0].games?.minutes || 0;
+          const bMinutes = b.statistics[0].games?.minutes || 0;
+          return bMinutes - aMinutes; // 출전 시간이 많은 순으로 정렬
+        })
+        .slice(0, 20);
+      result.leastPlayTime = timeSorted;
+    }
 
     return result;
   } catch {
