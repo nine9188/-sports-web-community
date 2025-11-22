@@ -78,12 +78,12 @@ export default function ItemCard({ item, isOwned, onPurchase }: ItemCardProps) {
       aria-disabled={isDisabled}
       onClick={handleActivate}
       onKeyDown={handleKeyDown}
-      className={`group border rounded-md overflow-hidden bg-white shadow-sm hover:shadow-md transition-all flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 ${
-        isDisabled ? 'cursor-default' : 'cursor-pointer hover:border-blue-300'
+      className={`group border border-black/7 dark:border-0 rounded-md overflow-hidden bg-white dark:bg-[#1D1D1D] shadow-sm transition-all flex flex-col outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
+        isDisabled ? 'cursor-default' : 'cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
       }`}
     >
       {/* 이미지 영역: 20x20 고정 */}
-      <div className={`${cardPadding} sm:p-3 p-2 flex justify-center`}> 
+      <div className={`${cardPadding} sm:p-3 p-2 flex justify-center bg-[#F5F5F5] dark:bg-[#262626]`}> 
         <div className="h-5 w-5 flex items-center justify-center">
           <ApiSportsImage
             imageId={getTeamId(item.image_url)}
@@ -96,31 +96,31 @@ export default function ItemCard({ item, isOwned, onPurchase }: ItemCardProps) {
         </div>
       </div>
       
-      <div className={`${bodyPadding} sm:p-3 p-2 border-t mt-auto`}>
+      <div className={`${bodyPadding} sm:p-3 p-2 border-t border-black/5 dark:border-white/10 mt-auto`}>
         {/* 제목: 두 줄 허용, 폰트 한 단계 축소 (모바일 더 축소) */}
-        <h3 className="sm:text-[13px] text-[12px] font-medium text-center leading-5 line-clamp-2 min-h-[36px] sm:min-h-[40px] text-gray-900 group-hover:text-blue-600 transition-colors" title={displayName}>{displayName}</h3>
+        <h3 className="sm:text-[13px] text-[12px] font-medium text-center leading-5 line-clamp-2 min-h-[36px] sm:min-h-[40px] text-gray-900 dark:text-[#F0F0F0] transition-colors" title={displayName}>{displayName}</h3>
 
         {/* 가격/구매: 좌측 가격, 우측 구매 버튼 정렬 */}
         <div className="mt-1.5 sm:mt-2 flex items-center justify-between">
           <div className="flex items-center h-5">
-            <span className="sm:text-[11px] text-[10px] whitespace-nowrap tabular-nums">
+            <span className="sm:text-[11px] text-[10px] whitespace-nowrap tabular-nums text-gray-700 dark:text-gray-300">
               {item.is_default ? '기본' : `${item.price} P`}
             </span>
           </div>
           <div className="flex items-center">
             {isOwned ? (
-              <span className="h-7 sm:h-8 px-2 sm:text-[11px] text-[10px] bg-gray-600 text-white rounded whitespace-nowrap inline-flex items-center justify-center">
+              <span className="h-7 sm:h-8 px-2 sm:text-[11px] text-[10px] bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] rounded whitespace-nowrap inline-flex items-center justify-center border border-black/7 dark:border-0">
                 보유 중
               </span>
             ) : (
               <button
                 onClick={(e) => { e.stopPropagation(); startTransition(() => onPurchase()) }}
-                className={`h-7 sm:h-8 px-2 text-[11px] sm:text-[12px] font-medium rounded whitespace-nowrap text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-300 transition-colors ${
+                className={`h-7 sm:h-8 px-2 text-[11px] sm:text-[12px] font-medium rounded whitespace-nowrap text-center outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors ${
                   isPending
-                    ? 'bg-gray-300 text-gray-900 cursor-wait'
+                    ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-700 dark:text-gray-300 cursor-wait'
                     : item.is_default
-                      ? 'bg-gray-300 text-gray-700 cursor-not-allowed'
-                      : 'bg-gray-200 text-gray-900 hover:bg-gray-300 hover:text-blue-700 focus-visible:text-blue-700 group-hover:text-blue-700'
+                      ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-700 dark:text-gray-300 cursor-not-allowed'
+                      : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
                 }`}
                 disabled={isPending || !!item.is_default}
                 aria-busy={isPending}

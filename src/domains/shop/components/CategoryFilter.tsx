@@ -262,19 +262,19 @@ export default function CategoryFilter({
   return (
     <div>
       {/* HoverMenu 스타일에 맞춘 탭 바 */}
-      <div className="bg-white border rounded-lg mb-4">
-        <div className="px-4 py-2 relative" ref={containerRef}>
-          <nav className="flex items-center" ref={navRef}>
+      <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 rounded-lg mb-4">
+        <div className="h-12 px-4 relative flex items-center" ref={containerRef}>
+          <nav className="flex items-center gap-1 flex-1" ref={navRef}>
             {/* 좌측: 카테고리 탭 */}
             <button
               onClick={() => {
                 setActiveCategory('all')
                 updateUrlCategory('all')
               }}
-              className={`px-2 py-1 text-sm font-medium whitespace-nowrap hover:bg-gray-50 rounded-md flex items-center ${
+              className={`h-8 px-3 text-sm font-medium whitespace-nowrap rounded-md flex items-center gap-1 transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
                 activeCategory === 'all'
-                  ? 'bg-gray-100 text-blue-600'
-                  : 'text-gray-500'
+                  ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
               }`}
             >
               전체
@@ -300,10 +300,10 @@ export default function CategoryFilter({
                       updateUrlCategory(id)
                     }
                   }}
-                  className={`px-2 py-1 text-sm font-medium whitespace-nowrap hover:bg-gray-50 rounded-md flex items-center ${
+                  className={`h-8 px-3 text-sm font-medium whitespace-nowrap rounded-md flex items-center gap-1 transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
                     activeCategory === category.id.toString()
-                      ? 'bg-gray-100 text-blue-600'
-                      : 'text-gray-500'
+                      ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
                   }`}
                 >
                   {category.name}
@@ -330,7 +330,7 @@ export default function CategoryFilter({
             {hiddenCategories.length > 0 && (
               <button
                 onClick={() => setMobileDropdownOpen(prev => !prev)}
-                className="flex items-center px-2 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md ml-2"
+                className="h-8 flex items-center justify-center px-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                 aria-label="더보기"
                 aria-expanded={mobileDropdownOpen}
               >
@@ -356,7 +356,7 @@ export default function CategoryFilter({
 
           {/* 숨겨진 카테고리들을 위한 드롭다운 메뉴 */}
           {mobileDropdownOpen && hiddenCategories.length > 0 && (
-            <div className="mt-2 pt-2 border-t border-gray-200">
+            <div className="mt-2 pt-2 border-t border-black/5 dark:border-white/10">
               <div className="flex flex-wrap gap-1">
                 {hiddenCategories.map((category) => (
                   <div
@@ -380,8 +380,8 @@ export default function CategoryFilter({
                         }
                         setMobileDropdownOpen(false)
                       }}
-                      className={`px-2 py-1 text-sm font-medium whitespace-nowrap hover:bg-gray-50 rounded-md flex items-center ${
-                        activeCategory === category.id.toString() ? 'bg-blue-50 text-blue-600' : 'text-gray-500'
+                      className={`h-8 px-3 text-sm font-medium whitespace-nowrap rounded-md flex items-center gap-1 transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
+                        activeCategory === category.id.toString() ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]' : 'text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
                       }`}
                     >
                       {category.name}
@@ -414,13 +414,19 @@ export default function CategoryFilter({
               ref={menuRef}
               onMouseEnter={() => clearTimers()}
               onMouseLeave={handleMouseLeave}
-              className="absolute bg-white shadow-md border rounded-b-lg z-40 p-3 top-[100%] max-w-[600px] min-w-[300px] -mt-1"
-              style={{ left: `${menuPosition.left}px`, marginTop: '-7px' }}
+              className="absolute bg-white dark:bg-[#1D1D1D] shadow-lg border border-black/7 dark:border-0 z-40 top-[100%] -mt-1 overflow-hidden"
+              style={{ 
+                left: `${menuPosition.left}px`, 
+                marginTop: '-7px',
+                borderRadius: '0.5rem',
+                minWidth: '300px',
+                maxWidth: '600px'
+              }}
             >
-              {/* 4개씩 한 줄 구성 (긴 텍스트는 2줄까지 표시) */}
-              <div className="grid gap-1 max-w-full">
+              {/* 3개씩 한 줄 구성 */}
+              <div className="grid gap-0">
                 {Array.from({ length: Math.ceil(((hoveredCategoryData.subcategories ?? []).length) / 3) }, (_, rowIndex) => (
-                  <div key={rowIndex} className="flex gap-1 overflow-hidden">
+                  <div key={rowIndex} className="flex gap-0">
                     {(hoveredCategoryData.subcategories ?? [])
                       .slice(rowIndex * 3, rowIndex * 3 + 3)
                       .sort((a, b) => a.name.localeCompare(b.name))
@@ -433,9 +439,12 @@ export default function CategoryFilter({
                 updateUrlCategory(id)
                 closeDropdown()
               }}
-                          className={`inline-block px-3 py-2 text-sm hover:bg-gray-50 rounded-md whitespace-nowrap ${
-                            activeCategory === sub.id.toString() ? 'bg-blue-50 text-blue-600' : ''
+                          className={`flex-1 px-4 py-2.5 text-sm text-center whitespace-nowrap overflow-hidden text-ellipsis transition-colors text-gray-900 dark:text-[#F0F0F0] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
+                            activeCategory === sub.id.toString() 
+                              ? 'bg-[#EAEAEA] dark:bg-[#333333]' 
+                              : 'bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
                           }`}
+                          title={sub.name}
                         >
                           {sub.name}
                         </button>
@@ -466,23 +475,25 @@ export default function CategoryFilter({
             onClick={() => setBottomSheetCategory(null)}
           />
           {/* 바텀시트 */}
-          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-lg z-50" ref={bottomSheetRef}>
+          <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#1D1D1D] rounded-t-lg z-50" ref={bottomSheetRef}>
             {/* 헤더 */}
-            <div className="flex justify-between items-center p-4 border-b border-gray-200">
-              <h3 className="text-base font-semibold text-gray-900">
+            <div className="flex justify-between items-center px-4 py-2.5 border-b border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
+              <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
                 {bottomSheetCategoryData.name}
               </h3>
               <button
                 onClick={() => setBottomSheetCategory(null)}
-                className="p-2 hover:bg-gray-100 rounded-full"
+                className="p-1 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors text-gray-700 dark:text-gray-300 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                 aria-label="닫기"
               >
-                ×
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
             {/* 콘텐츠 */}
             <div className="p-4 max-h-96 overflow-y-auto">
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <button
                   onClick={() => {
                     if (bottomSheetCategory == null) return
@@ -491,9 +502,9 @@ export default function CategoryFilter({
                     updateUrlCategory(id)
                     setBottomSheetCategory(null)
                   }}
-                  className="w-full text-left px-4 py-3 text-sm font-medium hover:bg-gray-50 rounded-lg border border-gray-300 text-blue-600"
+                  className="w-full text-left px-3 py-2 text-sm bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md text-gray-900 dark:text-[#F0F0F0] transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                 >
-                  전체 보기
+                  {bottomSheetCategoryData.name} 전체 보기
                 </button>
                 {bottomSheetCategoryData.subcategories?.map((sub) => (
                   <button
@@ -504,10 +515,10 @@ export default function CategoryFilter({
                       updateUrlCategory(id)
                       setBottomSheetCategory(null)
                     }}
-                    className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 rounded-lg border ${
+                    className={`w-full text-left px-3 py-2 text-sm rounded-md text-gray-900 dark:text-[#F0F0F0] transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
                       activeCategory === sub.id.toString()
-                        ? 'bg-blue-50 text-blue-600 border-blue-200'
-                        : 'border-gray-200'
+                        ? 'bg-[#EAEAEA] dark:bg-[#333333]'
+                        : 'bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
               }`}
             >
               {sub.name}

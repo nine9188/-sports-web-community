@@ -14,29 +14,29 @@ export default function ShopCategoryCard({ category }: ShopCategoryCardProps) {
       href={`/shop/${category.slug}`}
       className="block group"
     >
-      <div className="border rounded-lg overflow-hidden shadow-sm transition-shadow hover:shadow-md">
-        <div className="h-48 bg-gray-100 relative">
+      <div className="border border-black/7 dark:border-0 rounded-lg overflow-hidden bg-white dark:bg-[#1D1D1D] shadow-sm transition-all hover:bg-[#EAEAEA] dark:hover:bg-[#333333]">
+        <div className="h-48 bg-[#F5F5F5] dark:bg-[#262626] relative">
           {category.image_url ? (
             <Image 
               src={category.image_url} 
               alt={category.name}
               fill
-              className="object-cover"
+              className="object-cover group-hover:brightness-75 transition-all"
             />
           ) : (
-            <div className="flex items-center justify-center h-full bg-gray-200">
-              <span className="text-gray-400">이미지 준비 중</span>
+            <div className="flex items-center justify-center h-full">
+              <span className="text-gray-500 dark:text-gray-400">이미지 준비 중</span>
             </div>
           )}
         </div>
         
         <div className="p-4">
-          <h2 className="text-xl font-semibold group-hover:text-blue-600 transition-colors">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-[#F0F0F0] transition-colors">
             {category.name}
           </h2>
-          <p className="text-gray-600 mt-2">{category.description || `${category.name} 아이템을 구매해보세요.`}</p>
+          <p className="text-gray-700 dark:text-gray-300 mt-2">{category.description || `${category.name} 아이템을 구매해보세요.`}</p>
           <div className="mt-4 text-right">
-            <span className="inline-block px-4 py-2 bg-blue-600 text-white rounded-md group-hover:bg-blue-700 transition-colors">
+            <span className="inline-block px-4 py-2 bg-slate-800 dark:bg-[#3F3F3F] text-white rounded-md group-hover:bg-slate-700 dark:group-hover:bg-[#4A4A4A] transition-colors">
               구경하기
             </span>
           </div>

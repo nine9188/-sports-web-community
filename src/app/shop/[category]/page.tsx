@@ -9,6 +9,7 @@ import {
 } from '@/domains/shop/actions/actions'
 import CategoryFilter from '@/domains/shop/components/CategoryFilter'
 import ShopPagination from '@/domains/shop/components/ShopPagination'
+import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui'
 
 // 동적 렌더링 강제 설정 추가
 export const dynamic = 'force-dynamic'
@@ -90,12 +91,16 @@ export default async function CategoryPage({ params, searchParams }: Props) {
     return (
       <div className="container mx-auto">
         
-        <div className="mb-4 rounded-md border border-gray-200 p-4">
-          <h1 className="text-2xl font-bold">{currentCategory.name}</h1>
+        <Container className="mb-4">
+          <ContainerHeader>
+            <ContainerTitle>{currentCategory.name}</ContainerTitle>
+          </ContainerHeader>
           {currentCategory.description && (
-            <p className="text-gray-600 mt-2">{currentCategory.description}</p>
+            <div className="px-4 py-3">
+              <p className="text-gray-700 dark:text-gray-300 text-sm">{currentCategory.description}</p>
+            </div>
           )}
-        </div>
+        </Container>
 
         <CategoryFilter 
           items={items}
@@ -111,6 +116,14 @@ export default async function CategoryPage({ params, searchParams }: Props) {
     )
   } catch (error) {
     console.error('Error:', error)
-    return <div>오류가 발생했습니다.</div>
+    return (
+      <div className="container mx-auto">
+        <Container>
+          <div className="px-4 py-8 text-center">
+            <p className="text-gray-700 dark:text-gray-300">오류가 발생했습니다.</p>
+          </div>
+        </Container>
+      </div>
+    )
   }
 }

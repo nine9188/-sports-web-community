@@ -3,6 +3,7 @@ import { createClient } from '@/shared/api/supabaseServer';
 import { getCategoryItemsPaginated, getUserItems, getUserPoints, getShopCategories } from '@/domains/shop/actions/actions';
 import CategoryFilter from '@/domains/shop/components/CategoryFilter';
 import ShopPagination from '@/domains/shop/components/ShopPagination';
+import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 
 // 동적 렌더링 강제 설정 추가
 export const dynamic = 'force-dynamic';
@@ -93,18 +94,20 @@ export default async function ShopPage({ searchParams }: Props) {
 
   return (
     <div className="container mx-auto">
-      <div className="mb-4 rounded-md border border-gray-200 p-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold">포인트 상점</h1>
-        {user && !error && (
-          <div className="flex items-center gap-2 text-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-blue-600">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-            </svg>
-            <span className="text-gray-600">보유 포인트</span>
-            <span className="font-semibold tabular-nums">{userPoints} P</span>
-          </div>
-        )}
-      </div>
+      <Container className="mb-4">
+        <ContainerHeader>
+          <ContainerTitle>포인트 상점</ContainerTitle>
+          {user && !error && (
+            <div className="ml-auto flex items-center gap-2 text-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-700 dark:text-gray-300">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+              </svg>
+              <span className="text-gray-700 dark:text-gray-300">보유 포인트</span>
+              <span className="font-semibold tabular-nums text-gray-900 dark:text-[#F0F0F0]">{userPoints} P</span>
+            </div>
+          )}
+        </ContainerHeader>
+      </Container>
 
       {/* 상세형 상점: 탭 + 로그인 안내(하위) + 그리드 */}
       <CategoryFilter 
@@ -115,9 +118,12 @@ export default async function ShopPage({ searchParams }: Props) {
         categories={filterCategories}
         initialActiveCategory={catParam ?? 'all'}
         loginNotice={(!user || error) ? (
-          <div className="p-3 sm:p-4 bg-blue-50 rounded-md text-center border border-blue-100">
-            <p className="text-blue-700 text-sm sm:text-base">아이템을 구매하고 사용하려면 로그인이 필요합니다.</p>
-            <a href="/signin" className="mt-2 inline-block px-3 py-2 sm:px-4 sm:py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm">
+          <div className="p-3 sm:p-4 bg-[#F5F5F5] dark:bg-[#262626] rounded-md text-center border border-black/7 dark:border-0">
+            <p className="text-gray-900 dark:text-[#F0F0F0] text-sm sm:text-base">아이템을 구매하고 사용하려면 로그인이 필요합니다.</p>
+            <a 
+              href="/signin" 
+              className="mt-2 inline-block px-3 py-2 sm:px-4 sm:py-2 bg-slate-800 dark:bg-[#3F3F3F] text-white rounded-md hover:bg-slate-700 dark:hover:bg-[#4A4A4A] transition-colors text-sm outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+            >
               로그인하기
             </a>
           </div>
@@ -128,8 +134,8 @@ export default async function ShopPage({ searchParams }: Props) {
 
       {/* 루트 카테고리가 없을 경우 */}
       {(!rootCategoriesRaw || rootCategoriesRaw.length === 0) && (
-        <div className="text-center py-10 sm:py-12 bg-gray-50 rounded-lg mt-4 sm:mt-6">
-          <p className="text-gray-500">현재 이용 가능한 상점 카테고리가 없습니다.</p>
+        <div className="text-center py-10 sm:py-12 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg mt-4 sm:mt-6">
+          <p className="text-gray-700 dark:text-gray-300">현재 이용 가능한 상점 카테고리가 없습니다.</p>
         </div>
       )}
     </div>
