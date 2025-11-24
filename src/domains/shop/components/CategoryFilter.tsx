@@ -14,9 +14,11 @@ interface CategoryFilterProps {
   categories: {
     id: number
     name: string
+    display_order?: number
     subcategories?: {
       id: number
       name: string
+      display_order?: number
     }[]
   }[]
   loginNotice?: React.ReactNode
@@ -38,8 +40,7 @@ export default function CategoryFilter({
   const router = useRouter()
   const [activeCategory, setActiveCategory] = useState<string>(initialActiveCategory ?? (searchParams.get('cat') ?? 'all'))
   const [hoveredCategory, setHoveredCategory] = useState<number | null>(null)
-  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [isMobile, setIsMobile] = useState(false)
   const [bottomSheetCategory, setBottomSheetCategory] = useState<number | null>(null)
   const [mobileDropdownOpen, setMobileDropdownOpen] = useState(false)
@@ -52,18 +53,29 @@ export default function CategoryFilter({
   const bottomSheetRef = useRef<HTMLDivElement>(null)
   const [menuPosition, setMenuPosition] = useState<{ left: number }>({ left: 0 })
   const [isNavigating, startTransition] = useTransition()
+
+  // 카테고리 정렬 - display_order 우선, 그 다음 이름순
+  const sortedCategories = useMemo(() => 
+    [...categories].sort((a, b) => {
+      if (a.display_order !== undefined && b.display_order !== undefined) {
+        if (a.display_order !== b.display_order) {
+          return a.display_order - b.display_order
+        }
+      }
+      return a.name.localeCompare(b.name)
+    }), [categories])
   
   const filteredItems = useMemo(() => {
     if (activeCategory === 'all') return items
     const activeId = Number(activeCategory)
     if (Number.isNaN(activeId)) return items
-    const parent = categories.find(cat => cat.id === activeId)
+    const parent = sortedCategories.find(cat => cat.id === activeId)
     const allowedIds = new Set<number>([activeId])
     if (parent?.subcategories && parent.subcategories.length > 0) {
       parent.subcategories.forEach(sub => allowedIds.add(sub.id))
     }
     return items.filter(item => item.category_id != null && allowedIds.has(item.category_id as number))
-  }, [items, activeCategory, categories])
+  }, [items, activeCategory, sortedCategories])
 
   // URL 변화에 따라 내부 상태 동기화 (뒤로가기 등)
   useEffect(() => {
@@ -88,71 +100,84 @@ export default function CategoryFilter({
     startTransition(() => router.push(href))
   }
 
-  // 타이머 정리 함수
-  const clearTimers = () => {
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current)
-      hoverTimeoutRef.current = null
-    }
-    if (leaveTimeoutRef.current) {
-      clearTimeout(leaveTimeoutRef.current)
-      leaveTimeoutRef.current = null
-    }
-  }
-
-  // 모바일 여부 감지 및 리사이즈 시 업데이트
+  // 초기 설정
   useEffect(() => {
-    const updateIsMobile = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-    updateIsMobile()
-    window.addEventListener('resize', updateIsMobile, { passive: true })
-    return () => window.removeEventListener('resize', updateIsMobile)
-  }, [])
-
-  // 상단 탭 표시 개수 제어 (모바일: 3개 + 더보기)
-  useEffect(() => {
-    const applyVisibility = () => {
-      const mobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false
+    if (sortedCategories.length > 0) {
+      const mobile = window.innerWidth < 768
+      
       if (mobile) {
-        const maxVisible = 3
-        if (categories.length <= maxVisible) {
-          setVisibleCategories(categories)
+        const maxVisibleCategories = 3
+        
+        if (sortedCategories.length <= maxVisibleCategories) {
+          setVisibleCategories(sortedCategories)
           setHiddenCategories([])
         } else {
-          setVisibleCategories(categories.slice(0, maxVisible))
-          setHiddenCategories(categories.slice(maxVisible))
+          setVisibleCategories(sortedCategories.slice(0, maxVisibleCategories))
+          setHiddenCategories(sortedCategories.slice(maxVisibleCategories))
         }
       } else {
-        setVisibleCategories(categories)
+        setVisibleCategories(sortedCategories)
+        setHiddenCategories([])
+      }
+    }
+  }, [sortedCategories])
+
+  // 모바일 환경 체크 및 보이는/숨겨진 카테고리 계산
+  useEffect(() => {
+    let isResizing = false
+    let rafId: number | null = null
+    
+    const checkMobileAndCalculateVisibleCategories = () => {
+      const mobile = window.innerWidth < 768
+      setIsMobile(mobile)
+      
+      if (mobile) {
+        const maxVisibleCategories = 3
+        
+        if (sortedCategories.length <= maxVisibleCategories) {
+          setVisibleCategories(sortedCategories)
+          setHiddenCategories([])
+        } else {
+          const visible = sortedCategories.slice(0, maxVisibleCategories)
+          const hidden = sortedCategories.slice(maxVisibleCategories)
+          setVisibleCategories(visible)
+          setHiddenCategories(hidden)
+        }
+      } else {
+        setVisibleCategories(sortedCategories)
         setHiddenCategories([])
         setMobileDropdownOpen(false)
       }
     }
-    applyVisibility()
-  }, [categories])
-
-  useEffect(() => {
-    const onResize = () => {
-      const mobile = window.innerWidth < 768
-      if (!mobile) setMobileDropdownOpen(false)
-      const maxVisible = 3
-      if (mobile) {
-        if (categories.length <= maxVisible) {
-          setVisibleCategories(categories)
-          setHiddenCategories([])
-        } else {
-          setVisibleCategories(categories.slice(0, maxVisible))
-          setHiddenCategories(categories.slice(maxVisible))
+    
+    checkMobileAndCalculateVisibleCategories()
+    
+    // requestAnimationFrame을 사용한 최적화된 리사이즈 핸들러
+    const optimizedResize = () => {
+      if (!isResizing) {
+        isResizing = true
+        
+        if (rafId) {
+          cancelAnimationFrame(rafId)
         }
-      } else {
-        setVisibleCategories(categories)
-        setHiddenCategories([])
+        
+        rafId = requestAnimationFrame(() => {
+          checkMobileAndCalculateVisibleCategories()
+          isResizing = false
+          rafId = null
+        })
       }
     }
-    window.addEventListener('resize', onResize, { passive: true })
-    return () => window.removeEventListener('resize', onResize)
-  }, [categories])
+    
+    window.addEventListener('resize', optimizedResize, { passive: true })
+    
+    return () => {
+      if (rafId) {
+        cancelAnimationFrame(rafId)
+      }
+      window.removeEventListener('resize', optimizedResize)
+    }
+  }, [sortedCategories])
 
   // 외부 클릭 시 닫기
   const handleOutsideClick = useCallback((event: MouseEvent) => {
@@ -198,141 +223,151 @@ export default function CategoryFilter({
     }
   }, [isMobile, bottomSheetCategory])
 
-  // 호버 시작 처리 - BoardNavigationClient와 동일한 패턴
-  const handleMouseEnter = (categoryId: number, element: HTMLElement) => {
-    if (isMobile) return
-    clearTimers()
-    
-    const category = categories.find(cat => cat.id === categoryId)
-    if (category?.subcategories && category.subcategories.length > 0) {
-      requestAnimationFrame(() => {
-        const rawLeft = (element as HTMLElement).offsetLeft || 0
-        const containerWidth = containerRef.current?.clientWidth || window.innerWidth
-        const padding = 8
-        const estimatedMenuWidth = 600 // matches max-w of panel
-        const maxLeft = Math.max(0, containerWidth - estimatedMenuWidth - padding)
-        const clampedLeft = Math.max(padding, Math.min(rawLeft, maxLeft))
-        setMenuPosition({ left: clampedLeft })
-        setHoveredCategory(categoryId)
-      })
+  // 마우스가 메뉴 영역을 벗어날 때 지연 시간 후 닫기
+  const handleMenuClose = useCallback(() => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current)
     }
-  }
-
-  // 호버 종료 처리
-  const handleMouseLeave = () => {
-    if (isMobile) return
-    clearTimers()
     
-    leaveTimeoutRef.current = setTimeout(() => {
-      setHoveredCategory(null)
-    }, 250)
-  }
+    requestAnimationFrame(() => {
+      closeTimeoutRef.current = setTimeout(() => {
+        setHoveredCategory(null)
+        closeTimeoutRef.current = null
+      }, 250)
+    })
+  }, [])
+  
+  // 마우스가 메뉴 영역으로 들어오면 닫기 타이머 취소
+  const handleMenuEnter = useCallback((categoryId: number) => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current)
+      closeTimeoutRef.current = null
+    }
+    if (hoveredCategory !== categoryId) {
+      setHoveredCategory(categoryId)
+    }
+  }, [hoveredCategory])
 
-  // 메뉴에 마우스 진입/이탈 (HoverMenu 스타일)
-  // 현재 상단 패널은 nav 내부에 붙어 있어 트리거와의 이탈만 처리
-
-  // 드롭다운 닫기
-  const closeDropdown = () => {
-    clearTimers()
-    setHoveredCategory(null)
-  }
-
-  const hoveredCategoryData = hoveredCategory ? categories.find(cat => cat.id === hoveredCategory) : null
-  const bottomSheetCategoryData = bottomSheetCategory ? categories.find(cat => cat.id === bottomSheetCategory) : null
-
-  // 데스크탑: 패널 실제 너비 기반으로 좌측 위치 보정 (오버플로 방지)
-  useEffect(() => {
-    if (isMobile || !hoveredCategory) return
-    const clampLeft = () => {
-      if (!menuRef.current || !containerRef.current) return
-      const containerWidth = containerRef.current.clientWidth
-      const menuWidth = menuRef.current.offsetWidth
-      const padding = 8
-      const maxLeft = Math.max(0, containerWidth - menuWidth - padding)
-      const clampedLeft = Math.max(padding, Math.min(menuPosition.left, maxLeft))
-      if (clampedLeft !== menuPosition.left) {
-        setMenuPosition({ left: clampedLeft })
+  // 모바일에서 하위 메뉴 클릭 처리
+  const handleMobileSubmenuClick = useCallback((categoryId: number) => (e: React.MouseEvent) => {
+    if (isMobile) {
+      const category = sortedCategories.find(cat => cat.id === categoryId)
+      if (category?.subcategories && category.subcategories.length > 0) {
+        e.preventDefault()
+        
+        // 이미 열린 메뉴를 다시 클릭하면 닫기
+        if (bottomSheetCategory === categoryId) {
+          setBottomSheetCategory(null)
+          return
+        }
+        
+        setBottomSheetCategory(categoryId)
       }
     }
-    clampLeft()
-    window.addEventListener('resize', clampLeft, { passive: true })
-    return () => window.removeEventListener('resize', clampLeft)
-  }, [hoveredCategory, isMobile, menuPosition.left])
+  }, [isMobile, sortedCategories, bottomSheetCategory])
+
+  // 모바일 드롭다운 토글
+  const toggleMobileDropdown = useCallback(() => {
+    setMobileDropdownOpen(!mobileDropdownOpen)
+  }, [mobileDropdownOpen])
+
+  const hoveredCategoryData = hoveredCategory ? sortedCategories.find(cat => cat.id === hoveredCategory) : null
+  const bottomSheetCategoryData = bottomSheetCategory ? sortedCategories.find(cat => cat.id === bottomSheetCategory) : null
+
+  // 메뉴 위치 설정 - 호버된 카테고리가 바뀔 때만 실행
+  useEffect(() => {
+    if (!hoveredCategory || !menuItemsRef.current[hoveredCategory]) return
+    
+    requestAnimationFrame(() => {
+      const menuItem = menuItemsRef.current[hoveredCategory]
+      if (menuItem) {
+        const parentLeft = menuItem.offsetLeft
+        setMenuPosition({ left: parentLeft })
+      }
+    })
+  }, [hoveredCategory])
 
   return (
     <div>
       {/* HoverMenu 스타일에 맞춘 탭 바 */}
       <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 rounded-lg mb-4">
-        <div className="h-12 px-4 relative flex items-center" ref={containerRef}>
-          <nav className="flex items-center gap-1 flex-1" ref={navRef}>
-            {/* 좌측: 카테고리 탭 */}
-            <button
-              onClick={() => {
-                setActiveCategory('all')
-                updateUrlCategory('all')
-              }}
-              className={`h-8 px-3 text-sm font-medium whitespace-nowrap rounded-md flex items-center gap-1 transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
-                activeCategory === 'all'
-                  ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-              }`}
-            >
-              전체
-            </button>
-            {visibleCategories.map(category => (
-              <div
-                key={category.id}
-                className="relative"
-                ref={(el) => { menuItemsRef.current[category.id] = el }}
-                onMouseEnter={(e) => {
-                  if (isMobile) return
-                  handleMouseEnter(category.id, e.currentTarget)
+        <div className="px-4 py-2.5 relative" ref={containerRef}>
+          {/* 네비게이션 바 */}
+          <nav className="flex items-center justify-between gap-1" ref={navRef}>
+            {/* 카테고리 목록 */}
+            <div className="flex items-center gap-1 flex-1 overflow-x-auto">
+              {/* 전체 버튼 */}
+              <button
+                onClick={() => {
+                  setActiveCategory('all')
+                  updateUrlCategory('all')
                 }}
-                onMouseLeave={handleMouseLeave}
+                className={`px-2 py-1 text-xs sm:text-sm whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 ${
+                  activeCategory === 'all' ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
+                }`}
               >
-                <button
-                  onClick={() => {
-                    if (isMobile && category.subcategories && category.subcategories.length > 0) {
-                      setBottomSheetCategory(category.id)
-                    } else {
-                      const id = category.id.toString()
-                      setActiveCategory(id)
-                      updateUrlCategory(id)
-                    }
-                  }}
-                  className={`h-8 px-3 text-sm font-medium whitespace-nowrap rounded-md flex items-center gap-1 transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
-                    activeCategory === category.id.toString()
-                      ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-                  }`}
-                >
-                  {category.name}
-                  {category.subcategories && category.subcategories.length > 0 && (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-3 w-3 ml-1"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  )}
-                </button>
-              </div>
-            ))}
+                전체
+              </button>
 
+              {/* 보이는 카테고리들 */}
+              {visibleCategories.map((category) => (
+                <div
+                  key={category.id}
+                  className="relative"
+                  ref={(el) => {
+                    menuItemsRef.current[category.id] = el
+                  }}
+                  onMouseEnter={() => !isMobile && handleMenuEnter(category.id)}
+                  onMouseLeave={(e) => {
+                    if (isMobile) return
+                    
+                    // dropdown 영역으로 진입하지 않으면 닫기
+                    const relatedTarget = e.relatedTarget as Node
+                    if (
+                      menuRef.current && 
+                      (menuRef.current.contains(relatedTarget) || menuRef.current === relatedTarget)
+                    ) {
+                      return
+                    }
+                    
+                    handleMenuClose()
+                  }}
+                >
+                  <button
+                    onClick={handleMobileSubmenuClick(category.id)}
+                    className={`px-2 py-1 text-xs sm:text-sm whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 ${
+                      activeCategory === category.id.toString()
+                        ? 'bg-[#EAEAEA] dark:bg-[#333333]'
+                        : ''
+                    }`}
+                  >
+                    {category.name}
+                    {category.subcategories && category.subcategories.length > 0 && (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-3 w-3"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* 드롭다운 버튼 (숨겨진 카테고리가 있을 때만) */}
             {hiddenCategories.length > 0 && (
               <button
-                onClick={() => setMobileDropdownOpen(prev => !prev)}
-                className="h-8 flex items-center justify-center px-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                aria-label="더보기"
-                aria-expanded={mobileDropdownOpen}
+                onClick={toggleMobileDropdown}
+                className="flex items-center justify-center px-2 py-1 text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md transition-colors flex-shrink-0"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -356,39 +391,43 @@ export default function CategoryFilter({
 
           {/* 숨겨진 카테고리들을 위한 드롭다운 메뉴 */}
           {mobileDropdownOpen && hiddenCategories.length > 0 && (
-            <div className="mt-2 pt-2 border-t border-black/5 dark:border-white/10">
+            <div className="mt-2 pt-2 border-t border-black/7 dark:border-white/10">
               <div className="flex flex-wrap gap-1">
                 {hiddenCategories.map((category) => (
                   <div
                     key={category.id}
                     className="relative"
-                    ref={(el) => { menuItemsRef.current[category.id] = el }}
-                    onMouseEnter={(e) => {
-                      if (isMobile) return
-                      handleMouseEnter(category.id, e.currentTarget)
+                    ref={(el) => {
+                      menuItemsRef.current[category.id] = el
                     }}
-                    onMouseLeave={handleMouseLeave}
+                    onMouseEnter={() => !isMobile && handleMenuEnter(category.id)}
+                    onMouseLeave={(e) => {
+                      if (isMobile) return
+                      
+                      const relatedTarget = e.relatedTarget as Node
+                      if (
+                        menuRef.current && 
+                        (menuRef.current.contains(relatedTarget) || menuRef.current === relatedTarget)
+                      ) {
+                        return
+                      }
+                      
+                      handleMenuClose()
+                    }}
                   >
                     <button
-                      onClick={() => {
-                        if (category.subcategories && category.subcategories.length > 0) {
-                          setBottomSheetCategory(category.id)
-                        } else {
-                          const id = category.id.toString()
-                          setActiveCategory(id)
-                          updateUrlCategory(id)
-                        }
-                        setMobileDropdownOpen(false)
-                      }}
-                      className={`h-8 px-3 text-sm font-medium whitespace-nowrap rounded-md flex items-center gap-1 transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
-                        activeCategory === category.id.toString() ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]' : 'text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
+                      onClick={handleMobileSubmenuClick(category.id)}
+                      className={`px-2 py-1 text-xs sm:text-sm whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 ${
+                        activeCategory === category.id.toString()
+                          ? 'bg-[#EAEAEA] dark:bg-[#333333]'
+                          : ''
                       }`}
                     >
                       {category.name}
                       {category.subcategories && category.subcategories.length > 0 && (
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          className="h-3 w-3 ml-1"
+                          className="h-3 w-3"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -407,50 +446,52 @@ export default function CategoryFilter({
               </div>
             </div>
           )}
-
-          {/* 데스크톱: HoverMenu 스타일 패널 */}
+          
+          {/* 하위 메뉴 (호버 메뉴) - 데스크톱 */}
           {!isMobile && hoveredCategory && hoveredCategoryData && hoveredCategoryData.subcategories && hoveredCategoryData.subcategories.length > 0 && (
             <div
               ref={menuRef}
-              onMouseEnter={() => clearTimers()}
-              onMouseLeave={handleMouseLeave}
+              onMouseEnter={() => handleMenuEnter(hoveredCategory)}
+              onMouseLeave={() => handleMenuClose()}
               className="absolute bg-white dark:bg-[#1D1D1D] shadow-lg border border-black/7 dark:border-0 z-40 top-[100%] -mt-1 overflow-hidden"
               style={{ 
                 left: `${menuPosition.left}px`, 
-                marginTop: '-7px',
+                marginTop: '-7px', 
                 borderRadius: '0.5rem',
-                minWidth: '300px',
-                maxWidth: '600px'
+                minWidth: `${Math.min((hoveredCategoryData.subcategories ?? []).length, 5) * 100}px`,
+                maxWidth: '700px'
               }}
             >
-              {/* 3개씩 한 줄 구성 */}
-              <div className="grid gap-0">
-                {Array.from({ length: Math.ceil(((hoveredCategoryData.subcategories ?? []).length) / 3) }, (_, rowIndex) => (
-                  <div key={rowIndex} className="flex gap-0">
-                    {(hoveredCategoryData.subcategories ?? [])
-                      .slice(rowIndex * 3, rowIndex * 3 + 3)
-                      .sort((a, b) => a.name.localeCompare(b.name))
-                      .map((sub) => (
-            <button
-              key={sub.id}
-              onClick={() => {
-                const id = sub.id.toString()
-                setActiveCategory(id)
-                updateUrlCategory(id)
-                closeDropdown()
-              }}
-                          className={`flex-1 px-4 py-2.5 text-sm text-center whitespace-nowrap overflow-hidden text-ellipsis transition-colors text-gray-900 dark:text-[#F0F0F0] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
-                            activeCategory === sub.id.toString() 
-                              ? 'bg-[#EAEAEA] dark:bg-[#333333]' 
-                              : 'bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-                          }`}
-                          title={sub.name}
-                        >
-                          {sub.name}
-                        </button>
-                      ))}
-                  </div>
-                ))}
+              {/* 하위 카테고리 그리드 */}
+              <div className={`grid grid-cols-${Math.min((hoveredCategoryData.subcategories ?? []).length, 5)} gap-0`}>
+                {(hoveredCategoryData.subcategories ?? [])
+                  .sort((a, b) => {
+                    if (a.display_order !== undefined && b.display_order !== undefined) {
+                      if (a.display_order !== b.display_order) {
+                        return a.display_order - b.display_order
+                      }
+                    }
+                    return a.name.localeCompare(b.name)
+                  })
+                  .map((sub) => (
+                    <button
+                      key={sub.id}
+                      onClick={() => {
+                        const id = sub.id.toString()
+                        setActiveCategory(id)
+                        updateUrlCategory(id)
+                        setHoveredCategory(null)
+                      }}
+                      className={`px-2 py-2 text-[10px] sm:text-xs text-center transition-colors text-gray-900 dark:text-[#F0F0F0] whitespace-nowrap overflow-hidden text-ellipsis ${
+                        activeCategory === sub.id.toString()
+                          ? 'bg-[#EAEAEA] dark:bg-[#333333]'
+                          : 'bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
+                      }`}
+                      title={sub.name}
+                    >
+                      {sub.name}
+                    </button>
+                  ))}
               </div>
             </div>
           )}
@@ -467,7 +508,7 @@ export default function CategoryFilter({
       {/* 데스크톱 드롭다운 제거: HoverMenu 스타일 상단 패널로 대체됨 */}
 
       {/* 모바일: 바텀시트 - 하위 카테고리 */}
-      {isMobile && bottomSheetCategory && bottomSheetCategoryData && ReactDOM.createPortal(
+      {isMobile && bottomSheetCategory && bottomSheetCategoryData && bottomSheetCategoryData.subcategories && bottomSheetCategoryData.subcategories.length > 0 && ReactDOM.createPortal(
         <>
           {/* 오버레이 */}
           <div 
@@ -475,15 +516,15 @@ export default function CategoryFilter({
             onClick={() => setBottomSheetCategory(null)}
           />
           {/* 바텀시트 */}
-          <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#1D1D1D] rounded-t-lg z-50" ref={bottomSheetRef}>
+          <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#1D1D1D] rounded-t-lg z-50 animate-slide-up" ref={bottomSheetRef}>
             {/* 헤더 */}
             <div className="flex justify-between items-center px-4 py-2.5 border-b border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
-              <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+              <h3 className="text-xs sm:text-sm text-gray-900 dark:text-[#F0F0F0]">
                 {bottomSheetCategoryData.name}
               </h3>
               <button
                 onClick={() => setBottomSheetCategory(null)}
-                className="p-1 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors text-gray-700 dark:text-gray-300 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="p-1 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors text-gray-700 dark:text-gray-300"
                 aria-label="닫기"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -502,28 +543,37 @@ export default function CategoryFilter({
                     updateUrlCategory(id)
                     setBottomSheetCategory(null)
                   }}
-                  className="w-full text-left px-3 py-2 text-sm bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md text-gray-900 dark:text-[#F0F0F0] transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                  className="w-full text-left px-3 py-2 text-xs sm:text-sm bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md text-gray-900 dark:text-[#F0F0F0] block transition-colors"
                 >
                   {bottomSheetCategoryData.name} 전체 보기
                 </button>
-                {bottomSheetCategoryData.subcategories?.map((sub) => (
-                  <button
-                    key={sub.id}
-                    onClick={() => {
-                      const id = sub.id.toString()
-                      setActiveCategory(id)
-                      updateUrlCategory(id)
-                      setBottomSheetCategory(null)
-                    }}
-                    className={`w-full text-left px-3 py-2 text-sm rounded-md text-gray-900 dark:text-[#F0F0F0] transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
-                      activeCategory === sub.id.toString()
-                        ? 'bg-[#EAEAEA] dark:bg-[#333333]'
-                        : 'bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-              }`}
-            >
-              {sub.name}
-            </button>
-          ))}
+                {bottomSheetCategoryData.subcategories
+                  .sort((a, b) => {
+                    if (a.display_order !== undefined && b.display_order !== undefined) {
+                      if (a.display_order !== b.display_order) {
+                        return a.display_order - b.display_order
+                      }
+                    }
+                    return a.name.localeCompare(b.name)
+                  })
+                  .map((sub) => (
+                    <button
+                      key={sub.id}
+                      onClick={() => {
+                        const id = sub.id.toString()
+                        setActiveCategory(id)
+                        updateUrlCategory(id)
+                        setBottomSheetCategory(null)
+                      }}
+                      className={`w-full text-left px-3 py-2 text-xs sm:text-sm rounded-md text-gray-900 dark:text-[#F0F0F0] block transition-colors ${
+                        activeCategory === sub.id.toString()
+                          ? 'bg-[#EAEAEA] dark:bg-[#333333]'
+                          : 'bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
+                      }`}
+                    >
+                      {sub.name}
+                    </button>
+                  ))}
               </div>
             </div>
           </div>

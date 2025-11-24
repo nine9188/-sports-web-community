@@ -3,7 +3,6 @@ import { createClient } from '@/shared/api/supabaseServer';
 import { getCategoryItemsPaginated, getUserItems, getUserPoints, getShopCategories } from '@/domains/shop/actions/actions';
 import CategoryFilter from '@/domains/shop/components/CategoryFilter';
 import ShopPagination from '@/domains/shop/components/ShopPagination';
-import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 
 // 동적 렌더링 강제 설정 추가
 export const dynamic = 'force-dynamic';
@@ -94,9 +93,9 @@ export default async function ShopPage({ searchParams }: Props) {
 
   return (
     <div className="container mx-auto">
-      <Container className="mb-4">
-        <ContainerHeader>
-          <ContainerTitle>포인트 상점</ContainerTitle>
+      <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 md:rounded-lg overflow-hidden mb-4">
+        <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center md:rounded-t-lg">
+          <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">포인트 상점</h3>
           {user && !error && (
             <div className="ml-auto flex items-center gap-2 text-sm">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-700 dark:text-gray-300">
@@ -106,8 +105,8 @@ export default async function ShopPage({ searchParams }: Props) {
               <span className="font-semibold tabular-nums text-gray-900 dark:text-[#F0F0F0]">{userPoints} P</span>
             </div>
           )}
-        </ContainerHeader>
-      </Container>
+        </div>
+      </div>
 
       {/* 상세형 상점: 탭 + 로그인 안내(하위) + 그리드 */}
       <CategoryFilter 
