@@ -51,21 +51,21 @@ export default async function MyCommentsPage({
     
     return (
       <div className="space-y-4">
-        <div className="mb-4 bg-white rounded-lg border overflow-hidden p-4">
-          <h2 className="text-xl font-semibold mb-1">내가 쓴 댓글</h2>
-          <p className="text-gray-500 text-sm">
+        <div className="mb-4 bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden p-4">
+          <h2 className="text-xl font-semibold mb-1 text-gray-900 dark:text-[#F0F0F0]">내가 쓴 댓글</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
             내가 작성한 댓글 목록을 확인할 수 있습니다.
           </p>
         </div>
-        
-        <Suspense fallback={<div className="flex justify-center py-8"><div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div></div>}>
+
+        <Suspense fallback={<div className="flex justify-center py-8"><div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-slate-800 dark:border-white"></div></div>}>
           <MyCommentsContent
             key={`my-comments-content-page-${page}`}
             initialComments={data || []}
             initialTotalCount={totalCount || 0}
           />
         </Suspense>
-        
+
         <PostsPagination
           currentPage={page}
           totalPages={totalPages}
@@ -75,7 +75,7 @@ export default async function MyCommentsPage({
   } catch (error) {
     console.error('페이지 로딩 중 오류 발생:', error);
     return (
-      <div className="p-4 text-center text-red-500">
+      <div className="p-4 text-center text-red-500 dark:text-red-400">
         댓글을 불러오는 중 오류가 발생했습니다. 다시 시도해 주세요.
       </div>
     );

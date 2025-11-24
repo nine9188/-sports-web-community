@@ -22,23 +22,23 @@ export default async function PointsPage() {
     
     return (
       <div className="space-y-4">
-        <div className="mb-4 bg-white rounded-lg border overflow-hidden p-4">
-          <h2 className="text-xl font-semibold mb-1">포인트 관리</h2>
-          <p className="text-gray-500 text-sm mb-4">
+        <div className="mb-4 bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden p-4">
+          <h2 className="text-xl font-semibold mb-1 text-gray-900 dark:text-[#F0F0F0]">포인트 관리</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
             보유한 포인트와 사용 내역을 확인합니다.
           </p>
           {/* 포인트 정보 컴포넌트 */}
           <PointsForm userPoints={userPoints} />
         </div>
-        
+
         {/* 포인트 내역 컴포넌트 */}
         <PointHistory pointHistory={pointHistory} />
-        
+
         {/* 디버깅 정보 (개발 환경에서만 표시) */}
         {process.env.NODE_ENV === 'development' && pointHistoryResult.error && (
-          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-            <h3 className="text-sm font-medium text-yellow-800">디버깅 정보</h3>
-            <p className="text-sm mt-1 text-yellow-700">{pointHistoryResult.error}</p>
+          <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-md">
+            <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">디버깅 정보</h3>
+            <p className="text-sm mt-1 text-yellow-700 dark:text-yellow-300">{pointHistoryResult.error}</p>
           </div>
         )}
       </div>

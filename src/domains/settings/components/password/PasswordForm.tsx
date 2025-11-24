@@ -121,18 +121,18 @@ export default function PasswordForm({ isOAuthAccount = false }: PasswordFormPro
         {/* 봇 검증 (소셜 로그인 계정은 표시하지 않음) */}
         {!isOAuthAccount && (
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">봇 검증</label>
+            <label className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">봇 검증</label>
             <TurnstileWidget
               siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY as string}
               onToken={setCaptchaToken}
               className="w-full"
             />
-            <p className="text-xs text-gray-500">보안을 위해 자동 입력 방지를 확인합니다.</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">보안을 위해 자동 입력 방지를 확인합니다.</p>
           </div>
         )}
         {/* 현재 비밀번호 필드 */}
         <div className="space-y-1">
-          <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
             현재 비밀번호
           </label>
           <div className="relative">
@@ -143,24 +143,24 @@ export default function PasswordForm({ isOAuthAccount = false }: PasswordFormPro
               value={formData.currentPassword}
               onChange={handleChange}
               disabled={isLoading || isOAuthAccount}
-              className={`w-full px-3 py-2 border ${errors.currentPassword ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed`}
+              className={`w-full px-3 py-2 border ${errors.currentPassword ? 'border-red-500 dark:border-red-500' : 'border-black/7 dark:border-white/10'} rounded-md shadow-sm bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] disabled:bg-[#EAEAEA] disabled:dark:bg-[#333333] disabled:cursor-not-allowed transition-colors`}
             />
-            <button 
-              type="button" 
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-500" 
+            <button
+              type="button"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors"
               onClick={() => setShowCurrentPassword(!showCurrentPassword)}
             >
               {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
           {errors.currentPassword && (
-            <p className="text-xs text-red-500">{errors.currentPassword}</p>
+            <p className="text-xs text-red-500 dark:text-red-400">{errors.currentPassword}</p>
           )}
         </div>
 
         {/* 새 비밀번호 필드 */}
         <div className="space-y-1">
-          <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="newPassword" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
             새 비밀번호
           </label>
           <div className="relative">
@@ -171,26 +171,26 @@ export default function PasswordForm({ isOAuthAccount = false }: PasswordFormPro
               value={formData.newPassword}
               onChange={handleChange}
               disabled={isLoading || isOAuthAccount}
-              className={`w-full px-3 py-2 border ${errors.newPassword ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed`}
+              className={`w-full px-3 py-2 border ${errors.newPassword ? 'border-red-500 dark:border-red-500' : 'border-black/7 dark:border-white/10'} rounded-md shadow-sm bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] disabled:bg-[#EAEAEA] disabled:dark:bg-[#333333] disabled:cursor-not-allowed transition-colors`}
             />
-            <button 
-              type="button" 
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-500" 
+            <button
+              type="button"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors"
               onClick={() => setShowNewPassword(!showNewPassword)}
             >
               {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
           {errors.newPassword ? (
-            <p className="text-xs text-red-500">{errors.newPassword}</p>
+            <p className="text-xs text-red-500 dark:text-red-400">{errors.newPassword}</p>
           ) : (
-            <p className="text-xs text-gray-500">비밀번호는 최소 8자 이상이어야 합니다.</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">비밀번호는 최소 8자 이상이어야 합니다.</p>
           )}
         </div>
 
         {/* 비밀번호 확인 필드 */}
         <div className="space-y-1">
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
             비밀번호 확인
           </label>
           <div className="relative">
@@ -201,18 +201,18 @@ export default function PasswordForm({ isOAuthAccount = false }: PasswordFormPro
               value={formData.confirmPassword}
               onChange={handleChange}
               disabled={isLoading || isOAuthAccount}
-              className={`w-full px-3 py-2 border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed`}
+              className={`w-full px-3 py-2 border ${errors.confirmPassword ? 'border-red-500 dark:border-red-500' : 'border-black/7 dark:border-white/10'} rounded-md shadow-sm bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] disabled:bg-[#EAEAEA] disabled:dark:bg-[#333333] disabled:cursor-not-allowed transition-colors`}
             />
-            <button 
-              type="button" 
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-500" 
+            <button
+              type="button"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             >
               {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
           {errors.confirmPassword && (
-            <p className="text-xs text-red-500">{errors.confirmPassword}</p>
+            <p className="text-xs text-red-500 dark:text-red-400">{errors.confirmPassword}</p>
           )}
         </div>
 
@@ -221,7 +221,7 @@ export default function PasswordForm({ isOAuthAccount = false }: PasswordFormPro
           <button
             type="submit"
             disabled={isLoading || isOAuthAccount}
-            className="px-4 py-2 bg-slate-800 text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center rounded-md"
+            className="px-4 py-2 bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed flex items-center rounded-md transition-colors"
             >
             {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             비밀번호 변경

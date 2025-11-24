@@ -37,11 +37,11 @@ export default async function ProfileSettingsPage() {
       {isSuspended && suspensionInfo && (
         <SuspensionNotice suspensionInfo={suspensionInfo} />
       )}
-      
-      <div className="bg-white rounded-lg border overflow-hidden p-4">
-        <h2 className="text-xl font-semibold mb-4">기본 정보</h2>
-        
-        <ProfileForm 
+
+      <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden p-4">
+        <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-[#F0F0F0]">기본 정보</h2>
+
+        <ProfileForm
           initialData={{
             id: profileData.id,
             nickname: profileData.nickname,

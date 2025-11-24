@@ -39,7 +39,7 @@ export default async function LeaguePage({ params }: LeaguePageProps) {
 
   return (
     <div className="min-h-screen">
-      <div className="space-y-0">
+      <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
         <LeagueHeader league={league} />
         <LeagueTeamsList teams={teams} leagueId={league.id} />
       </div>

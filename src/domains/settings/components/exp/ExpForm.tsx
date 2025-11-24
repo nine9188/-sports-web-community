@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { 
+import {
   getExpForNextLevel,
   calculateLevelProgress,
   getExpToNextLevel
@@ -26,59 +26,59 @@ interface ExpFormProps {
  * 경험치 정보 표시 컴포넌트
  * 사용자의 현재 레벨, 경험치 및 다음 레벨까지 필요한 경험치를 보여줍니다.
  */
-export default function ExpForm({ 
-  userExp = 0, 
+export default function ExpForm({
+  userExp = 0,
   userLevel = 1
 }: ExpFormProps) {
   // 현재 레벨의 진행률 계산
   const progressPercentage = calculateLevelProgress(userLevel, userExp);
-  
+
   // 다음 레벨까지 남은 경험치 계산
   const remainingExp = getExpToNextLevel(userLevel, userExp);
-  
+
   // 현재 레벨의 총 필요 경험치 계산
   const nextLevelTotalExp = getExpForNextLevel(userLevel);
-  
+
   // 현재 레벨에서 획득한 경험치 계산
   const currentLevelExp = userExp - (userLevel > 1 ? getExpForNextLevel(userLevel - 1) : 0);
-  
+
   return (
     <div>
       {/* 현재 레벨 및 경험치 정보 */}
-      <div className="bg-white">
+      <div className="bg-white dark:bg-[#1D1D1D]">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-          <h3 className="text-base font-medium text-gray-900 mb-2 md:mb-0">현재 레벨</h3>
-          
+          <h3 className="text-base font-medium text-gray-900 dark:text-[#F0F0F0] mb-2 md:mb-0">현재 레벨</h3>
+
           <div className="flex items-center">
-            <div className="text-lg font-bold mr-2">
+            <div className="text-lg font-bold mr-2 text-gray-900 dark:text-[#F0F0F0]">
               {userLevel}
             </div>
-            <span className="text-gray-600">Lv.</span>
+            <span className="text-gray-700 dark:text-gray-300">Lv.</span>
           </div>
         </div>
-        
-        <div className="border-t pt-4">
+
+        <div className="border-t border-black/5 dark:border-white/10 pt-4">
           <div className="mb-2 flex justify-between">
-            <span className="text-sm text-gray-600">경험치</span>
-            <span className="text-sm font-medium">
+            <span className="text-sm text-gray-700 dark:text-gray-300">경험치</span>
+            <span className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
               {currentLevelExp.toLocaleString()} / {nextLevelTotalExp.toLocaleString()} XP
             </span>
           </div>
-          
+
           {/* 경험치 진행 바 */}
-          <div className="w-full bg-gray-200 rounded-full h-2.5">
-            <div 
-              className="bg-blue-600 h-2.5 rounded-full" 
+          <div className="w-full bg-[#F5F5F5] dark:bg-[#262626] rounded-full h-2.5">
+            <div
+              className="bg-slate-800 dark:bg-white h-2.5 rounded-full transition-all"
               style={{ width: `${progressPercentage}%` }}
             ></div>
           </div>
-          
-          <p className="mt-2 text-sm text-gray-600">
+
+          <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
             다음 레벨까지 {remainingExp.toLocaleString()} XP 필요
           </p>
         </div>
       </div>
-      
+
       {/* 경험치 획득 안내 */}
       <ExpRewardsGuide />
     </div>
@@ -92,34 +92,34 @@ export default function ExpForm({
 function ExpRewardsGuide() {
   return (
     <div className="p-0 mt-4">
-      <h3 className="font-medium text-gray-900 mb-2">경험치 획득 방법</h3>
-      <p className="text-gray-600 text-sm mb-4">
+      <h3 className="font-medium text-gray-900 dark:text-[#F0F0F0] mb-2">경험치 획득 방법</h3>
+      <p className="text-gray-700 dark:text-gray-300 text-sm mb-4">
         다양한 활동을 통해 경험치를 획득하고 레벨을 올릴 수 있습니다.
       </p>
-      <div className="bg-gray-50 rounded-lg p-4">
-        <ul className="space-y-2 text-sm text-gray-600">
-          <RewardItem 
-            type="POST_CREATION" 
-            description="게시글 작성" 
+      <div className="bg-[#F5F5F5] dark:bg-[#262626] rounded-lg p-4">
+        <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+          <RewardItem
+            type="POST_CREATION"
+            description="게시글 작성"
             dailyLimit={5}
           />
-          <RewardItem 
-            type="COMMENT_CREATION" 
-            description="댓글 작성" 
+          <RewardItem
+            type="COMMENT_CREATION"
+            description="댓글 작성"
             dailyLimit={5}
           />
-          <RewardItem 
-            type="RECEIVED_LIKE" 
-            description="추천 받기" 
+          <RewardItem
+            type="RECEIVED_LIKE"
+            description="추천 받기"
             dailyLimit={10}
           />
-          <RewardItem 
-            type="DAILY_LOGIN" 
-            description="하루 최초 로그인" 
+          <RewardItem
+            type="DAILY_LOGIN"
+            description="하루 최초 로그인"
           />
-          <RewardItem 
-            type="CONSECUTIVE_LOGIN" 
-            description="연속 출석 보너스" 
+          <RewardItem
+            type="CONSECUTIVE_LOGIN"
+            description="연속 출석 보너스"
           />
         </ul>
       </div>
@@ -139,14 +139,14 @@ interface RewardItemProps {
  */
 function RewardItem({ type, description, dailyLimit }: RewardItemProps) {
   const reward = ACTIVITY_REWARDS[type];
-  
+
   return (
     <li className="flex items-start">
-      <span className="mr-2 text-blue-600">•</span>
+      <span className="mr-2 text-gray-900 dark:text-[#F0F0F0]">•</span>
       <span>
         {description} - {reward.exp} XP
         {dailyLimit && ` (하루 ${reward.exp * dailyLimit}XP 제한)`}
       </span>
     </li>
   );
-} 
+}

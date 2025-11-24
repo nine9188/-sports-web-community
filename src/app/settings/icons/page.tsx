@@ -18,8 +18,8 @@ export const revalidate = 0;
 function IconSettingsLoading() {
   return (
     <div className="animate-pulse">
-      <div className="h-6 w-1/3 bg-gray-200 rounded mb-3"></div>
-      <div className="h-40 bg-gray-200 rounded mb-4"></div>
+      <div className="h-6 w-1/3 bg-[#F5F5F5] dark:bg-[#262626] rounded mb-3"></div>
+      <div className="h-40 bg-[#F5F5F5] dark:bg-[#262626] rounded mb-4"></div>
     </div>
   );
 }
@@ -51,9 +51,9 @@ export default async function IconSettingsPage() {
   
   return (
     <div className="space-y-4">
-      <div className="bg-white rounded-lg border overflow-hidden p-4">
-        <h2 className="text-xl font-semibold mb-1">아이콘 설정</h2>
-        <p className="text-gray-500 text-sm">
+      <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden p-4">
+        <h2 className="text-xl font-semibold mb-1 text-gray-900 dark:text-[#F0F0F0]">아이콘 설정</h2>
+        <p className="text-gray-500 dark:text-gray-400 text-sm">
           프로필에 표시될 아이콘을 선택하고 관리합니다.
         </p>
       </div>

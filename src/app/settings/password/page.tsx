@@ -19,12 +19,12 @@ export default async function PasswordSettingsPage() {
   const isOAuthAccount: boolean = !!provider && provider !== 'email';
   
   return (
-    <div className="bg-white rounded-lg border overflow-hidden p-4">
-      <h2 className="text-xl font-semibold mb-1">비밀번호 변경</h2>
-      <p className="text-gray-500 text-sm mb-4">
+    <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden p-4">
+      <h2 className="text-xl font-semibold mb-1 text-gray-900 dark:text-[#F0F0F0]">비밀번호 변경</h2>
+      <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
         계정 보안을 위해 주기적으로 비밀번호를 변경하는 것이 좋습니다.
       </p>
-      <div className="bg-blue-50 border border-blue-200 rounded p-3 text-blue-700 text-sm mb-3">
+      <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded p-3 text-blue-700 dark:text-blue-200 text-sm mb-3">
         <p className="font-medium">안전한 비밀번호로 내정보를 보호하세요</p>
         <ul className="list-disc pl-5 mt-2 space-y-1">
           <li>다른 아이디/사이트에서 사용한 적 없는 비밀번호</li>
@@ -33,7 +33,7 @@ export default async function PasswordSettingsPage() {
       </div>
 
       {isOAuthAccount && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded p-4 text-yellow-800 mb-4">
+        <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded p-4 text-yellow-800 dark:text-yellow-200 mb-4">
           <p className="text-sm font-medium">소셜 로그인(OAuth) 계정입니다.</p>
           <p className="text-sm mt-1">
             소셜 로그인으로 가입한 계정은 비밀번호를 변경할 수 없습니다.

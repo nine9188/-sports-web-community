@@ -13,12 +13,12 @@ interface LeagueTeamsListProps {
 export default function LeagueTeamsList({ teams, isLoading = false, leagueId }: LeagueTeamsListProps) {
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-[#1D1D1D] rounded-lg pt-4">
+      <div className="p-4">
         <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-3 gap-2 lg:gap-4">
           {Array.from({ length: 8 }).map((_, index) => (
             <div
               key={index}
-              className="bg-[#F5F5F5] dark:bg-[#262626] rounded-lg p-2 lg:p-4 animate-pulse border border-black/7 dark:border-0"
+              className="bg-[#F5F5F5] dark:bg-[#262626] rounded-lg p-2 lg:p-4 animate-pulse"
             >
               <div className="flex flex-col items-center space-y-1 lg:space-y-3">
                 <div className="w-8 h-8 lg:w-16 lg:h-16 bg-[#EAEAEA] dark:bg-[#333333] rounded-full"></div>
@@ -37,7 +37,7 @@ export default function LeagueTeamsList({ teams, isLoading = false, leagueId }: 
 
   if (teams.length === 0) {
     return (
-      <div className="bg-white dark:bg-[#1D1D1D] rounded-lg pt-4">
+      <div className="p-4">
         <div className="text-center py-12">
           <div className="text-gray-500 dark:text-gray-400 text-lg mb-2">
             소속 팀 정보를 찾을 수 없습니다
@@ -75,13 +75,12 @@ export default function LeagueTeamsList({ teams, isLoading = false, leagueId }: 
   }
 
   return (
-    <div className="bg-white dark:bg-[#1D1D1D] rounded-lg pt-4">
-
+    <div className="p-4">
       {isMLS ? (
         <div className="space-y-6">
           {/* WEST */}
           <div>
-            <div className="flex items-center mb-2">
+            <div className="flex items-center mb-3">
               <h3 className="text-base font-semibold text-gray-900 dark:text-[#F0F0F0]">서부 컨퍼런스 (WEST)</h3>
             </div>
             <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-3 gap-2 lg:gap-4">
@@ -93,7 +92,7 @@ export default function LeagueTeamsList({ teams, isLoading = false, leagueId }: 
 
           {/* EAST */}
           <div>
-            <div className="flex items-center mb-2">
+            <div className="flex items-center mb-3">
               <h3 className="text-base font-semibold text-gray-900 dark:text-[#F0F0F0]">동부 컨퍼런스 (EAST)</h3>
             </div>
             <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-3 gap-2 lg:gap-4">
@@ -112,4 +111,4 @@ export default function LeagueTeamsList({ teams, isLoading = false, leagueId }: 
       )}
     </div>
   );
-} 
+}

@@ -23,23 +23,23 @@ export default function MyCommentsContent({
     <div className="space-y-4">
       {/* 에러 메시지 */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-200 px-4 py-3 rounded">
           {error}
         </div>
       )}
-      
+
       {/* 댓글 목록 */}
       <MyCommentList
         comments={comments}
         totalCount={totalCount}
       />
-      
+
       {/* 로딩 상태 표시 */}
       {isLoading && (
-        <div className="text-center py-2 text-gray-500 text-sm">
+        <div className="text-center py-2 text-gray-500 dark:text-gray-400 text-sm">
           댓글을 불러오는 중...
         </div>
       )}
     </div>
   );
-} 
+}

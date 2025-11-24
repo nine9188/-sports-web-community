@@ -18,33 +18,33 @@ export default function LevelList({ currentLevel }: LevelListProps) {
 
   // 레벨 목록 표시는 50레벨까지
   const totalLevels = Math.min(50, LEVEL_EXP_REQUIREMENTS.length);
-  
+
   // 아코디언 토글 함수
   const toggleAccordion = () => {
     setIsOpen(!isOpen);
   };
 
   return (
-    <div className="bg-white rounded-lg border overflow-hidden">
-      <AccordionHeader 
+    <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
+      <AccordionHeader
         isOpen={isOpen}
         onClick={toggleAccordion}
       />
-      
+
       {isOpen && (
         <div className="p-4">
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
             레벨별 필요 경험치와 아이콘을 확인하세요. 현재 레벨: <strong>Lv.{currentLevel}</strong>
           </p>
-          
-          <MobileLevelGrid 
-            totalLevels={totalLevels} 
-            currentLevel={currentLevel} 
+
+          <MobileLevelGrid
+            totalLevels={totalLevels}
+            currentLevel={currentLevel}
           />
-          
-          <DesktopLevelGrid 
-            totalLevels={totalLevels} 
-            currentLevel={currentLevel} 
+
+          <DesktopLevelGrid
+            totalLevels={totalLevels}
+            currentLevel={currentLevel}
           />
         </div>
       )}
@@ -62,15 +62,15 @@ interface AccordionHeaderProps {
  */
 function AccordionHeader({ isOpen, onClick }: AccordionHeaderProps) {
   return (
-    <button 
+    <button
       onClick={onClick}
-      className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 border-b focus:outline-none"
+      className="w-full px-4 py-3 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
     >
-      <h3 className="text-base font-medium text-gray-900">레벨 및 아이콘 목록</h3>
+      <h3 className="text-base font-medium text-gray-900 dark:text-[#F0F0F0]">레벨 및 아이콘 목록</h3>
       {isOpen ? (
-        <ChevronUp className="h-5 w-5 text-gray-500" />
+        <ChevronUp className="h-5 w-5 text-gray-500 dark:text-gray-400" />
       ) : (
-        <ChevronDown className="h-5 w-5 text-gray-500" />
+        <ChevronDown className="h-5 w-5 text-gray-500 dark:text-gray-400" />
       )}
     </button>
   );
@@ -90,7 +90,7 @@ function MobileLevelGrid({ totalLevels, currentLevel }: LevelGridProps) {
       {Array.from({ length: totalLevels }, (_, i) => {
         const level = i + 1;
         return (
-          <LevelItem 
+          <LevelItem
             key={level}
             level={level}
             isCurrentLevel={level === currentLevel}
@@ -111,7 +111,7 @@ function DesktopLevelGrid({ totalLevels, currentLevel }: LevelGridProps) {
       {Array.from({ length: totalLevels }, (_, i) => {
         const level = i + 1;
         return (
-          <LevelItem 
+          <LevelItem
             key={level}
             level={level}
             isCurrentLevel={level === currentLevel}
@@ -135,16 +135,16 @@ interface LevelItemProps {
 function LevelItem({ level, isCurrentLevel, size }: LevelItemProps) {
   const expRequired = LEVEL_EXP_REQUIREMENTS[level - 1];
   const iconUrl = getLevelIconUrl(level);
-  
+
   const iconSize = size === 'small' ? 24 : 40;
   const iconSizeClass = size === 'small' ? 'w-6 h-6' : 'w-10 h-10';
   const fontSizeClass = size === 'small' ? 'text-xs' : 'text-sm';
-  
+
   return (
-    <div 
+    <div
       className={`
         flex flex-col items-center p-2 rounded-lg border text-center
-        ${isCurrentLevel ? 'bg-blue-50 border-blue-200' : 'bg-white'}
+        ${isCurrentLevel ? 'bg-[#EAEAEA] dark:bg-[#333333] border-black/15 dark:border-white/20' : 'bg-white dark:bg-[#1D1D1D] border-black/7 dark:border-white/10'}
       `}
     >
       <div className={`relative ${iconSizeClass} mb-1`}>
@@ -156,10 +156,10 @@ function LevelItem({ level, isCurrentLevel, size }: LevelItemProps) {
           className="object-contain"
         />
       </div>
-      <div className={`font-medium ${fontSizeClass}`}>Lv.{level}</div>
-      <div className="text-xs text-gray-500">
+      <div className={`font-medium ${fontSizeClass} text-gray-900 dark:text-[#F0F0F0]`}>Lv.{level}</div>
+      <div className="text-xs text-gray-500 dark:text-gray-400">
         {expRequired.toLocaleString()}~
       </div>
     </div>
   );
-} 
+}

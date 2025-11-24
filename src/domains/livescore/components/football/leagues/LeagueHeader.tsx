@@ -17,10 +17,10 @@ export default function LeagueHeader({ league }: LeagueHeaderProps) {
   const displayName = leagueInfo?.nameKo || league.name;
 
   return (
-    <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 p-3 mb-4">
+    <div className="p-4 border-b border-black/5 dark:border-white/10">
       {/* 상단 네비게이션 */}
       <div className="flex items-center justify-between mb-3">
-        <Link 
+        <Link
           href="/livescore/football/leagues"
           className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors group px-2 py-1 rounded"
         >
@@ -32,7 +32,7 @@ export default function LeagueHeader({ league }: LeagueHeaderProps) {
       </div>
 
       {/* 구분선 */}
-      <div className="border-t border-gray-200 dark:border-gray-700 mb-3"></div>
+      <div className="border-t border-black/5 dark:border-white/10 mb-3"></div>
 
       <div className="flex items-center space-x-3">
         {/* 리그 로고 */}
@@ -86,4 +86,4 @@ export default function LeagueHeader({ league }: LeagueHeaderProps) {
       </div>
     </div>
   );
-} 
+}
