@@ -26,6 +26,11 @@ export async function generatePageMetadata(pagePath: string): Promise<Metadata> 
 
     // OG 이미지 절대 URL
     const ogImage = `${seoSettings.site_url}${seoSettings.og_image}`;
+    
+    // 이미지 확장자로 MIME 타입 결정 (Safari는 JPG 선호하지만 PNG도 지원)
+    const imageType = seoSettings.og_image.endsWith('.jpg') || seoSettings.og_image.endsWith('.jpeg')
+      ? 'image/jpeg'
+      : 'image/png';
 
     return {
       title,
@@ -36,7 +41,13 @@ export async function generatePageMetadata(pagePath: string): Promise<Metadata> 
         description,
         url: `${seoSettings.site_url}${pagePath}`,
         siteName: seoSettings.site_name,
-        images: [{ url: ogImage, width: 1200, height: 630 }],
+        images: [{ 
+          url: ogImage, 
+          width: 1200, 
+          height: 630,
+          alt: title,
+          type: imageType,
+        }],
         locale: 'ko_KR',
         type: 'website',
       },
@@ -46,6 +57,16 @@ export async function generatePageMetadata(pagePath: string): Promise<Metadata> 
         description,
         images: [ogImage],
         creator: seoSettings.twitter_handle,
+      },
+      // Safari 제안 카드 최적화를 위한 추가 메타태그 (DCInside 방식)
+      other: {
+        'og:image:secure_url': ogImage,
+        'og:image:type': imageType,
+        'og:image:width': '1200',
+        'og:image:height': '630',
+        'og:image:alt': title,
+        'twitter:image': ogImage,
+        'image': ogImage, // Safari가 우선 인식하는 비공식 태그
       },
     };
   } catch (error) {

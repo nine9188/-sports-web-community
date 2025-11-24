@@ -207,6 +207,21 @@ export default async function BrandingPage() {
               <li>• <strong>절대 URL:</strong> OG 이미지는 반드시 절대 경로로 설정 (예: https://yourdomain.com/og-image.png)</li>
               <li>• <strong>HTTPS 필수:</strong> 대부분의 SNS는 HTTPS URL만 지원합니다</li>
               <li>• <strong>파일 크기:</strong> OG 이미지는 8MB 이하 권장 (일부 플랫폼 제한)</li>
+              <li>• <strong>Safari 최적화:</strong> JPG 형식 권장 (PNG도 가능하지만 JPG를 우선 인식)</li>
+            </ul>
+          </div>
+
+          <div className="mt-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+            <h4 className="text-sm font-semibold text-purple-900 mb-2">🍎 Safari 제안 카드 최적화</h4>
+            <p className="text-xs text-purple-800 mb-2">
+              Safari는 일반적으로 화면 스냅샷을 제안 카드에 사용하지만, 
+              특정 메타태그를 추가하면 OG 이미지를 우선 표시합니다.
+            </p>
+            <ul className="space-y-1 text-xs text-purple-800">
+              <li>• <strong>확장 OG 태그:</strong> og:image:secure_url, twitter:image 등 자동 추가됨</li>
+              <li>• <strong>이미지 형식:</strong> JPG 권장 (Safari가 JPG를 더 선호)</li>
+              <li>• <strong>캐시 관리:</strong> Safari는 제안 카드를 강하게 캐싱하므로 변경 후 시간 필요</li>
+              <li>• <strong>테스트:</strong> Safari에서 URL 공유 → 제안 카드 확인</li>
             </ul>
           </div>
         </div>
