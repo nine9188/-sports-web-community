@@ -17,6 +17,7 @@ import ReactDOM from 'react-dom';
 import LiveScoreModal from './livescoremodal';
 import UserProfileClient from './UserProfileClient';
 import { MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
+import { NotificationBell } from '@/domains/notifications/components';
 
 type HeaderClientProps = {
   onProfileClick: () => void;
@@ -446,7 +447,12 @@ export default function HeaderClient({
   // 인증 상태에 따른 렌더링 결정
   const renderAuthState = useMemo(() => {
     return (
-      <div className="flex space-x-2">
+      <div className="flex items-center space-x-1">
+        {/* 알림 벨 - 로그인한 사용자에게만 표시 */}
+        {userData && (
+          <NotificationBell userId={userData.id} />
+        )}
+        
         {/* PC 버전(md 이상): UserProfileClient 사용 */}
         <UserProfileClient userData={userData || null} />
         

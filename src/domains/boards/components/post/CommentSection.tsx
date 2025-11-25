@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { 
   createComment,
   deleteComment,
@@ -8,6 +8,7 @@ import {
   getComments
 } from "@/domains/boards/actions/comments/index";
 import { CommentType } from "@/domains/boards/types/post/comment";
+import { buildCommentTree } from "@/domains/boards/utils/comment/commentUtils";
 import Comment from "./Comment";
 import { Button } from "@/shared/components/ui/button";
 import { createClient } from '@/shared/api/supabase';
@@ -46,6 +47,9 @@ export default function CommentSection({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(propCurrentUserId);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [replyTo, setReplyTo] = useState<string | null>(null);
+  const [replyToNickname, setReplyToNickname] = useState<string | null>(null);
+  const replyFormRef = useRef<HTMLTextAreaElement>(null);
   const supabase = useMemo(() => createClient(), []);
 
   // 댓글 데이터 업데이트 함수 최적화 - 사용자 액션 정보 포함
@@ -123,6 +127,26 @@ export default function CommentSection({
     };
   }, [postId, supabase, debouncedUpdateComments]);
 
+  // 답글 시작 핸들러
+  const handleReply = useCallback((parentId: string) => {
+    const parentComment = comments.find(c => c.id === parentId);
+    setReplyTo(parentId);
+    setReplyToNickname(parentComment?.profiles?.nickname || '알 수 없음');
+    setContent('');
+    // 답글 폼으로 스크롤 및 포커스
+    setTimeout(() => {
+      replyFormRef.current?.focus();
+      replyFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  }, [comments]);
+
+  // 답글 취소 핸들러
+  const cancelReply = useCallback(() => {
+    setReplyTo(null);
+    setReplyToNickname(null);
+    setContent('');
+  }, []);
+
   // 댓글 제출 핸들러
   const handleCommentSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,7 +159,8 @@ export default function CommentSection({
     try {
       const result = await createComment({
         postId,
-        content: content.trim()
+        content: content.trim(),
+        parentId: replyTo
       });
       
       if (!result.success) {
@@ -155,6 +180,8 @@ export default function CommentSection({
         const newComment = { ...result.comment, userAction: null } as CommentType;
         setComments(prevComments => [...prevComments, newComment]);
         setContent('');
+        setReplyTo(null);
+        setReplyToNickname(null);
         setErrorMessage(null);
       }
       
@@ -165,7 +192,7 @@ export default function CommentSection({
     } finally {
       setIsSubmitting(false);
     }
-  }, [postId, content]);
+  }, [postId, content, replyTo]);
   
   // 댓글 수정 핸들러
   const handleUpdate = useCallback(async (commentId: string, updatedContent: string) => {
@@ -227,16 +254,22 @@ export default function CommentSection({
     setContent(e.target.value);
   }, []);
 
-  // 댓글 목록 메모이제이션
+  // 댓글 계층 구조로 변환
+  const treeComments = useMemo(() => {
+    return buildCommentTree(comments);
+  }, [comments]);
+
+  // 댓글 목록 메모이제이션 (계층 구조 렌더링)
   const commentsList = useMemo(() => {
-    return comments.length > 0 ? (
-      comments.map((comment) => (
+    return treeComments.length > 0 ? (
+      treeComments.map((comment) => (
         <Comment
           key={comment.id}
           comment={comment}
           currentUserId={currentUserId} 
           onUpdate={handleUpdate} 
           onDelete={handleDelete}
+          onReply={handleReply}
           isPostOwner={currentUserId === postOwnerId}
         />
       ))
@@ -245,7 +278,7 @@ export default function CommentSection({
         아직 댓글이 없습니다. 첫 댓글을 남겨보세요!
       </div>
     );
-  }, [comments, currentUserId, handleUpdate, handleDelete, postOwnerId]);
+  }, [treeComments, currentUserId, handleUpdate, handleDelete, handleReply, postOwnerId]);
 
   return (
     <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden mb-4">
@@ -268,23 +301,55 @@ export default function CommentSection({
             {errorMessage}
           </div>
         )}
+        
+        {/* 답글 대상 표시 */}
+        {replyTo && replyToNickname && (
+          <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-md flex items-center justify-between">
+            <div className="flex items-center text-sm text-blue-700 dark:text-blue-400">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+              </svg>
+              <span className="font-medium">{replyToNickname}</span>
+              <span className="ml-1">님에게 답글 작성 중</span>
+            </div>
+            <button
+              type="button"
+              onClick={cancelReply}
+              className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+            >
+              취소
+            </button>
+          </div>
+        )}
+        
         <form className="space-y-3" onSubmit={handleCommentSubmit}>
           <textarea
+            ref={replyFormRef}
             className="w-full px-3 py-3 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg text-sm placeholder-gray-500 dark:placeholder-gray-500 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors duration-200 resize-none"
             rows={3}
-            placeholder="댓글을 작성해주세요..."
+            placeholder={replyTo ? "답글을 작성해주세요..." : "댓글을 작성해주세요..."}
             value={content}
             onChange={handleTextareaChange}
             required
             disabled={isSubmitting}
           />
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            {replyTo && (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={cancelReply}
+                disabled={isSubmitting}
+              >
+                취소
+              </Button>
+            )}
             <Button
               type="submit"
               variant="primary"
               disabled={isSubmitting || !content.trim()}
             >
-              {isSubmitting ? '작성 중...' : '댓글 작성'}
+              {isSubmitting ? '작성 중...' : (replyTo ? '답글 작성' : '댓글 작성')}
             </Button>
           </div>
         </form>

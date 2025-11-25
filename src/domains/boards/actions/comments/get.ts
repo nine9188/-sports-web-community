@@ -43,6 +43,7 @@ export async function getComments(postId: string): Promise<CommentsListResponse>
         content: comment.content,
         created_at: comment.created_at,
         updated_at: comment.updated_at,
+        parent_id: comment.parent_id || null,
         likes: comment.likes || 0,
         dislikes: comment.dislikes || 0,
         profiles: comment.profiles,
