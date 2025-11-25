@@ -21,22 +21,28 @@ function LoginContent() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberUsername, setRememberUsername] = useState(false);
+  const [keepLogin, setKeepLogin] = useState(false);
   
   // 유효성 검사 상태
   const [usernameValid, setUsernameValid] = useState(false);
   const [usernameError, setUsernameError] = useState('');
   const [passwordValid, setPasswordValid] = useState(false);
   const [passwordError, setPasswordError] = useState('');
+
+  const { user, setSessionType } = useAuth();
   
-  const { user } = useAuth();
-  
-  // 컴포넌트 마운트 시 저장된 아이디 불러오기
+  // 컴포넌트 마운트 시 저장된 아이디 및 로그인 유지 설정 불러오기
   useEffect(() => {
     const savedUsername = localStorage.getItem('remembered-username');
     if (savedUsername) {
       setUsername(savedUsername);
       setRememberUsername(true);
       validateUsername(savedUsername);
+    }
+
+    const savedKeepLogin = localStorage.getItem('keep_login');
+    if (savedKeepLogin === 'true') {
+      setKeepLogin(true);
     }
   }, []);
   
@@ -112,6 +118,10 @@ function LoginContent() {
       } else {
         localStorage.removeItem('remembered-username');
       }
+
+      // 로그인 유지 설정 저장 및 세션 타입 설정
+      localStorage.setItem('keep_login', keepLogin ? 'true' : 'false');
+      setSessionType(keepLogin);
 
       // 서버 액션을 통한 로그인 (아이디로)
       const result = await signIn(username, password);
@@ -229,17 +239,32 @@ function LoginContent() {
           )}
         </div>
         
-        <div className="flex items-center">
-          <input
-            id="remember-username"
-            type="checkbox"
-            checked={rememberUsername}
-            onChange={() => setRememberUsername(!rememberUsername)}
-            className="h-4 w-4 text-slate-600 border-gray-300 dark:border-white/10 rounded focus:ring-slate-500"
-          />
-          <label htmlFor="remember-username" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-            아이디 기억하기
-          </label>
+        <div className="space-y-2">
+          <div className="flex items-center">
+            <input
+              id="remember-username"
+              type="checkbox"
+              checked={rememberUsername}
+              onChange={() => setRememberUsername(!rememberUsername)}
+              className="h-4 w-4 text-slate-600 border-gray-300 dark:border-white/10 rounded focus:ring-slate-500"
+            />
+            <label htmlFor="remember-username" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+              아이디 기억하기
+            </label>
+          </div>
+
+          <div className="flex items-center">
+            <input
+              id="keep-login"
+              type="checkbox"
+              checked={keepLogin}
+              onChange={() => setKeepLogin(!keepLogin)}
+              className="h-4 w-4 text-slate-600 border-gray-300 dark:border-white/10 rounded focus:ring-slate-500"
+            />
+            <label htmlFor="keep-login" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+              로그인 유지 (30일)
+            </label>
+          </div>
         </div>
 
         <button

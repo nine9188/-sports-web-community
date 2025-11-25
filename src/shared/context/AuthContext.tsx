@@ -6,10 +6,25 @@ import { Session, User } from '@supabase/supabase-js';
 import { updateUserData, refreshSession, signOut } from '@/domains/auth/actions';
 import { toast } from 'react-toastify';
 
-// 실제 운영용 설정 - 30분 후 자동 로그아웃
-const SESSION_REFRESH_INTERVAL = 5 * 60 * 1000; // 5분마다 갱신
-const AUTO_LOGOUT_TIME = 30 * 60 * 1000; // 30분 후 자동 로그아웃
-const SESSION_WARNING_TIME = 5 * 60 * 1000; // 5분 전 경고
+// 세션 관리 설정
+const SESSION_REFRESH_INTERVAL = 15 * 60 * 1000; // 15분마다 갱신
+
+// 로그인 유지 옵션에 따른 설정
+const SESSION_TYPES = {
+  NORMAL: {
+    // 일반 로그인 (로그인 유지 체크 X) - 24시간 후 자동 로그아웃
+    AUTO_LOGOUT_TIME: 24 * 60 * 60 * 1000, // 24시간
+    SESSION_WARNING_TIME: 30 * 60 * 1000, // 30분 전 경고
+    STORAGE_KEY: 'session_type_normal'
+  },
+  EXTENDED: {
+    // 로그인 유지 (로그인 유지 체크 O) - 30일, idle timeout 없음
+    AUTO_LOGOUT_TIME: 30 * 24 * 60 * 60 * 1000, // 30일
+    SESSION_WARNING_TIME: 24 * 60 * 60 * 1000, // 1일 전 경고
+    STORAGE_KEY: 'session_type_extended'
+  }
+};
+
 // 기본 JWT 만료 시간 (1시간) - fallback용
 const DEFAULT_JWT_EXPIRY = 60 * 60;
 
@@ -22,6 +37,7 @@ interface AuthContextType {
   logoutUser: () => Promise<void>;
   extendSession: () => void;
   timeUntilLogout: number | null;
+  setSessionType: (isExtended: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -33,21 +49,29 @@ const AuthContext = createContext<AuthContextType>({
   logoutUser: async () => {},
   extendSession: () => {},
   timeUntilLogout: null,
+  setSessionType: () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
 
-export function AuthProvider({ 
-  children, 
-  initialSession = null 
-}: { 
+export function AuthProvider({
+  children,
+  initialSession = null
+}: {
   children: React.ReactNode;
   initialSession?: Session | null;
 }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(initialSession);
   const [isLoading, setIsLoading] = useState(true);
-  
+
+  // 세션 타입 상태 (localStorage에서 읽어옴)
+  const [isExtendedSession, setIsExtendedSession] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('keep_login') === 'true';
+    }
+    return false;
+  });
 
   const [timeUntilLogout, setTimeUntilLogout] = useState<number | null>(null);
   
@@ -96,6 +120,36 @@ export function AuthProvider({
     updateLastActivity();
     toast.info('세션이 연장되었습니다.');
   }, [updateLastActivity]);
+
+  // 세션 타입 설정 함수
+  const setSessionType = useCallback((isExtended: boolean) => {
+    setIsExtendedSession(isExtended);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('keep_login', isExtended ? 'true' : 'false');
+    }
+
+    // 세션 타입 변경 시 타이머 재설정
+    if (user) {
+      // 기존 타이머 정리
+      if (autoLogoutTimerRef.current) {
+        clearTimeout(autoLogoutTimerRef.current);
+      }
+      if (warningTimerRef.current) {
+        clearTimeout(warningTimerRef.current);
+      }
+      if (countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current);
+      }
+
+      setTimeUntilLogout(null);
+      warningShownRef.current = false;
+
+      // 새로운 세션 타입으로 타이머 재설정
+      if (setupAutoLogoutTimerRef.current) {
+        setupAutoLogoutTimerRef.current();
+      }
+    }
+  }, [user]);
   
   // 로그아웃 함수
   const logoutUser = useCallback(async () => {
@@ -225,31 +279,40 @@ export function AuthProvider({
   
   // 자동 로그아웃 타이머 설정
   const setupAutoLogoutTimer = useCallback(() => {
-    // 경고 타이머 (25분 후)
+    // 현재 세션 타입에 따른 설정 선택
+    const sessionConfig = isExtendedSession ? SESSION_TYPES.EXTENDED : SESSION_TYPES.NORMAL;
+    const { AUTO_LOGOUT_TIME, SESSION_WARNING_TIME } = sessionConfig;
+
+    // 경고 타이머
     warningTimerRef.current = setTimeout(() => {
       if (!warningShownRef.current) {
         warningShownRef.current = true;
-        
+
         // 카운트다운 시작
-        let countdown = SESSION_WARNING_TIME / 1000; // 5분 = 300초
+        let countdown = SESSION_WARNING_TIME / 1000;
         setTimeUntilLogout(countdown);
-        
+
         countdownTimerRef.current = setInterval(() => {
           countdown -= 1;
           setTimeUntilLogout(countdown);
-          
+
           if (countdown <= 0) {
             if (countdownTimerRef.current) {
               clearInterval(countdownTimerRef.current);
             }
           }
         }, 1000);
-        
+
+        // 세션 타입에 따른 경고 메시지
+        const warningMessage = isExtendedSession
+          ? '1일 후 자동 로그아웃됩니다.'
+          : '30분 후 자동 로그아웃됩니다.';
+
         // 세션 경고 토스트 (프로그레스 바와 함께)
         toast.info(
           <div>
-            <p>5분 후 자동 로그아웃됩니다.</p>
-            <button 
+            <p>{warningMessage}</p>
+            <button
               onClick={() => {
                 extendSessionRef.current?.();
                 toast.dismiss('session-warning'); // 세션 연장 시 토스트 닫기
@@ -261,7 +324,7 @@ export function AuthProvider({
           </div>,
           {
             toastId: 'session-warning', // 고유 ID 설정
-            autoClose: SESSION_WARNING_TIME, // 5분 후 자동 닫기
+            autoClose: SESSION_WARNING_TIME, // 설정된 경고 시간 후 자동 닫기
             closeOnClick: false,
             draggable: false,
             hideProgressBar: false, // 프로그레스 바 표시
@@ -271,8 +334,8 @@ export function AuthProvider({
         );
       }
     }, AUTO_LOGOUT_TIME - SESSION_WARNING_TIME);
-    
-    // 자동 로그아웃 타이머 (30분 후)
+
+    // 자동 로그아웃 타이머
     autoLogoutTimerRef.current = setTimeout(async () => {
       try {
         // 세션 경고 토스트 닫기
@@ -313,7 +376,7 @@ export function AuthProvider({
         console.error('자동 로그아웃 중 오류:', error);
       }
     }, AUTO_LOGOUT_TIME);
-  }, []);
+  }, [isExtendedSession]);
   
   // ref에 함수들 할당
   useEffect(() => {
@@ -620,6 +683,7 @@ export function AuthProvider({
     logoutUser,
     extendSession,
     timeUntilLogout,
+    setSessionType,
   };
 
   return (

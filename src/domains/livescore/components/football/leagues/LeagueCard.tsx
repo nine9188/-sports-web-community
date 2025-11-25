@@ -38,7 +38,7 @@ export default function LeagueCard({ leagueId, name }: LeagueCardProps) {
   return (
     <Link
       href={`/livescore/football/leagues/${leagueId}`}
-      className="group block bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors p-2 lg:p-3 h-full min-h-[110px] lg:min-h-[140px]"
+      className="group block bg-[#F5F5F5] dark:bg-[#262626] rounded-lg hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] p-2 lg:p-3 h-full min-h-[110px] lg:min-h-[140px]"
     >
       <div className={`flex flex-col items-center text-center space-y-1 lg:space-y-2 h-full ${hasInfo ? 'justify-between' : 'justify-center'}`}>
         {/* 리그 로고 */}

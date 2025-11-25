@@ -18,10 +18,10 @@ export default function TeamCard({ team }: TeamCardProps) {
   return (
     <Link
       href={`/livescore/football/team/${team.id}`}
-      className={`group block bg-[#F5F5F5] dark:bg-[#262626] rounded-lg transition-colors p-2 lg:p-4 relative ${
+      className={`group block bg-[#F5F5F5] dark:bg-[#262626] rounded-lg transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 p-2 lg:p-4 relative ${
         team.isWinner
-          ? 'ring-2 ring-yellow-400 dark:ring-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'
-          : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
+          ? 'ring-2 ring-yellow-400 dark:ring-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 focus:bg-yellow-50 dark:focus:bg-yellow-900/20'
+          : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333] focus:bg-[#EAEAEA] dark:focus:bg-[#333333]'
       }`}
     >
       {/* 우승 표시 */}

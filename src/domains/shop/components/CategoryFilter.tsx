@@ -86,7 +86,7 @@ export default function CategoryFilter({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
-  const updateUrlCategory = (next: string) => {
+  const updateUrlCategory = useCallback((next: string) => {
     const params = new URLSearchParams(searchParams.toString())
     // 페이지 초기화
     params.delete('page')
@@ -98,7 +98,7 @@ export default function CategoryFilter({
     const query = params.toString()
     const href = query ? `${pathname}?${query}` : pathname
     startTransition(() => router.push(href))
-  }
+  }, [searchParams, pathname, router])
 
   // 초기 설정
   useEffect(() => {
@@ -248,23 +248,28 @@ export default function CategoryFilter({
     }
   }, [hoveredCategory])
 
-  // 모바일에서 하위 메뉴 클릭 처리
-  const handleMobileSubmenuClick = useCallback((categoryId: number) => (e: React.MouseEvent) => {
-    if (isMobile) {
-      const category = sortedCategories.find(cat => cat.id === categoryId)
-      if (category?.subcategories && category.subcategories.length > 0) {
-        e.preventDefault()
-        
-        // 이미 열린 메뉴를 다시 클릭하면 닫기
-        if (bottomSheetCategory === categoryId) {
-          setBottomSheetCategory(null)
-          return
-        }
-        
-        setBottomSheetCategory(categoryId)
+  // 카테고리 클릭 처리
+  const handleCategoryClick = useCallback((categoryId: number) => (e: React.MouseEvent) => {
+    const category = sortedCategories.find(cat => cat.id === categoryId)
+
+    if (isMobile && category?.subcategories && category.subcategories.length > 0) {
+      // 모바일에서 서브카테고리가 있는 경우 바텀시트 열기
+      e.preventDefault()
+
+      // 이미 열린 메뉴를 다시 클릭하면 닫기
+      if (bottomSheetCategory === categoryId) {
+        setBottomSheetCategory(null)
+        return
       }
+
+      setBottomSheetCategory(categoryId)
+    } else {
+      // 서브카테고리가 없거나 데스크톱인 경우 직접 선택
+      const id = categoryId.toString()
+      setActiveCategory(id)
+      updateUrlCategory(id)
     }
-  }, [isMobile, sortedCategories, bottomSheetCategory])
+  }, [isMobile, sortedCategories, bottomSheetCategory, updateUrlCategory])
 
   // 모바일 드롭다운 토글
   const toggleMobileDropdown = useCallback(() => {
@@ -334,7 +339,7 @@ export default function CategoryFilter({
                   }}
                 >
                   <button
-                    onClick={handleMobileSubmenuClick(category.id)}
+                    onClick={handleCategoryClick(category.id)}
                     className={`px-2 py-1 text-xs sm:text-sm whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 ${
                       activeCategory === category.id.toString()
                         ? 'bg-[#EAEAEA] dark:bg-[#333333]'
@@ -416,7 +421,7 @@ export default function CategoryFilter({
                     }}
                   >
                     <button
-                      onClick={handleMobileSubmenuClick(category.id)}
+                      onClick={handleCategoryClick(category.id)}
                       className={`px-2 py-1 text-xs sm:text-sm whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 ${
                         activeCategory === category.id.toString()
                           ? 'bg-[#EAEAEA] dark:bg-[#333333]'

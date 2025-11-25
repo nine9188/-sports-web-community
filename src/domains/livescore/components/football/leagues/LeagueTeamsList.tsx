@@ -3,6 +3,7 @@
 import { LeagueTeam } from '@/domains/livescore/actions/footballApi';
 import TeamCard from './TeamCard';
 import { MLS_TEAMS, MLSConference } from '@/domains/livescore/constants/teams/mls';
+import { ContainerContent } from '@/shared/components/ui';
 
 interface LeagueTeamsListProps {
   teams: LeagueTeam[];
@@ -13,7 +14,7 @@ interface LeagueTeamsListProps {
 export default function LeagueTeamsList({ teams, isLoading = false, leagueId }: LeagueTeamsListProps) {
   if (isLoading) {
     return (
-      <div className="p-4">
+      <ContainerContent>
         <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-3 gap-2 lg:gap-4">
           {Array.from({ length: 8 }).map((_, index) => (
             <div
@@ -31,13 +32,13 @@ export default function LeagueTeamsList({ teams, isLoading = false, leagueId }: 
             </div>
           ))}
         </div>
-      </div>
+      </ContainerContent>
     );
   }
 
   if (teams.length === 0) {
     return (
-      <div className="p-4">
+      <ContainerContent>
         <div className="text-center py-12">
           <div className="text-gray-500 dark:text-gray-400 text-lg mb-2">
             소속 팀 정보를 찾을 수 없습니다
@@ -46,7 +47,7 @@ export default function LeagueTeamsList({ teams, isLoading = false, leagueId }: 
             리그 정보를 다시 확인해주세요
           </div>
         </div>
-      </div>
+      </ContainerContent>
     );
   }
 
@@ -75,7 +76,7 @@ export default function LeagueTeamsList({ teams, isLoading = false, leagueId }: 
   }
 
   return (
-    <div className="p-4">
+    <ContainerContent>
       {isMLS ? (
         <div className="space-y-6">
           {/* WEST */}
@@ -109,6 +110,6 @@ export default function LeagueTeamsList({ teams, isLoading = false, leagueId }: 
           ))}
         </div>
       )}
-    </div>
+    </ContainerContent>
   );
 }

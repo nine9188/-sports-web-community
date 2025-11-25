@@ -1,6 +1,6 @@
 import { MAJOR_LEAGUE_IDS, LEAGUE_NAMES_MAP } from '@/domains/livescore/constants/league-mappings';
 import { LeagueCard } from '@/domains/livescore/components/football/leagues';
-import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
+import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 
 // 리그 카테고리별 분류
 const LEAGUE_CATEGORIES = {
@@ -55,18 +55,7 @@ const LEAGUE_CATEGORIES = {
   ],
 };
 
-// 모든 리그 ID를 수집
-const getAllLeagueIds = () => {
-  const allIds: number[] = [];
-  Object.values(LEAGUE_CATEGORIES).forEach(ids => {
-    allIds.push(...ids);
-  });
-  return allIds;
-};
-
 export default async function LeaguesPage() {
-  const allLeagueIds = getAllLeagueIds();
-
   return (
     <div className="min-h-screen w-full">
       <div className="container mx-auto w-full">
@@ -75,48 +64,29 @@ export default async function LeaguesPage() {
           <ContainerHeader>
             <ContainerTitle>축구 리그</ContainerTitle>
           </ContainerHeader>
-          {/* 통계 정보 */}
-          <div className="bg-[#F5F5F5] dark:bg-[#262626] p-2 md:rounded-b-lg">
-            <div className="grid grid-cols-3 gap-2">
-              <div className="bg-white dark:bg-[#1D1D1D] rounded-sm p-2 border border-black/7 dark:border-0 flex items-center justify-center space-x-1">
-                <span className="text-base lg:text-xl font-bold text-gray-900 dark:text-[#F0F0F0]">{allLeagueIds.length}</span>
-                <span className="text-[10px] lg:text-xs text-gray-700 dark:text-gray-300 font-medium">리그</span>
-              </div>
-              
-              <div className="bg-white dark:bg-[#1D1D1D] rounded-sm p-2 border border-black/7 dark:border-0 flex items-center justify-center space-x-1">
-                <span className="text-base lg:text-xl font-bold text-gray-900 dark:text-[#F0F0F0]">{Object.keys(LEAGUE_CATEGORIES).length}</span>
-                <span className="text-[10px] lg:text-xs text-gray-700 dark:text-gray-300 font-medium">카테고리</span>
-              </div>
-              
-              <div className="bg-white dark:bg-[#1D1D1D] rounded-sm p-2 border border-black/7 dark:border-0 flex items-center justify-center space-x-1">
-                <span className="text-base lg:text-xl font-bold text-gray-900 dark:text-[#F0F0F0]">30+</span>
-                <span className="text-[10px] lg:text-xs text-gray-700 dark:text-gray-300 font-medium">국가</span>
-              </div>
-            </div>
-          </div>
         </Container>
 
         <div className="space-y-4 mt-4">
           {Object.entries(LEAGUE_CATEGORIES).map(([category, leagueIds]) => (
-            <div key={category}>
+            <Container key={category}>
               {/* 카테고리 헤더 */}
-              <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center md:rounded-lg border border-black/7 dark:border-0">
-                <h2 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
-                  {category}
-                </h2>
-              </div>
-              
+              <ContainerHeader>
+                <ContainerTitle>{category}</ContainerTitle>
+              </ContainerHeader>
+
               {/* 리그 카드 그리드 */}
-              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 lg:gap-3 mt-3">
-                {leagueIds.map((leagueId) => (
-                  <LeagueCard
-                    key={leagueId}
-                    leagueId={leagueId}
-                    name={LEAGUE_NAMES_MAP[leagueId]}
-                  />
-                ))}
-              </div>
-            </div>
+              <ContainerContent>
+                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 lg:gap-3">
+                  {leagueIds.map((leagueId) => (
+                    <LeagueCard
+                      key={leagueId}
+                      leagueId={leagueId}
+                      name={LEAGUE_NAMES_MAP[leagueId]}
+                    />
+                  ))}
+                </div>
+              </ContainerContent>
+            </Container>
           ))}
         </div>
       </div>
