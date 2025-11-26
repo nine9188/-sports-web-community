@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { createAdminClient } from '@/shared/api/supabaseServer';
 import { CreateNotificationParams, NotificationActionResponse } from '../types/notification';
 
 /**
@@ -9,15 +9,16 @@ import { CreateNotificationParams, NotificationActionResponse } from '../types/n
  */
 export async function createNotification(params: CreateNotificationParams): Promise<NotificationActionResponse> {
   const { userId, actorId, type, title, message, link, metadata } = params;
-  
+
   try {
     // 자기 자신에게 알림 보내지 않음
     if (actorId && userId === actorId) {
       return { success: true }; // 에러 아님, 그냥 알림 안 보냄
     }
-    
-    const supabase = await createClient();
-    
+
+    // Admin Client 사용 (RLS 우회하여 시스템 알림 생성)
+    const supabase = createAdminClient();
+
     const { data, error } = await supabase
       .from('notifications')
       .insert({
@@ -31,18 +32,18 @@ export async function createNotification(params: CreateNotificationParams): Prom
       })
       .select()
       .single();
-    
+
     if (error) {
       console.error('알림 생성 오류:', error);
       return { success: false, error: error.message };
     }
-    
+
     return { success: true, notification: data };
   } catch (error) {
     console.error('알림 생성 중 예외:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : '알림 생성 중 오류가 발생했습니다.' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '알림 생성 중 오류가 발생했습니다.'
     };
   }
 }
@@ -119,4 +120,6 @@ export async function createReplyNotification({
     }
   });
 }
+
+
 

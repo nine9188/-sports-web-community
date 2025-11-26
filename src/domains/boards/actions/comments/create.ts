@@ -125,11 +125,11 @@ export async function createComment({
         `)
         .eq('id', postId)
         .single();
-      
+
       if (postData) {
         const boardSlug = (postData.board as { slug: string } | null)?.slug || '';
         const actorNickname = newComment.profiles?.nickname || '알 수 없음';
-        
+
         if (parentId && parentCommentOwnerId) {
           // 대댓글인 경우: 부모 댓글 작성자에게 알림
           await createReplyNotification({

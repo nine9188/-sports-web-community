@@ -45,3 +45,5 @@ export function getTotalCommentCount(comments: CommentType[]): number {
   return comments.length;
 }
 
+
+
