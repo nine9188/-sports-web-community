@@ -3,6 +3,7 @@
 import { createClient } from '@/shared/api/supabaseServer';
 import { rewardUserActivity, getActivityTypeValues } from '@/shared/actions/activity-actions';
 import { CommentLikeResponse } from './utils';
+import { createCommentLikeNotification } from '@/domains/notifications/actions';
 
 /**
  * 댓글 좋아요
@@ -155,24 +156,56 @@ export async function likeComment(commentId: string): Promise<CommentLikeRespons
     // 업데이트된 댓글 정보 조회
     const { data: updatedComment, error: selectError } = await supabase
       .from('comments')
-      .select('likes, dislikes, user_id')
+      .select(`
+        likes,
+        dislikes,
+        user_id,
+        content,
+        post:posts(
+          post_number,
+          board:boards(slug)
+        )
+      `)
       .eq('id', commentId)
       .single();
-    
+
     if (selectError) {
       return {
         success: false,
         error: `댓글 조회 오류: ${selectError.message}`
       };
     }
-    
-    // 좋아요가 새로 추가된 경우 댓글 작성자에게 보상 지급
+
+    // 좋아요가 새로 추가된 경우 댓글 작성자에게 알림 및 보상 지급
     if (newUserAction === 'like' && updatedComment.user_id && updatedComment.user_id !== user.id) {
       try {
+        // 현재 사용자 닉네임 조회
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('nickname')
+          .eq('id', user.id)
+          .single();
+
+        const post = updatedComment.post as { post_number: number; board: { slug: string } } | null;
+
+        if (profile && post?.board?.slug) {
+          // 좋아요 알림 생성
+          await createCommentLikeNotification({
+            commentOwnerId: updatedComment.user_id,
+            actorId: user.id,
+            actorNickname: profile.nickname || '알 수 없음',
+            commentId,
+            commentContent: updatedComment.content,
+            postNumber: post.post_number,
+            boardSlug: post.board.slug
+          });
+        }
+
+        // 보상 지급
         const activityTypes = await getActivityTypeValues();
         await rewardUserActivity(updatedComment.user_id, activityTypes.RECEIVED_LIKE, commentId);
-      } catch (rewardError) {
-        console.error('댓글 추천 받기 보상 지급 오류:', rewardError);
+      } catch (error) {
+        console.error('댓글 좋아요 알림/보상 처리 오류:', error);
       }
     }
     

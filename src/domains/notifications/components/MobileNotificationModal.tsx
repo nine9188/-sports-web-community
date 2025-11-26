@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import ReactDOM from 'react-dom';
 import Link from 'next/link';
 import { X } from 'lucide-react';
 import { Notification } from '../types/notification';
 import NotificationItem from './NotificationItem';
+import { filterOldReadNotifications } from '../utils/filterNotifications';
 
 interface MobileNotificationModalProps {
   isOpen: boolean;
@@ -28,10 +29,16 @@ export default function MobileNotificationModal({
 }: MobileNotificationModalProps) {
   // SSR 보호: 클라이언트 마운트 후에만 포털 사용
   const [isMounted, setIsMounted] = useState(false);
-  
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // 읽은 알림 이틀 후 자동 숨김
+  const visibleNotifications = useMemo(() =>
+    filterOldReadNotifications(notifications),
+    [notifications]
+  );
 
   // 모달 열릴 때 body 스크롤 잠금
   useEffect(() => {
@@ -64,20 +71,20 @@ export default function MobileNotificationModal({
         {/* 헤더 - 고정 */}
         <div className="flex items-center justify-between p-4 border-b border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
           <h2 className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0]">
-            알림 {unreadCount > 0 && <span className="text-blue-500">({unreadCount})</span>}
+            알림 {unreadCount > 0 && <span className="text-gray-500 dark:text-gray-400">({unreadCount})</span>}
           </h2>
           <div className="flex items-center gap-2">
             {unreadCount > 0 && (
               <button
                 onClick={onMarkAllRead}
-                className="text-xs text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 px-2 py-1 transition-colors"
+                className="text-xs text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-2 py-1 rounded transition-colors"
               >
                 전체 읽음
               </button>
             )}
             <button
               onClick={onClose}
-              className="p-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-full transition-colors"
+              className="p-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-full transition-colors outline-none focus:outline-none"
             >
               <X className="h-4 w-4" />
             </button>
@@ -88,11 +95,11 @@ export default function MobileNotificationModal({
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
             <div className="flex items-center justify-center py-16">
-              <div className="w-8 h-8 border-2 border-gray-300 dark:border-gray-600 border-t-blue-500 rounded-full animate-spin" />
+              <div className="w-8 h-8 border-2 border-gray-300 dark:border-gray-600 border-t-gray-900 dark:border-t-[#F0F0F0] rounded-full animate-spin" />
             </div>
-          ) : notifications.length > 0 ? (
-            <div className="divide-y divide-gray-100 dark:divide-white/10">
-              {notifications.map((notification) => (
+          ) : visibleNotifications.length > 0 ? (
+            <div className="divide-y divide-black/5 dark:divide-white/10">
+              {visibleNotifications.map((notification) => (
                 <div key={notification.id} onClick={onClose}>
                   <NotificationItem
                     notification={notification}
@@ -115,12 +122,12 @@ export default function MobileNotificationModal({
         </div>
 
         {/* 푸터 - 전체 보기 링크 */}
-        {notifications.length > 0 && (
-          <div className="border-t border-gray-100 dark:border-white/10 p-4">
+        {visibleNotifications.length > 0 && (
+          <div className="border-t border-black/5 dark:border-white/10 p-4">
             <Link
               href="/notifications"
               onClick={onClose}
-              className="block w-full py-3 text-center text-sm font-medium text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 bg-gray-50 dark:bg-[#252525] hover:bg-gray-100 dark:hover:bg-[#333333] rounded-lg transition-colors"
+              className="block w-full py-3 text-center text-sm font-medium text-gray-900 dark:text-[#F0F0F0] bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-lg transition-colors outline-none focus:outline-none"
             >
               전체 알림 보기
             </Link>
@@ -131,6 +138,7 @@ export default function MobileNotificationModal({
     document.body
   );
 }
+
 
 
 

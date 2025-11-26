@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { Notification } from '../types/notification';
 import NotificationItem from './NotificationItem';
+import { filterOldReadNotifications } from '../utils/filterNotifications';
 
 interface NotificationDropdownProps {
   notifications: Notification[];
@@ -22,17 +23,23 @@ export default function NotificationDropdown({
   onClose,
   isLoading = false
 }: NotificationDropdownProps) {
+  // 읽은 알림 이틀 후 자동 숨김
+  const visibleNotifications = useMemo(() =>
+    filterOldReadNotifications(notifications),
+    [notifications]
+  );
+
   return (
-    <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-[#1D1D1D] rounded-lg shadow-lg border border-black/7 dark:border-white/10 overflow-hidden z-50">
+    <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-[#1D1D1D] rounded-lg shadow-lg border border-black/7 dark:border-0 overflow-hidden z-50">
       {/* 헤더 */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
         <h3 className="font-bold text-sm text-gray-900 dark:text-[#F0F0F0]">
-          알림 {unreadCount > 0 && <span className="text-blue-500">({unreadCount})</span>}
+          알림 {unreadCount > 0 && <span className="text-gray-500 dark:text-gray-400">({unreadCount})</span>}
         </h3>
         {unreadCount > 0 && (
           <button
             onClick={onMarkAllRead}
-            className="text-xs text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+            className="text-xs text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-2 py-1 rounded transition-colors"
           >
             전체 읽음
           </button>
@@ -43,11 +50,11 @@ export default function NotificationDropdown({
       <div className="max-h-96 overflow-y-auto">
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="w-6 h-6 border-2 border-gray-300 dark:border-gray-600 border-t-blue-500 rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-gray-300 dark:border-gray-600 border-t-gray-900 dark:border-t-[#F0F0F0] rounded-full animate-spin" />
           </div>
-        ) : notifications.length > 0 ? (
-          <div className="divide-y divide-gray-100 dark:divide-white/10">
-            {notifications.map((notification) => (
+        ) : visibleNotifications.length > 0 ? (
+          <div className="divide-y divide-black/5 dark:divide-white/10">
+            {visibleNotifications.map((notification) => (
               <NotificationItem
                 key={notification.id}
                 notification={notification}
@@ -66,12 +73,12 @@ export default function NotificationDropdown({
       </div>
 
       {/* 푸터 - 전체 보기 링크 */}
-      {notifications.length > 0 && (
-        <div className="border-t border-gray-100 dark:border-white/10">
+      {visibleNotifications.length > 0 && (
+        <div className="border-t border-black/5 dark:border-white/10">
           <Link
             href="/notifications"
             onClick={onClose}
-            className="block px-4 py-3 text-center text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-gray-50 dark:hover:bg-[#252525] transition-colors"
+            className="block px-4 py-3 text-center text-sm text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
           >
             전체 알림 보기
           </Link>
@@ -80,6 +87,7 @@ export default function NotificationDropdown({
     </div>
   );
 }
+
 
 
 

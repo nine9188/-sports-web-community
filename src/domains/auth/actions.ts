@@ -68,7 +68,7 @@ export async function signIn(username: string, password: string) {
     if (error) {
       // 로그인 실패 시 시도 횟수 증가
       await recordLoginAttempt(username);
-      
+
       // 로그인 실패 로그 기록
       await logAuthEvent(
         'LOGIN_FAILED',
@@ -77,13 +77,26 @@ export async function signIn(username: string, password: string) {
         false,
         { username, reason: 'invalid_password', error: error.message }
       );
-      
+
       return { error: '아이디 또는 비밀번호가 올바르지 않습니다.' }
+    }
+
+    // 로그인 성공 시 세션 확인
+    if (data.session) {
+      console.log('✅ 로그인 성공 - 세션 생성됨:', {
+        userId: data.user?.id,
+        username,
+        sessionExpiry: data.session.expires_at,
+        hasAccessToken: !!data.session.access_token,
+        hasRefreshToken: !!data.session.refresh_token
+      });
+    } else {
+      console.warn('⚠️ 로그인 성공했지만 세션이 없음!');
     }
 
     // 로그인 성공 시 시도 기록 초기화
     await clearLoginAttempts(username);
-    
+
     // 로그인 성공 로그 기록
     await logAuthEvent(
       'LOGIN_SUCCESS',
@@ -92,7 +105,7 @@ export async function signIn(username: string, password: string) {
       true,
       { username, email }
     );
-    
+
     // 다중 로그인 차단 기능은 현재 비활성화됨
 
     revalidatePath('/', 'layout')

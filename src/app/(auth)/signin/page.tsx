@@ -29,7 +29,7 @@ function LoginContent() {
   const [passwordValid, setPasswordValid] = useState(false);
   const [passwordError, setPasswordError] = useState('');
 
-  const { user, setSessionType } = useAuth();
+  const { user } = useAuth();
   
   // 컴포넌트 마운트 시 저장된 아이디 및 로그인 유지 설정 불러오기
   useEffect(() => {
@@ -119,9 +119,8 @@ function LoginContent() {
         localStorage.removeItem('remembered-username');
       }
 
-      // 로그인 유지 설정 저장 및 세션 타입 설정
+      // 로그인 유지 설정 먼저 저장 (어드민 체크는 AuthContext에서 수행)
       localStorage.setItem('keep_login', keepLogin ? 'true' : 'false');
-      setSessionType(keepLogin);
 
       // 서버 액션을 통한 로그인 (아이디로)
       const result = await signIn(username, password);
@@ -138,9 +137,19 @@ function LoginContent() {
       // 로그인 성공 플래그를 sessionStorage에 저장 (토스트용)
       sessionStorage.setItem('login-success', 'true');
 
-      // 로그인 성공 - 페이지 새로고침으로 모든 상태를 확실하게 초기화
-      // router.push는 클라이언트 사이드 네비게이션이므로 AuthContext 업데이트 타이밍 이슈가 있을 수 있음
-      window.location.href = redirectUrl;
+      // 로그인 성공 - 짧은 대기 후 리다이렉트하여 쿠키가 확실히 설정되도록 함
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // router.push로 클라이언트 사이드 네비게이션
+      router.push(redirectUrl);
+
+      // 추가 안전장치: 1초 후에도 페이지가 변경되지 않았다면 강제 새로고침
+      setTimeout(() => {
+        if (window.location.pathname.includes('/signin')) {
+          console.warn('로그인 후 리다이렉트 실패, 강제 새로고침 시도');
+          window.location.href = redirectUrl;
+        }
+      }, 1000);
 
     } catch (error: unknown) {
       console.error('로그인 오류:', error);

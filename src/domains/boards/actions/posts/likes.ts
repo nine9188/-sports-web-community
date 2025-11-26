@@ -5,6 +5,7 @@ import { checkSuspensionGuard } from '@/shared/utils/suspension-guard';
 import { logUserAction } from '@/shared/actions/log-actions';
 import { createServerActionClient } from '@/shared/api/supabaseServer';
 import { LikeActionResponse } from './utils';
+import { createPostLikeNotification } from '@/domains/notifications/actions';
 
 /**
  * 게시글 좋아요 액션
@@ -219,7 +220,7 @@ export async function likePost(postId: string): Promise<LikeActionResponse> {
       
       newUserAction = 'like';
       console.log('[likePost] 좋아요 추가 완료');
-      
+
       // 좋아요 로그 기록
       await logUserAction(
         'POST_LIKE',
@@ -227,15 +228,49 @@ export async function likePost(postId: string): Promise<LikeActionResponse> {
         userId,
         { postId }
       );
-      
-      // 좋아요가 새로 추가된 경우 게시글 작성자에게 보상 지급
+
+      // 게시글 작성자에게 알림 및 보상 지급
       if (currentPost.user_id && currentPost.user_id !== userId) {
         try {
+          // 게시글 정보 조회 (알림용)
+          const { data: postData } = await supabase
+            .from('posts')
+            .select(`
+              title,
+              post_number,
+              board:boards(slug)
+            `)
+            .eq('id', postId)
+            .single();
+
+          // 현재 사용자 닉네임 조회
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('nickname')
+            .eq('id', userId)
+            .single();
+
+          if (postData && profile) {
+            const boardSlug = (postData.board as { slug: string } | null)?.slug || '';
+
+            // 좋아요 알림 생성
+            await createPostLikeNotification({
+              postOwnerId: currentPost.user_id,
+              actorId: userId,
+              actorNickname: profile.nickname || '알 수 없음',
+              postId,
+              postTitle: postData.title,
+              postNumber: postData.post_number,
+              boardSlug
+            });
+          }
+
+          // 보상 지급
           const activityTypes = await getActivityTypeValues();
           await rewardUserActivity(currentPost.user_id, activityTypes.RECEIVED_LIKE, postId);
-        } catch (rewardError) {
-          console.error('게시글 추천 받기 보상 지급 오류:', rewardError);
-          // 보상 지급 실패해도 좋아요는 성공으로 처리
+        } catch (error) {
+          console.error('게시글 좋아요 알림/보상 처리 오류:', error);
+          // 알림/보상 실패해도 좋아요는 성공으로 처리
         }
       }
     }

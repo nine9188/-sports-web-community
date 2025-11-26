@@ -545,34 +545,55 @@ export function AuthProvider({
     async function getInitialSession() {
       try {
         setIsLoading(true);
-        
-        // 현재 사용자 인증 확인 (보안 강화) - 초기 세션이 있어도 검증
-        const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
-        
 
-        
+        // 먼저 세션 존재 여부 확인 (네트워크 요청 없이 빠르게)
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+
         if (mounted) {
-          if (!userError && currentUser) {
-            // 인증된 사용자가 있는 경우에만 세션 정보 가져오기
-            const { data: { session: currentSession } } = await supabase.auth.getSession();
-            
+          if (currentSession) {
+            // 세션이 있으면 사용자 정보 검증
+            const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
 
-            
-            setUser(currentUser);
-            setSession(currentSession || initialSession);
-            
-            // 세션 갱신 타이머 설정
-            const sessionToUse = currentSession || initialSession;
-            if (sessionToUse && setupRefreshTimerRef.current) {
-              setupRefreshTimerRef.current(sessionToUse.expires_at);
-            }
-            
-            // 자동 로그아웃 타이머 설정
-            if (setupAutoLogoutTimerRef.current) {
-              setupAutoLogoutTimerRef.current();
+            if (!userError && currentUser) {
+              // 어드민 사용자인 경우 자동으로 30일 세션 유지 설정
+              try {
+                const { data: profile } = await supabase
+                  .from('profiles')
+                  .select('is_admin')
+                  .eq('id', currentUser.id)
+                  .single();
+
+                if (profile?.is_admin) {
+                  const currentKeepLogin = localStorage.getItem('keep_login');
+                  if (currentKeepLogin !== 'true') {
+                    localStorage.setItem('keep_login', 'true');
+                    setIsExtendedSession(true);
+                  }
+                }
+              } catch (error) {
+                console.error('어드민 상태 확인 오류:', error);
+              }
+
+              setUser(currentUser);
+              setSession(currentSession);
+
+              // 세션 갱신 타이머 설정
+              if (setupRefreshTimerRef.current) {
+                setupRefreshTimerRef.current(currentSession.expires_at);
+              }
+
+              // 자동 로그아웃 타이머 설정
+              if (setupAutoLogoutTimerRef.current) {
+                setupAutoLogoutTimerRef.current();
+              }
+            } else {
+              // 세션은 있지만 사용자 검증 실패 → 로그아웃
+              console.warn('세션은 있지만 사용자 검증 실패');
+              setUser(null);
+              setSession(null);
             }
           } else {
-
+            // 세션 없음
             setUser(null);
             setSession(null);
           }

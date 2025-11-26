@@ -2,6 +2,7 @@
 
 import { createClient } from '@/shared/api/supabaseServer';
 import { calculateLevelFromExp } from '@/shared/utils/level-icons-server';
+import { createLevelUpNotification } from '@/domains/notifications/actions';
 
 // 활동 유형 정의 - 내부에서만 사용하는 상수 (export 하지 않음)
 const ActivityTypeValues = {
@@ -126,20 +127,21 @@ export async function rewardUserActivity(
       return { success: false, error: '오늘 이 활동으로 받을 수 있는 보상을 모두 받았습니다.' };
     }
     
-    // 3. 현재 사용자 경험치와 포인트 가져오기
+    // 3. 현재 사용자 경험치, 포인트, 레벨 가져오기
     const { data: userData, error: userError } = await supabase
       .from('profiles')
-      .select('exp, points')
+      .select('exp, points, level')
       .eq('id', userId)
       .single();
-      
+
     if (userError) {
       console.error('사용자 데이터 조회 오류:', userError);
       return { success: false, error: '사용자 정보를 조회할 수 없습니다.' };
     }
-    
+
     const currentExp = userData.exp || 0;
     const currentPoints = userData.points || 0;
+    const currentLevel = userData.level || 1;
     
     // 4. 경험치와 포인트 계산
     const expReward = ACTIVITY_REWARDS[activityType].exp;
@@ -179,7 +181,7 @@ export async function rewardUserActivity(
       const newExp = currentExp + expReward;
       const newPoints = currentPoints + pointsReward;
       const newLevel = calculateLevelFromExp(newExp);
-      
+
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
@@ -189,10 +191,23 @@ export async function rewardUserActivity(
           updated_at: new Date().toISOString()
         })
         .eq('id', userId);
-        
+
       if (updateError) {
         console.error('사용자 프로필 업데이트 오류:', updateError);
         return { success: false, error: '사용자 프로필을 업데이트할 수 없습니다.' };
+      }
+
+      // 8. 레벨업 발생 시 알림 생성
+      if (newLevel > currentLevel) {
+        try {
+          await createLevelUpNotification({
+            userId,
+            newLevel
+          });
+        } catch (notificationError) {
+          console.error('레벨업 알림 생성 오류:', notificationError);
+          // 알림 생성 실패해도 보상은 성공으로 처리
+        }
       }
     } catch (error) {
       console.error('활동 보상 처리 중 예외 발생:', error);

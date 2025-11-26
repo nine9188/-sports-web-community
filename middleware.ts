@@ -52,21 +52,26 @@ export async function middleware(request: NextRequest) {
           })
         },
       },
+      auth: {
+        // 미들웨어에서 자동 갱신 비활성화 (클라이언트가 담당)
+        autoRefreshToken: false,
+        persistSession: false,
+        detectSessionInUrl: false
+      }
     }
   )
 
   const { pathname } = request.nextUrl
 
   try {
-    // 세션 새로고침 및 사용자 정보 확인 (중요: 쿠키 동기화)
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    
-    // 세션 유효성 추가 확인 - 임시 비활성화
-    // const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    
-    if (userError) {
-      console.warn('미들웨어에서 인증 확인 실패:', { userError })
+    // getUser() 대신 getSession() 사용 (토큰 갱신 없이 세션만 조회)
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+
+    if (sessionError && !sessionError.message?.includes('refresh')) {
+      console.warn('미들웨어에서 세션 확인 실패:', { sessionError })
     }
+
+    const user = session?.user || null
 
     // 인증이 필요한 경로들
     const protectedPaths = ['/settings'] // admin은 layout에서 체크하므로 제외

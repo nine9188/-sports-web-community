@@ -2,7 +2,9 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Coins, TrendingUp, Users, Home, LayoutDashboard, ShoppingBag, Rss, Youtube, AlertTriangle, Target, Image as ImageIcon, FileText, Settings, Grid3x3 } from 'lucide-react';
+import { useEffect } from 'react';
+import { useAuth } from '@/shared/context/AuthContext';
+import { Coins, TrendingUp, Users, Home, LayoutDashboard, ShoppingBag, Rss, Youtube, AlertTriangle, Target, Image as ImageIcon, FileText, Settings, Grid3x3, Bell } from 'lucide-react';
 
 interface AdminLayoutClientProps {
   children: React.ReactNode;
@@ -10,6 +12,18 @@ interface AdminLayoutClientProps {
 
 export default function AdminLayoutClient({ children }: AdminLayoutClientProps) {
   const pathname = usePathname();
+  const { user, setSessionType } = useAuth();
+
+  // 어드민 페이지 진입 시 자동으로 30일 세션 유지 설정
+  useEffect(() => {
+    if (user && typeof window !== 'undefined') {
+      const currentKeepLogin = localStorage.getItem('keep_login');
+      if (currentKeepLogin !== 'true') {
+        localStorage.setItem('keep_login', 'true');
+        setSessionType(true);
+      }
+    }
+  }, [user, setSessionType]);
 
   // 관리자 메뉴 항목
   const menuItems = [
@@ -19,6 +33,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
     { path: '/admin/boards', label: '게시판 관리', icon: <Home className="w-5 h-5 mr-2" /> },
     { path: '/admin/banners', label: '배너 관리', icon: <ImageIcon className="w-5 h-5 mr-2" /> },
     { path: '/admin/widgets/board-collection', label: '게시판 모음 위젯', icon: <Grid3x3 className="w-5 h-5 mr-2" /> },
+    { path: '/admin/notifications', label: '공지 발송', icon: <Bell className="w-5 h-5 mr-2" /> },
     { path: '/admin/reports', label: '신고 관리', icon: <AlertTriangle className="w-5 h-5 mr-2" /> },
     { path: '/admin/logs', label: '로그 관리', icon: <FileText className="w-5 h-5 mr-2" /> },
     { path: '/admin/points', label: '포인트 관리', icon: <Coins className="w-5 h-5 mr-2" /> },

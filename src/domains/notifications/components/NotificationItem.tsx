@@ -9,12 +9,26 @@ import { formatDate } from '@/shared/utils/date';
 interface NotificationItemProps {
   notification: Notification;
   onRead?: (id: string) => void;
+  isSelected?: boolean;
+  onToggleSelect?: (id: string) => void;
 }
 
-export default function NotificationItem({ notification, onRead }: NotificationItemProps) {
-  const handleClick = () => {
+export default function NotificationItem({ notification, onRead, isSelected, onToggleSelect }: NotificationItemProps) {
+  const handleClick = (e: React.MouseEvent) => {
+    // 체크박스 클릭이 아닌 경우에만 읽음 처리
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'INPUT' || target.closest('input[type="checkbox"]')) {
+      return;
+    }
+
     if (!notification.is_read && onRead) {
       onRead(notification.id);
+    }
+  };
+
+  const handleCheckboxChange = () => {
+    if (onToggleSelect) {
+      onToggleSelect(notification.id);
     }
   };
 
@@ -56,12 +70,25 @@ export default function NotificationItem({ notification, onRead }: NotificationI
   };
 
   const content = (
-    <div 
-      className={`flex items-start gap-3 p-3 hover:bg-gray-50 dark:hover:bg-[#252525] transition-colors cursor-pointer ${
+    <div
+      className={`flex items-start gap-3 p-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors cursor-pointer ${
         !notification.is_read ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''
-      }`}
+      } ${isSelected ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
       onClick={handleClick}
     >
+      {/* 체크박스 */}
+      {onToggleSelect && (
+        <div className="flex-shrink-0 pt-1.5">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={handleCheckboxChange}
+            onClick={(e) => e.stopPropagation()}
+            className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-[#F0F0F0] focus:ring-gray-900 dark:focus:ring-[#F0F0F0] cursor-pointer"
+          />
+        </div>
+      )}
+
       {/* 읽음 표시 점 */}
       <div className="flex-shrink-0 pt-1.5">
         {!notification.is_read ? (
@@ -83,7 +110,7 @@ export default function NotificationItem({ notification, onRead }: NotificationI
             />
           </div>
         ) : (
-          <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-[#333333] flex items-center justify-center text-gray-500 dark:text-gray-400">
+          <div className="w-8 h-8 rounded-full bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center text-gray-500 dark:text-gray-400">
             {getTypeIcon()}
           </div>
         )}
@@ -116,6 +143,7 @@ export default function NotificationItem({ notification, onRead }: NotificationI
 
   return content;
 }
+
 
 
 
