@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 
@@ -26,7 +26,7 @@ export async function deleteAccount(
       };
     }
 
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 현재 사용자 정보 가져오기 (getUser 사용 - 보안 강화)
     const { data: { user }, error: userError } = await supabase.auth.getUser();

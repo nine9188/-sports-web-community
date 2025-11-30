@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createServerActionClient } from '@/shared/api/supabaseServer'
+import { getSupabaseAction } from '@/shared/lib/supabase/server'
 import type { SiteSetting } from './types'
 
 /**
@@ -9,7 +9,7 @@ import type { SiteSetting } from './types'
  * 예: 'branding', 'general', 'policy'
  */
 export async function getSiteSettingsByType(type: string): Promise<SiteSetting[]> {
-  const supabase = await createServerActionClient()
+  const supabase = await getSupabaseAction()
 
   // 임시 구현: site_settings 테이블(키/값 저장) 가정
   // 실제 테이블 스키마에 맞게 컬럼명과 테이블명을 조정하세요.
@@ -31,7 +31,7 @@ export async function getSiteSettingsByType(type: string): Promise<SiteSetting[]
  */
 export async function updateMultipleSiteSettings(settings: Array<{ key: string; value: unknown; type?: string }>): Promise<{ success: boolean; error?: string }>{
   try {
-    const supabase = await createServerActionClient()
+    const supabase = await getSupabaseAction()
 
     // 현재 사용자 확인 (관리자 여부는 필요시 추가 검증)
     const { data: { user } } = await supabase.auth.getUser()

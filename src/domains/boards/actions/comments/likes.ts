@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { rewardUserActivity, getActivityTypeValues } from '@/shared/actions/activity-actions';
 import { CommentLikeResponse } from './utils';
 import { createCommentLikeNotification } from '@/domains/notifications/actions';
@@ -10,7 +10,7 @@ import { createCommentLikeNotification } from '@/domains/notifications/actions';
  */
 export async function likeComment(commentId: string): Promise<CommentLikeResponse> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
 
     // 인증된 사용자 확인
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -242,7 +242,7 @@ export async function likeComment(commentId: string): Promise<CommentLikeRespons
  */
 export async function dislikeComment(commentId: string): Promise<CommentLikeResponse> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
 
     // 인증된 사용자 확인
     const { data: { user }, error: authError } = await supabase.auth.getUser();

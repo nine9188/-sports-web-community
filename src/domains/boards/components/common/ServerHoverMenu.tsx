@@ -1,5 +1,5 @@
 import ClientHoverMenu from '@/domains/boards/components/common/ClientHoverMenu';
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 
 interface ServerHoverMenuProps {
   currentBoardId: string;
@@ -25,7 +25,7 @@ export default async function ServerHoverMenu({
   fromParam
 }: ServerHoverMenuProps) {
   // 서버 컴포넌트에서 직접 데이터 가져오기
-  const supabase = await createClient();
+  const supabase = await getSupabaseServer();
   
   // 모든 게시판 데이터 가져오기
   const { data: boardsData, error } = await supabase

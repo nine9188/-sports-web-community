@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ChatConversation } from '../types';
 
@@ -9,7 +9,7 @@ export async function createConversation(
   title: string = '새로운 대화'
 ): Promise<{ success: boolean; data?: ChatConversation; error?: string }> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
 
     const { data, error } = await supabase
       .from('chat_conversations')
@@ -42,7 +42,7 @@ export async function getConversations(
   userId: string
 ): Promise<{ success: boolean; data?: ChatConversation[]; error?: string }> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
 
     const { data, error } = await supabase
       .from('chat_conversations')
@@ -70,7 +70,7 @@ export async function updateConversation(
   updates: Partial<Pick<ChatConversation, 'title' | 'status'>>
 ): Promise<{ success: boolean; data?: ChatConversation; error?: string }> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
 
     const { data, error } = await supabase
       .from('chat_conversations')

@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ChatMessage, ChipType } from '../types';
 
@@ -12,7 +12,7 @@ export async function sendMessage(
   formData?: Record<string, any>
 ): Promise<{ success: boolean; data?: ChatMessage; error?: string }> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
 
     const { data, error } = await supabase
       .from('chat_messages')
@@ -47,7 +47,7 @@ export async function getMessages(
   conversationId: string
 ): Promise<{ success: boolean; data?: ChatMessage[]; error?: string }> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
 
     const { data, error } = await supabase
       .from('chat_messages')
@@ -75,7 +75,7 @@ export async function markMessageAsRead(
   userId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
 
     // Update message read status
     const { error: messageError } = await supabase
@@ -120,7 +120,7 @@ export async function deleteMessage(
   messageId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
 
     const { error } = await supabase
       .from('chat_messages')
@@ -151,7 +151,7 @@ export async function submitChatForm(
   formData: Record<string, any>
 ): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
 
     // Save form submission
     const { data, error } = await supabase

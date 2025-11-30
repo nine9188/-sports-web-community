@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { CommentType } from '../../types/post/comment';
 import { rewardUserActivity, getActivityTypeValues } from '@/shared/actions/activity-actions';
 import { checkSuspensionGuard } from '@/shared/utils/suspension-guard';
@@ -20,7 +20,7 @@ export async function createComment({
   content: string;
   parentId?: string | null;
 }): Promise<CommentActionResponse> {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServer();
   
   try {
     // 1. 현재 사용자 정보 확인

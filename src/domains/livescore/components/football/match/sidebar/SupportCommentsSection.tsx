@@ -12,7 +12,7 @@ import {
   type TeamType,
   type SupportComment
 } from '@/domains/livescore/actions/match/supportComments';
-import { createClient } from '@/shared/api/supabase';
+import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import ReportButton from '@/domains/reports/components/ReportButton';
 
 // 매치 데이터 타입 정의
@@ -235,7 +235,7 @@ export default function SupportCommentsSection({
 
   // 로그인 상태 체크
   useEffect(() => {
-    const supabase = createClient();
+    const supabase = getSupabaseBrowser();
     
     const checkAuth = async () => {
       try {

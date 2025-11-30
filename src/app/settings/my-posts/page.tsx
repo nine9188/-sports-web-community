@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { Metadata } from 'next';
 import { getMyPosts } from '@/domains/settings/actions/my-posts';
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import MyPostsContent from '@/domains/settings/components/my-posts/MyPostsContent';
 import PostsPagination from '@/domains/settings/components/my-posts/PostsPagination';
 
@@ -24,7 +24,7 @@ export default async function MyPostsPage({
   searchParams: Promise<SearchParams>;
 }) {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
 
     // 사용자 인증 확인
     const { data: { user }, error: userError } = await supabase.auth.getUser();

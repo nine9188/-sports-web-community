@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/shared/api/supabaseServer'
+import { getSupabaseServer } from '@/shared/lib/supabase/server'
 import { headers } from 'next/headers'
 
 // 검색 로그 저장 (사용자 정보 포함)
@@ -11,7 +11,7 @@ export async function createSearchLog(params: {
   search_duration_ms?: number
 }) {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     // 현재 사용자 정보 가져오기
     const { data: { user } } = await supabase.auth.getUser()
@@ -60,7 +60,7 @@ export async function getPopularSearches(
   limit: number = 10
 ) {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     // 타입 우회를 위해 any 사용
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -109,7 +109,7 @@ export async function trackSearchResultClick(params: {
   clicked_result_type: 'post' | 'comment' | 'team'
 }) {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     // 현재 사용자 정보 가져오기
     const { data: { user } } = await supabase.auth.getUser()

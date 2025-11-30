@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/shared/api/supabaseServer'
+import { getSupabaseServer } from '@/shared/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 
@@ -21,7 +21,7 @@ export async function serverAuthGuard(options: AuthGuardOptions = {}) {
   } = options
 
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     const { data: { user }, error } = await supabase.auth.getUser()
     
     // 인증 실패 시 로깅 및 리다이렉트
@@ -103,7 +103,7 @@ async function logUnauthorizedRequest(type: string, details: Record<string, stri
     }
 
     // 향후 보안 로그 테이블이 생성되면 활성화
-    // const supabase = await createClient()
+    // const supabase = await getSupabaseServer()
     // await supabase
     //   .from('security_logs')
     //   .insert({

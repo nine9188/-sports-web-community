@@ -1,7 +1,7 @@
 'use server';
 
 import { logUserAction } from '@/shared/actions/log-actions';
-import { createServerActionClient } from '@/shared/api/supabaseServer';
+import { getSupabaseAction } from '@/shared/lib/supabase/server';
 import { PostActionResponse } from './utils';
 
 /**
@@ -19,7 +19,7 @@ export async function deletePost(
   }
   
   try {
-    const supabase = await createServerActionClient();
+    const supabase = await getSupabaseAction();
     
     if (!supabase) {
       return {

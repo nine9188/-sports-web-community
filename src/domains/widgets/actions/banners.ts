@@ -1,13 +1,13 @@
 'use server'
 
-import { createServerActionClient } from '@/shared/api/supabaseServer'
+import { getSupabaseAction } from '@/shared/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { Banner, BannerPosition } from '../types/banner'
-import { createClient } from '@/shared/api/supabaseServer'
+import { getSupabaseServer } from '@/shared/lib/supabase/server'
 
 // 특정 위치의 배너 목록 조회
 export async function getBannersByPosition(position: BannerPosition) {
-  const supabase = await createServerActionClient()
+  const supabase = await getSupabaseAction()
   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
@@ -32,7 +32,7 @@ export async function getBannersByPosition(position: BannerPosition) {
 
 // 모든 배너 조회 (관리자용)
 export async function getAllBanners() {
-  const supabase = await createServerActionClient()
+  const supabase = await getSupabaseAction()
   
   // 관리자 권한 확인
   const { data: { user } } = await supabase.auth.getUser()
@@ -69,7 +69,7 @@ export async function getAllBanners() {
 
 // 배너 생성
 export async function createBanner(bannerData: Omit<Banner, 'id' | 'created_at' | 'updated_at'>) {
-  const supabase = await createServerActionClient()
+  const supabase = await getSupabaseAction()
   
   // 관리자 권한 확인
   const { data: { user } } = await supabase.auth.getUser()
@@ -103,7 +103,7 @@ export async function createBanner(bannerData: Omit<Banner, 'id' | 'created_at' 
 
 // 배너 수정
 export async function updateBanner(id: string, bannerData: Partial<Omit<Banner, 'id' | 'created_at' | 'updated_at'>>) {
-  const supabase = await createServerActionClient()
+  const supabase = await getSupabaseAction()
   
   // 관리자 권한 확인
   const { data: { user } } = await supabase.auth.getUser()
@@ -138,7 +138,7 @@ export async function updateBanner(id: string, bannerData: Partial<Omit<Banner, 
 
 // 배너 삭제
 export async function deleteBanner(id: string) {
-  const supabase = await createServerActionClient()
+  const supabase = await getSupabaseAction()
   
   // 관리자 권한 확인
   const { data: { user } } = await supabase.auth.getUser()
@@ -171,7 +171,7 @@ export async function deleteBanner(id: string) {
 
 // 배너 순서 변경
 export async function updateBannerOrder(bannerId: string, newOrder: number) {
-  const supabase = await createServerActionClient()
+  const supabase = await getSupabaseAction()
   
   // 관리자 권한 확인
   const { data: { user } } = await supabase.auth.getUser()
@@ -212,7 +212,7 @@ interface BannerImageUploadResult {
 // 배너 이미지를 Supabase Storage에 업로드
 export async function uploadBannerImage(file: File): Promise<BannerImageUploadResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     // 파일 유효성 검사
     if (!file.type.startsWith('image/')) {
@@ -264,7 +264,7 @@ export async function uploadBannerImage(file: File): Promise<BannerImageUploadRe
 // 배너 이미지 삭제
 export async function deleteBannerImage(imageUrl: string): Promise<boolean> {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     // URL에서 파일 경로 추출
     const urlParts = imageUrl.split('/')

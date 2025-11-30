@@ -1,7 +1,5 @@
-import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { Database } from '@/shared/types/supabase'
+import { getSupabaseRouteHandler } from '@/shared/lib/supabase/server'
 
 /**
  * OAuth 콜백 처리 라우트 핸들러
@@ -17,30 +15,8 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     try {
-      const cookieStore = await cookies()
-
-      // Route Handler용 Supabase 클라이언트 생성 (쿠키 설정 가능)
-      const supabase = createServerClient<Database>(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-          cookies: {
-            getAll() {
-              return cookieStore.getAll()
-            },
-            setAll(cookiesToSet) {
-              try {
-                cookiesToSet.forEach(({ name, value, options }) => {
-                  cookieStore.set(name, value, options)
-                })
-              } catch (error) {
-                // Route Handler에서 쿠키 설정 실패 시 로깅
-                console.error('쿠키 설정 실패:', error)
-              }
-            },
-          },
-        }
-      )
+      // Route Handler용 Supabase 클라이언트 생성
+      const { supabase } = await getSupabaseRouteHandler(request)
 
       // OAuth 코드를 세션으로 교환 - Supabase가 자동으로 쿠키 설정
       const { data, error } = await supabase.auth.exchangeCodeForSession(code)

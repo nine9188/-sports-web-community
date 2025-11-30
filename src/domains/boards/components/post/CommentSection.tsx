@@ -11,7 +11,7 @@ import { CommentType } from "@/domains/boards/types/post/comment";
 import { buildCommentTree } from "@/domains/boards/utils/comment/commentUtils";
 import Comment from "./Comment";
 import { Button } from "@/shared/components/ui/button";
-import { createClient } from '@/shared/api/supabase';
+import { getSupabaseBrowser } from '@/shared/lib/supabase';
 
 // 내부 디바운스 함수 구현
 function debounce<T extends (...args: unknown[]) => unknown>(
@@ -50,7 +50,12 @@ export default function CommentSection({
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [replyToNickname, setReplyToNickname] = useState<string | null>(null);
   const replyFormRef = useRef<HTMLTextAreaElement>(null);
-  const supabase = useMemo(() => createClient(), []);
+
+  // Supabase 클라이언트 (SSR 안전)
+  const supabase = useMemo(() => {
+    if (typeof window === 'undefined') return null as any;
+    return getSupabaseBrowser();
+  }, []);
 
   // 댓글 데이터 업데이트 함수 최적화 - 사용자 액션 정보 포함
   const updateComments = useCallback(async () => {

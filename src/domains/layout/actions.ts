@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { cache } from 'react';
 import { HeaderUserData } from './types/header';
 import { Board } from './types/board';
@@ -11,7 +11,7 @@ import { Board } from './types/board';
  */
 export const getHeaderUserData = cache(async (): Promise<HeaderUserData | null> => {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 현재 사용자 확인
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -80,7 +80,7 @@ export const getBoardsForNavigation = cache(async (): Promise<{
   isAdmin: boolean;
 }> => {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 현재 사용자의 관리자 권한 확인
     let isAdmin = false;

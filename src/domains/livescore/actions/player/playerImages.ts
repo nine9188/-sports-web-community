@@ -1,6 +1,6 @@
 'use server'
 
-// import { createClient } from '@/shared/api/supabaseServer'
+// import { getSupabaseServer } from '@/shared/lib/supabase/server'
 // import { revalidatePath } from 'next/cache'
 
 // TODO: 테이블 생성 후 활성화
@@ -55,7 +55,7 @@ export async function refreshPlayerImage(): Promise<CachedImageResult> {
 // 선수 이미지 캐시에서 조회
 export async function getCachedPlayerImage(playerId: number): Promise<CachedImageResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     // 먼저 처리된 이미지가 있는지 확인
     const { data: playerImage } = await supabase
@@ -97,7 +97,7 @@ export async function getCachedPlayerImage(playerId: number): Promise<CachedImag
 // 선수 이미지를 Supabase 스토리지에 업로드
 export async function uploadPlayerImageToStorage(imageData: PlayerImageData): Promise<CachedImageResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     // 이미지 다운로드
     const response = await fetch(imageData.original_url)
@@ -160,7 +160,7 @@ export async function uploadPlayerImageToStorage(imageData: PlayerImageData): Pr
     console.error('Error uploading player image:', error)
     
     // 실패 시 캐시에 에러 상태 저장
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     const cacheKey = `player_${imageData.player_id}`
     
     await supabase
@@ -210,7 +210,7 @@ export async function batchProcessPlayerImages(playersData: PlayerImageData[]): 
 // 만료된 캐시 정리
 export async function cleanupExpiredCache(): Promise<void> {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     const { error } = await supabase
       .from('image_cache')
@@ -228,7 +228,7 @@ export async function cleanupExpiredCache(): Promise<void> {
 // 특정 선수의 이미지 강제 새로고침
 export async function refreshPlayerImage(playerId: number): Promise<CachedImageResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     // 기존 캐시 삭제
     await supabase

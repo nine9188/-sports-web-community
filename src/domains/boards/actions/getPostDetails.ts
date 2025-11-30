@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { AdjacentPosts } from '../types/post';
 import { getBoardLevel, getFilteredBoardIds, findRootBoard, createBreadcrumbs } from '../utils/board/boardHierarchy';
 import { formatPosts } from '../utils/post/postUtils';
@@ -17,7 +17,7 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       throw new Error('유효하지 않은 게시글 번호입니다.');
     }
     
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 로그인 상태 확인
     const { data: { user } } = await supabase.auth.getUser();
@@ -386,7 +386,7 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
  */
 export async function incrementViewCount(postId: string): Promise<void> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     await supabase.rpc('increment_view_count', { post_id: postId });
   } catch (error) {
     console.error('조회수 증가 오류:', error);
@@ -398,7 +398,7 @@ export async function incrementViewCount(postId: string): Promise<void> {
  */
 export async function getPost(postId: string) {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     // 게시글 조회 및 조회수 증가
     const { data, error } = await supabase

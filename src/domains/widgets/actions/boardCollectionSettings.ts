@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
 export interface BoardCollectionSetting {
@@ -18,7 +18,7 @@ export interface BoardCollectionSetting {
 // 게시판 모음 위젯 설정 조회
 export async function getBoardCollectionSettings(): Promise<BoardCollectionSetting[]> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
 
     const { data, error } = await supabase
       .from('board_collection_widget_settings')
@@ -53,7 +53,7 @@ export async function saveBoardCollectionSettings(
   settings: { board_id: string; display_order: number }[]
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
 
     // 기존 설정 모두 삭제
     await supabase
@@ -90,7 +90,7 @@ export async function saveBoardCollectionSettings(
 // 모든 게시판 목록 조회 (관리자용)
 export async function getAllBoards(): Promise<{ id: string; name: string; slug: string }[]> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
 
     const { data, error } = await supabase
       .from('boards')

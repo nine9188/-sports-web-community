@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getCategoryItemsPaginated, getUserItems, getUserPoints, getShopCategories } from '@/domains/shop/actions/actions';
 import CategoryFilter from '@/domains/shop/components/CategoryFilter';
 import ShopPagination from '@/domains/shop/components/ShopPagination';
@@ -17,7 +17,7 @@ interface Props {
 }
 
 export default async function ShopPage({ searchParams }: Props) {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServer();
 
   // 활성 카테고리 전체 조회
   const categoriesAll = await getShopCategories();

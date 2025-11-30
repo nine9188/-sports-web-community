@@ -1,4 +1,4 @@
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import fs from 'fs';
 import path from 'path';
 
@@ -326,7 +326,7 @@ const teams = [
 ];
 
 async function generateJ1LeaguePlayers() {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServer();
   console.log('J1 League 선수 데이터 가져오는 중...');
 
   const allPlayers: any[] = [];

@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/shared/api/supabaseServer'
+import { getSupabaseServer } from '@/shared/lib/supabase/server'
 import type { ShopCategory } from '@/domains/shop/types'
 import { revalidatePath } from 'next/cache'
 import { checkSuspensionGuard } from '@/shared/utils/suspension-guard'
@@ -10,7 +10,7 @@ import { logUserAction } from '@/shared/actions/log-actions'
  * 상점 카테고리 조회
  */
 export async function getShopCategories() {
-  const supabase = await createClient()
+  const supabase = await getSupabaseServer()
   
   const { data, error } = await supabase
     .from('shop_categories')
@@ -26,7 +26,7 @@ export async function getShopCategories() {
  * 특정 카테고리 조회
  */
 export async function getShopCategory(slug: string) {
-  const supabase = await createClient()
+  const supabase = await getSupabaseServer()
   
   const { data, error } = await supabase
     .from('shop_categories')
@@ -81,7 +81,7 @@ export async function getShopCategory(slug: string) {
  * 카테고리 아이템 조회
  */
 export async function getCategoryItems(categoryIds: number[]) {
-  const supabase = await createClient()
+  const supabase = await getSupabaseServer()
   
   const { data, error } = await supabase
     .from('shop_items')
@@ -102,7 +102,7 @@ export async function getCategoryItemsPaginated(
   page: number,
   pageSize: number
 ) {
-  const supabase = await createClient()
+  const supabase = await getSupabaseServer()
 
   const currentPage = Number.isFinite(page) && page > 0 ? page : 1
   const limit = Number.isFinite(pageSize) && pageSize > 0 ? pageSize : 24
@@ -133,7 +133,7 @@ export async function getCategoryItemsPaginated(
 export async function getUserPoints(userId: string | undefined): Promise<number> {
   if (!userId) return 0
   
-  const supabase = await createClient()
+  const supabase = await getSupabaseServer()
   
   const { data, error } = await supabase
     .from('profiles')
@@ -151,7 +151,7 @@ export async function getUserPoints(userId: string | undefined): Promise<number>
 export async function getUserItems(userId: string | undefined): Promise<number[]> {
   if (!userId) return []
   
-  const supabase = await createClient()
+  const supabase = await getSupabaseServer()
   
   const { data } = await supabase
     .from('user_items')
@@ -166,7 +166,7 @@ export async function getUserItems(userId: string | undefined): Promise<number[]
  */
 export async function purchaseItem(itemId: number) {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     // 현재 사용자 확인
     const { data: { user } } = await supabase.auth.getUser()

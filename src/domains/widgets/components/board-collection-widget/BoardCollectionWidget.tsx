@@ -1,5 +1,5 @@
 import React from 'react';
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import BoardCollectionWidgetClient from './BoardCollectionWidgetClient';
 import { BoardCollectionData, BoardPost } from './types';
 import { Json } from '@/shared/types/supabase';
@@ -85,7 +85,7 @@ function extractFirstImageUrl(content?: Json): string | null {
 // 여러 게시판에서 최신 게시글 가져오기
 async function getBoardsData(): Promise<BoardCollectionData[]> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
 
     // DB에서 설정된 게시판 목록 가져오기
     // board_collection_widget_settings 테이블이 타입 정의에 없어서 타입 단언 사용

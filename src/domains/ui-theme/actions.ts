@@ -1,6 +1,6 @@
 'use server'
 
-import { createServerActionClient, createClient } from '@/shared/api/supabaseServer'
+import { getSupabaseServer, getSupabaseAction } from '@/shared/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
 export interface UIThemeSettings {
@@ -13,7 +13,7 @@ export interface UIThemeSettings {
  */
 export async function getUIThemeSettings(): Promise<UIThemeSettings> {
   // 서버 컴포넌트에서 호출되므로 읽기 전용 클라이언트 사용 (쿠키 수정 금지)
-  const supabase = await createClient()
+  const supabase = await getSupabaseServer()
 
   // ui_theme_settings 테이블이 타입 정의에 없어서 타입 단언 사용
   const { data, error } = await supabase
@@ -50,7 +50,7 @@ export async function updateUIThemeSettings(
   settings: UIThemeSettings
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = await createServerActionClient()
+    const supabase = await getSupabaseAction()
 
     // 현재 사용자 확인
     const { data: { user } } = await supabase.auth.getUser()

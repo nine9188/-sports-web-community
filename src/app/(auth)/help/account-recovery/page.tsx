@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'react-toastify';
-import { sendIdRecoveryCode, findUsernameWithCode, sendPasswordResetLink } from '@/domains/auth/actions-custom';
+import { sendIdRecoveryCode, findUsernameWithCode, sendPasswordResetLink } from '@/domains/auth/actions';
 import { AlertCircle, Check, Mail, User } from 'lucide-react';
 
 // SearchParams를 사용하는 내용 컴포넌트

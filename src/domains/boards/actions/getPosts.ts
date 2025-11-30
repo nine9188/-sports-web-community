@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
 import { formatDate } from '@/domains/boards/utils/post/postUtils';
 import type { Json } from '@/shared/types/supabase';
@@ -83,7 +83,7 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
     const offset = (page - 1) * limit;
     
     // Supabase 클라이언트 생성
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     if (!supabase) {
       return {
@@ -525,7 +525,7 @@ export async function revalidatePostsData(path: string = '/') {
  */
 export async function getPosts(boardId: string, page = 1, limit = 20) {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     // 페이지네이션을 위한 offset 계산
     const offset = (page - 1) * limit

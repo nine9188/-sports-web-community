@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/shared/api/supabaseServer'
+import { getSupabaseServer } from '@/shared/lib/supabase/server'
 import type { ImageCacheResult, BatchImageCacheResult, ImageCacheRequest } from '@/shared/types/image'
 
 // 지원하는 이미지 타입 정의
@@ -21,7 +21,7 @@ export async function getCachedImageFromStorage(
   id: string | number
 ): Promise<ImageCacheResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     // 우선순위: gif → png (스토리지 캐시 확인 시 둘 다 확인)
     const pngName = `${id}.png`
     const gifName = `${id}.gif`
@@ -187,7 +187,7 @@ export async function batchCacheImages(images: ImageCacheRequest[]): Promise<Bat
  */
 export async function createStorageBucketIfNotExists(bucketName: ImageTypeString): Promise<void> {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     // 버킷 존재 여부 확인
     const { data: buckets, error: listError } = await supabase.storage.listBuckets()

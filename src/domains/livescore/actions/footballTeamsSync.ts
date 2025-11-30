@@ -1,6 +1,6 @@
 'use server'
 
-import { createAdminClient } from '@/shared/api/supabaseServer'
+import { getSupabaseAdmin } from '@/shared/lib/supabase/server'
 import { getLeagueName } from '@/domains/livescore/constants/league-mappings'
 import { CUP_LEAGUE_IDS, LEAGUE_IDS } from '@/domains/search/constants/leagues'
 
@@ -190,7 +190,7 @@ export async function syncAllFootballTeamsFromApi(): Promise<{
   errors: string[]
   summary: string
 }> {
-  const supabase = createAdminClient() // 관리자 클라이언트 사용 (RLS 우회)
+  const supabase = getSupabaseAdmin() // 관리자 클라이언트 사용 (RLS 우회)
 
   // 컵 대회를 먼저, 리그를 나중에 동기화 (리그 데이터가 우선)
   const allLeagueIds = [...CUP_LEAGUE_IDS, ...LEAGUE_IDS]
@@ -308,7 +308,7 @@ export async function getFootballTeams(options?: {
   limit?: number
   offset?: number
 }) {
-  const supabase = createAdminClient()
+  const supabase = getSupabaseAdmin()
   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase as any)

@@ -8,7 +8,7 @@ import UserProfile from './auth/UserProfile';
 import Link from 'next/link';
 import { toast } from 'react-toastify';
 import { useCallback, useState, useEffect } from 'react';
-import { createClient } from '@/shared/api/supabase';
+import { getSupabaseBrowser } from '@/shared/lib/supabase';
 
 interface ProfileSidebarProps {
   isOpen: boolean;
@@ -73,7 +73,7 @@ export default function ProfileSidebar({
       if (!user || !isOpen) return;
 
       try {
-        const supabase = createClient();
+        const supabase = getSupabaseBrowser();
 
         // 게시글 수와 댓글 수만 조회 (병렬 처리)
         const [{ count: postCount }, { count: commentCount }] = await Promise.all([
@@ -109,15 +109,13 @@ export default function ProfileSidebar({
     try {
       // 사이드바 닫기
       onClose();
-      
+
       // AuthContext의 logoutUser 함수 사용
       await logoutUser();
-      
+
       // 아이콘 상태 초기화
       updateUserIconState('', '');
-      
-      toast.success('로그아웃되었습니다.');
-      
+
       // 확실한 페이지 새로고침을 위해 window.location 사용
       window.location.href = '/';
     } catch (error) {

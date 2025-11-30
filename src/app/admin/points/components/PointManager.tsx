@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/shared/api/supabase';
+import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { toast } from 'react-toastify';
 import { Button } from '@/shared/components/ui/button';
 import { Coins } from 'lucide-react';
@@ -96,7 +96,7 @@ export default function PointManager({ adminUser, selectedUser, onRefreshData }:
     
     try {
       setIsSubmitting(true);
-      const supabase = createClient();
+      const supabase = getSupabaseBrowser();
       
       try {
         const { error } = await supabase.rpc('admin_adjust_points', {

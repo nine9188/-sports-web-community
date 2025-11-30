@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getUserIcons, getCurrentUserIcon } from '@/domains/settings/actions/icons';
 import { IconForm } from '@/domains/settings/components/icons';
 import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
@@ -29,7 +29,7 @@ function IconSettingsLoading() {
  */
 export default async function IconSettingsPage() {
   // Supabase 클라이언트 생성
-  const supabase = await createClient();
+  const supabase = await getSupabaseServer();
   
   // 사용자 정보 가져오기
   const { data: { user } } = await supabase.auth.getUser();

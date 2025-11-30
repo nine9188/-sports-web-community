@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient, createServerActionClient } from '@/shared/api/supabaseServer'
+import { getSupabaseServer, getSupabaseAction } from '@/shared/lib/supabase/server'
 import { headers } from 'next/headers'
 import { logAuthEvent, logSecurityEvent, logError } from '@/shared/actions/log-actions'
 import { revalidatePath } from 'next/cache'
@@ -11,7 +11,7 @@ import { redirect } from 'next/navigation'
  */
 export async function signIn(username: string, password: string) {
   try {
-    const supabase = await createServerActionClient()
+    const supabase = await getSupabaseAction()
     
     // 아이디로 이메일 조회
     const { data: profile, error: profileError } = await supabase
@@ -132,7 +132,7 @@ async function checkLoginBlock(username: string): Promise<{ isBlocked: boolean; 
   const now = Date.now();
   
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 최근 15분간의 로그인 시도 기록 조회 (아이디 기반)
     const { data: attempts } = await supabase
@@ -170,7 +170,7 @@ async function checkLoginBlock(username: string): Promise<{ isBlocked: boolean; 
  */
 async function recordLoginAttempt(username: string): Promise<void> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     await supabase
       .from('login_attempts')
@@ -190,7 +190,7 @@ async function recordLoginAttempt(username: string): Promise<void> {
  */
 async function clearLoginAttempts(username: string): Promise<void> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     await supabase
       .from('login_attempts')
@@ -225,7 +225,7 @@ export async function signUp(email: string, password: string, metadata?: Record<
       return { error: '보안 확인에 실패했습니다. 새로고침 후 다시 시도해주세요.' }
     }
 
-    const supabase = await createServerActionClient()
+    const supabase = await getSupabaseAction()
     
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -274,7 +274,7 @@ export async function signUp(email: string, password: string, metadata?: Record<
  */
 export async function signOut() {
   try {
-    const supabase = await createServerActionClient()
+    const supabase = await getSupabaseAction()
     
     // 로그아웃 전 사용자 정보 확인
     const { data: { user } } = await supabase.auth.getUser()
@@ -308,7 +308,7 @@ export async function signOut() {
  */
 export async function getCurrentUser() {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     const { data: { user }, error } = await supabase.auth.getUser()
     
@@ -338,7 +338,7 @@ export async function getCurrentUser() {
  */
 export async function updateUserData(userId: string, metadata: Record<string, unknown>) {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     // 메타데이터 업데이트
     const { data, error } = await supabase.auth.admin.updateUserById(
@@ -369,7 +369,7 @@ export async function updateUserData(userId: string, metadata: Record<string, un
  */
 export async function refreshSession(refreshToken: string) {
   try {
-    const supabase = await createServerActionClient()
+    const supabase = await getSupabaseAction()
     
     // 세션 갱신
     const { data, error } = await supabase.auth.refreshSession({
@@ -399,7 +399,7 @@ export async function refreshSession(refreshToken: string) {
  */
 export async function resetPassword(email: string) {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/reset-password`,
@@ -420,7 +420,7 @@ export async function resetPassword(email: string) {
  */
 export async function updatePassword(password: string) {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     const { error } = await supabase.auth.updateUser({
       password
@@ -441,7 +441,7 @@ export async function updatePassword(password: string) {
  */
 export async function resendConfirmation(email: string) {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     const { error } = await supabase.auth.resend({
       type: 'signup',
@@ -463,7 +463,7 @@ export async function resendConfirmation(email: string) {
  */
 export async function findUsername(email: string, verificationCode: string) {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     // 1. 인증 코드 확인 (OTP 검증)
     const { error: verifyError } = await supabase.auth.verifyOtp({
@@ -537,7 +537,7 @@ export async function checkUsernameAvailability(username: string) {
       return { available: false, error: '아이디는 영문, 숫자, 언더스코어(_)만 사용 가능합니다.' }
     }
     
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     const { data, error } = await supabase
       .from('profiles')
@@ -574,7 +574,7 @@ export async function checkNicknameAvailability(nickname: string) {
       return { available: false, error: '닉네임은 영문, 숫자, 한글, 언더스코어(_)만 사용 가능합니다.' }
     }
     
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     const { data, error } = await supabase
       .from('profiles')
@@ -603,7 +603,7 @@ export async function checkNicknameAvailability(nickname: string) {
  */
 export async function signInWithKakao(redirectTo: string) {
   try {
-    const supabase = await createServerActionClient()
+    const supabase = await getSupabaseAction()
     
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'kakao',
@@ -637,7 +637,7 @@ export async function updateSocialUserProfile(userId: string, profileData: {
   username?: string
 }) {
   try {
-    const supabase = await createServerActionClient()
+    const supabase = await getSupabaseAction()
     
     const { error } = await supabase
       .from('profiles')

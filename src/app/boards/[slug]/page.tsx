@@ -2,7 +2,7 @@ import { getBoardPageData } from '@/domains/boards/actions';
 import { fetchPosts, Post as ApiPost } from '@/domains/boards/actions';
 import BoardDetailLayout from '@/domains/boards/components/layout/BoardDetailLayout';
 import ErrorMessage from '@/shared/ui/error-message';
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 
 // BoardDetailLayout에서 사용하는 Post 타입 정의
 interface LayoutPost {
@@ -108,7 +108,7 @@ export default async function BoardDetailPage({
     const layoutPosts = convertApiPostsToLayoutPosts(postsData.data || []);
     
     // HoverMenu용 데이터 가져오기
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     const { data: boardsData } = await supabase
       .from('boards')
       .select('*')

@@ -64,20 +64,15 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   try {
-    // getUser() 대신 getSession() 사용 (토큰 갱신 없이 세션만 조회)
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-
-    if (sessionError && !sessionError.message?.includes('refresh')) {
-      console.warn('미들웨어에서 세션 확인 실패:', { sessionError })
-    }
-
+    // 세션 조회 (토큰 갱신 없이 현재 세션만 확인)
+    const { data: { session } } = await supabase.auth.getSession()
     const user = session?.user || null
 
-    // 인증이 필요한 경로들
-    const protectedPaths = ['/settings'] // admin은 layout에서 체크하므로 제외
-    const authPaths = ['/signin', '/signup', '/auth']
+    // 경로 분류
+    const protectedPaths = ['/settings'] // 로그인 필요 경로
+    const authPaths = ['/signin', '/signup', '/auth'] // 인증 페이지
 
-    // 보호된 경로에 비로그인 사용자 접근 시 로그인 페이지로 리다이렉트 (우선 처리)
+    // 1. 보호된 경로 접근 제어 (비로그인 사용자 차단)
     if (protectedPaths.some(path => pathname.startsWith(path)) && !user) {
       const redirectUrl = new URL('/signin', request.url)
       redirectUrl.searchParams.set('redirect', pathname)
@@ -85,42 +80,17 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(redirectUrl)
     }
 
-    // Admin 경로는 layout.tsx에서 체크하므로 여기서는 스킵 (성능 향상)
-
-    // 로그인된 사용자가 인증 페이지 접근 시 홈으로 리다이렉트
+    // 2. 로그인 사용자의 인증 페이지 접근 방지
     if (authPaths.some(path => pathname.startsWith(path)) && user) {
       const redirectUrl = request.nextUrl.searchParams.get('redirect') || '/'
       return NextResponse.redirect(new URL(redirectUrl, request.url))
     }
 
-    // 세션 만료 체크 및 자동 갱신 - 임시 비활성화
-    /*
-    if (session && session.expires_at) {
-      const expiresAt = session.expires_at * 1000 // 밀리초로 변환
-      const now = Date.now()
-      const timeUntilExpiry = expiresAt - now
-      
-      // 만료 5분 전이면 토큰 갱신 시도
-      if (timeUntilExpiry < 5 * 60 * 1000 && timeUntilExpiry > 0) {
-        try {
-          const { data: { session: refreshedSession }, error: refreshError } = 
-            await supabase.auth.refreshSession()
-          
-          if (refreshError) {
-            console.warn('미들웨어에서 토큰 갱신 실패:', refreshError)
-          } else if (refreshedSession) {
-            console.log('미들웨어에서 토큰 갱신 성공')
-          }
-        } catch (error) {
-          console.error('미들웨어에서 토큰 갱신 중 오류:', error)
-        }
-      }
-    }
-    */
+    // 참고: Admin 권한 체크는 /app/admin/layout.tsx에서 처리
 
   } catch (error) {
     console.error('미들웨어 처리 중 오류:', error)
-    // 에러가 발생해도 요청은 계속 진행
+    // 에러 발생 시에도 요청 계속 진행
   }
 
   return response

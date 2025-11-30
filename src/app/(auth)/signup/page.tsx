@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/shared/context/AuthContext';
-import { createClient } from '@/shared/api/supabase';
+import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { signUp } from '@/domains/auth/actions';
 import { AlertCircle, Check, Eye, EyeOff } from 'lucide-react';
 import KakaoLoginButton from '@/domains/auth/components/KakaoLoginButton';
@@ -245,7 +245,7 @@ export default function SignupPage() {
       setIsCheckingUsername(true);
       
       // Supabase 클라이언트 생성
-      const supabase = createClient();
+      const supabase = getSupabaseBrowser();
       
       // 프로필 테이블에서 해당 username으로 검색
       const { data, error } = await supabase
@@ -332,7 +332,7 @@ export default function SignupPage() {
       setIsCheckingNickname(true);
       
       // Supabase 클라이언트 생성
-      const supabase = createClient();
+      const supabase = getSupabaseBrowser();
       
       // 프로필 테이블에서 해당 nickname으로 검색
       const { data, error } = await supabase

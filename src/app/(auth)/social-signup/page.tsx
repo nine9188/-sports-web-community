@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/shared/context/AuthContext'
-import { createClient } from '@/shared/api/supabase'
+import { getSupabaseBrowser } from '@/shared/lib/supabase'
 import { toast } from 'react-toastify'
 
 export default function SocialSignupPage() {
@@ -25,7 +25,7 @@ export default function SocialSignupPage() {
       // 사용자가 없으면 강제로 세션 확인
       if (!user) {
         try {
-          const supabase = createClient()
+          const supabase = getSupabaseBrowser()
           
           // 강제로 세션 새로고침 시도
           const { data: { session } } = await supabase.auth.getSession()
@@ -60,7 +60,7 @@ export default function SocialSignupPage() {
 
       // 사용자가 있으면 프로필 확인
       if (user) {
-        const supabase = createClient()
+        const supabase = getSupabaseBrowser()
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
@@ -101,7 +101,7 @@ export default function SocialSignupPage() {
 
     setIsCheckingNickname(true)
     try {
-      const supabase = createClient()
+      const supabase = getSupabaseBrowser()
       const { data: existingNickname } = await supabase
         .from('profiles')
         .select('id')
@@ -152,7 +152,7 @@ export default function SocialSignupPage() {
     setLoading(true)
 
     try {
-      const supabase = createClient()
+      const supabase = getSupabaseBrowser()
 
       // 고유한 username 자동 생성
       const baseUsername = `kakao_${user.id.slice(0, 8)}`

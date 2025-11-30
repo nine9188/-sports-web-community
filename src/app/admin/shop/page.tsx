@@ -1,4 +1,4 @@
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { serverAuthGuard } from '@/shared/utils/auth-guard';
 import ShopItemManagement from './components/ShopItemManagement';
 import { notFound } from 'next/navigation';
@@ -15,7 +15,7 @@ export default async function ShopAdminPage() {
       logUnauthorizedAccess: true
     });
 
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
 
     // 팀 데이터 가져오기
     const { data: teams, error: teamsError } = await supabase

@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { suspendUser } from '@/domains/admin/actions/suspension';
 import { 
@@ -16,7 +16,7 @@ import {
  */
 export async function createReport(request: CreateReportRequest): Promise<ReportResponse> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 현재 사용자 확인
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -70,7 +70,7 @@ export async function createReport(request: CreateReportRequest): Promise<Report
  */
 export async function getReports(params: GetReportsParams = {}): Promise<ReportWithReporter[]> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 관리자 권한 확인
     const { data: { user } } = await supabase.auth.getUser();
@@ -198,7 +198,7 @@ export async function getReports(params: GetReportsParams = {}): Promise<ReportW
  */
 export async function processReport(request: ProcessReportRequest): Promise<ReportResponse> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 관리자 권한 확인
     const { data: { user } } = await supabase.auth.getUser();
@@ -252,7 +252,7 @@ export async function executeReportAction(
   suspendDays?: number
 ): Promise<ReportResponse> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 관리자 권한 확인
     const { data: { user } } = await supabase.auth.getUser();
@@ -519,7 +519,7 @@ async function handleUserSuspension(supabase: Awaited<ReturnType<typeof createCl
  */
 export async function getUserReports(): Promise<ReportWithReporter[]> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
@@ -547,7 +547,7 @@ export async function getUserReports(): Promise<ReportWithReporter[]> {
  */
 export async function restoreExpiredHiddenContent(): Promise<{ success: boolean; message: string; restored: number }> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     const now = new Date().toISOString();
     
     let totalRestored = 0;
@@ -651,7 +651,7 @@ export async function restoreExpiredHiddenContent(): Promise<{ success: boolean;
  */
 export async function getReportTargetAuthorId(reportId: string): Promise<{ success: boolean; authorId?: string; error?: string }> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 관리자 권한 확인
     const { data: { user } } = await supabase.auth.getUser();

@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { logUserAction } from '@/shared/actions/log-actions';
 import { CommentDeleteResponse } from './utils';
 
@@ -8,7 +8,7 @@ import { CommentDeleteResponse } from './utils';
  * 댓글 삭제
  */
 export async function deleteComment(commentId: string): Promise<CommentDeleteResponse> {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServer();
   
   try {
     // 1. 현재 사용자 정보 확인

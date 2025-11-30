@@ -1,4 +1,4 @@
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import ClientBoardList from '@/domains/boards/components/board/ClientBoardList';
 
 interface ServerBoardListProps {
@@ -7,7 +7,7 @@ interface ServerBoardListProps {
 
 export default async function ServerBoardList({ parentId }: ServerBoardListProps) {
   // 서버에서 게시판 목록 데이터를 가져옴
-  const supabase = await createClient();
+  const supabase = await getSupabaseServer();
   
   let query = supabase
     .from('boards')

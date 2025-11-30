@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { CommentType } from '../../types/post/comment';
 import { checkSuspensionGuard } from '@/shared/utils/suspension-guard';
 import { logUserAction } from '@/shared/actions/log-actions';
@@ -18,7 +18,7 @@ export async function updateComment(commentId: string, content: string): Promise
   }
   
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 인증된 사용자 정보 확인
     const { data: { user } } = await supabase.auth.getUser();

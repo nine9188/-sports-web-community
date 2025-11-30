@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/shared/api/supabaseServer'
+import { getSupabaseServer } from '@/shared/lib/supabase/server'
 import type { CommentSearchResult } from '../types'
 
 interface SearchCommentsParams {
@@ -22,7 +22,7 @@ export async function searchComments({
   }
 
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     if (!supabase) {
       throw new Error('Supabase 클라이언트 초기화 실패')

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { createClient } from '@/shared/api/supabase';
+import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { useAuth } from '@/shared/context/AuthContext';
 import SuspensionManager from '@/domains/admin/components/SuspensionManager';
 import { checkUserSuspension, getAllUsersWithLastAccess } from '@/domains/admin/actions/suspension';
@@ -62,7 +62,7 @@ export default function UsersAdminPage() {
       // 처리 중인 상태 추가
       setProcessingIds(prev => [...prev, userId]);
       
-      const supabase = createClient();
+      const supabase = getSupabaseBrowser();
       
       // 업데이트 실행 (.select() 제거)
       const { error } = await supabase

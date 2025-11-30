@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { calculateLevelFromExp } from '@/shared/utils/level-icons-server';
 import { createLevelUpNotification } from '@/domains/notifications/actions';
 
@@ -84,7 +84,7 @@ export async function rewardUserActivity(
       return { success: false, error: '오늘 이 활동으로 받을 수 있는 보상을 모두 받았습니다.' };
     }
     
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 관련 ID 로깅 (미사용 변수 경고 방지)
     if (relatedId && process.env.NODE_ENV === 'development') {
@@ -236,7 +236,7 @@ export async function checkConsecutiveLogin(userId: string): Promise<{ consecuti
     return { consecutive: 1, reward: false };
     
     /* 실제 구현 (login_history 테이블 필요)
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 1. 사용자의 마지막 로그인 기록 가져오기
     const { data: lastLogins, error: historyError } = await supabase

@@ -7,7 +7,6 @@ import AuthSection from '@/domains/sidebar/components/auth/AuthSection';
 import { fetchStandingsData } from '@/domains/sidebar/actions/football';
 import LeagueStandings from '@/domains/sidebar/components/league/LeagueStandings';
 import { RightSidebar } from '@/domains/sidebar/components';
-import { getInitialSession } from '@/shared/api/supabaseServer';
 import { getHeaderUserData, getBoardsForNavigation } from '@/domains/layout/actions';
 import { fetchMultiDayMatches } from '@/domains/livescore/actions/footballApi';
 import { generatePageMetadata } from '@/shared/utils/metadataNew';
@@ -63,7 +62,6 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   // 서버에서 초기 세션 가져오기 (SSR 지원)
-  const initialSession = await getInitialSession();
   
   // AuthSection 컴포넌트 생성 - 이제 서버 컴포넌트이므로 props 불필요
   const authSection = <AuthSection />;
@@ -127,7 +125,6 @@ export default async function RootLayout({
           rightSidebar={<RightSidebar />}
           authSection={authSection}
           leagueStandingsComponent={leagueStandingsComponent}
-          initialSession={initialSession}
           headerUserData={headerUserData}
           headerBoards={headerBoardsData.boardData}
           headerIsAdmin={headerBoardsData.isAdmin}

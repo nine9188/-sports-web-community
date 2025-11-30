@@ -1,13 +1,13 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 
 /**
  * 단일 알림 읽음 처리
  */
 export async function markNotificationAsRead(notificationId: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -38,7 +38,7 @@ export async function markNotificationAsRead(notificationId: string): Promise<{ 
  */
 export async function markAllNotificationsAsRead(): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -69,7 +69,7 @@ export async function markAllNotificationsAsRead(): Promise<{ success: boolean; 
  */
 export async function deleteNotification(notificationId: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -94,6 +94,7 @@ export async function deleteNotification(notificationId: string): Promise<{ succ
     };
   }
 }
+
 
 
 

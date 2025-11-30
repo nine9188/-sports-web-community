@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/shared/api/supabase';
+import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { Bell, Users, Send, Loader2, CheckCircle, XCircle, Clock, History } from 'lucide-react';
 import { createAdminNoticeWithLog, createBroadcastNotification, getNotificationLogs } from '@/domains/notifications/actions';
 
@@ -44,7 +44,7 @@ export default function NotificationSendPage() {
   const [isLoadingLogs, setIsLoadingLogs] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
 
-  const supabase = createClient();
+  const supabase = getSupabaseBrowser();
 
   // 현재 사용자 정보 및 알림 로그 조회
   useEffect(() => {

@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/shared/api/supabase';
+import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
@@ -76,9 +76,12 @@ export default function PostEditForm({
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [showSocialModal, setShowSocialModal] = useState(false);
-  
-  // Supabase 클라이언트 - 한 번만 생성하여 재사용 (성능 최적화)
-  const supabase = useMemo(() => createClient(), []);
+
+  // Supabase 클라이언트 - 한 번만 생성하여 재사용 (성능 최적화, SSR 안전)
+  const supabase = useMemo(() => {
+    if (typeof window === 'undefined') return null as any;
+    return getSupabaseBrowser();
+  }, []);
   
   // 확장 로딩 상태 관리 - any 타입으로 타입 충돌 해결
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

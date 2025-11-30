@@ -1,6 +1,6 @@
 'use server';
 
-import { createServerActionClient } from '@/shared/api/supabaseServer';
+import { getSupabaseAction } from '@/shared/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { cache } from 'react';
 
@@ -52,7 +52,7 @@ export async function createOrUpdatePrediction(
   predictionType: PredictionType
 ) {
   try {
-    const supabase = await createServerActionClient();
+    const supabase = await getSupabaseAction();
     
     // 현재 사용자 확인
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -149,7 +149,7 @@ export async function createOrUpdatePrediction(
 // 예측 통계 업데이트
 export async function updatePredictionStatsManually(matchId: string) {
   try {
-    const supabase = await createServerActionClient();
+    const supabase = await getSupabaseAction();
     
     // 예측 데이터 조회
     const { data: predictions, error: selectError } = await supabase
@@ -192,7 +192,7 @@ export async function updatePredictionStatsManually(matchId: string) {
 // 매치 예측 통계 조회 (캐시 적용)
 export const getPredictionStats = cache(async (matchId: string) => {
   try {
-    const supabase = await createServerActionClient();
+    const supabase = await getSupabaseAction();
     
     const { data, error } = await supabase
       .from('match_prediction_stats')
@@ -235,7 +235,7 @@ export const getPredictionStats = cache(async (matchId: string) => {
 // 사용자의 현재 예측 조회 (캐시 적용)
 export const getUserPrediction = cache(async (matchId: string) => {
   try {
-    const supabase = await createServerActionClient();
+    const supabase = await getSupabaseAction();
     
     // 현재 사용자 확인
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -264,7 +264,7 @@ export const getUserPrediction = cache(async (matchId: string) => {
 // 예측 삭제
 export async function deletePrediction(matchId: string) {
   try {
-    const supabase = await createServerActionClient();
+    const supabase = await getSupabaseAction();
     
     // 현재 사용자 확인
     const { data: { user }, error: userError } = await supabase.auth.getUser();

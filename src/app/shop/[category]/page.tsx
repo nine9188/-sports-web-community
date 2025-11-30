@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
-import { createClient } from '@/shared/api/supabaseServer'
+import { getSupabaseServer } from '@/shared/lib/supabase/server'
 import { 
   getShopCategory, 
   getCategoryItemsPaginated, 
@@ -66,7 +66,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
     const allCategoryIds = Array.from(allCategoryIdsSet)
 
     // 사용자 정보 및 아이템 가져오기
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     const { data: { user } } = await supabase.auth.getUser()
     
     // catParam이 있으면 해당 카테고리로 범위 축소 (루트=자식 포함, 서브=해당 서브만)

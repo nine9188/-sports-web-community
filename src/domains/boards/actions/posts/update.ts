@@ -2,7 +2,7 @@
 
 import { checkSuspensionGuard } from '@/shared/utils/suspension-guard';
 import { logUserAction } from '@/shared/actions/log-actions';
-import { createServerActionClient } from '@/shared/api/supabaseServer';
+import { getSupabaseAction } from '@/shared/lib/supabase/server';
 import { processMatchCardsInContent, PostActionResponse } from './utils';
 
 /**
@@ -31,7 +31,7 @@ export async function updatePost(
       };
     }
     
-    const supabase = await createServerActionClient();
+    const supabase = await getSupabaseAction();
     
     if (!supabase) {
       return {

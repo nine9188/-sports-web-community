@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
-import { createClient } from '@/shared/api/supabase';
+import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { getLevelIconUrl } from '@/shared/utils/level-icons';
 
 interface IconContextType {
@@ -49,7 +49,7 @@ export function IconProvider({
     try {
       setIsIconLoading(true);
       
-      const supabase = createClient();
+      const supabase = getSupabaseBrowser();
       
       // 현재 로그인한 사용자 정보 가져오기
       const { data: { user } } = await supabase.auth.getUser();
@@ -92,7 +92,7 @@ export function IconProvider({
     } catch (error) {
       console.error('아이콘 정보 로드 중 오류 발생:', error);
       // 오류 발생 시 기본값 설정
-      const supabase = createClient();
+      const supabase = getSupabaseBrowser();
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {

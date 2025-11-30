@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { createClient } from '@/shared/api/supabase';
+import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { AlertCircle, FileVideo } from 'lucide-react';
 import { toast } from 'react-toastify';
 
@@ -27,7 +27,7 @@ export default function VideoForm({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadAbortController = useRef<AbortController | null>(null);
-  const supabase = createClient();
+  const supabase = getSupabaseBrowser();
 
   // 외부 클릭 감지
   useEffect(() => {

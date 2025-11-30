@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { createClient } from '@/shared/api/supabase';
+import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { Notification } from '../types/notification';
 import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '../actions';
 import NotificationDropdown from './NotificationDropdown';
@@ -19,7 +19,7 @@ export default function NotificationBell({ userId, initialUnreadCount = 0 }: Not
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
   const [isLoading, setIsLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const supabase = createClient();
+  const supabase = getSupabaseBrowser();
   
   // 모바일 여부 감지 (md breakpoint: 768px)
   const isMobile = useMediaQuery('(max-width: 767px)');
@@ -61,7 +61,14 @@ export default function NotificationBell({ userId, initialUnreadCount = 0 }: Not
     }
   }, [userId]);
 
-  // 모달/드롭다운 열릴 때 알림 로드
+  // 컴포넌트 마운트 시 초기 알림 개수 로드 (로그인 직후)
+  useEffect(() => {
+    if (userId) {
+      loadNotifications();
+    }
+  }, [userId, loadNotifications]);
+
+  // 모달/드롭다운 열릴 때 알림 새로고침
   useEffect(() => {
     if (isOpen && userId) {
       loadNotifications();

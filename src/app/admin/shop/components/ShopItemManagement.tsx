@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useMemo, Fragment } from 'react';
-import { createClient } from '@/shared/api/supabase';
+import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { Card } from '@/shared/ui/card';
 import Tabs, { TabItem } from '@/shared/ui/tabs';
 import { Button } from '@/shared/components/ui/button';
@@ -111,7 +111,7 @@ export default function ShopItemManagement({ teams, leagues, storageImages, shop
   const handleImageUpload = async (file: File) => {
     try {
       setLoading(true);
-      const supabase = createClient();
+      const supabase = getSupabaseBrowser();
 
       // 파일 이름 생성
       const fileExt = file.name.split('.').pop();
@@ -167,7 +167,7 @@ export default function ShopItemManagement({ teams, leagues, storageImages, shop
 
     try {
       setLoading(true);
-      const supabase = createClient();
+      const supabase = getSupabaseBrowser();
 
       const newItem = {
         name,
@@ -240,7 +240,7 @@ export default function ShopItemManagement({ teams, leagues, storageImages, shop
 
     try {
       setLoading(true);
-      const supabase = createClient();
+      const supabase = getSupabaseBrowser();
 
       const updates = {
         name,
@@ -283,7 +283,7 @@ export default function ShopItemManagement({ teams, leagues, storageImages, shop
 
     try {
       setLoading(true);
-      const supabase = createClient();
+      const supabase = getSupabaseBrowser();
 
       const { error } = await supabase
         .from('shop_items')

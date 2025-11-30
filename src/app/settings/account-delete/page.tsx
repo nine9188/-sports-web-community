@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { AccountDeleteForm } from '@/domains/settings/components';
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 
 export const metadata: Metadata = {
   title: '회원 탈퇴 | 설정',
@@ -13,7 +13,7 @@ export const revalidate = 0;
 
 export default async function AccountDeletePage() {
   // Supabase 클라이언트 생성
-  const supabase = await createClient();
+  const supabase = await getSupabaseServer();
 
   // 사용자 인증 정보 확인 (getUser 메서드 사용)
   const { data: { user }, error } = await supabase.auth.getUser();

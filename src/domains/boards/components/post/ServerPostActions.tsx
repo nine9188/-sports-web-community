@@ -1,4 +1,4 @@
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import PostActions from '@/domains/boards/components/post/PostActions';
 
 interface ServerPostActionsProps {
@@ -11,7 +11,7 @@ export default async function ServerPostActions({
   boardId 
 }: ServerPostActionsProps) {
   // 서버에서 초기 좋아요/싫어요 데이터를 가져옴
-  const supabase = await createClient();
+  const supabase = await getSupabaseServer();
   
   // 현재 사용자 확인
   const { data: { user } } = await supabase.auth.getUser();

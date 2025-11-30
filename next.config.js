@@ -1,9 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Instrumentation 활성화 (에러 필터링용)
-  experimental: {
-    instrumentationHook: true,
-  },
   images: {
     remotePatterns: [
       {

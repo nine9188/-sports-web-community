@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ProfileUpdateData } from '../types';
 
@@ -9,7 +9,7 @@ import { ProfileUpdateData } from '../types';
  */
 export async function getUserProfile(userId: string) {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     const { data, error } = await supabase
       .from('profiles')
@@ -53,7 +53,7 @@ export async function updateProfile(
     }
 
     // Supabase 클라이언트 생성
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 사용자 정보 확인
     const { data: { user }, error } = await supabase.auth.getUser();
@@ -102,7 +102,7 @@ export async function updateProfileIcon(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // Supabase 클라이언트 생성
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 사용자 정보 확인
     const { data: { user }, error } = await supabase.auth.getUser();
@@ -145,7 +145,7 @@ export async function updateProfileIcon(
 export async function getUserIcons(userId: string) {
   try {
     // Supabase 클라이언트 생성
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 사용자가 보유한 아이콘 목록 조회
     const { data, error } = await supabase
@@ -183,7 +183,7 @@ export async function getUserIcons(userId: string) {
 export async function getCurrentUserIcon(userId: string) {
   try {
     // Supabase 클라이언트 생성
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 사용자의 현재 아이콘 ID 조회
     const { data: profileData, error: profileError } = await supabase

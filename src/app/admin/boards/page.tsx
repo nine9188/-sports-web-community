@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '@/shared/ui/button';
 import { toast } from 'react-toastify';
-import { createClient } from '@/shared/api/supabase';
+import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { ArrowUp, ArrowDown, ChevronRight, ChevronsRight } from 'lucide-react';
 
 interface Board {
@@ -52,9 +52,12 @@ export default function BoardsAdminPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUpdatingOrder, setIsUpdatingOrder] = useState(false);
-  
-  // Supabase 클라이언트를 useMemo로 안정화
-  const supabase = useMemo(() => createClient(), []);
+
+  // Supabase 클라이언트를 useMemo로 안정화 (SSR 안전)
+  const supabase = useMemo(() => {
+    if (typeof window === 'undefined') return null as any;
+    return getSupabaseBrowser();
+  }, []);
 
   // 게시판 목록 불러오기 - useCallback 사용
   const fetchBoards = useCallback(async () => {

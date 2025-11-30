@@ -1,4 +1,4 @@
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { SupabaseClient } from '@supabase/supabase-js';
 
 // 유튜브 비디오 데이터 인터페이스
@@ -25,7 +25,7 @@ export async function fetchYouTubeVideos(boardSlug: string): Promise<YouTubeVide
     
     // 데이터 가져오기 Promise
     const fetchPromise = (async () => {
-      const supabase = await createClient();
+      const supabase = await getSupabaseServer();
       
       if (!supabase) {
         return [];

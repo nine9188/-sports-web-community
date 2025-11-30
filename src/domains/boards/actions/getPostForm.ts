@@ -1,13 +1,13 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 
 /**
  * 게시글 수정 페이지에 필요한 데이터를 가져옵니다.
  */
 export async function getPostEditData(slug: string, postNumber: string) {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 세션 정보 가져오기
     const { data: userData } = await supabase.auth.getUser();
@@ -86,7 +86,7 @@ export async function getCreatePostData(slug: string) {
   }
 
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 게시판 정보 가져오기
     const { data: board, error: boardError } = await supabase

@@ -3,7 +3,7 @@ import { Post, AdjacentPosts } from '../../types/post';
 import { FormattedPost } from '../../types/post/formatted';
 import { CommentType } from '../../types/post/comment';
 import { BoardData } from '../../types/board/data';
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
 
 /**
@@ -13,7 +13,7 @@ import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
  * @returns 이전/다음 게시글 정보
  */
 export async function getAdjacentPosts(boardId: string, postNumber: number): Promise<AdjacentPosts> {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServer();
 
   const { data: prevPost } = await supabase
     .from('posts')
@@ -44,7 +44,7 @@ export async function getAdjacentPosts(boardId: string, postNumber: number): Pro
  * @param postId 게시글 ID
  */
 export async function incrementPostViews(postId: string) {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServer();
 
   const { data: currentPost } = await supabase
     .from('posts')
@@ -128,8 +128,7 @@ export async function formatPosts(
 
     if (iconIds.length > 0) {
       try {
-        const { createClient } = await import('@/shared/api/supabaseServer');
-        const supabase = await createClient();
+        const supabase = await getSupabaseServer();
 
         const { data: iconsData } = await supabase
           .from('shop_items')

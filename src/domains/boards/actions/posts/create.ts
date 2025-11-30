@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { rewardUserActivity, getActivityTypeValues } from '@/shared/actions/activity-actions';
 import { checkSuspensionGuard } from '@/shared/utils/suspension-guard';
 import { logUserAction, logError } from '@/shared/actions/log-actions';
-import { createServerActionClient } from '@/shared/api/supabaseServer';
+import { getSupabaseAction } from '@/shared/lib/supabase/server';
 import { processMatchCardsInContent, PostActionResponse } from './utils';
 
 /**
@@ -33,7 +33,7 @@ export async function createPostWithParams(
       };
     }
     
-    const supabase = await createServerActionClient();
+    const supabase = await getSupabaseAction();
     
     if (!supabase) {
       return {
@@ -149,7 +149,7 @@ export async function createPost(formData: FormData): Promise<{ success: true; p
   
   try {
     console.log('[createPost] Supabase 클라이언트 생성 시작');
-    const supabase = await createServerActionClient()
+    const supabase = await getSupabaseAction()
     
     if (!supabase) {
       console.error('[createPost] Supabase 클라이언트 초기화 실패');
@@ -338,7 +338,7 @@ export async function createPost(formData: FormData): Promise<{ success: true; p
     try {
       const formDataTitle = formData.get('title') as string;
       const formDataBoardId = formData.get('boardId') as string;
-      const tempSupabase = await createServerActionClient();
+      const tempSupabase = await getSupabaseAction();
       
       if (tempSupabase) {
         const { data: { user } } = await tempSupabase.auth.getUser();

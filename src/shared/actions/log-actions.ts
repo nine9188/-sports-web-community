@@ -1,6 +1,6 @@
 'use server'
 
-import { createServerActionClient } from '@/shared/api/supabaseServer'
+import { getSupabaseAction } from '@/shared/lib/supabase/server'
 import { headers } from 'next/headers'
 import { Database, Json } from '@/shared/types/supabase'
 
@@ -45,7 +45,7 @@ export interface LogStatistics {
  */
 export async function writeLog(entry: LogEntry) {
   try {
-    const supabase = await createServerActionClient()
+    const supabase = await getSupabaseAction()
     const headersList = await headers()
     
     // 요청 정보 자동 수집
@@ -242,7 +242,7 @@ export async function getApplicationLogs(
   }
 ) {
   try {
-    const supabase = await createServerActionClient()
+    const supabase = await getSupabaseAction()
     
     // 현재 사용자가 관리자인지 확인
     const { data: { user } } = await supabase.auth.getUser()
@@ -343,7 +343,7 @@ export async function getLogStatistics(
   period: 'today' | 'week' | 'month' = 'today'
 ): Promise<LogStatistics> {
   try {
-    const supabase = await createServerActionClient()
+    const supabase = await getSupabaseAction()
     
     // 관리자 권한 확인
     const { data: { user } } = await supabase.auth.getUser()

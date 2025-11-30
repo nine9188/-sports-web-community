@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { CommentType } from '../../types/post/comment';
 import { CommentsListResponse, addIconUrlToComments, determineCommentStatus } from './utils';
 
@@ -9,7 +9,7 @@ import { CommentsListResponse, addIconUrlToComments, determineCommentStatus } fr
  */
 export async function getComments(postId: string): Promise<CommentsListResponse> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 댓글 가져오기 (사용자 정보 포함)
     const { data, error } = await supabase

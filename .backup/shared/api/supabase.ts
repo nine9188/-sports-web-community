@@ -18,10 +18,10 @@ let client: SupabaseClient<Database> | undefined
  * 사용 예시:
  * ```tsx
  * 'use client'
- * import { createClient } from '@/shared/api/supabase'
+ * import { getSupabaseBrowser } from '@/shared/lib/supabase'
  *
  * export default function ClientComponent() {
- *   const supabase = createClient()
+ *   const supabase = getSupabaseBrowser()
  *   // ... 클라이언트 로직
  * }
  * ```

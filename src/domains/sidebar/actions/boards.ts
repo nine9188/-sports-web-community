@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { cache } from 'react';
 import { HierarchicalBoard, BoardNavigationData } from '../types';
 import { revalidatePath } from 'next/cache';
@@ -23,7 +23,7 @@ type DatabaseBoard = {
 // 서버 측에서 게시판 데이터를 가져오는 함수 (캐싱 적용)
 export const getBoardsData = cache(async (): Promise<BoardNavigationData> => {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 게시판 데이터 쿼리
     const { data: boards, error } = await supabase

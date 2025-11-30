@@ -1,10 +1,10 @@
 'use server'
 
-import { createServerActionClient } from '@/shared/api/supabaseServer'
+import { getSupabaseAction } from '@/shared/lib/supabase/server'
 
 // 관리자 권한 확인 함수
 async function checkAdminPermission() {
-  const supabase = await createServerActionClient()
+  const supabase = await getSupabaseAction()
   
   const { data: { user }, error } = await supabase.auth.getUser()
   

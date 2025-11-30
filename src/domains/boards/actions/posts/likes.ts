@@ -3,7 +3,7 @@
 import { rewardUserActivity, getActivityTypeValues } from '@/shared/actions/activity-actions';
 import { checkSuspensionGuard } from '@/shared/utils/suspension-guard';
 import { logUserAction } from '@/shared/actions/log-actions';
-import { createServerActionClient } from '@/shared/api/supabaseServer';
+import { getSupabaseAction } from '@/shared/lib/supabase/server';
 import { LikeActionResponse } from './utils';
 import { createPostLikeNotification } from '@/domains/notifications/actions';
 
@@ -21,7 +21,7 @@ export async function likePost(postId: string): Promise<LikeActionResponse> {
   });
   
   try {
-    const supabase = await createServerActionClient();
+    const supabase = await getSupabaseAction();
     console.log('[likePost] Supabase 클라이언트 생성 완료');
     
     // Supabase 클라이언트가 제대로 생성되었는지 확인
@@ -306,7 +306,7 @@ export async function likePost(postId: string): Promise<LikeActionResponse> {
  */
 export async function dislikePost(postId: string): Promise<LikeActionResponse> {
   try {
-    const supabase = await createServerActionClient();
+    const supabase = await getSupabaseAction();
     
     // 인증된 사용자 정보 확인
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -478,7 +478,7 @@ export async function dislikePost(postId: string): Promise<LikeActionResponse> {
  */
 export async function getUserPostAction(postId: string): Promise<{ userAction: 'like' | 'dislike' | null, error?: string }> {
   try {
-    const supabase = await createServerActionClient();
+    const supabase = await getSupabaseAction();
     
     // 인증된 사용자 정보 확인
     const { data: { user }, error: userError } = await supabase.auth.getUser();

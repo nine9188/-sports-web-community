@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/shared/api/supabase';
+import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { toast } from 'react-toastify';
 import { Youtube, Plus, Trash2, RefreshCw, Code } from 'lucide-react';
 
@@ -38,7 +38,7 @@ export default function YoutubeChannelManager() {
   const [playlistId, setPlaylistId] = useState('');
   const [autoPublish, setAutoPublish] = useState(true);
   
-  const supabase = createClient();
+  const supabase = getSupabaseBrowser();
   
   useEffect(() => {
     fetchChannels();

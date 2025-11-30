@@ -1,7 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
 
@@ -12,7 +12,7 @@ import { headers } from 'next/headers';
  */
 export async function checkUserAuth(redirectTo = '/auth/signin') {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     const { data: { user }, error } = await supabase.auth.getUser();
     
     if (error || !user) {
@@ -75,7 +75,7 @@ export async function changePassword(
     }
 
     // Supabase 클라이언트 생성
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 사용자 정보 확인 (getUser 사용 - 보안 강화)
     const { data: { user }, error } = await supabase.auth.getUser();

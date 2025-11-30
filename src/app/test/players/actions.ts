@@ -1,6 +1,6 @@
 'use server'
 
-import { createAdminClient } from '@/shared/api/supabaseServer'
+import { getSupabaseAdmin } from '@/shared/lib/supabase/server'
 import { LEAGUE_IDS } from '@/domains/search/constants/leagues'
 import { revalidatePath } from 'next/cache'
 
@@ -141,7 +141,7 @@ async function chunkedUpsert<T extends Record<string, any>>(
   onConflict: string,
   chunkSize = 200
 ) {
-  const supabase = createAdminClient()
+  const supabase = getSupabaseAdmin()
   let saved = 0
 
   for (let i = 0; i < rows.length; i += chunkSize) {
@@ -159,7 +159,7 @@ async function chunkedUpsert<T extends Record<string, any>>(
 
 // ---------- 리그/팀 조회 ----------
 export async function getLeagueCompetitions() {
-  const supabase = createAdminClient()
+  const supabase = getSupabaseAdmin()
   const leagueIds = Object.values(LEAGUE_IDS)
 
   const { data: teams, error } = await supabase
@@ -208,7 +208,7 @@ export async function getLeagueCompetitions() {
 }
 
 export async function getLeaguePlayersStats(leagueId: number) {
-  const supabase = createAdminClient()
+  const supabase = getSupabaseAdmin()
 
   const { data: teams } = await supabase
     .from('football_teams')
@@ -315,7 +315,7 @@ export async function savePlayersToDatabase(
   teamName: string,
   players: ApiSquadPlayer[]
 ) {
-  const supabase = createAdminClient()
+  const supabase = getSupabaseAdmin()
 
   if (players.length === 0) {
     return { success: false, message: '저장할 선수 데이터가 없습니다.', count: 0 }
@@ -435,7 +435,7 @@ export async function savePlayersToDatabase(
 
 // ---------- 조회 ----------
 export async function getTeamPlayers(teamId: number) {
-  const supabase = createAdminClient()
+  const supabase = getSupabaseAdmin()
   const { data, error } = await supabase
     .from('football_players')
     .select('*')
@@ -471,7 +471,7 @@ export async function syncTeamPlayers(teamId: number, teamName: string) {
 
 export async function syncLeaguePlayers(leagueId: number, leagueName: string) {
   try {
-    const supabase = createAdminClient()
+    const supabase = getSupabaseAdmin()
     console.log(`📡 ${leagueName} 선수 조회 시작...`)
 
     const { data: teams } = await supabase

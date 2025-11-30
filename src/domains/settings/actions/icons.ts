@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { ActionResponse, IconItem, UserItem } from '../types';
 
 /**
@@ -19,7 +19,7 @@ export async function getUserIcons(userId: string): Promise<ActionResponse<IconI
       };
     }
     
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 사용자의 아이템 목록 조회 - type 필터를 제거
     const { data, error } = await supabase
@@ -80,7 +80,7 @@ export async function getCurrentUserIcon(userId: string): Promise<ActionResponse
       };
     }
     
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 프로필 정보 조회
     const { data: profile, error: profileError } = await supabase
@@ -164,7 +164,7 @@ export async function updateUserIcon(userId: string, iconId: number | null): Pro
       };
     }
     
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 사용자 인증 확인
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -232,7 +232,7 @@ export async function updateUserIcon(userId: string, iconId: number | null): Pro
  */
 export async function updateUserIconServer(userId: string, iconId: number | null) {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 사용자 프로필 아이콘 업데이트
     const { error } = await supabase
@@ -260,7 +260,7 @@ export async function updateUserIconServer(userId: string, iconId: number | null
  */
 export async function getUserIcon(userId: string) {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 사용자 프로필에서 선택된 아이콘 ID 가져오기
     const { data: profile, error: profileError } = await supabase

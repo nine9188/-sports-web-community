@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { cache } from 'react';
 
 // 사이드바용 사용자 프로필 데이터 타입
@@ -25,7 +25,7 @@ export interface SidebarUserProfile {
  */
 export const getSidebarUserProfile = cache(async (): Promise<SidebarUserProfile | null> => {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 현재 사용자 확인
     const { data: { user }, error: authError } = await supabase.auth.getUser();

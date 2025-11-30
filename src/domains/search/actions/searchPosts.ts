@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/shared/api/supabaseServer'
+import { getSupabaseServer } from '@/shared/lib/supabase/server'
 import type { PostSearchResult } from '../types'
 import { logUserAction } from '@/shared/actions/log-actions'
 
@@ -23,7 +23,7 @@ export async function searchPosts({
   }
 
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
         if (!supabase) {
       throw new Error('Supabase 클라이언트 초기화 실패')

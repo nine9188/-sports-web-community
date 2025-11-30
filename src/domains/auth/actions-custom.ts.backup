@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient, createServerActionClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer, getSupabaseAction } from '@/shared/lib/supabase/server';
 import { 
   generateVerificationCode, 
   generateSecureToken, 
@@ -17,7 +17,7 @@ import { sendVerificationCodeEmail, sendPasswordResetEmail } from '@/shared/serv
 export async function sendIdRecoveryCode(email: string, fullName: string) {
   try {
     // 이메일과 이름으로 사용자 존재 확인
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     const { data: user, error } = await supabase
       .from('profiles')
       .select('username, full_name')
@@ -67,7 +67,7 @@ export async function findUsernameWithCode(email: string, code: string) {
     }
 
     // 사용자 정보 조회
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     const { data: user, error } = await supabase
       .from('profiles')
       .select('username, full_name, id')
@@ -120,7 +120,7 @@ export async function findUsernameWithCode(email: string, code: string) {
 export async function sendPasswordResetLink(username: string) {
   try {
     // 아이디로 사용자 조회
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     const { data: user, error } = await supabase
       .from('profiles')
       .select('email, username, full_name')
@@ -193,7 +193,7 @@ export async function resetPasswordWithToken(token: string, newPassword: string)
     const email = tokenResult.email;
 
     // Supabase Auth를 통한 비밀번호 업데이트
-    const supabase = await createServerActionClient();
+    const supabase = await getSupabaseAction();
     
     // 사용자 조회
     const { data: user, error: userError } = await supabase

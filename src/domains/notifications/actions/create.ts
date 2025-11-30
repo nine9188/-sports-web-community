@@ -1,6 +1,6 @@
 'use server';
 
-import { createAdminClient } from '@/shared/api/supabaseServer';
+import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import { CreateNotificationParams, NotificationActionResponse } from '../types/notification';
 
 /**
@@ -17,7 +17,7 @@ export async function createNotification(params: CreateNotificationParams): Prom
     }
 
     // Admin Client 사용 (RLS 우회하여 시스템 알림 생성)
-    const supabase = createAdminClient();
+    const supabase = getSupabaseAdmin();
 
     const { data, error } = await supabase
       .from('notifications')
@@ -316,7 +316,7 @@ export async function createBroadcastNotification({
   link?: string;
   adminId?: string;
 }): Promise<{ success: boolean; sent: number; failed: number }> {
-  const supabase = createAdminClient();
+  const supabase = getSupabaseAdmin();
 
   // 모든 활성 사용자 ID 조회
   const { data: users, error } = await supabase
@@ -372,7 +372,7 @@ export async function createAdminNoticeWithLog({
   const result = await createAdminNoticeNotification({ userIds, title, message, link });
 
   // 로그 저장
-  const supabase = createAdminClient();
+  const supabase = getSupabaseAdmin();
   try {
     await supabase.from('admin_notification_logs').insert({
       admin_id: adminId,
@@ -410,7 +410,7 @@ export async function getNotificationLogs(limit: number = 50): Promise<{
   error?: string;
 }> {
   try {
-    const supabase = createAdminClient();
+    const supabase = getSupabaseAdmin();
 
     const { data, error } = await supabase
       .from('admin_notification_logs')
@@ -445,6 +445,7 @@ export async function getNotificationLogs(limit: number = 50): Promise<{
     };
   }
 }
+
 
 
 

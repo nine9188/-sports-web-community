@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { MyCommentItem, PaginationParams, ActionResponse } from '../types';
 
 // Supabase 응답 데이터에 대한 인터페이스
@@ -40,7 +40,7 @@ export async function getMyComments(
       };
     }
     
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 내가 쓴 댓글 가져오기
     const { data, count, error } = await supabase

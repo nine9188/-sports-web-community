@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/shared/api/supabase';
+import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { Users, FileText, MessageSquare, Coins, TrendingUp } from 'lucide-react';
 
 interface DashboardStats {
@@ -20,7 +20,7 @@ export default function AdminDashboard() {
   });
   
   const [isLoading, setIsLoading] = useState(true);
-  const supabase = createClient();
+  const supabase = getSupabaseBrowser();
   
   useEffect(() => {
     const fetchSimpleStats = async () => {

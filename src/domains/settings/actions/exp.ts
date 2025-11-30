@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { ActionResponse, ExpHistoryItem, ExpLevelInfo } from '../types';
 
 /**
@@ -22,7 +22,7 @@ export async function getUserExpHistory(
       };
     }
     
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 실제 exp_history 테이블 구조를 기반으로 쿼리 수정
     const { data, error } = await supabase
@@ -82,7 +82,7 @@ export async function getUserExpLevel(
       };
     }
     
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 프로필에서 경험치 정보 조회
     const { data, error } = await supabase

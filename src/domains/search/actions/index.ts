@@ -5,7 +5,7 @@ import { searchPosts } from './searchPosts'
 import { searchComments } from './searchComments'
 import { searchTeams, getPopularTeams, getTeamCountByLeague } from './searchTeams'
 import { createSearchLog } from './searchLogs'
-import { createClient } from '@/shared/api/supabaseServer'
+import { getSupabaseServer } from '@/shared/lib/supabase/server'
 import { searchTeamsByName } from '@/domains/livescore/constants/teams'
 import { ALLOWED_LEAGUE_IDS } from '../constants/leagues'
 
@@ -210,7 +210,7 @@ export { getPopularTeams, getTeamCountByLeague }
  */
 async function getPostsCount(query: string): Promise<number> {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     if (!supabase) return 0
     
     const { count } = await supabase
@@ -229,7 +229,7 @@ async function getPostsCount(query: string): Promise<number> {
 
 async function getCommentsCount(query: string): Promise<number> {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     if (!supabase) return 0
     
     const { count } = await supabase
@@ -247,7 +247,7 @@ async function getCommentsCount(query: string): Promise<number> {
 
 async function getTeamsCount(query: string): Promise<number> {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     if (!supabase) return 0
 
     const searchTerm = query.trim().toLowerCase()

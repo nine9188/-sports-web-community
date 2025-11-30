@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { BoardMap, ChildBoardsMap } from '../types/board';
 import { getBoardLevel, getFilteredBoardIds, findRootBoard, generateBoardBreadcrumbs } from '../utils/board/boardHierarchy';
 import { BoardsResponse, Board, HierarchicalBoard } from '@/domains/boards/types';
@@ -9,7 +9,7 @@ import { BoardsResponse, Board, HierarchicalBoard } from '@/domains/boards/types
  * 모든 게시판 목록을 가져옵니다.
  */
 export async function getAllBoards() {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServer();
   const { data, error } = await supabase
     .from('boards')
     .select('*')
@@ -26,7 +26,7 @@ export async function getAllBoards() {
  * 게시판 정보를 슬러그 또는 ID로 가져옵니다.
  */
 export async function getBoardBySlugOrId(slugOrId: string) {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServer();
   let query = supabase.from('boards').select('*');
   
   // 슬러그가 숫자로만 구성된 경우 ID로 처리
@@ -50,7 +50,7 @@ export async function getBoardBySlugOrId(slugOrId: string) {
  */
 export async function getBoardPageData(slug: string, currentPage: number, fromParam?: string) {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 사용자 인증 확인 (로그인 상태)
     const { data: userData } = await supabase.auth.getUser();
@@ -242,7 +242,7 @@ function buildHierarchicalBoards(boards: Board[]): HierarchicalBoard[] {
  */
 export async function getBoards(): Promise<BoardsResponse> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     const { data, error } = await supabase
       .from('boards')
       .select('id, name, parent_id, display_order, slug, team_id, league_id, description, access_level, logo, views, view_type')

@@ -41,15 +41,13 @@ export default function ProfileDropdown() {
     try {
       // 드롭다운 닫기
       setIsDropdownOpen(false);
-      
+
       // AuthContext의 logoutUser 함수 사용
       await logoutUser();
-      
+
       // 아이콘 상태 초기화
       updateUserIconState('', '');
-      
-      toast.success('로그아웃되었습니다.');
-      
+
       // 확실한 페이지 새로고침을 위해 window.location 사용
       window.location.href = '/';
     } catch (error) {

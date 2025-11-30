@@ -8,7 +8,7 @@ declare global {
     rssAutoInterval?: NodeJS.Timeout;
   }
 }
-import { createClient } from '@/shared/api/supabase';
+import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { toast } from 'react-toastify';
 import Tabs, { TabItem } from '@/shared/ui/tabs';
 import { Loader2, RefreshCw, Plus, Trash2, Check, X, ExternalLink } from 'lucide-react';
@@ -73,7 +73,7 @@ export default function RSSAdminPage() {
     created_at: string;
     details?: string;
   }>>([]);
-  const supabase = createClient();
+  const supabase = getSupabaseBrowser();
   
   // 게시판 목록 가져오기 함수를 useCallback으로 정의
   const fetchBoards = useCallback(async () => {

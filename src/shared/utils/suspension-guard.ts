@@ -1,13 +1,13 @@
 'use server'
 
-import { createClient } from '@/shared/api/supabaseServer'
+import { getSupabaseServer } from '@/shared/lib/supabase/server'
 
 /**
  * 사용자 정지 상태 확인 및 활동 제한
  */
 export async function checkSuspensionStatus(userId?: string) {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     // 사용자 ID가 없으면 인증되지 않은 상태
     if (!userId) {

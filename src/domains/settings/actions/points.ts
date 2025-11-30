@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 
 // 포인트 내역 아이템 타입 정의
 export interface PointHistoryItem {
@@ -27,7 +27,7 @@ interface ActionResponse<T> {
  */
 export async function getUserPointInfo(userId: string): Promise<ActionResponse<{ points: number; level: number }>> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 사용자 프로필에서 포인트 및 레벨 정보 조회
     const { data, error } = await supabase
@@ -71,7 +71,7 @@ export async function getUserPointHistory(
   try {
     console.log(`포인트 내역 조회 시도: 사용자 ID ${userId}, 한도 ${limit}`);
     
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // point_history 테이블에서 사용자의 포인트 내역 조회
     const { data, error } = await supabase

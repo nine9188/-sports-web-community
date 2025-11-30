@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createClient } from '@/shared/api/supabase';
+import { getSupabaseBrowser } from '@/shared/lib/supabase';
 
 interface ReadStatusHookReturn {
   markAsRead: (messageId: string, conversationId: string) => Promise<void>;
@@ -13,13 +13,15 @@ interface ReadStatusHookReturn {
 }
 
 export function useReadStatus(userId: string): ReadStatusHookReturn {
-  const supabase = createClient();
+  const supabase = getSupabaseBrowser();
   const queryClient = useQueryClient();
 
   // Get all message read statuses for the user
   const { data: readStatuses = [], isLoading } = useQuery({
     queryKey: ['messageReadStatus', userId],
     queryFn: async () => {
+      if (!supabase) return [];
+
       const { data, error } = await supabase
         .from('chat_message_status')
         .select('*')
@@ -28,12 +30,14 @@ export function useReadStatus(userId: string): ReadStatusHookReturn {
       if (error) throw error;
       return data || [];
     },
-    enabled: !!userId,
+    enabled: !!userId && !!supabase,
   });
 
   // Mark single message as read
   const markAsReadMutation = useMutation({
     mutationFn: async ({ messageId, conversationId }: { messageId: string; conversationId: string }) => {
+      if (!supabase) return;
+
       const { error: statusError } = await supabase
         .from('chat_message_status')
         .upsert({
@@ -65,6 +69,8 @@ export function useReadStatus(userId: string): ReadStatusHookReturn {
   // Mark entire conversation as read
   const markConversationAsReadMutation = useMutation({
     mutationFn: async (conversationId: string) => {
+      if (!supabase) return;
+
       // Get all unread messages in the conversation
       const { data: messages, error: messagesError } = await supabase
         .from('chat_messages')

@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
 // ========== 타입 정의 ==========
@@ -30,7 +30,7 @@ export interface PageSeoOverride {
  * SEO 설정 가져오기 (공개)
  */
 export async function getSeoSettings(): Promise<SeoSettings | null> {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServer();
 
   const { data, error } = await supabase
     .from('seo_settings')
@@ -59,7 +59,7 @@ export async function updateGlobalSeo(updates: {
   og_image?: string;
   twitter_handle?: string;
 }): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServer();
 
   // 관리자 확인
   const { data: { user } } = await supabase.auth.getUser();
@@ -105,7 +105,7 @@ export async function updatePageSeo(
   path: string,
   override: PageSeoOverride
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServer();
 
   // 관리자 확인
   const { data: { user } } = await supabase.auth.getUser();
@@ -161,7 +161,7 @@ export async function updatePageSeo(
 export async function deletePageSeo(
   path: string
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
+  const supabase = await getSupabaseServer();
 
   // 관리자 확인
   const { data: { user } } = await supabase.auth.getUser();

@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { NotificationActionResponse } from '../types/notification';
 
 /**
@@ -8,7 +8,7 @@ import { NotificationActionResponse } from '../types/notification';
  */
 export async function deleteNotification(id: string): Promise<NotificationActionResponse> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
 
     // 현재 사용자 확인
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -40,7 +40,7 @@ export async function deleteNotification(id: string): Promise<NotificationAction
  */
 export async function deleteNotifications(ids: string[]): Promise<{ success: boolean; error?: string; deletedCount?: number }> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
 
     // 현재 사용자 확인
     const { data: { user }, error: userError } = await supabase.auth.getUser();

@@ -1,4 +1,4 @@
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import crypto from 'crypto';
 
 
@@ -27,7 +27,7 @@ export async function saveVerificationCode(
   expiresInMinutes: number = 5
 ) {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 기존 코드 무효화 (같은 이메일, 같은 타입)
     await supabase
@@ -73,7 +73,7 @@ export async function verifyCode(
   type: 'id_recovery' | 'password_reset'
 ) {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 코드 조회
     const { data, error } = await supabase
@@ -115,7 +115,7 @@ export async function verifyCode(
  */
 export async function verifyResetToken(token: string) {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     const { data, error } = await supabase
       .from('verification_codes')
@@ -149,7 +149,7 @@ export async function verifyResetToken(token: string) {
  */
 export async function useResetToken(token: string) {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     const { error } = await supabase
       .from('verification_codes')
@@ -174,7 +174,7 @@ export async function useResetToken(token: string) {
  */
 export async function cleanupExpiredCodes() {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     const now = new Date().toISOString();
     

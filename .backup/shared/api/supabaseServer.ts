@@ -120,7 +120,7 @@ export const getInitialSession = async () => {
 // 서버에서 사용자 정보 가져오기
 export const getServerUser = async () => {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
 
     // getUser() 대신 getSession() 사용 (토큰 갱신 없이 세션만 조회)
     const { data: { session }, error } = await supabase.auth.getSession()

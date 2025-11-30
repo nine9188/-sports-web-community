@@ -14,7 +14,7 @@ import {
   getExpToNextLevel,
   getLevelIconUrl
 } from '@/shared/utils/level-icons';
-import { createClient } from '@/shared/api/supabase';
+import { getSupabaseBrowser } from '@/shared/lib/supabase';
 
 interface ProfileData {
   id?: string;
@@ -143,7 +143,7 @@ export default function UserProfile({ profileData: initialProfileData, showActio
       if (profileData || !user) return;
       
       try {
-        const supabase = createClient();
+        const supabase = getSupabaseBrowser();
         
         // 프로필 정보 조회
         const { data: profile, error } = await supabase

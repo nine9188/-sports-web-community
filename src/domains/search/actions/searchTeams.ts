@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/shared/api/supabaseServer'
+import { getSupabaseServer } from '@/shared/lib/supabase/server'
 import { getLeagueName } from '@/domains/livescore/constants/league-mappings'
 import { getTeamById, searchTeamsByName } from '@/domains/livescore/constants/teams'
 import type { TeamSearchResult } from '../types'
@@ -26,7 +26,7 @@ export async function searchTeams(options: TeamSearchOptions): Promise<{
   }
 
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     // 한국어 팀명 매핑을 통한 검색 개선
     const searchTerm = query.trim().toLowerCase()
@@ -154,7 +154,7 @@ export async function searchTeams(options: TeamSearchOptions): Promise<{
 // 주요 팀 목록 (검색 전 표시용) - 각 리그의 대표팀들
 export async function getPopularTeams(limit: number = 12): Promise<TeamSearchResult[]> {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     // 주요 리그의 대표팀들 ID (유명한 팀들)
     const majorTeamIds = [
@@ -249,7 +249,7 @@ export async function getPopularTeams(limit: number = 12): Promise<TeamSearchRes
 // 대체 팀 목록 (프리미어리그 위주)
 async function getFallbackTeams(limit: number): Promise<TeamSearchResult[]> {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: teams, error } = await (supabase as any)
@@ -305,7 +305,7 @@ export async function getTeamCountByLeague(): Promise<Array<{
   team_count: number
 }>> {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any)

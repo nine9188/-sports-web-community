@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient, createServerActionClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer, getSupabaseAction } from '@/shared/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { cache } from 'react';
 import { ReportResponse } from '@/domains/reports/types';
@@ -35,7 +35,7 @@ export interface SupportComment {
 // 응원 댓글 목록 조회 (캐시 적용)
 export const getSupportComments = cache(async (matchId: string) => {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 현재 사용자 확인 (좋아요 상태 확인용)
     const { data: { user } } = await supabase.auth.getUser();
@@ -148,7 +148,7 @@ export async function createSupportComment(
   content: string
 ) {
   try {
-    const supabase = await createServerActionClient();
+    const supabase = await getSupabaseAction();
     
     // 현재 사용자 확인
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -202,7 +202,7 @@ export async function toggleCommentLike(commentId: string) {
 // 응원 댓글 좋아요
 export async function likeMatchComment(commentId: string): Promise<MatchCommentLikeResponse> {
   try {
-    const supabase = await createServerActionClient();
+    const supabase = await getSupabaseAction();
 
     // 인증된 사용자 확인
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -308,7 +308,7 @@ export async function likeMatchComment(commentId: string): Promise<MatchCommentL
 // 응원 댓글 싫어요
 export async function dislikeMatchComment(commentId: string): Promise<MatchCommentLikeResponse> {
   try {
-    const supabase = await createServerActionClient();
+    const supabase = await getSupabaseAction();
 
     // 인증된 사용자 확인
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -419,7 +419,7 @@ export async function toggleSupportCommentLike(commentId: string) {
 // 응원 댓글 삭제
 export async function deleteSupportComment(commentId: string) {
   try {
-    const supabase = await createServerActionClient();
+    const supabase = await getSupabaseAction();
     
     // 현재 사용자 확인
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -470,7 +470,7 @@ export async function reportSupportComment(
   description?: string
 ): Promise<ReportResponse> {
   try {
-    const supabase = await createServerActionClient();
+    const supabase = await getSupabaseAction();
     
     // 현재 사용자 확인
     const { data: { user }, error: userError } = await supabase.auth.getUser();

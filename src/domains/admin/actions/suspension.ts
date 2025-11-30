@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/shared/api/supabaseServer'
+import { getSupabaseServer } from '@/shared/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
 export interface SuspensionData {
@@ -14,7 +14,7 @@ export interface SuspensionData {
  */
 export async function suspendUser(data: SuspensionData) {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     // 현재 관리자 확인
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -73,7 +73,7 @@ export async function suspendUser(data: SuspensionData) {
  */
 export async function unsuspendUser(userId: string) {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     // 현재 관리자 확인
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -127,7 +127,7 @@ export async function unsuspendUser(userId: string) {
  */
 export async function getSuspendedUsers() {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     const { data, error } = await supabase
       .from('profiles')
@@ -152,7 +152,7 @@ export async function getSuspendedUsers() {
  */
 export async function checkUserSuspension(userId: string) {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     const { data, error } = await supabase
       .from('profiles')
@@ -217,7 +217,7 @@ export async function checkUserSuspension(userId: string) {
  */
 export async function getAllUsersWithLastAccess() {
   try {
-    const supabase = await createClient()
+    const supabase = await getSupabaseServer()
     
     // 현재 사용자가 관리자인지 확인
     const { data: { user }, error: authError } = await supabase.auth.getUser()

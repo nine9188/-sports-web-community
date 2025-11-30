@@ -12,18 +12,7 @@ interface AdminLayoutClientProps {
 
 export default function AdminLayoutClient({ children }: AdminLayoutClientProps) {
   const pathname = usePathname();
-  const { user, setSessionType } = useAuth();
-
-  // 어드민 페이지 진입 시 자동으로 30일 세션 유지 설정
-  useEffect(() => {
-    if (user && typeof window !== 'undefined') {
-      const currentKeepLogin = localStorage.getItem('keep_login');
-      if (currentKeepLogin !== 'true') {
-        localStorage.setItem('keep_login', 'true');
-        setSessionType(true);
-      }
-    }
-  }, [user, setSessionType]);
+  const { user } = useAuth();
 
   // 관리자 메뉴 항목
   const menuItems = [

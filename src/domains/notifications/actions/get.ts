@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { Notification, NotificationsResponse } from '../types/notification';
 
 /**
@@ -8,7 +8,7 @@ import { Notification, NotificationsResponse } from '../types/notification';
  */
 export async function getNotifications(limit: number = 20): Promise<NotificationsResponse> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 현재 사용자 확인
     const { data: { user } } = await supabase.auth.getUser();
@@ -65,7 +65,7 @@ export async function getNotifications(limit: number = 20): Promise<Notification
  */
 export async function getUnreadNotificationCount(): Promise<{ success: boolean; count?: number; error?: string }> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -127,6 +127,7 @@ async function addActorIconUrls(
     return notification;
   });
 }
+
 
 
 

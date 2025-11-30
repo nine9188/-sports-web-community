@@ -1,6 +1,6 @@
 'use client';
 
-import { createClient } from '@/shared/api/supabase';
+import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { getLevelIconUrl } from './level-icons';
 
 // 기본 아이콘 URL
@@ -48,7 +48,7 @@ export async function getOptimizedUserIcon(
 
   try {
     // Supabase 클라이언트 생성
-    const supabase = createClient();
+    const supabase = getSupabaseBrowser();
     
     // 프로필 정보 조회 (icon_id와 level만 필요)
     const { data: profile, error } = await supabase

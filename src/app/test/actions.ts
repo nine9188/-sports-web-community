@@ -1,11 +1,11 @@
 'use server'
 
-import { createAdminClient } from '@/shared/api/supabaseServer'
+import { getSupabaseAdmin } from '@/shared/lib/supabase/server'
 import { ALL_TEAMS } from '@/domains/livescore/constants/teams'
 import { revalidatePath } from 'next/cache'
 
 export async function updateTeamMappings() {
-  const supabase = createAdminClient() // 관리자 권한으로 실행
+  const supabase = getSupabaseAdmin() // 관리자 권한으로 실행
 
   try {
     // 1. DB에서 모든 팀 조회

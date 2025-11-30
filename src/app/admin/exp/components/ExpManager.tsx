@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/shared/api/supabase';
+import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { toast } from 'react-toastify';
 import { Button } from '@/shared/ui/button';
 import { Award } from 'lucide-react';
@@ -108,7 +108,7 @@ export default function ExpManager({
     
     try {
       setIsSubmitting(true);
-      const supabase = createClient();
+      const supabase = getSupabaseBrowser();
       
       // 현재 사용자의 경험치 및 레벨 데이터
       const userExp = selectedUser.exp || 0;

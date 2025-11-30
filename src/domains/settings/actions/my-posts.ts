@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { PaginationParams, ActionResponse } from '../types';
 import { MyPostItem, DbPostResult } from '../types/posts';
 
@@ -26,7 +26,7 @@ export async function getMyPosts(
 
 
     
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     try {
       // 게시글 조회 (실제 테이블 구조에 맞게 필드명 수정)

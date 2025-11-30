@@ -1,5 +1,5 @@
 import NewsWidgetClient from './news-widget-client';
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 
 // 뉴스 데이터 인터페이스
 export interface NewsItem {
@@ -133,7 +133,7 @@ function extractImageFromContent(content: string): string {
 // 서버 컴포넌트에서 게시글 데이터 가져오기
 async function getBoardPosts(boardSlug: string): Promise<NewsItem[]> {
   try {
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 1. 게시판 정보 가져오기 (slug로 검색)
     const { data: boardData, error: boardError } = await supabase

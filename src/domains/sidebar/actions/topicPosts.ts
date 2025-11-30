@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { cache } from 'react';
 import { TopicPost } from '../types';
 
@@ -11,7 +11,7 @@ import { TopicPost } from '../types';
 export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comments'): Promise<TopicPost[]> => {
   try {
     // 서버 컴포넌트에서 Supabase 클라이언트 생성
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 1. 글 목록 가져오기 (정렬 기준에 따라)
     // 최종적으로 20개만 보여주므로 50개만 가져와서 처리 (성능 최적화)

@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { PaginationParams } from '../types';
 
 /**
@@ -12,7 +12,7 @@ export async function getMyPosts(userId: string, params: PaginationParams) {
     const offset = (page - 1) * limit;
     
     // Supabase 클라이언트 생성
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 내 게시글 목록 조회
     const { data: posts, error, count } = await supabase
@@ -60,7 +60,7 @@ export async function getMyComments(userId: string, params: PaginationParams) {
     const offset = (page - 1) * limit;
     
     // Supabase 클라이언트 생성
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 내 댓글 목록 조회
     const { data: comments, error, count } = await supabase
@@ -113,7 +113,7 @@ export async function getMyComments(userId: string, params: PaginationParams) {
 export async function getUserExpHistory(userId: string, limit = 10) {
   try {
     // Supabase 클라이언트 생성
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 경험치 내역 조회
     const { data, error } = await supabase
@@ -147,7 +147,7 @@ export async function getUserExpHistory(userId: string, limit = 10) {
 export async function getUserPointHistory(userId: string, limit = 10) {
   try {
     // Supabase 클라이언트 생성
-    const supabase = await createClient();
+    const supabase = await getSupabaseServer();
     
     // 포인트 내역 조회
     const { data, error } = await supabase
