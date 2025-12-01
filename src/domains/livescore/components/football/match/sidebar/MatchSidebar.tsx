@@ -149,9 +149,9 @@ export function MatchInfoSection({
   return (
     <>
       {/* 경기 상세정보 섹션 */}
-      <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 mb-3">
+      <div className="bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 mb-3">
         {/* 헤더 */}
-        <div className="h-12 flex items-center px-4 border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] rounded-t-lg">
+        <div className="h-12 flex items-center px-4 border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] md:rounded-t-lg">
           <h3 className="font-semibold text-sm text-gray-900 dark:text-[#F0F0F0]">경기 상세정보</h3>
         </div>
 

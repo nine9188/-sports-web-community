@@ -32,6 +32,7 @@ interface MatchDataType {
     name?: string;
     name_ko?: string;
     logo?: string;
+    round?: string;
   };
   teams?: {
     home?: {
@@ -100,6 +101,17 @@ const MatchHeader = memo(() => {
       score
     };
   }, [typedMatchData]);
+
+  // 라운드 포맷팅 함수
+  const formatRound = (round?: string) => {
+    if (!round) return null;
+    // "Regular Season - 15" -> "15라운드"
+    if (round.includes('Regular Season')) {
+      const roundNumber = round.split(' - ')[1];
+      return roundNumber ? `${roundNumber}라운드` : round;
+    }
+    return round;
+  };
 
   // 점수 및 상태 정보 메모이제이션
   const displayInfo = useMemo(() => {
@@ -196,9 +208,9 @@ const MatchHeader = memo(() => {
   return (
     <div className="w-full md:max-w-screen-xl md:mx-auto">
       {/* 통합된 매치 헤더 카드 */}
-      <div className="mb-4 bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
+      <div className="mb-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 overflow-hidden">
         {/* 리그 정보 및 경기 상태 */}
-        <div className="h-12 flex items-center justify-between border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] rounded-t-lg px-4">
+        <div className="h-12 flex items-center justify-between border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] md:rounded-t-lg px-4">
           {/* 리그 정보 - 모바일: 왼쪽 / 데스크톱: 왼쪽 1/3 */}
           <div className="flex items-center gap-1.5 md:gap-2 md:w-1/3 md:border-r md:border-r-black/5 md:dark:border-r-white/10 md:pr-4">
             <div className="relative w-4 h-4 md:w-6 md:h-6 flex items-center justify-center flex-shrink-0">
@@ -219,11 +231,16 @@ const MatchHeader = memo(() => {
             </span>
           </div>
 
-          {/* 경기 날짜 - 모바일: 중앙(1/3 너비) / 데스크톱: 중앙 1/3 */}
-          <div className="w-1/3 md:w-1/3 flex items-center justify-center md:border-r md:border-r-black/5 md:dark:border-r-white/10 md:px-4">
+          {/* 경기 날짜 및 라운드 - 모바일: 중앙(1/3 너비) / 데스크톱: 중앙 1/3 */}
+          <div className="w-1/3 md:w-1/3 flex flex-col items-center justify-center md:border-r md:border-r-black/5 md:dark:border-r-white/10 md:px-4">
             <div className="text-xs text-gray-500 dark:text-gray-400">
               {fixture?.date ? formatDateToKorean(new Date(fixture.date)) : '날짜 정보 없음'}
             </div>
+            {league?.round && (
+              <div className="text-xs text-gray-600 dark:text-gray-300 font-medium mt-0.5">
+                {formatRound(league.round)}
+              </div>
+            )}
           </div>
 
           {/* 경기장 정보 - 데스크톱에서만 표시 */}
