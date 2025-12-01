@@ -1,13 +1,14 @@
 // 알림 관련 타입 정의
 
-export type NotificationType = 
+export type NotificationType =
   | 'comment'       // 내 게시글에 댓글
   | 'reply'         // 내 댓글에 대댓글
   | 'post_like'     // 내 게시글에 좋아요
   | 'comment_like'  // 내 댓글에 좋아요
   | 'level_up'      // 레벨업
   | 'report_result' // 신고 처리 결과
-  | 'admin_notice'; // 관리자 공지
+  | 'admin_notice'  // 관리자 공지
+  | 'welcome';      // 회원가입 환영 알림
 
 export interface Notification {
   id: string;

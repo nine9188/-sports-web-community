@@ -69,7 +69,8 @@ export default function SocialSignupPage() {
 
         if (profile && profile.nickname && profile.nickname.trim() !== '') {
           // 닉네임이 있는 완전한 프로필이면 메인 페이지로
-          toast.success('로그인되었습니다!')
+          // 로그인 성공 플래그 설정 (AuthContext가 토스트 표시)
+          sessionStorage.setItem('login-success', 'true')
           router.replace('/')
           return
         }
@@ -198,12 +199,13 @@ export default function SocialSignupPage() {
         return
       }
 
-      toast.success('회원가입이 완료되었습니다! 환영합니다! 🎉')
-      
+      // 로그인 성공 플래그 설정 (AuthContext가 토스트 표시)
+      sessionStorage.setItem('login-success', 'true')
+
       // 새로고침으로 AuthContext 업데이트 보장
       setTimeout(() => {
         window.location.href = '/'
-      }, 1000)
+      }, 500)
 
     } catch (error) {
       console.error('회원가입 오류:', error)

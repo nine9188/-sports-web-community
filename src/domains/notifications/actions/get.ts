@@ -37,7 +37,7 @@ export async function getNotifications(limit: number = 20): Promise<Notification
     }
     
     // 아이콘 URL 추가
-    const notifications = await addActorIconUrls(data || [], supabase);
+    const notifications = await addActorIconUrls(data as Notification[] || [], supabase);
     
     // 안 읽은 알림 개수
     const { count: unreadCount } = await supabase
@@ -93,22 +93,22 @@ export async function getUnreadNotificationCount(): Promise<{ success: boolean; 
 
 // 액터 아이콘 URL 추가
 async function addActorIconUrls(
-  notifications: Notification[], 
-  supabase: Awaited<ReturnType<typeof createClient>>
+  notifications: Notification[],
+  supabase: Awaited<ReturnType<typeof getSupabaseServer>>
 ): Promise<Notification[]> {
   const iconIds = notifications
     .map(n => n.actor?.icon_id)
     .filter((id): id is number => id !== null && id !== undefined);
-  
+
   if (iconIds.length === 0) return notifications;
-  
+
   const { data: icons } = await supabase
     .from('shop_items')
     .select('id, image_url')
     .in('id', iconIds);
-  
+
   const iconMap: Record<number, string> = {};
-  icons?.forEach(icon => {
+  icons?.forEach((icon: { id: number | null; image_url: string | null }) => {
     if (icon.id && icon.image_url) {
       iconMap[icon.id] = icon.image_url;
     }
@@ -127,6 +127,7 @@ async function addActorIconUrls(
     return notification;
   });
 }
+
 
 
 

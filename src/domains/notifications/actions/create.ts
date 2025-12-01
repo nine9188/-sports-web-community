@@ -205,7 +205,7 @@ export async function createLevelUpNotification({
 }): Promise<NotificationActionResponse> {
   return createNotification({
     userId,
-    actorId: null, // 시스템 알림
+    actorId: undefined, // 시스템 알림
     type: 'level_up',
     title: `축하합니다! 레벨 ${newLevel}이 되었습니다! 🎉`,
     message: `계속해서 활동하고 경험치를 쌓아보세요!`,
@@ -244,11 +244,11 @@ export async function createReportResultNotification({
 
   return createNotification({
     userId: reporterId,
-    actorId: null, // 시스템/관리자 알림
+    actorId: undefined, // 시스템/관리자 알림
     type: 'report_result',
     title: titles[result],
     message: reason || messages[result],
-    link: null, // 신고 상세는 링크 없음
+    link: undefined, // 신고 상세는 링크 없음
     metadata: {
       target_type: targetType,
       target_id: targetId,
@@ -276,11 +276,11 @@ export async function createAdminNoticeNotification({
     userIds.map(userId =>
       createNotification({
         userId,
-        actorId: null, // 관리자 알림
+        actorId: undefined, // 관리자 알림
         type: 'admin_notice',
         title,
         message,
-        link: link || null,
+        link: link || undefined,
         metadata: {
           is_admin_notice: true
         }
@@ -329,7 +329,7 @@ export async function createBroadcastNotification({
     return { success: false, sent: 0, failed: 0 };
   }
 
-  const userIds = users.map(u => u.id);
+  const userIds = users.map((u: { id: string }) => u.id);
   const result = await createAdminNoticeNotification({ userIds, title, message, link });
 
   // 로그 저장
@@ -392,6 +392,29 @@ export async function createAdminNoticeWithLog({
 }
 
 /**
+ * 회원가입 환영 알림 생성
+ */
+export async function createWelcomeNotification({
+  userId
+}: {
+  userId: string;
+}): Promise<NotificationActionResponse> {
+  return createNotification({
+    userId,
+    actorId: undefined, // 시스템 알림
+    type: 'welcome',
+    title: '환영합니다! 4590 Football에 오신 것을 환영합니다! 👋',
+    message: '커뮤니티 가이드와 인기 게시판을 둘러보세요!',
+    link: '/guide/beginner',
+    metadata: {
+      is_welcome: true,
+      guide_link: '/guide/beginner',
+      popular_link: '/boards/popular'
+    }
+  });
+}
+
+/**
  * 알림 발송 기록 조회
  */
 export async function getNotificationLogs(limit: number = 50): Promise<{
@@ -436,7 +459,17 @@ export async function getNotificationLogs(limit: number = 50): Promise<{
       return { success: false, error: error.message };
     }
 
-    return { success: true, logs: data as any };
+    return { success: true, logs: data as Array<{
+      id: string;
+      admin: { nickname: string; email: string };
+      send_mode: string;
+      title: string;
+      message: string;
+      link: string | null;
+      total_sent: number;
+      total_failed: number;
+      created_at: string;
+    }> };
   } catch (error) {
     console.error('알림 발송 기록 조회 중 예외:', error);
     return {
@@ -445,6 +478,7 @@ export async function getNotificationLogs(limit: number = 50): Promise<{
     };
   }
 }
+
 
 
 

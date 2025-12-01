@@ -708,6 +708,107 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_notification_logs: {
+        Row: {
+          id: string
+          admin_id: string
+          send_mode: string
+          title: string
+          message: string
+          link: string | null
+          target_user_ids: string[]
+          total_sent: number
+          total_failed: number
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          admin_id: string
+          send_mode: string
+          title: string
+          message: string
+          link?: string | null
+          target_user_ids: string[]
+          total_sent: number
+          total_failed: number
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          admin_id?: string
+          send_mode?: string
+          title?: string
+          message?: string
+          link?: string | null
+          target_user_ids?: string[]
+          total_sent?: number
+          total_failed?: number
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_notification_logs_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          actor_id: string | null
+          type: string
+          title: string
+          message: string | null
+          link: string | null
+          is_read: boolean | null
+          metadata: Json | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          actor_id?: string | null
+          type: string
+          title: string
+          message?: string | null
+          link?: string | null
+          is_read?: boolean | null
+          metadata?: Json | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          actor_id?: string | null
+          type?: string
+          title?: string
+          message?: string | null
+          link?: string | null
+          is_read?: boolean | null
+          metadata?: Json | null
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       match_ai_predictions: {
         Row: {
           ai_analysis: string

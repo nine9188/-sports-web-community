@@ -5,6 +5,7 @@ import { logAuthEvent } from '@/shared/actions/log-actions'
 import { headers } from 'next/headers'
 import { validateEmail, validatePassword, validateUsername, validateNickname } from './utils/validation'
 import type { SignUpResponse, AvailabilityCheckResponse } from '../types'
+import { createWelcomeNotification } from '@/domains/notifications/actions/create'
 
 /**
  * 회원가입
@@ -145,6 +146,15 @@ export async function signUp(
       true,
       { email, username: metadata?.username }
     )
+
+    // 6. 환영 알림 발송
+    try {
+      await createWelcomeNotification({ userId: data.user.id })
+      console.log('환영 알림 발송 성공')
+    } catch (notificationError) {
+      // 알림 발송 실패는 회원가입 성공에 영향 없음
+      console.error('환영 알림 발송 실패:', notificationError)
+    }
 
     return {
       success: true,

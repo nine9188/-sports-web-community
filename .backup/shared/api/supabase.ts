@@ -2,7 +2,7 @@
 'use client'
 
 import { createBrowserClient } from '@supabase/ssr'
-import { type Database } from '@/shared/types/supabase'
+import { type Database } from '../../../src/shared/lib/supabase/types'
 import { type SupabaseClient } from '@supabase/supabase-js'
 
 // 싱글톤 인스턴스를 저장할 변수
