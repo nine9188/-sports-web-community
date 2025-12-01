@@ -1,6 +1,18 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Resend 인스턴스를 지연 초기화하여 빌드 시 에러 방지
+let resend: Resend | null = null;
+
+function getResendClient() {
+  if (!resend) {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      throw new Error('RESEND_API_KEY environment variable is not set');
+    }
+    resend = new Resend(apiKey);
+  }
+  return resend;
+}
 
 interface EmailTemplate {
   to: string;
@@ -13,7 +25,8 @@ interface EmailTemplate {
  */
 async function sendEmail({ to, subject, html }: EmailTemplate) {
   try {
-    const { data, error } = await resend.emails.send({
+    const resendClient = getResendClient();
+    const { data, error } = await resendClient.emails.send({
       from: 'SPORTS <onboarding@resend.dev>',
       to: [to],
       subject,
