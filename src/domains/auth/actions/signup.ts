@@ -96,23 +96,44 @@ export async function signUp(
     // 4. 프로필 생성
     if (metadata) {
       try {
+        const profileData = {
+          id: data.user.id,
+          email: data.user.email,
+          username: (metadata.username as string) || null,
+          nickname: (metadata.nickname as string) || null,
+          full_name: (metadata.full_name as string) || null,
+          updated_at: new Date().toISOString()
+        }
+
+        console.log('프로필 생성 시도:', { ...profileData, id: data.user.id.substring(0, 8) + '...' })
+
         const { error: profileError } = await supabase
           .from('profiles')
-          .upsert({
-            id: data.user.id,
-            email: data.user.email,
-            username: metadata.username as string || null,
-            nickname: metadata.nickname as string || null,
-            full_name: metadata.full_name as string || null,
-            updated_at: new Date().toISOString()
-          })
+          .upsert(profileData)
 
         if (profileError) {
           console.error('프로필 생성 오류:', profileError)
-          // 프로필 생성 실패해도 회원가입은 성공으로 처리
+          await logAuthEvent(
+            'PROFILE_CREATE_FAILED',
+            `프로필 생성 실패: ${email}`,
+            data.user.id,
+            false,
+            { email, username: metadata.username, error: profileError.message }
+          )
+          // 프로필 생성 실패 시 에러 반환
+          return {
+            success: false,
+            error: '프로필 생성에 실패했습니다. 관리자에게 문의해주세요.'
+          }
         }
+
+        console.log('프로필 생성 성공')
       } catch (profileError) {
         console.error('프로필 생성 중 오류:', profileError)
+        return {
+          success: false,
+          error: '프로필 생성 중 오류가 발생했습니다.'
+        }
       }
     }
 

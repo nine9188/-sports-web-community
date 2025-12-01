@@ -389,7 +389,7 @@ export default function SignupPage() {
       }, captchaToken);
       
       if (result.success) {
-        toast.success('회원가입이 완료되었습니다! 이메일을 확인해주세요.');
+        // 중복 토스트 제거 - signin 페이지의 message 파라미터만 사용
         router.push('/signin?message=회원가입이 완료되었습니다. 이메일을 확인하고 로그인해주세요.');
       } else {
         toast.error(result.error || '회원가입에 실패했습니다.');
