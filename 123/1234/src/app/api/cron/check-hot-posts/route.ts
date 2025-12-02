@@ -14,11 +14,14 @@ import { NextRequest, NextResponse } from 'next/server';
  */
 export async function GET(request: NextRequest) {
   try {
-    // Cron Secret 검증 (보안)
+    // Vercel Cron 인증 검증 (Vercel Cron은 자동으로 인증됨)
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
 
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    // Vercel Cron에서 오는 요청은 자동으로 허용
+    const isVercelCron = request.headers.get('user-agent')?.includes('vercel-cron');
+
+    if (cronSecret && !isVercelCron && authHeader !== `Bearer ${cronSecret}`) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
