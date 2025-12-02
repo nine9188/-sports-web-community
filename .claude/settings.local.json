@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx update-browserslist-db@latest)",
+      "Bash(npm run build:*)",
+      "Bash(node migrate-server-imports.js:*)",
+      "Bash(npx tsc:*)",
+      "Bash(node -e:*)",
+      "Bash(git mv:*)",
+      "Bash(move componentsHOT_SCORE_GUIDE.md HOT_SCORE_GUIDE.md)",
+      "Bash(move componentsSIDEBAR_POPULAR_POSTS.md SIDEBAR_POPULAR_POSTS.md)",
+      "Bash(dir:*)",
+      "Bash(tree:*)",
+      "Bash(cat:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git remote:*)",
+      "Bash(git add:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
+}

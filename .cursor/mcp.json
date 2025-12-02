@@ -1,8 +1,11 @@
 {
   "mcpServers": {
     "supabase": {
-      "command": "npx",
+      "type": "stdio",
+      "command": "cmd",
       "args": [
+        "/c",
+        "npx",
         "-y",
         "@supabase/mcp-server-supabase@latest",
         "--project-ref=vnjjfhsuzoxcljqqwwvx"
