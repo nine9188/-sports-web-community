@@ -415,6 +415,44 @@ export async function createWelcomeNotification({
 }
 
 /**
+ * HOT 게시글 진입 알림 생성
+ */
+export async function createHotPostNotification({
+  userId,
+  postId,
+  postTitle,
+  boardSlug,
+  postNumber,
+  hotRank,
+  hotScore
+}: {
+  userId: string;
+  postId: string;
+  postTitle: string;
+  boardSlug: string;
+  postNumber: number;
+  hotRank: number;
+  hotScore: number;
+}): Promise<NotificationActionResponse> {
+  return createNotification({
+    userId,
+    actorId: undefined, // 시스템 알림
+    type: 'hot_post',
+    title: `🔥 내 게시글이 HOT 게시글 ${hotRank}위에 진입했어요!`,
+    message: postTitle.length > 50 ? postTitle.substring(0, 50) + '...' : postTitle,
+    link: `/boards/${boardSlug}/${postNumber}`,
+    metadata: {
+      post_id: postId,
+      post_title: postTitle,
+      post_number: postNumber,
+      board_slug: boardSlug,
+      hot_rank: hotRank,
+      hot_score: hotScore
+    }
+  });
+}
+
+/**
  * 알림 발송 기록 조회
  */
 export async function getNotificationLogs(limit: number = 50): Promise<{

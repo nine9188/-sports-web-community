@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Eye, ThumbsUp, MessageSquare, Image as ImageIcon, Link as LinkIcon, Video as VideoIcon, Youtube as YoutubeIcon } from 'lucide-react';
+import { Eye, ThumbsUp, MessageSquare, Flame, Image as ImageIcon, Link as LinkIcon, Video as VideoIcon, Youtube as YoutubeIcon } from 'lucide-react';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { TopicPostsData, TabType, TopicPost } from '../types';
@@ -12,8 +12,8 @@ interface TopicTabsClientProps {
 }
 
 export function TopicTabsClient({ postsData }: TopicTabsClientProps) {
-  // 현재 활성화된 탭 상태
-  const [activeTab, setActiveTab] = useState<TabType>('views');
+  // 현재 활성화된 탭 상태 (기본값: hot)
+  const [activeTab, setActiveTab] = useState<TabType>('hot');
 
   // 현재 탭에 맞는 게시글 배열 가져오기
   const getCurrentPosts = (): TopicPost[] => {
@@ -66,7 +66,20 @@ export function TopicTabsClient({ postsData }: TopicTabsClientProps) {
 
   // 탭에 따른 카운트 표시
   const renderCount = (post: TopicPost) => {
-    if (activeTab === 'views') {
+    if (activeTab === 'hot') {
+      return (
+        <span className="text-gray-500 dark:text-gray-400 ml-1 shrink-0 flex items-center gap-2">
+          <span className="flex items-center">
+            <Eye className="h-3 w-3 mr-0.5" />
+            {post.views}
+          </span>
+          <span className="flex items-center">
+            <ThumbsUp className="h-3 w-3 mr-0.5" />
+            {post.likes}
+          </span>
+        </span>
+      );
+    } else if (activeTab === 'views') {
       return (
         <span className="text-gray-500 dark:text-gray-400 ml-1 shrink-0 flex items-center">
           <Eye className="h-3 w-3 mr-0.5" />
@@ -98,11 +111,14 @@ export function TopicTabsClient({ postsData }: TopicTabsClientProps) {
     <div className="mb-4 bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0">
       <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center border-b border-black/5 dark:border-white/10 rounded-t-lg">
         <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">인기글</h3>
-        <span className="text-xs text-gray-500 dark:text-gray-400 ml-auto">최근 24시간 기준</span>
+        <span className="text-xs text-gray-500 dark:text-gray-400 ml-auto">
+          {postsData.windowDays ? `최근 ${postsData.windowDays}일 기준` : '최근 24시간 기준'}
+        </span>
       </div>
 
       <div className="flex border-b border-black/5 dark:border-white/10">
         {[
+          { id: 'hot', label: 'HOT', icon: <Flame className="h-3 w-3 mr-0.5" /> },
           { id: 'views', label: '조회수', icon: <Eye className="h-3 w-3 mr-0.5" /> },
           { id: 'likes', label: '추천수', icon: <ThumbsUp className="h-3 w-3 mr-0.5" /> },
           { id: 'comments', label: '댓글수', icon: <MessageSquare className="h-3 w-3 mr-0.5" /> }

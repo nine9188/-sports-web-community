@@ -8,7 +8,8 @@ export type NotificationType =
   | 'level_up'      // 레벨업
   | 'report_result' // 신고 처리 결과
   | 'admin_notice'  // 관리자 공지
-  | 'welcome';      // 회원가입 환영 알림
+  | 'welcome'       // 회원가입 환영 알림
+  | 'hot_post';     // 내 게시글 HOT 진입
 
 export interface Notification {
   id: string;
@@ -38,6 +39,8 @@ export interface NotificationMetadata {
   board_slug?: string;
   board_name?: string;
   post_number?: number;
+  hot_rank?: number;        // HOT 순위
+  hot_score?: number;       // HOT 점수
   [key: string]: unknown;
 }
 

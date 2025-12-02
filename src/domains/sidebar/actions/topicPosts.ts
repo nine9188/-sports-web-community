@@ -3,18 +3,44 @@
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { cache } from 'react';
 import { TopicPost } from '../types';
+import { getHotPosts } from './getHotPosts';
 
 /**
  * 인기글 목록을 유형별로 조회하는 서버 액션
  * React.cache로 래핑하여 중복 요청 방지
+ *
+ * 🔄 슬라이딩 윈도우 적용:
+ * - 고정 7일 윈도우 (초보 커뮤니티 특성)
+ * - 향후 커뮤니티 활성화 시 동적 조정 가능
+ *
+ * 📖 상세 문서: src/domains/sidebar/SIDEBAR_POPULAR_POSTS.md
  */
-export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comments'): Promise<TopicPost[]> => {
+export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comments' | 'hot'): Promise<TopicPost[]> => {
+  // 'hot' 타입일 경우 슬라이딩 윈도우 기반 인기글 반환
+  if (type === 'hot') {
+    const { posts } = await getHotPosts({ limit: 20 });
+    return posts;
+  }
+
+  // 조회수/댓글/추천 탭도 슬라이딩 윈도우 적용
   try {
-    // 서버 컴포넌트에서 Supabase 클라이언트 생성
     const supabase = await getSupabaseServer();
-    
-    // 1. 글 목록 가져오기 (정렬 기준에 따라)
-    // 최종적으로 20개만 보여주므로 50개만 가져와서 처리 (성능 최적화)
+
+    // Step 1: 최근 24시간 게시글 수 확인 (윈도우 크기 결정)
+    const { count: recentCount } = await supabase
+      .from('posts')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+      .eq('is_deleted', false)
+      .eq('is_hidden', false);
+
+    // Step 2: 동적 윈도우 크기 결정
+    // 초보 커뮤니티 특성 반영: 기본 7일 윈도우
+    let windowDays = 7;
+
+    const windowStart = new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000).toISOString();
+
+    // Step 3: 윈도우 내 글 목록 가져오기 (정렬 기준에 따라)
     let query = supabase
       .from('posts')
       .select(`
@@ -29,8 +55,11 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
         is_hidden,
         is_deleted
       `)
-      .limit(50);
-      
+      .gte('created_at', windowStart)
+      .eq('is_deleted', false)
+      .eq('is_hidden', false)
+      .limit(100);
+
     // 정렬 기준 적용
     if (type === 'views') {
       query = query.order('views', { ascending: false });

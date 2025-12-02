@@ -109,7 +109,9 @@ export interface TopicPostsData {
   views: TopicPost[];
   likes: TopicPost[];
   comments: TopicPost[];
+  hot?: TopicPost[]; // 슬라이딩 윈도우 기반 인기글 (옵션)
+  windowDays?: number; // 적용된 윈도우 크기 (일)
 }
 
 // 탭 타입 정의
-export type TabType = 'views' | 'likes' | 'comments'; 
+export type TabType = 'views' | 'likes' | 'comments' | 'hot'; 

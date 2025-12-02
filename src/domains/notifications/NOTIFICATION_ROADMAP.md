@@ -32,7 +32,49 @@
 
 ---
 
-#### 2. 내 게시글 HOT 이슈 알림 ⭐⭐⭐⭐⭐
+#### 2. ✅ 내 게시글 HOT 이슈 알림 (완료)
+**구현 완료일**: 2025-12-02
+**구현 내용**:
+- ✅ `createHotPostNotification()` 함수 구현 완료
+- ✅ Supabase Edge Function (`check-hot-posts`) 구현 완료
+- ✅ 중복 발송 방지 (24시간 내 동일 게시글 재알림 방지)
+- ✅ 7일 슬라이딩 윈도우 기반 HOT 점수 계산
+- ✅ 상위 10위 이내 게시글 작성자에게 알림 발송
+- ✅ `NotificationItem.tsx`에 Flame 아이콘 추가
+- ✅ 데이터베이스 CHECK 제약조건에 'hot_post' 타입 추가
+- ✅ TypeScript 타입 정의 추가
+
+**구현 위치**:
+- [create.ts:420-453](c:\Users\USER\Desktop\web2\123\1234\src\domains\notifications\actions\create.ts#L420-L453) - 생성 함수
+- [check-hot-posts/](c:\Users\USER\Desktop\web2\123\1234\supabase\functions\check-hot-posts\) - 엣지 함수
+- [NotificationItem.tsx:69-75](c:\Users\USER\Desktop\web2\123\1234\src\domains\notifications\components\NotificationItem.tsx#L69-L75) - UI 아이콘
+- [notification.ts:12](c:\Users\USER\Desktop\web2\123\1234\src\domains\notifications\types\notification.ts#L12) - 타입 정의
+
+**HOT 점수 계산 공식**:
+```
+기본점수 = (조회수 × 1) + (좋아요 × 10) + (댓글 × 20)
+시간감쇠 = max(0, 1 - (경과시간 / 168시간))
+HOT점수 = 기본점수 × 시간감쇠
+```
+
+**실제 메시지**:
+```
+🔥 내 게시글이 HOT 게시글 {순위}위에 진입했어요!
+```
+
+**크론잡 설정**: 매 1시간마다 실행 권장
+
+**관련 문서**:
+- [HOT 점수 계산 가이드](../sidebar/HOT_SCORE_GUIDE.md)
+- [인기글 시스템 문서](../sidebar/SIDEBAR_POPULAR_POSTS.md)
+- [엣지 함수 설정 가이드](../../supabase/functions/check-hot-posts/README.md)
+
+---
+
+#### 🗑️ 구 버전 (참고용)
+<details>
+<summary>초기 기획안 (클릭하여 펼치기)</summary>
+
 **구현 난이도**: ⚡⚡ 보통 (3-4시간)
 **효과**: 🎯 유저가 가장 좋아하는 기능, 재방문율 증가
 **필요 작업**:
@@ -97,6 +139,8 @@ export async function createHotPostNotification(params: {
 - `domains/boards/actions/likes.ts` - 좋아요 20개 도달 시
 - `domains/boards/actions/comments.ts` - 댓글 15개 도달 시
 - Supabase Function (배치) - 1시간마다 조회수 체크
+
+</details>
 
 ---
 
@@ -445,12 +489,12 @@ export async function createSecurityAlertNotification(params: {
 ### Phase 1: 즉시 구현 (1주 이내)
 ```
 ✅ 1. 회원가입 웰컴 알림 (완료 - 2025-12-01)
-🔄 2. HOT 이슈 알림 (3-4시간)
+✅ 2. HOT 이슈 알림 (완료 - 2025-12-02)
 🔄 3. 프로필 변경 알림 (1시간)
 🔄 4. 포인트 획득 알림 (1시간)
 ```
-**진행 상황**: 1/4 완료 (25%)
-**남은 예상 시간**: 5-6시간
+**진행 상황**: 2/4 완료 (50%)
+**남은 예상 시간**: 2시간
 
 ---
 
@@ -496,7 +540,7 @@ export type NotificationType =
   | 'admin_notice'
   // Phase 1
   | 'welcome'              // ✅ 구현 완료 (2025-12-01)
-  | 'hot_post'             // 🔄 구현 예정
+  | 'hot_post'             // ✅ 구현 완료 (2025-12-02)
   | 'profile_update'       // 🔄 구현 예정
   | 'point_earned'         // 🔄 구현 예정
   // Phase 2
@@ -538,9 +582,10 @@ const getNotificationIcon = (type: NotificationType) => {
     // 기존
     case 'comment': return '💬';
     case 'reply': return '↩️';
-    // Phase 1
-    case 'welcome': return '👋';
-    case 'hot_post': return '🔥';
+    // Phase 1 (구현 완료)
+    case 'welcome': return '👋';           // ✅
+    case 'hot_post': return '🔥';          // ✅
+    // Phase 1 (구현 예정)
     case 'profile_update': return '✏️';
     case 'point_earned': return '🎉';
     // Phase 2
@@ -560,12 +605,12 @@ const getNotificationIcon = (type: NotificationType) => {
 
 ### 이번 주에 구현하세요 (ROI 최고):
 1. ✅ **회원가입 웰컴 알림** - ✅ 완료 (2025-12-01)
-2. 🔄 **HOT 이슈 알림** - 3-4시간, 유저 만족도 최고
+2. ✅ **HOT 이슈 알림** - ✅ 완료 (2025-12-02)
 3. 🔄 **프로필 변경 알림** - 1시간, 보안 UX 향상
 4. 🔄 **포인트 알림** - 1시간, 게임화 강화
 
-**진행 상황**: 1/4 완료
-**남은 소요 시간**: 5-6시간
+**진행 상황**: 2/4 완료 (50%)
+**남은 소요 시간**: 2시간
 
 ---
 
@@ -589,8 +634,8 @@ const getNotificationIcon = (type: NotificationType) => {
 ---
 
 **문서 작성일**: 2025-12-01
-**마지막 업데이트**: 2025-12-01
-**버전**: 1.1.0
+**마지막 업데이트**: 2025-12-02
+**버전**: 1.2.0
 
 ---
 
@@ -599,3 +644,4 @@ const getNotificationIcon = (type: NotificationType) => {
 | 날짜 | 구현 항목 | 상태 | 비고 |
 |-----|----------|------|------|
 | 2025-12-01 | 회원가입 웰컴 알림 | ✅ 완료 | 읽을 때까지 유지, 자동 숨김 없음 |
+| 2025-12-02 | HOT 게시글 진입 알림 | ✅ 완료 | 7일 슬라이딩 윈도우, 상위 10위 이내 진입 시 발송 |

@@ -38,7 +38,7 @@
 
 ## 알림 타입
 
-총 **8가지** 알림 타입을 지원합니다:
+총 **9가지** 알림 타입을 지원합니다:
 
 | 타입 | 코드 | 설명 | 트리거 |
 |-----|------|------|--------|
@@ -50,6 +50,7 @@
 | 신고 결과 | `report_result` | 신고 처리 완료 | 신고자에게 발송 |
 | 관리자 공지 | `admin_notice` | 관리자가 특정 사용자에게 발송 | 관리자 패널에서 수동 발송 |
 | 환영 알림 | `welcome` | 회원가입 환영 메시지 | 회원가입 시 자동 발송 |
+| HOT 게시글 진입 | `hot_post` | 내 게시글이 HOT 상위권 진입 | 크론잡/엣지 함수에서 주기적 체크 |
 
 ---
 
@@ -330,6 +331,39 @@ await createWelcomeNotification({
 - 가이드 페이지 링크 포함
 - 회원가입 성공 직후 자동 발송
 
+#### 12. `createHotPostNotification()`
+HOT 게시글 진입 알림 생성 (시스템 알림)
+
+```typescript
+await createHotPostNotification({
+  userId: string,
+  postId: string,
+  postTitle: string,
+  boardSlug: string,
+  postNumber: number,
+  hotRank: number,
+  hotScore: number
+});
+```
+
+**특징**:
+- 게시글이 HOT 상위 10위 이내 진입 시 발송
+- 24시간 내 중복 발송 방지
+- 7일 슬라이딩 윈도우 기반 HOT 점수 계산
+- Supabase Edge Function에서 주기적 실행 (매 시간 권장)
+
+**HOT 점수 계산 공식**:
+```
+기본점수 = (조회수 × 1) + (좋아요 × 10) + (댓글 × 20)
+시간감쇠 = max(0, 1 - (경과시간 / 168시간))
+HOT점수 = 기본점수 × 시간감쇠
+```
+
+**관련 문서**:
+- [HOT 점수 계산 가이드](../sidebar/HOT_SCORE_GUIDE.md)
+- [인기글 시스템 문서](../sidebar/SIDEBAR_POPULAR_POSTS.md)
+- [엣지 함수 설정](../../supabase/functions/check-hot-posts/README.md)
+
 ---
 
 ### 알림 조회 (`actions/get.ts`)
@@ -520,7 +554,7 @@ CREATE TABLE notifications (
   actor_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   type TEXT NOT NULL CHECK (type IN (
     'comment', 'reply', 'post_like', 'comment_like',
-    'level_up', 'report_result', 'admin_notice', 'welcome'
+    'level_up', 'report_result', 'admin_notice', 'welcome', 'hot_post'
   )),
   message TEXT NOT NULL,
   metadata JSONB DEFAULT '{}',
@@ -883,9 +917,10 @@ CREATE POLICY "Authenticated users can insert notifications"
 |-----|----------|--------|
 | 2025-12-01 | 초기 문서 작성 | Claude Code |
 | 2025-12-01 | 환영 알림 (welcome) 타입 추가 | Claude Code |
+| 2025-12-02 | HOT 게시글 진입 알림 (hot_post) 타입 추가 | Claude Code |
 
 ---
 
 **문서 작성일**: 2025-12-01
-**마지막 업데이트**: 2025-12-01
-**버전**: 1.1.0
+**마지막 업데이트**: 2025-12-02
+**버전**: 1.2.0
