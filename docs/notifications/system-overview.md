@@ -362,7 +362,7 @@ HOT점수 = 기본점수 × 시간감쇠
 **관련 문서**:
 - [HOT 점수 계산 가이드](../sidebar/HOT_SCORE_GUIDE.md)
 - [인기글 시스템 문서](../sidebar/SIDEBAR_POPULAR_POSTS.md)
-- [엣지 함수 설정](../../supabase/functions/check-hot-posts/README.md)
+- [엣지 함수 설정](../../../supabase/functions/check-hot-posts/README.md)
 
 ---
 

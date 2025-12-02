@@ -1,10 +1,14 @@
-// Supabase Edge Function: check-hot-posts
-// 주기적으로 실행되어 HOT 게시글 진입 시 알림 발송
+'use server';
 
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+// Server Action용 Supabase 클라이언트 생성
+function createSupabaseClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 interface HotPost {
   id: string;
@@ -34,37 +38,33 @@ function calculateHotScore(
   const postTime = new Date(createdAt).getTime();
   const hoursSince = (now - postTime) / (1000 * 60 * 60);
   const maxHours = windowDays * 24;
-  const timeDecay = Math.max(0, 1 - (hoursSince / maxHours));
+  const timeDecay = Math.max(0, 1 - hoursSince / maxHours);
 
-  const rawScore = (views * 1) + (likes * 10) + (comments * 20);
+  const rawScore = views * 1 + likes * 10 + comments * 20;
   const hotScore = rawScore * timeDecay;
 
   return hotScore;
 }
 
-Deno.serve(async (req) => {
+/**
+ * HOT 게시글 체크 및 알림 발송
+ * 주기적으로 실행 (Vercel Cron 또는 수동 호출)
+ */
+export async function checkHotPosts() {
   try {
-    // CORS headers
-    if (req.method === 'OPTIONS') {
-      return new Response('ok', {
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'POST',
-          'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-        },
-      });
-    }
-
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const supabase = createSupabaseClient();
 
     // 슬라이딩 윈도우: 고정 7일
     const windowDays = 7;
-    const windowStart = new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000).toISOString();
+    const windowStart = new Date(
+      Date.now() - windowDays * 24 * 60 * 60 * 1000
+    ).toISOString();
 
     // Step 1: 윈도우 내 모든 게시글 가져오기
     const { data: postsData, error: postsError } = await supabase
       .from('posts')
-      .select(`
+      .select(
+        `
         id,
         title,
         created_at,
@@ -75,21 +75,25 @@ Deno.serve(async (req) => {
         user_id,
         is_hidden,
         is_deleted
-      `)
+      `
+      )
       .gte('created_at', windowStart)
       .eq('is_deleted', false)
       .eq('is_hidden', false)
       .limit(100);
 
     if (postsError || !postsData || postsData.length === 0) {
-      return new Response(
-        JSON.stringify({ message: 'No posts found', processed: 0 }),
-        { headers: { 'Content-Type': 'application/json' } }
-      );
+      return {
+        success: true,
+        message: 'No posts found',
+        processed: 0,
+      };
     }
 
     // Step 2: 게시판 정보 가져오기
-    const boardIds = [...new Set(postsData.map((post) => post.board_id).filter(Boolean))];
+    const boardIds = [
+      ...new Set(postsData.map((post: { board_id: string }) => post.board_id).filter(Boolean)),
+    ];
 
     const { data: boardsData } = await supabase
       .from('boards')
@@ -105,7 +109,7 @@ Deno.serve(async (req) => {
 
     // Step 3: 댓글 수 구하기
     const commentCounts: Record<string, number> = {};
-    const postIds = postsData.map((post) => post.id);
+    const postIds = postsData.map((post: { id: string }) => post.id);
 
     if (postIds.length > 0) {
       const { data: commentsData } = await supabase
@@ -118,12 +122,13 @@ Deno.serve(async (req) => {
       if (commentsData) {
         commentsData.forEach((comment: { post_id: string | null }) => {
           if (comment.post_id) {
-            commentCounts[comment.post_id] = (commentCounts[comment.post_id] || 0) + 1;
+            commentCounts[comment.post_id] =
+              (commentCounts[comment.post_id] || 0) + 1;
           }
         });
       }
 
-      postsData.forEach((post) => {
+      postsData.forEach((post: { id: string }) => {
         if (!(post.id in commentCounts)) {
           commentCounts[post.id] = 0;
         }
@@ -132,12 +137,27 @@ Deno.serve(async (req) => {
 
     // Step 4: HOT 점수 계산 및 정렬
     const scoredPosts = postsData
-      .map((post) => {
+      .map((post: {
+        id: string;
+        title: string;
+        board_id: string;
+        post_number: number;
+        user_id: string;
+        views: number;
+        likes: number;
+        created_at: string;
+      }) => {
         const views = post.views || 0;
         const likes = post.likes || 0;
         const comments = commentCounts[post.id] || 0;
 
-        const hotScore = calculateHotScore(views, likes, comments, post.created_at, windowDays);
+        const hotScore = calculateHotScore(
+          views,
+          likes,
+          comments,
+          post.created_at,
+          windowDays
+        );
 
         return {
           id: post.id,
@@ -153,16 +173,18 @@ Deno.serve(async (req) => {
           hot_rank: 0, // Will be assigned after sorting
         };
       })
-      .sort((a, b) => b.hot_score - a.hot_score)
+      .sort((a: HotPost, b: HotPost) => b.hot_score - a.hot_score)
       .slice(0, 20); // 상위 20개만
 
     // HOT 순위 할당
-    scoredPosts.forEach((post, index) => {
+    scoredPosts.forEach((post: HotPost, index: number) => {
       post.hot_rank = index + 1;
     });
 
     // Step 5: 이미 알림 보낸 게시글 확인 (최근 24시간 내)
-    const recentNotificationCheck = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const recentNotificationCheck = new Date(
+      Date.now() - 24 * 60 * 60 * 1000
+    ).toISOString();
 
     const { data: existingNotifications } = await supabase
       .from('notifications')
@@ -178,8 +200,8 @@ Deno.serve(async (req) => {
 
     // Step 6: 상위 10위 이내 게시글에 대해 알림 발송 (아직 알림 안 보낸 것만)
     const notificationsToSend: HotPost[] = scoredPosts
-      .filter((post) => post.hot_rank <= 10 && !notifiedPostIds.has(post.id))
-      .filter((post) => post.user_id); // user_id가 있는 것만
+      .filter((post: HotPost) => post.hot_rank <= 10 && !notifiedPostIds.has(post.id))
+      .filter((post: HotPost) => post.user_id); // user_id가 있는 것만
 
     let successCount = 0;
     let failCount = 0;
@@ -191,7 +213,10 @@ Deno.serve(async (req) => {
           actor_id: null,
           type: 'hot_post',
           title: `🔥 내 게시글이 HOT 게시글 ${post.hot_rank}위에 진입했어요!`,
-          message: post.title.length > 50 ? post.title.substring(0, 50) + '...' : post.title,
+          message:
+            post.title.length > 50
+              ? post.title.substring(0, 50) + '...'
+              : post.title,
           link: `/boards/${post.board_slug}/${post.post_number}`,
           metadata: {
             post_id: post.id,
@@ -204,7 +229,10 @@ Deno.serve(async (req) => {
         });
 
         if (error) {
-          console.error(`Failed to send notification for post ${post.id}:`, error);
+          console.error(
+            `Failed to send notification for post ${post.id}:`,
+            error
+          );
           failCount++;
         } else {
           successCount++;
@@ -215,33 +243,23 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(
-      JSON.stringify({
-        message: 'HOT post notifications processed',
-        totalHotPosts: scoredPosts.length,
-        notificationsSent: successCount,
-        notificationsFailed: failCount,
-        topPosts: scoredPosts.slice(0, 5).map((p) => ({
-          rank: p.hot_rank,
-          title: p.title,
-          score: p.hot_score.toFixed(2),
-        })),
-      }),
-      {
-        headers: { 'Content-Type': 'application/json' },
-        status: 200,
-      }
-    );
+    return {
+      success: true,
+      message: 'HOT post notifications processed',
+      totalHotPosts: scoredPosts.length,
+      notificationsSent: successCount,
+      notificationsFailed: failCount,
+      topPosts: scoredPosts.slice(0, 5).map((p: HotPost) => ({
+        rank: p.hot_rank,
+        title: p.title,
+        score: p.hot_score.toFixed(2),
+      })),
+    };
   } catch (error) {
-    console.error('Error in check-hot-posts function:', error);
-    return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        headers: { 'Content-Type': 'application/json' },
-        status: 500,
-      }
-    );
+    console.error('Error in checkHotPosts:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
   }
-});
+}

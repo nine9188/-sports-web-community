@@ -302,7 +302,9 @@ const timeDecay = Math.max(0, 1 - (hoursSince / maxHours));
 
 ## 📝 관련 문서
 
+- [HOT 점수 계산 가이드](./HOT_SCORE_GUIDE.md)
 - [알림 시스템 설계](../notifications/NOTIFICATION_SYSTEM.md)
+- [엣지 함수 설정](../../../supabase/functions/check-hot-posts/README.md)
 - [게시판 구조](../boards/README.md)
 - [Supabase 스키마](../../shared/types/supabase.ts)
 

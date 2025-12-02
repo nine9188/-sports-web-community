@@ -335,6 +335,15 @@ const likeWeight = boardType === 'info' ? 15 : 10;
 
 ---
 
+## 📝 관련 문서
+
+- [인기글 시스템 문서](./SIDEBAR_POPULAR_POSTS.md)
+- [알림 시스템 설계](../notifications/NOTIFICATION_SYSTEM.md)
+- [엣지 함수 설정](../../../supabase/functions/check-hot-posts/README.md)
+- [테스트 스크립트 가이드](../../../scripts/README.md)
+
+---
+
 **문서 작성일**: 2025-12-02
 **최종 업데이트**: 2025-12-02
 **버전**: 1.0.0
