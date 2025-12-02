@@ -1,0 +1,741 @@
+import { PlayerMapping } from './index';
+
+// 1899 Hoffenheim (Team ID: 167) - 36명
+export const HOFFENHEIM_PLAYERS: PlayerMapping[] = [
+  // Goalkeepers
+  { id: 702, name: "O. Baumann", korean_name: "올리버 바우만", team_id: 167, position: "Goalkeeper" },
+  { id: 288097, name: "L. Petersson", korean_name: "루카스 페테르손", team_id: 167, position: "Goalkeeper" },
+  { id: 163066, name: "L. Philipp", korean_name: "루카스 필립", team_id: 167, position: "Goalkeeper" },
+  
+  // Defenders
+  { id: 162964, name: "R. Hranáč", korean_name: "로빈 흐라나츠", team_id: 167, position: "Defender" },
+  { id: 26300, name: "O. Kabak", korean_name: "오잔 카바크", team_id: 167, position: "Defender" },
+  { id: 380559, name: "Kelven Olagie Frees", korean_name: "켈벤 올라기 프리스", team_id: 167, position: "Defender" },
+  { id: 18964, name: "Bernardo", korean_name: "베르나르두", team_id: 167, position: "Defender" },
+  { id: 327861, name: "T. Drexler", korean_name: "팀 드렉슬러", team_id: 167, position: "Defender" },
+  { id: 127631, name: "V. Gendrey", korean_name: "발렌틴 장드레", team_id: 167, position: "Defender" },
+  { id: 278453, name: "A. Hajdari", korean_name: "아르돈 하이다리", team_id: 167, position: "Defender" },
+  { id: 7327, name: "A. Prass", korean_name: "알렉산더 프라스", team_id: 167, position: "Defender" },
+  { id: 25366, name: "K. Akpoguma", korean_name: "케빈 아크포구마", team_id: 167, position: "Defender" },
+  { id: 33067, name: "K. Machida", korean_name: "마치다 코키", team_id: 167, position: "Defender" },
+  { id: 1231, name: "V. Coufal", korean_name: "블라디미르 쿠팔", team_id: 167, position: "Defender" },
+  { id: 304686, name: "Arthur Chaves", korean_name: "아르투르 샤베스", team_id: 167, position: "Defender" },
+  
+  // Midfielders
+  { id: 353143, name: "Hennes Behrens", korean_name: "헤네스 베렌스", team_id: 167, position: "Midfielder" },
+  { id: 24854, name: "G. Prömel", korean_name: "게르손 프뢰멜", team_id: 167, position: "Midfielder" },
+  { id: 390586, name: "L. Avdullahu", korean_name: "루카 아브둘라후", team_id: 167, position: "Midfielder" },
+  { id: 718, name: "D. Geiger", korean_name: "데니스 가이거", team_id: 167, position: "Midfielder" },
+  { id: 328262, name: "M. Damar", korean_name: "메르트 다마르", team_id: 167, position: "Midfielder" },
+  { id: 279913, name: "L. Đurić", korean_name: "루카 두리치", team_id: 167, position: "Midfielder" },
+  { id: 202501, name: "F. Asllani", korean_name: "피슬란 아슬라니", team_id: 167, position: "Midfielder" },
+  { id: 279907, name: "U. Tohumcu", korean_name: "우므트 토훔주", team_id: 167, position: "Midfielder" },
+  { id: 37153, name: "W. Burger", korean_name: "워우터 뷔르거", team_id: 167, position: "Midfielder" },
+  { id: 24932, name: "F. Becker", korean_name: "플로리안 베커", team_id: 167, position: "Midfielder" },
+  { id: 719, name: "F. Grillitsch", korean_name: "플로리안 그릴리치", team_id: 167, position: "Midfielder" },
+  { id: 387643, name: "B. Touré", korean_name: "부바카르 투레", team_id: 167, position: "Midfielder" },
+  
+  // Attackers
+  { id: 25389, name: "I. Bebou", korean_name: "이헤아나초 베부", team_id: 167, position: "Attacker" },
+  { id: 7691, name: "M. Berisha", korean_name: "메르기 베리샤", team_id: 167, position: "Attacker" },
+  { id: 368260, name: "G. Orban", korean_name: "기프트 오르반", team_id: 167, position: "Attacker" },
+  { id: 203040, name: "T. Lemperle", korean_name: "팀 렘페를레", team_id: 167, position: "Attacker" },
+  { id: 66019, name: "A. Hložek", korean_name: "아담 흘로제크", team_id: 167, position: "Attacker" },
+  { id: 350047, name: "D. Mokwa", korean_name: "데니스 모크와", team_id: 167, position: "Attacker" },
+  { id: 726, name: "A. Kramarić", korean_name: "안드레이 크라마리치", team_id: 167, position: "Attacker" },
+  { id: 387973, name: "Max Moerstedt", korean_name: "막스 모어슈테트", team_id: 167, position: "Attacker" },
+  { id: 511606, name: "P. Benjamin", korean_name: "파트릭 벤야민", team_id: 167, position: "Attacker" },
+];
+
+// 1. FC Heidenheim (Team ID: 180) - 30명
+export const HEIDENHEIM_PLAYERS: PlayerMapping[] = [
+  // Goalkeepers
+  { id: 24893, name: "K. Müller", korean_name: "케빈 뮐러", team_id: 180, position: "Goalkeeper" },
+  { id: 328008, name: "Frank  Feller", korean_name: "프랑크 펠러", team_id: 180, position: "Goalkeeper" },
+  { id: 24894, name: "D. Ramaj", korean_name: "디오니시스 라마이", team_id: 180, position: "Goalkeeper" },
+  
+  // Defenders
+  { id: 24897, name: "M. Busch", korean_name: "마르빈 부시", team_id: 180, position: "Defender" },
+  { id: 177815, name: "T. Siersleben", korean_name: "팀 지어슬레벤", team_id: 180, position: "Defender" },
+  { id: 25203, name: "B. Gimber", korean_name: "베네딕트 김버", team_id: 180, position: "Defender" },
+  { id: 24899, name: "P. Mainka", korean_name: "파트리크 마인카", team_id: 180, position: "Defender" },
+  { id: 24979, name: "J. Föhrenbach", korean_name: "요나스 푀렌바흐", team_id: 180, position: "Defender" },
+  { id: 25502, name: "O. Traoré", korean_name: "오마르 트라오레", team_id: 180, position: "Defender" },
+  { id: 431917, name: "Adam Kölle", korean_name: "아담 쾰레", team_id: 180, position: "Defender" },
+  { id: 0, name: "G. Venuti", korean_name: "지안루카 베누티", team_id: 180, position: "Defender" },
+  
+  // Midfielders
+  { id: 127619, name: "J. Schöppner", korean_name: "얀 쇠프너", team_id: 180, position: "Midfielder" },
+  { id: 283323, name: "Léo Scienza", korean_name: "레오 시엔차", team_id: 180, position: "Midfielder" },
+  { id: 203011, name: "J. Niehues", korean_name: "요나스 니후스", team_id: 180, position: "Midfielder" },
+  { id: 280055, name: "L. Kerber", korean_name: "렌나르트 케르버", team_id: 180, position: "Midfielder" },
+  { id: 8959, name: "A. Beck", korean_name: "아드리안 베크", team_id: 180, position: "Midfielder" },
+  { id: 327897, name: "A. Ibrahimović", korean_name: "아드리안 이브라히모비치", team_id: 180, position: "Midfielder" },
+  { id: 125723, name: "T. Keller", korean_name: "토마스 켈러", team_id: 180, position: "Midfielder" },
+  { id: 24904, name: "N. Dorsch", korean_name: "니클라스 도르시", team_id: 180, position: "Midfielder" },
+  { id: 383729, name: "N. Rothweiler", korean_name: "니콜라스 로트바일러", team_id: 180, position: "Midfielder" },
+  { id: 327887, name: "Luka Janes", korean_name: "루카 야네스", team_id: 180, position: "Midfielder" },
+  
+  // Attackers
+  { id: 26530, name: "S. Schimmer", korean_name: "슈테판 쉼머", team_id: 180, position: "Attacker" },
+  { id: 128849, name: "M. Breunig", korean_name: "마르빈 브로이니히", team_id: 180, position: "Attacker" },
+  { id: 24641, name: "B. Zivzivadze", korean_name: "부두 지브지바제", team_id: 180, position: "Attacker" },
+  { id: 24955, name: "M. Honsak", korean_name: "마티아스 혼삭", team_id: 180, position: "Attacker" },
+  { id: 178106, name: "M. Pieringer", korean_name: "마르빈 피어링거", team_id: 180, position: "Attacker" },
+  { id: 15732, name: "M. Kaufmann", korean_name: "미카엘 카우프만", team_id: 180, position: "Attacker" },
+  { id: 125720, name: "S. Conteh", korean_name: "시에라 콘테", team_id: 180, position: "Attacker" },
+  { id: 551353, name: "T. Weigel", korean_name: "토비아스 바이겔", team_id: 180, position: "Attacker" },
+  { id: 480613, name: "Y. Wagner", korean_name: "야니크 바그너", team_id: 180, position: "Attacker" },
+];
+
+// 1.FC Köln (Team ID: 192) - 33명
+export const KOLN_PLAYERS: PlayerMapping[] = [
+  // Goalkeepers
+  { id: 15871, name: "M. Schwäbe", korean_name: "마르빈 슈베베", team_id: 192, position: "Goalkeeper" },
+  { id: 26293, name: "R. Zieler", korean_name: "론-로베르트 찰러", team_id: 192, position: "Goalkeeper" },
+  { id: 24892, name: "M. Köbbing", korean_name: "마티아스 쾨빙", team_id: 192, position: "Goalkeeper" },
+  
+  // Defenders
+  { id: 48765, name: "J. Schmied", korean_name: "얀 슈미트", team_id: 192, position: "Defender" },
+  { id: 26237, name: "D. Heintz", korean_name: "도미니크 하인츠", team_id: 192, position: "Defender" },
+  { id: 90641, name: "T. Hübers", korean_name: "티모 휘버스", team_id: 192, position: "Defender" },
+  { id: 108474, name: "L. Kilian", korean_name: "루카 킬리안", team_id: 192, position: "Defender" },
+  { id: 7319, name: "J. Gazibegović", korean_name: "요시프 가지베고비치", team_id: 192, position: "Defender" },
+  { id: 25178, name: "L. Paqarada", korean_name: "루카 파카라다", team_id: 192, position: "Defender" },
+  { id: 287916, name: "R. van den Berg", korean_name: "라세 반 덴 베르흐", team_id: 192, position: "Defender" },
+  { id: 72048, name: "C. Özkacar", korean_name: "침케 외즈카차르", team_id: 192, position: "Defender" },
+  { id: 380860, name: "Neo Telle", korean_name: "네오 텔레", team_id: 192, position: "Defender" },
+  
+  // Midfielders
+  { id: 1156, name: "T. Krauß", korean_name: "톰 크라우스", team_id: 192, position: "Midfielder" },
+  { id: 162480, name: "E. Martel", korean_name: "에릭 마르텔", team_id: 192, position: "Midfielder" },
+  { id: 202838, name: "D. Huseinbašić", korean_name: "데얀 후세인바시치", team_id: 192, position: "Midfielder" },
+  { id: 24803, name: "F. Kainz", korean_name: "플로리안 카인츠", team_id: 192, position: "Midfielder" },
+  { id: 432310, name: "S. El Mala", korean_name: "사미르 엘 말라", team_id: 192, position: "Midfielder" },
+  { id: 15907, name: "J. Christensen", korean_name: "요나스 크리스텐센", team_id: 192, position: "Midfielder" },
+  { id: 8641, name: "A. Castro-Montes", korean_name: "안드레아스 카스트로-몬테스", team_id: 192, position: "Midfielder" },
+  { id: 48198, name: "Í. Bergmann Jóhannesson", korean_name: "이시크 베르그만 요하네손", team_id: 192, position: "Midfielder" },
+  { id: 191740, name: "S. Sebulonsen", korean_name: "세브 세불론센", team_id: 192, position: "Midfielder" },
+  { id: 162386, name: "K. Lund", korean_name: "크리스티안 룬드", team_id: 192, position: "Midfielder" },
+  { id: 25380, name: "L. Maina", korean_name: "린톤 마이나", team_id: 192, position: "Midfielder" },
+  { id: 356491, name: "E. Kujović", korean_name: "에딘 쿠요비치", team_id: 192, position: "Midfielder" },
+  { id: 394733, name: "Fayssal Harchaoui", korean_name: "파이살 하르샤위", team_id: 192, position: "Midfielder" },
+  
+  // Attackers
+  { id: 26260, name: "L. Waldschmidt", korean_name: "루카 발트슈미트", team_id: 192, position: "Attacker" },
+  { id: 37439, name: "R. Ache", korean_name: "라그나르 아헤", team_id: 192, position: "Attacker" },
+  { id: 91181, name: "F. Dietz", korean_name: "팀 디츠", team_id: 192, position: "Attacker" },
+  { id: 40560, name: "J. Kamiński", korean_name: "야쿱 카민스키", team_id: 192, position: "Attacker" },
+  { id: 181908, name: "J. Thielmann", korean_name: "얀 틸만", team_id: 192, position: "Attacker" },
+  { id: 25242, name: "M. Bülter", korean_name: "마리우스 뷜터", team_id: 192, position: "Attacker" },
+  { id: 432311, name: "M. El Mala", korean_name: "모하메드 엘 말라", team_id: 192, position: "Attacker" },
+  { id: 80497, name: "I. Rondić", korean_name: "이반 론디치", team_id: 192, position: "Attacker" },
+];
+
+// Bayer Leverkusen (Team ID: 168) - 33명
+export const LEVERKUSEN_PLAYERS: PlayerMapping[] = [
+  // Goalkeepers
+  { id: 26232, name: "M. Flekken", korean_name: "마르크 플레켄", team_id: 168, position: "Goalkeeper" },
+  { id: 37246, name: "J. Blaswich", korean_name: "야니스 블라스비히", team_id: 168, position: "Goalkeeper" },
+  { id: 25168, name: "N. Lomb", korean_name: "니클라스 롬", team_id: 168, position: "Goalkeeper" },
+  
+  // Defenders
+  { id: 127817, name: "P. Hincapié", korean_name: "피에로 인카피에", team_id: 168, position: "Defender" },
+  { id: 158698, name: "J. Quansah", korean_name: "제럴 퀀사", team_id: 168, position: "Defender" },
+  { id: 174918, name: "L. Badé", korean_name: "루카 바데", team_id: 168, position: "Defender" },
+  { id: 41150, name: "E. Tapsoba", korean_name: "에드몬드 탑소바", team_id: 168, position: "Defender" },
+  { id: 352375, name: "Arthur", korean_name: "아르투르", team_id: 168, position: "Defender" },
+  { id: 462228, name: "A. Natali", korean_name: "아담 나탈리", team_id: 168, position: "Defender" },
+  { id: 343316, name: "J. Belocian", korean_name: "졸리 벨로시안", team_id: 168, position: "Defender" },
+  { id: 486523, name: "B. Hawighorst", korean_name: "벤 하비호르스트", team_id: 168, position: "Defender" },
+  
+  // Midfielders
+  { id: 237087, name: "E. Fernández", korean_name: "엔소 페르난데스", team_id: 168, position: "Midfielder" },
+  { id: 25635, name: "J. Hofmann", korean_name: "요나스 호프만", team_id: 168, position: "Midfielder" },
+  { id: 24903, name: "R. Andrich", korean_name: "로베르트 안드리히", team_id: 168, position: "Midfielder" },
+  { id: 414385, name: "C. Echeverri", korean_name: "클라우디오 에체베리", team_id: 168, position: "Midfielder" },
+  { id: 491103, name: "A. Tape", korean_name: "알렉산드레 타페", team_id: 168, position: "Midfielder" },
+  { id: 324034, name: "G. Puerta", korean_name: "가브리엘 푸에르타", team_id: 168, position: "Midfielder" },
+  { id: 563, name: "Álex Grimaldo", korean_name: "알레스 그리말도", team_id: 168, position: "Midfielder" },
+  { id: 757, name: "Lucas Vázquez", korean_name: "루카스 바스케스", team_id: 168, position: "Midfielder" },
+  { id: 47516, name: "Aleix García", korean_name: "알레이스 가르시아", team_id: 168, position: "Midfielder" },
+  { id: 6002, name: "E. Palacios", korean_name: "엑셀 팔라시오스", team_id: 168, position: "Midfielder" },
+  { id: 493409, name: "J. Mensah", korean_name: "저스틴 멘사", team_id: 168, position: "Midfielder" },
+  
+  // Attackers
+  { id: 663, name: "M. Terrier", korean_name: "마르탱 테리에", team_id: 168, position: "Attacker" },
+  { id: 162037, name: "M. Tillman", korean_name: "말릭 틸만", team_id: 168, position: "Attacker" },
+  { id: 794, name: "P. Schick", korean_name: "파트리크 시크", team_id: 168, position: "Attacker" },
+  { id: 389035, name: "Farid Alfa-Ruprecht", korean_name: "파리드 알파-루프레히트", team_id: 168, position: "Attacker" },
+  { id: 343320, name: "E. Ben Seghir", korean_name: "엘리예 벤 세기르", team_id: 168, position: "Attacker" },
+  { id: 414384, name: "A. Sarco", korean_name: "알렉시스 사르코", team_id: 168, position: "Attacker" },
+  { id: 312840, name: "E. Poku", korean_name: "에릭 포쿠", team_id: 168, position: "Attacker" },
+  { id: 231029, name: "N. Tella", korean_name: "나탄 텔라", team_id: 168, position: "Attacker" },
+  { id: 380587, name: "I. Maza", korean_name: "이브라힘 마자", team_id: 168, position: "Attacker" },
+  { id: 505295, name: "Christian Kofane", korean_name: "크리스티안 코파네", team_id: 168, position: "Attacker" },
+  { id: 543471, name: "Ken Izekor", korean_name: "켄 이제코르", team_id: 168, position: "Attacker" },
+];
+
+// Bayern München (Team ID: 157) - 29명
+export const BAYERN_PLAYERS: PlayerMapping[] = [
+  // Goalkeepers
+  { id: 497, name: "M. Neuer", korean_name: "마누엘 노이어", team_id: 157, position: "Goalkeeper" },
+  { id: 498, name: "S. Ulreich", korean_name: "스벤 울라이히", team_id: 157, position: "Goalkeeper" },
+  { id: 432595, name: "Jannis Bärtl", korean_name: "야니스 베르틀", team_id: 157, position: "Goalkeeper" },
+  { id: 203376, name: "J. Urbig", korean_name: "요나스 우르비히", team_id: 157, position: "Goalkeeper" },
+  { id: 435089, name: "Leon Klanac", korean_name: "레온 클라나츠", team_id: 157, position: "Goalkeeper" },
+  
+  // Defenders
+  { id: 1149, name: "D. Upamecano", korean_name: "다요 우파메카노", team_id: 157, position: "Defender" },
+  { id: 2897, name: "Kim Min-Jae", korean_name: "김민재", team_id: 157, position: "Defender" },
+  { id: 972, name: "J. Tah", korean_name: "요나탄 타", team_id: 157, position: "Defender" },
+  { id: 509, name: "A. Davies", korean_name: "알폰소 데이비스", team_id: 157, position: "Defender" },
+  { id: 32893, name: "H. Ito", korean_name: "이토 히로키", team_id: 157, position: "Defender" },
+  { id: 8, name: "Raphaël Guerreiro", korean_name: "하파엘 게헤이루", team_id: 157, position: "Defender" },
+  { id: 2195, name: "S. Boey", korean_name: "사샤 보에이", team_id: 157, position: "Defender" },
+  { id: 1157, name: "K. Laimer", korean_name: "콘라트 라이머", team_id: 157, position: "Defender" },
+  { id: 524214, name: "Cassiano Kiala", korean_name: "카시아누 키알라", team_id: 157, position: "Defender" },
+  { id: 125171, name: "J. Stanišić", korean_name: "요시프 스타니시치", team_id: 157, position: "Defender" },
+  
+  // Midfielders
+  { id: 502, name: "J. Kimmich", korean_name: "요슈아 키미히", team_id: 157, position: "Midfielder" },
+  { id: 510, name: "S. Gnabry", korean_name: "세르주 그나브리", team_id: 157, position: "Midfielder" },
+  { id: 511, name: "L. Goretzka", korean_name: "레온 고레츠카", team_id: 157, position: "Midfielder" },
+  { id: 2489, name: "L. Díaz", korean_name: "루이스 디아스", team_id: 157, position: "Midfielder" },
+  { id: 19617, name: "M. Olise", korean_name: "미카엘 올리세", team_id: 157, position: "Midfielder" },
+  { id: 325975, name: "T. Bischof", korean_name: "톰 비쇼프", team_id: 157, position: "Midfielder" },
+  { id: 494131, name: "L. Karl", korean_name: "루카스 카를", team_id: 157, position: "Midfielder" },
+  { id: 181812, name: "J. Musiala", korean_name: "야말 무시알라", team_id: 157, position: "Midfielder" },
+  { id: 328033, name: "A. Pavlović", korean_name: "알렉산다르 파블로비치", team_id: 157, position: "Midfielder" },
+  { id: 449689, name: "David Daiber", korean_name: "다비트 다이버", team_id: 157, position: "Midfielder" },
+  
+  // Attackers
+  { id: 184, name: "H. Kane", korean_name: "해리 케인", team_id: 157, position: "Attacker" },
+  { id: 283058, name: "N. Jackson", korean_name: "니콜라스 잭슨", team_id: 157, position: "Attacker" },
+  { id: 496738, name: "W. Mike", korean_name: "윌리엄 마이크", team_id: 157, position: "Attacker" },
+  { id: 436443, name: "J. Kusi-Asare", korean_name: "저스틴 쿠시-아사레", team_id: 157, position: "Attacker" },
+];
+
+// Borussia Dortmund (Team ID: 165) - 29명
+export const DORTMUND_PLAYERS: PlayerMapping[] = [
+  // Goalkeepers
+  { id: 25282, name: "G. Kobel", korean_name: "그레고르 코벨", team_id: 165, position: "Goalkeeper" },
+  { id: 26395, name: "P. Drewes", korean_name: "파트리크 드레베스", team_id: 165, position: "Goalkeeper" },
+  { id: 280463, name: "S. Ostrzinski", korean_name: "시몬 오스트르진스키", team_id: 165, position: "Goalkeeper" },
+  { id: 26292, name: "A. Meyer", korean_name: "알렉산더 마이어", team_id: 165, position: "Goalkeeper" },
+  
+  // Defenders
+  { id: 25368, name: "W. Anton", korean_name: "발데마르 안톤", team_id: 165, position: "Defender" },
+  { id: 26243, name: "N. Schlotterbeck", korean_name: "니코 슐로터베크", team_id: 165, position: "Defender" },
+  { id: 2194, name: "R. Bensebaïni", korean_name: "라미 벤세바이니", team_id: 165, position: "Defender" },
+  { id: 506, name: "N. Süle", korean_name: "니클라스 쥘레", team_id: 165, position: "Defender" },
+  { id: 24845, name: "J. Ryerson", korean_name: "줄리안 뤼어손", team_id: 165, position: "Defender" },
+  { id: 422780, name: "A. Anselmino", korean_name: "아론 안셀미노", team_id: 165, position: "Defender" },
+  { id: 341839, name: "F. Mané", korean_name: "파마라 마네", team_id: 165, position: "Defender" },
+  { id: 394667, name: "Almugera Raouf Mohammed Kabar", korean_name: "알무게라 카바르", team_id: 165, position: "Defender" },
+  { id: 203269, name: "Y. Lührs", korean_name: "얀닉 뤼르스", team_id: 165, position: "Defender" },
+  
+  // Midfielders
+  { id: 197448, name: "Yan Couto", korean_name: "얀 코우투", team_id: 165, position: "Midfielder" },
+  { id: 24807, name: "S. Özcan", korean_name: "살리 외즈잔", team_id: 165, position: "Midfielder" },
+  { id: 326757, name: "J. Bellingham", korean_name: "조브 벨링엄", team_id: 165, position: "Midfielder" },
+  { id: 637, name: "F. Nmecha", korean_name: "펠릭스 은메차", team_id: 165, position: "Midfielder" },
+  { id: 984, name: "J. Brandt", korean_name: "율리안 브란트", team_id: 165, position: "Midfielder" },
+  { id: 18970, name: "P. Groß", korean_name: "파스칼 그로스", team_id: 165, position: "Midfielder" },
+  { id: 138935, name: "C. Chukwuemeka", korean_name: "카니 추크부에메카", team_id: 165, position: "Midfielder" },
+  { id: 1159, name: "M. Sabitzer", korean_name: "마르셀 자비처", team_id: 165, position: "Midfielder" },
+  { id: 864, name: "E. Can", korean_name: "엠레 잔", team_id: 165, position: "Midfielder" },
+  { id: 198654, name: "D. Svensson", korean_name: "다비드 스벤손", team_id: 165, position: "Midfielder" },
+  
+  // Attackers
+  { id: 21393, name: "S. Guirassy", korean_name: "세르우 기라시", team_id: 165, position: "Attacker" },
+  { id: 158644, name: "M. Beier", korean_name: "막시밀리안 바이어", team_id: 165, position: "Attacker" },
+  { id: 368230, name: "J. Duranville", korean_name: "줄리앙 뒤랑빌", team_id: 165, position: "Attacker" },
+  { id: 129791, name: "Fábio Silva", korean_name: "파비우 실바", team_id: 165, position: "Attacker" },
+  { id: 7334, name: "K. Adeyemi", korean_name: "카림 아데예미", team_id: 165, position: "Attacker" },
+  { id: 328617, name: "William Cole Campbell", korean_name: "윌리엄 캠벨", team_id: 165, position: "Attacker" },
+];
+
+// Borussia Mönchengladbach (Team ID: 163) - 31명
+export const MONCHENGLADBACH_PLAYERS: PlayerMapping[] = [
+  // Goalkeepers
+  { id: 2801, name: "J. Omlin", korean_name: "요나스 옴린", team_id: 163, position: "Goalkeeper" },
+  { id: 25627, name: "T. Sippel", korean_name: "토비아스 지펠", team_id: 163, position: "Goalkeeper" },
+  { id: 25626, name: "M. Nicolas", korean_name: "모리츠 니콜라스", team_id: 163, position: "Goalkeeper" },
+  { id: 340155, name: "T. Pereira Cardoso", korean_name: "티아구 카르도수", team_id: 163, position: "Goalkeeper" },
+  
+  // Defenders
+  { id: 322627, name: "F. Chiarodia", korean_name: "파브리치오 키아로디아", team_id: 163, position: "Defender" },
+  { id: 31043, name: "K. Diks", korean_name: "카스퍼 딕스", team_id: 163, position: "Defender" },
+  { id: 24839, name: "M. Friedrich", korean_name: "마르빈 프리드리히", team_id: 163, position: "Defender" },
+  { id: 163069, name: "L. Netz", korean_name: "루카 네츠", team_id: 163, position: "Defender" },
+  { id: 327646, name: "L. Ullrich", korean_name: "루카스 울리히", team_id: 163, position: "Defender" },
+  { id: 50852, name: "J. Scally", korean_name: "조 스캘리", team_id: 163, position: "Defender" },
+  { id: 2803, name: "N. Elvedi", korean_name: "니코 엘베디", team_id: 163, position: "Defender" },
+  
+  // Midfielders
+  { id: 19, name: "J. Weigl", korean_name: "율리안 바이글", team_id: 163, position: "Midfielder" },
+  { id: 178709, name: "Y. Engelhardt", korean_name: "얀 엥겔하르트", team_id: 163, position: "Midfielder" },
+  { id: 25461, name: "K. Stöger", korean_name: "케빈 슈퇴거", team_id: 163, position: "Midfielder" },
+  { id: 20784, name: "F. Honorat", korean_name: "프랑크 오노라", team_id: 163, position: "Midfielder" },
+  { id: 24969, name: "P. Sander", korean_name: "필립 잔더", team_id: 163, position: "Midfielder" },
+  { id: 280358, name: "J. Castrop", korean_name: "조던 카스트롭", team_id: 163, position: "Midfielder" },
+  { id: 161921, name: "G. Reyna", korean_name: "지오바니 레이나", team_id: 163, position: "Midfielder" },
+  { id: 180298, name: "O. Fraulo", korean_name: "오스카르 프라울로", team_id: 163, position: "Midfielder" },
+  { id: 725, name: "R. Hack", korean_name: "로빈 학", team_id: 163, position: "Midfielder" },
+  { id: 203007, name: "R. Reitz", korean_name: "로코 라이츠", team_id: 163, position: "Midfielder" },
+  { id: 22148, name: "N. Ngoumou", korean_name: "나탄 은구무", team_id: 163, position: "Midfielder" },
+  { id: 412705, name: "Charles Herrmann", korean_name: "샤를 헤르만", team_id: 163, position: "Midfielder" },
+  { id: 442151, name: "Niklas Swider", korean_name: "니클라스 스위더", team_id: 163, position: "Midfielder" },
+  { id: 501906, name: "W. Mohya", korean_name: "와실 모야", team_id: 163, position: "Midfielder" },
+  
+  // Attackers
+  { id: 25638, name: "F. Neuhaus", korean_name: "플로리안 노이하우스", team_id: 163, position: "Attacker" },
+  { id: 26256, name: "T. Kleindienst", korean_name: "팀 클라인딘스트", team_id: 163, position: "Attacker" },
+  { id: 28382, name: "H. Tabaković", korean_name: "하리스 타바코비치", team_id: 163, position: "Attacker" },
+  { id: 106851, name: "S. Machino", korean_name: "시온 마치노", team_id: 163, position: "Attacker" },
+  { id: 280427, name: "G. Ranos", korean_name: "게오르기오스 라노스", team_id: 163, position: "Attacker" },
+  { id: 428913, name: "Jan Urbich", korean_name: "얀 우르비히", team_id: 163, position: "Attacker" },
+];
+
+// Eintracht Frankfurt (Team ID: 169) - 31명
+export const FRANKFURT_PLAYERS: PlayerMapping[] = [
+  // Goalkeepers
+  { id: 26291, name: "J. Grahl", korean_name: "얀 그랄", team_id: 169, position: "Goalkeeper" },
+  { id: 362884, name: "Kauã Santos", korean_name: "카우아 산투스", team_id: 169, position: "Goalkeeper" },
+  
+  // Defenders
+  { id: 382492, name: "Elias Baum", korean_name: "엘리아스 바움", team_id: 169, position: "Defender" },
+  { id: 204043, name: "A. Theate", korean_name: "아르투르 테아테", team_id: 169, position: "Defender" },
+  { id: 26238, name: "R. Koch", korean_name: "로빈 코흐", team_id: 169, position: "Defender" },
+  { id: 162414, name: "A. Amenda", korean_name: "아우렐리오 아멘다", team_id: 169, position: "Defender" },
+  { id: 14276, name: "H. Smolčić", korean_name: "흐르보예 스몰치치", team_id: 169, position: "Defender" },
+  { id: 533, name: "R. Kristensen", korean_name: "라스무스 크리스텐센", team_id: 169, position: "Defender" },
+  { id: 280074, name: "N. Brown", korean_name: "나탄 브라운", team_id: 169, position: "Defender" },
+  { id: 8451, name: "Aurélio Buta", korean_name: "아우렐리우 부타", team_id: 169, position: "Defender" },
+  { id: 156490, name: "N. Nkounkou", korean_name: "니엘스 은쿤쿠", team_id: 169, position: "Defender" },
+  { id: 269531, name: "N. Collins", korean_name: "네이선 콜린스", team_id: 169, position: "Defender" },
+  { id: 382491, name: "Fousseny Doumbia", korean_name: "푸세니 둠비아", team_id: 169, position: "Defender" },
+  
+  // Midfielders
+  { id: 339874, name: "O. HÃ¸jlund", korean_name: "오스카르 회일룬드", team_id: 169, position: "Midfielder" },
+  { id: 90594, name: "J. Dina Ebimbe", korean_name: "에릭 주니어 디나 에빔베", team_id: 169, position: "Midfielder" },
+  { id: 276670, name: "F. Chaïbi", korean_name: "파레스 샤이비", team_id: 169, position: "Midfielder" },
+  { id: 21587, name: "E. Skhiri", korean_name: "엘리예 스키리", team_id: 169, position: "Midfielder" },
+  { id: 335094, name: "H. Larsson", korean_name: "후고 라르손", team_id: 169, position: "Midfielder" },
+  { id: 14, name: "M. Dahoud", korean_name: "마흐무드 다후드", team_id: 169, position: "Midfielder" },
+  { id: 369674, name: "J. Bahoya", korean_name: "장-마티스 바호야", team_id: 169, position: "Midfielder" },
+  { id: 2598, name: "R. Dōan", korean_name: "도안 리츠", team_id: 169, position: "Midfielder" },
+  { id: 1803, name: "T. Chandler", korean_name: "티모시 챈들러", team_id: 169, position: "Midfielder" },
+  { id: 16, name: "M. Götze", korean_name: "마리오 괴체", team_id: 169, position: "Midfielder" },
+  { id: 339887, name: "C. Uzun", korean_name: "칸 우준", team_id: 169, position: "Midfielder" },
+  { id: 387534, name: "Noah Dávid Gabriel Fenyö", korean_name: "노아 페뇨", team_id: 169, position: "Midfielder" },
+  { id: 478662, name: "M. Dills", korean_name: "마티스 딜스", team_id: 169, position: "Midfielder" },
+  
+  // Attackers
+  { id: 161922, name: "A. Knauff", korean_name: "안사가르 크나우프", team_id: 169, position: "Attacker" },
+  { id: 25926, name: "J. Burkardt", korean_name: "요나탄 부르카르트", team_id: 169, position: "Attacker" },
+  { id: 162707, name: "E. Wahi", korean_name: "엘리예 와히", team_id: 169, position: "Attacker" },
+  { id: 162771, name: "J. Ngankam", korean_name: "제시 은강캄", team_id: 169, position: "Attacker" },
+  { id: 2927, name: "M. Batshuayi", korean_name: "미시 바추아이", team_id: 169, position: "Attacker" },
+];
+
+// FC Augsburg (Team ID: 170) - 33명
+export const AUGSBURG_PLAYERS: PlayerMapping[] = [
+  // Goalkeepers
+  { id: 25903, name: "F. Dahmen", korean_name: "핀 다멘", team_id: 170, position: "Goalkeeper" },
+  { id: 14553, name: "N. Labrović", korean_name: "네디모 라브로비치", team_id: 170, position: "Goalkeeper" },
+  { id: 163064, name: "D. Klein", korean_name: "다니엘 클라인", team_id: 170, position: "Goalkeeper" },
+  
+  // Defenders
+  { id: 15901, name: "M. Pedersen", korean_name: "말텐 페데르센", team_id: 170, position: "Defender" },
+  { id: 163039, name: "C. Matsima", korean_name: "크리스토스 마치마", team_id: 170, position: "Defender" },
+  { id: 25290, name: "J. Gouweleeuw", korean_name: "제프리 하우벨레우", team_id: 170, position: "Defender" },
+  { id: 48574, name: "C. Zesiger", korean_name: "셀린 체시거", team_id: 170, position: "Defender" },
+  { id: 14395, name: "K. Jakić", korean_name: "크리스티안 야키치", team_id: 170, position: "Defender" },
+  { id: 25144, name: "M. Bauer", korean_name: "마르빈 바우어", team_id: 170, position: "Defender" },
+  { id: 26242, name: "K. Schlotterbeck", korean_name: "켈러 슐로터베크", team_id: 170, position: "Defender" },
+  { id: 413065, name: "Noahkai Kai Daniel Banks", korean_name: "노아카이 뱅크스", team_id: 170, position: "Defender" },
+  { id: 468698, name: "Felix Meiser", korean_name: "펠릭스 마이저", team_id: 170, position: "Defender" },
+  { id: 404895, name: "O. Sorg", korean_name: "올리버 소르그", team_id: 170, position: "Defender" },
+  
+  // Midfielders
+  { id: 110, name: "H. Massengo", korean_name: "한-노아 마셍고", team_id: 170, position: "Midfielder" },
+  { id: 202755, name: "T. Breithaupt", korean_name: "팀 브라이타우프트", team_id: 170, position: "Midfielder" },
+  { id: 25413, name: "E. Rexhbeçaj", korean_name: "에르메딘 레크스베차이", team_id: 170, position: "Midfielder" },
+  { id: 25355, name: "A. Maier", korean_name: "아르네 마이어", team_id: 170, position: "Midfielder" },
+  { id: 2360, name: "D. Giannoulis", korean_name: "디미트리스 기아눌리스", team_id: 170, position: "Midfielder" },
+  { id: 143831, name: "R. Fellhauer", korean_name: "로베르트 펠하우어", team_id: 170, position: "Midfielder" },
+  { id: 20634, name: "A. Claude-Maurice", korean_name: "알렉시스 클로드-모리스", team_id: 170, position: "Midfielder" },
+  { id: 26, name: "M. Wolf", korean_name: "모리츠 볼프", team_id: 170, position: "Midfielder" },
+  { id: 279993, name: "A. Kade", korean_name: "아르네 카데", team_id: 170, position: "Midfielder" },
+  { id: 328019, name: "M. Kücüksahin", korean_name: "메르트 퀴취크사힌", team_id: 170, position: "Midfielder" },
+  
+  // Attackers
+  { id: 3395, name: "S. Mounié", korean_name: "스티브 무니에", team_id: 170, position: "Attacker" },
+  { id: 8651, name: "S. Essende", korean_name: "사무엘 에센데", team_id: 170, position: "Attacker" },
+  { id: 310196, name: "Ismaël Gharbi", korean_name: "이스마엘 가르비", team_id: 170, position: "Attacker" },
+  { id: 343710, name: "K. Dong", korean_name: "켈빈 동", team_id: 170, position: "Attacker" },
+  { id: 26171, name: "P. Tietz", korean_name: "필립 티츠", team_id: 170, position: "Attacker" },
+  { id: 323974, name: "E. Saad", korean_name: "엘비스 라잘", team_id: 170, position: "Attacker" },
+  { id: 380518, name: "Aiman Dardari", korean_name: "아이만 다르다리", team_id: 170, position: "Attacker" },
+  { id: 163032, name: "F. Rieder", korean_name: "파비안 리더", team_id: 170, position: "Attacker" },
+  { id: 322508, name: "Y. Kabadayı", korean_name: "유수프 카바다이", team_id: 170, position: "Attacker" },
+  { id: 348888, name: "M. Kömür", korean_name: "메르트 쾨뮐", team_id: 170, position: "Attacker" },
+];
+
+// FC St. Pauli (Team ID: 186) - 30명
+export const ST_PAULI_PLAYERS: PlayerMapping[] = [
+  // Goalkeepers
+  { id: 119167, name: "B. Voll", korean_name: "벤 볼", team_id: 186, position: "Goalkeeper" },
+  { id: 9026, name: "N. Vasilj", korean_name: "니클라스 바실리", team_id: 186, position: "Goalkeeper" },
+  { id: 203324, name: "S. Spari", korean_name: "사샤 슈파리", team_id: 186, position: "Goalkeeper" },
+  
+  // Defenders
+  { id: 27157, name: "M. Saliakas", korean_name: "마놀리스 살리아카스", team_id: 186, position: "Defender" },
+  { id: 48142, name: "K. Mets", korean_name: "카롤 메츠", team_id: 186, position: "Defender" },
+  { id: 7649, name: "D. Nemeth", korean_name: "다비드 네메트", team_id: 186, position: "Defender" },
+  { id: 24961, name: "H. Wahl", korean_name: "하우케 발", team_id: 186, position: "Defender" },
+  { id: 8486, name: "E. Smith", korean_name: "에릭 스미스", team_id: 186, position: "Defender" },
+  { id: 276263, name: "F. Stevens", korean_name: "핀 스티븐스", team_id: 186, position: "Defender" },
+  { id: 90731, name: "L. Ritzka", korean_name: "라르스 리츠카", team_id: 186, position: "Defender" },
+  { id: 40274, name: "A. Dźwigała", korean_name: "아담 즈비갈라", team_id: 186, position: "Defender" },
+  { id: 384968, name: "J. Robatsch", korean_name: "제시카 로바치", team_id: 186, position: "Defender" },
+  
+  // Midfielders
+  { id: 50863, name: "J. Sands", korean_name: "제임스 샌즈", team_id: 186, position: "Midfielder" },
+  { id: 2749, name: "J. Irvine", korean_name: "잭슨 어바인", team_id: 186, position: "Midfielder" },
+  { id: 148448, name: "A. Pyrka", korean_name: "아담 피르카", team_id: 186, position: "Midfielder" },
+  { id: 146586, name: "J. Fujita", korean_name: "후지타 조엘", team_id: 186, position: "Midfielder" },
+  { id: 47965, name: "E. Ahlstrand", korean_name: "에릭 알스트란드", team_id: 186, position: "Midfielder" },
+  { id: 202636, name: "L. Oppie", korean_name: "루카스 오피", team_id: 186, position: "Midfielder" },
+  { id: 6904, name: "C. Metcalfe", korean_name: "코너 메트칼프", team_id: 186, position: "Midfielder" },
+  { id: 449985, name: "Marwin Reiner Ian Schmitz", korean_name: "마르빈 슈미츠", team_id: 186, position: "Midfielder" },
+  { id: 469579, name: "N. Schmidt", korean_name: "니콜라스 슈미트", team_id: 186, position: "Midfielder" },
+  
+  // Attackers
+  { id: 474789, name: "Abdoulie Ceesay", korean_name: "압둘리에 세세이", team_id: 186, position: "Attacker" },
+  { id: 1672, name: "D. Sinani", korean_name: "다뷔 시나니", team_id: 186, position: "Attacker" },
+  { id: 138873, name: "R. Jones", korean_name: "라이언 존스", team_id: 186, position: "Attacker" },
+  { id: 17756, name: "O. Afolayan", korean_name: "오라두르 아폴라얀", team_id: 186, position: "Attacker" },
+  { id: 37759, name: "M. Kaars", korean_name: "모르간 카르스", team_id: 186, position: "Attacker" },
+  { id: 107087, name: "S. Banks", korean_name: "스콧 뱅크스", team_id: 186, position: "Attacker" },
+  { id: 178921, name: "A. Hountondji", korean_name: "안드레아스 훈톤지", team_id: 186, position: "Attacker" },
+  { id: 20780, name: "Mathias Pereira Lage", korean_name: "마티아스 페레이라 라제", team_id: 186, position: "Attacker" },
+  { id: 344284, name: "Romeo Aigbekaen", korean_name: "로메오 아이그베카엔", team_id: 186, position: "Attacker" },
+];
+
+// FSV Mainz 05 (Team ID: 164) - 30명
+export const MAINZ_PLAYERS: PlayerMapping[] = [
+  { id: 180553, name: "L. Rieß", korean_name: "루카스 리스", team_id: 164, position: "Goalkeeper" },
+  { id: 25906, name: "R. Zentner", korean_name: "로빈 첸트너", team_id: 164, position: "Goalkeeper" },
+  { id: 90829, name: "D. Batz", korean_name: "다니엘 바츠", team_id: 164, position: "Goalkeeper" },
+  { id: 25066, name: "M. Leitsch", korean_name: "막시밀리안 라이치", team_id: 164, position: "Defender" },
+  { id: 25907, name: "S. Bell", korean_name: "슈테판 벨", team_id: 164, position: "Defender" },
+  { id: 22244, name: "A. Caci", korean_name: "안토니 카치", team_id: 164, position: "Defender" },
+  { id: 1812, name: "D. da Costa", korean_name: "다니 다 코스타", team_id: 164, position: "Defender" },
+  { id: 283753, name: "N. Veratschnig", korean_name: "니콜라우스 베라츠니히", team_id: 164, position: "Defender" },
+  { id: 39279, name: "A. Hanche-Olsen", korean_name: "안드레아스 한셰-올센", team_id: 164, position: "Defender" },
+  { id: 48378, name: "S. Widmer", korean_name: "실반 비드머", team_id: 164, position: "Defender" },
+  { id: 979, name: "D. Kohr", korean_name: "도미니크 코르", team_id: 164, position: "Defender" },
+  { id: 394735, name: "Maxim Bora Dal", korean_name: "막심 보라 달", team_id: 164, position: "Defender" },
+  { id: 414161, name: "K. Schopp", korean_name: "카이 쇼프", team_id: 164, position: "Defender" },
+  { id: 442546, name: "K. Potulski", korean_name: "카를 포툴스키", team_id: 164, position: "Defender" },
+  { id: 25915, name: "P. Mwene", korean_name: "필립 음베네", team_id: 164, position: "Midfielder" },
+  { id: 33889, name: "K. Sano", korean_name: "카이세이 사노", team_id: 164, position: "Midfielder" },
+  { id: 22097, name: "A. Nordin", korean_name: "안토니 노르딘", team_id: 164, position: "Midfielder" },
+  { id: 714, name: "N. Amiri", korean_name: "나딤 아미리", team_id: 164, position: "Midfielder" },
+  { id: 24842, name: "L. Maloney", korean_name: "레넌 말로니", team_id: 164, position: "Midfielder" },
+  { id: 199897, name: "S. Kawasaki", korean_name: "가와사키 슌야", team_id: 164, position: "Midfielder" },
+  { id: 380603, name: "Daniel Gleiber", korean_name: "다니엘 글라이버", team_id: 164, position: "Midfielder" },
+  { id: 550361, name: "J. Debrah", korean_name: "조나탄 데브라", team_id: 164, position: null },
+  { id: 2906, name: "Lee Jae-Sung", korean_name: "이재성", team_id: 164, position: "Attacker" },
+  { id: 202736, name: "P. Nebel", korean_name: "파울 네벨", team_id: 164, position: "Attacker" },
+  { id: 280339, name: "A. Sieb", korean_name: "안사가르 지브", team_id: 164, position: "Attacker" },
+  { id: 199931, name: "W. Bøving", korean_name: "윌리엄 뵈빙", team_id: 164, position: "Attacker" },
+  { id: 162946, name: "B. Hollerbach", korean_name: "베르타 홀러바흐", team_id: 164, position: "Attacker" },
+  { id: 427056, name: "K. Bos", korean_name: "카스파르 보스", team_id: 164, position: "Attacker" },
+  { id: 287932, name: "B. Bobzien", korean_name: "벤 봅지엔", team_id: 164, position: "Attacker" },
+  { id: 342177, name: "N. Weiper", korean_name: "넬슨 바이퍼", team_id: 164, position: "Attacker" },
+];
+
+// Hamburger SV (Team ID: 175) - 36명
+export const HAMBURGER_SV_PLAYERS: PlayerMapping[] = [
+  { id: 25033, name: "Daniel Heuer Fernandes", korean_name: "다니엘 호이어 페르난데스", team_id: 175, position: "Goalkeeper" },
+  { id: 126530, name: "Daniel Peretz", korean_name: "다니엘 페레츠", team_id: 175, position: "Goalkeeper" },
+  { id: 380940, name: "H. Hermann", korean_name: "후고 헤르만", team_id: 175, position: "Goalkeeper" },
+  { id: 416268, name: "Fernando Dickes", korean_name: "페르난도 디케스", team_id: 175, position: "Goalkeeper" },
+  { id: 458593, name: "C. Poppelbaum", korean_name: "크리스티안 포펠바움", team_id: 175, position: "Goalkeeper" },
+  { id: 302632, name: "W. Mikelbrencis", korean_name: "윌리엄 미켈브렌치스", team_id: 175, position: "Defender" },
+  { id: 24792, name: "N. Katterbach", korean_name: "노아 카터바흐", team_id: 175, position: "Defender" },
+  { id: 324019, name: "Daniel Elfadli", korean_name: "다니엘 엘파들리", team_id: 175, position: "Defender" },
+  { id: 41799, name: "Guilherme Ramos", korean_name: "길례르미 라무스", team_id: 175, position: "Defender" },
+  { id: 162265, name: "W. Omari", korean_name: "윌리엄 오마리", team_id: 175, position: "Defender" },
+  { id: 384861, name: "A. Souhmahoro", korean_name: "아브두 수마호로", team_id: 175, position: "Defender" },
+  { id: 5973, name: "N. Capaldo", korean_name: "니콜라스 카팔도", team_id: 175, position: "Defender" },
+  { id: 25346, name: "J. Torunarigha", korean_name: "조던 토루나리가", team_id: 175, position: "Defender" },
+  { id: 48475, name: "S. Hefti", korean_name: "실반 헤프티", team_id: 175, position: "Defender" },
+  { id: 387521, name: "L. Vušković", korean_name: "루카 부쇼비치", team_id: 175, position: "Defender" },
+  { id: 480452, name: "S. Nandja", korean_name: "사무엘 난자", team_id: 175, position: "Defender" },
+  { id: 1427, name: "A. Sambi Lokonga", korean_name: "알베르트 삼비 로콩가", team_id: 175, position: "Midfielder" },
+  { id: 177780, name: "A. Suhonen", korean_name: "아아투 수호넨", team_id: 175, position: "Midfielder" },
+  { id: 161923, name: "I. Pherai", korean_name: "이마누엘 프헤라이", team_id: 175, position: "Midfielder" },
+  { id: 265741, name: "G. Gocholeishvili", korean_name: "지오르기 고촐레이슈빌리", team_id: 175, position: "Midfielder" },
+  { id: 24880, name: "B. Jatta", korean_name: "바카리 야타", team_id: 175, position: "Midfielder" },
+  { id: 41725, name: "Fábio Vieira", korean_name: "파비우 비에이라", team_id: 175, position: "Midfielder" },
+  { id: 260898, name: "N. Remberg", korean_name: "니콜라스 렘베르크", team_id: 175, position: "Midfielder" },
+  { id: 24965, name: "J. Meffert", korean_name: "요나스 메페르트", team_id: 175, position: "Midfielder" },
+  { id: 48489, name: "M. Muheim", korean_name: "미로 무하임", team_id: 175, position: "Midfielder" },
+  { id: 480437, name: "M. Reimers", korean_name: "막스 라이머스", team_id: 175, position: "Midfielder" },
+  { id: 551352, name: "F. Balde", korean_name: "파비오 발데", team_id: 175, position: null },
+  { id: 8483, name: "J. Dompé", korean_name: "장-뤽 돔페", team_id: 175, position: "Attacker" },
+  { id: 24914, name: "R. Glatzel", korean_name: "로베르트 글라첼", team_id: 175, position: "Attacker" },
+  { id: 162773, name: "R. Königsdörffer", korean_name: "란실로 쾨닉스되르퍼", team_id: 175, position: "Attacker" },
+  { id: 129693, name: "R. Philippe", korean_name: "로베르 필립", team_id: 175, position: "Attacker" },
+  { id: 1167, name: "Y. Poulsen", korean_name: "유수프 폴센", team_id: 175, position: "Attacker" },
+  { id: 14351, name: "E. Sahiti", korean_name: "에돈 사히티", team_id: 175, position: "Attacker" },
+  { id: 470282, name: "Alexander Røssing-Lelesiit", korean_name: "알렉산더 뢰싱", team_id: 175, position: "Attacker" },
+  { id: 380939, name: "Fabio Amadu Uri Baldé", korean_name: "파비오 발데", team_id: 175, position: "Attacker" },
+  { id: 444962, name: "Otto Emerson Stange", korean_name: "오토 스탕게", team_id: 175, position: "Attacker" },
+];
+
+// RB Leipzig (Team ID: 173) - 35명
+export const LEIPZIG_PLAYERS: PlayerMapping[] = [
+  { id: 1139, name: "P. Gulácsi", korean_name: "페테르 굴라치", team_id: 173, position: "Goalkeeper" },
+  { id: 24814, name: "L. Zingerle", korean_name: "레오폴트 찡거레", team_id: 173, position: "Goalkeeper" },
+  { id: 1924, name: "M. Vandevoordt", korean_name: "마르텐 판데보르트", team_id: 173, position: "Goalkeeper" },
+  { id: 37143, name: "L. Geertruida", korean_name: "루트헤르 헤이르트루이다", team_id: 173, position: "Defender" },
+  { id: 1148, name: "W. Orbán", korean_name: "빌리 오르반", team_id: 173, position: "Defender" },
+  { id: 268571, name: "E. Bitshiabu", korean_name: "엘 샤드라크 비치아부", team_id: 173, position: "Defender" },
+  { id: 1144, name: "L. Klostermann", korean_name: "루카스 클로스터만", team_id: 173, position: "Defender" },
+  { id: 25917, name: "R. Baku", korean_name: "리들 바쿠", team_id: 173, position: "Defender" },
+  { id: 342320, name: "K. Nedeljković", korean_name: "코스타 네델코비치", team_id: 173, position: "Defender" },
+  { id: 25158, name: "D. Raum", korean_name: "다비트 라움", team_id: 173, position: "Defender" },
+  { id: 162761, name: "C. Lukeba", korean_name: "카스텔 루케바", team_id: 173, position: "Defender" },
+  { id: 355167, name: "Max Finkgräfe", korean_name: "막스 핑크그레페", team_id: 173, position: "Defender" },
+  { id: 98, name: "B. Henrichs", korean_name: "벤야민 헨리히스", team_id: 173, position: "Defender" },
+  { id: 343286, name: "E. Banzuzi", korean_name: "엘 차드라크 반주지", team_id: 173, position: "Midfielder" },
+  { id: 1153, name: "A. Haidara", korean_name: "아마두 하이다라", team_id: 173, position: "Midfielder" },
+  { id: 162016, name: "X. Simons", korean_name: "사비 시몬스", team_id: 173, position: "Midfielder" },
+  { id: 7328, name: "N. Seiwald", korean_name: "니콜라스 자이발트", team_id: 173, position: "Midfielder" },
+  { id: 715, name: "C. Baumgartner", korean_name: "크리스토프 바움가르트너", team_id: 173, position: "Midfielder" },
+  { id: 340154, name: "A. Vermeeren", korean_name: "아르투르 베르메렌", team_id: 173, position: "Midfielder" },
+  { id: 1358, name: "E. Elmas", korean_name: "엘리프 엘마스", team_id: 173, position: "Midfielder" },
+  { id: 380978, name: "A. Ouédraogo", korean_name: "아시코 우에드라오고", team_id: 173, position: "Midfielder" },
+  { id: 1095, name: "X. Schlager", korean_name: "자버 슐라거", team_id: 173, position: "Midfielder" },
+  { id: 398192, name: "A. MaksimoviÄ", korean_name: "알렉산다르 막시모비치", team_id: 173, position: "Midfielder" },
+  { id: 1155, name: "K. Kampl", korean_name: "케빈 캄플", team_id: 173, position: "Midfielder" },
+  { id: 469695, name: "V. Gebel", korean_name: "빅토르 게벨", team_id: 173, position: "Midfielder" },
+  { id: 388894, name: "Joyeux Masanka Bungi", korean_name: "조예 마상카", team_id: 173, position: "Midfielder" },
+  { id: 314511, name: "A. Nusa", korean_name: "안토니오 누사", team_id: 173, position: "Attacker" },
+  { id: 290549, name: "J. Bakayoko", korean_name: "요한 바카요코", team_id: 173, position: "Attacker" },
+  { id: 419916, name: "C. Harder", korean_name: "콘라트 하더", team_id: 173, position: "Attacker" },
+  { id: 86, name: "L. Openda", korean_name: "로이스 오펜다", team_id: 173, position: "Attacker" },
+  { id: 394666, name: "Robert Ramsak", korean_name: "로베르트 람사크", team_id: 173, position: "Attacker" },
+  { id: 383665, name: "T. Gomis", korean_name: "티아고 고미스", team_id: 173, position: "Attacker" },
+  { id: 1166, name: "T. Werner", korean_name: "티모 베르너", team_id: 173, position: "Attacker" },
+  { id: 326102, name: "Rômulo", korean_name: "호물루", team_id: 173, position: "Attacker" },
+  { id: 513776, name: "Y. Diomande", korean_name: "야야 디오망데", team_id: 173, position: "Attacker" },
+];
+
+// SC Freiburg (Team ID: 160) - 29명
+export const FREIBURG_PLAYERS: PlayerMapping[] = [
+  { id: 178768, name: "N. Atubolu", korean_name: "노아 아투볼루", team_id: 160, position: "Goalkeeper" },
+  { id: 25905, name: "F. Müller", korean_name: "플로리안 뮐러", team_id: 160, position: "Goalkeeper" },
+  { id: 25904, name: "J. Huth", korean_name: "요한 후트", team_id: 160, position: "Goalkeeper" },
+  { id: 26240, name: "P. Lienhart", korean_name: "필립 리엔하르트", team_id: 160, position: "Defender" },
+  { id: 15874, name: "A. Jung", korean_name: "아티라 융", team_id: 160, position: "Defender" },
+  { id: 26239, name: "L. Kübler", korean_name: "루카스 퀴블러", team_id: 160, position: "Defender" },
+  { id: 2915, name: "M. Ginter", korean_name: "마티아스 긴터", team_id: 160, position: "Defender" },
+  { id: 178769, name: "P. Treu", korean_name: "파트리크 트로이", team_id: 160, position: "Defender" },
+  { id: 26236, name: "C. Günter", korean_name: "크리스티안 귄터", team_id: 160, position: "Defender" },
+  { id: 191160, name: "J. Makengo", korean_name: "장-빅토르 마켕고", team_id: 160, position: "Defender" },
+  { id: 202919, name: "M. Rosenfelder", korean_name: "막스 로젠펠더", team_id: 160, position: "Defender" },
+  { id: 361393, name: "I. Ogbus", korean_name: "이고르 오그부스", team_id: 160, position: "Defender" },
+  { id: 163022, name: "P. Osterhage", korean_name: "파트리크 오스터하게", team_id: 160, position: "Midfielder" },
+  { id: 2917, name: "M. Eggestein", korean_name: "막시밀리안 에게슈타인", team_id: 160, position: "Midfielder" },
+  { id: 26255, name: "L. Höler", korean_name: "루카스 횔러", team_id: 160, position: "Midfielder" },
+  { id: 25530, name: "D. Kyereh", korean_name: "다니엘 키에레", team_id: 160, position: "Midfielder" },
+  { id: 199143, name: "Y. Suzuki", korean_name: "스즈키 유야", team_id: 160, position: "Midfielder" },
+  { id: 25313, name: "J. Beste", korean_name: "얀-니클라스 베스테", team_id: 160, position: "Midfielder" },
+  { id: 26250, name: "N. Höfler", korean_name: "니콜라스 횔러", team_id: 160, position: "Midfielder" },
+  { id: 26248, name: "V. Grifo", korean_name: "빈첸초 그리포", team_id: 160, position: "Midfielder" },
+  { id: 202854, name: "M. Röhl", korean_name: "막스 뢸", team_id: 160, position: "Midfielder" },
+  { id: 406244, name: "J. Manzambi", korean_name: "주니어 만잠비", team_id: 160, position: "Midfielder" },
+  { id: 202844, name: "N. Weißhaupt", korean_name: "노아 바이스하우프트", team_id: 160, position: "Midfielder" },
+  { id: 286710, name: "D. Scherhant", korean_name: "다리 셰르한트", team_id: 160, position: "Attacker" },
+  { id: 431149, name: "Cyriaque Kalou Irié", korean_name: "시리아크 이리에", team_id: 160, position: "Attacker" },
+  { id: 24, name: "M. Philipp", korean_name: "막시밀리안 필립", team_id: 160, position: "Attacker" },
+  { id: 202526, name: "E. Dinkçi", korean_name: "에렌 딘크치", team_id: 160, position: "Attacker" },
+  { id: 125173, name: "J. Adamu", korean_name: "주니어 아다무", team_id: 160, position: "Attacker" },
+  { id: 202696, name: "I. Matanović", korean_name: "이고르 마타노비치", team_id: 160, position: "Attacker" },
+];
+
+// Union Berlin (Team ID: 182) - 30명
+export const UNION_BERLIN_PLAYERS: PlayerMapping[] = [
+  { id: 1798, name: "F. Rønnow", korean_name: "프레데리크 뢴노우", team_id: 182, position: "Goalkeeper" },
+  { id: 127471, name: "C. Klaus", korean_name: "크리스토퍼 클라우스", team_id: 182, position: "Goalkeeper" },
+  { id: 262815, name: "M. Raab", korean_name: "마르쿠스 라프", team_id: 182, position: "Goalkeeper" },
+  { id: 286728, name: "Y. Stein", korean_name: "야니스 슈타인", team_id: 182, position: "Goalkeeper" },
+  { id: 413294, name: "Andrik Markgraf", korean_name: "안드리크 마르크그라프", team_id: 182, position: "Defender" },
+  { id: 376, name: "Diogo Leite", korean_name: "디오구 레이치", team_id: 182, position: "Defender" },
+  { id: 37117, name: "D. Doekhi", korean_name: "다니엘레 도에키", team_id: 182, position: "Defender" },
+  { id: 288206, name: "L. Querfeld", korean_name: "레오폴트 케르펠트", team_id: 182, position: "Defender" },
+  { id: 324957, name: "T. Rothe", korean_name: "톰 로테", team_id: 182, position: "Defender" },
+  { id: 14330, name: "J. Juranović", korean_name: "요시프 유라노비치", team_id: 182, position: "Defender" },
+  { id: 270, name: "S. Nsoki", korean_name: "스탄리 은소키", team_id: 182, position: "Defender" },
+  { id: 412847, name: "Oluwaseun God Power Osaro Ogbemudia", korean_name: "오그베무디아", team_id: 182, position: "Defender" },
+  { id: 327831, name: "A. Kemlein", korean_name: "알레산드르 켐라인", team_id: 182, position: "Midfielder" },
+  { id: 25300, name: "R. Khedira", korean_name: "라니 케디라", team_id: 182, position: "Midfielder" },
+  { id: 30785, name: "A. Schäfer", korean_name: "안드라스 셰퍼", team_id: 182, position: "Midfielder" },
+  { id: 26249, name: "J. Haberer", korean_name: "야니크 하베러", team_id: 182, position: "Midfielder" },
+  { id: 24910, name: "T. Skarke", korean_name: "팀 스카르케", team_id: 182, position: "Midfielder" },
+  { id: 1298, name: "R. Skov", korean_name: "로베르트 스코브", team_id: 182, position: "Midfielder" },
+  { id: 24848, name: "C. Trimmel", korean_name: "크리스토퍼 트리멜", team_id: 182, position: "Midfielder" },
+  { id: 664, name: "L. Tousart", korean_name: "루카 투사르", team_id: 182, position: "Midfielder" },
+  { id: 1234, name: "A. Král", korean_name: "알렉스 크랄", team_id: 182, position: "Midfielder" },
+  { id: 128853, name: "D. Köhn", korean_name: "다비드 쾬", team_id: 182, position: "Midfielder" },
+  { id: 1124, name: "O. Burke", korean_name: "올리버 버크", team_id: 182, position: "Attacker" },
+  { id: 380873, name: "Ilyas  Ansah", korean_name: "일리야스 안사", team_id: 182, position: "Attacker" },
+  { id: 512, name: "Jeong Woo-Yeong", korean_name: "정우영", team_id: 182, position: "Attacker" },
+  { id: 327956, name: "David Preu", korean_name: "다비드 프로이", team_id: 182, position: "Attacker" },
+  { id: 45892, name: "A. Ilić", korean_name: "알렉산다르 일리치", team_id: 182, position: "Attacker" },
+  { id: 292218, name: "M. LjubiÄiÄ", korean_name: "미할 류비치치", team_id: 182, position: "Attacker" },
+  { id: 430354, name: "Livan Burcu", korean_name: "리반 부르쿠", team_id: 182, position: "Attacker" },
+  { id: 440136, name: "Dmytro Bohdanov", korean_name: "드미트로 보그다노프", team_id: 182, position: "Attacker" },
+];
+
+// VfB Stuttgart (Team ID: 172) - 34명
+export const STUTTGART_PLAYERS: PlayerMapping[] = [
+  { id: 409750, name: "Florian Hellstern", korean_name: "플로리안 헬스턴", team_id: 172, position: "Goalkeeper" },
+  { id: 25597, name: "F. Bredlow", korean_name: "파비안 브레들로우", team_id: 172, position: "Goalkeeper" },
+  { id: 178217, name: "S. Drljača", korean_name: "스테판 드릴라차", team_id: 172, position: "Goalkeeper" },
+  { id: 399, name: "A. Nübel", korean_name: "알렉산더 뉘벨", team_id: 172, position: "Goalkeeper" },
+  { id: 323449, name: "A. Al Dakhil", korean_name: "아민 알 다킬", team_id: 172, position: "Defender" },
+  { id: 135883, name: "R. Hendriks", korean_name: "람 헨드릭스", team_id: 172, position: "Defender" },
+  { id: 24868, name: "J. Vagnoman", korean_name: "조샤 바그노만", team_id: 172, position: "Defender" },
+  { id: 25342, name: "M. Mittelstädt", korean_name: "막시밀리안 미텔슈테트", team_id: 172, position: "Defender" },
+  { id: 349344, name: "L. Jaquez", korean_name: "라몬 헨드리케스", team_id: 172, position: "Defender" },
+  { id: 26244, name: "P. Stenzel", korean_name: "파스칼 슈텐첼", team_id: 172, position: "Defender" },
+  { id: 48481, name: "L. Stergiou", korean_name: "레오니다스 스테르지우", team_id: 172, position: "Defender" },
+  { id: 180731, name: "L. Assignon", korean_name: "로렌츠 아시뇽", team_id: 172, position: "Defender" },
+  { id: 13, name: "D. Zagadou", korean_name: "단 악셀 자가두", team_id: 172, position: "Defender" },
+  { id: 38112, name: "J. Chabot", korean_name: "율리안 샤보", team_id: 172, position: "Defender" },
+  { id: 394734, name: "Finn Jeltsch", korean_name: "핀 옐치", team_id: 172, position: "Defender" },
+  { id: 137210, name: "A. Stiller", korean_name: "안젤로 슈틸러", team_id: 172, position: "Midfielder" },
+  { id: 24798, name: "C. Führich", korean_name: "크리스 퓌리히", team_id: 172, position: "Midfielder" },
+  { id: 340573, name: "B. El Khannouss", korean_name: "빌랄 엘 칸누스", team_id: 172, position: "Midfielder" },
+  { id: 178093, name: "Y. Keitel", korean_name: "야닉 카이텔", team_id: 172, position: "Midfielder" },
+  { id: 24963, name: "A. Karazor", korean_name: "아타칸 카라조르", team_id: 172, position: "Midfielder" },
+  { id: 128533, name: "J. Leweling", korean_name: "제이미 레벨링", team_id: 172, position: "Midfielder" },
+  { id: 334879, name: "B. Bouanani", korean_name: "바드르 부아나니", team_id: 172, position: "Midfielder" },
+  { id: 24806, name: "N. Nartey", korean_name: "니콜라이 나르테이", team_id: 172, position: "Midfielder" },
+  { id: 388871, name: "José María Andrés Baixauli", korean_name: "호세 바이샬리", team_id: 172, position: "Midfielder" },
+  { id: 412704, name: "Noah Darvich", korean_name: "노아 다르비히", team_id: 172, position: "Midfielder" },
+  { id: 478610, name: "M. Catovic", korean_name: "마르코 카토비치", team_id: 172, position: "Midfielder" },
+  { id: 371911, name: "J. Milošević", korean_name: "야닉 밀로셰비치", team_id: 172, position: "Attacker" },
+  { id: 265363, name: "Tiago Tomás", korean_name: "티아구 토마스", team_id: 172, position: "Attacker" },
+  { id: 46930, name: "E. Demirović", korean_name: "에르메딘 데미로비치", team_id: 172, position: "Attacker" },
+  { id: 158054, name: "N. Woltemade", korean_name: "니콜라스 볼테마데", team_id: 172, position: "Attacker" },
+  { id: 20617, name: "S. Katompa Mvumpa", korean_name: "딜라노 바카부카", team_id: 172, position: "Attacker" },
+  { id: 26475, name: "D. Undav", korean_name: "데니스 운다브", team_id: 172, position: "Attacker" },
+  { id: 287927, name: "J. Diehl", korean_name: "자스틴 딜", team_id: 172, position: "Attacker" },
+  { id: 398194, name: "L. JovanoviÄ", korean_name: "루카 요바노비치", team_id: 172, position: "Attacker" },
+];
+
+// VfL Wolfsburg (Team ID: 161) - 31명
+export const WOLFSBURG_PLAYERS: PlayerMapping[] = [
+  { id: 15573, name: "K. Grabara", korean_name: "카밀 그라바라", team_id: 161, position: "Goalkeeper" },
+  { id: 25396, name: "P. Pervan", korean_name: "파블라오 페르반", team_id: 161, position: "Goalkeeper" },
+  { id: 1141, name: "M. Müller", korean_name: "모리츠 뮐러", team_id: 161, position: "Goalkeeper" },
+  { id: 442629, name: "J. Zieliński", korean_name: "야쿱 지엘린스키", team_id: 161, position: "Goalkeeper" },
+  { id: 177618, name: "K. Fischer", korean_name: "켈리안 피셔", team_id: 161, position: "Defender" },
+  { id: 1291, name: "D. Vavro", korean_name: "데니스 바브로", team_id: 161, position: "Defender" },
+  { id: 162409, name: "K. Koulierakis", korean_name: "콘스탄티노스 쿨리에라키스", team_id: 161, position: "Defender" },
+  { id: 30527, name: "Rogério", korean_name: "호제리우", team_id: 161, position: "Defender" },
+  { id: 290545, name: "J. Seelt", korean_name: "조나탄 젤트", team_id: 161, position: "Defender" },
+  { id: 231032, name: "M. Jenz", korean_name: "모리츠 옌츠", team_id: 161, position: "Defender" },
+  { id: 1930, name: "J. Mæhle", korean_name: "요아킴 마일레", team_id: 161, position: "Defender" },
+  { id: 449714, name: "M. Angely", korean_name: "모리츠 안겔리", team_id: 161, position: "Defender" },
+  { id: 323951, name: "A. Zehnter", korean_name: "알렉산더 첸터", team_id: 161, position: "Defender" },
+  { id: 334914, name: "S. Kumbedi", korean_name: "사엘 쿰베디", team_id: 161, position: "Defender" },
+  { id: 394740, name: "D. Odogu", korean_name: "다비드 오도구", team_id: 161, position: "Defender" },
+  { id: 10169, name: "Vinicius Souza", korean_name: "비니시우스 소자", team_id: 161, position: "Midfielder" },
+  { id: 380503, name: "Bence Dárdai", korean_name: "벤체 다르다이", team_id: 161, position: "Midfielder" },
+  { id: 200139, name: "M. Amoura", korean_name: "모하메드 아무라", team_id: 161, position: "Midfielder" },
+  { id: 1321, name: "L. Majer", korean_name: "로빈 마예르", team_id: 161, position: "Midfielder" },
+  { id: 362564, name: "A. Daghim", korean_name: "아민 다김", team_id: 161, position: "Midfielder" },
+  { id: 15884, name: "J. Lindstrøm", korean_name: "예스퍼 린드스트룀", team_id: 161, position: "Midfielder" },
+  { id: 174, name: "C. Eriksen", korean_name: "크리스티안 에릭센", team_id: 161, position: "Midfielder" },
+  { id: 25408, name: "M. Arnold", korean_name: "막시밀리안 아르놀트", team_id: 161, position: "Midfielder" },
+  { id: 25400, name: "Y. Gerhardt", korean_name: "야니크 게르하르트", team_id: 161, position: "Midfielder" },
+  { id: 30484, name: "M. Svanberg", korean_name: "마테스 스반베리", team_id: 161, position: "Midfielder" },
+  { id: 126642, name: "P. Wimmer", korean_name: "파트리크 비머", team_id: 161, position: "Midfielder" },
+  { id: 149557, name: "K. Paredes", korean_name: "케빈 파레데스", team_id: 161, position: "Midfielder" },
+  { id: 15916, name: "A. Skov Olsen", korean_name: "안드레아스 스코브 올센", team_id: 161, position: "Attacker" },
+  { id: 342188, name: "D. Pejčinović", korean_name: "다리오 페이치노비치", team_id: 161, position: "Attacker" },
+  { id: 549, name: "V. Černý", korean_name: "바츨라프 체르니", team_id: 161, position: "Attacker" },
+  { id: 1302, name: "J. Wind", korean_name: "요나스 빈트", team_id: 161, position: "Attacker" },
+];
+
+// Werder Bremen (Team ID: 162) - 36명
+export const BREMEN_PLAYERS: PlayerMapping[] = [
+  { id: 7288, name: "M. Zetterer", korean_name: "미하엘 체테러", team_id: 162, position: "Goalkeeper" },
+  { id: 169295, name: "Karl Jakob Hein", korean_name: "칼 야코프 하인", team_id: 162, position: "Goalkeeper" },
+  { id: 25519, name: "M. Kolke", korean_name: "미하엘 콜케", team_id: 162, position: "Goalkeeper" },
+  { id: 329578, name: "M. Backhaus", korean_name: "마르쿠스 바크하우스", team_id: 162, position: "Goalkeeper" },
+  { id: 375806, name: "S. Smarkalev", korean_name: "스타니슬라프 스마르칼레프", team_id: 162, position: "Goalkeeper" },
+  { id: 8673, name: "O. Deman", korean_name: "올리비에 데만", team_id: 162, position: "Defender" },
+  { id: 32887, name: "Yukinari Sugawara", korean_name: "스가와라 유키나리", team_id: 162, position: "Defender" },
+  { id: 2916, name: "N. Stark", korean_name: "니클라스 슈타르크", team_id: 162, position: "Defender" },
+  { id: 25011, name: "A. Pieper", korean_name: "아모스 피퍼", team_id: 162, position: "Defender" },
+  { id: 973, name: "M. Weiser", korean_name: "미첼 바이저", team_id: 162, position: "Defender" },
+  { id: 289460, name: "J. Malatini", korean_name: "줄리앙 말라티니", team_id: 162, position: "Defender" },
+  { id: 265372, name: "Isaac Osa's Schmidt", korean_name: "이삭 슈미트", team_id: 162, position: "Defender" },
+  { id: 26319, name: "F. Agu", korean_name: "펠릭스 아구", team_id: 162, position: "Defender" },
+  { id: 282566, name: "Kessy Setigui Fabou Coulibaly", korean_name: "케시 쿨리발리", team_id: 162, position: "Defender" },
+  { id: 440147, name: "Abdoul Karim Coulibaly", korean_name: "압둘 카림 쿨리발리", team_id: 162, position: "Defender" },
+  { id: 25314, name: "M. Friedl", korean_name: "마르코 프리들", team_id: 162, position: "Defender" },
+  { id: 444984, name: "Mick Schmetgens", korean_name: "미크 슈메트겐스", team_id: 162, position: "Defender" },
+  { id: 2048, name: "M. Wöber", korean_name: "막시밀리안 뵈버", team_id: 162, position: "Defender" },
+  { id: 294, name: "N. Keïta", korean_name: "나비 케이타", team_id: 162, position: "Midfielder" },
+  { id: 15592, name: "J. Stage", korean_name: "옌스 스타게", team_id: 162, position: "Midfielder" },
+  { id: 716, name: "L. Bittencourt", korean_name: "레오나르두 비텐쿠르트", team_id: 162, position: "Midfielder" },
+  { id: 38798, name: "S. Lynen", korean_name: "세누 리넨", team_id: 162, position: "Midfielder" },
+  { id: 48642, name: "Cameron Mitchel Puertas Castro", korean_name: "캐머런 푸에르타스", team_id: 162, position: "Midfielder" },
+  { id: 279924, name: "D. Salifou", korean_name: "디쿠 사리푸", team_id: 162, position: "Midfielder" },
+  { id: 216770, name: "I. Hansen-Aarøen", korean_name: "이스악 한센-오뢴", team_id: 162, position: "Midfielder" },
+  { id: 448468, name: "P. Čović", korean_name: "파벨 초비치", team_id: 162, position: "Midfielder" },
+  { id: 193720, name: "S. Alvero", korean_name: "스콧 알베로", team_id: 162, position: "Midfielder" },
+  { id: 455290, name: "Wesley Adeh", korean_name: "웨슬리 아데", team_id: 162, position: "Midfielder" },
+  { id: 346866, name: "S. Mbangula", korean_name: "사무엘 음방굴라", team_id: 162, position: "Attacker" },
+  { id: 334334, name: "K. Topp", korean_name: "카우퍼만 토프", team_id: 162, position: "Attacker" },
+  { id: 177807, name: "J. Njinmah", korean_name: "저스틴 은진마", team_id: 162, position: "Attacker" },
+  { id: 7073, name: "M. Grüll", korean_name: "마르코 그륄", team_id: 162, position: "Attacker" },
+  { id: 7562, name: "R. Schmid", korean_name: "로만 슈미트", team_id: 162, position: "Attacker" },
+  { id: 363638, name: "L. Opitz", korean_name: "렌 오피츠", team_id: 162, position: "Attacker" },
+  { id: 39071, name: "Victor Okoh Boniface", korean_name: "빅토르 보니파스", team_id: 162, position: "Attacker" },
+  { id: 432519, name: "Salim Amani Musah", korean_name: "살림 무사", team_id: 162, position: "Attacker" },
+];
+
+// 분데스리가 전체 선수 (576명)
+export const BUNDESLIGA_PLAYERS: PlayerMapping[] = [
+  ...HOFFENHEIM_PLAYERS,
+  ...HEIDENHEIM_PLAYERS,
+  ...KOLN_PLAYERS,
+  ...LEVERKUSEN_PLAYERS,
+  ...BAYERN_PLAYERS,
+  ...DORTMUND_PLAYERS,
+  ...MONCHENGLADBACH_PLAYERS,
+  ...FRANKFURT_PLAYERS,
+  ...AUGSBURG_PLAYERS,
+  ...ST_PAULI_PLAYERS,
+  ...MAINZ_PLAYERS,
+  ...HAMBURGER_SV_PLAYERS,
+  ...LEIPZIG_PLAYERS,
+  ...FREIBURG_PLAYERS,
+  ...UNION_BERLIN_PLAYERS,
+  ...STUTTGART_PLAYERS,
+  ...WOLFSBURG_PLAYERS,
+  ...BREMEN_PLAYERS,
+];

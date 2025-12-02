@@ -1,0 +1,219 @@
+'use client';
+
+import React, { memo } from 'react';
+import Link from 'next/link';
+import { PenLine } from 'lucide-react';
+import BoardBreadcrumbs from '../common/BoardBreadcrumbs';
+import BoardTeamInfo from '../board/BoardTeamInfo';
+import LeagueInfo from '../board/LeagueInfo';
+import BoardInfo from '../board/BoardInfo';
+import ClientHoverMenu from '../common/ClientHoverMenu';
+import PostList from '../post/PostList';
+import ShopPagination from '@/domains/shop/components/ShopPagination';
+import { Breadcrumb } from '../../types/board/data';
+import { Board } from '../../types/board';
+
+// 여기에 Post 타입 정의
+interface Post {
+  id: string;
+  title: string;
+  board_id: string;
+  board_name: string;
+  board_slug: string;
+  post_number: number;
+  created_at: string;
+  formattedDate: string;
+  views: number;
+  likes: number;
+  author_nickname: string;
+  author_id?: string;
+  author_icon_id?: number | null;
+  author_icon_url?: string | null;
+  author_level?: number;
+  comment_count: number;
+  content?: string;
+  team_id?: number | null;
+  team_name?: string | null;
+  team_logo?: string | null;
+  league_id?: number | null;
+  league_name?: string | null;
+  league_logo?: string | null;
+}
+
+// HoverMenu 관련 타입 정의
+interface TopBoard {
+  id: string;
+  name: string;
+  display_order: number;
+  slug?: string;
+}
+
+interface ChildBoard {
+  id: string;
+  name: string;
+  display_order: number;
+  slug?: string;
+}
+
+interface TeamData {
+  team: {
+    id: number;
+    name: string;
+    country: string;
+    founded: number;
+    logo: string;
+  };
+  venue: {
+    name: string;
+    city: string;
+    capacity: number;
+  };
+}
+
+interface LeagueData {
+  id: number;
+  name: string;
+  country: string;
+  logo: string;
+  type: string;
+}
+
+// BoardDetailLayout에 posts 데이터를 추가합니다
+interface BoardDetailLayoutProps {
+  boardData: Board;
+  breadcrumbs: Breadcrumb[];
+  teamData: TeamData | null;
+  leagueData: LeagueData | null;
+  isLoggedIn: boolean;
+  currentPage: number;
+  slug: string;
+  rootBoardId: string;
+  rootBoardSlug?: string;
+  // 서버에서 미리 로드한 게시글 데이터
+  posts: Post[];
+  // HoverMenu를 위한 데이터
+  topBoards?: TopBoard[];
+  hoverChildBoardsMap?: Record<string, ChildBoard[]>;
+  // 페이지네이션 메타
+  pagination?: {
+    totalItems: number;
+    itemsPerPage: number;
+    currentPage: number;
+  };
+}
+
+// 메모이제이션된 컴포넌트들
+const MemoizedBoardBreadcrumbs = memo(BoardBreadcrumbs);
+const MemoizedPostList = memo(PostList);
+const MemoizedClientHoverMenu = memo(ClientHoverMenu);
+const MemoizedShopPagination = memo(ShopPagination);
+
+export default function BoardDetailLayout({
+  boardData,
+  breadcrumbs,
+  teamData,
+  leagueData,
+  isLoggedIn,
+  currentPage,
+  slug,
+  rootBoardId,
+  rootBoardSlug,
+  posts,
+  topBoards,
+  hoverChildBoardsMap,
+  pagination
+}: BoardDetailLayoutProps) {
+  // view_type이 타입에 없더라도 안전하게 읽어서 분기
+  const viewType = (boardData as unknown as { view_type?: 'list' | 'image-table' })?.view_type;
+
+  return (
+    <div className="container mx-auto" data-current-page={currentPage}>
+      <div>
+        <MemoizedBoardBreadcrumbs breadcrumbs={breadcrumbs} />
+      </div>
+
+      {teamData && (
+        <BoardTeamInfo 
+          teamData={teamData} 
+          boardId={boardData.id}
+          boardSlug={slug}
+          isLoggedIn={isLoggedIn}
+          className="mb-4"
+        />
+      )}
+      
+      {leagueData && (
+        <LeagueInfo 
+          leagueData={leagueData}
+          boardId={boardData.id}
+          boardSlug={slug}
+          isLoggedIn={isLoggedIn}
+          className="mb-4"
+        />
+      )}
+
+      {/* 팀/리그 정보가 없는 게시판: 게시판 이름과 글쓰기 버튼만 표시 */}
+      {!teamData && !leagueData && (
+        <BoardInfo 
+          boardName={boardData.name}
+          boardId={boardData.id}
+          boardSlug={slug}
+          isLoggedIn={isLoggedIn}
+          className="mb-4"
+        />
+      )}
+
+      {/* 호버 메뉴 - 클라이언트 컴포넌트로 전환 */}
+      {topBoards && hoverChildBoardsMap && (
+        <MemoizedClientHoverMenu
+          currentBoardId={boardData.id}
+          rootBoardId={rootBoardId}
+          rootBoardSlug={rootBoardSlug}
+          prefetchedData={{
+            topBoards: topBoards,
+            childBoardsMap: hoverChildBoardsMap,
+            isServerFetched: true
+          }}
+        />
+      )}
+
+      <MemoizedPostList
+        posts={posts}
+        loading={false}
+        currentBoardId={boardData.id}
+        showBoard={true}
+        className="mt-2"
+        emptyMessage="아직 작성된 게시글이 없습니다."
+        variant={viewType === 'image-table' ? 'image-table' : 'text'}
+      />
+
+      {/* 페이지네이션 & 글쓰기 버튼 영역 */}
+      {(pagination && Math.ceil(pagination.totalItems / pagination.itemsPerPage) > 1) || isLoggedIn ? (
+        <div className="flex items-center justify-between mt-4 px-4 sm:px-0">
+          {/* 페이지네이션 (중앙) */}
+          <div className="flex-1 flex justify-center">
+            {pagination && Math.ceil(pagination.totalItems / pagination.itemsPerPage) > 1 && (
+              <MemoizedShopPagination
+                page={pagination.currentPage}
+                pageSize={pagination.itemsPerPage}
+                total={pagination.totalItems}
+                withMargin={false}
+              />
+            )}
+          </div>
+          
+          {/* 글쓰기 버튼 (오른쪽) */}
+          {isLoggedIn && (
+            <Link
+              href={`/boards/${slug}/create`}
+              className="flex items-center justify-center gap-1 px-3 py-2 border border-black/7 dark:border-0 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded text-sm transition-colors whitespace-nowrap ml-2 min-h-[36px]"
+            >
+              <PenLine className="h-4 w-4" />
+              <span className="hidden sm:inline">글쓰기</span>
+            </Link>
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+} 
