@@ -350,7 +350,7 @@ await createHotPostNotification({
 - 게시글이 HOT 상위 10위 이내 진입 시 발송
 - 24시간 내 중복 발송 방지
 - 7일 슬라이딩 윈도우 기반 HOT 점수 계산
-- Supabase Edge Function에서 주기적 실행 (매 시간 권장)
+- ✅ **Supabase Edge Function + pg_cron으로 매시간 정각 자동 실행 중** (2025-12-03 배포 완료)
 
 **HOT 점수 계산 공식**:
 ```
@@ -359,10 +359,18 @@ await createHotPostNotification({
 HOT점수 = 기본점수 × 시간감쇠
 ```
 
+**실행 환경**:
+- **Edge Function**: `supabase/functions/check-hot-posts/index.ts`
+- **스케줄**: `0 * * * *` (매시간 정각)
+- **크론 설정**: Supabase pg_cron
+- **상태**: ✅ Production 운영 중
+
 **관련 문서**:
 - [HOT 점수 계산 가이드](../sidebar/HOT_SCORE_GUIDE.md)
 - [인기글 시스템 문서](../sidebar/SIDEBAR_POPULAR_POSTS.md)
-- [엣지 함수 설정](../../../supabase/functions/check-hot-posts/README.md)
+- [HOT 시스템 아키텍처](../hot-system/edge-function.md) ⭐ **현재 방식**
+- [Edge Function 배포 가이드](../../../DEPLOY_EDGE_FUNCTION.md)
+- [Supabase 마이그레이션 가이드](../hot-system/supabase-edge-migration.md)
 
 ---
 
@@ -918,9 +926,11 @@ CREATE POLICY "Authenticated users can insert notifications"
 | 2025-12-01 | 초기 문서 작성 | Claude Code |
 | 2025-12-01 | 환영 알림 (welcome) 타입 추가 | Claude Code |
 | 2025-12-02 | HOT 게시글 진입 알림 (hot_post) 타입 추가 | Claude Code |
+| 2025-12-03 | HOT 알림 Supabase Edge Function 마이그레이션 완료 (Vercel Cron → Supabase pg_cron) | Claude Code |
+| 2025-12-03 | HOT 알림 실행 주기: 일 1회 → 시간당 1회로 개선 | Claude Code |
 
 ---
 
 **문서 작성일**: 2025-12-01
-**마지막 업데이트**: 2025-12-02
-**버전**: 1.2.0
+**마지막 업데이트**: 2025-12-03
+**버전**: 1.3.0
