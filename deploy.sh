@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# web2 루트로 이동
+# 123/1234 폴더로 이동
 cd "$(dirname "$0")"
 
 # 현재 위치 확인
@@ -27,15 +27,11 @@ git add .
 
 echo ""
 echo "📦 Committing with message: '$COMMIT_MSG'"
-git commit -m "$COMMIT_MSG
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-
-Co-Authored-By: Claude <noreply@anthropic.com>"
+git commit -m "$COMMIT_MSG"
 
 echo ""
 echo "🚀 Pushing to GitHub (main branch)..."
-git push origin master:main
+git push origin main
 
 echo ""
 echo "✅ Deploy complete!"
