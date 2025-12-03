@@ -453,6 +453,85 @@ export async function createHotPostNotification({
 }
 
 /**
+ * 프로필 변경 알림 생성 (자기 자신에게)
+ */
+export async function createProfileUpdateNotification({
+  userId,
+  changeType,
+  oldValue,
+  newValue,
+  ipAddress,
+  userAgent
+}: {
+  userId: string;
+  changeType: 'nickname' | 'profile_icon' | 'password';
+  oldValue?: string;
+  newValue?: string;
+  ipAddress?: string;
+  userAgent?: string;
+}): Promise<NotificationActionResponse> {
+  // 변경 타입별 알림 내용 생성
+  let title: string;
+  let message: string | undefined;
+
+  switch (changeType) {
+    case 'nickname':
+      title = '닉네임이 변경되었습니다';
+      message = oldValue && newValue ? `"${oldValue}" → "${newValue}"` : undefined;
+      break;
+    case 'profile_icon':
+      title = '프로필 아이콘이 변경되었습니다';
+      message = oldValue && newValue ? `아이콘 ${oldValue} → ${newValue}` : undefined;
+      break;
+    case 'password':
+      title = '비밀번호가 변경되었습니다';
+      message = ipAddress
+        ? `본인이 아닌 경우 즉시 비밀번호를 재변경하세요. (${ipAddress})`
+        : '본인이 아닌 경우 즉시 비밀번호를 재변경하세요.';
+      break;
+  }
+
+  // 프로필 변경 알림은 자기 자신에게 보내므로 actorId = userId
+  try {
+    const supabase = getSupabaseAdmin();
+
+    const { data, error } = await supabase
+      .from('notifications')
+      .insert({
+        user_id: userId,
+        actor_id: userId, // 자기 자신
+        type: 'profile_update',
+        title,
+        message: message || null,
+        link: '/settings/profile',
+        metadata: {
+          changeType,
+          oldValue,
+          newValue,
+          changedAt: new Date().toISOString(),
+          ipAddress: changeType === 'password' ? ipAddress : undefined,
+          userAgent: changeType === 'password' ? userAgent : undefined
+        }
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('프로필 변경 알림 생성 오류:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, notification: data };
+  } catch (error) {
+    console.error('프로필 변경 알림 생성 중 예외:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '프로필 변경 알림 생성 중 오류가 발생했습니다.'
+    };
+  }
+}
+
+/**
  * 알림 발송 기록 조회
  */
 export async function getNotificationLogs(limit: number = 50): Promise<{

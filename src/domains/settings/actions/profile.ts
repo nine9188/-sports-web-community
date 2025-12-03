@@ -3,6 +3,7 @@
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ProfileUpdateData } from '../types';
+import { createProfileUpdateNotification } from '@/domains/notifications/actions/create';
 
 /**
  * 사용자 프로필 정보 조회 서버 액션
@@ -54,15 +55,22 @@ export async function updateProfile(
 
     // Supabase 클라이언트 생성
     const supabase = await getSupabaseServer();
-    
+
     // 사용자 정보 확인
     const { data: { user }, error } = await supabase.auth.getUser();
-    
+
     // 권한 확인
     if (!user || error || user.id !== userId) {
       return { success: false, error: '권한이 없습니다.' };
     }
-    
+
+    // 기존 프로필 정보 조회 (변경 감지용)
+    const { data: oldProfile } = await supabase
+      .from('profiles')
+      .select('nickname, icon_id')
+      .eq('id', userId)
+      .single();
+
     // 프로필 업데이트
     const { error: updateError } = await supabase
       .from('profiles')
@@ -74,14 +82,38 @@ export async function updateProfile(
         updated_at: new Date().toISOString(),
       })
       .eq('id', userId);
-    
+
     if (updateError) {
       throw updateError;
     }
-    
+
+    // 닉네임 변경 알림
+    if (oldProfile && oldProfile.nickname !== data.nickname) {
+      await createProfileUpdateNotification({
+        userId,
+        changeType: 'nickname',
+        oldValue: oldProfile.nickname || undefined,
+        newValue: data.nickname
+      });
+    }
+
+    // 아이콘 변경 알림 (icon_id가 명시적으로 제공되고 변경된 경우)
+    if (
+      oldProfile &&
+      data.icon_id !== undefined &&
+      oldProfile.icon_id !== data.icon_id
+    ) {
+      await createProfileUpdateNotification({
+        userId,
+        changeType: 'profile_icon',
+        oldValue: oldProfile.icon_id?.toString() || undefined,
+        newValue: data.icon_id?.toString() || undefined
+      });
+    }
+
     // 페이지 캐시 갱신
     revalidatePath('/settings/profile');
-    
+
     return { success: true };
   } catch (error: unknown) {
     console.error('프로필 업데이트 오류:', error);
@@ -103,15 +135,22 @@ export async function updateProfileIcon(
   try {
     // Supabase 클라이언트 생성
     const supabase = await getSupabaseServer();
-    
+
     // 사용자 정보 확인
     const { data: { user }, error } = await supabase.auth.getUser();
-    
+
     // 권한 확인
     if (!user || error || user.id !== userId) {
       return { success: false, error: '권한이 없습니다.' };
     }
-    
+
+    // 기존 아이콘 정보 조회
+    const { data: oldProfile } = await supabase
+      .from('profiles')
+      .select('icon_id')
+      .eq('id', userId)
+      .single();
+
     // 아이콘 업데이트
     const { error: updateError } = await supabase
       .from('profiles')
@@ -120,21 +159,31 @@ export async function updateProfileIcon(
         updated_at: new Date().toISOString(),
       })
       .eq('id', userId);
-    
+
     if (updateError) {
       throw updateError;
     }
-    
+
+    // 아이콘 변경 알림
+    if (oldProfile && oldProfile.icon_id !== iconId) {
+      await createProfileUpdateNotification({
+        userId,
+        changeType: 'profile_icon',
+        oldValue: oldProfile.icon_id?.toString() || undefined,
+        newValue: iconId?.toString() || undefined
+      });
+    }
+
     // 페이지 캐시 갱신
     revalidatePath('/settings/icons');
-    
+
     return { success: true };
   } catch (error: unknown) {
     console.error('프로필 아이콘 업데이트 오류:', error);
     const errorMessage = error instanceof Error ? error.message : '아이콘 업데이트에 실패했습니다. 다시 시도해주세요.';
-    return { 
-      success: false, 
-      error: errorMessage 
+    return {
+      success: false,
+      error: errorMessage
     };
   }
 }

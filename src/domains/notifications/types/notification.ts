@@ -1,15 +1,18 @@
 // 알림 관련 타입 정의
 
+export type ProfileChangeType = 'nickname' | 'profile_icon' | 'password';
+
 export type NotificationType =
-  | 'comment'       // 내 게시글에 댓글
-  | 'reply'         // 내 댓글에 대댓글
-  | 'post_like'     // 내 게시글에 좋아요
-  | 'comment_like'  // 내 댓글에 좋아요
-  | 'level_up'      // 레벨업
-  | 'report_result' // 신고 처리 결과
-  | 'admin_notice'  // 관리자 공지
-  | 'welcome'       // 회원가입 환영 알림
-  | 'hot_post';     // 내 게시글 HOT 진입
+  | 'comment'        // 내 게시글에 댓글
+  | 'reply'          // 내 댓글에 대댓글
+  | 'post_like'      // 내 게시글에 좋아요
+  | 'comment_like'   // 내 댓글에 좋아요
+  | 'level_up'       // 레벨업
+  | 'report_result'  // 신고 처리 결과
+  | 'admin_notice'   // 관리자 공지
+  | 'welcome'        // 회원가입 환영 알림
+  | 'hot_post'       // 내 게시글 HOT 진입
+  | 'profile_update';// 프로필 변경 (자기 알림)
 
 export interface Notification {
   id: string;
@@ -41,6 +44,13 @@ export interface NotificationMetadata {
   post_number?: number;
   hot_rank?: number;        // HOT 순위
   hot_score?: number;       // HOT 점수
+  // 프로필 변경 관련
+  changeType?: ProfileChangeType;
+  oldValue?: string;
+  newValue?: string;
+  changedAt?: string;
+  ipAddress?: string;
+  userAgent?: string;
   [key: string]: unknown;
 }
 

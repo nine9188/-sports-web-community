@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { ActionResponse, IconItem, UserItem } from '../types';
+import { createProfileUpdateNotification } from '@/domains/notifications/actions/create';
 
 /**
  * 사용자가 보유한 아이콘 목록 조회
@@ -233,20 +234,37 @@ export async function updateUserIcon(userId: string, iconId: number | null): Pro
 export async function updateUserIconServer(userId: string, iconId: number | null) {
   try {
     const supabase = await getSupabaseServer();
-    
+
+    // 기존 아이콘 정보 조회 (변경 감지용)
+    const { data: oldProfile } = await supabase
+      .from('profiles')
+      .select('icon_id')
+      .eq('id', userId)
+      .single();
+
     // 사용자 프로필 아이콘 업데이트
     const { error } = await supabase
       .from('profiles')
       .update({ icon_id: iconId })
       .eq('id', userId);
-    
+
     if (error) throw error;
-    
+
+    // 아이콘 변경 알림 (변경된 경우에만)
+    if (oldProfile && oldProfile.icon_id !== iconId) {
+      await createProfileUpdateNotification({
+        userId,
+        changeType: 'profile_icon',
+        oldValue: oldProfile.icon_id?.toString() || undefined,
+        newValue: iconId?.toString() || undefined
+      });
+    }
+
     // 페이지 캐시 갱신
     revalidatePath('/settings/profile');
     revalidatePath('/settings/icons');
     revalidatePath('/'); // 홈페이지 (레이아웃 포함)
-    
+
     return { success: true };
   } catch (error: unknown) {
     console.error('아이콘 업데이트 오류:', error);
