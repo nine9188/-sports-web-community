@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/check-hot-posts",
-      "schedule": "0 * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
