@@ -45,6 +45,12 @@ export default function ProfileActions() {
           로그아웃
         </button>
       </div>
+      <Link
+        href="/boards/soccer/create"
+        className="mt-2 bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors rounded-md py-2 text-center text-gray-900 dark:text-[#F0F0F0] font-medium text-xs block"
+      >
+        글쓰기
+      </Link>
     </>
   );
 } 

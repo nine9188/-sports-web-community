@@ -3,7 +3,7 @@
 import { useCallback, useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faSignOutAlt, faChevronDown } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faSignOutAlt, faChevronDown, faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/shared/context/AuthContext';
 import { useIcon } from '@/shared/context/IconContext';
@@ -95,8 +95,16 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
             style={{ borderRadius: '0.5rem' }}
           >
             <Link
-              href="/settings/profile"
+              href="/boards/soccer/create"
               className="flex items-center px-4 py-2 text-sm text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors rounded-t-lg"
+              onClick={() => setIsDropdownOpen(false)}
+            >
+              <FontAwesomeIcon icon={faPenToSquare} className="h-4 w-4 mr-2" />
+              글쓰기
+            </Link>
+            <Link
+              href="/settings/profile"
+              className="flex items-center px-4 py-2 text-sm text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
               onClick={() => setIsDropdownOpen(false)}
             >
               <FontAwesomeIcon icon={faUser} className="h-4 w-4 mr-2" />

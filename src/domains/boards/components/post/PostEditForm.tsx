@@ -79,7 +79,7 @@ export default function PostEditForm({
 
   // Supabase 클라이언트 - 한 번만 생성하여 재사용 (성능 최적화, SSR 안전)
   const supabase = useMemo(() => {
-    if (typeof window === 'undefined') return null as any;
+    if (typeof window === 'undefined') return null;
     return getSupabaseBrowser();
   }, []);
   

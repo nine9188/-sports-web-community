@@ -111,6 +111,11 @@ export default function ProfileDropdown() {
                 </div>
               </div>
             </div>
+            <Link href="/boards/soccer/create" className="block px-4 py-2 hover:bg-gray-100">
+              <div className="flex items-center">
+                <span className="text-sm">글쓰기</span>
+              </div>
+            </Link>
             <Link href="/settings/profile" className="block px-4 py-2 hover:bg-gray-100">
               <div className="flex items-center">
                 <FontAwesomeIcon icon={faCog} className="h-3.5 w-3.5 mr-2" />

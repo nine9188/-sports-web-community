@@ -357,8 +357,16 @@ const BoardSelector = React.memo(({
     return bottomLevelBoards[selectedMid.id] && bottomLevelBoards[selectedMid.id].length > 0;
   }, [selectedMid, bottomLevelBoards]);
   
+  // 선택된 게시판 이름 계산
+  const getSelectedBoardName = useCallback(() => {
+    if (selectedBottom) return selectedBottom.name;
+    if (selectedMid) return selectedMid.name;
+    if (selectedTop) return selectedTop.name;
+    return null;
+  }, [selectedTop, selectedMid, selectedBottom]);
+
   return (
-    <div className="w-full">
+    <div className="w-full space-y-3">
       {/* 가로 정렬 컨테이너 */}
       <div className="flex flex-wrap gap-3">
         {/* 1단계: 최상위 게시판 선택 */}
@@ -454,6 +462,15 @@ const BoardSelector = React.memo(({
           )}
         </div>
       </div>
+
+      {/* 선택된 게시판 표시 */}
+      {getSelectedBoardName() && (
+        <div className="px-3 py-2 bg-[#F5F5F5] dark:bg-[#262626] rounded-md border border-black/7 dark:border-white/10">
+          <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">
+            선택된 게시판: <span className="font-medium">{getSelectedBoardName()}</span>
+          </span>
+        </div>
+      )}
     </div>
   );
 });

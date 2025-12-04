@@ -48,32 +48,42 @@ export default function BoardQuickLinksWidget({ items = DEFAULT_ITEMS, className
           href={item.href}
           aria-label={item.ariaLabel ?? item.label}
           className={classNames(
-            // 타일 스타일 (모바일: 심플, 데스크탑: 카드 톤)
+            // 타일 스타일 (모바일: 심플, 데스크탑: 헤더 UI 색상)
             'group text-gray-900 dark:text-[#F0F0F0]',
             'flex flex-col items-center justify-center md:flex-row md:items-center md:justify-center',
             'gap-1 md:gap-0 rounded-lg',
-            // 데스크탑에서만 카드 스타일 적용
-            'md:bg-white md:dark:bg-[#1D1D1D] md:border md:border-black/7 md:dark:border-0',
+            // 데스크탑에서만 카드 스타일 적용 (헤더/서브 컨테이너 색상, 헤더 높이)
+            'md:bg-[#F5F5F5] md:dark:bg-[#262626] md:border md:border-black/7 md:dark:border-0',
             'md:hover:bg-[#EAEAEA] md:dark:hover:bg-[#333333]',
-            'px-1 py-1 md:px-1 md:py-2',
+            'md:h-12', // 데스크탑: 헤더 표준 높이 (48px)
+            'px-1 py-1 md:px-2', // 데스크탑: 좌우 패딩만
             'transition-all',
             'focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300/60'
           )}
         >
+          {/* 모바일: 아이콘 컨테이너 박스 */}
           <span
             className={classNames(
               'inline-flex items-center justify-center shrink-0',
-              // 모바일: 아이콘을 박스에 담고 (공통 UI ContainerHeader 색상 + 호버), 데스크탑은 심플하게
               'w-12 h-12 bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-0 shadow-sm text-2xl',
               'group-hover:bg-[#EAEAEA] group-hover:dark:bg-[#333333]',
-              'md:w-8 md:h-8 md:bg-transparent md:border-0 md:shadow-none md:text-xl md:mr-0',
-              'group-hover:scale-110 transition-all'
+              'group-hover:scale-110 transition-all',
+              'md:hidden' // PC에서 숨김
             )}
             style={{ borderRadius: '0.5rem' }}
             aria-hidden
           >
             {item.icon ?? '📌'}
           </span>
+
+          {/* PC: 아이콘만 (컨테이너 없음) */}
+          <span
+            className="hidden md:inline-flex items-center justify-center text-xl mr-1"
+            aria-hidden
+          >
+            {item.icon ?? '📌'}
+          </span>
+
           <span className="w-full md:w-auto text-[10px] md:text-xs font-medium leading-tight md:leading-none text-center md:text-center whitespace-nowrap truncate md:truncate md:ml-0 mt-1 md:mt-0">
             {item.label}
           </span>

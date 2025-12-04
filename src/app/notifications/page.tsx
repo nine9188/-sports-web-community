@@ -229,7 +229,7 @@ export default function NotificationsPage() {
         >
           안 읽음
           {unreadCount > 0 && (
-            <span className="ml-2 px-1.5 py-0.5 text-xs font-semibold bg-gray-900 dark:bg-[#F0F0F0] text-white dark:text-gray-900 rounded-full">
+            <span className="ml-2 px-1.5 py-0.5 text-xs font-semibold bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-full">
               {unreadCount}
             </span>
           )}

@@ -219,18 +219,8 @@ export default function IconForm({
 
       {/* 아이콘 선택 영역 */}
       <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
-        <div className="px-4 py-3 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div className="px-4 py-3 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
           <h3 className="text-base font-medium text-gray-900 dark:text-[#F0F0F0]">아이콘 선택</h3>
-
-          {/* 저장 버튼 */}
-          <button
-            onClick={handleSaveIcon}
-            disabled={isLoading || selectedIconId === currentIconId}
-            className="mt-2 sm:mt-0 px-4 py-2 bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed flex items-center rounded-md transition-colors"
-          >
-            {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            아이콘 저장
-          </button>
         </div>
 
         <div className="p-4">
@@ -257,7 +247,7 @@ export default function IconForm({
               </div>
 
               {selectedIconId === null && (
-                <div className="absolute top-1 right-1 bg-slate-800 dark:bg-white rounded-full p-1">
+                <div className="absolute top-1 right-1 bg-slate-800 dark:bg-[#F0F0F0] rounded-full p-1">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white dark:text-slate-800" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
@@ -294,7 +284,7 @@ export default function IconForm({
                   </div>
 
                   {selectedIconId === icon.id && (
-                    <div className="absolute top-1 right-1 bg-slate-800 dark:bg-white rounded-full p-1">
+                    <div className="absolute top-1 right-1 bg-slate-800 dark:bg-[#F0F0F0] rounded-full p-1">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white dark:text-slate-800" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
@@ -303,6 +293,18 @@ export default function IconForm({
                 </button>
               ))
             )}
+          </div>
+
+          {/* 저장 버튼 */}
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={handleSaveIcon}
+              disabled={isLoading || selectedIconId === currentIconId}
+              className="px-4 py-2 bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed flex items-center rounded-md transition-colors"
+            >
+              {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              아이콘 저장
+            </button>
           </div>
         </div>
       </div>
@@ -317,12 +319,14 @@ export default function IconForm({
           <p className="text-gray-700 dark:text-gray-300 text-sm mb-4">
             다양한 프로필 아이콘을 포인트 상점에서 구매할 수 있습니다.
           </p>
-          <Link
-            href="/shop"
-            className="inline-block px-4 py-2 bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 rounded-md transition-colors"
-          >
-            포인트 상점 방문하기
-          </Link>
+          <div className="flex justify-end">
+            <Link
+              href="/shop"
+              className="inline-block px-4 py-2 bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 rounded-md transition-colors"
+            >
+              포인트 상점 방문하기
+            </Link>
+          </div>
         </div>
       </div>
     </div>
