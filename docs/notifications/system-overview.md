@@ -38,19 +38,20 @@
 
 ## 알림 타입
 
-총 **9가지** 알림 타입을 지원합니다:
+총 **10가지** 알림 타입을 지원합니다:
 
-| 타입 | 코드 | 설명 | 트리거 |
-|-----|------|------|--------|
-| 댓글 | `comment` | 내 게시글에 댓글이 달림 | 게시글 작성자에게 발송 |
-| 답글 | `reply` | 내 댓글에 답글이 달림 | 댓글 작성자에게 발송 |
-| 게시글 좋아요 | `post_like` | 내 게시글에 좋아요 | 게시글 작성자에게 발송 |
-| 댓글 좋아요 | `comment_like` | 내 댓글에 좋아요 | 댓글 작성자에게 발송 |
-| 레벨업 | `level_up` | 사용자 레벨 상승 | 시스템 자동 발송 |
-| 신고 결과 | `report_result` | 신고 처리 완료 | 신고자에게 발송 |
-| 관리자 공지 | `admin_notice` | 관리자가 특정 사용자에게 발송 | 관리자 패널에서 수동 발송 |
-| 환영 알림 | `welcome` | 회원가입 환영 메시지 | 회원가입 시 자동 발송 |
-| HOT 게시글 진입 | `hot_post` | 내 게시글이 HOT 상위권 진입 | 크론잡/엣지 함수에서 주기적 체크 |
+| 타입 | 코드 | 설명 | 트리거 | 상태 |
+|-----|------|------|--------|------|
+| 댓글 | `comment` | 내 게시글에 댓글이 달림 | 게시글 작성자에게 발송 | ✅ 완료 |
+| 답글 | `reply` | 내 댓글에 답글이 달림 | 댓글 작성자에게 발송 | ✅ 완료 |
+| 게시글 좋아요 | `post_like` | 내 게시글에 좋아요 | 게시글 작성자에게 발송 | ✅ 완료 |
+| 댓글 좋아요 | `comment_like` | 내 댓글에 좋아요 | 댓글 작성자에게 발송 | ✅ 완료 |
+| 레벨업 | `level_up` | 사용자 레벨 상승 | 시스템 자동 발송 | ✅ 완료 |
+| 신고 결과 | `report_result` | 신고 처리 완료 | 신고자에게 발송 | ✅ 완료 |
+| 관리자 공지 | `admin_notice` | 관리자가 특정 사용자에게 발송 | 관리자 패널에서 수동 발송 | ✅ 완료 |
+| 환영 알림 | `welcome` | 회원가입 환영 메시지 | 회원가입 시 자동 발송 | ✅ 완료 |
+| HOT 게시글 진입 | `hot_post` | 내 게시글이 HOT 상위권 진입 | 크론잡/엣지 함수에서 주기적 체크 | ✅ 완료 |
+| 프로필 변경 | `profile_update` | 프로필 아이콘 변경 시 자기 알림 | 아이콘 변경 시 자동 발송 | ✅ 완료 |
 
 ---
 
@@ -371,6 +372,29 @@ HOT점수 = 기본점수 × 시간감쇠
 - [HOT 시스템 아키텍처](../hot-system/edge-function.md) ⭐ **현재 방식**
 - [Edge Function 배포 가이드](../../../DEPLOY_EDGE_FUNCTION.md)
 - [Supabase 마이그레이션 가이드](../hot-system/supabase-edge-migration.md)
+
+#### 13. `createProfileUpdateNotification()`
+프로필 변경 알림 생성 (자기 알림)
+
+```typescript
+await createProfileUpdateNotification({
+  userId: string,
+  changeType: 'nickname' | 'profile_icon' | 'password',
+  oldValue?: string,
+  newValue?: string
+});
+```
+
+**특징**:
+- ✅ 자기 자신에게 발송되는 보안 알림
+- ✅ 프로필 아이콘 변경 시 자동 발송 (`src/domains/settings/components/icons/IconForm.tsx:149`)
+- ⚠️ 비밀번호 변경은 알림 대신 보안 로그 사용 (`logAuthEvent()`)
+- 🔄 닉네임 변경 알림은 준비 완료 (프로필 업데이트 액션 통합 필요)
+
+**구현 완료일**: 2025-12-04
+
+**관련 문서**:
+- [프로필 변경 알림 상세 가이드](./profile-update-notification.md)
 
 ---
 
@@ -928,9 +952,11 @@ CREATE POLICY "Authenticated users can insert notifications"
 | 2025-12-02 | HOT 게시글 진입 알림 (hot_post) 타입 추가 | Claude Code |
 | 2025-12-03 | HOT 알림 Supabase Edge Function 마이그레이션 완료 (Vercel Cron → Supabase pg_cron) | Claude Code |
 | 2025-12-03 | HOT 알림 실행 주기: 일 1회 → 시간당 1회로 개선 | Claude Code |
+| 2025-12-04 | 프로필 변경 알림 (profile_update) 타입 추가 및 구현 완료 | Claude Code |
+| 2025-12-04 | 비밀번호 변경 로직 개선 (알림 대신 보안 로그 사용) | Claude Code |
 
 ---
 
 **문서 작성일**: 2025-12-01
-**마지막 업데이트**: 2025-12-03
-**버전**: 1.3.0
+**마지막 업데이트**: 2025-12-04
+**버전**: 1.4.0

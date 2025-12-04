@@ -151,12 +151,30 @@ export async function createHotPostNotification(params: {
 
 ---
 
-#### 3. 프로필 변경 알림 (자기 알림) ⭐⭐⭐⭐
-**구현 난이도**: ⚡ 쉬움 (1시간)
-**효과**: 🔒 보안 + UX 향상
-**필요 작업**:
-- `createProfileUpdateNotification()` 함수 추가
-- 닉네임/프로필 이미지 변경 액션에서 호출
+#### 3. ✅ 프로필 변경 알림 (자기 알림) (완료)
+**구현 완료일**: 2025-12-04
+**구현 내용**:
+- ✅ `createProfileUpdateNotification()` 함수 구현 완료
+- ✅ 비밀번호 변경 시 자동 알림 (Server Action에서 호출하지 않고 별도 처리)
+- ✅ 프로필 아이콘 변경 시 알림 (`IconForm.tsx`에서 호출)
+- ✅ 닉네임/프로필 정보 변경 시 알림 준비 완료
+
+**구현 위치**:
+- [create.ts:455-493](c:\Users\USER\Desktop\web2\123\1234\src\domains\notifications\actions\create.ts#L455-L493) - 생성 함수
+- [IconForm.tsx:67-72](c:\Users\USER\Desktop\web2\123\1234\src\domains\settings\components\icons\IconForm.tsx#L67-L72) - 아이콘 변경 트리거
+- [auth.ts](c:\Users\USER\Desktop\web2\123\1234\src\domains\settings\actions\auth.ts) - 비밀번호 변경 (로그 기록만, 알림 없음)
+
+**비밀번호 변경 처리**:
+- Supabase가 자동으로 새 세션 발급
+- 페이지 새로고침 후 메인으로 이동
+- 보안 로그 기록 (`logAuthEvent`)
+- 에러 메시지 한글화 (same_password 등)
+
+**실제 메시지 예시**:
+```
+✏️ 프로필 아이콘이 변경되었습니다.
+✏️ 닉네임이 '이전닉네임' → '새닉네임'으로 변경되었습니다.
+```
 
 ```typescript
 // domains/notifications/actions/create.ts

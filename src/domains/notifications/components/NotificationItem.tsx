@@ -3,7 +3,6 @@
 import React from 'react';
 import Link from 'next/link';
 import { Notification } from '../types/notification';
-import UserIcon from '@/shared/components/UserIcon';
 import { formatDate } from '@/shared/utils/date';
 
 interface NotificationItemProps {
@@ -90,64 +89,53 @@ export default function NotificationItem({ notification, onRead, isSelected, onT
 
   const content = (
     <div
-      className={`flex items-start gap-3 p-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors cursor-pointer ${
-        !notification.is_read ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''
-      } ${isSelected ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
+      className={`flex items-center gap-3 transition-colors relative ${
+        notification.link ? 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer' : 'cursor-default'
+      } ${!notification.is_read ? 'bg-[#F5F5F5] dark:bg-[#262626]' : ''} ${
+        isSelected ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
+      }`}
       onClick={handleClick}
     >
-      {/* 체크박스 */}
-      {onToggleSelect && (
-        <div className="flex-shrink-0 pt-1.5">
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={handleCheckboxChange}
-            onClick={(e) => e.stopPropagation()}
-            className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-[#F0F0F0] focus:ring-gray-900 dark:focus:ring-[#F0F0F0] cursor-pointer"
-          />
-        </div>
+      {/* 왼쪽 세로 바 (안읽은 알림 표시) */}
+      {!notification.is_read && (
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500" />
       )}
 
-      {/* 읽음 표시 점 */}
-      <div className="flex-shrink-0 pt-1.5">
-        {!notification.is_read ? (
-          <div className="w-2 h-2 bg-blue-500 rounded-full" />
-        ) : (
-          <div className="w-2 h-2" />
-        )}
-      </div>
-
-      {/* 액터 아이콘 또는 타입 아이콘 */}
-      <div className="flex-shrink-0">
-        {notification.actor ? (
-          <div className="w-8 h-8 rounded-full overflow-hidden">
-            <UserIcon
-              iconUrl={notification.actor.icon_url || null}
-              level={notification.actor.level || 1}
-              size={32}
-              alt={notification.actor.nickname || '사용자'}
+      <div className="flex items-center gap-3 w-full pl-3 pr-3 py-3">
+        {/* 체크박스 */}
+        {onToggleSelect && (
+          <div className="flex-shrink-0">
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={handleCheckboxChange}
+              onClick={(e) => e.stopPropagation()}
+              className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-[#F0F0F0] focus:ring-gray-900 dark:focus:ring-[#F0F0F0] cursor-pointer"
             />
           </div>
-        ) : (
+        )}
+
+        {/* 타입 아이콘 */}
+        <div className="flex-shrink-0">
           <div className="w-8 h-8 rounded-full bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center text-gray-500 dark:text-gray-400">
             {getTypeIcon()}
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* 알림 내용 */}
-      <div className="flex-1 min-w-0">
-        <p className="text-sm text-gray-900 dark:text-[#F0F0F0] line-clamp-2">
-          {notification.title}
-        </p>
-        {notification.message && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-1">
-            {notification.message}
+        {/* 알림 내용 */}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm text-gray-900 dark:text-[#F0F0F0] line-clamp-2">
+            {notification.title}
           </p>
-        )}
-        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-          {formatDate(notification.created_at)}
-        </p>
+          {notification.message && (
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-1">
+              {notification.message}
+            </p>
+          )}
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            {formatDate(notification.created_at)}
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -7,7 +7,6 @@ import { markNotificationAsRead, markAllNotificationsAsRead } from '@/domains/no
 import { deleteNotifications } from '@/domains/notifications/actions/delete';
 import { Notification, NotificationType } from '@/domains/notifications/types/notification';
 import NotificationItem from '@/domains/notifications/components/NotificationItem';
-import { shouldShowNotification } from '@/domains/notifications/utils/filterNotifications';
 
 type FilterType = 'all' | 'unread';
 type TypeFilter = 'all' | NotificationType;
@@ -20,7 +19,10 @@ const notificationTypeLabels: Record<TypeFilter, string> = {
   comment_like: '댓글 좋아요',
   level_up: '레벨업',
   report_result: '신고 결과',
-  admin_notice: '공지사항'
+  admin_notice: '공지사항',
+  welcome: '환영',
+  hot_post: '인기 게시글',
+  profile_update: '프로필 업데이트'
 };
 
 export default function NotificationsPage() {
@@ -132,11 +134,6 @@ export default function NotificationsPage() {
 
   // 필터링된 알림 목록
   const filteredNotifications = notifications.filter(notification => {
-    // 읽은 알림 이틀 후 자동 숨김
-    if (!shouldShowNotification(notification)) {
-      return false;
-    }
-
     // 읽음/안읽음 필터
     if (filter === 'unread' && notification.is_read) {
       return false;
@@ -152,9 +149,9 @@ export default function NotificationsPage() {
   const isAllSelected = filteredNotifications.length > 0 && selectedIds.size === filteredNotifications.length;
 
   return (
-    <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 rounded-lg">
+    <div className="bg-white dark:bg-[#1D1D1D] md:border md:border-black/7 md:dark:border-0 md:rounded-lg">
       {/* 헤더 */}
-      <div className="h-12 px-4 bg-[#F5F5F5] dark:bg-[#262626] rounded-t-lg border-b border-black/5 dark:border-white/10 flex items-center justify-between">
+      <div className="h-12 px-4 bg-[#F5F5F5] dark:bg-[#262626] md:rounded-t-lg border-b border-black/5 dark:border-white/10 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Bell className="w-4 h-4 text-gray-900 dark:text-[#F0F0F0]" />
           <h1 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">알림</h1>
@@ -241,7 +238,7 @@ export default function NotificationsPage() {
 
       {/* 액션 버튼 */}
       {filteredNotifications.length > 0 && (
-        <div className="flex items-center gap-2 px-4 py-2 border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
+        <div className="flex items-center gap-2 px-4 py-2 border-b border-black/5 dark:border-white/10 bg-white dark:bg-[#1D1D1D]">
           <button
             onClick={handleToggleSelectAll}
             className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors outline-none focus:outline-none"
@@ -255,7 +252,7 @@ export default function NotificationsPage() {
             className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded transition-colors outline-none focus:outline-none ${
               selectedIds.size === 0
                 ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
-                : 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
+                : 'text-red-600 dark:text-red-400 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
             }`}
           >
             <Trash2 className="w-3.5 h-3.5" />
@@ -291,7 +288,7 @@ export default function NotificationsPage() {
           </p>
         </div>
       ) : filteredNotifications.length > 0 ? (
-        <div className="divide-y divide-black/5 dark:divide-white/10">
+        <div className="divide-y divide-black/5 dark:divide-white/10 overflow-hidden md:rounded-b-lg">
           {filteredNotifications.map((notification) => (
             <NotificationItem
               key={notification.id}

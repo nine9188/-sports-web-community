@@ -18,6 +18,9 @@ export default function ProfileActions() {
       // 아이콘 상태 초기화
       updateUserIconState('', '');
 
+      // 성공 토스트
+      toast.success('로그아웃되었습니다.');
+
       // 확실한 페이지 새로고침을 위해 window.location 사용
       window.location.href = '/';
     } catch (error) {

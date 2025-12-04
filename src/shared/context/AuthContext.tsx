@@ -85,10 +85,10 @@ export function AuthProvider({
       await signOut();
       setUser(null);
       setSession(null);
-      toast.info('로그아웃되었습니다.');
+      // 토스트는 호출하는 쪽에서 처리 (중복 방지)
     } catch (error) {
       console.error('로그아웃 오류:', error);
-      toast.error('로그아웃 중 오류가 발생했습니다.');
+      throw error; // 에러를 다시 던져서 호출하는 쪽에서 처리
     }
   }, []);
 

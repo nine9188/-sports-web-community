@@ -298,53 +298,99 @@ export async function updateProfile(userId: string, params: UpdateProfileParams)
 
 ---
 
-### 4. 비밀번호 변경 액션에서 호출
+### 4. 비밀번호 변경 액션 (보안 로그 사용)
 
-**파일**: `src/domains/auth/actions/changePassword.ts`
+**파일**: `src/domains/settings/actions/auth.ts`
 
+**실제 구현 (알림 대신 보안 로그 사용)**:
 ```typescript
 'use server';
 
-import { createClient } from '@/shared/api/supabaseServer';
-import { createProfileUpdateNotification } from '@/domains/notifications';
+import { getSupabaseServer, getSupabaseAction } from '@/shared/lib/supabase/server';
 import { headers } from 'next/headers';
+import { logAuthEvent } from '@/shared/actions/log-actions';
 
-export interface ChangePasswordParams {
-  userId: string;
-  currentPassword: string;
-  newPassword: string;
-}
+export async function changePassword(
+  newPassword: string,
+  turnstileToken: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // 1. 필드 검증
+    if (!newPassword || newPassword.length < 8) {
+      return { success: false, error: '새 비밀번호는 최소 8자 이상이어야 합니다.' };
+    }
 
-export async function changePassword(params: ChangePasswordParams) {
-  const supabase = await createClient();
+    // 2. Turnstile 봇 검증
+    if (!turnstileToken) {
+      return { success: false, error: '봇 검증을 완료해주세요.' };
+    }
+    // ... Turnstile 검증 로직 ...
 
-  // 1. 비밀번호 변경
-  const { error: updateError } = await supabase.auth.updateUser({
-    password: params.newPassword,
-  });
+    // 3. Supabase 클라이언트 & 사용자 확인
+    const supabase = await getSupabaseAction();
+    const { data: { user }, error } = await supabase.auth.getUser();
 
-  if (updateError) {
-    return { success: false, error: updateError.message };
+    if (!user || error) {
+      return { success: false, error: '로그인이 필요합니다.' };
+    }
+
+    // 4. OAuth 계정 체크
+    const provider = user.app_metadata?.provider;
+    if (provider && provider !== 'email') {
+      return { success: false, error: '소셜 로그인 계정은 비밀번호를 변경할 수 없습니다.' };
+    }
+
+    // 5. 비밀번호 변경 (Supabase가 자동으로 새 세션 발급)
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (updateError) {
+      // 한글 에러 메시지 번역
+      let errorMessage = '비밀번호 변경에 실패했습니다.';
+      if (updateError.message.includes('same password') || updateError.code === 'same_password') {
+        errorMessage = '새 비밀번호는 현재 비밀번호와 달라야 합니다.';
+      } else if (updateError.message.includes('Password')) {
+        errorMessage = '비밀번호 형식이 올바르지 않습니다.';
+      }
+
+      // 실패 로그 기록
+      await logAuthEvent(
+        'PASSWORD_CHANGE_FAILED',
+        `비밀번호 변경 실패: ${updateError.message}`,
+        user.id,
+        false,
+        { error: updateError.message, code: updateError.code }
+      );
+
+      return { success: false, error: errorMessage };
+    }
+
+    // 6. 성공 로그 기록 (알림 대신)
+    await logAuthEvent(
+      'PASSWORD_CHANGE_SUCCESS',
+      '비밀번호 변경 성공',
+      user.id,
+      true,
+      { userId: user.id, email: user.email }
+    );
+
+    return { success: true };
+  } catch (error: unknown) {
+    console.error('비밀번호 변경 오류:', error);
+    const errorMessage = error instanceof Error ? error.message : '비밀번호 변경에 실패했습니다.';
+    return { success: false, error: errorMessage };
   }
-
-  // 2. 보안 정보 수집
-  const headersList = await headers();
-  const ipAddress = headersList.get('x-forwarded-for') ||
-                    headersList.get('x-real-ip') ||
-                    'Unknown';
-  const userAgent = headersList.get('user-agent') || 'Unknown';
-
-  // 3. 비밀번호 변경 알림 (보안 정보 포함)
-  await createProfileUpdateNotification({
-    userId: params.userId,
-    changeType: 'password',
-    ipAddress,
-    userAgent,
-  });
-
-  return { success: true, error: null };
 }
 ```
+
+**주요 특징**:
+- ✅ 현재 비밀번호 검증 제거 (Supabase가 처리)
+- ✅ Turnstile 봇 검증으로 보안 강화
+- ✅ 한글 에러 메시지 번역 (`same_password`, `Password` 등)
+- ✅ Supabase 자동 세션 갱신 활용
+- ✅ 보안 로그로 모든 시도 추적
+- ✅ OAuth 계정 비밀번호 변경 방지
 
 ---
 
@@ -554,7 +600,67 @@ CREATE POLICY "Users can view own notifications"
 
 ---
 
+## ✅ 구현 완료 상태
+
+**구현 완료일**: 2025-12-04
+
+### 완료된 기능
+
+- ✅ **프로필 아이콘 변경 알림** (완전 구현)
+  - 파일: `src/domains/settings/components/icons/IconForm.tsx:149`
+  - 아이콘 변경 시 `createProfileUpdateNotification()` 호출
+  - 변경 전/후 아이콘 URL 기록
+
+- ✅ **비밀번호 변경 구현** (알림 없이 보안 로그로 대체)
+  - 파일: `src/domains/settings/actions/auth.ts`
+  - Supabase `updateUser()`로 자동 세션 갱신
+  - 현재 비밀번호 검증 제거 (Supabase가 처리)
+  - 한글 에러 메시지 번역 (same_password 등)
+  - `logAuthEvent()`로 보안 로그 기록
+  - 성공 시 메인 페이지로 리다이렉트 (`window.location.href = '/'`)
+  - 확인 다이얼로그 추가 (실수 방지)
+
+- ✅ **닉네임 변경 알림 준비 완료**
+  - `createProfileUpdateNotification()` 함수 구현됨
+  - 프로필 업데이트 액션에서 호출 가능
+
+### 비밀번호 변경 처리 방식
+
+**알림 대신 보안 로그 사용**:
+```typescript
+// src/domains/settings/actions/auth.ts
+await logAuthEvent(
+  'PASSWORD_CHANGE_SUCCESS',
+  '비밀번호 변경 성공',
+  user.id,
+  true,
+  { userId: user.id, email: user.email }
+);
+```
+
+**이유**:
+1. Supabase가 자동으로 새 세션 발급 (수동 로그아웃 불필요)
+2. 페이지 새로고침으로 세션 갱신
+3. 보안 로그로 충분한 추적 가능
+4. 사용자에게 즉각적인 피드백 (토스트 메시지)
+
+### 체크리스트
+
+- ✅ TypeScript 타입 정의 추가 (`src/domains/notifications/types/notification.ts`)
+- ✅ `createProfileUpdateNotification()` 함수 구현 (`src/domains/notifications/actions/create.ts`)
+- ✅ 프로필 아이콘 변경 시 알림 호출 (`src/domains/settings/components/icons/IconForm.tsx`)
+- ✅ 비밀번호 변경 액션 구현 (`src/domains/settings/actions/auth.ts`)
+- ✅ NotificationItem UI 아이콘 추가 (✏️)
+- ✅ 데이터베이스 CHECK 제약 조건 업데이트
+- ✅ 프로필 아이콘 변경 테스트
+- ✅ 비밀번호 변경 테스트
+- ✅ 한글 에러 메시지 번역
+- ⚠️ 닉네임 변경 알림 (함수 준비됨, 프로필 업데이트 액션 통합 필요)
+
+---
+
 **작성일**: 2025-12-03
-**예상 구현 시간**: 1시간
+**구현 완료일**: 2025-12-04
 **우선순위**: ⭐⭐⭐⭐ (High - 보안 UX)
 **난이도**: ⚡ 쉬움
+**상태**: ✅ 완료 (비밀번호는 보안 로그로 대체)

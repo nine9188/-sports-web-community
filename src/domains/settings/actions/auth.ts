@@ -102,16 +102,25 @@ export async function changePassword(
     if (updateError) {
       console.error('비밀번호 업데이트 오류:', updateError);
 
+      // 에러 메시지 한글화
+      let errorMessage = '비밀번호 변경에 실패했습니다.';
+
+      if (updateError.message.includes('same password') || updateError.code === 'same_password') {
+        errorMessage = '새 비밀번호는 현재 비밀번호와 달라야 합니다.';
+      } else if (updateError.message.includes('Password')) {
+        errorMessage = '비밀번호 형식이 올바르지 않습니다.';
+      }
+
       // 실패 로그 기록
       await logAuthEvent(
         'PASSWORD_CHANGE_FAILED',
         `비밀번호 변경 실패: ${updateError.message}`,
         user.id,
         false,
-        { error: updateError.message }
+        { error: updateError.message, code: updateError.code }
       );
 
-      throw updateError;
+      return { success: false, error: errorMessage };
     }
 
     // 성공 로그 기록
