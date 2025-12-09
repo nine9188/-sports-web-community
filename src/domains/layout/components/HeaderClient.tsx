@@ -94,11 +94,20 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
     setIsMounted(true);
   }, []);
 
-  if (!isOpen || !isMounted) return null;
+  if (!isMounted) return null;
 
-  return ReactDOM.createPortal(
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden">
-      <div className={`fixed top-0 right-0 h-full w-full max-w-md bg-white dark:bg-[#1D1D1D] transform transition-transform duration-300 ease-in-out ${
+  return (
+    <>
+      {/* Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-[999] md:hidden"
+          onClick={onClose}
+        />
+      )}
+
+      {/* 햄버거 메뉴 모달 */}
+      <div className={`fixed top-0 right-0 h-full w-full max-w-md bg-white dark:bg-[#1D1D1D] transform transition-transform duration-300 ease-in-out z-[1000] md:hidden ${
         isOpen ? 'translate-x-0' : 'translate-x-full'
       } flex flex-col`}>
         {/* 헤더 - 고정 */}
@@ -287,8 +296,7 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
           </div>
         </div>
       </div>
-    </div>,
-    document.body
+    </>
   );
 });
 

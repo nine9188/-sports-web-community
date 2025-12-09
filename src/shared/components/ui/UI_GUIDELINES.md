@@ -65,6 +65,147 @@ border-black/5 dark:border-white/10
 - 테이블 행 구분선
 - 서브 섹션 구분선
 
+### 강조 색상
+
+#### 댓글 수 표시
+```css
+text-orange-600 dark:text-orange-400
+```
+- **사용처**: 게시글 목록의 댓글 수 `[N]` 표시
+- **예시**: `<span className="text-xs text-orange-600 dark:text-orange-400">[5]</span>`
+- **금지**: 파란색, 회색 등 다른 색상 사용 금지
+
+## 테이블 패턴
+
+### 게시글 목록 테이블 구조
+
+#### 테이블 컨테이너
+```tsx
+<table className="w-full border-collapse">
+  <thead>...</thead>
+  <tbody>...</tbody>
+</table>
+```
+- `w-full`: 전체 너비 사용
+- `border-collapse`: 테두리 병합
+
+#### 테이블 헤더
+```tsx
+<tr className="border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
+  <th className="py-2 px-3 text-center text-sm font-medium text-gray-500 dark:text-gray-400">게시판</th>
+  <th className="py-2 px-4 text-center text-sm font-medium text-gray-500 dark:text-gray-400">제목</th>
+  <th className="py-2 px-3 text-center text-sm font-medium text-gray-500 dark:text-gray-400">글쓴이</th>
+  <th className="py-2 px-1 text-center text-sm font-medium text-gray-500 dark:text-gray-400">날짜</th>
+  <th className="py-2 px-1 text-center text-sm font-medium text-gray-500 dark:text-gray-400">조회</th>
+  <th className="py-2 px-1 text-center text-sm font-medium text-gray-500 dark:text-gray-400">추천</th>
+</tr>
+```
+- **배경**: `bg-[#F5F5F5] dark:bg-[#262626]` (Secondary Container)
+- **텍스트**: `text-sm font-medium text-gray-500 dark:text-gray-400` (Tertiary Text)
+- **정렬**: `text-center`
+- **패딩**: `py-2` (상하), `px-1~4` (좌우, 컬럼에 따라 다름)
+- **구분선**: `border-b border-black/5 dark:border-white/10`
+
+#### 테이블 행 (Body)
+```tsx
+<tr className="border-b border-black/5 dark:border-white/10 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors">
+  <td className="py-2 px-3 text-center text-xs text-gray-500 dark:text-gray-400">...</td>
+  <td className="py-2 px-4">...</td>
+</tr>
+```
+- **호버**: `hover:bg-[#EAEAEA] dark:hover:bg-[#333333]` (Tertiary Container)
+- **트랜지션**: `transition-colors`
+- **구분선**: `border-b border-black/5 dark:border-white/10`
+- **텍스트**: `text-xs` (본문 셀), `text-gray-500 dark:text-gray-400` (보조 정보)
+- **정렬**: `text-center` (숫자형 데이터), 좌측 정렬 (텍스트형 데이터)
+- **패딩 (상하)**: `py-2` (8px 상하)
+- **패딩 (좌우)**: 컬럼에 따라 다름
+  - 게시판/글쓴이: `px-3` (12px 좌우) 또는 `px-2` (8px 좌우)
+  - 제목: `px-4` (16px 좌우)
+  - 날짜/조회/추천: `px-1` (4px 좌우)
+
+#### 테이블 컬럼 너비 패턴 (PostList.tsx 기준)
+```tsx
+{/* 게시판 컬럼 */}
+<th style={{ width: '120px' }}>게시판</th>
+<td className="py-2 px-3" style={{ width: '120px' }}>...</td>
+
+{/* 제목 컬럼 - flex-1으로 남은 공간 차지 */}
+<th className="flex-1">제목</th>
+<td className="py-2 px-4 flex-1">...</td>
+
+{/* 글쓴이 컬럼 */}
+<th style={{ width: '120px' }}>글쓴이</th>
+<td className="py-2 px-2" style={{ width: '120px' }}>...</td>
+
+{/* 날짜 컬럼 */}
+<th className="w-16">날짜</th>
+<td className="py-2 px-1" style={{ width: '80px' }}>...</td>
+
+{/* 조회 컬럼 */}
+<th className="w-12">조회</th>
+<td className="py-2 px-1" style={{ width: '60px' }}>...</td>
+
+{/* 추천 컬럼 */}
+<th className="w-12">추천</th>
+<td className="py-2 px-1" style={{ width: '60px' }}>...</td>
+```
+
+**컬럼 너비 가이드:**
+- **게시판/글쓴이**: `120px` - 중간 너비
+- **날짜**: `80px` - 짧은 너비
+- **조회/추천**: `60px` - 매우 짧은 너비 (숫자만 표시)
+- **제목**: `flex-1` - 남은 공간 전부 차지
+- **inline style 사용**: Tailwind의 `w-` 클래스는 정확한 픽셀 제어가 어려우므로 `style={{ width: 'Xpx' }}` 사용
+
+#### 간소화된 테이블 (BoardPopularPosts 패턴)
+```tsx
+{/* colgroup으로 컬럼 너비 정의 */}
+<table className="w-full">
+  <colgroup>
+    <col className="w-12" />  {/* 순위 */}
+    <col />                   {/* 제목 - 남은 공간 */}
+  </colgroup>
+  <tbody>
+    <tr className="border-t border-black/5 dark:border-white/10 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors">
+      <td className="px-4 py-2 text-center">
+        <span className="text-xs font-bold text-gray-500 dark:text-gray-400">1</span>
+      </td>
+      <td className="px-4 py-2">
+        <Link href="..." className="text-xs text-gray-900 dark:text-[#F0F0F0] line-clamp-1 block">
+          제목
+        </Link>
+      </td>
+    </tr>
+  </tbody>
+</table>
+```
+- **colgroup 사용**: 컬럼 너비를 미리 정의 (`<col className="w-12" />`)
+- **헤더 없음**: 간소화된 목록은 thead 생략 가능
+- **첫 행 구분선**: `border-t` 사용 (헤더 없을 때)
+- **커서**: `cursor-pointer` 추가로 클릭 가능 표시
+- **패딩**: `px-4 py-2` - PostList와 동일 (16px 좌우, 8px 상하)
+- **제목 폰트 크기**: `text-xs` - PostList와 동일 (12px)
+- **순위 폰트**: `text-xs font-bold`
+
+#### 테이블 셀 내 링크
+```tsx
+<td className="py-2 px-4">
+  <Link href="..." className="text-sm text-gray-900 dark:text-[#F0F0F0] line-clamp-1 block">
+    {title}
+    {comment_count > 0 && (
+      <span className="ml-1 text-xs text-orange-600 dark:text-orange-400">
+        [{comment_count}]
+      </span>
+    )}
+  </Link>
+</td>
+```
+- **링크 스타일**: `text-sm text-gray-900 dark:text-[#F0F0F0]` (Primary Text)
+- **블록 레벨**: `block` - 전체 셀 클릭 가능
+- **말줄임**: `line-clamp-1` - 한 줄로 제한
+- **댓글 수**: 제목 옆에 orange 색상으로 표시
+
 ## 인터랙션 패턴
 
 ### 호버 효과

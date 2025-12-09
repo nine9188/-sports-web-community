@@ -90,7 +90,7 @@ const MatchItem = React.memo(function MatchItem({ match, onClose }: MatchItemPro
 
   return (
     <div
-      className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 rounded-lg p-4 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors cursor-pointer"
+      className="bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-0 rounded-lg p-4 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors cursor-pointer"
       onClick={handleMatchClick}
     >
       {/* 리그 정보 */}

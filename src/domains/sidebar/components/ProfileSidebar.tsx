@@ -1,6 +1,6 @@
 'use client';
 
-import { X, User, LogOut, UserCog } from 'lucide-react';
+import { X, User, LogOut, UserCog, PenSquare } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { useAuth } from '@/shared/context/AuthContext';
 import { useIcon } from '@/shared/context/IconContext';
@@ -142,11 +142,11 @@ export default function ProfileSidebar({
         />
       )}
       
-      {/* 프로필 사이드바 (좌측에서 열림) */}
+      {/* 프로필 사이드바 (우측에서 열림) */}
       <div
-        className={`fixed top-0 left-0 h-full w-full max-w-sm
-          bg-[#F8F9FA] dark:bg-black transform transition-transform duration-300 ease-in-out z-[1000]
-          ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:hidden`}
+        className={`fixed top-0 right-0 h-full w-full max-w-sm
+          bg-white dark:bg-[#1D1D1D] transform transition-transform duration-300 ease-in-out z-[1000]
+          ${isOpen ? 'translate-x-0' : 'translate-x-full'} lg:hidden`}
       >
         {/* 헤더 */}
         <div className="flex items-center justify-between h-14 border-b border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] px-4">
@@ -163,7 +163,7 @@ export default function ProfileSidebar({
         </div>
 
         {/* 컨텐츠 영역 */}
-        <div className="h-[calc(100%-56px)] overflow-y-auto bg-[#F8F9FA] dark:bg-black">
+        <div className="h-[calc(100%-56px)] overflow-y-auto bg-white dark:bg-[#1D1D1D]">
           {user ? (
             // 로그인된 사용자
             <>
@@ -174,20 +174,30 @@ export default function ProfileSidebar({
 
               {/* 메뉴 섹션 */}
               <div className="p-4 space-y-2">
+                {/* 글쓰기 */}
+                <Link
+                  href="/boards"
+                  className="flex items-center gap-3 p-3 rounded-lg bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]"
+                  onClick={handleMenuClick}
+                >
+                  <PenSquare className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                  <span className="text-sm font-medium">글쓰기</span>
+                </Link>
+
+                {/* 프로필 설정 */}
                 <Link
                   href="/settings/profile"
-                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]"
+                  className="flex items-center gap-3 p-3 rounded-lg bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]"
                   onClick={handleMenuClick}
                 >
                   <UserCog className="h-5 w-5 text-gray-600 dark:text-gray-300" />
                   <span className="text-sm font-medium">프로필 설정</span>
                 </Link>
 
-                {/* 아이콘 설정 항목 제거 */}
-
+                {/* 로그아웃 */}
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-left"
+                  className="w-full flex items-center gap-3 p-3 rounded-lg bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-left"
                 >
                   <LogOut className="h-5 w-5 text-red-600 dark:text-red-400" />
                   <span className="text-sm font-medium text-red-600 dark:text-red-400">로그아웃</span>

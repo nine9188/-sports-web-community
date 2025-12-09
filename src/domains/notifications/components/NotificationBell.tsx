@@ -89,13 +89,13 @@ export default function NotificationBell({ userId, initialUnreadCount = 0 }: Not
           table: 'notifications',
           filter: `user_id=eq.${userId}`
         },
-        (payload) => {
+        (payload: { new: Notification }) => {
           // 새 알림이 들어오면 카운트 증가
           setUnreadCount(prev => prev + 1);
-          
+
           // 모달/드롭다운이 열려있으면 목록도 업데이트
           if (isOpen) {
-            const newNotification = payload.new as Notification;
+            const newNotification = payload.new;
             setNotifications(prev => [newNotification, ...prev]);
           }
         }

@@ -1,5 +1,6 @@
 import { getBoardPageData } from '@/domains/boards/actions';
 import { fetchPosts, Post as ApiPost } from '@/domains/boards/actions';
+import { getBoardPopularPosts } from '@/domains/boards/actions/getPopularPosts';
 import BoardDetailLayout from '@/domains/boards/components/layout/BoardDetailLayout';
 import ErrorMessage from '@/shared/ui/error-message';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
@@ -106,7 +107,10 @@ export default async function BoardDetailPage({
     
     // API 데이터를 레이아웃 호환 형식으로 변환
     const layoutPosts = convertApiPostsToLayoutPosts(postsData.data || []);
-    
+
+    // 인기 게시글 데이터 가져오기
+    const popularPosts = await getBoardPopularPosts(result.boardData.id);
+
     // HoverMenu용 데이터 가져오기
     const supabase = await getSupabaseServer();
     const { data: boardsData } = await supabase
@@ -189,6 +193,7 @@ export default async function BoardDetailPage({
           itemsPerPage: postsData.meta.itemsPerPage,
           currentPage: postsData.meta.currentPage
         }}
+        popularPosts={popularPosts}
       />
     );
   } catch (error) {

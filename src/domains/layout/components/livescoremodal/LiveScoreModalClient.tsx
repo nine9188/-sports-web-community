@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
 import { X, Clock } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFutbol } from '@fortawesome/free-solid-svg-icons';
@@ -29,11 +28,20 @@ export default function LiveScoreModalClient({ isOpen, onClose, initialData }: L
     setSelectedDate(newDate);
   };
 
-  if (!isOpen || !isMounted) return null;
+  if (!isMounted) return null;
 
-  return ReactDOM.createPortal(
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden">
-      <div className={`fixed top-0 right-0 h-full w-full max-w-md bg-[#F8F9FA] dark:bg-black transform transition-transform duration-300 ease-in-out ${
+  return (
+    <>
+      {/* Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-[999] md:hidden"
+          onClick={onClose}
+        />
+      )}
+
+      {/* 경기일정 모달 */}
+      <div className={`fixed top-0 right-0 h-full w-full max-w-md bg-white dark:bg-[#1D1D1D] transform transition-transform duration-300 ease-in-out z-[1000] md:hidden ${
         isOpen ? 'translate-x-0' : 'translate-x-full'
       } flex flex-col`}>
 
@@ -99,7 +107,6 @@ export default function LiveScoreModalClient({ isOpen, onClose, initialData }: L
           </div>
         </div>
       </div>
-    </div>,
-    (document.body as Element)
+    </>
   );
 }

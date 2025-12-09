@@ -7,6 +7,7 @@ import BoardBreadcrumbs from '../common/BoardBreadcrumbs';
 import BoardTeamInfo from '../board/BoardTeamInfo';
 import LeagueInfo from '../board/LeagueInfo';
 import BoardInfo from '../board/BoardInfo';
+import BoardPopularPosts from '../board/BoardPopularPosts';
 import ClientHoverMenu from '../common/ClientHoverMenu';
 import PostList from '../post/PostList';
 import ShopPagination from '@/domains/shop/components/ShopPagination';
@@ -38,6 +39,18 @@ interface Post {
   league_id?: number | null;
   league_name?: string | null;
   league_logo?: string | null;
+}
+
+// PopularPost 타입 정의
+interface PopularPost {
+  id: string;
+  title: string;
+  board_slug: string;
+  post_number: number;
+  likes: number;
+  comment_count: number;
+  author_nickname: string;
+  created_at: string;
 }
 
 // HoverMenu 관련 타입 정의
@@ -100,6 +113,11 @@ interface BoardDetailLayoutProps {
     itemsPerPage: number;
     currentPage: number;
   };
+  // 인기 게시글 데이터
+  popularPosts?: {
+    todayPosts: PopularPost[];
+    weekPosts: PopularPost[];
+  };
 }
 
 // 메모이제이션된 컴포넌트들
@@ -107,6 +125,7 @@ const MemoizedBoardBreadcrumbs = memo(BoardBreadcrumbs);
 const MemoizedPostList = memo(PostList);
 const MemoizedClientHoverMenu = memo(ClientHoverMenu);
 const MemoizedShopPagination = memo(ShopPagination);
+const MemoizedBoardPopularPosts = memo(BoardPopularPosts);
 
 export default function BoardDetailLayout({
   boardData,
@@ -121,7 +140,8 @@ export default function BoardDetailLayout({
   posts,
   topBoards,
   hoverChildBoardsMap,
-  pagination
+  pagination,
+  popularPosts
 }: BoardDetailLayoutProps) {
   // view_type이 타입에 없더라도 안전하게 읽어서 분기
   const viewType = (boardData as unknown as { view_type?: 'list' | 'image-table' })?.view_type;
@@ -143,7 +163,7 @@ export default function BoardDetailLayout({
       )}
       
       {leagueData && (
-        <LeagueInfo 
+        <LeagueInfo
           leagueData={leagueData}
           boardId={boardData.id}
           boardSlug={slug}
@@ -154,11 +174,20 @@ export default function BoardDetailLayout({
 
       {/* 팀/리그 정보가 없는 게시판: 게시판 이름과 글쓰기 버튼만 표시 */}
       {!teamData && !leagueData && (
-        <BoardInfo 
+        <BoardInfo
           boardName={boardData.name}
           boardId={boardData.id}
           boardSlug={slug}
           isLoggedIn={isLoggedIn}
+          className="mb-4"
+        />
+      )}
+
+      {/* 인기 게시글 위젯 - BoardInfo 아래 표시 */}
+      {popularPosts && (popularPosts.todayPosts.length > 0 || popularPosts.weekPosts.length > 0) && (
+        <MemoizedBoardPopularPosts
+          todayPosts={popularPosts.todayPosts}
+          weekPosts={popularPosts.weekPosts}
           className="mb-4"
         />
       )}
