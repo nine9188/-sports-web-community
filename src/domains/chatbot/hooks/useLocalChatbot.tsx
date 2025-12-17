@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { ChatState, ChatConversation, ChatMessage, ChipButton, ChipType } from '../types';
 import { localChatStorage } from '../actions/localStorageActions';
 import { getChatFlowResponse } from '../actions/chatFlowActions';
-import { generateConversationTitle } from '../utils';
+import { generateConversationTitle, CHIP_BUTTONS } from '../utils';
+import { CHATBOT_MESSAGES } from '../constants/messages';
 
 interface UseLocalChatbotReturn extends ChatState {
   toggleChat: () => void;
@@ -35,25 +36,45 @@ export function useLocalChatbot(): UseLocalChatbotReturn {
   const [isFormSubmitting, setIsFormSubmitting] = useState(false);
   const [currentChipType, setCurrentChipType] = useState<ChipType | null>(null);
 
-  // 데이터 로드
-  const loadData = useCallback(() => {
-    const conversations = localChatStorage.getConversations();
-    const messages: Record<string, ChatMessage[]> = {};
-    
-    conversations.forEach(conv => {
-      messages[conv.id] = localChatStorage.getMessages(conv.id);
-    });
+  // Batch update queue for localStorage optimization
+  const loadDataTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingUpdatesRef = useRef<number>(0);
 
-    setChatState(prev => ({
-      ...prev,
-      conversations,
-      messages,
-    }));
+  // 데이터 로드 - debounced to reduce localStorage access
+  const loadData = useCallback(() => {
+    // Cancel any pending load
+    if (loadDataTimeoutRef.current) {
+      clearTimeout(loadDataTimeoutRef.current);
+    }
+
+    // Batch multiple updates within 50ms
+    loadDataTimeoutRef.current = setTimeout(() => {
+      const conversations = localChatStorage.getConversations();
+      const messages: Record<string, ChatMessage[]> = {};
+
+      conversations.forEach(conv => {
+        messages[conv.id] = localChatStorage.getMessages(conv.id);
+      });
+
+      setChatState(prev => ({
+        ...prev,
+        conversations,
+        messages,
+      }));
+
+      pendingUpdatesRef.current = 0;
+    }, 50);
   }, []);
 
   // 초기 데이터 로드
   useEffect(() => {
     loadData();
+
+    return () => {
+      if (loadDataTimeoutRef.current) {
+        clearTimeout(loadDataTimeoutRef.current);
+      }
+    };
   }, [loadData]);
 
   const toggleChat = useCallback(() => {
@@ -91,12 +112,12 @@ export function useLocalChatbot(): UseLocalChatbotReturn {
   }, [loadData]);
 
   const startNewConversation = useCallback(async () => {
-    const title = '새로운 대화';
+    const title = CHATBOT_MESSAGES.NEW_CONVERSATION;
     const conversation = localChatStorage.createConversation(title);
-    
+
     // 로컬 스토리지에서 업데이트된 데이터 다시 로드
     loadData();
-    
+
     setChatState(prev => ({
       ...prev,
       activeConversation: conversation.id,
@@ -108,14 +129,18 @@ export function useLocalChatbot(): UseLocalChatbotReturn {
     // 초기 인사말과 칩 버튼 추가
     try {
       setChatState(prev => ({ ...prev, isTyping: true }));
-      
+
       // 1. 인사말 추가
-      await addBotMessage(conversation.id, '안녕하세요! 무엇을 도와드릴까요?');
-      
+      await addBotMessage(conversation.id, CHATBOT_MESSAGES.GREETING);
+
       // 2. 칩버튼 메시지 추가
-      localChatStorage.addMessage(conversation.id, '', 'chips', undefined, { showChips: true });
+      const allChips = CHIP_BUTTONS.map(chip => chip.label);
+      localChatStorage.addMessage(conversation.id, '', 'chips', undefined, {
+        showChips: true,
+        chips: allChips
+      });
       loadData();
-      
+
       setChatState(prev => ({ ...prev, isTyping: false }));
     } catch (error) {
       console.error('Error initializing new conversation:', error);
@@ -145,29 +170,35 @@ export function useLocalChatbot(): UseLocalChatbotReturn {
       // 봇 응답 처리
       try {
         setChatState(prev => ({ ...prev, isTyping: true }));
-        
+
         const flowResult = await getChatFlowResponse(conversation.id, message);
         if (flowResult.success && flowResult.steps) {
           for (const step of flowResult.steps) {
             if (step.type === 'message' && step.content) {
               await addBotMessage(conversation.id, step.content);
+            } else if (step.type === 'chips' && step.chips) {
+              localChatStorage.addMessage(conversation.id, '', 'chips', undefined, {
+                showChips: true,
+                chips: step.chips
+              });
+              loadData();
             }
           }
         }
-        
+
         setChatState(prev => ({ ...prev, isTyping: false }));
       } catch (error) {
         console.error('Error processing bot response:', error);
-        setError('메시지 처리 중 오류가 발생했습니다.');
+        setError(CHATBOT_MESSAGES.ERROR_MESSAGE_SEND_FAILED);
         setChatState(prev => ({ ...prev, isTyping: false }));
       }
-      
+
       return;
     }
 
     try {
       setChatState(prev => ({ ...prev, isTyping: true }));
-      
+
       // 사용자 메시지 추가
       localChatStorage.addMessage(chatState.activeConversation, message, 'user');
       loadData();
@@ -178,26 +209,36 @@ export function useLocalChatbot(): UseLocalChatbotReturn {
         for (const step of flowResult.steps) {
           if (step.type === 'message' && step.content) {
             await addBotMessage(chatState.activeConversation, step.content);
+          } else if (step.type === 'chips' && step.chips) {
+            localChatStorage.addMessage(chatState.activeConversation, '', 'chips', undefined, {
+              showChips: true,
+              chips: step.chips
+            });
+            loadData();
           }
         }
       }
 
       // "괜찮아요"라고 답했을 때 대화 완료 처리
-      if (message === '괜찮아요') {
+      if (message === CHATBOT_MESSAGES.COMPLETION_OKAY) {
         localChatStorage.updateConversationStatus(chatState.activeConversation, 'completed');
         loadData();
       }
-      
+
       // "네 다른문의 할게요"라고 답했을 때 칩버튼 다시 표시
-      if (message === '네 다른문의 할게요') {
-        localChatStorage.addMessage(chatState.activeConversation, '', 'chips', undefined, { showChips: true });
+      if (message === CHATBOT_MESSAGES.COMPLETION_ANOTHER_INQUIRY) {
+        const allChips = CHIP_BUTTONS.map(chip => chip.label);
+        localChatStorage.addMessage(chatState.activeConversation, '', 'chips', undefined, {
+          showChips: true,
+          chips: allChips
+        });
         loadData();
       }
 
       setChatState(prev => ({ ...prev, isTyping: false }));
     } catch (error) {
       console.error('Error sending message:', error);
-      setError('메시지 전송에 실패했습니다.');
+      setError(CHATBOT_MESSAGES.ERROR_MESSAGE_SEND_FAILED);
       setChatState(prev => ({ ...prev, isTyping: false }));
     }
   }, [chatState.activeConversation, addBotMessage, loadData]);
@@ -249,15 +290,21 @@ export function useLocalChatbot(): UseLocalChatbotReturn {
 
       // 봇 응답
       const flowResult = await getChatFlowResponse(
-        chatState.activeConversation, 
-        chip.label, 
+        chatState.activeConversation,
+        chip.label,
         chip.type
       );
-      
+
       if (flowResult.success && flowResult.steps) {
         for (const step of flowResult.steps) {
           if (step.type === 'message' && step.content) {
             await addBotMessage(chatState.activeConversation, step.content);
+          } else if (step.type === 'chips' && step.chips) {
+            localChatStorage.addMessage(chatState.activeConversation, '', 'chips', undefined, {
+              showChips: true,
+              chips: step.chips
+            });
+            loadData();
           }
         }
       }
@@ -271,7 +318,7 @@ export function useLocalChatbot(): UseLocalChatbotReturn {
       setChatState(prev => ({ ...prev, isTyping: false }));
     } catch (error) {
       console.error('Error handling chip click:', error);
-      setError('요청 처리에 실패했습니다.');
+      setError(CHATBOT_MESSAGES.ERROR_REQUEST_FAILED);
       setChatState(prev => ({ ...prev, isTyping: false }));
     }
   }, [chatState.activeConversation, addBotMessage, sendUserMessage, loadData]);
@@ -281,16 +328,16 @@ export function useLocalChatbot(): UseLocalChatbotReturn {
 
     try {
       setIsFormSubmitting(true);
-      
+
       // 폼 제출 상태 업데이트
       localChatStorage.updateFormSubmissionStatus(chatState.activeConversation, currentChipType);
-      
+
       // 잠깐 대기 (UI에서 로딩 상태 확인용)
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // 제출 완료 메시지들
-      await addBotMessage(chatState.activeConversation, '신고가 접수되었습니다. 검토 후 적절한 조치를 취하겠습니다.');
-      await addBotMessage(chatState.activeConversation, '더 도와드릴게 있을까요?');
+      await addBotMessage(chatState.activeConversation, CHATBOT_MESSAGES.REPORT_SUBMITTED);
+      await addBotMessage(chatState.activeConversation, CHATBOT_MESSAGES.ASK_MORE_HELP);
 
       // completion 칩버튼 메시지 추가
       localChatStorage.addMessage(chatState.activeConversation, '', 'chips', undefined, { showCompletion: true });
@@ -300,7 +347,7 @@ export function useLocalChatbot(): UseLocalChatbotReturn {
       setIsFormSubmitting(false);
     } catch (error) {
       console.error('Error submitting form:', error);
-      setError('폼 제출에 실패했습니다.');
+      setError(CHATBOT_MESSAGES.ERROR_FORM_SUBMIT_FAILED);
       setIsFormSubmitting(false);
     }
   }, [chatState.activeConversation, currentChipType, addBotMessage, loadData]);

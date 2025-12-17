@@ -1,20 +1,19 @@
 'use client';
 
-import { 
-  ChatConversation, 
-  ChatMessage, 
-  LocalChatData, 
+import {
+  ChatConversation,
+  ChatMessage,
+  LocalChatData,
   LocalSession,
-  ChipType 
+  ChipType
 } from '../types';
-import { 
-  getLocalChatData, 
-  saveLocalChatData, 
+import {
+  getLocalChatData,
+  saveLocalChatData,
   createLocalSession,
   isSessionExpired,
   generateConversationId,
-  generateMessageId,
-  generateConversationTitle 
+  generateMessageId
 } from '../utils';
 
 export class LocalChatStorage {
@@ -114,7 +113,7 @@ export class LocalChatStorage {
     content: string,
     type: 'user' | 'bot' | 'system' | 'form' | 'chips' = 'user',
     chipType?: ChipType,
-    formData?: Record<string, any>
+    formData?: Record<string, unknown>
   ): ChatMessage {
     if (!this.data) {
       this.initializeData();

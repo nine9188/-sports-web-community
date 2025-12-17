@@ -25,29 +25,29 @@ export function ChatHeader({
   };
 
   return (
-    <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+    <div className="flex items-center justify-between p-4 border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
       {/* Left Section */}
       <div className="flex items-center space-x-3">
         {currentView === 'chat' && canGoBack && (
           <button
             onClick={handleBackClick}
-            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+            className="p-1 rounded-full hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0"
             aria-label="대화 목록으로 돌아가기"
           >
-            <ChevronLeft className="w-5 h-5 text-gray-600" />
+            <ChevronLeft className="w-5 h-5 text-gray-700 dark:text-gray-300" />
           </button>
         )}
         
         <div className="flex items-center space-x-2">
           {currentView === 'conversations' ? (
             <>
-              <List className="w-5 h-5 text-blue-600" />
-              <h2 className="text-lg font-semibold text-gray-900">대화 목록</h2>
+              <List className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0]">대화 목록</h2>
             </>
           ) : (
             <>
-              <MessageCircle className="w-5 h-5 text-blue-600" />
-              <h2 className="text-lg font-semibold text-gray-900 truncate">
+              <MessageCircle className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0] truncate">
                 {conversationTitle || '고객센터'}
               </h2>
             </>

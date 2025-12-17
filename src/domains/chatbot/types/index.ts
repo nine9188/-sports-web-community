@@ -14,7 +14,7 @@ export interface ChatMessage {
   type: ChatMessageType;
   content: string;
   chip_type?: ChipType;
-  form_data?: Record<string, any>;
+  form_data?: Record<string, unknown>;
   is_submitted?: boolean; // 폼 제출 완료 상태
   is_read: boolean;
   created_at: string;

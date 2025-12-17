@@ -199,7 +199,6 @@ async function getBoardsData(): Promise<BoardCollectionData[]> {
                   commentCountMap[comment.post_id] = (commentCountMap[comment.post_id] || 0) + 1;
                 }
               });
-              console.log(`게시판 "${board.name}" 댓글 수 맵:`, commentCountMap);
             }
           } catch (error) {
             console.error(`게시판 "${board.name}" 댓글 수 조회 오류:`, error);

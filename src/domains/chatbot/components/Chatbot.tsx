@@ -60,10 +60,11 @@ export function Chatbot({ userId }: ChatbotProps) {
           isTyping={chatbot.isTyping}
           isLoading={chatbot.isLoading}
           onMessageRead={handleMessageRead}
+          onChipClick={chatbot.handleChipClick}
         />
 
         {/* Chat Actions */}
-        <div className="p-4 border-t border-gray-200 bg-gray-50">
+        <div className="p-4 border-t border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
           {/* Show initial chips or form */}
           {chatbot.currentForm ? (
             <ChatFormRenderer
@@ -73,7 +74,7 @@ export function Chatbot({ userId }: ChatbotProps) {
             />
           ) : currentMessages.length === 0 ? (
             <div className="space-y-4">
-              <div className="text-center text-gray-600 text-sm mb-4">
+              <div className="text-center text-gray-700 dark:text-gray-300 text-sm mb-4">
                 무엇을 도와드릴까요?
               </div>
               <ChatChipButtons
@@ -141,8 +142,8 @@ export function Chatbot({ userId }: ChatbotProps) {
 
         {/* Error Display */}
         {chatbot.error && (
-          <div className="p-4 bg-red-50 border-t border-red-200">
-            <div className="text-sm text-red-700">
+          <div className="p-4 bg-red-50 dark:bg-red-900/20 border-t border-red-300 dark:border-red-700">
+            <div className="text-sm text-red-700 dark:text-red-300">
               {chatbot.error}
             </div>
           </div>

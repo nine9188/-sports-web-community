@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useChatUser } from '../hooks/useChatUser';
 import { useChatbot } from '../hooks/useChatbot';
 import { useLocalChatbot } from '../hooks/useLocalChatbot';
@@ -13,13 +13,18 @@ import { ChatMessageList } from './ChatMessageList';
 import { ChatInput } from './ChatInput';
 import { localChatStorage } from '../actions/localStorageActions';
 
+// Type guard helper function
+function hasFormSubmitting(obj: any): obj is { isFormSubmitting: boolean } {
+  return !!obj && typeof obj.isFormSubmitting === 'boolean';
+}
+
 export function UniversalChatbot() {
   const { chatUser, isLoading: userLoading } = useChatUser();
-  
+
   // 인증된 사용자용 훅
   const authenticatedChatbot = useChatbot(chatUser?.isAuthenticated ? chatUser.id : '');
   const readStatus = useReadStatus(chatUser?.isAuthenticated ? chatUser.id : '');
-  
+
   // 로컬 사용자용 훅
   const localChatbot = useLocalChatbot();
 
@@ -29,43 +34,63 @@ export function UniversalChatbot() {
   // 문의하기 클릭 후 런처(플로팅 버튼) 노출 여부
   const [launcherVisible, setLauncherVisible] = useState(false);
 
+  // Refs for chatbot functions to avoid re-registering event listener
+  const toggleChatRef = useRef(chatbot.toggleChat);
+  const startNewConversationRef = useRef(chatbot.startNewConversation);
+  const switchViewRef = useRef(chatbot.switchView);
+  const selectConversationRef = useRef(chatbot.selectConversation);
+  const isOpenRef = useRef(chatbot.isOpen);
+  const conversationsRef = useRef(chatbot.conversations);
+
+  // Update refs when chatbot changes
+  useEffect(() => {
+    toggleChatRef.current = chatbot.toggleChat;
+    startNewConversationRef.current = chatbot.startNewConversation;
+    switchViewRef.current = chatbot.switchView;
+    selectConversationRef.current = chatbot.selectConversation;
+    isOpenRef.current = chatbot.isOpen;
+    conversationsRef.current = chatbot.conversations;
+  }, [chatbot]);
+
   // 전역 이벤트로 챗봇 열기
   useEffect(() => {
     const handleOpen = (e: Event) => {
       const custom = e as CustomEvent<{ mode?: 'new' | 'list' | 'auto' }>;
       const mode = custom.detail?.mode || 'auto';
-      if (!launcherVisible) {
-        setLauncherVisible(true);
+
+      setLauncherVisible(true);
+
+      if (!isOpenRef.current) {
+        toggleChatRef.current();
       }
-      if (!chatbot.isOpen) {
-        chatbot.toggleChat();
-      }
+
       // 모드별 시작 상태
       if (mode === 'new') {
-        chatbot.startNewConversation();
-        chatbot.switchView('chat');
+        startNewConversationRef.current();
+        switchViewRef.current('chat');
       } else if (mode === 'list') {
-        chatbot.switchView('conversations');
+        switchViewRef.current('conversations');
       } else {
         // auto 규칙
         // 1) 대화가 하나도 없으면 새 대화 시작
         // 2) 진행중(active) 대화가 있으면 그 대화로 시작
         // 3) 진행중이 없고 완료된 대화만 있으면 목록으로
-        const conversations = chatbot.conversations;
+        const conversations = conversationsRef.current;
         if (!conversations || conversations.length === 0) {
-          chatbot.startNewConversation();
-          chatbot.switchView('chat');
+          startNewConversationRef.current();
+          switchViewRef.current('chat');
         } else {
           const activeConv = conversations.find((c) => c.status === 'active');
           if (activeConv) {
-            chatbot.selectConversation(activeConv.id);
-            chatbot.switchView('chat');
+            selectConversationRef.current(activeConv.id);
+            switchViewRef.current('chat');
           } else {
-            chatbot.switchView('conversations');
+            switchViewRef.current('conversations');
           }
         }
       }
     };
+
     if (typeof window !== 'undefined') {
       window.addEventListener('open-chatbot', handleOpen as EventListener);
     }
@@ -74,37 +99,22 @@ export function UniversalChatbot() {
         window.removeEventListener('open-chatbot', handleOpen as EventListener);
       }
     };
-  }, [chatbot, launcherVisible]);
+  }, []); // No dependencies - refs are always up to date
 
-  // 로딩 중이면 아무것도 렌더링하지 않음
-  if (userLoading || !chatUser) {
-    return null;
-  }
-
-  const activeConversation = chatbot.conversations.find(
-    conv => conv.id === chatbot.activeConversation
-  );
-
-  const currentMessages = chatbot.activeConversation 
-    ? chatbot.messages[chatbot.activeConversation] || []
-    : [];
-
-  // 읽지 않은 메시지 수 계산 (플로팅 버튼 배지)
-  const totalUnreadCount = chatUser.isAuthenticated 
-    ? chatbot.conversations.reduce((total, conv) => {
-        return total + readStatus.getUnreadCount(conv.id);
-      }, 0)
-    : localChatbot.totalUnreadCount;
-
-  const handleMessageRead = (messageId: string) => {
-    if (chatUser.isAuthenticated && chatbot.activeConversation) {
+  // Memoized callbacks - MUST be before early return
+  const handleMessageRead = useCallback((messageId: string) => {
+    if (chatUser?.isAuthenticated && chatbot.activeConversation) {
       readStatus.markAsRead(messageId, chatbot.activeConversation);
     } else {
       localChatStorage.markMessageAsRead(messageId);
     }
-  };
+  }, [chatUser?.isAuthenticated, chatbot.activeConversation, readStatus]);
 
-  const renderChatContent = () => {
+  const currentMessages = chatbot.activeConversation
+    ? chatbot.messages[chatbot.activeConversation] || []
+    : [];
+
+  const renderChatContent = useCallback(() => {
     if (chatbot.currentView === 'conversations') {
       return (
         <div className="flex-1 flex flex-col overflow-hidden">
@@ -130,15 +140,8 @@ export function UniversalChatbot() {
           onMessageRead={handleMessageRead}
           onFormSubmit={chatbot.handleFormSubmit}
           onChipClick={chatbot.handleChipClick}
-          isFormSubmitting={(function () {
-            type MaybeFormSubmitting = { isFormSubmitting: boolean };
-            const guard = (obj: unknown): obj is MaybeFormSubmitting => {
-              return !!obj && typeof (obj as Record<string, unknown>).isFormSubmitting === 'boolean';
-            };
-            return guard(chatbot) ? chatbot.isFormSubmitting : false;
-          })()}
+          isFormSubmitting={hasFormSubmitting(chatbot) ? chatbot.isFormSubmitting : false}
         />
-
 
         {/* Chat Input */}
         <ChatInput
@@ -148,7 +151,37 @@ export function UniversalChatbot() {
         />
       </div>
     );
-  };
+  }, [
+    chatbot.currentView,
+    chatbot.conversations,
+    chatbot.selectConversation,
+    chatbot.activeConversation,
+    chatbot.isLoading,
+    chatbot.startNewConversation,
+    chatbot.isTyping,
+    chatbot.handleFormSubmit,
+    chatbot.handleChipClick,
+    chatbot.sendUserMessage,
+    chatbot,
+    currentMessages,
+    handleMessageRead,
+  ]);
+
+  // 로딩 중이면 아무것도 렌더링하지 않음
+  if (userLoading || !chatUser) {
+    return null;
+  }
+
+  const activeConversation = chatbot.conversations.find(
+    conv => conv.id === chatbot.activeConversation
+  );
+
+  // 읽지 않은 메시지 수 계산 (플로팅 버튼 배지)
+  const totalUnreadCount = chatUser.isAuthenticated
+    ? chatbot.conversations.reduce((total, conv) => {
+        return total + readStatus.getUnreadCount(conv.id);
+      }, 0)
+    : localChatbot.totalUnreadCount;
 
   return (
     <>
@@ -180,8 +213,8 @@ export function UniversalChatbot() {
 
         {/* Error Display */}
         {chatbot.error && (
-          <div className="p-4 bg-red-50 border-t border-red-200">
-            <div className="text-sm text-red-700">
+          <div className="p-4 bg-red-50 dark:bg-red-900/20 border-t border-red-300 dark:border-red-700">
+            <div className="text-sm text-red-700 dark:text-red-300">
               {chatbot.error}
             </div>
           </div>
@@ -189,7 +222,7 @@ export function UniversalChatbot() {
 
         {/* User Status Indicator (개발용) */}
         {process.env.NODE_ENV === 'development' && (
-          <div className="p-2 bg-gray-100 border-t text-xs text-gray-500 text-center">
+          <div className="p-2 bg-[#F5F5F5] dark:bg-[#262626] border-t border-black/5 dark:border-white/10 text-xs text-gray-700 dark:text-gray-300 text-center">
             {chatUser.isAuthenticated ? '인증된 사용자' : '로컬 세션 사용자'} | ID: {chatUser.id}
           </div>
         )}

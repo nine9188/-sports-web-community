@@ -10,6 +10,7 @@ import BoardInfo from '../board/BoardInfo';
 import BoardPopularPosts from '../board/BoardPopularPosts';
 import ClientHoverMenu from '../common/ClientHoverMenu';
 import PostList from '../post/PostList';
+import PopularPostList from '../post/PopularPostList';
 import ShopPagination from '@/domains/shop/components/ShopPagination';
 import { Breadcrumb } from '../../types/board/data';
 import { Board } from '../../types/board';
@@ -118,6 +119,10 @@ interface BoardDetailLayoutProps {
     todayPosts: PopularPost[];
     weekPosts: PopularPost[];
   };
+  // 커스텀 필터 컴포넌트 (인기글 기간 필터 등)
+  filterComponent?: React.ReactNode;
+  // 리스트 스타일 타입 (기본: text, 카드형: card)
+  listVariant?: 'text' | 'card';
 }
 
 // 메모이제이션된 컴포넌트들
@@ -141,7 +146,9 @@ export default function BoardDetailLayout({
   topBoards,
   hoverChildBoardsMap,
   pagination,
-  popularPosts
+  popularPosts,
+  filterComponent,
+  listVariant = 'text'
 }: BoardDetailLayoutProps) {
   // view_type이 타입에 없더라도 안전하게 읽어서 분기
   const viewType = (boardData as unknown as { view_type?: 'list' | 'image-table' })?.view_type;
@@ -183,6 +190,13 @@ export default function BoardDetailLayout({
         />
       )}
 
+      {/* 커스텀 필터 컴포넌트 (예: 인기글 기간 필터) */}
+      {filterComponent && (
+        <div className="mb-4">
+          {filterComponent}
+        </div>
+      )}
+
       {/* 인기 게시글 위젯 - BoardInfo 아래 표시 */}
       {popularPosts && (popularPosts.todayPosts.length > 0 || popularPosts.weekPosts.length > 0) && (
         <MemoizedBoardPopularPosts
@@ -206,15 +220,24 @@ export default function BoardDetailLayout({
         />
       )}
 
-      <MemoizedPostList
-        posts={posts}
-        loading={false}
-        currentBoardId={boardData.id}
-        showBoard={true}
-        className="mt-2"
-        emptyMessage="아직 작성된 게시글이 없습니다."
-        variant={viewType === 'image-table' ? 'image-table' : 'text'}
-      />
+      {/* 게시글 목록 - listVariant에 따라 다른 컴포넌트 렌더링 */}
+      {listVariant === 'card' ? (
+        <PopularPostList
+          posts={posts}
+          loading={false}
+          emptyMessage="아직 작성된 게시글이 없습니다."
+        />
+      ) : (
+        <MemoizedPostList
+          posts={posts}
+          loading={false}
+          currentBoardId={boardData.id}
+          showBoard={true}
+          className="mt-2"
+          emptyMessage="아직 작성된 게시글이 없습니다."
+          variant={viewType === 'image-table' ? 'image-table' : 'text'}
+        />
+      )}
 
       {/* 페이지네이션 & 글쓰기 버튼 영역 */}
       {(pagination && Math.ceil(pagination.totalItems / pagination.itemsPerPage) > 1) || isLoggedIn ? (

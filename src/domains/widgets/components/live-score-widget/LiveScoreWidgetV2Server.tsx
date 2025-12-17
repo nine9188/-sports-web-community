@@ -108,8 +108,6 @@ export default async function LiveScoreWidgetV2Server() {
 
       // 리그별로 그룹화
       leagues = groupMatchesByLeague(todayMatches);
-
-      console.log(`✅ LiveScoreWidgetV2: ${leagues.length}개 리그, ${todayMatches.length}개 경기 로드 완료`);
     } else {
       console.warn('⚠️ LiveScoreWidgetV2: API 응답이 성공하지 않음', result.error);
     }

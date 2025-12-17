@@ -7,6 +7,7 @@ import { createConversation, getConversations, updateConversation } from '../act
 import { sendMessage, submitChatForm, deleteMessage } from '../actions/messageActions';
 import { getChatFlowResponse, processChatFlow, handleFormSubmission } from '../actions/chatFlowActions';
 import { generateConversationTitle, generateConversationId } from '../utils';
+import { CHATBOT_MESSAGES } from '../constants/messages';
 
 interface UseChatbotReturn extends ChatState {
   toggleChat: () => void;
@@ -84,16 +85,16 @@ export function useChatbot(userId: string): UseChatbotReturn {
 
   // Send message mutation
   const sendMessageMutation = useMutation({
-    mutationFn: async ({ 
-      conversationId, 
-      content, 
+    mutationFn: async ({
+      conversationId,
+      content,
       type = 'user',
       chipType,
-      formData 
+      formData
     }: {
       conversationId: string;
       content: string;
-      type?: 'user' | 'bot' | 'system' | 'form';
+      type?: 'user' | 'bot' | 'system' | 'form' | 'chips';
       chipType?: ChipType;
       formData?: Record<string, any>;
     }) => {
@@ -157,18 +158,18 @@ export function useChatbot(userId: string): UseChatbotReturn {
   }, []);
 
   const startNewConversation = useCallback(async () => {
-    const title = '새로운 대화';
-    
+    const title = CHATBOT_MESSAGES.NEW_CONVERSATION;
+
     // 새 대화 생성 후 초기 인사말 추가
     createConversationMutation.mutate(title, {
       onSuccess: async (newConversation) => {
         // 초기 인사말 추가
         try {
           setChatState(prev => ({ ...prev, isTyping: true }));
-          
+
           await sendMessageMutation.mutateAsync({
             conversationId: newConversation.id,
-            content: '안녕하세요! 무엇을 도와드릴까요?',
+            content: CHATBOT_MESSAGES.GREETING,
             type: 'bot',
           });
 
@@ -206,7 +207,7 @@ export function useChatbot(userId: string): UseChatbotReturn {
       }
 
       // "괜찮아요"라고 답했을 때 대화 완료 처리
-      if (message === '괜찮아요') {
+      if (message === CHATBOT_MESSAGES.COMPLETION_OKAY) {
         await updateConversation(chatState.activeConversation, { status: 'completed' });
         queryClient.invalidateQueries({ queryKey: ['chatConversations', userId] });
       }
@@ -214,7 +215,7 @@ export function useChatbot(userId: string): UseChatbotReturn {
       setChatState(prev => ({ ...prev, isTyping: false }));
     } catch (error) {
       console.error('Error sending message:', error);
-      setError('메시지 전송에 실패했습니다.');
+      setError(CHATBOT_MESSAGES.ERROR_MESSAGE_SEND_FAILED);
       setChatState(prev => ({ ...prev, isTyping: false }));
     }
   }, [chatState.activeConversation, createConversationMutation, sendMessageMutation, queryClient, userId]);
@@ -306,7 +307,7 @@ export function useChatbot(userId: string): UseChatbotReturn {
       setChatState(prev => ({ ...prev, isTyping: false }));
     } catch (error) {
       console.error('Error handling chip click:', error);
-      setError('요청 처리에 실패했습니다.');
+      setError(CHATBOT_MESSAGES.ERROR_REQUEST_FAILED);
       setChatState(prev => ({ ...prev, isTyping: false }));
     }
   }, [chatState.activeConversation, sendMessageMutation]);
@@ -342,7 +343,7 @@ export function useChatbot(userId: string): UseChatbotReturn {
       queryClient.invalidateQueries({ queryKey: ['chatMessages', chatState.activeConversation] });
     } catch (error) {
       console.error('Error submitting form:', error);
-      setError('폼 제출에 실패했습니다.');
+      setError(CHATBOT_MESSAGES.ERROR_FORM_SUBMIT_FAILED);
       setIsFormSubmitting(false);
     }
   }, [chatState.activeConversation, currentChipType, userId, queryClient]);

@@ -16,18 +16,6 @@ export function ChatModal({ isOpen, onClose, chatState, children }: ChatModalPro
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen]);
-
-  useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
         onClose();
@@ -41,33 +29,28 @@ export function ChatModal({ isOpen, onClose, chatState, children }: ChatModalPro
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-end">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/20 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      
-      {/* Modal Container */}
-      <div 
+    <div className="fixed bottom-0 right-0 z-50 flex items-end justify-end pointer-events-none">
+      {/* Modal Container - only the modal itself receives pointer events */}
+      <div
         ref={modalRef}
         className={cn(
-          'relative bg-white rounded-t-2xl md:rounded-2xl shadow-2xl',
+          'pointer-events-auto',
+          'relative bg-white dark:bg-[#1D1D1D] rounded-t-2xl md:rounded-2xl shadow-2xl',
           'transition-all duration-300 ease-out',
           'w-full h-[85vh] md:w-96 md:h-[600px]',
           'md:m-6 md:mb-20',
           'flex flex-col overflow-hidden',
           'animate-in slide-in-from-bottom-full md:slide-in-from-right-full',
-          'border border-gray-200'
+          'border border-black/7 dark:border-white/0'
         )}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-gray-100 transition-colors"
+          className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0"
           aria-label="채팅 닫기"
         >
-          <X className="w-5 h-5 text-gray-600" />
+          <X className="w-5 h-5 text-gray-700 dark:text-gray-300" />
         </button>
 
         {/* Modal Content */}

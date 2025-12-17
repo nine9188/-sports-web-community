@@ -4,6 +4,24 @@ import { ChatMessage } from '../types';
 import { formatMessageTime } from '../utils';
 import { Check, CheckCheck, Clock, User, Bot } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
+import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
+
+// Dynamic imports for better code splitting
+const ChatChipButtons = dynamic(() => import('./ChatChipButtons').then(m => ({ default: m.ChatChipButtons })), {
+  ssr: false,
+  loading: () => <div className="animate-pulse bg-[#F5F5F5] dark:bg-[#262626] h-10 rounded-lg" />
+});
+
+const SingleChipButton = dynamic(() => import('./ChatChipButtons').then(m => ({ default: m.SingleChipButton })), {
+  ssr: false,
+  loading: () => <div className="animate-pulse bg-[#F5F5F5] dark:bg-[#262626] h-10 w-24 rounded-lg" />
+});
+
+const ChatFormRenderer = dynamic(() => import('./ChatFormRenderer').then(m => ({ default: m.ChatFormRenderer })), {
+  ssr: false,
+  loading: () => <div className="animate-pulse bg-[#F5F5F5] dark:bg-[#262626] h-40 rounded-lg" />
+});
 
 interface ChatMessageBubbleProps {
   message: ChatMessage;
@@ -14,13 +32,13 @@ interface ChatMessageBubbleProps {
   isFormSubmitting?: boolean;
 }
 
-export function ChatMessageBubble({ 
-  message, 
+export function ChatMessageBubble({
+  message,
   showTimestamp = false,
   showReadStatus = true,
   onFormSubmit,
   onChipClick,
-  isFormSubmitting = false 
+  isFormSubmitting = false
 }: ChatMessageBubbleProps) {
   const isUser = message.type === 'user';
   const isBot = message.type === 'bot';
@@ -31,7 +49,7 @@ export function ChatMessageBubble({
   if (isSystem) {
     return (
       <div className="flex justify-center my-4">
-        <div className="px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full border">
+        <div className="px-3 py-1 bg-[#EAEAEA] dark:bg-[#333333] text-gray-700 dark:text-gray-300 text-xs rounded-full border border-black/5 dark:border-white/10">
           {message.content}
         </div>
       </div>
@@ -39,62 +57,71 @@ export function ChatMessageBubble({
   }
 
   if (isChips && message.form_data) {
-    const { ChatChipButtons, SingleChipButton } = require('./ChatChipButtons');
     const isCompletion = message.form_data.showCompletion;
-    
+    const chipLabels = message.form_data.chips as string[] | undefined;
+
     return (
       <div className="flex items-start space-x-3 animate-in fade-in-0 slide-in-from-left-2 duration-300">
         {/* Bot Avatar */}
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-          <Bot className="w-4 h-4 text-gray-600" />
+        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center">
+          <Bot className="w-4 h-4 text-gray-700 dark:text-gray-300" />
         </div>
 
         {/* Chips Content */}
-        <div className="max-w-xs lg:max-w-md">
-          {isCompletion ? (
-            <div className="flex space-x-2 justify-center">
-              <SingleChipButton
-                label="괜찮아요"
-                onClick={() => onChipClick && onChipClick({ label: '괜찮아요' })}
+        <div className="max-w-xs lg:max-w-md w-full">
+          <Suspense fallback={<div className="animate-pulse bg-[#F5F5F5] dark:bg-[#262626] h-10 rounded-lg" />}>
+            {isCompletion ? (
+              <div className="flex space-x-2 justify-center">
+                <SingleChipButton
+                  label="괜찮아요"
+                  onClick={() => onChipClick && onChipClick({ label: '괜찮아요' })}
+                  disabled={false}
+                />
+                <SingleChipButton
+                  label="네 다른문의 할게요"
+                  onClick={() => onChipClick && onChipClick({ label: '네 다른문의 할게요' })}
+                  disabled={false}
+                  variant="primary"
+                />
+              </div>
+            ) : chipLabels && chipLabels.length > 0 ? (
+              // Show only specified chips
+              <ChatChipButtons
+                onChipClick={onChipClick || (() => {})}
+                disabled={false}
+                filterLabels={chipLabels}
+              />
+            ) : (
+              // Show all chips as fallback
+              <ChatChipButtons
+                onChipClick={onChipClick || (() => {})}
                 disabled={false}
               />
-              <SingleChipButton
-                label="네 다른문의 할게요"
-                onClick={() => onChipClick && onChipClick({ label: '네 다른문의 할게요' })}
-                disabled={false}
-                variant="primary"
-              />
-            </div>
-          ) : (
-            <ChatChipButtons
-              onChipClick={onChipClick || (() => {})}
-              disabled={false}
-            />
-          )}
+            )}
+          </Suspense>
         </div>
       </div>
     );
   }
 
   if (isForm && message.form_data) {
-    // Import ChatFormRenderer dynamically to avoid circular dependency
-    const { ChatFormRenderer } = require('./ChatFormRenderer');
-    
     return (
       <div className="flex items-start space-x-3 animate-in fade-in-0 slide-in-from-left-2 duration-300">
         {/* Bot Avatar */}
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-          <Bot className="w-4 h-4 text-gray-600" />
+        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center">
+          <Bot className="w-4 h-4 text-gray-700 dark:text-gray-300" />
         </div>
 
         {/* Form Content */}
         <div className="max-w-xs lg:max-w-md">
-          <ChatFormRenderer
-            formConfig={message.form_data}
-            onSubmit={onFormSubmit || (() => {})}
-            isSubmitting={isFormSubmitting}
-            messageSubmitted={message.is_submitted}
-          />
+          <Suspense fallback={<div className="animate-pulse bg-[#F5F5F5] dark:bg-[#262626] h-40 rounded-lg" />}>
+            <ChatFormRenderer
+              formConfig={message.form_data}
+              onSubmit={onFormSubmit || (() => {})}
+              isSubmitting={isFormSubmitting}
+              messageSubmitted={message.is_submitted}
+            />
+          </Suspense>
         </div>
       </div>
     );
@@ -108,12 +135,12 @@ export function ChatMessageBubble({
       {/* Avatar */}
       <div className={cn(
         'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center',
-        isUser ? 'bg-blue-600' : 'bg-gray-100'
+        isUser ? 'bg-slate-800 dark:bg-[#3F3F3F]' : 'bg-[#F5F5F5] dark:bg-[#262626]'
       )}>
         {isUser ? (
           <User className="w-4 h-4 text-white" />
         ) : (
-          <Bot className="w-4 h-4 text-gray-600" />
+          <Bot className="w-4 h-4 text-gray-700 dark:text-gray-300" />
         )}
       </div>
 
@@ -126,9 +153,9 @@ export function ChatMessageBubble({
         {/* Message Bubble */}
         <div className={cn(
           'px-4 py-3 rounded-2xl shadow-sm',
-          isUser 
-            ? 'bg-blue-600 text-white rounded-br-md' 
-            : 'bg-gray-100 text-gray-900 rounded-bl-md border border-gray-200'
+          isUser
+            ? 'bg-slate-800 dark:bg-[#3F3F3F] text-white rounded-br-md'
+            : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] rounded-bl-md border border-black/7 dark:border-white/0'
         )}>
           <p className="text-sm whitespace-pre-wrap break-words">
             {message.content}
@@ -146,7 +173,7 @@ export function ChatMessageBubble({
 
         {/* Message Info */}
         <div className={cn(
-          'flex items-center space-x-2 text-xs text-gray-500',
+          'flex items-center space-x-2 text-xs text-gray-700 dark:text-gray-300',
           isUser ? 'flex-row-reverse space-x-reverse' : ''
         )}>
           {showTimestamp && (
@@ -155,14 +182,14 @@ export function ChatMessageBubble({
               <span>{formatMessageTime(message.created_at)}</span>
             </div>
           )}
-          
+
           {/* Read Status (only for user messages) */}
           {isUser && showReadStatus && (
             <div className="flex items-center">
               {message.is_read ? (
-                <CheckCheck className="w-4 h-4 text-blue-600" />
+                <CheckCheck className="w-4 h-4 text-gray-700 dark:text-gray-300" />
               ) : (
-                <Check className="w-4 h-4 text-gray-400" />
+                <Check className="w-4 h-4 text-gray-500 dark:text-gray-400" />
               )}
             </div>
           )}

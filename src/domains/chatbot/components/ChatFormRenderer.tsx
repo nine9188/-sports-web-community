@@ -14,40 +14,46 @@ interface ChatFormRendererProps {
   messageSubmitted?: boolean; // 메시지 레벨의 제출 상태
 }
 
-export function ChatFormRenderer({ 
-  formConfig, 
-  onSubmit, 
+export function ChatFormRenderer({
+  formConfig,
+  onSubmit,
   onCancel,
   isSubmitting = false,
   isSubmitted = false,
-  messageSubmitted = false 
+  messageSubmitted = false
 }: ChatFormRendererProps) {
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLocalSubmitted, setIsLocalSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleInputChange = (fieldName: string, value: any) => {
     setFormData(prev => ({
       ...prev,
       [fieldName]: value
     }));
-    
+
     if (errors[fieldName]) {
       setErrors(prev => ({
         ...prev,
         [fieldName]: ''
       }));
     }
+
+    // Clear submit error when user makes changes
+    if (submitError) {
+      setSubmitError(null);
+    }
   };
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
-    
+
     formConfig.fields.forEach(field => {
       if (field.required && (!formData[field.name] || formData[field.name].toString().trim() === '')) {
         newErrors[field.name] = `${field.label}은(는) 필수 입력 항목입니다.`;
       }
-      
+
       if (field.type === 'email' && formData[field.name]) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(formData[field.name])) {
@@ -55,19 +61,27 @@ export function ChatFormRenderer({
         }
       }
     });
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (isSubmitting || isSubmitted || isLocalSubmitted) return;
-    
+
     if (validateForm()) {
       setIsLocalSubmitted(true);
-      onSubmit(formData);
+      setSubmitError(null);
+
+      try {
+        await onSubmit(formData);
+      } catch (error) {
+        console.error('Form submission error:', error);
+        setSubmitError('제출 중 오류가 발생했습니다. 다시 시도해주세요.');
+        setIsLocalSubmitted(false);
+      }
     }
   };
 
@@ -83,12 +97,14 @@ export function ChatFormRenderer({
       disabled: isDisabled,
       className: cn(
         'w-full px-3 py-2 border rounded-lg transition-colors',
-        'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
-        error 
-          ? 'border-red-300 bg-red-50' 
+        'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0]',
+        'outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0',
+        'focus:bg-[#EAEAEA] dark:focus:bg-[#333333]',
+        error
+          ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20'
           : (isSubmitted || isLocalSubmitted)
-            ? 'border-green-300 bg-green-50'
-            : 'border-gray-300 bg-white hover:border-gray-400',
+            ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20'
+            : 'border-black/7 dark:border-white/10 hover:border-gray-400 dark:hover:border-gray-600',
         isDisabled && 'opacity-75 cursor-not-allowed'
       )
     };
@@ -99,7 +115,7 @@ export function ChatFormRenderer({
           htmlFor={field.name}
           className={cn(
             'block text-sm font-medium',
-            error ? 'text-red-700' : (isSubmitted || isLocalSubmitted) ? 'text-green-700' : 'text-gray-700'
+            error ? 'text-red-700 dark:text-red-400' : (isSubmitted || isLocalSubmitted) ? 'text-green-700 dark:text-green-400' : 'text-gray-900 dark:text-[#F0F0F0]'
           )}
         >
           {field.label}
@@ -138,7 +154,7 @@ export function ChatFormRenderer({
         )}
         
         {error && (
-          <p className="text-sm text-red-600 animate-in fade-in-0 slide-in-from-top-1">
+          <p className="text-sm text-red-600 dark:text-red-400 animate-in fade-in-0 slide-in-from-top-1">
             {error}
           </p>
         )}
@@ -149,14 +165,14 @@ export function ChatFormRenderer({
   if (isSubmitted || isLocalSubmitted || messageSubmitted) {
     return (
       <div className={cn(
-        'p-4 rounded-lg border border-green-200 bg-green-50',
+        'p-4 rounded-lg border border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20',
         'animate-in fade-in-0 zoom-in-95 duration-300'
       )}>
-        <div className="flex items-center space-x-2 text-green-800 mb-2">
+        <div className="flex items-center space-x-2 text-green-800 dark:text-green-200 mb-2">
           <Check className="w-5 h-5" />
           <h4 className="font-medium">제출 완료</h4>
         </div>
-        <p className="text-sm text-green-700">
+        <p className="text-sm text-green-700 dark:text-green-300">
           신고가 접수되었습니다. 검토 후 적절한 조치를 취하겠습니다.
         </p>
       </div>
@@ -167,16 +183,23 @@ export function ChatFormRenderer({
     <div className={cn(
       'p-4 rounded-lg border shadow-sm',
       'animate-in fade-in-0 slide-in-from-bottom-2 duration-300',
-      (isSubmitted || isLocalSubmitted) 
-        ? 'border-green-200 bg-green-50' 
-        : isSubmitting 
-          ? 'border-blue-200 bg-blue-50' 
-          : 'border-gray-200 bg-white',
+      (isSubmitted || isLocalSubmitted)
+        ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20'
+        : isSubmitting
+          ? 'border-gray-300 dark:border-gray-600 bg-[#F5F5F5] dark:bg-[#262626]'
+          : 'border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D]',
       (isSubmitting || isLocalSubmitted) && 'pointer-events-none'
     )}>
       <form onSubmit={handleSubmit} className="space-y-4">
         {formConfig.fields.map(renderField)}
-        
+
+        {/* Submit Error Display */}
+        {submitError && (
+          <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 animate-in fade-in-0 slide-in-from-top-1">
+            <p className="text-sm text-red-700 dark:text-red-300">{submitError}</p>
+          </div>
+        )}
+
         <div className="flex justify-end space-x-3 pt-2">
           {onCancel && (
             <button
@@ -185,8 +208,8 @@ export function ChatFormRenderer({
               disabled={isSubmitting || isLocalSubmitted}
               className={cn(
                 'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
-                'border border-gray-300 text-gray-700 bg-white',
-                'hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2',
+                'border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-[#F0F0F0] bg-white dark:bg-[#1D1D1D]',
+                'hover:bg-[#F5F5F5] dark:hover:bg-[#262626] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0',
                 (isSubmitting || isLocalSubmitted) && 'opacity-50 cursor-not-allowed'
               )}
             >
@@ -200,8 +223,8 @@ export function ChatFormRenderer({
             disabled={isSubmitting || isLocalSubmitted}
             className={cn(
               'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
-              'bg-blue-600 text-white border border-blue-600',
-              'hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+              'bg-slate-800 dark:bg-[#3F3F3F] text-white border border-slate-800 dark:border-[#3F3F3F]',
+              'hover:bg-slate-700 dark:hover:bg-[#4A4A4A] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0',
               'disabled:opacity-50 disabled:cursor-not-allowed',
               'flex items-center space-x-2'
             )}

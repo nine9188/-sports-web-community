@@ -47,7 +47,7 @@ export function ChatInput({
   };
 
   return (
-    <div className="p-4 border-t border-gray-200 bg-white">
+    <div className="p-4 border-t border-black/5 dark:border-white/10 bg-white dark:bg-[#1D1D1D]">
       <form onSubmit={handleSubmit} className="flex items-end space-x-3">
         {/* Attachment Button (placeholder) */}
         <button
@@ -55,8 +55,8 @@ export function ChatInput({
           disabled={disabled}
           className={cn(
             'flex-shrink-0 p-2 rounded-full transition-colors',
-            'text-gray-400 hover:text-gray-600 hover:bg-gray-100',
-            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+            'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]',
+            'outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0',
             disabled && 'opacity-50 cursor-not-allowed'
           )}
           aria-label="파일 첨부"
@@ -75,11 +75,13 @@ export function ChatInput({
             placeholder={placeholder}
             rows={1}
             className={cn(
-              'w-full px-4 py-3 pr-12 rounded-2xl border border-gray-300',
-              'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+              'w-full px-4 py-3 pr-12 rounded-2xl border border-black/7 dark:border-white/10',
+              'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0]',
+              'outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0',
+              'focus:bg-[#EAEAEA] dark:focus:bg-[#333333] focus:border-gray-400 dark:focus:border-gray-600',
               'resize-none overflow-hidden',
-              'placeholder-gray-500',
-              disabled && 'opacity-50 cursor-not-allowed bg-gray-50'
+              'placeholder-gray-500 dark:placeholder-gray-400',
+              disabled && 'opacity-50 cursor-not-allowed bg-[#F5F5F5] dark:bg-[#262626]'
             )}
             style={{ minHeight: '48px', maxHeight: '120px' }}
           />
@@ -91,9 +93,9 @@ export function ChatInput({
           disabled={disabled || !message.trim()}
           className={cn(
             'flex-shrink-0 p-3 rounded-full transition-all duration-200',
-            'bg-blue-600 text-white hover:bg-blue-700',
-            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
-            'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600',
+            'bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A]',
+            'outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0',
+            'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-slate-800 dark:disabled:hover:bg-[#3F3F3F]',
             'active:scale-95 transform',
             message.trim() && !disabled && 'hover:scale-105'
           )}
@@ -104,7 +106,7 @@ export function ChatInput({
       </form>
       
       {/* Helper Text */}
-      <div className="mt-2 text-xs text-gray-500 text-center">
+      <div className="mt-2 text-xs text-gray-700 dark:text-gray-300 text-center">
         Enter로 전송, Shift+Enter로 줄바꿈
       </div>
     </div>

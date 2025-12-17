@@ -16,23 +16,31 @@ interface ChatMessageListProps {
   isFormSubmitting?: boolean;
 }
 
-export function ChatMessageList({ 
-  messages, 
-  isTyping = false, 
+export function ChatMessageList({
+  messages,
+  isTyping = false,
   isLoading = false,
   onMessageRead,
   onFormSubmit,
   onChipClick,
-  isFormSubmitting = false 
+  isFormSubmitting = false
 }: ChatMessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const prevMessageCountRef = useRef(messages.length);
 
+  // Optimized scroll: only scroll when new messages are added or typing starts
   useEffect(() => {
     if (containerRef.current) {
-      scrollToBottom(containerRef.current);
+      const shouldScroll = messages.length > prevMessageCountRef.current || isTyping;
+
+      if (shouldScroll) {
+        scrollToBottom(containerRef.current);
+      }
+
+      prevMessageCountRef.current = messages.length;
     }
-  }, [messages, isTyping]);
+  }, [messages.length, isTyping]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -63,19 +71,19 @@ export function ChatMessageList({
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-700 dark:border-gray-300" />
       </div>
     );
   }
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth"
     >
       {messages.length === 0 ? (
         <div className="flex items-center justify-center h-full">
-          <div className="text-center text-gray-500">
+          <div className="text-center text-gray-700 dark:text-gray-300">
             <p className="text-sm">메시지가 없습니다</p>
           </div>
         </div>
@@ -83,10 +91,10 @@ export function ChatMessageList({
         <>
           {messages.map((message, index) => (
             <div key={message.id} id={`message-${message.id}`}>
-              <ChatMessageBubble 
+              <ChatMessageBubble
                 message={message}
                 showTimestamp={
-                  index === 0 || 
+                  index === 0 ||
                   index === messages.length - 1 ||
                   (index > 0 && new Date(message.created_at).getTime() - new Date(messages[index - 1].created_at).getTime() > 5 * 60 * 1000)
                 }
