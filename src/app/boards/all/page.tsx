@@ -34,8 +34,35 @@ interface LayoutPost {
   league_logo?: string | null;
 }
 
+// API Post 타입 정의
+interface ApiPost {
+  id: string;
+  title: string;
+  board_id: string;
+  board_name: string;
+  board_slug: string;
+  post_number: number;
+  created_at: string;
+  formattedDate: string;
+  views?: number;
+  likes?: number;
+  author_nickname?: string;
+  author_id?: string;
+  author_icon_id?: number | null;
+  author_icon_url?: string | null;
+  author_level?: number;
+  comment_count?: number;
+  content?: string;
+  team_id?: number | string | null;
+  team_name?: string | null;
+  team_logo?: string | null;
+  league_id?: number | string | null;
+  league_name?: string | null;
+  league_logo?: string | null;
+}
+
 // API Post를 레이아웃 호환 Post로 변환하는 함수
-function convertApiPostsToLayoutPosts(apiPosts: any[]): LayoutPost[] {
+function convertApiPostsToLayoutPosts(apiPosts: ApiPost[]): LayoutPost[] {
   return apiPosts.map(post => ({
     id: post.id,
     title: post.title,
@@ -140,10 +167,10 @@ export default async function AllPostsPage({
       parent_id: null,
       team_id: null,
       league_id: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
       display_order: 0,
-      views: 0
+      views: 0,
+      access_level: null,
+      logo: null
     };
 
     // 레이아웃 컴포넌트에 데이터 전달

@@ -47,11 +47,20 @@ interface PopularPost {
   id: string;
   title: string;
   board_slug: string;
+  board_name: string;
   post_number: number;
   likes: number;
+  views: number;
   comment_count: number;
   author_nickname: string;
+  author_id?: string;
+  author_level?: number;
+  author_icon_id?: number | null;
+  author_icon_url?: string | null;
   created_at: string;
+  formattedDate?: string;
+  team_id?: string | number | null;
+  league_id?: string | number | null;
 }
 
 // HoverMenu 관련 타입 정의
