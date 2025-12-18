@@ -38,8 +38,13 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
+  // Next.js 16: eslint 설정은 더 이상 next.config.js에서 지원되지 않음
+  // 대신 next lint 명령어 옵션을 사용하거나 package.json scripts에서 설정
+  turbopack: {
+    // Turbopack 설정 (Next.js 16 기본값)
+    resolveAlias: {
+      // webpack의 resolve.fallback을 Turbopack으로 마이그레이션
+    },
   },
   webpack: (config) => {
     config.resolve.fallback = {
