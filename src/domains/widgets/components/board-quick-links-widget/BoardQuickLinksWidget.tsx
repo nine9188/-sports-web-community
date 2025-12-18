@@ -17,12 +17,12 @@ export type BoardQuickLinksWidgetProps = {
 };
 
 const DEFAULT_ITEMS: QuickLinkItem[] = [
-  { key: 'popular', label: '인기', href: '/boards', icon: '🔥', ariaLabel: '인기 게시판' },
-  { key: 'all', label: '전체', href: '/boards', icon: '💬', ariaLabel: '전체 게시판' },
-  { key: 'hotdeal', label: '핫딜', href: '/boards', icon: '🏷️', ariaLabel: '핫딜 게시판' },
-  { key: 'build', label: '조립/견적', href: '/boards', icon: '🛠️', ariaLabel: '조립/견적 게시판' },
-  { key: 'cpu', label: 'CPU', href: '/boards', icon: '🖥️', ariaLabel: 'CPU 게시판' },
-  { key: 'gpu', label: '그래픽카드', href: '/boards', icon: '🎮', ariaLabel: '그래픽카드 게시판' },
+  { key: 'popular', label: '인기', href: '/boards/popular', icon: '🔥', ariaLabel: '인기 게시판' },
+  { key: 'all', label: '전체', href: '/boards/all', icon: '💬', ariaLabel: '전체 게시판' },
+  { key: 'notice', label: '공지', href: '/boards/notice', icon: '📌', ariaLabel: '공지 게시판' },
+  { key: 'news', label: '소식', href: '/boards/news', icon: '⚽', ariaLabel: '소식 게시판' },
+  { key: 'analysis', label: '분석', href: '/boards/ai-analysis', icon: '🤖', ariaLabel: 'AI 분석 게시판' },
+  { key: 'live', label: '라이브', href: '/livescore/football', icon: '⚡', ariaLabel: '라이브 스코어' },
 ];
 
 function classNames(...classes: Array<string | undefined | false>) {
