@@ -91,17 +91,25 @@ const VirtualizedPostItem = React.memo(function VirtualizedPostItem({
       <div style={style} className={`py-2 px-3 border-b border-black/5 dark:border-white/10 ${isCurrentPost ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}>
         <Link href={href} prefetch={false}>
           <div className="space-y-1">
-            <div className="flex items-center">
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center">
-                  <span className={`text-xs line-clamp-1 ${isCurrentPost ? 'font-medium' : ''} text-gray-900 dark:text-[#F0F0F0] ${post.is_deleted ? 'text-red-500 dark:text-red-400' : post.is_hidden ? 'text-gray-500 dark:text-gray-400' : ''}`}>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 min-w-0 flex items-center gap-1 overflow-hidden">
+                <span className={`text-xs truncate ${isCurrentPost ? 'font-medium' : ''} text-gray-900 dark:text-[#F0F0F0] ${post.is_deleted ? 'text-red-500 dark:text-red-400' : post.is_hidden ? 'text-gray-500 dark:text-gray-400' : ''}`}>
                   {post.is_deleted ? '[삭제된 게시글]' : post.is_hidden ? '[숨김 처리된 게시글]' : String(post?.title || '제목 없음')}
                 </span>
-                {renderContentTypeIcons(post)}
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  {renderContentTypeIcons(post)}
+                  {post.comment_count > 0 && (
+                    <span
+                      className="text-xs text-orange-600 dark:text-orange-400 font-medium"
+                      title={`댓글 ${post.comment_count}개`}
+                    >
+                      [{post.comment_count}]
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
               {variant === 'image-table' && (
-                <div className="ml-3 flex-shrink-0">
+                <div className="flex-shrink-0">
                   {(() => {
                     const url = extractFirstImageUrl(post.content);
                     if (!url) return null;
@@ -144,11 +152,21 @@ const VirtualizedPostItem = React.memo(function VirtualizedPostItem({
       )}
       <div className="py-2 px-4 flex-1">
         <Link href={href} className="block w-full" prefetch={false}>
-          <div className="flex items-center">
-            <span className={`text-xs line-clamp-1 ${isCurrentPost ? 'font-medium' : ''} text-gray-900 dark:text-[#F0F0F0] ${post.is_deleted ? 'text-red-500 dark:text-red-400' : post.is_hidden ? 'text-gray-500 dark:text-gray-400' : ''}`}>
+          <div className="flex items-center gap-1 overflow-hidden">
+            <span className={`text-xs truncate ${isCurrentPost ? 'font-medium' : ''} text-gray-900 dark:text-[#F0F0F0] ${post.is_deleted ? 'text-red-500 dark:text-red-400' : post.is_hidden ? 'text-gray-500 dark:text-gray-400' : ''}`}>
               {post.is_deleted ? '[삭제된 게시글]' : post.is_hidden ? '[숨김 처리된 게시글]' : String(post?.title || '제목 없음')}
             </span>
-            {renderContentTypeIcons(post)}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {renderContentTypeIcons(post)}
+              {post.comment_count > 0 && (
+                <span
+                  className="text-xs text-orange-600 dark:text-orange-400 font-medium"
+                  title={`댓글 ${post.comment_count}개`}
+                >
+                  [{post.comment_count}]
+                </span>
+              )}
+            </div>
           </div>
           <div className="mt-1 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
             <div className="flex items-center overflow-hidden whitespace-nowrap">
@@ -231,28 +249,25 @@ const PostItem = React.memo(function PostItem({
       <div className={`py-2 px-3 ${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''} ${isCurrentPost ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}>
         <Link href={href} prefetch={false}>
           <div className="space-y-1">
-            <div className="flex items-center">
-              <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center">
-                <span className={`text-xs line-clamp-1 ${isCurrentPost ? 'font-medium' : ''} text-gray-900 dark:text-[#F0F0F0] ${post.is_deleted ? 'text-red-500 dark:text-red-400' : post.is_hidden ? 'text-gray-500 dark:text-gray-400' : ''}`}>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 min-w-0 flex items-center gap-1 overflow-hidden">
+                <span className={`text-xs truncate ${isCurrentPost ? 'font-medium' : ''} text-gray-900 dark:text-[#F0F0F0] ${post.is_deleted ? 'text-red-500 dark:text-red-400' : post.is_hidden ? 'text-gray-500 dark:text-gray-400' : ''}`}>
                   {post.is_deleted ? '[삭제된 게시글]' : post.is_hidden ? '[숨김 처리된 게시글]' : String(post?.title || '제목 없음')}
                 </span>
-                {renderContentTypeIcons(post)}
-              </div>
-                <div className="mt-1 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
-                <div className="flex items-center overflow-hidden whitespace-nowrap">
-                    {renderAuthor(post, 20, "justify-start")}
-                  <span className="mx-1 flex-shrink-0">|</span>
-                    <span className="flex-shrink-0 flex items-center"><CalendarIcon className="w-3 h-3 mr-0.5" />{formattedDate}</span>
-                </div>
-                  <div className="flex items-center space-x-2 flex-shrink-0">
-                    <span className="flex items-center"><EyeIcon className="w-3 h-3 mr-0.5" />{post.views || 0}</span>
-                  <span>추천 {post.likes || 0}</span>
-                  </div>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  {renderContentTypeIcons(post)}
+                  {post.comment_count > 0 && (
+                    <span
+                      className="text-xs text-orange-600 dark:text-orange-400 font-medium"
+                      title={`댓글 ${post.comment_count}개`}
+                    >
+                      [{post.comment_count}]
+                    </span>
+                  )}
                 </div>
               </div>
               {variant === 'image-table' && (
-                <div className="ml-3 flex-shrink-0">
+                <div className="flex-shrink-0">
                   {(() => {
                     const url = extractFirstImageUrl(post.content);
                     if (!url) return null;
@@ -264,6 +279,19 @@ const PostItem = React.memo(function PostItem({
                   })()}
                 </div>
               )}
+            </div>
+            <div className="flex text-[11px] text-gray-500 dark:text-gray-400">
+              <div className="w-full flex items-center justify-between gap-2">
+                <div className="flex items-center overflow-hidden whitespace-nowrap">
+                  {renderAuthor(post, 20, "justify-start")}
+                  <span className="mx-1 flex-shrink-0">|</span>
+                  <span className="flex-shrink-0 flex items-center"><CalendarIcon className="w-3 h-3 mr-0.5" />{formattedDate}</span>
+                </div>
+                <div className="flex items-center space-x-2 flex-shrink-0">
+                  <span className="flex items-center"><EyeIcon className="w-3 h-3 mr-0.5" />{post.views || 0}</span>
+                  <span>추천 {post.likes || 0}</span>
+                </div>
+              </div>
             </div>
           </div>
         </Link>
@@ -289,11 +317,21 @@ const PostItem = React.memo(function PostItem({
               </div>
             </div>
             <div className="flex-1 min-w-0 flex flex-col justify-center">
-              <div className="flex items-center">
-                <span className={`text-xs line-clamp-1 ${isCurrentPost ? 'font-medium' : ''} text-gray-900 dark:text-[#F0F0F0] ${post.is_deleted ? 'text-red-500 dark:text-red-400' : post.is_hidden ? 'text-gray-500 dark:text-gray-400' : ''}`}>
+              <div className="flex items-center gap-1 overflow-hidden">
+                <span className={`text-xs truncate ${isCurrentPost ? 'font-medium' : ''} text-gray-900 dark:text-[#F0F0F0] ${post.is_deleted ? 'text-red-500 dark:text-red-400' : post.is_hidden ? 'text-gray-500 dark:text-gray-400' : ''}`}>
                   {post.is_deleted ? '[삭제된 게시글]' : post.is_hidden ? '[숨김 처리된 게시글]' : String(post?.title || '제목 없음')}
                 </span>
-                {renderContentTypeIcons(post)}
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  {renderContentTypeIcons(post)}
+                  {post.comment_count > 0 && (
+                    <span
+                      className="text-xs text-orange-600 dark:text-orange-400 font-medium"
+                      title={`댓글 ${post.comment_count}개`}
+                    >
+                      [{post.comment_count}]
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="mt-1 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                 {/* 제목 아래: 게시판 이름 노출 */}
@@ -334,11 +372,21 @@ const PostItem = React.memo(function PostItem({
       )}
       <td className="py-2 px-4 align-middle">
         <Link href={href} className="block w-full" prefetch={false}>
-          <div className="flex items-center">
-            <span className={`text-xs line-clamp-1 ${isCurrentPost ? 'font-medium' : ''} text-gray-900 dark:text-[#F0F0F0] ${post.is_deleted ? 'text-red-500 dark:text-red-400' : post.is_hidden ? 'text-gray-500 dark:text-gray-400' : ''}`}>
+          <div className="flex items-center gap-1 overflow-hidden">
+            <span className={`text-xs truncate ${isCurrentPost ? 'font-medium' : ''} text-gray-900 dark:text-[#F0F0F0] ${post.is_deleted ? 'text-red-500 dark:text-red-400' : post.is_hidden ? 'text-gray-500 dark:text-gray-400' : ''}`}>
               {post.is_deleted ? '[삭제된 게시글]' : post.is_hidden ? '[숨김 처리된 게시글]' : String(post?.title || '제목 없음')}
             </span>
-            {renderContentTypeIcons(post)}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {renderContentTypeIcons(post)}
+              {post.comment_count > 0 && (
+                <span
+                  className="text-xs text-orange-600 dark:text-orange-400 font-medium"
+                  title={`댓글 ${post.comment_count}개`}
+                >
+                  [{post.comment_count}]
+                </span>
+              )}
+            </div>
           </div>
         </Link>
       </td>
@@ -540,19 +588,19 @@ export default function PostList({
     }
   }, []);
 
-  // 컨텐츠 타입 아이콘 렌더링 (메모이제이션)
+  // 컨텐츠 타입 아이콘 렌더링 (메모이제이션) - 댓글 수 제외
   const renderContentTypeIcons = useCallback((post: Post) => {
     if (!post.content) return null;
-    
+
     const { hasImage, hasVideo, hasYoutube, hasLink } = checkContentType(post.content);
-    
+
     // 아이콘이 하나도 없으면 null 반환
-    if (!hasImage && !hasVideo && !hasYoutube && !hasLink && post.comment_count === 0) {
+    if (!hasImage && !hasVideo && !hasYoutube && !hasLink) {
       return null;
     }
-    
+
     return (
-      <div className="inline-flex items-center space-x-1 ml-1">
+      <div className="inline-flex items-center space-x-1 flex-shrink-0">
         {hasImage && (
           <div title="이미지 포함">
             <ImageIcon className="h-3 w-3 text-green-500 flex-shrink-0" />
@@ -572,14 +620,6 @@ export default function PostList({
           <div title="링크 포함">
             <LinkIcon className="h-3 w-3 text-gray-500 dark:text-gray-400 flex-shrink-0" />
           </div>
-        )}
-        {post.comment_count > 0 && (
-          <span
-            className="text-xs text-orange-600 dark:text-orange-400 font-medium flex-shrink-0"
-            title={`댓글 ${post.comment_count}개`}
-          >
-            [{post.comment_count}]
-          </span>
         )}
       </div>
     );

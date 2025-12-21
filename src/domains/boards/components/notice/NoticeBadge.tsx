@@ -33,6 +33,7 @@ export function NoticeBadge({ type, isMustRead = false, className = '' }: Notice
     <span
       className={`
         inline-flex items-center h-5 px-2 py-0 rounded text-xs font-semibold leading-none
+        flex-shrink-0 whitespace-nowrap
         ${badgeStyle.bg} ${badgeStyle.text}
         ${className}
       `}

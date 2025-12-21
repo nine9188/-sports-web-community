@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Calendar as CalendarIcon, Eye as EyeIcon } from 'lucide-react';
 import type { Post } from '@/domains/boards/types/post';
 import { NoticeBadge } from './NoticeBadge';
 import UserIconComponent from '@/shared/components/UserIcon';
@@ -89,27 +90,49 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
       <div className={`py-2 px-3 ${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''}`}>
         <Link href={postUrl} prefetch={false}>
           <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              {notice.notice_type && (
-                <NoticeBadge type={notice.notice_type} isMustRead={notice.is_must_read} />
-              )}
-              <span className="text-xs line-clamp-1 text-gray-900 dark:text-[#F0F0F0]">
-                {notice.title}
-              </span>
-            </div>
-            <div className="flex text-[11px] text-gray-500 dark:text-gray-400 justify-between">
-              <div className="flex items-center gap-1">
-                <UserIconComponent
-                  iconUrl={notice.author_icon_url}
-                  level={notice.author_level || 1}
-                  size={20}
-                  alt={notice.author_nickname || '익명'}
-                />
-                <span>{notice.author_nickname || '익명'}</span>
+            <div className="flex items-center">
+              <div className="flex-1 min-w-0 flex items-center gap-1">
+                {notice.notice_type && (
+                  <div className="flex-shrink-0">
+                    <NoticeBadge type={notice.notice_type} isMustRead={notice.is_must_read} />
+                  </div>
+                )}
+                <span className="text-xs truncate min-w-0 flex-1 text-gray-900 dark:text-[#F0F0F0]">
+                  {notice.title}
+                </span>
+                {notice.comment_count > 0 && (
+                  <span
+                    className="text-xs text-orange-600 dark:text-orange-400 font-medium flex-shrink-0"
+                    title={`댓글 ${notice.comment_count}개`}
+                  >
+                    [{notice.comment_count}]
+                  </span>
+                )}
               </div>
-              <div className="flex items-center gap-2">
-                <span>{formattedDate}</span>
-                <span>조회 {notice.views || 0}</span>
+            </div>
+            <div className="flex text-[11px] text-gray-500 dark:text-gray-400">
+              <div className="w-full flex items-center justify-between gap-2">
+                <div className="flex items-center overflow-hidden whitespace-nowrap">
+                  <span className="truncate" style={{maxWidth: '80px'}}>{notice.board?.name || notice.board_name || '-'}</span>
+                  <span className="mx-1 flex-shrink-0">|</span>
+                  <div className="flex items-center mr-0.5">
+                    <UserIconComponent
+                      iconUrl={notice.author_icon_url}
+                      level={notice.author_level || 1}
+                      size={20}
+                      alt={notice.author_nickname || '익명'}
+                    />
+                  </div>
+                  <span className="truncate" style={{maxWidth: '80px'}}>{notice.author_nickname || '익명'}</span>
+                  <span className="mx-1 flex-shrink-0">|</span>
+                  <span className="flex-shrink-0 flex items-center">
+                    <CalendarIcon className="w-3 h-3 mr-0.5" />{formattedDate}
+                  </span>
+                </div>
+                <div className="flex items-center justify-end space-x-2 flex-shrink-0">
+                  <span className="flex items-center"><EyeIcon className="w-3 h-3 mr-0.5" />{notice.views || 0}</span>
+                  <span>추천 {notice.likes || 0}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -134,12 +157,15 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
           <div className="flex items-center">
             <span className="text-xs line-clamp-1 text-gray-900 dark:text-[#F0F0F0]">
               {notice.title}
-              {notice.comment_count && notice.comment_count > 0 && (
-                <span className="ml-1 text-xs text-orange-600 dark:text-orange-400">
-                  [{notice.comment_count}]
-                </span>
-              )}
             </span>
+            {notice.comment_count > 0 && (
+              <span
+                className="ml-1 text-xs text-orange-600 dark:text-orange-400 font-medium flex-shrink-0"
+                title={`댓글 ${notice.comment_count}개`}
+              >
+                [{notice.comment_count}]
+              </span>
+            )}
           </div>
         </Link>
       </td>

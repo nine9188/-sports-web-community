@@ -53,7 +53,8 @@ export async function getNotices(boardId?: string): Promise<Post[]> {
           slug,
           team_id,
           league_id
-        )
+        ),
+        comments!post_id(count)
       `)
       .eq('is_notice', true);
 
@@ -112,6 +113,7 @@ export async function getNotices(boardId?: string): Promise<Post[]> {
         team_id?: number | null;
         league_id?: number | null;
       };
+      comments?: Array<{ count: number }>;
     }>;
 
     // 사용자 아이콘 정보 가져오기
@@ -222,7 +224,7 @@ export async function getNotices(boardId?: string): Promise<Post[]> {
         author_nickname: profile?.nickname || '익명',
         author_icon_url: iconUrl,
         author_level: userLevel,
-        comment_count: 0, // 공지사항은 댓글 수를 표시하지 않으므로 0
+        comment_count: notice.comments?.[0]?.count || 0,
         profiles: profile ? {
           id: profile.id,
           nickname: profile.nickname || '익명',
@@ -286,7 +288,8 @@ export async function getGlobalNotices(): Promise<Post[]> {
           slug,
           team_id,
           league_id
-        )
+        ),
+        comments!post_id(count)
       `)
       .eq('is_notice', true)
       .eq('notice_type', 'global')
@@ -353,7 +356,8 @@ export async function getBoardNotices(boardId: string): Promise<Post[]> {
           slug,
           team_id,
           league_id
-        )
+        ),
+        comments!post_id(count)
       `)
       .eq('is_notice', true)
       .eq('notice_type', 'board')
