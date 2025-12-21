@@ -1,6 +1,7 @@
 import { getBoardPageData } from '@/domains/boards/actions';
 import { fetchPosts, Post as ApiPost } from '@/domains/boards/actions';
 import { getBoardPopularPosts } from '@/domains/boards/actions/getPopularPosts';
+import { getNotices } from '@/domains/boards/actions/posts';
 import BoardDetailLayout from '@/domains/boards/components/layout/BoardDetailLayout';
 import ErrorMessage from '@/shared/ui/error-message';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
@@ -111,6 +112,39 @@ export default async function BoardDetailPage({
     // 인기 게시글 데이터 가져오기
     const popularPosts = await getBoardPopularPosts(result.boardData.id);
 
+    // 공지사항 데이터 가져오기
+    const isNoticeBoard = result.boardData.slug === 'notice' || result.boardData.slug === 'notices';
+
+    let finalPosts;
+    let finalNotices;
+    let finalPagination;
+
+    if (isNoticeBoard) {
+      // 공지사항 게시판: 헤더는 공지사항 게시판 공지만, PostList는 모든 공지
+      const allNotices = await getNotices(); // PostList용 - 모든 공지 (필독 + 전체 + 게시판)
+      const headerNotices = await getNotices(result.boardData.id); // 헤더용 - 전체 공지 + 공지사항 게시판 공지
+
+      finalPosts = allNotices as any;
+      finalNotices = headerNotices;
+
+      // 공지사항 게시판은 페이지네이션 없이 모든 공지 표시
+      finalPagination = {
+        totalItems: allNotices.length,
+        itemsPerPage: allNotices.length,
+        currentPage: 1
+      };
+    } else {
+      // 일반 게시판: 전체 공지 + 현재 게시판 공지
+      const notices = await getNotices(result.boardData.id);
+      finalPosts = layoutPosts;
+      finalNotices = notices;
+      finalPagination = {
+        totalItems: postsData.meta.totalItems,
+        itemsPerPage: postsData.meta.itemsPerPage,
+        currentPage: postsData.meta.currentPage
+      };
+    }
+
     // HoverMenu용 데이터 가져오기
     const supabase = await getSupabaseServer();
     const { data: boardsData } = await supabase
@@ -185,15 +219,12 @@ export default async function BoardDetailPage({
         rootBoardId={result.rootBoardId || ''}
         rootBoardSlug={result.rootBoardSlug || undefined}
         // 서버에서 미리 가져온 데이터 전달
-        posts={layoutPosts}
+        posts={finalPosts}
         topBoards={topBoards}
         hoverChildBoardsMap={hoverChildBoardsMap}
-        pagination={{
-          totalItems: postsData.meta.totalItems,
-          itemsPerPage: postsData.meta.itemsPerPage,
-          currentPage: postsData.meta.currentPage
-        }}
+        pagination={finalPagination}
         popularPosts={popularPosts}
+        notices={finalNotices}
       />
     );
   } catch (error) {

@@ -126,34 +126,34 @@ export const formatDateToKorean = (date: Date): string => {
   if (!date || isNaN(date.getTime())) {
     return '날짜 정보 없음';
   }
-  
+
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
   const day = date.getDate();
   const hours = date.getHours();
   const minutes = date.getMinutes().toString().padStart(2, '0');
-  
+
   const now = new Date();
-  
+
   // 오늘인지 확인
   if (isSameDay(date, now)) {
     return `오늘 ${hours}:${minutes}`;
   }
-  
+
   // 어제인지 확인
   const yesterday = new Date(now);
   yesterday.setDate(yesterday.getDate() - 1);
   if (isSameDay(date, yesterday)) {
     return `어제 ${hours}:${minutes}`;
   }
-  
+
   // 내일인지 확인
   const tomorrow = new Date(now);
   tomorrow.setDate(tomorrow.getDate() + 1);
   if (isSameDay(date, tomorrow)) {
     return `내일 ${hours}:${minutes}`;
   }
-  
+
   // 기본 형식
   return `${year}년 ${month}월 ${day}일 ${hours}:${minutes}`;
 }; 

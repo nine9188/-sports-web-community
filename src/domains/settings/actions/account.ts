@@ -89,7 +89,7 @@ export async function deleteAccount(
     }
     
     // 세션 쿠키 삭제
-    const cookieStore = await cookies();
+    const cookieStore = cookies();
     cookieStore.delete('sb-access-token');
     cookieStore.delete('sb-refresh-token');
     

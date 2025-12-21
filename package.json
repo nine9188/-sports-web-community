@@ -76,6 +76,7 @@
     "react-window-infinite-loader": "^1.0.10",
     "recharts": "^2.15.1",
     "resend": "^4.6.0",
+    "server-only": "^0.0.1",
     "tailwind-merge": "^2.6.0",
     "uuid": "^11.1.0",
     "zod": "^3.25.76"

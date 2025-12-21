@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { useAuth } from '@/shared/context/AuthContext';
-import { Coins, TrendingUp, Users, Home, LayoutDashboard, ShoppingBag, Rss, Youtube, AlertTriangle, Target, Image as ImageIcon, FileText, Settings, Grid3x3, Bell } from 'lucide-react';
+import { Coins, TrendingUp, Users, Home, LayoutDashboard, ShoppingBag, Rss, Youtube, AlertTriangle, Target, Image as ImageIcon, FileText, Settings, Grid3x3, Bell, Pin } from 'lucide-react';
 
 interface AdminLayoutClientProps {
   children: React.ReactNode;
@@ -20,6 +20,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
     { path: '/admin/site-management', label: '사이트 관리', icon: <Settings className="w-5 h-5 mr-2" /> },
     { path: '/admin/users', label: '사용자 관리', icon: <Users className="w-5 h-5 mr-2" /> },
     { path: '/admin/boards', label: '게시판 관리', icon: <Home className="w-5 h-5 mr-2" /> },
+    { path: '/admin/notices', label: '공지사항 관리', icon: <Pin className="w-5 h-5 mr-2" /> },
     { path: '/admin/banners', label: '배너 관리', icon: <ImageIcon className="w-5 h-5 mr-2" /> },
     { path: '/admin/widgets/board-collection', label: '게시판 모음 위젯', icon: <Grid3x3 className="w-5 h-5 mr-2" /> },
     { path: '/admin/notifications', label: '공지 발송', icon: <Bell className="w-5 h-5 mr-2" /> },

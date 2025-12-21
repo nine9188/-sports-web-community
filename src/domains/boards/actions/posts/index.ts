@@ -10,6 +10,12 @@ export { deletePost } from './delete';
 // 좋아요/싫어요 관련
 export { likePost, dislikePost, getUserPostAction } from './likes';
 
+// 공지사항 조회 관련
+export { getNotices, getGlobalNotices, getBoardNotices } from './notices';
+
+// 공지사항 설정 관련 (관리자)
+export { setPostAsNotice, removeNotice, updateNoticeOrder, updateNoticeType } from './setNotice';
+
 // 유틸리티 함수 및 타입
 export { processMatchCardsInContent } from './utils';
 export type { PostActionResponse, LikeActionResponse } from './utils'; 

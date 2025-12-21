@@ -5,6 +5,7 @@ import { CommentType } from '../../types/post/comment';
 import { BoardData } from '../../types/board/data';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
+import { formatDate } from '@/shared/utils/date';
 
 /**
  * 이전 및 다음 게시글을 가져옵니다.
@@ -223,44 +224,6 @@ export const checkContentType = (content: string) => {
   }
 
   return { hasImage, hasVideo, hasYoutube, hasLink };
-};
-
-// 날짜 포맷팅 함수
-export const formatDate = (dateString: string) => {
-  // 빈 문자열이나 undefined 체크
-  if (!dateString || typeof dateString !== 'string') {
-    return '-';
-  }
-  
-  try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return '-';
-
-    const kst = new Intl.DateTimeFormat('ko-KR', {
-      timeZone: 'Asia/Seoul',
-      year: 'numeric', month: '2-digit', day: '2-digit',
-      hour: '2-digit', minute: '2-digit', hour12: false,
-    });
-    const now = new Date();
-    const partsNow = kst.formatToParts(now);
-    const partsDate = kst.formatToParts(date);
-    const yNow = partsNow.find(p => p.type === 'year')?.value;
-    const mNow = partsNow.find(p => p.type === 'month')?.value;
-    const dNow = partsNow.find(p => p.type === 'day')?.value;
-    const y = partsDate.find(p => p.type === 'year')?.value;
-    const m = partsDate.find(p => p.type === 'month')?.value;
-    const d = partsDate.find(p => p.type === 'day')?.value;
-    const hh = partsDate.find(p => p.type === 'hour')?.value ?? '00';
-    const mm = partsDate.find(p => p.type === 'minute')?.value ?? '00';
-
-    if (y === yNow && m === mNow && d === dNow) {
-      return `${hh}:${mm}`;
-    }
-    return `${y}.${m}.${d}`;
-  } catch (error) {
-    console.warn('날짜 포맷팅 오류:', error);
-    return '-';
-  }
 };
 
 export const getBoardSlug = (boardId: string, boardsData: Record<string, { slug?: string }>) => {

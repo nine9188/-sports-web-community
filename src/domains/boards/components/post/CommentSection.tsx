@@ -84,13 +84,13 @@ export default function CommentSection({
 
   // 사용자 정보 가져오기 (props로 받지 않은 경우에만)
   useEffect(() => {
-    // props로 currentUserId를 받은 경우 클라이언트 사이드에서 다시 가져오지 않음
-    if (propCurrentUserId !== null) {
+    // SSR 환경이거나 supabase가 없는 경우 스킵
+    if (!supabase || propCurrentUserId !== null) {
       return;
     }
-    
+
     let isMounted = true;
-    
+
     const getCurrentUser = async () => {
       try {
         const { data, error } = await supabase.auth.getUser();
@@ -103,16 +103,21 @@ export default function CommentSection({
         setCurrentUserId(null);
       }
     };
-    
+
     getCurrentUser();
-    
+
     return () => {
       isMounted = false;
     };
-  }, [supabase.auth, propCurrentUserId]);
+  }, [supabase, propCurrentUserId]);
 
   // 실시간 댓글 업데이트 구독 - 별도 effect로 분리
   useEffect(() => {
+    // SSR 환경이거나 supabase가 없는 경우 스킵
+    if (!supabase) {
+      return;
+    }
+
     const channel = supabase
       .channel(`post-comments-${postId}`)
       .on(

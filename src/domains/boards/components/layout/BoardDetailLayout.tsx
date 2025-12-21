@@ -6,14 +6,15 @@ import { PenLine } from 'lucide-react';
 import BoardBreadcrumbs from '../common/BoardBreadcrumbs';
 import BoardTeamInfo from '../board/BoardTeamInfo';
 import LeagueInfo from '../board/LeagueInfo';
-import BoardInfo from '../board/BoardInfo';
 import BoardPopularPosts from '../board/BoardPopularPosts';
 import ClientHoverMenu from '../common/ClientHoverMenu';
 import PostList from '../post/PostList';
 import PopularPostList from '../post/PopularPostList';
 import ShopPagination from '@/domains/shop/components/ShopPagination';
+import { NoticeList } from '../notice';
 import { Breadcrumb } from '../../types/board/data';
 import { Board } from '../../types/board';
+import type { Post as NoticePost } from '@/domains/boards/types/post';
 
 // 여기에 Post 타입 정의
 interface Post {
@@ -128,6 +129,8 @@ interface BoardDetailLayoutProps {
     todayPosts: PopularPost[];
     weekPosts: PopularPost[];
   };
+  // 공지사항 데이터
+  notices?: NoticePost[];
   // 커스텀 필터 컴포넌트 (인기글 기간 필터 등)
   filterComponent?: React.ReactNode;
   // 리스트 스타일 타입 (기본: text, 카드형: card)
@@ -140,6 +143,7 @@ const MemoizedPostList = memo(PostList);
 const MemoizedClientHoverMenu = memo(ClientHoverMenu);
 const MemoizedShopPagination = memo(ShopPagination);
 const MemoizedBoardPopularPosts = memo(BoardPopularPosts);
+const MemoizedNoticeList = memo(NoticeList);
 
 export default function BoardDetailLayout({
   boardData,
@@ -156,6 +160,7 @@ export default function BoardDetailLayout({
   hoverChildBoardsMap,
   pagination,
   popularPosts,
+  notices,
   filterComponent,
   listVariant = 'text'
 }: BoardDetailLayoutProps) {
@@ -169,34 +174,60 @@ export default function BoardDetailLayout({
       </div>
 
       {teamData && (
-        <BoardTeamInfo 
-          teamData={teamData} 
-          boardId={boardData.id}
-          boardSlug={slug}
-          isLoggedIn={isLoggedIn}
-          className="mb-4"
-        />
-      )}
-      
-      {leagueData && (
-        <LeagueInfo
-          leagueData={leagueData}
-          boardId={boardData.id}
-          boardSlug={slug}
-          isLoggedIn={isLoggedIn}
-          className="mb-4"
-        />
+        <div className="mb-4 bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 rounded-lg shadow-sm overflow-hidden">
+          <BoardTeamInfo
+            teamData={teamData}
+            boardId={boardData.id}
+            boardSlug={slug}
+            isLoggedIn={isLoggedIn}
+            className=""
+          />
+          {/* 공지사항 - TeamInfo 바로 아래 붙임 */}
+          {notices && notices.length > 0 && (
+            <MemoizedNoticeList notices={notices} standalone={false} />
+          )}
+        </div>
       )}
 
-      {/* 팀/리그 정보가 없는 게시판: 게시판 이름과 글쓰기 버튼만 표시 */}
+      {leagueData && (
+        <div className="mb-4 bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 rounded-lg shadow-sm overflow-hidden">
+          <LeagueInfo
+            leagueData={leagueData}
+            boardId={boardData.id}
+            boardSlug={slug}
+            isLoggedIn={isLoggedIn}
+            className=""
+          />
+          {/* 공지사항 - LeagueInfo 바로 아래 붙임 */}
+          {notices && notices.length > 0 && (
+            <MemoizedNoticeList notices={notices} standalone={false} />
+          )}
+        </div>
+      )}
+
+      {/* 팀/리그 정보가 없는 게시판: 게시판 이름 + 공지사항 통합 */}
       {!teamData && !leagueData && (
-        <BoardInfo
-          boardName={boardData.name}
-          boardId={boardData.id}
-          boardSlug={slug}
-          isLoggedIn={isLoggedIn}
-          className="mb-4"
-        />
+        <div className="mb-4 bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 rounded-lg shadow-sm overflow-hidden">
+          {/* 게시판 헤더 */}
+          <div className="h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
+            <h2 className="text-sm font-semibold truncate text-gray-900 dark:text-[#F0F0F0]">{boardData.name}</h2>
+            {isLoggedIn && (
+              <Link
+                href={`/boards/${slug}/create`}
+                aria-label="글쓰기"
+                title="글쓰기"
+                className="p-2 rounded-full hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors flex-shrink-0"
+              >
+                <PenLine className="h-4 w-4 text-gray-900 dark:text-[#F0F0F0]" />
+              </Link>
+            )}
+          </div>
+
+          {/* 공지사항 - 헤더 바로 아래 붙임 */}
+          {notices && notices.length > 0 && (
+            <MemoizedNoticeList notices={notices} standalone={false} />
+          )}
+        </div>
       )}
 
       {/* 커스텀 필터 컴포넌트 (예: 인기글 기간 필터) */}
@@ -206,7 +237,7 @@ export default function BoardDetailLayout({
         </div>
       )}
 
-      {/* 인기 게시글 위젯 - BoardInfo 아래 표시 */}
+      {/* 인기 게시글 위젯 - 공지사항 아래 표시 */}
       {popularPosts && (popularPosts.todayPosts.length > 0 || popularPosts.weekPosts.length > 0) && (
         <MemoizedBoardPopularPosts
           todayPosts={popularPosts.todayPosts}
@@ -230,7 +261,14 @@ export default function BoardDetailLayout({
       )}
 
       {/* 게시글 목록 - listVariant에 따라 다른 컴포넌트 렌더링 */}
-      {listVariant === 'card' ? (
+      {/* 공지사항 게시판은 NoticeList 사용 */}
+      {(slug === 'notice' || slug === 'notices') ? (
+        <MemoizedNoticeList
+          notices={posts as unknown as NoticePost[]}
+          showBoardName={true}
+          emptyMessage="아직 공지사항이 없습니다."
+        />
+      ) : listVariant === 'card' ? (
         <PopularPostList
           posts={posts}
           loading={false}

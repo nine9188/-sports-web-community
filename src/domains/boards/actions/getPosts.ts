@@ -2,7 +2,7 @@
 
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
-import { formatDate } from '@/domains/boards/utils/post/postUtils';
+import { formatDate } from '@/shared/utils/date';
 import type { Json } from '@/shared/types/supabase';
 
 // 게시글 타입 정의
@@ -30,6 +30,7 @@ export interface Post {
   league_logo?: string | null;
   is_hidden?: boolean;
   is_deleted?: boolean;
+  is_notice?: boolean;
 }
 
 // 응답 타입 정의
@@ -81,10 +82,10 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
   try {
     const { boardId, boardIds, currentBoardId, limit = 20, page = 1, fromParam } = params;
     const offset = (page - 1) * limit;
-    
+
     // Supabase 클라이언트 생성
     const supabase = await getSupabaseServer();
-    
+
     if (!supabase) {
       return {
         data: Array(5).fill(null).map((_, i) => createFallbackPost(i+1)),
@@ -96,7 +97,24 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
         }
       };
     }
-    
+
+    // notice 게시판인지 확인
+    let isNoticeBoard = false;
+    let noticeBoardId: string | null = null;
+    const checkBoardId = boardId || currentBoardId;
+    if (checkBoardId) {
+      const { data: boardData } = await supabase
+        .from('boards')
+        .select('id, slug')
+        .eq('id', checkBoardId)
+        .single();
+
+      if (boardData?.slug === 'notice') {
+        isNoticeBoard = true;
+        noticeBoardId = boardData.id;
+      }
+    }
+
     // 게시판 ID 처리
     let targetBoardIds = ['all'];
     if (boardId) {
@@ -104,11 +122,11 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
     } else if (boardIds && Array.isArray(boardIds) && boardIds.length > 0) {
       targetBoardIds = boardIds;
     }
-    
+
     // 필터링 조건을 저장할 변수
     let currentBoardFilter = null;
     let targetBoardsFilter = null;
-    
+
     // 게시판 필터링 적용
     if (fromParam === 'boards' && currentBoardId) {
       // from=boards인 경우 현재 게시판만 표시
@@ -120,7 +138,7 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
         .select('id')
         .eq('id', fromParam)
         .single();
-      
+
       if (fromBoardData) {
         currentBoardFilter = fromParam;
       } else if (targetBoardIds[0] !== 'all') {
@@ -129,14 +147,14 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
     } else if (targetBoardIds[0] !== 'all') {
       targetBoardsFilter = targetBoardIds;
     }
-    
+
     // 쿼리 기본 구성
     let postsQuery = supabase
       .from('posts')
       .select(`
-        id, 
-        title, 
-        created_at, 
+        id,
+        title,
+        created_at,
         updated_at,
         board_id,
         views,
@@ -145,6 +163,7 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
         user_id,
         is_hidden,
         is_deleted,
+        is_notice,
         profiles (
           id,
           nickname,
@@ -154,12 +173,18 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
         content
       `)
       .order('created_at', { ascending: false });
-    
-    // 필터 조건 적용
-    if (currentBoardFilter) {
-      postsQuery = postsQuery.eq('board_id', currentBoardFilter);
-    } else if (targetBoardsFilter && targetBoardsFilter.length > 0) {
-      postsQuery = postsQuery.in('board_id', targetBoardsFilter);
+
+    // notice 게시판인 경우: notice 게시판의 모든 글 + 다른 게시판의 공지글
+    if (isNoticeBoard && noticeBoardId) {
+      // (board_id = notice 게시판 ID) OR (is_notice = true)
+      postsQuery = postsQuery.or(`board_id.eq.${noticeBoardId},is_notice.eq.true`);
+    } else {
+      // 일반 게시판: 필터 조건 적용
+      if (currentBoardFilter) {
+        postsQuery = postsQuery.eq('board_id', currentBoardFilter);
+      } else if (targetBoardsFilter && targetBoardsFilter.length > 0) {
+        postsQuery = postsQuery.in('board_id', targetBoardsFilter);
+      }
     }
     
     // 총 게시물 수 가져오기 (페이지네이션 구현용)
@@ -167,12 +192,17 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
     let countQuery = supabase
       .from('posts')
       .select('id', { count: 'exact', head: true });
-      
-    // 동일한 필터 조건 적용
-    if (currentBoardFilter) {
-      countQuery = countQuery.eq('board_id', currentBoardFilter);
-    } else if (targetBoardsFilter && targetBoardsFilter.length > 0) {
-      countQuery = countQuery.in('board_id', targetBoardsFilter);
+
+    // notice 게시판인 경우: notice 게시판의 모든 글 + 다른 게시판의 공지글 카운트
+    if (isNoticeBoard && noticeBoardId) {
+      countQuery = countQuery.or(`board_id.eq.${noticeBoardId},is_notice.eq.true`);
+    } else {
+      // 일반 게시판: 동일한 필터 조건 적용
+      if (currentBoardFilter) {
+        countQuery = countQuery.eq('board_id', currentBoardFilter);
+      } else if (targetBoardsFilter && targetBoardsFilter.length > 0) {
+        countQuery = countQuery.in('board_id', targetBoardsFilter);
+      }
     }
     
     // 카운트 실행
@@ -228,6 +258,7 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
       user_id?: string;
       is_hidden?: boolean;
       is_deleted?: boolean;
+      is_notice?: boolean;
       profiles?: {
         id?: string;
         nickname?: string;
@@ -473,7 +504,8 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
         team_logo: teamLogo,
         league_logo: leagueLogo,
         is_hidden: post.is_hidden || false,
-        is_deleted: post.is_deleted || false
+        is_deleted: post.is_deleted || false,
+        is_notice: post.is_notice || false
       };
     });
     

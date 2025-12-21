@@ -2,7 +2,7 @@
 
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
-import { formatDate } from '@/domains/boards/utils/post/postUtils';
+import { formatDate } from '@/shared/utils/date';
 
 export interface PopularPost {
   id: string;

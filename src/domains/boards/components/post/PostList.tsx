@@ -48,7 +48,6 @@ interface PostListProps {
   className?: string;
   maxHeight?: string;
   currentBoardId: string;
-  boardNameMaxWidth?: string;
   // 게시판 목록 렌더링 변형: 기본 텍스트, 이미지형 테이블 지원
   variant?: 'text' | 'image-table';
 }
@@ -164,7 +163,7 @@ const VirtualizedPostItem = React.memo(function VirtualizedPostItem({
           </div>
         </Link>
       </div>
-      <div className="py-2 px-2 flex items-center justify-center" style={{ width: '120px' }}>
+      <div className="py-2 px-3 flex items-center justify-start" style={{ width: '120px' }}>
             {renderAuthor(post, 20, "justify-start")}
       </div>
       <div className="py-2 px-1 flex items-center justify-center" style={{ width: '80px' }}>
@@ -343,7 +342,7 @@ const PostItem = React.memo(function PostItem({
           </div>
         </Link>
       </td>
-      <td className="py-2 px-2 text-center text-xs text-gray-500 dark:text-gray-400 align-middle">
+      <td className="py-2 px-3 text-left text-xs text-gray-500 dark:text-gray-400 align-middle">
         {renderAuthor(post, 20, "justify-start")}
       </td>
       <td className="py-2 px-1 text-center text-xs text-gray-500 dark:text-gray-400 align-middle">
@@ -391,7 +390,6 @@ export default function PostList({
   className = "",
   maxHeight,
   currentBoardId,
-  boardNameMaxWidth = "100px",
   variant = 'text'
 }: PostListProps) {
   const [isMobile, setIsMobile] = useState(false);
@@ -634,11 +632,23 @@ export default function PostList({
       );
     } else {
       return (
-        <span className="inline-block text-xs bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 px-1.5 py-0.5 rounded-full truncate"
-              title={post.board_name}
-              style={{maxWidth: '90px'}}>
-          {post.board_name}
-        </span>
+        <div className="flex items-center">
+          <div className="relative w-5 h-5 mr-1">
+            <Image
+              src="/logo/4590 로고2 이미지크기 275X200 누끼제거 버전.png"
+              alt={post.board_name}
+              width={20}
+              height={20}
+              className="object-contain w-5 h-5 dark:invert"
+              loading="lazy"
+            />
+          </div>
+          <span className="text-xs text-gray-700 dark:text-gray-300 truncate"
+                title={post.board_name}
+                style={{maxWidth: '85px'}}>
+            {post.board_name}
+          </span>
+        </div>
       );
     }
   }, []);
@@ -823,17 +833,25 @@ export default function PostList({
             ))}
           </div>
         ) : (
-        <table className="w-full border-collapse">
+        <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
+          <colgroup>
+            {showBoard && <col style={{ width: '130px' }} />}
+            <col />
+            <col style={{ width: '120px' }} />
+            <col style={{ width: '70px' }} />
+            <col style={{ width: '40px' }} />
+            <col style={{ width: '40px' }} />
+          </colgroup>
           <thead>
             <tr className="border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
               {showBoard && (
-                <th className={`py-2 px-3 text-center w-[${boardNameMaxWidth}] text-sm font-medium text-gray-500 dark:text-gray-400`}>게시판</th>
+                <th className="py-2 px-3 text-center text-sm font-medium text-gray-500 dark:text-gray-400">게시판</th>
               )}
               <th className="py-2 px-4 text-center text-sm font-medium text-gray-500 dark:text-gray-400">제목</th>
-              <th className={`py-2 px-3 text-center w-[${boardNameMaxWidth}] text-sm font-medium text-gray-500 dark:text-gray-400`}>글쓴이</th>
-              <th className="py-2 px-1 text-center w-16 text-sm font-medium text-gray-500 dark:text-gray-400">날짜</th>
-              <th className="py-2 px-1 text-center w-12 text-sm font-medium text-gray-500 dark:text-gray-400">조회</th>
-              <th className="py-2 px-1 text-center w-12 text-sm font-medium text-gray-500 dark:text-gray-400">추천</th>
+              <th className="py-2 px-3 text-center text-sm font-medium text-gray-500 dark:text-gray-400">글쓴이</th>
+              <th className="py-2 px-1 text-center text-sm font-medium text-gray-500 dark:text-gray-400">날짜</th>
+              <th className="py-2 px-1 text-center text-sm font-medium text-gray-500 dark:text-gray-400">조회</th>
+              <th className="py-2 px-1 text-center text-sm font-medium text-gray-500 dark:text-gray-400">추천</th>
             </tr>
           </thead>
           <tbody>
@@ -858,7 +876,7 @@ export default function PostList({
         )}
       </div>
     );
-  }, [isMobile, useVirtualization, deferredPosts, showBoard, boardNameMaxWidth, currentPostId, currentBoardId, renderContentTypeIcons, renderAuthor, renderBoardLogo, extractFirstImageUrl, variant]);
+  }, [isMobile, useVirtualization, deferredPosts, showBoard, currentPostId, currentBoardId, renderContentTypeIcons, renderAuthor, renderBoardLogo, extractFirstImageUrl, variant]);
 
   return (
     <div className={`bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden p-0 m-0 ${className}`}>

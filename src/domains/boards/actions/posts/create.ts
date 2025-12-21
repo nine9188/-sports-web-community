@@ -164,11 +164,20 @@ export async function createPost(formData: FormData): Promise<{ success: true; p
     const title = formData.get('title') as string
     let content = formData.get('content') as string
     const boardId = formData.get('boardId') as string
-    
-    console.log('[createPost] FormData 추출:', { 
-      title: title?.substring(0, 20), 
+
+    // 공지 정보 추출 (관리자가 설정한 경우)
+    const isNotice = formData.get('isNotice') === 'true'
+    const noticeType = formData.get('noticeType') as 'global' | 'board' | null
+    const noticeBoardsStr = formData.get('noticeBoards') as string | null
+    const noticeOrder = formData.get('noticeOrder') as string | null
+
+    console.log('[createPost] FormData 추출:', {
+      title: title?.substring(0, 20),
       contentLength: content?.length,
-      boardId 
+      boardId,
+      isNotice,
+      noticeType,
+      noticeOrder
     });
     
     if (!title || !content || !boardId) {
@@ -236,16 +245,38 @@ export async function createPost(formData: FormData): Promise<{ success: true; p
     
     // 게시글 작성
     console.log('[createPost] 게시글 INSERT 시작');
+
+    // 공지 데이터 준비
+    const insertData: any = {
+      title: title.trim(),
+      content: typeof content === 'string' && content.startsWith('{')
+        ? JSON.parse(content)
+        : content,
+      user_id: user.id,
+      board_id: boardId
+    };
+
+    // 공지 정보 추가 (관리자가 공지로 설정한 경우)
+    if (isNotice) {
+      insertData.is_notice = true;
+      insertData.notice_type = noticeType || 'global';
+      insertData.notice_order = noticeOrder ? parseInt(noticeOrder, 10) : 0;
+      insertData.notice_created_at = new Date().toISOString();
+
+      // 게시판 공지인 경우 notice_boards 배열 추가
+      if (noticeType === 'board' && noticeBoardsStr) {
+        try {
+          const noticeBoards = JSON.parse(noticeBoardsStr);
+          insertData.notice_boards = noticeBoards;
+        } catch (err) {
+          console.error('[createPost] notice_boards 파싱 오류:', err);
+        }
+      }
+    }
+
     const { data, error } = await supabase
       .from('posts')
-      .insert({
-        title: title.trim(),
-        content: typeof content === 'string' && content.startsWith('{') 
-          ? JSON.parse(content) 
-          : content,
-        user_id: user.id,
-        board_id: boardId
-      })
+      .insert(insertData)
       .select(`
         *,
         board:boards(
