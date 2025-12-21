@@ -23,7 +23,12 @@
       "mcp__supabase__apply_migration",
       "mcp__supabase__execute_sql",
       "mcp__supabase__get_advisors",
-      "mcp__supabase__list_tables"
+      "mcp__supabase__list_tables",
+      "Bash(wc:*)",
+      "Bash(while read f)",
+      "Bash(done)",
+      "Bash(for f in *.ts *.tsx components/**/*.tsx)",
+      "Bash(do [ -f \"$f\" ])"
     ]
   },
   "enableAllProjectMcpServers": true,

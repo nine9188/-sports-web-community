@@ -1,10 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { TrendingUp } from 'lucide-react';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
-import { ImageType } from '@/shared/types/image';
+import { TrendingUp, ChevronLeft, ChevronRight, Image as ImageIcon, Video as VideoIcon, Youtube as YoutubeIcon, Link as LinkIcon } from 'lucide-react';
 
 interface PopularPost {
   id: string;
@@ -24,6 +22,7 @@ interface PopularPost {
   formattedDate?: string;
   team_id?: string | number | null;
   league_id?: string | number | null;
+  content?: string;
 }
 
 interface BoardPopularPostsProps {
@@ -32,38 +31,66 @@ interface BoardPopularPostsProps {
   className?: string;
 }
 
+// TipTap 노드 타입 정의
+interface TipTapMark {
+  type: string;
+  attrs?: Record<string, unknown>;
+}
+
+interface TipTapNode {
+  type: string;
+  content?: TipTapNode[];
+  marks?: TipTapMark[];
+  attrs?: Record<string, unknown>;
+}
+
+// 콘텐츠 타입 체크 함수
+function checkContentType(content: string) {
+  try {
+    const parsed = JSON.parse(content);
+    let hasImage = false;
+    let hasVideo = false;
+    let hasYoutube = false;
+    let hasLink = false;
+
+    const checkNode = (node: TipTapNode) => {
+      if (node.type === 'image') hasImage = true;
+      if (node.type === 'video') hasVideo = true;
+      if (node.type === 'youtube') hasYoutube = true;
+      if (node.type === 'link' || node.marks?.some((m: TipTapMark) => m.type === 'link')) hasLink = true;
+      if (node.content) node.content.forEach(checkNode);
+    };
+
+    if (parsed?.content) parsed.content.forEach(checkNode);
+    return { hasImage, hasVideo, hasYoutube, hasLink };
+  } catch {
+    return { hasImage: false, hasVideo: false, hasYoutube: false, hasLink: false };
+  }
+}
+
 export default function BoardPopularPosts({
   todayPosts,
   weekPosts,
   className = ''
 }: BoardPopularPostsProps) {
-  const renderBoardLogo = (post: PopularPost) => {
-    if (post.team_id || post.league_id) {
-      return (
-        <div className="flex items-center justify-center">
-          <div className="relative w-5 h-5">
-            <ApiSportsImage
-              imageId={post.team_id || post.league_id || 0}
-              imageType={post.team_id ? ImageType.Teams : ImageType.Leagues}
-              alt={post.board_name}
-              width={20}
-              height={20}
-              className="object-contain w-5 h-5"
-              loading="lazy"
-              priority={false}
-            />
-          </div>
-        </div>
-      );
-    } else {
-      return (
-        <span className="inline-block text-xs bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 px-1.5 py-0.5 rounded-full truncate"
-              title={post.board_name}
-              style={{maxWidth: '90px'}}>
-          {post.board_name}
-        </span>
-      );
-    }
+  const [activeTab, setActiveTab] = useState<'today' | 'week'>('today');
+
+  const currentPosts = activeTab === 'today' ? todayPosts : weekPosts;
+  const tabLabel = activeTab === 'today' ? '오늘 BEST' : '이번주 BEST';
+
+  const renderContentIcons = (post: PopularPost) => {
+    if (!post.content) return null;
+    const { hasImage, hasVideo, hasYoutube, hasLink } = checkContentType(post.content);
+    if (!hasImage && !hasVideo && !hasYoutube && !hasLink) return null;
+
+    return (
+      <div className="inline-flex items-center gap-0.5 flex-shrink-0">
+        {hasImage && <ImageIcon className="h-3 w-3 text-green-500" />}
+        {hasVideo && <VideoIcon className="h-3 w-3 text-purple-500" />}
+        {hasYoutube && <YoutubeIcon className="h-3 w-3 text-red-500" />}
+        {hasLink && <LinkIcon className="h-3 w-3 text-gray-500 dark:text-gray-400" />}
+      </div>
+    );
   };
 
   const renderTableRows = (posts: PopularPost[]) => {
@@ -77,28 +104,30 @@ export default function BoardPopularPosts({
       );
     }
 
-    return posts.slice(0, 4).map((post, index) => {
+    const displayedPosts = posts.slice(0, 4);
+    return displayedPosts.map((post, index) => {
+      const isLast = index === displayedPosts.length - 1;
       return (
         <tr
           key={post.id}
-          className="border-b border-black/5 dark:border-white/10 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
+          className={`hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors ${
+            !isLast ? 'border-b border-black/5 dark:border-white/10' : ''
+          }`}
         >
-          <td className="py-2 px-2 align-middle">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-gray-500 dark:text-gray-400">
-                {index + 1}
-              </span>
-              {renderBoardLogo(post)}
-            </div>
+          <td className="py-1.5 px-3 align-middle w-6">
+            <span className="text-xs font-bold text-gray-500 dark:text-gray-400 leading-none">
+              {index + 1}
+            </span>
           </td>
-          <td className="py-2 px-4 align-middle">
-            <Link href={`/boards/${post.board_slug}/${post.post_number}`} className="block w-full" prefetch={false}>
-              <div className="flex items-center">
-                <span className="text-xs line-clamp-1 text-gray-900 dark:text-[#F0F0F0]">
+          <td className="py-1.5 pr-3 align-middle max-w-0">
+            <Link href={`/boards/${post.board_slug}/${post.post_number}`} className="block w-full overflow-hidden" prefetch={false}>
+              <div className="flex items-center gap-1">
+                <span className="text-xs truncate text-gray-900 dark:text-[#F0F0F0]">
                   {post.title}
                 </span>
+                {renderContentIcons(post)}
                 {post.comment_count > 0 && (
-                  <span className="ml-1 text-xs text-orange-600 dark:text-orange-400 flex-shrink-0">
+                  <span className="text-xs text-orange-600 dark:text-orange-400 flex-shrink-0 whitespace-nowrap">
                     [{post.comment_count}]
                   </span>
                 )}
@@ -112,33 +141,35 @@ export default function BoardPopularPosts({
 
   return (
     <div className={className}>
-      {/* 모바일 UI */}
-      <div className="md:hidden grid grid-cols-1 gap-4">
-        {/* 오늘 BEST */}
-        <div className="border border-black/7 dark:border-0 rounded-lg overflow-hidden bg-white dark:bg-[#1D1D1D]">
-          <div className="h-12 bg-[#F5F5F5] dark:bg-[#262626] px-4 flex items-center border-b border-black/5 dark:border-white/10">
+      {/* 모바일 UI - 탭 전환 */}
+      <div className="md:hidden border border-black/7 dark:border-0 rounded-lg overflow-hidden bg-white dark:bg-[#1D1D1D]">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
+          <div className="flex items-center">
             <TrendingUp className="w-4 h-4 text-gray-900 dark:text-[#F0F0F0] mr-2" />
-            <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">오늘 BEST</h3>
+            <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">{tabLabel}</h3>
           </div>
-          <table className="w-full border-collapse">
-            <tbody>
-              {renderTableRows(todayPosts)}
-            </tbody>
-          </table>
-        </div>
-
-        {/* 이번주 BEST */}
-        <div className="border border-black/7 dark:border-0 rounded-lg overflow-hidden bg-white dark:bg-[#1D1D1D]">
-          <div className="h-12 bg-[#F5F5F5] dark:bg-[#262626] px-4 flex items-center border-b border-black/5 dark:border-white/10">
-            <TrendingUp className="w-4 h-4 text-gray-900 dark:text-[#F0F0F0] mr-2" />
-            <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">이번주 BEST</h3>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <span className="text-xs text-gray-600 dark:text-gray-400">
+              {activeTab === 'today' ? '1' : '2'} / 2
+            </span>
+            <button
+              onClick={() => setActiveTab(activeTab === 'today' ? 'week' : 'today')}
+              className="p-1 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-700 dark:text-gray-300"
+              aria-label={activeTab === 'today' ? '이번주 BEST' : '오늘 BEST'}
+            >
+              {activeTab === 'today' ? (
+                <ChevronRight className="w-4 h-4" />
+              ) : (
+                <ChevronLeft className="w-4 h-4" />
+              )}
+            </button>
           </div>
-          <table className="w-full border-collapse">
-            <tbody>
-              {renderTableRows(weekPosts)}
-            </tbody>
-          </table>
         </div>
+        <table className="w-full border-collapse">
+          <tbody>
+            {renderTableRows(currentPosts)}
+          </tbody>
+        </table>
       </div>
 
       {/* PC UI */}

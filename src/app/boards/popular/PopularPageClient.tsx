@@ -2,15 +2,64 @@
 
 import PeriodFilter from '@/domains/boards/components/common/PeriodFilter';
 import BoardDetailLayout from '@/domains/boards/components/layout/BoardDetailLayout';
+import { Board } from '@/domains/boards/types/board';
+import { Breadcrumb } from '@/domains/boards/types/board/data';
+
+// Post 타입 정의
+interface Post {
+  id: string;
+  title: string;
+  board_id: string;
+  board_name: string;
+  board_slug: string;
+  post_number: number;
+  created_at: string;
+  formattedDate: string;
+  views: number;
+  likes: number;
+  author_nickname: string;
+  author_id?: string;
+  author_icon_id?: number | null;
+  author_icon_url?: string | null;
+  author_level?: number;
+  comment_count: number;
+  content?: string;
+  team_id?: number | null;
+  team_name?: string | null;
+  team_logo?: string | null;
+  league_id?: number | null;
+  league_name?: string | null;
+  league_logo?: string | null;
+}
+
+interface TopBoard {
+  id: string;
+  name: string;
+  display_order: number;
+  slug?: string;
+}
+
+interface ChildBoard {
+  id: string;
+  name: string;
+  display_order: number;
+  slug?: string;
+}
+
+interface Pagination {
+  totalItems: number;
+  itemsPerPage: number;
+  currentPage: number;
+}
 
 interface PopularPageClientProps {
-  boardData: any;
-  breadcrumbs: any[];
+  boardData: Board;
+  breadcrumbs: Breadcrumb[];
   currentPage: number;
-  posts: any[];
-  topBoards: any[];
-  hoverChildBoardsMap: any;
-  pagination: any;
+  posts: Post[];
+  topBoards: TopBoard[];
+  hoverChildBoardsMap: Record<string, ChildBoard[]>;
+  pagination: Pagination;
   period: string;
 }
 

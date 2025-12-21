@@ -88,27 +88,25 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
   if (isMobile) {
     return (
       <div className={`py-2 px-3 ${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''}`}>
-        <Link href={postUrl} prefetch={false}>
+        <Link href={postUrl} prefetch={false} className="block w-full overflow-hidden">
           <div className="space-y-1">
-            <div className="flex items-center">
-              <div className="flex-1 min-w-0 flex items-center gap-1">
-                {notice.notice_type && (
-                  <div className="flex-shrink-0">
-                    <NoticeBadge type={notice.notice_type} isMustRead={notice.is_must_read} />
-                  </div>
-                )}
-                <span className="text-xs truncate min-w-0 flex-1 text-gray-900 dark:text-[#F0F0F0]">
-                  {notice.title}
+            <div className="flex items-center gap-1">
+              {notice.notice_type && (
+                <div className="flex-shrink-0">
+                  <NoticeBadge type={notice.notice_type} isMustRead={notice.is_must_read} />
+                </div>
+              )}
+              <span className="text-xs truncate text-gray-900 dark:text-[#F0F0F0]">
+                {notice.title}
+              </span>
+              {(notice.comment_count || 0) > 0 && (
+                <span
+                  className="text-xs text-orange-600 dark:text-orange-400 font-medium flex-shrink-0 whitespace-nowrap"
+                  title={`댓글 ${notice.comment_count}개`}
+                >
+                  [{notice.comment_count}]
                 </span>
-                {notice.comment_count > 0 && (
-                  <span
-                    className="text-xs text-orange-600 dark:text-orange-400 font-medium flex-shrink-0"
-                    title={`댓글 ${notice.comment_count}개`}
-                  >
-                    [{notice.comment_count}]
-                  </span>
-                )}
-              </div>
+              )}
             </div>
             <div className="flex text-[11px] text-gray-500 dark:text-gray-400">
               <div className="w-full flex items-center justify-between gap-2">
@@ -146,7 +144,7 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
     <tr className={`${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''} hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors`}>
       {/* 첫 번째 컬럼: showBoardName이 true면 게시판 이름, false면 공지 배지 */}
       <td className="py-2 px-3 align-middle">
-        <div className="h-5 flex items-center">
+        <div className={`h-5 flex items-center ${showBoardName ? 'justify-start' : 'justify-center'}`}>
           {renderBoardLogo}
         </div>
       </td>
@@ -158,7 +156,7 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
             <span className="text-xs line-clamp-1 text-gray-900 dark:text-[#F0F0F0]">
               {notice.title}
             </span>
-            {notice.comment_count > 0 && (
+            {(notice.comment_count || 0) > 0 && (
               <span
                 className="ml-1 text-xs text-orange-600 dark:text-orange-400 font-medium flex-shrink-0"
                 title={`댓글 ${notice.comment_count}개`}

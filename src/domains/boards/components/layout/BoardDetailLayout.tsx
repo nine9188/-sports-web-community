@@ -168,7 +168,7 @@ export default function BoardDetailLayout({
   const viewType = (boardData as unknown as { view_type?: 'list' | 'image-table' })?.view_type;
 
   return (
-    <div className="container mx-auto" data-current-page={currentPage}>
+    <div className="container mx-auto overflow-x-hidden" data-current-page={currentPage}>
       <div>
         <MemoizedBoardBreadcrumbs breadcrumbs={breadcrumbs} />
       </div>
@@ -280,7 +280,7 @@ export default function BoardDetailLayout({
           loading={false}
           currentBoardId={boardData.id}
           showBoard={true}
-          className="mt-2"
+          className="mt-2 overflow-x-hidden"
           emptyMessage="아직 작성된 게시글이 없습니다."
           variant={viewType === 'image-table' ? 'image-table' : 'text'}
         />

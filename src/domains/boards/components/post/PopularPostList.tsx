@@ -2,8 +2,10 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ThumbsUp } from 'lucide-react';
+import Image from 'next/image';
+import { ThumbsUp, Image as ImageIcon, Video as VideoIcon, Youtube as YoutubeIcon, Link as LinkIcon } from 'lucide-react';
 import UserIcon from '@/shared/components/UserIcon';
+import { checkContentType, extractFirstImageUrl } from './postlist/utils';
 
 interface Post {
   id: string;
@@ -33,31 +35,6 @@ interface PopularPostListProps {
   emptyMessage?: string;
 }
 
-// 게시글 내용에서 첫 번째 이미지 추출
-function extractFirstImage(content: string): string | null {
-  try {
-    const parsed = JSON.parse(content);
-    if (parsed?.content) {
-      for (const node of parsed.content) {
-        if (node.type === 'image' && node.attrs?.src) {
-          return node.attrs.src;
-        }
-        // 중첩된 콘텐츠도 검색
-        if (node.content) {
-          for (const child of node.content) {
-            if (child.type === 'image' && child.attrs?.src) {
-              return child.attrs.src;
-            }
-          }
-        }
-      }
-    }
-  } catch {
-    // JSON 파싱 실패 시 무시
-  }
-  return null;
-}
-
 export default function PopularPostList({
   posts,
   loading = false,
@@ -82,14 +59,15 @@ export default function PopularPostList({
   return (
     <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
       {posts.map((post, index) => {
-        const thumbnailUrl = extractFirstImage(post.content || '');
+        const thumbnailUrl = extractFirstImageUrl(post.content);
         const postUrl = `/boards/${post.board_slug}/${post.post_number}`;
         const isLast = index === posts.length - 1;
+        const { hasImage, hasVideo, hasYoutube, hasLink } = checkContentType(post.content || '');
 
         return (
           <div
             key={post.id}
-            className={`flex items-center gap-2 sm:gap-4 px-2 sm:px-4 py-2 bg-white dark:bg-[#1D1D1D] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors ${
+            className={`flex items-center gap-2 sm:gap-4 px-2 sm:px-4 py-2 bg-white dark:bg-[#1D1D1D] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors overflow-hidden ${
               !isLast ? 'border-b border-black/5 dark:border-white/10' : ''
             }`}
           >
@@ -103,35 +81,49 @@ export default function PopularPostList({
 
             {/* 썸네일 이미지 - 반응형 크기 */}
             <Link href={postUrl} className="flex-shrink-0">
-              <div className="w-20 h-14 sm:w-24 sm:h-16 rounded-lg overflow-hidden bg-[#F5F5F5] dark:bg-[#262626]">
+              <div className="relative w-20 h-14 sm:w-24 sm:h-16 rounded-lg overflow-hidden bg-[#F5F5F5] dark:bg-[#262626]">
                 {thumbnailUrl ? (
-                  <img
+                  <Image
                     src={thumbnailUrl}
                     alt={post.title}
-                    className="w-full h-full object-cover"
+                    fill
+                    sizes="(max-width: 640px) 80px, 96px"
+                    className="object-cover"
                   />
                 ) : (
-                  <img
+                  <Image
                     src="/logo/4590 로고2 이미지크기 275X200 누끼제거 버전.png"
                     alt="사이트 로고"
-                    className="w-full h-full object-contain p-2 dark:invert"
+                    fill
+                    sizes="(max-width: 640px) 80px, 96px"
+                    className="object-contain p-2 dark:invert"
                   />
                 )}
               </div>
             </Link>
 
             {/* 게시글 정보 */}
-            <div className="flex-1 min-w-0">
-              {/* 제목 + 댓글 수 */}
-              <Link href={postUrl}>
-                <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] line-clamp-1 mb-2">
-                  {post.title}
+            <div className="flex-1 min-w-0 overflow-hidden">
+              {/* 제목 + 아이콘 + 댓글 수 */}
+              <Link href={postUrl} className="block overflow-hidden">
+                <div className="flex items-center gap-1 mb-2">
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
+                    {post.title}
+                  </h3>
+                  {(hasImage || hasVideo || hasYoutube || hasLink) && (
+                    <div className="flex items-center gap-0.5 flex-shrink-0">
+                      {hasImage && <ImageIcon className="h-3 w-3 text-green-500" />}
+                      {hasVideo && <VideoIcon className="h-3 w-3 text-purple-500" />}
+                      {hasYoutube && <YoutubeIcon className="h-3 w-3 text-red-500" />}
+                      {hasLink && <LinkIcon className="h-3 w-3 text-gray-500 dark:text-gray-400" />}
+                    </div>
+                  )}
                   {post.comment_count > 0 && (
-                    <span className="ml-1 text-xs text-orange-600 dark:text-orange-400">
+                    <span className="text-xs text-orange-600 dark:text-orange-400 flex-shrink-0 whitespace-nowrap">
                       [{post.comment_count}]
                     </span>
                   )}
-                </h3>
+                </div>
               </Link>
 
               {/* 메타 정보 - 모바일 3줄, 데스크톱 1줄 */}

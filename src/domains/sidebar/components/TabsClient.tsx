@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Eye, ThumbsUp, MessageSquare, Flame, Image as ImageIcon, Link as LinkIcon, Video as VideoIcon, Youtube as YoutubeIcon } from 'lucide-react';
 import ApiSportsImage from '@/shared/components/ApiSportsImage';
 import { ImageType } from '@/shared/types/image';
@@ -152,11 +153,11 @@ export function TopicTabsClient({ postsData }: TopicTabsClientProps) {
                 <li key={post.id} className={index < currentPosts.length - 1 ? "border-b border-black/5 dark:border-white/10" : ""}>
                   <Link
                     href={`/boards/${post.board_slug}/${post.post_number}?from=root`}
-                    className="block px-3 py-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]"
+                    className="block px-3 py-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0] overflow-hidden"
                   >
-                    <div className="flex items-center text-xs">
+                    <div className="flex items-center text-xs gap-1">
                       {post.team_id || post.league_id ? (
-                        <div className="relative w-5 h-5 mr-1 flex-shrink-0">
+                        <div className="relative w-5 h-5 flex-shrink-0">
                           <ApiSportsImage
                             imageId={post.team_id || post.league_id || 0}
                             imageType={post.team_id ? ImageType.Teams : ImageType.Leagues}
@@ -168,19 +169,26 @@ export function TopicTabsClient({ postsData }: TopicTabsClientProps) {
                           />
                         </div>
                       ) : (
-                        <div className="w-5 h-5 bg-[#F5F5F5] dark:bg-[#262626] rounded-full mr-1 flex-shrink-0 flex items-center justify-center">
-                          <span className="text-[10px] text-gray-500 dark:text-gray-400">{post.board_name.charAt(0)}</span>
+                        <div className="relative w-5 h-5 flex-shrink-0">
+                          <Image
+                            src="/logo/4590 로고2 이미지크기 275X200 누끼제거 버전.png"
+                            alt={post.board_name}
+                            width={20}
+                            height={20}
+                            className="object-contain w-5 h-5 dark:invert"
+                            loading="lazy"
+                          />
                         </div>
                       )}
-                      <div className="flex items-center flex-1">
-                        <span className="line-clamp-1 mr-1">{post.title}</span>
-                        <div className="flex items-center space-x-1 mr-1">
-                          {hasImage && <ImageIcon className="h-3 w-3 text-gray-400" />}
-                          {hasVideo && <VideoIcon className="h-3 w-3 text-gray-400" />}
-                          {hasYoutube && <YoutubeIcon className="h-3 w-3 text-red-400" />}
-                          {hasLink && <LinkIcon className="h-3 w-3 text-blue-400" />}
+                      <span className="truncate">{post.title}</span>
+                      {(hasImage || hasVideo || hasYoutube || hasLink) && (
+                        <div className="flex items-center gap-0.5 flex-shrink-0">
+                          {hasImage && <ImageIcon className="h-3 w-3 text-green-500" />}
+                          {hasVideo && <VideoIcon className="h-3 w-3 text-purple-500" />}
+                          {hasYoutube && <YoutubeIcon className="h-3 w-3 text-red-500" />}
+                          {hasLink && <LinkIcon className="h-3 w-3 text-gray-500 dark:text-gray-400" />}
                         </div>
-                      </div>
+                      )}
                       {renderCount(post)}
                     </div>
                   </Link>

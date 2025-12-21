@@ -82,7 +82,7 @@ export function NoticeList({
 
   // 데스크톱 테이블 내용
   const desktopContent = (
-    <table className="w-full border-collapse [&_tbody_td:first-child]:text-center" style={{ tableLayout: 'fixed' }}>
+    <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
       <colgroup>
         <col style={{ width: showBoardName ? '130px' : '100px' }} />
         <col />

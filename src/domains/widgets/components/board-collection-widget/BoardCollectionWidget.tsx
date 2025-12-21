@@ -21,67 +21,6 @@ interface PostWithContent {
   category: string | null;
 }
 
-// 경기결과 카드인지 확인
-function isMatchResultCard(content?: Json): boolean {
-  if (!content) return false;
-
-  // content를 문자열로 변환
-  const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
-
-  return contentStr.includes('match-card') ||
-         contentStr.includes('processed-match-card') ||
-         contentStr.includes('league-header') ||
-         contentStr.includes('match-main') ||
-         contentStr.includes('team-logo') ||
-         contentStr.includes('score-area') ||
-         contentStr.includes('livescore/football/match/');
-}
-
-// 이미지 URL 추출
-function extractFirstImageUrl(content?: Json): string | null {
-  if (!content) return null;
-
-  try {
-    // content를 문자열로 변환
-    const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
-
-    // JSON 형식 (TipTap)
-    if (contentStr.trim().startsWith('{')) {
-      const obj = typeof content === 'string' ? JSON.parse(content) : content;
-      if (obj?.type === 'doc' && Array.isArray(obj.content)) {
-        for (const node of obj.content) {
-          if (node?.type === 'image' && node?.attrs?.src) {
-            const src = node.attrs.src;
-            if (!src.includes('api-sports.io')) return src;
-          }
-          if (node?.type === 'paragraph' && Array.isArray(node.content)) {
-            for (const sub of node.content) {
-              if (sub?.type === 'image' && sub?.attrs?.src) {
-                const src = sub.attrs.src;
-                if (!src.includes('api-sports.io')) return src;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    // HTML img 태그
-    const imgMatches = contentStr.matchAll(/<img[^>]+src=["']([^"']+)["'][^>]*>/gi);
-    for (const match of imgMatches) {
-      const src = match[1];
-      if (!src.includes('api-sports.io') && !src.includes('placeholder.png')) {
-        return src;
-      }
-    }
-
-  } catch (e) {
-    console.error('이미지 URL 추출 오류:', e);
-  }
-
-  return null;
-}
-
 // 여러 게시판에서 최신 게시글 가져오기
 async function getBoardsData(): Promise<BoardCollectionData[]> {
   try {
