@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { TransfersPageContent } from '@/domains/livescore/components/football/transfers';
 import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
+import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 
 export const metadata: Metadata = {
   title: '이적시장 | 축구 이적 소식',
@@ -24,6 +25,7 @@ export default async function TransfersPage({ searchParams }: TransfersPageProps
   
   return (
     <div className="min-h-screen">
+      <TrackPageVisit id="transfers" slug="transfers" name="이적시장" />
       {/* 헤더 섹션 */}
       <Container>
         <ContainerHeader>

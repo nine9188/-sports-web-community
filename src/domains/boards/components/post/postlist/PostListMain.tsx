@@ -56,7 +56,7 @@ export default function PostList({
     >
       {/* Header */}
       {headerContent && (
-        <div className="h-12 px-4 flex items-center bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10">
+        <div className="h-12 px-4 flex items-center bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10 rounded-t-lg">
           {headerContent}
         </div>
       )}

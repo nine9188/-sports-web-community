@@ -13,6 +13,24 @@ interface MegaDropdownMenuProps {
   onMouseLeave: () => void;
 }
 
+// 가상 보드 중 /boards/ 경로를 사용하는 보드 ID 목록
+const BOARD_PATH_NAV_IDS = ['nav-posts', 'nav-all', 'nav-popular'];
+
+// 보드 링크 생성 헬퍼 함수
+const getBoardHref = (board: Board): string => {
+  // 가상 보드인 경우 (nav- 프리픽스)
+  if (board.id.startsWith('nav-')) {
+    // 글 관련 가상 보드는 /boards/ 경로 사용
+    if (BOARD_PATH_NAV_IDS.includes(board.id)) {
+      return `/boards/${board.slug}`;
+    }
+    // 축구 관련 가상 보드는 직접 경로 사용
+    return `/${board.slug}`;
+  }
+  // 일반 게시판
+  return `/boards/${board.slug || board.id}`;
+};
+
 const MegaDropdownMenu = React.memo(function MegaDropdownMenu({ 
   board, 
   position, 
@@ -49,7 +67,7 @@ const MegaDropdownMenu = React.memo(function MegaDropdownMenu({
 
   return ReactDOM.createPortal(
     <div
-      className="fixed bg-white dark:bg-[#1D1D1D] border-b border-black/7 dark:border-0 shadow-lg hidden md:block"
+      className="fixed bg-white dark:bg-[#1D1D1D] border-y border-black/5 dark:border-white/10 shadow-lg hidden md:block"
       style={{
         top: `${position.top}px`,
         left: '0',
@@ -57,7 +75,7 @@ const MegaDropdownMenu = React.memo(function MegaDropdownMenu({
         width: '100vw',
         maxHeight: '60vh',
         overflowY: 'auto',
-        zIndex: 50
+        zIndex: 60
       }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -67,9 +85,14 @@ const MegaDropdownMenu = React.memo(function MegaDropdownMenu({
           <div className="flex gap-6">
             {/* 좌측: 2차 메뉴 리스트 */}
             <div className="w-56 flex-shrink-0">
-              <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-3">
+              <Link
+                href={getBoardHref(board)}
+                className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] hover:text-blue-600 dark:hover:text-blue-400 transition-colors inline-flex items-center gap-1 mb-3"
+                onClick={onClose}
+              >
                 {board.name}
-              </h3>
+                <span className="text-xs text-gray-400">→</span>
+              </Link>
               <div className="space-y-1">
                 {board.children && board.children.length > 0 ? (
                   board.children
@@ -84,7 +107,7 @@ const MegaDropdownMenu = React.memo(function MegaDropdownMenu({
                         }`}
                         onMouseEnter={() => setSelectedSecondLevel(secondLevel)}
                         onClick={() => {
-                          window.location.href = `/boards/${secondLevel.slug || secondLevel.id}`;
+                          window.location.href = getBoardHref(secondLevel);
                           onClose();
                         }}
                       >
@@ -118,7 +141,7 @@ const MegaDropdownMenu = React.memo(function MegaDropdownMenu({
                       {selectedSecondLevel.name}
                     </h4>
                     <Link
-                      href={`/boards/${selectedSecondLevel.slug || selectedSecondLevel.id}`}
+                      href={getBoardHref(selectedSecondLevel)}
                       className="text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors"
                       onClick={onClose}
                     >
@@ -135,7 +158,7 @@ const MegaDropdownMenu = React.memo(function MegaDropdownMenu({
                           {column.map((thirdLevel) => (
                             <Link
                               key={thirdLevel.id}
-                              href={`/boards/${thirdLevel.slug || thirdLevel.id}`}
+                              href={getBoardHref(thirdLevel)}
                               className="block px-2 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors"
                               onClick={onClose}
                             >

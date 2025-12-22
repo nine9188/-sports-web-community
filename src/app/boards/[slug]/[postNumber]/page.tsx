@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { getPostPageData } from '@/domains/boards/actions';
 import PostDetailLayout from '@/domains/boards/components/layout/PostDetailLayout';
 import ErrorMessage from '@/shared/ui/error-message';
+import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 
 // 동적 렌더링 강제 설정 추가
 export const dynamic = 'force-dynamic';
@@ -169,7 +170,13 @@ export default async function PostDetailPage({
     
     // 레이아웃 컴포넌트에 데이터 전달
     return (
-      <PostDetailLayout
+      <>
+        <TrackPageVisit
+          id={result.board.id}
+          slug={result.board.slug || result.board.id}
+          name={result.board.name}
+        />
+        <PostDetailLayout
         post={postWithIcon as Parameters<typeof PostDetailLayout>[0]['post']}
         board={result.board as Parameters<typeof PostDetailLayout>[0]['board']}
         breadcrumbs={result.breadcrumbs || []}
@@ -189,6 +196,7 @@ export default async function PostDetailPage({
         slug={slug}
         postNumber={postNumber}
       />
+      </>
     );
   } catch (error) {
     // 오류가 NEXT_NOT_FOUND 관련인지 확인

@@ -197,10 +197,15 @@ const BoardSelector = React.memo(({
     setSelectedMid(null);
     setSelectedBottom(null);
     setShowTopDropdown(false);
-    onSelect(board.id);
-  }, [onSelect]);
+
+    // 하위 게시판이 없는 경우에만 선택 가능
+    const hasChildren = midLevelBoards[board.id] && midLevelBoards[board.id].length > 0;
+    if (!hasChildren) {
+      onSelect(board.id);
+    }
+  }, [onSelect, midLevelBoards]);
   
-  // 중간 게시판 선택
+  // 중간 게시판 선택 - 하위 여부와 관계없이 항상 선택 가능
   const handleMidSelect = useCallback((board: Board) => {
     setSelectedMid(board);
     setSelectedBottom(null);
@@ -215,25 +220,6 @@ const BoardSelector = React.memo(({
     onSelect(board.id);
   }, [onSelect]);
   
-  // 중간 게시판 선택 건너뛰기
-  const handleSkipMid = useCallback(() => {
-    if (selectedTop) {
-      setSelectedMid(null);
-      setSelectedBottom(null);
-      setShowMidDropdown(false);
-      onSelect(selectedTop.id);
-    }
-  }, [selectedTop, onSelect]);
-  
-  // 하위 게시판 선택 건너뛰기
-  const handleSkipBottom = useCallback(() => {
-    if (selectedMid) {
-      setSelectedBottom(null);
-      setShowBottomDropdown(false);
-      onSelect(selectedMid.id);
-    }
-  }, [selectedMid, onSelect]);
-  
   // 최상위 게시판 옵션 렌더링
   const renderTopOptions = useCallback(() => {
     if (isLoading || !topLevelBoards || topLevelBoards.length === 0) {
@@ -243,108 +229,96 @@ const BoardSelector = React.memo(({
         </div>
       );
     }
-    
-    return topLevelBoards.map(board => (
-      <div 
+
+    return topLevelBoards.map(board => {
+      const hasChildren = midLevelBoards[board.id] && midLevelBoards[board.id].length > 0;
+
+      return (
+        <div
+          key={board.id}
+          className={`px-3 py-1.5 transition-colors ${
+            board.id === selectedTop?.id ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
+          } ${
+            hasChildren
+              ? 'text-gray-500 dark:text-gray-400 cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
+              : 'text-gray-900 dark:text-[#F0F0F0] cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333] font-medium'
+          }`}
+          onClick={() => handleTopSelect(board)}
+        >
+          <span className="flex items-center justify-between">
+            <span>
+              {board.name}
+              {board.id === currentBoardId ? " (현재 게시판)" : ""}
+            </span>
+            {hasChildren && (
+              <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">▶</span>
+            )}
+          </span>
+        </div>
+      );
+    });
+  }, [topLevelBoards, selectedTop, currentBoardId, handleTopSelect, isLoading, midLevelBoards]);
+  
+  // 중간 게시판 옵션 렌더링 - 하위 여부와 관계없이 모두 선택 가능
+  const renderMidOptions = useCallback(() => {
+    if (!selectedTop) {
+      return null;
+    }
+
+    const midBoards = midLevelBoards[selectedTop.id] || [];
+    if (midBoards.length === 0) {
+      return null;
+    }
+
+    return midBoards.map(board => {
+      const hasChildren = bottomLevelBoards[board.id] && bottomLevelBoards[board.id].length > 0;
+
+      return (
+        <div
+          key={board.id}
+          className={`px-3 py-1.5 transition-colors cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333] font-medium text-gray-900 dark:text-[#F0F0F0] ${
+            board.id === selectedMid?.id ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
+          }`}
+          onClick={() => handleMidSelect(board)}
+        >
+          <span className="flex items-center justify-between">
+            <span>
+              {board.name}
+              {board.id === currentBoardId ? " (현재 게시판)" : ""}
+            </span>
+            {hasChildren && (
+              <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">▶</span>
+            )}
+          </span>
+        </div>
+      );
+    });
+  }, [selectedTop, selectedMid, currentBoardId, handleMidSelect, midLevelBoards, bottomLevelBoards]);
+  
+  // 하위 게시판 옵션 렌더링
+  const renderBottomOptions = useCallback(() => {
+    if (!selectedMid) {
+      return null;
+    }
+
+    const bottomBoards = bottomLevelBoards[selectedMid.id] || [];
+    if (bottomBoards.length === 0) {
+      return null;
+    }
+
+    return bottomBoards.map(board => (
+      <div
         key={board.id}
-        className={`px-3 py-1.5 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors ${
-          board.id === selectedTop?.id ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]' : 'text-gray-900 dark:text-[#F0F0F0]'
-        } font-medium`}
-        onClick={() => handleTopSelect(board)}
+        className={`px-3 py-1.5 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors font-medium ${
+          board.id === selectedBottom?.id ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]' : 'text-gray-900 dark:text-[#F0F0F0]'
+        }`}
+        onClick={() => handleBottomSelect(board)}
       >
         {board.name}
         {board.id === currentBoardId ? " (현재 게시판)" : ""}
       </div>
     ));
-  }, [topLevelBoards, selectedTop, currentBoardId, handleTopSelect, isLoading]);
-  
-  // 중간 게시판 옵션 렌더링
-  const renderMidOptions = useCallback(() => {
-    const options = [];
-    
-    // 선택 안함 옵션
-    options.push(
-      <div 
-        key="skip-mid"
-        className={`px-3 py-1.5 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors ${
-          !selectedMid ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]' : 'text-gray-900 dark:text-[#F0F0F0]'
-        } font-medium border-b border-black/5 dark:border-white/10`}
-        onClick={handleSkipMid}
-      >
-        중간 게시판 선택 안함
-      </div>
-    );
-    
-    if (!selectedTop) {
-      return options;
-    }
-    
-    const midBoards = midLevelBoards[selectedTop.id] || [];
-    if (midBoards.length === 0) {
-      return options;
-    }
-    
-    midBoards.forEach(board => {
-      options.push(
-        <div 
-          key={board.id}
-          className={`px-3 py-1.5 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors ${
-            board.id === selectedMid?.id ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]' : 'text-gray-900 dark:text-[#F0F0F0]'
-          }`}
-          onClick={() => handleMidSelect(board)}
-        >
-          {board.name}
-          {board.id === currentBoardId ? " (현재 게시판)" : ""}
-        </div>
-      );
-    });
-    
-    return options;
-  }, [selectedTop, selectedMid, currentBoardId, handleMidSelect, handleSkipMid, midLevelBoards]);
-  
-  // 하위 게시판 옵션 렌더링
-  const renderBottomOptions = useCallback(() => {
-    const options = [];
-    
-    // 선택 안함 옵션
-    options.push(
-      <div 
-        key="skip-bottom"
-        className={`px-3 py-1.5 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors ${
-          !selectedBottom ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]' : 'text-gray-900 dark:text-[#F0F0F0]'
-        } font-medium border-b border-black/5 dark:border-white/10`}
-        onClick={handleSkipBottom}
-      >
-        하위 게시판 선택 안함
-      </div>
-    );
-    
-    if (!selectedMid) {
-      return options;
-    }
-    
-    const bottomBoards = bottomLevelBoards[selectedMid.id] || [];
-    if (bottomBoards.length === 0) {
-      return options;
-    }
-    
-    bottomBoards.forEach(board => {
-      options.push(
-        <div 
-          key={board.id}
-          className={`px-3 py-1.5 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors ${
-            board.id === selectedBottom?.id ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]' : 'text-gray-900 dark:text-[#F0F0F0]'
-          }`}
-          onClick={() => handleBottomSelect(board)}
-        >
-          {board.name}
-          {board.id === currentBoardId ? " (현재 게시판)" : ""}
-        </div>
-      );
-    });
-    
-    return options;
-  }, [selectedMid, selectedBottom, currentBoardId, handleBottomSelect, handleSkipBottom, bottomLevelBoards]);
+  }, [selectedMid, selectedBottom, currentBoardId, handleBottomSelect, bottomLevelBoards]);
   
   // 중간/하위 게시판 존재 여부 확인
   const hasMidBoards = useMemo(() => {
@@ -358,12 +332,28 @@ const BoardSelector = React.memo(({
   }, [selectedMid, bottomLevelBoards]);
   
   // 선택된 게시판 이름 계산
+  // 최상위만 카테고리 역할, 중간/하위는 모두 선택 가능
   const getSelectedBoardName = useCallback(() => {
+    // 하위 게시판이 선택되었으면 해당 게시판
     if (selectedBottom) return selectedBottom.name;
+
+    // 중간 게시판이 선택되었으면 해당 게시판 (하위 여부 무관)
     if (selectedMid) return selectedMid.name;
-    if (selectedTop) return selectedTop.name;
+
+    // 최상위 게시판이 선택되었고, 중간 게시판이 없으면 해당 게시판
+    if (selectedTop) {
+      const hasMidChildren = midLevelBoards[selectedTop.id]?.length > 0;
+      if (!hasMidChildren) return selectedTop.name;
+      return null; // 중간/하위 선택 필요
+    }
+
     return null;
-  }, [selectedTop, selectedMid, selectedBottom]);
+  }, [selectedTop, selectedMid, selectedBottom, midLevelBoards]);
+
+  // 선택이 완료되었는지 확인
+  const isSelectionComplete = useCallback(() => {
+    return getSelectedBoardName() !== null;
+  }, [getSelectedBoardName]);
 
   return (
     <div className="w-full space-y-3">
@@ -464,13 +454,19 @@ const BoardSelector = React.memo(({
       </div>
 
       {/* 선택된 게시판 표시 */}
-      {getSelectedBoardName() && (
-        <div className="px-3 py-2 bg-[#F5F5F5] dark:bg-[#262626] rounded-md border border-black/7 dark:border-white/10">
-          <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">
-            선택된 게시판: <span className="font-medium">{getSelectedBoardName()}</span>
+      {isSelectionComplete() ? (
+        <div className="px-3 py-2 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800">
+          <span className="text-sm text-green-700 dark:text-green-300">
+            ✓ 선택된 게시판: <span className="font-medium">{getSelectedBoardName()}</span>
           </span>
         </div>
-      )}
+      ) : selectedTop ? (
+        <div className="px-3 py-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-md border border-yellow-200 dark:border-yellow-800">
+          <span className="text-sm text-yellow-700 dark:text-yellow-300">
+            ⚠ 하위 게시판을 선택해주세요
+          </span>
+        </div>
+      ) : null}
     </div>
   );
 });

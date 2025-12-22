@@ -1,5 +1,6 @@
 import { fetchMatchesByDate, MatchData } from '@/domains/livescore/actions/footballApi';
 import LiveScoreView from '@/domains/livescore/components/football/MainView/LiveScoreView';
+import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 import { getTeamById } from '@/domains/livescore/constants/teams/index';
 import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
 import { Match } from '@/domains/livescore/types/match';
@@ -84,19 +85,25 @@ export default async function FootballLiveScorePage({
     
     // 클라이언트 컴포넌트에 초기 데이터 전달
     return (
-      <LiveScoreView
-        initialMatches={processedMatches}
-        initialDate={dateParam}
-      />
+      <>
+        <TrackPageVisit id="livescore" slug="livescore/football" name="라이브스코어" />
+        <LiveScoreView
+          initialMatches={processedMatches}
+          initialDate={dateParam}
+        />
+      </>
     );
   } catch (error) {
     // 오류 발생 시 빈 데이터로 렌더링
     console.error('축구 경기 데이터 가져오기 실패:', error);
     return (
-      <LiveScoreView
-        initialMatches={[]}
-        initialDate={dateParam}
-      />
+      <>
+        <TrackPageVisit id="livescore" slug="livescore/football" name="라이브스코어" />
+        <LiveScoreView
+          initialMatches={[]}
+          initialDate={dateParam}
+        />
+      </>
     );
   }
 }

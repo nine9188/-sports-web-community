@@ -226,10 +226,8 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
                   <div className="flex items-center mb-1">
                     <div className="w-5 h-5 relative mr-2 flex-shrink-0">
                       <ApiSportsImage
-                        src={group.league.logo || '/placeholder.png'}
                         imageId={group.league.id}
                         imageType={ImageType.Leagues}
-                        fallbackType={ImageType.Leagues}
                         alt={group.league.name}
                         width={20}
                         height={20}

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { memo } from 'react';
+import React, { memo, useEffect } from 'react';
+import { addRecentlyVisited } from '@/domains/layout/utils/recentlyVisited';
 import Link from 'next/link';
 import { PenLine } from 'lucide-react';
 import BoardBreadcrumbs from '../common/BoardBreadcrumbs';
@@ -166,6 +167,17 @@ export default function BoardDetailLayout({
 }: BoardDetailLayoutProps) {
   // view_type이 타입에 없더라도 안전하게 읽어서 분기
   const viewType = (boardData as unknown as { view_type?: 'list' | 'image-table' })?.view_type;
+
+  // 게시판 방문 기록
+  useEffect(() => {
+    if (boardData.id && boardData.name) {
+      addRecentlyVisited({
+        id: boardData.id,
+        slug: boardData.slug || boardData.id,
+        name: boardData.name
+      });
+    }
+  }, [boardData.id, boardData.slug, boardData.name]);
 
   return (
     <div className="container mx-auto overflow-x-hidden" data-current-page={currentPage}>

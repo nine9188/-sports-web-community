@@ -1,6 +1,7 @@
 import { MAJOR_LEAGUE_IDS, LEAGUE_NAMES_MAP } from '@/domains/livescore/constants/league-mappings';
 import { LeagueCard } from '@/domains/livescore/components/football/leagues';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
+import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 
 // 리그 카테고리별 분류
 const LEAGUE_CATEGORIES = {
@@ -58,6 +59,7 @@ const LEAGUE_CATEGORIES = {
 export default async function LeaguesPage() {
   return (
     <div className="min-h-screen w-full">
+      <TrackPageVisit id="datacenter" slug="livescore/football/leagues" name="데이터센터" />
       <div className="container mx-auto w-full">
         {/* 페이지 헤더 */}
         <Container>

@@ -24,18 +24,27 @@ type DatabaseBoard = {
 export const getBoardsData = cache(async (): Promise<BoardNavigationData> => {
   try {
     const supabase = await getSupabaseServer();
-    
-    // 게시판 데이터 쿼리
-    const { data: boards, error } = await supabase
-      .from('boards')
-      .select('*')
-      .order('display_order', { ascending: true })
-      .order('name', { ascending: true })
-      .abortSignal(AbortSignal.timeout(15000)); // 15초 타임아웃
-      
+
+    // 게시판 데이터와 전체 글 개수를 병렬로 가져오기
+    const [boardsResult, postsCountResult] = await Promise.all([
+      supabase
+        .from('boards')
+        .select('*')
+        .order('display_order', { ascending: true })
+        .order('name', { ascending: true })
+        .abortSignal(AbortSignal.timeout(15000)),
+      supabase
+        .from('posts')
+        .select('*', { count: 'exact', head: true })
+        .abortSignal(AbortSignal.timeout(15000))
+    ]);
+
+    const { data: boards, error } = boardsResult;
+    const totalPostCount = postsCountResult.count || 0;
+
     if (error) {
       console.error('게시판 데이터 불러오기 오류:', error.message);
-      return { rootBoards: [] };
+      return { rootBoards: [], totalPostCount: 0 };
     }
 
     // 계층형 구조 변환
@@ -91,10 +100,10 @@ export const getBoardsData = cache(async (): Promise<BoardNavigationData> => {
       });
     };
     
-    return { rootBoards: sortBoards(rootBoards) };
+    return { rootBoards: sortBoards(rootBoards), totalPostCount };
   } catch (error) {
     console.error('게시판 데이터 처리 오류:', error);
-    return { rootBoards: [] };
+    return { rootBoards: [], totalPostCount: 0 };
   }
 });
 

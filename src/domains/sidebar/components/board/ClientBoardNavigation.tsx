@@ -3,8 +3,17 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, Flame, Timer, ArrowLeftRight, Database, ShoppingBag, FileText } from 'lucide-react';
 import { BoardNavigationData, HierarchicalBoard } from '../../types';
+
+// 빠른 이동 메뉴 항목 (전체글 제외 - 별도 처리)
+const quickMenuItems = [
+  { href: '/boards/popular', label: '인기글', icon: Flame },
+  { href: '/livescore/football', label: '라이브스코어', icon: Timer },
+  { href: '/transfers', label: '이적시장', icon: ArrowLeftRight },
+  { href: '/livescore/football/leagues', label: '데이터센터', icon: Database },
+  { href: '/shop', label: '아이콘샵', icon: ShoppingBag },
+];
 
 // 게시판 카테고리 컴포넌트 타입 정의
 type BoardCategoryItemProps = { 
@@ -108,8 +117,59 @@ export default function ClientBoardNavigation({
     });
   };
   
+  const isAllPostsActive = pathname === '/boards/all';
+
+  // 숫자 포맷팅 (1000 이상이면 K 단위로)
+  const formatCount = (count: number) => {
+    if (count >= 1000) {
+      return `${(count / 1000).toFixed(1)}K`;
+    }
+    return count.toLocaleString();
+  };
+
   return (
     <div>
+      {/* 전체글 (개수 표시) */}
+      <Link
+        href="/boards/all"
+        className={`flex items-center justify-between text-sm py-2 px-4 transition-colors ${
+          isAllPostsActive
+            ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] font-medium'
+            : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]'
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <FileText className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+          <span>전체글</span>
+        </div>
+        <span className="text-xs text-gray-500 dark:text-gray-400">
+          {formatCount(initialData.totalPostCount || 0)}
+        </span>
+      </Link>
+
+      {/* 빠른 이동 메뉴 */}
+      {quickMenuItems.map((item) => {
+        const isActive = pathname === item.href;
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`flex items-center gap-3 text-sm py-2 px-4 transition-colors ${
+              isActive
+                ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] font-medium'
+                : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]'
+            }`}
+          >
+            <item.icon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            <span>{item.label}</span>
+          </Link>
+        );
+      })}
+
+      {/* 구분선 */}
+      <div className="my-2 mx-4 border-t border-gray-200 dark:border-gray-700" />
+
+      {/* 게시판 목록 */}
       {initialData.rootBoards.map((board) => (
         <BoardCategoryItem
           key={board.id}

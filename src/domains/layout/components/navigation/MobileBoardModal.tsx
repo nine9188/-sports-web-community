@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import ReactDOM from 'react-dom';
-import { ChevronDown, X, ShoppingBag, Search } from 'lucide-react';
+import { ChevronDown, X, ShoppingBag, Search, FileText, Flame } from 'lucide-react';
 import { Board } from '../../types/board';
+import { ThemeToggle } from '@/shared/components/ThemeToggle';
 
 interface MobileBoardModalProps {
   boards: Board[];
@@ -33,13 +33,13 @@ const MobileBoardModal = React.memo(function MobileBoardModal({
   });
   const router = useRouter();
 
-  // 모든 게시판을 평면화하여 검색 가능하게 만듭니다
-  const flattenBoards = (items: Board[]): Board[] => {
+  // 모든 게시판을 평면화하여 검색 가능하게 만들기
+  const flattenBoards = (boards: Board[]): Board[] => {
     const result: Board[] = [];
-    items.forEach(item => {
-      result.push(item);
-      if (item.children && item.children.length > 0) {
-        result.push(...flattenBoards(item.children));
+    boards.forEach(board => {
+      result.push(board);
+      if (board.children) {
+        result.push(...flattenBoards(board.children));
       }
     });
     return result;
@@ -47,7 +47,9 @@ const MobileBoardModal = React.memo(function MobileBoardModal({
 
   const allBoards = flattenBoards(boards);
   const filteredBoards = searchTerm
-    ? allBoards.filter(board => board.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    ? allBoards.filter(board =>
+        board.name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
     : boards;
 
   const handleBoardClick = (board: Board) => {
@@ -65,11 +67,28 @@ const MobileBoardModal = React.memo(function MobileBoardModal({
     setExpandedBoards(newExpanded);
   };
 
-  if (!isOpen) return null;
+  // SSR 보호: 클라이언트 마운트 후에만 포털 사용
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
-  return ReactDOM.createPortal(
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden">
-      <div className="bg-white dark:bg-[#1D1D1D] h-full flex flex-col">
+  if (!isMounted) return null;
+
+  return (
+    <>
+      {/* Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-[999] md:hidden"
+          onClick={onClose}
+        />
+      )}
+
+      {/* 햄버거 메뉴 모달 */}
+      <div className={`fixed top-0 right-0 h-full w-full max-w-md bg-white dark:bg-[#1D1D1D] transform transition-transform duration-300 ease-in-out z-[1000] md:hidden ${
+        isOpen ? 'translate-x-0' : 'translate-x-full'
+      } flex flex-col`}>
         {/* 헤더 - 고정 */}
         <div className="flex items-center justify-between p-4 border-b border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
           <h2 className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0]">게시판 선택</h2>
@@ -77,12 +96,18 @@ const MobileBoardModal = React.memo(function MobileBoardModal({
             onClick={onClose}
             className="p-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-full transition-colors"
           >
-            <X className="h-4 w-4 text-gray-900 dark:text-[#F0F0F0]" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
+        {/* 테마 토글 - 고정 */}
+        <div className="p-4 border-b border-black/7 dark:border-white/10 flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">테마 설정</span>
+          <ThemeToggle />
+        </div>
+
         {/* 검색 - 고정 */}
-        <div className="p-4 border-b border-black/7 dark:border-white/10">
+        <div className="p-4 border-b border-black/5 dark:border-white/10">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400" />
             <input
@@ -97,12 +122,30 @@ const MobileBoardModal = React.memo(function MobileBoardModal({
 
         {/* 스크롤 가능한 콘텐츠 영역 */}
         <div className="flex-1 overflow-y-auto">
-          {/* 라이브스코어, 아이콘샵 링크 */}
-          <div className="p-4 border-b border-black/7 dark:border-white/10 space-y-2">
+          {/* 전체글, 인기글, 라이브스코어, 데이터센터, 아이콘샵 링크 */}
+          <div className="border-b border-black/5 dark:border-white/10">
+            <Link
+              href="/boards/all"
+              onClick={onClose}
+              className="flex items-center gap-3 px-4 py-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]"
+            >
+              <FileText className="h-4 w-4" />
+              <span className="text-sm font-medium">전체글</span>
+            </Link>
+
+            <Link
+              href="/boards/popular"
+              onClick={onClose}
+              className="flex items-center gap-3 px-4 py-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]"
+            >
+              <Flame className="h-4 w-4" />
+              <span className="text-sm font-medium">인기글</span>
+            </Link>
+
             <Link
               href="/livescore/football"
               onClick={onClose}
-              className="flex items-center gap-3 p-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-lg transition-colors text-gray-900 dark:text-[#F0F0F0]"
+              className="flex items-center gap-3 px-4 py-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -114,7 +157,7 @@ const MobileBoardModal = React.memo(function MobileBoardModal({
             <Link
               href="/transfers"
               onClick={onClose}
-              className="flex items-center gap-3 p-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-lg transition-colors text-gray-900 dark:text-[#F0F0F0]"
+              className="flex items-center gap-3 px-4 py-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M16 3h5v5M16 8l5-5m-1 10v5h-5m-8-5l-5 5v-5h5m8-8v5h5m-5-5l5 5"/>
@@ -125,9 +168,9 @@ const MobileBoardModal = React.memo(function MobileBoardModal({
             <Link
               href="/livescore/football/leagues"
               onClick={onClose}
-              className="flex items-center gap-3 p-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-lg transition-colors text-gray-900 dark:text-[#F0F0F0]"
+              className="flex items-center gap-3 px-4 py-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
                 <path d="M3 3v18h18V3H3zm16 16H5V5h14v14z"/>
                 <path d="M8 8h8v2H8V8zm0 4h8v2H8v-2zm0 4h5v2H8v-2z"/>
               </svg>
@@ -137,7 +180,7 @@ const MobileBoardModal = React.memo(function MobileBoardModal({
             <Link
               href="/shop"
               onClick={onClose}
-              className="flex items-center gap-3 p-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-lg transition-colors text-gray-900 dark:text-[#F0F0F0]"
+              className="flex items-center gap-3 px-4 py-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]"
             >
               <ShoppingBag className="h-4 w-4" />
               <span className="text-sm font-medium">아이콘샵</span>
@@ -148,7 +191,7 @@ const MobileBoardModal = React.memo(function MobileBoardModal({
               <Link
                 href="/admin"
                 onClick={onClose}
-                className="flex items-center gap-3 p-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-lg transition-colors text-gray-900 dark:text-[#F0F0F0]"
+                className="flex items-center gap-3 px-4 py-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
                   <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
@@ -163,12 +206,12 @@ const MobileBoardModal = React.memo(function MobileBoardModal({
           <div className="pb-4">
             {searchTerm ? (
               // 검색 결과
-              <div className="p-2">
+              <div>
                 {filteredBoards.map(board => (
                   <button
                     key={board.id}
                     onClick={() => handleBoardClick(board)}
-                    className="w-full text-left p-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-lg transition-colors text-gray-900 dark:text-[#F0F0F0]"
+                    className="w-full text-left px-4 py-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]"
                   >
                     <div className="text-sm font-medium">{board.name}</div>
                   </button>
@@ -181,29 +224,29 @@ const MobileBoardModal = React.memo(function MobileBoardModal({
               </div>
             ) : (
               // 카테고리별 게시판 (아코디언 스타일)
-              <div className="p-2">
+              <div>
                 {boards.map(board => (
-                  <div key={board.id} className="mb-2">
+                  <div key={board.id}>
                     {/* 1단계: 크기 줄임, 다른 버튼들과 동일한 크기 */}
                     <button
                       onClick={() => handleBoardClick(board)}
-                      className="w-full text-left p-2 bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-lg mb-1 transition-colors"
+                      className="w-full text-left px-4 py-3 bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                     >
                       <div className="font-semibold text-gray-900 dark:text-[#F0F0F0] text-sm">{board.name}</div>
                     </button>
-                    
+
                     {/* 2단계: 항상 표시됨 */}
                     {board.children && board.children.length > 0 && (
-                      <div className="ml-4 space-y-1">
+                      <div className="ml-4">
                         {board.children
                           .sort((a, b) => a.display_order - b.display_order)
                           .map(child => (
                             <div key={child.id}>
-                              <div className="flex items-center bg-white dark:bg-[#1D1D1D] rounded">
+                              <div className="flex items-center">
                                 {/* 2단계 게시판 이름 */}
                                 <button
                                   onClick={() => handleBoardClick(child)}
-                                  className="flex-1 text-left p-2 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] rounded-l text-sm transition-colors text-gray-900 dark:text-[#F0F0F0]"
+                                  className="flex-1 text-left px-4 py-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-sm transition-colors text-gray-900 dark:text-[#F0F0F0]"
                                 >
                                   {child.name}
                                 </button>
@@ -212,7 +255,7 @@ const MobileBoardModal = React.memo(function MobileBoardModal({
                                 {child.children && child.children.length > 0 && (
                                   <button
                                     onClick={() => toggleExpanded(child.id)}
-                                    className="p-2 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] rounded-r border-l border-black/7 dark:border-white/10 transition-colors text-gray-900 dark:text-[#F0F0F0]"
+                                    className="px-4 py-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] border-l border-black/5 dark:border-white/10 transition-colors"
                                   >
                                     <ChevronDown
                                       className={`h-3 w-3 transition-transform ${
@@ -225,14 +268,14 @@ const MobileBoardModal = React.memo(function MobileBoardModal({
 
                               {/* 3단계 하위 게시판 (펼쳐진 경우에만 표시) */}
                               {child.children && child.children.length > 0 && expandedBoards.has(child.id) && (
-                                <div className="ml-4 mt-1 space-y-1">
+                                <div className="ml-4">
                                   {child.children
                                     .sort((a, b) => a.display_order - b.display_order)
                                     .map(grandChild => (
                                       <button
                                         key={grandChild.id}
                                         onClick={() => handleBoardClick(grandChild)}
-                                        className="w-full text-left p-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded text-sm text-gray-900 dark:text-[#F0F0F0] bg-[#F5F5F5] dark:bg-[#262626] transition-colors"
+                                        className="w-full text-left px-4 py-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-sm text-gray-900 dark:text-[#F0F0F0] transition-colors"
                                       >
                                         ┗ {grandChild.name}
                                       </button>
@@ -250,9 +293,8 @@ const MobileBoardModal = React.memo(function MobileBoardModal({
           </div>
         </div>
       </div>
-    </div>,
-    document.body
+    </>
   );
 });
 
-export default MobileBoardModal; 
+export default MobileBoardModal;

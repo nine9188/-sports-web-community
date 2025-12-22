@@ -43,7 +43,7 @@ export default function Sidebar({
           onClick={onClose}
         />
       )}
-      
+
       {/* 데스크탑 사이드바 (왼쪽에 고정) */}
       <div
         className="fixed lg:relative top-0 lg:top-0 left-0 h-[100dvh] lg:h-auto w-[300px]
@@ -123,4 +123,4 @@ export default function Sidebar({
       </div>
     </>
   );
-} 
+}

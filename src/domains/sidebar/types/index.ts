@@ -35,6 +35,7 @@ export interface ProfileData {
 // 게시판 내비게이션 초기 데이터 타입
 export interface BoardNavigationData {
   rootBoards: HierarchicalBoard[];
+  totalPostCount?: number;
 }
 
 // 리그 데이터 타입

@@ -114,8 +114,8 @@ const DropdownMenu = React.memo(function DropdownMenu({
   };
 
   return ReactDOM.createPortal(
-    <div 
-      className="fixed bg-white border rounded-md shadow-lg py-1 hidden md:block"
+    <div
+      className="fixed bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-md shadow-lg py-1 hidden md:block"
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`,
@@ -123,7 +123,7 @@ const DropdownMenu = React.memo(function DropdownMenu({
         maxWidth: '240px',
         maxHeight: '60vh',
         overflowY: 'auto',
-        zIndex: 50
+        zIndex: 60
       }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}

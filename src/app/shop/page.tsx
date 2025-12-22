@@ -3,6 +3,7 @@ import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getCategoryItemsPaginated, getUserItems, getUserPoints, getShopCategories } from '@/domains/shop/actions/actions';
 import CategoryFilter from '@/domains/shop/components/CategoryFilter';
 import ShopPagination from '@/domains/shop/components/ShopPagination';
+import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 
 // 동적 렌더링 강제 설정 추가
 export const dynamic = 'force-dynamic';
@@ -93,6 +94,7 @@ export default async function ShopPage({ searchParams }: Props) {
 
   return (
     <div className="container mx-auto">
+      <TrackPageVisit id="shop" slug="shop" name="아이콘샵" />
       <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 md:rounded-lg overflow-hidden mb-4">
         <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center md:rounded-t-lg">
           <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">포인트 상점</h3>

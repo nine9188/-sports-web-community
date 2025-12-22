@@ -21,10 +21,8 @@ const TopLevelBoard = React.memo(function TopLevelBoard({
   const hasChildren = board.children && board.children.length > 0;
 
   const handleClick = () => {
-    // 하위 게시판이 없는 경우에만 클릭 시 이동
-    if (!hasChildren) {
-      onClick(board);
-    }
+    // 하위 게시판 여부와 관계없이 클릭 시 이동
+    onClick(board);
   };
 
   return (
