@@ -1,10 +1,28 @@
 'use client'
 
 import Image from 'next/image'
-import ApiSportsImage from '@/shared/components/ApiSportsImage'
-import { getImageIdFromUrl, getImageTypeFromUrl, isApiSportsUrl } from '@/shared/utils/image-proxy'
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage'
 import { ImageType } from '@/shared/types/image'
 import { ShopItem } from '../types'
+
+// API-Sports URL 유틸리티 함수들
+function isApiSportsUrl(url: string): boolean {
+  return Boolean(url && url.includes('media.api-sports.io'));
+}
+
+function getImageTypeFromUrl(url: string): ImageType | null {
+  if (url.includes('/players/')) return ImageType.Players;
+  if (url.includes('/teams/')) return ImageType.Teams;
+  if (url.includes('/leagues/')) return ImageType.Leagues;
+  if (url.includes('/coachs/')) return ImageType.Coachs;
+  return null;
+}
+
+function getImageIdFromUrl(url: string): string | null {
+  if (!url) return null;
+  const match = url.match(/\/(players|teams|leagues|coachs|venues)\/(\d+)\.(png|gif)$/);
+  return match ? match[2] : null;
+}
 
 interface PurchaseModalProps {
   item: ShopItem
@@ -55,7 +73,7 @@ export default function PurchaseModal({
           <div className="flex items-center gap-3 mb-4">
             <div className="w-5 h-5 relative flex-shrink-0">
               {isApiSportsUrl(item.image_url) ? (
-                <ApiSportsImage
+                <UnifiedSportsImage
                   imageId={getImageIdFromUrl(item.image_url) as string}
                   imageType={getImageTypeFromUrl(item.image_url) as ImageType}
                   alt={item.name}

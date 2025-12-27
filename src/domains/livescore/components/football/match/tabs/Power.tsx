@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { Team } from '@/domains/livescore/types/match';
 import { StandingsData } from '@/domains/livescore/types/match';
@@ -69,10 +69,6 @@ export default function Power({ data }: PowerProps) {
   const teamAMeta = findTeamMeta(data.teamA)
   const teamBMeta = findTeamMeta(data.teamB)
 
-  // 데이터 확인용 콘솔 로그
-  console.log('Team A recent games:', data.recent.teamA.items.length, data.recent.teamA.items);
-  console.log('Team B recent games:', data.recent.teamB.items.length, data.recent.teamB.items);
-
   // 평균 득/실점 계산 (최근 폼 기준)
   const gamesA = Math.max(1, data.recent.teamA.last)
   const gamesB = Math.max(1, data.recent.teamB.last)
@@ -96,7 +92,7 @@ export default function Power({ data }: PowerProps) {
           <div className="text-right px-1">
             <Link href={`/livescore/football/team/${data.teamA}`} className="group flex items-center justify-end gap-2 mb-1">
               <div className="font-semibold truncate text-right text-gray-900 dark:text-[#F0F0F0] group-hover:underline transition-colors">{teamAMeta.name}</div>
-              <ApiSportsImage
+              <UnifiedSportsImage
                 imageId={data.teamA}
                 imageType={ImageType.Teams}
                 alt={teamAMeta.name}
@@ -122,7 +118,7 @@ export default function Power({ data }: PowerProps) {
           </div>
           <div className="text-left px-1">
             <Link href={`/livescore/football/team/${data.teamB}`} className="group flex items-center justify-start gap-2 mb-1">
-              <ApiSportsImage
+              <UnifiedSportsImage
                 imageId={data.teamB}
                 imageType={ImageType.Teams}
                 alt={teamBMeta.name}
@@ -211,7 +207,7 @@ export default function Power({ data }: PowerProps) {
         <ContainerHeader>
           <div className="flex items-center gap-2">
             <ContainerTitle>최근 경기 - {teamAMeta.name}</ContainerTitle>
-            <ApiSportsImage
+            <UnifiedSportsImage
               imageId={data.teamA}
               imageType={ImageType.Teams}
               alt={teamAMeta.name}
@@ -271,7 +267,7 @@ export default function Power({ data }: PowerProps) {
         <ContainerHeader>
           <div className="flex items-center gap-2">
             <ContainerTitle>최근 경기 - {teamBMeta.name}</ContainerTitle>
-            <ApiSportsImage
+            <UnifiedSportsImage
               imageId={data.teamB}
               imageType={ImageType.Teams}
               alt={teamBMeta.name}
@@ -452,7 +448,7 @@ export default function Power({ data }: PowerProps) {
               >
                 <div className="flex items-center justify-end px-1 gap-2">
                   <span className="text-sm">{teamAMeta.name}</span>
-                  <ApiSportsImage
+                  <UnifiedSportsImage
                     imageId={data.teamA}
                     imageType={ImageType.Teams}
                     alt={teamAMeta.name}
@@ -468,7 +464,7 @@ export default function Power({ data }: PowerProps) {
                 </div>
                 <div className="flex items-center justify-start px-1 gap-2">
                   <span className="font-semibold">{bScore}</span>
-                  <ApiSportsImage
+                  <UnifiedSportsImage
                     imageId={data.teamB}
                     imageType={ImageType.Teams}
                     alt={teamBMeta.name}
@@ -561,7 +557,7 @@ export default function Power({ data }: PowerProps) {
         <ContainerHeader>
           <div className="flex items-center gap-2">
             <ContainerTitle>{teamAMeta.name} 득점·도움 순위</ContainerTitle>
-            <ApiSportsImage
+            <UnifiedSportsImage
               imageId={data.teamA}
               imageType={ImageType.Teams}
               alt={teamAMeta.name}
@@ -636,7 +632,7 @@ export default function Power({ data }: PowerProps) {
       <Container className="bg-white dark:bg-[#1D1D1D] md:hidden">
         <ContainerHeader>
           <div className="flex items-center gap-2">
-            <ApiSportsImage
+            <UnifiedSportsImage
               imageId={data.teamB}
               imageType={ImageType.Teams}
               alt={teamBMeta.name}
@@ -719,7 +715,7 @@ export default function Power({ data }: PowerProps) {
             <div>
               <Link href={`/livescore/football/team/${data.teamA}`} className="flex items-center justify-end gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors mb-3">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{teamAMeta.name}</span>
-                <ApiSportsImage
+                <UnifiedSportsImage
                   imageId={data.teamA}
                   imageType={ImageType.Teams}
                   alt={teamAMeta.name}
@@ -794,7 +790,7 @@ export default function Power({ data }: PowerProps) {
             {/* Team B 섹션 */}
             <div>
               <Link href={`/livescore/football/team/${data.teamB}`} className="flex items-center justify-start gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors mb-3">
-                <ApiSportsImage
+                <UnifiedSportsImage
                   imageId={data.teamB}
                   imageType={ImageType.Teams}
                   alt={teamBMeta.name}

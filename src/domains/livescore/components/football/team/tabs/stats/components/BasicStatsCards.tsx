@@ -1,6 +1,6 @@
 'use client';
 
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 
 import { TeamStatsData, LeagueData } from '@/domains/livescore/types/stats';
@@ -56,7 +56,7 @@ export default function BasicStatsCards({ stats }: BasicStatsCardsProps) {
           <div className="flex items-center p-3">
             <div className="mr-3 flex-shrink-0">
               <div className="w-6 h-6 relative">
-                <ApiSportsImage
+                <UnifiedSportsImage
                   imageId={safeLeague.id}
                   imageType={ImageType.Leagues}
                   alt={safeLeague.name || ''}

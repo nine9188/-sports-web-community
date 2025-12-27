@@ -146,7 +146,7 @@ export default function LiveScoreView({
 
     const id = scheduleNextKstMidnight();
     return () => {
-      clearTimeout(id as unknown as number);
+      clearTimeout(id);
     };
   }, []);
 

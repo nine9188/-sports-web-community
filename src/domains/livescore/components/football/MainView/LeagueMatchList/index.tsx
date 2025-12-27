@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Match } from '@/domains/livescore/types/match';
 import MatchCard from '../MatchCard';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 
 interface LeagueMatchListProps {
@@ -95,7 +95,7 @@ export default function LeagueMatchList({ matches, allExpanded = true }: LeagueM
             >
               <div className="flex items-center gap-3">
                 {group.logo && group.leagueId ? (
-                  <ApiSportsImage
+                  <UnifiedSportsImage
                     imageId={group.leagueId}
                     imageType={ImageType.Leagues}
                     alt={group.name}

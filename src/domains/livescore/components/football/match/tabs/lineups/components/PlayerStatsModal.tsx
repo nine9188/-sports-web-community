@@ -43,17 +43,10 @@ export default function PlayerStatsModal({
       setError(null);
 
       try {
-        console.log('🔍 선수 통계 요청:', { matchId, playerId, playerName: playerInfo.name });
         const data = await fetchCachedPlayerStats(matchId, playerId);
-        console.log('📊 선수 통계 응답:', data);
         setPlayerStats(data);
-        
-        if (!data.success) {
-          console.warn('⚠️ 선수 통계 실패:', data.message);
-        }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : '알 수 없는 오류';
-        console.error('❌ 선수 통계 에러:', err);
         setError(`선수 통계를 가져오는 중 오류가 발생했습니다: ${errorMessage}`);
       } finally {
         setIsLoading(false);

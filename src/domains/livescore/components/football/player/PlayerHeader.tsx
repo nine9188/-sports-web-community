@@ -1,7 +1,7 @@
 'use client';
 
 import React, { memo } from 'react';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import { ErrorState, PlayerProfileLoadingState } from '@/domains/livescore/components/common/CommonComponents';
@@ -9,29 +9,7 @@ import { usePlayerData } from './context/PlayerDataContext';
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
-
-// 필요한 타입 정의
-interface TeamData {
-  id: number;
-  name: string;
-  logo: string;
-}
-
-interface LeagueData {
-  id: number;
-  name: string;
-  country: string;
-}
-
-interface GamesData {
-  position?: string;
-}
-
-interface StatisticsData {
-  team: TeamData;
-  league: LeagueData;
-  games: GamesData;
-}
+import type { PlayerStatistic } from '@/domains/livescore/types/player';
 
 // 포지션 한글 매핑
 const POSITION_MAP: Record<string, string> = {
@@ -79,7 +57,7 @@ const PlayerHeader = memo(function PlayerHeader() {
 
   // 통계 데이터 가져오기
   const statistics = playerData.statistics || [];
-  const playerStats = statistics.length > 0 ? statistics[0] as unknown as StatisticsData : null;
+  const playerStats: PlayerStatistic | null = statistics.length > 0 ? statistics[0] : null;
   
   // 포지션 정보 가져오기
   const position = playerStats?.games?.position || '';
@@ -100,7 +78,7 @@ const PlayerHeader = memo(function PlayerHeader() {
             <div className="relative w-20 h-20 md:w-28 md:h-28 flex-shrink-0">
               <div className="relative w-20 h-20 md:w-28 md:h-28">
                 <div className="absolute inset-0 rounded-full border-4 border-white dark:border-[#1D1D1D] shadow-lg"></div>
-                <ApiSportsImage
+                <UnifiedSportsImage
                   imageId={playerData.info.id}
                   imageType={ImageType.Players}
                   alt={playerData.info.name}
@@ -115,7 +93,7 @@ const PlayerHeader = memo(function PlayerHeader() {
                   className="absolute -bottom-2 -right-2 w-8 h-8 md:w-10 md:h-10 rounded-full shadow-lg flex items-center justify-center"
                   style={{ backgroundColor: '#ffffff' }}
                 >
-                  <ApiSportsImage
+                  <UnifiedSportsImage
                     imageId={mainTeamStats.team.id}
                     imageType={ImageType.Teams}
                     alt={mainTeamStats.team.name || ''}

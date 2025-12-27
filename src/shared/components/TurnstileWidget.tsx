@@ -60,10 +60,30 @@ export default function TurnstileWidget({ siteKey, onToken, className, appearanc
 
 		function ensureScript() {
 			const id = 'cf-turnstile-script';
-			if (document.getElementById(id)) {
-				render();
+			const existingScript = document.getElementById(id);
+
+			if (existingScript) {
+				// 스크립트가 이미 있지만 turnstile이 아직 로드 안됐을 수 있음
+				if (window.turnstile) {
+					render();
+				} else {
+					// turnstile 로드 대기
+					const checkInterval = setInterval(() => {
+						if (!mounted) {
+							clearInterval(checkInterval);
+							return;
+						}
+						if (window.turnstile) {
+							clearInterval(checkInterval);
+							render();
+						}
+					}, 50);
+					// 5초 후 타임아웃
+					setTimeout(() => clearInterval(checkInterval), 5000);
+				}
 				return;
 			}
+
 			const s = document.createElement('script');
 			s.id = id;
             s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';

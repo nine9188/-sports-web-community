@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import useEmblaCarousel from 'embla-carousel-react';
 
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { fetchBigMatches, MatchData as FootballMatchData } from '@/domains/livescore/actions/footballApi';
 import { getTeamById } from '@/domains/livescore/constants/teams';
@@ -279,7 +279,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                           <div className="flex items-center justify-between mb-1 text-gray-700">
                             <div className="flex items-center gap-0.5 flex-1 min-w-0">
                               {match.league?.logo && match.league?.id && (
-                                <ApiSportsImage
+                                <UnifiedSportsImage
                                   imageId={match.league.id}
                                   imageType={ImageType.Leagues}
                                   alt={String(leagueNameKo)}
@@ -305,7 +305,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                           <div className="grid grid-cols-3 gap-1 flex-1">
                             <div className="flex flex-col items-center justify-center gap-0">
                               {match.teams?.home?.logo && match.teams?.home?.id && (
-                                <ApiSportsImage 
+                                <UnifiedSportsImage 
                                   imageId={match.teams.home.id} 
                                   imageType={ImageType.Teams} 
                                   alt={String(homeTeamNameKo)} 
@@ -331,7 +331,7 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                             </div>
                             <div className="flex flex-col items-center justify-center gap-0">
                               {match.teams?.away?.logo && match.teams?.away?.id && (
-                                <ApiSportsImage 
+                                <UnifiedSportsImage 
                                   imageId={match.teams.away.id} 
                                   imageType={ImageType.Teams} 
                                   alt={String(awayTeamNameKo)} 

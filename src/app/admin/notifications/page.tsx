@@ -90,7 +90,6 @@ export default function NotificationSendPage() {
           throw error;
         }
 
-        console.log('조회된 사용자:', data?.length);
         setUsers(data || []);
       } catch (error) {
         console.error('사용자 목록 조회 실패:', error);

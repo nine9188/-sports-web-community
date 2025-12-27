@@ -1,17 +1,53 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image, { ImageProps } from 'next/image';
+import Image from 'next/image';
+import { useTheme } from 'next-themes';
 import { ImageType } from '@/shared/types/image';
-import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
 
-// 메모리 캐시 - 이미 확인된 URL들을 저장하여 중복 요청 방지
-export const urlCache = new Map<string, string | null>();
+// Supabase Storage URL (리그, 팀 이미지용)
+const SUPABASE_STORAGE_URL = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public';
+
+// API-Sports 이미지 URL (선수, 감독 이미지용)
+const API_SPORTS_BASE_URL = 'https://media.api-sports.io/football';
+
+// 다크모드 이미지가 있는 리그 ID들 (Supabase에 {id}-1.png 형식으로 저장됨)
+const DARK_MODE_LEAGUE_IDS = [
+  39,   // Premier League
+  2,    // Champions League
+  3,    // Europa League
+  13,   // Coppa Italia
+  119,  // Superliga
+  179,  // Scottish Premiership
+  292,  // K-League 1
+];
+
+/**
+ * 이미지 URL 생성
+ * - 리그/팀: Supabase Storage에서 로드
+ * - 선수/감독: API-Sports에서 로드
+ */
+function getImageUrl(type: ImageType, id: string | number, isDark: boolean = false): string {
+  // 리그와 팀은 Supabase Storage에서 로드
+  if (type === ImageType.Leagues || type === ImageType.Teams) {
+    const bucket = type === ImageType.Leagues ? 'leagues' : 'teams';
+
+    // 다크모드이고 다크모드 이미지가 있는 리그인 경우 ({id}-1.png 형식)
+    if (isDark && type === ImageType.Leagues && DARK_MODE_LEAGUE_IDS.includes(Number(id))) {
+      return `${SUPABASE_STORAGE_URL}/${bucket}/${id}-1.png`;
+    }
+
+    return `${SUPABASE_STORAGE_URL}/${bucket}/${id}.png`;
+  }
+
+  // 선수와 감독은 API-Sports에서 로드
+  return `${API_SPORTS_BASE_URL}/${type}/${id}.png`;
+}
 
 type SizeVariant = 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
 type ShapeVariant = 'square' | 'circle';
 
-interface UnifiedSportsImageProps extends Omit<ImageProps, 'src' | 'width' | 'height'> {
+interface UnifiedSportsImageProps {
   imageId: string | number;
   imageType: ImageType;
   alt: string;
@@ -22,15 +58,23 @@ interface UnifiedSportsImageProps extends Omit<ImageProps, 'src' | 'width' | 'he
   loading?: 'lazy' | 'eager';
   priority?: boolean;
   fit?: 'cover' | 'contain';
+  className?: string;
+  // ApiSportsImage 호환용 props
+  width?: number;
+  height?: number;
 }
 
 /**
- * 통일된 스포츠 이미지 컴포넌트
- * 
+ * 통일된 스포츠 이미지 컴포넌트 (Next.js Image 사용)
+ *
+ * 이미지 소스:
+ * - 리그/팀: Supabase Storage에서 로드 (다크모드 이미지 지원)
+ * - 선수/감독: API-Sports에서 로드
+ *
  * 특징:
- * - 팀 로고, 선수, 감독 이미지를 동일한 구조로 처리
- * - size와 variant로 모든 케이스 커버
- * - 공통 로딩 애니메이션
+ * - Next.js Image로 자동 최적화 및 CDN 캐싱
+ * - size와 variant로 모든 케이스 커버 (또는 width/height 직접 지정)
+ * - 다크모드 리그 로고 자동 전환 ({id}-1.png)
  * - 일관된 폴백 시스템
  */
 export default function UnifiedSportsImage({
@@ -44,23 +88,44 @@ export default function UnifiedSportsImage({
   loading = 'lazy',
   priority = false,
   className = '',
-  fit = 'cover',
-  ...props
+  fit,
+  width,
+  height,
 }: UnifiedSportsImageProps) {
-  // 상태 관리
-  const [src, setSrc] = useState<string | null>(null);
-  const [hasTriedServerAction, setHasTriedServerAction] = useState(false);
+  // 팀/리그 로고는 기본적으로 contain (잘리면 안 됨), 선수/감독은 cover
+  const defaultFit = (imageType === ImageType.Teams || imageType === ImageType.Leagues)
+    ? 'contain'
+    : 'cover';
+  const finalFit = fit ?? defaultFit;
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
+  // 클라이언트에서만 테마 확인 (hydration 에러 방지)
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // imageId 또는 imageType이 변경되면 에러 상태 리셋
+  useEffect(() => {
+    setHasError(false);
+  }, [imageId, imageType]);
+
+  const isDark = mounted && resolvedTheme === 'dark';
+
+  // 이미지 URL 생성 (리그/팀은 Supabase, 선수/감독은 API-Sports)
+  const src = getImageUrl(imageType, imageId, isDark);
 
   // 크기 맵핑
-  const sizeClasses = {
-    sm: 'w-6 h-6',    // 24px - 팀 로고
-    md: 'w-8 h-8',    // 32px - 선수
-    lg: 'w-10 h-10',  // 40px - 감독
-    xl: 'w-12 h-12',  // 48px - 큰 아바타
-    xxl: 'w-28 h-28'  // 112px - 모달 대형 아바타
+  const sizeClasses: Record<SizeVariant, string> = {
+    sm: 'w-6 h-6',
+    md: 'w-8 h-8',
+    lg: 'w-10 h-10',
+    xl: 'w-12 h-12',
+    xxl: 'w-28 h-28'
   };
 
-  const sizeValues = {
+  const sizeValues: Record<SizeVariant, { width: number; height: number }> = {
     sm: { width: 24, height: 24 },
     md: { width: 32, height: 32 },
     lg: { width: 40, height: 40 },
@@ -69,97 +134,54 @@ export default function UnifiedSportsImage({
   };
 
   // 모양 맵핑
-  const shapeClasses = {
+  const shapeClasses: Record<ShapeVariant, string> = {
     square: 'rounded',
     circle: 'rounded-full'
   };
 
-
-  // 이미지 URL 로드
-  useEffect(() => {
-    const cacheKey = `${imageType}-${imageId}`;
-    
-    // 메모리 캐시에서 먼저 확인
-    if (urlCache.has(cacheKey)) {
-      const cachedUrl = urlCache.get(cacheKey);
-      setSrc(cachedUrl || null);
-      return;
-    }
-
-    // 직접 스토리지 URL 시도
-    const directStorageUrl = getSupabaseStorageUrl(imageType, imageId);
-    urlCache.set(cacheKey, directStorageUrl);
-    setSrc(directStorageUrl);
-  }, [imageId, imageType]);
-
-  // 이미지 로드 에러 시 서버 액션으로 캐싱 시도
-  const handleImageError = async () => {
-    if (hasTriedServerAction) {
-      setSrc(null);
-      return;
-    }
-
-    setHasTriedServerAction(true);
-    
-    try {
-      const { getCachedImageFromStorage } = await import('@/shared/actions/image-storage-actions');
-      const result = await getCachedImageFromStorage(
-        imageType as 'players' | 'teams' | 'leagues' | 'coachs' | 'venues', 
-        imageId
-      );
-      
-      if (result.success && result.url && result.url.includes('supabase.co')) {
-        const cacheKey = `${imageType}-${imageId}`;
-        urlCache.set(cacheKey, result.url);
-        setSrc(result.url);
-      } else {
-        setSrc(null);
-      }
-    } catch (error) {
-      console.debug(`이미지 서버 액션 실패: ${imageType}/${imageId}`, error);
-      setSrc(null);
-    }
-  };
+  // width/height가 직접 지정된 경우 사용, 아니면 size 기반
+  const useCustomSize = width !== undefined || height !== undefined;
+  const finalWidth = width ?? sizeValues[size].width;
+  const finalHeight = height ?? sizeValues[size].height;
 
   // 컨테이너 클래스 생성
   const containerClasses = [
-    sizeClasses[size],
+    useCustomSize ? '' : sizeClasses[size],
     shapeClasses[variant],
     'relative',
     'flex-shrink-0',
     'overflow-hidden',
-    'bg-transparent',
-    variant === 'circle' ? 'border-2 border-gray-200 dark:border-gray-700' : '',
     className
   ].filter(Boolean).join(' ');
 
-  // src가 null이면 폴백 콘텐츠만 표시 (로딩 없음)
-  if (!src) {
+  // 커스텀 사이즈 스타일
+  const containerStyle = useCustomSize ? { width: finalWidth, height: finalHeight } : undefined;
+
+  // 에러 시 폴백 표시
+  if (hasError) {
     return (
-      <div className={`${containerClasses} flex items-center justify-center`}>
+      <div
+        className={`${containerClasses} flex items-center justify-center bg-gray-100 dark:bg-gray-800`}
+        style={containerStyle}
+      >
         {showFallback && fallbackContent ? fallbackContent : null}
       </div>
     );
   }
 
-  // 이미지 렌더링
+  // Next.js Image 렌더링 - 자동 최적화 및 CDN 캐싱
   return (
-    <div className={containerClasses}>
+    <div className={containerClasses} style={containerStyle}>
       <Image
-        {...props}
         src={src}
         alt={alt}
-        {...sizeValues[size]}
-        onError={handleImageError}
-        // priority가 true이면 priority만, 아니면 loading만 설정
-        {...(priority ? { priority: true } : { loading: loading })}
-        className={`w-full h-full ${fit === 'contain' ? 'object-contain' : 'object-cover'} transition-opacity duration-300 opacity-0 animate-fade-in`}
-        onLoad={(e) => {
-          // 이미지 로드 완료 시 페이드인 효과
-          const target = e.target as HTMLImageElement;
-          target.classList.remove('opacity-0');
-          target.classList.add('opacity-100');
-        }}
+        width={finalWidth}
+        height={finalHeight}
+        priority={priority}
+        loading={priority ? undefined : loading}
+        onError={() => setHasError(true)}
+        className={`w-full h-full ${finalFit === 'contain' ? 'object-contain' : 'object-cover'}`}
+        sizes={`${finalWidth}px`}
       />
     </div>
   );

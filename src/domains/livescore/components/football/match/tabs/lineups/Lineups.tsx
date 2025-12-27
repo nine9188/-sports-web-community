@@ -64,7 +64,12 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
     };
   } | null>(null);
 
-  const { playersRatings } = usePlayerStats(matchId);
+  const { playersRatings, captainIds } = usePlayerStats(matchId);
+
+  // 주장 여부 확인 헬퍼 함수 (lineup API 데이터 또는 player stats API 데이터 사용)
+  const isCaptain = (playerId: number, lineupCaptain?: boolean): boolean => {
+    return lineupCaptain === true || captainIds.includes(playerId);
+  };
 
   const lineups = matchData?.lineups?.response || null;
   const events = matchData?.events || [];
@@ -235,7 +240,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                             {homeLineup.startXI[index].player.number || '-'}
                           </div>
                         )}
-                        {homeLineup.startXI[index].player.captain && (
+                        {isCaptain(homeLineup.startXI[index].player.id, homeLineup.startXI[index].player.captain) && (
                           <span className="absolute -top-1 -right-1 bg-yellow-400 text-xs text-white rounded-full w-4 h-4 flex items-center justify-center font-bold">
                             C
                           </span>
@@ -245,7 +250,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                         <div className="text-xs text-gray-900 dark:text-gray-100">
                           {/* 선수 한국어 이름 매핑 */}
                           {getPlayerKoreanName(homeLineup.startXI[index].player.id) || homeLineup.startXI[index].player.name}
-                          {homeLineup.startXI[index].player.captain && (
+                          {isCaptain(homeLineup.startXI[index].player.id, homeLineup.startXI[index].player.captain) && (
                             <span className="ml-1 text-xs text-yellow-600 dark:text-yellow-400 font-semibold">(주장)</span>
                           )}
                         </div>
@@ -282,7 +287,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                             {awayLineup.startXI[index].player.number || '-'}
                           </div>
                         )}
-                        {awayLineup.startXI[index].player.captain && (
+                        {isCaptain(awayLineup.startXI[index].player.id, awayLineup.startXI[index].player.captain) && (
                           <span className="absolute -top-1 -right-1 bg-yellow-400 text-xs text-white rounded-full w-4 h-4 flex items-center justify-center font-bold">
                             C
                           </span>
@@ -292,7 +297,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                         <div className="text-xs text-gray-900 dark:text-gray-100">
                           {/* 선수 한국어 이름 매핑 */}
                           {getPlayerKoreanName(awayLineup.startXI[index].player.id) || awayLineup.startXI[index].player.name}
-                          {awayLineup.startXI[index].player.captain && (
+                          {isCaptain(awayLineup.startXI[index].player.id, awayLineup.startXI[index].player.captain) && (
                             <span className="ml-1 text-xs text-yellow-600 dark:text-yellow-400 font-semibold">(주장)</span>
                           )}
                         </div>
@@ -331,14 +336,14 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                     <div
                       className="flex items-center gap-3 cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors py-2 px-4"
                       onClick={() => handlePlayerClick(
-                        homeLineup.substitutes[index].player, 
-                        homeTeam.id, 
+                        homeLineup.substitutes[index].player,
+                        homeTeam.id,
                         homeTeam.name
                       )}
                     >
                       <div className="relative">
                         {homeLineup.substitutes[index].player.id ? (
-                          <PlayerImage 
+                          <PlayerImage
                             alt={`${homeLineup.substitutes[index].player.name} 선수 사진`}
                             playerId={homeLineup.substitutes[index].player.id}
                           />
@@ -347,7 +352,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                             {homeLineup.substitutes[index].player.number || '-'}
                           </div>
                         )}
-                        {homeLineup.substitutes[index].player.captain && (
+                        {isCaptain(homeLineup.substitutes[index].player.id, homeLineup.substitutes[index].player.captain) && (
                           <span className="absolute -top-1 -right-1 bg-yellow-400 text-xs text-white rounded-full w-4 h-4 flex items-center justify-center font-bold">
                             C
                           </span>
@@ -357,7 +362,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                         <div className="text-xs text-gray-900 dark:text-gray-100">
                           {/* 선수 한국어 이름 매핑 */}
                           {getPlayerKoreanName(homeLineup.substitutes[index].player.id) || homeLineup.substitutes[index].player.name}
-                          {homeLineup.substitutes[index].player.captain && (
+                          {isCaptain(homeLineup.substitutes[index].player.id, homeLineup.substitutes[index].player.captain) && (
                             <span className="ml-1 text-xs text-yellow-600 dark:text-yellow-400 font-semibold">(주장)</span>
                           )}
                         </div>
@@ -390,7 +395,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                             {awayLineup.substitutes[index].player.number || '-'}
                           </div>
                         )}
-                        {awayLineup.substitutes[index].player.captain && (
+                        {isCaptain(awayLineup.substitutes[index].player.id, awayLineup.substitutes[index].player.captain) && (
                           <span className="absolute -top-1 -right-1 bg-yellow-400 text-xs text-white rounded-full w-4 h-4 flex items-center justify-center font-bold">
                             C
                           </span>
@@ -400,7 +405,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                         <div className="text-xs text-gray-900 dark:text-gray-100">
                           {/* 선수 한국어 이름 매핑 */}
                           {getPlayerKoreanName(awayLineup.substitutes[index].player.id) || awayLineup.substitutes[index].player.name}
-                          {awayLineup.substitutes[index].player.captain && (
+                          {isCaptain(awayLineup.substitutes[index].player.id, awayLineup.substitutes[index].player.captain) && (
                             <span className="ml-1 text-xs text-yellow-600 dark:text-yellow-400 font-semibold">(주장)</span>
                           )}
                         </div>
@@ -536,7 +541,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                           {item.player.number || '-'}
                         </div>
                       )}
-                      {item.player.captain && (
+                      {isCaptain(item.player.id, item.player.captain) && (
                         <span className="absolute -top-1 -right-1 bg-yellow-400 text-xs text-white rounded-full w-4 h-4 flex items-center justify-center font-bold">
                           C
                         </span>
@@ -545,7 +550,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                     <div className="flex-1">
                       <div className="text-xs text-gray-900 dark:text-gray-100">
                         {getPlayerKoreanName(item.player.id) || item.player.name}
-                        {item.player.captain && (
+                        {isCaptain(item.player.id, item.player.captain) && (
                           <span className="ml-1 text-xs text-yellow-600 dark:text-yellow-400 font-semibold">(주장)</span>
                         )}
                       </div>
@@ -584,7 +589,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                           {item.player.number || '-'}
                         </div>
                       )}
-                      {item.player.captain && (
+                      {isCaptain(item.player.id, item.player.captain) && (
                         <span className="absolute -top-1 -right-1 bg-yellow-400 text-xs text-white rounded-full w-4 h-4 flex items-center justify-center font-bold">
                           C
                         </span>
@@ -593,7 +598,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                     <div className="flex-1">
                       <div className="text-xs text-gray-900 dark:text-gray-100">
                         {getPlayerKoreanName(item.player.id) || item.player.name}
-                        {item.player.captain && (
+                        {isCaptain(item.player.id, item.player.captain) && (
                           <span className="ml-1 text-xs text-yellow-600 dark:text-yellow-400 font-semibold">(주장)</span>
                         )}
                       </div>
@@ -692,7 +697,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                           {item.player.number || '-'}
                         </div>
                       )}
-                      {item.player.captain && (
+                      {isCaptain(item.player.id, item.player.captain) && (
                         <span className="absolute -top-1 -right-1 bg-yellow-400 text-xs text-white rounded-full w-4 h-4 flex items-center justify-center font-bold">
                           C
                         </span>
@@ -701,7 +706,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                     <div className="flex-1">
                       <div className="text-xs text-gray-900 dark:text-gray-100">
                         {getPlayerKoreanName(item.player.id) || item.player.name}
-                        {item.player.captain && (
+                        {isCaptain(item.player.id, item.player.captain) && (
                           <span className="ml-1 text-xs text-yellow-600 dark:text-yellow-400 font-semibold">(주장)</span>
                         )}
                       </div>
@@ -740,7 +745,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                           {item.player.number || '-'}
                         </div>
                       )}
-                      {item.player.captain && (
+                      {isCaptain(item.player.id, item.player.captain) && (
                         <span className="absolute -top-1 -right-1 bg-yellow-400 text-xs text-white rounded-full w-4 h-4 flex items-center justify-center font-bold">
                           C
                         </span>
@@ -749,7 +754,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                     <div className="flex-1">
                       <div className="text-xs text-gray-900 dark:text-gray-100">
                         {getPlayerKoreanName(item.player.id) || item.player.name}
-                        {item.player.captain && (
+                        {isCaptain(item.player.id, item.player.captain) && (
                           <span className="ml-1 text-xs text-yellow-600 dark:text-yellow-400 font-semibold">(주장)</span>
                         )}
                       </div>

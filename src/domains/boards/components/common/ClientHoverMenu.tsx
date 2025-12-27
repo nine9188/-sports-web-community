@@ -3,28 +3,7 @@
 import React from 'react';
 import HoverMenu from '@/domains/boards/components/common/HoverMenu';
 import { useBoards, HierarchicalBoard, BoardsResponse } from '@/domains/boards/hooks/useBoards';
-
-// 게시판 관련 타입 정의
-interface ChildBoard {
-  id: string;
-  name: string;
-  display_order: number;
-  slug?: string;
-}
-
-interface TopBoard {
-  id: string;
-  name: string;
-  display_order: number;
-  slug?: string;
-}
-
-// 서버에서 미리 가져온 데이터 인터페이스
-interface PrefetchedData {
-  topBoards: TopBoard[];
-  childBoardsMap: Record<string, ChildBoard[]>;
-  isServerFetched: boolean;
-}
+import { ChildBoard, TopBoard, PrefetchedData } from './hover-menu';
 
 interface ClientHoverMenuProps {
   currentBoardId: string;

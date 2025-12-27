@@ -3,10 +3,10 @@
 import React, { memo, useRef, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import styles from '../styles/formation.module.css';
-import { getSupabaseStorageUrl } from '@/shared/utils/image-proxy';
-import { ImageType } from '@/shared/types/image';
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
-import { urlCache } from '@/shared/components/UnifiedSportsImage';
+
+// API-Sports 이미지 URL 직접 생성
+const API_SPORTS_BASE_URL = 'https://media.api-sports.io/football';
 
 
 // 미디어 쿼리 커스텀 훅
@@ -25,20 +25,6 @@ function useMediaQuery(query: string) {
 
   return matches;
 }
-
-// 팀별 선수 데이터 매핑 (필요시 사용)
-// const teamPlayersMap: { [key: number]: any[] } = {
-//   40: liverpoolPlayers,
-//   65: NottinghamForestPlayers,
-//   42: Arsenalplayers,
-//   34: NewcastleUnitedplayers,
-//   49: Chelseaplayers,
-//   50: ManchesterCityplayers,
-//   66: AstonVillaplayers,
-//   35: Bournemouthplayers,
-//   36: Fulhamplayers,
-//   51: Brightonplayers,
-// };
 
 interface PlayerData {
   id: number;
@@ -79,42 +65,27 @@ interface PlayerProps {
   playersRatings?: Record<number, number>; // 선수 ID별 평점 (예: { 123: 8.5, 456: 7.2 })
 }
 
-// SVG 내부에서 사용할 최적화된 선수 이미지 컴포넌트
+// SVG 내부에서 사용할 선수 이미지 컴포넌트
 interface SVGPlayerImageProps {
   playerId: number;
-  photoUrl: string;
   teamId: number;
   onImageLoad: () => void;
   onImageError: () => void;
 }
 
-const SVGPlayerImage = memo(function SVGPlayerImage({ playerId, photoUrl, teamId, onImageLoad, onImageError }: SVGPlayerImageProps) {
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+const SVGPlayerImage = memo(function SVGPlayerImage({ playerId, teamId, onImageLoad, onImageError }: SVGPlayerImageProps) {
+  const [hasError, setHasError] = useState(false);
 
-  const cacheKey = `${ImageType.Players}-${playerId}`;
-
-  // 캐시 확인 및 URL 설정 - 폴링 제거
+  // playerId가 변경되면 에러 상태 리셋
   useEffect(() => {
-    if (!playerId) {
-      setImageUrl(photoUrl || null);
-      return;
-    }
+    setHasError(false);
+  }, [playerId]);
 
-    // 1. 캐시 확인
-    const cachedUrl = urlCache?.get?.(cacheKey);
-    if (cachedUrl) {
-      setImageUrl(cachedUrl);
-      return;
-    }
+  // API-Sports URL 직접 생성
+  const imageUrl = playerId ? `${API_SPORTS_BASE_URL}/players/${playerId}.png` : null;
 
-    // 2. 캐시에 없으면 직접 URL 생성하고 저장
-    const url = photoUrl || getSupabaseStorageUrl(ImageType.Players, playerId);
-    urlCache.set(cacheKey, url);
-    setImageUrl(url);
-  }, [playerId, photoUrl, cacheKey]);
-
-  // 이미지 URL이 없으면 null 반환
-  if (!imageUrl) {
+  // 에러 시 null 반환
+  if (!imageUrl || hasError) {
     return null;
   }
 
@@ -130,7 +101,10 @@ const SVGPlayerImage = memo(function SVGPlayerImage({ playerId, photoUrl, teamId
       role="img"
       aria-labelledby={`player-name-${teamId}-${playerId}`}
       onLoad={onImageLoad}
-      onError={onImageError}
+      onError={() => {
+        setHasError(true);
+        onImageError();
+      }}
     />
   );
 });
@@ -257,9 +231,6 @@ const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, away
       const numberKey = `number-${teamId}-${playerId}`;
       const nameKey = `name-${isHome ? 'home' : 'away'}-${teamId}-${playerId}`;
       
-      // 이미지 URL 처리 - 스토리지 URL 생성
-      const photoUrl = player.photo || getSupabaseStorageUrl(ImageType.Players, player.id);
-
       const koreanName = getPlayerKoreanName(player.id);
       const displayName = koreanName || player.name;
       
@@ -317,11 +288,10 @@ const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, away
           </defs>
           
           
-          {/* 선수 이미지 - 항상 렌더링 (내부에서 로딩/캐시 상태 관리) */}
+          {/* 선수 이미지 - API-Sports에서 직접 로딩 */}
           {playerId && (
             <SVGPlayerImage
               playerId={playerId}
-              photoUrl={photoUrl}
               teamId={teamId}
               onImageLoad={() => {}}
               onImageError={() => {}}

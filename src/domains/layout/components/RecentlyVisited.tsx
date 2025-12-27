@@ -22,7 +22,7 @@ const RecentlyVisited = React.memo(function RecentlyVisited() {
 
   return (
     <div className="bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
-      <div className="container mx-auto px-4">
+      <div className="w-full max-w-[1400px] mx-auto px-4">
         {isExpanded ? (
           // 펼쳐진 상태 - 여러 줄
           <div className="py-3">
@@ -42,11 +42,11 @@ const RecentlyVisited = React.memo(function RecentlyVisited() {
             {/* 태그들 */}
             {recentBoards.length > 0 ? (
               <>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-x-3 gap-y-1">
                   {recentBoards.map(board => (
                     <div
                       key={board.id}
-                      className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-[#333333] rounded text-xs text-gray-700 dark:text-gray-300 group"
+                      className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300 group"
                     >
                       <Link
                         href={`/boards/${board.slug}`}
@@ -76,7 +76,7 @@ const RecentlyVisited = React.memo(function RecentlyVisited() {
                 </div>
               </>
             ) : (
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-gray-700 dark:text-gray-300">
                 방문한 페이지가 없습니다
               </p>
             )}
@@ -88,13 +88,13 @@ const RecentlyVisited = React.memo(function RecentlyVisited() {
               최근방문
             </span>
 
-            <div className="flex-1 overflow-x-auto no-scrollbar">
+            <div className="flex-1 flex items-center overflow-x-auto no-scrollbar">
               {recentBoards.length > 0 ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   {recentBoards.map(board => (
                     <div
                       key={board.id}
-                      className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-[#333333] rounded text-xs text-gray-700 dark:text-gray-300 shrink-0 group"
+                      className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300 shrink-0 group"
                     >
                       <Link
                         href={`/boards/${board.slug}`}
@@ -112,20 +112,18 @@ const RecentlyVisited = React.memo(function RecentlyVisited() {
                   ))}
                 </div>
               ) : (
-                <span className="text-xs text-gray-500 dark:text-gray-400">
+                <span className="text-xs text-gray-700 dark:text-gray-300 whitespace-nowrap">
                   방문한 페이지가 없습니다
                 </span>
               )}
             </div>
 
-            {recentBoards.length > 0 && (
-              <button
-                onClick={toggleExpanded}
-                className="p-1 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors shrink-0"
-              >
-                <ChevronDown className="h-4 w-4 text-gray-500 transition-transform" />
-              </button>
-            )}
+            <button
+              onClick={toggleExpanded}
+              className="p-1 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors shrink-0"
+            >
+              <ChevronDown className="h-4 w-4 text-gray-500 transition-transform" />
+            </button>
           </div>
         )}
       </div>

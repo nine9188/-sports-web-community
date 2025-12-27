@@ -2,7 +2,7 @@
 
 import { memo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { Standing } from '@/domains/livescore/actions/teams/standings';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
@@ -24,7 +24,7 @@ const TeamLogo = memo(({ teamName, teamId }: { teamName: string; teamId?: number
   return (
     <div className="w-6 h-6 flex-shrink-0 relative transform-gpu">
       {teamId && teamId > 0 ? (
-      <ApiSportsImage
+      <UnifiedSportsImage
         imageId={teamId}
         imageType={ImageType.Teams}
         alt={teamName}
@@ -181,7 +181,7 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
               <div className="flex items-center gap-3">
                 {leagueInfo.id && (
                   <div className="w-6 h-6 relative flex-shrink-0">
-                    <ApiSportsImage
+                    <UnifiedSportsImage
                       imageId={leagueInfo.id}
                       imageType={ImageType.Leagues}
                       alt={leagueInfo.name || '리그'}

@@ -5,9 +5,8 @@ import { motion, useInView } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useMatchData, isStatsTabData } from '@/domains/livescore/components/football/match/context/MatchDataContext';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
-import { ImageType } from '@/shared/types/image';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
+import { ImageType } from '@/shared/types/image';
 import { fetchMatchPlayerStats } from '@/domains/livescore/actions/match/matchPlayerStats';
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 import { getTeamById } from '@/domains/livescore/constants/teams';
@@ -29,7 +28,7 @@ const TeamLogo = memo(({ name, teamId }: { name: string; teamId?: number }) => {
   return (
     <div className="w-8 h-8 relative flex-shrink-0 overflow-hidden">
       {teamId && teamId > 0 ? (
-        <ApiSportsImage
+        <UnifiedSportsImage
           imageId={teamId}
           imageType={ImageType.Teams}
           alt={name || '팀'}

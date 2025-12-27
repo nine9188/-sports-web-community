@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { StandingsData, League } from '../../types';
 import { fetchStandingsData } from '../../actions/football';
@@ -178,14 +178,13 @@ export default function LeagueStandings({
         <div className="flex items-center gap-2">
           {standings?.league?.logo && (
             <div className="w-5 h-5 relative">
-              <ApiSportsImage
+              <UnifiedSportsImage
                 imageId={standings.league.id}
                 imageType={ImageType.Leagues}
                 alt={standings.league.name}
                 width={20}
                 height={20}
-                className="object-contain w-5 h-5"
-                style={{ width: '20px', height: '20px' }}
+                className="object-contain"
               />
             </div>
           )}
@@ -248,14 +247,13 @@ export default function LeagueStandings({
                     <td className="text-left py-1.5 px-1">
                       <div className="flex items-center gap-1">
                         <div className="w-5 h-5 relative flex-shrink-0">
-                          <ApiSportsImage
+                          <UnifiedSportsImage
                             imageId={team.team.team_id}
                             imageType={ImageType.Teams}
                             alt={team.team.name}
                             width={20}
                             height={20}
-                            className="object-contain w-5 h-5"
-                            style={{ width: '20px', height: '20px' }}
+                            className="object-contain"
                           />
                         </div>
                         <span className="truncate max-w-[100px] text-sm">

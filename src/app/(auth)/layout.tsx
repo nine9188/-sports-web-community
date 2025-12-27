@@ -19,7 +19,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[#F8F9FA] dark:bg-[#0A0A0A]">
+    <div className="min-h-screen bg-white dark:bg-[#1F1F1F]">
       <div className="px-4 py-6 sm:p-6">
         <div className="mb-6 sm:mb-8">
           <Link href="/" className="inline-block">

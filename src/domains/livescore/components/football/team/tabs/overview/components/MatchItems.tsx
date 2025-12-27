@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
 import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui/container';
@@ -139,7 +139,7 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                     <td className="p-0 md:px-2">
                       <div className="flex justify-start items-center gap-1 md:gap-2">
                         <div className="w-5 h-5 relative flex-shrink-0">
-                          <ApiSportsImage
+                          <UnifiedSportsImage
                             imageId={match.league.id}
                             imageType={ImageType.Leagues}
                             alt={match.league.name}
@@ -159,7 +159,7 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                           <span className={`truncate max-w-[100px] md:max-w-[180px] text-right mr-1 text-xs md:text-sm text-gray-900 dark:text-[#F0F0F0] ${match.teams.home.id === teamId ? 'font-bold' : ''}`}>
                             {match.teams.home.name}
                           </span>
-                          <ApiSportsImage
+                          <UnifiedSportsImage
                             imageId={match.teams.home.id}
                             imageType={ImageType.Teams}
                             alt={match.teams.home.name}
@@ -174,7 +174,7 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                         </div>
 
                         <div className="flex-1 flex items-center justify-start gap-0 min-w-0">
-                          <ApiSportsImage
+                          <UnifiedSportsImage
                             imageId={match.teams.away.id}
                             imageType={ImageType.Teams}
                             alt={match.teams.away.name}
@@ -250,7 +250,7 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                     <td className="p-0 md:px-2">
                       <div className="flex justify-start items-center gap-1 md:gap-2">
                         <div className="w-5 h-5 relative flex-shrink-0">
-                          <ApiSportsImage
+                          <UnifiedSportsImage
                             imageId={match.league.id}
                             imageType={ImageType.Leagues}
                             alt={match.league.name}
@@ -270,7 +270,7 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                           <span className={`truncate max-w-[100px] md:max-w-[180px] text-right mr-1 text-xs md:text-sm text-gray-900 dark:text-[#F0F0F0] ${match.teams.home.id === teamId ? 'font-bold' : ''}`}>
                             {match.teams.home.name}
                           </span>
-                          <ApiSportsImage
+                          <UnifiedSportsImage
                             imageId={match.teams.home.id}
                             imageType={ImageType.Teams}
                             alt={match.teams.home.name}
@@ -285,7 +285,7 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
                         </div>
 
                         <div className="flex-1 flex items-center justify-start gap-0 min-w-0">
-                          <ApiSportsImage
+                          <UnifiedSportsImage
                             imageId={match.teams.away.id}
                             imageType={ImageType.Teams}
                             alt={match.teams.away.name}

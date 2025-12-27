@@ -6,7 +6,7 @@ import { ko } from 'date-fns/locale';
 import { CalendarIcon, Search, X } from 'lucide-react';
 import Image from 'next/image';
 import DatePicker from 'react-datepicker';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import "react-datepicker/dist/react-datepicker.css";
 import { getMatchesByDate } from '@/domains/boards/actions/matches';
@@ -225,7 +225,7 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
                 <div key={group.league.id} className="space-y-1.5">
                   <div className="flex items-center mb-1">
                     <div className="w-5 h-5 relative mr-2 flex-shrink-0">
-                      <ApiSportsImage
+                      <UnifiedSportsImage
                         imageId={group.league.id}
                         imageType={ImageType.Leagues}
                         alt={group.league.name}
@@ -290,25 +290,14 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
                         <div className="flex items-center justify-between">
                           <div className="flex items-center flex-1 min-w-0">
                             <div className="w-6 h-6 flex items-center justify-center mr-2 flex-shrink-0">
-                              {match.teams.home.logo ? (
-                                <ApiSportsImage
-                                  src={match.teams.home.logo}
-                                  imageId={match.teams.home.id}
-                                  imageType={ImageType.Teams}
-                                  alt={match.teams.home.name}
-                                  width={24}
-                                  height={24}
-                                  className="w-6 h-6 object-contain"
-                                />
-                              ) : (
-                                <Image
-                                  src="/placeholder-team.png"
-                                  alt={match.teams.home.name}
-                                  width={24}
-                                  height={24}
-                                  className="w-6 h-6 object-contain"
-                                />
-                              )}
+                              <UnifiedSportsImage
+                                imageId={match.teams.home.id}
+                                imageType={ImageType.Teams}
+                                alt={match.teams.home.name}
+                                width={24}
+                                height={24}
+                                className="w-6 h-6 object-contain"
+                              />
                             </div>
                             <span className="text-xs truncate">{match.teams.home.name}</span>
                           </div>
@@ -320,25 +309,14 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
                           <div className="flex items-center flex-1 justify-end min-w-0">
                             <span className="text-xs truncate">{match.teams.away.name}</span>
                             <div className="w-6 h-6 flex items-center justify-center ml-2 flex-shrink-0">
-                              {match.teams.away.logo ? (
-                                <ApiSportsImage
-                                  src={match.teams.away.logo}
-                                  imageId={match.teams.away.id}
-                                  imageType={ImageType.Teams}
-                                  alt={match.teams.away.name}
-                                  width={24}
-                                  height={24}
-                                  className="w-6 h-6 object-contain"
-                                />
-                              ) : (
-                                <Image
-                                  src="/placeholder-team.png"
-                                  alt={match.teams.away.name}
-                                  width={24}
-                                  height={24}
-                                  className="w-6 h-6 object-contain"
-                                />
-                              )}
+                              <UnifiedSportsImage
+                                imageId={match.teams.away.id}
+                                imageType={ImageType.Teams}
+                                alt={match.teams.away.name}
+                                width={24}
+                                height={24}
+                                className="w-6 h-6 object-contain"
+                              />
                             </div>
                           </div>
                         </div>

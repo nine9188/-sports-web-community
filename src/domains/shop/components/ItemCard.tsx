@@ -3,7 +3,7 @@
 import { useTransition } from 'react'
 import { ShopItem } from '../types'
 import { getTeamDisplayName, searchTeamsByName } from '@teams'
-import ApiSportsImage from '@/shared/components/ApiSportsImage'
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage'
 import { ImageType } from '@/shared/types/image'
 
 interface ItemCardProps {
@@ -81,7 +81,7 @@ export default function ItemCard({ item, isOwned, onPurchase }: ItemCardProps) {
       {/* 이미지 영역: 20x20 고정 */}
       <div className="p-3 flex justify-center bg-[#F5F5F5] dark:bg-[#262626]"> 
         <div className="h-5 w-5 flex items-center justify-center">
-          <ApiSportsImage
+          <UnifiedSportsImage
             imageId={getTeamId(item.image_url)}
             imageType={ImageType.Teams}
             alt={displayName}

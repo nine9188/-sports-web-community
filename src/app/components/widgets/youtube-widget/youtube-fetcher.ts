@@ -18,7 +18,6 @@ export async function fetchYouTubeVideos(boardSlug: string): Promise<YouTubeVide
     // 타임아웃 Promise 생성 (8초)
     const timeoutPromise = new Promise<YouTubeVideo[]>((resolve) => {
       setTimeout(() => {
-        console.warn('YouTube 데이터 가져오기 시간 초과 (8초)');
         resolve([]); // 빈 배열 반환
       }, 8000);
     });

@@ -15,55 +15,10 @@ import ShopPagination from '@/domains/shop/components/ShopPagination';
 import { NoticeList } from '../notice';
 import { Breadcrumb } from '../../types/board/data';
 import { Board } from '../../types/board';
-import type { Post as NoticePost } from '@/domains/boards/types/post';
+import type { LayoutPost, PopularPost } from '@/domains/boards/types/post';
 
-// 여기에 Post 타입 정의
-interface Post {
-  id: string;
-  title: string;
-  board_id: string;
-  board_name: string;
-  board_slug: string;
-  post_number: number;
-  created_at: string;
-  formattedDate: string;
-  views: number;
-  likes: number;
-  author_nickname: string;
-  author_id?: string;
-  author_icon_id?: number | null;
-  author_icon_url?: string | null;
-  author_level?: number;
-  comment_count: number;
-  content?: string;
-  team_id?: number | null;
-  team_name?: string | null;
-  team_logo?: string | null;
-  league_id?: number | null;
-  league_name?: string | null;
-  league_logo?: string | null;
-}
-
-// PopularPost 타입 정의
-interface PopularPost {
-  id: string;
-  title: string;
-  board_slug: string;
-  board_name: string;
-  post_number: number;
-  likes: number;
-  views: number;
-  comment_count: number;
-  author_nickname: string;
-  author_id?: string;
-  author_level?: number;
-  author_icon_id?: number | null;
-  author_icon_url?: string | null;
-  created_at: string;
-  formattedDate?: string;
-  team_id?: string | number | null;
-  league_id?: string | number | null;
-}
+// LayoutPost를 Post로 alias (기존 코드 호환)
+type Post = LayoutPost;
 
 // HoverMenu 관련 타입 정의
 interface TopBoard {
@@ -165,8 +120,7 @@ export default function BoardDetailLayout({
   filterComponent,
   listVariant = 'text'
 }: BoardDetailLayoutProps) {
-  // view_type이 타입에 없더라도 안전하게 읽어서 분기
-  const viewType = (boardData as unknown as { view_type?: 'list' | 'image-table' })?.view_type;
+  const viewType = boardData.view_type;
 
   // 게시판 방문 기록
   useEffect(() => {
@@ -276,7 +230,7 @@ export default function BoardDetailLayout({
       {/* 공지사항 게시판은 NoticeList 사용 */}
       {(slug === 'notice' || slug === 'notices') ? (
         <MemoizedNoticeList
-          notices={posts as unknown as NoticePost[]}
+          notices={posts}
           showBoardName={true}
           emptyMessage="아직 공지사항이 없습니다."
         />

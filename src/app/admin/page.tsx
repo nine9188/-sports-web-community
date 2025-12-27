@@ -35,13 +35,11 @@ export default function AdminDashboard() {
               .select('*', { count: 'exact', head: true });
               
             if (error) {
-              console.warn('프로필 카운트 오류:', error);
               return 0;
             }
-            
+
             return count || 0;
-          } catch (e) {
-            console.warn('프로필 카운트 오류:', e);
+          } catch {
             return 0;
           }
         };
@@ -53,13 +51,11 @@ export default function AdminDashboard() {
               .select('*', { count: 'exact', head: true });
               
             if (error) {
-              console.warn('게시글 카운트 오류:', error);
               return 0;
             }
-            
+
             return count || 0;
-          } catch (e) {
-            console.warn('게시글 카운트 오류:', e);
+          } catch {
             return 0;
           }
         };
@@ -71,13 +67,11 @@ export default function AdminDashboard() {
               .select('*', { count: 'exact', head: true });
               
             if (error) {
-              console.warn('댓글 카운트 오류:', error);
               return 0;
             }
-            
+
             return count || 0;
-          } catch (e) {
-            console.warn('댓글 카운트 오류:', e);
+          } catch {
             return 0;
           }
         };
@@ -89,13 +83,11 @@ export default function AdminDashboard() {
               .select('*', { count: 'exact', head: true });
               
             if (error) {
-              console.warn('게시판 카운트 오류:', error);
               return 0;
             }
-            
+
             return count || 0;
-          } catch (e) {
-            console.warn('게시판 카운트 오류:', e);
+          } catch {
             return 0;
           }
         };
@@ -113,8 +105,8 @@ export default function AdminDashboard() {
           totalBoards: boardsCount
         });
         
-      } catch (error) {
-        console.warn('기본 통계 로딩 중 오류:', error);
+      } catch {
+        // 에러 발생 시 무시
       } finally {
         setIsLoading(false);
       }

@@ -81,8 +81,6 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       throw new Error('게시글을 찾을 수 없습니다.');
     }
 
-
-    
     const { data: boardStructure } = boardStructureResult;
     const { data: prevPostData } = prevPostResult;
     const { data: nextPostData } = nextPostResult;

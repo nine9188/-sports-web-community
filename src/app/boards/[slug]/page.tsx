@@ -1,64 +1,11 @@
 import { getBoardPageData } from '@/domains/boards/actions';
-import { fetchPosts, Post as ApiPost } from '@/domains/boards/actions';
+import { fetchPosts } from '@/domains/boards/actions';
 import { getBoardPopularPosts } from '@/domains/boards/actions/getPopularPosts';
 import { getNotices } from '@/domains/boards/actions/posts';
 import BoardDetailLayout from '@/domains/boards/components/layout/BoardDetailLayout';
+import { convertApiPostsToLayoutPosts } from '@/domains/boards/utils/post/postUtils';
 import ErrorMessage from '@/shared/ui/error-message';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
-
-// BoardDetailLayout에서 사용하는 Post 타입 정의
-interface LayoutPost {
-  id: string;
-  title: string;
-  board_id: string;
-  board_name: string;
-  board_slug: string;
-  post_number: number;
-  created_at: string;
-  formattedDate: string;
-  views: number;
-  likes: number;
-  author_nickname: string;
-  author_id?: string;
-  author_icon_id?: number | null;
-  author_icon_url?: string | null;
-  author_level?: number;
-  comment_count: number;
-  content?: string;
-  team_id?: number | null;
-  team_name?: string | null;
-  team_logo?: string | null;
-  league_id?: number | null;
-  league_name?: string | null;
-  league_logo?: string | null;
-}
-
-// API Post를 레이아웃 호환 Post로 변환하는 함수
-function convertApiPostsToLayoutPosts(apiPosts: ApiPost[]): LayoutPost[] {
-  return apiPosts.map(post => ({
-    id: post.id,
-    title: post.title,
-    board_id: post.board_id,
-    board_name: post.board_name,
-    board_slug: post.board_slug,
-    post_number: post.post_number,
-    created_at: post.created_at,
-    formattedDate: post.formattedDate,
-    views: post.views || 0,
-    likes: post.likes || 0,
-    author_nickname: post.author_nickname || '익명',
-    author_id: post.author_id,
-    author_icon_id: post.author_icon_id,
-    author_icon_url: post.author_icon_url,
-    author_level: post.author_level || 1,
-    comment_count: post.comment_count || 0,
-    content: post.content,
-    team_id: typeof post.team_id === 'string' ? parseInt(post.team_id, 10) : post.team_id as number | null,
-    team_logo: post.team_logo,
-    league_id: typeof post.league_id === 'string' ? parseInt(post.league_id, 10) : post.league_id as number | null,
-    league_logo: post.league_logo
-  }));
-}
 
 // 동적 렌더링 강제 설정 추가
 export const dynamic = 'force-dynamic';

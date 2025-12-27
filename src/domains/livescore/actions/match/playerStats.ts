@@ -222,12 +222,17 @@ async function fetchPlayerStats(matchId: string, playerId: number): Promise<Play
 export const fetchCachedPlayerStats = cache(fetchPlayerStats);
 
 /**
- * 평점만 가져오는 경량 액션 (포메이션용)
+ * 평점 + 주장 정보를 함께 가져오는 경량 액션 (포메이션/라인업용)
  */
-async function fetchPlayerRatingsInternal(matchId: string): Promise<Record<number, number>> {
+export interface PlayerRatingsAndCaptains {
+  ratings: Record<number, number>;
+  captainIds: number[]; // 주장 선수 ID 목록
+}
+
+async function fetchPlayerRatingsAndCaptainsInternal(matchId: string): Promise<PlayerRatingsAndCaptains> {
   try {
     if (!matchId || !process.env.FOOTBALL_API_KEY) {
-      return {};
+      return { ratings: {}, captainIds: [] };
     }
 
     const response = await fetch(
@@ -241,12 +246,13 @@ async function fetchPlayerRatingsInternal(matchId: string): Promise<Record<numbe
       }
     );
 
-    if (!response.ok) return {};
+    if (!response.ok) return { ratings: {}, captainIds: [] };
 
     const data = await response.json();
-    if (!data?.response?.length) return {};
+    if (!data?.response?.length) return { ratings: {}, captainIds: [] };
 
     const ratings: Record<number, number> = {};
+    const captainIds: number[] = [];
 
     for (const teamStats of data.response) {
       if (!teamStats?.players?.length) continue;
@@ -254,20 +260,39 @@ async function fetchPlayerRatingsInternal(matchId: string): Promise<Record<numbe
       for (const player of teamStats.players) {
         if (!player?.player?.id) continue;
 
-        const rating = player.statistics?.[0]?.games?.rating;
+        const playerId = player.player.id;
+        const stats = player.statistics?.[0];
+
+        // 평점 추출
+        const rating = stats?.games?.rating;
         if (rating) {
           const ratingValue = typeof rating === 'string' ? parseFloat(rating) : Number(rating);
           if (!isNaN(ratingValue) && ratingValue > 0) {
-            ratings[player.player.id] = ratingValue;
+            ratings[playerId] = ratingValue;
           }
+        }
+
+        // 주장 여부 확인
+        if (stats?.games?.captain) {
+          captainIds.push(playerId);
         }
       }
     }
 
-    return ratings;
+    return { ratings, captainIds };
   } catch {
-    return {};
+    return { ratings: {}, captainIds: [] };
   }
+}
+
+export const fetchPlayerRatingsAndCaptains = cache(fetchPlayerRatingsAndCaptainsInternal);
+
+/**
+ * 평점만 가져오는 경량 액션 (하위 호환성 유지)
+ */
+async function fetchPlayerRatingsInternal(matchId: string): Promise<Record<number, number>> {
+  const result = await fetchPlayerRatingsAndCaptainsInternal(matchId);
+  return result.ratings;
 }
 
 export const fetchPlayerRatings = cache(fetchPlayerRatingsInternal);

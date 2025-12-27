@@ -2,7 +2,22 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { TrendingUp, ChevronLeft, ChevronRight, Image as ImageIcon, Video as VideoIcon, Youtube as YoutubeIcon, Link as LinkIcon } from 'lucide-react';
+import {
+  TrendingUp,
+  ChevronLeft,
+  ChevronRight,
+  Image as ImageIcon,
+  Video as VideoIcon,
+  Youtube as YoutubeIcon,
+  Link as LinkIcon,
+  Trophy as MatchCardIcon,
+  Twitter as TwitterIcon,
+  Instagram as InstagramIcon,
+  Facebook as FacebookIcon,
+  Linkedin as LinkedinIcon,
+  Music2 as TiktokIcon,
+} from 'lucide-react';
+import { checkContentType } from '../post/postlist/utils';
 
 interface PopularPost {
   id: string;
@@ -31,43 +46,6 @@ interface BoardPopularPostsProps {
   className?: string;
 }
 
-// TipTap 노드 타입 정의
-interface TipTapMark {
-  type: string;
-  attrs?: Record<string, unknown>;
-}
-
-interface TipTapNode {
-  type: string;
-  content?: TipTapNode[];
-  marks?: TipTapMark[];
-  attrs?: Record<string, unknown>;
-}
-
-// 콘텐츠 타입 체크 함수
-function checkContentType(content: string) {
-  try {
-    const parsed = JSON.parse(content);
-    let hasImage = false;
-    let hasVideo = false;
-    let hasYoutube = false;
-    let hasLink = false;
-
-    const checkNode = (node: TipTapNode) => {
-      if (node.type === 'image') hasImage = true;
-      if (node.type === 'video') hasVideo = true;
-      if (node.type === 'youtube') hasYoutube = true;
-      if (node.type === 'link' || node.marks?.some((m: TipTapMark) => m.type === 'link')) hasLink = true;
-      if (node.content) node.content.forEach(checkNode);
-    };
-
-    if (parsed?.content) parsed.content.forEach(checkNode);
-    return { hasImage, hasVideo, hasYoutube, hasLink };
-  } catch {
-    return { hasImage: false, hasVideo: false, hasYoutube: false, hasLink: false };
-  }
-}
-
 export default function BoardPopularPosts({
   todayPosts,
   weekPosts,
@@ -80,15 +58,35 @@ export default function BoardPopularPosts({
 
   const renderContentIcons = (post: PopularPost) => {
     if (!post.content) return null;
-    const { hasImage, hasVideo, hasYoutube, hasLink } = checkContentType(post.content);
-    if (!hasImage && !hasVideo && !hasYoutube && !hasLink) return null;
+    const {
+      hasImage,
+      hasVideo,
+      hasYoutube,
+      hasLink,
+      hasMatchCard,
+      hasTwitter,
+      hasInstagram,
+      hasFacebook,
+      hasTiktok,
+      hasLinkedin,
+    } = checkContentType(post.content);
+
+    const hasAnyIcon = hasImage || hasVideo || hasYoutube || hasLink || hasMatchCard ||
+      hasTwitter || hasInstagram || hasFacebook || hasTiktok || hasLinkedin;
+    if (!hasAnyIcon) return null;
 
     return (
       <div className="inline-flex items-center gap-0.5 flex-shrink-0">
+        {hasMatchCard && <MatchCardIcon className="h-3 w-3 text-blue-500" />}
         {hasImage && <ImageIcon className="h-3 w-3 text-green-500" />}
         {hasVideo && <VideoIcon className="h-3 w-3 text-purple-500" />}
         {hasYoutube && <YoutubeIcon className="h-3 w-3 text-red-500" />}
-        {hasLink && <LinkIcon className="h-3 w-3 text-gray-500 dark:text-gray-400" />}
+        {hasTwitter && <TwitterIcon className="h-3 w-3 text-sky-500" />}
+        {hasInstagram && <InstagramIcon className="h-3 w-3 text-pink-500" />}
+        {hasFacebook && <FacebookIcon className="h-3 w-3 text-blue-600" />}
+        {hasTiktok && <TiktokIcon className="h-3 w-3 text-black dark:text-white" />}
+        {hasLinkedin && <LinkedinIcon className="h-3 w-3 text-blue-700" />}
+        {hasLink && !hasMatchCard && <LinkIcon className="h-3 w-3 text-gray-500 dark:text-gray-400" />}
       </div>
     );
   };

@@ -224,7 +224,7 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
         league_id: leagueId,
         team_logo: teamLogo,
         league_logo: leagueLogo,
-        content: post.content
+        content: typeof post.content === 'string' ? post.content : (post.content ? JSON.stringify(post.content) : undefined)
       });
     }
     

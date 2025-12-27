@@ -72,7 +72,7 @@ const formatTransferTypeMobile = (type: string): string => {
   return originalType;
 };
 import { TransferFilters } from '@/domains/livescore/components/football/transfers';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import ShopPagination from '@/domains/shop/components/ShopPagination';
 import { memo } from 'react';
@@ -86,7 +86,7 @@ const TeamLogo = memo(({ teamName, teamId, size = 20 }: { teamName: string; team
   return (
     <div className={`${sizeClass} flex-shrink-0 relative transform-gpu`}>
       {teamId ? (
-        <ApiSportsImage
+        <UnifiedSportsImage
           imageId={teamId}
           imageType={ImageType.Teams}
           alt={teamName || '팀'}
@@ -377,7 +377,7 @@ export default async function TransfersPageContent({
                         <div className="flex-shrink-0 w-10 h-10 relative">
                           {transfer.player.id && transfer.player.id > 0 ? (
                             <div className="relative w-10 h-10">
-                              <ApiSportsImage
+                              <UnifiedSportsImage
                                 imageId={transfer.player.id}
                                 imageType={ImageType.Players}
                                 alt={`${transfer.player.name} 사진`}
@@ -501,7 +501,7 @@ export default async function TransfersPageContent({
                       <div className="flex-shrink-0 w-8 h-8 relative">
                         {transfer.player.id && transfer.player.id > 0 ? (
                           <div className="relative w-8 h-8">
-                            <ApiSportsImage
+                            <UnifiedSportsImage
                               imageId={transfer.player.id}
                               imageType={ImageType.Players}
                               alt={`${transfer.player.name} 사진`}

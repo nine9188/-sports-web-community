@@ -7,7 +7,7 @@ import { getMessages, sendMessage, markMessageAsRead } from '../actions/messageA
 interface UseChatMessagesReturn {
   messages: ChatMessage[];
   sendMessage: (content: string, type?: 'user' | 'bot' | 'system') => Promise<void>;
-  markAsRead: (messageId: string, userId: string) => Promise<void>;
+  markAsRead: (messageId: string) => Promise<void>;
   isLoading: boolean;
   error: string | null;
 }
@@ -54,8 +54,8 @@ export function useChatMessages(conversationId: string | null): UseChatMessagesR
 
   // Mark as read mutation
   const markAsReadMutation = useMutation({
-    mutationFn: async ({ messageId, userId }: { messageId: string; userId: string }) => {
-      const result = await markMessageAsRead(messageId, userId);
+    mutationFn: async (messageId: string) => {
+      const result = await markMessageAsRead(messageId);
       if (!result.success) throw new Error(result.error);
     },
     onSuccess: () => {
@@ -68,8 +68,8 @@ export function useChatMessages(conversationId: string | null): UseChatMessagesR
     await sendMessageMutation.mutateAsync({ content, type });
   };
 
-  const handleMarkAsRead = async (messageId: string, userId: string) => {
-    await markAsReadMutation.mutateAsync({ messageId, userId });
+  const handleMarkAsRead = async (messageId: string) => {
+    await markAsReadMutation.mutateAsync(messageId);
   };
 
   return {

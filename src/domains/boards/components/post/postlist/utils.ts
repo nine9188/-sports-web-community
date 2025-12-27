@@ -12,13 +12,34 @@ import { DEFAULT_MAX_HEIGHT } from './constants';
  * @returns 이미지/비디오/유튜브/링크 포함 여부
  */
 export function checkContentType(content: string | undefined): ContentTypeCheck {
+  const defaultResult: ContentTypeCheck = {
+    hasImage: false,
+    hasVideo: false,
+    hasYoutube: false,
+    hasLink: false,
+    hasMatchCard: false,
+    hasTwitter: false,
+    hasInstagram: false,
+    hasFacebook: false,
+    hasTiktok: false,
+    hasLinkedin: false,
+  };
+
   if (!content) {
-    return { hasImage: false, hasVideo: false, hasYoutube: false, hasLink: false };
+    return defaultResult;
   }
 
   try {
     let contentToCheck = content;
-    let hasSpecialContent = false;
+    let hasRealImage = false;  // 실제 이미지 (매치카드 제외)
+    let foundMatchCard = false; // 매치카드 발견 여부
+    let foundVideo = false;     // 비디오 발견 여부
+    let foundYoutube = false;   // 유튜브 발견 여부
+    let foundTwitter = false;   // 트위터 발견 여부
+    let foundInstagram = false; // 인스타그램 발견 여부
+    let foundFacebook = false;  // 페이스북 발견 여부
+    let foundTiktok = false;    // 틱톡 발견 여부
+    let foundLinkedin = false;  // 링크드인 발견 여부
 
     const isJSON = content.startsWith('{') || content.startsWith('[');
 
@@ -47,11 +68,51 @@ export function checkContentType(content: string | undefined): ContentTypeCheck 
                   ) {
                     const attrs = nodeObj.attrs as Record<string, unknown>;
                     text += `<img src="${attrs.src}"> `;
-                    hasSpecialContent = true;
+                    hasRealImage = true;  // 실제 이미지 발견
+                  } else if (nodeObj.type === 'video') {
+                    // 비디오 노드 감지
+                    text += ' [비디오] ';
+                    foundVideo = true;
+                  } else if (nodeObj.type === 'youtube') {
+                    // 유튜브 노드 감지
+                    text += ' [유튜브] ';
+                    foundYoutube = true;
+                  } else if (nodeObj.type === 'socialEmbed' && nodeObj.attrs) {
+                    // 소셜 임베드 노드 감지
+                    const attrs = nodeObj.attrs as Record<string, unknown>;
+                    const platform = attrs.platform as string;
+                    switch (platform) {
+                      case 'youtube':
+                        text += ' [유튜브] ';
+                        foundYoutube = true;
+                        break;
+                      case 'twitter':
+                        text += ' [트위터] ';
+                        foundTwitter = true;
+                        break;
+                      case 'instagram':
+                        text += ' [인스타그램] ';
+                        foundInstagram = true;
+                        break;
+                      case 'facebook':
+                        text += ' [페이스북] ';
+                        foundFacebook = true;
+                        break;
+                      case 'tiktok':
+                        text += ' [틱톡] ';
+                        foundTiktok = true;
+                        break;
+                      case 'linkedin':
+                        text += ' [링크드인] ';
+                        foundLinkedin = true;
+                        break;
+                      default:
+                        text += ` [${platform}] `;
+                    }
                   } else if (nodeObj.type === 'matchCard') {
-                    // 매치카드 감지
+                    // 매치카드 감지 (이미지와 분리)
                     text += ' [매치카드] ';
-                    hasSpecialContent = true;
+                    foundMatchCard = true;
                   } else if (Array.isArray(nodeObj.content)) {
                     text += extractTextFromTipTap(nodeObj.content);
                   }
@@ -90,51 +151,109 @@ export function checkContentType(content: string | undefined): ContentTypeCheck 
       }
     }
 
-    // 소셜 임베드 및 특수 콘텐츠 확인
-    const hasSocialEmbed =
-      contentToCheck.includes('twitter.com') ||
-      contentToCheck.includes('instagram.com') ||
-      contentToCheck.includes('youtube.com/embed');
-
+    // 매치카드 확인 (HTML 형식에서도 감지)
     const hasMatchCard =
+      foundMatchCard ||
       contentToCheck.includes('data-type="match-card"') ||
       contentToCheck.includes('[매치카드]') ||
       contentToCheck.includes('match-card');
 
-    // 이미지 확인 (다양한 형식)
-    const hasImage =
-      contentToCheck.includes('<img') ||
-      contentToCheck.includes('![') ||
-      contentToCheck.includes('image') ||
-      /\.(jpg|jpeg|png|gif|webp|svg|bmp|ico)/i.test(contentToCheck) ||
-      hasSpecialContent;
+    // 이미지 확인 (매치카드 내부 이미지 제외)
+    let hasImage = hasRealImage;
 
-    // 비디오 확인
+    if (!hasImage && !hasMatchCard) {
+      // 매치카드가 없을 때만 HTML/URL 패턴 검사
+      hasImage =
+        contentToCheck.includes('<img') ||
+        contentToCheck.includes('![') ||
+        /\.(jpg|jpeg|png|gif|webp|svg|bmp|ico)/i.test(contentToCheck);
+    } else if (!hasImage && hasMatchCard) {
+      // 매치카드가 있을 때는 매치카드 외부의 이미지만 검사
+      const contentWithoutMatchCard = contentToCheck
+        .replace(/<div[^>]*data-type="match-card"[^>]*>[\s\S]*?<\/div>/gi, '')
+        .replace(/<div[^>]*class="[^"]*match-card[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '');
+
+      hasImage =
+        contentWithoutMatchCard.includes('<img') ||
+        contentWithoutMatchCard.includes('![') ||
+        /\.(jpg|jpeg|png|gif|webp|svg|bmp|ico)/i.test(contentWithoutMatchCard);
+    }
+
+    // 비디오 확인 (TipTap video 노드 또는 HTML video 태그)
     const hasVideo =
+      foundVideo ||
       contentToCheck.includes('<video') ||
-      contentToCheck.includes('mp4') ||
-      contentToCheck.includes('webm') ||
-      contentToCheck.includes('mov') ||
+      contentToCheck.includes('[비디오]') ||
       /\.(mp4|webm|mov|avi|mkv|flv|wmv)/i.test(contentToCheck);
 
-    // YouTube 확인 (더 정확한 패턴)
+    // YouTube 확인
     const hasYoutube =
-      /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)/i.test(
-        contentToCheck
-      ) ||
-      contentToCheck.includes('youtube') ||
-      hasSocialEmbed;
+      foundYoutube ||
+      contentToCheck.includes('[유튜브]') ||
+      /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)/i.test(contentToCheck);
 
-    // 링크 확인 (http/https 링크)
+    // 트위터 확인
+    const hasTwitter =
+      foundTwitter ||
+      contentToCheck.includes('[트위터]') ||
+      /(?:twitter\.com|x\.com)\/[^/]+\/status\/\d+/i.test(contentToCheck);
+
+    // 인스타그램 확인
+    const hasInstagram =
+      foundInstagram ||
+      contentToCheck.includes('[인스타그램]') ||
+      /instagram\.com\/(?:p|reel|tv)\/[a-zA-Z0-9_-]+/i.test(contentToCheck);
+
+    // 페이스북 확인
+    const hasFacebook =
+      foundFacebook ||
+      contentToCheck.includes('[페이스북]') ||
+      /facebook\.com\/(?:[\w.-]+\/)?(?:posts|videos|photo|permalink|pfbid)/i.test(contentToCheck);
+
+    // 틱톡 확인
+    const hasTiktok =
+      foundTiktok ||
+      contentToCheck.includes('[틱톡]') ||
+      /tiktok\.com\/@[\w.-]+\/video\/\d+/i.test(contentToCheck);
+
+    // 링크드인 확인
+    const hasLinkedin =
+      foundLinkedin ||
+      contentToCheck.includes('[링크드인]') ||
+      /linkedin\.com\/(?:feed\/update|posts)\/[\w-]+/i.test(contentToCheck);
+
+    // 링크 확인 (http/https 링크, 이미지/비디오/소셜 URL 제외)
+    const imageExtensions = /\.(jpg|jpeg|png|gif|webp|svg|bmp|ico)(\?.*)?$/i;
+    const videoExtensions = /\.(mp4|webm|mov|avi|mkv|flv|wmv)(\?.*)?$/i;
+    const socialDomains = /(youtube\.com|youtu\.be|twitter\.com|x\.com|instagram\.com|facebook\.com|tiktok\.com|linkedin\.com)/i;
+
+    // URL 추출 후 미디어/소셜 URL 제외
+    const urlMatches = contentToCheck.match(/https?:\/\/[^\s<>"]+/gi) || [];
+    const hasNonMediaLink = urlMatches.some(url =>
+      !imageExtensions.test(url) &&
+      !videoExtensions.test(url) &&
+      !socialDomains.test(url)
+    );
+
     const hasLink =
-      /https?:\/\/[^\s<>"]+/i.test(contentToCheck) ||
-      contentToCheck.includes('href=') ||
-      hasSocialEmbed ||
+      hasNonMediaLink ||
+      (contentToCheck.includes('href=') && !socialDomains.test(contentToCheck)) ||
       hasMatchCard;
 
-    return { hasImage, hasVideo, hasYoutube, hasLink };
+    return {
+      hasImage,
+      hasVideo,
+      hasYoutube,
+      hasLink,
+      hasMatchCard,
+      hasTwitter,
+      hasInstagram,
+      hasFacebook,
+      hasTiktok,
+      hasLinkedin,
+    };
   } catch {
-    return { hasImage: false, hasVideo: false, hasYoutube: false, hasLink: false };
+    return defaultResult;
   }
 }
 
@@ -153,28 +272,68 @@ export function extractFirstImageUrl(content?: string): string | null {
       try {
         const obj = JSON.parse(content);
         if (obj?.type === 'doc' && Array.isArray(obj.content)) {
-          for (const node of obj.content) {
-            if (node?.type === 'image' && node?.attrs?.src) {
-              return node.attrs.src as string;
-            }
-            if (node?.type === 'paragraph' && Array.isArray(node.content)) {
-              for (const sub of node.content) {
-                if (sub?.type === 'image' && sub?.attrs?.src) {
-                  return sub.attrs.src as string;
+          // 재귀적으로 실제 image 노드만 찾기 (matchCard 제외)
+          const findImageUrl = (nodes: unknown[]): string | null => {
+            for (const node of nodes) {
+              if (typeof node !== 'object' || node === null) continue;
+              const nodeObj = node as Record<string, unknown>;
+
+              // matchCard 노드는 건너뜀
+              if (nodeObj.type === 'matchCard') continue;
+
+              // image 노드 발견
+              if (nodeObj.type === 'image') {
+                const attrs = nodeObj.attrs as Record<string, unknown> | undefined;
+                if (attrs?.src && typeof attrs.src === 'string') {
+                  return attrs.src;
                 }
               }
+
+              // 중첩된 content 탐색
+              if (Array.isArray(nodeObj.content)) {
+                const found = findImageUrl(nodeObj.content);
+                if (found) return found;
+              }
             }
-          }
+            return null;
+          };
+
+          const imageUrl = findImageUrl(obj.content);
+          if (imageUrl) return imageUrl;
+
+          // TipTap JSON이지만 image 노드가 없으면 null 반환
+          // (매치카드만 있는 경우 여기서 종료)
+          return null;
         }
+        // RSS 등 다른 JSON 형식
         if (obj?.imageUrl) return obj.imageUrl as string;
         if (obj?.image_url) return obj.image_url as string;
+
+        // JSON이지만 알 수 없는 형식이면 null 반환
+        return null;
       } catch {
-        // JSON 파싱 실패 시 계속 진행
+        // JSON 파싱 실패 시 HTML로 처리
       }
     }
 
-    // HTML img 태그에서 추출
-    const imgTag = content.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i);
+    // 매치카드 포함 여부 확인
+    const hasMatchCard = content.includes('match-card') || content.includes('data-type="match-card"');
+
+    // 매치카드가 있으면 매치카드 외부의 이미지만 추출
+    if (hasMatchCard) {
+      // 매치카드 시작 전의 콘텐츠에서만 이미지 찾기
+      const beforeMatchCard = content.split(/class="[^"]*match-card/i)[0] || '';
+
+      const imgTag = beforeMatchCard.match(/<img[^>]+src=["'](https?:\/\/[^"']+)["'][^>]*>/i);
+      if (imgTag?.[1]) return imgTag[1];
+
+      // 매치카드만 있고 다른 이미지 없으면 null
+      return null;
+    }
+
+    // 매치카드 없는 일반 콘텐츠
+    // HTML img 태그에서 추출 (http로 시작하는 URL만)
+    const imgTag = content.match(/<img[^>]+src=["'](https?:\/\/[^"']+)["'][^>]*>/i);
     if (imgTag?.[1]) return imgTag[1];
 
     // Markdown 이미지 형식에서 추출

@@ -17,6 +17,7 @@ export interface ImageCacheResult {
   url?: string;
   error?: string;
   cached?: boolean;
+  notFound?: boolean;  // API-Sports에도 없는 경우
 }
 
 // 배치 이미지 캐싱 결과 타입
@@ -35,4 +36,21 @@ export interface BatchImageCacheResult {
 export interface ImageCacheRequest {
   type: 'players' | 'teams' | 'leagues' | 'coachs' | 'venues';
   id: string | number;
-} 
+}
+
+// 이미지 캐시 상태
+export type ImageCacheStatus = 'loading' | 'success' | 'error' | 'not-found';
+
+// 이미지 캐시 엔트리
+export interface ImageCacheEntry {
+  url: string | null;
+  status: ImageCacheStatus;
+  timestamp: number;
+}
+
+// 캐시 만료 시간 (밀리초)
+export const IMAGE_CACHE_TTL = {
+  SUCCESS: 24 * 60 * 60 * 1000,    // 성공: 24시간
+  NOT_FOUND: 30 * 60 * 1000,       // 없음: 30분 (나중에 추가될 수 있음)
+  ERROR: 5 * 60 * 1000,            // 에러: 5분
+} as const; 

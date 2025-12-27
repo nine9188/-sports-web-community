@@ -45,7 +45,6 @@ export default function NoticeManagement() {
       }
 
       if (data) {
-        console.log('게시판 목록 불러오기 성공:', data.length);
         setBoards(data as Board[]);
       }
     } catch (error) {

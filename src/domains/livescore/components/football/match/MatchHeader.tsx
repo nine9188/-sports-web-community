@@ -2,7 +2,7 @@
 
 import React, { memo, useMemo } from 'react';
 import Link from 'next/link';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 
 import { useMatchData } from '@/domains/livescore/components/football/match/context/MatchDataContext';
@@ -215,7 +215,7 @@ const MatchHeader = memo(() => {
           <div className="flex items-center gap-1.5 md:gap-2 md:w-1/3 md:border-r md:border-r-black/5 md:dark:border-r-white/10 md:pr-4">
             <div className="relative w-4 h-4 md:w-6 md:h-6 flex items-center justify-center flex-shrink-0">
               {league?.id && (
-                <ApiSportsImage
+                <UnifiedSportsImage
                   imageId={league.id}
                   imageType={ImageType.Leagues}
                   alt={league?.name || ''}
@@ -261,7 +261,7 @@ const MatchHeader = memo(() => {
               {homeTeam?.id ? (
                 <Link href={`/livescore/football/team/${homeTeam.id}`} className="group">
                   <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-1 md:mb-2 flex items-center justify-center">
-                    <ApiSportsImage
+                    <UnifiedSportsImage
                       imageId={homeTeam.id}
                       imageType={ImageType.Teams}
                       alt={homeTeam.name || ''}
@@ -280,7 +280,7 @@ const MatchHeader = memo(() => {
                 <>
                   <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-1 md:mb-2 flex items-center justify-center">
                     {homeTeam?.id && (
-                      <ApiSportsImage
+                      <UnifiedSportsImage
                         imageId={homeTeam.id}
                         imageType={ImageType.Teams}
                         alt={homeTeam.name || ''}
@@ -314,7 +314,7 @@ const MatchHeader = memo(() => {
               {awayTeam?.id ? (
                 <Link href={`/livescore/football/team/${awayTeam.id}`} className="group">
                   <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-1 md:mb-2 flex items-center justify-center">
-                    <ApiSportsImage
+                    <UnifiedSportsImage
                       imageId={awayTeam.id}
                       imageType={ImageType.Teams}
                       alt={awayTeam.name || ''}
@@ -333,7 +333,7 @@ const MatchHeader = memo(() => {
                 <>
                   <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-1 md:mb-2 flex items-center justify-center">
                     {awayTeam?.id && (
-                      <ApiSportsImage
+                      <UnifiedSportsImage
                         imageId={awayTeam.id}
                         imageType={ImageType.Teams}
                         alt={awayTeam.name || ''}
@@ -362,7 +362,7 @@ const MatchHeader = memo(() => {
                 <div className="md:hidden py-1 font-semibold mb-2 text-sm flex items-center text-gray-900 dark:text-[#F0F0F0]">
                   <div className="relative w-4 h-4 mr-2 flex items-center justify-center">
                     {homeTeam?.id && (
-                      <ApiSportsImage
+                      <UnifiedSportsImage
                         imageId={homeTeam.id}
                         imageType={ImageType.Teams}
                         alt={homeTeam.name || ''}
@@ -411,7 +411,7 @@ const MatchHeader = memo(() => {
                 <div className="md:hidden py-1 font-semibold mb-2 text-sm flex items-center text-gray-900 dark:text-[#F0F0F0]">
                   <div className="relative w-4 h-4 mr-2 flex items-center justify-center">
                     {awayTeam?.id && (
-                      <ApiSportsImage
+                      <UnifiedSportsImage
                         imageId={awayTeam.id}
                         imageType={ImageType.Teams}
                         alt={awayTeam.name || ''}

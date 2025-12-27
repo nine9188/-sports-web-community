@@ -137,7 +137,6 @@ function LoginContent() {
       // 추가 안전장치: 1초 후에도 페이지가 변경되지 않았다면 강제 새로고침
       setTimeout(() => {
         if (window.location.pathname.includes('/signin')) {
-          console.warn('로그인 후 리다이렉트 실패, 강제 새로고침 시도');
           window.location.href = redirectUrl;
         }
       }, 1000);
@@ -151,12 +150,13 @@ function LoginContent() {
   };
 
   return (
-    <div className="max-w-md w-full">
+    <div className="max-w-md w-full md:bg-white md:dark:bg-[#2D2D2D] md:rounded-2xl md:shadow-lg md:border md:border-black/10 md:dark:border-white/10 md:p-8">
       {/* 헤더 */}
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">4590 멤버 로그인</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">4590 Football 로그인</h2>
         <p className="text-gray-600 dark:text-gray-400 mb-8">
-          모든 축구팬을 위한 4590 커뮤니티에 오신 것을 환영합니다.
+          모든 축구팬을 위한<br />
+          4590 Football 커뮤니티에 오신 것을 환영합니다.
         </p>
       </div>
 
@@ -259,6 +259,17 @@ function LoginContent() {
         >
           {loading ? '로그인 중...' : '로그인'}
         </button>
+
+        {/* 아이디/비밀번호 찾기 */}
+        <div className="mt-4 text-center text-gray-600 dark:text-gray-400">
+          <Link href="/help/account-recovery?tab=id" className="hover:text-slate-800 dark:hover:text-[#F0F0F0] hover:underline text-sm">
+            아이디 찾기
+          </Link>
+          <span className="mx-2">ㅣ</span>
+          <Link href="/help/account-recovery?tab=password" className="hover:text-slate-800 dark:hover:text-[#F0F0F0] hover:underline text-sm">
+            비밀번호 찾기
+          </Link>
+        </div>
       </form>
 
       {/* 소셜 로그인 구분선 */}
@@ -268,7 +279,7 @@ function LoginContent() {
             <div className="w-full border-t border-black/7 dark:border-white/10" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-[#F8F9FA] dark:bg-black text-gray-500 dark:text-gray-400">또는</span>
+            <span className="px-2 bg-white dark:bg-[#1F1F1F] md:dark:bg-[#2D2D2D] text-gray-500 dark:text-gray-400">또는</span>
           </div>
         </div>
       </div>
@@ -289,17 +300,6 @@ function LoginContent() {
             </Link>
           </p>
         </div>
-
-        {/* 아이디/비밀번호 찾기 - 회원가입 아래로 이동 */}
-        <div className="mt-4 text-center text-gray-600 dark:text-gray-400">
-          <Link href="/help/account-recovery?tab=id" className="hover:text-slate-800 dark:hover:text-[#F0F0F0] hover:underline text-sm">
-            아이디 찾기
-          </Link>
-          <span className="mx-2">ㅣ</span>
-          <Link href="/help/account-recovery?tab=password" className="hover:text-slate-800 dark:hover:text-[#F0F0F0] hover:underline text-sm">
-            비밀번호 찾기
-          </Link>
-        </div>
       </div>
     </div>
   );
@@ -311,13 +311,13 @@ export default function SignInPage() {
       <Suspense fallback={
         <div className="max-w-md w-full">
           <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-48 mb-2"></div>
-            <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-            <div className="h-4 bg-gray-200 rounded w-3/4 mb-8"></div>
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-2"></div>
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2"></div>
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-8"></div>
             <div className="space-y-4">
-              <div className="h-12 bg-gray-200 rounded"></div>
-              <div className="h-12 bg-gray-200 rounded"></div>
-              <div className="h-12 bg-gray-200 rounded"></div>
+              <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
             </div>
           </div>
         </div>

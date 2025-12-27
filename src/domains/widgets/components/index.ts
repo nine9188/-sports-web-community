@@ -1,6 +1,5 @@
 // 위젯 컴포넌트 exports
-export { default as NewsWidget } from './news-widget';
-export { default as NewsWidgetClient } from './news-widget-client';
+export { NewsWidget, NewsWidgetClient } from './news-widget';
 export { default as AllPostsWidget } from './AllPostsWidget';
 export { default as LiveScoreWidget } from './live-score-widget';
 export { default as BannerWidget } from './banner-widget';
@@ -12,5 +11,5 @@ export * from './banner-widget';
 export * from './board-quick-links-widget';
 
 // 타입 exports
-export type { NewsItem } from './news-widget';
+export type { NewsItem, NewsWidgetProps } from './news-widget';
 export type { BoardCollectionData, BoardPost, BoardInfo } from './board-collection-widget'; 

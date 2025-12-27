@@ -11,12 +11,18 @@ export async function createConversation(
   try {
     const supabase = await getSupabaseServer();
 
-    // Use chat_sessions table as it exists in the database
+    const now = new Date().toISOString();
+
+    // Use chat_conversations table (correct table name)
     const { data, error } = await supabase
-      .from('chat_sessions')
+      .from('chat_conversations')
       .insert({
-        created_at: new Date().toISOString(),
-        last_seen_assistant_count: 0,
+        user_id: userId,
+        title,
+        status: 'active',
+        last_message_at: now,
+        created_at: now,
+        updated_at: now,
       })
       .select()
       .single();
@@ -26,15 +32,14 @@ export async function createConversation(
       return { success: false, error: error.message };
     }
 
-    // Transform to ChatConversation format
     const conversation: ChatConversation = {
       id: data.id,
-      user_id: userId,
-      title,
-      status: 'active',
-      last_message_at: data.created_at || new Date().toISOString(),
-      created_at: data.created_at || new Date().toISOString(),
-      updated_at: data.created_at || new Date().toISOString(),
+      user_id: data.user_id,
+      title: data.title,
+      status: data.status,
+      last_message_at: data.last_message_at,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
     };
 
     revalidatePath('/');
@@ -54,39 +59,27 @@ export async function getConversations(
   try {
     const supabase = await getSupabaseServer();
 
-    // Get all sessions and their messages to build conversation list
-    const { data: sessions, error: sessionsError } = await supabase
-      .from('chat_sessions')
+    // Get conversations for the specific user from chat_conversations table
+    const { data, error } = await supabase
+      .from('chat_conversations')
       .select('*')
-      .order('created_at', { ascending: false });
+      .eq('user_id', userId)
+      .order('last_message_at', { ascending: false });
 
-    if (sessionsError) {
-      console.error('Error fetching conversations:', sessionsError);
-      return { success: false, error: sessionsError.message };
+    if (error) {
+      console.error('Error fetching conversations:', error);
+      return { success: false, error: error.message };
     }
 
-    // Get messages for each session to determine last message time
-    const conversations: ChatConversation[] = [];
-    for (const session of sessions || []) {
-      const { data: messages } = await supabase
-        .from('chat_messages')
-        .select('created_at')
-        .eq('session_id', session.id)
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      const lastMessageAt = messages?.[0]?.created_at || session.created_at || new Date().toISOString();
-
-      conversations.push({
-        id: session.id,
-        user_id: userId,
-        title: '대화',
-        status: 'active',
-        last_message_at: lastMessageAt,
-        created_at: session.created_at || new Date().toISOString(),
-        updated_at: lastMessageAt,
-      });
-    }
+    const conversations: ChatConversation[] = (data || []).map((conv) => ({
+      id: conv.id,
+      user_id: conv.user_id,
+      title: conv.title || '대화',
+      status: conv.status || 'active',
+      last_message_at: conv.last_message_at || conv.created_at,
+      created_at: conv.created_at,
+      updated_at: conv.updated_at,
+    }));
 
     return { success: true, data: conversations };
   } catch (error) {
@@ -105,37 +98,29 @@ export async function updateConversation(
   try {
     const supabase = await getSupabaseServer();
 
-    // chat_sessions table doesn't support title/status updates directly
-    // We'll just return the current session info with the requested updates
-    const { data: session, error } = await supabase
-      .from('chat_sessions')
-      .select('*')
+    const { data, error } = await supabase
+      .from('chat_conversations')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', conversationId)
+      .select()
       .single();
 
     if (error) {
-      console.error('Error fetching conversation:', error);
+      console.error('Error updating conversation:', error);
       return { success: false, error: error.message };
     }
 
-    // Get last message time
-    const { data: messages } = await supabase
-      .from('chat_messages')
-      .select('created_at')
-      .eq('session_id', conversationId)
-      .order('created_at', { ascending: false })
-      .limit(1);
-
-    const lastMessageAt = messages?.[0]?.created_at || session.created_at || new Date().toISOString();
-
     const conversation: ChatConversation = {
-      id: session.id,
-      user_id: '', // We don't have user_id in chat_sessions
-      title: updates.title || '대화',
-      status: updates.status || 'active',
-      last_message_at: lastMessageAt,
-      created_at: session.created_at || new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      id: data.id,
+      user_id: data.user_id,
+      title: data.title,
+      status: data.status,
+      last_message_at: data.last_message_at,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
     };
 
     revalidatePath('/');

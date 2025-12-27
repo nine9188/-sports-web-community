@@ -173,7 +173,7 @@ export function ChatFormRenderer({
           <h4 className="font-medium">제출 완료</h4>
         </div>
         <p className="text-sm text-green-700 dark:text-green-300">
-          신고가 접수되었습니다. 검토 후 적절한 조치를 취하겠습니다.
+          {formConfig.success_message || '요청이 접수되었습니다. 확인 후 처리해 드리겠습니다.'}
         </p>
       </div>
     );

@@ -13,8 +13,14 @@ import {
   Link as LinkIcon,
   Video as VideoIcon,
   Youtube as YoutubeIcon,
+  Trophy as MatchCardIcon,
+  Twitter as TwitterIcon,
+  Instagram as InstagramIcon,
+  Facebook as FacebookIcon,
+  Linkedin as LinkedinIcon,
+  Music2 as TiktokIcon,
 } from 'lucide-react';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import UserIconComponent from '@/shared/components/UserIcon';
 import { Post } from '../../types';
@@ -35,15 +41,32 @@ import { checkContentType } from '../../utils';
 export function renderContentTypeIcons(post: Post): React.ReactNode {
   if (!post.content) return null;
 
-  const { hasImage, hasVideo, hasYoutube, hasLink } = checkContentType(post.content);
+  const {
+    hasImage,
+    hasVideo,
+    hasYoutube,
+    hasLink,
+    hasMatchCard,
+    hasTwitter,
+    hasInstagram,
+    hasFacebook,
+    hasTiktok,
+    hasLinkedin,
+  } = checkContentType(post.content);
 
   // 아이콘이 하나도 없으면 null 반환
-  if (!hasImage && !hasVideo && !hasYoutube && !hasLink) {
+  if (!hasImage && !hasVideo && !hasYoutube && !hasLink && !hasMatchCard &&
+      !hasTwitter && !hasInstagram && !hasFacebook && !hasTiktok && !hasLinkedin) {
     return null;
   }
 
   return (
     <div className="inline-flex items-center space-x-1 flex-shrink-0">
+      {hasMatchCard && (
+        <div title="경기 카드 포함">
+          <MatchCardIcon className="h-3 w-3 text-blue-500 flex-shrink-0" />
+        </div>
+      )}
       {hasImage && (
         <div title="이미지 포함">
           <ImageIcon className="h-3 w-3 text-green-500 flex-shrink-0" />
@@ -59,7 +82,32 @@ export function renderContentTypeIcons(post: Post): React.ReactNode {
           <YoutubeIcon className="h-3 w-3 text-red-500 flex-shrink-0" />
         </div>
       )}
-      {hasLink && (
+      {hasTwitter && (
+        <div title="트위터(X)">
+          <TwitterIcon className="h-3 w-3 text-sky-500 flex-shrink-0" />
+        </div>
+      )}
+      {hasInstagram && (
+        <div title="인스타그램">
+          <InstagramIcon className="h-3 w-3 text-pink-500 flex-shrink-0" />
+        </div>
+      )}
+      {hasFacebook && (
+        <div title="페이스북">
+          <FacebookIcon className="h-3 w-3 text-blue-600 flex-shrink-0" />
+        </div>
+      )}
+      {hasTiktok && (
+        <div title="틱톡">
+          <TiktokIcon className="h-3 w-3 text-black dark:text-white flex-shrink-0" />
+        </div>
+      )}
+      {hasLinkedin && (
+        <div title="링크드인">
+          <LinkedinIcon className="h-3 w-3 text-blue-700 flex-shrink-0" />
+        </div>
+      )}
+      {hasLink && !hasMatchCard && (
         <div title="링크 포함">
           <LinkIcon className="h-3 w-3 text-gray-500 dark:text-gray-400 flex-shrink-0" />
         </div>
@@ -94,7 +142,7 @@ export function renderAuthor(
       <span
         className="text-xs text-gray-600 dark:text-gray-400 truncate"
         title={post.author_nickname || '익명'}
-        style={{ maxWidth: '60px' }}
+        style={{ maxWidth: '100px' }}
       >
         {post.author_nickname || '익명'}
       </span>
@@ -116,7 +164,7 @@ export function renderBoardLogo(post: Post): React.ReactNode {
     return (
       <div className="flex items-center">
         <div className="relative w-5 h-5 mr-1">
-          <ApiSportsImage
+          <UnifiedSportsImage
             imageId={post.team_id || post.league_id || 0}
             imageType={post.team_id ? ImageType.Teams : ImageType.Leagues}
             alt={post.board_name}

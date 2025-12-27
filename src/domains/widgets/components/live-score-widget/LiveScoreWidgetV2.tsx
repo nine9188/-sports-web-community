@@ -3,42 +3,9 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { ChevronDown, ChevronUp, ChevronsDown, ChevronsUp } from 'lucide-react';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
-
-// 경기 데이터 타입
-interface Match {
-  id: string;
-  homeTeam: {
-    id: number;
-    name: string;
-    logo?: string;
-  };
-  awayTeam: {
-    id: number;
-    name: string;
-    logo?: string;
-  };
-  score: {
-    home: number;
-    away: number;
-  };
-  status: string; // 'FT', 'LIVE', 'NS' etc
-}
-
-// 리그 데이터 타입
-interface League {
-  id: string;
-  name: string;
-  icon?: string;
-  logo?: string;
-  leagueIdNumber?: number;
-  matches: Match[];
-}
-
-interface LiveScoreWidgetV2Props {
-  leagues: League[];
-}
+import type { League, LiveScoreWidgetV2Props } from './types';
 
 export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
   // 첫 번째 리그만 기본으로 펼치기
@@ -155,7 +122,7 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
             >
               <div className="flex items-center gap-3">
                 {league.logo && league.leagueIdNumber ? (
-                  <ApiSportsImage
+                  <UnifiedSportsImage
                     imageId={league.leagueIdNumber}
                     imageType={ImageType.Leagues}
                     alt={league.name}
@@ -209,13 +176,13 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
                     </div>
 
                     {/* 홈팀 정보 */}
-                    <div className="flex items-center justify-end gap-2.5 flex-1 min-w-0 px-3">
+                    <div className="flex items-center justify-end gap-2 flex-1 min-w-0">
                       <span className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate text-right">
                         {match.homeTeam.name}
                       </span>
                       {match.homeTeam.logo && (
                         <div className="w-6 h-6 flex-shrink-0 relative">
-                          <ApiSportsImage
+                          <UnifiedSportsImage
                             imageId={match.homeTeam.id}
                             imageType={ImageType.Teams}
                             alt={match.homeTeam.name}
@@ -228,17 +195,17 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
                     </div>
 
                     {/* 스코어 */}
-                    <div className="px-4 flex-shrink-0">
+                    <div className="px-2 flex-shrink-0">
                       <span className="text-lg font-bold text-gray-900 dark:text-[#F0F0F0]">
                         {match.score.home} - {match.score.away}
                       </span>
                     </div>
 
                     {/* 원정팀 정보 */}
-                    <div className="flex items-center gap-2.5 flex-1 min-w-0 px-3">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
                       {match.awayTeam.logo && (
                         <div className="w-6 h-6 flex-shrink-0 relative">
-                          <ApiSportsImage
+                          <UnifiedSportsImage
                             imageId={match.awayTeam.id}
                             imageType={ImageType.Teams}
                             alt={match.awayTeam.name}

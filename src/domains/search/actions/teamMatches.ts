@@ -80,8 +80,6 @@ export async function getTeamMatches(teamId: number, limit: number = 10): Promis
   error?: string
 }> {
   try {
-    console.log(`[getTeamMatches] 팀 ID ${teamId}의 경기 정보 요청 (limit: ${limit})`)
-    
     // footballApi.ts의 fetchFromFootballApi 함수 사용
     const currentSeason = new Date().getFullYear()
     
@@ -111,8 +109,6 @@ export async function getTeamMatches(teamId: number, limit: number = 10): Promis
       ...(nextMatches.response || [])
     ]
 
-    console.log(`[getTeamMatches] 팀 ID ${teamId}: 총 ${allMatches.length}개 경기 조회됨`)
-
     // 날짜순으로 정렬 (최신순)
     const sortedMatches = allMatches.sort((a: TeamMatch, b: TeamMatch) => {
       return new Date(b.fixture.date).getTime() - new Date(a.fixture.date).getTime()
@@ -140,14 +136,10 @@ export async function getMatchDetails(fixtureId: number): Promise<{
   error?: string
 }> {
   try {
-    console.log(`[getMatchDetails] 경기 ID ${fixtureId} 상세 정보 요청`)
-    
     // footballApi.ts의 fetchFromFootballApi 함수 사용
     const data = await fetchFromFootballApi('fixtures', { id: fixtureId })
 
     const matchData = data.response?.[0] || null
-    
-    console.log(`[getMatchDetails] 경기 ID ${fixtureId}: ${matchData ? '조회 성공' : '데이터 없음'}`)
 
     return {
       success: true,

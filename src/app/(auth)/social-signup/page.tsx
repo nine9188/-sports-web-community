@@ -30,7 +30,6 @@ export default function SocialSignupPage() {
           // 강제로 세션 새로고침 시도
           const { data: { session } } = await supabase.auth.getSession()
           if (session) {
-            console.log('🔄 세션 발견, 강제 새로고침 중...')
             // 세션이 있으면 AuthContext가 업데이트될 때까지 잠시 대기
             setTimeout(() => checkAuthAndProfile(), 1000)
             return

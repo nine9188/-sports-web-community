@@ -3,10 +3,26 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Eye, ThumbsUp, MessageSquare, Flame, Image as ImageIcon, Link as LinkIcon, Video as VideoIcon, Youtube as YoutubeIcon } from 'lucide-react';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import {
+  Eye,
+  ThumbsUp,
+  MessageSquare,
+  Flame,
+  Image as ImageIcon,
+  Link as LinkIcon,
+  Video as VideoIcon,
+  Youtube as YoutubeIcon,
+  Trophy as MatchCardIcon,
+  Twitter as TwitterIcon,
+  Instagram as InstagramIcon,
+  Facebook as FacebookIcon,
+  Linkedin as LinkedinIcon,
+  Music2 as TiktokIcon,
+} from 'lucide-react';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { TopicPostsData, TabType, TopicPost } from '../types';
+import { checkContentType } from '@/domains/boards/components/post/postlist/utils';
 
 interface TopicTabsClientProps {
   postsData: TopicPostsData;
@@ -19,50 +35,6 @@ export function TopicTabsClient({ postsData }: TopicTabsClientProps) {
   // 현재 탭에 맞는 게시글 배열 가져오기
   const getCurrentPosts = (): TopicPost[] => {
     return postsData[activeTab] || [];
-  };
-
-  // 게시글 내용에서 특수 항목(이미지, 비디오 등) 감지
-  const checkContentType = (content?: string | object) => {
-    if (!content) return { hasImage: false, hasVideo: false, hasYoutube: false, hasLink: false };
-
-    // content를 문자열로 변환
-    const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
-
-    const hasImage = contentStr.includes('<img') || contentStr.includes('data-type="image"');
-    const hasVideo = contentStr.includes('<video') || contentStr.includes('data-type="video"');
-
-    const urlPattern = /https?:\/\/[^\s<>"']+/g;
-    const urls = contentStr.match(urlPattern) || [];
-    
-    let foundYoutubeUrl = false;
-    let foundNonYoutubeUrl = false;
-    
-    for (const url of urls) {
-      if (/youtube\.com|youtu\.be/i.test(url)) {
-        foundYoutubeUrl = true;
-      } else if (!/\.(jpg|jpeg|png|gif|webp|svg|bmp|mp4|webm|ogg|mov|avi|wmv|flv|mkv)(\?.*)?$/i.test(url)) {
-        foundNonYoutubeUrl = true;
-      }
-      
-      if (foundYoutubeUrl && foundNonYoutubeUrl) break;
-    }
-    
-    if (!foundNonYoutubeUrl && contentStr.includes('<a href')) {
-      foundNonYoutubeUrl = !(
-        contentStr.includes('<a href="https://youtube.com') ||
-        contentStr.includes('<a href="https://www.youtube.com') ||
-        contentStr.includes('<a href="https://youtu.be')
-      );
-    }
-
-    const hasYoutube = foundYoutubeUrl ||
-                       contentStr.includes('data-type="youtube"') ||
-                       contentStr.includes('youtube-video') ||
-                       (contentStr.includes('<iframe') && (contentStr.includes('youtube.com') || contentStr.includes('youtu.be')));
-    
-    const hasLink = foundNonYoutubeUrl;
-    
-    return { hasImage, hasVideo, hasYoutube, hasLink };
   };
 
   // 탭에 따른 카운트 표시
@@ -147,7 +119,21 @@ export function TopicTabsClient({ postsData }: TopicTabsClientProps) {
         ) : (
           <ul>
             {currentPosts.map((post, index) => {
-              const { hasImage, hasVideo, hasYoutube, hasLink } = checkContentType(post.content);
+              const {
+                hasImage,
+                hasVideo,
+                hasYoutube,
+                hasLink,
+                hasMatchCard,
+                hasTwitter,
+                hasInstagram,
+                hasFacebook,
+                hasTiktok,
+                hasLinkedin,
+              } = checkContentType(post.content);
+
+              const hasAnyIcon = hasImage || hasVideo || hasYoutube || hasLink || hasMatchCard ||
+                hasTwitter || hasInstagram || hasFacebook || hasTiktok || hasLinkedin;
 
               return (
                 <li key={post.id} className={index < currentPosts.length - 1 ? "border-b border-black/5 dark:border-white/10" : ""}>
@@ -158,7 +144,7 @@ export function TopicTabsClient({ postsData }: TopicTabsClientProps) {
                     <div className="flex items-center text-xs gap-1">
                       {post.team_id || post.league_id ? (
                         <div className="relative w-5 h-5 flex-shrink-0">
-                          <ApiSportsImage
+                          <UnifiedSportsImage
                             imageId={post.team_id || post.league_id || 0}
                             imageType={post.team_id ? ImageType.Teams : ImageType.Leagues}
                             alt={post.board_name}
@@ -181,12 +167,18 @@ export function TopicTabsClient({ postsData }: TopicTabsClientProps) {
                         </div>
                       )}
                       <span className="truncate">{post.title}</span>
-                      {(hasImage || hasVideo || hasYoutube || hasLink) && (
+                      {hasAnyIcon && (
                         <div className="flex items-center gap-0.5 flex-shrink-0">
+                          {hasMatchCard && <MatchCardIcon className="h-3 w-3 text-blue-500" />}
                           {hasImage && <ImageIcon className="h-3 w-3 text-green-500" />}
                           {hasVideo && <VideoIcon className="h-3 w-3 text-purple-500" />}
                           {hasYoutube && <YoutubeIcon className="h-3 w-3 text-red-500" />}
-                          {hasLink && <LinkIcon className="h-3 w-3 text-gray-500 dark:text-gray-400" />}
+                          {hasTwitter && <TwitterIcon className="h-3 w-3 text-sky-500" />}
+                          {hasInstagram && <InstagramIcon className="h-3 w-3 text-pink-500" />}
+                          {hasFacebook && <FacebookIcon className="h-3 w-3 text-blue-600" />}
+                          {hasTiktok && <TiktokIcon className="h-3 w-3 text-black dark:text-white" />}
+                          {hasLinkedin && <LinkedinIcon className="h-3 w-3 text-blue-700" />}
+                          {hasLink && !hasMatchCard && <LinkIcon className="h-3 w-3 text-gray-500 dark:text-gray-400" />}
                         </div>
                       )}
                       {renderCount(post)}

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { toast } from 'react-toastify';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { 
   savePrediction,
@@ -59,7 +59,7 @@ const PredictionButton: React.FC<PredictionButtonProps> = ({
             <span className="text-gray-700 dark:text-gray-300 font-bold text-lg">D</span>
           </div>
         ) : teamId ? (
-          <ApiSportsImage
+          <UnifiedSportsImage
             imageId={teamId}
             imageType={ImageType.Teams}
             alt={teamName || 'Team'}
@@ -415,7 +415,7 @@ export default function MatchPredictionClient({
               <div className="flex items-center text-xs">
                 <div className="w-8 h-4 relative mr-2">
                   {homeTeam?.id && (
-                    <ApiSportsImage
+                    <UnifiedSportsImage
                       imageId={homeTeam.id}
                       imageType={ImageType.Teams}
                       alt={homeTeam?.name || 'Home'}
@@ -456,7 +456,7 @@ export default function MatchPredictionClient({
               <div className="flex items-center text-xs">
                 <div className="w-8 h-4 relative mr-2">
                   {awayTeam?.id && (
-                    <ApiSportsImage
+                    <UnifiedSportsImage
                       imageId={awayTeam.id}
                       imageType={ImageType.Teams}
                       alt={awayTeam?.name || 'Away'}

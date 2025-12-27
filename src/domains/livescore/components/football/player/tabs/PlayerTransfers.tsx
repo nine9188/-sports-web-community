@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { EmptyState } from '@/domains/livescore/components/common';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { TransferData } from '@/domains/livescore/types/player';
 import { getTeamById } from '@/domains/livescore/constants/teams';
@@ -28,7 +28,7 @@ const TeamLogo = ({ logo, name, teamId }: { logo?: string; name: string; teamId?
   return (
     <div className="w-12 h-12 flex items-center justify-center">
       {logo && teamId ? (
-        <ApiSportsImage
+        <UnifiedSportsImage
           src={logo}
           imageId={teamId}
           imageType={ImageType.Teams}

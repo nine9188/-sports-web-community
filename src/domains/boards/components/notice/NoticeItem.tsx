@@ -4,14 +4,40 @@ import { useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Calendar as CalendarIcon, Eye as EyeIcon } from 'lucide-react';
-import type { Post } from '@/domains/boards/types/post';
+import type { NoticeType } from '@/domains/boards/types/post';
 import { NoticeBadge } from './NoticeBadge';
 import UserIconComponent from '@/shared/components/UserIcon';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 
+/**
+ * NoticeList/NoticeItem에서 사용하는 게시글 타입
+ * Post와 LayoutPost 모두 호환 가능하도록 필요한 필드만 정의
+ */
+export interface NoticeListPost {
+  id: string;
+  title: string;
+  post_number: number;
+  board_id?: string | null;
+  board_slug?: string;
+  board_name?: string;
+  board?: { name: string; slug?: string } | null;
+  formattedDate?: string;
+  notice_type?: NoticeType | null;
+  is_must_read?: boolean;
+  team_id?: string | number | null;
+  league_id?: string | number | null;
+  comment_count?: number;
+  author_icon_url?: string | null;
+  author_level?: number;
+  author_nickname?: string;
+  profiles?: { nickname: string | null } | null;
+  views?: number | null;
+  likes?: number | null;
+}
+
 interface NoticeItemProps {
-  notice: Post;
+  notice: NoticeListPost;
   showBoardName?: boolean;
   isLast?: boolean;
   isMobile?: boolean;
@@ -43,7 +69,7 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
       return (
         <div className="flex items-center">
           <div className="relative w-5 h-5 mr-1">
-            <ApiSportsImage
+            <UnifiedSportsImage
               imageId={teamId || leagueId || 0}
               imageType={teamId ? ImageType.Teams : ImageType.Leagues}
               alt={notice.board?.name || notice.board_name || ''}

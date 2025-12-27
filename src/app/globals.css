@@ -892,6 +892,45 @@ iframe[src*="youtu.be/"] {
   text-align: center;
 }
 
+/* TipTap 에디터 기본 스타일 */
+.ProseMirror {
+  padding: 1rem;
+  min-height: 500px;
+  color: #111827;
+}
+
+.dark .ProseMirror {
+  color: #F0F0F0;
+}
+
+/* 에디터 내 경기 카드 스타일 */
+.ProseMirror .match-card {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 12px 0 !important;
+  border: 1px solid rgba(0, 0, 0, 0.07) !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+  background: white !important;
+}
+
+.dark .ProseMirror .match-card {
+  border: 0 !important;
+  background: #1D1D1D !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3) !important;
+}
+
+.ProseMirror .match-card img {
+  max-width: unset !important;
+  display: inline-block !important;
+  object-fit: contain !important;
+}
+
+.ProseMirror .match-card > div {
+  width: 100% !important;
+}
+
 /* 에디터 내부 YouTube 컨테이너 스타일 조정 */
 .ProseMirror .youtube-container,
 .ProseMirror .responsive-video-container {

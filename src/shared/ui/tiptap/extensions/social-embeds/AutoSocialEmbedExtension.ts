@@ -9,6 +9,47 @@ export interface AutoSocialEmbedOptions {
   enabled: boolean;
 }
 
+/**
+ * iframe/embed 코드에서 URL 추출
+ */
+function extractUrlFromEmbed(text: string): string | null {
+  // Facebook iframe에서 href 파라미터 추출
+  const fbIframeMatch = text.match(/facebook\.com\/plugins\/post\.php\?href=([^&"'\s]+)/i);
+  if (fbIframeMatch) {
+    try {
+      return decodeURIComponent(fbIframeMatch[1]);
+    } catch {
+      return fbIframeMatch[1];
+    }
+  }
+
+  // Instagram blockquote에서 URL 추출
+  const igMatch = text.match(/instagram\.com\/p\/([a-zA-Z0-9_-]+)/i);
+  if (igMatch) {
+    return `https://www.instagram.com/p/${igMatch[1]}/`;
+  }
+
+  // Twitter/X blockquote에서 URL 추출
+  const twitterMatch = text.match(/(?:twitter\.com|x\.com)\/[^/]+\/status\/(\d+)/i);
+  if (twitterMatch) {
+    return `https://twitter.com/i/status/${twitterMatch[1]}`;
+  }
+
+  // TikTok에서 URL 추출
+  const tiktokMatch = text.match(/tiktok\.com\/@[^/]+\/video\/(\d+)/i);
+  if (tiktokMatch) {
+    return text.match(/(https?:\/\/[^\s"'<>]+tiktok\.com[^\s"'<>]+)/i)?.[1] || null;
+  }
+
+  // YouTube iframe에서 video ID 추출
+  const ytIframeMatch = text.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/i);
+  if (ytIframeMatch) {
+    return `https://www.youtube.com/watch?v=${ytIframeMatch[1]}`;
+  }
+
+  return null;
+}
+
 export const AutoSocialEmbedExtension = Extension.create<AutoSocialEmbedOptions>({
   name: 'autoSocialEmbed',
 
@@ -31,21 +72,45 @@ export const AutoSocialEmbedExtension = Extension.create<AutoSocialEmbedOptions>
             }
 
             const text = event.clipboardData?.getData('text/plain');
+            const html = event.clipboardData?.getData('text/html');
 
-            if (!text || !text.trim()) {
+            if (!text && !html) {
               return false;
             }
 
-            // URL인지 확인 (간단한 체크)
+            const pastedContent = text?.trim() || html?.trim() || '';
+
+            if (!pastedContent) {
+              return false;
+            }
+
+            let url: string | null = null;
+            let platform: ReturnType<typeof detectPlatform> = null;
+
+            // 1. 먼저 직접 URL인지 확인
             const urlPattern = /^https?:\/\//i;
-            if (!urlPattern.test(text.trim())) {
-              return false;
+            if (urlPattern.test(pastedContent)) {
+              url = pastedContent;
+              platform = detectPlatform(url);
             }
 
-            const url = text.trim();
-            const platform = detectPlatform(url);
-
+            // 2. URL이 아니면 embed 코드에서 URL 추출 시도
             if (!platform) {
+              url = extractUrlFromEmbed(pastedContent);
+              if (url) {
+                platform = detectPlatform(url);
+              }
+            }
+
+            // 3. HTML에서도 시도
+            if (!platform && html) {
+              url = extractUrlFromEmbed(html);
+              if (url) {
+                platform = detectPlatform(url);
+              }
+            }
+
+            if (!platform || !url) {
               return false;
             }
 

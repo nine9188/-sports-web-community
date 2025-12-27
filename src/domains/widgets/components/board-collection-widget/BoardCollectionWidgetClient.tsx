@@ -135,7 +135,7 @@ export default function BoardCollectionWidgetClient({ boardsData }: BoardCollect
             /* 텍스트 목록 2열: 왼쪽(1~10) / 오른쪽(11~20) */
             <div className="grid grid-cols-2">
               {/* 왼쪽 열: 1~10번 */}
-              <div className="flex flex-col">
+              <div className="flex flex-col border-r border-black/5 dark:border-white/10">
                 {currentBoardData.recentPosts.slice(0, 10).map((post, index) => (
                   <Link
                     key={post.id}

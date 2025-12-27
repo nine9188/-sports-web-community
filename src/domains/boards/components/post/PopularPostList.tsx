@@ -3,7 +3,19 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ThumbsUp, Image as ImageIcon, Video as VideoIcon, Youtube as YoutubeIcon, Link as LinkIcon } from 'lucide-react';
+import {
+  ThumbsUp,
+  Image as ImageIcon,
+  Video as VideoIcon,
+  Youtube as YoutubeIcon,
+  Link as LinkIcon,
+  Trophy as MatchCardIcon,
+  Twitter as TwitterIcon,
+  Instagram as InstagramIcon,
+  Facebook as FacebookIcon,
+  Linkedin as LinkedinIcon,
+  Music2 as TiktokIcon,
+} from 'lucide-react';
 import UserIcon from '@/shared/components/UserIcon';
 import { checkContentType, extractFirstImageUrl } from './postlist/utils';
 
@@ -62,7 +74,21 @@ export default function PopularPostList({
         const thumbnailUrl = extractFirstImageUrl(post.content);
         const postUrl = `/boards/${post.board_slug}/${post.post_number}`;
         const isLast = index === posts.length - 1;
-        const { hasImage, hasVideo, hasYoutube, hasLink } = checkContentType(post.content || '');
+        const {
+          hasImage,
+          hasVideo,
+          hasYoutube,
+          hasLink,
+          hasMatchCard,
+          hasTwitter,
+          hasInstagram,
+          hasFacebook,
+          hasTiktok,
+          hasLinkedin,
+        } = checkContentType(post.content || '');
+
+        const hasAnyIcon = hasImage || hasVideo || hasYoutube || hasLink || hasMatchCard ||
+          hasTwitter || hasInstagram || hasFacebook || hasTiktok || hasLinkedin;
 
         return (
           <div
@@ -110,12 +136,18 @@ export default function PopularPostList({
                   <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
                     {post.title}
                   </h3>
-                  {(hasImage || hasVideo || hasYoutube || hasLink) && (
+                  {hasAnyIcon && (
                     <div className="flex items-center gap-0.5 flex-shrink-0">
+                      {hasMatchCard && <MatchCardIcon className="h-3 w-3 text-blue-500" />}
                       {hasImage && <ImageIcon className="h-3 w-3 text-green-500" />}
                       {hasVideo && <VideoIcon className="h-3 w-3 text-purple-500" />}
                       {hasYoutube && <YoutubeIcon className="h-3 w-3 text-red-500" />}
-                      {hasLink && <LinkIcon className="h-3 w-3 text-gray-500 dark:text-gray-400" />}
+                      {hasTwitter && <TwitterIcon className="h-3 w-3 text-sky-500" />}
+                      {hasInstagram && <InstagramIcon className="h-3 w-3 text-pink-500" />}
+                      {hasFacebook && <FacebookIcon className="h-3 w-3 text-blue-600" />}
+                      {hasTiktok && <TiktokIcon className="h-3 w-3 text-black dark:text-white" />}
+                      {hasLinkedin && <LinkedinIcon className="h-3 w-3 text-blue-700" />}
+                      {hasLink && !hasMatchCard && <LinkIcon className="h-3 w-3 text-gray-500 dark:text-gray-400" />}
                     </div>
                   )}
                   {post.comment_count > 0 && (

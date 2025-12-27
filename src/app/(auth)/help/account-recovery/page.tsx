@@ -183,9 +183,7 @@ function AccountRecoveryContent() {
       
       // 자체 구현한 서버 액션 사용
       const result = await findUsernameWithCode(email, verificationCode);
-      
-      console.log('클라이언트에서 받은 결과:', result);
-      
+
       if (!result.success) {
         toast.error('error' in result ? result.error || '아이디 찾기에 실패했습니다.' : '아이디 찾기에 실패했습니다.');
         return;
@@ -205,7 +203,6 @@ function AccountRecoveryContent() {
           params.append('lastSignInAt', String(result.lastSignInAt));
         }
         
-        console.log('URL 파라미터:', params.toString());
         router.push(`/help/account-found?${params.toString()}`);
       } else {
         toast.error('결과 데이터가 올바르지 않습니다.');

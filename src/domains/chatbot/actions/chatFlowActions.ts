@@ -172,7 +172,8 @@ export async function processChatFlow(
 
 export async function handleFormSubmission(
   conversationId: string,
-  chipType: ChipType
+  chipType: ChipType,
+  formData?: Record<string, unknown>
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const chip = getChipButton(chipType);
@@ -180,10 +181,15 @@ export async function handleFormSubmission(
       return { success: false, error: 'Invalid form configuration' };
     }
 
+    // formData는 submitChatForm에서 이미 저장되므로 여기서는 확인용 로그만 출력
+    if (formData) {
+      console.log(`[Chatbot] Form submitted for ${chipType}:`, Object.keys(formData));
+    }
+
     // Send confirmation message
     await sendMessage(
-      conversationId, 
-      chip.form_config.success_message, 
+      conversationId,
+      chip.form_config.success_message,
       'bot'
     );
 

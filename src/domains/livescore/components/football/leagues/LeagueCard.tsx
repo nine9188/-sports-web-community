@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 
 interface LeagueCardProps {
@@ -43,7 +43,7 @@ export default function LeagueCard({ leagueId, name }: LeagueCardProps) {
       <div className={`flex flex-col items-center text-center space-y-1 lg:space-y-2 h-full ${hasInfo ? 'justify-between' : 'justify-center'}`}>
         {/* 리그 로고 */}
         <div className="relative w-7 h-7 lg:w-10 lg:h-10 flex-shrink-0">
-          <ApiSportsImage
+          <UnifiedSportsImage
             imageId={leagueId}
             imageType={ImageType.Leagues}
             alt={`${name} 로고`}

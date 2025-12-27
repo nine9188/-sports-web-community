@@ -1,11 +1,46 @@
 // 게시글 관련 유틸리티 함수
 import { Post, AdjacentPosts } from '../../types/post';
 import { FormattedPost } from '../../types/post/formatted';
+import { LayoutPost, ApiPost } from '../../types/post/layout';
 import { CommentType } from '../../types/post/comment';
 import { BoardData } from '../../types/board/data';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
 import { formatDate } from '@/shared/utils/date';
+
+/**
+ * API 응답 게시글을 레이아웃용 게시글로 변환합니다.
+ *
+ * @param apiPosts API에서 받은 게시글 배열
+ * @returns 레이아웃에서 사용할 수 있는 게시글 배열
+ */
+export function convertApiPostsToLayoutPosts(apiPosts: ApiPost[]): LayoutPost[] {
+  return apiPosts.map(post => ({
+    id: post.id,
+    title: post.title,
+    board_id: post.board_id,
+    board_name: post.board_name,
+    board_slug: post.board_slug,
+    post_number: post.post_number,
+    created_at: post.created_at,
+    formattedDate: post.formattedDate,
+    views: post.views || 0,
+    likes: post.likes || 0,
+    author_nickname: post.author_nickname || '익명',
+    author_id: post.author_id,
+    author_icon_id: post.author_icon_id,
+    author_icon_url: post.author_icon_url,
+    author_level: post.author_level || 1,
+    comment_count: post.comment_count || 0,
+    content: post.content,
+    team_id: typeof post.team_id === 'string' ? parseInt(post.team_id, 10) : post.team_id as number | null,
+    team_name: post.team_name,
+    team_logo: post.team_logo,
+    league_id: typeof post.league_id === 'string' ? parseInt(post.league_id, 10) : post.league_id as number | null,
+    league_name: post.league_name,
+    league_logo: post.league_logo
+  }));
+}
 
 /**
  * 이전 및 다음 게시글을 가져옵니다.

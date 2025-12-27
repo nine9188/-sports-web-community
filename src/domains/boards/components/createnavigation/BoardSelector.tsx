@@ -202,6 +202,9 @@ const BoardSelector = React.memo(({
     const hasChildren = midLevelBoards[board.id] && midLevelBoards[board.id].length > 0;
     if (!hasChildren) {
       onSelect(board.id);
+    } else {
+      // 하위 게시판이 있는 경우, 선택 초기화 (UI와 categoryId 일치 보장)
+      onSelect('');
     }
   }, [onSelect, midLevelBoards]);
   

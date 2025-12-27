@@ -16,6 +16,5 @@ export { getNotices, getGlobalNotices, getBoardNotices } from './notices';
 // 공지사항 설정 관련 (관리자)
 export { setPostAsNotice, removeNotice, updateNoticeOrder, updateNoticeType } from './setNotice';
 
-// 유틸리티 함수 및 타입
-export { processMatchCardsInContent } from './utils';
+// 유틸리티 타입
 export type { PostActionResponse, LikeActionResponse } from './utils'; 

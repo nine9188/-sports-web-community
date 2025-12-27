@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { StandingDisplay } from '@/domains/livescore/types/standings';
 import { findTeamStanding, getDisplayStandings, getLeagueInfo, getLeagueForStandings } from '../utils/standingUtils';
@@ -52,7 +52,7 @@ export default function StandingsPreview({ standings, teamId, safeLeague, onTabC
     <Container className="bg-white dark:bg-[#1D1D1D]">
       <ContainerHeader>
         <div className="w-6 h-6 relative flex-shrink-0 mr-2">
-          <ApiSportsImage
+          <UnifiedSportsImage
             imageId={displayLeagueInfo?.id || leagueInfo.id}
             imageType={ImageType.Leagues}
             alt={displayLeagueInfo?.name || leagueInfo.name || safeLeague.name || '리그'}
@@ -108,7 +108,7 @@ export default function StandingsPreview({ standings, teamId, safeLeague, onTabC
                   <td className={tableCellStyle}>
                     <div className="flex items-center gap-2">
                       <div className="w-5 h-5 relative flex-shrink-0">
-                        <ApiSportsImage
+                        <UnifiedSportsImage
                           imageId={standing.team.id}
                           imageType={ImageType.Teams}
                           alt={standing.team.name}

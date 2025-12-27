@@ -3,6 +3,7 @@ import { fetchBigMatches, MatchData as FootballMatchData } from '@/domains/lives
 import { getTeamById } from '@/domains/livescore/constants/teams';
 import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
 import LiveScoreWidgetV2 from './LiveScoreWidgetV2';
+import type { League, Match } from './types';
 
 // API 응답 타입 정의
 interface MultiDayMatchesResponse {
@@ -15,37 +16,8 @@ interface MultiDayMatchesResponse {
   error?: string;
 }
 
-// 위젯에 전달할 타입 정의
-interface GroupedMatch {
-  id: string;
-  homeTeam: {
-    id: number;
-    name: string;
-    logo?: string;
-  };
-  awayTeam: {
-    id: number;
-    name: string;
-    logo?: string;
-  };
-  score: {
-    home: number;
-    away: number;
-  };
-  status: string;
-}
-
-interface GroupedLeague {
-  id: string;
-  name: string;
-  icon?: string;
-  logo?: string;
-  leagueIdNumber: number;
-  matches: GroupedMatch[];
-}
-
 // 리그별로 경기를 그룹화하는 함수
-function groupMatchesByLeague(matches: FootballMatchData[]): GroupedLeague[] {
+function groupMatchesByLeague(matches: FootballMatchData[]): League[] {
   const leagueMap = new Map<number, FootballMatchData[]>();
 
   matches.forEach(match => {
@@ -97,7 +69,7 @@ function groupMatchesByLeague(matches: FootballMatchData[]): GroupedLeague[] {
 
 // 서버 컴포넌트
 export default async function LiveScoreWidgetV2Server() {
-  let leagues: GroupedLeague[] = [];
+  let leagues: League[] = [];
 
   try {
     const result = await fetchBigMatches() as MultiDayMatchesResponse;

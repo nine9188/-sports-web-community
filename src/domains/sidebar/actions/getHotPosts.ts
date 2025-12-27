@@ -189,7 +189,7 @@ export const getHotPosts = cache(async (
         league_id: leagueId,
         team_logo: teamLogo,
         league_logo: leagueLogo,
-        content: typeof post.content === 'string' ? post.content : undefined,
+        content: typeof post.content === 'string' ? post.content : (post.content ? JSON.stringify(post.content) : undefined),
         hot_score: hotScore
       };
     });

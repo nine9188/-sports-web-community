@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react';
 import { fetchCachedMatchFullData, MatchFullDataResponse } from '@/domains/livescore/actions/match/matchData';
 import { MatchEvent } from '@/domains/livescore/types/match';
 import { TeamLineup } from '@/domains/livescore/actions/match/lineupData';
@@ -58,6 +58,7 @@ interface MatchDataContextType {
   tabData?: unknown;
   isTabLoading: boolean;
   tabLoadError: string | null;
+  isTabLoaded: (tab: TabType) => boolean;
 }
 
 const MatchDataContext = createContext<MatchDataContextType>({
@@ -77,7 +78,8 @@ const MatchDataContext = createContext<MatchDataContextType>({
   tabsData: {},
   tabData: undefined,
   isTabLoading: false,
-  tabLoadError: null
+  tabLoadError: null,
+  isTabLoaded: () => false
 });
 
 export const useMatchData = () => useContext(MatchDataContext);
@@ -95,6 +97,30 @@ export function MatchDataProvider({
   initialTab = 'power',
   initialData = {}
 }: MatchDataProviderProps) {
+  // initialData에 있는 탭들을 미리 loadedTabs에 추가
+  const getInitialLoadedTabs = (): Set<string> => {
+    if (!initialMatchId) return new Set();
+
+    const tabs = new Set<string>();
+
+    // 각 데이터가 있으면 해당 탭을 로드된 것으로 표시
+    if (initialData.events !== undefined) {
+      tabs.add(`${initialMatchId}-events`);
+    }
+    if (initialData.lineups !== undefined) {
+      tabs.add(`${initialMatchId}-lineups`);
+    }
+    if (initialData.stats !== undefined) {
+      tabs.add(`${initialMatchId}-stats`);
+    }
+    if (initialData.standings !== undefined) {
+      tabs.add(`${initialMatchId}-standings`);
+    }
+    // power 탭은 별도 로직이므로 초기 데이터에서는 제외
+
+    return tabs;
+  };
+
   const [matchId, setMatchId] = useState<string | null>(initialMatchId || null);
   const [matchData, setMatchData] = useState<Record<string, unknown> | null>(initialData.matchData || null);
   const [eventsData, setEventsData] = useState<MatchEvent[] | null>(initialData.events || null);
@@ -116,9 +142,15 @@ export function MatchDataProvider({
   const [error, setError] = useState<string | null>(null);
   const [currentTab, setCurrentTab] = useState<TabType>(initialTab as TabType);
   const [powerData, setPowerData] = useState<HeadToHeadTestData | undefined>(undefined);
-  
-  // 탭별 로드 완료 상태 추적 (무한 루프 방지)
-  const [loadedTabs, setLoadedTabs] = useState<Set<string>>(new Set());
+
+  // 탭별 로드 완료 상태 추적 (initialData에 있는 탭들은 미리 로드된 것으로 표시)
+  const [loadedTabs, setLoadedTabs] = useState<Set<string>>(() => getInitialLoadedTabs());
+
+  // 특정 탭이 로드되었는지 확인
+  const isTabLoaded = useCallback((tab: TabType): boolean => {
+    if (!matchId) return false;
+    return loadedTabs.has(`${matchId}-${tab}`);
+  }, [matchId, loadedTabs]);
 
   const getOptionsForTab = (tab: string) => {
     switch (tab) {
@@ -235,7 +267,8 @@ export function MatchDataProvider({
         tabsData: { power: powerData },
         tabData: currentTab === 'stats' ? { stats: statsData } : currentTab === 'standings' ? { standings: standingsData } : undefined,
         isTabLoading: isLoading,
-        tabLoadError: error
+        tabLoadError: error,
+        isTabLoaded
       }}
     >
       {children}

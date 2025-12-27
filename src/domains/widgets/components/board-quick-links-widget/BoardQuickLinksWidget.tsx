@@ -2,12 +2,14 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export type QuickLinkItem = {
   key: string;
   label: string;
   href: string;
   icon?: string; // emoji or simple text icon
+  iconImage?: string; // 이미지 경로 (이모지 대신 이미지 사용 시)
   ariaLabel?: string;
 };
 
@@ -17,12 +19,12 @@ export type BoardQuickLinksWidgetProps = {
 };
 
 const DEFAULT_ITEMS: QuickLinkItem[] = [
-  { key: 'popular', label: '인기', href: '/boards/popular', icon: '🔥', ariaLabel: '인기 게시판' },
-  { key: 'all', label: '전체', href: '/boards/all', icon: '💬', ariaLabel: '전체 게시판' },
-  { key: 'notice', label: '공지', href: '/boards/notice', icon: '📌', ariaLabel: '공지 게시판' },
-  { key: 'news', label: '소식', href: '/boards/news', icon: '⚽', ariaLabel: '소식 게시판' },
-  { key: 'analysis', label: '분석', href: '/boards/ai-analysis', icon: '🤖', ariaLabel: 'AI 분석 게시판' },
-  { key: 'live', label: '라이브', href: '/livescore/football', icon: '⚡', ariaLabel: '라이브 스코어' },
+  { key: 'popular', label: '인기', href: '/boards/popular', iconImage: '/icons/인기글.png', ariaLabel: '인기 게시판' },
+  { key: 'all', label: '전체', href: '/boards/all', iconImage: '/icons/게시글.png', ariaLabel: '전체 게시판' },
+  { key: 'notice', label: '공지', href: '/boards/notice', iconImage: '/icons/notice.png', ariaLabel: '공지 게시판' },
+  { key: 'news', label: '소식', href: '/boards/news', iconImage: '/icons/news.png', ariaLabel: '소식 게시판' },
+  { key: 'analysis', label: '분석', href: '/boards/ai-analysis', iconImage: '/icons/ai.png', ariaLabel: 'AI 분석 게시판' },
+  { key: 'live', label: '라이브', href: '/livescore/football', iconImage: '/icons/live.png', ariaLabel: '라이브 스코어' },
 ];
 
 function classNames(...classes: Array<string | undefined | false>) {
@@ -65,7 +67,7 @@ export default function BoardQuickLinksWidget({ items = DEFAULT_ITEMS, className
           <span
             className={classNames(
               'inline-flex items-center justify-center shrink-0',
-              'w-12 h-12 bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-0 shadow-sm text-2xl',
+              'w-12 h-12 bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-0 shadow-sm',
               'group-hover:bg-[#EAEAEA] group-hover:dark:bg-[#333333]',
               'group-hover:scale-110 transition-all',
               'md:hidden' // PC에서 숨김
@@ -73,15 +75,35 @@ export default function BoardQuickLinksWidget({ items = DEFAULT_ITEMS, className
             style={{ borderRadius: '0.5rem' }}
             aria-hidden
           >
-            {item.icon ?? '📌'}
+            {item.iconImage ? (
+              <Image
+                src={item.iconImage}
+                alt=""
+                width={28}
+                height={28}
+                className="w-7 h-7 object-contain dark:invert"
+              />
+            ) : (
+              <span className="text-2xl">{item.icon ?? '📌'}</span>
+            )}
           </span>
 
           {/* PC: 아이콘만 (컨테이너 없음) */}
           <span
-            className="hidden md:inline-flex items-center justify-center text-xl mr-1"
+            className="hidden md:inline-flex items-center justify-center mr-1"
             aria-hidden
           >
-            {item.icon ?? '📌'}
+            {item.iconImage ? (
+              <Image
+                src={item.iconImage}
+                alt=""
+                width={20}
+                height={20}
+                className="w-5 h-5 object-contain dark:invert"
+              />
+            ) : (
+              <span className="text-xl">{item.icon ?? '📌'}</span>
+            )}
           </span>
 
           <span className="w-full md:w-auto text-[10px] md:text-xs font-medium leading-tight md:leading-none text-center md:text-center whitespace-nowrap truncate md:truncate md:ml-0 mt-1 md:mt-0">

@@ -96,14 +96,6 @@ export async function signIn(
       { username, email: profile.email }
     )
 
-    console.log('✅ 로그인 성공 - 세션 생성됨:', {
-      userId: data.user.id,
-      username,
-      sessionExpiry: data.session.expires_at,
-      hasAccessToken: !!data.session.access_token,
-      hasRefreshToken: !!data.session.refresh_token
-    })
-
     revalidatePath('/', 'layout')
 
     return {

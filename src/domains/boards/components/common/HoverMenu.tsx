@@ -2,28 +2,7 @@
 
 import Link from 'next/link';
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-
-interface ChildBoard {
-  id: string;
-  name: string;
-  display_order: number;
-  slug?: string;
-}
-
-interface TopBoard {
-  id: string;
-  name: string;
-  display_order: number;
-  slug?: string;
-}
-
-interface HoverMenuProps {
-  currentBoardId: string;
-  topBoards: TopBoard[];
-  childBoardsMap: Record<string, ChildBoard[]>;
-  rootBoardId: string;
-  rootBoardSlug?: string;
-}
+import { ChildBoard, TopBoard, HoverMenuProps, MobileBottomSheet } from './hover-menu';
 
 export default function HoverMenu({
   currentBoardId,
@@ -468,61 +447,14 @@ export default function HoverMenu({
           <>
             {/* 모바일 바텀시트 */}
             {isMobile ? (
-              <>
-                {/* 오버레이 */}
-                <div 
-                  className="fixed inset-0 bg-black bg-opacity-50 z-50"
-                  onClick={() => setHoveredBoard(null)}
-                />
-                
-                {/* 바텀시트 */}
-                <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#1D1D1D] rounded-t-lg z-50 animate-slide-up">
-                  {/* 헤더 */}
-                  <div className="flex justify-between items-center px-4 py-2.5 border-b border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
-                    <h3 className="text-xs sm:text-sm text-gray-900 dark:text-[#F0F0F0]">
-                      {sortedTopBoards.find(board => board.id === hoveredBoard)?.name || '게시판 이동'}
-                    </h3>
-                    <button
-                      onClick={() => setHoveredBoard(null)}
-                      className="p-1 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors text-gray-700 dark:text-gray-300"
-                      aria-label="닫기"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                  
-                  {/* 콘텐츠 */}
-                  <div className="p-4 max-h-96 overflow-y-auto">
-                    <div className="space-y-1">
-                      <Link
-                        href={`/boards/${sortedTopBoards.find(board => board.id === hoveredBoard)?.slug || hoveredBoard}`}
-                        className="w-full text-left px-3 py-2 text-xs sm:text-sm bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md text-gray-900 dark:text-[#F0F0F0] block transition-colors"
-                        onClick={() => setHoveredBoard(null)}
-                      >
-                        {sortedTopBoards.find(board => board.id === hoveredBoard)?.name} 게시판 전체 보기
-                      </Link>
-                      {getChildBoards(hoveredBoard)
-                        .sort((a, b) => (a.display_order !== b.display_order ? a.display_order - b.display_order : a.name.localeCompare(b.name)))
-                        .map((childBoard: ChildBoard) => (
-                          <Link
-                            href={`/boards/${childBoard.slug || childBoard.id}`}
-                            key={childBoard.id}
-                            className={`w-full text-left px-3 py-2 text-xs sm:text-sm rounded-md text-gray-900 dark:text-[#F0F0F0] block transition-colors ${
-                              childBoard.id === currentBoardId
-                                ? 'bg-[#EAEAEA] dark:bg-[#333333]'
-                                : 'bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-                            }`}
-                            onClick={() => setHoveredBoard(null)}
-                          >
-                            {childBoard.name}
-                          </Link>
-                        ))}
-                    </div>
-                  </div>
-                </div>
-              </>
+              <MobileBottomSheet
+                hoveredBoard={hoveredBoard}
+                boardName={sortedTopBoards.find(board => board.id === hoveredBoard)?.name || '게시판 이동'}
+                boardSlug={sortedTopBoards.find(board => board.id === hoveredBoard)?.slug || hoveredBoard}
+                childBoards={getChildBoards(hoveredBoard)}
+                currentBoardId={currentBoardId}
+                onClose={() => setHoveredBoard(null)}
+              />
             ) : (
               /* 데스크톱 호버 메뉴 */
               <div

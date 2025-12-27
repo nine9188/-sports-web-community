@@ -106,8 +106,6 @@ export async function signUp(
           updated_at: new Date().toISOString()
         }
 
-        console.log('프로필 생성 시도:', { ...profileData, id: data.user.id.substring(0, 8) + '...' })
-
         const { error: profileError } = await supabase
           .from('profiles')
           .upsert(profileData)
@@ -128,7 +126,6 @@ export async function signUp(
           }
         }
 
-        console.log('프로필 생성 성공')
       } catch (profileError) {
         console.error('프로필 생성 중 오류:', profileError)
         return {
@@ -150,7 +147,6 @@ export async function signUp(
     // 6. 환영 알림 발송
     try {
       await createWelcomeNotification({ userId: data.user.id })
-      console.log('환영 알림 발송 성공')
     } catch (notificationError) {
       // 알림 발송 실패는 회원가입 성공에 영향 없음
       console.error('환영 알림 발송 실패:', notificationError)

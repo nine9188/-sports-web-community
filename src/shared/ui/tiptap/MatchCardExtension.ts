@@ -1,40 +1,14 @@
 import { Node, mergeAttributes } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import MatchCardNode from '@/domains/boards/components/match/MatchCardNode';
+import type { MatchCardData } from '@/shared/types/matchCard';
 
 export interface MatchCardOptions {
   HTMLAttributes: Record<string, string | number | boolean>;
 }
 
-export interface MatchData {
-  id: string;
-  teams: {
-    home: {
-      name: string;
-      logo: string;
-      winner?: boolean;
-    };
-    away: {
-      name: string;
-      logo: string;
-      winner?: boolean;
-    };
-  };
-  goals: {
-    home: number | null;
-    away: number | null;
-  };
-  league: {
-    name: string;
-    logo: string;
-    id?: string;
-  };
-  status: {
-    code: string;
-    elapsed?: number;
-    name?: string;
-  };
-}
+// 하위 호환성을 위해 MatchData를 MatchCardData의 별칭으로 export
+export type MatchData = MatchCardData;
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {

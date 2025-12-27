@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { PenLine } from 'lucide-react';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 
 interface LeagueData {
@@ -46,7 +46,7 @@ export default function LeagueInfo({ leagueData, boardId, boardSlug, isLoggedIn 
       <div className="flex items-center gap-2 min-w-0">
         {/* 리그 로고 */}
         <div className="relative w-6 h-6 flex-shrink-0">
-          <ApiSportsImage
+          <UnifiedSportsImage
             imageId={leagueData.id}
             imageType={ImageType.Leagues}
             alt={`${leagueData.name} logo`}

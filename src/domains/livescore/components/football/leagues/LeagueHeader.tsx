@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import Link from 'next/link';
 import { LeagueDetails } from '@/domains/livescore/actions/footballApi';
@@ -37,7 +37,7 @@ export default function LeagueHeader({ league }: LeagueHeaderProps) {
           {/* 리그 로고 */}
           {league.logo && (
             <div className="relative w-8 h-8 flex-shrink-0">
-              <ApiSportsImage
+              <UnifiedSportsImage
                 imageId={league.id}
                 imageType={ImageType.Leagues}
                 alt={`${displayName} 로고`}

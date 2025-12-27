@@ -3,7 +3,6 @@
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ChatMessage, ChipType } from '../types';
-import type { Json } from '@/shared/lib/supabase/types';
 
 export async function sendMessage(
   conversationId: string,
@@ -15,22 +14,20 @@ export async function sendMessage(
   try {
     const supabase = await getSupabaseServer();
 
-    // Map our application data to the actual database schema
-    const contentJson: Json = {
-      type,
-      content,
-      chip_type: chipType || null,
-      form_data: formData ? JSON.parse(JSON.stringify(formData)) : null,
-      is_read: type === 'user',
-      conversation_id: conversationId,
-    };
+    const now = new Date().toISOString();
 
+    // Insert message with correct field names matching the actual DB schema
     const { data, error } = await supabase
       .from('chat_messages')
       .insert({
-        session_id: conversationId,
-        role: type,
-        content_json: contentJson,
+        conversation_id: conversationId,
+        type,
+        content,
+        chip_type: chipType || null,
+        form_data: formData || null,
+        is_read: type === 'user',
+        created_at: now,
+        updated_at: now,
       })
       .select()
       .single();
@@ -40,17 +37,22 @@ export async function sendMessage(
       return { success: false, error: error.message };
     }
 
-    // Transform database data back to ChatMessage format
+    // Update conversation's last_message_at
+    await supabase
+      .from('chat_conversations')
+      .update({ last_message_at: now, updated_at: now })
+      .eq('id', conversationId);
+
     const chatMessage: ChatMessage = {
       id: data.id,
-      conversation_id: conversationId,
-      type: type,
-      content: content,
-      chip_type: chipType,
-      form_data: formData,
-      is_read: type === 'user',
-      created_at: data.created_at || new Date().toISOString(),
-      updated_at: data.created_at || new Date().toISOString(),
+      conversation_id: data.conversation_id,
+      type: data.type,
+      content: data.content,
+      chip_type: data.chip_type,
+      form_data: data.form_data,
+      is_read: data.is_read,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
     };
 
     revalidatePath('/');
@@ -73,7 +75,7 @@ export async function getMessages(
     const { data, error } = await supabase
       .from('chat_messages')
       .select('*')
-      .eq('session_id', conversationId)
+      .eq('conversation_id', conversationId)
       .order('created_at', { ascending: true });
 
     if (error) {
@@ -81,24 +83,18 @@ export async function getMessages(
       return { success: false, error: error.message };
     }
 
-    // Transform database data to ChatMessage format
-    const chatMessages: ChatMessage[] = (data || []).map((msg) => {
-      const contentJson = msg.content_json as Record<string, unknown> || {};
-
-      const transformedMsg = {
-        id: msg.id,
-        conversation_id: conversationId,
-        type: (contentJson.type as ChatMessage['type']) || (msg.role as ChatMessage['type']) || 'bot',
-        content: (contentJson.content as string) || '',
-        chip_type: contentJson.chip_type as ChatMessage['chip_type'],
-        form_data: contentJson.form_data as Record<string, unknown>,
-        is_read: (contentJson.is_read as boolean) || false,
-        created_at: msg.created_at || new Date().toISOString(),
-        updated_at: msg.created_at || new Date().toISOString(),
-      };
-
-      return transformedMsg;
-    });
+    // Transform database data to ChatMessage format (fields now match directly)
+    const chatMessages: ChatMessage[] = (data || []).map((msg) => ({
+      id: msg.id,
+      conversation_id: msg.conversation_id,
+      type: msg.type,
+      content: msg.content || '',
+      chip_type: msg.chip_type,
+      form_data: msg.form_data as Record<string, unknown>,
+      is_read: msg.is_read || false,
+      created_at: msg.created_at,
+      updated_at: msg.updated_at,
+    }));
 
     return { success: true, data: chatMessages };
   } catch (error) {
@@ -116,30 +112,17 @@ export async function markMessageAsRead(
   try {
     const supabase = await getSupabaseServer();
 
-    // Get current message to update its content_json
-    const { data: currentMsg, error: fetchError } = await supabase
+    const { error } = await supabase
       .from('chat_messages')
-      .select('*')
-      .eq('id', messageId)
-      .single();
-
-    if (fetchError) {
-      console.error('Error fetching message:', fetchError);
-      return { success: false, error: fetchError.message };
-    }
-
-    // Update is_read flag in content_json
-    const contentJson = (currentMsg.content_json as Record<string, unknown>) || {};
-    const updatedContentJson: Json = JSON.parse(JSON.stringify({ ...contentJson, is_read: true }));
-
-    const { error: updateError } = await supabase
-      .from('chat_messages')
-      .update({ content_json: updatedContentJson })
+      .update({
+        is_read: true,
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', messageId);
 
-    if (updateError) {
-      console.error('Error updating message read status:', updateError);
-      return { success: false, error: updateError.message };
+    if (error) {
+      console.error('Error updating message read status:', error);
+      return { success: false, error: error.message };
     }
 
     revalidatePath('/');
@@ -190,30 +173,36 @@ export async function submitChatForm(
   try {
     const supabase = await getSupabaseServer();
 
-    // Update the message to include form submission data in content_json
-    const { data: currentMsg, error: fetchError } = await supabase
-      .from('chat_messages')
-      .select('*')
-      .eq('id', messageId)
-      .single();
+    const now = new Date().toISOString();
 
-    if (fetchError) {
-      console.error('Error fetching message:', fetchError);
-      return { success: false, error: fetchError.message };
+    // If messageId is provided, update the message's form_data
+    if (messageId) {
+      const { error: updateError } = await supabase
+        .from('chat_messages')
+        .update({
+          form_data: { ...formData, is_submitted: true },
+          updated_at: now,
+        })
+        .eq('id', messageId);
+
+      if (updateError) {
+        console.error('Error updating message form data:', updateError);
+      }
     }
 
-    // Update content_json with form submission
-    const contentJson = (currentMsg.content_json as Record<string, unknown>) || {};
-    const updatedContentJson: Json = JSON.parse(JSON.stringify({
-      ...contentJson,
-      form_data: formData,
-      is_submitted: true,
-    }));
-
+    // Also save to chat_form_submissions table for tracking
     const { error } = await supabase
-      .from('chat_messages')
-      .update({ content_json: updatedContentJson })
-      .eq('id', messageId);
+      .from('chat_form_submissions')
+      .insert({
+        conversation_id: conversationId,
+        message_id: messageId || null,
+        user_id: userId,
+        form_type: formType,
+        form_data: formData,
+        status: 'submitted',
+        created_at: now,
+        updated_at: now,
+      });
 
     if (error) {
       console.error('Error submitting form:', error);

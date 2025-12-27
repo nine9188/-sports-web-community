@@ -3,7 +3,7 @@
 import { useMemo, memo } from 'react';
 import Link from 'next/link';
 import { PlayerStatistic } from '@/domains/livescore/types/player';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { Container, ContainerHeader, ContainerContent } from '@/shared/components/ui';
 import { EmptyState } from '@/domains/livescore/components/common/CommonComponents';
@@ -28,7 +28,7 @@ const LeagueLogo = memo(({ name, leagueId }: { name: string; leagueId?: number }
   return (
     <div className="w-6 h-6 relative flex-shrink-0">
       {leagueId && leagueId > 0 ? (
-        <ApiSportsImage
+        <UnifiedSportsImage
           imageId={leagueId}
           imageType={ImageType.Leagues}
           alt={name || '리그'}
@@ -52,7 +52,7 @@ const TeamLogo = memo(({ name, teamId }: { name: string; teamId?: number }) => {
   return (
     <div className="w-6 h-6 relative flex-shrink-0">
       {teamId && teamId > 0 ? (
-        <ApiSportsImage
+        <UnifiedSportsImage
           imageId={teamId}
           imageType={ImageType.Teams}
           alt={name || '팀'}

@@ -4,9 +4,27 @@ import React, { useState, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { getFallbackIconUrl } from '@/shared/utils/user-icons';
 import { getLevelIconUrl } from '@/shared/utils/level-icons';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
-import { getImageIdFromUrl, getImageTypeFromUrl, isApiSportsUrl } from '@/shared/utils/image-proxy';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
+
+// API-Sports URL 유틸리티 함수들
+function isApiSportsUrl(url: string): boolean {
+  return Boolean(url && url.includes('media.api-sports.io'));
+}
+
+function getImageTypeFromUrl(url: string): ImageType | null {
+  if (url.includes('/players/')) return ImageType.Players;
+  if (url.includes('/teams/')) return ImageType.Teams;
+  if (url.includes('/leagues/')) return ImageType.Leagues;
+  if (url.includes('/coachs/')) return ImageType.Coachs;
+  return null;
+}
+
+function getImageIdFromUrl(url: string): string | null {
+  if (!url) return null;
+  const match = url.match(/\/(players|teams|leagues|coachs|venues)\/(\d+)\.(png|gif)$/);
+  return match ? match[2] : null;
+}
 
 interface UserIconProps {
   iconUrl?: string | null;
@@ -60,7 +78,7 @@ const UserIcon = React.memo(function UserIcon({
     const id = getImageIdFromUrl(src);
     if (!type || !id) return null;
     return (
-      <ApiSportsImage
+      <UnifiedSportsImage
         imageId={id}
         imageType={type as ImageType}
         alt={alt || '유저 아이콘'}

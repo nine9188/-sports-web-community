@@ -1,6 +1,6 @@
 'use client';
 
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import FormDisplay from './FormDisplay';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
@@ -123,7 +123,7 @@ export default function StatsCards({ stats, onTabChange }: StatsCardsProps) {
           </ContainerHeader>
           <div className="flex items-center p-2">
             <div className="w-6 h-6 relative flex-shrink-0 mr-3">
-              <ApiSportsImage
+              <UnifiedSportsImage
                 imageId={safeLeague.id || 0}
                 imageType={ImageType.Leagues}
                 alt={safeLeague.name || '리그'}

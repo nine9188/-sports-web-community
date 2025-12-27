@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import { useRouter } from 'next/navigation';
@@ -55,7 +55,7 @@ const TeamLogo = ({ name, teamId }: { name: string; teamId?: number }) => {
   return (
     <div className="relative w-6 h-6 shrink-0 overflow-hidden rounded-full">
       {teamId && teamId > 0 ? (
-        <ApiSportsImage 
+        <UnifiedSportsImage 
           imageId={teamId}
           imageType={ImageType.Teams}
           alt={name}
@@ -312,7 +312,7 @@ export default function PlayerFixtures({
           <ContainerHeader>
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 flex items-center justify-center">
-                <ApiSportsImage
+                <UnifiedSportsImage
                   imageId={leagueGroup.league.id}
                   imageType={ImageType.Leagues}
                   alt={leagueGroup.league.name}

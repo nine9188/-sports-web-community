@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { EmptyState } from '@/domains/livescore/components/common';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { InjuryData } from '@/domains/livescore/types/player';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
@@ -49,7 +49,7 @@ export default function PlayerInjuries({
                   className="flex items-center gap-2 mb-2 transition-opacity hover:opacity-70 outline-none focus:outline-none"
                 >
                   <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center">
-                    <ApiSportsImage
+                    <UnifiedSportsImage
                       imageId={injury.team.id}
                       imageType={ImageType.Teams}
                       alt={injury.team.name}

@@ -228,80 +228,124 @@ export default function HeaderClient({
   }, [userData, iconUrl, userLevel, onProfileClick]);
 
   return (
-    <header className="sticky top-0 z-50 border-b shadow-sm bg-white dark:bg-[#1D1D1D] border-black/7 dark:border-0">
+    <>
+      {/* 사이드바 오버레이 */}
       {isSidebarOpen && (
-        <div className="absolute inset-0 bg-black/70 z-[998] lg:hidden pointer-events-auto" />
+        <div className="fixed inset-0 bg-black/70 z-[998] lg:hidden pointer-events-auto" />
       )}
-      <div className="container mx-auto relative z-[999]">
-        <div className="flex h-20 md:h-16 items-center px-4">
-          <div className="flex items-center space-x-2">
-            <Link href="/" className="flex items-center space-x-2">
-              <Image
-                src={logoUrl}
-                alt="SPORTS 로고"
-                width={124}
-                height={60}
-                priority
-                className="h-14 w-auto dark:invert"
-              />
-            </Link>
-            {/* 라이브스코어 버튼 - 로고 옆으로 이동 */}
-            <button
-              onClick={toggleLiveScore}
-              className="md:hidden flex items-center gap-1.5 px-2 py-1.5 rounded-lg active:bg-[#EAEAEA] dark:active:bg-[#333333] transition-colors duration-150"
-              style={{ WebkitTapHighlightColor: 'transparent' }}
-            >
-              <span className={`relative flex h-2 w-2 ${hasTodayMatches ? '' : 'opacity-50'}`}>
-                {hasTodayMatches ? (
-                  <>
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                  </>
-                ) : (
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                )}
-              </span>
-              <span className="text-xs text-gray-700 dark:text-gray-300 font-medium whitespace-nowrap">경기일정</span>
-            </button>
-          </div>
-          <div className="flex flex-1 items-center justify-end space-x-4">
-            <div className="flex items-center space-x-1">
-              {/* 검색 아이콘 - 모바일에서만 표시 */}
-              <button
-                onClick={goToSearchPage}
-                className="md:hidden flex items-center justify-center w-9 h-9 rounded-full active:bg-[#EAEAEA] dark:active:bg-[#333333] transition-colors duration-150"
-                style={{ WebkitTapHighlightColor: 'transparent' }}
-              >
-                <Search className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-              </button>
 
-              {/* 테마 토글 버튼 */}
-              <div className="hidden md:block">
+      {/* 데스크탑 메인 헤더 - 스크롤 시 사라짐 */}
+      <header className="hidden md:block bg-white dark:bg-[#1D1D1D] border-b border-black/7 dark:border-white/10">
+        <div className="w-full max-w-[1400px] mx-auto relative z-[999]">
+          <div className="flex h-20 items-center px-4">
+            <div className="flex items-center space-x-2">
+              <Link href="/" className="flex items-center space-x-2">
+                <Image
+                  src={logoUrl}
+                  alt="SPORTS 로고"
+                  width={124}
+                  height={60}
+                  priority
+                  className="h-14 w-auto dark:invert"
+                />
+              </Link>
+            </div>
+            <div className="flex flex-1 items-center justify-end space-x-4">
+              <div className="flex items-center space-x-1">
+                {/* 테마 토글 버튼 */}
                 <ThemeToggle />
-              </div>
 
-              <div className="min-w-[40px] h-9">
-                {renderAuthState}
-              </div>
+                <div className="min-w-[40px] h-9">
+                  {renderAuthState}
+                </div>
 
-              <button
-                className="lg:hidden flex items-center justify-center w-9 h-9 rounded-full active:bg-[#EAEAEA] dark:active:bg-[#333333] transition-colors duration-150"
-                onClick={toggleMobileMenu}
-                onTouchEnd={handleMobileMenuTouch}
-                style={{ WebkitTapHighlightColor: 'transparent' }}
-              >
-                <FontAwesomeIcon icon={faBars} className="h-4 w-4" />
-              </button>
+                <button
+                  className="lg:hidden flex items-center justify-center w-9 h-9 rounded-full active:bg-[#EAEAEA] dark:active:bg-[#333333] transition-colors duration-150"
+                  onClick={toggleMobileMenu}
+                  onTouchEnd={handleMobileMenuTouch}
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                >
+                  <FontAwesomeIcon icon={faBars} className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
-        <nav className="hidden md:flex items-center h-12 px-4 overflow-x-auto border-t border-black/5 dark:border-white/10 relative">
-          <BoardNavigationClient boards={boards} isAdmin={isAdmin} />
-        </nav>
-      </div>
+      </header>
 
-      {/* 최근방문 섹션 */}
-      <RecentlyVisited />
+      {/* 모바일: 헤더 + 최근방문 sticky / 데스크탑: nav + 최근방문 sticky */}
+      <div className="sticky top-0 z-50 bg-white dark:bg-[#1D1D1D] shadow-sm">
+        {/* 모바일 헤더 - sticky 영역 안에 포함 */}
+        <div className="md:hidden border-b border-black/7 dark:border-white/10">
+          <div className="w-full max-w-[1400px] mx-auto relative z-[999]">
+            <div className="flex h-16 items-center px-4">
+              <div className="flex items-center space-x-2">
+                <Link href="/" className="flex items-center space-x-2">
+                  <Image
+                    src={logoUrl}
+                    alt="SPORTS 로고"
+                    width={100}
+                    height={48}
+                    priority
+                    className="h-10 w-auto dark:invert"
+                  />
+                </Link>
+                {/* 라이브스코어 버튼 */}
+                <button
+                  onClick={toggleLiveScore}
+                  className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg active:bg-[#EAEAEA] dark:active:bg-[#333333] transition-colors duration-150"
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                >
+                  <span className={`relative flex h-2 w-2 ${hasTodayMatches ? '' : 'opacity-50'}`}>
+                    {hasTodayMatches ? (
+                      <>
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                      </>
+                    ) : (
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                    )}
+                  </span>
+                  <span className="text-xs text-gray-700 dark:text-gray-300 font-medium whitespace-nowrap">경기일정</span>
+                </button>
+              </div>
+              <div className="flex flex-1 items-center justify-end space-x-1">
+                {/* 검색 아이콘 */}
+                <button
+                  onClick={goToSearchPage}
+                  className="flex items-center justify-center w-9 h-9 rounded-full active:bg-[#EAEAEA] dark:active:bg-[#333333] transition-colors duration-150"
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                >
+                  <Search className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                </button>
+
+                <div className="min-w-[40px] h-9">
+                  {renderAuthState}
+                </div>
+
+                <button
+                  className="lg:hidden flex items-center justify-center w-9 h-9 rounded-full active:bg-[#EAEAEA] dark:active:bg-[#333333] transition-colors duration-150"
+                  onClick={toggleMobileMenu}
+                  onTouchEnd={handleMobileMenuTouch}
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                >
+                  <FontAwesomeIcon icon={faBars} className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 데스크탑 네비게이션 */}
+        <div className="w-full max-w-[1400px] mx-auto">
+          <nav className="hidden md:flex items-center h-12 px-4 overflow-x-auto relative">
+            <BoardNavigationClient boards={boards} isAdmin={isAdmin} />
+          </nav>
+        </div>
+        {/* 전체 너비 구분선 */}
+        <div className="border-b border-black/5 dark:border-white/10" />
+        <RecentlyVisited />
+      </div>
 
       {/* 모바일 햄버거 메뉴 모달 */}
       <MobileHamburgerModal
@@ -325,6 +369,6 @@ export default function HeaderClient({
           onClose={() => router.back()}
         />
       )}
-    </header>
+    </>
   );
 } 

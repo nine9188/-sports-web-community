@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { LeagueTeam } from '@/domains/livescore/actions/footballApi';
 import { getTeamById } from '@/domains/livescore/constants/teams';
@@ -34,7 +34,7 @@ export default function TeamCard({ team }: TeamCardProps) {
       <div className="flex flex-col items-center space-y-1 lg:space-y-3">
         {/* 팀 로고 */}
         <div className="relative w-8 h-8 lg:w-16 lg:h-16 flex-shrink-0">
-          <ApiSportsImage
+          <UnifiedSportsImage
             imageId={team.id}
             imageType={ImageType.Teams}
             alt={`${displayName} 로고`}

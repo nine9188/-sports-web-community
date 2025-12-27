@@ -1,15 +1,22 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChatState, ChatConversation, ChatMessage, ChipButton, ChipType } from '../types';
 import { createConversation, getConversations, updateConversation } from '../actions/conversationActions';
-import { sendMessage, submitChatForm, deleteMessage } from '../actions/messageActions';
+import { sendMessage, submitChatForm, deleteMessage, getMessages } from '../actions/messageActions';
 import { getChatFlowResponse, processChatFlow, handleFormSubmission } from '../actions/chatFlowActions';
-import { generateConversationTitle, generateConversationId } from '../utils';
+import { generateConversationTitle, CHIP_BUTTONS } from '../utils';
 import { CHATBOT_MESSAGES } from '../constants/messages';
 
-interface UseChatbotReturn extends ChatState {
+interface UseChatbotReturn {
+  isOpen: boolean;
+  currentView: 'chat' | 'conversations';
+  activeConversation: string | null;
+  conversations: ChatConversation[];
+  messages: Record<string, ChatMessage[]>;
+  isTyping: boolean;
+  currentForm: any;
   toggleChat: () => void;
   switchView: (view: 'chat' | 'conversations') => void;
   selectConversation: (conversationId: string) => void;
@@ -20,50 +27,55 @@ interface UseChatbotReturn extends ChatState {
   isLoading: boolean;
   isFormSubmitting: boolean;
   error: string | null;
+  totalUnreadCount: number;
 }
 
 export function useChatbot(userId: string): UseChatbotReturn {
   const queryClient = useQueryClient();
-  
-  const [chatState, setChatState] = useState<ChatState>({
-    isOpen: false,
-    currentView: 'conversations',
-    activeConversation: null,
-    conversations: [],
-    messages: {},
-    isTyping: false,
-    currentForm: null,
-  });
 
+  // 기본 UI 상태만 useState로 관리
+  const [isOpen, setIsOpen] = useState(false);
+  const [currentView, setCurrentView] = useState<'chat' | 'conversations'>('conversations');
+  const [activeConversation, setActiveConversation] = useState<string | null>(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const [currentForm, setCurrentForm] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [isFormSubmitting, setIsFormSubmitting] = useState(false);
   const [currentChipType, setCurrentChipType] = useState<ChipType | null>(null);
 
-  // Fetch conversations
-  const { data: conversationsData, isLoading: conversationsLoading } = useQuery({
+  // React Query로 대화 목록 조회 (데이터는 쿼리에서 직접 가져옴)
+  const { data: conversations = [], isLoading: conversationsLoading } = useQuery({
     queryKey: ['chatConversations', userId],
     queryFn: async () => {
+      if (!userId) return [];
       const result = await getConversations(userId);
       if (!result.success) throw new Error(result.error);
       return result.data || [];
     },
-    enabled: !!userId && chatState.isOpen,
+    enabled: !!userId && isOpen,
+    staleTime: 30000,
   });
 
-  // Fetch messages for active conversation
-  const { data: messagesData, isLoading: messagesLoading } = useQuery({
-    queryKey: ['chatMessages', chatState.activeConversation],
+  // React Query로 현재 대화의 메시지 조회
+  const { data: currentMessages = [], isLoading: messagesLoading } = useQuery({
+    queryKey: ['chatMessages', activeConversation],
     queryFn: async () => {
-      if (!chatState.activeConversation) return [];
-      const { getMessages } = await import('../actions/messageActions');
-      const result = await getMessages(chatState.activeConversation);
+      if (!activeConversation) return [];
+      const result = await getMessages(activeConversation);
       if (!result.success) throw new Error(result.error);
       return result.data || [];
     },
-    enabled: !!chatState.activeConversation,
+    enabled: !!activeConversation,
+    staleTime: 10000,
   });
 
-  // Create conversation mutation
+  // messages 객체를 useMemo로 안정적으로 생성
+  const messages = useMemo(() => {
+    if (!activeConversation) return {};
+    return { [activeConversation]: currentMessages };
+  }, [activeConversation, currentMessages]);
+
+  // 대화 생성 mutation
   const createConversationMutation = useMutation({
     mutationFn: async (title: string) => {
       const result = await createConversation(userId, title);
@@ -72,259 +84,191 @@ export function useChatbot(userId: string): UseChatbotReturn {
     },
     onSuccess: (newConversation) => {
       queryClient.invalidateQueries({ queryKey: ['chatConversations', userId] });
-      setChatState(prev => ({
-        ...prev,
-        activeConversation: newConversation.id,
-        currentView: 'chat',
-      }));
+      setActiveConversation(newConversation.id);
+      setCurrentView('chat');
     },
-    onError: (error) => {
-      setError(error instanceof Error ? error.message : 'Failed to create conversation');
+    onError: (err) => {
+      setError(err instanceof Error ? err.message : 'Failed to create conversation');
     },
   });
 
-  // Send message mutation
+  // 메시지 전송 mutation
   const sendMessageMutation = useMutation({
-    mutationFn: async ({
-      conversationId,
-      content,
-      type = 'user',
-      chipType,
-      formData
-    }: {
+    mutationFn: async (params: {
       conversationId: string;
       content: string;
       type?: 'user' | 'bot' | 'system' | 'form' | 'chips';
       chipType?: ChipType;
       formData?: Record<string, any>;
     }) => {
-      const result = await sendMessage(conversationId, content, type, chipType, formData);
+      const result = await sendMessage(
+        params.conversationId,
+        params.content,
+        params.type || 'user',
+        params.chipType,
+        params.formData
+      );
       if (!result.success) throw new Error(result.error);
       return result.data!;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['chatMessages', chatState.activeConversation] });
+      queryClient.invalidateQueries({ queryKey: ['chatMessages', activeConversation] });
       queryClient.invalidateQueries({ queryKey: ['chatConversations', userId] });
     },
-    onError: (error) => {
-      setError(error instanceof Error ? error.message : 'Failed to send message');
-      setChatState(prev => ({ ...prev, isTyping: false }));
+    onError: (err) => {
+      setError(err instanceof Error ? err.message : 'Failed to send message');
+      setIsTyping(false);
     },
   });
 
-  // Update state when data changes
-  useEffect(() => {
-    if (conversationsData) {
-      setChatState(prev => ({
-        ...prev,
-        conversations: conversationsData,
-      }));
-    }
-  }, [conversationsData]);
-
-  useEffect(() => {
-    if (messagesData && chatState.activeConversation) {
-      setChatState(prev => ({
-        ...prev,
-        messages: {
-          ...prev.messages,
-          [chatState.activeConversation!]: messagesData,
-        },
-      }));
-    }
-  }, [messagesData, chatState.activeConversation]);
-
   const toggleChat = useCallback(() => {
-    setChatState(prev => ({
-      ...prev,
-      isOpen: !prev.isOpen,
-    }));
+    setIsOpen(prev => !prev);
     setError(null);
   }, []);
 
   const switchView = useCallback((view: 'chat' | 'conversations') => {
-    setChatState(prev => ({
-      ...prev,
-      currentView: view,
-    }));
+    setCurrentView(view);
   }, []);
 
   const selectConversation = useCallback((conversationId: string) => {
-    setChatState(prev => ({
-      ...prev,
-      activeConversation: conversationId,
-      currentView: 'chat',
-    }));
+    setActiveConversation(conversationId);
+    setCurrentView('chat');
   }, []);
 
   const startNewConversation = useCallback(async () => {
     const title = CHATBOT_MESSAGES.NEW_CONVERSATION;
 
-    // 새 대화 생성 후 초기 인사말 추가
     createConversationMutation.mutate(title, {
       onSuccess: async (newConversation) => {
-        // 초기 인사말 추가
         try {
-          setChatState(prev => ({ ...prev, isTyping: true }));
+          setIsTyping(true);
 
+          // 1. 인사말 추가
           await sendMessageMutation.mutateAsync({
             conversationId: newConversation.id,
             content: CHATBOT_MESSAGES.GREETING,
             type: 'bot',
           });
 
-          setChatState(prev => ({ ...prev, isTyping: false }));
-        } catch (error) {
-          console.error('Error adding initial greeting:', error);
-          setChatState(prev => ({ ...prev, isTyping: false }));
+          // 2. 칩 버튼 메시지 추가
+          const allChips = CHIP_BUTTONS.map(chip => chip.label);
+          await sendMessageMutation.mutateAsync({
+            conversationId: newConversation.id,
+            content: '',
+            type: 'chips',
+            formData: {
+              showChips: true,
+              chips: allChips
+            }
+          });
+
+          setIsTyping(false);
+        } catch (err) {
+          console.error('Error adding initial greeting:', err);
+          setIsTyping(false);
         }
       }
     });
   }, [createConversationMutation, sendMessageMutation]);
 
   const sendUserMessage = useCallback(async (message: string) => {
-    if (!chatState.activeConversation) {
-      // Create new conversation first
+    if (!activeConversation) {
       const title = generateConversationTitle(message);
       createConversationMutation.mutate(title);
       return;
     }
 
     try {
-      setChatState(prev => ({ ...prev, isTyping: true }));
-      
-      // Send user message
+      setIsTyping(true);
+
       await sendMessageMutation.mutateAsync({
-        conversationId: chatState.activeConversation,
+        conversationId: activeConversation,
         content: message,
         type: 'user',
       });
 
-      // Get bot response
-      const flowResult = await getChatFlowResponse(chatState.activeConversation, message);
+      const flowResult = await getChatFlowResponse(activeConversation, message);
       if (flowResult.success && flowResult.steps) {
-        await processChatFlow(chatState.activeConversation, flowResult.steps);
+        await processChatFlow(activeConversation, flowResult.steps);
+        queryClient.invalidateQueries({ queryKey: ['chatMessages', activeConversation] });
       }
 
-      // "괜찮아요"라고 답했을 때 대화 완료 처리
       if (message === CHATBOT_MESSAGES.COMPLETION_OKAY) {
-        await updateConversation(chatState.activeConversation, { status: 'completed' });
+        await updateConversation(activeConversation, { status: 'completed' });
         queryClient.invalidateQueries({ queryKey: ['chatConversations', userId] });
       }
 
-      setChatState(prev => ({ ...prev, isTyping: false }));
-    } catch (error) {
-      console.error('Error sending message:', error);
+      setIsTyping(false);
+    } catch (err) {
+      console.error('Error sending message:', err);
       setError(CHATBOT_MESSAGES.ERROR_MESSAGE_SEND_FAILED);
-      setChatState(prev => ({ ...prev, isTyping: false }));
+      setIsTyping(false);
     }
-  }, [chatState.activeConversation, createConversationMutation, sendMessageMutation, queryClient, userId]);
+  }, [activeConversation, createConversationMutation, sendMessageMutation, queryClient, userId]);
 
   const handleChipClick = useCallback(async (chip: ChipButton | { label: string }) => {
-    if (!chatState.activeConversation) return;
+    if (!activeConversation) return;
 
-    // completion 버튼 처리 (단순 텍스트 메시지)
     if (!('type' in chip)) {
-      // completion chips 메시지 제거
-      const messages = chatState.messages[chatState.activeConversation] || [];
-      for (let i = messages.length - 1; i >= 0; i--) {
-        if (messages[i].type === 'chips' && messages[i].form_data?.showCompletion) {
-          try {
-            await deleteMessage(messages[i].id);
-          } catch (error) {
-            console.error('Error deleting completion chip message:', error);
-          }
-          break;
-        }
-      }
-
       await sendMessageMutation.mutateAsync({
-        conversationId: chatState.activeConversation,
+        conversationId: activeConversation,
         content: chip.label,
         type: 'user',
       });
 
-      // 봇 응답 처리
-      const flowResult = await getChatFlowResponse(chatState.activeConversation, chip.label);
+      const flowResult = await getChatFlowResponse(activeConversation, chip.label);
       if (flowResult.success && flowResult.steps) {
-        await processChatFlow(chatState.activeConversation, flowResult.steps);
+        await processChatFlow(activeConversation, flowResult.steps);
+        queryClient.invalidateQueries({ queryKey: ['chatMessages', activeConversation] });
       }
-
-      queryClient.invalidateQueries({ queryKey: ['chatMessages', chatState.activeConversation] });
       return;
     }
 
     try {
-      setChatState(prev => ({ 
-        ...prev, 
-        isTyping: true,
-        currentForm: null, // 폼 상태 초기화
-      }));
+      setIsTyping(true);
+      setCurrentForm(null);
       setCurrentChipType(chip.type);
 
-      // 칩 버튼 메시지 제거 (가장 최근의 chips 타입 메시지)
-      const messages = chatState.messages[chatState.activeConversation] || [];
-      for (let i = messages.length - 1; i >= 0; i--) {
-        if (messages[i].type === 'chips') {
-          try {
-            await deleteMessage(messages[i].id);
-          } catch (error) {
-            console.error('Error deleting chip message:', error);
-          }
-          break;
-        }
-      }
-
-      // Echo user selection
       await sendMessageMutation.mutateAsync({
-        conversationId: chatState.activeConversation,
+        conversationId: activeConversation,
         content: chip.label,
         type: 'user',
         chipType: chip.type,
       });
 
-      // Get bot response
-      const flowResult = await getChatFlowResponse(
-        chatState.activeConversation, 
-        chip.label, 
-        chip.type
-      );
-      
+      const flowResult = await getChatFlowResponse(activeConversation, chip.label, chip.type);
       if (flowResult.success && flowResult.steps) {
-        await processChatFlow(chatState.activeConversation, flowResult.steps);
+        await processChatFlow(activeConversation, flowResult.steps);
+        queryClient.invalidateQueries({ queryKey: ['chatMessages', activeConversation] });
       }
 
-      // 폼이 있으면 폼 메시지 추가
       if (chip.form_config) {
         await sendMessageMutation.mutateAsync({
-          conversationId: chatState.activeConversation,
+          conversationId: activeConversation,
           content: '',
           type: 'form',
           formData: chip.form_config,
         });
       }
 
-      setChatState(prev => ({ ...prev, isTyping: false }));
-    } catch (error) {
-      console.error('Error handling chip click:', error);
+      setIsTyping(false);
+    } catch (err) {
+      console.error('Error handling chip click:', err);
       setError(CHATBOT_MESSAGES.ERROR_REQUEST_FAILED);
-      setChatState(prev => ({ ...prev, isTyping: false }));
+      setIsTyping(false);
     }
-  }, [chatState.activeConversation, sendMessageMutation]);
+  }, [activeConversation, sendMessageMutation, queryClient]);
 
   const handleFormSubmit = useCallback(async (formData: Record<string, any>) => {
-    if (!chatState.activeConversation || !currentChipType) return;
+    if (!activeConversation || !currentChipType) return;
 
     try {
       setIsFormSubmitting(true);
-      
-      // 잠깐 대기 (UI에서 로딩 상태 확인용)
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Submit form data
+
       const result = await submitChatForm(
-        chatState.activeConversation,
-        '', // We'll need to track message ID if needed
+        activeConversation,
+        '',
         userId,
         currentChipType,
         formData
@@ -334,27 +278,40 @@ export function useChatbot(userId: string): UseChatbotReturn {
         throw new Error(result.error);
       }
 
-      // Handle form submission flow
-      await handleFormSubmission(chatState.activeConversation, currentChipType, formData);
+      await handleFormSubmission(activeConversation, currentChipType, formData);
 
       setCurrentChipType(null);
       setIsFormSubmitting(false);
 
-      queryClient.invalidateQueries({ queryKey: ['chatMessages', chatState.activeConversation] });
-    } catch (error) {
-      console.error('Error submitting form:', error);
+      queryClient.invalidateQueries({ queryKey: ['chatMessages', activeConversation] });
+    } catch (err) {
+      console.error('Error submitting form:', err);
       setError(CHATBOT_MESSAGES.ERROR_FORM_SUBMIT_FAILED);
       setIsFormSubmitting(false);
     }
-  }, [chatState.activeConversation, currentChipType, userId, queryClient]);
+  }, [activeConversation, currentChipType, userId, queryClient]);
 
-  const isLoading = conversationsLoading || 
-                   messagesLoading || 
-                   createConversationMutation.isPending || 
+  const isLoading = conversationsLoading || messagesLoading ||
+                   createConversationMutation.isPending ||
                    sendMessageMutation.isPending;
 
+  // 읽지 않은 메시지 수 계산
+  const totalUnreadCount = useMemo(() => {
+    let count = 0;
+    Object.values(messages).forEach(msgs => {
+      count += msgs.filter(m => m.type === 'bot' && !m.is_read).length;
+    });
+    return count;
+  }, [messages]);
+
   return {
-    ...chatState,
+    isOpen,
+    currentView,
+    activeConversation,
+    conversations,
+    messages,
+    isTyping,
+    currentForm,
     toggleChat,
     switchView,
     selectConversation,
@@ -365,5 +322,6 @@ export function useChatbot(userId: string): UseChatbotReturn {
     isLoading,
     isFormSubmitting,
     error,
+    totalUnreadCount,
   };
 }

@@ -71,4 +71,5 @@ export interface AdjacentPosts {
 }
 
 // 타입 재내보내기
-export type { CommentType, FormattedPost } 
+export type { CommentType, FormattedPost }
+export type { LayoutPost, ApiPost, PopularPost } from './layout' 

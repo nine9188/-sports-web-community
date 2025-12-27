@@ -5,9 +5,9 @@ import LiveScoreWidgetV2 from '@/domains/widgets/components/live-score-widget/in
 // 메인 페이지 컴포넌트 - 모든 로딩 제거하고 즉시 렌더링
 export default function HomePage() {
   return (
-    <main className="bg-transparent space-y-4" style={{ overflow: 'visible' }}>
+    <main className="bg-transparent space-y-4 overflow-visible">
       {/* 게시판 바로가기 아이콘 - 라이브스코어 상단 */}
-      <div className="bg-transparent" style={{ overflow: 'visible' }}>
+      <div className="bg-transparent overflow-visible">
         <BoardQuickLinksWidget />
       </div>
       {/* LiveScore 위젯 V2 - 새로운 디자인 */}

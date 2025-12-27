@@ -2,7 +2,7 @@
 
 import { EmptyState } from '@/domains/livescore/components/common';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { TrophyData } from '@/domains/livescore/types/player';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
@@ -104,7 +104,7 @@ export default function PlayerTrophies({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 md:mb-0">
                     {trophy.leagueLogo && (
-                      <ApiSportsImage
+                      <UnifiedSportsImage
                         imageId={parseInt(trophy.leagueLogo.split('/').pop()?.split('.')[0] || '0')}
                         imageType={ImageType.Leagues}
                         alt={trophy.league}

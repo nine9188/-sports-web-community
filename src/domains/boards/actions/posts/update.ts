@@ -3,7 +3,7 @@
 import { checkSuspensionGuard } from '@/shared/utils/suspension-guard';
 import { logUserAction } from '@/shared/actions/log-actions';
 import { getSupabaseAction } from '@/shared/lib/supabase/server';
-import { processMatchCardsInContent, PostActionResponse } from './utils';
+import type { PostActionResponse } from './utils';
 
 /**
  * 게시글 수정 서버 액션
@@ -68,15 +68,15 @@ export async function updatePost(
       };
     }
     
-    // 경기 카드 데이터를 완전한 HTML로 변환
-    const processedContent = processMatchCardsInContent(content);
-    
+    // 매치카드는 TipTap JSON 그대로 저장 (HTML 변환 없음)
+    // PostContent.tsx에서 matchCard 노드 감지하여 렌더링
+
     // 게시글 업데이트 쿼리
     const { error: updateError } = await supabase
       .from('posts')
       .update({
         title: title.trim(),
-        content: processedContent,
+        content: content,
         updated_at: new Date().toISOString()
       })
       .eq('id', postId);

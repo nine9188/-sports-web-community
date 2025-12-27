@@ -44,8 +44,6 @@ export default function ItemGrid({
           item={item}
           isOwned={userItems.includes(item.id)}
           onPurchase={() => handleSelectItem(item)}
-          // compact 모드 시 내부 간격을 줄이기 위해 data-attribute 전달 (선택적)
-          data-compact={viewMode === 'compact' ? true : undefined as unknown as never}
         />
       ))}
     </div>

@@ -96,9 +96,11 @@ export async function fetchMatchLineups(matchId: string): Promise<LineupsRespons
     const homeTeamData = data.response[0];
     const awayTeamData = data.response[1];
 
-    // 주장 찾기 (라인업 데이터에서)
+    // 주장 찾기 (라인업 데이터에서) - truthy 체크로 변경
+    // 참고: lineup API는 captain 데이터를 제공하지 않는 경우가 많음
+    // 대신 player stats API (/fixtures/players)에서 games.captain 정보 사용
     const findCaptainId = (teamData: any): number | null => {
-      const captainInStartXI = teamData.startXI?.find((item: any) => item.player.captain === true);
+      const captainInStartXI = teamData.startXI?.find((item: any) => item.player.captain);
       return captainInStartXI?.player.id || null;
     };
 
@@ -116,7 +118,8 @@ export async function fetchMatchLineups(matchId: string): Promise<LineupsRespons
           number: item.player.number,
           pos: item.player.pos,
           grid: item.player.grid || null,
-          captain: item.player.captain === true || item.player.id === captainId,
+          // truthy 체크로 변경 (true, 1, "true" 등 모두 처리)
+          captain: Boolean(item.player.captain) || item.player.id === captainId,
           photo: `https://media.api-sports.io/football/players/${item.player.id}.png`
         }
       });

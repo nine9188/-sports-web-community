@@ -24,17 +24,23 @@ export default function TabContent() {
     awayTeam,
     isLoading,
     loadMatchData,
-    tabsData
+    tabsData,
+    isTabLoaded
   } = useMatchData();
 
   // 탭 변경 시 데이터 로드 (Context에서 중복 로드 방지)
   useEffect(() => {
-    if (!matchId || currentTab === 'support' || isLoading) return;
+    if (!matchId || currentTab === 'support') return;
 
-    // loadMatchData 내부에서 loadedTabs로 중복 방지하므로 안전하게 호출
+    // 이미 로드된 탭이면 스킵 (중복 로드 방지)
+    if (isTabLoaded(currentTab as TabType)) return;
+
+    // 현재 로딩 중이면 스킵 (다른 탭 로딩 완료 후 다시 시도됨)
+    if (isLoading) return;
+
+    // loadMatchData 호출
     loadMatchData(matchId, currentTab as TabType);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [matchId, currentTab]);
+  }, [matchId, currentTab, isLoading, isTabLoaded, loadMatchData]);
 
   if (!matchId) {
     return <EmptyState title="경기 정보 없음" message="경기 정보가 없습니다." />;
@@ -48,11 +54,19 @@ export default function TabContent() {
   // 탭별 렌더링
   switch (currentTab) {
     case 'events':
+      // 아직 로드되지 않았으면 로딩 표시
+      if (!isTabLoaded('events')) {
+        return <LoadingState message="이벤트 데이터를 불러오는 중..." />;
+      }
       return eventsData && eventsData.length > 0
         ? <Events events={eventsData} />
         : <EmptyState title="이벤트 없음" message="이 경기의 이벤트 데이터를 찾을 수 없습니다." />;
 
     case 'lineups':
+      // 아직 로드되지 않았으면 로딩 표시 (핵심 수정!)
+      if (!isTabLoaded('lineups')) {
+        return <LoadingState message="라인업 데이터를 불러오는 중..." />;
+      }
       if (!lineupsData?.response) {
         return <EmptyState title="라인업 없음" message="이 경기의 라인업 정보를 찾을 수 없습니다." />;
       }
@@ -99,16 +113,28 @@ export default function TabContent() {
       );
 
     case 'stats':
+      // 아직 로드되지 않았으면 로딩 표시
+      if (!isTabLoaded('stats')) {
+        return <LoadingState message="통계 데이터를 불러오는 중..." />;
+      }
       return statsData && statsData.length > 0
         ? <Stats matchData={{ stats: statsData, homeTeam: homeTeam || undefined, awayTeam: awayTeam || undefined }} matchId={matchId} />
         : <EmptyState title="통계 없음" message="이 경기의 통계 데이터를 찾을 수 없습니다." />;
 
     case 'standings':
+      // 아직 로드되지 않았으면 로딩 표시
+      if (!isTabLoaded('standings')) {
+        return <LoadingState message="순위 데이터를 불러오는 중..." />;
+      }
       return standingsData
         ? <Standings matchData={{ standings: standingsData, homeTeam: homeTeam || undefined, awayTeam: awayTeam || undefined }} matchId={matchId} />
         : <EmptyState title="순위 없음" message="이 리그의 순위 정보를 찾을 수 없습니다." />;
 
     case 'power':
+      // 아직 로드되지 않았으면 로딩 표시
+      if (!isTabLoaded('power')) {
+        return <LoadingState message="전력 데이터를 불러오는 중..." />;
+      }
       const powerData = tabsData.power;
       return powerData && isPowerTabData(powerData) && homeTeam && awayTeam
         ? <Power matchId={matchId} homeTeam={homeTeam} awayTeam={awayTeam} data={{ ...powerData, standings: standingsData }} />

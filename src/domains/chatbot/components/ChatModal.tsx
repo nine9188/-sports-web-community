@@ -3,16 +3,14 @@
 import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
-import { ChatState } from '../types';
 
 interface ChatModalProps {
   isOpen: boolean;
   onClose: () => void;
-  chatState: ChatState;
   children: React.ReactNode;
 }
 
-export function ChatModal({ isOpen, onClose, chatState, children }: ChatModalProps) {
+export function ChatModal({ isOpen, onClose, children }: ChatModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

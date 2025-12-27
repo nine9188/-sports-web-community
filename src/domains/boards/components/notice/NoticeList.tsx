@@ -1,11 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, startTransition } from 'react';
-import type { Post } from '@/domains/boards/types/post';
-import { NoticeItem } from './NoticeItem';
+import { NoticeItem, type NoticeListPost } from './NoticeItem';
 
 interface NoticeListProps {
-  notices: Post[];
+  notices: NoticeListPost[];
   showBoardName?: boolean;
   emptyMessage?: string;
   standalone?: boolean; // true: 독립 컨테이너, false: 내용만

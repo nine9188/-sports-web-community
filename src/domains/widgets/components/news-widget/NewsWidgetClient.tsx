@@ -4,17 +4,9 @@ import { useState, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { formatDate } from '@/shared/utils/date';
+import { NewsItem } from './types';
 
 // ==================== 타입 정의 ====================
-interface NewsItem {
-  id: string;
-  title: string;
-  url: string;
-  source: string;
-  publishedAt: string;
-  imageUrl?: string;
-}
-
 interface NewsWidgetClientProps {
   initialNews: NewsItem[];
 }
@@ -23,7 +15,7 @@ type ImageLoadingState = 'loading' | 'loaded' | 'error' | 'timeout';
 
 // ==================== 상수 ====================
 const IMAGE_TIMEOUT_MS = 5000;
-const BACKUP_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
+const FALLBACK_LOGO = '/logo/4590 로고2 이미지크기 275X200 누끼제거 버전.png';
 const BLUR_DATA_URL = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q==";
 
 const CARD_STYLES = {
@@ -35,16 +27,8 @@ const CARD_STYLES = {
 } as const;
 
 // ==================== 유틸리티 함수 ====================
-const getBackupImage = (id: string, index: number): string => {
-  const color = BACKUP_COLORS[index % BACKUP_COLORS.length];
-  return `data:image/svg+xml;base64,${btoa(`<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="${color}"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="white" font-size="24" font-family="Arial">뉴스</text></svg>`)}`;
-};
-
-const getSafeImageUrl = (item: NewsItem, index: number): string => {
-  if (item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.trim()) {
-    return item.imageUrl;
-  }
-  return getBackupImage(item.id, index);
+const hasValidImageUrl = (item: NewsItem): boolean => {
+  return !!(item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.trim());
 };
 
 // ==================== 서브 컴포넌트 ====================
@@ -68,46 +52,55 @@ const LoadingSpinner = ({ size = 'md' }: LoadingSpinnerProps) => {
 
 interface NewsImageProps {
   item: NewsItem;
-  index: number;
   isLoading: boolean;
+  hasError: boolean;
   onLoad: () => void;
   onLoadStart: () => void;
   onError: () => void;
   priority?: boolean;
   sizes: string;
-  className?: string;
   spinnerSize?: 'sm' | 'md' | 'lg';
 }
 
 const NewsImage = ({
   item,
-  index,
   isLoading,
+  hasError,
   onLoad,
   onLoadStart,
   onError,
   priority = false,
   sizes,
-  className = "object-cover group-hover:brightness-75 transition-all",
   spinnerSize = 'md'
-}: NewsImageProps) => (
-  <>
-    {isLoading && <LoadingSpinner size={spinnerSize} />}
-    <Image
-      src={getSafeImageUrl(item, index)}
-      alt={String(item?.title || '뉴스 이미지')}
-      fill
-      className={className}
-      sizes={sizes}
-      priority={priority}
-      onLoad={onLoad}
-      onLoadStart={onLoadStart}
-      onError={onError}
-      placeholder="blur"
-      blurDataURL={BLUR_DATA_URL}
-    />
-  </>
-);
+}: NewsImageProps) => {
+  // 이미지 URL이 없거나 에러가 발생한 경우 fallback 사용
+  const useFallback = !hasValidImageUrl(item) || hasError;
+  const imageUrl = useFallback ? FALLBACK_LOGO : item.imageUrl!;
+
+  return (
+    <>
+      {isLoading && <LoadingSpinner size={spinnerSize} />}
+      <Image
+        src={imageUrl}
+        alt={String(item?.title || '뉴스 이미지')}
+        fill
+        className={useFallback
+          ? "object-contain p-4 dark:invert transition-all"
+          : "object-cover transition-all"
+        }
+        sizes={sizes}
+        priority={priority}
+        onLoad={onLoad}
+        onLoadStart={onLoadStart}
+        onError={onError}
+        placeholder={useFallback ? undefined : "blur"}
+        blurDataURL={useFallback ? undefined : BLUR_DATA_URL}
+      />
+      {/* 호버 오버레이 */}
+      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-all pointer-events-none" />
+    </>
+  );
+};
 
 // ==================== 메인 컴포넌트 ====================
 export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps) {
@@ -134,6 +127,7 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
   }, []);
 
   const isImageLoading = (id: string) => imageStates[id] === 'loading';
+  const hasImageError = (id: string) => imageStates[id] === 'error' || imageStates[id] === 'timeout';
 
   // 뉴스 없음 상태
   if (!news.length) {
@@ -159,11 +153,11 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
             style={CARD_STYLES.transform}
           >
             <div className="flex flex-col h-full">
-              <div className="relative w-full h-56 md:h-80 lg:h-96">
+              <div className="relative w-full h-56 md:h-80 lg:h-96 bg-[#F5F5F5] dark:bg-[#262626]">
                 <NewsImage
                   item={news[0]}
-                  index={0}
                   isLoading={isImageLoading(news[0].id)}
+                  hasError={hasImageError(news[0].id)}
                   onLoad={() => handleImageLoad(news[0].id)}
                   onLoadStart={() => handleImageLoadStart(news[0].id)}
                   onError={() => handleImageError(news[0].id)}
@@ -197,11 +191,11 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
                 style={CARD_STYLES.transform}
               >
                 <div className="flex flex-col h-full">
-                  <div className="relative w-full aspect-[4/3] md:aspect-auto md:flex-1">
+                  <div className="relative w-full aspect-[4/3] md:aspect-auto md:flex-1 bg-[#F5F5F5] dark:bg-[#262626]">
                     <NewsImage
                       item={item}
-                      index={index + 1}
                       isLoading={isImageLoading(item.id)}
+                      hasError={hasImageError(item.id)}
                       onLoad={() => handleImageLoad(item.id)}
                       onLoadStart={() => handleImageLoadStart(item.id)}
                       onError={() => handleImageError(item.id)}
@@ -233,11 +227,11 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
                 style={CARD_STYLES.transform}
               >
                 <div className="flex flex-col h-full">
-                  <div className="relative w-full aspect-[4/3] md:aspect-auto md:flex-1">
+                  <div className="relative w-full aspect-[4/3] md:aspect-auto md:flex-1 bg-[#F5F5F5] dark:bg-[#262626]">
                     <NewsImage
                       item={item}
-                      index={index + 3}
                       isLoading={isImageLoading(item.id)}
+                      hasError={hasImageError(item.id)}
                       onLoad={() => handleImageLoad(item.id)}
                       onLoadStart={() => handleImageLoadStart(item.id)}
                       onError={() => handleImageError(item.id)}
@@ -286,16 +280,15 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
                 </div>
 
                 {/* 이미지 영역 (오른쪽) */}
-                <div className="relative w-20 md:w-24 aspect-[1/1] md:aspect-auto md:h-auto flex-shrink-0">
+                <div className="relative w-20 md:w-24 aspect-[1/1] md:aspect-auto md:h-auto flex-shrink-0 bg-[#F5F5F5] dark:bg-[#262626] rounded-r-lg overflow-hidden">
                   <NewsImage
                     item={item}
-                    index={index + 5}
                     isLoading={isImageLoading(item.id)}
+                    hasError={hasImageError(item.id)}
                     onLoad={() => handleImageLoad(item.id)}
                     onLoadStart={() => handleImageLoadStart(item.id)}
                     onError={() => handleImageError(item.id)}
                     sizes="100px"
-                    className="object-cover group-hover:brightness-75 transition-all"
                     spinnerSize="sm"
                   />
                 </div>
@@ -307,4 +300,4 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
       )}
     </div>
   );
-} 
+}

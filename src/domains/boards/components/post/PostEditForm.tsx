@@ -9,12 +9,12 @@ import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import BoardSelector from '@/domains/boards/components/createnavigation/BoardSelector';
 import EditorToolbar from '@/domains/boards/components/createnavigation/EditorToolbar';
-import { MatchData } from '@/domains/livescore/actions/footballApi';
 import { toast } from 'react-toastify';
 import { createPost, updatePost } from '@/domains/boards/actions/posts/index';
 import { Board } from '@/domains/boards/types/board';
-import { generateMatchCardHTML } from '@/shared/utils/matchCardRenderer';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui/container';
+import { useEditorHandlers } from './post-edit-form/hooks';
+import { NoticeAdminSection } from './post-edit-form/components';
 
 // MatchCard 확장 로딩 함수
 const loadMatchCardExtension = async () => {
@@ -76,13 +76,6 @@ export default function PostEditForm({
   const [noticeOrder, setNoticeOrder] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
   
-  // 드롭다운 상태들
-  const [showImageModal, setShowImageModal] = useState(false);
-  const [showYoutubeModal, setShowYoutubeModal] = useState(false);
-  const [showVideoModal, setShowVideoModal] = useState(false);
-  const [showMatchModal, setShowMatchModal] = useState(false);
-  const [showLinkModal, setShowLinkModal] = useState(false);
-  const [showSocialModal, setShowSocialModal] = useState(false);
 
   // Supabase 클라이언트 - 한 번만 생성하여 재사용 (성능 최적화, SSR 안전)
   const supabase = useMemo(() => {
@@ -188,6 +181,28 @@ export default function PostEditForm({
     immediatelyRender: false
   }, [loadedExtensions]); // loadedExtensions 변경 시 에디터 재생성
 
+  // 에디터 핸들러 훅
+  const {
+    showImageModal,
+    showYoutubeModal,
+    showVideoModal,
+    showMatchModal,
+    showLinkModal,
+    showSocialModal,
+    handleToggleDropdown,
+    handleFileUpload,
+    handleAddImage,
+    handleAddYoutube,
+    handleAddVideo,
+    handleAddMatch,
+    handleAddLink,
+    handleAddSocialEmbed
+  } = useEditorHandlers({
+    editor,
+    extensionsLoaded,
+    supabase
+  });
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (boardDropdownRef.current && !boardDropdownRef.current.contains(event.target as Node)) {
@@ -238,30 +253,46 @@ export default function PostEditForm({
 
     // 입력값 검증
     if (!title.trim()) {
-      setError('제목을 입력해주세요.');
+      toast.error('제목을 입력해주세요.');
       return;
     }
 
     if (!content || content === '<p></p>') {
-      setError('내용을 입력해주세요.');
+      toast.error('내용을 입력해주세요.');
       return;
     }
 
     if (isCreateMode && !categoryId) {
-      setError('게시판을 선택해주세요.');
+      toast.error('게시판을 선택해주세요.');
       return;
+    }
+
+    // 게시판 선택 유효성 검사: 최상위 게시판이 하위 게시판을 가지고 있는 경우 하위 선택 필수
+    if (isCreateMode && categoryId) {
+      const selectedBoard = allBoardsFlat.find(b => b.id === categoryId);
+      if (selectedBoard && selectedBoard.parent_id === null) {
+        // 최상위 게시판인 경우, 하위 게시판이 있는지 확인
+        const hasChildren = allBoardsFlat.some(b => b.parent_id === categoryId);
+        if (hasChildren) {
+          toast.error('하위 게시판을 선택해주세요.');
+          return;
+        }
+      }
     }
 
     setIsSubmitting(true);
     setError(null);
 
     try {
+      // TipTap JSON 형식으로 저장 (매치카드 등 구조화된 데이터 보존)
+      const jsonContent = editor ? JSON.stringify(editor.getJSON()) : content;
+
       // 게시글 생성 모드
       if (isCreateMode) {
         // FormData 생성
         const formData = new FormData();
         formData.append('title', title.trim());
-        formData.append('content', content);
+        formData.append('content', jsonContent);
         formData.append('boardId', categoryId);
 
         // 공지 정보 추가 (관리자이고 공지로 설정한 경우)
@@ -330,8 +361,8 @@ export default function PostEditForm({
         return;
       }
 
-      // 서버 액션 실행
-      const result = await updatePost(postId, title.trim(), content, userData.user.id);
+      // 서버 액션 실행 (TipTap JSON 형식으로 저장)
+      const result = await updatePost(postId, title.trim(), jsonContent, userData.user.id);
 
       // 실패 케이스
       if (!result.success) {
@@ -363,303 +394,7 @@ export default function PostEditForm({
       setIsSubmitting(false);
     }
   };
-  
-  // 파일 업로드 처리
-  const handleFileUpload = async (file: File, caption: string) => {
-    if (!file || !editor) return;
-    
-    try {
-      // 파일명에서 특수문자 및 공백 제거하여, 고유한 파일명 생성
-      const timestamp = new Date().getTime();
-      const randomString = Math.random().toString(36).substring(2, 8); // 추가 무작위 문자열
-      const safeFileName = file.name.replace(/[^a-zA-Z0-9.]/g, '_');
-      const fileName = `upload_${timestamp}_${randomString}_${safeFileName}`;
-      
-      // Supabase Storage에 업로드 (재사용된 클라이언트 사용)
-      const { error } = await supabase
-        .storage
-        .from('post-images')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: true // 중복 파일 덮어쓰기 허용
-        });
-        
-      if (error) {
-        throw new Error(`파일 업로드 실패: ${error.message}`);
-      }
-      
-      // 업로드된 파일의 공개 URL 가져오기 (재사용된 클라이언트 사용)
-      const { data: urlData } = supabase
-        .storage
-        .from('post-images')
-        .getPublicUrl(fileName);
-        
-      if (!urlData.publicUrl) {
-        throw new Error('파일 URL을 가져올 수 없습니다.');
-      }
-      
-      // 에디터에 이미지 삽입 (alt 텍스트에 caption 사용)
-      editor.chain().focus().setImage({ 
-        src: urlData.publicUrl,
-        alt: caption || file.name 
-      }).run();
-      
-      // 드롭다운 닫기
-      setShowImageModal(false);
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류';
-      alert(`이미지 업로드 중 오류가 발생했습니다: ${errorMessage}`);
-    }
-  };
-  
-  // URL 이미지 추가
-  const handleAddImage = (url: string, caption?: string) => {
-    if (editor) {
-      editor.chain().focus().setImage({ src: url, alt: caption || "" }).run();
-      setShowImageModal(false);
-    }
-  };
-  
-  // 유튜브 추가 함수 - TipTap 확장 명령어 사용
-  const handleAddYoutube = async (url: string, caption?: string) => {
-    if (!url || !editor) return;
-    
-    try {
-      // 에디터에 YouTube 확장이 로드되어 있는지 확인
-      if (!extensionsLoaded) {
-        toast.error('에디터가 아직 로딩 중입니다. 잠시 후 다시 시도해주세요.');
-        return;
-      }
 
-      // TipTap YouTube 확장의 setYoutubeVideo 명령어 사용
-      let result = false;
-      
-              // YouTube 확장이 로드되었는지 확인하고 명령어 실행
-        if (extensionsLoaded && 'setYoutubeVideo' in editor.commands) {
-          const commands = editor.commands as Record<string, (...args: unknown[]) => boolean>;
-          result = commands.setYoutubeVideo({
-            src: url,
-            caption: caption
-          });
-        }
-
-      if (!result) {
-        // 명령어 실행 실패 시 fallback으로 직접 HTML 삽입
-        console.warn('YouTube 확장 명령어 실행 실패, HTML 직접 삽입으로 fallback');
-        
-        // 유튜브 URL을 embed URL로 변환
-        let embedUrl = url;
-        if (url.includes('youtube.com/watch?v=')) {
-          const videoId = url.split('v=')[1]?.split('&')[0];
-          embedUrl = `https://www.youtube.com/embed/${videoId}`;
-        } else if (url.includes('youtu.be/')) {
-          const videoId = url.split('youtu.be/')[1]?.split('?')[0];
-          embedUrl = `https://www.youtube.com/embed/${videoId}`;
-        }
-        
-        const youtubeHTML = `
-          <div class="youtube-container">
-            <iframe src="${embedUrl}" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
-            ${caption ? `<div class="youtube-caption" style="margin-top: 0.5rem; font-size: 0.875rem; color: #666;">${caption}</div>` : ''}
-          </div>
-        `;
-        
-        editor.commands.insertContent(youtubeHTML);
-      }
-      
-      toast.success('YouTube 영상이 추가되었습니다.');
-      
-    } catch (error) {
-      console.error('유튜브 추가 중 오류:', error);
-      toast.error('유튜브 영상을 추가하는데 실패했습니다. 다시 시도해주세요.');
-    }
-    
-    setShowYoutubeModal(false);
-  };
-  
-  // 비디오 추가 함수 - TipTap 확장 명령어 사용
-  const handleAddVideo = async (videoUrl: string, caption: string) => {
-    if (!videoUrl || !editor) return;
-    
-    try {
-      // 에디터에 Video 확장이 로드되어 있는지 확인
-      if (!extensionsLoaded) {
-        toast.error('에디터가 아직 로딩 중입니다. 잠시 후 다시 시도해주세요.');
-        return;
-      }
-
-      // TipTap Video 확장의 setVideo 명령어 사용
-      let result = false;
-      
-              // Video 확장이 로드되었는지 확인하고 명령어 실행
-        if (extensionsLoaded && 'setVideo' in editor.commands) {
-          const commands = editor.commands as Record<string, (...args: unknown[]) => boolean>;
-          result = commands.setVideo({
-            src: videoUrl,
-            caption: caption,
-            controls: true,
-            width: '100%',
-            height: 'auto'
-          });
-        }
-
-      if (!result) {
-        // 명령어 실행 실패 시 fallback으로 직접 HTML 삽입
-        console.warn('Video 확장 명령어 실행 실패, HTML 직접 삽입으로 fallback');
-        
-        const videoHTML = `
-          <div class="video-wrapper" style="margin: 1rem 0;">
-            <video src="${videoUrl}" controls style="width: 100%; max-width: 640px; height: auto;" data-caption="${caption || ''}">
-              브라우저가 비디오를 지원하지 않습니다.
-            </video>
-            ${caption ? `<div class="video-caption" style="margin-top: 0.5rem; font-size: 0.875rem; color: #666;">${caption}</div>` : ''}
-          </div>
-        `;
-        
-        editor.commands.insertContent(videoHTML);
-      }
-      
-      toast.success('동영상이 추가되었습니다.');
-      
-    } catch (error) {
-      console.error('비디오 추가 중 오류:', error);
-      toast.error('비디오를 추가하는데 실패했습니다. 다시 시도해주세요.');
-    }
-    
-    setShowVideoModal(false);
-  };
-  
-  // 한 번에 하나의 드롭다운만 표시되도록 관리 (함수 수정)
-  const handleToggleDropdown = async (dropdown: 'match' | 'link' | 'video' | 'image' | 'youtube' | 'social') => {
-    // 현재 상태 확인
-    const currentState: Record<'image' | 'youtube' | 'video' | 'match' | 'link' | 'social', boolean> = {
-      image: showImageModal,
-      youtube: showYoutubeModal,
-      video: showVideoModal,
-      match: showMatchModal,
-      link: showLinkModal,
-      social: showSocialModal
-    };
-
-    // 이미 열려있는 모달이면 닫기
-    if (currentState[dropdown]) {
-      // 모든 모달 닫기
-      setShowImageModal(false);
-      setShowYoutubeModal(false);
-      setShowVideoModal(false);
-      setShowMatchModal(false);
-      setShowLinkModal(false);
-      setShowSocialModal(false);
-      return;
-    }
-
-    // 모든 모달 닫기
-    setShowImageModal(false);
-    setShowYoutubeModal(false);
-    setShowVideoModal(false);
-    setShowMatchModal(false);
-    setShowLinkModal(false);
-    setShowSocialModal(false);
-
-    // 선택된 드롭다운만 열기 (확장 로딩 제거)
-    switch (dropdown) {
-      case 'image':
-        setShowImageModal(true);
-        break;
-      case 'youtube':
-        setShowYoutubeModal(true);
-        break;
-      case 'video':
-        setShowVideoModal(true);
-        break;
-      case 'match':
-        setShowMatchModal(true);
-        break;
-      case 'link':
-        setShowLinkModal(true);
-        break;
-      case 'social':
-        setShowSocialModal(true);
-        break;
-    }
-  };
-  
-  // 경기 카드 추가 함수 수정 - HTML 직접 삽입 방식으로 변경
-  const handleAddMatch = async (matchId: string, matchData: MatchData) => {
-    if (!editor) {
-      toast.error('에디터가 준비되지 않았습니다.');
-      return;
-    }
-    
-    try {
-      
-      // 경기 카드 HTML 생성
-      const matchCardHTML = generateMatchCardHTML(matchData);
-      
-      // HTML 직접 삽입
-      editor.commands.insertContent(matchCardHTML);
-      
-      // 모달 닫기
-      setShowMatchModal(false);
-      toast.success('경기 결과가 추가되었습니다.');
-    } catch (error) {
-      console.error('경기 추가 중 오류:', error);
-      toast.error('경기 추가 중 오류가 발생했습니다.');
-    }
-  };
-  
-  // 링크 추가 핸들러 - 개선
-  const handleAddLink = (url: string, text?: string) => {
-    if (!editor || !url) return;
-
-    try {
-
-      // 현재 선택된 텍스트가 있는지 확인
-      const { from, to } = editor.state.selection;
-      const selectedText = editor.state.doc.textBetween(from, to);
-
-      if (selectedText) {
-        // 선택된 텍스트가 있으면 링크로 변환
-        editor.chain().focus().setLink({ href: url }).run();
-      } else {
-        // 선택된 텍스트가 없으면 링크 텍스트와 함께 삽입
-        const linkText = text || url;
-        editor.chain().focus().insertContent(`<a href="${url}" target="_blank" rel="noopener noreferrer">${linkText}</a>`).run();
-      }
-
-    } catch (error) {
-      console.error('링크 추가 중 오류:', error);
-      toast.error('링크를 추가하는데 실패했습니다.');
-    }
-  };
-
-  // 소셜 미디어 임베드 추가 핸들러
-  const handleAddSocialEmbed = (platform: string, url: string) => {
-    if (!editor || !extensionsLoaded) {
-      toast.error('에디터가 준비되지 않았습니다.');
-      return;
-    }
-
-    try {
-      // setSocialEmbed 명령어 사용
-      const commands = editor.commands as Record<string, (...args: unknown[]) => boolean>;
-      if ('setSocialEmbed' in commands) {
-        const success = commands.setSocialEmbed({ platform, url });
-        if (success) {
-          toast.success('소셜 미디어 임베드가 추가되었습니다.');
-          setShowSocialModal(false);
-        } else {
-          toast.error('임베드 추가에 실패했습니다.');
-        }
-      } else {
-        toast.error('소셜 임베드 기능이 로드되지 않았습니다.');
-      }
-    } catch (error) {
-      console.error('소셜 임베드 추가 중 오류:', error);
-      toast.error('소셜 미디어 임베드를 추가하는데 실패했습니다.');
-    }
-  };
-  
   return (
     <Container className="mt-0">
       {/* 헤더 */}
@@ -695,115 +430,17 @@ export default function PostEditForm({
 
           {/* 공지 설정 (관리자 전용) */}
           {isCreateMode && isAdmin && (
-            <div className="space-y-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="isNotice"
-                  checked={isNotice}
-                  onChange={(e) => setIsNotice(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
-                />
-                <label htmlFor="isNotice" className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
-                  공지로 등록
-                </label>
-              </div>
-
-              {isNotice && (
-                <div className="space-y-4 pl-6">
-                  {/* 공지 타입 선택 */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
-                      공지 타입
-                    </label>
-                    <div className="flex gap-4">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          value="global"
-                          checked={noticeType === 'global'}
-                          onChange={(e) => {
-                            setNoticeType(e.target.value as 'global' | 'board');
-                            setNoticeBoards([]); // 전체 공지로 변경 시 게시판 선택 초기화
-                          }}
-                          className="mr-2"
-                        />
-                        <span className="text-sm text-gray-700 dark:text-gray-300">전체 공지</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          value="board"
-                          checked={noticeType === 'board'}
-                          onChange={(e) => setNoticeType(e.target.value as 'global' | 'board')}
-                          className="mr-2"
-                        />
-                        <span className="text-sm text-gray-700 dark:text-gray-300">게시판 공지</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* 게시판 선택 (게시판 공지인 경우) */}
-                  {noticeType === 'board' && (
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
-                        공지를 표시할 게시판 선택 (다중 선택 가능)
-                      </label>
-                      <div className="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-[#262626]">
-                        {allBoardsFlat.length === 0 ? (
-                          <p className="text-sm text-gray-500">게시판을 불러오는 중...</p>
-                        ) : (
-                          <div className="grid grid-cols-2 gap-2">
-                            {allBoardsFlat.map((board) => (
-                              <label
-                                key={board.id}
-                                className="flex items-center p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer"
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={noticeBoards.includes(board.id)}
-                                  onChange={(e) => {
-                                    if (e.target.checked) {
-                                      setNoticeBoards([...noticeBoards, board.id]);
-                                    } else {
-                                      setNoticeBoards(noticeBoards.filter(id => id !== board.id));
-                                    }
-                                  }}
-                                  className="mr-2"
-                                />
-                                <span className="text-sm text-gray-700 dark:text-gray-300">
-                                  {board.name}
-                                </span>
-                              </label>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      {noticeBoards.length > 0 && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          선택된 게시판: {noticeBoards.length}개
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* 공지 순서 */}
-                  <div className="space-y-2">
-                    <label htmlFor="noticeOrder" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
-                      공지 순서 (낮은 숫자가 먼저 표시됨)
-                    </label>
-                    <input
-                      type="number"
-                      id="noticeOrder"
-                      value={noticeOrder}
-                      onChange={(e) => setNoticeOrder(parseInt(e.target.value, 10) || 0)}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      min="0"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
+            <NoticeAdminSection
+              isNotice={isNotice}
+              setIsNotice={setIsNotice}
+              noticeType={noticeType}
+              setNoticeType={setNoticeType}
+              noticeBoards={noticeBoards}
+              setNoticeBoards={setNoticeBoards}
+              noticeOrder={noticeOrder}
+              setNoticeOrder={setNoticeOrder}
+              allBoardsFlat={allBoardsFlat}
+            />
           )}
 
           <div className="space-y-2">
@@ -843,129 +480,8 @@ export default function PostEditForm({
               handleAddSocialEmbed={handleAddSocialEmbed}
             />
             
-            {/* 에디터 컨텐츠 영역 - 패딩 추가 */}
+            {/* 에디터 컨텐츠 영역 - 스타일은 globals.css에서 관리 */}
             <div className="border border-black/7 dark:border-white/10 rounded-b-md min-h-[500px] bg-white dark:bg-[#262626]">
-              <style jsx global>{`
-                .ProseMirror {
-                  padding: 1rem;
-                  min-height: 500px;
-                  color: #111827;
-                }
-                
-                .dark .ProseMirror {
-                  color: #F0F0F0;
-                }
-                
-                /* 경기 카드 스타일 */
-                .ProseMirror .match-card {
-                  width: 100% !important;
-                  max-width: 100% !important;
-                  margin: 12px 0 !important;
-                  border: 1px solid rgba(0, 0, 0, 0.07) !important;
-                  border-radius: 8px !important;
-                  overflow: hidden !important;
-                  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
-                  background: white !important;
-                }
-                
-                .dark .ProseMirror .match-card {
-                  border: 0 !important;
-                  background: #1D1D1D !important;
-                  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3) !important;
-                }
-                
-                .ProseMirror .match-card img {
-                  max-width: unset !important;
-                  display: inline-block !important;
-                  object-fit: contain !important;
-                }
-
-                /* 경기 카드 내부 요소들 */
-                .ProseMirror .match-card > div {
-                  width: 100% !important;
-                }
-
-                /* 유튜브 임베드 스타일은 globals.css에서 관리 */
-
-                /* 비디오 스타일 */
-                .video-wrapper {
-                  margin: 1rem 0;
-                  width: 100%;
-                }
-
-                .video-wrapper video {
-                  width: 100%;
-                  max-width: 800px; /* PC에서 더 큰 최대 너비 */
-                  height: auto;
-                  border-radius: 0.5rem;
-                  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-                }
-                
-                /* 대형 화면용 최적화 */
-                @media (min-width: 1025px) {
-                  .video-wrapper {
-                    margin: 2rem auto;
-                    max-width: 900px;
-                  }
-                  
-                  .video-wrapper video {
-                    max-height: 650px;
-                  }
-                }
-                
-                @media (min-width: 1441px) {
-                  .video-wrapper {
-                    margin: 2.5rem auto;
-                    max-width: 1000px;
-                  }
-                  
-                  .video-wrapper video {
-                    max-height: 750px;
-                  }
-                }
-                
-                /* 모바일에서 비디오 최적화 */
-                @media (max-width: 480px) {
-                  .video-wrapper video {
-                    max-height: none;
-                    height: auto;
-                    aspect-ratio: 16/9;
-                    box-shadow: none;
-                    border-radius: 0;
-                  }
-                  
-                  .video-wrapper {
-                    margin: 0.5rem -1rem;
-                    border-radius: 0;
-                  }
-                  
-                  .ProseMirror .video-wrapper {
-                    margin-left: -1rem !important;
-                    margin-right: -1rem !important;
-                    width: calc(100% + 2rem) !important;
-                    max-width: calc(100% + 2rem) !important;
-                  }
-                }
-                
-                @media (min-width: 481px) and (max-width: 768px) {
-                  .video-wrapper video {
-                    max-height: none;
-                    height: auto;
-                    aspect-ratio: 16/9;
-                  }
-                  
-                  .video-wrapper {
-                    margin: 0.5rem -0.5rem;
-                  }
-                  
-                  .ProseMirror .video-wrapper {
-                    margin-left: -0.5rem !important;
-                    margin-right: -0.5rem !important;
-                    width: calc(100% + 1rem) !important;
-                    max-width: calc(100% + 1rem) !important;
-                  }
-                }
-              `}</style>
               <EditorContent editor={editor} />
             </div>
           </div>

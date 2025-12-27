@@ -19,7 +19,7 @@ export default async function AllPostsWidget() {
       <div className="w-full h-full flex items-center justify-between">
         <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">최신 게시글</h3>
         <Link
-          href="/boards/soccer"
+          href="/boards/all"
           className="text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
           aria-label="더 많은 게시글 보기"
         >

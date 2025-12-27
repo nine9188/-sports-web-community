@@ -2,7 +2,7 @@
 
 import { useState, useEffect, memo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { useMatchData, isStandingsTabData } from '@/domains/livescore/components/football/match/context/MatchDataContext';
 import { Standing, StandingsData, Team } from '@/domains/livescore/types/match';
@@ -26,7 +26,7 @@ const TeamLogo = memo(({ teamName, teamId }: { teamName: string; teamId?: number
   return (
     <div className="w-6 h-6 flex-shrink-0 relative transform-gpu">
       {teamId ? (
-        <ApiSportsImage
+        <UnifiedSportsImage
           imageId={teamId}
           imageType={ImageType.Teams}
           alt={teamName || '팀'}
@@ -302,7 +302,7 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
             {groupIndex === 0 ? (
               <div className="flex items-center gap-3 w-full">
                 <div className="w-6 h-6 relative flex-shrink-0">
-                  <ApiSportsImage
+                  <UnifiedSportsImage
                     imageId={leagueData.id}
                     imageType={ImageType.Leagues}
                     alt={leagueData.name}

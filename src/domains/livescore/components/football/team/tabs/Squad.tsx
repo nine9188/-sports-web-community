@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import React, { useMemo } from 'react';
 import { PlayerStats } from '@/domains/livescore/actions/teams/player-stats';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
@@ -179,7 +179,7 @@ export default function Squad({ initialSquad, initialStats, isLoading: externalL
                         >
                           <td className="px-2 sm:px-4 md:px-6 py-2 whitespace-nowrap">
                             <div className="relative w-8 h-8 md:w-10 md:h-10 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden flex-shrink-0">
-                              <ApiSportsImage
+                              <UnifiedSportsImage
                                 imageId={member.id}
                                 imageType={position === 'Coach' ? ImageType.Coachs : ImageType.Players}
                                 alt={member.name}

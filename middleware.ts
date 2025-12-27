@@ -86,7 +86,25 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL(redirectUrl, request.url))
     }
 
-    // 참고: Admin 권한 체크는 /app/admin/layout.tsx에서 처리
+    // 3. 관리자 페이지 접근 제어
+    if (pathname.startsWith('/admin')) {
+      // 비로그인 사용자 차단
+      if (!user) {
+        return NextResponse.redirect(new URL('/', request.url))
+      }
+
+      // 관리자 권한 확인
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single()
+
+      if (!profile?.is_admin) {
+        // 관리자가 아니면 메인으로 리다이렉트
+        return NextResponse.redirect(new URL('/', request.url))
+      }
+    }
 
   } catch (error) {
     console.error('미들웨어 처리 중 오류:', error)

@@ -13,6 +13,7 @@ export interface Board {
   access_level: string | null;
   logo: string | null;
   views: number | null;
+  view_type?: 'list' | 'image-table';
 }
 
 export interface BoardMap {

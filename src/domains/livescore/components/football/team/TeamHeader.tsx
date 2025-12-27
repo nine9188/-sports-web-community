@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { useTeamData } from './context/TeamDataContext';
 
@@ -137,7 +137,7 @@ export default function TeamHeader({ team, teamId, isLoading: externalLoading, e
         {/* 팀 로고 및 기본 정보 */}
         <div className="flex items-center p-2 md:p-4 md:w-96 flex-shrink-0">
           <div className="relative w-16 h-16 md:w-20 md:h-20 flex-shrink-0 mr-3 md:mr-4">
-            <ApiSportsImage
+            <UnifiedSportsImage
               imageId={teamInfo.id}
               imageType={ImageType.Teams}
               alt={`${teamInfo.name} 로고`}
@@ -183,7 +183,7 @@ export default function TeamHeader({ team, teamId, isLoading: externalLoading, e
 
                     
                     return (
-                      <ApiSportsImage
+                      <UnifiedSportsImage
                         imageId={venueId || teamInfo.id}
                         imageType={ImageType.Venues}
                         alt={`${venue.name} 경기장`}

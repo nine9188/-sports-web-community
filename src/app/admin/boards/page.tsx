@@ -63,15 +63,12 @@ export default function BoardsAdminPage() {
   const fetchBoards = useCallback(async () => {
     try {
       setIsLoading(true);
-      console.log('게시판 목록 조회 시작...');
-      
+
       const { data, error } = await supabase
         .from('boards')
         .select('*')
         .order('display_order', { ascending: true })
         .order('name', { ascending: true });
-      
-      console.log('게시판 조회 결과:', { data, error });
       
       if (error) {
         console.error('Supabase 에러:', error);
@@ -92,9 +89,7 @@ export default function BoardsAdminPage() {
         team_id: item.team_id,
         view_type: (item.view_type as 'list' | 'image-table' | null) ?? 'list'
       })) as Board[];
-      
-      console.log('변환된 게시판 데이터:', boardsData);
-      
+
       setBoards(boardsData);
       
       // 계층 구조로 데이터 변환

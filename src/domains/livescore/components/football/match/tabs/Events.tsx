@@ -2,7 +2,7 @@
 
 import { memo, useState, useEffect } from 'react';
 import Link from 'next/link';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { MatchEvent } from '@/domains/livescore/types/match';
 import { getTeamById, TeamMapping } from '@/domains/livescore/constants/teams';
@@ -146,7 +146,7 @@ function Events({ events: propsEvents }: EventsProps) {
     return (
       <div className="w-5 h-5 md:w-6 md:h-6 relative flex-shrink-0 overflow-hidden">
         {teamId ? (
-          <ApiSportsImage
+          <UnifiedSportsImage
             imageId={teamId}
             imageType={ImageType.Teams}
             alt={teamName}

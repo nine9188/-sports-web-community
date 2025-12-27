@@ -79,7 +79,6 @@ export default function BoardCollectionWidgetSettingsPage() {
         .map((s: any) => {
           const boardData = s.boards;
           if (!boardData) {
-            console.warn('게시판 데이터 없음:', s);
             return null;
           }
           return {

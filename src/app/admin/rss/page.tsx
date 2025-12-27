@@ -288,14 +288,12 @@ export default function RSSAdminPage() {
               const intervalMs = autoFetchInterval * 60 * 1000; // 분을 밀리초로 변환
               window.rssAutoInterval = setInterval(async () => {
                 try {
-                  console.log('🔄 자동 RSS 수집 실행...');
                   const autoResponse = await fetch('/api/rss/auto-fetch');
                   const autoResult = await autoResponse.json();
-                  
+
                   if (autoResult.success) {
                     setLastAutoFetch(new Date().toISOString());
                     loadAutomationLogs(); // 로그 새로고침
-                    console.log('✅ 자동 RSS 수집 완료');
                   }
                 } catch (error) {
                   console.error('❌ 자동 RSS 수집 오류:', error);
@@ -709,14 +707,12 @@ export default function RSSAdminPage() {
                       const intervalMs = newInterval * 60 * 1000;
                       window.rssAutoInterval = setInterval(async () => {
                         try {
-                          console.log('🔄 자동 RSS 수집 실행...');
                           const autoResponse = await fetch('/api/rss/auto-fetch');
                           const autoResult = await autoResponse.json();
-                          
+
                           if (autoResult.success) {
                             setLastAutoFetch(new Date().toISOString());
                             loadAutomationLogs();
-                            console.log('✅ 자동 RSS 수집 완료');
                           }
                         } catch (error) {
                           console.error('❌ 자동 RSS 수집 오류:', error);

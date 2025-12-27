@@ -4,13 +4,13 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useAuth } from '@/shared/context/AuthContext';
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { signUp } from '@/domains/auth/actions';
 import { AlertCircle, Check, Eye, EyeOff } from 'lucide-react';
 import KakaoLoginButton from '@/domains/auth/components/KakaoLoginButton';
 import TurnstileWidget from '@/shared/components/TurnstileWidget';
+import { TermsContent, PrivacyContent } from '@/shared/components/legal';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -19,6 +19,7 @@ export default function SignupPage() {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   
   // 단계 표시 상태
+  const [showEmailStep, setShowEmailStep] = useState(false);
   const [showNameStep, setShowNameStep] = useState(false);
   const [showIdStep, setShowIdStep] = useState(false);
   const [showNicknameStep, setShowNicknameStep] = useState(false);
@@ -52,6 +53,17 @@ export default function SignupPage() {
   const [nicknameChecked, setNicknameChecked] = useState(false);
   const [nicknameMessage, setNicknameMessage] = useState('');
   const [nicknameAvailable, setNicknameAvailable] = useState(false);
+
+  // 약관 동의 상태
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [agreePrivacy, setAgreePrivacy] = useState(false);
+
+  // 약관 동의 후 다음 단계로
+  const handleAgreeSubmit = () => {
+    if (agreeTerms && agreePrivacy && captchaToken) {
+      setShowEmailStep(true);
+    }
+  };
 
   // 이미 로그인된 사용자 처리
   useEffect(() => {
@@ -417,12 +429,13 @@ export default function SignupPage() {
 
   return (
     <div className="flex flex-col justify-center items-center min-h-[calc(100vh-120px)]">
-      <div className="max-w-md w-full">
+      <div className="max-w-md w-full md:bg-white md:dark:bg-[#2D2D2D] md:rounded-2xl md:shadow-lg md:border md:border-black/10 md:dark:border-white/10 md:p-8">
         {/* 헤더 */}
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">4590 멤버 ID를 생성하세요.</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">4590 Football 회원가입</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-8">
-            모든 축구팬을 위한 4590 커뮤니티에 오신 것을 환영합니다.
+            모든 축구팬을 위한<br />
+            4590 Football 커뮤니티에 오신 것을 환영합니다.
           </p>
         </div>
 
@@ -440,54 +453,123 @@ export default function SignupPage() {
             />
           </div>
 
-          {/* 이메일 입력 단계 */}
-          <div className="space-y-4">
-            <div>
-              <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">이메일 주소</label>
-              <div className="relative">
+          {/* 약관 동의 */}
+          {!showEmailStep && (
+            <div className="space-y-4">
+              {/* 전체 동의 */}
+              <label className="flex items-center p-3 bg-slate-100 dark:bg-[#333333] rounded-lg cursor-pointer border border-black/7 dark:border-white/10">
                 <input
-                  type="email"
-                  value={email}
+                  type="checkbox"
+                  checked={agreeTerms && agreePrivacy}
                   onChange={(e) => {
-                    setEmail(e.target.value);
-                    validateEmail(e.target.value);
+                    setAgreeTerms(e.target.checked);
+                    setAgreePrivacy(e.target.checked);
                   }}
-                  onBlur={() => validateEmail(email)}
-                  className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none transition-colors ${
-                    emailError ? 'border-red-500 ' : 
-                    emailValid ? 'border-green-500 ' : 
-                    'border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
-                  }`}
-                  placeholder="이메일 주소"
-                  required
-                  disabled={showNameStep}
+                  className="h-5 w-5 text-slate-600 border-gray-300 dark:border-white/20 rounded focus:ring-slate-500"
                 />
-                {emailValid && !emailError && (
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    <Check className="h-5 w-5 text-green-500" />
+                <span className="ml-3 text-gray-900 dark:text-[#F0F0F0] font-semibold">
+                  전체 동의
+                </span>
+              </label>
+
+              {/* 이용약관 동의 */}
+              <div className="border border-black/7 dark:border-white/10 rounded-lg overflow-hidden">
+                <label className="flex items-center p-3 bg-gray-50 dark:bg-[#262626] cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={agreeTerms}
+                    onChange={(e) => setAgreeTerms(e.target.checked)}
+                    className="h-5 w-5 text-slate-600 border-gray-300 dark:border-white/20 rounded focus:ring-slate-500"
+                  />
+                  <span className="ml-3 text-gray-900 dark:text-[#F0F0F0] font-medium">
+                    이용약관에 동의합니다 <span className="text-red-500 text-sm">(필수)</span>
+                  </span>
+                </label>
+                <div className="p-3 bg-white dark:bg-[#1D1D1D] text-xs text-gray-600 dark:text-gray-400 max-h-40 overflow-y-auto border-t border-black/7 dark:border-white/10">
+                  <TermsContent />
+                </div>
+              </div>
+
+              {/* 개인정보 수집 동의 */}
+              <div className="border border-black/7 dark:border-white/10 rounded-lg overflow-hidden">
+                <label className="flex items-center p-3 bg-gray-50 dark:bg-[#262626] cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={agreePrivacy}
+                    onChange={(e) => setAgreePrivacy(e.target.checked)}
+                    className="h-5 w-5 text-slate-600 border-gray-300 dark:border-white/20 rounded focus:ring-slate-500"
+                  />
+                  <span className="ml-3 text-gray-900 dark:text-[#F0F0F0] font-medium">
+                    개인정보 수집과 이용에 동의합니다 <span className="text-red-500 text-sm">(필수)</span>
+                  </span>
+                </label>
+                <div className="p-3 bg-white dark:bg-[#1D1D1D] text-xs text-gray-600 dark:text-gray-400 max-h-40 overflow-y-auto border-t border-black/7 dark:border-white/10">
+                  <PrivacyContent />
+                </div>
+              </div>
+
+              {/* 다음 버튼 */}
+              <button
+                type="button"
+                onClick={handleAgreeSubmit}
+                disabled={!agreeTerms || !agreePrivacy || !captchaToken}
+                className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md transition-colors disabled:opacity-50"
+              >
+                다음
+              </button>
+            </div>
+          )}
+
+          {/* 이메일 입력 단계 */}
+          {showEmailStep && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">이메일 주소</label>
+                <div className="relative">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      validateEmail(e.target.value);
+                    }}
+                    onBlur={() => validateEmail(email)}
+                    className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none transition-colors ${
+                      emailError ? 'border-red-500 ' :
+                      emailValid ? 'border-green-500 ' :
+                      'border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
+                    }`}
+                    placeholder="이메일 주소"
+                    required
+                    disabled={showNameStep}
+                  />
+                  {emailValid && !emailError && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <Check className="h-5 w-5 text-green-500" />
+                    </div>
+                  )}
+                </div>
+                {emailError && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                    <AlertCircle className="h-4 w-4 mr-1" />
+                    {emailError}
+                  </p>
+                )}
+                {!showNameStep && (
+                  <div className="mt-2">
+                    <button
+                      type="button"
+                      onClick={handleEmailSubmit}
+                      disabled={!emailValid || isLoading}
+                      className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md transition-colors disabled:opacity-50"
+                    >
+                      {isLoading ? '처리 중...' : '계속하기'}
+                    </button>
                   </div>
                 )}
               </div>
-              {emailError && (
-                <p className="mt-1 text-sm text-red-600 flex items-center">
-                  <AlertCircle className="h-4 w-4 mr-1" />
-                  {emailError}
-                </p>
-              )}
-              {!showNameStep && (
-                <div className="mt-2">
-                  <button
-                    type="button"
-                    onClick={handleEmailSubmit}
-                    disabled={!emailValid || isLoading || !captchaToken}
-                    className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md transition-colors disabled:opacity-50"
-                  >
-                    {isLoading ? '처리 중...' : '계속하기'}
-                  </button>
-                </div>
-              )}
             </div>
-          </div>
+          )}
           
           {/* 이름 입력 단계 */}
           {showNameStep && (
@@ -788,7 +870,7 @@ export default function SignupPage() {
               <div className="w-full border-t border-black/7 dark:border-white/10" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-[#F8F9FA] dark:bg-black text-gray-500 dark:text-gray-400">또는</span>
+              <span className="px-2 bg-white dark:bg-[#1F1F1F] md:dark:bg-[#2D2D2D] text-gray-500 dark:text-gray-400">또는</span>
             </div>
           </div>
         </div>

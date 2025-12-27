@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Match } from '@/domains/livescore/types/match';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 
 interface MatchCardProps {
@@ -78,7 +78,7 @@ export default function MatchCard({ match, isLast = false }: MatchCardProps) {
         </span>
         {homeTeam.id > 0 && (
           <div className="w-6 h-6 flex-shrink-0 relative">
-            <ApiSportsImage
+            <UnifiedSportsImage
               imageId={homeTeam.id}
               imageType={ImageType.Teams}
               alt={homeTeam.name}
@@ -101,7 +101,7 @@ export default function MatchCard({ match, isLast = false }: MatchCardProps) {
       <div className="flex items-center gap-2.5 flex-1 min-w-0 px-3">
         {awayTeam.id > 0 && (
           <div className="w-6 h-6 flex-shrink-0 relative">
-            <ApiSportsImage
+            <UnifiedSportsImage
               imageId={awayTeam.id}
               imageType={ImageType.Teams}
               alt={awayTeam.name}

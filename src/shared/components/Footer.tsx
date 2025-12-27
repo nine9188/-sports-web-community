@@ -8,7 +8,7 @@ export default function Footer() {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-sm text-gray-500 dark:text-gray-400">
-            © 2024 SPORTS Community. All rights reserved.
+            © 2025 4590. All rights reserved.
           </div>
           <div className="flex gap-6 text-sm text-gray-700 dark:text-gray-300 items-center">
             <Link href="/terms" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors">이용약관</Link>

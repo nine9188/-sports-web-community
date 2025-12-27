@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Trophy, Users } from 'lucide-react';
-import ApiSportsImage from '@/shared/components/ApiSportsImage';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { MatchData } from '@/domains/livescore/actions/footballApi';
 import { getLeagueKoreanName, getLeagueName } from '@/domains/livescore/constants/league-mappings';
@@ -97,7 +97,7 @@ const MatchItem = React.memo(function MatchItem({ match, onClose }: MatchItemPro
       {match.league && (
         <div className="flex items-center gap-2 mb-3 text-xs text-gray-500 dark:text-gray-400">
           {match.league.id ? (
-            <ApiSportsImage
+            <UnifiedSportsImage
               imageId={match.league.id}
               imageType={ImageType.Leagues}
               alt={match.league.name || '리그'}
@@ -130,7 +130,7 @@ const MatchItem = React.memo(function MatchItem({ match, onClose }: MatchItemPro
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {match.teams?.home?.logo ? (
             <div className="w-6 h-6 flex-shrink-0 flex items-center justify-center">
-              <ApiSportsImage
+              <UnifiedSportsImage
                 imageId={match.teams.home.id}
                 imageType={ImageType.Teams}
                 alt={match.teams?.home?.name || '홈팀'}
@@ -183,7 +183,7 @@ const MatchItem = React.memo(function MatchItem({ match, onClose }: MatchItemPro
           </span>
           {match.teams?.away?.logo ? (
             <div className="w-6 h-6 flex-shrink-0 flex items-center justify-center">
-              <ApiSportsImage
+              <UnifiedSportsImage
                 imageId={match.teams.away.id}
                 imageType={ImageType.Teams}
                 alt={match.teams?.away?.name || '원정팀'}

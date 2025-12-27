@@ -49,8 +49,6 @@ export async function getUserExpHistory(
       amount: item.exp // exp를 amount로 매핑
     }));
     
-    console.log('경험치 내역 조회 첫 항목:', data[0]);
-    
     return {
       success: true,
       data: historyItems

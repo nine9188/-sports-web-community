@@ -27,8 +27,6 @@ export async function GET(request: NextRequest) {
       }
 
       if (data.user && data.session) {
-        console.log('OAuth 로그인 성공:', { userId: data.user.id, email: data.user.email })
-
         // 기존 프로필 확인
         const { data: profile, error: profileError } = await supabase
           .from('profiles')

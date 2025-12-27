@@ -69,8 +69,6 @@ export async function getUserPointHistory(
   limit: number = 10
 ): Promise<ActionResponse<PointHistoryItem[]>> {
   try {
-    console.log(`포인트 내역 조회 시도: 사용자 ID ${userId}, 한도 ${limit}`);
-    
     const supabase = await getSupabaseServer();
     
     // point_history 테이블에서 사용자의 포인트 내역 조회
@@ -86,11 +84,8 @@ export async function getUserPointHistory(
       throw new Error(error.message);
     }
     
-    console.log(`포인트 내역 조회 결과: ${data?.length || 0}개 항목 발견`);
-    
     // 포인트 내역이 없으면 빈 배열 반환 또는 테스트 데이터 생성
     if (!data || data.length === 0) {
-      console.log('포인트 내역이 없습니다.');
       
       // 테스트 데이터 추가 (실제 프로덕션에서는 제거)
       const testData: PointHistoryItem[] = [

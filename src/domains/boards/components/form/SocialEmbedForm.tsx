@@ -63,8 +63,8 @@ export default function SocialEmbedForm({ onCancel, onSocialEmbedAdd, isOpen }: 
     }
   }, [url]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (e?: { preventDefault?: () => void }) => {
+    e?.preventDefault?.();
 
     if (!url.trim()) {
       setError('URL을 입력해주세요.');
@@ -120,7 +120,7 @@ export default function SocialEmbedForm({ onCancel, onSocialEmbedAdd, isOpen }: 
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
-                    handleSubmit(e as unknown as React.FormEvent);
+                    handleSubmit();
                   }
                 }}
                 placeholder="https://twitter.com/..."
@@ -160,7 +160,7 @@ export default function SocialEmbedForm({ onCancel, onSocialEmbedAdd, isOpen }: 
               </button>
               <button
                 type="button"
-                onClick={(e) => handleSubmit(e as unknown as React.FormEvent)}
+                onClick={() => handleSubmit()}
                 disabled={!detectedPlatform}
                 className="px-3 py-1.5 text-sm rounded-md bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
               >
