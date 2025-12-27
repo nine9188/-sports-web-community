@@ -61,6 +61,7 @@ function groupMatchesByLeague(matches: FootballMatchData[]): League[] {
             away: match.goals?.away ?? 0,
           },
           status: match.status?.code || 'NS',
+          elapsed: match.status?.elapsed || 0,
         };
       }),
     };

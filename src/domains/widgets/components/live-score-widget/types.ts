@@ -15,6 +15,7 @@ export interface Match {
     away: number;
   };
   status: string; // 'FT', 'LIVE', 'NS', 'HT' etc
+  elapsed?: number; // 경과 시간 (분)
 }
 
 // 리그 데이터 타입

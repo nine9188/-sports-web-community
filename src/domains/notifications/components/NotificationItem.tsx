@@ -87,68 +87,80 @@ export default function NotificationItem({ notification, onRead, isSelected, onT
     }
   };
 
-  const content = (
+  // 알림 내용 부분 (링크가 있으면 Link로 감싸짐)
+  const notificationContent = (
+    <div className="flex items-center gap-3 flex-1 py-3 pr-3">
+      {/* 타입 아이콘 */}
+      <div className="flex-shrink-0">
+        <div className="w-8 h-8 rounded-full bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center text-gray-500 dark:text-gray-400">
+          {getTypeIcon()}
+        </div>
+      </div>
+
+      {/* 알림 내용 */}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm text-gray-900 dark:text-[#F0F0F0] line-clamp-2">
+          {notification.title}
+        </p>
+        {notification.message && (
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-1">
+            {notification.message}
+          </p>
+        )}
+        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+          {formatDate(notification.created_at)}
+        </p>
+      </div>
+    </div>
+  );
+
+  return (
     <div
-      className={`flex items-center gap-3 transition-colors relative ${
-        notification.link ? 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer' : 'cursor-default'
-      } ${!notification.is_read ? 'bg-[#F5F5F5] dark:bg-[#262626]' : ''} ${
-        isSelected ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
-      }`}
-      onClick={handleClick}
+      className={`flex items-center transition-colors relative ${
+        !notification.is_read ? 'bg-[#F5F5F5] dark:bg-[#262626]' : ''
+      } ${isSelected ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
     >
       {/* 왼쪽 세로 바 (안읽은 알림 표시) */}
       {!notification.is_read && (
         <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500" />
       )}
 
-      <div className="flex items-center gap-3 w-full pl-3 pr-3 py-3">
-        {/* 체크박스 */}
-        {onToggleSelect && (
-          <div className="flex-shrink-0">
-            <input
-              type="checkbox"
-              checked={isSelected}
-              onChange={handleCheckboxChange}
-              onClick={(e) => e.stopPropagation()}
-              className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-[#F0F0F0] focus:ring-gray-900 dark:focus:ring-[#F0F0F0] cursor-pointer"
-            />
-          </div>
-        )}
-
-        {/* 타입 아이콘 */}
-        <div className="flex-shrink-0">
-          <div className="w-8 h-8 rounded-full bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center text-gray-500 dark:text-gray-400">
-            {getTypeIcon()}
-          </div>
+      {/* 체크박스 영역 - 링크와 분리 */}
+      {onToggleSelect && (
+        <div
+          className="flex-shrink-0 w-12 flex items-center justify-center self-stretch cursor-pointer border-r border-black/5 dark:border-white/10 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleCheckboxChange();
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={handleCheckboxChange}
+            onClick={(e) => e.stopPropagation()}
+            className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-[#F0F0F0] focus:ring-gray-900 dark:focus:ring-[#F0F0F0] cursor-pointer"
+          />
         </div>
+      )}
 
-        {/* 알림 내용 */}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm text-gray-900 dark:text-[#F0F0F0] line-clamp-2">
-            {notification.title}
-          </p>
-          {notification.message && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-1">
-              {notification.message}
-            </p>
-          )}
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-            {formatDate(notification.created_at)}
-          </p>
+      {/* 알림 내용 영역 - 링크 적용 */}
+      {notification.link ? (
+        <Link
+          href={notification.link}
+          className={`flex-1 cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors ${!onToggleSelect ? 'pl-3' : 'pl-2'}`}
+          onClick={handleClick}
+        >
+          {notificationContent}
+        </Link>
+      ) : (
+        <div className={`flex-1 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors ${!onToggleSelect ? 'pl-3' : 'pl-2'}`} onClick={handleClick}>
+          {notificationContent}
         </div>
-      </div>
+      )}
     </div>
   );
-
-  if (notification.link) {
-    return (
-      <Link href={notification.link} className="block">
-        {content}
-      </Link>
-    );
-  }
-
-  return content;
 }
 
 

@@ -130,17 +130,15 @@ export default function MobileNotificationModal({
         </div>
 
         {/* 푸터 - 전체 보기 링크 */}
-        {visibleNotifications.length > 0 && (
-          <div className="border-t border-black/5 dark:border-white/10 p-4">
-            <Link
-              href="/notifications"
-              onClick={onClose}
-              className="block w-full py-3 text-center text-sm font-medium text-gray-900 dark:text-[#F0F0F0] bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-lg transition-colors outline-none focus:outline-none"
-            >
-              전체 알림 보기
-            </Link>
-          </div>
-        )}
+        <div className="border-t border-black/5 dark:border-white/10 p-4">
+          <Link
+            href="/notifications"
+            onClick={onClose}
+            className="block w-full py-3 text-center text-sm font-medium text-gray-900 dark:text-[#F0F0F0] bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-lg transition-colors outline-none focus:outline-none"
+          >
+            전체 알림 보기
+          </Link>
+        </div>
       </div>
     </>
   );
