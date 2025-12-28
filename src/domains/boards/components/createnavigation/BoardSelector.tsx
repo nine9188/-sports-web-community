@@ -227,24 +227,27 @@ const BoardSelector = React.memo(({
   const renderTopOptions = useCallback(() => {
     if (isLoading || !topLevelBoards || topLevelBoards.length === 0) {
       return (
-        <div className="px-3 py-1.5 text-gray-500 dark:text-gray-400">
+        <div className="px-4 py-2.5 text-sm text-gray-500 dark:text-gray-400">
           {isLoading ? "게시판 데이터를 불러오는 중입니다..." : "게시판이 없습니다."}
         </div>
       );
     }
 
-    return topLevelBoards.map(board => {
+    return topLevelBoards.map((board, index) => {
       const hasChildren = midLevelBoards[board.id] && midLevelBoards[board.id].length > 0;
+      const isLast = index === topLevelBoards.length - 1;
 
       return (
         <div
           key={board.id}
-          className={`px-3 py-1.5 transition-colors ${
+          className={`px-4 py-2.5 text-sm transition-colors cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333] ${
+            !isLast ? 'border-b border-black/5 dark:border-white/10' : ''
+          } ${
             board.id === selectedTop?.id ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
           } ${
             hasChildren
-              ? 'text-gray-500 dark:text-gray-400 cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-              : 'text-gray-900 dark:text-[#F0F0F0] cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333] font-medium'
+              ? 'text-gray-500 dark:text-gray-400'
+              : 'text-gray-900 dark:text-[#F0F0F0]'
           }`}
           onClick={() => handleTopSelect(board)}
         >
@@ -273,13 +276,16 @@ const BoardSelector = React.memo(({
       return null;
     }
 
-    return midBoards.map(board => {
+    return midBoards.map((board, index) => {
       const hasChildren = bottomLevelBoards[board.id] && bottomLevelBoards[board.id].length > 0;
+      const isLast = index === midBoards.length - 1;
 
       return (
         <div
           key={board.id}
-          className={`px-3 py-1.5 transition-colors cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333] font-medium text-gray-900 dark:text-[#F0F0F0] ${
+          className={`px-4 py-2.5 text-sm transition-colors cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] ${
+            !isLast ? 'border-b border-black/5 dark:border-white/10' : ''
+          } ${
             board.id === selectedMid?.id ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
           }`}
           onClick={() => handleMidSelect(board)}
@@ -309,18 +315,24 @@ const BoardSelector = React.memo(({
       return null;
     }
 
-    return bottomBoards.map(board => (
-      <div
-        key={board.id}
-        className={`px-3 py-1.5 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors font-medium ${
-          board.id === selectedBottom?.id ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]' : 'text-gray-900 dark:text-[#F0F0F0]'
-        }`}
-        onClick={() => handleBottomSelect(board)}
-      >
-        {board.name}
-        {board.id === currentBoardId ? " (현재 게시판)" : ""}
-      </div>
-    ));
+    return bottomBoards.map((board, index) => {
+      const isLast = index === bottomBoards.length - 1;
+
+      return (
+        <div
+          key={board.id}
+          className={`px-4 py-2.5 text-sm hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors text-gray-900 dark:text-[#F0F0F0] ${
+            !isLast ? 'border-b border-black/5 dark:border-white/10' : ''
+          } ${
+            board.id === selectedBottom?.id ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
+          }`}
+          onClick={() => handleBottomSelect(board)}
+        >
+          {board.name}
+          {board.id === currentBoardId ? " (현재 게시판)" : ""}
+        </div>
+      );
+    });
   }, [selectedMid, selectedBottom, currentBoardId, handleBottomSelect, bottomLevelBoards]);
   
   // 중간/하위 게시판 존재 여부 확인
@@ -381,10 +393,8 @@ const BoardSelector = React.memo(({
           </div>
 
           {showTopDropdown && (
-            <div className="absolute z-10 mt-1 w-full bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-md shadow-lg max-h-60 overflow-y-auto">
-              <div className="py-1">
-                {renderTopOptions()}
-              </div>
+            <div className="absolute z-10 mt-1 w-full bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-md shadow-lg max-h-60 overflow-y-auto overflow-hidden">
+              {renderTopOptions()}
             </div>
           )}
         </div>
@@ -414,10 +424,8 @@ const BoardSelector = React.memo(({
           </div>
 
           {showMidDropdown && selectedTop && hasMidBoards && (
-            <div className="absolute z-10 mt-1 w-full bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-md shadow-lg max-h-60 overflow-y-auto">
-              <div className="py-1">
-                {renderMidOptions()}
-              </div>
+            <div className="absolute z-10 mt-1 w-full bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-md shadow-lg max-h-60 overflow-y-auto overflow-hidden">
+              {renderMidOptions()}
             </div>
           )}
         </div>
@@ -447,10 +455,8 @@ const BoardSelector = React.memo(({
           </div>
 
           {showBottomDropdown && selectedMid && hasBottomBoards && (
-            <div className="absolute z-10 mt-1 w-full bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-md shadow-lg max-h-60 overflow-y-auto">
-              <div className="py-1">
-                {renderBottomOptions()}
-              </div>
+            <div className="absolute z-10 mt-1 w-full bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-md shadow-lg max-h-60 overflow-y-auto overflow-hidden">
+              {renderBottomOptions()}
             </div>
           )}
         </div>

@@ -64,21 +64,19 @@ export default async function LeaguesPage() {
         {/* 페이지 헤더 */}
         <Container>
           <ContainerHeader>
-            <ContainerTitle>축구 리그</ContainerTitle>
+            <ContainerTitle>데이터센터</ContainerTitle>
           </ContainerHeader>
         </Container>
 
         <div className="space-y-4 mt-4">
           {Object.entries(LEAGUE_CATEGORIES).map(([category, leagueIds]) => (
             <Container key={category}>
-              {/* 카테고리 헤더 */}
               <ContainerHeader>
                 <ContainerTitle>{category}</ContainerTitle>
               </ContainerHeader>
 
-              {/* 리그 카드 그리드 */}
-              <ContainerContent>
-                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 lg:gap-3">
+              <ContainerContent className="px-2 lg:px-4">
+                <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-1.5 lg:gap-3">
                   {leagueIds.map((leagueId) => (
                     <LeagueCard
                       key={leagueId}

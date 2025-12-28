@@ -91,32 +91,31 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
         {/* 드롭다운 메뉴 */}
         {isDropdownOpen && (
           <div
-            className="absolute right-0 mt-2 w-48 bg-[#F5F5F5] dark:bg-[#262626] shadow-lg border border-black/7 dark:border-0 z-50"
+            className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#1D1D1D] shadow-lg border border-black/7 dark:border-white/10 z-50 overflow-hidden"
             style={{ borderRadius: '0.5rem' }}
           >
             <Link
               href="/boards/soccer/create"
-              className="flex items-center px-4 py-2 text-sm text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors rounded-t-lg"
+              className="flex items-center px-4 py-2.5 text-sm text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors border-b border-black/5 dark:border-white/10"
               onClick={() => setIsDropdownOpen(false)}
             >
-              <FontAwesomeIcon icon={faPenToSquare} className="h-4 w-4 mr-2" />
+              <FontAwesomeIcon icon={faPenToSquare} className="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
               글쓰기
             </Link>
             <Link
               href="/settings/profile"
-              className="flex items-center px-4 py-2 text-sm text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
+              className="flex items-center px-4 py-2.5 text-sm text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors border-b border-black/5 dark:border-white/10"
               onClick={() => setIsDropdownOpen(false)}
             >
-              <FontAwesomeIcon icon={faUser} className="h-4 w-4 mr-2" />
+              <FontAwesomeIcon icon={faUser} className="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
               프로필 설정
             </Link>
-            {/* 일반 설정 메뉴 제거 */}
             <button
               data-testid="logout-button"
               onClick={handleLogout}
-              className="flex items-center w-full px-4 py-2 text-sm text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors rounded-b-lg"
+              className="flex items-center w-full px-4 py-2.5 text-sm text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
             >
-              <FontAwesomeIcon icon={faSignOutAlt} className="h-4 w-4 mr-2" />
+              <FontAwesomeIcon icon={faSignOutAlt} className="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
               로그아웃
             </button>
           </div>

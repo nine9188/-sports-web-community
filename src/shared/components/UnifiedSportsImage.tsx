@@ -4,23 +4,13 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useTheme } from 'next-themes';
 import { ImageType } from '@/shared/types/image';
+import { DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
 
 // Supabase Storage URL (리그, 팀 이미지용)
 const SUPABASE_STORAGE_URL = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public';
 
 // API-Sports 이미지 URL (선수, 감독 이미지용)
 const API_SPORTS_BASE_URL = 'https://media.api-sports.io/football';
-
-// 다크모드 이미지가 있는 리그 ID들 (Supabase에 {id}-1.png 형식으로 저장됨)
-const DARK_MODE_LEAGUE_IDS = [
-  39,   // Premier League
-  2,    // Champions League
-  3,    // Europa League
-  13,   // Coppa Italia
-  119,  // Superliga
-  179,  // Scottish Premiership
-  292,  // K-League 1
-];
 
 /**
  * 이미지 URL 생성

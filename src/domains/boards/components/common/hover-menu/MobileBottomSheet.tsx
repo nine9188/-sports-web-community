@@ -65,30 +65,30 @@ export default function MobileBottomSheet({
         </div>
 
         {/* 콘텐츠 */}
-        <div className="p-4 max-h-96 overflow-y-auto">
-          <div className="space-y-1">
+        <div className="max-h-96 overflow-y-auto">
+          <Link
+            href={`/boards/${boardSlug || hoveredBoard}`}
+            className="w-full text-left px-4 py-2.5 text-xs sm:text-sm bg-white dark:bg-[#1D1D1D] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] block transition-colors border-b border-black/5 dark:border-white/10"
+            onClick={onClose}
+          >
+            {boardName} 게시판 전체 보기
+          </Link>
+          {sortedChildBoards.map((childBoard: ChildBoard, index: number) => (
             <Link
-              href={`/boards/${boardSlug || hoveredBoard}`}
-              className="w-full text-left px-3 py-2 text-xs sm:text-sm bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md text-gray-900 dark:text-[#F0F0F0] block transition-colors"
+              href={`/boards/${childBoard.slug || childBoard.id}`}
+              key={childBoard.id}
+              className={`w-full text-left px-4 py-2.5 text-xs sm:text-sm text-gray-900 dark:text-[#F0F0F0] block transition-colors ${
+                index < sortedChildBoards.length - 1 ? 'border-b border-black/5 dark:border-white/10' : ''
+              } ${
+                childBoard.id === currentBoardId
+                  ? 'bg-[#EAEAEA] dark:bg-[#333333]'
+                  : 'bg-white dark:bg-[#1D1D1D] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
+              }`}
               onClick={onClose}
             >
-              {boardName} 게시판 전체 보기
+              {childBoard.name}
             </Link>
-            {sortedChildBoards.map((childBoard: ChildBoard) => (
-              <Link
-                href={`/boards/${childBoard.slug || childBoard.id}`}
-                key={childBoard.id}
-                className={`w-full text-left px-3 py-2 text-xs sm:text-sm rounded-md text-gray-900 dark:text-[#F0F0F0] block transition-colors ${
-                  childBoard.id === currentBoardId
-                    ? 'bg-[#EAEAEA] dark:bg-[#333333]'
-                    : 'bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-                }`}
-                onClick={onClose}
-              >
-                {childBoard.name}
-              </Link>
-            ))}
-          </div>
+          ))}
         </div>
       </div>
     </>

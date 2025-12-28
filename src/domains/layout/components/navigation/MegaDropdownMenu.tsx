@@ -87,7 +87,7 @@ const MegaDropdownMenu = React.memo(function MegaDropdownMenu({
             <div className="w-56 flex-shrink-0">
               <Link
                 href={getBoardHref(board)}
-                className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] hover:text-blue-600 dark:hover:text-blue-400 transition-colors inline-flex items-center gap-1 mb-3"
+                className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] hover:text-gray-600 dark:hover:text-gray-300 transition-colors inline-flex items-center gap-1 mb-3"
                 onClick={onClose}
               >
                 {board.name}

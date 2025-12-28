@@ -243,15 +243,15 @@ export default function HoverMenu({
     const gridColsClass = `grid-cols-${gridCols}`;
 
     return (
-      <div className={`grid ${gridColsClass} gap-0`}>
-        {sortedChildBoards.map((childBoard: ChildBoard) => (
+      <div className={`grid ${gridColsClass}`}>
+        {sortedChildBoards.map((childBoard: ChildBoard, index: number) => (
           <Link
             href={`/boards/${childBoard.slug || childBoard.id}`}
             key={childBoard.id}
-            className={`px-2 py-2 text-[10px] sm:text-xs text-center transition-colors text-gray-900 dark:text-[#F0F0F0] whitespace-nowrap overflow-hidden text-ellipsis ${
+            className={`px-3 py-2.5 text-[10px] sm:text-xs text-center transition-colors text-gray-900 dark:text-[#F0F0F0] whitespace-nowrap overflow-hidden text-ellipsis border-b border-r border-black/5 dark:border-white/10 ${
               childBoard.id === currentBoardId
                 ? 'bg-[#EAEAEA] dark:bg-[#333333]'
-                : 'bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
+                : 'bg-white dark:bg-[#1D1D1D] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
             }`}
             onClick={() => setHoveredBoard(null)}
             title={childBoard.name}
@@ -269,7 +269,7 @@ export default function HoverMenu({
 
   // 메뉴 UI 렌더링
   return (
-    <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 rounded-lg mb-4">
+    <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-lg mb-4">
       <div className="px-4 py-2.5 relative" ref={containerRef}>
         {/* 네비게이션 바 */}
         <nav className="flex items-center justify-between gap-1" ref={navRef}>
@@ -461,7 +461,7 @@ export default function HoverMenu({
                 ref={menuRef}
                 onMouseEnter={() => handleMenuEnter(hoveredBoard)}
                 onMouseLeave={() => handleMenuClose()}
-                className="absolute bg-white dark:bg-[#1D1D1D] shadow-lg border border-black/7 dark:border-0 z-40 top-[100%] -mt-1 overflow-hidden"
+                className="absolute bg-white dark:bg-[#1D1D1D] shadow-lg border border-black/7 dark:border-white/10 z-40 top-[100%] -mt-1 overflow-hidden"
                 style={{ 
                   left: `${menuPosition.left}px`, 
                   marginTop: '-7px', 

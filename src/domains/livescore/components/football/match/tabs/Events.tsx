@@ -11,6 +11,49 @@ import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/compon
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 
+// 이벤트 타입에 따른 아이콘 반환
+const getEventIcon = (type: string, detail: string) => {
+  const lowerType = type?.toLowerCase() || '';
+  const lowerDetail = detail?.toLowerCase() || '';
+
+  // 골
+  if (lowerType === 'goal') {
+    if (lowerDetail.includes('own goal')) {
+      return <span className="text-base" title="자책골">⚽</span>;
+    }
+    if (lowerDetail.includes('penalty')) {
+      return <span className="text-base" title="페널티 골">⚽</span>;
+    }
+    if (lowerDetail.includes('missed penalty')) {
+      return <span className="text-base text-gray-400" title="페널티 실축">❌</span>;
+    }
+    return <span className="text-base" title="골">⚽</span>;
+  }
+
+  // 카드
+  if (lowerType === 'card') {
+    if (lowerDetail.includes('yellow')) {
+      return <span className="text-base" title="옐로카드">🟨</span>;
+    }
+    if (lowerDetail.includes('red')) {
+      return <span className="text-base" title="레드카드">🟥</span>;
+    }
+    return <span className="text-base" title="카드">🟨</span>;
+  }
+
+  // 교체
+  if (lowerType === 'subst') {
+    return <span className="text-base" title="교체">🔄</span>;
+  }
+
+  // VAR
+  if (lowerType === 'var') {
+    return <span className="text-base" title="VAR">📺</span>;
+  }
+
+  // 기타
+  return <span className="text-base text-gray-400" title={type}>📋</span>;
+};
 
 interface EventsProps {
   matchId?: string;
@@ -206,11 +249,17 @@ function Events({ events: propsEvents }: EventsProps) {
                 className="flex items-start gap-2 py-2 border-b border-black/5 dark:border-white/10 last:border-b-0"
                 title={koreanText}
               >
-                <div className="w-12 flex items-center justify-end text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">
+                {/* 시간 */}
+                <div className="w-10 flex items-center justify-end text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">
                   <span>
                     {event.time?.elapsed || 0}
                     {event.time?.extra && event.time.extra > 0 && `+${event.time.extra}`}
                   </span>
+                </div>
+
+                {/* 이벤트 아이콘 */}
+                <div className="w-8 flex items-center justify-center flex-shrink-0">
+                  {getEventIcon(event.type, event.detail)}
                 </div>
 
                 <div className="flex-1">

@@ -30,7 +30,7 @@ export default function NotificationDropdown({
   );
 
   return (
-    <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-[#1D1D1D] rounded-lg shadow-lg border border-black/7 dark:border-0 overflow-hidden z-50">
+    <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-[#1D1D1D] rounded-lg shadow-lg border border-black/7 dark:border-white/10 overflow-hidden z-50">
       {/* 헤더 */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
         <h3 className="font-bold text-sm text-gray-900 dark:text-[#F0F0F0]">

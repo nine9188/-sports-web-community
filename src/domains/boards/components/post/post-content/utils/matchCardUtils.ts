@@ -1,8 +1,5 @@
 import type { MatchCardLinkElement } from '../types';
-import { normalizeMatchCardData, generateMatchCardHtml } from '@/shared/utils/matchCard';
-
-// 다크모드 이미지가 있는 리그 ID 목록
-const DARK_MODE_LEAGUE_IDS = [39, 2, 3, 848, 179, 88, 119, 98, 292, 66, 13];
+import { normalizeMatchCardData, generateMatchCardHtml, DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
 const SUPABASE_URL = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co';
 
 /**

@@ -8,7 +8,6 @@ import { Board } from '../types/board';
 import {
   SearchBar,
   TopLevelBoard,
-  DropdownMenu,
   MegaDropdownMenu,
   MobileBoardModal
 } from './navigation';
@@ -72,12 +71,9 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
     ];
   }, [boards, navBoards]);
 
-  // 메가 드롭다운 사용 여부 결정 (하위 메뉴가 있으면 메가 드롭다운 사용)
-  const shouldUseMegaDropdown = (board: Board) => {
-    if (!board.children) return false;
-    
-    // 하위 메뉴가 있으면 메가 드롭다운 사용
-    return board.children.length > 0;
+  // 드롭다운 표시 여부 결정 (하위 메뉴가 있어야 드롭다운 표시)
+  const hasChildren = (board: Board) => {
+    return board.children && board.children.length > 0;
   };
 
   // 타이머 정리 함수
@@ -95,45 +91,23 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
   // 호버 시작 처리
   const handleMouseEnter = (boardId: string, element: HTMLDivElement) => {
     clearTimers();
-    
-    const rect = element.getBoundingClientRect();
-    const viewportWidth = window.innerWidth;
-    
-    // 메가 드롭다운의 경우 헤더 바로 아래에 전체 너비로 표시
-    const currentBoard = allBoards.find(b => b.id === boardId);
-    const useMega = currentBoard ? shouldUseMegaDropdown(currentBoard) : false;
-    
-    if (useMega) {
-      // 메가 드롭다운: nav 바로 아래 전체 너비
-      // nav의 bottom을 기준으로 계산 (RecentlyVisited 위에 덮어서 표시)
-      const navElement = element.closest('nav');
-      const navBottom = navElement ? navElement.getBoundingClientRect().bottom : rect.bottom;
 
-      setDropdownPosition({
-        top: navBottom,
-        left: 0 // 메가 드롭다운에서는 left 값이 중요하지 않음 (전체 너비 사용)
-      });
-    } else {
-      // 일반 드롭다운: 기존 로직
-      const menuWidth = 240;
-      const spacing = 10;
-      
-      let left = rect.left;
-      
-      if (left + menuWidth > viewportWidth - spacing) {
-        left = viewportWidth - menuWidth - spacing;
-      }
-      
-      if (left < spacing) {
-        left = spacing;
-      }
-      
-      setDropdownPosition({
-        top: rect.bottom,
-        left: left
-      });
+    // 하위 게시판이 없으면 드롭다운 표시 안함
+    const currentBoard = allBoards.find(b => b.id === boardId);
+    if (!currentBoard || !hasChildren(currentBoard)) {
+      return;
     }
-    
+
+    // 메가 드롭다운: nav 바로 아래 전체 너비
+    const rect = element.getBoundingClientRect();
+    const navElement = element.closest('nav');
+    const navBottom = navElement ? navElement.getBoundingClientRect().bottom : rect.bottom;
+
+    setDropdownPosition({
+      top: navBottom,
+      left: 0
+    });
+
     setHoveredBoard(boardId);
   };
 
@@ -231,25 +205,15 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
           <SearchBar />
         </div>
 
-        {/* 드롭다운 메뉴 - 조건에 따라 메가 드롭다운 또는 일반 드롭다운 */}
+        {/* 메가 드롭다운 메뉴 */}
         {hoveredBoardData && dropdownPosition && (
-          shouldUseMegaDropdown(hoveredBoardData) ? (
-            <MegaDropdownMenu
-              board={hoveredBoardData}
-              position={dropdownPosition}
-              onClose={closeDropdown}
-              onMouseEnter={handleDropdownMouseEnter}
-              onMouseLeave={handleDropdownMouseLeave}
-            />
-          ) : (
-            <DropdownMenu
-              board={hoveredBoardData}
-              position={dropdownPosition}
-              onClose={closeDropdown}
-              onMouseEnter={handleDropdownMouseEnter}
-              onMouseLeave={handleDropdownMouseLeave}
-            />
-          )
+          <MegaDropdownMenu
+            board={hoveredBoardData}
+            position={dropdownPosition}
+            onClose={closeDropdown}
+            onMouseEnter={handleDropdownMouseEnter}
+            onMouseLeave={handleDropdownMouseLeave}
+          />
         )}
       </div>
 

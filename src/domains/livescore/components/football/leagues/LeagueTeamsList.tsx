@@ -1,9 +1,12 @@
 'use client';
 
+import Link from 'next/link';
 import { LeagueTeam } from '@/domains/livescore/actions/footballApi';
-import TeamCard from './TeamCard';
 import { MLS_TEAMS, MLSConference } from '@/domains/livescore/constants/teams/mls';
 import { ContainerContent } from '@/shared/components/ui';
+import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
+import { ImageType } from '@/shared/types/image';
+import { getTeamById } from '@/domains/livescore/constants/teams';
 
 interface LeagueTeamsListProps {
   teams: LeagueTeam[];
@@ -14,21 +17,12 @@ interface LeagueTeamsListProps {
 export default function LeagueTeamsList({ teams, isLoading = false, leagueId }: LeagueTeamsListProps) {
   if (isLoading) {
     return (
-      <ContainerContent>
-        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-3 gap-2 lg:gap-4">
+      <ContainerContent className="p-0">
+        <div className="divide-y divide-black/5 dark:divide-white/10">
           {Array.from({ length: 8 }).map((_, index) => (
-            <div
-              key={index}
-              className="bg-[#F5F5F5] dark:bg-[#262626] rounded-lg p-2 lg:p-4 animate-pulse"
-            >
-              <div className="flex flex-col items-center space-y-1 lg:space-y-3">
-                <div className="w-8 h-8 lg:w-16 lg:h-16 bg-[#EAEAEA] dark:bg-[#333333] rounded-full"></div>
-                <div className="space-y-1 w-full">
-                  <div className="h-3 lg:h-4 bg-[#EAEAEA] dark:bg-[#333333] rounded w-full"></div>
-                  <div className="hidden lg:block h-3 bg-[#EAEAEA] dark:bg-[#333333] rounded w-3/4 mx-auto"></div>
-                  <div className="hidden lg:block h-3 bg-[#EAEAEA] dark:bg-[#333333] rounded w-1/2 mx-auto"></div>
-                </div>
-              </div>
+            <div key={index} className="flex items-center gap-3 px-4 py-2.5 animate-pulse">
+              <div className="w-6 h-6 bg-[#EAEAEA] dark:bg-[#333333] rounded-full" />
+              <div className="h-4 bg-[#EAEAEA] dark:bg-[#333333] rounded w-32" />
             </div>
           ))}
         </div>
@@ -75,38 +69,64 @@ export default function LeagueTeamsList({ teams, isLoading = false, leagueId }: 
     eastTeams.sort(byRankThenName);
   }
 
+  const TeamRow = ({ team }: { team: LeagueTeam }) => {
+    const teamInfo = getTeamById(team.id);
+    const displayName = teamInfo?.name_ko || team.name;
+
+    return (
+      <Link
+        href={`/livescore/football/team/${team.id}`}
+        className={`flex items-center gap-3 px-4 py-2.5 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors ${
+          team.isWinner ? 'bg-yellow-50 dark:bg-yellow-900/20' : ''
+        }`}
+      >
+        <UnifiedSportsImage
+          imageId={team.id}
+          imageType={ImageType.Teams}
+          alt={displayName}
+          size="sm"
+          className="w-6 h-6"
+        />
+        <span className="text-sm text-gray-900 dark:text-[#F0F0F0] flex-1">
+          {displayName}
+        </span>
+        {team.isWinner && (
+          <span className="text-[10px] font-bold px-1.5 py-0.5 bg-yellow-500 text-white rounded">
+            우승
+          </span>
+        )}
+      </Link>
+    );
+  };
+
   return (
-    <ContainerContent>
+    <ContainerContent className="p-0">
       {isMLS ? (
-        <div className="space-y-6">
+        <div>
           {/* WEST */}
-          <div>
-            <div className="flex items-center mb-3">
-              <h3 className="text-base font-semibold text-gray-900 dark:text-[#F0F0F0]">서부 컨퍼런스 (WEST)</h3>
-            </div>
-            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-3 gap-2 lg:gap-4">
-              {westTeams.map((team) => (
-                <TeamCard key={team.id} team={team} />
-              ))}
-            </div>
+          <div className="px-4 py-2 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
+            <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300">서부 컨퍼런스 (WEST)</h3>
+          </div>
+          <div className="divide-y divide-black/5 dark:divide-white/10">
+            {westTeams.map((team) => (
+              <TeamRow key={team.id} team={team} />
+            ))}
           </div>
 
           {/* EAST */}
-          <div>
-            <div className="flex items-center mb-3">
-              <h3 className="text-base font-semibold text-gray-900 dark:text-[#F0F0F0]">동부 컨퍼런스 (EAST)</h3>
-            </div>
-            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-3 gap-2 lg:gap-4">
-              {eastTeams.map((team) => (
-                <TeamCard key={team.id} team={team} />
-              ))}
-            </div>
+          <div className="px-4 py-2 bg-[#F5F5F5] dark:bg-[#262626] border-y border-black/5 dark:border-white/10">
+            <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300">동부 컨퍼런스 (EAST)</h3>
+          </div>
+          <div className="divide-y divide-black/5 dark:divide-white/10">
+            {eastTeams.map((team) => (
+              <TeamRow key={team.id} team={team} />
+            ))}
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-3 gap-2 lg:gap-4">
+        <div className="divide-y divide-black/5 dark:divide-white/10">
           {teams.map((team) => (
-            <TeamCard key={team.id} team={team} />
+            <TeamRow key={team.id} team={team} />
           ))}
         </div>
       )}

@@ -295,7 +295,7 @@ export default function CategoryFilter({
   return (
     <div>
       {/* HoverMenu 스타일에 맞춘 탭 바 */}
-      <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 rounded-lg mb-4">
+      <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-lg mb-4">
         <div className="px-4 py-2.5 relative" ref={containerRef}>
           {/* 네비게이션 바 */}
           <nav className="flex items-center justify-between gap-1" ref={navRef}>
@@ -458,17 +458,17 @@ export default function CategoryFilter({
               ref={menuRef}
               onMouseEnter={() => handleMenuEnter(hoveredCategory)}
               onMouseLeave={() => handleMenuClose()}
-              className="absolute bg-white dark:bg-[#1D1D1D] shadow-lg border border-black/7 dark:border-0 z-40 top-[100%] -mt-1 overflow-hidden"
-              style={{ 
-                left: `${menuPosition.left}px`, 
-                marginTop: '-7px', 
+              className="absolute bg-white dark:bg-[#1D1D1D] shadow-lg border border-black/7 dark:border-white/10 z-40 top-[100%] -mt-1 overflow-hidden"
+              style={{
+                left: `${menuPosition.left}px`,
+                marginTop: '-7px',
                 borderRadius: '0.5rem',
                 minWidth: `${Math.min((hoveredCategoryData.subcategories ?? []).length, 5) * 100}px`,
                 maxWidth: '700px'
               }}
             >
               {/* 하위 카테고리 그리드 */}
-              <div className={`grid grid-cols-${Math.min((hoveredCategoryData.subcategories ?? []).length, 5)} gap-0`}>
+              <div className={`grid grid-cols-${Math.min((hoveredCategoryData.subcategories ?? []).length, 5)}`}>
                 {(hoveredCategoryData.subcategories ?? [])
                   .sort((a, b) => {
                     if (a.display_order !== undefined && b.display_order !== undefined) {
@@ -487,10 +487,10 @@ export default function CategoryFilter({
                         updateUrlCategory(id)
                         setHoveredCategory(null)
                       }}
-                      className={`px-2 py-2 text-[10px] sm:text-xs text-center transition-colors text-gray-900 dark:text-[#F0F0F0] whitespace-nowrap overflow-hidden text-ellipsis ${
+                      className={`px-3 py-2.5 text-[10px] sm:text-xs text-center transition-colors text-gray-900 dark:text-[#F0F0F0] whitespace-nowrap overflow-hidden text-ellipsis border-b border-r border-black/5 dark:border-white/10 ${
                         activeCategory === sub.id.toString()
                           ? 'bg-[#EAEAEA] dark:bg-[#333333]'
-                          : 'bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
+                          : 'bg-white dark:bg-[#1D1D1D] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
                       }`}
                       title={sub.name}
                     >
@@ -538,48 +538,48 @@ export default function CategoryFilter({
               </button>
             </div>
             {/* 콘텐츠 */}
-            <div className="p-4 max-h-96 overflow-y-auto">
-              <div className="space-y-1">
-                <button
-                  onClick={() => {
-                    if (bottomSheetCategory == null) return
-                    const id = bottomSheetCategory.toString()
-                    setActiveCategory(id)
-                    updateUrlCategory(id)
-                    setBottomSheetCategory(null)
-                  }}
-                  className="w-full text-left px-3 py-2 text-xs sm:text-sm bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md text-gray-900 dark:text-[#F0F0F0] block transition-colors"
-                >
-                  {bottomSheetCategoryData.name} 전체 보기
-                </button>
-                {bottomSheetCategoryData.subcategories
-                  .sort((a, b) => {
-                    if (a.display_order !== undefined && b.display_order !== undefined) {
-                      if (a.display_order !== b.display_order) {
-                        return a.display_order - b.display_order
-                      }
+            <div className="max-h-96 overflow-y-auto">
+              <button
+                onClick={() => {
+                  if (bottomSheetCategory == null) return
+                  const id = bottomSheetCategory.toString()
+                  setActiveCategory(id)
+                  updateUrlCategory(id)
+                  setBottomSheetCategory(null)
+                }}
+                className="w-full text-left px-4 py-2.5 text-xs sm:text-sm bg-white dark:bg-[#1D1D1D] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] block transition-colors border-b border-black/5 dark:border-white/10"
+              >
+                {bottomSheetCategoryData.name} 전체 보기
+              </button>
+              {bottomSheetCategoryData.subcategories
+                .sort((a, b) => {
+                  if (a.display_order !== undefined && b.display_order !== undefined) {
+                    if (a.display_order !== b.display_order) {
+                      return a.display_order - b.display_order
                     }
-                    return a.name.localeCompare(b.name)
-                  })
-                  .map((sub) => (
-                    <button
-                      key={sub.id}
-                      onClick={() => {
-                        const id = sub.id.toString()
-                        setActiveCategory(id)
-                        updateUrlCategory(id)
-                        setBottomSheetCategory(null)
-                      }}
-                      className={`w-full text-left px-3 py-2 text-xs sm:text-sm rounded-md text-gray-900 dark:text-[#F0F0F0] block transition-colors ${
-                        activeCategory === sub.id.toString()
-                          ? 'bg-[#EAEAEA] dark:bg-[#333333]'
-                          : 'bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-                      }`}
-                    >
-                      {sub.name}
-                    </button>
-                  ))}
-              </div>
+                  }
+                  return a.name.localeCompare(b.name)
+                })
+                .map((sub, index, arr) => (
+                  <button
+                    key={sub.id}
+                    onClick={() => {
+                      const id = sub.id.toString()
+                      setActiveCategory(id)
+                      updateUrlCategory(id)
+                      setBottomSheetCategory(null)
+                    }}
+                    className={`w-full text-left px-4 py-2.5 text-xs sm:text-sm text-gray-900 dark:text-[#F0F0F0] block transition-colors ${
+                      index < arr.length - 1 ? 'border-b border-black/5 dark:border-white/10' : ''
+                    } ${
+                      activeCategory === sub.id.toString()
+                        ? 'bg-[#EAEAEA] dark:bg-[#333333]'
+                        : 'bg-white dark:bg-[#1D1D1D] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
+                    }`}
+                  >
+                    {sub.name}
+                  </button>
+                ))}
             </div>
           </div>
         </>,
