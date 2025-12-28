@@ -45,7 +45,7 @@ export default async function LeaguePage({ params }: LeaguePageProps) {
       </div>
 
       <LeagueStandingsTable
-        standings={standingsResponse.success ? standingsResponse.data : null}
+        standings={standingsResponse.success && standingsResponse.data ? standingsResponse.data : null}
         leagueId={leagueId}
       />
     </div>

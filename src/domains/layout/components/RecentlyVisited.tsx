@@ -5,6 +5,20 @@ import Link from 'next/link';
 import { ChevronDown, X, Trash2 } from 'lucide-react';
 import { useRecentlyVisited } from '../hooks/useRecentlyVisited';
 
+// 게시판이 아닌 페이지들 (boards prefix 불필요)
+const NON_BOARD_PREFIXES = ['shop', 'livescore', 'transfers', 'admin', 'settings'];
+
+// slug에 따라 올바른 경로 반환
+const getHref = (slug: string): string => {
+  // 이미 boards/로 시작하면 그대로 사용
+  if (slug.startsWith('boards/')) {
+    return `/${slug}`;
+  }
+  // 게시판이 아닌 페이지인지 확인
+  const isNonBoard = NON_BOARD_PREFIXES.some(prefix => slug.startsWith(prefix));
+  return isNonBoard ? `/${slug}` : `/boards/${slug}`;
+};
+
 const RecentlyVisited = React.memo(function RecentlyVisited() {
   const {
     recentBoards,
@@ -49,7 +63,7 @@ const RecentlyVisited = React.memo(function RecentlyVisited() {
                       className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300 group"
                     >
                       <Link
-                        href={`/boards/${board.slug}`}
+                        href={getHref(board.slug)}
                         className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                       >
                         {board.name}
@@ -97,7 +111,7 @@ const RecentlyVisited = React.memo(function RecentlyVisited() {
                       className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300 shrink-0 group"
                     >
                       <Link
-                        href={`/boards/${board.slug}`}
+                        href={getHref(board.slug)}
                         className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors whitespace-nowrap"
                       >
                         {board.name}
