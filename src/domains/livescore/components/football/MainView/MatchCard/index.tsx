@@ -87,12 +87,12 @@ export default function MatchCard({ match, isLast = false }: MatchCardProps) {
     <Link
       href={`/livescore/football/match/${match.id}`}
       className={`
-        flex items-center h-14 px-4 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors
+        flex items-center h-12 px-4 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors
         ${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''}
       `}
     >
       {/* 경기 상태 */}
-      <div className="w-14 flex-shrink-0">
+      <div className="w-14 flex-shrink-0 flex items-center">
         {statusInfo.isLive ? (
           <span className="text-[10px] font-bold text-white bg-red-500 px-1.5 py-1 rounded animate-pulse whitespace-nowrap">
             {statusInfo.label}
@@ -105,8 +105,8 @@ export default function MatchCard({ match, isLast = false }: MatchCardProps) {
       </div>
 
       {/* 홈팀 정보 */}
-      <div className="flex items-center justify-end gap-2.5 flex-1 min-w-0 px-3">
-        <span className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate text-right">
+      <div className="flex items-center justify-end gap-2 flex-1 min-w-0">
+        <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate text-right">
           {homeTeam.name}
         </span>
         {homeTeam.id > 0 && (
@@ -124,14 +124,14 @@ export default function MatchCard({ match, isLast = false }: MatchCardProps) {
       </div>
 
       {/* 스코어 */}
-      <div className="px-4 flex-shrink-0">
-        <span className="text-lg font-bold text-gray-900 dark:text-[#F0F0F0]">
+      <div className="px-2 flex-shrink-0">
+        <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
           {getScore(true)} - {getScore(false)}
         </span>
       </div>
 
       {/* 원정팀 정보 */}
-      <div className="flex items-center gap-2.5 flex-1 min-w-0 px-3">
+      <div className="flex items-center gap-2 flex-1 min-w-0">
         {awayTeam.id > 0 && (
           <div className="w-6 h-6 flex-shrink-0 relative">
             <UnifiedSportsImage
@@ -144,7 +144,7 @@ export default function MatchCard({ match, isLast = false }: MatchCardProps) {
             />
           </div>
         )}
-        <span className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
+        <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
           {awayTeam.name}
         </span>
       </div>

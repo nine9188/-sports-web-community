@@ -202,7 +202,7 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
                     key={match.id}
                     href={`/livescore/football/match/${match.id}`}
                     className={`
-                      flex items-center h-14 px-4 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors
+                      flex items-center h-12 px-4 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors
                       ${idx !== league.matches.length - 1 ? 'border-b border-black/5 dark:border-white/10' : ''}
                     `}
                   >
@@ -210,7 +210,7 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
                     {(() => {
                       const statusInfo = getStatusInfo(match.status, match.elapsed);
                       return (
-                        <div className="w-14 flex-shrink-0">
+                        <div className="w-14 flex-shrink-0 flex items-center">
                           {statusInfo.isLive ? (
                             <span className="text-[10px] font-bold text-white bg-red-500 px-1.5 py-1 rounded animate-pulse whitespace-nowrap">
                               {statusInfo.label}
@@ -245,7 +245,7 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
 
                     {/* 스코어 */}
                     <div className="px-2 flex-shrink-0">
-                      <span className="text-lg font-bold text-gray-900 dark:text-[#F0F0F0]">
+                      <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
                         {match.score.home} - {match.score.away}
                       </span>
                     </div>
