@@ -17,7 +17,7 @@ export default function MyPostList({
   return (
     <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
       <div className="px-4 py-3 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10 flex justify-between items-center">
-        <h3 className="text-base font-medium text-gray-900 dark:text-[#F0F0F0]">게시글 목록</h3>
+        <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">게시글 목록</h3>
         <span className="text-sm text-gray-500 dark:text-gray-400">총 {totalCount}개</span>
       </div>
 

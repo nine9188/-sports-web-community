@@ -214,9 +214,14 @@ All UI components must support dark mode using Tailwind's `dark:` prefix:
 
 #### Sport Result Colors (W/D/L)
 Use these colors consistently for match results:
-- **Win (W)**: `bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200`
-- **Draw (D)**: `bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200`
-- **Loss (L)**: `bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200`
+- **Win (W)**: `bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400`
+- **Draw (D)**: `bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400`
+- **Loss (L)**: `bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400`
+
+#### Success/Attendance Colors
+Use these colors for success states, attendance, checkmarks:
+- **Background**: `bg-green-100 dark:bg-green-900/30`
+- **Text/Icon**: `text-green-800 dark:text-green-400`
 
 #### Team Role Colors (Home/Away)
 Use these colors for home/away team indicators:

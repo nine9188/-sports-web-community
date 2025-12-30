@@ -13,7 +13,7 @@ export default function PointHistory({ pointHistory = [] }: PointHistoryProps) {
   return (
     <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
       <div className="px-4 py-3 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
-        <h3 className="text-base font-medium text-gray-900 dark:text-[#F0F0F0]">포인트 내역</h3>
+        <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">포인트 내역</h3>
       </div>
 
       {pointHistory.length === 0 ? (

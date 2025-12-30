@@ -1,7 +1,7 @@
 'use client'
 
 import { useTransition } from 'react'
-import { ShopItem } from '../types'
+import { ShopItem, TIER_LABELS, TIER_TEXT_COLORS, TIER_BORDER_COLORS } from '../types'
 import { getTeamDisplayName, searchTeamsByName } from '@teams'
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage'
 import { ImageType } from '@/shared/types/image'
@@ -54,6 +54,11 @@ export default function ItemCard({ item, isOwned, onPurchase }: ItemCardProps) {
 
   const isDisabled = isPending || !!item.is_default || isOwned
 
+  // 티어별 테두리 색상 클래스
+  const tierBorderClass = item.tier && item.tier !== 'common'
+    ? TIER_BORDER_COLORS[item.tier]
+    : 'border-black/7 dark:border-0'
+
   const handleActivate = () => {
     if (isDisabled) return
     startTransition(() => onPurchase())
@@ -74,12 +79,18 @@ export default function ItemCard({ item, isOwned, onPurchase }: ItemCardProps) {
       aria-disabled={isDisabled}
       onClick={handleActivate}
       onKeyDown={handleKeyDown}
-      className={`group border border-black/7 dark:border-0 rounded-md overflow-hidden bg-white dark:bg-[#1D1D1D] shadow-sm transition-all flex flex-col outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
+      className={`group border ${tierBorderClass} rounded-md overflow-hidden bg-white dark:bg-[#1D1D1D] shadow-sm transition-all flex flex-col outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
         isDisabled ? 'cursor-default' : 'cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
       }`}
     >
-      {/* 이미지 영역: 20x20 고정 */}
-      <div className="p-3 flex justify-center bg-[#F5F5F5] dark:bg-[#262626]"> 
+      {/* 이미지 영역: 20x20 고정 + 티어 배지 */}
+      <div className="p-3 flex justify-center bg-[#F5F5F5] dark:bg-[#262626] relative">
+        {/* 티어 배지 (Phase 3) */}
+        {item.tier && item.tier !== 'common' && (
+          <span className={`absolute top-1 left-1 text-[9px] font-bold px-1 py-0.5 rounded ${TIER_TEXT_COLORS[item.tier]} bg-white/80 dark:bg-black/50`}>
+            {TIER_LABELS[item.tier]}
+          </span>
+        )}
         <div className="h-5 w-5 flex items-center justify-center">
           <UnifiedSportsImage
             imageId={getTeamId(item.image_url)}

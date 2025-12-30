@@ -2,6 +2,14 @@ import { MAJOR_LEAGUE_IDS, LEAGUE_NAMES_MAP } from '@/domains/livescore/constant
 import { LeagueCard } from '@/domains/livescore/components/football/leagues';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
+import { generatePageMetadataWithDefaults } from '@/shared/utils/metadataNew';
+
+export async function generateMetadata() {
+  return generatePageMetadataWithDefaults('/livescore/football/leagues', {
+    title: '데이터센터 - 4590 Football',
+    description: '전 세계 주요 축구 리그 목록을 확인하고 원하는 리그의 팀 정보와 경기 결과를 확인하세요.',
+  });
+}
 
 // 리그 카테고리별 분류
 const LEAGUE_CATEGORIES = {
@@ -92,10 +100,4 @@ export default async function LeaguesPage() {
       </div>
     </div>
   );
-}
-
-// 메타데이터
-export const metadata = {
-  title: '축구 리그 목록 - 라이브스코어',
-  description: '전 세계 주요 축구 리그 목록을 확인하고 원하는 리그의 팀 정보와 경기 결과를 확인하세요.',
-}; 
+} 

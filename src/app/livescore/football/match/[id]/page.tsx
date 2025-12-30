@@ -1,3 +1,4 @@
+import { Metadata } from 'next';
 import { MatchHeaderSkeleton } from '@/domains/livescore/components/common/HeadersUI';
 import TabNavigation from '@/domains/livescore/components/football/match/TabNavigation';
 import TabContent from '@/domains/livescore/components/football/match/TabContent';
@@ -8,6 +9,94 @@ import { getCachedSidebarData } from '@/domains/livescore/actions/match/sidebarD
 import { MatchDataProvider } from '@/domains/livescore/components/football/match/context/MatchDataContext';
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
+import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
+import { getTeamById } from '@/domains/livescore/constants/teams';
+import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
+
+// 경기 메타데이터 생성
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  try {
+    const { id } = await params;
+    const seoSettings = await getSeoSettings();
+
+    const siteUrl = seoSettings?.site_url || 'https://4590.co.kr';
+    const siteName = seoSettings?.site_name || '4590 Football';
+
+    // 경기 데이터 조회 (최소한의 옵션으로)
+    const matchData = await fetchCachedMatchFullData(id, {
+      fetchEvents: false,
+      fetchLineups: false,
+      fetchStats: false,
+      fetchStandings: false,
+    });
+
+    if (!matchData.success || !matchData.match) {
+      return {
+        title: '경기 정보를 찾을 수 없습니다',
+        description: '요청하신 경기 정보가 존재하지 않습니다.',
+      };
+    }
+
+    const { match } = matchData;
+
+    // 매핑 파일에서 한글 이름 조회
+    const homeTeamMapping = getTeamById(match.teams.home.id);
+    const awayTeamMapping = getTeamById(match.teams.away.id);
+    const leagueMapping = getLeagueById(match.league.id);
+    const homeTeam = homeTeamMapping?.name_ko || match.teams.home.name;
+    const awayTeam = awayTeamMapping?.name_ko || match.teams.away.name;
+    const leagueName = leagueMapping?.nameKo || match.league.name;
+
+    // 스코어 표시 (경기 시작 전이면 'vs', 아니면 실제 스코어)
+    const isNotStarted = ['TBD', 'NS'].includes(match.status.code);
+    const score = isNotStarted
+      ? 'vs'
+      : `${match.goals.home} - ${match.goals.away}`;
+
+    const title = `${homeTeam} ${score} ${awayTeam} | ${leagueName}`;
+    const description = `${leagueName} - ${homeTeam} vs ${awayTeam} 경기 정보, 라인업, 통계, 하이라이트를 확인하세요.`;
+    const url = `${siteUrl}/livescore/football/match/${id}`;
+
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        url,
+        type: 'website',
+        images: match.league.logo ? [
+          {
+            url: match.league.logo,
+            width: 80,
+            height: 80,
+            alt: leagueName,
+          },
+        ] : undefined,
+        siteName,
+        locale: 'ko_KR',
+      },
+      twitter: {
+        card: 'summary',
+        title,
+        description,
+      },
+      alternates: {
+        canonical: url,
+      },
+    };
+  } catch (error) {
+    console.error('[MatchPage generateMetadata] 오류:', error);
+    return {
+      title: '경기 정보 - 4590 Football',
+      description: '축구 경기 정보, 라인업, 통계를 확인하세요.',
+    };
+  }
+}
 
 // 캐시 항목 인터페이스
 interface CacheEntry {

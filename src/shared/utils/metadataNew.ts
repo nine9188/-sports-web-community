@@ -1,6 +1,69 @@
 import { Metadata } from 'next';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
 
+interface DefaultMeta {
+  title: string;
+  description: string;
+}
+
+/**
+ * 페이지의 메타데이터를 생성합니다.
+ * DB에 page_overrides가 있으면 우선 사용, 없으면 제공된 기본값 사용
+ */
+export async function generatePageMetadataWithDefaults(
+  pagePath: string,
+  defaults: DefaultMeta
+): Promise<Metadata> {
+  try {
+    const seoSettings = await getSeoSettings();
+
+    if (!seoSettings) {
+      return {
+        title: defaults.title,
+        description: defaults.description,
+        openGraph: {
+          title: defaults.title,
+          description: defaults.description,
+          type: 'website',
+        },
+      };
+    }
+
+    // 페이지별 오버라이드 확인
+    const pageOverride = seoSettings.page_overrides?.[pagePath];
+
+    // DB 설정 우선, 없으면 기본값
+    const title = pageOverride?.title || defaults.title;
+    const description = pageOverride?.description || defaults.description;
+    const ogImage = `${seoSettings.site_url}${seoSettings.og_image}`;
+
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        url: `${seoSettings.site_url}${pagePath}`,
+        siteName: seoSettings.site_name,
+        images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
+        locale: 'ko_KR',
+        type: 'website',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title,
+        description,
+      },
+    };
+  } catch (error) {
+    console.error('[generatePageMetadataWithDefaults] 오류:', error);
+    return {
+      title: defaults.title,
+      description: defaults.description,
+    };
+  }
+}
+
 /**
  * 페이지의 메타데이터를 생성합니다 (초간단 버전!)
  */

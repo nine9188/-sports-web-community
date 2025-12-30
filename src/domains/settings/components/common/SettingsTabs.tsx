@@ -12,7 +12,7 @@ export default function SettingsTabs() {
   const pathname = usePathname();
   const router = useRouter();
   const [isChangingTab, setIsChangingTab] = useState(false);
-  
+
   // 탭 목록 정의
   const tabs: TabItem[] = [
     { id: '/settings/profile', label: '기본 정보' },
@@ -24,21 +24,21 @@ export default function SettingsTabs() {
     { id: '/settings/my-comments', label: '내가 쓴 댓글' },
     { id: '/settings/account-delete', label: '회원 탈퇴' },
   ];
-  
+
   // 탭 변경 처리 - useCallback으로 최적화
   const handleTabChange = useCallback((href: string) => {
     // 같은 탭이면 이동하지 않음
     if (pathname === href || isChangingTab) return;
-    
+
     setIsChangingTab(true);
     router.push(href, { scroll: false }); // scroll: false로 불필요한 스크롤 방지
-    
+
     // 페이지 이동 후 상태 초기화 (항상 실행되지 않을 수 있어 타임아웃 추가)
     setTimeout(() => {
       setIsChangingTab(false);
     }, 500);
   }, [pathname, router, isChangingTab]);
-  
+
   return (
     <Tabs
       tabs={tabs}

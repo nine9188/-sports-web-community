@@ -3,6 +3,7 @@
 import React from 'react';
 import { Calendar, Clock } from 'lucide-react';
 import { formatDate } from '@/shared/utils/date';
+import AttendanceCalendar from '@/shared/components/AttendanceCalendar';
 
 interface ProfileFormProps {
   initialData: {
@@ -86,6 +87,9 @@ export default function ProfileForm({ initialData }: ProfileFormProps) {
           {formatDate(initialData.last_sign_in_at) || '-'}
         </div>
       </div>
+
+      {/* 출석 현황 캘린더 */}
+      <AttendanceCalendar userId={initialData.id} variant="full" />
     </div>
   );
 } 

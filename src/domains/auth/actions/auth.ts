@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
 
 import { checkLoginAttempts, recordAttempt, clearAttempts } from './utils/login-attempts'
+import { recordDailyLogin } from '@/shared/actions/attendance-actions'
 import type { SignInResponse, UserProfile } from '../types'
 
 /**
@@ -87,6 +88,11 @@ export async function signIn(
 
     // 5. 로그인 성공 처리
     await clearAttempts(username)
+
+    // 6. 일일 출석 기록 및 보상 (비동기로 처리, 실패해도 로그인은 성공)
+    recordDailyLogin(data.user.id).catch(err => {
+      console.error('출석 기록 오류:', err)
+    })
 
     await logAuthEvent(
       'LOGIN_SUCCESS',

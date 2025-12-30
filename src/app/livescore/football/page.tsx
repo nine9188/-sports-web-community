@@ -4,6 +4,14 @@ import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 import { getTeamById } from '@/domains/livescore/constants/teams/index';
 import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
 import { Match } from '@/domains/livescore/types/match';
+import { generatePageMetadataWithDefaults } from '@/shared/utils/metadataNew';
+
+export async function generateMetadata() {
+  return generatePageMetadataWithDefaults('/livescore/football', {
+    title: '라이브스코어 - 4590 Football',
+    description: '실시간 축구 경기 결과와 일정을 확인하세요. 전 세계 주요 리그 경기를 한눈에.',
+  });
+}
 
 // 기본 이미지 URL - 로고가 없을 때 사용
 const DEFAULT_TEAM_LOGO = 'https://cdn.sportmonks.com/images/soccer/team_placeholder.png';

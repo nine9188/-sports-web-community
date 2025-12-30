@@ -1,36 +1,36 @@
 'use client';
 
-// 서버 액션을 클라이언트에서 사용하기 위한 간소화된 래퍼
-import { 
-  rewardUserActivity, 
+/**
+ * 활동 보상 클라이언트 래퍼
+ * 서버 액션과 공용 상수를 클라이언트에서 사용하기 위한 모듈
+ */
+
+// 서버 액션 import
+import {
+  rewardUserActivity,
   checkConsecutiveLogin,
-  getActivityTypeValues,
-  getActivityTypesForClient,
-  type ActivityType as ActivityTypeEnum
+  getActivityTypeValues
 } from '@/shared/actions/activity-actions';
 
-// 클라이언트에서 상수로 사용하기 위한 활동 유형 정의
-// 초기 빈 객체 생성
-export const ActivityTypeValues = {
-  POST_CREATION: 'post_creation',
-  COMMENT_CREATION: 'comment_creation', 
-  RECEIVED_LIKE: 'received_like',
-  DAILY_LOGIN: 'daily_login',
-  CONSECUTIVE_LOGIN: 'consecutive_login'
-} as const;
+// 공용 상수 re-export (클라이언트에서 직접 사용 가능)
+export {
+  ActivityTypes,
+  ACTIVITY_REWARDS,
+  DAILY_LIMITS,
+  REWARD_DISPLAY_LIST,
+  DAILY_MAX_EXP,
+  DAILY_MAX_POINTS,
+  type ActivityType,
+  type ActivityReward,
+  type RewardDisplayItem
+} from '@/shared/constants/rewards';
 
-// 서버에서 값을 불러오는 함수
-// 이 코드는 클라이언트 컴포넌트 내에서 효과(Effect) 안에서 호출해야 함
-export async function initActivityTypes() {
-  const serverTypes = await getActivityTypesForClient();
-  // 값 업데이트를 위한 코드 (필요시 구현)
-  return serverTypes;
-}
-
+// 서버 액션 re-export
 export {
   rewardUserActivity,
   checkConsecutiveLogin,
   getActivityTypeValues
 };
 
-export type { ActivityTypeEnum as ActivityType }; 
+// 하위 호환성을 위한 alias
+export { ActivityTypes as ActivityTypeValues } from '@/shared/constants/rewards'; 

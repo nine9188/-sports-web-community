@@ -1,17 +1,19 @@
-import { Metadata } from 'next';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getCategoryItemsPaginated, getUserItems, getUserPoints, getShopCategories } from '@/domains/shop/actions/actions';
 import CategoryFilter from '@/domains/shop/components/CategoryFilter';
 import ShopPagination from '@/domains/shop/components/ShopPagination';
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
+import { generatePageMetadataWithDefaults } from '@/shared/utils/metadataNew';
 
 // 동적 렌더링 강제 설정 추가
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: '상점 | 내 서비스',
-  description: '다양한 아이템을 구매하세요.',
-};
+export async function generateMetadata() {
+  return generatePageMetadataWithDefaults('/shop', {
+    title: '상점 - 4590 Football',
+    description: '포인트로 다양한 아이템을 구매하세요. 아이콘, 닉네임 변경권 등.',
+  });
+}
 
 interface Props {
   searchParams?: Promise<Record<string, string | string[] | undefined>>

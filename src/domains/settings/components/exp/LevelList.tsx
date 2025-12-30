@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import { LEVEL_EXP_REQUIREMENTS, getLevelIconUrl } from '@/shared/utils/level-icons';
-import Image from 'next/image';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import UserIcon from '@/shared/components/UserIcon';
 
 interface LevelListProps {
   currentLevel: number;
@@ -66,7 +66,7 @@ function AccordionHeader({ isOpen, onClick }: AccordionHeaderProps) {
       onClick={onClick}
       className="w-full px-4 py-3 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
     >
-      <h3 className="text-base font-medium text-gray-900 dark:text-[#F0F0F0]">레벨 및 아이콘 목록</h3>
+      <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">레벨 및 아이콘 목록</h3>
       {isOpen ? (
         <ChevronUp className="h-5 w-5 text-gray-500 dark:text-gray-400" />
       ) : (
@@ -94,7 +94,6 @@ function MobileLevelGrid({ totalLevels, currentLevel }: LevelGridProps) {
             key={level}
             level={level}
             isCurrentLevel={level === currentLevel}
-            size="small"
           />
         );
       })}
@@ -115,7 +114,6 @@ function DesktopLevelGrid({ totalLevels, currentLevel }: LevelGridProps) {
             key={level}
             level={level}
             isCurrentLevel={level === currentLevel}
-            size="normal"
           />
         );
       })}
@@ -126,19 +124,14 @@ function DesktopLevelGrid({ totalLevels, currentLevel }: LevelGridProps) {
 interface LevelItemProps {
   level: number;
   isCurrentLevel: boolean;
-  size: 'small' | 'normal';
 }
 
 /**
  * 개별 레벨 아이템 컴포넌트
  */
-function LevelItem({ level, isCurrentLevel, size }: LevelItemProps) {
+function LevelItem({ level, isCurrentLevel }: LevelItemProps) {
   const expRequired = LEVEL_EXP_REQUIREMENTS[level - 1];
   const iconUrl = getLevelIconUrl(level);
-
-  const iconSize = size === 'small' ? 24 : 40;
-  const iconSizeClass = size === 'small' ? 'w-6 h-6' : 'w-10 h-10';
-  const fontSizeClass = size === 'small' ? 'text-xs' : 'text-sm';
 
   return (
     <div
@@ -147,16 +140,16 @@ function LevelItem({ level, isCurrentLevel, size }: LevelItemProps) {
         ${isCurrentLevel ? 'bg-[#EAEAEA] dark:bg-[#333333] border-black/15 dark:border-white/20' : 'bg-white dark:bg-[#1D1D1D] border-black/7 dark:border-white/10'}
       `}
     >
-      <div className={`relative ${iconSizeClass} mb-1`}>
-        <Image
-          src={iconUrl}
+      <div className="relative w-5 h-5 mb-1">
+        <UserIcon
+          iconUrl={iconUrl}
+          level={level}
+          size={20}
           alt={`레벨 ${level} 아이콘`}
-          width={iconSize}
-          height={iconSize}
           className="object-contain"
         />
       </div>
-      <div className={`font-medium ${fontSizeClass} text-gray-900 dark:text-[#F0F0F0]`}>Lv.{level}</div>
+      <div className="font-medium text-xs text-gray-900 dark:text-[#F0F0F0]">Lv.{level}</div>
       <div className="text-xs text-gray-500 dark:text-gray-400">
         {expRequired.toLocaleString()}~
       </div>

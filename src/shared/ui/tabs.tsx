@@ -51,7 +51,7 @@ export default function Tabs({
 
   const baseClasses = variant === 'minimal'
     ? 'flex border-b border-black/7 dark:border-white/10'
-    : 'bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden flex sticky top-0 z-10 overflow-x-auto';
+    : 'bg-[#F5F5F5] dark:bg-[#262626] rounded-lg border border-black/7 dark:border-0 overflow-hidden flex sticky top-0 z-10 overflow-x-auto';
 
   return (
     <div className={`mb-4 ${className}`}>
@@ -71,14 +71,14 @@ export default function Tabs({
           );
 
           const buttonClasses = variant === 'minimal'
-            ? `py-2 px-4 ${isActive
+            ? `py-2 px-3 ${isActive
                 ? 'border-b-2 border-slate-800 dark:border-white font-medium text-gray-900 dark:text-[#F0F0F0]'
-                : 'text-gray-700 dark:text-gray-300 hover:text-gray-600 dark:hover:text-gray-300'
+                : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
               } ${tab.mobileOnly ? 'xl:hidden' : ''}`
-            : `h-12 px-4 flex items-center justify-center text-sm font-medium flex-1 whitespace-nowrap transition-colors ${
+            : `h-12 px-3 flex items-center justify-center text-xs font-medium flex-1 whitespace-nowrap transition-colors ${
                 isActive
-                  ? 'text-gray-900 dark:text-[#F0F0F0] border-b-2 border-slate-800 dark:border-white font-semibold'
-                  : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0]'
+                  ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] font-semibold border-b-2 border-slate-800 dark:border-white'
+                  : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
               } ${tab.mobileOnly ? 'xl:hidden' : ''} ${
                 tab.disabled ? 'opacity-50 cursor-not-allowed' : ''
               }`;

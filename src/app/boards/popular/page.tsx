@@ -3,10 +3,18 @@ import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import PopularPageClient from './PopularPageClient';
 import { convertApiPostsToLayoutPosts } from '@/domains/boards/utils/post/postUtils';
 import ErrorMessage from '@/shared/ui/error-message';
+import { generatePageMetadataWithDefaults } from '@/shared/utils/metadataNew';
 
 // 동적 렌더링 강제 설정
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+export async function generateMetadata() {
+  return generatePageMetadataWithDefaults('/boards/popular', {
+    title: '인기글 - 4590 Football',
+    description: '가장 인기 있는 게시글을 확인하세요. 좋아요가 많은 순서로 정렬됩니다.',
+  });
+}
 
 export default async function PopularPostsPage({
   searchParams

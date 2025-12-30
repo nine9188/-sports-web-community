@@ -1,14 +1,15 @@
 import { Suspense } from 'react';
-import { Metadata } from 'next';
 import { TransfersPageContent } from '@/domains/livescore/components/football/transfers';
 import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
+import { generatePageMetadataWithDefaults } from '@/shared/utils/metadataNew';
 
-export const metadata: Metadata = {
-  title: '이적시장 | 축구 이적 소식',
-  description: '최신 축구 이적 소식, 영입 정보, 방출 소식을 실시간으로 확인하세요.',
-  keywords: ['이적시장', '축구 이적', '영입', '방출', '선수 이적', '프리미어리그', '라리가'],
-};
+export async function generateMetadata() {
+  return generatePageMetadataWithDefaults('/transfers', {
+    title: '이적시장 - 4590 Football',
+    description: '최신 축구 이적 소식, 영입 정보, 방출 소식을 실시간으로 확인하세요.',
+  });
+}
 
 interface TransfersPageProps {
   searchParams: Promise<{

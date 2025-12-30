@@ -1,6 +1,14 @@
 import React from 'react';
 import { AllPostsWidget, NewsWidget, BoardCollectionWidget, BoardQuickLinksWidget } from '@/domains/widgets/components';
 import LiveScoreWidgetV2 from '@/domains/widgets/components/live-score-widget/index';
+import { generatePageMetadataWithDefaults } from '@/shared/utils/metadataNew';
+
+export async function generateMetadata() {
+  return generatePageMetadataWithDefaults('/', {
+    title: '4590 Football',
+    description: '실시간 축구 경기 일정과 스코어, 팀·선수 정보를 확인하고, 사랑하는 축구 팀의 팬들과 함께 소통할 수 있는 축구 커뮤니티 플랫폼',
+  });
+}
 
 // 메인 페이지 컴포넌트 - 모든 로딩 제거하고 즉시 렌더링
 export default function HomePage() {

@@ -6,15 +6,7 @@ import {
   calculateLevelProgress,
   getExpToNextLevel
 } from '@/shared/utils/level-icons';
-
-// 활동 보상 상수 정의
-const ACTIVITY_REWARDS = {
-  POST_CREATION: { exp: 25, points: 5 },
-  COMMENT_CREATION: { exp: 5, points: 1 },
-  RECEIVED_LIKE: { exp: 5, points: 1 },
-  DAILY_LOGIN: { exp: 30, points: 5 },
-  CONSECUTIVE_LOGIN: { exp: 30, points: 5 }
-} as const;
+import RewardGuide from '@/shared/components/RewardGuide';
 
 interface ExpFormProps {
   userId: string;
@@ -47,7 +39,7 @@ export default function ExpForm({
       {/* 현재 레벨 및 경험치 정보 */}
       <div className="bg-white dark:bg-[#1D1D1D]">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-          <h3 className="text-base font-medium text-gray-900 dark:text-[#F0F0F0] mb-2 md:mb-0">현재 레벨</h3>
+          <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-2 md:mb-0">현재 레벨</h3>
 
           <div className="flex items-center">
             <div className="text-lg font-bold mr-2 text-gray-900 dark:text-[#F0F0F0]">
@@ -80,73 +72,7 @@ export default function ExpForm({
       </div>
 
       {/* 경험치 획득 안내 */}
-      <ExpRewardsGuide />
+      <RewardGuide type="exp" />
     </div>
-  );
-}
-
-/**
- * 경험치 획득 방법을 안내하는 컴포넌트
- * 책임 분리를 통해 코드 가독성 향상
- */
-function ExpRewardsGuide() {
-  return (
-    <div className="p-0 mt-4">
-      <h3 className="font-medium text-gray-900 dark:text-[#F0F0F0] mb-2">경험치 획득 방법</h3>
-      <p className="text-gray-700 dark:text-gray-300 text-sm mb-4">
-        다양한 활동을 통해 경험치를 획득하고 레벨을 올릴 수 있습니다.
-      </p>
-      <div className="bg-[#F5F5F5] dark:bg-[#262626] rounded-lg p-4">
-        <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
-          <RewardItem
-            type="POST_CREATION"
-            description="게시글 작성"
-            dailyLimit={5}
-          />
-          <RewardItem
-            type="COMMENT_CREATION"
-            description="댓글 작성"
-            dailyLimit={5}
-          />
-          <RewardItem
-            type="RECEIVED_LIKE"
-            description="추천 받기"
-            dailyLimit={10}
-          />
-          <RewardItem
-            type="DAILY_LOGIN"
-            description="하루 최초 로그인"
-          />
-          <RewardItem
-            type="CONSECUTIVE_LOGIN"
-            description="연속 출석 보너스"
-          />
-        </ul>
-      </div>
-    </div>
-  );
-}
-
-interface RewardItemProps {
-  type: keyof typeof ACTIVITY_REWARDS;
-  description: string;
-  dailyLimit?: number;
-}
-
-/**
- * 개별 경험치 보상 항목 컴포넌트
- * 각 보상 항목을 더 읽기 쉽게 표시
- */
-function RewardItem({ type, description, dailyLimit }: RewardItemProps) {
-  const reward = ACTIVITY_REWARDS[type];
-
-  return (
-    <li className="flex items-start">
-      <span className="mr-2 text-gray-900 dark:text-[#F0F0F0]">•</span>
-      <span>
-        {description} - {reward.exp} XP
-        {dailyLimit && ` (하루 ${reward.exp * dailyLimit}XP 제한)`}
-      </span>
-    </li>
   );
 }

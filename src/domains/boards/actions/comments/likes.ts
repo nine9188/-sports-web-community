@@ -178,7 +178,10 @@ async function handleCommentLikeNotification(
     }
 
     const activityTypes = await getActivityTypeValues();
+    // 댓글 작성자에게 추천 받기 보상
     await rewardUserActivity(commentData.user_id, activityTypes.RECEIVED_LIKE, commentId);
+    // 추천한 사람에게 추천하기 보상 (Phase 3)
+    await rewardUserActivity(userId, activityTypes.GIVE_LIKE, commentId);
   } catch (error) {
     console.error('댓글 좋아요 알림/보상 처리 오류:', error);
   }

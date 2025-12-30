@@ -1,3 +1,4 @@
+import { Metadata } from 'next';
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import PlayerHeader from '@/domains/livescore/components/football/player/PlayerHeader';
@@ -6,6 +7,91 @@ import TabContent from '@/domains/livescore/components/football/player/TabConten
 import { fetchPlayerFullData, PlayerFullDataResponse } from '@/domains/livescore/actions/player/data';
 import { PlayerDataProvider } from '@/domains/livescore/components/football/player/context/PlayerDataContext';
 import { LoadingState } from '@/domains/livescore/components/common/CommonComponents';
+import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
+import { getTeamById } from '@/domains/livescore/constants/teams';
+import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
+
+// 선수 메타데이터 생성
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  try {
+    const { id } = await params;
+    const seoSettings = await getSeoSettings();
+
+    const siteUrl = seoSettings?.site_url || 'https://4590.co.kr';
+    const siteName = seoSettings?.site_name || '4590 Football';
+
+    // 선수 데이터 조회 (최소한의 옵션으로)
+    const playerData = await fetchPlayerFullData(id, {
+      fetchSeasons: false,
+      fetchStats: false,
+      fetchFixtures: false,
+      fetchTrophies: false,
+      fetchTransfers: false,
+      fetchInjuries: false,
+      fetchRankings: false,
+    });
+
+    if (!playerData.success || !playerData.playerData?.info) {
+      return {
+        title: '선수 정보를 찾을 수 없습니다',
+        description: '요청하신 선수 정보가 존재하지 않습니다.',
+      };
+    }
+
+    const player = playerData.playerData.info;
+    const statistics = playerData.playerData.statistics;
+
+    // 한글 매핑
+    const playerName = getPlayerKoreanName(player.id) || player.name;
+    const teamId = statistics?.[0]?.team?.id;
+    const teamMapping = teamId ? getTeamById(teamId) : null;
+    const currentTeam = teamMapping?.name_ko || statistics?.[0]?.team?.name || '';
+    const position = statistics?.[0]?.games?.position || '';
+
+    const title = `${playerName} | 선수 정보 - ${siteName}`;
+    const description = `${playerName}${player.nationality ? ` (${player.nationality})` : ''}${currentTeam ? ` - ${currentTeam}` : ''}${position ? ` ${position}` : ''}. 시즌 통계, 경기 기록, 프로필 정보를 확인하세요.`;
+    const url = `${siteUrl}/livescore/football/player/${id}`;
+
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        url,
+        type: 'profile',
+        images: player.photo ? [
+          {
+            url: player.photo,
+            width: 120,
+            height: 120,
+            alt: player.name,
+          },
+        ] : undefined,
+        siteName,
+        locale: 'ko_KR',
+      },
+      twitter: {
+        card: 'summary',
+        title,
+        description,
+      },
+      alternates: {
+        canonical: url,
+      },
+    };
+  } catch (error) {
+    console.error('[PlayerPage generateMetadata] 오류:', error);
+    return {
+      title: '선수 정보 - 4590 Football',
+      description: '축구 선수 정보, 통계, 경기 기록을 확인하세요.',
+    };
+  }
+}
 
 // 플레이스홀더 로딩 컴포넌트
 function ContentLoading() {

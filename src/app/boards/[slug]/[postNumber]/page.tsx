@@ -1,13 +1,107 @@
 import React from 'react';
+import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getPostPageData } from '@/domains/boards/actions';
 import PostDetailLayout from '@/domains/boards/components/layout/PostDetailLayout';
 import ErrorMessage from '@/shared/ui/error-message';
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
 
 // 동적 렌더링 강제 설정 추가
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+// 게시글 메타데이터 생성
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ slug: string; postNumber: string }>
+}): Promise<Metadata> {
+  try {
+    const { slug, postNumber } = await params;
+    const supabase = await getSupabaseServer();
+    const seoSettings = await getSeoSettings();
+
+    const siteUrl = seoSettings?.site_url || 'https://4590.co.kr';
+    const siteName = seoSettings?.site_name || '4590 Football';
+
+    // 1. 먼저 게시판 정보 조회 (slug로)
+    const { data: board } = await supabase
+      .from('boards')
+      .select('id, name')
+      .eq('slug', slug)
+      .single();
+
+    if (!board) {
+      return {
+        title: '게시판을 찾을 수 없습니다',
+        description: '요청하신 게시판이 존재하지 않습니다.',
+      };
+    }
+
+    // 2. 게시글 정보 조회 (board_id + post_number로)
+    const { data: post } = await supabase
+      .from('posts')
+      .select('title, content, created_at, updated_at')
+      .eq('board_id', board.id)
+      .eq('post_number', Number(postNumber))
+      .single();
+
+    if (!post) {
+      return {
+        title: '게시글을 찾을 수 없습니다',
+        description: '요청하신 게시글이 존재하지 않습니다.',
+      };
+    }
+
+    // 본문에서 설명 추출 (HTML 태그 제거, 160자 제한)
+    let description = '';
+    if (post.content) {
+      const contentStr = typeof post.content === 'string'
+        ? post.content
+        : JSON.stringify(post.content);
+      description = contentStr
+        .replace(/<[^>]*>/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 160);
+    }
+
+    const boardName = board.name || '게시판';
+    const title = `${post.title} - ${boardName}`;
+    const url = `${siteUrl}/boards/${slug}/${postNumber}`;
+
+    return {
+      title,
+      description: description || `${boardName}의 게시글입니다.`,
+      openGraph: {
+        title,
+        description: description || `${boardName}의 게시글입니다.`,
+        url,
+        type: 'article',
+        publishedTime: post.created_at ?? undefined,
+        modifiedTime: post.updated_at ?? undefined,
+        siteName,
+        locale: 'ko_KR',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title,
+        description: description || `${boardName}의 게시글입니다.`,
+      },
+      alternates: {
+        canonical: url,
+      },
+    };
+  } catch (error) {
+    console.error('[PostPage generateMetadata] 오류:', error);
+    return {
+      title: '게시글 - 4590 Football',
+      description: '축구 커뮤니티 게시글',
+    };
+  }
+}
 
 export default async function PostDetailPage({ 
   params,

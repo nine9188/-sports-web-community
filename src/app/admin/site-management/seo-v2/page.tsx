@@ -1,4 +1,5 @@
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import SeoSettingsPage from './SeoSettingsPage';
 
 export const metadata = {
@@ -7,6 +8,13 @@ export const metadata = {
 
 export default async function Page() {
   const settings = await getSeoSettings();
+
+  // 게시판 목록 가져오기
+  const supabase = await getSupabaseServer();
+  const { data: boards } = await supabase
+    .from('boards')
+    .select('id, name, slug, parent_id')
+    .order('display_order', { ascending: true });
 
   if (!settings) {
     return (
@@ -18,5 +26,5 @@ export default async function Page() {
     );
   }
 
-  return <SeoSettingsPage initialSettings={settings} />;
+  return <SeoSettingsPage initialSettings={settings} boards={boards || []} />;
 }

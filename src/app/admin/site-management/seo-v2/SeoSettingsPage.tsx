@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
-import { Plus, Trash2, Save } from 'lucide-react';
+import { Plus, Trash2, Save, Edit2 } from 'lucide-react';
 import {
   SeoSettings,
   PageSeoOverride,
@@ -12,11 +12,30 @@ import {
   deletePageSeo,
 } from '@/domains/seo/actions/seoSettings';
 
-interface Props {
-  initialSettings: SeoSettings;
+// 지원하는 페이지 목록 (기본값 포함)
+const PREDEFINED_PAGES = [
+  { path: '/', name: '메인', defaultTitle: '4590 Football', defaultDescription: '축구 팬들을 위한 커뮤니티. 실시간 라이브스코어, 게시판, 이적시장 정보를 확인하세요.' },
+  { path: '/boards/all', name: '전체글', defaultTitle: '전체글 - 4590 Football', defaultDescription: '모든 게시판의 최신 게시글을 한곳에서 확인하세요.' },
+  { path: '/boards/popular', name: '인기글', defaultTitle: '인기글 - 4590 Football', defaultDescription: '가장 인기 있는 게시글을 확인하세요. 좋아요가 많은 순서로 정렬됩니다.' },
+  { path: '/shop', name: '상점', defaultTitle: '상점 - 4590 Football', defaultDescription: '포인트로 다양한 아이템을 구매하세요. 아이콘, 닉네임 변경권 등.' },
+  { path: '/transfers', name: '이적시장', defaultTitle: '이적시장 - 4590 Football', defaultDescription: '최신 축구 이적 소식, 영입 정보, 방출 소식을 실시간으로 확인하세요.' },
+  { path: '/livescore/football', name: '라이브스코어', defaultTitle: '라이브스코어 - 4590 Football', defaultDescription: '실시간 축구 경기 결과와 일정을 확인하세요. 전 세계 주요 리그 경기를 한눈에.' },
+  { path: '/livescore/football/leagues', name: '데이터센터', defaultTitle: '데이터센터 - 4590 Football', defaultDescription: '전 세계 주요 축구 리그 목록을 확인하고 원하는 리그의 팀 정보와 경기 결과를 확인하세요.' },
+];
+
+interface BoardData {
+  id: string;
+  name: string;
+  slug: string;
+  parent_id: string | null;
 }
 
-export default function SeoSettingsPage({ initialSettings }: Props) {
+interface Props {
+  initialSettings: SeoSettings;
+  boards: BoardData[];
+}
+
+export default function SeoSettingsPage({ initialSettings, boards }: Props) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -44,6 +63,52 @@ export default function SeoSettingsPage({ initialSettings }: Props) {
     description: '',
     keywords: [],
   });
+
+  // 수정 모달
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingPath, setEditingPath] = useState('');
+  const [editingData, setEditingData] = useState<PageSeoOverride>({
+    title: '',
+    description: '',
+    keywords: [],
+  });
+
+  // 페이지 수정 시작
+  const handleStartEdit = (path: string, predefinedPage?: typeof PREDEFINED_PAGES[0]) => {
+    setEditingPath(path);
+    const currentOverride = pageOverrides[path];
+    setEditingData({
+      title: currentOverride?.title || predefinedPage?.defaultTitle || '',
+      description: currentOverride?.description || predefinedPage?.defaultDescription || '',
+      keywords: currentOverride?.keywords || [],
+    });
+    setShowEditModal(true);
+  };
+
+  // 페이지 수정 저장
+  const handleSaveEdit = async () => {
+    if (!editingData.title) {
+      toast.error('제목은 필수입니다');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const result = await updatePageSeo(editingPath, editingData);
+      if (result.success) {
+        toast.success('페이지 SEO가 저장되었습니다');
+        setShowEditModal(false);
+        setPageOverrides({ ...pageOverrides, [editingPath]: editingData });
+        router.refresh();
+      } else {
+        toast.error(result.error || '저장 실패');
+      }
+    } catch {
+      toast.error('저장 중 오류가 발생했습니다');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // 전역 설정 저장
   const handleSaveGlobal = async () => {
@@ -237,42 +302,241 @@ export default function SeoSettingsPage({ initialSettings }: Props) {
       {/* ===== 페이지별 커스터마이징 ===== */}
       <div className="bg-white rounded-lg border p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">페이지별 커스터마이징 (선택)</h2>
+          <div>
+            <h2 className="text-lg font-semibold">페이지별 SEO 설정</h2>
+            <p className="text-sm text-gray-500 mt-1">
+              각 페이지의 메타 제목과 설명을 커스터마이징할 수 있습니다.
+            </p>
+          </div>
           <button
             onClick={() => setShowAddModal(true)}
             className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
           >
             <Plus className="w-4 h-4" />
-            페이지 추가
+            직접 추가
           </button>
         </div>
 
-        {Object.keys(pageOverrides).length === 0 ? (
-          <p className="text-sm text-gray-500">
-            페이지별 커스터마이징이 없습니다. 추가 버튼을 눌러 시작하세요.
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {Object.entries(pageOverrides).map(([path, override]) => (
-              <div key={path} className="border rounded-lg p-4">
+        {/* 미리 정의된 페이지 목록 */}
+        <div className="space-y-2">
+          {PREDEFINED_PAGES.map((page) => {
+            const hasOverride = !!pageOverrides[page.path];
+            const override = pageOverrides[page.path];
+
+            return (
+              <div
+                key={page.path}
+                className={`border rounded-lg p-4 ${hasOverride ? 'border-blue-300 bg-blue-50' : 'border-gray-200'}`}
+              >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <div className="font-medium text-gray-900">{path}</div>
-                    <div className="text-sm text-gray-600 mt-1">
-                      <div>제목: {override.title || '(없음)'}</div>
-                      <div>설명: {override.description || '(없음)'}</div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-900">{page.name}</span>
+                      <code className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">{page.path}</code>
+                      {hasOverride && (
+                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">커스텀</span>
+                      )}
+                    </div>
+                    <div className="text-sm text-gray-600 mt-2 space-y-1">
+                      <div>
+                        <span className="text-gray-500">제목:</span>{' '}
+                        {override?.title || <span className="text-gray-400">{page.defaultTitle} (기본값)</span>}
+                      </div>
+                      <div>
+                        <span className="text-gray-500">설명:</span>{' '}
+                        {override?.description || <span className="text-gray-400">{page.defaultDescription} (기본값)</span>}
+                      </div>
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleDeletePage(path)}
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex gap-2 ml-4">
+                    <button
+                      onClick={() => handleStartEdit(page.path, page)}
+                      className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                      수정
+                    </button>
+                    {hasOverride && (
+                      <button
+                        onClick={() => handleDeletePage(page.path)}
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-md hover:bg-red-50"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        초기화
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-            ))}
+            );
+          })}
+        </div>
+
+        {/* 게시판 목록 */}
+        {boards.length > 0 && (
+          <div className="border-t mt-6 pt-4">
+            <h3 className="text-sm font-medium text-gray-700 mb-3">게시판</h3>
+            <div className="space-y-2">
+              {boards
+                .filter(board => !board.parent_id) // 최상위 게시판만
+                .map((board) => {
+                  const boardPath = `/boards/${board.slug}`;
+                  const hasOverride = !!pageOverrides[boardPath];
+                  const override = pageOverrides[boardPath];
+                  const childBoards = boards.filter(b => b.parent_id === board.id);
+
+                  return (
+                    <div key={board.id}>
+                      {/* 상위 게시판 */}
+                      <div
+                        className={`border rounded-lg p-3 ${hasOverride ? 'border-blue-300 bg-blue-50' : 'border-gray-200'}`}
+                      >
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-gray-900">{board.name}</span>
+                            <code className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">{boardPath}</code>
+                            {hasOverride && (
+                              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">커스텀</span>
+                            )}
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleStartEdit(boardPath, {
+                                path: boardPath,
+                                name: board.name,
+                                defaultTitle: `${board.name} - 4590 Football`,
+                                defaultDescription: `${board.name} 게시판입니다.`,
+                              })}
+                              className="flex items-center gap-1 px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50"
+                            >
+                              <Edit2 className="w-3 h-3" />
+                              수정
+                            </button>
+                            {hasOverride && (
+                              <button
+                                onClick={() => handleDeletePage(boardPath)}
+                                className="flex items-center gap-1 px-2 py-1 text-xs text-red-600 border border-red-200 rounded hover:bg-red-50"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        {override && (
+                          <div className="text-xs text-gray-600 mt-2">
+                            {override.title}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 하위 게시판 */}
+                      {childBoards.length > 0 && (
+                        <div className="ml-6 mt-1 space-y-1">
+                          {childBoards.map((child) => {
+                            const childPath = `/boards/${child.slug}`;
+                            const childHasOverride = !!pageOverrides[childPath];
+                            const childOverride = pageOverrides[childPath];
+
+                            return (
+                              <div
+                                key={child.id}
+                                className={`border rounded-lg p-2.5 ${childHasOverride ? 'border-blue-300 bg-blue-50' : 'border-gray-200'}`}
+                              >
+                                <div className="flex justify-between items-center">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm text-gray-700">{child.name}</span>
+                                    <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">{childPath}</code>
+                                    {childHasOverride && (
+                                      <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">커스텀</span>
+                                    )}
+                                  </div>
+                                  <div className="flex gap-1">
+                                    <button
+                                      onClick={() => handleStartEdit(childPath, {
+                                        path: childPath,
+                                        name: child.name,
+                                        defaultTitle: `${child.name} - 4590 Football`,
+                                        defaultDescription: `${child.name} 게시판입니다.`,
+                                      })}
+                                      className="flex items-center gap-1 px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50"
+                                    >
+                                      <Edit2 className="w-3 h-3" />
+                                    </button>
+                                    {childHasOverride && (
+                                      <button
+                                        onClick={() => handleDeletePage(childPath)}
+                                        className="text-xs text-red-600 border border-red-200 rounded px-2 py-1 hover:bg-red-50"
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                                {childOverride && (
+                                  <div className="text-xs text-gray-600 mt-1">
+                                    {childOverride.title}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+            </div>
           </div>
+        )}
+
+        {/* 커스텀 페이지 목록 (미리 정의되지 않은 것들) */}
+        {Object.entries(pageOverrides)
+          .filter(([path]) =>
+            !PREDEFINED_PAGES.some(p => p.path === path) &&
+            !boards.some(b => `/boards/${b.slug}` === path)
+          )
+          .length > 0 && (
+          <>
+            <div className="border-t mt-6 pt-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">직접 추가한 페이지</h3>
+              <div className="space-y-2">
+                {Object.entries(pageOverrides)
+                  .filter(([path]) =>
+                    !PREDEFINED_PAGES.some(p => p.path === path) &&
+                    !boards.some(b => `/boards/${b.slug}` === path)
+                  )
+                  .map(([path, override]) => (
+                    <div key={path} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <code className="text-sm bg-gray-100 px-2 py-0.5 rounded">{path}</code>
+                          <div className="text-sm text-gray-600 mt-2">
+                            <div>제목: {override.title}</div>
+                            <div>설명: {override.description || '(없음)'}</div>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 ml-4">
+                          <button
+                            onClick={() => handleStartEdit(path)}
+                            className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                            수정
+                          </button>
+                          <button
+                            onClick={() => handleDeletePage(path)}
+                            className="flex items-center gap-1 px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-md hover:bg-red-50"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            삭제
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </>
         )}
       </div>
 
@@ -344,6 +608,72 @@ export default function SeoSettingsPage({ initialSettings }: Props) {
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
               >
                 {isLoading ? '추가 중...' : '추가'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== 수정 모달 ===== */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-lg">
+            <h3 className="text-lg font-semibold mb-1">페이지 SEO 수정</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              <code className="bg-gray-100 px-2 py-0.5 rounded">{editingPath}</code>
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  제목 *
+                </label>
+                <input
+                  type="text"
+                  value={editingData.title}
+                  onChange={(e) =>
+                    setEditingData({ ...editingData, title: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  설명 (150-160자 권장)
+                </label>
+                <textarea
+                  value={editingData.description}
+                  onChange={(e) =>
+                    setEditingData({ ...editingData, description: e.target.value })
+                  }
+                  rows={3}
+                  maxLength={200}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  {editingData.description?.length || 0} / 200자
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingPath('');
+                  setEditingData({ title: '', description: '', keywords: [] });
+                }}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                disabled={isLoading}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+              >
+                {isLoading ? '저장 중...' : '저장'}
               </button>
             </div>
           </div>

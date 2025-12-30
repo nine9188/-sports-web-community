@@ -12,10 +12,53 @@ docs/
 ├── QUICK_START.md               # 빠른 시작 가이드
 ├── hot-system/                  # HOT 게시글 시스템
 ├── notifications/               # 알림 시스템
+├── reward-system/               # 보상 시스템 ✨ NEW
+├── seo/                         # SEO 개선 가이드
 ├── auth-refactoring/            # 인증 리팩토링 기록
 ├── guides/                      # 가이드 및 튜토리얼
 └── dev-notes/                   # 개발 메모 및 노트
 ```
+
+---
+
+## 🎁 보상 시스템 ✨ NEW
+
+사용자 활동에 대한 경험치(XP)와 포인트(P) 보상 시스템입니다.
+
+| 문서 | 설명 | 상태 |
+|------|------|------|
+| [README.md](./reward-system/README.md) | 보상 시스템 전체 개요 | - |
+| [PHASE2_PLAN.md](./reward-system/PHASE2_PLAN.md) | Phase 2: 연속 출석, 추천 보상, 레벨업 알림 | ✅ 완료 |
+| [PHASE3_PLAN.md](./reward-system/PHASE3_PLAN.md) | Phase 3: 밸런스 조정, 아이템 등급화, 추가 보상 | ✅ 완료 |
+
+**주요 기능**:
+- ✅ 활동별 보상 (게시글, 댓글, 좋아요)
+- ✅ 연속 출석 보너스 (7/14/21/30일)
+- ✅ 출석 캘린더 UI (PC/모바일)
+- ✅ 레벨업 알림
+- ✅ 아이템 등급 시스템 (common/rare/epic/legendary)
+- ✅ 경험치 밸런스 조정 (+100~200%)
+- ✅ 추천하기/첫 활동 보너스
+
+---
+
+## 🔍 SEO 개선 가이드
+
+검색 엔진 최적화(SEO) 개선을 위한 단계별 구현 가이드입니다.
+
+| 문서 | 설명 | 우선순위 |
+|------|------|---------|
+| [README.md](./seo/README.md) | SEO 개선 전체 개요 및 현재 상태 | - |
+| [step-1-dynamic-metadata.md](./seo/step-1-dynamic-metadata.md) | 동적 페이지 메타데이터 구현 | 🔴 높음 |
+| [step-2-robots-sitemap.md](./seo/step-2-robots-sitemap.md) | Robots.txt & Sitemap 개선 | 🔴 높음 |
+| [step-3-json-ld.md](./seo/step-3-json-ld.md) | JSON-LD 구조화 데이터 구현 | 🟡 중간 |
+| [step-4-canonical-url.md](./seo/step-4-canonical-url.md) | Canonical URL 구현 | 🟢 낮음 |
+
+**구현 순서**:
+1. [Step 1] Post/Match/Team/Player 페이지 메타데이터 추가
+2. [Step 2] Robots.txt에 sitemap URL 설정, Sitemap 확장
+3. [Step 3] JSON-LD 스키마로 리치 스니펫 활성화
+4. [Step 4] Canonical URL로 중복 콘텐츠 방지
 
 ---
 
@@ -121,5 +164,5 @@ HOT 게시글은 조회수, 좋아요, 댓글을 기반으로 인기 게시글�
 ---
 
 **문서 작성일**: 2025-12-03
-**최종 업데이트**: 2025-12-03
-**버전**: 1.0.0
+**최종 업데이트**: 2025-12-30
+**버전**: 1.2.0

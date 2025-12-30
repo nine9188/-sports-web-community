@@ -3,54 +3,44 @@
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { calculateLevelFromExp } from '@/shared/utils/level-icons-server';
 import { createLevelUpNotification } from '@/domains/notifications/actions';
+import {
+  ActivityTypes,
+  ACTIVITY_REWARDS,
+  DAILY_LIMITS,
+  type ActivityType as SharedActivityType
+} from '@/shared/constants/rewards';
 
-// 활동 유형 정의 - 내부에서만 사용하는 상수 (export 하지 않음)
-const ActivityTypeValues = {
-  POST_CREATION: 'post_creation',
-  COMMENT_CREATION: 'comment_creation', 
-  RECEIVED_LIKE: 'received_like',
-  DAILY_LOGIN: 'daily_login',
-  CONSECUTIVE_LOGIN: 'consecutive_login'
-} as const;
-
-// 타입 정의는 별도로 유지
-export type ActivityType = typeof ActivityTypeValues[keyof typeof ActivityTypeValues];
+// 타입 재export (기존 코드 호환성)
+export type ActivityType = SharedActivityType;
 
 // 클라이언트에서 사용할 ActivityTypeValues를 async 함수로 내보냄
 export async function getActivityTypeValues() {
-  return ActivityTypeValues;
+  return ActivityTypes;
 }
 
 // 활동 상수를 async 함수로 내보냄 (기존 코드와의 호환성 유지)
 export async function getActivityTypes() {
-  return ActivityTypeValues;
+  return ActivityTypes;
 }
 
 // 클라이언트에서 사용할 ActivityTypes를 가져오는 비동기 함수
 export async function getActivityTypesForClient() {
-  return ActivityTypeValues;
+  return ActivityTypes;
 }
 
-// 각 활동별 보상 정의
+// 각 활동별 보상 정의 (공용 상수 사용)
 export async function getActivityRewards() {
-  return {
-    [ActivityTypeValues.POST_CREATION]: { exp: 25, points: 5, reason: '게시글 작성' },
-    [ActivityTypeValues.COMMENT_CREATION]: { exp: 5, points: 1, reason: '댓글 작성' },
-    [ActivityTypeValues.RECEIVED_LIKE]: { exp: 5, points: 1, reason: '추천' },
-    [ActivityTypeValues.DAILY_LOGIN]: { exp: 30, points: 5, reason: '하루 최초 로그인' },
-    [ActivityTypeValues.CONSECUTIVE_LOGIN]: { exp: 30, points: 5, reason: '연속 출석 보너스' }
-  };
+  return ACTIVITY_REWARDS;
 }
 
-// 각 활동별 일일 제한
+// 각 활동별 일일 제한 (공용 상수 사용)
 export async function getDailyLimits() {
-  return {
-    [ActivityTypeValues.POST_CREATION]: { count: 5, points: 25 },
-    [ActivityTypeValues.COMMENT_CREATION]: { count: 5, points: 5 },
-    [ActivityTypeValues.RECEIVED_LIKE]: { count: 10, points: 10 },
-    [ActivityTypeValues.DAILY_LOGIN]: { count: 1, points: 5 },
-    [ActivityTypeValues.CONSECUTIVE_LOGIN]: { count: 1, points: 5 }
-  };
+  return Object.fromEntries(
+    Object.entries(DAILY_LIMITS).map(([key, value]) => [
+      key,
+      { count: value.count, points: value.maxPoints }
+    ])
+  );
 }
 
 // 활동 이력 캐시 (메모리 내 간단한 캐시)
@@ -209,11 +199,20 @@ export async function rewardUserActivity(
           // 알림 생성 실패해도 보상은 성공으로 처리
         }
       }
+
+      // 9. 첫 활동 보너스 (Phase 3) - 오늘 첫 게시글/댓글인 경우 추가 보상
+      if (activityCount === 0) {
+        if (activityType === ActivityTypes.POST_CREATION) {
+          await grantFirstActivityBonus(supabase, userId, ActivityTypes.FIRST_POST_BONUS);
+        } else if (activityType === ActivityTypes.COMMENT_CREATION) {
+          await grantFirstActivityBonus(supabase, userId, ActivityTypes.FIRST_COMMENT_BONUS);
+        }
+      }
     } catch (error) {
       console.error('활동 보상 처리 중 예외 발생:', error);
       return { success: false, error: '보상 처리 중 오류가 발생했습니다.' };
     }
-    
+
     // 캐시 업데이트 (활동 횟수 증가)
     activityCache.set(cacheKey, (activityCache.get(cacheKey) || 0) + 1);
     
@@ -224,6 +223,60 @@ export async function rewardUserActivity(
   } catch (error) {
     console.error('활동 보상 처리 중 예외 발생:', error);
     return { success: false, error: '보상 처리 중 오류가 발생했습니다.' };
+  }
+}
+
+/**
+ * 첫 활동 보너스 지급 (Phase 3)
+ * 오늘 첫 게시글/댓글 작성 시 추가 보상 지급
+ */
+async function grantFirstActivityBonus(
+  supabase: Awaited<ReturnType<typeof getSupabaseServer>>,
+  userId: string,
+  bonusType: typeof ActivityTypes.FIRST_POST_BONUS | typeof ActivityTypes.FIRST_COMMENT_BONUS
+): Promise<void> {
+  try {
+    const reward = ACTIVITY_REWARDS[bonusType];
+
+    // 경험치 히스토리 기록
+    await supabase.from('exp_history').insert({
+      user_id: userId,
+      exp: reward.exp,
+      reason: reward.reason,
+    });
+
+    // 포인트 히스토리 기록
+    await supabase.from('point_history').insert({
+      user_id: userId,
+      points: reward.points,
+      reason: reward.reason,
+    });
+
+    // 프로필 업데이트
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('exp, points, level')
+      .eq('id', userId)
+      .single();
+
+    if (profile) {
+      const newExp = (profile.exp || 0) + reward.exp;
+      const newPoints = (profile.points || 0) + reward.points;
+      const newLevel = calculateLevelFromExp(newExp);
+
+      await supabase
+        .from('profiles')
+        .update({ exp: newExp, points: newPoints, level: newLevel })
+        .eq('id', userId);
+
+      // 레벨업 알림 (보너스로 인한 레벨업)
+      if (newLevel > (profile.level || 1)) {
+        await createLevelUpNotification({ userId, newLevel });
+      }
+    }
+  } catch (error) {
+    console.error('첫 활동 보너스 지급 오류:', error);
+    // 보너스 지급 실패해도 메인 보상은 성공으로 처리
   }
 }
 
