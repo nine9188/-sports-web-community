@@ -5,6 +5,7 @@ import { Button } from '@/shared/components/ui/button';
 import { useAuth } from '@/shared/context/AuthContext';
 import { useIcon } from '@/shared/context/IconContext';
 import UserProfile from './auth/UserProfile';
+import AttendanceCalendar from '@/shared/components/AttendanceCalendar';
 import Link from 'next/link';
 import { toast } from 'react-toastify';
 import { useCallback, useState, useEffect } from 'react';
@@ -171,6 +172,13 @@ export default function ProfileSidebar({
               <div className="p-4 border-b border-black/7 dark:border-white/10">
                 <UserProfile profileData={profileData} showActions={false} />
               </div>
+
+              {/* 출석 현황 (미니 캘린더) */}
+              {user?.id && (
+                <div className="px-4 pt-2">
+                  <AttendanceCalendar userId={user.id} variant="mini" />
+                </div>
+              )}
 
               {/* 메뉴 섹션 */}
               <div className="p-4 space-y-2">

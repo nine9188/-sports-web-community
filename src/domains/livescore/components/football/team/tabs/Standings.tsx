@@ -318,7 +318,7 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
                               {standing.form?.split('').map((result, idx) => (
                                 <div 
                                   key={idx} 
-                                  className={`w-6 h-6 flex items-center justify-center ${getFormStyle(result)} text-xs font-bold`}
+                                  className={`w-6 h-6 flex items-center justify-center ${getFormStyle(result)} text-xs font-medium rounded`}
                                   title={result === 'W' ? '승리' : result === 'D' ? '무승부' : '패배'}
                                 >
                                   {result}

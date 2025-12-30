@@ -102,10 +102,10 @@ const getStatusColor = (description: string) => {
 
 const getFormStyle = (result: string) => {
   switch (result) {
-    case 'W': return 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200';
-    case 'D': return 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200';
-    case 'L': return 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200';
-    default: return 'bg-gray-200 text-gray-700';
+    case 'W': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400';
+    case 'D': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400';
+    case 'L': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400';
+    default: return 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300';
   }
 };
 
@@ -276,7 +276,7 @@ const LeagueStandingsTable = memo(({ standings, leagueId }: LeagueStandingsTable
                             {standing.form?.split('').map((result, idx) => (
                               <div
                                 key={idx}
-                                className={`w-6 h-6 flex items-center justify-center ${getFormStyle(result)} text-xs font-bold`}
+                                className={`w-6 h-6 flex items-center justify-center ${getFormStyle(result)} text-xs font-medium rounded`}
                                 title={result === 'W' ? '승리' : result === 'D' ? '무승부' : '패배'}
                               >
                                 {result}

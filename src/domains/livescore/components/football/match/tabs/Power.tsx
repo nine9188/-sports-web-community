@@ -224,15 +224,15 @@ export default function Power({ data }: PowerProps) {
               const displayName = getTeamDisplayName(it.opponent.id || 0, { language: 'ko' });
               const finalName = displayName.startsWith('팀 ') ? opponentName : displayName;
               const bgColor = it.result === 'W'
-                ? 'bg-green-100 dark:bg-green-900'
+                ? 'bg-green-100 dark:bg-green-900/30'
                 : it.result === 'D'
-                ? 'bg-yellow-100 dark:bg-yellow-900'
-                : 'bg-red-100 dark:bg-red-900';
+                ? 'bg-yellow-100 dark:bg-yellow-900/30'
+                : 'bg-red-100 dark:bg-red-900/30';
               const textColor = it.result === 'W'
-                ? 'text-green-800 dark:text-green-200'
+                ? 'text-green-800 dark:text-green-400'
                 : it.result === 'D'
-                ? 'text-yellow-800 dark:text-yellow-200'
-                : 'text-red-800 dark:text-red-200';
+                ? 'text-yellow-800 dark:text-yellow-400'
+                : 'text-red-800 dark:text-red-400';
 
               return (
                 <Link
@@ -284,15 +284,15 @@ export default function Power({ data }: PowerProps) {
               const displayName = getTeamDisplayName(it.opponent.id || 0, { language: 'ko' });
               const finalName = displayName.startsWith('팀 ') ? opponentName : displayName;
               const bgColor = it.result === 'W'
-                ? 'bg-green-100 dark:bg-green-900'
+                ? 'bg-green-100 dark:bg-green-900/30'
                 : it.result === 'D'
-                ? 'bg-yellow-100 dark:bg-yellow-900'
-                : 'bg-red-100 dark:bg-red-900';
+                ? 'bg-yellow-100 dark:bg-yellow-900/30'
+                : 'bg-red-100 dark:bg-red-900/30';
               const textColor = it.result === 'W'
-                ? 'text-green-800 dark:text-green-200'
+                ? 'text-green-800 dark:text-green-400'
                 : it.result === 'D'
-                ? 'text-yellow-800 dark:text-yellow-200'
-                : 'text-red-800 dark:text-red-200';
+                ? 'text-yellow-800 dark:text-yellow-400'
+                : 'text-red-800 dark:text-red-400';
 
               return (
                 <Link
@@ -338,15 +338,15 @@ export default function Power({ data }: PowerProps) {
                   const displayName = getTeamDisplayName(it.opponent.id || 0, { language: 'ko' });
                   const finalName = displayName.startsWith('팀 ') ? opponentName : displayName;
                   const bgColor = it.result === 'W'
-                    ? 'bg-green-100 dark:bg-green-900'
+                    ? 'bg-green-100 dark:bg-green-900/30'
                     : it.result === 'D'
-                    ? 'bg-yellow-100 dark:bg-yellow-900'
-                    : 'bg-red-100 dark:bg-red-900';
+                    ? 'bg-yellow-100 dark:bg-yellow-900/30'
+                    : 'bg-red-100 dark:bg-red-900/30';
                   const textColor = it.result === 'W'
-                    ? 'text-green-800 dark:text-green-200'
+                    ? 'text-green-800 dark:text-green-400'
                     : it.result === 'D'
-                    ? 'text-yellow-800 dark:text-yellow-200'
-                    : 'text-red-800 dark:text-red-200';
+                    ? 'text-yellow-800 dark:text-yellow-400'
+                    : 'text-red-800 dark:text-red-400';
 
                   return (
                     <Link
@@ -387,15 +387,15 @@ export default function Power({ data }: PowerProps) {
                   const displayName = getTeamDisplayName(it.opponent.id || 0, { language: 'ko' });
                   const finalName = displayName.startsWith('팀 ') ? opponentName : displayName;
                   const bgColor = it.result === 'W'
-                    ? 'bg-green-100 dark:bg-green-900'
+                    ? 'bg-green-100 dark:bg-green-900/30'
                     : it.result === 'D'
-                    ? 'bg-yellow-100 dark:bg-yellow-900'
-                    : 'bg-red-100 dark:bg-red-900';
+                    ? 'bg-yellow-100 dark:bg-yellow-900/30'
+                    : 'bg-red-100 dark:bg-red-900/30';
                   const textColor = it.result === 'W'
-                    ? 'text-green-800 dark:text-green-200'
+                    ? 'text-green-800 dark:text-green-400'
                     : it.result === 'D'
-                    ? 'text-yellow-800 dark:text-yellow-200'
-                    : 'text-red-800 dark:text-red-200';
+                    ? 'text-yellow-800 dark:text-yellow-400'
+                    : 'text-red-800 dark:text-red-400';
 
                   return (
                     <Link
@@ -486,9 +486,9 @@ export default function Power({ data }: PowerProps) {
             <div className="flex items-center justify-end px-1">
               <div className="flex items-center gap-2">
                 <div className="flex gap-1">
-                  <span className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded text-xs font-medium">{data.h2h.resultSummary.teamA.win}W</span>
-                  <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded text-xs font-medium">{data.h2h.resultSummary.teamA.draw}D</span>
-                  <span className="px-2 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded text-xs font-medium">{data.h2h.resultSummary.teamA.loss}L</span>
+                  <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 rounded text-xs font-medium">{data.h2h.resultSummary.teamA.win}W</span>
+                  <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 rounded text-xs font-medium">{data.h2h.resultSummary.teamA.draw}D</span>
+                  <span className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 rounded text-xs font-medium">{data.h2h.resultSummary.teamA.loss}L</span>
                 </div>
               </div>
             </div>
@@ -496,9 +496,9 @@ export default function Power({ data }: PowerProps) {
             <div className="flex items-center justify-start px-1">
               <div className="flex items-center gap-2">
                 <div className="flex gap-1">
-                  <span className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded text-xs font-medium">{data.h2h.resultSummary.teamB.win}W</span>
-                  <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded text-xs font-medium">{data.h2h.resultSummary.teamB.draw}D</span>
-                  <span className="px-2 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded text-xs font-medium">{data.h2h.resultSummary.teamB.loss}L</span>
+                  <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 rounded text-xs font-medium">{data.h2h.resultSummary.teamB.win}W</span>
+                  <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 rounded text-xs font-medium">{data.h2h.resultSummary.teamB.draw}D</span>
+                  <span className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 rounded text-xs font-medium">{data.h2h.resultSummary.teamB.loss}L</span>
                 </div>
               </div>
             </div>

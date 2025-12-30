@@ -51,9 +51,9 @@ const tableStyles = {
   cell: "px-1 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center",
   smallCol: "w-8",
   mediumCol: "w-10",
-  formBadgeWin: "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200",
-  formBadgeDraw: "bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200",
-  formBadgeLoss: "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200"
+  formBadgeWin: "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400",
+  formBadgeDraw: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400",
+  formBadgeLoss: "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400"
 };
 
 const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
@@ -463,7 +463,7 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
                           {standing.form?.split('').map((result, idx) => (
                             <div
                               key={idx}
-                              className={`w-6 h-6 flex items-center justify-center ${getFormStyle(result)} text-xs font-bold`}
+                              className={`w-6 h-6 flex items-center justify-center ${getFormStyle(result)} text-xs font-medium rounded`}
                               title={result === 'W' ? '승리' : result === 'D' ? '무승부' : '패배'}
                             >
                               {result}

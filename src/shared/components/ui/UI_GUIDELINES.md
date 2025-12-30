@@ -75,6 +75,82 @@ text-orange-600 dark:text-orange-400
 - **예시**: `<span className="text-xs text-orange-600 dark:text-orange-400">[5]</span>`
 - **금지**: 파란색, 회색 등 다른 색상 사용 금지
 
+### 승무패 색상 (W/D/L)
+
+경기 결과, 폼 배지 등에 일관되게 사용하는 색상입니다.
+
+#### 승리 (Win)
+```css
+bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400
+```
+
+#### 무승부 (Draw)
+```css
+bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400
+```
+
+#### 패배 (Loss)
+```css
+bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400
+```
+
+**공통 스타일:**
+- 크기: `w-6 h-6`
+- 라운드: `rounded`
+- 폰트: `text-xs font-medium`
+- 정렬: `flex items-center justify-center`
+
+**예시:**
+```tsx
+<div className={`w-6 h-6 flex items-center justify-center rounded text-xs font-medium
+  ${result === 'W' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400' :
+    result === 'D' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400' :
+    'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400'}`}>
+  {result}
+</div>
+```
+
+**사용처:**
+- `FormDisplay.tsx` - 팀 최근 폼
+- `LeagueStandingsTable.tsx` - 리그 순위표 폼
+- `match/tabs/Standings.tsx` - 경기 순위표
+- `team/tabs/Standings.tsx` - 팀 순위표
+- `MatchStatsChart.tsx` - 경기 통계 차트
+- `Power.tsx` - 전력 분석 탭
+
+### 성공/출석 색상
+
+출석 체크, 성공 상태 등에 사용하는 색상입니다. 승리(W) 색상과 동일합니다.
+
+```css
+bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400
+```
+
+**사용처:**
+- `AttendanceCalendar.tsx` - 출석 캘린더 (배지, 체크 아이콘)
+
+### 오늘/활성 상태 표시
+
+포커스 링 대신 배경색 변화로 "오늘" 또는 "활성" 상태를 표시합니다.
+
+```css
+/* 오늘/활성 상태 배경 (더 진한 색) */
+bg-[#EAEAEA] dark:bg-[#333333]
+
+/* 오늘+출석 (녹색 배경 + 테두리 강조) */
+bg-green-100 dark:bg-green-900/30 border-2 border-green-500 dark:border-green-400
+```
+
+**패턴 설명:**
+- 포커스 링(`ring-2`) 대신 배경색 변화 사용
+- `SearchBar.tsx` 패턴과 동일: 기본 → 포커스 시 더 진한 배경
+- 기본 배경: `bg-[#F5F5F5] dark:bg-[#262626]`
+- 활성 배경: `bg-[#EAEAEA] dark:bg-[#333333]`
+
+**사용처:**
+- `AttendanceCalendar.tsx` - 오늘 날짜 표시
+- `SearchBar.tsx` - 검색창 포커스 상태
+
 ## 테이블 패턴
 
 ### 게시글 목록 테이블 구조
