@@ -15,6 +15,7 @@ export interface CommentType {
   userAction?: 'like' | 'dislike' | null;
   profiles?: {
     nickname: string | null;
+    public_id?: string | null;
     icon_id: number | null;
     icon_url?: string | null;
     level?: number | null;

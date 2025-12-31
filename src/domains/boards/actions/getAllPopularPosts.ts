@@ -19,6 +19,7 @@ export interface PopularPost {
   author_level?: number;
   author_icon_id?: number | null;
   author_icon_url?: string | null;
+  author_public_id?: string | null;
   created_at: string;
   formattedDate: string;
   team_id?: string | number | null;
@@ -105,7 +106,7 @@ export async function getAllPopularPosts({
         content,
         user_id,
         boards!inner(id, slug, name, team_id, league_id),
-        profiles!inner(id, nickname, level, icon_id)
+        profiles!inner(id, nickname, level, icon_id, public_id)
       `, { count: 'exact' })
       .eq('is_deleted', false)
       .eq('is_hidden', false)
@@ -248,6 +249,7 @@ export async function getAllPopularPosts({
         author_level: post.profiles?.level || 1,
         author_icon_id: iconId,
         author_icon_url: iconUrl,
+        author_public_id: post.profiles?.public_id || null,
         created_at: post.created_at,
         formattedDate: formatDate(post.created_at),
         team_id: post.boards?.team_id,

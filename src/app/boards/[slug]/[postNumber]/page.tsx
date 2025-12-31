@@ -201,9 +201,10 @@ export default async function PostDetailPage({
       userAction?: 'like' | 'dislike' | null;
       profiles?: {
         nickname?: string;
+        public_id?: string;
         icon_id?: number;
         level?: number;
-        icon_url?: string; // icon_url 타입 추가
+        icon_url?: string;
       };
     }) => ({
       id: comment.id,
@@ -217,9 +218,10 @@ export default async function PostDetailPage({
       profiles: {
         nickname: comment.profiles?.nickname || null,
         id: comment.user_id || '',
+        public_id: comment.profiles?.public_id || null,
         icon_id: comment.profiles?.icon_id || null,
         level: comment.profiles?.level || null,
-        icon_url: comment.profiles?.icon_url || null // 실제 icon_url 사용
+        icon_url: comment.profiles?.icon_url || null
       },
       children: []
     }));
@@ -238,6 +240,7 @@ export default async function PostDetailPage({
       likes: post.likes,
       author_nickname: post.author,
       author_id: post.author_id || '',
+      author_public_id: post.author_public_id || null,
       author_level: post.author_level || 1,
       author_icon_id: post.author_icon_id,
       author_icon_url: post.author_icon_url || undefined,  // null을 undefined로 변환

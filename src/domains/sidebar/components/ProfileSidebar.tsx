@@ -1,7 +1,6 @@
 'use client';
 
 import { X, User, LogOut, UserCog, PenSquare } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
 import { useAuth } from '@/shared/context/AuthContext';
 import { useIcon } from '@/shared/context/IconContext';
 import UserProfile from './auth/UserProfile';
@@ -154,13 +153,14 @@ export default function ProfileSidebar({
           <span className="font-medium text-gray-900 dark:text-[#F0F0F0]">
             {user ? '프로필' : '로그인'}
           </span>
-          <Button
-            variant="ghost"
-            size="icon"
+          <button
+            type="button"
             onClick={onClose}
+            className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-[#EAEAEA] dark:hover:bg-[#333333] active:bg-[#EAEAEA] dark:active:bg-[#333333] transition-colors duration-150"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             <X className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-          </Button>
+          </button>
         </div>
 
         {/* 컨텐츠 영역 */}

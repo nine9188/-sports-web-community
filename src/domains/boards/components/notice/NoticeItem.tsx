@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { Calendar as CalendarIcon, Eye as EyeIcon } from 'lucide-react';
 import type { NoticeType } from '@/domains/boards/types/post';
 import { NoticeBadge } from './NoticeBadge';
-import UserIconComponent from '@/shared/components/UserIcon';
+import AuthorLink from '@/domains/user/components/AuthorLink';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 
@@ -28,10 +28,12 @@ export interface NoticeListPost {
   team_id?: string | number | null;
   league_id?: string | number | null;
   comment_count?: number;
+  author_id?: string;
   author_icon_url?: string | null;
   author_level?: number;
   author_nickname?: string;
-  profiles?: { nickname: string | null } | null;
+  author_public_id?: string | null;
+  profiles?: { nickname: string | null; public_id?: string | null; id?: string } | null;
   views?: number | null;
   likes?: number | null;
 }
@@ -139,15 +141,14 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
                 <div className="flex items-center overflow-hidden whitespace-nowrap">
                   <span className="truncate" style={{maxWidth: '80px'}}>{notice.board?.name || notice.board_name || '-'}</span>
                   <span className="mx-1 flex-shrink-0">|</span>
-                  <div className="flex items-center mr-0.5">
-                    <UserIconComponent
-                      iconUrl={notice.author_icon_url}
-                      level={notice.author_level || 1}
-                      size={20}
-                      alt={notice.author_nickname || '익명'}
-                    />
-                  </div>
-                  <span className="truncate" style={{maxWidth: '80px'}}>{notice.author_nickname || '익명'}</span>
+                  <AuthorLink
+                    nickname={notice.author_nickname || '익명'}
+                    publicId={notice.author_public_id || notice.profiles?.public_id}
+                    oddsUserId={notice.author_id || notice.profiles?.id}
+                    iconUrl={notice.author_icon_url}
+                    level={notice.author_level || 1}
+                    iconSize={20}
+                  />
                   <span className="mx-1 flex-shrink-0">|</span>
                   <span className="flex-shrink-0 flex items-center">
                     <CalendarIcon className="w-3 h-3 mr-0.5" />{formattedDate}
@@ -196,19 +197,15 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
 
       {/* 작성자 (아이콘 + 닉네임) */}
       <td className="py-2 px-3 text-left text-xs text-gray-500 dark:text-gray-400 align-middle">
-        <div className="flex items-center justify-start">
-          <div className="mr-0.5 flex items-center justify-center overflow-hidden">
-            <UserIconComponent
-              iconUrl={notice.author_icon_url}
-              level={notice.author_level || 1}
-              size={20}
-              alt={notice.author_nickname || '익명'}
-            />
-          </div>
-          <span className="truncate text-xs text-gray-600 dark:text-gray-400" title={notice.author_nickname || '익명'} style={{maxWidth: '100px'}}>
-            {notice.author_nickname || notice.profiles?.nickname || '익명'}
-          </span>
-        </div>
+        <AuthorLink
+          nickname={notice.author_nickname || notice.profiles?.nickname || '익명'}
+          publicId={notice.author_public_id || notice.profiles?.public_id}
+          oddsUserId={notice.author_id || notice.profiles?.id}
+          iconUrl={notice.author_icon_url}
+          level={notice.author_level || 1}
+          iconSize={20}
+          className="justify-start"
+        />
       </td>
 
       {/* 작성일 */}

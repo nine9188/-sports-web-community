@@ -46,7 +46,8 @@ export async function getNotices(boardId?: string): Promise<Post[]> {
           id,
           nickname,
           level,
-          icon_id
+          icon_id,
+          public_id
         ),
         boards (
           name,
@@ -106,6 +107,7 @@ export async function getNotices(boardId?: string): Promise<Post[]> {
         nickname?: string;
         level?: number;
         icon_id?: number | null;
+        public_id?: string | null;
       };
       boards?: {
         name?: string;
@@ -222,12 +224,14 @@ export async function getNotices(boardId?: string): Promise<Post[]> {
         team_id: board?.team_id || null,
         league_id: board?.league_id || null,
         author_nickname: profile?.nickname || '익명',
+        author_public_id: profile?.public_id || null,
         author_icon_url: iconUrl,
         author_level: userLevel,
         comment_count: notice.comments?.[0]?.count || 0,
         profiles: profile ? {
           id: profile.id,
           nickname: profile.nickname || '익명',
+          public_id: profile.public_id || null,
           icon_id: profile.icon_id,
           level: userLevel
         } : null,
@@ -281,7 +285,8 @@ export async function getGlobalNotices(): Promise<Post[]> {
           id,
           nickname,
           level,
-          icon_id
+          icon_id,
+          public_id
         ),
         boards (
           name,
@@ -349,7 +354,8 @@ export async function getBoardNotices(boardId: string): Promise<Post[]> {
           id,
           nickname,
           level,
-          icon_id
+          icon_id,
+          public_id
         ),
         boards (
           name,

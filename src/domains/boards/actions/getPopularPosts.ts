@@ -16,6 +16,7 @@ export interface PopularPost {
   author_level?: number;
   author_icon_id?: number | null;
   author_icon_url?: string | null;
+  author_public_id?: string | null;
   created_at: string;
   formattedDate?: string;
   team_id?: string | number | null;
@@ -76,7 +77,7 @@ export async function getBoardPopularPosts(boardId: string) {
       views,
       created_at,
       boards!inner(slug, name, team_id, league_id),
-      profiles!inner(id, nickname, level, icon_id)
+      profiles!inner(id, nickname, level, icon_id, public_id)
     `)
     .in('board_id', allBoardIds)
     .eq('is_deleted', false)
@@ -96,7 +97,7 @@ export async function getBoardPopularPosts(boardId: string) {
       views,
       created_at,
       boards!inner(slug, name, team_id, league_id),
-      profiles!inner(id, nickname, level, icon_id)
+      profiles!inner(id, nickname, level, icon_id, public_id)
     `)
     .in('board_id', allBoardIds)
     .eq('is_deleted', false)
@@ -185,6 +186,7 @@ export async function getBoardPopularPosts(boardId: string) {
         author_level: post.profiles.level,
         author_icon_id: iconId,
         author_icon_url: iconUrl,
+        author_public_id: post.profiles.public_id || null,
         created_at: post.created_at,
         formattedDate: formattedDate,
         team_id: post.boards.team_id,

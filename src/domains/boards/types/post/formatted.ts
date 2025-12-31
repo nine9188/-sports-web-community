@@ -5,6 +5,7 @@ export interface FormattedPost {
   title: string;
   author: string;
   author_id?: string;
+  author_public_id?: string | null;
   author_level?: number;
   author_icon_id?: number | null;
   author_icon_url?: string | null;

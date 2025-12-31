@@ -20,7 +20,8 @@ export async function getComments(postId: string): Promise<CommentsListResponse>
           id,
           nickname,
           icon_id,
-          level
+          level,
+          public_id
         )
       `)
       .eq('post_id', postId)

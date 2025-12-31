@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
-import UserIconComponent from '@/shared/components/UserIcon';
+import { AuthorLink } from '@/domains/user/components';
 import { Post } from '../../types';
 import { checkContentType } from '../../utils';
 
@@ -130,23 +130,15 @@ export function renderAuthor(
   containerClass: string = 'justify-start'
 ): React.ReactNode {
   return (
-    <div className={`flex items-center flex-shrink-0 ${containerClass}`}>
-      <div className="mr-0.5 flex-shrink-0">
-        <UserIconComponent
-          iconUrl={post.author_icon_url}
-          level={post.author_level || 1}
-          size={size}
-          alt={post.author_nickname || '익명'}
-        />
-      </div>
-      <span
-        className="text-xs text-gray-600 dark:text-gray-400 truncate"
-        title={post.author_nickname || '익명'}
-        style={{ maxWidth: '100px' }}
-      >
-        {post.author_nickname || '익명'}
-      </span>
-    </div>
+    <AuthorLink
+      nickname={post.author_nickname || '익명'}
+      publicId={post.author_public_id}
+      oddsUserId={post.author_id}
+      iconUrl={post.author_icon_url}
+      level={post.author_level || 1}
+      iconSize={size}
+      className={containerClass}
+    />
   );
 }
 

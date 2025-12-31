@@ -16,7 +16,7 @@ import {
   Linkedin as LinkedinIcon,
   Music2 as TiktokIcon,
 } from 'lucide-react';
-import UserIcon from '@/shared/components/UserIcon';
+import { AuthorLink } from '@/domains/user/components';
 import { checkContentType, extractFirstImageUrl } from './postlist/utils';
 
 interface Post {
@@ -32,6 +32,7 @@ interface Post {
   likes: number;
   author_nickname: string;
   author_id?: string;
+  author_public_id?: string | null;
   author_icon_id?: number | null;
   author_icon_url?: string | null;
   author_level?: number;
@@ -168,14 +169,14 @@ export default function PopularPostList({
                     </span>
                   </Link>
 
-                  <div className="flex items-center gap-1">
-                    <UserIcon
-                      iconUrl={post.author_icon_url}
-                      level={post.author_level || 1}
-                      size={16}
-                    />
-                    <span>{post.author_nickname}</span>
-                  </div>
+                  <AuthorLink
+                    nickname={post.author_nickname}
+                    publicId={post.author_public_id}
+                    oddsUserId={post.author_id}
+                    iconUrl={post.author_icon_url}
+                    level={post.author_level || 1}
+                    iconSize={16}
+                  />
                 </div>
 
                 {/* 데스크톱 구분선 */}

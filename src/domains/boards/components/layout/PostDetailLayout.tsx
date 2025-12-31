@@ -36,6 +36,8 @@ const MemoizedPostList = memo(PostList);
 interface PostAuthor {
   nickname: string | null;
   id: string;
+  public_id?: string | null;
+  level?: number;
   icon_id: number | null;
   icon_url: string | null;
 }
@@ -57,6 +59,8 @@ interface PostDetailLayoutProps {
     is_deleted?: boolean;
     profiles?: {
       nickname: string | null;
+      public_id?: string | null;
+      level?: number;
       icon_id: number | null;
       icon_url: string | null;
     };
@@ -151,6 +155,8 @@ export default function PostDetailLayout({
   const author: PostAuthor = {
     nickname: post.profiles?.nickname || null,
     id: post.user_id,
+    public_id: post.profiles?.public_id || null,
+    level: post.profiles?.level,
     icon_id: post.profiles?.icon_id || null,
     icon_url: post.profiles?.icon_url || null
   };

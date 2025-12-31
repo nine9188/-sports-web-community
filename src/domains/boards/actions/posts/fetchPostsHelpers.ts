@@ -237,7 +237,7 @@ export function formatPostData(
     is_hidden?: boolean;
     is_deleted?: boolean;
     is_notice?: boolean;
-    profiles?: { id?: string; nickname?: string; level?: number; icon_id?: number | null } | null;
+    profiles?: { id?: string; nickname?: string; level?: number; icon_id?: number | null; public_id?: string | null } | null;
     content?: Json;
   },
   boardsData: Record<string, { name: string; team_id?: number | null; league_id?: number | null; slug: string }>,
@@ -300,6 +300,7 @@ export function formatPostData(
     author_level: userLevel,
     author_icon_id: profile?.icon_id,
     author_icon_url: iconUrl,
+    author_public_id: profile?.public_id || null,
     views: post.views || 0,
     likes: post.likes || 0,
     comment_count: commentCountMap[post.id] || 0,

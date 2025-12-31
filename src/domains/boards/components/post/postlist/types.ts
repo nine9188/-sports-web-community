@@ -22,6 +22,7 @@ export interface Post {
   likes: number;
   author_nickname: string;
   author_id?: string;
+  author_public_id?: string;
   author_level?: number;
   author_icon_id?: number | null;
   author_icon_url?: string | null;

@@ -93,24 +93,24 @@ export const DesktopVirtualizedItem = React.memo(function DesktopVirtualizedItem
               </>
             )}
           </div>
-          <div className="mt-1 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
-            <div className="flex items-center overflow-hidden whitespace-nowrap">
-              {renderAuthor(post, 20, 'justify-start')}
-              <span className="mx-1 flex-shrink-0">|</span>
-              <span className="flex-shrink-0 flex items-center">
-                <CalendarIcon className="w-3 h-3 mr-0.5" />
-                {formattedDate}
-              </span>
-            </div>
-            <div className="flex items-center space-x-2 flex-shrink-0">
-              <span className="flex items-center">
-                <EyeIcon className="w-3 h-3 mr-0.5" />
-                {post.views || 0}
-              </span>
-              <span>추천 {post.likes || 0}</span>
-            </div>
-          </div>
         </Link>
+        <div className="mt-1 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
+          <div className="flex items-center overflow-hidden whitespace-nowrap">
+            {renderAuthor(post, 20, 'justify-start')}
+            <span className="mx-1 flex-shrink-0">|</span>
+            <span className="flex-shrink-0 flex items-center">
+              <CalendarIcon className="w-3 h-3 mr-0.5" />
+              {formattedDate}
+            </span>
+          </div>
+          <div className="flex items-center space-x-2 flex-shrink-0">
+            <span className="flex items-center">
+              <EyeIcon className="w-3 h-3 mr-0.5" />
+              {post.views || 0}
+            </span>
+            <span>추천 {post.likes || 0}</span>
+          </div>
+        </div>
       </div>
 
       {/* 글쓴이 컬럼 */}

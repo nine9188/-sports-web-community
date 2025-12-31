@@ -44,7 +44,7 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       // 게시글 상세 정보
       supabase
         .from('posts')
-        .select('*, profiles(id, nickname, icon_id, level), board:board_id(name)')
+        .select('*, profiles(id, nickname, icon_id, level, public_id), board:board_id(name)')
         .eq('board_id', board.id)
         .eq('post_number', postNum)
         .single(),
@@ -165,7 +165,7 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       // 게시글 목록
       supabase
         .from('posts')
-        .select('*, profiles(id, nickname, icon_id, level)', { count: 'exact' })
+        .select('*, profiles(id, nickname, icon_id, level, public_id)', { count: 'exact' })
         .in('board_id', boardFilter)
         .eq('is_hidden', false)
         .eq('is_deleted', false)

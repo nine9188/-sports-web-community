@@ -26,7 +26,7 @@ interface RawPostData {
   is_hidden?: boolean;
   is_deleted?: boolean;
   is_notice?: boolean;
-  profiles?: { id?: string; nickname?: string; level?: number; icon_id?: number | null };
+  profiles?: { id?: string; nickname?: string; level?: number; icon_id?: number | null; public_id?: string | null };
   content?: Json;
 }
 
@@ -45,6 +45,7 @@ export interface Post {
   author_level?: number;
   author_icon_id?: number | null;
   author_icon_url?: string | null;
+  author_public_id?: string | null;
   views: number;
   likes: number;
   comment_count: number;
@@ -145,7 +146,7 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
       .select(`
         id, title, created_at, updated_at, board_id, views, likes,
         post_number, user_id, is_hidden, is_deleted, is_notice,
-        profiles (id, nickname, level, icon_id),
+        profiles (id, nickname, level, icon_id, public_id),
         content
       `)
       .order('created_at', { ascending: false });

@@ -2,13 +2,16 @@
 
 import React from 'react';
 import UserIcon from '@/shared/components/UserIcon';
-import { formatDate } from '@/shared/utils/date'; // 공통 유틸로 분리 추천
+import { AuthorLink } from '@/domains/user/components';
+import { formatDate } from '@/shared/utils/date';
 
 interface PostHeaderProps {
   title: string;
   author: {
     nickname: string | null;
     id?: string;
+    public_id?: string;
+    level?: number;
     icon_id?: number | null;
     icon_url?: string | null;
   };
@@ -37,18 +40,14 @@ export default function PostHeader({
 
       {/* PC */}
       <div className="hidden md:flex flex-wrap items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-        <div className="flex items-center flex-shrink-0">
-          <div className="w-5 h-5 mr-1.5 relative rounded-full overflow-hidden flex-shrink-0">
-            <UserIcon
-              iconUrl={author.icon_url}
-              size={20}
-              alt={author.nickname || '사용자'}
-              className="object-cover"
-              priority
-            />
-          </div>
-          <span className="font-medium text-sm text-gray-900 dark:text-[#F0F0F0]">{author.nickname || '알 수 없음'}</span>
-        </div>
+        <AuthorLink
+          nickname={author.nickname || '알 수 없음'}
+          publicId={author.public_id}
+          oddsUserId={author.id}
+          iconUrl={author.icon_url}
+          level={author.level}
+          iconSize={20}
+        />
 
         <div className="flex items-center space-x-4 flex-shrink-0 ml-auto">
           <div className="flex items-center space-x-3">
@@ -63,18 +62,14 @@ export default function PostHeader({
       {/* Mobile */}
       <div className="md:hidden">
         <div className="flex flex-wrap items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-          <div className="flex items-center flex-shrink-0">
-            <div className="w-5 h-5 mr-1.5 relative rounded-full overflow-hidden flex-shrink-0">
-              <UserIcon
-                iconUrl={author.icon_url}
-                size={20}
-                alt={author.nickname || '사용자'}
-                className="object-cover"
-                priority
-              />
-            </div>
-            <span className="font-medium text-sm text-gray-900 dark:text-[#F0F0F0]">{author.nickname || '알 수 없음'}</span>
-          </div>
+          <AuthorLink
+            nickname={author.nickname || '알 수 없음'}
+            publicId={author.public_id}
+            oddsUserId={author.id}
+            iconUrl={author.icon_url}
+            level={author.level}
+            iconSize={20}
+          />
 
           <span className="flex-shrink-0">{formatDate(createdAt)}</span>
         </div>

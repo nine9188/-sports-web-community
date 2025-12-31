@@ -36,6 +36,7 @@ export interface Post {
   profiles?: {
     id?: string;
     nickname: string | null;
+    public_id?: string | null;
     icon_id: number | null;
     level?: number;
   } | null;

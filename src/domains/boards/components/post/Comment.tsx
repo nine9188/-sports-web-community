@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import Link from 'next/link';
+import { User } from 'lucide-react';
 import UserIcon from '@/shared/components/UserIcon';
 import { likeComment, dislikeComment } from '@/domains/boards/actions/comments/index';
 import { CommentType } from '@/domains/boards/types/post/comment';
@@ -19,11 +21,11 @@ interface CommentProps {
   isReply?: boolean;
 }
 
-export default function Comment({ 
-  comment, 
-  currentUserId, 
-  onUpdate, 
-  onDelete, 
+export default function Comment({
+  comment,
+  currentUserId,
+  onUpdate,
+  onDelete,
   onReply,
   isPostOwner = false,
   isReply = false
@@ -35,10 +37,37 @@ export default function Comment({
   const [userAction, setUserAction] = useState<'like' | 'dislike' | null>(comment.userAction || null);
   const [isLiking, setIsLiking] = useState(false);
   const [isDisliking, setIsDisliking] = useState(false);
+  const [isAuthorDropdownOpen, setIsAuthorDropdownOpen] = useState(false);
+  const authorDropdownRef = useRef<HTMLDivElement>(null);
 
   const isCommentOwner = currentUserId === comment.user_id;
   const isHidden = comment.is_hidden === true;
   const isDeleted = comment.is_deleted === true;
+
+  // 외부 클릭 시 작성자 드롭다운 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (authorDropdownRef.current && !authorDropdownRef.current.contains(event.target as Node)) {
+        setIsAuthorDropdownOpen(false);
+      }
+    };
+
+    if (isAuthorDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isAuthorDropdownOpen]);
+
+  const handleAuthorToggle = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (comment.profiles?.public_id) {
+      setIsAuthorDropdownOpen(prev => !prev);
+    }
+  }, [comment.profiles?.public_id]);
 
   useEffect(() => {
     setLikes(comment.likes || 0);
@@ -135,9 +164,33 @@ export default function Comment({
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center space-x-2 min-w-0">
-                <span className="font-medium text-sm truncate text-gray-900 dark:text-[#F0F0F0]">
-                  {comment.profiles?.nickname || '알 수 없음'}
-                </span>
+                {comment.profiles?.public_id ? (
+                  <div className="relative" ref={authorDropdownRef}>
+                    <button
+                      type="button"
+                      onClick={handleAuthorToggle}
+                      className="font-medium text-sm truncate text-gray-900 dark:text-[#F0F0F0] hover:underline cursor-pointer"
+                    >
+                      {comment.profiles?.nickname || '알 수 없음'}
+                    </button>
+                    {isAuthorDropdownOpen && (
+                      <div className="absolute left-0 top-full mt-1 z-50 min-w-[120px] bg-white dark:bg-[#2D2D2D] border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1">
+                        <Link
+                          href={`/user/${comment.profiles.public_id}`}
+                          onClick={() => setIsAuthorDropdownOpen(false)}
+                          className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] flex items-center gap-2"
+                        >
+                          <User className="w-4 h-4" />
+                          프로필 보기
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <span className="font-medium text-sm truncate text-gray-900 dark:text-[#F0F0F0]">
+                    {comment.profiles?.nickname || '알 수 없음'}
+                  </span>
+                )}
                 {isPostOwner && isCommentOwner && (
                   <span className="text-xs bg-gray-100 dark:bg-[#333333] text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full">작성자</span>
                 )}

@@ -135,9 +135,9 @@
     backdrop-filter: blur(8px);
   }
   
-  /* 드롭다운 메뉴에 대한 전역 스타일 */
+  /* 드롭다운 메뉴에 대한 전역 스타일 - 배경 투명 */
   [data-radix-popper-content-wrapper] {
-    @apply bg-white dark:bg-slate-950 !important;
+    background: transparent !important;
   }
   
   /* 드롭다운 메뉴 항목 스타일 */
