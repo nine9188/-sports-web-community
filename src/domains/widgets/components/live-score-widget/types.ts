@@ -16,6 +16,8 @@ export interface Match {
   };
   status: string; // 'FT', 'LIVE', 'NS', 'HT' etc
   elapsed?: number; // 경과 시간 (분)
+  dateLabel?: 'today' | 'tomorrow'; // 오늘/내일 구분
+  kickoffTime?: string; // 경기 시작 시간 (HH:mm)
 }
 
 // 리그 데이터 타입
@@ -25,6 +27,7 @@ export interface League {
   icon?: string;
   logo?: string;
   leagueIdNumber?: number;
+  dateLabel?: 'today' | 'tomorrow'; // 오늘/내일 구분
   matches: Match[];
 }
 

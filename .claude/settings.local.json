@@ -35,7 +35,11 @@
       "Bash(find:*)",
       "Bash(timeout 20 npm run dev:*)",
       "Bash(grep:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "mcp__supabase__get_logs",
+      "mcp__supabase__list_migrations",
+      "Bash(npm install:*)",
+      "Bash(timeout 30 npm run dev)"
     ]
   },
   "enableAllProjectMcpServers": true,

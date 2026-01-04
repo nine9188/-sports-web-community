@@ -9,7 +9,7 @@ import { User, Mail, Clock } from 'lucide-react';
 interface AccountInfo {
   nickname: string;
   username?: string;
-  full_name?: string;
+  maskedUsername?: string;
   lastSignInAt?: string;
 }
 
@@ -19,25 +19,25 @@ function AccountFoundContent() {
   const router = useRouter();
   const type = searchParams?.get('type') || 'id';
   const [accountInfo, setAccountInfo] = useState<AccountInfo | null>(null);
-  
+
   useEffect(() => {
     // URL 파라미터가 올바른지 확인
     if (type !== 'id' && type !== 'password') {
       router.push('/help/account-recovery');
       return;
     }
-    
+
     // 아이디 찾기 결과 표시
     if (type === 'id') {
       const username = searchParams?.get('username');
-      const fullName = searchParams?.get('fullName');
+      const maskedUsername = searchParams?.get('maskedUsername');
       const lastSignInAt = searchParams?.get('lastSignInAt');
-      
+
       if (username) {
         setAccountInfo({
           nickname: username,
           username,
-          full_name: fullName || '',
+          maskedUsername: maskedUsername || '',
           lastSignInAt: lastSignInAt || undefined
         });
       } else {
@@ -53,16 +53,16 @@ function AccountFoundContent() {
       const date = new Date(dateString);
       const now = new Date();
       const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-      
+
       if (diffInDays === 0) {
-        return `오늘 ${date.toLocaleTimeString('ko-KR', { 
-          hour: '2-digit', 
-          minute: '2-digit' 
+        return `오늘 ${date.toLocaleTimeString('ko-KR', {
+          hour: '2-digit',
+          minute: '2-digit'
         })}`;
       } else if (diffInDays === 1) {
-        return `어제 ${date.toLocaleTimeString('ko-KR', { 
-          hour: '2-digit', 
-          minute: '2-digit' 
+        return `어제 ${date.toLocaleTimeString('ko-KR', {
+          hour: '2-digit',
+          minute: '2-digit'
         })}`;
       } else if (diffInDays < 7) {
         return `${diffInDays}일 전`;
@@ -82,12 +82,12 @@ function AccountFoundContent() {
     <div className="max-w-md w-full">
       {/* 고정 헤더 */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-left mb-2">
+        <h2 className="text-2xl font-bold text-left mb-2 text-gray-900 dark:text-[#F0F0F0]">
           {type === 'id' ? '아이디 찾기 완료' : '재설정 링크 발송 완료'}
         </h2>
-        <p className="text-gray-600 mb-8 text-left">
-          {type === 'id' 
-            ? '회원님의 계정 정보를 찾았습니다.' 
+        <p className="text-gray-600 dark:text-gray-400 mb-8 text-left">
+          {type === 'id'
+            ? '회원님의 계정 정보를 찾았습니다.'
             : '등록된 이메일로 비밀번호 재설정 링크를 발송했습니다.'
           }
         </p>
@@ -96,78 +96,78 @@ function AccountFoundContent() {
       {/* 콘텐츠 영역 - 최소 높이 설정 */}
       <div className="min-h-[400px]">
         {type === 'id' && accountInfo && (
-          
+
           <div className="space-y-6">
-            <div className="p-6 bg-slate-50 rounded-lg border">
+            <div className="p-6 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg border border-black/7 dark:border-white/10">
               <div className="flex items-center mb-4">
-                <User className="h-5 w-5 text-slate-600 mr-2" />
-                <span className="text-sm font-medium text-gray-600">찾은 아이디</span>
+                <User className="h-5 w-5 text-gray-500 dark:text-gray-400 mr-2" />
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">찾은 아이디</span>
               </div>
-              <div className="text-xl font-bold text-slate-800 mb-4">
+              <div className="text-xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-4">
                 {accountInfo.nickname}
               </div>
-              
+
               {accountInfo.lastSignInAt && (
-                <div className="pt-4 border-t border-slate-200">
+                <div className="pt-4 border-t border-black/5 dark:border-white/10">
                   <div className="flex items-center mb-2">
-                    <Clock className="h-4 w-4 text-slate-500 mr-2" />
-                    <span className="text-sm font-medium text-gray-600">마지막 로그인</span>
+                    <Clock className="h-4 w-4 text-gray-500 dark:text-gray-400 mr-2" />
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">마지막 로그인</span>
                   </div>
-                  <div className="text-sm text-slate-600">
+                  <div className="text-sm text-gray-700 dark:text-gray-300">
                     {formatLastSignIn(accountInfo.lastSignInAt)}
                   </div>
                 </div>
               )}
             </div>
-            
+
             <div className="space-y-3">
               <Link href="/signin" className="block">
-                <button className="w-full py-3 px-4 bg-slate-700 hover:bg-slate-800 text-white font-medium rounded-md transition-colors">
+                <button className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white font-medium rounded-md transition-colors">
                   로그인하기
                 </button>
               </Link>
               <Link href="/help/account-recovery?tab=password" className="block">
-                <button className="w-full py-3 px-4 border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium rounded-md transition-colors">
+                <button className="w-full py-3 px-4 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#F5F5F5] dark:hover:bg-[#262626] font-medium rounded-md transition-colors">
                   비밀번호 찾기
                 </button>
               </Link>
             </div>
           </div>
         )}
-      
+
         {type === 'password' && (
-          
+
           <div className="space-y-6">
-            <div className="p-6 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="p-6 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg border border-black/7 dark:border-white/10">
               <div className="flex items-center mb-3">
-                <Mail className="h-5 w-5 text-blue-600 mr-2" />
-                <span className="text-sm font-medium text-blue-800">이메일 확인 필요</span>
+                <Mail className="h-5 w-5 text-gray-500 dark:text-gray-400 mr-2" />
+                <span className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">이메일 확인 필요</span>
               </div>
-              <p className="text-sm text-blue-700">
+              <p className="text-sm text-gray-700 dark:text-gray-300">
                 이메일을 확인하여 비밀번호를 재설정해주세요.<br/>
                 링크는 30분간 유효합니다.
               </p>
             </div>
-            
+
             <div className="space-y-3">
               <Link href="/signin" className="block">
-                <button className="w-full py-3 px-4 bg-slate-700 hover:bg-slate-800 text-white font-medium rounded-md transition-colors">
+                <button className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white font-medium rounded-md transition-colors">
                   로그인하기
                 </button>
               </Link>
               <Link href="/help/account-recovery" className="block">
-                <button className="w-full py-3 px-4 border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium rounded-md transition-colors">
+                <button className="w-full py-3 px-4 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#F5F5F5] dark:hover:bg-[#262626] font-medium rounded-md transition-colors">
                   계정 찾기
                 </button>
               </Link>
             </div>
           </div>
         )}
-      
+
         <div className="mt-8 text-center">
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             처음 방문이신가요?{' '}
-            <Link href="/signup" className="text-slate-600 hover:text-slate-800 hover:underline font-medium">
+            <Link href="/signup" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline font-medium">
               회원가입
             </Link>
           </p>
@@ -183,13 +183,13 @@ export default function AccountFoundPage() {
     <Suspense fallback={
       <div className="max-w-md w-full">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-48 mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-3/4 mb-8"></div>
+          <div className="h-8 bg-[#F5F5F5] dark:bg-[#262626] rounded w-48 mb-2"></div>
+          <div className="h-4 bg-[#F5F5F5] dark:bg-[#262626] rounded w-full mb-2"></div>
+          <div className="h-4 bg-[#F5F5F5] dark:bg-[#262626] rounded w-3/4 mb-8"></div>
           <div className="space-y-4">
-            <div className="h-20 bg-gray-200 rounded"></div>
-            <div className="h-12 bg-gray-200 rounded"></div>
-            <div className="h-12 bg-gray-200 rounded"></div>
+            <div className="h-20 bg-[#F5F5F5] dark:bg-[#262626] rounded"></div>
+            <div className="h-12 bg-[#F5F5F5] dark:bg-[#262626] rounded"></div>
+            <div className="h-12 bg-[#F5F5F5] dark:bg-[#262626] rounded"></div>
           </div>
         </div>
       </div>
@@ -197,4 +197,4 @@ export default function AccountFoundPage() {
       <AccountFoundContent />
     </Suspense>
   );
-} 
+}

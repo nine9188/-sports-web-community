@@ -12,6 +12,9 @@ export interface ShopCategory {
 // 아이템 등급 타입 (Phase 3)
 export type ItemTier = 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
 
+// 소모품 타입
+export type ConsumableType = 'nickname_change';
+
 // 등급별 라벨
 export const TIER_LABELS: Record<ItemTier, string> = {
   common: '일반',
@@ -59,9 +62,23 @@ export interface ShopItem {
   is_default: boolean | null
   is_active: boolean | null
   created_at: string | null
+  // 소모품 관련 필드
+  is_consumable: boolean | null
+  consumable_type: ConsumableType | null
   category?: {
     name: string
   } | null
+}
+
+// 아이템 사용 기록
+export interface ItemUsageLog {
+  id: string
+  user_id: string
+  item_id: number
+  user_item_id: string
+  used_at: string
+  usage_type: ConsumableType
+  usage_details: Record<string, unknown>
 }
 
 export interface UserItem {

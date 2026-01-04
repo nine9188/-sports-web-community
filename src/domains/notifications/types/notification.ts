@@ -12,7 +12,8 @@ export type NotificationType =
   | 'admin_notice'   // 관리자 공지
   | 'welcome'        // 회원가입 환영 알림
   | 'hot_post'       // 내 게시글 HOT 진입
-  | 'profile_update';// 프로필 변경 (자기 알림)
+  | 'profile_update' // 프로필 변경 (자기 알림)
+  | 'suspension';    // 계정 정지 알림
 
 export interface Notification {
   id: string;
@@ -51,6 +52,10 @@ export interface NotificationMetadata {
   changedAt?: string;
   ipAddress?: string;
   userAgent?: string;
+  // 계정 정지 관련
+  suspension_reason?: string;
+  suspended_until?: string;
+  suspension_days?: number;
   [key: string]: unknown;
 }
 

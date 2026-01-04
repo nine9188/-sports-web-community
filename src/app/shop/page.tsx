@@ -45,6 +45,7 @@ export default async function ShopPage({ searchParams }: Props) {
   const filterCategories = rootCategoriesRaw.map((c) => ({
     id: c.id,
     name: c.name,
+    display_order: c.display_order,
     subcategories: (childrenByParent.get(c.id) ?? []).sort((a, b) => a.name.localeCompare(b.name)),
   }));
 

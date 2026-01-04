@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { toast } from 'react-toastify'
 import { ShopItem } from '../types'
 import { purchaseItem } from '../actions/actions'
@@ -16,6 +17,7 @@ export function useShopItems({
   initialUserPoints,
   userId
 }: UseShopItemsProps) {
+  const router = useRouter()
   const [userItems, setUserItems] = useState<number[]>(initialUserItems)
   const [points, setPoints] = useState<number>(initialUserPoints)
   const [selectedItem, setSelectedItem] = useState<ShopItem | null>(null)
@@ -43,10 +45,18 @@ export function useShopItems({
       
       // 구매 성공 시 보유 아이템 목록 업데이트
       setUserItems(prev => [...prev, selectedItem.id])
-      
+
       // 포인트 차감
       setPoints(prev => prev - selectedItem.price)
-      
+
+      // 닉네임 변경권 구매 시 프로필 페이지로 이동
+      if (selectedItem.consumable_type === 'nickname_change') {
+        toast.success('닉네임 변경권을 구매했습니다! 프로필에서 사용하세요.')
+        setSelectedItem(null)
+        router.push('/settings/profile')
+        return
+      }
+
       toast.success('아이템 구매가 완료되었습니다!')
       setSelectedItem(null)
     } catch (error: unknown) {

@@ -45,10 +45,10 @@ export async function signIn(
 
     const supabase = await getSupabaseAction()
 
-    // 3. 아이디로 이메일 조회
+    // 3. 아이디로 이메일 및 인증 상태 조회
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('email')
+      .select('id, email, email_confirmed')
       .eq('username', username)
       .single()
 
@@ -72,7 +72,28 @@ export async function signIn(
       password,
     })
 
-    if (error || !data.user || !data.session) {
+    // 5. 이메일 미인증 에러 체크 (Supabase가 먼저 반환하는 경우)
+    if (error) {
+      const errorMsg = error.message?.toLowerCase() || ''
+
+      // 이메일 미인증 에러인 경우
+      if (errorMsg.includes('email not confirmed') || errorMsg.includes('email_not_confirmed')) {
+        await logAuthEvent(
+          'LOGIN_FAILED',
+          `로그인 실패: 이메일 미인증 ${username}`,
+          undefined,
+          false,
+          { username, reason: 'email_not_confirmed' }
+        )
+
+        return {
+          success: false,
+          error: '이메일 인증이 필요합니다. 가입 시 발송된 인증 메일을 확인해주세요.',
+          needsEmailConfirmation: true
+        }
+      }
+
+      // 그 외 에러 (비밀번호 오류 등)
       await recordAttempt(username, 'invalid_password')
 
       await logAuthEvent(
@@ -80,16 +101,51 @@ export async function signIn(
         `로그인 실패: 잘못된 비밀번호 ${username}`,
         undefined,
         false,
-        { username, reason: 'invalid_password', error: error?.message }
+        { username, reason: 'invalid_password', error: error.message }
       )
 
       return { success: false, error: '아이디 또는 비밀번호가 올바르지 않습니다.' }
     }
 
-    // 5. 로그인 성공 처리
+    if (!data.user || !data.session) {
+      return { success: false, error: '로그인 처리 중 오류가 발생했습니다.' }
+    }
+
+    // 6. 이메일 인증 여부 추가 확인 (혹시 Supabase에서 에러 없이 통과한 경우)
+    if (!data.user.email_confirmed_at) {
+      // 로그아웃 처리 (이메일 미인증 사용자는 세션 유지 안함)
+      await supabase.auth.signOut()
+
+      await logAuthEvent(
+        'LOGIN_FAILED',
+        `로그인 실패: 이메일 미인증 ${username}`,
+        data.user.id,
+        false,
+        { username, reason: 'email_not_confirmed' }
+      )
+
+      return {
+        success: false,
+        error: '이메일 인증이 필요합니다. 가입 시 발송된 인증 메일을 확인해주세요.',
+        needsEmailConfirmation: true
+      }
+    }
+
+    // 7. profiles에 이메일 인증 상태 동기화 (트리거가 미처 처리 못한 경우)
+    if (!profile.email_confirmed && data.user.email_confirmed_at) {
+      await supabase
+        .from('profiles')
+        .update({
+          email_confirmed: true,
+          email_confirmed_at: data.user.email_confirmed_at
+        })
+        .eq('id', profile.id)
+    }
+
+    // 8. 로그인 성공 처리
     await clearAttempts(username)
 
-    // 6. 일일 출석 기록 및 보상 (비동기로 처리, 실패해도 로그인은 성공)
+    // 9. 일일 출석 기록 및 보상 (비동기로 처리, 실패해도 로그인은 성공)
     recordDailyLogin(data.user.id).catch(err => {
       console.error('출석 기록 오류:', err)
     })

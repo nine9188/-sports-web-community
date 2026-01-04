@@ -34,7 +34,12 @@ const STATUS_MAP: Record<string, { label: string; isLive: boolean }> = {
 };
 
 // 상태 정보 가져오기
-function getStatusInfo(status: string, elapsed?: number): { label: string; isLive: boolean } {
+function getStatusInfo(
+  status: string,
+  elapsed?: number,
+  kickoffTime?: string,
+  dateLabel?: 'today' | 'tomorrow'
+): { label: string; isLive: boolean; subLabel?: string } {
   // 진행 중인 경기에서 경과 시간이 있으면 시간 표시
   const liveStatuses = ['LIVE', '1H', '2H', 'ET', 'P', 'IN_PLAY'];
   if (liveStatuses.includes(status) && elapsed && elapsed > 0) {
@@ -42,7 +47,16 @@ function getStatusInfo(status: string, elapsed?: number): { label: string; isLiv
   }
   // STATUS_MAP에서 확인
   if (STATUS_MAP[status]) {
-    return STATUS_MAP[status];
+    const statusInfo = STATUS_MAP[status];
+    // 예정 경기인 경우 시간 표시
+    if (status === 'NS' && kickoffTime) {
+      return {
+        label: kickoffTime,
+        isLive: false,
+        subLabel: dateLabel === 'tomorrow' ? '내일' : undefined
+      };
+    }
+    return statusInfo;
   }
   // 숫자로만 이루어진 경우 시간 표시 (예: "45", "90+3")
   if (/^\d+(\+\d+)?$/.test(status)) {
@@ -93,7 +107,7 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
         {/* 위젯 헤더 */}
         <div className="h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10">
           <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
-            중요 경기
+            오늘·내일 경기
           </span>
           <Link
             href="/livescore/football"
@@ -105,7 +119,7 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
         {/* Empty State */}
         <div className="h-14 flex items-center justify-center px-4 text-center">
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            오늘은 중요 경기가 없습니다
+            예정된 경기가 없습니다
           </p>
         </div>
       </div>
@@ -128,7 +142,7 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
             {isFirst && (
               <div className="h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10">
                 <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
-                  중요 경기
+                  오늘·내일 경기
                 </span>
                 <div className="flex items-center gap-3">
                   {/* 전체 펼치기/접기 버튼 */}
@@ -180,6 +194,11 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
                 <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
                   {league.name}
                 </span>
+                {league.dateLabel === 'tomorrow' && (
+                  <span className="text-[10px] font-medium text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-1.5 py-0.5 rounded">
+                    내일
+                  </span>
+                )}
               </div>
 
               <div className="flex items-center gap-3">
@@ -208,17 +227,24 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
                   >
                     {/* 경기 상태 */}
                     {(() => {
-                      const statusInfo = getStatusInfo(match.status, match.elapsed);
+                      const statusInfo = getStatusInfo(match.status, match.elapsed, match.kickoffTime, match.dateLabel);
                       return (
-                        <div className="w-14 flex-shrink-0 flex items-center">
+                        <div className="w-16 flex-shrink-0 flex flex-col items-start justify-center">
                           {statusInfo.isLive ? (
                             <span className="text-[10px] font-bold text-white bg-red-500 px-1.5 py-1 rounded animate-pulse whitespace-nowrap">
                               {statusInfo.label}
                             </span>
                           ) : (
-                            <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400 bg-[#F5F5F5] dark:bg-[#262626] px-1.5 py-1 rounded whitespace-nowrap">
-                              {statusInfo.label}
-                            </span>
+                            <>
+                              {statusInfo.subLabel && (
+                                <span className="text-[9px] font-medium text-blue-600 dark:text-blue-400 mb-0.5">
+                                  {statusInfo.subLabel}
+                                </span>
+                              )}
+                              <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400 bg-[#F5F5F5] dark:bg-[#262626] px-1.5 py-1 rounded whitespace-nowrap">
+                                {statusInfo.label}
+                              </span>
+                            </>
                           )}
                         </div>
                       );

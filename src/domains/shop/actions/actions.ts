@@ -88,8 +88,9 @@ export async function getCategoryItems(categoryIds: number[]) {
     .select('*, category:shop_categories(name)')
     .in('category_id', categoryIds)
     .eq('is_active', true)
+    .order('is_consumable', { ascending: false, nullsFirst: false })
     .order('price', { ascending: true })
-  
+
   if (error) throw new Error('아이템 목록 조회 실패')
   return data || []
 }
@@ -114,6 +115,7 @@ export async function getCategoryItemsPaginated(
     .select('*, category:shop_categories(name)', { count: 'exact' })
     .in('category_id', categoryIds)
     .eq('is_active', true)
+    .order('is_consumable', { ascending: false, nullsFirst: false })
     .order('price', { ascending: true })
     .range(from, to)
 

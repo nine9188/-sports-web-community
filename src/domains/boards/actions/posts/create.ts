@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { rewardUserActivity, getActivityTypeValues } from '@/shared/actions/activity-actions';
+import { checkReferralMilestone } from '@/shared/actions/referral-actions';
 import { checkSuspensionGuard } from '@/shared/utils/suspension-guard';
 import { logUserAction, logError } from '@/shared/actions/log-actions';
 import { getSupabaseAction } from '@/shared/lib/supabase/server';
@@ -101,6 +102,17 @@ async function createPostInternal(params: {
 
       const activityTypes = await getActivityTypeValues();
       await rewardUserActivity(userId, activityTypes.POST_CREATION, data.id);
+
+      // 첫 게시글 마일스톤 체크 (추천 시스템)
+      const { count: postCount } = await supabase
+        .from('posts')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId);
+
+      if (postCount === 1) {
+        // 첫 게시글이면 마일스톤 체크
+        await checkReferralMilestone(userId, 'first_post');
+      }
     } catch (logErr) {
       console.error('게시글 생성 로그/보상 처리 실패:', logErr);
     }

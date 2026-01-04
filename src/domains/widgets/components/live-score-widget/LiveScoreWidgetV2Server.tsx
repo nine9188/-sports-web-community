@@ -16,8 +16,24 @@ interface MultiDayMatchesResponse {
   error?: string;
 }
 
+// 경기 시작 시간 추출 (HH:mm 형식)
+function getKickoffTime(dateString?: string): string | undefined {
+  if (!dateString) return undefined;
+  try {
+    const date = new Date(dateString);
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  } catch {
+    return undefined;
+  }
+}
+
 // 리그별로 경기를 그룹화하는 함수
-function groupMatchesByLeague(matches: FootballMatchData[]): League[] {
+function groupMatchesByLeague(
+  matches: FootballMatchData[],
+  dateLabel: 'today' | 'tomorrow'
+): League[] {
   const leagueMap = new Map<number, FootballMatchData[]>();
 
   matches.forEach(match => {
@@ -35,11 +51,12 @@ function groupMatchesByLeague(matches: FootballMatchData[]): League[] {
     const firstMatch = matches[0];
 
     return {
-      id: String(leagueId),
+      id: `${leagueId}-${dateLabel}`,
       name: leagueInfo?.nameKo || firstMatch.league?.name || '리그',
       icon: '⚽',
       logo: firstMatch.league?.logo,
-      leagueIdNumber: leagueId, // 숫자 ID 추가
+      leagueIdNumber: leagueId,
+      dateLabel,
       matches: matches.map(match => {
         const homeTeamInfo = match.teams?.home?.id ? getTeamById(match.teams.home.id) : null;
         const awayTeamInfo = match.teams?.away?.id ? getTeamById(match.teams.away.id) : null;
@@ -62,6 +79,8 @@ function groupMatchesByLeague(matches: FootballMatchData[]): League[] {
           },
           status: match.status?.code || 'NS',
           elapsed: match.status?.elapsed || 0,
+          dateLabel,
+          kickoffTime: getKickoffTime(match.fixture?.date),
         };
       }),
     };
@@ -76,11 +95,15 @@ export default async function LiveScoreWidgetV2Server() {
     const result = await fetchBigMatches() as MultiDayMatchesResponse;
 
     if (result.success && result.data) {
-      // 오늘 경기만 가져오기 (또는 전체 경기)
+      // 오늘 + 내일 경기 가져오기
       const todayMatches = result.data.today?.matches || [];
+      const tomorrowMatches = result.data.tomorrow?.matches || [];
 
-      // 리그별로 그룹화
-      leagues = groupMatchesByLeague(todayMatches);
+      // 리그별로 그룹화 (오늘 먼저, 내일 그 다음)
+      const todayLeagues = groupMatchesByLeague(todayMatches, 'today');
+      const tomorrowLeagues = groupMatchesByLeague(tomorrowMatches, 'tomorrow');
+
+      leagues = [...todayLeagues, ...tomorrowLeagues];
     } else {
       console.warn('⚠️ LiveScoreWidgetV2: API 응답이 성공하지 않음', result.error);
     }

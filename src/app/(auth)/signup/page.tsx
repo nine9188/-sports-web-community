@@ -7,7 +7,8 @@ import Link from 'next/link';
 import { useAuth } from '@/shared/context/AuthContext';
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { signUp } from '@/domains/auth/actions';
-import { AlertCircle, Check, Eye, EyeOff } from 'lucide-react';
+import { validateReferralCode } from '@/shared/actions/referral-actions';
+import { AlertCircle, Check, Eye, EyeOff, Gift } from 'lucide-react';
 import KakaoLoginButton from '@/domains/auth/components/KakaoLoginButton';
 import TurnstileWidget from '@/shared/components/TurnstileWidget';
 import { TermsContent, PrivacyContent } from '@/shared/components/legal';
@@ -53,6 +54,14 @@ export default function SignupPage() {
   const [nicknameChecked, setNicknameChecked] = useState(false);
   const [nicknameMessage, setNicknameMessage] = useState('');
   const [nicknameAvailable, setNicknameAvailable] = useState(false);
+
+  // 추천 코드 상태
+  const [referralCode, setReferralCode] = useState('');
+  const [isCheckingReferral, setIsCheckingReferral] = useState(false);
+  const [referralChecked, setReferralChecked] = useState(false);
+  const [referralMessage, setReferralMessage] = useState('');
+  const [referralValid, setReferralValid] = useState(false);
+  const [referrerNickname, setReferrerNickname] = useState('');
 
   // 약관 동의 상태
   const [agreeTerms, setAgreeTerms] = useState(false);
@@ -331,7 +340,7 @@ export default function SignupPage() {
       setNicknameMessage('닉네임을 입력해주세요.');
       return;
     }
-    
+
     // 유효성 검사 먼저 실행
     const validationError = validateNickname(nickname);
     if (validationError) {
@@ -339,37 +348,71 @@ export default function SignupPage() {
       setNicknameAvailable(false);
       return;
     }
-    
+
     try {
       setIsCheckingNickname(true);
-      
+
       // Supabase 클라이언트 생성
       const supabase = getSupabaseBrowser();
-      
+
       // 프로필 테이블에서 해당 nickname으로 검색
       const { data, error } = await supabase
         .from('profiles')
         .select('id')
         .eq('nickname', nickname);
-      
+
       if (error) {
         console.error('닉네임 조회 오류:', error);
         throw error;
       }
-      
+
       // 결과 확인 및 상태 업데이트
       const isAvailable = !data || data.length === 0;
-      
+
       setNicknameChecked(true);
       setNicknameAvailable(isAvailable);
       setNicknameMessage(isAvailable ? '사용 가능한 닉네임입니다.' : '이미 사용 중인 닉네임입니다.');
-      
+
     } catch (error) {
       console.error('닉네임 중복 확인 오류:', error);
       setNicknameMessage('닉네임 확인 중 오류가 발생했습니다.');
       setNicknameAvailable(false);
     } finally {
       setIsCheckingNickname(false);
+    }
+  };
+
+  // 추천 코드 확인
+  const checkReferralCode = async () => {
+    if (!referralCode.trim()) {
+      // 추천 코드 미입력 시 건너뛰기 허용
+      setReferralChecked(false);
+      setReferralValid(false);
+      setReferralMessage('');
+      setReferrerNickname('');
+      return;
+    }
+
+    try {
+      setIsCheckingReferral(true);
+
+      const result = await validateReferralCode(referralCode.trim());
+
+      setReferralChecked(true);
+      setReferralValid(result.valid);
+      setReferrerNickname(result.referrerNickname || '');
+      setReferralMessage(
+        result.valid
+          ? '올바른 추천코드입니다.'
+          : result.error || '유효하지 않은 추천 코드입니다.'
+      );
+
+    } catch (error) {
+      console.error('추천 코드 확인 오류:', error);
+      setReferralMessage('추천 코드 확인 중 오류가 발생했습니다.');
+      setReferralValid(false);
+    } finally {
+      setIsCheckingReferral(false);
     }
   };
 
@@ -397,7 +440,8 @@ export default function SignupPage() {
       const result = await signUp(email, password, {
         username,
         full_name: fullName,
-        nickname
+        nickname,
+        ...(referralValid && referralCode.trim() ? { referral_code: referralCode.trim() } : {})
       }, captchaToken);
       
       if (result.success) {
@@ -720,15 +764,16 @@ export default function SignupPage() {
                   <p className={`text-sm mt-1 flex items-center ${
                     nicknameAvailable ? 'text-green-600' : 'text-red-600'
                   }`}>
-                    {nicknameAvailable ? 
-                      <Check className="h-4 w-4 mr-1" /> : 
+                    {nicknameAvailable ?
+                      <Check className="h-4 w-4 mr-1" /> :
                       <AlertCircle className="h-4 w-4 mr-1" />
                     }
                     {nicknameMessage}
                   </p>
                 )}
+
                 {!showPasswordStep && (
-                  <div className="mt-2">
+                  <div className="mt-4">
                     <button
                       type="button"
                       onClick={handleNicknameSubmit}
@@ -742,7 +787,7 @@ export default function SignupPage() {
               </div>
             </div>
           )}
-          
+
           {/* 비밀번호 입력 단계 */}
           {showPasswordStep && (
             <div className="space-y-4">
@@ -846,11 +891,61 @@ export default function SignupPage() {
                   </p>
                 )}
               </div>
-              
 
-              
+              {/* 추천 코드 입력 (선택) */}
+              <div className="p-4 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg border border-black/7 dark:border-white/10">
+                <div className="flex items-center gap-2 mb-2">
+                  <Gift className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    추천 코드 <span className="text-gray-500 dark:text-gray-400 font-normal">(선택)</span>
+                  </label>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                  친구의 추천 코드가 있다면 입력하세요. 가입 시 300P + 50XP를 받을 수 있습니다!
+                </p>
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={referralCode}
+                    onChange={(e) => {
+                      setReferralCode(e.target.value.toLowerCase());
+                      setReferralChecked(false);
+                      setReferralValid(false);
+                      setReferralMessage('');
+                      setReferrerNickname('');
+                    }}
+                    className={`flex-1 p-3 border rounded-md focus:outline-none transition-colors ${
+                      referralChecked && !referralValid && referralCode.trim() ? 'border-red-500' :
+                      referralChecked && referralValid ? 'border-green-500' :
+                      'border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
+                    }`}
+                    placeholder="예: a1b2c3d4"
+                    maxLength={8}
+                  />
+                  <button
+                    type="button"
+                    onClick={checkReferralCode}
+                    disabled={isCheckingReferral || !referralCode.trim()}
+                    className="px-4 py-2 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md disabled:opacity-50"
+                  >
+                    {isCheckingReferral ? '확인 중...' : '확인'}
+                  </button>
+                </div>
+                {referralMessage && (
+                  <p className={`text-sm mt-2 flex items-center ${
+                    referralValid ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {referralValid ?
+                      <Check className="h-4 w-4 mr-1" /> :
+                      <AlertCircle className="h-4 w-4 mr-1" />
+                    }
+                    {referralMessage}
+                  </p>
+                )}
+              </div>
+
               <div className="mt-2">
-                <button 
+                <button
                   type="submit"
                   disabled={isLoading || !passwordValid || !confirmPasswordValid || !emailValid || !usernameChecked || !usernameAvailable || !nicknameChecked || !nicknameAvailable}
                   className="w-full p-3 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md transition-colors disabled:opacity-50 mt-4"

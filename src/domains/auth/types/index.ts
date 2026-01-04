@@ -14,6 +14,7 @@ export interface SignInResponse {
     }
   }
   error?: string
+  needsEmailConfirmation?: boolean
 }
 
 /**

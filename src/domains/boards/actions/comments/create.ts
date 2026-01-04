@@ -3,6 +3,7 @@
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { CommentType } from '../../types/post/comment';
 import { rewardUserActivity, getActivityTypeValues } from '@/shared/actions/activity-actions';
+import { checkReferralMilestone } from '@/shared/actions/referral-actions';
 import { checkSuspensionGuard } from '@/shared/utils/suspension-guard';
 import { logUserAction } from '@/shared/actions/log-actions';
 import { CommentActionResponse } from './utils';
@@ -108,6 +109,17 @@ export async function createComment({
     try {
       const activityTypes = await getActivityTypeValues();
       await rewardUserActivity(user.id, activityTypes.COMMENT_CREATION, data.id);
+
+      // 첫 댓글 마일스톤 체크 (추천 시스템)
+      const { count: commentCount } = await supabase
+        .from('comments')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      if (commentCount === 1) {
+        // 첫 댓글이면 마일스톤 체크
+        await checkReferralMilestone(user.id, 'first_comment');
+      }
     } catch (rewardError) {
       console.error('댓글 작성 보상 지급 오류:', rewardError);
     }

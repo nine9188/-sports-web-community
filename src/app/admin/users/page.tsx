@@ -6,6 +6,7 @@ import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { useAuth } from '@/shared/context/AuthContext';
 import SuspensionManager from '@/domains/admin/components/SuspensionManager';
 import { checkUserSuspension, getAllUsersWithLastAccess } from '@/domains/admin/actions/suspension';
+import { confirmUserEmail, getAllUsersEmailStatus } from '@/domains/admin/actions/email-verification';
 
 interface User {
   id: string;
@@ -17,6 +18,7 @@ interface User {
   is_suspended?: boolean;
   suspended_until?: string | null;
   suspended_reason?: string | null;
+  email_confirmed?: boolean;
 }
 
 export default function UsersAdminPage() {
@@ -31,14 +33,26 @@ export default function UsersAdminPage() {
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
-      
-      const result = await getAllUsersWithLastAccess();
-      
-      if (!result.success) {
-        throw new Error(result.error);
+
+      // 사용자 목록과 이메일 인증 상태를 병렬로 조회
+      const [usersResult, emailStatusResult] = await Promise.all([
+        getAllUsersWithLastAccess(),
+        getAllUsersEmailStatus()
+      ]);
+
+      if (!usersResult.success) {
+        throw new Error(usersResult.error);
       }
-      
-      setUsers(result.data || []);
+
+      // 이메일 인증 상태를 사용자 목록에 병합
+      const usersWithEmailStatus = (usersResult.data || []).map(user => ({
+        ...user,
+        email_confirmed: emailStatusResult.success && emailStatusResult.data
+          ? emailStatusResult.data[user.id]?.emailConfirmed ?? false
+          : false
+      }));
+
+      setUsers(usersWithEmailStatus);
     } catch (error) {
       console.error('사용자 목록 조회 오류:', error);
       toast.error('사용자 목록을 불러오는데 실패했습니다.');
@@ -129,6 +143,29 @@ export default function UsersAdminPage() {
     setSelectedUser(null);
   };
 
+  // 이메일 인증 처리
+  const handleConfirmEmail = async (userId: string) => {
+    try {
+      setProcessingIds(prev => [...prev, userId]);
+
+      const result = await confirmUserEmail(userId);
+
+      if (!result.success) {
+        toast.error(result.error || '이메일 인증 처리에 실패했습니다.');
+        return;
+      }
+
+      toast.success('이메일 인증이 완료되었습니다.');
+      await fetchUsers();
+
+    } catch (error) {
+      console.error('이메일 인증 처리 오류:', error);
+      toast.error('이메일 인증 처리 중 오류가 발생했습니다.');
+    } finally {
+      setProcessingIds(prev => prev.filter(id => id !== userId));
+    }
+  };
+
   return (
     <>
       <div className="bg-white shadow overflow-hidden sm:rounded-lg">
@@ -205,7 +242,7 @@ export default function UsersAdminPage() {
                             일반 사용자
                           </span>
                         )}
-                        
+
                         {user.is_suspended ? (
                           <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
                             정지됨
@@ -213,6 +250,16 @@ export default function UsersAdminPage() {
                         ) : (
                           <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
                             정상
+                          </span>
+                        )}
+
+                        {user.email_confirmed ? (
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-emerald-100 text-emerald-800">
+                            이메일 인증됨
+                          </span>
+                        ) : (
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                            이메일 미인증
                           </span>
                         )}
                       </div>
@@ -250,6 +297,16 @@ export default function UsersAdminPage() {
                         >
                           계정 정지 관리
                         </button>
+
+                        {!user.email_confirmed && (
+                          <button
+                            onClick={() => handleConfirmEmail(user.id)}
+                            className="block text-emerald-600 hover:text-emerald-900"
+                            disabled={processingIds.includes(user.id)}
+                          >
+                            {processingIds.includes(user.id) ? '처리 중...' : '이메일 인증 처리'}
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

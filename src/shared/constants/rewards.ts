@@ -29,32 +29,32 @@ export interface ActivityReward {
 
 export const ACTIVITY_REWARDS: Record<ActivityType, ActivityReward> = {
   [ActivityTypes.POST_CREATION]: {
-    exp: 50,      // Phase 3: 25 → 50 (+100%)
-    points: 10,   // Phase 3: 5 → 10 (+100%)
+    exp: 100,     // Phase 4: 50 → 100
+    points: 50,   // Phase 4: 10 → 50
     reason: '게시글 작성',
-    dailyLimit: 5,
-  },
-  [ActivityTypes.COMMENT_CREATION]: {
-    exp: 15,      // Phase 3: 5 → 15 (+200%)
-    points: 3,    // Phase 3: 1 → 3 (+200%)
-    reason: '댓글 작성',
-    dailyLimit: 5,
-  },
-  [ActivityTypes.RECEIVED_LIKE]: {
-    exp: 10,      // Phase 3: 5 → 10 (+100%)
-    points: 2,    // Phase 3: 1 → 2 (+100%)
-    reason: '추천 받기',
     dailyLimit: 10,
   },
+  [ActivityTypes.COMMENT_CREATION]: {
+    exp: 10,      // Phase 4: 15 → 10
+    points: 5,    // Phase 4: 3 → 5
+    reason: '댓글 작성',
+    dailyLimit: 10,
+  },
+  [ActivityTypes.RECEIVED_LIKE]: {
+    exp: 10,
+    points: 5,    // Phase 4: 2 → 5
+    reason: '추천 받기',
+    dailyLimit: 20,
+  },
   [ActivityTypes.GIVE_LIKE]: {
-    exp: 3,       // Phase 3: 신규
+    exp: 3,
     points: 0,
     reason: '추천하기',
     dailyLimit: 20,
   },
   [ActivityTypes.DAILY_LOGIN]: {
-    exp: 50,      // Phase 3: 30 → 50 (+67%)
-    points: 10,   // Phase 3: 5 → 10 (+100%)
+    exp: 100,     // Phase 4: 50 → 100
+    points: 50,   // Phase 4: 10 → 50
     reason: '하루 최초 로그인',
     dailyLimit: 1,
   },
@@ -65,14 +65,14 @@ export const ACTIVITY_REWARDS: Record<ActivityType, ActivityReward> = {
     dailyLimit: 1,
   },
   [ActivityTypes.FIRST_POST_BONUS]: {
-    exp: 20,      // Phase 3: 신규
-    points: 5,
+    exp: 60,      // Phase 4: 20 → 60
+    points: 30,   // Phase 4: 5 → 30
     reason: '오늘의 첫 게시글 보너스',
     dailyLimit: 1,
   },
   [ActivityTypes.FIRST_COMMENT_BONUS]: {
-    exp: 10,      // Phase 3: 신규
-    points: 2,
+    exp: 20,      // Phase 4: 10 → 20
+    points: 10,   // Phase 4: 2 → 10
     reason: '오늘의 첫 댓글 보너스',
     dailyLimit: 1,
   },
@@ -81,19 +81,19 @@ export const ACTIVITY_REWARDS: Record<ActivityType, ActivityReward> = {
 // 일일 제한 정보 (포인트 기준)
 export const DAILY_LIMITS: Record<ActivityType, { count: number; maxPoints: number; maxExp: number }> = {
   [ActivityTypes.POST_CREATION]: {
-    count: 5,
-    maxPoints: ACTIVITY_REWARDS[ActivityTypes.POST_CREATION].points * 5,
-    maxExp: ACTIVITY_REWARDS[ActivityTypes.POST_CREATION].exp * 5,
+    count: 10,
+    maxPoints: ACTIVITY_REWARDS[ActivityTypes.POST_CREATION].points * 10,
+    maxExp: ACTIVITY_REWARDS[ActivityTypes.POST_CREATION].exp * 10,
   },
   [ActivityTypes.COMMENT_CREATION]: {
-    count: 5,
-    maxPoints: ACTIVITY_REWARDS[ActivityTypes.COMMENT_CREATION].points * 5,
-    maxExp: ACTIVITY_REWARDS[ActivityTypes.COMMENT_CREATION].exp * 5,
+    count: 10,
+    maxPoints: ACTIVITY_REWARDS[ActivityTypes.COMMENT_CREATION].points * 10,
+    maxExp: ACTIVITY_REWARDS[ActivityTypes.COMMENT_CREATION].exp * 10,
   },
   [ActivityTypes.RECEIVED_LIKE]: {
-    count: 10,
-    maxPoints: ACTIVITY_REWARDS[ActivityTypes.RECEIVED_LIKE].points * 10,
-    maxExp: ACTIVITY_REWARDS[ActivityTypes.RECEIVED_LIKE].exp * 10,
+    count: 20,
+    maxPoints: ACTIVITY_REWARDS[ActivityTypes.RECEIVED_LIKE].points * 20,
+    maxExp: ACTIVITY_REWARDS[ActivityTypes.RECEIVED_LIKE].exp * 20,
   },
   [ActivityTypes.GIVE_LIKE]: {
     count: 20,
@@ -139,7 +139,7 @@ export const REWARD_DISPLAY_LIST: RewardDisplayItem[] = [
     description: '게시글 작성',
     exp: ACTIVITY_REWARDS[ActivityTypes.POST_CREATION].exp,
     points: ACTIVITY_REWARDS[ActivityTypes.POST_CREATION].points,
-    dailyLimit: 5,
+    dailyLimit: 10,
     dailyMaxExp: DAILY_LIMITS[ActivityTypes.POST_CREATION].maxExp,
     dailyMaxPoints: DAILY_LIMITS[ActivityTypes.POST_CREATION].maxPoints,
   },
@@ -148,7 +148,7 @@ export const REWARD_DISPLAY_LIST: RewardDisplayItem[] = [
     description: '댓글 작성',
     exp: ACTIVITY_REWARDS[ActivityTypes.COMMENT_CREATION].exp,
     points: ACTIVITY_REWARDS[ActivityTypes.COMMENT_CREATION].points,
-    dailyLimit: 5,
+    dailyLimit: 10,
     dailyMaxExp: DAILY_LIMITS[ActivityTypes.COMMENT_CREATION].maxExp,
     dailyMaxPoints: DAILY_LIMITS[ActivityTypes.COMMENT_CREATION].maxPoints,
   },
@@ -157,7 +157,7 @@ export const REWARD_DISPLAY_LIST: RewardDisplayItem[] = [
     description: '추천 받기',
     exp: ACTIVITY_REWARDS[ActivityTypes.RECEIVED_LIKE].exp,
     points: ACTIVITY_REWARDS[ActivityTypes.RECEIVED_LIKE].points,
-    dailyLimit: 10,
+    dailyLimit: 20,
     dailyMaxExp: DAILY_LIMITS[ActivityTypes.RECEIVED_LIKE].maxExp,
     dailyMaxPoints: DAILY_LIMITS[ActivityTypes.RECEIVED_LIKE].maxPoints,
   },
@@ -209,10 +209,10 @@ export interface ConsecutiveLoginBonus {
 }
 
 export const CONSECUTIVE_LOGIN_BONUSES: ConsecutiveLoginBonus[] = [
-  { days: 7, exp: 100, points: 50, label: '1주 연속 출석' },
-  { days: 14, exp: 200, points: 100, label: '2주 연속 출석' },
-  { days: 21, exp: 300, points: 150, label: '3주 연속 출석' },
-  { days: 30, exp: 500, points: 200, label: '월간 출석 완료' },
+  { days: 7, exp: 200, points: 200, label: '1주 연속 출석' },
+  { days: 14, exp: 400, points: 500, label: '2주 연속 출석' },
+  { days: 21, exp: 600, points: 800, label: '3주 연속 출석' },
+  { days: 30, exp: 1000, points: 1500, label: '월간 출석 완료' },
 ];
 
 /**
@@ -220,4 +220,64 @@ export const CONSECUTIVE_LOGIN_BONUSES: ConsecutiveLoginBonus[] = [
  */
 export function getConsecutiveBonus(consecutiveDays: number): ConsecutiveLoginBonus | null {
   return CONSECUTIVE_LOGIN_BONUSES.find(bonus => bonus.days === consecutiveDays) || null;
+}
+
+// ============================================
+// 추천 시스템 보상 정의
+// ============================================
+
+// 추천인/피추천인 가입 시 기본 보상
+export const REFERRAL_REWARDS = {
+  // 추천인 보상 (가입 시)
+  REFERRER_SIGNUP: {
+    points: 500,
+    exp: 100,
+    reason: '친구 추천 보상',
+  },
+  // 피추천인 보상 (가입 시)
+  REFEREE_SIGNUP: {
+    points: 300,
+    exp: 50,
+    reason: '추천 코드 사용 보상',
+  },
+} as const;
+
+// 마일스톤 보상 정의 (피추천인 활동 시 추천인에게 지급)
+export interface ReferralMilestone {
+  type: 'first_post' | 'first_comment' | 'seven_day_streak';
+  points: number;
+  exp: number;
+  label: string;
+  description: string;
+}
+
+export const REFERRAL_MILESTONES: ReferralMilestone[] = [
+  {
+    type: 'first_post',
+    points: 200,
+    exp: 50,
+    label: '첫 게시글 작성',
+    description: '추천한 친구가 첫 게시글을 작성했습니다',
+  },
+  {
+    type: 'first_comment',
+    points: 100,
+    exp: 30,
+    label: '첫 댓글 작성',
+    description: '추천한 친구가 첫 댓글을 작성했습니다',
+  },
+  {
+    type: 'seven_day_streak',
+    points: 500,
+    exp: 100,
+    label: '7일 연속 출석',
+    description: '추천한 친구가 7일 연속 출석했습니다',
+  },
+];
+
+/**
+ * 마일스톤 타입에 따른 보상 반환
+ */
+export function getReferralMilestone(type: ReferralMilestone['type']): ReferralMilestone | null {
+  return REFERRAL_MILESTONES.find(m => m.type === type) || null;
 }

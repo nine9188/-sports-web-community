@@ -532,6 +532,64 @@ export async function createProfileUpdateNotification({
 }
 
 /**
+ * 계정 정지 알림 생성
+ */
+export async function createSuspensionNotification({
+  userId,
+  reason,
+  suspendedUntil,
+  days
+}: {
+  userId: string;
+  reason: string;
+  suspendedUntil: string;
+  days: number;
+}): Promise<NotificationActionResponse> {
+  const untilDate = new Date(suspendedUntil);
+  const formattedDate = untilDate.toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'Asia/Seoul'
+  });
+
+  return createNotification({
+    userId,
+    actorId: undefined, // 시스템/관리자 알림
+    type: 'suspension',
+    title: `⚠️ 계정이 ${days}일간 정지되었습니다`,
+    message: `사유: ${reason}\n해제일: ${formattedDate}`,
+    link: '/settings/profile',
+    metadata: {
+      suspension_reason: reason,
+      suspended_until: suspendedUntil,
+      suspension_days: days
+    }
+  });
+}
+
+/**
+ * 계정 정지 해제 알림 생성
+ */
+export async function createUnsuspensionNotification({
+  userId
+}: {
+  userId: string;
+}): Promise<NotificationActionResponse> {
+  return createNotification({
+    userId,
+    actorId: undefined, // 시스템/관리자 알림
+    type: 'suspension',
+    title: `✅ 계정 정지가 해제되었습니다`,
+    message: '이제 모든 서비스를 정상적으로 이용할 수 있습니다.',
+    link: '/settings/profile',
+    metadata: {
+      is_unsuspension: true
+    }
+  });
+}
+
+/**
  * 알림 발송 기록 조회
  */
 export async function getNotificationLogs(limit: number = 50): Promise<{

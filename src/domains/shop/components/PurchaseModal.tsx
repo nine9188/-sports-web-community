@@ -83,12 +83,12 @@ export default function PurchaseModal({
                   loading="eager"
                 />
               ) : (
-                <Image 
-                  src={item.image_url} 
+                <Image
+                  src={item.image_url}
                   alt={item.name}
                   width={20}
                   height={20}
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain dark:invert"
                 />
               )}
             </div>

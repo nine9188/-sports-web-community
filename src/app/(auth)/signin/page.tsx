@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/shared/context/AuthContext';
 import { EyeIcon, EyeOffIcon, AlertCircle, Check } from 'lucide-react';
-import { signIn } from '@/domains/auth/actions';
+import { signIn, resendConfirmationByUsername } from '@/domains/auth/actions';
 import KakaoLoginButton from '@/domains/auth/components/KakaoLoginButton';
 
 // SearchParams를 사용하는 로그인 컴포넌트
@@ -28,6 +28,10 @@ function LoginContent() {
   const [passwordValid, setPasswordValid] = useState(false);
   const [passwordError, setPasswordError] = useState('');
 
+  // 이메일 인증 필요 상태
+  const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false);
+  const [resendingEmail, setResendingEmail] = useState(false);
+
   const { user } = useAuth();
   
   // 컴포넌트 마운트 시 저장된 아이디 불러오기
@@ -40,10 +44,14 @@ function LoginContent() {
     }
   }, []);
   
-  // 메시지 파라미터 처리
+  // 메시지 파라미터 처리 (한 번만 실행)
   useEffect(() => {
     if (message) {
       toast.info(decodeURIComponent(message).replace(/\+/g, ' '));
+      // URL에서 message 파라미터 제거 (중복 토스트 방지)
+      const url = new URL(window.location.href);
+      url.searchParams.delete('message');
+      window.history.replaceState({}, '', url.toString());
     }
   }, [message]);
   
@@ -92,7 +100,28 @@ function LoginContent() {
   const handleTogglePassword = () => {
     setShowPassword(!showPassword);
   };
-  
+
+  // 이메일 인증 재발송
+  const handleResendEmail = async () => {
+    try {
+      setResendingEmail(true);
+
+      // 아이디로 이메일을 조회하여 인증 이메일 재발송
+      const result = await resendConfirmationByUsername(username);
+
+      if (result.success) {
+        toast.success('인증 이메일을 재발송했습니다. 메일함을 확인해주세요.');
+      } else {
+        toast.error(result.error || '이메일 재발송에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('이메일 재발송 오류:', error);
+      toast.error('이메일 재발송 중 오류가 발생했습니다.');
+    } finally {
+      setResendingEmail(false);
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -117,6 +146,13 @@ function LoginContent() {
       const result = await signIn(username, password);
 
       if (result.error) {
+        // 이메일 미인증 상태 처리
+        if (result.needsEmailConfirmation) {
+          setNeedsEmailConfirmation(true);
+          toast.warning('이메일 인증이 필요합니다.');
+          return;
+        }
+
         if (result.error.includes('Invalid login credentials')) {
           toast.error('아이디 또는 비밀번호가 올바르지 않습니다');
         } else {
@@ -124,6 +160,9 @@ function LoginContent() {
         }
         return;
       }
+
+      // 로그인 성공 시 이메일 인증 상태 초기화
+      setNeedsEmailConfirmation(false);
 
       // 로그인 성공 플래그를 sessionStorage에 저장 (토스트용)
       sessionStorage.setItem('login-success', 'true');
@@ -251,6 +290,31 @@ function LoginContent() {
             아이디 기억하기
           </label>
         </div>
+
+        {/* 이메일 미인증 안내 */}
+        {needsEmailConfirmation && (
+          <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                  이메일 인증이 필요합니다
+                </p>
+                <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+                  회원가입 시 입력한 이메일로 발송된 인증 메일을 확인해주세요.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleResendEmail}
+                  disabled={resendingEmail}
+                  className="mt-2 text-xs text-yellow-800 dark:text-yellow-200 hover:underline disabled:opacity-50"
+                >
+                  {resendingEmail ? '발송 중...' : '인증 이메일 재발송'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <button
           type="submit"

@@ -2,9 +2,21 @@
 
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { rewardUserActivity, getActivityTypeValues } from './activity-actions';
+import { checkReferralMilestone } from './referral-actions';
 import { getConsecutiveBonus, CONSECUTIVE_LOGIN_BONUSES } from '@/shared/constants/rewards';
 import { createLevelUpNotification } from '@/domains/notifications/actions/create';
 import { calculateLevelFromExp } from '@/shared/utils/level-icons-server';
+
+/**
+ * 한국 시간(KST) 기준 오늘 날짜 반환 (YYYY-MM-DD)
+ */
+function getTodayKST(): string {
+  const now = new Date();
+  // UTC+9 (한국 시간)
+  const kstOffset = 9 * 60 * 60 * 1000;
+  const kstDate = new Date(now.getTime() + kstOffset);
+  return kstDate.toISOString().split('T')[0];
+}
 
 // 응답 타입 정의
 export interface AttendanceResult {
@@ -43,7 +55,7 @@ export interface AttendanceData {
 export async function recordDailyLogin(userId: string): Promise<AttendanceResult> {
   try {
     const supabase = await getSupabaseServer();
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayKST(); // 한국 시간 기준
 
     // 1. 오늘 이미 로그인했는지 확인
     const { data: existingLogin } = await supabase
@@ -98,6 +110,15 @@ export async function recordDailyLogin(userId: string): Promise<AttendanceResult
         points: bonus.points,
         label: bonus.label,
       };
+    }
+
+    // 6. 7일 연속 출석 마일스톤 체크 (추천 시스템)
+    if (consecutiveDays === 7) {
+      try {
+        await checkReferralMilestone(userId, 'seven_day_streak');
+      } catch (milestoneError) {
+        console.error('7일 연속 출석 마일스톤 체크 오류:', milestoneError);
+      }
     }
 
     return {
@@ -212,13 +233,18 @@ async function grantConsecutiveBonus(
  */
 export async function getAttendanceData(userId: string, year?: number, month?: number): Promise<AttendanceData> {
   const supabase = await getSupabaseServer();
-  const now = new Date();
-  const targetYear = year || now.getFullYear();
-  const targetMonth = month || now.getMonth() + 1;
+
+  // 한국 시간 기준으로 현재 날짜 계산
+  const todayKST = getTodayKST();
+  const [currentYear, currentMonth] = todayKST.split('-').map(Number);
+
+  const targetYear = year || currentYear;
+  const targetMonth = month || currentMonth;
 
   // 해당 월의 시작일과 종료일
   const startDate = `${targetYear}-${String(targetMonth).padStart(2, '0')}-01`;
-  const endDate = new Date(targetYear, targetMonth, 0).toISOString().split('T')[0];
+  const lastDay = new Date(targetYear, targetMonth, 0).getDate();
+  const endDate = `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
 
   // 해당 월 출석 기록 조회
   const { data: logins, error } = await supabase
@@ -242,9 +268,51 @@ export async function getAttendanceData(userId: string, year?: number, month?: n
   // 연속 출석 일수 계산
   const consecutiveDays = await calculateConsecutiveDays(userId);
 
+  // 오늘 출석 여부 (한국 시간 기준)
+  const todayAttended = logins?.some(l => l.login_date === todayKST) || false;
+
+  // 다음 보너스 계산
+  const nextBonus = calculateNextBonus(consecutiveDays);
+
+  return {
+    loginHistory: logins || [],
+    consecutiveDays,
+    todayAttended,
+    nextBonus,
+  };
+}
+
+/**
+ * 주간 출석 데이터 조회 (mini 캘린더용)
+ */
+export async function getWeekAttendanceData(userId: string, startDate: string, endDate: string): Promise<AttendanceData> {
+  const supabase = await getSupabaseServer();
+  const todayKST = getTodayKST();
+
+  // 주간 출석 기록 조회 (startDate ~ endDate)
+  const { data: logins, error } = await supabase
+    .from('login_history')
+    .select('login_date')
+    .eq('user_id', userId)
+    .gte('login_date', startDate)
+    .lte('login_date', endDate)
+    .order('login_date', { ascending: true });
+
+  if (error) {
+    console.error('주간 출석 기록 조회 오류:', error);
+    return {
+      loginHistory: [],
+      consecutiveDays: 0,
+      todayAttended: false,
+      nextBonus: null,
+    };
+  }
+
+  // 연속 출석 일수 계산
+  const consecutiveDays = await calculateConsecutiveDays(userId);
+
   // 오늘 출석 여부
-  const today = now.toISOString().split('T')[0];
-  const todayAttended = logins?.some(l => l.login_date === today) || false;
+  const todayAttended = logins?.some(l => l.login_date === todayKST) || false;
 
   // 다음 보너스 계산
   const nextBonus = calculateNextBonus(consecutiveDays);

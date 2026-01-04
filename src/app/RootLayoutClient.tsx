@@ -11,6 +11,8 @@ import { IconProvider } from '@/shared/context/IconContext';
 import { ThemeProvider } from '@/shared/context/ThemeContext';
 import { UserProfileModalProvider } from '@/domains/user/context/UserProfileModalContext';
 import AuthStateManager from '@/shared/components/AuthStateManager';
+import SuspensionPopup from '@/shared/components/SuspensionPopup';
+import AttendanceChecker from '@/shared/components/AttendanceChecker';
 import { HeaderUserData } from '@/domains/layout/types/header';
 import { Board } from '@/domains/layout/types/board';
 import { MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
@@ -193,6 +195,8 @@ export default function RootLayoutClient({
               )}
 
               <ToastContainer {...toastConfig} />
+              <SuspensionPopup />
+              <AttendanceChecker />
             </UserProfileModalProvider>
           </IconProvider>
         </AuthProvider>

@@ -190,19 +190,14 @@ function AccountRecoveryContent() {
       }
       
       // 타입 가드로 성공 결과 확인
-      if ('username' in result && 'fullName' in result) {
+      if ('username' in result) {
         // 계정 정보를 찾았으면 결과 페이지로 이동
         const params = new URLSearchParams({
           type: 'id',
           username: result.username || '',
-          fullName: result.fullName || ''
+          maskedUsername: 'maskedUsername' in result ? (result.maskedUsername || '') : ''
         });
-        
-        // 마지막 로그인 정보가 있으면 추가
-        if ('lastSignInAt' in result && result.lastSignInAt) {
-          params.append('lastSignInAt', String(result.lastSignInAt));
-        }
-        
+
         router.push(`/help/account-found?${params.toString()}`);
       } else {
         toast.error('결과 데이터가 올바르지 않습니다.');

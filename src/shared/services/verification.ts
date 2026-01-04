@@ -21,9 +21,9 @@ export function generateSecureToken(): string {
  * 인증 코드 저장 (데이터베이스)
  */
 export async function saveVerificationCode(
-  email: string, 
-  code: string, 
-  type: 'id_recovery' | 'password_reset',
+  email: string,
+  code: string,
+  type: 'id_recovery' | 'password_reset' | 'email_verification',
   expiresInMinutes: number = 5
 ) {
   try {
@@ -68,9 +68,9 @@ export async function saveVerificationCode(
  * 인증 코드 검증
  */
 export async function verifyCode(
-  email: string, 
-  code: string, 
-  type: 'id_recovery' | 'password_reset'
+  email: string,
+  code: string,
+  type: 'id_recovery' | 'password_reset' | 'email_verification'
 ) {
   try {
     const supabase = await getSupabaseServer();
@@ -156,6 +156,65 @@ export async function useResetToken(token: string) {
       .update({ used_at: new Date().toISOString() })
       .eq('code', token)
       .eq('type', 'password_reset');
+
+    if (error) {
+      console.error('토큰 사용 처리 오류:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('토큰 사용 처리 중 오류:', error);
+    return { success: false, error: '토큰 처리 중 오류가 발생했습니다.' };
+  }
+}
+
+/**
+ * 이메일 인증 토큰 검증
+ */
+export async function verifyEmailToken(token: string) {
+  try {
+    const supabase = await getSupabaseServer();
+
+    const { data, error } = await supabase
+      .from('verification_codes')
+      .select('*')
+      .eq('code', token)
+      .eq('type', 'email_verification')
+      .is('used_at', null)
+      .single();
+
+    if (error || !data) {
+      return { success: false, error: '유효하지 않은 인증 링크입니다.' };
+    }
+
+    // 만료 시간 확인 (24시간)
+    const now = new Date();
+    const expiresAt = new Date(data.expires_at);
+
+    if (now > expiresAt) {
+      return { success: false, error: '인증 링크가 만료되었습니다.' };
+    }
+
+    return { success: true, email: data.email };
+  } catch (error) {
+    console.error('이메일 토큰 검증 중 오류:', error);
+    return { success: false, error: '토큰 검증 중 오류가 발생했습니다.' };
+  }
+}
+
+/**
+ * 이메일 인증 토큰 사용 처리
+ */
+export async function useEmailToken(token: string) {
+  try {
+    const supabase = await getSupabaseServer();
+
+    const { error } = await supabase
+      .from('verification_codes')
+      .update({ used_at: new Date().toISOString() })
+      .eq('code', token)
+      .eq('type', 'email_verification');
 
     if (error) {
       console.error('토큰 사용 처리 오류:', error);

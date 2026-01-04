@@ -295,7 +295,7 @@ export default function CategoryFilter({
   return (
     <div>
       {/* HoverMenu 스타일에 맞춘 탭 바 */}
-      <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-lg mb-4">
+      <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 rounded-lg mb-4">
         <div className="px-4 py-2.5 relative" ref={containerRef}>
           {/* 네비게이션 바 */}
           <nav className="flex items-center justify-between gap-1" ref={navRef}>

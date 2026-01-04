@@ -2,6 +2,7 @@
 
 import { getSupabaseServer } from '@/shared/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { createSuspensionNotification, createUnsuspensionNotification } from '@/domains/notifications/actions/create'
 
 export interface SuspensionData {
   userId: string
@@ -52,12 +53,20 @@ export async function suspendUser(data: SuspensionData) {
       return { success: false, error: '정지 처리 중 오류가 발생했습니다.' }
     }
 
+    // 정지 알림 생성
+    await createSuspensionNotification({
+      userId: data.userId,
+      reason: data.reason,
+      suspendedUntil: suspendedUntil.toISOString(),
+      days: data.days
+    })
+
     // 관련 페이지 재검증
     revalidatePath('/admin/users')
     revalidatePath('/settings/profile')
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       message: `사용자가 ${data.days}일간 정지되었습니다.`,
       suspendedUntil: suspendedUntil.toISOString()
     }
@@ -107,12 +116,15 @@ export async function unsuspendUser(userId: string) {
       return { success: false, error: '정지 해제 중 오류가 발생했습니다.' }
     }
 
+    // 정지 해제 알림 생성
+    await createUnsuspensionNotification({ userId })
+
     // 관련 페이지 재검증
     revalidatePath('/admin/users')
     revalidatePath('/settings/profile')
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       message: '사용자 정지가 해제되었습니다.'
     }
 

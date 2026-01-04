@@ -2,8 +2,36 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Check, Gift, Calendar } from 'lucide-react';
-import { getAttendanceData, type AttendanceData } from '@/shared/actions/attendance-actions';
+import { getAttendanceData, getWeekAttendanceData, type AttendanceData } from '@/shared/actions/attendance-actions';
 import { CONSECUTIVE_LOGIN_BONUSES, ACTIVITY_REWARDS, ActivityTypes } from '@/shared/constants/rewards';
+
+/**
+ * 한국 시간(KST) 기준 오늘 날짜 반환 (YYYY-MM-DD)
+ */
+function getTodayKST(): string {
+  const now = new Date();
+  const kstOffset = 9 * 60 * 60 * 1000; // UTC+9
+  const kstDate = new Date(now.getTime() + kstOffset);
+  return kstDate.toISOString().split('T')[0];
+}
+
+/**
+ * 한국 시간(KST) 기준 현재 Date 객체 반환
+ */
+function getNowKST(): Date {
+  const now = new Date();
+  const kstOffset = 9 * 60 * 60 * 1000;
+  return new Date(now.getTime() + kstOffset);
+}
+
+/**
+ * Date 객체를 한국 시간 기준 YYYY-MM-DD 문자열로 변환
+ */
+function dateToKSTString(date: Date): string {
+  const kstOffset = 9 * 60 * 60 * 1000;
+  const kstDate = new Date(date.getTime() + kstOffset);
+  return kstDate.toISOString().split('T')[0];
+}
 
 interface AttendanceCalendarProps {
   userId: string;
@@ -18,12 +46,37 @@ export default function AttendanceCalendar({ userId, variant = 'full' }: Attenda
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth() + 1;
 
+  // 이번 주 날짜 범위 계산 (mini용)
+  const weekRange = useMemo(() => {
+    const nowKST = getNowKST();
+    const dayOfWeek = nowKST.getUTCDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+
+    const monday = new Date(nowKST);
+    monday.setUTCDate(nowKST.getUTCDate() + mondayOffset);
+
+    const sunday = new Date(monday);
+    sunday.setUTCDate(monday.getUTCDate() + 6);
+
+    const startDate = monday.toISOString().split('T')[0];
+    const endDate = sunday.toISOString().split('T')[0];
+
+    return { startDate, endDate };
+  }, []);
+
   // 출석 데이터 로드
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const data = await getAttendanceData(userId, year, month);
+        let data: AttendanceData;
+        if (variant === 'mini') {
+          // mini 버전: 이번 주 데이터만 조회 (월~일, 월이 바뀌어도 정상 조회)
+          data = await getWeekAttendanceData(userId, weekRange.startDate, weekRange.endDate);
+        } else {
+          // full 버전: 해당 월 전체 조회
+          data = await getAttendanceData(userId, year, month);
+        }
         setAttendanceData(data);
       } catch (error) {
         console.error('출석 데이터 로드 오류:', error);
@@ -33,7 +86,7 @@ export default function AttendanceCalendar({ userId, variant = 'full' }: Attenda
     };
 
     fetchData();
-  }, [userId, year, month]);
+  }, [userId, year, month, variant, weekRange.startDate, weekRange.endDate]);
 
   // 출석한 날짜 Set (날짜 형식 정규화)
   const attendedDates = useMemo(() => {
@@ -113,7 +166,7 @@ function MiniCalendar({
   }, []);
 
   const dayLabels = ['월', '화', '수', '목', '금', '토', '일'];
-  const today = new Date().toISOString().split('T')[0];
+  const today = getTodayKST(); // 한국 시간 기준
 
   if (isLoading) {
     return (
@@ -144,10 +197,10 @@ function MiniCalendar({
       {/* 이번 주 출석 */}
       <div className="flex gap-1">
         {weekDates.map((date, index) => {
-          const dateStr = date.toISOString().split('T')[0];
+          const dateStr = dateToKSTString(date); // 한국 시간 기준
           const isAttended = attendedDates.has(dateStr);
           const isToday = dateStr === today;
-          const isFuture = date > new Date();
+          const isFuture = dateStr > today; // 한국 시간 기준으로 미래 여부 판단
 
           return (
             <div
@@ -221,9 +274,9 @@ function FullCalendar({
   onPrevMonth: () => void;
   onNextMonth: () => void;
 }) {
-  const today = new Date();
-  const todayStr = today.toISOString().split('T')[0];
-  const isCurrentMonth = year === today.getFullYear() && month === today.getMonth() + 1;
+  const todayStr = getTodayKST(); // 한국 시간 기준
+  const nowKST = getNowKST();
+  const isCurrentMonth = year === nowKST.getUTCFullYear() && month === nowKST.getUTCMonth() + 1;
   const canGoNext = !isCurrentMonth;
 
   // 달력 날짜 계산
@@ -321,7 +374,7 @@ function FullCalendar({
             const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const isAttended = attendedDates.has(dateStr);
             const isToday = dateStr === todayStr;
-            const isFuture = new Date(dateStr) > today;
+            const isFuture = dateStr > todayStr; // 한국 시간 기준으로 미래 여부 판단
             const dayOfWeek = (index) % 7;
 
             return (
@@ -370,7 +423,9 @@ function FullCalendar({
         <div className="p-2 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
           <div className="flex items-center gap-2 mb-1">
             <Calendar className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
-            <span className="text-xs font-medium text-gray-900 dark:text-[#F0F0F0]">일일 출석 보상</span>
+            <span className="text-xs font-medium text-gray-900 dark:text-[#F0F0F0]">
+              {todayStr.substring(5).replace('-', '/')} 일일 출석 보상
+            </span>
             {attendanceData?.todayAttended && (
               <span className="px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 text-[10px] font-medium rounded">
                 완료

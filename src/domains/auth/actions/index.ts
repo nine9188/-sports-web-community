@@ -20,7 +20,9 @@ export {
   signUp,
   checkUsernameAvailability,
   checkNicknameAvailability,
-  resendConfirmation
+  resendConfirmation,
+  resendConfirmationByUsername,
+  verifyEmailWithToken
 } from './signup'
 
 // 비밀번호 관리 (password.ts)
