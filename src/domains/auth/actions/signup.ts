@@ -1,6 +1,6 @@
 'use server'
 
-import { getSupabaseServer, getSupabaseAction } from '@/shared/lib/supabase/server'
+import { getSupabaseServer, getSupabaseAction, getSupabaseAdmin } from '@/shared/lib/supabase/server'
 import { logAuthEvent } from '@/shared/actions/log-actions'
 import { headers } from 'next/headers'
 import { validateEmail, validatePassword, validateUsername, validateNickname } from './utils/validation'
@@ -97,7 +97,19 @@ export async function signUp(
       return { success: false, error: '회원가입 처리 중 오류가 발생했습니다.' }
     }
 
-    // 4. 프로필 생성 대기 (Auth 트리거가 프로필을 생성할 때까지)
+    // 4. 이메일 미인증 상태로 변경 (커스텀 이메일 인증 사용을 위해)
+    // Supabase의 Confirm email이 OFF인 경우 자동으로 인증된 상태가 되므로, 수동으로 미인증 상태로 변경
+    try {
+      const adminSupabase = getSupabaseAdmin()
+      await adminSupabase.auth.admin.updateUserById(data.user.id, {
+        email_confirm: false
+      })
+    } catch (adminError) {
+      console.error('이메일 미인증 상태 설정 오류:', adminError)
+      // 실패해도 회원가입은 계속 진행
+    }
+
+    // 5. 프로필 생성 대기
     const waitForProfile = async (userId: string, maxRetries = 10): Promise<boolean> => {
       for (let i = 0; i < maxRetries; i++) {
         const { data: profile } = await supabase
@@ -117,7 +129,7 @@ export async function signUp(
       console.error('프로필 생성 대기 시간 초과')
     }
 
-    // 5. 커스텀 인증 이메일 발송
+    // 6. 커스텀 인증 이메일 발송
     try {
       const verificationToken = generateSecureToken()
 
@@ -140,7 +152,7 @@ export async function signUp(
       // 이메일 발송 실패해도 회원가입은 성공으로 처리
     }
 
-    // 6. 성공 로그 기록
+    // 7. 성공 로그 기록
     await logAuthEvent(
       'SIGNUP_SUCCESS',
       `회원가입 성공: ${email}`,
@@ -149,7 +161,7 @@ export async function signUp(
       { email, username: metadata?.username }
     )
 
-    // 7. 환영 알림 발송 (프로필 생성 후에만)
+    // 8. 환영 알림 발송 (프로필 생성 후에만)
     if (profileExists) {
       try {
         await createWelcomeNotification({ userId: data.user.id })
@@ -159,7 +171,7 @@ export async function signUp(
       }
     }
 
-    // 8. 추천 코드 처리 (프로필 생성 후에만)
+    // 9. 추천 코드 처리 (프로필 생성 후에만)
     if (profileExists && metadata?.referral_code) {
       try {
         const referralResult = await processReferral(
@@ -438,8 +450,8 @@ export async function verifyEmailWithToken(
       return { success: false, error: '유효하지 않은 인증 토큰입니다.' }
     }
 
-    // 사용자 조회 및 이메일 확인 처리
-    const supabase = await getSupabaseAction()
+    // 사용자 조회
+    const supabase = await getSupabaseServer()
 
     // 이메일로 사용자 조회
     const { data: profile, error: profileError } = await supabase
@@ -452,8 +464,9 @@ export async function verifyEmailWithToken(
       return { success: false, error: '사용자를 찾을 수 없습니다.' }
     }
 
-    // Supabase Auth에서 이메일 확인 처리 (admin API 사용)
-    const { error: updateError } = await supabase.auth.admin.updateUserById(
+    // Supabase Auth에서 이메일 확인 처리 (admin API 사용 - service role 필요)
+    const adminSupabase = getSupabaseAdmin()
+    const { error: updateError } = await adminSupabase.auth.admin.updateUserById(
       profile.id,
       { email_confirm: true }
     )
