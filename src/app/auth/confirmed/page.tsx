@@ -4,13 +4,13 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { CheckCircle } from 'lucide-react';
 import { useEffect } from 'react';
-import { createClient } from '@/shared/api/supabase';
+import { getSupabaseBrowser } from '@/shared/lib/supabase';
 
 export default function EmailConfirmedPage() {
   // 자동 로그인 방지: 세션이 있으면 로그아웃
   useEffect(() => {
     const preventAutoLogin = async () => {
-      const supabase = createClient();
+      const supabase = getSupabaseBrowser();
       await supabase.auth.signOut();
     };
     preventAutoLogin();
