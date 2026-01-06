@@ -45,9 +45,7 @@ export default function PointHistory({ pointHistory = [] }: PointHistoryProps) {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
                     {item.reason || '포인트 내역'}
                   </td>
-                  <td className={`px-6 py-4 whitespace-nowrap text-sm font-bold text-right ${
-                    item.type === 'earn' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-                  }`}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-right text-gray-900 dark:text-[#F0F0F0]">
                     {item.type === 'earn' ? '+' : '-'}{Math.abs(item.points || 0).toLocaleString()} P
                   </td>
                 </tr>

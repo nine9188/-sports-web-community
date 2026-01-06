@@ -18,6 +18,7 @@ export {
 // 회원가입 (signup.ts)
 export {
   signUp,
+  checkEmailAvailability,
   checkUsernameAvailability,
   checkNicknameAvailability,
   resendConfirmation,

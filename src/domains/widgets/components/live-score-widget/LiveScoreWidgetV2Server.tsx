@@ -29,60 +29,76 @@ function getKickoffTime(dateString?: string): string | undefined {
   }
 }
 
-// 리그별로 경기를 그룹화하는 함수
-function groupMatchesByLeague(
-  matches: FootballMatchData[],
+// 경기 데이터를 Match 타입으로 변환
+function convertToMatch(
+  match: FootballMatchData,
   dateLabel: 'today' | 'tomorrow'
+): Match {
+  const homeTeamInfo = match.teams?.home?.id ? getTeamById(match.teams.home.id) : null;
+  const awayTeamInfo = match.teams?.away?.id ? getTeamById(match.teams.away.id) : null;
+
+  return {
+    id: String(match.id),
+    homeTeam: {
+      id: match.teams?.home?.id || 0,
+      name: homeTeamInfo?.name_ko || match.teams?.home?.name || '홈팀',
+      logo: match.teams?.home?.logo,
+    },
+    awayTeam: {
+      id: match.teams?.away?.id || 0,
+      name: awayTeamInfo?.name_ko || match.teams?.away?.name || '원정팀',
+      logo: match.teams?.away?.logo,
+    },
+    score: {
+      home: match.goals?.home ?? 0,
+      away: match.goals?.away ?? 0,
+    },
+    status: match.status?.code || 'NS',
+    elapsed: match.status?.elapsed || 0,
+    dateLabel,
+    kickoffTime: getKickoffTime(match.time?.date),
+  };
+}
+
+// 리그별로 경기를 그룹화하는 함수 (오늘+내일 통합)
+function groupMatchesByLeague(
+  todayMatches: FootballMatchData[],
+  tomorrowMatches: FootballMatchData[]
 ): League[] {
-  const leagueMap = new Map<number, FootballMatchData[]>();
+  const leagueMap = new Map<number, { matches: Match[]; firstMatch: FootballMatchData }>();
 
-  matches.forEach(match => {
+  // 오늘 경기 추가
+  todayMatches.forEach(match => {
     if (!match.league?.id) return;
-
     const leagueId = match.league.id;
+
     if (!leagueMap.has(leagueId)) {
-      leagueMap.set(leagueId, []);
+      leagueMap.set(leagueId, { matches: [], firstMatch: match });
     }
-    leagueMap.get(leagueId)!.push(match);
+    leagueMap.get(leagueId)!.matches.push(convertToMatch(match, 'today'));
   });
 
-  return Array.from(leagueMap.entries()).map(([leagueId, matches]) => {
+  // 내일 경기 추가 (같은 리그에 합침)
+  tomorrowMatches.forEach(match => {
+    if (!match.league?.id) return;
+    const leagueId = match.league.id;
+
+    if (!leagueMap.has(leagueId)) {
+      leagueMap.set(leagueId, { matches: [], firstMatch: match });
+    }
+    leagueMap.get(leagueId)!.matches.push(convertToMatch(match, 'tomorrow'));
+  });
+
+  return Array.from(leagueMap.entries()).map(([leagueId, { matches, firstMatch }]) => {
     const leagueInfo = getLeagueById(leagueId);
-    const firstMatch = matches[0];
 
     return {
-      id: `${leagueId}-${dateLabel}`,
+      id: String(leagueId),
       name: leagueInfo?.nameKo || firstMatch.league?.name || '리그',
       icon: '⚽',
       logo: firstMatch.league?.logo,
       leagueIdNumber: leagueId,
-      dateLabel,
-      matches: matches.map(match => {
-        const homeTeamInfo = match.teams?.home?.id ? getTeamById(match.teams.home.id) : null;
-        const awayTeamInfo = match.teams?.away?.id ? getTeamById(match.teams.away.id) : null;
-
-        return {
-          id: String(match.id),
-          homeTeam: {
-            id: match.teams?.home?.id || 0,
-            name: homeTeamInfo?.name_ko || match.teams?.home?.name || '홈팀',
-            logo: match.teams?.home?.logo,
-          },
-          awayTeam: {
-            id: match.teams?.away?.id || 0,
-            name: awayTeamInfo?.name_ko || match.teams?.away?.name || '원정팀',
-            logo: match.teams?.away?.logo,
-          },
-          score: {
-            home: match.goals?.home ?? 0,
-            away: match.goals?.away ?? 0,
-          },
-          status: match.status?.code || 'NS',
-          elapsed: match.status?.elapsed || 0,
-          dateLabel,
-          kickoffTime: getKickoffTime(match.fixture?.date),
-        };
-      }),
+      matches,
     };
   });
 }
@@ -99,11 +115,8 @@ export default async function LiveScoreWidgetV2Server() {
       const todayMatches = result.data.today?.matches || [];
       const tomorrowMatches = result.data.tomorrow?.matches || [];
 
-      // 리그별로 그룹화 (오늘 먼저, 내일 그 다음)
-      const todayLeagues = groupMatchesByLeague(todayMatches, 'today');
-      const tomorrowLeagues = groupMatchesByLeague(tomorrowMatches, 'tomorrow');
-
-      leagues = [...todayLeagues, ...tomorrowLeagues];
+      // 리그별로 그룹화 (오늘+내일 통합, 같은 리그는 하나로)
+      leagues = groupMatchesByLeague(todayMatches, tomorrowMatches);
     } else {
       console.warn('⚠️ LiveScoreWidgetV2: API 응답이 성공하지 않음', result.error);
     }

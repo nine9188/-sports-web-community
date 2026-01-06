@@ -13,16 +13,19 @@ interface PasswordFormProps {
 export default function PasswordForm({ isOAuthAccount = false }: PasswordFormProps) {
 
   const [formData, setFormData] = useState({
+    currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
 
   const [errors, setErrors] = useState({
+    currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
@@ -38,6 +41,12 @@ export default function PasswordForm({ isOAuthAccount = false }: PasswordFormPro
   const validateForm = (): boolean => {
     let isValid = true;
     const newErrors = { ...errors };
+
+    // 현재 비밀번호 검증
+    if (!formData.currentPassword) {
+      newErrors.currentPassword = '현재 비밀번호를 입력해주세요.';
+      isValid = false;
+    }
 
     // 새 비밀번호 검증
     if (!formData.newPassword) {
@@ -89,6 +98,7 @@ export default function PasswordForm({ isOAuthAccount = false }: PasswordFormPro
 
     try {
       const result = await changePassword(
+        formData.currentPassword,
         formData.newPassword,
         captchaToken
       );
@@ -126,6 +136,34 @@ export default function PasswordForm({ isOAuthAccount = false }: PasswordFormPro
             <p className="text-xs text-gray-500 dark:text-gray-400">보안을 위해 자동 입력 방지를 확인합니다.</p>
           </div>
         )}
+
+        {/* 현재 비밀번호 필드 */}
+        <div className="space-y-1">
+          <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+            현재 비밀번호
+          </label>
+          <div className="relative">
+            <input
+              type={showCurrentPassword ? "text" : "password"}
+              id="currentPassword"
+              name="currentPassword"
+              value={formData.currentPassword}
+              onChange={handleChange}
+              disabled={isLoading || isOAuthAccount}
+              className={`w-full px-3 py-2 border ${errors.currentPassword ? 'border-red-500 dark:border-red-500' : 'border-black/7 dark:border-white/10'} rounded-md shadow-sm bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] disabled:bg-[#EAEAEA] disabled:dark:bg-[#333333] disabled:cursor-not-allowed transition-colors`}
+            />
+            <button
+              type="button"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors"
+              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+            >
+              {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          {errors.currentPassword && (
+            <p className="text-xs text-red-500 dark:text-red-400">{errors.currentPassword}</p>
+          )}
+        </div>
 
         {/* 새 비밀번호 필드 */}
         <div className="space-y-1">

@@ -33,6 +33,12 @@ const nextConfig = {
         hostname: 'image.fmkorea.com',
         pathname: '/**',
       },
+      // NYT Athletic 이미지
+      {
+        protocol: 'https',
+        hostname: 'static01.nyt.com',
+        pathname: '/**',
+      },
     ],
   },
   typescript: {

@@ -108,14 +108,12 @@ export default function IconForm({
 
         <div className="p-4">
           <div className="flex items-center">
-            {/* 현재 아이콘 표시 - 20px 통일 */}
-            <div className="rounded-full overflow-hidden border-2 border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] w-5 h-5 flex items-center justify-center mr-3">
+            {/* 현재 아이콘 표시 */}
+            <div className="mr-2">
               <UserIcon
                 iconUrl={displayIconUrl}
                 level={userLevel}
-                size={20}
                 alt="현재 아이콘"
-                className="object-contain"
               />
             </div>
 

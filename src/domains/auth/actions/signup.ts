@@ -162,6 +162,57 @@ export async function signUp(
 }
 
 /**
+ * 이메일 중복 확인
+ *
+ * @description
+ * 이메일이 이미 사용 중인지 확인합니다.
+ *
+ * @example
+ * ```typescript
+ * const result = await checkEmailAvailability('user@example.com')
+ * if (result.available) {
+ *   console.log('사용 가능한 이메일입니다')
+ * }
+ * ```
+ */
+export async function checkEmailAvailability(
+  email: string
+): Promise<AvailabilityCheckResponse> {
+  try {
+    // 입력 검증
+    const validation = validateEmail(email)
+    if (!validation.valid) {
+      return { available: false, message: validation.error }
+    }
+
+    const supabase = await getSupabaseServer()
+
+    // auth.users 테이블은 직접 조회할 수 없으므로 profiles 테이블에서 확인
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', email)
+      .limit(1)
+
+    if (error) {
+      console.error('이메일 중복 확인 오류:', error)
+      return { available: false, message: '이메일 확인 중 오류가 발생했습니다.' }
+    }
+
+    const available = !data || data.length === 0
+
+    return {
+      available,
+      message: available ? '사용 가능한 이메일입니다.' : '이미 사용 중인 이메일입니다.'
+    }
+
+  } catch (error) {
+    console.error('이메일 중복 확인 중 오류:', error)
+    return { available: false, message: '이메일 확인 중 오류가 발생했습니다.' }
+  }
+}
+
+/**
  * 아이디 중복 확인
  *
  * @description

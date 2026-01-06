@@ -23,3 +23,6 @@ export { getUserExpHistory, getUserExpLevel } from './exp';
 
 // 포인트 관련 액션
 export { getUserPointInfo, getUserPointHistory } from './points';
+
+// 전화번호 인증 관련 액션
+export { sendPhoneVerificationCode, verifyPhoneCode, getPhoneVerificationStatus } from './phone';

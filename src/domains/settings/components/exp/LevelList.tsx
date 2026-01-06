@@ -64,7 +64,7 @@ function AccordionHeader({ isOpen, onClick }: AccordionHeaderProps) {
   return (
     <button
       onClick={onClick}
-      className="w-full px-4 py-3 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
+      className={`w-full px-4 py-3 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] border-b ${isOpen ? 'border-black/5 dark:border-white/10' : 'border-transparent'}`}
     >
       <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">레벨 및 아이콘 목록</h3>
       {isOpen ? (

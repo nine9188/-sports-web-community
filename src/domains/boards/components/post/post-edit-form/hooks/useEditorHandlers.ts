@@ -6,6 +6,16 @@ import { toast } from 'react-toastify';
 import { MatchData } from '@/domains/livescore/actions/footballApi';
 import { generateMatchCardHTML } from '@/shared/utils/matchCardRenderer';
 import { SupabaseClient } from '@supabase/supabase-js';
+import type { TeamMapping } from '@/domains/livescore/constants/teams';
+import type { Player } from '@/domains/livescore/actions/teams/squad';
+import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
+
+// 리그 정보 인터페이스
+interface LeagueInfo {
+  id: number;
+  name: string;
+  koreanName: string;
+}
 
 interface UseEditorHandlersProps {
   editor: Editor | null;
@@ -21,6 +31,7 @@ interface UseEditorHandlersReturn {
   showMatchModal: boolean;
   showLinkModal: boolean;
   showSocialModal: boolean;
+  showEntityModal: boolean;
   // 모달 상태 설정
   setShowImageModal: (show: boolean) => void;
   setShowYoutubeModal: (show: boolean) => void;
@@ -28,8 +39,9 @@ interface UseEditorHandlersReturn {
   setShowMatchModal: (show: boolean) => void;
   setShowLinkModal: (show: boolean) => void;
   setShowSocialModal: (show: boolean) => void;
+  setShowEntityModal: (show: boolean) => void;
   // 핸들러
-  handleToggleDropdown: (dropdown: 'match' | 'link' | 'video' | 'image' | 'youtube' | 'social') => void;
+  handleToggleDropdown: (dropdown: 'match' | 'link' | 'video' | 'image' | 'youtube' | 'social' | 'entity') => void;
   handleFileUpload: (file: File, caption: string) => Promise<void>;
   handleAddImage: (url: string, caption?: string) => void;
   handleAddYoutube: (url: string, caption?: string) => Promise<void>;
@@ -37,6 +49,8 @@ interface UseEditorHandlersReturn {
   handleAddMatch: (matchId: string, matchData: MatchData) => Promise<void>;
   handleAddLink: (url: string, text?: string) => void;
   handleAddSocialEmbed: (platform: string, url: string) => void;
+  handleAddTeam: (team: TeamMapping, league: LeagueInfo) => void;
+  handleAddPlayer: (player: Player, team: TeamMapping) => void;
 }
 
 export function useEditorHandlers({
@@ -51,6 +65,7 @@ export function useEditorHandlers({
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [showSocialModal, setShowSocialModal] = useState(false);
+  const [showEntityModal, setShowEntityModal] = useState(false);
 
   // 모든 모달 닫기
   const closeAllModals = useCallback(() => {
@@ -60,17 +75,19 @@ export function useEditorHandlers({
     setShowMatchModal(false);
     setShowLinkModal(false);
     setShowSocialModal(false);
+    setShowEntityModal(false);
   }, []);
 
   // 모달 토글 핸들러
-  const handleToggleDropdown = useCallback((dropdown: 'match' | 'link' | 'video' | 'image' | 'youtube' | 'social') => {
+  const handleToggleDropdown = useCallback((dropdown: 'match' | 'link' | 'video' | 'image' | 'youtube' | 'social' | 'entity') => {
     const currentState: Record<typeof dropdown, boolean> = {
       image: showImageModal,
       youtube: showYoutubeModal,
       video: showVideoModal,
       match: showMatchModal,
       link: showLinkModal,
-      social: showSocialModal
+      social: showSocialModal,
+      entity: showEntityModal
     };
 
     // 이미 열려있는 모달이면 닫기
@@ -101,8 +118,11 @@ export function useEditorHandlers({
       case 'social':
         setShowSocialModal(true);
         break;
+      case 'entity':
+        setShowEntityModal(true);
+        break;
     }
-  }, [showImageModal, showYoutubeModal, showVideoModal, showMatchModal, showLinkModal, showSocialModal, closeAllModals]);
+  }, [showImageModal, showYoutubeModal, showVideoModal, showMatchModal, showLinkModal, showSocialModal, showEntityModal, closeAllModals]);
 
   // 파일 업로드 처리
   const handleFileUpload = useCallback(async (file: File, caption: string) => {
@@ -317,6 +337,85 @@ export function useEditorHandlers({
     }
   }, [editor, extensionsLoaded]);
 
+  // 팀 카드 추가
+  const handleAddTeam = useCallback((team: TeamMapping, league: LeagueInfo) => {
+    if (!editor || !extensionsLoaded) {
+      toast.error('에디터가 준비되지 않았습니다.');
+      return;
+    }
+
+    try {
+      const commands = editor.commands as Record<string, (...args: unknown[]) => boolean>;
+      if ('setTeamCard' in commands) {
+        const teamData = {
+          id: team.id,
+          name: team.name_en,
+          koreanName: team.name_ko,
+          logo: team.logo || `https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/${team.id}.png`,
+          league: {
+            id: league.id,
+            name: league.name,
+            koreanName: league.koreanName,
+            logo: `https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/leagues/${league.id}.png`
+          }
+        };
+        const success = commands.setTeamCard(team.id, teamData);
+        if (success) {
+          toast.success('팀 카드가 추가되었습니다.');
+          setShowEntityModal(false);
+        } else {
+          toast.error('팀 카드 추가에 실패했습니다.');
+        }
+      } else {
+        toast.error('팀 카드 기능이 로드되지 않았습니다.');
+      }
+    } catch (error) {
+      console.error('팀 카드 추가 중 오류:', error);
+      toast.error('팀 카드를 추가하는데 실패했습니다.');
+    }
+  }, [editor, extensionsLoaded]);
+
+  // 선수 카드 추가
+  const handleAddPlayer = useCallback((player: Player, team: TeamMapping) => {
+    if (!editor || !extensionsLoaded) {
+      toast.error('에디터가 준비되지 않았습니다.');
+      return;
+    }
+
+    try {
+      const koreanName = getPlayerKoreanName(player.id);
+      const commands = editor.commands as Record<string, (...args: unknown[]) => boolean>;
+      if ('setPlayerCard' in commands) {
+        const playerData = {
+          id: player.id,
+          name: player.name,
+          koreanName: koreanName || player.name,
+          photo: player.photo || `https://media.api-sports.io/football/players/${player.id}.png`,
+          position: player.position,
+          number: player.number,
+          team: {
+            id: team.id,
+            name: team.name_en,
+            koreanName: team.name_ko,
+            logo: team.logo || `https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/${team.id}.png`
+          }
+        };
+        const success = commands.setPlayerCard(player.id, playerData);
+        if (success) {
+          toast.success('선수 카드가 추가되었습니다.');
+          setShowEntityModal(false);
+        } else {
+          toast.error('선수 카드 추가에 실패했습니다.');
+        }
+      } else {
+        toast.error('선수 카드 기능이 로드되지 않았습니다.');
+      }
+    } catch (error) {
+      console.error('선수 카드 추가 중 오류:', error);
+      toast.error('선수 카드를 추가하는데 실패했습니다.');
+    }
+  }, [editor, extensionsLoaded]);
+
   return {
     showImageModal,
     showYoutubeModal,
@@ -324,12 +423,14 @@ export function useEditorHandlers({
     showMatchModal,
     showLinkModal,
     showSocialModal,
+    showEntityModal,
     setShowImageModal,
     setShowYoutubeModal,
     setShowVideoModal,
     setShowMatchModal,
     setShowLinkModal,
     setShowSocialModal,
+    setShowEntityModal,
     handleToggleDropdown,
     handleFileUpload,
     handleAddImage,
@@ -337,6 +438,8 @@ export function useEditorHandlers({
     handleAddVideo,
     handleAddMatch,
     handleAddLink,
-    handleAddSocialEmbed
+    handleAddSocialEmbed,
+    handleAddTeam,
+    handleAddPlayer
   };
 }

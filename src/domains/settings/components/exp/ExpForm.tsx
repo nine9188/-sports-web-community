@@ -28,11 +28,8 @@ export default function ExpForm({
   // 다음 레벨까지 남은 경험치 계산
   const remainingExp = getExpToNextLevel(userLevel, userExp);
 
-  // 현재 레벨의 총 필요 경험치 계산
+  // 다음 레벨에 필요한 총 경험치 계산
   const nextLevelTotalExp = getExpForNextLevel(userLevel);
-
-  // 현재 레벨에서 획득한 경험치 계산
-  const currentLevelExp = userExp - (userLevel > 1 ? getExpForNextLevel(userLevel - 1) : 0);
 
   return (
     <div>
@@ -53,7 +50,7 @@ export default function ExpForm({
           <div className="mb-2 flex justify-between">
             <span className="text-sm text-gray-700 dark:text-gray-300">경험치</span>
             <span className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
-              {currentLevelExp.toLocaleString()} / {nextLevelTotalExp.toLocaleString()} XP
+              {userExp.toLocaleString()} / {nextLevelTotalExp.toLocaleString()} XP
             </span>
           </div>
 

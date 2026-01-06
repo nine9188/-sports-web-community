@@ -36,14 +36,19 @@ export async function checkUserAuth(redirectTo = '/auth/signin') {
  * 비밀번호 변경 Server Action
  *
  * Supabase는 updateUser()로 비밀번호 변경 시 자동으로 새 세션을 발급합니다.
- * 추가 보안을 위해 Turnstile 봇 검증을 사용합니다.
+ * 추가 보안을 위해 현재 비밀번호 확인과 Turnstile 봇 검증을 사용합니다.
  */
 export async function changePassword(
+  currentPassword: string,
   newPassword: string,
   turnstileToken: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // 필드 검증
+    if (!currentPassword) {
+      return { success: false, error: '현재 비밀번호를 입력해주세요.' };
+    }
+
     if (!newPassword) {
       return { success: false, error: '새 비밀번호를 입력해주세요.' };
     }
@@ -92,6 +97,24 @@ export async function changePassword(
     const provider = user.app_metadata?.provider;
     if (provider && provider !== 'email') {
       return { success: false, error: '소셜 로그인 계정은 비밀번호를 변경할 수 없습니다.' };
+    }
+
+    // 현재 비밀번호 확인 (signInWithPassword로 검증)
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email: user.email!,
+      password: currentPassword,
+    });
+
+    if (verifyError) {
+      // 실패 로그 기록
+      await logAuthEvent(
+        'PASSWORD_CHANGE_FAILED',
+        '현재 비밀번호 검증 실패',
+        user.id,
+        false,
+        { error: 'invalid_current_password' }
+      );
+      return { success: false, error: '현재 비밀번호가 일치하지 않습니다.' };
     }
 
     // 비밀번호 변경

@@ -22,14 +22,15 @@ export async function getUserIcons(userId: string): Promise<ActionResponse<IconI
     
     const supabase = await getSupabaseServer();
     
-    // 사용자의 아이템 목록 조회 - type 필터를 제거
+    // 사용자의 아이콘 목록 조회 (소모품 제외 - 닉네임 변경권 등)
     const { data, error } = await supabase
       .from('user_items')
       .select(`
         item_id,
-        shop_items!inner(id, name, image_url)
+        shop_items!inner(id, name, image_url, is_consumable)
       `)
-      .eq('user_id', userId);
+      .eq('user_id', userId)
+      .eq('shop_items.is_consumable', false);
     
     if (error) {
       console.error('아이콘 목록 조회 오류:', error);
@@ -178,18 +179,27 @@ export async function updateUserIcon(userId: string, iconId: number | null): Pro
       };
     }
     
-    // 아이콘 ID가 제공된 경우 해당 아이콘이 실제로 존재하는지 확인
+    // 아이콘 ID가 제공된 경우 해당 아이콘이 실제로 존재하고 소모품이 아닌지 확인
     if (iconId !== null) {
-      const { data: iconExists, error: iconError } = await supabase
+      const { data: iconData, error: iconError } = await supabase
         .from('shop_items')
-        .select('id')
+        .select('id, is_consumable')
         .eq('id', iconId)
         .single();
-        
-      if (iconError || !iconExists) {
+
+      if (iconError || !iconData) {
         return {
           success: false,
           error: '선택한 아이콘이 존재하지 않습니다.',
+          data: null
+        };
+      }
+
+      // 소모품은 아이콘으로 설정 불가
+      if (iconData.is_consumable) {
+        return {
+          success: false,
+          error: '해당 아이템은 아이콘으로 설정할 수 없습니다.',
           data: null
         };
       }
@@ -234,6 +244,23 @@ export async function updateUserIcon(userId: string, iconId: number | null): Pro
 export async function updateUserIconServer(userId: string, iconId: number | null) {
   try {
     const supabase = await getSupabaseServer();
+
+    // 아이콘 ID가 제공된 경우 소모품이 아닌지 확인
+    if (iconId !== null) {
+      const { data: iconData, error: iconError } = await supabase
+        .from('shop_items')
+        .select('id, is_consumable')
+        .eq('id', iconId)
+        .single();
+
+      if (iconError || !iconData) {
+        return { success: false, error: '선택한 아이콘이 존재하지 않습니다.' };
+      }
+
+      if (iconData.is_consumable) {
+        return { success: false, error: '해당 아이템은 아이콘으로 설정할 수 없습니다.' };
+      }
+    }
 
     // 기존 아이콘 정보 조회 (변경 감지용)
     const { data: oldProfile } = await supabase

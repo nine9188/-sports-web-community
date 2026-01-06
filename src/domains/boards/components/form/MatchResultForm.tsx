@@ -3,12 +3,10 @@
 import React, { useState, useRef, useEffect, useTransition } from 'react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { CalendarIcon, Search, X } from 'lucide-react';
-import Image from 'next/image';
-import DatePicker from 'react-datepicker';
+import { CalendarIcon, Search } from 'lucide-react';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
-import "react-datepicker/dist/react-datepicker.css";
+import Calendar from '@/shared/components/Calendar';
 import { getMatchesByDate } from '@/domains/boards/actions/matches';
 import type { MatchData } from '@/domains/livescore/actions/footballApi';
 
@@ -70,25 +68,30 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(false);
   const [calendar, setCalendar] = useState(false);
+  const [calendarPosition, setCalendarPosition] = useState({ top: 0, left: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const calendarButtonRef = useRef<HTMLButtonElement>(null);
   const [, startTransition] = useTransition();
 
-  // 외부 클릭 감지 - 이벤트 리스너 수정
+  // 외부 클릭 감지 - 캘린더가 열려있을 때는 무시
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
+      // 캘린더가 열려있으면 외부 클릭 무시
+      if (calendar) return;
+
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         onCancel();
       }
     }
-    
+
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
-    
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen, onCancel]);
+  }, [isOpen, onCancel, calendar]);
 
   // 서버액션으로 경기 데이터 불러오기
   useEffect(() => {
@@ -164,32 +167,23 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
               {/* 날짜 선택 버튼 */}
               <div className="relative flex-1">
                 <button
+                  ref={calendarButtonRef}
                   type="button"
-                  onClick={() => setCalendar(!calendar)}
+                  onClick={() => {
+                    if (!calendar && calendarButtonRef.current) {
+                      const rect = calendarButtonRef.current.getBoundingClientRect();
+                      setCalendarPosition({
+                        top: rect.bottom + 4,
+                        left: Math.max(8, rect.left),
+                      });
+                    }
+                    setCalendar(!calendar);
+                  }}
                   className="w-full flex items-center px-3 py-1.5 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#1D1D1D] text-xs text-gray-900 dark:text-[#F0F0F0] hover:bg-[#F5F5F5] dark:hover:bg-[#262626] transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                 >
                   <CalendarIcon className="mr-2 h-3 w-3 text-gray-500 dark:text-gray-400" />
                   <span>{format(selectedDate, 'PPP (eee)', { locale: ko })}</span>
                 </button>
-
-                {calendar && (
-                  <div className="absolute top-full left-0 mt-1 bg-white dark:bg-[#1D1D1D] shadow-lg rounded-md border border-black/7 dark:border-white/10 z-10">
-                    <div className="p-2">
-                      <DatePicker
-                        selected={selectedDate}
-                        onChange={handleDateChange}
-                        inline
-                        locale={ko}
-                        minDate={new Date(2024, 0, 1)}
-                        maxDate={new Date(2025, 11, 31)}
-                        showMonthDropdown
-                        showYearDropdown
-                        dropdownMode="select"
-                        calendarClassName="custom-datepicker"
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
               
               {/* 검색 입력 필드 */}
@@ -349,145 +343,46 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
           </div>
         </div>
       </div>
-      
-      {/* DatePicker 커스텀 스타일 */}
-      <style jsx>{`
-        :global(.custom-datepicker) {
-          font-family: inherit;
-          border: none;
-          box-shadow: none;
-        }
-        
-        :global(.react-datepicker) {
-          font-family: inherit;
-          border: 1px solid #e5e7eb;
-          border-radius: 0.5rem;
-          box-shadow: none;
-        }
-        
-        :global(.react-datepicker__header) {
-          background-color: #f9fafb;
-          border-bottom: 1px solid #e5e7eb;
-          border-radius: 0.5rem 0.5rem 0 0;
-          padding: 0.5rem;
-        }
-        
-        :global(.react-datepicker__current-month) {
-          font-size: 0.875rem;
-          font-weight: 600;
-          color: #374151;
-          margin-bottom: 0.5rem;
-        }
-        
-        :global(.react-datepicker__day-names) {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 0.25rem;
-        }
-        
-        :global(.react-datepicker__day-name) {
-          color: #6b7280;
-          font-size: 0.75rem;
-          font-weight: 500;
-          width: 2rem;
-          line-height: 1.5rem;
-          text-align: center;
-        }
-        
-        :global(.react-datepicker__month) {
-          margin: 0.5rem;
-        }
-        
-        :global(.react-datepicker__week) {
-          display: flex;
-          justify-content: space-between;
-        }
-        
-        :global(.react-datepicker__day) {
-          width: 2rem;
-          height: 2rem;
-          line-height: 2rem;
-          text-align: center;
-          font-size: 0.75rem;
-          color: #374151;
-          cursor: pointer;
-          border-radius: 0.25rem;
-          margin: 0.125rem 0;
-          display: inline-block;
-        }
-        
-        :global(.react-datepicker__day:hover) {
-          background-color: #f3f4f6;
-        }
-        
-        :global(.react-datepicker__day--selected) {
-          background-color: #3b82f6;
-          color: white;
-        }
-        
-        :global(.react-datepicker__day--selected:hover) {
-          background-color: #2563eb;
-        }
-        
-        :global(.react-datepicker__day--today) {
-          background-color: #dbeafe;
-          color: #1d4ed8;
-        }
-        
-        :global(.react-datepicker__day--outside-month) {
-          color: #d1d5db;
-        }
-        
-        :global(.react-datepicker__navigation) {
-          top: 0.75rem;
-          width: 1.5rem;
-          height: 1.5rem;
-          border: none;
-          background: none;
-          cursor: pointer;
-        }
-        
-        :global(.react-datepicker__navigation--previous) {
-          left: 0.75rem;
-        }
-        
-        :global(.react-datepicker__navigation--next) {
-          right: 0.75rem;
-        }
-        
-        :global(.react-datepicker__navigation-icon::before) {
-          border-color: #6b7280;
-          border-width: 2px 2px 0 0;
-          width: 0.5rem;
-          height: 0.5rem;
-        }
-        
-        :global(.react-datepicker__month-dropdown),
-        :global(.react-datepicker__year-dropdown) {
-          background-color: white;
-          border: 1px solid #e5e7eb;
-          border-radius: 0.25rem;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        
-        :global(.react-datepicker__month-option),
-        :global(.react-datepicker__year-option) {
-          padding: 0.25rem 0.5rem;
-          font-size: 0.75rem;
-          cursor: pointer;
-        }
-        
-        :global(.react-datepicker__month-option:hover),
-        :global(.react-datepicker__year-option:hover) {
-          background-color: #f3f4f6;
-        }
-        
-        :global(.react-datepicker__month-option--selected),
-        :global(.react-datepicker__year-option--selected) {
-          background-color: #3b82f6;
-          color: white;
-        }
-      `}</style>
+
+      {/* 캘린더 모달 - 버튼 아래에 표시 */}
+      {calendar && (
+        <div
+          className="fixed inset-0 z-[200]"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setCalendar(false);
+          }}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        >
+          <div
+            className="absolute"
+            style={{
+              top: calendarPosition.top,
+              left: calendarPosition.left,
+            }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+          >
+            <Calendar
+              selectedDate={selectedDate}
+              onDateSelect={handleDateChange}
+              onClose={() => setCalendar(false)}
+              minDate={new Date(2024, 0, 1)}
+              maxDate={new Date(2026, 11, 31)}
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 } 

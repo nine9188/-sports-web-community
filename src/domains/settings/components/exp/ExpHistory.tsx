@@ -98,7 +98,6 @@ function ExpHistoryRow({ item }: ExpHistoryRowProps) {
 
   // 음수면 spend, 양수면 earn으로 처리
   const isEarned = item.amount >= 0;
-  const textColorClass = isEarned ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
   const prefix = isEarned ? '+' : '';
   const expAmount = Math.abs(item.amount || 0);
 
@@ -110,7 +109,7 @@ function ExpHistoryRow({ item }: ExpHistoryRowProps) {
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
         {item.reason || '경험치 획득'}
       </td>
-      <td className={`px-6 py-4 whitespace-nowrap text-sm font-bold text-right ${textColorClass}`}>
+      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-right text-gray-900 dark:text-[#F0F0F0]">
         {prefix}{expAmount.toLocaleString()} XP
       </td>
     </tr>

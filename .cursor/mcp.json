@@ -13,6 +13,16 @@
       "env": {
         "SUPABASE_ACCESS_TOKEN": "sbp_5830b6f1bafaa738c3a01765618068fdd73f96e9"
       }
+    },
+    "solapi": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "@solapi/mcp-server"
+      ]
     }
   }
 } 

@@ -36,11 +36,10 @@ export function renderMatchCard(data: MatchCardRenderData): string {
     normalized.id = matchId;
   }
 
-  // 통합 함수 사용 (조회용: CSS 클래스 + 호버 핸들러)
+  // 통합 함수 사용 (조회용: CSS 클래스)
   return generateMatchCardHtml(normalized, {
     useInlineStyles: false,
     includeDataAttr: false,
-    includeHoverHandlers: true,
     markAsProcessed: true,
   });
 }

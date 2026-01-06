@@ -30,7 +30,6 @@ export function generateMatchCardHTML(matchData: MatchData, matchId?: string | n
   return generateMatchCardHtml(normalized, {
     useInlineStyles: true,
     includeDataAttr: true,
-    includeHoverHandlers: false,
     markAsProcessed: false,
   });
 }

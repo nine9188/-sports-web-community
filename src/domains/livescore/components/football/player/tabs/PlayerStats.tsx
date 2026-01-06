@@ -166,7 +166,7 @@ export default function PlayerStats({ statistics: initialStatistics }: PlayerSta
                   <h4 className="text-xs text-gray-500 dark:text-gray-400 uppercase">경기 출전</h4>
                   <p className="font-semibold text-sm text-gray-900 dark:text-[#F0F0F0]">{stat.games.appearences || 0}</p>
                 </div>
-                <div className="p-3 border-r border-b border-black/5 dark:border-white/10 md:border-b-0">
+                <div className="p-3 border-r border-black/5 dark:border-white/10 md:border-r">
                   <h4 className="text-xs text-gray-500 dark:text-gray-400 uppercase">선발 출전</h4>
                   <p className="font-semibold text-sm text-gray-900 dark:text-[#F0F0F0]">{stat.games.lineups || 0}</p>
                 </div>
@@ -191,7 +191,7 @@ export default function PlayerStats({ statistics: initialStatistics }: PlayerSta
                   <h4 className="text-xs text-gray-500 dark:text-gray-400">도움</h4>
                   <p className="font-medium text-sm text-gray-900 dark:text-[#F0F0F0]">{stat.goals.assists || 0}</p>
                 </div>
-                <div className="p-3 border-r border-b border-black/5 dark:border-white/10 md:border-b-0">
+                <div className="p-3 border-r border-black/5 dark:border-white/10 md:border-r">
                   <h4 className="text-xs text-gray-500 dark:text-gray-400">슈팅</h4>
                   <p className="font-medium text-sm text-gray-900 dark:text-[#F0F0F0]">{stat.shots.total || 0}</p>
                 </div>
@@ -216,7 +216,7 @@ export default function PlayerStats({ statistics: initialStatistics }: PlayerSta
                   <h4 className="text-xs text-gray-500 dark:text-gray-400">키패스</h4>
                   <p className="font-medium text-sm text-gray-900 dark:text-[#F0F0F0]">{stat.passes.key || 0}</p>
                 </div>
-                <div className="p-3 border-r border-b border-black/5 dark:border-white/10 md:border-b-0">
+                <div className="p-3 border-r border-black/5 dark:border-white/10 md:border-r">
                   <h4 className="text-xs text-gray-500 dark:text-gray-400">패스 정확도</h4>
                   <p className="font-medium text-sm text-gray-900 dark:text-[#F0F0F0]">{stat.passes.accuracy || '0%'}</p>
                 </div>
@@ -241,7 +241,7 @@ export default function PlayerStats({ statistics: initialStatistics }: PlayerSta
                   <h4 className="text-xs text-gray-500 dark:text-gray-400">차단</h4>
                   <p className="font-medium text-sm text-gray-900 dark:text-[#F0F0F0]">{stat.tackles.blocks || 0}</p>
                 </div>
-                <div className="p-3 border-r border-b border-black/5 dark:border-white/10 md:border-b-0">
+                <div className="p-3 border-r border-black/5 dark:border-white/10 md:border-r">
                   <h4 className="text-xs text-gray-500 dark:text-gray-400">인터셉트</h4>
                   <p className="font-medium text-sm text-gray-900 dark:text-[#F0F0F0]">{stat.tackles.interceptions || 0}</p>
                 </div>
@@ -258,11 +258,11 @@ export default function PlayerStats({ statistics: initialStatistics }: PlayerSta
                 <h3 className="text-xs font-semibold text-gray-900 dark:text-[#F0F0F0]">기타 통계</h3>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-                <div className="p-3 border-r border-b border-black/5 dark:border-white/10 md:border-b-0">
+                <div className="p-3 border-r border-b border-black/5 dark:border-white/10 md:border-b-0 lg:border-b-0">
                   <h4 className="text-xs text-gray-500 dark:text-gray-400">옐로카드</h4>
                   <p className="font-medium text-sm text-gray-900 dark:text-[#F0F0F0]">{stat.cards.yellow || 0}</p>
                 </div>
-                <div className="p-3 border-b border-black/5 dark:border-white/10 md:border-b-0 md:border-r">
+                <div className="p-3 border-b border-black/5 dark:border-white/10 md:border-b-0 md:border-r lg:border-b-0">
                   <h4 className="text-xs text-gray-500 dark:text-gray-400">레드카드</h4>
                   <p className="font-medium text-sm text-gray-900 dark:text-[#F0F0F0]">{stat.cards.red || 0}</p>
                 </div>
@@ -270,11 +270,11 @@ export default function PlayerStats({ statistics: initialStatistics }: PlayerSta
                   <h4 className="text-xs text-gray-500 dark:text-gray-400">드리블 시도</h4>
                   <p className="font-medium text-sm text-gray-900 dark:text-[#F0F0F0]">{stat.dribbles.attempts || 0}</p>
                 </div>
-                <div className="p-3 border-b border-black/5 dark:border-white/10 lg:border-b-0 lg:border-r">
+                <div className="p-3 border-b border-black/5 dark:border-white/10 md:border-r lg:border-b-0 lg:border-r">
                   <h4 className="text-xs text-gray-500 dark:text-gray-400">드리블 성공</h4>
                   <p className="font-medium text-sm text-gray-900 dark:text-[#F0F0F0]">{stat.dribbles.success || 0}</p>
                 </div>
-                <div className="p-3 border-r border-b border-black/5 dark:border-white/10 lg:border-b-0">
+                <div className="p-3 border-r border-black/5 dark:border-white/10 md:border-r lg:border-r">
                   <h4 className="text-xs text-gray-500 dark:text-gray-400">파울 유도</h4>
                   <p className="font-medium text-sm text-gray-900 dark:text-[#F0F0F0]">{stat.fouls.drawn || 0}</p>
                 </div>
@@ -284,7 +284,7 @@ export default function PlayerStats({ statistics: initialStatistics }: PlayerSta
                 </div>
               </div>
             </div>
-              
+
             {/* 골키퍼 통계 (포지션이 골키퍼인 경우만 표시) */}
             {stat.games.position === 'Goalkeeper' && (
               <div>
@@ -300,7 +300,7 @@ export default function PlayerStats({ statistics: initialStatistics }: PlayerSta
                     <h4 className="text-xs text-gray-500 dark:text-gray-400">실점</h4>
                     <p className="font-medium text-sm text-gray-900 dark:text-[#F0F0F0]">{stat.goals.conceded || 0}</p>
                   </div>
-                  <div className="p-3 border-r border-b border-black/5 dark:border-white/10 md:border-b-0">
+                  <div className="p-3 border-r border-black/5 dark:border-white/10 md:border-r">
                     <h4 className="text-xs text-gray-500 dark:text-gray-400">무실점 경기</h4>
                     <p className="font-medium text-sm text-gray-900 dark:text-[#F0F0F0]">{stat.goals.cleansheets || 0}</p>
                   </div>

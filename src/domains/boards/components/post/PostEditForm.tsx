@@ -132,12 +132,22 @@ export default function PostEditForm({
     const loadAdditionalExtensions = async () => {
       try {
         // 동적 확장 로드
-        const [YoutubeExtension, VideoExtension, MatchCardExt, SocialEmbedExt, AutoSocialEmbedExt] = await Promise.all([
+        const [
+          YoutubeExtension,
+          VideoExtension,
+          MatchCardExt,
+          SocialEmbedExt,
+          AutoSocialEmbedExt,
+          TeamCardExt,
+          PlayerCardExt
+        ] = await Promise.all([
           import('@/shared/ui/tiptap/YoutubeExtension').then(mod => mod.YoutubeExtension),
           import('@/shared/ui/tiptap/VideoExtension').then(mod => mod.Video),
           loadMatchCardExtension(),
           import('@/shared/ui/tiptap/extensions/social-embeds').then(mod => mod.SocialEmbedExtension),
-          import('@/shared/ui/tiptap/extensions/social-embeds').then(mod => mod.AutoSocialEmbedExtension)
+          import('@/shared/ui/tiptap/extensions/social-embeds').then(mod => mod.AutoSocialEmbedExtension),
+          import('@/shared/ui/tiptap/TeamCardExtension').then(mod => mod.TeamCardExtension),
+          import('@/shared/ui/tiptap/PlayerCardExtension').then(mod => mod.PlayerCardExtension)
         ]);
 
         // 기본 확장에 추가 확장 병합
@@ -147,7 +157,9 @@ export default function PostEditForm({
           VideoExtension,
           MatchCardExt,
           SocialEmbedExt,
-          AutoSocialEmbedExt.configure({ enabled: true }) // 자동 임베드 활성화
+          AutoSocialEmbedExt.configure({ enabled: true }), // 자동 임베드 활성화
+          TeamCardExt,
+          PlayerCardExt
         ]);
         setExtensionsLoaded(true);
       } catch (error) {
@@ -189,6 +201,7 @@ export default function PostEditForm({
     showMatchModal,
     showLinkModal,
     showSocialModal,
+    showEntityModal,
     handleToggleDropdown,
     handleFileUpload,
     handleAddImage,
@@ -196,7 +209,9 @@ export default function PostEditForm({
     handleAddVideo,
     handleAddMatch,
     handleAddLink,
-    handleAddSocialEmbed
+    handleAddSocialEmbed,
+    handleAddTeam,
+    handleAddPlayer
   } = useEditorHandlers({
     editor,
     extensionsLoaded,
@@ -470,6 +485,7 @@ export default function PostEditForm({
               showVideoModal={showVideoModal}
               showMatchModal={showMatchModal}
               showSocialModal={showSocialModal}
+              showEntityModal={showEntityModal}
               handleToggleDropdown={handleToggleDropdown}
               handleFileUpload={handleFileUpload}
               handleAddImage={handleAddImage}
@@ -478,6 +494,8 @@ export default function PostEditForm({
               handleAddVideo={handleAddVideo}
               handleAddMatch={handleAddMatch}
               handleAddSocialEmbed={handleAddSocialEmbed}
+              handleAddTeam={handleAddTeam}
+              handleAddPlayer={handleAddPlayer}
             />
             
             {/* 에디터 컨텐츠 영역 - 스타일은 globals.css에서 관리 */}

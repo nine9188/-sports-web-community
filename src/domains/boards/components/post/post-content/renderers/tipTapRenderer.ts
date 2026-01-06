@@ -1,15 +1,36 @@
 import type { TipTapDoc, TipTapNode } from '../types';
 import { renderMatchCard } from './matchCardRenderer';
+import { renderTeamCard } from './teamCardRenderer';
+import { renderPlayerCard } from './playerCardRenderer';
 
 /**
  * TipTap 노드를 HTML로 변환
  */
 export function renderTipTapNode(node: TipTapNode): string {
+  // 경기 카드
   if (node.type === 'matchCard' && node.attrs) {
     const { matchId, matchData } = node.attrs;
     return renderMatchCard({
       matchId: matchId as string,
       matchData: matchData as Record<string, unknown>
+    });
+  }
+
+  // 팀 카드
+  if (node.type === 'teamCard' && node.attrs) {
+    const { teamId, teamData } = node.attrs;
+    return renderTeamCard({
+      teamId: teamId as string | number,
+      teamData: teamData as Record<string, unknown>
+    });
+  }
+
+  // 선수 카드
+  if (node.type === 'playerCard' && node.attrs) {
+    const { playerId, playerData } = node.attrs;
+    return renderPlayerCard({
+      playerId: playerId as string | number,
+      playerData: playerData as Record<string, unknown>
     });
   }
 
@@ -201,6 +222,15 @@ export function renderTipTapNode(node: TipTapNode): string {
     });
     listContent += '</ul>';
     return listContent;
+  }
+
+  // blockquote 노드 처리
+  if (node.type === 'blockquote' && Array.isArray(node.content)) {
+    let quoteContent = '';
+    node.content.forEach((childNode) => {
+      quoteContent += renderTipTapNode(childNode);
+    });
+    return `<blockquote class="border-l-4 border-blue-500 pl-4 py-2 my-4 bg-blue-50 dark:bg-blue-900/20 rounded-r-lg italic text-gray-700 dark:text-gray-300">${quoteContent}</blockquote>`;
   }
 
   return '';

@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
 
 // 소셜 미디어 아이콘 컴포넌트들
 function InstagramIcon({ className }: { className?: string }) {
@@ -37,56 +36,8 @@ function DiscordIcon({ className }: { className?: string }) {
 }
 
 export default function Footer() {
-  const [email, setEmail] = useState('')
-  const [isSubscribed, setIsSubscribed] = useState(false)
-
-  const handleNewsletterSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (email) {
-      // TODO: 실제 뉴스레터 구독 API 연동
-      console.log('Newsletter subscription:', email)
-      setIsSubscribed(true)
-      setEmail('')
-      setTimeout(() => setIsSubscribed(false), 3000)
-    }
-  }
-
   return (
     <footer className="bg-white dark:bg-[#1D1D1D] border-t border-black/7 dark:border-white/10">
-      {/* 뉴스레터 섹션 */}
-      <div className="border-b border-black/5 dark:border-white/5">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="text-center md:text-left">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0] mb-1">
-                뉴스레터 구독
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                최신 경기 결과, 이적 뉴스, 커뮤니티 소식을 받아보세요
-              </p>
-            </div>
-            <form onSubmit={handleNewsletterSubmit} className="flex gap-2 w-full md:w-auto">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="이메일 주소 입력"
-                className="flex-1 md:w-64 px-4 py-2.5 text-sm rounded-lg border border-black/7 dark:border-0 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] placeholder-gray-400 dark:placeholder-gray-500 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] transition-all"
-                required
-              />
-              <button
-                type="submit"
-                disabled={isSubscribed}
-                className="px-5 py-2.5 text-sm font-medium text-white bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-              >
-                {isSubscribed ? '구독 완료!' : '구독하기'}
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      {/* 메인 푸터 */}
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
           {/* 저작권 */}

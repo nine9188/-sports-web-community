@@ -59,11 +59,7 @@ export default function MatchCard({ match, isLast = false }: MatchCardProps) {
     if ((statusCode === 'LIVE' || statusCode === '1H' || statusCode === '2H' || statusCode === 'IN_PLAY') && elapsed > 0) {
       return { label: `${elapsed}'`, isLive: true };
     }
-    // STATUS_MAP에서 확인
-    if (STATUS_MAP[statusCode]) {
-      return STATUS_MAP[statusCode];
-    }
-    // NS, TBD는 시간 표시
+    // NS, TBD는 시간 표시 (STATUS_MAP보다 먼저 체크)
     if (statusCode === 'NS' || statusCode === 'TBD') {
       const timeStr = new Date(match.time?.date ?? 0).toLocaleTimeString('ko-KR', {
         hour: '2-digit',
@@ -72,6 +68,10 @@ export default function MatchCard({ match, isLast = false }: MatchCardProps) {
         timeZone: 'Asia/Seoul'
       });
       return { label: timeStr, isLive: false };
+    }
+    // STATUS_MAP에서 확인
+    if (STATUS_MAP[statusCode]) {
+      return STATUS_MAP[statusCode];
     }
     return { label: statusCode, isLive: false };
   };

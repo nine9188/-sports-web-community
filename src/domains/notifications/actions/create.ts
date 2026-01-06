@@ -393,6 +393,9 @@ export async function createAdminNoticeWithLog({
 
 /**
  * 회원가입 환영 알림 생성
+ *
+ * TODO: 나중에 공지사항 게시글 작성 후 해당 게시글 링크로 변경 필요
+ * 예: link: '/boards/notice/1' (초보자 가이드 공지글)
  */
 export async function createWelcomeNotification({
   userId
@@ -405,10 +408,10 @@ export async function createWelcomeNotification({
     type: 'welcome',
     title: '환영합니다! 4590 Football에 오신 것을 환영합니다! 👋',
     message: '커뮤니티 가이드와 인기 게시판을 둘러보세요!',
-    link: '/guide/beginner',
+    // TODO: 공지사항 게시글 작성 후 해당 링크로 변경 (예: '/boards/notice/1')
+    link: '/boards/popular',
     metadata: {
       is_welcome: true,
-      guide_link: '/guide/beginner',
       popular_link: '/boards/popular'
     }
   });

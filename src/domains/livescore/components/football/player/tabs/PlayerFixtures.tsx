@@ -480,24 +480,24 @@ export default function PlayerFixtures({
                     </div>
                     
                     {/* 두 번째 줄: 골, 도움, 슈팅, 유효슈팅, 패스, 키패스 */}
-                    <div className="flex justify-between py-2 px-2 text-xs text-gray-700 dark:text-gray-300 bg-[#F5F5F5] dark:bg-[#262626]">
-                      <div className="flex-1 text-center">
+                    <div className="flex justify-between py-2 text-xs text-gray-700 dark:text-gray-300 bg-[#F5F5F5] dark:bg-[#262626]">
+                      <div className="flex-1 text-center border-r border-black/10 dark:border-white/10">
                         <div className="font-medium mb-1">골</div>
                         <div>{fixture.statistics?.goals?.total || '-'}</div>
                       </div>
-                      <div className="flex-1 text-center">
+                      <div className="flex-1 text-center border-r border-black/10 dark:border-white/10">
                         <div className="font-medium mb-1">도움</div>
                         <div>{fixture.statistics?.goals?.assists || '-'}</div>
                       </div>
-                      <div className="flex-1 text-center">
+                      <div className="flex-1 text-center border-r border-black/10 dark:border-white/10">
                         <div className="font-medium mb-1">슈팅</div>
                         <div>{fixture.statistics?.shots?.total || '-'}</div>
                       </div>
-                      <div className="flex-1 text-center">
+                      <div className="flex-1 text-center border-r border-black/10 dark:border-white/10">
                         <div className="font-medium mb-1">유효</div>
                         <div>{fixture.statistics?.shots?.on || '-'}</div>
                       </div>
-                      <div className="flex-1 text-center">
+                      <div className="flex-1 text-center border-r border-black/10 dark:border-white/10">
                         <div className="font-medium mb-1">패스</div>
                         <div>{fixture.statistics?.passes?.total || '-'}</div>
                       </div>

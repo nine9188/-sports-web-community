@@ -141,9 +141,10 @@ export default function TeamHeader({ team, teamId, isLoading: externalLoading, e
               imageId={teamInfo.id}
               imageType={ImageType.Teams}
               alt={`${teamInfo.name} 로고`}
-              width={80}
-              height={80}
-              className="object-contain w-16 h-16 md:w-20 md:h-20"
+              size="xl"
+              variant="square"
+              fit="contain"
+              className="w-16 h-16 md:w-20 md:h-20"
             />
           </div>
           <div className="flex flex-col justify-center">
@@ -187,9 +188,10 @@ export default function TeamHeader({ team, teamId, isLoading: externalLoading, e
                         imageId={venueId || teamInfo.id}
                         imageType={ImageType.Venues}
                         alt={`${venue.name} 경기장`}
-                        width={144}
-                        height={96}
-                        className="object-cover w-24 h-16 md:w-36 md:h-24"
+                        size="xl"
+                        variant="square"
+                        fit="cover"
+                        className="w-24 h-16 md:w-36 md:h-24"
                       />
                     );
                   })()

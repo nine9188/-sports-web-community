@@ -1,4 +1,3 @@
-import type { MatchCardLinkElement } from '../types';
 import { normalizeMatchCardData, generateMatchCardHtml, DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
 const SUPABASE_URL = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co';
 
@@ -34,7 +33,6 @@ export function populateEmptyMatchCards(container: HTMLElement): void {
       const html = generateMatchCardHtml(normalized, {
         useInlineStyles: false,
         includeDataAttr: false,
-        includeHoverHandlers: true,
         markAsProcessed: true,
       });
 
@@ -59,21 +57,9 @@ export function registerMatchCardHoverHandler(): void {
   if (typeof window === 'undefined') return;
 
   window.handleMatchCardHover = function(element: HTMLElement, isEnter: boolean) {
-    const card = element.closest('.match-card, .processed-match-card') as HTMLElement | null;
-    if (!card) return;
-
-    const isDark = document.documentElement.classList.contains('dark');
-
-    if (isEnter) {
-      card.style.backgroundColor = isDark ? '#333333' : '#EAEAEA';
-      card.style.boxShadow = '0 4px 12px 0 rgba(0, 0, 0, 0.15)';
-      card.style.transform = 'translateY(-2px)';
-      card.style.transition = 'all 0.2s ease';
-    } else {
-      card.style.backgroundColor = isDark ? '#1D1D1D' : 'white';
-      card.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1)';
-      card.style.transform = 'translateY(0)';
-    }
+    // CSS로 호버 효과 처리 - JS는 빈 함수로 유지 (호환성)
+    void element;
+    void isEnter;
   };
 }
 
@@ -156,45 +142,10 @@ function updateTeamImage(img: HTMLImageElement, isDark: boolean): void {
  * 매치 카드 호버 효과 적용
  */
 export function setupMatchCardHover(container: HTMLElement): MutationObserver | undefined {
-  const applyHoverToCards = () => {
-    const matchCards = container.querySelectorAll('.match-card, .processed-match-card') || [];
-
-    matchCards.forEach((card) => {
-      const cardElement = card as HTMLElement;
-      const link = cardElement.querySelector('a') as MatchCardLinkElement | null;
-
-      if (!link || link._hoverSetup) return;
-
-      const handleMouseEnter = () => {
-        const isDark = document.documentElement.classList.contains('dark');
-        cardElement.style.backgroundColor = isDark ? '#333333' : '#EAEAEA';
-        cardElement.style.boxShadow = '0 4px 12px 0 rgba(0, 0, 0, 0.15)';
-        cardElement.style.transform = 'translateY(-2px)';
-        cardElement.style.transition = 'all 0.2s ease';
-      };
-
-      const handleMouseLeave = () => {
-        const isDark = document.documentElement.classList.contains('dark');
-        cardElement.style.backgroundColor = isDark ? '#1D1D1D' : 'white';
-        cardElement.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1)';
-        cardElement.style.transform = 'translateY(0)';
-      };
-
-      link.addEventListener('mouseenter', handleMouseEnter);
-      link.addEventListener('mouseleave', handleMouseLeave);
-
-      link._hoverSetup = true;
-      link._hoverEnter = handleMouseEnter;
-      link._hoverLeave = handleMouseLeave;
-    });
-  };
-
-  // 즉시 적용
-  applyHoverToCards();
-
-  // MutationObserver로 동적으로 추가되는 카드도 감지
+  // CSS로 호버 효과 처리 - JS 핸들러 불필요
+  // MutationObserver는 다크모드 이미지 업데이트 등 다른 용도로 유지
   const observer = new MutationObserver(() => {
-    applyHoverToCards();
+    updateMatchCardImages(container);
   });
 
   observer.observe(container, {
@@ -206,17 +157,9 @@ export function setupMatchCardHover(container: HTMLElement): MutationObserver | 
 }
 
 /**
- * 매치카드 호버 이벤트 리스너 정리
+ * 매치카드 호버 이벤트 리스너 정리 (호환성 유지용)
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function cleanupMatchCardHover(container: HTMLElement): void {
-  const links = container.querySelectorAll('.match-card a, .processed-match-card a');
-  links.forEach((link) => {
-    const linkWithHandlers = link as MatchCardLinkElement;
-    if (linkWithHandlers._hoverEnter) {
-      link.removeEventListener('mouseenter', linkWithHandlers._hoverEnter);
-    }
-    if (linkWithHandlers._hoverLeave) {
-      link.removeEventListener('mouseleave', linkWithHandlers._hoverLeave);
-    }
-  });
+  // CSS로 호버 효과 처리 - JS 이벤트 리스너 정리 불필요
 }

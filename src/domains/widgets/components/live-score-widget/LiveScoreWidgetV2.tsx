@@ -48,13 +48,23 @@ function getStatusInfo(
   // STATUS_MAP에서 확인
   if (STATUS_MAP[status]) {
     const statusInfo = STATUS_MAP[status];
-    // 예정 경기인 경우 시간 표시
-    if (status === 'NS' && kickoffTime) {
-      return {
-        label: kickoffTime,
-        isLive: false,
-        subLabel: dateLabel === 'tomorrow' ? '내일' : undefined
-      };
+    // 예정 경기인 경우
+    if (status === 'NS') {
+      // 내일 경기
+      if (dateLabel === 'tomorrow') {
+        return {
+          label: kickoffTime || '예정',
+          isLive: false,
+          subLabel: '내일'
+        };
+      }
+      // 오늘 경기면 시간 또는 "예정"
+      if (kickoffTime) {
+        return {
+          label: kickoffTime,
+          isLive: false
+        };
+      }
     }
     return statusInfo;
   }
@@ -194,11 +204,6 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
                 <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
                   {league.name}
                 </span>
-                {league.dateLabel === 'tomorrow' && (
-                  <span className="text-[10px] font-medium text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-1.5 py-0.5 rounded">
-                    내일
-                  </span>
-                )}
               </div>
 
               <div className="flex items-center gap-3">
@@ -229,21 +234,21 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
                     {(() => {
                       const statusInfo = getStatusInfo(match.status, match.elapsed, match.kickoffTime, match.dateLabel);
                       return (
-                        <div className="w-16 flex-shrink-0 flex flex-col items-start justify-center">
+                        <div className="w-20 flex-shrink-0 flex items-center gap-1">
                           {statusInfo.isLive ? (
                             <span className="text-[10px] font-bold text-white bg-red-500 px-1.5 py-1 rounded animate-pulse whitespace-nowrap">
                               {statusInfo.label}
                             </span>
                           ) : (
                             <>
-                              {statusInfo.subLabel && (
-                                <span className="text-[9px] font-medium text-blue-600 dark:text-blue-400 mb-0.5">
-                                  {statusInfo.subLabel}
-                                </span>
-                              )}
                               <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400 bg-[#F5F5F5] dark:bg-[#262626] px-1.5 py-1 rounded whitespace-nowrap">
                                 {statusInfo.label}
                               </span>
+                              {statusInfo.subLabel && (
+                                <span className="text-[9px] font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                                  {statusInfo.subLabel}
+                                </span>
+                              )}
                             </>
                           )}
                         </div>

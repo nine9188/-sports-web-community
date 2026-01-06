@@ -58,6 +58,33 @@ export function validateUsername(username: string): { valid: boolean; error?: st
 }
 
 /**
+ * 이름(fullName) 유효성 검사
+ */
+export function validateFullName(fullName: string): { valid: boolean; error?: string } {
+  if (!fullName || !fullName.trim()) {
+    return { valid: false, error: '이름을 입력해주세요.' }
+  }
+
+  const trimmed = fullName.trim()
+
+  if (trimmed.length < 2) {
+    return { valid: false, error: '이름은 최소 2자 이상이어야 합니다.' }
+  }
+
+  if (trimmed.length > 20) {
+    return { valid: false, error: '이름은 최대 20자까지 가능합니다.' }
+  }
+
+  // 한글, 영문, 공백만 허용
+  const nameRegex = /^[가-힣a-zA-Z\s]+$/
+  if (!nameRegex.test(trimmed)) {
+    return { valid: false, error: '이름은 한글과 영문만 입력 가능합니다.' }
+  }
+
+  return { valid: true }
+}
+
+/**
  * 닉네임 유효성 검사
  */
 export function validateNickname(nickname: string): { valid: boolean; error?: string } {

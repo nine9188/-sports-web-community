@@ -205,6 +205,10 @@ export async function getSearchSuggestions(): Promise<string[]> {
 // 팀 검색 관련 함수들 re-export
 export { getPopularTeams, getTeamCountByLeague }
 
+// 선수 검색은 ./searchPlayers에서 직접 import해야 합니다
+// 팀/선수 통합 검색은 ./searchEntities에서 직접 import해야 합니다
+// (use server 파일에서는 async 함수만 re-export 가능)
+
 /**
  * 개수만 가져오는 효율적인 함수들
  */

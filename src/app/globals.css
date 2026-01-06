@@ -526,9 +526,9 @@ iframe[src*="youtu.be/"] {
   border: 1px solid rgba(0, 0, 0, 0.05);
   border-radius: 0.5rem;
   overflow: hidden;
+  background-color: white;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   transition: all 0.2s ease;
-  background-color: white;
 }
 
 .dark .match-card {
@@ -537,7 +537,12 @@ iframe[src*="youtu.be/"] {
 }
 
 .match-card:hover {
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.dark .match-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .match-card a {
@@ -548,7 +553,7 @@ iframe[src*="youtu.be/"] {
 
 /* PostContent.tsx에서 생성되는 매치카드 스타일 */
 .match-card .league-header {
-  background-color: #F5F5F5;
+  background-color: #f9fafb;
   padding: 0.75rem;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   height: 2.5rem;
@@ -561,11 +566,22 @@ iframe[src*="youtu.be/"] {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.match-card .league-logo {
+.match-card .league-logo-box {
   width: 1.5rem;
   height: 1.5rem;
-  object-fit: contain;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-right: 0.5rem;
+}
+
+.match-card .league-logo-box img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
 }
 
 .match-card .league-name {
@@ -595,11 +611,22 @@ iframe[src*="youtu.be/"] {
   width: 40%;
 }
 
-.match-card .team-logo {
+.match-card .team-logo-box {
   width: 3rem;
   height: 3rem;
-  object-fit: contain;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 0.5rem;
+}
+
+.match-card .team-logo-box img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
 }
 
 .match-card .team-name {
@@ -662,7 +689,7 @@ iframe[src*="youtu.be/"] {
 }
 
 .match-card .match-footer {
-  background-color: #F5F5F5;
+  background-color: #f9fafb;
   padding: 0.5rem 0.75rem;
   border-top: 1px solid rgba(0, 0, 0, 0.05);
   text-align: center;
@@ -799,35 +826,9 @@ iframe[src*="youtu.be/"] {
   transition: background-color 0.2s;
 }
 
-.match-card:hover .match-footer {
-  background-color: #e5edff;
-}
-
 .match-preview-link {
   font-size: 0.75rem;
   color: #2563eb;
-}
-
-/* 경기 카드 노드 스타일 */
-.match-card-node {
-  margin: 1.5rem 0;
-  user-select: none;
-}
-
-.match-card-node:hover {
-  position: relative;
-}
-
-.match-card-node:hover::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-  border-radius: 0.5rem;
 }
 
 .match-card-error {
@@ -901,34 +902,6 @@ iframe[src*="youtu.be/"] {
 
 .dark .ProseMirror {
   color: #F0F0F0;
-}
-
-/* 에디터 내 경기 카드 스타일 */
-.ProseMirror .match-card {
-  width: 100% !important;
-  max-width: 100% !important;
-  margin: 12px 0 !important;
-  border: 1px solid rgba(0, 0, 0, 0.07) !important;
-  border-radius: 8px !important;
-  overflow: hidden !important;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
-  background: white !important;
-}
-
-.dark .ProseMirror .match-card {
-  border: 0 !important;
-  background: #1D1D1D !important;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3) !important;
-}
-
-.ProseMirror .match-card img {
-  max-width: unset !important;
-  display: inline-block !important;
-  object-fit: contain !important;
-}
-
-.ProseMirror .match-card > div {
-  width: 100% !important;
 }
 
 /* 에디터 내부 YouTube 컨테이너 스타일 조정 */
@@ -1126,5 +1099,233 @@ iframe[src*="youtu.be/"] {
     max-width: 100% !important;
     overflow: hidden !important;
   }
+}
+
+/* =====================================================
+   팀/선수 카드 스타일 (게시글 본문용) - 매치 카드와 동일한 구조
+   ===================================================== */
+
+.team-card,
+.player-card {
+  display: block;
+  width: 50%;
+  max-width: 50%;
+  margin: 0.5rem auto;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
+}
+
+.dark .team-card,
+.dark .player-card {
+  background-color: #1D1D1D;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.team-card:hover,
+.player-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.dark .team-card:hover,
+.dark .player-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.team-card a,
+.player-card a {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.team-card a:hover,
+.player-card a:hover {
+  text-decoration: none;
+}
+
+/* 팀/선수 카드 헤더 (매치 카드 league-header와 동일) */
+.team-card .league-header,
+.player-card .league-header {
+  background-color: #f9fafb;
+  padding: 0.75rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.dark .team-card .league-header,
+.dark .player-card .league-header {
+  background-color: #262626;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.team-card .league-logo-box,
+.player-card .league-logo-box {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.5rem;
+}
+
+.team-card .league-logo-box img,
+.player-card .league-logo-box img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.team-card .league-name,
+.player-card .league-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4B5563;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dark .team-card .league-name,
+.dark .player-card .league-name {
+  color: #D1D5DB;
+}
+
+/* 팀 카드 메인 영역 */
+.team-card .team-main {
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 5.5rem;
+  justify-content: center;
+}
+
+.team-card .team-logo-box {
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.team-card .team-logo-box img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.team-card .team-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: center;
+  color: #111827;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.2;
+}
+
+.dark .team-card .team-name {
+  color: #F0F0F0;
+}
+
+/* 선수 카드 메인 영역 */
+.player-card .player-main {
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 5.5rem;
+  justify-content: center;
+}
+
+.player-card .player-photo {
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.player-card .player-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dark .player-card .player-photo {
+  background: #333333;
+}
+
+.player-card .player-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: center;
+  color: #111827;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.2;
+}
+
+.dark .player-card .player-name {
+  color: #F0F0F0;
+}
+
+/* 팀/선수 카드 푸터 스타일 (매치 카드와 동일) */
+.team-card .match-footer,
+.player-card .match-footer {
+  background-color: #f9fafb;
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dark .team-card .match-footer,
+.dark .player-card .match-footer {
+  background-color: #262626;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.team-card .footer-link,
+.player-card .footer-link {
+  font-size: 0.75rem;
+  color: #2563EB;
+}
+
+.dark .team-card .footer-link,
+.dark .player-card .footer-link {
+  color: #60A5FA;
+}
+
+.team-card:hover .footer-link,
+.player-card:hover .footer-link {
+  text-decoration: underline;
 }
   

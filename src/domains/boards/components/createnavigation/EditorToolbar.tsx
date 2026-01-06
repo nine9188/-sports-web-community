@@ -4,10 +4,19 @@ import React, { Suspense, lazy } from 'react';
 import { Editor } from '@tiptap/react';
 import {
   Bold, Italic, List, ListOrdered, Image as ImageIcon, Link as LinkIcon,
-  Undo, Redo, Youtube as YoutubeIcon, Video as VideoIcon, Activity, Share2
+  Undo, Redo, Youtube as YoutubeIcon, Video as VideoIcon, Activity, Share2, Users
 } from 'lucide-react';
 import type { MatchData } from '@/domains/livescore/actions/footballApi';
 import type { SocialPlatform } from '@/shared/ui/tiptap/extensions/social-embeds';
+import type { TeamMapping } from '@/domains/livescore/constants/teams';
+import type { Player } from '@/domains/livescore/actions/teams/squad';
+
+// 리그 정보 인터페이스
+interface LeagueInfo {
+  id: number;
+  name: string;
+  koreanName: string;
+}
 
 // 폼 컴포넌트들을 지연 로딩으로 변경
 const ImageUploadForm = lazy(() => import('../form/ImageUploadForm'));
@@ -16,6 +25,7 @@ const YoutubeForm = lazy(() => import('../form/YoutubeForm'));
 const VideoForm = lazy(() => import('../form/VideoForm'));
 const MatchResultForm = lazy(() => import('../form/MatchResultForm'));
 const SocialEmbedForm = lazy(() => import('../form/SocialEmbedForm'));
+const EntityPickerForm = lazy(() => import('../entity/EntityPickerForm').then(mod => ({ default: mod.EntityPickerForm })));
 
 interface EditorToolbarProps {
   editor: Editor | null;
@@ -26,7 +36,8 @@ interface EditorToolbarProps {
   showVideoModal: boolean;
   showMatchModal: boolean;
   showSocialModal: boolean;
-  handleToggleDropdown: (dropdown: 'image' | 'link' | 'youtube' | 'video' | 'match' | 'social') => void;
+  showEntityModal: boolean;
+  handleToggleDropdown: (dropdown: 'image' | 'link' | 'youtube' | 'video' | 'match' | 'social' | 'entity') => void;
   handleFileUpload: (file: File, caption: string) => Promise<void>;
   handleAddImage: (url: string, caption?: string) => void;
   handleAddLink: (url: string, text?: string) => void;
@@ -34,6 +45,8 @@ interface EditorToolbarProps {
   handleAddVideo: (videoUrl: string, caption: string) => void;
   handleAddMatch: (matchId: string, matchData: MatchData) => void;
   handleAddSocialEmbed: (platform: SocialPlatform, url: string) => void;
+  handleAddTeam: (team: TeamMapping, league: LeagueInfo) => void;
+  handleAddPlayer: (player: Player, team: TeamMapping) => void;
 }
 
 // 로딩 스피너 컴포넌트
@@ -55,6 +68,7 @@ export default function EditorToolbar({
   showVideoModal,
   showMatchModal,
   showSocialModal,
+  showEntityModal,
   handleToggleDropdown,
   handleFileUpload,
   handleAddImage,
@@ -62,7 +76,9 @@ export default function EditorToolbar({
   handleAddYoutube,
   handleAddVideo,
   handleAddMatch,
-  handleAddSocialEmbed
+  handleAddSocialEmbed,
+  handleAddTeam,
+  handleAddPlayer
 }: EditorToolbarProps) {
   if (!editor) {
     return <div className="border border-black/7 dark:border-white/10 rounded-t-md p-2 bg-[#F5F5F5] dark:bg-[#262626] h-11"></div>;
@@ -82,6 +98,8 @@ export default function EditorToolbar({
       handleToggleDropdown('match');
     } else if (type === 'social') {
       handleToggleDropdown('social');
+    } else if (type === 'entity') {
+      handleToggleDropdown('entity');
     }
   };
 
@@ -264,6 +282,30 @@ export default function EditorToolbar({
               isOpen={showSocialModal}
               onCancel={() => closeModal('social')}
               onSocialEmbedAdd={handleAddSocialEmbed}
+            />
+          </Suspense>
+        )}
+      </div>
+
+      {/* 팀/선수 선택 버튼과 모달 */}
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => handleToggleDropdown('entity')}
+          className={`p-2 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0] ${showEntityModal ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''} ${!extensionsLoaded ? 'opacity-50 cursor-not-allowed' : ''}`}
+          title={extensionsLoaded ? "팀/선수 추가" : "에디터 로딩 중..."}
+          disabled={!extensionsLoaded}
+        >
+          <Users size={18} />
+        </button>
+
+        {showEntityModal && (
+          <Suspense fallback={<FormLoadingSpinner />}>
+            <EntityPickerForm
+              isOpen={showEntityModal}
+              onClose={() => closeModal('entity')}
+              onSelectTeam={handleAddTeam}
+              onSelectPlayer={handleAddPlayer}
             />
           </Suspense>
         )}

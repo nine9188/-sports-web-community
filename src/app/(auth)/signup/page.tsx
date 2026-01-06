@@ -6,12 +6,13 @@ import { toast } from 'react-toastify';
 import Link from 'next/link';
 import { useAuth } from '@/shared/context/AuthContext';
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
-import { signUp } from '@/domains/auth/actions';
+import { signUp, checkEmailAvailability } from '@/domains/auth/actions';
 import { validateReferralCode } from '@/shared/actions/referral-actions';
-import { AlertCircle, Check, Eye, EyeOff, Gift } from 'lucide-react';
+import { AlertCircle, Check, Eye, EyeOff, Gift, Calendar as CalendarIcon } from 'lucide-react';
 import KakaoLoginButton from '@/domains/auth/components/KakaoLoginButton';
 import TurnstileWidget from '@/shared/components/TurnstileWidget';
 import { TermsContent, PrivacyContent } from '@/shared/components/legal';
+import Calendar from '@/shared/components/Calendar';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -22,6 +23,7 @@ export default function SignupPage() {
   // 단계 표시 상태
   const [showEmailStep, setShowEmailStep] = useState(false);
   const [showNameStep, setShowNameStep] = useState(false);
+  const [showBirthStep, setShowBirthStep] = useState(false);
   const [showIdStep, setShowIdStep] = useState(false);
   const [showNicknameStep, setShowNicknameStep] = useState(false);
   const [showPasswordStep, setShowPasswordStep] = useState(false);
@@ -33,10 +35,25 @@ export default function SignupPage() {
   const [username, setUsername] = useState('');
   const [nickname, setNickname] = useState('');
   const [fullName, setFullName] = useState('');
+  const [birthDate, setBirthDate] = useState('');
   
   // 유효성 검사 상태
   const [emailValid, setEmailValid] = useState(false);
   const [emailError, setEmailError] = useState('');
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [emailChecked, setEmailChecked] = useState(false);
+  const [emailAvailable, setEmailAvailable] = useState(false);
+  const [emailMessage, setEmailMessage] = useState('');
+
+  // 이름 유효성 검사 상태
+  const [fullNameValid, setFullNameValid] = useState(false);
+  const [fullNameError, setFullNameError] = useState('');
+
+  // 생년월일 유효성 검사 상태
+  const [birthValid, setBirthValid] = useState(false);
+  const [birthError, setBirthError] = useState('');
+  const [showCalendar, setShowCalendar] = useState(false);
+
   const [passwordValid, setPasswordValid] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [passwordStrength, setPasswordStrength] = useState<'약함' | '보통' | '강함' | ''>('');
@@ -92,10 +109,14 @@ export default function SignupPage() {
     if (!value) {
       setEmailError('이메일을 입력해주세요.');
       setEmailValid(false);
+      setEmailChecked(false);
+      setEmailAvailable(false);
       return false;
     } else if (!emailRegex.test(value)) {
       setEmailError('유효한 이메일 주소를 입력해주세요.');
       setEmailValid(false);
+      setEmailChecked(false);
+      setEmailAvailable(false);
       return false;
     } else {
       setEmailError('');
@@ -103,7 +124,151 @@ export default function SignupPage() {
       return true;
     }
   };
-  
+
+  // 이메일 중복 확인
+  const checkEmail = async () => {
+    if (!email) {
+      setEmailMessage('이메일을 입력해주세요.');
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      return;
+    }
+
+    try {
+      setIsCheckingEmail(true);
+
+      const result = await checkEmailAvailability(email);
+
+      setEmailChecked(true);
+      setEmailAvailable(result.available);
+      setEmailMessage(result.message || '');
+
+    } catch (error) {
+      console.error('이메일 중복 확인 오류:', error);
+      setEmailMessage('이메일 확인 중 오류가 발생했습니다.');
+      setEmailAvailable(false);
+    } finally {
+      setIsCheckingEmail(false);
+    }
+  };
+
+  // 이름 유효성 검사
+  const validateFullName = (value: string) => {
+    if (!value || !value.trim()) {
+      setFullNameError('이름을 입력해주세요.');
+      setFullNameValid(false);
+      return false;
+    }
+
+    const trimmed = value.trim();
+
+    if (trimmed.length < 2) {
+      setFullNameError('이름은 최소 2자 이상이어야 합니다.');
+      setFullNameValid(false);
+      return false;
+    }
+
+    if (trimmed.length > 20) {
+      setFullNameError('이름은 최대 20자까지 가능합니다.');
+      setFullNameValid(false);
+      return false;
+    }
+
+    // 한글, 영문, 공백만 허용
+    const nameRegex = /^[가-힣a-zA-Z\s]+$/;
+    if (!nameRegex.test(trimmed)) {
+      setFullNameError('이름은 한글과 영문만 입력 가능합니다.');
+      setFullNameValid(false);
+      return false;
+    }
+
+    setFullNameError('');
+    setFullNameValid(true);
+    return true;
+  };
+
+  // 생년월일 입력 포맷팅 (YYYY.MM.DD)
+  const formatBirthDate = (value: string) => {
+    // 숫자만 추출
+    const numbers = value.replace(/\D/g, '');
+
+    // 포맷팅
+    if (numbers.length <= 4) {
+      return numbers;
+    } else if (numbers.length <= 6) {
+      return `${numbers.slice(0, 4)}.${numbers.slice(4)}`;
+    } else {
+      return `${numbers.slice(0, 4)}.${numbers.slice(4, 6)}.${numbers.slice(6, 8)}`;
+    }
+  };
+
+  // 생년월일 유효성 검사
+  const validateBirthDate = (value: string) => {
+    if (!value) {
+      setBirthError('생년월일을 입력해주세요.');
+      setBirthValid(false);
+      return false;
+    }
+
+    // YYYY.MM.DD 형식 체크
+    const match = value.match(/^(\d{4})\.(\d{2})\.(\d{2})$/);
+    if (!match) {
+      setBirthError('YYYY.MM.DD 형식으로 입력해주세요.');
+      setBirthValid(false);
+      return false;
+    }
+
+    const [, year, month, day] = match;
+    const yearNum = parseInt(year);
+    const monthNum = parseInt(month);
+    const dayNum = parseInt(day);
+
+    const currentYear = new Date().getFullYear();
+
+    // 연도 검증 (1900 ~ 현재년도)
+    if (yearNum < 1900 || yearNum > currentYear) {
+      setBirthError('올바른 연도를 입력해주세요.');
+      setBirthValid(false);
+      return false;
+    }
+
+    // 월 검증
+    if (monthNum < 1 || monthNum > 12) {
+      setBirthError('올바른 월을 입력해주세요.');
+      setBirthValid(false);
+      return false;
+    }
+
+    // 일 검증 (월별 일수 체크)
+    const daysInMonth = new Date(yearNum, monthNum, 0).getDate();
+    if (dayNum < 1 || dayNum > daysInMonth) {
+      setBirthError('올바른 일을 입력해주세요.');
+      setBirthValid(false);
+      return false;
+    }
+
+    // 만 14세 이상 체크
+    const birthDateObj = new Date(yearNum, monthNum - 1, dayNum);
+    const today = new Date();
+    let age = today.getFullYear() - birthDateObj.getFullYear();
+    const monthDiff = today.getMonth() - birthDateObj.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDateObj.getDate())) {
+      age--;
+    }
+
+    if (age < 14) {
+      setBirthError('만 14세 이상만 가입할 수 있습니다.');
+      setBirthValid(false);
+      return false;
+    }
+
+    setBirthError('');
+    setBirthValid(true);
+    return true;
+  };
+
   // 비밀번호 강도 계산
   const calculatePasswordStrength = (password: string): '약함' | '보통' | '강함' | '' => {
     if (!password) return '';
@@ -175,8 +340,8 @@ export default function SignupPage() {
   // 이메일 제출 처리
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (validateEmail(email)) {
+
+    if (emailChecked && emailAvailable) {
       setShowNameStep(true);
     }
   };
@@ -184,12 +349,21 @@ export default function SignupPage() {
   // 이름 제출 처리
   const handleNameSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (fullName.trim()) {
+
+    if (validateFullName(fullName)) {
+      setShowBirthStep(true);
+    }
+  };
+
+  // 생년월일 제출 처리
+  const handleBirthSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (validateBirthDate(birthDate)) {
       setShowIdStep(true);
     }
   };
-  
+
   // 아이디 제출 처리
   const handleIdSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -441,6 +615,7 @@ export default function SignupPage() {
         username,
         full_name: fullName,
         nickname,
+        birth_date: birthDate.replace(/\./g, '-'), // YYYY.MM.DD -> YYYY-MM-DD
         ...(referralValid && referralCode.trim() ? { referral_code: referralCode.trim() } : {})
       }, captchaToken);
       
@@ -569,29 +744,37 @@ export default function SignupPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">이메일 주소</label>
-                <div className="relative">
+                <div className="flex space-x-2">
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => {
-                      setEmail(e.target.value);
-                      validateEmail(e.target.value);
+                      const value = e.target.value;
+                      setEmail(value);
+                      validateEmail(value);
+                      setEmailChecked(false);
+                      setEmailAvailable(false);
+                      setEmailMessage('');
                     }}
                     onBlur={() => validateEmail(email)}
-                    className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none transition-colors ${
-                      emailError ? 'border-red-500 ' :
-                      emailValid ? 'border-green-500 ' :
+                    className={`flex-1 px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none transition-colors ${
+                      emailError ? 'border-red-500' :
+                      emailChecked && !emailAvailable ? 'border-red-500' :
+                      emailChecked && emailAvailable ? 'border-green-500' :
                       'border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
                     }`}
                     placeholder="이메일 주소"
                     required
                     disabled={showNameStep}
                   />
-                  {emailValid && !emailError && (
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                      <Check className="h-5 w-5 text-green-500" />
-                    </div>
-                  )}
+                  <button
+                    type="button"
+                    onClick={checkEmail}
+                    disabled={isCheckingEmail || !emailValid || showNameStep}
+                    className="px-4 py-2 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md disabled:opacity-50"
+                  >
+                    {isCheckingEmail ? '확인 중...' : '중복 확인'}
+                  </button>
                 </div>
                 {emailError && (
                   <p className="mt-1 text-sm text-red-600 flex items-center">
@@ -599,12 +782,23 @@ export default function SignupPage() {
                     {emailError}
                   </p>
                 )}
+                {emailMessage && !emailError && (
+                  <p className={`text-sm mt-1 flex items-center ${
+                    emailAvailable ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {emailAvailable ?
+                      <Check className="h-4 w-4 mr-1" /> :
+                      <AlertCircle className="h-4 w-4 mr-1" />
+                    }
+                    {emailMessage}
+                  </p>
+                )}
                 {!showNameStep && (
                   <div className="mt-2">
                     <button
                       type="button"
                       onClick={handleEmailSubmit}
-                      disabled={!emailValid || isLoading}
+                      disabled={!emailChecked || !emailAvailable || isLoading}
                       className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md transition-colors disabled:opacity-50"
                     >
                       {isLoading ? '처리 중...' : '계속하기'}
@@ -620,21 +814,53 @@ export default function SignupPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">이름</label>
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full p-3 border border-black/7 dark:border-white/10 rounded-md md:rounded-md max-md:rounded-lg bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] focus:outline-none transition-colors focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]"
-                  placeholder="이름"
-                  required
-                  disabled={showIdStep}
-                />
-                {!showIdStep && (
+                <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
+                  *2-20자, 한글·영문만 사용 가능
+                </p>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFullName(value);
+                      if (value) {
+                        validateFullName(value);
+                      } else {
+                        setFullNameError('');
+                        setFullNameValid(false);
+                      }
+                    }}
+                    onBlur={() => {
+                      if (fullName) validateFullName(fullName);
+                    }}
+                    className={`w-full p-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none transition-colors ${
+                      fullNameError ? 'border-red-500' :
+                      fullNameValid ? 'border-green-500' :
+                      'border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
+                    }`}
+                    placeholder="이름"
+                    required
+                    disabled={showBirthStep}
+                  />
+                  {fullNameValid && !fullNameError && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <Check className="h-5 w-5 text-green-500" />
+                    </div>
+                  )}
+                </div>
+                {fullNameError && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                    <AlertCircle className="h-4 w-4 mr-1" />
+                    {fullNameError}
+                  </p>
+                )}
+                {!showBirthStep && (
                   <div className="mt-2">
                     <button
                       type="button"
                       onClick={handleNameSubmit}
-                      disabled={!fullName.trim() || isLoading}
+                      disabled={!fullNameValid || isLoading}
                       className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md transition-colors disabled:opacity-50"
                     >
                       {isLoading ? '처리 중...' : '계속하기'}
@@ -644,7 +870,96 @@ export default function SignupPage() {
               </div>
             </div>
           )}
-          
+
+          {/* 생년월일 입력 단계 */}
+          {showBirthStep && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">생년월일</label>
+                <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
+                  *만 14세 이상만 가입 가능합니다
+                </p>
+                <div className="relative">
+                  {/* 텍스트 입력 필드 */}
+                  <input
+                    type="text"
+                    value={birthDate}
+                    onChange={(e) => {
+                      const formatted = formatBirthDate(e.target.value);
+                      setBirthDate(formatted);
+                      setBirthError('');
+                      setBirthValid(false);
+                    }}
+                    onBlur={() => {
+                      if (birthDate) validateBirthDate(birthDate);
+                    }}
+                    className={`w-full p-3 pr-10 border rounded-md focus:outline-none transition-colors ${
+                      birthError ? 'border-red-500' :
+                      birthValid ? 'border-green-500' :
+                      'border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
+                    }`}
+                    placeholder="YYYY.MM.DD"
+                    maxLength={10}
+                    disabled={showIdStep}
+                  />
+                  {/* 캘린더 아이콘 버튼 */}
+                  <button
+                    type="button"
+                    onClick={() => setShowCalendar(true)}
+                    disabled={showIdStep}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors outline-none focus:outline-none"
+                  >
+                    <CalendarIcon className="h-5 w-5" />
+                  </button>
+
+                  {/* 캘린더 팝업 */}
+                  {showCalendar && (
+                    <div className="absolute top-full left-0 mt-2 z-50">
+                      <Calendar
+                        selectedDate={birthDate ? new Date(birthDate.replace(/\./g, '-')) : new Date()}
+                        onDateSelect={(date) => {
+                          const year = date.getFullYear();
+                          const month = String(date.getMonth() + 1).padStart(2, '0');
+                          const day = String(date.getDate()).padStart(2, '0');
+                          const formatted = `${year}.${month}.${day}`;
+                          setBirthDate(formatted);
+                          validateBirthDate(formatted);
+                        }}
+                        onClose={() => setShowCalendar(false)}
+                        maxDate={new Date()}
+                        minDate={new Date(1900, 0, 1)}
+                      />
+                    </div>
+                  )}
+                </div>
+                {birthError && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                    <AlertCircle className="h-4 w-4 mr-1" />
+                    {birthError}
+                  </p>
+                )}
+                {birthValid && !birthError && (
+                  <p className="mt-1 text-sm text-green-600 flex items-center">
+                    <Check className="h-4 w-4 mr-1" />
+                    확인되었습니다.
+                  </p>
+                )}
+                {!showIdStep && (
+                  <div className="mt-2">
+                    <button
+                      type="button"
+                      onClick={handleBirthSubmit}
+                      disabled={!birthDate || birthDate.length < 10 || isLoading}
+                      className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md transition-colors disabled:opacity-50"
+                    >
+                      {isLoading ? '처리 중...' : '계속하기'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* 아이디 입력 단계 */}
           {showIdStep && (
             <div className="space-y-4">

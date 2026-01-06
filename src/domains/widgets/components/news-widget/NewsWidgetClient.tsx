@@ -84,6 +84,7 @@ const NewsImage = ({
         src={imageUrl}
         alt={String(item?.title || '뉴스 이미지')}
         fill
+        unoptimized  // 외부 이미지 도메인 제한 해제
         className={useFallback
           ? "object-contain p-4 dark:invert transition-all"
           : "object-cover transition-all"
@@ -93,8 +94,6 @@ const NewsImage = ({
         onLoad={onLoad}
         onLoadStart={onLoadStart}
         onError={onError}
-        placeholder={useFallback ? undefined : "blur"}
-        blurDataURL={useFallback ? undefined : BLUR_DATA_URL}
       />
       {/* 호버 오버레이 */}
       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-all pointer-events-none" />

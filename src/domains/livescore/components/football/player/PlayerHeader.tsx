@@ -75,6 +75,7 @@ const PlayerHeader = memo(function PlayerHeader() {
         <div className="flex flex-col md:flex-row items-stretch gap-4 md:gap-8">
           {/* 선수 사진 및 기본 정보 */}
           <div className="flex flex-row items-center gap-4 md:gap-6 md:w-1/3">
+            {/* 이미지 컨테이너 */}
             <div className="relative w-20 h-20 md:w-28 md:h-28 flex-shrink-0">
               <div className="relative w-20 h-20 md:w-28 md:h-28">
                 <div className="absolute inset-0 rounded-full border-4 border-white dark:border-[#1D1D1D] shadow-lg"></div>
@@ -82,35 +83,36 @@ const PlayerHeader = memo(function PlayerHeader() {
                   imageId={playerData.info.id}
                   imageType={ImageType.Players}
                   alt={playerData.info.name}
-                  width={112}
-                  height={112}
-                  className="w-full h-full rounded-full object-cover"
+                  size="xxl"
+                  variant="circle"
+                  className="w-full h-full"
                 />
               </div>
-              
+
               {mainTeamStats?.team && (
                 <div
-                  className="absolute -bottom-2 -right-2 w-8 h-8 md:w-10 md:h-10 rounded-full shadow-lg flex items-center justify-center"
+                  className="absolute -bottom-1 -right-1 md:-bottom-2 md:-right-2 w-7 h-7 md:w-10 md:h-10 rounded-full shadow-lg flex items-center justify-center"
                   style={{ backgroundColor: '#ffffff' }}
                 >
                   <UnifiedSportsImage
                     imageId={mainTeamStats.team.id}
                     imageType={ImageType.Teams}
-                    alt={mainTeamStats.team.name || ''}
-                    width={32}
-                    height={32}
-                    className="w-6 h-6 md:w-8 md:h-8 object-contain"
+                    alt={mainTeamStats.team.name || '팀 로고'}
+                    size="sm"
+                    variant="square"
+                    fit="contain"
+                    className="w-5 h-5 md:w-7 md:h-7"
                   />
                 </div>
               )}
             </div>
-            
-            <div className="text-left flex-1">
-              <h1 className="text-md md:text-base font-bold truncate max-w-[200px] md:max-w-full text-gray-900 dark:text-[#F0F0F0]">
+
+            <div className="text-left flex-1 min-w-0">
+              <h1 className="text-base md:text-lg font-bold truncate text-gray-900 dark:text-[#F0F0F0]">
                 {getPlayerKoreanName(playerData.info.id) || playerData.info.name}
               </h1>
               {mainTeamStats?.team && (
-                <p className="text-sm text-gray-700 dark:text-gray-300 truncate max-w-[200px]">
+                <p className="text-sm text-gray-700 dark:text-gray-300 truncate">
                   {(() => {
                     const koreanName = getTeamDisplayName(mainTeamStats.team.id, { language: 'ko' });
                     return koreanName.startsWith('팀 ') ? mainTeamStats.team.name : koreanName;

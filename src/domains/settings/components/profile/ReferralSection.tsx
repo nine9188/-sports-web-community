@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Copy, Check, Users, Gift, TrendingUp } from 'lucide-react';
+import { Copy, Check } from 'lucide-react';
 import { getReferralStats, type ReferralStats } from '@/shared/actions/referral-actions';
 import { REFERRAL_REWARDS, REFERRAL_MILESTONES } from '@/shared/constants/rewards';
 
@@ -51,7 +51,7 @@ export default function ReferralSection({ userId }: ReferralSectionProps) {
       <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">친구 추천</h3>
 
       {/* 내 추천 코드 */}
-      <div className="p-4 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg border border-black/7 dark:border-white/10">
+      <div className="p-4 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm text-gray-700 dark:text-gray-300">내 추천 코드</span>
           <button
@@ -79,37 +79,12 @@ export default function ReferralSection({ userId }: ReferralSectionProps) {
         </p>
       </div>
 
-      {/* 추천 통계 */}
-      <div className="grid grid-cols-3 gap-2">
-        <div className="p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg text-center">
-          <Users className="h-4 w-4 mx-auto mb-1 text-gray-500 dark:text-gray-400" />
-          <div className="text-lg font-bold text-gray-900 dark:text-[#F0F0F0]">
-            {stats.totalReferrals}
-          </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">추천</div>
-        </div>
-        <div className="p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg text-center">
-          <Gift className="h-4 w-4 mx-auto mb-1 text-green-600 dark:text-green-400" />
-          <div className="text-lg font-bold text-gray-900 dark:text-[#F0F0F0]">
-            {stats.totalPointsEarned.toLocaleString()}P
-          </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">획득 포인트</div>
-        </div>
-        <div className="p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg text-center">
-          <TrendingUp className="h-4 w-4 mx-auto mb-1 text-blue-600 dark:text-blue-400" />
-          <div className="text-lg font-bold text-gray-900 dark:text-[#F0F0F0]">
-            {stats.totalExpEarned.toLocaleString()}
-          </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">획득 경험치</div>
-        </div>
-      </div>
-
       {/* 보상 안내 */}
-      <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800/50">
-        <div className="text-sm font-medium text-green-800 dark:text-green-400 mb-2">
+      <div className="p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
+        <div className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-2">
           추천 보상 안내
         </div>
-        <ul className="text-xs text-green-700 dark:text-green-400 space-y-1">
+        <ul className="text-xs text-gray-700 dark:text-gray-300 space-y-1">
           <li>- 친구 가입 시: {REFERRAL_REWARDS.REFERRER_SIGNUP.points}P + {REFERRAL_REWARDS.REFERRER_SIGNUP.exp}XP</li>
           {REFERRAL_MILESTONES.map((milestone) => (
             <li key={milestone.type}>
@@ -127,9 +102,16 @@ export default function ReferralSection({ userId }: ReferralSectionProps) {
       )}
 
       {/* 최근 추천 목록 */}
-      {stats.recentReferrals.length > 0 && (
-        <div className="space-y-2">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
           <h4 className="text-xs font-medium text-gray-700 dark:text-gray-300">최근 추천 친구</h4>
+          <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+            <span>추천 <strong className="text-gray-900 dark:text-[#F0F0F0]">{stats.totalReferrals}</strong></span>
+            <span>포인트 <strong className="text-gray-900 dark:text-[#F0F0F0]">{stats.totalPointsEarned.toLocaleString()}P</strong></span>
+            <span>경험치 <strong className="text-gray-900 dark:text-[#F0F0F0]">{stats.totalExpEarned.toLocaleString()}XP</strong></span>
+          </div>
+        </div>
+        {stats.recentReferrals.length > 0 ? (
           <div className="space-y-1">
             {stats.recentReferrals.slice(0, 5).map((referral, index) => (
               <div
@@ -143,8 +125,10 @@ export default function ReferralSection({ userId }: ReferralSectionProps) {
               </div>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <p className="text-xs text-gray-500 dark:text-gray-400">아직 추천한 친구가 없습니다.</p>
+        )}
+      </div>
     </div>
   );
 }

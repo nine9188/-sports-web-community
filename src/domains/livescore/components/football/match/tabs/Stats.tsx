@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, memo, useEffect, useMemo, useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useMatchData, isStatsTabData } from '@/domains/livescore/components/football/match/context/MatchDataContext';
@@ -188,10 +188,6 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
   const [loading, setLoading] = useState(isTabLoading || !propsMatchData?.stats?.length);
   const [error, setError] = useState<string | null>(tabLoadError || null);
 
-  // 스크롤 힌트 표시 여부 추적
-  const [hasScrolled, setHasScrolled] = useState(false);
-  const [showHint, setShowHint] = useState(false);
-
   // 정렬 상태 관리 (홈팀)
   const [homeSortField, setHomeSortField] = useState<string>('minutes');
   const [homeSortDirection, setHomeSortDirection] = useState<'asc' | 'desc'>('desc');
@@ -200,18 +196,12 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
   const [awaySortField, setAwaySortField] = useState<string>('minutes');
   const [awaySortDirection, setAwaySortDirection] = useState<'asc' | 'desc'>('desc');
 
-  // 각 섹션의 ref와 inView 상태 관리 (hooks는 항상 최상단에 위치)
+  // 각 섹션의 ref 관리
   const basicRef = useRef(null);
   const shootingRef = useRef(null);
   const passingRef = useRef(null);
   const homePlayersRef = useRef(null);
   const awayPlayersRef = useRef(null);
-
-  const basicInView = useInView(basicRef, { amount: 0.5 });
-  const shootingInView = useInView(shootingRef, { amount: 0.5 });
-  const passingInView = useInView(passingRef, { amount: 0.5 });
-  const homePlayersInView = useInView(homePlayersRef, { amount: 0.5 });
-  const awayPlayersInView = useInView(awayPlayersRef, { amount: 0.5 });
 
   // matchId 추출
   const fixtureId = useMemo(() => {
@@ -262,34 +252,6 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
     setLoading(isTabLoading);
     if (tabLoadError) setError(tabLoadError);
   }, [isTabLoading, tabLoadError]);
-
-  // 힌트 표시 로직: 2초 후 표시
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowHint(true);
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // 스크롤 감지: 사용자가 스크롤하면 힌트 숨김
-  useEffect(() => {
-    if (!showHint || hasScrolled) return;
-
-    let scrollTimeout: NodeJS.Timeout;
-    const handleScroll = () => {
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(() => {
-        setHasScrolled(true);
-      }, 100);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      clearTimeout(scrollTimeout);
-    };
-  }, [showHint, hasScrolled]);
 
   // 통계 항목 매핑 (API에서 사용하는 키값 -> 표시 레이블)
   const statMappings = useMemo(() => [
@@ -459,36 +421,6 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        {/* 모바일 전용: 기본 통계 위 오버레이 힌트 */}
-        {showHint && !hasScrolled && (
-          <motion.div
-            className="md:hidden absolute top-0 left-0 right-0 z-10 pointer-events-none"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-          >
-            <div className="relative">
-              {/* 그라데이션 배경 */}
-              <div className="absolute inset-0 bg-gradient-to-b from-white/85 via-white/40 to-transparent h-40 backdrop-blur-[1px]" />
-
-              {/* 힌트 텍스트 */}
-              <div className="relative flex flex-col items-center pt-5 pb-6">
-                <motion.div
-                  className="flex flex-col items-center gap-1.5 text-gray-500"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.4, delay: 0.2 }}
-                >
-                  <svg className="w-5 h-5 animate-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                  <span className="text-sm font-medium">아래로 스크롤하여 더 많은 통계 보기</span>
-                </motion.div>
-              </div>
-            </div>
-          </motion.div>
-        )}
         {/* 기본 통계 */}
         <motion.div
           ref={basicRef}
@@ -523,24 +455,6 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
           </Container>
         </motion.div>
 
-        {/* PC 전용: 기본 통계 하단 힌트 */}
-        {basicInView && !shootingInView && !hasScrolled && (
-          <motion.div
-            className="hidden md:flex justify-center items-center py-3 text-gray-400"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-xs">아래로 스크롤하세요</span>
-              <svg className="w-4 h-4 animate-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
-            </div>
-          </motion.div>
-        )}
-        
         {/* 슈팅 통계 */}
         <motion.div
           ref={shootingRef}
@@ -563,24 +477,6 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
           </Container>
         </motion.div>
 
-        {/* 슈팅 통계 하단 힌트 - PC 전용 */}
-        {shootingInView && !passingInView && !hasScrolled && (
-          <motion.div
-            className="hidden md:flex justify-center items-center py-3 text-gray-400"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-xs">아래로 스크롤하세요</span>
-              <svg className="w-4 h-4 animate-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
-            </div>
-          </motion.div>
-        )}
-        
         {/* 패스 통계 */}
         <motion.div
           ref={passingRef}
@@ -603,24 +499,6 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
           </Container>
         </motion.div>
 
-        {/* 패스 통계 하단 힌트 - PC 전용 */}
-        {passingInView && !homePlayersInView && !hasScrolled && (
-          <motion.div
-            className="hidden md:flex justify-center items-center py-3 text-gray-400"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-xs">아래로 스크롤하세요</span>
-              <svg className="w-4 h-4 animate-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
-            </div>
-          </motion.div>
-        )}
-
         {/* 선수 종합 통계 - 홈팀 */}
         {playerStatsData?.success && playerStatsData.data?.homeTeam && (
           <motion.div
@@ -632,25 +510,22 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
           >
             <Container className="bg-white dark:bg-[#1D1D1D]">
               <ContainerHeader>
-                <div className="flex items-center justify-between w-full">
-                  <Link 
-                    href={`/livescore/football/team/${playerStatsData.data.homeTeam.id}`}
-                    className="flex items-center gap-2 group hover:opacity-80 transition-opacity"
-                  >
-                    <UnifiedSportsImage 
-                      imageId={playerStatsData.data.homeTeam.id} 
-                      imageType={ImageType.Teams} 
-                      alt={playerStatsData.data.homeTeam.name} 
-                      size="sm" 
-                      variant="square" 
-                      fit="contain" 
-                    />
-                    <ContainerTitle className="group-hover:underline">
-                      {getTeamById(playerStatsData.data.homeTeam.id)?.name_ko || playerStatsData.data.homeTeam.name}
-                    </ContainerTitle>
-                  </Link>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">← 스크롤하세요 →</span>
-                </div>
+                <Link
+                  href={`/livescore/football/team/${playerStatsData.data.homeTeam.id}`}
+                  className="flex items-center gap-2 group hover:opacity-80 transition-opacity"
+                >
+                  <UnifiedSportsImage
+                    imageId={playerStatsData.data.homeTeam.id}
+                    imageType={ImageType.Teams}
+                    alt={playerStatsData.data.homeTeam.name}
+                    size="sm"
+                    variant="square"
+                    fit="contain"
+                  />
+                  <ContainerTitle className="group-hover:underline">
+                    {getTeamById(playerStatsData.data.homeTeam.id)?.name_ko || playerStatsData.data.homeTeam.name}
+                  </ContainerTitle>
+                </Link>
               </ContainerHeader>
               <ContainerContent>
                 <HorizontalScrollContainer>
@@ -814,24 +689,6 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
           </motion.div>
         )}
 
-        {/* 홈팀 선수 하단 힌트 - PC 전용 */}
-        {homePlayersInView && !awayPlayersInView && !hasScrolled && (
-          <motion.div
-            className="hidden md:flex justify-center items-center py-3 text-gray-400"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-xs">아래로 스크롤하세요</span>
-              <svg className="w-4 h-4 animate-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
-            </div>
-          </motion.div>
-        )}
-
         {/* 선수 종합 통계 - 원정팀 */}
         {playerStatsData?.success && playerStatsData.data?.awayTeam && (
           <motion.div
@@ -843,25 +700,22 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
           >
             <Container className="bg-white dark:bg-[#1D1D1D]">
               <ContainerHeader>
-                <div className="flex items-center justify-between w-full">
-                  <Link 
-                    href={`/livescore/football/team/${playerStatsData.data.awayTeam.id}`}
-                    className="flex items-center gap-2 group hover:opacity-80 transition-opacity"
-                  >
-                    <UnifiedSportsImage 
-                      imageId={playerStatsData.data.awayTeam.id} 
-                      imageType={ImageType.Teams} 
-                      alt={playerStatsData.data.awayTeam.name} 
-                      size="sm" 
-                      variant="square" 
-                      fit="contain" 
-                    />
-                    <ContainerTitle className="group-hover:underline">
-                      {getTeamById(playerStatsData.data.awayTeam.id)?.name_ko || playerStatsData.data.awayTeam.name}
-                    </ContainerTitle>
-                  </Link>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">← 스크롤하세요 →</span>
-                </div>
+                <Link
+                  href={`/livescore/football/team/${playerStatsData.data.awayTeam.id}`}
+                  className="flex items-center gap-2 group hover:opacity-80 transition-opacity"
+                >
+                  <UnifiedSportsImage
+                    imageId={playerStatsData.data.awayTeam.id}
+                    imageType={ImageType.Teams}
+                    alt={playerStatsData.data.awayTeam.name}
+                    size="sm"
+                    variant="square"
+                    fit="contain"
+                  />
+                  <ContainerTitle className="group-hover:underline">
+                    {getTeamById(playerStatsData.data.awayTeam.id)?.name_ko || playerStatsData.data.awayTeam.name}
+                  </ContainerTitle>
+                </Link>
               </ContainerHeader>
               <ContainerContent>
                 <HorizontalScrollContainer>
@@ -869,7 +723,7 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
                     <thead className="bg-gray-50 dark:bg-[#262626] whitespace-nowrap">
                       <tr>
                         <th className="sticky left-0 z-10 bg-gray-50 dark:bg-[#262626] px-2 py-2 text-left font-medium text-gray-700 dark:text-gray-300 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-32 min-w-[8rem] max-w-[8rem]">선수</th>
-                        <th 
+                        <th
                           className="px-3 py-2 text-center font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
                           onClick={() => handleAwaySort('position')}
                         >

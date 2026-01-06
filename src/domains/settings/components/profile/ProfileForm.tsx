@@ -6,6 +6,7 @@ import { formatDate } from '@/shared/utils/date';
 import AttendanceCalendar from '@/shared/components/AttendanceCalendar';
 import NicknameChangeModal from './NicknameChangeModal';
 import ReferralSection from './ReferralSection';
+import PhoneVerificationForm from '../phone/PhoneVerificationForm';
 import { getNicknameTicketCount } from '@/domains/shop/actions/consumables';
 
 interface ProfileFormProps {
@@ -85,7 +86,7 @@ export default function ProfileForm({ initialData }: ProfileFormProps) {
           {ticketCount > 0 ? (
             <button
               onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 dark:bg-[#3F3F3F] text-white text-sm rounded-md hover:bg-slate-700 dark:hover:bg-[#4A4A4A] transition-colors whitespace-nowrap outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="flex items-center gap-1.5 px-4 py-2 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors whitespace-nowrap outline-none focus:outline-none"
             >
               <Edit2 className="h-4 w-4" />
               변경
@@ -93,7 +94,7 @@ export default function ProfileForm({ initialData }: ProfileFormProps) {
           ) : (
             <a
               href="/shop?category=special-items"
-              className="flex items-center gap-1.5 px-3 py-2 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-sm rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors whitespace-nowrap"
+              className="flex items-center gap-1.5 px-4 py-2 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors whitespace-nowrap outline-none focus:outline-none"
             >
               <Ticket className="h-4 w-4" />
               구매
@@ -106,6 +107,12 @@ export default function ProfileForm({ initialData }: ProfileFormProps) {
             : '샵에서 닉네임 변경권을 구매하면 변경할 수 있습니다.'
           }
         </p>
+      </div>
+
+      {/* 전화번호 인증 */}
+      <div className="space-y-1 border-t border-black/5 dark:border-white/10 pt-4">
+        <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-3">전화번호 인증</h3>
+        <PhoneVerificationForm userId={initialData.id} />
       </div>
 
       {/* 계정 정보 */}

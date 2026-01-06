@@ -8,6 +8,7 @@
  */
 
 import type { MatchStatus, MatchStatusInfo, ImageUrlPair } from '@/shared/types/matchCard';
+import { getTeamById } from '@/domains/livescore/constants/teams';
 
 /**
  * 다크모드 전용 이미지가 있는 리그 ID 목록
@@ -233,8 +234,6 @@ export interface MatchCardHtmlOptions {
   useInlineStyles?: boolean;
   /** data-match 속성에 원본 데이터 포함 여부 (에디터용: true) */
   includeDataAttr?: boolean;
-  /** 호버 이벤트 핸들러 포함 여부 */
-  includeHoverHandlers?: boolean;
   /** processed 마크 추가 여부 */
   markAsProcessed?: boolean;
 }
@@ -255,7 +254,6 @@ export function generateMatchCardHtml(
   const {
     useInlineStyles = false,
     includeDataAttr = false,
-    includeHoverHandlers = true,
     markAsProcessed = true,
   } = options;
 
@@ -265,6 +263,14 @@ export function generateMatchCardHtml(
   const homeScore = goals.home !== null ? goals.home : '-';
   const awayScore = goals.away !== null ? goals.away : '-';
 
+  // 한글 팀명 매핑
+  const homeTeamId = typeof homeTeam.id === 'string' ? parseInt(homeTeam.id, 10) : homeTeam.id;
+  const awayTeamId = typeof awayTeam.id === 'string' ? parseInt(awayTeam.id, 10) : awayTeam.id;
+  const homeTeamMapping = homeTeamId ? getTeamById(homeTeamId) : undefined;
+  const awayTeamMapping = awayTeamId ? getTeamById(awayTeamId) : undefined;
+  const homeTeamName = homeTeamMapping?.name_ko || homeTeam.name;
+  const awayTeamName = awayTeamMapping?.name_ko || awayTeam.name;
+
   // 이미지 URL 생성
   const leagueImages = getImageUrls(league.logo, league.id, 'leagues');
   const homeTeamImages = getImageUrls(homeTeam.logo, homeTeam.id, 'teams');
@@ -272,12 +278,6 @@ export function generateMatchCardHtml(
 
   // 상태 정보
   const statusInfo = getStatusInfo(status);
-
-  // 호버 핸들러
-  const hoverAttrs = includeHoverHandlers
-    ? `onmouseenter="if(window.handleMatchCardHover) window.handleMatchCardHover(this, true)"
-       onmouseleave="if(window.handleMatchCardHover) window.handleMatchCardHover(this, false)"`
-    : '';
 
   // data-match 속성
   const dataMatchAttr = includeDataAttr
@@ -297,7 +297,9 @@ export function generateMatchCardHtml(
       homeTeamImages,
       awayTeamImages,
       statusInfo,
-      dataMatchAttr
+      dataMatchAttr,
+      homeTeamName,
+      awayTeamName
     );
   }
 
@@ -307,32 +309,34 @@ export function generateMatchCardHtml(
 
   return `
     <div class="match-card${processedClass}" data-type="match-card" data-match-id="${matchId}"${processedAttr}>
-      <a href="/livescore/football/match/${matchId}" ${hoverAttrs}>
+      <a href="/livescore/football/match/${matchId}">
         <div class="league-header">
           <div style="display: flex; align-items: center;">
-            <img
-              src="${leagueImages.light}"
-              data-light-src="${leagueImages.light}"
-              data-dark-src="${leagueImages.dark}"
-              alt="${league.name}"
-              class="league-logo"
-              onerror="this.onerror=null;this.src='/placeholder.png';"
-            />
+            <div class="league-logo-box">
+              <img
+                src="${leagueImages.light}"
+                data-light-src="${leagueImages.light}"
+                data-dark-src="${leagueImages.dark}"
+                alt="${league.name}"
+                onerror="this.onerror=null;this.src='/placeholder.png';"
+              />
+            </div>
             <span class="league-name">${league.name}</span>
           </div>
         </div>
 
         <div class="match-main">
           <div class="team-info">
-            <img
-              src="${homeTeamImages.light}"
-              data-light-src="${homeTeamImages.light}"
-              data-dark-src="${homeTeamImages.dark}"
-              alt="${homeTeam.name}"
-              class="team-logo"
-              onerror="this.onerror=null;this.src='/placeholder.png';"
-            />
-            <span class="team-name${homeTeam.winner ? ' winner' : ''}">${homeTeam.name}</span>
+            <div class="team-logo-box">
+              <img
+                src="${homeTeamImages.light}"
+                data-light-src="${homeTeamImages.light}"
+                data-dark-src="${homeTeamImages.dark}"
+                alt="${homeTeam.name}"
+                onerror="this.onerror=null;this.src='/placeholder.png';"
+              />
+            </div>
+            <span class="team-name${homeTeam.winner ? ' winner' : ''}">${homeTeamName}</span>
           </div>
 
           <div class="score-area">
@@ -345,15 +349,16 @@ export function generateMatchCardHtml(
           </div>
 
           <div class="team-info">
-            <img
-              src="${awayTeamImages.light}"
-              data-light-src="${awayTeamImages.light}"
-              data-dark-src="${awayTeamImages.dark}"
-              alt="${awayTeam.name}"
-              class="team-logo"
-              onerror="this.onerror=null;this.src='/placeholder.png';"
-            />
-            <span class="team-name${awayTeam.winner ? ' winner' : ''}">${awayTeam.name}</span>
+            <div class="team-logo-box">
+              <img
+                src="${awayTeamImages.light}"
+                data-light-src="${awayTeamImages.light}"
+                data-dark-src="${awayTeamImages.dark}"
+                alt="${awayTeam.name}"
+                onerror="this.onerror=null;this.src='/placeholder.png';"
+              />
+            </div>
+            <span class="team-name${awayTeam.winner ? ' winner' : ''}">${awayTeamName}</span>
           </div>
         </div>
 
@@ -379,7 +384,9 @@ function generateInlineStyleHtml(
   homeTeamImages: ImageUrlPair,
   awayTeamImages: ImageUrlPair,
   statusInfo: MatchStatusInfo,
-  dataMatchAttr: string
+  dataMatchAttr: string,
+  homeTeamName: string,
+  awayTeamName: string
 ): string {
   const statusStyle = statusInfo.isLive ? 'color: #059669; font-weight: 500;' : '';
 
@@ -388,18 +395,18 @@ function generateInlineStyleHtml(
       width: 100%;
       max-width: 100%;
       margin: 12px 0;
-      border: 1px solid #e5e7eb;
+      border: 1px solid rgba(0, 0, 0, 0.05);
       border-radius: 8px;
       overflow: hidden;
-      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
       background: white;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       display: block;
     ">
       <a href="/livescore/football/match/${matchId}" style="display: block; text-decoration: none; color: inherit;">
         <div style="
           padding: 12px;
           background-color: #f9fafb;
-          border-bottom: 1px solid #e5e7eb;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.05);
           display: flex;
           align-items: center;
           height: 40px;
@@ -428,7 +435,7 @@ function generateInlineStyleHtml(
               onerror="this.onerror=null;this.src='/placeholder.png';"
             />
             <span style="font-size: 14px; font-weight: 500; text-align: center; color: ${homeTeam.winner ? '#2563eb' : '#000'};">
-              ${homeTeam.name}
+              ${homeTeamName}
             </span>
           </div>
 
@@ -451,13 +458,13 @@ function generateInlineStyleHtml(
               onerror="this.onerror=null;this.src='/placeholder.png';"
             />
             <span style="font-size: 14px; font-weight: 500; text-align: center; color: ${awayTeam.winner ? '#2563eb' : '#000'};">
-              ${awayTeam.name}
+              ${awayTeamName}
             </span>
           </div>
         </div>
 
-        <div style="padding: 8px 12px; background-color: #f9fafb; border-top: 1px solid #e5e7eb; text-align: center;">
-          <span style="font-size: 12px; color: #2563eb; text-decoration: underline;">매치 상세 정보</span>
+        <div style="padding: 8px 12px; background-color: #f9fafb; border-top: 1px solid rgba(0, 0, 0, 0.05); text-align: center;">
+          <span style="font-size: 12px; color: #2563eb;">매치 상세 정보</span>
         </div>
       </a>
     </div>
