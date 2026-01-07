@@ -257,11 +257,22 @@ export default async function PostDetailPage({
     }));
     
     // post 데이터에 iconUrl과 icon_id 직접 설정
+    const postProfiles =
+      result.post.profiles && typeof result.post.profiles === 'object' && !Array.isArray(result.post.profiles)
+        ? (result.post.profiles as {
+            nickname?: string | null;
+            public_id?: string | null;
+            icon_id?: number | null;
+            level?: number | null;
+            icon_url?: string | null;
+          })
+        : undefined;
+
     const postWithIcon = {
       ...result.post,
       content: result.post.content as Record<string, unknown>,
       profiles: {
-        ...result.post.profiles,
+        ...(postProfiles || {}),
         icon_url: result.iconUrl
       }
     } as unknown;
@@ -324,12 +335,19 @@ export default async function PostDetailPage({
         name: '홈',
         item: siteUrl
       },
-      ...result.breadcrumbs.map((breadcrumb, index) => ({
-        '@type': 'ListItem',
-        position: index + 2,
-        name: breadcrumb.name,
-        item: breadcrumb.path ? `${siteUrl}${breadcrumb.path}` : undefined
-      })),
+      ...result.breadcrumbs.map((breadcrumb, index) => {
+        const breadcrumbPath =
+          breadcrumb.slug && breadcrumb.slug !== '#'
+            ? (breadcrumb.slug.startsWith('/') ? breadcrumb.slug : `/boards/${breadcrumb.slug}`)
+            : undefined;
+
+        return {
+          '@type': 'ListItem',
+          position: index + 2,
+          name: breadcrumb.name,
+          item: breadcrumbPath ? `${siteUrl}${breadcrumbPath}` : undefined
+        };
+      }),
       {
         '@type': 'ListItem',
         position: result.breadcrumbs.length + 2,

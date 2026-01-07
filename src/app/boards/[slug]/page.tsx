@@ -5,6 +5,7 @@ import { getBoardPopularPosts } from '@/domains/boards/actions/getPopularPosts';
 import { getNotices } from '@/domains/boards/actions/posts';
 import BoardDetailLayout from '@/domains/boards/components/layout/BoardDetailLayout';
 import { convertApiPostsToLayoutPosts } from '@/domains/boards/utils/post/postUtils';
+import type { LayoutPost } from '@/domains/boards/types/post';
 import ErrorMessage from '@/shared/ui/error-message';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
@@ -130,7 +131,7 @@ export default async function BoardDetailPage({
     // 공지사항 데이터 가져오기
     const isNoticeBoard = result.boardData.slug === 'notice' || result.boardData.slug === 'notices';
 
-    let finalPosts;
+    let finalPosts: LayoutPost[] = [];
     let finalNotices;
     let finalPagination;
 
@@ -139,7 +140,42 @@ export default async function BoardDetailPage({
       const allNotices = await getNotices(); // PostList용 - 모든 공지 (필독 + 전체 + 게시판)
       const headerNotices = await getNotices(result.boardData.id); // 헤더용 - 전체 공지 + 공지사항 게시판 공지
 
-      finalPosts = allNotices as any;
+      const noticePosts: LayoutPost[] = allNotices.map((notice) => {
+        const content =
+          typeof notice.content === 'string'
+            ? notice.content
+            : notice.content
+            ? JSON.stringify(notice.content)
+            : undefined;
+
+        const teamId = typeof notice.team_id === 'string' ? parseInt(notice.team_id, 10) : notice.team_id ?? null;
+        const leagueId = typeof notice.league_id === 'string' ? parseInt(notice.league_id, 10) : notice.league_id ?? null;
+
+        return {
+          id: notice.id,
+          title: notice.title,
+          board_id: notice.board_id || '',
+          board_name: notice.board_name || notice.board?.name || '',
+          board_slug: notice.board_slug || notice.board?.slug || notice.board_id || '',
+          post_number: notice.post_number,
+          created_at: notice.created_at || '',
+          formattedDate: notice.formattedDate || '',
+          views: notice.views ?? 0,
+          likes: notice.likes ?? 0,
+          author_nickname: notice.author_nickname || notice.profiles?.nickname || '익명',
+          author_id: notice.user_id,
+          author_public_id: notice.profiles?.public_id ?? null,
+          author_icon_id: notice.profiles?.icon_id ?? null,
+          author_icon_url: notice.author_icon_url ?? null,
+          author_level: notice.author_level || notice.profiles?.level || 1,
+          comment_count: notice.comment_count ?? 0,
+          content,
+          team_id: teamId,
+          league_id: leagueId
+        };
+      });
+
+      finalPosts = noticePosts;
       finalNotices = headerNotices;
 
       // 공지사항 게시판은 페이지네이션 없이 모든 공지 표시

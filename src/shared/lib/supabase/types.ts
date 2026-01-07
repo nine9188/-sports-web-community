@@ -1383,6 +1383,7 @@ export type Database = {
           level: number | null
           nickname: string | null
           points: number | null
+          public_id: string | null
           suspended_reason: string | null
           suspended_until: string | null
           updated_at: string | null
@@ -1399,6 +1400,7 @@ export type Database = {
           level?: number | null
           nickname?: string | null
           points?: number | null
+          public_id?: string | null
           suspended_reason?: string | null
           suspended_until?: string | null
           updated_at?: string | null
@@ -1415,6 +1417,7 @@ export type Database = {
           level?: number | null
           nickname?: string | null
           points?: number | null
+          public_id?: string | null
           suspended_reason?: string | null
           suspended_until?: string | null
           updated_at?: string | null
