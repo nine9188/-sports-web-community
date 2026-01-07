@@ -40,7 +40,9 @@ import { checkContentType } from '../../utils';
  * @param post - 게시글 데이터
  * @returns 아이콘 JSX 또는 null
  */
-export function renderContentTypeIcons(post: Post): React.ReactNode {
+type ContentTypeSource = Pick<Post, 'content'>;
+
+export function renderContentTypeIcons(post: ContentTypeSource): React.ReactNode {
   if (!post.content) return null;
 
   const {

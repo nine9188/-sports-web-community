@@ -11,6 +11,7 @@ import { getHeaderUserData, getBoardsForNavigation } from '@/domains/layout/acti
 import { fetchMultiDayMatches } from '@/domains/livescore/actions/footballApi';
 import { generatePageMetadata } from '@/shared/utils/metadataNew';
 import { getUIThemeSettings } from '@/domains/ui-theme/actions';
+import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
 import Script from 'next/script';
 
 // 동적 렌더링 설정
@@ -28,7 +29,6 @@ export async function generateMetadata() {
     ...metadata,
     icons: {
       icon: [
-        { url: '/favicon.svg', type: 'image/svg+xml' },
         { url: '/favicon.ico', sizes: '48x48', type: 'image/x-icon' },
         { url: '/icon-96.png', sizes: '96x96', type: 'image/png' },
         { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
@@ -78,12 +78,13 @@ export default async function RootLayout({
   // 리그 순위 컴포넌트 생성
   const leagueStandingsComponent = <LeagueStandings initialLeague="premier" initialStandings={standingsData} />;
 
-  // 헤더 데이터 및 라이브스코어 데이터, UI 테마 설정 가져오기
-  const [headerUserData, headerBoardsData, liveScoreData, uiTheme] = await Promise.all([
+  // 헤더 데이터 및 라이브스코어 데이터, UI 테마 설정, SEO 설정 가져오기
+  const [headerUserData, headerBoardsData, liveScoreData, uiTheme, seoSettings] = await Promise.all([
     getHeaderUserData(),
     getBoardsForNavigation(),
     fetchMultiDayMatches().catch(() => undefined),
-    getUIThemeSettings()
+    getUIThemeSettings(),
+    getSeoSettings()
   ]);
 
   // Tailwind 클래스를 CSS Variable 값으로 변환
@@ -102,6 +103,27 @@ export default async function RootLayout({
   const desktopRadius = borderRadiusMap[uiTheme.borderRadiusDesktop] || '0.5rem';
   const mobileRadius = borderRadiusMap[uiTheme.borderRadiusMobile] || '0';
 
+  // WebSite 구조화 데이터 (Schema.org)
+  const siteUrl = seoSettings?.site_url || 'https://4590.co.kr';
+  const siteName = seoSettings?.site_name || '4590 Football';
+  const siteDescription = seoSettings?.default_description || '축구 팬들을 위한 커뮤니티. 실시간 라이브스코어, 게시판, 이적시장 정보를 확인하세요.';
+
+  const websiteSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: siteName,
+    url: siteUrl,
+    description: siteDescription,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${siteUrl}/search?q={search_term_string}`
+      },
+      'query-input': 'required name=search_term_string'
+    }
+  };
+
   return (
     <html lang="ko" className={`w-full h-full ${inter.className}`} suppressHydrationWarning>
       <head>
@@ -109,6 +131,14 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://challenges.cloudflare.com" />
       </head>
       <body className="w-full h-full overflow-x-hidden">
+        {/* WebSite 구조화 데이터 */}
+        <Script
+          id="website-schema"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(websiteSchema)
+          }}
+        />
         {/* UI 테마 CSS Variables 적용 */}
         <Script
           id="ui-theme-vars"

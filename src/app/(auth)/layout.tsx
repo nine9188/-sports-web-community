@@ -4,9 +4,48 @@ import '../globals.css';
 import Link from 'next/link';
 import Image from 'next/image';
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://4590.co.kr';
+const authTitle = '로그인 - 4590 Football';
+const authDescription = '4590 Football 로그인, 회원가입, 계정 복구 등 인증 페이지입니다.';
+
 export const metadata: Metadata = {
-  title: 'SPORTS 인증',
-  description: 'SPORTS 인증 페이지',
+  title: {
+    default: authTitle,
+    template: '%s | 4590 Football',
+  },
+  description: authDescription,
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+    },
+  },
+  openGraph: {
+    title: authTitle,
+    description: authDescription,
+    url: siteUrl + '/signin',
+    siteName: '4590 Football',
+    images: [
+      {
+        url: siteUrl + '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: '4590 Football',
+      },
+    ],
+    type: 'website',
+    locale: 'ko_KR',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: authTitle,
+    description: authDescription,
+    images: [siteUrl + '/og-image.png'],
+  },
 };
 
 /**

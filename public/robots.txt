@@ -1,5 +1,16 @@
 User-agent: *
 Allow: /
+Disallow: /signin
+Disallow: /signup
+Disallow: /social-signup
+Disallow: /auth
+Disallow: /help
+Disallow: /settings
+Disallow: /notifications
+Disallow: /admin
+Disallow: /boards/*/create
+Disallow: /boards/*/edit
+Disallow: /test
 
 # .well-known 경로 차단 (Chrome DevTools 관련)
 Disallow: /.well-known/

@@ -8,21 +8,11 @@ import {
   ThumbsUp,
   MessageSquare,
   Flame,
-  Image as ImageIcon,
-  Link as LinkIcon,
-  Video as VideoIcon,
-  Youtube as YoutubeIcon,
-  Trophy as MatchCardIcon,
-  Twitter as TwitterIcon,
-  Instagram as InstagramIcon,
-  Facebook as FacebookIcon,
-  Linkedin as LinkedinIcon,
-  Music2 as TiktokIcon,
 } from 'lucide-react';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { TopicPostsData, TabType, TopicPost } from '../types';
-import { checkContentType } from '@/domains/boards/components/post/postlist/utils';
+import { renderContentTypeIcons } from '@/domains/boards/components/post/postlist/components/shared/PostRenderers';
 
 interface TopicTabsClientProps {
   postsData: TopicPostsData;
@@ -119,22 +109,6 @@ export function TopicTabsClient({ postsData }: TopicTabsClientProps) {
         ) : (
           <ul>
             {currentPosts.map((post, index) => {
-              const {
-                hasImage,
-                hasVideo,
-                hasYoutube,
-                hasLink,
-                hasMatchCard,
-                hasTwitter,
-                hasInstagram,
-                hasFacebook,
-                hasTiktok,
-                hasLinkedin,
-              } = checkContentType(post.content);
-
-              const hasAnyIcon = hasImage || hasVideo || hasYoutube || hasLink || hasMatchCard ||
-                hasTwitter || hasInstagram || hasFacebook || hasTiktok || hasLinkedin;
-
               return (
                 <li key={post.id} className={index < currentPosts.length - 1 ? "border-b border-black/5 dark:border-white/10" : ""}>
                   <Link
@@ -167,20 +141,7 @@ export function TopicTabsClient({ postsData }: TopicTabsClientProps) {
                         </div>
                       )}
                       <span className="truncate">{post.title}</span>
-                      {hasAnyIcon && (
-                        <div className="flex items-center gap-0.5 flex-shrink-0">
-                          {hasMatchCard && <MatchCardIcon className="h-3 w-3 text-blue-500" />}
-                          {hasImage && <ImageIcon className="h-3 w-3 text-green-500" />}
-                          {hasVideo && <VideoIcon className="h-3 w-3 text-purple-500" />}
-                          {hasYoutube && <YoutubeIcon className="h-3 w-3 text-red-500" />}
-                          {hasTwitter && <TwitterIcon className="h-3 w-3 text-sky-500" />}
-                          {hasInstagram && <InstagramIcon className="h-3 w-3 text-pink-500" />}
-                          {hasFacebook && <FacebookIcon className="h-3 w-3 text-blue-600" />}
-                          {hasTiktok && <TiktokIcon className="h-3 w-3 text-black dark:text-white" />}
-                          {hasLinkedin && <LinkedinIcon className="h-3 w-3 text-blue-700" />}
-                          {hasLink && !hasMatchCard && <LinkIcon className="h-3 w-3 text-gray-500 dark:text-gray-400" />}
-                        </div>
-                      )}
+                      {renderContentTypeIcons(post)}
                       {renderCount(post)}
                     </div>
                   </Link>

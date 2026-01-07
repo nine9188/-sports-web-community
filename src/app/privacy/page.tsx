@@ -1,11 +1,13 @@
 import Link from 'next/link';
-import type { Metadata } from 'next';
 import BackButton from '@/shared/components/BackButton';
+import { generatePageMetadataWithDefaults } from '@/shared/utils/metadataNew';
 
-export const metadata: Metadata = {
-  title: '개인정보처리방침 - 4590 Football',
-  description: '4590 Football 축구 커뮤니티 개인정보처리방침',
-};
+export async function generateMetadata() {
+  return generatePageMetadataWithDefaults('/privacy', {
+    title: '개인정보처리방침 - 4590 Football',
+    description: '4590 Football 개인정보처리방침을 확인하세요.',
+  });
+}
 
 export default function PrivacyPage() {
   return (

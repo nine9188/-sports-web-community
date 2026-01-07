@@ -7,6 +7,16 @@ import SettingsAuthGuardClient from '@/domains/settings/components/common/Settin
 export const metadata: Metadata = {
   title: '설정 - 4590 Football',
   description: '계정 설정 및 개인 정보 관리',
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+    },
+  },
 };
 
 export const dynamic = 'force-dynamic';

@@ -144,8 +144,6 @@
 | 항목 | 상태 | 비고 |
 |------|------|------|
 | 이적 정보 (`/transfers`) | ✅ | API-Football 연동 |
-| 숏츠 (`/shorts`) | ✅ | YouTube 임베드 |
-| 숏츠 상세 (`/shorts/[id]`) | ✅ | YouTube 임베드 |
 | AI 챗봇 | ✅ | Phase 1.5 완료 |
 
 ---

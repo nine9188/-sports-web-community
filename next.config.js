@@ -1,6 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+    localPatterns: [
+      {
+        pathname: '/api/proxy-image',
+      },
+      {
+        pathname: '/logo/**',
+      },
+      {
+        pathname: '/icons/**',
+      },
+    ],
     remotePatterns: [
       // API-Sports (선수/감독 이미지)
       {

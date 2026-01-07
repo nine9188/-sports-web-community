@@ -105,7 +105,9 @@ src/domains/search/
 
 ## 3. 숏츠 기능 (`/shorts`)
 
-### 3.1 파일 구조
+> **⚠️ DEPRECATED**: 이 기능은 2026-01-07에 제거되었습니다. 실제 서비스에서 사용하지 않기로 결정하여 코드베이스에서 완전히 삭제되었습니다.
+
+### 3.1 파일 구조 (삭제됨)
 
 ```
 src/app/(shorts)/
@@ -184,7 +186,7 @@ src/domains/livescore/components/football/transfers/
 |--------|---------|
 | notifications | 14개 |
 | search | 17개 |
-| shorts | 7개 |
+| shorts | 7개 (2026-01-07 삭제됨) |
 | transfers | 1개 |
 | **총계** | **39개** |
 

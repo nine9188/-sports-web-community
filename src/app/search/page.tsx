@@ -1,11 +1,13 @@
-import { Metadata } from 'next'
 import { searchContent } from '@/domains/search/actions'
 import { SearchHeader, SearchResultsContainer } from '@/domains/search'
 import type { PostSearchResult, CommentSearchResult, TeamSearchResult } from '@/domains/search/types'
+import { generatePageMetadataWithDefaults } from '@/shared/utils/metadataNew'
 
-export const metadata: Metadata = {
-  title: '검색 - 축구 커뮤니티',
-  description: '게시글, 뉴스, 팀 정보를 통합 검색하세요',
+export async function generateMetadata() {
+  return generatePageMetadataWithDefaults('/search', {
+    title: '검색 - 4590 Football',
+    description: '게시글, 댓글, 팀 정보를 통합 검색하세요.',
+  });
 }
 
 interface SearchPageProps {

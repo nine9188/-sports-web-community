@@ -3,8 +3,18 @@ import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/domains/auth/actions';
 
 export const metadata: Metadata = {
-  title: '알림',
-  description: '실시간 알림 확인',
+  title: '알림 - 4590 Football',
+  description: '실시간 알림을 확인하세요.',
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+    },
+  },
 };
 
 export const dynamic = 'force-dynamic';

@@ -6,18 +6,8 @@ import {
   TrendingUp,
   ChevronLeft,
   ChevronRight,
-  Image as ImageIcon,
-  Video as VideoIcon,
-  Youtube as YoutubeIcon,
-  Link as LinkIcon,
-  Trophy as MatchCardIcon,
-  Twitter as TwitterIcon,
-  Instagram as InstagramIcon,
-  Facebook as FacebookIcon,
-  Linkedin as LinkedinIcon,
-  Music2 as TiktokIcon,
 } from 'lucide-react';
-import { checkContentType } from '../post/postlist/utils';
+import { renderContentTypeIcons } from '../post/postlist/components/shared/PostRenderers';
 
 interface PopularPost {
   id: string;
@@ -56,41 +46,6 @@ export default function BoardPopularPosts({
   const currentPosts = activeTab === 'today' ? todayPosts : weekPosts;
   const tabLabel = activeTab === 'today' ? '오늘 BEST' : '이번주 BEST';
 
-  const renderContentIcons = (post: PopularPost) => {
-    if (!post.content) return null;
-    const {
-      hasImage,
-      hasVideo,
-      hasYoutube,
-      hasLink,
-      hasMatchCard,
-      hasTwitter,
-      hasInstagram,
-      hasFacebook,
-      hasTiktok,
-      hasLinkedin,
-    } = checkContentType(post.content);
-
-    const hasAnyIcon = hasImage || hasVideo || hasYoutube || hasLink || hasMatchCard ||
-      hasTwitter || hasInstagram || hasFacebook || hasTiktok || hasLinkedin;
-    if (!hasAnyIcon) return null;
-
-    return (
-      <div className="inline-flex items-center gap-0.5 flex-shrink-0">
-        {hasMatchCard && <MatchCardIcon className="h-3 w-3 text-blue-500" />}
-        {hasImage && <ImageIcon className="h-3 w-3 text-green-500" />}
-        {hasVideo && <VideoIcon className="h-3 w-3 text-purple-500" />}
-        {hasYoutube && <YoutubeIcon className="h-3 w-3 text-red-500" />}
-        {hasTwitter && <TwitterIcon className="h-3 w-3 text-sky-500" />}
-        {hasInstagram && <InstagramIcon className="h-3 w-3 text-pink-500" />}
-        {hasFacebook && <FacebookIcon className="h-3 w-3 text-blue-600" />}
-        {hasTiktok && <TiktokIcon className="h-3 w-3 text-black dark:text-white" />}
-        {hasLinkedin && <LinkedinIcon className="h-3 w-3 text-blue-700" />}
-        {hasLink && !hasMatchCard && <LinkIcon className="h-3 w-3 text-gray-500 dark:text-gray-400" />}
-      </div>
-    );
-  };
-
   const renderTableRows = (posts: PopularPost[]) => {
     if (posts.length === 0) {
       return (
@@ -123,7 +78,7 @@ export default function BoardPopularPosts({
                 <span className="text-xs truncate text-gray-900 dark:text-[#F0F0F0]">
                   {post.title}
                 </span>
-                {renderContentIcons(post)}
+                {renderContentTypeIcons(post)}
                 {post.comment_count > 0 && (
                   <span className="text-xs text-orange-600 dark:text-orange-400 flex-shrink-0 whitespace-nowrap">
                     [{post.comment_count}]

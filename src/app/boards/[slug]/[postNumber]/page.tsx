@@ -1,6 +1,7 @@
 import React from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import Script from 'next/script';
 import { getPostPageData } from '@/domains/boards/actions';
 import PostDetailLayout from '@/domains/boards/components/layout/PostDetailLayout';
 import ErrorMessage from '@/shared/ui/error-message';
@@ -264,10 +265,104 @@ export default async function PostDetailPage({
         icon_url: result.iconUrl
       }
     } as unknown;
-    
+
+    // Article 구조화 데이터 생성
+    const seoSettings = await getSeoSettings();
+    const siteUrl = seoSettings?.site_url || 'https://4590.co.kr';
+    const siteName = seoSettings?.site_name || '4590 Football';
+    const postUrl = `${siteUrl}/boards/${slug}/${postNumber}`;
+
+    // 본문에서 설명 추출
+    let articleDescription = '';
+    if (result.post.content) {
+      const contentStr = typeof result.post.content === 'string'
+        ? result.post.content
+        : JSON.stringify(result.post.content);
+      articleDescription = contentStr
+        .replace(/<[^>]*>/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 200);
+    }
+
+    const articleSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: result.post.title,
+      description: articleDescription || `${result.board.name}의 게시글입니다.`,
+      author: {
+        '@type': 'Person',
+        name: result.post.profiles?.nickname || '익명'
+      },
+      datePublished: result.post.created_at,
+      dateModified: result.post.updated_at || result.post.created_at,
+      publisher: {
+        '@type': 'Organization',
+        name: siteName,
+        logo: {
+          '@type': 'ImageObject',
+          url: `${siteUrl}/logo/4590 로고2 이미지크기 275X200 누끼제거 버전.png`
+        }
+      },
+      mainEntityOfPage: {
+        '@type': 'WebPage',
+        '@id': postUrl
+      },
+      commentCount: processedComments.length,
+      interactionStatistic: {
+        '@type': 'InteractionCounter',
+        interactionType: 'https://schema.org/LikeAction',
+        userInteractionCount: result.post.likes || 0
+      }
+    };
+
+    // BreadcrumbList 구조화 데이터 생성
+    const breadcrumbListItems = [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: '홈',
+        item: siteUrl
+      },
+      ...result.breadcrumbs.map((breadcrumb, index) => ({
+        '@type': 'ListItem',
+        position: index + 2,
+        name: breadcrumb.name,
+        item: breadcrumb.path ? `${siteUrl}${breadcrumb.path}` : undefined
+      })),
+      {
+        '@type': 'ListItem',
+        position: result.breadcrumbs.length + 2,
+        name: result.post.title,
+        item: postUrl
+      }
+    ];
+
+    const breadcrumbSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: breadcrumbListItems
+    };
+
     // 레이아웃 컴포넌트에 데이터 전달
     return (
       <>
+        {/* Article 구조화 데이터 */}
+        <Script
+          id="article-schema"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(articleSchema)
+          }}
+        />
+        {/* BreadcrumbList 구조화 데이터 */}
+        <Script
+          id="breadcrumb-schema"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(breadcrumbSchema)
+          }}
+        />
         <TrackPageVisit
           id={result.board.id}
           slug={result.board.slug || result.board.id}
