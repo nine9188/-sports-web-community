@@ -184,7 +184,7 @@ export default function ProfileSidebar({
               <div className="p-4 space-y-2">
                 {/* 글쓰기 */}
                 <Link
-                  href="/boards"
+                  href="/boards/soccer/create"
                   className="flex items-center gap-3 p-3 rounded-lg bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]"
                   onClick={handleMenuClick}
                 >
