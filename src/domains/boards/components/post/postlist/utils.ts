@@ -18,6 +18,8 @@ export function checkContentType(content: string | undefined): ContentTypeCheck 
     hasYoutube: false,
     hasLink: false,
     hasMatchCard: false,
+    hasTeamCard: false,
+    hasPlayerCard: false,
     hasTwitter: false,
     hasInstagram: false,
     hasFacebook: false,
@@ -33,6 +35,8 @@ export function checkContentType(content: string | undefined): ContentTypeCheck 
     let contentToCheck = content;
     let hasRealImage = false;  // 실제 이미지 (매치카드 제외)
     let foundMatchCard = false; // 매치카드 발견 여부
+    let foundTeamCard = false;  // 팀카드 발견 여부
+    let foundPlayerCard = false; // 선수카드 발견 여부
     let foundVideo = false;     // 비디오 발견 여부
     let foundYoutube = false;   // 유튜브 발견 여부
     let foundTwitter = false;   // 트위터 발견 여부
@@ -113,6 +117,14 @@ export function checkContentType(content: string | undefined): ContentTypeCheck 
                     // 매치카드 감지 (이미지와 분리)
                     text += ' [매치카드] ';
                     foundMatchCard = true;
+                  } else if (nodeObj.type === 'teamCard') {
+                    // 팀카드 감지
+                    text += ' [팀카드] ';
+                    foundTeamCard = true;
+                  } else if (nodeObj.type === 'playerCard') {
+                    // 선수카드 감지
+                    text += ' [선수카드] ';
+                    foundPlayerCard = true;
                   } else if (Array.isArray(nodeObj.content)) {
                     text += extractTextFromTipTap(nodeObj.content);
                   }
@@ -157,6 +169,20 @@ export function checkContentType(content: string | undefined): ContentTypeCheck 
       contentToCheck.includes('data-type="match-card"') ||
       contentToCheck.includes('[매치카드]') ||
       contentToCheck.includes('match-card');
+
+    // 팀카드 확인 (HTML 형식에서도 감지)
+    const hasTeamCard =
+      foundTeamCard ||
+      contentToCheck.includes('data-type="team-card"') ||
+      contentToCheck.includes('[팀카드]') ||
+      contentToCheck.includes('team-card');
+
+    // 선수카드 확인 (HTML 형식에서도 감지)
+    const hasPlayerCard =
+      foundPlayerCard ||
+      contentToCheck.includes('data-type="player-card"') ||
+      contentToCheck.includes('[선수카드]') ||
+      contentToCheck.includes('player-card');
 
     // 이미지 확인 (매치카드 내부 이미지 제외)
     let hasImage = hasRealImage;
@@ -246,6 +272,8 @@ export function checkContentType(content: string | undefined): ContentTypeCheck 
       hasYoutube,
       hasLink,
       hasMatchCard,
+      hasTeamCard,
+      hasPlayerCard,
       hasTwitter,
       hasInstagram,
       hasFacebook,

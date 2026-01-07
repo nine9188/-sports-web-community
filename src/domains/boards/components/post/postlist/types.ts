@@ -75,6 +75,8 @@ export interface ContentTypeCheck {
   hasYoutube: boolean;
   hasLink: boolean;
   hasMatchCard: boolean;
+  hasTeamCard: boolean;
+  hasPlayerCard: boolean;
   hasTwitter: boolean;
   hasInstagram: boolean;
   hasFacebook: boolean;

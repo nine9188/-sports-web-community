@@ -1,17 +1,27 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useTheme } from 'next-themes';
 import type { PlayerCardProps } from '@/shared/types/playerCard';
 
 const SUPABASE_URL = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co';
 
 export function PlayerCard({ playerId, playerData, isEditable = false }: PlayerCardProps) {
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const { name, koreanName, team, photo } = playerData;
   const displayName = koreanName || name;
   const teamDisplayName = team?.koreanName || team?.name || '';
   const numericPlayerId = typeof playerId === 'string' ? parseInt(playerId, 10) : playerId;
+  const isDark = mounted && resolvedTheme === 'dark';
 
-  // 이미지 URL
+  // 이미지 URL (팀 다크모드는 DARK_MODE_TEAM_IDS 추가 시 지원 예정)
   const teamLogo = team?.id ? `${SUPABASE_URL}/storage/v1/object/public/teams/${team.id}.png` : null;
   const playerPhoto = photo || `https://media.api-sports.io/football/players/${numericPlayerId}.png`;
 

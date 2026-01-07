@@ -11,6 +11,7 @@ import { Calendar as CalendarIcon, Eye as EyeIcon } from 'lucide-react';
 import { Post, PostVariant } from '../../types';
 import { extractFirstImageUrl, getPostTitleText, getPostTitleClassName } from '../../utils';
 import { renderContentTypeIcons, renderAuthor, renderBoardLogo } from '../shared/PostRenderers';
+import { getProxiedImageUrl } from '@/shared/utils/imageProxy';
 
 interface VirtualizedItemData {
   posts: Post[];
@@ -44,7 +45,9 @@ export const DesktopVirtualizedItem = React.memo(function DesktopVirtualizedItem
 
   // 썸네일 URL 추출 (Hook은 early return 전에 호출)
   const thumbnailUrl = useMemo(() => {
-    return variant === 'image-table' && post ? extractFirstImageUrl(post.content) : null;
+    if (variant !== 'image-table' || !post) return null;
+    const originalUrl = extractFirstImageUrl(post.content);
+    return getProxiedImageUrl(originalUrl);
   }, [variant, post]);
 
   if (!post) return null;

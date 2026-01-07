@@ -14,6 +14,8 @@ import {
   Video as VideoIcon,
   Youtube as YoutubeIcon,
   Trophy as MatchCardIcon,
+  Shield as TeamCardIcon,
+  User as PlayerCardIcon,
   Twitter as TwitterIcon,
   Instagram as InstagramIcon,
   Facebook as FacebookIcon,
@@ -47,6 +49,8 @@ export function renderContentTypeIcons(post: Post): React.ReactNode {
     hasYoutube,
     hasLink,
     hasMatchCard,
+    hasTeamCard,
+    hasPlayerCard,
     hasTwitter,
     hasInstagram,
     hasFacebook,
@@ -56,6 +60,7 @@ export function renderContentTypeIcons(post: Post): React.ReactNode {
 
   // 아이콘이 하나도 없으면 null 반환
   if (!hasImage && !hasVideo && !hasYoutube && !hasLink && !hasMatchCard &&
+      !hasTeamCard && !hasPlayerCard &&
       !hasTwitter && !hasInstagram && !hasFacebook && !hasTiktok && !hasLinkedin) {
     return null;
   }
@@ -65,6 +70,16 @@ export function renderContentTypeIcons(post: Post): React.ReactNode {
       {hasMatchCard && (
         <div title="경기 카드 포함">
           <MatchCardIcon className="h-3 w-3 text-blue-500 flex-shrink-0" />
+        </div>
+      )}
+      {hasTeamCard && (
+        <div title="팀 카드 포함">
+          <TeamCardIcon className="h-3 w-3 text-indigo-500 flex-shrink-0" />
+        </div>
+      )}
+      {hasPlayerCard && (
+        <div title="선수 카드 포함">
+          <PlayerCardIcon className="h-3 w-3 text-orange-500 flex-shrink-0" />
         </div>
       )}
       {hasImage && (

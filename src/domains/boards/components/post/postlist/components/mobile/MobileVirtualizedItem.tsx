@@ -12,6 +12,7 @@ import { Calendar as CalendarIcon } from 'lucide-react';
 import { Post, PostVariant } from '../../types';
 import { extractFirstImageUrl, getPostTitleText, getPostTitleClassName } from '../../utils';
 import { renderAuthor, renderContentTypeIcons } from '../shared/PostRenderers';
+import { getProxiedImageUrl } from '@/shared/utils/imageProxy';
 
 interface VirtualizedItemData {
   posts: Post[];
@@ -44,7 +45,9 @@ export const MobileVirtualizedItem = React.memo(function MobileVirtualizedItem({
   }, [post.formattedDate]);
 
   const thumbnailUrl = useMemo(() => {
-    return variant === 'image-table' ? extractFirstImageUrl(post.content) : null;
+    if (variant !== 'image-table') return null;
+    const originalUrl = extractFirstImageUrl(post.content);
+    return getProxiedImageUrl(originalUrl);
   }, [variant, post.content]);
 
   const titleText = getPostTitleText(post);

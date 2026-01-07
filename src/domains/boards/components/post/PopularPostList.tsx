@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { AuthorLink } from '@/domains/user/components';
 import { checkContentType, extractFirstImageUrl } from './postlist/utils';
+import { getProxiedImageUrl } from '@/shared/utils/imageProxy';
 
 interface Post {
   id: string;
@@ -72,7 +73,8 @@ export default function PopularPostList({
   return (
     <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
       {posts.map((post, index) => {
-        const thumbnailUrl = extractFirstImageUrl(post.content);
+        const originalUrl = extractFirstImageUrl(post.content);
+        const thumbnailUrl = getProxiedImageUrl(originalUrl); // 프록시 URL로 변환
         const postUrl = `/boards/${post.board_slug}/${post.post_number}`;
         const isLast = index === posts.length - 1;
         const {

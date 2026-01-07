@@ -285,11 +285,10 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                                   alt={String(leagueNameKo)}
                                   width={16}
                                   height={16}
-                                  style={{ width: '16px', height: '16px', objectFit: 'contain' }}
+                                  fit="contain"
                                   className="rounded-full flex-shrink-0"
                                   loading="eager"
                                   priority={index < 4}
-                                  fetchPriority="high"
                                 />
                               )}
                               <span className="text-xs font-medium truncate">{leagueNameKo}</span>
@@ -305,17 +304,16 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                           <div className="grid grid-cols-3 gap-1 flex-1">
                             <div className="flex flex-col items-center justify-center gap-0">
                               {match.teams?.home?.logo && match.teams?.home?.id && (
-                                <UnifiedSportsImage 
-                                  imageId={match.teams.home.id} 
-                                  imageType={ImageType.Teams} 
-                                  alt={String(homeTeamNameKo)} 
-                                  width={40} 
-                                  height={40} 
-                                  style={{ width: '40px', height: '40px', objectFit: 'contain' }} 
+                                <UnifiedSportsImage
+                                  imageId={match.teams.home.id}
+                                  imageType={ImageType.Teams}
+                                  alt={String(homeTeamNameKo)}
+                                  width={40}
+                                  height={40}
+                                  fit="contain"
                                   className="mb-0.5 group-hover:scale-110 transition-transform"
                                   loading="eager"
                                   priority={index < 4}
-                                  fetchPriority="high"
                                 />
                               )}
                               <span className="text-[10px] text-center truncate w-full group-hover:text-blue-600 transition-colors">{homeTeamNameKo}</span>
@@ -331,17 +329,16 @@ export default function LiveScoreWidgetClient({ initialMatches }: LiveScoreWidge
                             </div>
                             <div className="flex flex-col items-center justify-center gap-0">
                               {match.teams?.away?.logo && match.teams?.away?.id && (
-                                <UnifiedSportsImage 
-                                  imageId={match.teams.away.id} 
-                                  imageType={ImageType.Teams} 
-                                  alt={String(awayTeamNameKo)} 
-                                  width={40} 
-                                  height={40} 
-                                  style={{ width: '40px', height: '40px', objectFit: 'contain' }} 
+                                <UnifiedSportsImage
+                                  imageId={match.teams.away.id}
+                                  imageType={ImageType.Teams}
+                                  alt={String(awayTeamNameKo)}
+                                  width={40}
+                                  height={40}
+                                  fit="contain"
                                   className="mb-0.5 group-hover:scale-110 transition-transform"
                                   loading="eager"
                                   priority={index < 4}
-                                  fetchPriority="high"
                                 />
                               )}
                               <span className="text-[10px] text-center truncate w-full group-hover:text-blue-600 transition-colors">{awayTeamNameKo}</span>

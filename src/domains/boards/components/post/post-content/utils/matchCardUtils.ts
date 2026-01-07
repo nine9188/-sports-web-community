@@ -64,21 +64,22 @@ export function registerMatchCardHoverHandler(): void {
 }
 
 /**
- * 다크모드 감지 및 매치카드 이미지 URL 교체
+ * 다크모드 감지 및 카드 이미지 URL 교체
+ * 매치카드, 팀카드, 선수카드 모두 지원
  */
 export function updateMatchCardImages(container: HTMLElement): void {
   const isDark = document.documentElement.classList.contains('dark');
-  const matchCards = container.querySelectorAll('.match-card, .processed-match-card');
+  const matchCards = container.querySelectorAll('.match-card, .processed-match-card, .team-card, .player-card');
 
   matchCards.forEach((card) => {
     // 리그 로고 업데이트
-    const leagueImg = card.querySelector('.league-logo') as HTMLImageElement;
+    const leagueImg = card.querySelector('.league-logo-box img') as HTMLImageElement;
     if (leagueImg) {
       updateLeagueImage(leagueImg, isDark);
     }
 
     // 팀 로고 업데이트
-    const teamLogos = card.querySelectorAll('.team-logo');
+    const teamLogos = card.querySelectorAll('.team-logo-box img');
     teamLogos.forEach((teamImg) => {
       updateTeamImage(teamImg as HTMLImageElement, isDark);
     });

@@ -2,22 +2,25 @@
 const nextConfig = {
   images: {
     remotePatterns: [
+      // API-Sports (선수/감독 이미지)
       {
         protocol: 'https',
         hostname: 'media.api-sports.io',
         pathname: '/**',
       },
+      // Supabase Storage (팀/리그/업로드 이미지)
       {
         protocol: 'https',
         hostname: 'vnjjfhsuzoxcljqqwwvx.supabase.co',
         pathname: '/**',
       },
-      // Supabase Storage 도메인 추가
+      // YouTube 썸네일
       {
         protocol: 'https',
-        hostname: 'vnjjfhsuzoxcljqqwwvx.supabase.co',
-        pathname: '/storage/v1/object/public/**',
+        hostname: 'i.ytimg.com',
+        pathname: '/**',
       },
+      // 기타 허용된 도메인
       {
         protocol: 'https',
         hostname: 'cdn.footballist.co.kr',
@@ -25,20 +28,15 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'i.ytimg.com',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
         hostname: 'image.fmkorea.com',
         pathname: '/**',
       },
-      // NYT Athletic 이미지
       {
         protocol: 'https',
         hostname: 'static01.nyt.com',
         pathname: '/**',
       },
+      // 외부 URL 이미지는 /api/proxy-image를 통해 프록시 처리
     ],
   },
   typescript: {

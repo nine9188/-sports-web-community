@@ -14,6 +14,7 @@ import { Calendar as CalendarIcon, Eye as EyeIcon } from 'lucide-react';
 import { PostItemProps } from '../../types';
 import { extractFirstImageUrl, getPostTitleText, getPostTitleClassName } from '../../utils';
 import { renderContentTypeIcons, renderAuthor, renderBoardLogo } from '../shared/PostRenderers';
+import { getProxiedImageUrl } from '@/shared/utils/imageProxy';
 
 /**
  * 데스크톱 게시글 아이템 (비가상화)
@@ -36,7 +37,9 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
 
   // 썸네일 URL 추출 (image-table variant일 때만)
   const thumbnailUrl = useMemo(() => {
-    return variant === 'image-table' ? extractFirstImageUrl(post.content) : null;
+    if (variant !== 'image-table') return null;
+    const originalUrl = extractFirstImageUrl(post.content);
+    return getProxiedImageUrl(originalUrl);
   }, [variant, post.content]);
 
   // 제목 텍스트 및 스타일 계산

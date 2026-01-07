@@ -3,18 +3,20 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage'
 import { ImageType } from '@/shared/types/image'
-import { getTeamsByLeagueId, type TeamMapping } from '@/domains/livescore/constants/teams'
+import { getTeamById, type TeamMapping } from '@/domains/livescore/constants/teams'
+import { fetchLeagueTeams } from '@/domains/livescore/actions/footballApi'
 import { fetchTeamSquad, type Player } from '@/domains/livescore/actions/teams/squad'
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players'
 import { ChevronLeft, Loader2, Users, User } from 'lucide-react'
 
-// 주요 5대 리그
+// 주요 리그
 const LEAGUES = [
   { id: 39, name: '프리미어리그', country: '잉글랜드' },
   { id: 140, name: '라리가', country: '스페인' },
   { id: 78, name: '분데스리가', country: '독일' },
   { id: 135, name: '세리에A', country: '이탈리아' },
   { id: 61, name: '리그1', country: '프랑스' },
+  { id: 292, name: 'K리그1', country: '대한민국' },
 ]
 
 // 리그 정보 인터페이스
@@ -68,16 +70,44 @@ export function EntityPickerForm({
   // 데이터
   const [teams, setTeams] = useState<TeamMapping[]>([])
   const [players, setPlayers] = useState<Player[]>([])
+  const [isLoadingTeams, setIsLoadingTeams] = useState(false)
   const [isLoadingPlayers, setIsLoadingPlayers] = useState(false)
   const [playerError, setPlayerError] = useState<string | null>(null)
+  const [teamError, setTeamError] = useState<string | null>(null)
 
 
-  // 리그 선택 시 팀 목록 로드
+  // 리그 선택 시 팀 목록 로드 (API에서)
   useEffect(() => {
     if (selectedLeagueId) {
-      const leagueTeams = getTeamsByLeagueId(selectedLeagueId)
-      setTeams(leagueTeams)
-      setStep('team')
+      setIsLoadingTeams(true)
+      setTeamError(null)
+
+      fetchLeagueTeams(selectedLeagueId.toString())
+        .then(apiTeams => {
+          // API 팀 데이터에 한국어 이름 매핑
+          const mappedTeams: TeamMapping[] = apiTeams.map(apiTeam => {
+            const localTeam = getTeamById(apiTeam.id)
+            return {
+              id: apiTeam.id,
+              name_ko: localTeam?.name_ko || apiTeam.name, // 매핑 없으면 영어 이름 사용
+              name_en: apiTeam.name,
+              country_ko: localTeam?.country_ko,
+              country_en: localTeam?.country_en,
+              code: localTeam?.code,
+              logo: apiTeam.logo
+            }
+          })
+          setTeams(mappedTeams)
+          setStep('team')
+        })
+        .catch(error => {
+          console.error('팀 목록 로드 실패:', error)
+          setTeams([])
+          setTeamError('팀 목록을 불러올 수 없습니다')
+        })
+        .finally(() => {
+          setIsLoadingTeams(false)
+        })
     }
   }, [selectedLeagueId])
 
@@ -117,6 +147,7 @@ export function EntityPickerForm({
       setStep('league')
       setSelectedLeagueId(null)
       setTeams([])
+      setTeamError(null)
     }
   }
 
@@ -129,6 +160,7 @@ export function EntityPickerForm({
     setTeams([])
     setPlayers([])
     setPlayerError(null)
+    setTeamError(null)
   }
 
   // 리그 선택
@@ -174,6 +206,7 @@ export function EntityPickerForm({
     setTeams([])
     setPlayers([])
     setPlayerError(null)
+    setTeamError(null)
     onClose()
   }
 
@@ -252,13 +285,13 @@ export function EntityPickerForm({
         <div className="max-h-[300px] overflow-y-auto p-4">
           {/* Step 1: 리그 선택 */}
           {step === 'league' && (
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {LEAGUES.map(league => (
                 <button
                   key={league.id}
                   type="button"
                   onClick={() => handleLeagueSelect(league.id)}
-                  className="flex flex-col items-center p-2 rounded-lg border border-black/7 dark:border-white/10 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors outline-none focus:outline-none"
+                  className="flex flex-col items-center p-2 rounded-lg bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors outline-none focus:outline-none"
                 >
                   <UnifiedSportsImage
                     imageId={league.id}
@@ -279,18 +312,27 @@ export function EntityPickerForm({
           {/* Step 2: 팀 선택 */}
           {step === 'team' && (
             <>
-              {teams.length === 0 ? (
+              {isLoadingTeams ? (
+                <div className="flex flex-col items-center justify-center h-40 text-gray-500 dark:text-gray-400 text-xs">
+                  <Loader2 className="w-6 h-6 animate-spin mb-2" />
+                  <span>팀 목록을 불러오는 중...</span>
+                </div>
+              ) : teamError ? (
+                <div className="flex items-center justify-center h-40 text-red-500 dark:text-red-400 text-xs">
+                  {teamError}
+                </div>
+              ) : teams.length === 0 ? (
                 <div className="flex items-center justify-center h-40 text-gray-500 dark:text-gray-400 text-xs">
                   팀 정보를 불러올 수 없습니다
                 </div>
               ) : (
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   {teams.map(team => (
                     <button
                       key={team.id}
                       type="button"
                       onClick={() => handleTeamSelect(team)}
-                      className="flex flex-col items-center p-2 rounded-lg border border-black/7 dark:border-white/10 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors outline-none focus:outline-none"
+                      className="flex flex-col items-center p-2 rounded-lg bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors outline-none focus:outline-none"
                     >
                       <UnifiedSportsImage
                         imageId={team.id}
@@ -333,7 +375,7 @@ export function EntityPickerForm({
                   선수 정보가 없습니다
                 </div>
               ) : (
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   {players.map(player => {
                     const koreanName = getPlayerKoreanName(player.id)
                     const displayName = koreanName || player.name
@@ -343,7 +385,7 @@ export function EntityPickerForm({
                         key={player.id}
                         type="button"
                         onClick={() => handlePlayerSelect(player)}
-                        className="flex flex-col items-center p-2 rounded-lg border border-black/7 dark:border-white/10 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors outline-none focus:outline-none"
+                        className="flex flex-col items-center p-2 rounded-lg bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors outline-none focus:outline-none"
                       >
                         {/* 선수 이미지 */}
                         <div className="relative">

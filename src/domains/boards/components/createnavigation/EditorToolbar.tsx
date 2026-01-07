@@ -1,10 +1,11 @@
 'use client';
 
 import React, { Suspense, lazy } from 'react';
+import Image from 'next/image';
 import { Editor } from '@tiptap/react';
 import {
   Bold, Italic, List, ListOrdered, Image as ImageIcon, Link as LinkIcon,
-  Undo, Redo, Youtube as YoutubeIcon, Video as VideoIcon, Activity, Share2, Users
+  Undo, Redo, Youtube as YoutubeIcon, Video as VideoIcon, Share2, Users
 } from 'lucide-react';
 import type { MatchData } from '@/domains/livescore/actions/footballApi';
 import type { SocialPlatform } from '@/shared/ui/tiptap/extensions/social-embeds';
@@ -238,32 +239,6 @@ export default function EditorToolbar({
         )}
       </div>
       
-      {/* 경기 결과 버튼과 드롭다운 - 지연 로딩 */}
-      <div className="relative">
-        <button
-          type="button"
-          onClick={() => handleToggleDropdown('match')}
-          className={`p-2 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0] ${showMatchModal ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
-          title="경기 결과 추가"
-        >
-          <Activity size={18} />
-        </button>
-
-        {showMatchModal && (
-          <Suspense fallback={<FormLoadingSpinner />}>
-            <MatchResultForm
-              isOpen={showMatchModal}
-              onCancel={() => {
-                closeModal('match');
-              }}
-              onMatchAdd={(matchId, matchData) => {
-                handleAddMatch(matchId, matchData);
-              }}
-            />
-          </Suspense>
-        )}
-      </div>
-
       {/* 소셜 미디어 임베드 버튼과 드롭다운 - 지연 로딩 */}
       <div className="relative">
         <button
@@ -282,6 +257,35 @@ export default function EditorToolbar({
               isOpen={showSocialModal}
               onCancel={() => closeModal('social')}
               onSocialEmbedAdd={handleAddSocialEmbed}
+            />
+          </Suspense>
+        )}
+      </div>
+
+      {/* 소셜-경기/팀 구분선 */}
+      <div className="w-px h-6 bg-black/7 dark:bg-white/10 mx-1"></div>
+
+      {/* 경기 결과 버튼과 드롭다운 - 지연 로딩 */}
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => handleToggleDropdown('match')}
+          className={`p-2 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0] ${showMatchModal ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
+          title="경기 결과 추가"
+        >
+          <Image src="/icons/live.png" alt="경기 결과" width={18} height={18} className="dark:invert" />
+        </button>
+
+        {showMatchModal && (
+          <Suspense fallback={<FormLoadingSpinner />}>
+            <MatchResultForm
+              isOpen={showMatchModal}
+              onCancel={() => {
+                closeModal('match');
+              }}
+              onMatchAdd={(matchId, matchData) => {
+                handleAddMatch(matchId, matchData);
+              }}
             />
           </Suspense>
         )}

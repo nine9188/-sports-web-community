@@ -1,13 +1,22 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useTheme } from 'next-themes';
 import type { MatchCardProps } from '@/shared/types/matchCard';
-import { getStatusInfo } from '@/shared/utils/matchCard';
+import { getStatusInfo, DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
 
 const SUPABASE_URL = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co';
 
 const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = false }) => {
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // 클라이언트에서만 테마 확인 (hydration 에러 방지)
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   if (!matchData || !matchData.teams) {
     return (
       <div className="p-4 border border-red-300 bg-red-50 text-red-500 rounded">
@@ -17,6 +26,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
   }
 
   const actualMatchId = matchData.id?.toString() || String(matchId);
+  const isDark = mounted && resolvedTheme === 'dark';
 
   const { teams, goals, league, status } = matchData;
   const homeTeam = teams.home;
@@ -28,8 +38,11 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
   const statusInfo = getStatusInfo(status);
   const statusText = statusInfo.text;
 
-  // 이미지 URL
-  const leagueLogo = league.id ? `${SUPABASE_URL}/storage/v1/object/public/leagues/${league.id}.png` : null;
+  // 이미지 URL (다크모드 지원)
+  const hasDarkLeagueLogo = league.id && DARK_MODE_LEAGUE_IDS.includes(Number(league.id));
+  const leagueLogo = league.id
+    ? `${SUPABASE_URL}/storage/v1/object/public/leagues/${league.id}${isDark && hasDarkLeagueLogo ? '-1' : ''}.png`
+    : null;
   const homeTeamLogo = homeTeam.id ? `${SUPABASE_URL}/storage/v1/object/public/teams/${homeTeam.id}.png` : null;
   const awayTeamLogo = awayTeam.id ? `${SUPABASE_URL}/storage/v1/object/public/teams/${awayTeam.id}.png` : null;
 

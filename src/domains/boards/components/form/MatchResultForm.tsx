@@ -155,7 +155,7 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
       />
       <div
         ref={dropdownRef}
-        className="z-50 bg-white dark:bg-[#1D1D1D] rounded-lg shadow-lg border border-black/7 dark:border-white/10 overflow-hidden fixed sm:absolute left-1/2 top-1/2 sm:left-0 sm:top-full -translate-x-1/2 -translate-y-1/2 sm:translate-x-0 sm:translate-y-0 w-[95vw] max-w-lg sm:w-[400px]"
+        className="z-50 bg-white dark:bg-[#1D1D1D] rounded-lg shadow-lg border border-black/7 dark:border-white/10 overflow-hidden fixed sm:absolute left-1/2 top-1/2 sm:-left-32 sm:top-full -translate-x-1/2 -translate-y-1/2 sm:translate-x-0 sm:translate-y-0 w-[95vw] max-w-lg sm:w-[400px]"
         style={{ marginTop: '0.5rem' }}
       >
         <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center">
@@ -217,7 +217,8 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
               {/* 리그별로 그룹화된 경기 목록 */}
               {Object.values(groupedMatches).map((group: LeagueGroup) => (
                 <div key={group.league.id} className="space-y-1.5">
-                  <div className="flex items-center mb-1">
+                  {/* 리그 헤더 */}
+                  <div className="flex items-center px-2 py-1.5 bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 rounded-md">
                     <div className="w-5 h-5 relative mr-2 flex-shrink-0">
                       <UnifiedSportsImage
                         imageId={group.league.id}
@@ -279,7 +280,7 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
                           onMatchAdd(matchId, matchData);
                           onCancel();
                         }}
-                        className="w-full text-left border border-black/7 dark:border-white/10 rounded-md p-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                        className="w-full text-left bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-md p-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center flex-1 min-w-0">

@@ -1,18 +1,33 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { useTheme } from 'next-themes';
 import type { TeamCardProps } from '@/shared/types/teamCard';
+import { DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
 
 const SUPABASE_URL = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co';
 
 export function TeamCard({ teamId, teamData, isEditable = false }: TeamCardProps) {
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const { name, koreanName, league } = teamData;
   const displayName = koreanName || name;
   const leagueDisplayName = league?.koreanName || league?.name || '';
   const numericTeamId = typeof teamId === 'string' ? parseInt(teamId, 10) : teamId;
+  const isDark = mounted && resolvedTheme === 'dark';
 
-  // 이미지 URL
-  const leagueLogo = league?.id ? `${SUPABASE_URL}/storage/v1/object/public/leagues/${league.id}.png` : null;
+  // 이미지 URL (다크모드 지원)
+  const hasDarkLeagueLogo = league?.id && DARK_MODE_LEAGUE_IDS.includes(Number(league.id));
+  const leagueLogo = league?.id
+    ? `${SUPABASE_URL}/storage/v1/object/public/leagues/${league.id}${isDark && hasDarkLeagueLogo ? '-1' : ''}.png`
+    : null;
   const teamLogo = `${SUPABASE_URL}/storage/v1/object/public/teams/${teamData.id || numericTeamId}.png`;
 
   const CardContent = () => (
@@ -22,12 +37,12 @@ export function TeamCard({ teamId, teamData, isEditable = false }: TeamCardProps
         <div style={{ display: 'flex', alignItems: 'center' }}>
           {leagueLogo && (
             <div className="league-logo-box">
-              <img
+              <Image
                 src={leagueLogo}
                 alt={leagueDisplayName}
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
+                width={24}
+                height={24}
+                style={{ width: '24px', height: '24px', objectFit: 'contain' }}
               />
             </div>
           )}
@@ -38,13 +53,12 @@ export function TeamCard({ teamId, teamData, isEditable = false }: TeamCardProps
       {/* 메인: 팀 로고 + 팀명 */}
       <div className="team-main">
         <div className="team-logo-box">
-          <img
+          <Image
             src={teamLogo}
             alt={displayName}
-            onError={(e) => {
-              e.currentTarget.onerror = null;
-              e.currentTarget.src = '/placeholder.png';
-            }}
+            width={64}
+            height={64}
+            style={{ width: '64px', height: '64px', objectFit: 'contain' }}
           />
         </div>
         <span className="team-name">{displayName}</span>

@@ -48,7 +48,9 @@
       "WebFetch(domain:developers.stibee.com)",
       "WebFetch(domain:www.thesun.ie)",
       "Bash(rm:*)",
-      "Bash(timeout 90 npm run build:*)"
+      "Bash(timeout 90 npm run build:*)",
+      "Bash(powershell -Command \"Get-Content ''C:\\\\Users\\\\USER\\\\Desktop\\\\web2\\\\123\\\\1234\\\\src\\\\domains\\\\boards\\\\components\\\\cards\\\\TeamCard.tsx'' | Select-Object -First 10\")",
+      "Bash(git checkout:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
