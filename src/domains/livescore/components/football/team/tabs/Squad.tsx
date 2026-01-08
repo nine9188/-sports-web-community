@@ -178,22 +178,22 @@ export default function Squad({ initialSquad, initialStats, isLoading: externalL
                           }}
                         >
                           <td className="px-2 sm:px-4 md:px-6 py-2 whitespace-nowrap">
-                            <div className="relative w-8 h-8 md:w-10 md:h-10 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden flex-shrink-0">
+                            <div className="w-8 h-8 md:w-10 md:h-10 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden flex-shrink-0">
                               <UnifiedSportsImage
                                 imageId={member.id}
                                 imageType={position === 'Coach' ? ImageType.Coachs : ImageType.Players}
                                 alt={member.name}
                                 width={40}
                                 height={40}
-                                className="object-cover w-full h-full rounded-full"
+                                className="!w-full !h-full !rounded-none"
                               />
                             </div>
                           </td>
                           <td className="px-2 sm:px-4 md:px-6 py-2 text-xs font-medium text-center text-gray-900 dark:text-[#F0F0F0] whitespace-nowrap">
                             {isPlayer ? (member as Player).number : '-'}
                           </td>
-                          <td className="px-2 sm:px-4 md:px-6 py-2 whitespace-nowrap">
-                            <div className="font-medium text-xs text-gray-900 dark:text-[#F0F0F0]">
+                          <td className="px-2 sm:px-4 md:px-6 py-2">
+                            <div className="font-medium text-xs text-gray-900 dark:text-[#F0F0F0] max-w-[115px] md:max-w-none truncate md:whitespace-normal">
                               {getPlayerKoreanName(member.id) || member.name}
                             </div>
                           </td>

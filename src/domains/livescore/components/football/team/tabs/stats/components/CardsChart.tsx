@@ -19,32 +19,26 @@ export default function CardsChart({ stats }: CardsChartProps) {
     return stats.cards?.red || {};
   }, [stats.cards]);
 
-  // 최대 카드 수 계산
-  const maxYellowCards = useMemo(() => findMaxCardValue(yellowCards), [yellowCards]);
-  const maxRedCards = useMemo(() => findMaxCardValue(redCards), [redCards]);
+  // 최대 카드 수 계산 (둘 중 큰 값 사용)
+  const maxCards = useMemo(() => {
+    const maxYellow = findMaxCardValue(yellowCards);
+    const maxRed = findMaxCardValue(redCards);
+    return Math.max(maxYellow, maxRed);
+  }, [yellowCards, redCards]);
 
   // 시간대 레이블 정의
   const timeRanges = [
     '0-15', '16-30', '31-45', '46-60', '61-75', '76-90', '91-105', '106-120'
   ];
 
-  // 차트 바 렌더링 함수
-  const renderBar = (value: CardData | undefined, maxValue: number, type: 'yellow' | 'red') => {
-    if (!value) return null;
-    
-    const percentage = calculateCardPercentage(value.total, maxValue);
-    
-    return (
-      <div className="flex items-center">
-      <div 
-        className={`h-5 ${type === 'yellow' ? 'bg-yellow-200 dark:bg-yellow-900/30' : 'bg-red-200 dark:bg-red-900/30'} rounded`}
-        style={{ width: `${percentage}%` }}
-      />
-      <span className={`ml-2 text-xs ${type === 'yellow' ? 'text-yellow-700 dark:text-yellow-400' : 'text-red-700 dark:text-red-400'}`}>
-        {value.total} ({value.percentage || '0%'})
-      </span>
-      </div>
-    );
+  // 바 퍼센트 계산
+  const getBarPercentage = (value: CardData | undefined) => {
+    if (!value) return 0;
+    return calculateCardPercentage(value.total, maxCards);
+  };
+
+  const getCardValue = (value: CardData | undefined) => {
+    return value?.total || 0;
   };
 
   // 카드 데이터가 없는 경우 표시하지 않음
@@ -57,39 +51,62 @@ export default function CardsChart({ stats }: CardsChartProps) {
       <ContainerHeader>
         <ContainerTitle>시간대별 경고/퇴장</ContainerTitle>
       </ContainerHeader>
-      <ContainerContent>
-        <div className="grid grid-cols-2 gap-8">
-          {/* 옐로 카드 */}
-          <div>
-            <h4 className="text-sm font-bold mb-2 text-yellow-700 dark:text-yellow-500">옐로 카드</h4>
-            <div className="space-y-4">
-              {timeRanges.map((range) => (
-                <div key={`yellow-${range}`} className="mb-2">
-                  <div className="flex justify-between mb-1">
-                    <span className="text-xs text-gray-500 dark:text-gray-400">{range}분</span>
-                  </div>
-                  {renderBar(yellowCards[range], maxYellowCards, 'yellow')}
-                </div>
-              ))}
-            </div>
+      <ContainerContent className="!p-0">
+        {/* 소제목 */}
+        <div className="flex bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
+          <div className="flex-1 py-2 px-4 text-right text-[10px] font-medium text-gray-500 dark:text-gray-400">
+            옐로카드
           </div>
+          <div className="w-16 py-2 px-2 text-center text-[10px] font-medium text-gray-500 dark:text-gray-400">
+            시간대
+          </div>
+          <div className="flex-1 py-2 px-4 text-left text-[10px] font-medium text-gray-500 dark:text-gray-400">
+            레드카드
+          </div>
+        </div>
+        {/* 데이터 행들 */}
+        <div className="divide-y divide-black/5 dark:divide-white/10">
+          {timeRanges.map((range) => {
+            const yellowValue = yellowCards[range];
+            const redValue = redCards[range];
+            const yellowPercent = getBarPercentage(yellowValue);
+            const redPercent = getBarPercentage(redValue);
+            const yellowCount = getCardValue(yellowValue);
+            const redCount = getCardValue(redValue);
 
-          {/* 레드 카드 */}
-          <div>
-            <h4 className="text-sm font-bold mb-2 text-red-700 dark:text-red-500">레드 카드</h4>
-            <div className="space-y-4">
-              {timeRanges.map((range) => (
-                <div key={`red-${range}`} className="mb-2">
-                  <div className="flex justify-between mb-1">
-                    <span className="text-xs text-gray-500 dark:text-gray-400">{range}분</span>
+            return (
+              <div key={range} className="flex items-center h-10">
+                {/* 옐로카드 바 (오른쪽에서 왼쪽으로) */}
+                <div className="flex-1 flex items-center justify-end px-2 gap-2">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{yellowCount}</span>
+                  <div className="flex-1 flex justify-end">
+                    <div
+                      className="h-5 bg-yellow-100 dark:bg-yellow-800/50 rounded-l"
+                      style={{ width: `${yellowPercent}%` }}
+                    />
                   </div>
-                  {renderBar(redCards[range], maxRedCards, 'red')}
                 </div>
-              ))}
-            </div>
-          </div>
+
+                {/* 시간대 (중앙) */}
+                <div className="w-16 text-center text-xs font-medium text-gray-700 dark:text-gray-300 flex-shrink-0 border-x border-black/5 dark:border-white/10">
+                  {range}분
+                </div>
+
+                {/* 레드카드 바 (왼쪽에서 오른쪽으로) */}
+                <div className="flex-1 flex items-center px-2 gap-2">
+                  <div className="flex-1 flex justify-start">
+                    <div
+                      className="h-5 bg-red-100 dark:bg-red-800/50 rounded-r"
+                      style={{ width: `${redPercent}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{redCount}</span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </ContainerContent>
     </Container>
   );
-} 
+}

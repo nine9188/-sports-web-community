@@ -141,23 +141,23 @@ export default function StandingsPreview({ standings, teamId, safeLeague, onTabC
       </div>
       
       {/* 전체 순위 보기 버튼 */}
-      <button 
+      <button
         onClick={() => onTabChange('standings')}
-        className="w-full p-2 text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors border-t border-black/5 dark:border-white/10 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+        className="w-full p-3 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors border-t border-black/5 dark:border-white/10 outline-none focus:outline-none"
       >
         <div className="flex items-center justify-center gap-1">
           <span className="text-sm font-medium">전체 순위 보기</span>
-          <svg 
-            className="w-4 h-4" 
-            fill="none" 
-            stroke="currentColor" 
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M19 9l-7 7-7-7" 
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
             />
           </svg>
         </div>

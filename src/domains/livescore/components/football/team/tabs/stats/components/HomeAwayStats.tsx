@@ -30,50 +30,49 @@ export default function HomeAwayStats({ stats }: HomeAwayStatsProps) {
   const safeCleanSheet = stats.clean_sheet || { total: 0, home: 0, away: 0 };
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-2 gap-4 mb-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
       {/* 홈 통계 */}
       <Container>
         <ContainerHeader>
           <ContainerTitle>홈 경기 통계</ContainerTitle>
         </ContainerHeader>
-        <ContainerContent>
-          <div className="flex flex-col md:flex-row gap-4 mb-3">
-            {/* 승무패 통계 */}
-            <div className="flex-1">
-              <h5 className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2">승무패</h5>
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div>
-                  <p className="text-base font-bold text-gray-900 dark:text-[#F0F0F0]">{safeFixtures.wins.home}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">승</p>
-                </div>
-                <div>
-                  <p className="text-base font-bold text-gray-900 dark:text-[#F0F0F0]">{safeFixtures.draws.home}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">무</p>
-                </div>
-                <div>
-                  <p className="text-base font-bold text-gray-900 dark:text-[#F0F0F0]">{safeFixtures.loses.home}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">패</p>
-                </div>
-              </div>
+        <ContainerContent className="!p-0">
+          {/* 헤더 */}
+          <div className="flex bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
+            {['경기', '승', '무', '패', '득점', '실점', '클린시트'].map((label) => (
+              <div key={label} className="flex-1 py-2 text-center text-[10px] font-medium text-gray-500 dark:text-gray-400">{label}</div>
+            ))}
+          </div>
+          {/* 데이터 */}
+          <div className="flex items-center py-3">
+            <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              {safeFixtures.played.home}
+              <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
             </div>
-            
-            {/* 득실점 통계 */}
-            <div className="flex-1">
-              <h5 className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2">득실점</h5>
-              <div className="space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-700 dark:text-gray-300">득점</span>
-                  <span className="font-medium text-gray-900 dark:text-[#F0F0F0]">{safeGoals.for.total.home}골 {safeGoals.for.average && `(평균 ${safeGoals.for.average.home})`}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-700 dark:text-gray-300">실점</span>
-                  <span className="font-medium text-gray-900 dark:text-[#F0F0F0]">{safeGoals.against.total.home}골 {safeGoals.against.average && `(평균 ${safeGoals.against.average.home})`}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-700 dark:text-gray-300">클린시트</span>
-                  <span className="font-medium text-gray-900 dark:text-[#F0F0F0]">{safeCleanSheet.home}회</span>
-                </div>
-              </div>
+            <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              {safeFixtures.wins.home}
+              <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
+            </div>
+            <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              {safeFixtures.draws.home}
+              <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
+            </div>
+            <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              {safeFixtures.loses.home}
+              <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
+            </div>
+            <div className="flex-1 text-center relative">
+              <div className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">{safeGoals.for.total.home}</div>
+              <div className="text-[9px] text-gray-400 dark:text-gray-500">({safeGoals.for.average?.home || '0'})</div>
+              <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
+            </div>
+            <div className="flex-1 text-center relative">
+              <div className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">{safeGoals.against.total.home}</div>
+              <div className="text-[9px] text-gray-400 dark:text-gray-500">({safeGoals.against.average?.home || '0'})</div>
+              <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
+            </div>
+            <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
+              {safeCleanSheet.home}
             </div>
           </div>
         </ContainerContent>
@@ -84,44 +83,43 @@ export default function HomeAwayStats({ stats }: HomeAwayStatsProps) {
         <ContainerHeader>
           <ContainerTitle>원정 경기 통계</ContainerTitle>
         </ContainerHeader>
-        <ContainerContent>
-          <div className="flex flex-col md:flex-row gap-4 mb-3">
-            {/* 승무패 통계 */}
-            <div className="flex-1">
-              <h5 className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2">승무패</h5>
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div>
-                  <p className="text-base font-bold text-gray-900 dark:text-[#F0F0F0]">{safeFixtures.wins.away}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">승</p>
-                </div>
-                <div>
-                  <p className="text-base font-bold text-gray-900 dark:text-[#F0F0F0]">{safeFixtures.draws.away}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">무</p>
-                </div>
-                <div>
-                  <p className="text-base font-bold text-gray-900 dark:text-[#F0F0F0]">{safeFixtures.loses.away}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">패</p>
-                </div>
-              </div>
+        <ContainerContent className="!p-0">
+          {/* 헤더 */}
+          <div className="flex bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
+            {['경기', '승', '무', '패', '득점', '실점', '클린시트'].map((label) => (
+              <div key={label} className="flex-1 py-2 text-center text-[10px] font-medium text-gray-500 dark:text-gray-400">{label}</div>
+            ))}
+          </div>
+          {/* 데이터 */}
+          <div className="flex items-center py-3">
+            <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              {safeFixtures.played.away}
+              <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
             </div>
-            
-            {/* 득실점 통계 */}
-            <div className="flex-1">
-              <h5 className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2">득실점</h5>
-              <div className="space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-700 dark:text-gray-300">득점</span>
-                  <span className="font-medium text-gray-900 dark:text-[#F0F0F0]">{safeGoals.for.total.away}골 {safeGoals.for.average && `(평균 ${safeGoals.for.average.away})`}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-700 dark:text-gray-300">실점</span>
-                  <span className="font-medium text-gray-900 dark:text-[#F0F0F0]">{safeGoals.against.total.away}골 {safeGoals.against.average && `(평균 ${safeGoals.against.average.away})`}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-700 dark:text-gray-300">클린시트</span>
-                  <span className="font-medium text-gray-900 dark:text-[#F0F0F0]">{safeCleanSheet.away}회</span>
-                </div>
-              </div>
+            <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              {safeFixtures.wins.away}
+              <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
+            </div>
+            <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              {safeFixtures.draws.away}
+              <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
+            </div>
+            <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              {safeFixtures.loses.away}
+              <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
+            </div>
+            <div className="flex-1 text-center relative">
+              <div className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">{safeGoals.for.total.away}</div>
+              <div className="text-[9px] text-gray-400 dark:text-gray-500">({safeGoals.for.average?.away || '0'})</div>
+              <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
+            </div>
+            <div className="flex-1 text-center relative">
+              <div className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">{safeGoals.against.total.away}</div>
+              <div className="text-[9px] text-gray-400 dark:text-gray-500">({safeGoals.against.average?.away || '0'})</div>
+              <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
+            </div>
+            <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
+              {safeCleanSheet.away}
             </div>
           </div>
         </ContainerContent>

@@ -22,8 +22,13 @@ export default function FormationStats({ stats }: FormationStatsProps) {
       <ContainerHeader>
         <ContainerTitle>주로 사용하는 포메이션</ContainerTitle>
       </ContainerHeader>
-      <ContainerContent>
-        <div className="space-y-3">
+      <ContainerContent className="!p-0">
+        {/* 소제목 */}
+        <div className="flex bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
+          <div className="flex-1 py-2 px-4 text-[10px] font-medium text-gray-500 dark:text-gray-400">포메이션</div>
+          <div className="w-3/5 py-2 px-4 text-[10px] font-medium text-gray-500 dark:text-gray-400">사용 비율</div>
+        </div>
+        <div className="space-y-3 p-4">
           {visibleFormations.map((formation, index) => (
             <div key={index} className="flex items-center justify-between">
               <div className="flex-1">
@@ -43,17 +48,17 @@ export default function FormationStats({ stats }: FormationStatsProps) {
               </div>
             </div>
           ))}
+
+          {/* 더보기 버튼 (5개 이상일 경우) */}
+          {lineups.length > 5 && (
+            <button
+              onClick={toggleFormations}
+              className="mt-2 text-sm text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-3 py-1 rounded transition-colors focus:outline-none"
+            >
+              {showAllFormations ? '접기' : '더 보기'}
+            </button>
+          )}
         </div>
-        
-        {/* 더보기 버튼 (5개 이상일 경우) */}
-        {lineups.length > 5 && (
-          <button 
-            onClick={toggleFormations}
-            className="mt-4 text-sm text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-3 py-1 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 dark:focus:ring-gray-600"
-          >
-            {showAllFormations ? '접기' : '더 보기'}
-          </button>
-        )}
       </ContainerContent>
     </Container>
   );
