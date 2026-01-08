@@ -4,12 +4,12 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { updateUserIconServer } from '@/domains/settings/actions/icons';
 import { toast } from 'react-toastify';
-import { Loader2 } from 'lucide-react';
 import { IconItem } from '../../types';
 import { useIcon } from '@/shared/context/IconContext';
 import UserIcon from '@/shared/components/UserIcon';
 import { getLevelIconUrl } from '@/shared/utils/level-icons';
 import LevelList from '../exp/LevelList';
+import Spinner from '@/shared/components/Spinner';
 
 interface IconFormProps {
   userId: string;
@@ -212,7 +212,7 @@ export default function IconForm({
               disabled={isLoading || selectedIconId === currentIconId}
               className="px-4 py-2 bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed flex items-center rounded-md transition-colors"
             >
-              {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {isLoading && <Spinner size="xs" className="mr-2" />}
               <span className="text-sm">아이콘 저장</span>
             </button>
           </div>

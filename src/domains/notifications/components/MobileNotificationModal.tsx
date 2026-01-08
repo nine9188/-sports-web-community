@@ -6,6 +6,7 @@ import { X } from 'lucide-react';
 import { Notification } from '../types/notification';
 import NotificationItem from './NotificationItem';
 import { filterOldReadNotifications } from '../utils/filterNotifications';
+import Spinner from '@/shared/components/Spinner';
 
 interface MobileNotificationModalProps {
   isOpen: boolean;
@@ -103,7 +104,7 @@ export default function MobileNotificationModal({
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
             <div className="flex items-center justify-center py-16">
-              <div className="w-8 h-8 border-2 border-gray-300 dark:border-gray-600 border-t-gray-900 dark:border-t-[#F0F0F0] rounded-full animate-spin" />
+              <Spinner size="lg" />
             </div>
           ) : visibleNotifications.length > 0 ? (
             <div className="divide-y divide-black/5 dark:divide-white/10">

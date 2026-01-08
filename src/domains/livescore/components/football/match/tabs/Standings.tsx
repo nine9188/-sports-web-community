@@ -10,6 +10,7 @@ import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
 import { getLeagueName } from '@/domains/livescore/constants/league-mappings';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import { STANDINGS_LEGENDS, LEAGUE_IDS } from './constants/standings';
+import Spinner from '@/shared/components/Spinner';
 
 // Props 타입 정의
 interface StandingsProps {
@@ -257,7 +258,7 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
     return (
       <div className="flex justify-center items-center py-8">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-gray-900 dark:border-[#F0F0F0] mx-auto mb-2"></div>
+          <Spinner size="xl" className="mx-auto mb-2" />
           <p className="text-sm text-gray-700 dark:text-gray-300">순위표 데이터를 불러오는 중...</p>
         </div>
       </div>

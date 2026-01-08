@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { Pagination } from '@/shared/components/ui/pagination';
 import { useUserPosts, useUserComments } from '@/domains/user/hooks';
 import PostList from '@/domains/boards/components/post/postlist/PostListMain';
-import { FileText, MessageSquare, Loader2 } from 'lucide-react';
+import { FileText, MessageSquare } from 'lucide-react';
+import Spinner from '@/shared/components/Spinner';
 
 interface UserActivityTabsProps {
   publicId: string;
@@ -65,7 +66,7 @@ export default function UserActivityTabs({ publicId }: UserActivityTabsProps) {
         {/* 탭 콘텐츠 - PostList */}
         {currentData.loading && currentData.posts.length === 0 ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+            <Spinner size="md" />
           </div>
         ) : (
           <PostList

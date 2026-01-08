@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/shared/context/AuthContext'
 import { getSupabaseBrowser } from '@/shared/lib/supabase'
 import { toast } from 'react-toastify'
+import Spinner from '@/shared/components/Spinner';
 
 export default function SocialSignupPage() {
   const router = useRouter()
@@ -217,7 +218,7 @@ export default function SocialSignupPage() {
   if (!user || isInitializing) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <Spinner size="xl" />
       </div>
     )
   }
@@ -268,7 +269,7 @@ export default function SocialSignupPage() {
               />
               {isCheckingNickname && (
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  <Spinner size="xs" />
                 </div>
               )}
             </div>

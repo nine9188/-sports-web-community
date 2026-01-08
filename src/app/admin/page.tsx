@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { Users, FileText, MessageSquare, Coins, TrendingUp } from 'lucide-react';
+import Spinner from '@/shared/components/Spinner';
 
 interface DashboardStats {
   totalUsers: number;
@@ -119,7 +120,7 @@ export default function AdminDashboard() {
     <>
       {isLoading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mr-2"></div>
+          <Spinner size="lg" className="mr-2" />
           <p>데이터 로딩 중...</p>
         </div>
       ) : (

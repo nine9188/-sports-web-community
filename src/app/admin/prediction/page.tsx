@@ -12,9 +12,10 @@ declare global {
 
 import { toast } from 'react-toastify';
 import Tabs, { TabItem } from '@/shared/ui/tabs';
-import { Loader2, RefreshCw, Check, X, Target } from 'lucide-react';
+import { RefreshCw, Check, X, Target } from 'lucide-react';
 import { formatDate } from '@/shared/utils/date';
-import { 
+import Spinner from '@/shared/components/Spinner';
+import {
   getUpcomingMatches,
   generateAllPredictions,
   generateSingleLeaguePrediction,
@@ -266,7 +267,7 @@ export default function PredictionAdminPage() {
                 className="bg-white border border-gray-300 px-4 py-2 rounded-md hover:bg-gray-50 flex items-center"
               >
                 {isLoading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Spinner size="xs" className="mr-2" />
                 ) : (
                   <RefreshCw className="mr-2 h-4 w-4" />
                 )}
@@ -278,7 +279,7 @@ export default function PredictionAdminPage() {
                 className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
               >
                 {isPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Spinner size="xs" className="mr-2" />
                 ) : (
                   <Target className="mr-2 h-4 w-4" />
                 )}
@@ -289,7 +290,7 @@ export default function PredictionAdminPage() {
           
           {isLoading ? (
             <div className="flex justify-center items-center h-64">
-              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+              <Spinner size="lg" />
             </div>
           ) : leagueGroups.length === 0 ? (
             <div className="text-center p-8 bg-gray-100 rounded-lg">
@@ -322,7 +323,7 @@ export default function PredictionAdminPage() {
                       className="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 flex items-center text-sm"
                     >
                       {isPending ? (
-                        <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                        <Spinner size="xs" className="mr-1" />
                       ) : (
                         <Target className="mr-1 h-3 w-3" />
                       )}
@@ -405,7 +406,7 @@ export default function PredictionAdminPage() {
                 }`}
               >
                 {isPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Spinner size="xs" className="mr-2" />
                 ) : autoGenerateEnabled ? (
                   <X className="mr-2 h-4 w-4" />
                 ) : (
@@ -420,7 +421,7 @@ export default function PredictionAdminPage() {
                 className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
               >
                 {isPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Spinner size="xs" className="mr-2" />
                 ) : (
                   <Target className="mr-2 h-4 w-4" />
                 )}

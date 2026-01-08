@@ -11,6 +11,7 @@ import type { MatchData } from '@/domains/livescore/actions/footballApi';
 import type { SocialPlatform } from '@/shared/ui/tiptap/extensions/social-embeds';
 import type { TeamMapping } from '@/domains/livescore/constants/teams';
 import type { Player } from '@/domains/livescore/actions/teams/squad';
+import Spinner from '@/shared/components/Spinner';
 
 // 리그 정보 인터페이스
 interface LeagueInfo {
@@ -54,7 +55,7 @@ interface EditorToolbarProps {
 const FormLoadingSpinner = () => (
   <div className="absolute top-full left-0 mt-1 bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-md shadow-lg p-4 z-50">
     <div className="flex items-center space-x-2">
-      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-800 dark:border-white"></div>
+      <Spinner size="xs" />
       <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">로딩 중...</span>
     </div>
   </div>

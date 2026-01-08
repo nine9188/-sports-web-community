@@ -8,6 +8,7 @@ import type { TeamSearchResult } from '../types'
 import { trackSearchResultClick } from '../actions/searchLogs'
 import { getTeamMatches, type TeamMatch } from '../actions/teamMatches'
 import TeamMatchDropdownButton, { TeamMatchExpandedRow } from './TeamMatchDropdown'
+import Spinner from '@/shared/components/Spinner';
 
 // 캐시 유효성 검사 (5분)
 const CACHE_DURATION = 5 * 60 * 1000 // 5분
@@ -168,7 +169,7 @@ export default function TeamSearchResults({
   if (isLoading && teams.length === 0) {
     return (
       <div className="text-center py-8">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800 dark:border-[#F0F0F0]"></div>
+        <Spinner size="lg" />
         <p className="mt-2 text-gray-500 dark:text-gray-400">팀 정보 로딩 중...</p>
       </div>
     )

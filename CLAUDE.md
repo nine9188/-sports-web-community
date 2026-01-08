@@ -263,6 +263,47 @@ import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/
 </Container>
 ```
 
+### Loading Spinner
+
+**IMPORTANT**: Always use the unified `Spinner` component from `@/shared/components/Spinner` for all loading states.
+
+**Location**: `src/shared/components/Spinner.tsx`
+
+**Size Variants**:
+- `xs` - 16px (w-4 h-4) - For inline text or small buttons
+- `sm` - 20px (w-5 h-5) - For small UI elements
+- `md` - 24px (w-6 h-6) - Default, for general use
+- `lg` - 32px (w-8 h-8) - For larger areas
+- `xl` - 40px (w-10 h-10) - For full-page loading states
+
+**Style**:
+- Border: `border-2` with `border-gray-300 dark:border-gray-600`
+- Top border accent: `border-t-gray-900 dark:border-t-[#F0F0F0]`
+- Shape: `rounded-full` (circular)
+- Animation: `animate-spin`
+
+**Usage**:
+```tsx
+import Spinner from '@/shared/components/Spinner';
+
+// Default size (md)
+<Spinner />
+
+// With size variant
+<Spinner size="lg" />
+
+// In a centered loading state
+<div className="flex items-center justify-center py-8">
+  <Spinner size="md" />
+</div>
+```
+
+**DO NOT**:
+- ❌ Use `Loader2` from lucide-react
+- ❌ Create custom spinner divs with `animate-spin`
+- ❌ Use different border colors or styles
+- ❌ Use any old spinner components (LoadingState, etc.)
+
 ## Path Aliases
 
 Configured in `tsconfig.json`:

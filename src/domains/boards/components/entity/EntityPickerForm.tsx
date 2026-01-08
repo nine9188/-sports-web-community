@@ -7,7 +7,8 @@ import { getTeamById, type TeamMapping } from '@/domains/livescore/constants/tea
 import { fetchLeagueTeams } from '@/domains/livescore/actions/footballApi'
 import { fetchTeamSquad, type Player } from '@/domains/livescore/actions/teams/squad'
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players'
-import { ChevronLeft, Loader2, Users, User } from 'lucide-react'
+import { ChevronLeft, Users, User } from 'lucide-react'
+import Spinner from '@/shared/components/Spinner';
 
 // 주요 리그
 const LEAGUES = [
@@ -314,7 +315,7 @@ export function EntityPickerForm({
             <>
               {isLoadingTeams ? (
                 <div className="flex flex-col items-center justify-center h-40 text-gray-500 dark:text-gray-400 text-xs">
-                  <Loader2 className="w-6 h-6 animate-spin mb-2" />
+                  <Spinner size="md" className="mb-2" />
                   <span>팀 목록을 불러오는 중...</span>
                 </div>
               ) : teamError ? (
@@ -357,7 +358,7 @@ export function EntityPickerForm({
             <>
               {isLoadingPlayers ? (
                 <div className="flex items-center justify-center h-40">
-                  <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                  <Spinner size="md" />
                 </div>
               ) : playerError ? (
                 <div className="flex flex-col items-center justify-center h-40 text-center px-4">

@@ -1,12 +1,13 @@
 import { memo } from 'react';
 import React from 'react';
+import Spinner from '@/shared/components/Spinner';
 
 // 로딩 상태 표시 공통 컴포넌트
 export const LoadingState = memo(({ message = '데이터를 불러오는 중...' }: { message?: string }) => {
   return (
     <div className="flex justify-center items-center py-8 bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 p-4">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-gray-900 dark:border-[#F0F0F0] mx-auto mb-2"></div>
+        <Spinner size="xl" className="mx-auto mb-2" />
         <p className="text-sm text-gray-700 dark:text-gray-300">{message}</p>
       </div>
     </div>

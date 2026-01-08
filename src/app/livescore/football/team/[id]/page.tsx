@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation';
 import { TeamDataProvider } from '@/domains/livescore/components/football/team/context/TeamDataContext';
 import { Suspense } from 'react';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
+import Spinner from '@/shared/components/Spinner';
 
 interface TeamPageProps {
   params: Promise<{ id: string }>;
@@ -119,7 +120,7 @@ export default async function TeamPage({ params, searchParams }: TeamPageProps) 
           <Suspense fallback={
             <div className="mb-4 bg-white rounded-lg border p-4">
               <div className="flex justify-center items-center py-8">
-                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+                <Spinner size="xl" className="mx-auto" />
                 <span className="ml-3 text-gray-600">팀 정보를 불러오는 중...</span>
               </div>
             </div>

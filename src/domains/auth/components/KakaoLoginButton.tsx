@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { toast } from 'react-toastify'
 import { signInWithKakao } from '@/domains/auth/actions'
+import Spinner from '@/shared/components/Spinner';
 
 interface KakaoLoginButtonProps {
   className?: string
@@ -65,7 +66,7 @@ export default function KakaoLoginButton({
     >
       {loading ? (
         <div className="flex items-center">
-          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-700 mr-3"></div>
+          <Spinner size="sm" className="mr-3" />
           로그인 중...
         </div>
       ) : (

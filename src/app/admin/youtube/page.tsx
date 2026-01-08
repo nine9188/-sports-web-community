@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { toast } from 'react-toastify';
 import { Youtube, Plus, Trash2, RefreshCw, Code } from 'lucide-react';
+import Spinner from '@/shared/components/Spinner';
 
 interface YoutubeChannel {
   id: string;
@@ -496,7 +497,7 @@ ALTER TABLE public.youtube_channels ADD COLUMN IF NOT EXISTS playlist_id TEXT;`}
         
         {isLoading && channels.length === 0 ? (
           <div className="flex items-center justify-center p-8">
-            <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500 mr-2"></div>
+            <Spinner size="md" className="mr-2" />
             <p>로딩 중...</p>
           </div>
         ) : channels.length === 0 ? (

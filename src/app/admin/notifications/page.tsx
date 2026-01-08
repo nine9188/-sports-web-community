@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
-import { Bell, Users, Send, Loader2, CheckCircle, XCircle, Clock, History } from 'lucide-react';
+import { Bell, Users, Send, CheckCircle, XCircle, Clock, History } from 'lucide-react';
 import { createAdminNoticeWithLog, createBroadcastNotification, getNotificationLogs } from '@/domains/notifications/actions';
+import Spinner from '@/shared/components/Spinner';
 
 interface User {
   id: string;
@@ -236,7 +237,7 @@ export default function NotificationSendPage() {
 
             {isLoadingLogs ? (
               <div className="text-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-500" />
+                <Spinner size="lg" className="mx-auto" />
                 <p className="text-gray-500 dark:text-gray-400 mt-2">
                   발송 기록 로딩 중...
                 </p>
@@ -437,7 +438,7 @@ export default function NotificationSendPage() {
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Spinner size="sm" />
                     발송 중...
                   </>
                 ) : (
@@ -494,7 +495,7 @@ export default function NotificationSendPage() {
               <div className="space-y-2 max-h-[600px] overflow-y-auto">
                 {isFetchingUsers ? (
                   <div className="text-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-500" />
+                    <Spinner size="lg" className="mx-auto" />
                     <p className="text-gray-500 dark:text-gray-400 mt-2">
                       사용자 목록 로딩 중...
                     </p>

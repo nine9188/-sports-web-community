@@ -6,6 +6,7 @@ import { fetchCachedPlayerStats, PlayerStatsResponse } from '@/domains/livescore
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
+import Spinner from '@/shared/components/Spinner';
 
 interface PlayerStatsModalProps {
   isOpen: boolean;
@@ -94,7 +95,7 @@ export default function PlayerStatsModal({
           {/* 로딩 */}
           {isLoading && (
             <div className="py-16 text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-[#F0F0F0] mx-auto mb-4"></div>
+              <Spinner size="xl" className="mx-auto mb-4" />
               <p className="text-gray-700 dark:text-gray-300">선수 통계를 불러오는 중...</p>
             </div>
           )}

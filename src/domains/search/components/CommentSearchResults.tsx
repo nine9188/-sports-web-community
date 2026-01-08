@@ -4,6 +4,7 @@ import Link from 'next/link'
 import type { CommentSearchResult } from '../types'
 import { trackSearchResultClick } from '../actions/searchLogs'
 import { formatDate } from '@/shared/utils/date'
+import Spinner from '@/shared/components/Spinner';
 
 interface CommentSearchResultsProps {
   comments: CommentSearchResult[]
@@ -43,7 +44,7 @@ export default function CommentSearchResults({
   if (isLoading) {
     return (
       <div className="text-center py-8">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800 dark:border-[#F0F0F0]"></div>
+        <Spinner size="lg" />
         <p className="mt-2 text-gray-500 dark:text-gray-400">댓글 로딩 중...</p>
       </div>
     )

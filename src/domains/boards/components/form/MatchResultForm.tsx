@@ -9,6 +9,7 @@ import { ImageType } from '@/shared/types/image';
 import Calendar from '@/shared/components/Calendar';
 import { getMatchesByDate } from '@/domains/boards/actions/matches';
 import type { MatchData } from '@/domains/livescore/actions/footballApi';
+import Spinner from '@/shared/components/Spinner';
 
 // 경기 데이터를 위한 인터페이스
 interface League {
@@ -206,7 +207,7 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
         <div className="max-h-[300px] overflow-y-auto px-4">
           {loading ? (
             <div className="flex justify-center items-center h-40">
-              <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-gray-900"></div>
+              <Spinner size="md" />
             </div>
           ) : Object.keys(groupedMatches).length === 0 ? (
             <div className="text-center py-6 text-gray-500 text-xs">

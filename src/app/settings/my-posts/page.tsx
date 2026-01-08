@@ -5,6 +5,7 @@ import { getMyPosts } from '@/domains/settings/actions/my-posts';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import MyPostsContent from '@/domains/settings/components/my-posts/MyPostsContent';
 import PostsPagination from '@/domains/settings/components/my-posts/PostsPagination';
+import Spinner from '@/shared/components/Spinner';
 
 export const metadata: Metadata = {
   title: '내가 쓴 글 - 설정',
@@ -60,7 +61,7 @@ export default async function MyPostsPage({
 
         <Suspense fallback={
           <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-slate-800 dark:border-white"></div>
+            <Spinner size="xl" />
           </div>
         }>
           <MyPostsContent

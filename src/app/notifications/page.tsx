@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Bell, CheckCheck, Loader2, Trash2, ChevronDown } from 'lucide-react';
+import { Bell, CheckCheck, Trash2, ChevronDown } from 'lucide-react';
 import { getNotifications } from '@/domains/notifications/actions/get';
 import { markNotificationAsRead, markAllNotificationsAsRead } from '@/domains/notifications/actions/read';
 import { deleteNotifications } from '@/domains/notifications/actions/delete';
 import { Notification, NotificationType } from '@/domains/notifications/types/notification';
 import NotificationItem from '@/domains/notifications/components/NotificationItem';
+import Spinner from '@/shared/components/Spinner';
 
 type FilterType = 'all' | 'unread';
 type TypeFilter = 'all' | NotificationType;
@@ -282,7 +283,7 @@ export default function NotificationsPage() {
       {/* 알림 목록 */}
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 text-gray-900 dark:text-[#F0F0F0] animate-spin mb-3" />
+          <Spinner size="lg" className="mb-3" />
           <p className="text-sm text-gray-500 dark:text-gray-400">
             알림을 불러오는 중...
           </p>

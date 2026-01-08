@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { X, AlertCircle, Check, Loader2 } from 'lucide-react';
+import { X, AlertCircle, Check } from 'lucide-react';
 import { useNicknameTicket } from '@/domains/shop/actions/consumables';
 import { toast } from 'react-toastify';
+import Spinner from '@/shared/components/Spinner';
 
 interface NicknameChangeModalProps {
   isOpen: boolean;
@@ -178,7 +179,7 @@ export default function NicknameChangeModal({
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Spinner size="xs" />
                     변경 중...
                   </>
                 ) : (

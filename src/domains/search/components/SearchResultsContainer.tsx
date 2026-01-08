@@ -6,6 +6,7 @@ import { PostSearchResults, CommentSearchResults, TeamSearchResults } from '@/do
 import type { PostSearchResult, CommentSearchResult, TeamSearchResult } from '@/domains/search/types'
 import Tabs, { TabItem } from '@/shared/ui/tabs'
 import Pagination from './Pagination'
+import Spinner from '@/shared/components/Spinner';
 
 interface SearchResultsContainerProps {
   query: string
@@ -68,7 +69,7 @@ export default function SearchResultsContainer({
       component: (
         <Suspense fallback={
           <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800 dark:border-[#F0F0F0]"></div>
+            <Spinner size="lg" />
             <p className="mt-2 text-gray-500 dark:text-gray-400">팀 정보 로딩 중...</p>
           </div>
         }>
@@ -97,7 +98,7 @@ export default function SearchResultsContainer({
       component: (
         <Suspense fallback={
           <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800 dark:border-[#F0F0F0]"></div>
+            <Spinner size="lg" />
             <p className="mt-2 text-gray-500 dark:text-gray-400">게시글 로딩 중...</p>
           </div>
         }>
@@ -130,7 +131,7 @@ export default function SearchResultsContainer({
       component: (
         <Suspense fallback={
           <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800 dark:border-[#F0F0F0]"></div>
+            <Spinner size="lg" />
             <p className="mt-2 text-gray-500 dark:text-gray-400">댓글 로딩 중...</p>
           </div>
         }>

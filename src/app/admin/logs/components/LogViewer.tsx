@@ -6,12 +6,13 @@ import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Badge } from '@/shared/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import { 
-  getApplicationLogs, 
-  getLogStatistics, 
-  LogLevel, 
-  LogCategory, 
-  LogStatistics 
+import Spinner from '@/shared/components/Spinner';
+import {
+  getApplicationLogs,
+  getLogStatistics,
+  LogLevel,
+  LogCategory,
+  LogStatistics
 } from '@/shared/actions/log-actions'
 
 // 데이터베이스 로그 엔트리 타입 (DB 응답용)
@@ -309,7 +310,7 @@ export default function LogViewer() {
         <CardContent>
           {loading ? (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <Spinner size="lg" className="mx-auto" />
               <p className="mt-2 text-gray-600">로그를 불러오는 중...</p>
             </div>
           ) : logs.length === 0 ? (

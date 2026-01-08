@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, FileText, MessageSquare, Calendar, Loader2 } from 'lucide-react';
+import { X, FileText, MessageSquare, Calendar } from 'lucide-react';
 import { getPublicProfile } from '../actions';
 import { PublicProfile } from '../types';
 import { useUserPosts, useUserComments } from '../hooks';
@@ -9,6 +9,7 @@ import UserIcon from '@/shared/components/UserIcon';
 import ReportButton from '@/domains/reports/components/ReportButton';
 import { Pagination } from '@/shared/components/ui/pagination';
 import PostList from '@/domains/boards/components/post/postlist/PostListMain';
+import Spinner from '@/shared/components/Spinner';
 import {
   LEVEL_EXP_REQUIREMENTS,
   calculateLevelProgress,
@@ -108,7 +109,7 @@ export default function UserProfileModal({
         <div className="flex-1 overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+              <Spinner size="lg" />
             </div>
           ) : error ? (
             <div className="text-center py-12 text-gray-500 dark:text-gray-400">
@@ -227,7 +228,7 @@ export default function UserProfileModal({
               {/* 탭 콘텐츠 - PostList만 */}
               {currentData.loading && currentData.posts.length === 0 ? (
                 <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                  <Spinner size="md" />
                 </div>
               ) : (
                 <PostList

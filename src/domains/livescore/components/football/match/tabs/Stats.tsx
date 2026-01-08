@@ -13,6 +13,7 @@ import { getTeamById } from '@/domains/livescore/constants/teams';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 
 import { TeamStats, Team } from '@/domains/livescore/types/match';
+import Spinner from '@/shared/components/Spinner';
 
 interface StatsProps {
   matchId: string;
@@ -301,7 +302,7 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
     return (
       <div className="flex justify-center items-center py-8">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500 mx-auto mb-2"></div>
+          <Spinner size="xl" className="mx-auto mb-2" />
           <p className="text-sm text-gray-600">통계 데이터를 불러오는 중...</p>
         </div>
       </div>

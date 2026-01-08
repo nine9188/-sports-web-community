@@ -4,6 +4,7 @@ import { serverAuthGuard } from '@/shared/utils/auth-guard';
 import { getMyComments } from '@/domains/settings/actions/my-comments';
 import MyCommentsContent from '@/domains/settings/components/my-comments/MyCommentsContent';
 import PostsPagination from '@/domains/settings/components/my-comments/PostsPagination';
+import Spinner from '@/shared/components/Spinner';
 
 export const metadata: Metadata = {
   title: '내가 쓴 댓글 - 설정',
@@ -58,7 +59,7 @@ export default async function MyCommentsPage({
           </p>
         </div>
 
-        <Suspense fallback={<div className="flex justify-center py-8"><div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-slate-800 dark:border-white"></div></div>}>
+        <Suspense fallback={<div className="flex justify-center py-8"><Spinner size="xl" /></div>}>
           <MyCommentsContent
             key={`my-comments-content-page-${page}`}
             initialComments={data || []}

@@ -11,14 +11,15 @@ declare global {
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { toast } from 'react-toastify';
 import Tabs, { TabItem } from '@/shared/ui/tabs';
-import { Loader2, RefreshCw, Plus, Trash2, Check, X, ExternalLink } from 'lucide-react';
+import { RefreshCw, Plus, Trash2, Check, X, ExternalLink } from 'lucide-react';
 import { formatDate } from '@/shared/utils/date';
-import { 
-  getRSSFeeds, 
-  createRSSFeed, 
-  toggleRSSFeedStatus, 
-  deleteRSSFeed, 
-  fetchAllRSSFeeds, 
+import Spinner from '@/shared/components/Spinner';
+import {
+  getRSSFeeds,
+  createRSSFeed,
+  toggleRSSFeedStatus,
+  deleteRSSFeed,
+  fetchAllRSSFeeds,
   fetchSingleRSSFeed,
   getRSSAutomationLogs
 } from '@/domains/rss/actions';
@@ -395,7 +396,7 @@ export default function RSSAdminPage() {
               className="bg-white border border-gray-300 px-4 py-2 rounded-md hover:bg-gray-50 flex items-center"
             >
               {isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Spinner size="xs" className="mr-2" />
               ) : (
                 <RefreshCw className="mr-2 h-4 w-4" />
               )}
@@ -405,7 +406,7 @@ export default function RSSAdminPage() {
           
           {isLoading ? (
             <div className="flex justify-center items-center h-64">
-              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+              <Spinner size="lg" />
             </div>
           ) : feeds.length === 0 ? (
             <div className="text-center p-8 bg-gray-100 rounded-lg">
@@ -465,7 +466,7 @@ export default function RSSAdminPage() {
                             disabled={isPending}
                             title="새로고침"
                           >
-                            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                            {isPending ? <Spinner size="xs" /> : <RefreshCw className="h-4 w-4" />}
                           </button>
                           <button 
                             className={`${feed.is_active ? 'bg-red-100 hover:bg-red-200' : 'bg-green-100 hover:bg-green-200'} p-1 rounded-md`}
@@ -583,7 +584,7 @@ export default function RSSAdminPage() {
               >
                 {isPending ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Spinner size="xs" className="mr-2" />
                     처리 중...
                   </>
                 ) : (
@@ -648,7 +649,7 @@ export default function RSSAdminPage() {
                 }`}
               >
                 {isPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Spinner size="xs" className="mr-2" />
                 ) : autoFetchEnabled ? (
                   <X className="mr-2 h-4 w-4" />
                 ) : (
@@ -663,7 +664,7 @@ export default function RSSAdminPage() {
                 className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
               >
                 {isPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Spinner size="xs" className="mr-2" />
                 ) : (
                   <RefreshCw className="mr-2 h-4 w-4" />
                 )}
@@ -676,7 +677,7 @@ export default function RSSAdminPage() {
                 className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 flex items-center"
               >
                 {isPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Spinner size="xs" className="mr-2" />
                 ) : (
                   <RefreshCw className="mr-2 h-4 w-4" />
                 )}

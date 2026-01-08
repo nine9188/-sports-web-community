@@ -6,6 +6,7 @@ import type { TeamSearchResult } from '../types'
 import { getTeamMatches, type TeamMatch } from '../actions/teamMatches'
 import { getLeagueName } from '@/domains/livescore/constants/league-mappings'
 import { getTeamById } from '@/domains/livescore/constants/teams'
+import Spinner from '@/shared/components/Spinner';
 
 // 캐시 유효성 검사 (5분)
 const CACHE_DURATION = 5 * 60 * 1000 // 5분
@@ -162,7 +163,7 @@ export function TeamMatchExpandedRow({
 
           {loading ? (
             <div className="flex items-center justify-center py-4">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-900 dark:border-[#F0F0F0]"></div>
+              <Spinner size="sm" />
               <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">로딩중...</span>
             </div>
           ) : matches.length > 0 ? (
@@ -182,7 +183,7 @@ export function TeamMatchExpandedRow({
 
           {loading ? (
             <div className="flex items-center justify-center py-4">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 dark:border-[#F0F0F0]"></div>
+              <Spinner size="md" />
               <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">경기 정보 로딩중...</span>
             </div>
           ) : matches.length > 0 ? (

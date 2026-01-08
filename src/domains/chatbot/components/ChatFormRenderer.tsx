@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { FormConfig, FormField } from '../types';
 import { cn } from '@/shared/utils/cn';
 import { Check, Send, X } from 'lucide-react';
+import Spinner from '@/shared/components/Spinner';
 
 interface ChatFormRendererProps {
   formConfig: FormConfig;
@@ -231,7 +232,7 @@ export function ChatFormRenderer({
           >
             {isSubmitting ? (
               <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <Spinner size="xs" />
                 <span>제출 중...</span>
               </>
             ) : (
