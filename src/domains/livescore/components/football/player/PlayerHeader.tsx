@@ -3,7 +3,7 @@
 import React, { memo } from 'react';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
-import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
+import { Container, ContainerContent } from '@/shared/components/ui';
 import { ErrorState, PlayerProfileLoadingState } from '@/domains/livescore/components/common/CommonComponents';
 import { usePlayerData } from './context/PlayerDataContext';
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
@@ -67,52 +67,42 @@ const PlayerHeader = memo(function PlayerHeader() {
 
   return (
     <Container className="mb-4 bg-white dark:bg-[#1D1D1D]">
-      <ContainerHeader>
-        <ContainerTitle>선수 프로필</ContainerTitle>
-      </ContainerHeader>
-      
-      <ContainerContent className="!px-4 !py-4 md:!px-6 md:!py-6">
-        <div className="flex flex-col md:flex-row items-stretch gap-4 md:gap-8">
-          {/* 선수 사진 및 기본 정보 */}
-          <div className="flex flex-row items-center gap-4 md:gap-6 md:w-1/3">
-            {/* 이미지 컨테이너 */}
-            <div className="relative w-20 h-20 md:w-28 md:h-28 flex-shrink-0">
-              <div className="relative w-20 h-20 md:w-28 md:h-28">
-                <div className="absolute inset-0 rounded-full border-4 border-white dark:border-[#1D1D1D] shadow-lg"></div>
+      {/* 상단: 선수 사진 + 이름 + 팀 + 포지션 */}
+      <ContainerContent className="!p-4">
+        <div className="flex items-center gap-4">
+          {/* 이미지 컨테이너 */}
+          <div className="relative w-16 h-16 md:w-20 md:h-20 flex-shrink-0">
+            <UnifiedSportsImage
+              imageId={playerData.info.id}
+              imageType={ImageType.Players}
+              alt={playerData.info.name}
+              size="xxl"
+              variant="circle"
+              className="w-full h-full"
+            />
+            {mainTeamStats?.team && (
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 md:w-8 md:h-8 rounded-full shadow-lg flex items-center justify-center bg-white dark:bg-[#262626]">
                 <UnifiedSportsImage
-                  imageId={playerData.info.id}
-                  imageType={ImageType.Players}
-                  alt={playerData.info.name}
-                  size="xxl"
-                  variant="circle"
-                  className="w-full h-full"
+                  imageId={mainTeamStats.team.id}
+                  imageType={ImageType.Teams}
+                  alt={mainTeamStats.team.name || '팀 로고'}
+                  size="sm"
+                  variant="square"
+                  fit="contain"
+                  className="w-4 h-4 md:w-5 md:h-5"
                 />
               </div>
+            )}
+          </div>
 
+          {/* 이름, 팀, 포지션 */}
+          <div className="flex-1 min-w-0">
+            <h1 className="text-base md:text-lg font-bold truncate text-gray-900 dark:text-[#F0F0F0]">
+              {getPlayerKoreanName(playerData.info.id) || playerData.info.name}
+            </h1>
+            <div className="flex items-center gap-2 mt-1">
               {mainTeamStats?.team && (
-                <div
-                  className="absolute -bottom-1 -right-1 md:-bottom-2 md:-right-2 w-7 h-7 md:w-10 md:h-10 rounded-full shadow-lg flex items-center justify-center"
-                  style={{ backgroundColor: '#ffffff' }}
-                >
-                  <UnifiedSportsImage
-                    imageId={mainTeamStats.team.id}
-                    imageType={ImageType.Teams}
-                    alt={mainTeamStats.team.name || '팀 로고'}
-                    size="sm"
-                    variant="square"
-                    fit="contain"
-                    className="w-5 h-5 md:w-7 md:h-7"
-                  />
-                </div>
-              )}
-            </div>
-
-            <div className="text-left flex-1 min-w-0">
-              <h1 className="text-base md:text-lg font-bold truncate text-gray-900 dark:text-[#F0F0F0]">
-                {getPlayerKoreanName(playerData.info.id) || playerData.info.name}
-              </h1>
-              {mainTeamStats?.team && (
-                <p className="text-sm text-gray-700 dark:text-gray-300 truncate">
+                <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
                   {(() => {
                     const koreanName = getTeamDisplayName(mainTeamStats.team.id, { language: 'ko' });
                     return koreanName.startsWith('팀 ') ? mainTeamStats.team.name : koreanName;
@@ -120,78 +110,47 @@ const PlayerHeader = memo(function PlayerHeader() {
                 </p>
               )}
               {position && (
-                <span className="mt-1 inline-block px-2 py-0.5 md:px-3 md:py-1 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] rounded-full text-xs md:text-sm">
+                <span className="px-2 py-0.5 bg-[#F5F5F5] dark:bg-[#333333] text-gray-700 dark:text-gray-300 rounded text-xs flex-shrink-0">
                   {getPositionKorean(position)}
                 </span>
               )}
             </div>
-          </div>
-
-          {/* 기본 정보 */}
-          <div className="flex-1 border-t md:border-t-0 md:border-l border-black/5 dark:border-white/10 pt-4 md:pt-0 md:pl-8 flex flex-col justify-center">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3">
-              <div className="overflow-hidden">
-                <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-0.5">생년월일</p>
-                <p className="font-medium text-xs md:text-sm whitespace-nowrap text-ellipsis overflow-hidden text-gray-900 dark:text-[#F0F0F0]">
-                  {formatBirthDate(playerData.info.birth.date)}
-                </p>
-              </div>
-              
-              <div className="overflow-hidden">
-                <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-0.5">나이</p>
-                <p className="font-medium text-xs md:text-sm whitespace-nowrap text-ellipsis overflow-hidden text-gray-900 dark:text-[#F0F0F0]">
-                  {playerData.info.age}세
-                </p>
-              </div>
-              
-              <div className="overflow-hidden">
-                <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-0.5">출생지</p>
-                <p className="font-medium text-xs md:text-sm whitespace-nowrap text-ellipsis overflow-hidden text-gray-900 dark:text-[#F0F0F0]" title={`${playerData.info.birth.country || ''}${playerData.info.birth.place ? `, ${playerData.info.birth.place}` : ''}`}>
-                  {playerData.info.birth.country || ''}{playerData.info.birth.place ? `, ${playerData.info.birth.place}` : ''}
-                </p>
-              </div>
-              
-              <div className="overflow-hidden">
-                <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-0.5">키</p>
-                <p className="font-medium text-xs md:text-sm whitespace-nowrap text-ellipsis overflow-hidden text-gray-900 dark:text-[#F0F0F0]">
-                  {playerData.info.height || '정보 없음'}
-                </p>
-              </div>
-              
-              <div className="overflow-hidden">
-                <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-0.5">몸무게</p>
-                <p className="font-medium text-xs md:text-sm whitespace-nowrap text-ellipsis overflow-hidden text-gray-900 dark:text-[#F0F0F0]">
-                  {playerData.info.weight || '정보 없음'}
-                </p>
-              </div>
-              
-              <div className="overflow-hidden">
-                <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-0.5">포지션</p>
-                <p className="font-medium text-xs md:text-sm whitespace-nowrap text-ellipsis overflow-hidden text-gray-900 dark:text-[#F0F0F0]">
-                  {position ? getPositionKorean(position) : '정보 없음'}
-                </p>
-              </div>
-
-              {playerStats?.team && playerStats?.league && (
-                <div className="md:col-span-2 lg:col-span-2 overflow-hidden">
-                  <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-0.5">소속팀</p>
-                  <div className="flex items-center gap-1 whitespace-nowrap text-ellipsis overflow-hidden">
-                    <p className="font-medium text-xs md:text-sm text-gray-900 dark:text-[#F0F0F0]">
-                      {(() => {
-                        const koreanName = getTeamDisplayName(playerStats.team.id, { language: 'ko' });
-                        return koreanName.startsWith('팀 ') ? playerStats.team.name : koreanName;
-                      })()}
-                    </p>
-                    <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                      ({getLeagueKoreanName(playerStats.league.name)}, {playerStats.league.country})
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
+            {playerStats?.league && (
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-0.5 truncate">
+                {getLeagueKoreanName(playerStats.league.name)} · {playerStats.league.country}
+              </p>
+            )}
           </div>
         </div>
       </ContainerContent>
+
+      {/* 하단: 정보 테이블 */}
+      <div className="flex bg-[#F5F5F5] dark:bg-[#262626] border-t border-black/5 dark:border-white/10">
+        {['키', '몸무게', '생년월일', '나이', '출생지'].map((label) => (
+          <div key={label} className="flex-1 py-2 text-center text-[10px] font-medium text-gray-500 dark:text-gray-400">{label}</div>
+        ))}
+      </div>
+      <div className="flex items-center py-3">
+        <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+          {playerData.info.height || '-'}
+          <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
+        </div>
+        <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+          {playerData.info.weight || '-'}
+          <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
+        </div>
+        <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+          {formatBirthDate(playerData.info.birth.date)}
+          <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
+        </div>
+        <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+          {playerData.info.age}세
+          <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
+        </div>
+        <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] truncate px-1">
+          {playerData.info.birth.country || '-'}
+        </div>
+      </div>
     </Container>
   );
 });
