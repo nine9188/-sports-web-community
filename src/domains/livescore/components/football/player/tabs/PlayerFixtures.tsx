@@ -332,19 +332,19 @@ export default function PlayerFixtures({
               <table className="w-full border-collapse text-sm">
                 <thead>
                   <tr className="bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0]">
-                    <th className="px-3 py-3 text-left border-b border-black/5 dark:border-white/10 whitespace-nowrap text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">날짜</th>
-                    <th className="px-3 py-3 text-right border-b border-black/5 dark:border-white/10 whitespace-nowrap text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">홈팀</th>
-                    <th className="px-3 py-3 text-center border-b border-black/5 dark:border-white/10 whitespace-nowrap text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">스코어</th>
-                    <th className="px-3 py-3 text-left border-b border-black/5 dark:border-white/10 whitespace-nowrap text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">원정팀</th>
-                    <th className="px-3 py-3 text-center border-b border-black/5 dark:border-white/10 whitespace-nowrap text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">결과</th>
-                    <th className="px-3 py-3 text-center border-b border-black/5 dark:border-white/10 whitespace-nowrap text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">출전</th>
-                    <th className="px-3 py-3 text-center border-b border-black/5 dark:border-white/10 whitespace-nowrap text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">평점</th>
-                    <th className="px-3 py-3 text-center border-b border-black/5 dark:border-white/10 whitespace-nowrap text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">골</th>
-                    <th className="px-3 py-3 text-center border-b border-black/5 dark:border-white/10 whitespace-nowrap text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">도움</th>
-                    <th className="px-3 py-3 text-center border-b border-black/5 dark:border-white/10 whitespace-nowrap text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">슈팅</th>
-                    <th className="px-3 py-3 text-center border-b border-black/5 dark:border-white/10 whitespace-nowrap text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">유효</th>
-                    <th className="px-3 py-3 text-center border-b border-black/5 dark:border-white/10 whitespace-nowrap text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">패스</th>
-                    <th className="px-3 py-3 text-center border-b border-black/5 dark:border-white/10 whitespace-nowrap text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">키패스</th>
+                    <th className="px-2 py-2 text-left border-b border-black/5 dark:border-white/10 whitespace-nowrap text-[11px] font-medium text-gray-500 dark:text-gray-400">날짜</th>
+                    <th className="px-1 py-2 text-right border-b border-black/5 dark:border-white/10 whitespace-nowrap text-[11px] font-medium text-gray-500 dark:text-gray-400">홈팀</th>
+                    <th className="px-1 py-2 text-center border-b border-black/5 dark:border-white/10 whitespace-nowrap text-[11px] font-medium text-gray-500 dark:text-gray-400">스코어</th>
+                    <th className="px-1 py-2 text-left border-b border-black/5 dark:border-white/10 whitespace-nowrap text-[11px] font-medium text-gray-500 dark:text-gray-400">원정팀</th>
+                    <th className="px-1 py-2 text-center border-b border-black/5 dark:border-white/10 whitespace-nowrap text-[11px] font-medium text-gray-500 dark:text-gray-400">결과</th>
+                    <th className="px-2 py-2 text-center border-b border-black/5 dark:border-white/10 whitespace-nowrap text-[11px] font-medium text-gray-500 dark:text-gray-400">출전</th>
+                    <th className="px-2 py-2 text-center border-b border-black/5 dark:border-white/10 whitespace-nowrap text-[11px] font-medium text-gray-500 dark:text-gray-400">평점</th>
+                    <th className="px-2 py-2 text-center border-b border-black/5 dark:border-white/10 whitespace-nowrap text-[11px] font-medium text-gray-500 dark:text-gray-400">골</th>
+                    <th className="px-2 py-2 text-center border-b border-black/5 dark:border-white/10 whitespace-nowrap text-[11px] font-medium text-gray-500 dark:text-gray-400">도움</th>
+                    <th className="px-2 py-2 text-center border-b border-black/5 dark:border-white/10 whitespace-nowrap text-[11px] font-medium text-gray-500 dark:text-gray-400">슈팅</th>
+                    <th className="px-2 py-2 text-center border-b border-black/5 dark:border-white/10 whitespace-nowrap text-[11px] font-medium text-gray-500 dark:text-gray-400">유효</th>
+                    <th className="px-2 py-2 text-center border-b border-black/5 dark:border-white/10 whitespace-nowrap text-[11px] font-medium text-gray-500 dark:text-gray-400">패스</th>
+                    <th className="px-2 py-2 text-center border-b border-black/5 dark:border-white/10 whitespace-nowrap text-[11px] font-medium text-gray-500 dark:text-gray-400">키패스</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -359,12 +359,12 @@ export default function PlayerFixtures({
                       className="hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer border-b border-black/5 dark:border-white/10 transition-colors"
                       onClick={() => router.push(`/livescore/football/match/${fixture.fixture.id}`)}
                     >
-                      <td className="px-3 py-3 text-left whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
-                        {format(new Date(fixture.fixture.date), 'yyyy-MM-dd', { locale: ko })}
+                      <td className="px-2 py-3 text-left whitespace-nowrap text-xs text-gray-900 dark:text-[#F0F0F0]">
+                        {format(new Date(fixture.fixture.date), 'yy/MM/dd', { locale: ko })}
                       </td>
                       <td className="py-3 pr-1 text-right">
                         <div className="flex items-center justify-end space-x-1">
-                          <span className={`max-w-[150px] truncate text-gray-900 dark:text-[#F0F0F0] ${playerTeamId === fixture.teams.home.id ? 'font-bold' : ''}`}>
+                          <span className={`max-w-[100px] truncate text-xs text-gray-900 dark:text-[#F0F0F0] ${playerTeamId === fixture.teams.home.id ? 'font-bold' : ''}`}>
                             {getTeamById(fixture.teams.home.id)?.name_ko || fixture.teams.home.name}
                           </span>
                           <TeamLogo
@@ -373,7 +373,7 @@ export default function PlayerFixtures({
                           />
                         </div>
                       </td>
-                      <td className="py-3 px-1 text-center font-medium text-gray-900 dark:text-[#F0F0F0]">
+                      <td className="py-3 px-1 text-center text-xs font-medium text-gray-900 dark:text-[#F0F0F0]">
                         {fixture.goals.home} - {fixture.goals.away}
                       </td>
                       <td className="py-3 pl-1 text-left">
@@ -382,7 +382,7 @@ export default function PlayerFixtures({
                             name={fixture.teams.away.name}
                             teamId={fixture.teams.away.id}
                           />
-                          <span className={`max-w-[150px] truncate text-gray-900 dark:text-[#F0F0F0] ${playerTeamId === fixture.teams.away.id ? 'font-bold' : ''}`}>
+                          <span className={`max-w-[100px] truncate text-xs text-gray-900 dark:text-[#F0F0F0] ${playerTeamId === fixture.teams.away.id ? 'font-bold' : ''}`}>
                             {getTeamById(fixture.teams.away.id)?.name_ko || fixture.teams.away.name}
                           </span>
                         </div>
@@ -392,29 +392,29 @@ export default function PlayerFixtures({
                           {matchResult}
                         </span>
                       </td>
-                      <td className="py-3 px-3 text-center text-gray-900 dark:text-[#F0F0F0]">
+                      <td className="py-3 px-2 text-center text-xs text-gray-900 dark:text-[#F0F0F0]">
                         {fixture.statistics?.games?.minutes || '-'}
                       </td>
-                      <td className="px-3 py-3 text-center text-gray-900 dark:text-[#F0F0F0]">
-                        {fixture.statistics?.games?.rating ? 
+                      <td className="px-2 py-3 text-center text-xs text-gray-900 dark:text-[#F0F0F0]">
+                        {fixture.statistics?.games?.rating ?
                           Number(fixture.statistics.games.rating).toFixed(1) : '-'}
                       </td>
-                      <td className="px-3 py-3 text-center text-gray-900 dark:text-[#F0F0F0]">
+                      <td className="px-2 py-3 text-center text-xs text-gray-900 dark:text-[#F0F0F0]">
                         {fixture.statistics?.goals?.total || '-'}
                       </td>
-                      <td className="px-3 py-3 text-center text-gray-900 dark:text-[#F0F0F0]">
+                      <td className="px-2 py-3 text-center text-xs text-gray-900 dark:text-[#F0F0F0]">
                         {fixture.statistics?.goals?.assists || '-'}
                       </td>
-                      <td className="px-3 py-3 text-center text-gray-900 dark:text-[#F0F0F0]">
+                      <td className="px-2 py-3 text-center text-xs text-gray-900 dark:text-[#F0F0F0]">
                         {fixture.statistics?.shots?.total || '-'}
                       </td>
-                      <td className="px-3 py-3 text-center text-gray-900 dark:text-[#F0F0F0]">
+                      <td className="px-2 py-3 text-center text-xs text-gray-900 dark:text-[#F0F0F0]">
                         {fixture.statistics?.shots?.on || '-'}
                       </td>
-                      <td className="px-3 py-3 text-center text-gray-900 dark:text-[#F0F0F0]">
+                      <td className="px-2 py-3 text-center text-xs text-gray-900 dark:text-[#F0F0F0]">
                         {fixture.statistics?.passes?.total || '-'}
                       </td>
-                      <td className="px-3 py-3 text-center text-gray-900 dark:text-[#F0F0F0]">
+                      <td className="px-2 py-3 text-center text-xs text-gray-900 dark:text-[#F0F0F0]">
                         {fixture.statistics?.passes?.key || '-'}
                       </td>
                     </tr>

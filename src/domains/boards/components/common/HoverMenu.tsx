@@ -242,23 +242,38 @@ export default function HoverMenu({
     const gridCols = Math.min(sortedChildBoards.length, 5);
     const gridColsClass = `grid-cols-${gridCols}`;
 
+    // 마지막 행 시작 인덱스 계산
+    const totalItems = sortedChildBoards.length;
+    const lastRowStartIndex = totalItems - (totalItems % gridCols || gridCols);
+
     return (
       <div className={`grid ${gridColsClass}`}>
-        {sortedChildBoards.map((childBoard: ChildBoard, index: number) => (
-          <Link
-            href={`/boards/${childBoard.slug || childBoard.id}`}
-            key={childBoard.id}
-            className={`px-3 py-2.5 text-[10px] sm:text-xs text-center transition-colors text-gray-900 dark:text-[#F0F0F0] whitespace-nowrap overflow-hidden text-ellipsis border-b border-r border-black/5 dark:border-white/10 ${
-              childBoard.id === currentBoardId
-                ? 'bg-[#EAEAEA] dark:bg-[#333333]'
-                : 'bg-white dark:bg-[#1D1D1D] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-            }`}
-            onClick={() => setHoveredBoard(null)}
-            title={childBoard.name}
-          >
-            {childBoard.name}
-          </Link>
-        ))}
+        {sortedChildBoards.map((childBoard: ChildBoard, index: number) => {
+          // 마지막 열인지 확인 (0-indexed이므로 +1)
+          const isLastCol = (index + 1) % gridCols === 0;
+          // 마지막 행인지 확인
+          const isLastRow = index >= lastRowStartIndex;
+
+          return (
+            <Link
+              href={`/boards/${childBoard.slug || childBoard.id}`}
+              key={childBoard.id}
+              className={`px-3 py-2.5 text-[10px] sm:text-xs text-center transition-colors text-gray-900 dark:text-[#F0F0F0] whitespace-nowrap overflow-hidden text-ellipsis border-black/5 dark:border-white/10 ${
+                !isLastRow ? 'border-b' : ''
+              } ${
+                !isLastCol ? 'border-r' : ''
+              } ${
+                childBoard.id === currentBoardId
+                  ? 'bg-[#EAEAEA] dark:bg-[#333333]'
+                  : 'bg-white dark:bg-[#1D1D1D] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
+              }`}
+              onClick={() => setHoveredBoard(null)}
+              title={childBoard.name}
+            >
+              {childBoard.name}
+            </Link>
+          );
+        })}
       </div>
     );
   }, [currentBoardId]);

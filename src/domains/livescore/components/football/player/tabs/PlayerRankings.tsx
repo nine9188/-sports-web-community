@@ -152,40 +152,37 @@ export default function PlayerRankings({
 
       {/* 4-10위 테이블 - 최소 높이 고정 */}
       <Container className="min-h-[300px] bg-white dark:bg-[#1D1D1D]">
-        <ContainerContent className="!p-0 overflow-x-auto">
-          <table className="min-w-full table-fixed">
+        <ContainerContent className="!p-0 overflow-hidden">
+          <table className="w-full table-fixed">
             <thead className="bg-[#F5F5F5] dark:bg-[#262626]">
               <tr>
-                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-[10%] sm:w-[10%] whitespace-nowrap border-b border-black/5 dark:border-white/10">순위</th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-[45%] sm:w-[40%] whitespace-nowrap border-b border-black/5 dark:border-white/10">선수</th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-[30%] sm:w-[35%] whitespace-nowrap border-b border-black/5 dark:border-white/10">
-                  <span className="hidden sm:inline">팀</span>
-                  <span className="sm:hidden">소속</span>
-                </th>
-                <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-[15%] whitespace-nowrap border-b border-black/5 dark:border-white/10">기록</th>
+                <th className="pl-3 pr-1 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 w-8 border-b border-black/5 dark:border-white/10">#</th>
+                <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-black/5 dark:border-white/10">선수</th>
+                <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-black/5 dark:border-white/10">소속</th>
+                <th className="pl-1 pr-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 w-12 border-b border-black/5 dark:border-white/10">기록</th>
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-[#1D1D1D]">
               {getRankingData().slice(3).length > 0 ? (
                 getRankingData().slice(3).map((player: PlayerRanking, index: number) => (
-                  <tr 
-                    key={player.player.id} 
+                  <tr
+                    key={player.player.id}
                     className={`hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors border-b border-black/5 dark:border-white/10 ${
                       player.player.id === playerId ? 'bg-[#F5F5F5] dark:bg-[#262626]' : ''
                     }`}
                     onClick={() => navigateToPlayer(player.player.id)}
                   >
-                    <td className="px-3 py-3 text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                    <td className="pl-3 pr-1 py-2 text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
                       {index + 4}
                     </td>
-                    <td className="px-3 py-3">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10 relative">
+                    <td className="px-1 py-2">
+                      <div className="flex items-center min-w-0 gap-1.5">
+                        <div className="flex-shrink-0 h-7 w-7 relative">
                           <Image
                             src={player.player.photo || '/placeholder-player.png'}
                             alt={player.player.name}
                             fill
-                            sizes="(max-width: 640px) 32px, 40px"
+                            sizes="28px"
                             className="rounded-full object-cover"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
@@ -194,21 +191,19 @@ export default function PlayerRankings({
                             unoptimized
                           />
                         </div>
-                        <div className="ml-2 sm:ml-3 overflow-hidden">
-                          <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate max-w-full">
-                            {getPlayerKoreanName(player.player.id) || player.player.name}
-                          </div>
-                        </div>
+                        <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
+                          {getPlayerKoreanName(player.player.id) || player.player.name}
+                        </span>
                       </div>
                     </td>
-                    <td className="px-3 py-3">
-                      <div className="flex items-center">
-                        <div className="relative w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0">
+                    <td className="px-1 py-2">
+                      <div className="flex items-center min-w-0 gap-1">
+                        <div className="relative w-5 h-5 flex-shrink-0">
                           <Image
                             src={player.statistics[0].team.logo || '/placeholder-team.png'}
                             alt={player.statistics[0].team.name}
                             fill
-                            sizes="(max-width: 640px) 20px, 24px"
+                            sizes="20px"
                             className="object-contain"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
@@ -217,14 +212,12 @@ export default function PlayerRankings({
                             unoptimized
                           />
                         </div>
-                        <div className="ml-1 sm:ml-2 overflow-hidden">
-                          <div className="text-xs sm:text-sm text-gray-900 dark:text-[#F0F0F0] truncate">
-                            {getTeamById(player.statistics[0].team.id)?.name_ko || player.statistics[0].team.name}
-                          </div>
-                        </div>
+                        <span className="text-xs sm:text-sm text-gray-900 dark:text-[#F0F0F0] truncate">
+                          {getTeamById(player.statistics[0].team.id)?.name_ko || player.statistics[0].team.name}
+                        </span>
                       </div>
                     </td>
-                    <td className="px-3 py-3 text-right text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                    <td className="pl-1 pr-3 py-2 text-right text-xs sm:text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
                       {getRankingValue(player, rankingType)}
                     </td>
                   </tr>

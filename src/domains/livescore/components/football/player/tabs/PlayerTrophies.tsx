@@ -103,16 +103,21 @@ export default function PlayerTrophies({
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 md:mb-0">
-                    {trophy.leagueLogo && (
-                      <UnifiedSportsImage
-                        imageId={parseInt(trophy.leagueLogo.split('/').pop()?.split('.')[0] || '0')}
-                        imageType={ImageType.Leagues}
-                        alt={trophy.league}
-                        width={20}
-                        height={20}
-                        className="w-5 h-5 object-contain flex-shrink-0"
-                      />
-                    )}
+                    {(() => {
+                      const leagueId = trophy.leagueLogo
+                        ? parseInt(trophy.leagueLogo.split('/').pop()?.split('.')[0] || '0')
+                        : 0;
+                      return leagueId > 0 ? (
+                        <UnifiedSportsImage
+                          imageId={leagueId}
+                          imageType={ImageType.Leagues}
+                          alt={trophy.league}
+                          width={20}
+                          height={20}
+                          className="w-5 h-5 object-contain flex-shrink-0"
+                        />
+                      ) : null;
+                    })()}
                     <p className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0] truncate">
                       {getLeagueKoreanName(trophy.league) || trophy.league}
                     </p>

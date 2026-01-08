@@ -23,8 +23,8 @@ const DEFAULT_ITEMS: QuickLinkItem[] = [
   { key: 'all', label: '전체', href: '/boards/all', iconImage: '/icons/게시글.png', ariaLabel: '전체 게시판' },
   { key: 'notice', label: '공지', href: '/boards/notice', iconImage: '/icons/notice.png', ariaLabel: '공지 게시판' },
   { key: 'news', label: '소식', href: '/boards/news', iconImage: '/icons/news.png', ariaLabel: '소식 게시판' },
-  { key: 'analysis', label: '분석', href: '/boards/ai-analysis', iconImage: '/icons/ai.png', ariaLabel: 'AI 분석 게시판' },
-  { key: 'live', label: '라이브', href: '/livescore/football', iconImage: '/icons/live.png', ariaLabel: '라이브 스코어' },
+  { key: 'live', label: '경기 확인', href: '/livescore/football', iconImage: '/icons/livescore.png', ariaLabel: '경기 확인' },
+  { key: 'data-center', label: '데이터센터', href: '/livescore/football/leagues', iconImage: '/icons/data.png', ariaLabel: '데이터센터' },
 ];
 
 function classNames(...classes: Array<string | undefined | false>) {
