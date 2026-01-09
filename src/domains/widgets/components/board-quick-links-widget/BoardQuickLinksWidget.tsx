@@ -19,8 +19,8 @@ export type BoardQuickLinksWidgetProps = {
 };
 
 const DEFAULT_ITEMS: QuickLinkItem[] = [
-  { key: 'popular', label: '인기', href: '/boards/popular', iconImage: '/icons/인기글.png', ariaLabel: '인기 게시판' },
-  { key: 'all', label: '전체', href: '/boards/all', iconImage: '/icons/게시글.png', ariaLabel: '전체 게시판' },
+  { key: 'popular', label: '인기', href: '/boards/popular', iconImage: '/icons/popular.png', ariaLabel: '인기 게시판' },
+  { key: 'all', label: '전체', href: '/boards/all', iconImage: '/icons/post.png', ariaLabel: '전체 게시판' },
   { key: 'notice', label: '공지', href: '/boards/notice', iconImage: '/icons/notice.png', ariaLabel: '공지 게시판' },
   { key: 'news', label: '소식', href: '/boards/news', iconImage: '/icons/news.png', ariaLabel: '소식 게시판' },
   { key: 'live', label: '경기 확인', href: '/livescore/football', iconImage: '/icons/livescore.png', ariaLabel: '경기 확인' },

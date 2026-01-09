@@ -11,7 +11,7 @@ export default function AdditionalStats({ stats }: AdditionalStatsProps) {
   return (
     <div className="space-y-4 mb-4">
       {/* 페널티 & 무득점 경기 */}
-      <Container>
+      <Container className="bg-white dark:bg-[#1D1D1D]">
         {/* 메인 헤더 - 반으로 나눔 */}
         <div className="flex h-12 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
           <div className="flex-1 px-4 flex items-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
@@ -25,10 +25,11 @@ export default function AdditionalStats({ stats }: AdditionalStatsProps) {
         <ContainerContent className="!p-0">
           {/* 소제목 */}
           <div className="flex bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
-            <div className="flex-1 flex">
+            <div className="flex-1 flex relative">
               {['총획득', '성공', '실패'].map((label) => (
                 <div key={label} className="flex-1 py-2 text-center text-[10px] font-medium text-gray-500 dark:text-gray-400">{label}</div>
               ))}
+              <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-300 dark:bg-gray-500" />
             </div>
             <div className="flex-1 flex">
               {['홈', '원정', '총경기'].map((label) => (
@@ -70,7 +71,7 @@ export default function AdditionalStats({ stats }: AdditionalStatsProps) {
       </Container>
 
       {/* 연속 기록 & 최다 득실점 */}
-      <Container>
+      <Container className="bg-white dark:bg-[#1D1D1D]">
         {/* 메인 헤더 - 반으로 나눔 */}
         <div className="flex h-12 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
           <div className="flex-1 px-4 flex items-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
@@ -84,10 +85,11 @@ export default function AdditionalStats({ stats }: AdditionalStatsProps) {
         <ContainerContent className="!p-0">
           {/* 소제목 */}
           <div className="flex bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
-            <div className="flex-1 flex">
+            <div className="flex-1 flex relative">
               {['연승', '연무', '연패'].map((label) => (
                 <div key={label} className="flex-1 py-2 text-center text-[10px] font-medium text-gray-500 dark:text-gray-400">{label}</div>
               ))}
+              <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-300 dark:bg-gray-500" />
             </div>
             <div className="flex-1 flex">
               {['득점(H)', '득점(A)', '실점(H)', '실점(A)'].map((label) => (
