@@ -6,75 +6,102 @@ import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { BoardCollectionData } from './types';
 
+// 상수 정의
+const POSTS_PER_PAGE = 10;
+
+// 타입 정의
+type Post = BoardCollectionData['recentPosts'][number];
+
 interface BoardCollectionWidgetClientProps {
   boardsData: BoardCollectionData[];
 }
 
+// 게시판 로고 컴포넌트
+const BoardLogo = ({ post }: { post: Post }) => {
+  if (post.team_logo || post.league_logo) {
+    return (
+      <div className="flex items-center">
+        <div className="relative w-4 h-4 mr-1 flex-shrink-0">
+          <Image
+            src={post.team_logo || post.league_logo || ''}
+            alt={post.board_name}
+            fill
+            sizes="16px"
+            className="object-contain"
+            loading="lazy"
+          />
+        </div>
+        <span
+          className="text-[10px] text-gray-700 dark:text-gray-300 truncate max-w-[60px]"
+          title={post.board_name}
+        >
+          {post.board_name}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <span
+      className="inline-block text-[10px] bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 px-1.5 py-0.5 rounded-full truncate flex-shrink-0 max-w-[70px]"
+      title={post.board_name}
+    >
+      {post.board_name}
+    </span>
+  );
+};
+
+// 댓글 수 컴포넌트
+const CommentCount = ({ count }: { count: number }) => {
+  if (count <= 0) return null;
+
+  return (
+    <span
+      className="text-xs text-orange-600 dark:text-orange-400 font-medium flex-shrink-0"
+      title={`댓글 ${count}개`}
+    >
+      [{count}]
+    </span>
+  );
+};
+
+// 게시글 아이템 컴포넌트 (중복 제거)
+const PostItem = ({ post, isLast }: { post: Post; isLast: boolean }) => (
+  <Link
+    href={`/boards/${post.board_slug}/${post.post_number}`}
+    className={`text-xs text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors py-2 px-4 flex items-center gap-2 min-w-0 ${
+      isLast ? '' : 'border-b border-black/5 dark:border-white/10'
+    }`}
+  >
+    <div className="flex-shrink-0">
+      <BoardLogo post={post} />
+    </div>
+    <span className="flex-1 min-w-0 line-clamp-1">{post.title}</span>
+    <CommentCount count={post.comment_count} />
+  </Link>
+);
+
 export default function BoardCollectionWidgetClient({ boardsData }: BoardCollectionWidgetClientProps) {
+  // 현재 선택된 게시판 인덱스 (데스크톱/모바일 공용)
   const [selectedBoardIndex, setSelectedBoardIndex] = useState(0);
-  const [page, setPage] = useState(0);
-  // 각 게시판별 페이지 상태 (0: 1~10, 1: 11~20)
-  const [boardPages, setBoardPages] = useState<Record<string, number>>({});
 
   const currentBoardData = boardsData[selectedBoardIndex];
-  const totalPages = boardsData.length;
+  const totalBoards = boardsData.length;
 
-  // 다음 게시판 (데스크톱용)
+  // 다음 게시판
   const handleNext = () => {
-    setSelectedBoardIndex((prev) => (prev + 1) % totalPages);
-    setPage((prev) => (prev + 1) % totalPages);
+    setSelectedBoardIndex((prev) => (prev + 1) % totalBoards);
   };
 
-  // 이전 게시판 (데스크톱용)
+  // 이전 게시판
   const handlePrev = () => {
-    setSelectedBoardIndex((prev) => (prev - 1 + totalPages) % totalPages);
-    setPage((prev) => (prev - 1 + totalPages) % totalPages);
-  };
-
-  // 특정 게시판의 페이지 전환 (모바일용)
-  const handleBoardPageToggle = (boardId: string) => {
-    setBoardPages(prev => ({
-      ...prev,
-      [boardId]: prev[boardId] === 1 ? 0 : 1
-    }));
+    setSelectedBoardIndex((prev) => (prev - 1 + totalBoards) % totalBoards);
   };
 
   // 현재 게시판에 게시글이 없으면 메시지 표시
-  const hasNoPosts = !currentBoardData ||
+  const hasNoPosts =
+    !currentBoardData ||
     (currentBoardData.recentPosts.length === 0 && currentBoardData.popularPosts.length === 0);
-
-  // 게시판 로고 렌더링 함수 (위젯에 맞게 컴팩트하게)
-  const renderBoardLogo = (post: BoardCollectionData['recentPosts'][0]) => {
-    if (post.team_logo || post.league_logo) {
-      return (
-        <div className="flex items-center">
-          <div className="relative w-4 h-4 mr-1 flex-shrink-0">
-            <Image
-              src={post.team_logo || post.league_logo || ''}
-              alt={post.board_name}
-              fill
-              sizes="16px"
-              className="object-contain"
-              loading="lazy"
-            />
-          </div>
-          <span className="text-[10px] text-gray-700 dark:text-gray-300 truncate"
-                title={post.board_name}
-                style={{maxWidth: '60px'}}>
-            {post.board_name}
-          </span>
-        </div>
-      );
-    } else {
-      return (
-        <span className="inline-block text-[10px] bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 px-1.5 py-0.5 rounded-full truncate flex-shrink-0"
-              title={post.board_name}
-              style={{maxWidth: '70px'}}>
-          {post.board_name}
-        </span>
-      );
-    }
-  };
 
   return (
     <>
@@ -86,7 +113,7 @@ export default function BoardCollectionWidgetClient({ boardsData }: BoardCollect
           {/* 페이지네이션 */}
           <div className="flex items-center gap-2 flex-shrink-0">
             <span className="text-sm text-gray-600 dark:text-gray-400">
-              {page + 1} / {totalPages}
+              {selectedBoardIndex + 1} / {totalBoards}
             </span>
             <button
               onClick={handlePrev}
@@ -110,10 +137,7 @@ export default function BoardCollectionWidgetClient({ boardsData }: BoardCollect
           {boardsData.map((data, index) => (
             <button
               key={data.board.id}
-              onClick={() => {
-                setSelectedBoardIndex(index);
-                setPage(index);
-              }}
+              onClick={() => setSelectedBoardIndex(index)}
               className={`flex-1 text-xs py-2 px-1 transition-colors whitespace-nowrap ${
                 index === selectedBoardIndex
                   ? 'bg-white dark:bg-[#1D1D1D] border-b-2 border-slate-800 dark:border-white font-medium text-gray-900 dark:text-[#F0F0F0]'
@@ -136,120 +160,91 @@ export default function BoardCollectionWidgetClient({ boardsData }: BoardCollect
             <div className="grid grid-cols-2">
               {/* 왼쪽 열: 1~10번 */}
               <div className="flex flex-col border-r border-black/5 dark:border-white/10">
-                {currentBoardData.recentPosts.slice(0, 10).map((post, index) => (
-                  <Link
+                {currentBoardData.recentPosts.slice(0, POSTS_PER_PAGE).map((post, index) => (
+                  <PostItem
                     key={post.id}
-                    href={`/boards/${post.board_slug}/${post.post_number}`}
-                    className={`text-xs text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors py-2 px-4 flex items-center gap-2 min-w-0 ${
-                      index === 9 ? '' : 'border-b border-black/5 dark:border-white/10'
-                    }`}
-                  >
-                    <div className="flex-shrink-0">
-                      {renderBoardLogo(post)}
-                    </div>
-                    <span className="flex-1 min-w-0 line-clamp-1">{post.title}</span>
-                    {post.comment_count > 0 && (
-                      <span
-                        className="text-xs text-orange-600 dark:text-orange-400 font-medium flex-shrink-0"
-                        title={`댓글 ${post.comment_count}개`}
-                      >
-                        [{post.comment_count}]
-                      </span>
-                    )}
-                  </Link>
+                    post={post}
+                    isLast={index === POSTS_PER_PAGE - 1}
+                  />
                 ))}
               </div>
 
               {/* 오른쪽 열: 11~20번 */}
               <div className="flex flex-col">
-                {currentBoardData.recentPosts.slice(10, 20).map((post, index) => (
-                  <Link
-                    key={post.id}
-                    href={`/boards/${post.board_slug}/${post.post_number}`}
-                    className={`text-xs text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors py-2 px-4 flex items-center gap-2 min-w-0 ${
-                      index === 9 ? '' : 'border-b border-black/5 dark:border-white/10'
-                    }`}
-                  >
-                    <div className="flex-shrink-0">
-                      {renderBoardLogo(post)}
-                    </div>
-                    <span className="flex-1 min-w-0 line-clamp-1">{post.title}</span>
-                    {post.comment_count > 0 && (
-                      <span
-                        className="text-xs text-orange-600 dark:text-orange-400 font-medium flex-shrink-0"
-                        title={`댓글 ${post.comment_count}개`}
-                      >
-                        [{post.comment_count}]
-                      </span>
-                    )}
-                  </Link>
-                ))}
+                {currentBoardData.recentPosts
+                  .slice(POSTS_PER_PAGE, POSTS_PER_PAGE * 2)
+                  .map((post, index) => (
+                    <PostItem
+                      key={post.id}
+                      post={post}
+                      isLast={index === POSTS_PER_PAGE - 1}
+                    />
+                  ))}
               </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* 모바일 버전 - 각 게시판을 섹션으로 표시 */}
-      <div className="md:hidden space-y-4">
-        {boardsData.map((boardData) => {
-          const currentPage = boardPages[boardData.board.id] || 0;
-          const posts = boardData.recentPosts.slice(currentPage * 10, (currentPage + 1) * 10);
-          const hasSecondPage = boardData.recentPosts.length > 10;
+      {/* 모바일 버전 - ContainerHeader + 탭 패턴 */}
+      <div className="md:hidden bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
+        {/* ContainerHeader - h-12 */}
+        <div className="h-12 flex items-center justify-between px-4 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10">
+          <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">게시판</h3>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <span className="text-xs text-gray-600 dark:text-gray-400">
+              {selectedBoardIndex + 1} / {totalBoards}
+            </span>
+            <button
+              onClick={handlePrev}
+              className="p-1 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-700 dark:text-gray-300"
+              aria-label="이전 게시판"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={handleNext}
+              className="p-1 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-700 dark:text-gray-300"
+              aria-label="다음 게시판"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
 
-          return (
-            <div key={boardData.board.id} className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
-              {/* 게시판 헤더 */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
-                <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">{boardData.board.name}</h3>
-                {hasSecondPage && (
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-xs text-gray-600 dark:text-gray-400">
-                      {currentPage + 1} / 2
-                    </span>
-                    <button
-                      onClick={() => handleBoardPageToggle(boardData.board.id)}
-                      className="p-1 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-700 dark:text-gray-300"
-                      aria-label={currentPage === 0 ? '다음' : '이전'}
-                    >
-                      {currentPage === 0 ? (
-                        <ChevronRight className="w-4 h-4" />
-                      ) : (
-                        <ChevronLeft className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                )}
-              </div>
+        {/* 게시판 탭 (균등 배분) */}
+        <div className="flex border-b border-black/5 dark:border-white/10">
+          {boardsData.map((data, index) => (
+            <button
+              key={data.board.id}
+              onClick={() => setSelectedBoardIndex(index)}
+              className={`flex-1 text-xs py-2 px-1 transition-colors whitespace-nowrap ${
+                index === selectedBoardIndex
+                  ? 'bg-white dark:bg-[#1D1D1D] border-b-2 border-slate-800 dark:border-white font-medium text-gray-900 dark:text-[#F0F0F0]'
+                  : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-400 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
+              }`}
+            >
+              {data.board.name}
+            </button>
+          ))}
+        </div>
 
-              {/* 게시글 목록 */}
-              <div className="flex flex-col">
-                {posts.map((post, index) => (
-                  <Link
-                    key={post.id}
-                    href={`/boards/${post.board_slug}/${post.post_number}`}
-                    className={`text-xs text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors py-2 px-4 flex items-center gap-2 min-w-0 ${
-                      index === posts.length - 1 ? '' : 'border-b border-black/5 dark:border-white/10'
-                    }`}
-                  >
-                    <div className="flex-shrink-0">
-                      {renderBoardLogo(post)}
-                    </div>
-                    <span className="flex-1 min-w-0 line-clamp-1">{post.title}</span>
-                    {post.comment_count > 0 && (
-                      <span
-                        className="text-xs text-orange-600 dark:text-orange-400 font-medium flex-shrink-0"
-                        title={`댓글 ${post.comment_count}개`}
-                      >
-                        [{post.comment_count}]
-                      </span>
-                    )}
-                  </Link>
-                ))}
-              </div>
+        {/* 게시글 목록 */}
+        <div className="flex flex-col">
+          {hasNoPosts ? (
+            <div className="text-center py-8 text-gray-500">
+              <p>아직 게시글이 없습니다.</p>
             </div>
-          );
-        })}
+          ) : (
+            currentBoardData.recentPosts.slice(0, POSTS_PER_PAGE).map((post, index) => (
+              <PostItem
+                key={post.id}
+                post={post}
+                isLast={index === POSTS_PER_PAGE - 1 || index === currentBoardData.recentPosts.length - 1}
+              />
+            ))
+          )}
+        </div>
       </div>
     </>
   );

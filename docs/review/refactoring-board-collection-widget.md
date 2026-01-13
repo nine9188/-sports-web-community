@@ -627,4 +627,166 @@ board-collection-widget/
 
 ---
 
+## 9. 클라이언트 컴포넌트 리뷰 (2026-01-14 추가)
+
+> 서버 컴포넌트는 리팩토링 완료됨. 아래는 **BoardCollectionWidgetClient.tsx** 이슈.
+
+### 9.1 발견된 문제점
+
+#### 문제 1: 게시글 렌더링 코드 3회 중복 (심각도: 높음)
+
+**동일한 Link 컴포넌트가 3곳에서 반복:**
+
+| 위치 | 라인 | 용도 |
+|------|------|------|
+| 1 | 139-160 | 데스크톱 왼쪽 열 (1~10번) |
+| 2 | 165-186 | 데스크톱 오른쪽 열 (11~20번) |
+| 3 | 227-248 | 모바일 목록 |
+
+```typescript
+// 3곳에서 동일한 구조 반복
+<Link
+  href={`/boards/${post.board_slug}/${post.post_number}`}
+  className={`text-xs text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA]
+    dark:hover:bg-[#333333] transition-colors py-2 px-4 flex items-center gap-2 min-w-0 ${...}`}
+>
+  <div className="flex-shrink-0">{renderBoardLogo(post)}</div>
+  <span className="flex-1 min-w-0 line-clamp-1">{post.title}</span>
+  {post.comment_count > 0 && (
+    <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">
+      [{post.comment_count}]
+    </span>
+  )}
+</Link>
+```
+
+**문제점:**
+- 스타일 변경 시 3곳 모두 수정 필요
+- 버그 수정 누락 위험
+- 코드량 증가로 가독성 저하
+
+---
+
+#### 문제 2: 중복 상태 관리 (심각도: 중간)
+
+```typescript
+const [selectedBoardIndex, setSelectedBoardIndex] = useState(0);
+const [page, setPage] = useState(0);  // ← selectedBoardIndex와 항상 동일!
+
+// 항상 함께 업데이트
+const handleNext = () => {
+  setSelectedBoardIndex((prev) => (prev + 1) % totalPages);
+  setPage((prev) => (prev + 1) % totalPages);  // 중복!
+};
+```
+
+**문제점:** `page`와 `selectedBoardIndex`가 항상 같은 값
+
+---
+
+#### 문제 3: 매직 넘버 (심각도: 중간)
+
+```typescript
+slice(0, 10)           // 페이지당 게시글 수
+slice(10, 20)          // 두 번째 페이지
+currentPage * 10       // 페이지 오프셋
+index === 9            // 마지막 아이템 체크
+recentPosts.length > 10  // 2페이지 존재 여부
+```
+
+**문제점:** 숫자 의미 파악 어려움, 변경 시 여러 곳 수정 필요
+
+---
+
+#### 문제 4: 인라인 스타일 (심각도: 낮음)
+
+```typescript
+style={{maxWidth: '60px'}}  // Line 63
+style={{maxWidth: '70px'}}  // Line 72
+```
+
+**문제점:** Tailwind 컨벤션과 불일치
+
+---
+
+#### 문제 5: 긴 className 반복 (심각도: 낮음)
+
+```typescript
+// 동일한 긴 className이 여러 곳에서 반복
+className={`text-xs text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA]
+  dark:hover:bg-[#333333] transition-colors py-2 px-4 flex items-center gap-2 min-w-0 ${...}`}
+```
+
+---
+
+### 9.2 리팩토링 계획
+
+#### Phase 1: 상수 정의
+```typescript
+const POSTS_PER_PAGE = 10;
+```
+
+#### Phase 2: 컴포넌트 분리
+```typescript
+// PostItem 컴포넌트 추출
+interface PostItemProps {
+  post: Post;
+  isLast: boolean;
+}
+
+const PostItem = ({ post, isLast }: PostItemProps) => (
+  <Link href={`/boards/${post.board_slug}/${post.post_number}`} className={...}>
+    <BoardLogo post={post} />
+    <span className="flex-1 min-w-0 line-clamp-1">{post.title}</span>
+    <CommentCount count={post.comment_count} />
+  </Link>
+);
+```
+
+#### Phase 3: 상태 정리
+```typescript
+// page 상태 제거, selectedBoardIndex만 사용
+const [selectedBoardIndex, setSelectedBoardIndex] = useState(0);
+```
+
+#### Phase 4: 스타일 정리
+```typescript
+// 인라인 스타일 → Tailwind
+className="max-w-[60px]"
+```
+
+---
+
+### 9.3 예상 결과
+
+| 항목 | 변경 전 | 변경 후 |
+|------|--------|--------|
+| 총 라인 수 | ~257줄 | ~180줄 |
+| 중복 코드 | 3곳 | 0곳 |
+| 상태 변수 | 4개 | 3개 |
+| 게시글 스타일 변경 시 수정 위치 | 3곳 | 1곳 |
+
+---
+
+### 9.4 상태
+
+- [x] 클라이언트 컴포넌트 리팩토링 완료 (2026-01-14)
+
+### 9.5 완료된 변경사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|--------|--------|
+| 총 라인 수 | 257줄 | 255줄 |
+| 중복 코드 | 3곳 | 0곳 (PostItem 컴포넌트) |
+| 상태 변수 | 4개 | 3개 (page 제거) |
+| 매직 넘버 | 다수 | POSTS_PER_PAGE 상수 |
+| 인라인 스타일 | 2곳 | 0곳 (Tailwind 변환) |
+
+**추출된 컴포넌트:**
+- `BoardLogo` - 게시판 로고 렌더링
+- `CommentCount` - 댓글 수 표시
+- `PostItem` - 게시글 아이템 (3곳 중복 제거)
+
+---
+
 [← Phase 1.1 메인 페이지 리뷰](./phase1-1-main-page-review.md)
