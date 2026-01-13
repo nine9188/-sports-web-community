@@ -1,10 +1,10 @@
 'use client';
 
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
-import { getLevelIconUrl } from './level-icons';
+import { getLevelIconUrl, LEVEL_ICON_BASE_URL } from './level-icons';
 
-// 기본 아이콘 URL
-const DEFAULT_ICON_URL = '/images/player.svg';
+// 기본 아이콘 URL (레벨 1 아이콘 사용)
+const DEFAULT_ICON_URL = `${LEVEL_ICON_BASE_URL}level-1.png`;
 const CACHE_EXPIRY = 5 * 60 * 1000; // 캐시 만료 시간 (5분)
 
 // 아이콘 캐시 - 메모리에 저장
@@ -119,12 +119,13 @@ export async function getOptimizedUserIcon(
 /**
  * 프로필 이미지 공통 스타일 속성
  * Next/Image 컴포넌트용
+ *
+ * 참고: unoptimized 제거하여 Next.js 이미지 최적화 활성화
  */
 export const profileImageProps = {
   sizes: "(max-width: 768px) 20px, 40px",
   priority: false,
   loading: "lazy" as const,
-  unoptimized: true,
   placeholder: "blur" as const,
   blurDataURL: getPlaceholderImage(),
 };

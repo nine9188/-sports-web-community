@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import MatchStatsChart from './MatchStatsChart';
+import PredictionChart from '@/domains/prediction/components/PredictionChart';
 import { parseMatchStatsFromText } from './post-content/parsers';
 import {
   renderTipTapDoc,
@@ -152,6 +153,45 @@ export default function PostContent({ content, meta }: PostContentProps) {
     const socialEmbedElements = rootElement.querySelectorAll('div[data-type="social-embed"]');
     socialEmbedElements.forEach((element) => {
       processSocialEmbed(element);
+    });
+
+    // 예측 차트 하이드레이션
+    const predictionChartElements = rootElement.querySelectorAll('div[data-type="prediction-chart"]');
+    predictionChartElements.forEach((element) => {
+      // 이미 하이드레이션 됐으면 스킵
+      if (element.getAttribute('data-hydrated') === 'true') return;
+
+      const chartDataStr = element.getAttribute('data-chart');
+      if (!chartDataStr) return;
+
+      try {
+        const chartData = JSON.parse(decodeURIComponent(chartDataStr));
+
+        // 새 컨테이너 생성
+        const chartContainer = document.createElement('div');
+        chartContainer.className = 'prediction-chart-hydrated my-4';
+
+        import('react-dom/client').then(({ createRoot }) => {
+          const root = createRoot(chartContainer);
+          root.render(
+            React.createElement(PredictionChart, {
+              data: chartData,
+              showRadar: true,
+              showComparison: true,
+              showPrediction: true
+            })
+          );
+
+          // 기존 요소 교체
+          element.innerHTML = '';
+          element.appendChild(chartContainer);
+          element.setAttribute('data-hydrated', 'true');
+        }).catch((err) => {
+          console.error('예측 차트 로드 실패:', err);
+        });
+      } catch (err) {
+        console.error('예측 차트 데이터 파싱 실패:', err);
+      }
     });
   }, [isMounted, meta]);
 

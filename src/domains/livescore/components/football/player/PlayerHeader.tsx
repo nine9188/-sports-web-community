@@ -81,7 +81,7 @@ const PlayerHeader = memo(function PlayerHeader() {
               className="w-full h-full"
             />
             {mainTeamStats?.team && (
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 md:w-8 md:h-8 rounded-full shadow-lg flex items-center justify-center bg-white dark:bg-[#262626]">
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 md:w-8 md:h-8 rounded-full shadow-lg flex items-center justify-center" style={{ backgroundColor: '#ffffff' }}>
                 <UnifiedSportsImage
                   imageId={mainTeamStats.team.id}
                   imageType={ImageType.Teams}

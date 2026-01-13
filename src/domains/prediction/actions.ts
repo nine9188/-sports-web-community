@@ -3,8 +3,132 @@
 import { createClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi'
-import { predictMatch } from './utils/predictMatch'
 import { getMajorLeagueIds } from '@/domains/livescore/constants/league-mappings'
+
+// Predictions API 타입
+interface MinuteStats {
+  [key: string]: { total: number | null; percentage: string | null };
+}
+
+interface UnderOverStats {
+  [key: string]: { over: number; under: number };
+}
+
+interface TeamLeagueStats {
+  form?: string;
+  fixtures?: {
+    played: { home: number; away: number; total: number };
+    wins: { home: number; away: number; total: number };
+    draws: { home: number; away: number; total: number };
+    loses: { home: number; away: number; total: number };
+  };
+  goals?: {
+    for: {
+      total: { home: number; away: number; total: number };
+      average: { home: string; away: string; total: string };
+      minute?: MinuteStats;
+      under_over?: UnderOverStats;
+    };
+    against: {
+      total: { home: number; away: number; total: number };
+      average: { home: string; away: string; total: string };
+      minute?: MinuteStats;
+      under_over?: UnderOverStats;
+    };
+  };
+  biggest?: {
+    streak: { wins: number; draws: number; loses: number };
+    wins: { home: string | null; away: string | null };
+    loses: { home: string | null; away: string | null };
+    goals: {
+      for: { home: number; away: number };
+      against: { home: number; away: number };
+    };
+  };
+  clean_sheet?: { home: number; away: number; total: number };
+  failed_to_score?: { home: number; away: number; total: number };
+  penalty?: {
+    scored: { total: number; percentage: string };
+    missed: { total: number; percentage: string };
+    total: number;
+  };
+  lineups?: Array<{ formation: string; played: number }>;
+  cards?: {
+    yellow: MinuteStats;
+    red: MinuteStats;
+  };
+}
+
+interface PredictionApiData {
+  predictions: {
+    winner: {
+      id: number | null;
+      name: string | null;
+      comment: string | null;
+    };
+    win_or_draw: boolean;
+    under_over: string | null;
+    goals: {
+      home: string;
+      away: string;
+    };
+    advice: string | null;
+    percent: {
+      home: string;
+      draw: string;
+      away: string;
+    };
+  };
+  comparison: {
+    form: { home: string; away: string };
+    att: { home: string; away: string };
+    def: { home: string; away: string };
+    poisson_distribution: { home: string; away: string };
+    h2h: { home: string; away: string };
+    goals: { home: string; away: string };
+    total: { home: string; away: string };
+  };
+  teams: {
+    home: {
+      id: number;
+      name: string;
+      logo: string;
+      last_5: {
+        form: string;
+        att: string;
+        def: string;
+        goals: {
+          for: { total: number; average: number };
+          against: { total: number; average: number };
+        };
+      };
+      league?: TeamLeagueStats;
+    };
+    away: {
+      id: number;
+      name: string;
+      logo: string;
+      last_5: {
+        form: string;
+        att: string;
+        def: string;
+        goals: {
+          for: { total: number; average: number };
+          against: { total: number; average: number };
+        };
+      };
+      league?: TeamLeagueStats;
+    };
+  };
+  h2h: Array<{
+    fixture: { id: number; date: string };
+    teams: {
+      home: { id: number; name: string; winner: boolean | null };
+      away: { id: number; name: string; winner: boolean | null };
+    };
+    goals: { home: number; away: number };
+  }>;
+}
 
 // API 라우트용 Supabase 클라이언트 생성
 function createSupabaseClient() {
@@ -12,6 +136,178 @@ function createSupabaseClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
+}
+
+// Predictions API 호출 함수
+async function fetchPredictions(fixtureId: number): Promise<PredictionApiData | null> {
+  try {
+    const response = await fetchFromFootballApi('predictions', {
+      fixture: fixtureId
+    })
+
+    if (!response?.response || response.response.length === 0) {
+      return null
+    }
+
+    return response.response[0] as PredictionApiData
+  } catch (error) {
+    console.error(`Predictions API 호출 실패 (fixture: ${fixtureId}):`, error)
+    return null
+  }
+}
+
+// 미리보기용 Predictions API 호출 (export)
+export async function fetchPredictionPreview(fixtureId: number): Promise<{
+  success: boolean
+  data: PredictionApiData | null
+  error: string | null
+}> {
+  try {
+    const data = await fetchPredictions(fixtureId)
+    if (!data) {
+      return { success: false, data: null, error: '예측 데이터를 불러올 수 없습니다.' }
+    }
+    return { success: true, data, error: null }
+  } catch (error) {
+    return {
+      success: false,
+      data: null,
+      error: error instanceof Error ? error.message : '알 수 없는 오류'
+    }
+  }
+}
+
+// Predictions 데이터를 게시글 형식으로 변환 (상세 버전)
+function formatPredictionContent(
+  prediction: PredictionApiData,
+  match: UpcomingMatch
+): string {
+  const { predictions, comparison, teams, h2h } = prediction
+  const homeTeam = teams.home
+  const awayTeam = teams.away
+
+  // 승률 예측
+  const percentSection = `📊 승률 예측
+• ${homeTeam.name} 승리: ${predictions.percent.home}
+• 무승부: ${predictions.percent.draw}
+• ${awayTeam.name} 승리: ${predictions.percent.away}`
+
+  // 예상 골 & 언더/오버
+  let goalsSection = ''
+  if (predictions.goals.home && predictions.goals.away) {
+    goalsSection = `\n\n⚽ 예상 골
+• ${homeTeam.name}: ${predictions.goals.home}골
+• ${awayTeam.name}: ${predictions.goals.away}골`
+    if (predictions.under_over) {
+      goalsSection += `\n• 언더/오버: ${predictions.under_over}`
+    }
+  }
+
+  // 분석 조언
+  const adviceSection = predictions.advice
+    ? `\n\n💡 분석 조언\n${predictions.advice}`
+    : ''
+
+  // 예상 승자
+  let winnerSection = ''
+  if (predictions.winner?.name) {
+    winnerSection = `\n\n🏆 예상 승자: ${predictions.winner.name}`
+    if (predictions.winner.comment) {
+      winnerSection += ` (${predictions.winner.comment})`
+    }
+  }
+
+  // 팀 비교 분석 (7개 지표)
+  const comparisonSection = `\n\n📈 팀 비교 분석 (7개 지표)
+┌─────────────────────────────────────┐
+│ 지표           │ ${homeTeam.name.substring(0, 8).padEnd(8)} │ ${awayTeam.name.substring(0, 8).padEnd(8)} │
+├─────────────────────────────────────┤
+│ 최근 폼        │ ${comparison.form.home.padStart(8)} │ ${comparison.form.away.padStart(8)} │
+│ 공격력         │ ${comparison.att.home.padStart(8)} │ ${comparison.att.away.padStart(8)} │
+│ 수비력         │ ${comparison.def.home.padStart(8)} │ ${comparison.def.away.padStart(8)} │
+│ 포아송 분포    │ ${comparison.poisson_distribution.home.padStart(8)} │ ${comparison.poisson_distribution.away.padStart(8)} │
+│ 상대전적       │ ${comparison.h2h.home.padStart(8)} │ ${comparison.h2h.away.padStart(8)} │
+│ 득점력         │ ${comparison.goals.home.padStart(8)} │ ${comparison.goals.away.padStart(8)} │
+│ 종합           │ ${comparison.total.home.padStart(8)} │ ${comparison.total.away.padStart(8)} │
+└─────────────────────────────────────┘`
+
+  // 최근 5경기 폼 (상세)
+  const formSection = `\n\n🔥 최근 5경기 분석
+
+[${homeTeam.name}]
+• 폼: ${homeTeam.last_5?.form || 'N/A'}
+• 공격력: ${homeTeam.last_5?.att || 'N/A'} | 수비력: ${homeTeam.last_5?.def || 'N/A'}
+• 득점: ${homeTeam.last_5?.goals?.for?.total || 0}골 (평균 ${homeTeam.last_5?.goals?.for?.average || 0})
+• 실점: ${homeTeam.last_5?.goals?.against?.total || 0}골 (평균 ${homeTeam.last_5?.goals?.against?.average || 0})
+
+[${awayTeam.name}]
+• 폼: ${awayTeam.last_5?.form || 'N/A'}
+• 공격력: ${awayTeam.last_5?.att || 'N/A'} | 수비력: ${awayTeam.last_5?.def || 'N/A'}
+• 득점: ${awayTeam.last_5?.goals?.for?.total || 0}골 (평균 ${awayTeam.last_5?.goals?.for?.average || 0})
+• 실점: ${awayTeam.last_5?.goals?.against?.total || 0}골 (평균 ${awayTeam.last_5?.goals?.against?.average || 0})`
+
+  // 시즌 통계 (있으면)
+  let seasonSection = ''
+  if (homeTeam.league?.fixtures || awayTeam.league?.fixtures) {
+    seasonSection = '\n\n📊 시즌 전체 통계'
+
+    if (homeTeam.league?.fixtures) {
+      const hf = homeTeam.league.fixtures
+      const hg = homeTeam.league.goals
+      seasonSection += `\n\n[${homeTeam.name}]
+• 경기: ${hf.played?.total || 0} (홈 ${hf.played?.home || 0}, 원정 ${hf.played?.away || 0})
+• 승/무/패: ${hf.wins?.total || 0}/${hf.draws?.total || 0}/${hf.loses?.total || 0}
+• 득점: ${hg?.for?.total?.total || 0} (평균 ${hg?.for?.average?.total || '-'})
+• 실점: ${hg?.against?.total?.total || 0} (평균 ${hg?.against?.average?.total || '-'})`
+      if (homeTeam.league.clean_sheet) {
+        seasonSection += `\n• 무실점: ${homeTeam.league.clean_sheet.total || 0}경기`
+      }
+      if (homeTeam.league.biggest?.streak) {
+        seasonSection += `\n• 최다 연승: ${homeTeam.league.biggest.streak.wins || 0}`
+      }
+    }
+
+    if (awayTeam.league?.fixtures) {
+      const af = awayTeam.league.fixtures
+      const ag = awayTeam.league.goals
+      seasonSection += `\n\n[${awayTeam.name}]
+• 경기: ${af.played?.total || 0} (홈 ${af.played?.home || 0}, 원정 ${af.played?.away || 0})
+• 승/무/패: ${af.wins?.total || 0}/${af.draws?.total || 0}/${af.loses?.total || 0}
+• 득점: ${ag?.for?.total?.total || 0} (평균 ${ag?.for?.average?.total || '-'})
+• 실점: ${ag?.against?.total?.total || 0} (평균 ${ag?.against?.average?.total || '-'})`
+      if (awayTeam.league.clean_sheet) {
+        seasonSection += `\n• 무실점: ${awayTeam.league.clean_sheet.total || 0}경기`
+      }
+      if (awayTeam.league.biggest?.streak) {
+        seasonSection += `\n• 최다 연승: ${awayTeam.league.biggest.streak.wins || 0}`
+      }
+    }
+  }
+
+  // 상대전적 (최근 5경기)
+  let h2hSection = ''
+  if (h2h && h2h.length > 0) {
+    // 전적 집계
+    let homeWins = 0, awayWins = 0, draws = 0
+    h2h.forEach(m => {
+      if (m.teams.home.winner) homeWins++
+      else if (m.teams.away.winner) awayWins++
+      else draws++
+    })
+
+    const recentH2h = h2h.slice(0, 5).map(m => {
+      const date = new Date(m.fixture.date).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
+      const winner = m.teams.home.winner ? '🔵' : m.teams.away.winner ? '🟢' : '⚪'
+      return `${winner} ${date}: ${m.teams.home.name} ${m.goals.home}-${m.goals.away} ${m.teams.away.name}`
+    }).join('\n')
+
+    h2hSection = `\n\n🏆 상대전적 (최근 ${h2h.length}경기)
+• 전적: ${homeTeam.name} ${homeWins}승 / 무승부 ${draws} / ${awayTeam.name} ${awayWins}승
+
+${recentH2h}`
+  }
+
+  return `${percentSection}${goalsSection}${adviceSection}${winnerSection}${comparisonSection}${formSection}${seasonSection}${h2hSection}`
 }
 
 interface UpcomingMatch {
@@ -46,20 +342,6 @@ interface PredictionResult {
   message: string;
   matches_count: number;
   boardCount?: number;
-}
-
-interface PredictionData {
-  textAnalysis: string;
-  chartData: {
-    homeTeam: {
-      name: string;
-      stats: Record<string, unknown>;
-    };
-    awayTeam: {
-      name: string;
-      stats: Record<string, unknown>;
-    };
-  };
 }
 
 // 리그별 게시판 매핑
@@ -225,39 +507,27 @@ async function generateLeaguePredictionPost(
       }
     }
     
-    // 각 경기에 대한 예측 분석 생성
-    const predictions: string[] = []
-    const chartDataList: unknown[] = []
-    
+    // 각 경기에 대한 예측 분석 생성 (Predictions API 사용)
+    const predictionContents: string[] = []
+    const predictionDataList: (PredictionApiData | null)[] = []
+
     for (const match of matches) {
       try {
         console.log(`🎯 경기 예측: ${match.teams.home.name} vs ${match.teams.away.name}`)
-        const predictionResult = await predictMatch(match.id, false)
-        
-        // 반환값이 객체인지 문자열인지 확인
-        let prediction: string
-        let chartData: unknown = null
-        
-        if (typeof predictionResult === 'object' && predictionResult !== null) {
-          const result = predictionResult as PredictionData;
-          prediction = result.textAnalysis || '';
-          chartData = result.chartData || null;
+        const predictionData = await fetchPredictions(match.id)
+
+        if (predictionData) {
+          const formattedContent = formatPredictionContent(predictionData, match)
+          predictionContents.push(`${match.teams.home.name} vs ${match.teams.away.name}\n\n${formattedContent}`)
+          predictionDataList.push(predictionData)
         } else {
-          prediction = predictionResult as string;
+          predictionContents.push(`${match.teams.home.name} vs ${match.teams.away.name}\n\n예측 데이터를 불러올 수 없습니다.`)
+          predictionDataList.push(null)
         }
-        
-        // 예측 텍스트 최종 정리 (predictMatch에서 이미 처리되었으므로 최소한만)
-        const formattedPrediction = prediction
-          .replace(/\n{3,}/g, '\n\n') // 과도한 줄바꿈 제거
-          .replace(/^\s+|\s+$/g, '') // 앞뒤 공백 제거
-          .trim()
-        
-        predictions.push(`${match.teams.home.name} vs ${match.teams.away.name}\n\n${formattedPrediction}`)
-        chartDataList.push(chartData)
       } catch (error) {
         console.error(`경기 예측 실패 (${match.id}):`, error)
-        predictions.push(`${match.teams.home.name} vs ${match.teams.away.name}\n\n예측 분석을 생성할 수 없습니다. 데이터 부족 또는 시스템 오류로 인해 이 경기의 분석을 생성하지 못했습니다.`)
-        chartDataList.push(null)
+        predictionContents.push(`${match.teams.home.name} vs ${match.teams.away.name}\n\n예측 분석을 생성할 수 없습니다. 데이터 부족 또는 시스템 오류로 인해 이 경기의 분석을 생성하지 못했습니다.`)
+        predictionDataList.push(null)
       }
     }
     
@@ -287,19 +557,29 @@ async function generateLeaguePredictionPost(
             { type: 'text', text: '' }
           ]
         },
-        ...predictions.flatMap((prediction, index) => {
+        ...predictionContents.flatMap((predictionContent, index) => {
           // 각 예측을 자연스럽게 파싱
-          const lines = prediction.trim().split('\n').filter(line => line.trim())
+          const lines = predictionContent.trim().split('\n').filter(line => line.trim())
           const matchTitle = lines[0] || '경기 정보' // 첫 번째 라인이 경기 제목
-          const content = lines.slice(1).join('\n\n') // 나머지가 내용
-          
-          // 차트 마커 방식 제거 - 단순 텍스트로 처리
-          // 문단별로 나누어서 자연스럽게 표시
-          const paragraphs = content.split('\n\n').filter(p => p.trim())
-          
-          // 해당 경기 정보 가져오기
+
+          // 해당 경기 정보 및 예측 데이터 가져오기
           const match = matches[index]
-          
+          const predictionData = predictionDataList[index]
+
+          // 예측 차트 노드 (데이터가 있을 때만)
+          const chartNode = predictionData ? [{
+            type: 'predictionChart',
+            attrs: {
+              fixtureId: match.id.toString(),
+              chartData: {
+                predictions: predictionData.predictions,
+                comparison: predictionData.comparison,
+                teams: predictionData.teams,
+                h2h: predictionData.h2h
+              }
+            }
+          }] : []
+
           return [
             {
               type: 'heading',
@@ -308,12 +588,8 @@ async function generateLeaguePredictionPost(
                 { type: 'text', text: matchTitle, marks: [{ type: 'bold' }] }
               ]
             },
-            ...paragraphs.map(paragraph => ({
-              type: 'paragraph',
-              content: [
-                { type: 'text', text: paragraph.trim() }
-              ]
-            })),
+            // 예측 차트 (레이더 + 비교 바)
+            ...chartNode,
             {
               type: 'paragraph',
               content: [
@@ -329,12 +605,14 @@ async function generateLeaguePredictionPost(
                   id: match.id.toString(),
                   teams: {
                     home: {
+                      id: match.teams.home.id,
                       name: match.teams.home.name,
                       logo: match.teams.home.logo,
                       winner: null
                     },
                     away: {
-                      name: match.teams.away.name, 
+                      id: match.teams.away.id,
+                      name: match.teams.away.name,
                       logo: match.teams.away.logo,
                       winner: null
                     }
@@ -362,7 +640,7 @@ async function generateLeaguePredictionPost(
               ]
             },
             // 마지막 경기가 아니면 구분선 추가
-            ...(index < predictions.length - 1 ? [{
+            ...(index < predictionContents.length - 1 ? [{
               type: 'horizontalRule'
             }] : [])
           ]
@@ -373,20 +651,20 @@ async function generateLeaguePredictionPost(
         {
           type: 'paragraph',
           content: [
-            { type: 'text', text: '※ 이 분석은 AI가 통계 데이터를 바탕으로 생성한 예측입니다. 실제 경기 결과와 다를 수 있으며, 참고용으로만 활용해주세요.', marks: [{ type: 'italic' }] }
+            { type: 'text', text: '※ 이 분석은 API-Football 통계 데이터를 바탕으로 생성한 예측입니다. 실제 경기 결과와 다를 수 있으며, 참고용으로만 활용해주세요.', marks: [{ type: 'italic' }] }
           ]
         }
       ]
     }
     
-    // 차트 데이터를 meta 필드에 저장할 메타데이터 생성
+    // 예측 데이터를 meta 필드에 저장할 메타데이터 생성
     const metaData = {
       prediction_type: 'league_analysis',
       league_id: league.id,
       league_name: league.name,
       target_date: targetDate,
       matches_count: matches.length,
-      chart_data: chartDataList.filter(data => data !== null) // null 값 제거
+      prediction_data: predictionDataList.filter(data => data !== null) // null 값 제거
     }
 
     // 게시글 작성 (여러 게시판에 동시 등록)
@@ -396,7 +674,7 @@ async function generateLeaguePredictionPost(
       uniqueBoardIds,
       PREDICTION_BOT_USER_ID,
       'prediction',
-      ['AI분석', league.name, '경기예측'],
+      ['데이터분석', league.name, '경기예측'],
       metaData
     )
     

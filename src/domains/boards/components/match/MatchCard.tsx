@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import type { MatchCardProps } from '@/shared/types/matchCard';
 import { getStatusInfo, DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
+import { getTeamById } from '@teams';
 
 const SUPABASE_URL = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co';
 
@@ -33,6 +34,14 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
   const awayTeam = teams.away;
   const homeScore = typeof goals?.home === 'number' ? goals.home : '-';
   const awayScore = typeof goals?.away === 'number' ? goals.away : '-';
+
+  // 팀 한국어 이름 매핑
+  const homeTeamId = typeof homeTeam.id === 'string' ? parseInt(homeTeam.id, 10) : homeTeam.id;
+  const awayTeamId = typeof awayTeam.id === 'string' ? parseInt(awayTeam.id, 10) : awayTeam.id;
+  const homeTeamMapping = homeTeamId ? getTeamById(homeTeamId) : undefined;
+  const awayTeamMapping = awayTeamId ? getTeamById(awayTeamId) : undefined;
+  const homeTeamName = homeTeamMapping?.name_ko || homeTeam.name;
+  const awayTeamName = awayTeamMapping?.name_ko || awayTeam.name;
 
   // 통합 유틸리티 사용
   const statusInfo = getStatusInfo(status);
@@ -71,7 +80,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
             <div className="team-logo-box">
               <img
                 src={homeTeamLogo}
-                alt={homeTeam.name}
+                alt={homeTeamName}
                 onError={(e) => {
                   e.currentTarget.onerror = null;
                   e.currentTarget.src = '/placeholder.png';
@@ -80,7 +89,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
             </div>
           )}
           <span className={`team-name ${homeTeam.winner ? 'winner' : ''}`}>
-            {homeTeam.name}
+            {homeTeamName}
           </span>
         </div>
 
@@ -98,7 +107,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
             <div className="team-logo-box">
               <img
                 src={awayTeamLogo}
-                alt={awayTeam.name}
+                alt={awayTeamName}
                 onError={(e) => {
                   e.currentTarget.onerror = null;
                   e.currentTarget.src = '/placeholder.png';
@@ -107,7 +116,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
             </div>
           )}
           <span className={`team-name ${awayTeam.winner ? 'winner' : ''}`}>
-            {awayTeam.name}
+            {awayTeamName}
           </span>
         </div>
       </div>

@@ -2,6 +2,7 @@ import type { TipTapDoc, TipTapNode } from '../types';
 import { renderMatchCard } from './matchCardRenderer';
 import { renderTeamCard } from './teamCardRenderer';
 import { renderPlayerCard } from './playerCardRenderer';
+import { renderPredictionChart } from './predictionChartRenderer';
 
 /**
  * TipTap 노드를 HTML로 변환
@@ -31,6 +32,15 @@ export function renderTipTapNode(node: TipTapNode): string {
     return renderPlayerCard({
       playerId: playerId as string | number,
       playerData: playerData as Record<string, unknown>
+    });
+  }
+
+  // 예측 차트
+  if (node.type === 'predictionChart' && node.attrs) {
+    const { fixtureId, chartData } = node.attrs;
+    return renderPredictionChart({
+      fixtureId: fixtureId as string | number,
+      chartData: chartData as Record<string, unknown>
     });
   }
 

@@ -36,11 +36,11 @@ export default function LiveScoreView({
 
   // 전체 경기 데이터에서 현재 진행 중인 경기 수를 계산
   const calculateLiveMatchCount = (matches: Match[]) => {
-    return matches.filter(match => 
-      match.status.code === 'LIVE' || 
-      match.status.code === 'IN_PLAY' || 
-      match.status.code === '1H' || 
-      match.status.code === '2H' || 
+    return matches.filter(match =>
+      match.status.code === 'LIVE' ||
+      match.status.code === 'IN_PLAY' ||
+      match.status.code === '1H' ||
+      match.status.code === '2H' ||
       match.status.code === 'HT'
     ).length;
   };
@@ -49,6 +49,34 @@ export default function LiveScoreView({
   useEffect(() => {
     setLiveMatchCount(calculateLiveMatchCount(initialMatches));
   }, [initialMatches]);
+
+  // 오늘 날짜의 라이브 경기 수를 주기적으로 업데이트 (날짜와 관계없이)
+  useEffect(() => {
+    const fetchTodayLiveCount = async () => {
+      try {
+        const today = format(new Date(), 'yyyy-MM-dd');
+        const todayMatches = await fetchMatchesByDate(today);
+        const liveCount = todayMatches.filter((match: MatchData) =>
+          match.status.code === 'LIVE' ||
+          match.status.code === 'IN_PLAY' ||
+          match.status.code === '1H' ||
+          match.status.code === '2H' ||
+          match.status.code === 'HT'
+        ).length;
+        setLiveMatchCount(liveCount);
+      } catch (error) {
+        console.error('라이브 경기 수 업데이트 실패:', error);
+      }
+    };
+
+    // 즉시 실행
+    fetchTodayLiveCount();
+
+    // 30초마다 라이브 경기 수 업데이트
+    const intervalId = setInterval(fetchTodayLiveCount, 30000);
+
+    return () => clearInterval(intervalId);
+  }, []);
 
   // 날짜 변경 시 Server Action 호출
   const fetchMatches = useCallback(async (date: Date, keepPreviousData = false) => {
@@ -115,11 +143,10 @@ export default function LiveScoreView({
       });
       
       setMatches(processedMatches);
-      setLiveMatchCount(calculateLiveMatchCount(processedMatches));
+      // liveMatchCount는 별도 useEffect에서 오늘 기준으로 관리
     } catch (error) {
       console.error('경기 데이터 불러오기 오류:', error);
       setMatches([]);
-      setLiveMatchCount(0);
     } finally {
       setLoading(false);
     }

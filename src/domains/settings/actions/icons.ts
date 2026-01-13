@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { ActionResponse, IconItem, UserItem } from '../types';
 import { createProfileUpdateNotification } from '@/domains/notifications/actions/create';
+import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
 
 /**
  * 사용자가 보유한 아이콘 목록 조회
@@ -306,48 +307,57 @@ export async function updateUserIconServer(userId: string, iconId: number | null
 export async function getUserIcon(userId: string) {
   try {
     const supabase = await getSupabaseServer();
-    
-    // 사용자 프로필에서 선택된 아이콘 ID 가져오기
+
+    // 사용자 프로필에서 선택된 아이콘 ID와 레벨 가져오기
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('icon_id')
+      .select('icon_id, level')
       .eq('id', userId)
       .single();
-    
+
     if (profileError) throw profileError;
-    
-    // 선택된 아이콘이 없으면 기본 아이콘 정보 반환
+
+    const userLevel = profile?.level || 1;
+
+    // 선택된 아이콘이 없으면 레벨 아이콘 정보 반환
     if (!profile?.icon_id) {
-      // 기본 레벨 아이콘 정보 반환
-      return { 
-        iconUrl: `/images/level-icons/level-default.png`, // 적절한 기본 아이콘 경로
-        iconName: `기본 아이콘`,
-        success: true 
+      return {
+        iconUrl: getLevelIconUrl(userLevel),
+        iconName: `레벨 ${userLevel} 아이콘`,
+        success: true
       };
     }
-    
+
     // 선택된 아이콘 정보 가져오기
     const { data: icon, error: iconError } = await supabase
       .from('shop_items')
       .select('name, image_url')
       .eq('id', profile.icon_id)
       .single();
-    
-    if (iconError) throw iconError;
-    
-    return { 
+
+    if (iconError || !icon?.image_url) {
+      // 아이콘 조회 실패 시 레벨 아이콘으로 폴백
+      return {
+        iconUrl: getLevelIconUrl(userLevel),
+        iconName: `레벨 ${userLevel} 아이콘`,
+        success: true
+      };
+    }
+
+    return {
       iconUrl: icon.image_url,
       iconName: icon.name,
-      success: true 
+      success: true
     };
   } catch (error: unknown) {
     console.error('아이콘 조회 오류:', error);
     const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다';
-    return { 
-      iconUrl: `/images/level-icons/level-default.png`, // 적절한 기본 아이콘 경로 
-      iconName: `기본 아이콘`,
-      success: false, 
-      error: errorMessage 
+    // 에러 시에도 기본 레벨 1 아이콘 제공
+    return {
+      iconUrl: getLevelIconUrl(1),
+      iconName: `레벨 1 아이콘`,
+      success: false,
+      error: errorMessage
     };
   }
 }

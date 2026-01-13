@@ -83,8 +83,10 @@ export default function NavigationBar({
     });
   };
 
-  const minDate = new Date(2024, 0, 1);
-  const maxDate = new Date(2025, 11, 31);
+  // 현재 연도 기준 동적 설정 (과거 2년 ~ 미래 1년)
+  const currentYear = new Date().getFullYear();
+  const minDate = new Date(currentYear - 2, 0, 1);
+  const maxDate = new Date(currentYear + 1, 11, 31);
 
   return (
     <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">

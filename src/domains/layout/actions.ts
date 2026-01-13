@@ -4,6 +4,7 @@ import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { cache } from 'react';
 import { HeaderUserData } from './types/header';
 import { Board } from './types/board';
+import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
 
 /**
  * 헤더에 표시할 사용자 데이터를 서버에서 미리 로드
@@ -32,26 +33,44 @@ export const getHeaderUserData = cache(async (): Promise<HeaderUserData | null> 
       return null;
     }
     
-    // 아이콘 정보 가져오기 (icon_id가 있는 경우만)
+    // 아이콘 정보 가져오기
     let iconInfo: { iconUrl: string; iconName: string } | null = null;
-    
+    const userLevel = profile.level || 1;
+
     if (profile.icon_id) {
+      // 커스텀 아이콘이 설정된 경우
       try {
         const { data: iconData } = await supabase
           .from('shop_items')
           .select('image_url, name')
           .eq('id', profile.icon_id)
           .single();
-        
+
         if (iconData && iconData.image_url) {
           iconInfo = {
             iconUrl: iconData.image_url,
             iconName: iconData.name || ''
           };
+        } else {
+          // 커스텀 아이콘 조회 실패 시 레벨 아이콘으로 폴백
+          iconInfo = {
+            iconUrl: getLevelIconUrl(userLevel),
+            iconName: `레벨 ${userLevel} 아이콘`
+          };
         }
       } catch {
-        // 아이콘 정보를 가져올 수 없어도 계속 진행
+        // 아이콘 정보를 가져올 수 없으면 레벨 아이콘 사용
+        iconInfo = {
+          iconUrl: getLevelIconUrl(userLevel),
+          iconName: `레벨 ${userLevel} 아이콘`
+        };
       }
+    } else {
+      // 커스텀 아이콘이 없으면 레벨 기반 아이콘 사용
+      iconInfo = {
+        iconUrl: getLevelIconUrl(userLevel),
+        iconName: `레벨 ${userLevel} 아이콘`
+      };
     }
     
     return {

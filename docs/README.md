@@ -12,7 +12,8 @@ docs/
 ├── QUICK_START.md               # 빠른 시작 가이드
 ├── hot-system/                  # HOT 게시글 시스템
 ├── notifications/               # 알림 시스템
-├── reward-system/               # 보상 시스템 ✨ NEW
+├── reward-system/               # 보상 시스템
+├── player-fixtures/             # 선수 경기 기록 API ✨ NEW
 ├── seo/                         # SEO 개선 가이드
 ├── auth-refactoring/            # 인증 리팩토링 기록
 ├── guides/                      # 가이드 및 튜토리얼
@@ -132,6 +133,7 @@ HOT 게시글은 조회수, 좋아요, 댓글을 기반으로 인기 게시글�
 | [README-BANNER.md](./guides/README-BANNER.md) | 배너 시스템 가이드 |
 | [README-icons-refactoring.md](./guides/README-icons-refactoring.md) | 아이콘 리팩토링 가이드 |
 | [README-user-icon.md](./guides/README-user-icon.md) | 사용자 아이콘 가이드 |
+| [profile-icon-system.md](./guides/profile-icon-system.md) | 프로필 아이콘 시스템 전체 구조 ✨ NEW |
 
 ---
 
@@ -164,5 +166,5 @@ HOT 게시글은 조회수, 좋아요, 댓글을 기반으로 인기 게시글�
 ---
 
 **문서 작성일**: 2025-12-03
-**최종 업데이트**: 2025-12-30
-**버전**: 1.2.0
+**최종 업데이트**: 2026-01-10
+**버전**: 1.3.0
