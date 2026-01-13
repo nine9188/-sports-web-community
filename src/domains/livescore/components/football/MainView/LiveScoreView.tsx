@@ -8,6 +8,7 @@ import { Match } from '../../../types/match';
 import { fetchMatchesByDate, MatchData } from '../../../actions/footballApi';
 import { getTeamById } from '../../../constants/teams/index';
 import { getLeagueById } from '../../../constants/league-mappings';
+import { isLiveMatch, countLiveMatches } from '../../../constants/match-status';
 
 // 기본 이미지 URL - 로고가 없을 때 사용
 const DEFAULT_TEAM_LOGO = 'https://cdn.sportmonks.com/images/soccer/team_placeholder.png';
@@ -34,36 +35,25 @@ export default function LiveScoreView({
   const [liveMatchCount, setLiveMatchCount] = useState(0);
   const [allExpanded, setAllExpanded] = useState(true);
 
-  // 전체 경기 데이터에서 현재 진행 중인 경기 수를 계산
-  const calculateLiveMatchCount = (matches: Match[]) => {
-    return matches.filter(match =>
-      match.status.code === 'LIVE' ||
-      match.status.code === 'IN_PLAY' ||
-      match.status.code === '1H' ||
-      match.status.code === '2H' ||
-      match.status.code === 'HT'
-    ).length;
-  };
-
   // 컴포넌트 마운트 시 실시간 경기 수 계산
   useEffect(() => {
-    setLiveMatchCount(calculateLiveMatchCount(initialMatches));
+    setLiveMatchCount(countLiveMatches(initialMatches));
   }, [initialMatches]);
 
-  // 오늘 날짜의 라이브 경기 수를 주기적으로 업데이트 (날짜와 관계없이)
+  // 오늘이 아닌 날짜를 볼 때만 라이브 경기 수 폴링 (60초 간격)
   useEffect(() => {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const selected = format(selectedDate, 'yyyy-MM-dd');
+
+    // 오늘 날짜를 보고 있으면 fetchMatches에서 업데이트하므로 폴링 불필요
+    if (today === selected) {
+      return;
+    }
+
     const fetchTodayLiveCount = async () => {
       try {
-        const today = format(new Date(), 'yyyy-MM-dd');
         const todayMatches = await fetchMatchesByDate(today);
-        const liveCount = todayMatches.filter((match: MatchData) =>
-          match.status.code === 'LIVE' ||
-          match.status.code === 'IN_PLAY' ||
-          match.status.code === '1H' ||
-          match.status.code === '2H' ||
-          match.status.code === 'HT'
-        ).length;
-        setLiveMatchCount(liveCount);
+        setLiveMatchCount(countLiveMatches(todayMatches));
       } catch (error) {
         console.error('라이브 경기 수 업데이트 실패:', error);
       }
@@ -72,11 +62,11 @@ export default function LiveScoreView({
     // 즉시 실행
     fetchTodayLiveCount();
 
-    // 30초마다 라이브 경기 수 업데이트
-    const intervalId = setInterval(fetchTodayLiveCount, 30000);
+    // 60초마다 라이브 경기 수 업데이트
+    const intervalId = setInterval(fetchTodayLiveCount, 60000);
 
     return () => clearInterval(intervalId);
-  }, []);
+  }, [selectedDate]);
 
   // 날짜 변경 시 Server Action 호출
   const fetchMatches = useCallback(async (date: Date, keepPreviousData = false) => {
@@ -143,7 +133,12 @@ export default function LiveScoreView({
       });
       
       setMatches(processedMatches);
-      // liveMatchCount는 별도 useEffect에서 오늘 기준으로 관리
+
+      // 오늘 날짜를 조회한 경우 라이브 카운트도 업데이트
+      const today = format(new Date(), 'yyyy-MM-dd');
+      if (formattedDate === today) {
+        setLiveMatchCount(countLiveMatches(processedMatches));
+      }
     } catch (error) {
       console.error('경기 데이터 불러오기 오류:', error);
       setMatches([]);
@@ -207,25 +202,13 @@ export default function LiveScoreView({
     return () => clearTimeout(timer);
   }, [selectedDate]);
 
-  // 실시간 경기만 보기 토글 시 현재 날짜로 설정
-  useEffect(() => {
-    if (showLiveOnly) {
-      fetchMatches(new Date(), false); // LIVE 모드는 즉시 로딩 표시
-    }
-  }, [showLiveOnly, fetchMatches]);
-
   // 필터링된 매치 목록
   const filteredMatches = matches.filter(match => {
     // LIVE 필터
-    if (showLiveOnly) {
-      const isLive = match.status.code === 'LIVE' || 
-                    match.status.code === 'IN_PLAY' || 
-                    match.status.code === '1H' || 
-                    match.status.code === '2H' || 
-                    match.status.code === 'HT';
-      if (!isLive) return false;
+    if (showLiveOnly && !isLiveMatch(match.status.code)) {
+      return false;
     }
-    
+
     // 검색어 필터
     if (searchKeyword) {
       const searchLower = searchKeyword.toLowerCase();

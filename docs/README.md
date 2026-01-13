@@ -13,7 +13,8 @@ docs/
 ├── hot-system/                  # HOT 게시글 시스템
 ├── notifications/               # 알림 시스템
 ├── reward-system/               # 보상 시스템
-├── player-fixtures/             # 선수 경기 기록 API ✨ NEW
+├── livescore/                   # 라이브스코어 시스템 ✨ NEW
+├── player-fixtures/             # 선수 경기 기록 API
 ├── seo/                         # SEO 개선 가이드
 ├── auth-refactoring/            # 인증 리팩토링 기록
 ├── guides/                      # 가이드 및 튜토리얼
@@ -40,6 +41,28 @@ docs/
 - ✅ 아이템 등급 시스템 (common/rare/epic/legendary)
 - ✅ 경험치 밸런스 조정 (+100~200%)
 - ✅ 추천하기/첫 활동 보너스
+
+---
+
+## ⚽ 라이브스코어 시스템 ✨ NEW
+
+실시간 축구 경기 정보를 제공하는 라이브스코어 시스템입니다.
+
+| 문서 | 설명 | 상태 |
+|------|------|------|
+| [mainview-refactoring.md](./livescore/mainview-refactoring.md) | MainView 컴포넌트 리팩토링 가이드 | 🔄 진행 중 |
+
+**주요 이슈**:
+- ⚠️ 라이브 상태 체크 로직 중복 (3곳)
+- ⚠️ LIVE 버튼 클릭 시 중복 API 호출
+- ⚠️ 과도한 useEffect 사용 (7개)
+- ⚠️ 30초 폴링 비효율성
+
+**리팩토링 계획**:
+1. 상수/유틸리티 추출
+2. useEffect 정리 및 Custom Hook 분리
+3. 폴링 최적화
+4. 월간 데이터 fetch 병렬화
 
 ---
 
@@ -166,5 +189,5 @@ HOT 게시글은 조회수, 좋아요, 댓글을 기반으로 인기 게시글�
 ---
 
 **문서 작성일**: 2025-12-03
-**최종 업데이트**: 2026-01-10
-**버전**: 1.3.0
+**최종 업데이트**: 2026-01-14
+**버전**: 1.4.0
