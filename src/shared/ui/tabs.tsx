@@ -50,8 +50,8 @@ export default function Tabs({
   });
 
   const baseClasses = variant === 'minimal'
-    ? 'flex border-b border-black/7 dark:border-white/10'
-    : 'bg-[#F5F5F5] dark:bg-[#262626] rounded-lg border border-black/7 dark:border-0 overflow-hidden flex sticky top-0 z-10 overflow-x-auto';
+    ? 'flex border-b border-black/7 dark:border-white/10 overflow-x-auto no-scrollbar'
+    : 'bg-[#F5F5F5] dark:bg-[#262626] rounded-lg border border-black/7 dark:border-0 overflow-hidden flex overflow-x-auto no-scrollbar';
 
   return (
     <div className={`mb-4 ${className}`}>

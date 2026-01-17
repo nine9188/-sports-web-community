@@ -55,7 +55,8 @@
       "Bash(python3:*)",
       "Bash(node replace-spinners.js)",
       "Bash(node replace-all-spinners.js)",
-      "WebFetch(domain:www.api-football.com)"
+      "WebFetch(domain:www.api-football.com)",
+      "Bash(npm run dev:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
