@@ -46,6 +46,7 @@ export default async function EditPostPage({ params }: { params: Promise<{ slug:
           initialContent={typeof result.post.content === 'string' ? result.post.content : JSON.stringify(result.post.content)}
           boardName={result.board.name}
           isCreateMode={false}
+          initialDealInfo={result.post.deal_info || null}
         />
       </div>
     );

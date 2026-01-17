@@ -255,7 +255,11 @@ function TeamDetailCard({ team, label, predictedGoals }: { team: TeamData; label
           </span>
           <div className="flex items-center gap-1.5">
             <span className="font-medium text-gray-900 dark:text-[#F0F0F0]">{teamNameKo}</span>
-            {team.logo && <img src={team.logo} alt={teamNameKo} className="w-6 h-6 object-contain" />}
+            {team.logo && (
+              <div className="w-6 h-6 flex-shrink-0 flex items-center justify-center">
+                <img src={team.logo} alt={teamNameKo} className="max-w-full max-h-full object-contain" />
+              </div>
+            )}
           </div>
         </div>
         {predictedGoals && (
@@ -535,7 +539,11 @@ export default function PredictionChart({
           <div className="flex items-center justify-center gap-6 mb-2">
             {/* 홈팀 */}
             <div className="flex items-center gap-2">
-              {teams.home.logo && <img src={teams.home.logo} alt={homeNameKo} className="w-8 h-8 object-contain" />}
+              {teams.home.logo && (
+                <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center">
+                  <img src={teams.home.logo} alt={homeNameKo} className="max-w-full max-h-full object-contain" />
+                </div>
+              )}
               <div className="text-center">
                 <div className="text-xl font-bold text-blue-600 dark:text-blue-400">{predictions.percent.home}</div>
                 <div className="text-[10px] text-gray-500 dark:text-gray-400 truncate max-w-[70px]">{homeNameKo}</div>
@@ -552,7 +560,11 @@ export default function PredictionChart({
                 <div className="text-xl font-bold text-green-600 dark:text-green-400">{predictions.percent.away}</div>
                 <div className="text-[10px] text-gray-500 dark:text-gray-400 truncate max-w-[70px]">{awayNameKo}</div>
               </div>
-              {teams.away.logo && <img src={teams.away.logo} alt={awayNameKo} className="w-8 h-8 object-contain" />}
+              {teams.away.logo && (
+                <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center">
+                  <img src={teams.away.logo} alt={awayNameKo} className="max-w-full max-h-full object-contain" />
+                </div>
+              )}
             </div>
           </div>
           {/* 예측 상세 */}

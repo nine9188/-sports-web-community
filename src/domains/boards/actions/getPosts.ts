@@ -13,6 +13,8 @@ import {
   formatPostData
 } from './posts/fetchPostsHelpers';
 
+import type { DealInfo } from '../types/hotdeal';
+
 // Supabase 쿼리 결과 타입 (raw)
 interface RawPostData {
   id: string;
@@ -28,6 +30,7 @@ interface RawPostData {
   is_notice?: boolean;
   profiles?: { id?: string; nickname?: string; level?: number; icon_id?: number | null; public_id?: string | null };
   content?: Json;
+  deal_info?: DealInfo | null;
 }
 
 // 게시글 타입 정의
@@ -57,6 +60,7 @@ export interface Post {
   is_hidden?: boolean;
   is_deleted?: boolean;
   is_notice?: boolean;
+  deal_info?: DealInfo | null;
 }
 
 // 응답 타입 정의
@@ -77,11 +81,12 @@ interface FetchPostsParams {
   limit?: number;
   page?: number;
   fromParam?: string;
+  store?: string; // 쇼핑몰 필터
 }
 
 export async function fetchPosts(params: FetchPostsParams): Promise<PostsResponse> {
   try {
-    const { boardId, boardIds, currentBoardId, limit = 20, page = 1, fromParam } = params;
+    const { boardId, boardIds, currentBoardId, limit = 20, page = 1, fromParam, store } = params;
     const offset = (page - 1) * limit;
 
     const supabase = await getSupabaseServer();
@@ -93,9 +98,10 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
       };
     }
 
-    // notice 게시판 확인
+    // 특수 게시판 확인 (공지, 분석)
     let isNoticeBoard = false;
     let noticeBoardId: string | null = null;
+    let isAnalysisBoard = false;
     const checkBoardId = boardId || currentBoardId;
 
     if (checkBoardId) {
@@ -108,6 +114,8 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
       if (boardData?.slug === 'notice') {
         isNoticeBoard = true;
         noticeBoardId = boardData.id;
+      } else if (boardData?.slug === 'data-analysis') {
+        isAnalysisBoard = true;
       }
     }
 
@@ -147,17 +155,31 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
         id, title, created_at, updated_at, board_id, views, likes,
         post_number, user_id, is_hidden, is_deleted, is_notice,
         profiles (id, nickname, level, icon_id, public_id),
-        content
+        content, deal_info
       `)
       .order('created_at', { ascending: false });
 
     // 필터 적용
     if (isNoticeBoard && noticeBoardId) {
       postsQuery = postsQuery.or(`board_id.eq.${noticeBoardId},is_notice.eq.true`);
+    } else if (isAnalysisBoard) {
+      // 분석게시판: 모든 리그 게시판의 분석글 모아보기
+      postsQuery = postsQuery.eq('meta->>prediction_type', 'league_analysis');
     } else if (currentBoardFilter) {
       postsQuery = postsQuery.eq('board_id', currentBoardFilter);
     } else if (targetBoardsFilter?.length) {
       postsQuery = postsQuery.in('board_id', targetBoardsFilter);
+    }
+
+    // 쇼핑몰 필터 적용 (핫딜 게시판) - 다중 선택 지원
+    if (store) {
+      const stores = store.split(',').map(s => s.trim()).filter(Boolean);
+      if (stores.length === 1) {
+        postsQuery = postsQuery.eq('deal_info->>store', stores[0]);
+      } else if (stores.length > 1) {
+        const orCondition = stores.map(s => `deal_info->>store.eq.${s}`).join(',');
+        postsQuery = postsQuery.or(orCondition);
+      }
     }
 
     // 카운트 쿼리
@@ -165,10 +187,24 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
 
     if (isNoticeBoard && noticeBoardId) {
       countQuery = countQuery.or(`board_id.eq.${noticeBoardId},is_notice.eq.true`);
+    } else if (isAnalysisBoard) {
+      // 분석게시판: 모든 리그 게시판의 분석글 카운트
+      countQuery = countQuery.eq('meta->>prediction_type', 'league_analysis');
     } else if (currentBoardFilter) {
       countQuery = countQuery.eq('board_id', currentBoardFilter);
     } else if (targetBoardsFilter?.length) {
       countQuery = countQuery.in('board_id', targetBoardsFilter);
+    }
+
+    // 쇼핑몰 필터 적용 (카운트) - 다중 선택 지원
+    if (store) {
+      const stores = store.split(',').map(s => s.trim()).filter(Boolean);
+      if (stores.length === 1) {
+        countQuery = countQuery.eq('deal_info->>store', stores[0]);
+      } else if (stores.length > 1) {
+        const orCondition = stores.map(s => `deal_info->>store.eq.${s}`).join(',');
+        countQuery = countQuery.or(orCondition);
+      }
     }
 
     const { count } = await countQuery;

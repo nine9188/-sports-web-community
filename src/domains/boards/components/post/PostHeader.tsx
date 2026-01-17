@@ -20,23 +20,30 @@ interface PostHeaderProps {
   likes: number;
   boardName?: string;
   commentCount?: number;
+  isEnded?: boolean;
 }
 
-export default function PostHeader({ 
-  title, 
-  author, 
-  createdAt, 
-  views, 
-  likes, 
+export default function PostHeader({
+  title,
+  author,
+  createdAt,
+  views,
+  likes,
   commentCount = 0,
+  isEnded = false,
 }: PostHeaderProps) {
-  const cleanTitle = typeof title === 'string' 
-    ? title.replace(/&quot;|"|"|"/g, '"').replace(/&ldquo;|&rdquo;/g, '"') 
+  const cleanTitle = typeof title === 'string'
+    ? title.replace(/&quot;|"|"|"/g, '"').replace(/&ldquo;|&rdquo;/g, '"')
     : title;
+  const titleClassName = isEnded
+    ? 'text-gray-400 dark:text-gray-500 line-through'
+    : 'text-gray-900 dark:text-[#F0F0F0]';
+  const displayTitle = isEnded ? `[종료] ${cleanTitle}` : cleanTitle;
 
   return (
     <div className="bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10 px-4 py-3">
-      <h1 className="text-lg font-medium mb-2 text-gray-900 dark:text-[#F0F0F0]">{cleanTitle}</h1>
+      {/* 제목 (핫딜의 경우 자동 생성된 제목 표시) */}
+      <h1 className={`text-lg font-medium mb-2 ${titleClassName}`}>{displayTitle}</h1>
 
       {/* PC */}
       <div className="hidden md:flex flex-wrap items-center justify-between text-xs text-gray-500 dark:text-gray-400">

@@ -38,7 +38,7 @@ export async function getPostEditData(slug: string, postNumber: string) {
     // 게시글 정보 가져오기
     const { data: post, error: postError } = await supabase
       .from('posts')
-      .select('*, profiles(nickname), board:board_id(name)')
+      .select('*, profiles(nickname), board:board_id(name), deal_info')
       .eq('board_id', board.id)
       .eq('post_number', parseInt(postNumber, 10))
       .single();

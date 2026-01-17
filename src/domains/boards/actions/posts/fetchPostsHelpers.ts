@@ -3,6 +3,7 @@ import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
 import { formatDate } from '@/shared/utils/date';
 import type { Json } from '@/shared/types/supabase';
 import type { Post, PostsResponse } from '../getPosts';
+import type { DealInfo } from '../../types/hotdeal';
 
 /**
  * 안전한 fallback 게시물 데이터 생성
@@ -239,6 +240,7 @@ export function formatPostData(
     is_notice?: boolean;
     profiles?: { id?: string; nickname?: string; level?: number; icon_id?: number | null; public_id?: string | null } | null;
     content?: Json;
+    deal_info?: DealInfo | null;
   },
   boardsData: Record<string, { name: string; team_id?: number | null; league_id?: number | null; slug: string }>,
   teamLogoMap: Record<string, string>,
@@ -311,6 +313,7 @@ export function formatPostData(
     league_logo: leagueLogo,
     is_hidden: post.is_hidden || false,
     is_deleted: post.is_deleted || false,
-    is_notice: post.is_notice || false
+    is_notice: post.is_notice || false,
+    deal_info: post.deal_info || null
   };
 }

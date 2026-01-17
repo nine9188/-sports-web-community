@@ -14,7 +14,8 @@ import { createPost, updatePost } from '@/domains/boards/actions/posts/index';
 import { Board } from '@/domains/boards/types/board';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui/container';
 import { useEditorHandlers } from './post-edit-form/hooks';
-import { NoticeAdminSection } from './post-edit-form/components';
+import { POPULAR_STORES, SHIPPING_OPTIONS, DealInfo } from '../../types/hotdeal';
+import { detectStoreFromUrl, isHotdealBoard, formatPrice } from '../../utils/hotdeal';
 
 // MatchCard 확장 로딩 함수
 const loadMatchCardExtension = async () => {
@@ -48,6 +49,8 @@ interface PostEditFormProps {
   setCategoryId?: ((id: string) => void) | null | undefined; // 옵션으로 변경
   allBoardsFlat?: Board[];
   isCreateMode?: boolean;
+  // 핫딜 정보 (수정 모드)
+  initialDealInfo?: DealInfo | null;
 }
 
 export default function PostEditForm({
@@ -60,22 +63,36 @@ export default function PostEditForm({
   categoryId: externalCategoryId,
   setCategoryId,
   allBoardsFlat = [],
-  isCreateMode = false
+  isCreateMode = false,
+  initialDealInfo = null
 }: PostEditFormProps) {
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // initialContent를 파싱하여 editor 초기화용 객체로 변환
+  const parsedInitialContent = useMemo(() => {
+    if (!initialContent) return '';
+    try {
+      // JSON string이면 파싱
+      const parsed = JSON.parse(initialContent);
+      return parsed;
+    } catch {
+      // 파싱 실패하면 HTML string으로 간주
+      return initialContent;
+    }
+  }, [initialContent]);
   // 내부 상태로 categoryId 관리
   const [categoryId, setCategoryIdInternal] = useState(externalCategoryId || '');
 
-  // 공지 관련 상태
-  const [isNotice, setIsNotice] = useState(false);
-  const [noticeType, setNoticeType] = useState<'global' | 'board'>('global');
-  const [noticeBoards, setNoticeBoards] = useState<string[]>([]);
-  const [noticeOrder, setNoticeOrder] = useState(0);
-  const [isAdmin, setIsAdmin] = useState(false);
-  
+  // 핫딜 관련 state (수정 모드일 경우 초기값 설정)
+  const [dealUrl, setDealUrl] = useState(initialDealInfo?.deal_url || '');
+  const [store, setStore] = useState(initialDealInfo?.store || '');
+  const [productName, setProductName] = useState(initialDealInfo?.product_name || '');
+  const [price, setPrice] = useState(initialDealInfo?.price ? String(initialDealInfo.price) : '');
+  const [originalPrice, setOriginalPrice] = useState(initialDealInfo?.original_price ? String(initialDealInfo.original_price) : '');
+  const [shipping, setShipping] = useState(initialDealInfo?.shipping || '');
 
   // Supabase 클라이언트 - 한 번만 생성하여 재사용 (성능 최적화, SSR 안전)
   const supabase = useMemo(() => {
@@ -100,32 +117,6 @@ export default function PostEditForm({
     }),
   ]);
   const [extensionsLoaded, setExtensionsLoaded] = useState(false);
-  
-  // 관리자 권한 확인
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (!supabase) return;
-
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('is_admin')
-          .eq('id', user.id)
-          .single();
-
-        if (profile && profile.is_admin === true) {
-          setIsAdmin(true);
-        }
-      } catch (error) {
-        console.error('관리자 권한 확인 오류:', error);
-      }
-    };
-
-    checkAdminStatus();
-  }, [supabase]);
 
   // 초기 로딩 시 추가 확장 로드
   useEffect(() => {
@@ -171,7 +162,44 @@ export default function PostEditForm({
 
     loadAdditionalExtensions();
   }, []);
-  
+
+  // 핫딜 URL 입력 시 쇼핑몰 자동 감지
+  useEffect(() => {
+    if (dealUrl && dealUrl.trim()) {
+      const detectedStore = detectStoreFromUrl(dealUrl);
+      setStore(detectedStore);
+    }
+  }, [dealUrl]);
+
+  // 핫딜 게시판/게시글 체크
+  const selectedBoard = useMemo(() => {
+    // 수정 모드에서는 boardId 사용
+    const boardIdToFind = isCreateMode ? categoryId : (boardId || categoryId);
+    return allBoardsFlat.find(b => b.id === boardIdToFind);
+  }, [allBoardsFlat, categoryId, boardId, isCreateMode]);
+
+  const isHotdeal = useMemo(() => {
+    // 수정 모드에서 initialDealInfo가 있으면 핫딜 게시글
+    if (!isCreateMode && initialDealInfo) {
+      return true;
+    }
+    // 생성 모드에서는 게시판 slug로 판단
+    if (!selectedBoard?.slug) return false;
+    return isHotdealBoard(selectedBoard.slug);
+  }, [selectedBoard, isCreateMode, initialDealInfo]);
+
+  // 핫딜 게시판/게시글에서 제목 자동 생성 (생성/수정 모두)
+  useEffect(() => {
+    if (isHotdeal && productName && store && price && shipping) {
+      const priceNum = parseFloat(price);
+      if (!isNaN(priceNum)) {
+        const formattedPrice = formatPrice(priceNum);
+        const generatedTitle = `[${store}] ${productName} [${formattedPrice}][${shipping}]`;
+        setTitle(generatedTitle);
+      }
+    }
+  }, [isHotdeal, productName, store, price, shipping]);
+
   // boardDropdownRef는 유지하되 사용하지 않는 showBoardDropdown 상태는 제거
   const boardDropdownRef = useRef<HTMLDivElement>(null);
   
@@ -180,10 +208,10 @@ export default function PostEditForm({
   // 에디터 초기화 - 기본 확장으로 먼저 생성 후 추가 확장 로드 시 재생성
   const editor = useEditor({
     extensions: loadedExtensions,
-    content,
+    content: parsedInitialContent,
     onUpdate: ({ editor }) => {
-      const content = editor.getHTML();
-      setContent(content);
+      const jsonContent = JSON.stringify(editor.getJSON());
+      setContent(jsonContent);
     },
     editorProps: { 
       attributes: {
@@ -266,8 +294,8 @@ export default function PostEditForm({
       return;
     }
 
-    // 입력값 검증
-    if (!title.trim()) {
+    // 입력값 검증 (핫딜 게시판은 제목이 자동 생성되므로 검증 스킵)
+    if (!title.trim() && !(isCreateMode && isHotdeal)) {
       toast.error('제목을 입력해주세요.');
       return;
     }
@@ -295,12 +323,37 @@ export default function PostEditForm({
       }
     }
 
+    // 핫딜 게시글 유효성 검사 (생성/수정 모두)
+    if (isHotdeal) {
+      if (!dealUrl.trim()) {
+        toast.error('상품 링크를 입력해주세요.');
+        return;
+      }
+      if (!store) {
+        toast.error('쇼핑몰을 선택해주세요.');
+        return;
+      }
+      if (!productName.trim()) {
+        toast.error('상품명을 입력해주세요.');
+        return;
+      }
+      if (!price || parseFloat(price) < 0) {
+        toast.error('올바른 가격을 입력해주세요.');
+        return;
+      }
+      if (!shipping) {
+        toast.error('배송비를 선택해주세요.');
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     setError(null);
 
     try {
       // TipTap JSON 형식으로 저장 (매치카드 등 구조화된 데이터 보존)
-      const jsonContent = editor ? JSON.stringify(editor.getJSON()) : content;
+      // content는 이미 onUpdate에서 JSON string으로 저장되어 있음
+      const jsonContent = content;
 
       // 게시글 생성 모드
       if (isCreateMode) {
@@ -310,14 +363,18 @@ export default function PostEditForm({
         formData.append('content', jsonContent);
         formData.append('boardId', categoryId);
 
-        // 공지 정보 추가 (관리자이고 공지로 설정한 경우)
-        if (isAdmin && isNotice) {
-          formData.append('isNotice', 'true');
-          formData.append('noticeType', noticeType);
-          if (noticeType === 'board' && noticeBoards.length > 0) {
-            formData.append('noticeBoards', JSON.stringify(noticeBoards));
-          }
-          formData.append('noticeOrder', noticeOrder.toString());
+        // 핫딜 정보 추가
+        if (isHotdeal) {
+          const dealInfo = {
+            store,
+            product_name: productName.trim(),
+            price: parseFloat(price),
+            original_price: originalPrice ? parseFloat(originalPrice) : undefined,
+            shipping,
+            deal_url: dealUrl.trim(),
+            is_ended: false,
+          };
+          formData.append('deal_info', JSON.stringify(dealInfo));
         }
 
         // 서버 액션 실행 (모든 비즈니스 로직 서버에서 처리)
@@ -376,8 +433,30 @@ export default function PostEditForm({
         return;
       }
 
+      // 핫딜 정보 준비 (핫딜 게시글인 경우)
+      let dealInfoToUpdate: DealInfo | null = null;
+      if (isHotdeal) {
+        dealInfoToUpdate = {
+          store,
+          product_name: productName.trim(),
+          price: parseFloat(price),
+          original_price: originalPrice ? parseFloat(originalPrice) : undefined,
+          shipping,
+          deal_url: dealUrl.trim(),
+          is_ended: initialDealInfo?.is_ended || false,
+          ended_reason: initialDealInfo?.ended_reason,
+          ended_at: initialDealInfo?.ended_at,
+        };
+      }
+
       // 서버 액션 실행 (TipTap JSON 형식으로 저장)
-      const result = await updatePost(postId, title.trim(), jsonContent, userData.user.id);
+      const result = await updatePost(
+        postId,
+        title.trim(),
+        jsonContent,
+        userData.user.id,
+        dealInfoToUpdate
+      );
 
       // 실패 케이스
       if (!result.success) {
@@ -443,35 +522,156 @@ export default function PostEditForm({
             </div>
           )}
 
-          {/* 공지 설정 (관리자 전용) */}
-          {isCreateMode && isAdmin && (
-            <NoticeAdminSection
-              isNotice={isNotice}
-              setIsNotice={setIsNotice}
-              noticeType={noticeType}
-              setNoticeType={setNoticeType}
-              noticeBoards={noticeBoards}
-              setNoticeBoards={setNoticeBoards}
-              noticeOrder={noticeOrder}
-              setNoticeOrder={setNoticeOrder}
-              allBoardsFlat={allBoardsFlat}
-            />
+
+          {/* 제목 필드 - 핫딜 게시판이 아닐 때만 표시 (핫딜은 제목 자동 생성) */}
+          {!isHotdeal && (
+            <div className="space-y-2">
+              <label htmlFor="title" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">제목</label>
+              <input
+                type="text"
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full px-3 py-2 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none"
+                placeholder="제목을 입력하세요"
+                maxLength={100}
+                required
+              />
+            </div>
           )}
 
-          <div className="space-y-2">
-            <label htmlFor="title" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">제목</label>
-            <input
-              type="text"
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-slate-800 dark:focus:ring-white/20"
-              placeholder="제목을 입력하세요"
-              maxLength={100}
-              required
-            />
-          </div>
-          
+          {/* 핫딜 정보 필드 - 핫딜 게시글일 때 표시 (생성/수정 모두) */}
+          {isHotdeal && (
+            <div className="space-y-4 border-t border-gray-200 dark:border-gray-700 pt-6">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-[#F0F0F0]">
+                  핫딜 정보
+                </h3>
+              </div>
+
+              {/* 상품 링크 */}
+              <div className="space-y-2">
+                <label htmlFor="deal_url" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                  상품 링크 <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="url"
+                  id="deal_url"
+                  value={dealUrl}
+                  onChange={(e) => setDealUrl(e.target.value)}
+                  className="w-full px-3 py-2 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none"
+                  placeholder="https://www.coupang.com/..."
+                />
+              </div>
+
+              {/* 쇼핑몰 */}
+              <div className="space-y-2">
+                <label htmlFor="store" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                  쇼핑몰 <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="store"
+                  value={store}
+                  onChange={(e) => setStore(e.target.value)}
+                  className="w-full px-3 py-2 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] focus:outline-none"
+                >
+                  <option value="">선택하세요</option>
+                  {POPULAR_STORES.map((storeName) => (
+                    <option key={storeName} value={storeName}>
+                      {storeName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 상품명 */}
+              <div className="space-y-2">
+                <label htmlFor="product_name" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                  상품명 <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="product_name"
+                  value={productName}
+                  onChange={(e) => setProductName(e.target.value)}
+                  className="w-full px-3 py-2 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none"
+                  placeholder="LG 통돌이 세탁기 19kg"
+                />
+              </div>
+
+              {/* 가격 */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label htmlFor="price" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                    판매가 <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      id="price"
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                      className="w-full px-3 py-2 pr-10 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none"
+                      placeholder="11160"
+                      min="0"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                      원
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="original_price" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                    정가 <span className="text-gray-400 text-xs">(선택)</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      id="original_price"
+                      value={originalPrice}
+                      onChange={(e) => setOriginalPrice(e.target.value)}
+                      className="w-full px-3 py-2 pr-10 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none"
+                      placeholder="15000"
+                      min="0"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                      원
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">할인율 표시용</p>
+                </div>
+              </div>
+
+              {/* 배송비 */}
+              <div className="space-y-2">
+                <label htmlFor="shipping" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                  배송비 <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="shipping"
+                  value={shipping}
+                  onChange={(e) => setShipping(e.target.value)}
+                  className="w-full px-3 py-2 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] focus:outline-none"
+                >
+                  <option value="">선택하세요</option>
+                  {SHIPPING_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <p className="text-sm text-blue-800 dark:text-blue-300">
+                  💡 <strong>팁:</strong> 상품 링크를 입력하면 쇼핑몰이 자동으로 선택됩니다.
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-2">
             <label htmlFor="content" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">내용</label>
             

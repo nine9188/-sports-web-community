@@ -28,8 +28,9 @@ async function createPostInternal(params: {
   noticeType?: 'global' | 'board' | null;
   noticeBoards?: string[] | null;
   noticeOrder?: number;
+  dealInfo?: Record<string, unknown> | null;
 }): Promise<CreatePostResult> {
-  const { title, content, boardId, userId, isNotice, noticeType, noticeBoards, noticeOrder } = params;
+  const { title, content, boardId, userId, isNotice, noticeType, noticeBoards, noticeOrder, dealInfo } = params;
 
   try {
     // 계정 정지 상태 확인
@@ -61,6 +62,11 @@ async function createPostInternal(params: {
       user_id: userId,
       board_id: boardId
     };
+
+    // 핫딜 정보 추가
+    if (dealInfo) {
+      insertData.deal_info = dealInfo;
+    }
 
     // 공지 정보 추가
     if (isNotice) {
@@ -198,6 +204,17 @@ export async function createPost(formData: FormData): Promise<CreatePostResult> 
       }
     }
 
+    // 핫딜 정보 추출
+    const dealInfoStr = formData.get('deal_info') as string | null;
+    let dealInfo: Record<string, unknown> | null = null;
+    if (dealInfoStr) {
+      try {
+        dealInfo = JSON.parse(dealInfoStr);
+      } catch (e) {
+        console.error('deal_info 파싱 실패:', e);
+      }
+    }
+
     // 매치카드는 TipTap JSON 그대로 저장 (HTML 변환 없음)
     // PostContent.tsx에서 matchCard 노드 감지하여 렌더링
 
@@ -209,7 +226,8 @@ export async function createPost(formData: FormData): Promise<CreatePostResult> 
       isNotice,
       noticeType,
       noticeBoards,
-      noticeOrder: noticeOrderStr ? parseInt(noticeOrderStr, 10) : 0
+      noticeOrder: noticeOrderStr ? parseInt(noticeOrderStr, 10) : 0,
+      dealInfo
     });
   } catch (error) {
     console.error('[createPost] 예외 발생:', error);

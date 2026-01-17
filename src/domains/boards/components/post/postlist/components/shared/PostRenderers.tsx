@@ -8,6 +8,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import {
   Image as ImageIcon,
   Link as LinkIcon,
@@ -169,9 +170,11 @@ export function renderAuthor(
  * @returns 게시판 로고 JSX
  */
 export function renderBoardLogo(post: Post): React.ReactNode {
+  const boardLink = `/boards/${post.board_slug}`;
+
   if (post.team_id || post.league_id) {
     return (
-      <div className="flex items-center">
+      <Link href={boardLink} className="flex items-center hover:underline">
         <div className="relative w-5 h-5 mr-1">
           <UnifiedSportsImage
             imageId={post.team_id || post.league_id || 0}
@@ -191,11 +194,11 @@ export function renderBoardLogo(post: Post): React.ReactNode {
         >
           {post.board_name}
         </span>
-      </div>
+      </Link>
     );
   } else {
     return (
-      <div className="flex items-center">
+      <Link href={boardLink} className="flex items-center hover:underline">
         <div className="relative w-5 h-5 mr-1">
           <Image
             src="/logo/4590 로고2 이미지크기 275X200 누끼제거 버전.png"
@@ -213,7 +216,7 @@ export function renderBoardLogo(post: Post): React.ReactNode {
         >
           {post.board_name}
         </span>
-      </div>
+      </Link>
     );
   }
 }

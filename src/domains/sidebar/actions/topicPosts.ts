@@ -26,17 +26,8 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
   try {
     const supabase = await getSupabaseServer();
 
-    // Step 1: 최근 24시간 게시글 수 확인 (윈도우 크기 결정)
-    const { count: recentCount } = await supabase
-      .from('posts')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-      .eq('is_deleted', false)
-      .eq('is_hidden', false);
-
-    // Step 2: 동적 윈도우 크기 결정
     // 초보 커뮤니티 특성 반영: 기본 7일 윈도우
-    let windowDays = 7;
+    const windowDays = 7;
 
     const windowStart = new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000).toISOString();
 
@@ -180,8 +171,10 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
 
       // 게시물별 댓글 수 계산
       if (commentsData) {
-        commentsData.forEach((comment: { post_id: string }) => {
-          commentCounts[comment.post_id] = (commentCounts[comment.post_id] || 0) + 1;
+        commentsData.forEach((comment: { post_id: string | null }) => {
+          if (comment.post_id) {
+            commentCounts[comment.post_id] = (commentCounts[comment.post_id] || 0) + 1;
+          }
         });
       }
 

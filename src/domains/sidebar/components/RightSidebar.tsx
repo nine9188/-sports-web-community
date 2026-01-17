@@ -1,15 +1,18 @@
 import { getCachedTopicPosts } from '../actions/topicPosts';
 import { getHotPosts } from '../actions/getHotPosts';
+import { getHotdealBestPosts } from '../actions/getHotdealBestPosts';
 import { TopicTabsClient } from './TabsClient';
+import { HotdealTabsClient } from './HotdealTabsClient';
 
 export default async function RightSidebar() {
   try {
     // 서버에서 데이터 가져오기 (병렬로 모든 탭 데이터 요청)
-    const [viewsData, likesData, commentsData, hotData] = await Promise.all([
+    const [viewsData, likesData, commentsData, hotData, hotdealData] = await Promise.all([
       getCachedTopicPosts('views'),
       getCachedTopicPosts('likes'),
       getCachedTopicPosts('comments'),
-      getHotPosts({ limit: 20 })
+      getHotPosts({ limit: 20 }),
+      getHotdealBestPosts(10, 3) // 10개, 최근 3일
     ]);
 
     // 모든 탭 데이터 구성 (hot 탭에 windowDays 포함)
@@ -20,11 +23,12 @@ export default async function RightSidebar() {
       hot: hotData.posts,
       windowDays: hotData.windowDays
     };
-    
+
     return (
       <aside className="hidden xl:block w-[300px] shrink-0">
         <div className="h-full pt-4">
           <TopicTabsClient postsData={postsData} />
+          <HotdealTabsClient postsData={hotdealData} />
         </div>
       </aside>
     );
@@ -37,11 +41,20 @@ export default async function RightSidebar() {
       hot: [],
       windowDays: 1
     };
-    
+
+    const emptyHotdealData = {
+      hot: [],
+      discount: [],
+      likes: [],
+      comments: [],
+      windowDays: 3
+    };
+
     return (
       <aside className="hidden xl:block w-[300px] shrink-0">
         <div className="h-full pt-4">
           <TopicTabsClient postsData={emptyData} />
+          <HotdealTabsClient postsData={emptyHotdealData} />
         </div>
       </aside>
     );

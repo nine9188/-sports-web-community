@@ -4,15 +4,17 @@ import { checkSuspensionGuard } from '@/shared/utils/suspension-guard';
 import { logUserAction } from '@/shared/actions/log-actions';
 import { getSupabaseAction } from '@/shared/lib/supabase/server';
 import type { PostActionResponse } from './utils';
+import type { DealInfo } from '../../types/hotdeal';
 
 /**
  * 게시글 수정 서버 액션
  */
 export async function updatePost(
-  postId: string, 
-  title: string, 
-  content: string, 
-  userId: string
+  postId: string,
+  title: string,
+  content: string,
+  userId: string,
+  dealInfo?: DealInfo | null
 ): Promise<PostActionResponse> {
   if (!postId || !title || !content || !userId) {
     return {
@@ -72,13 +74,25 @@ export async function updatePost(
     // PostContent.tsx에서 matchCard 노드 감지하여 렌더링
 
     // 게시글 업데이트 쿼리
+    const updateData: {
+      title: string;
+      content: string;
+      updated_at: string;
+      deal_info?: DealInfo | null;
+    } = {
+      title: title.trim(),
+      content: content,
+      updated_at: new Date().toISOString()
+    };
+
+    // 핫딜 정보가 제공된 경우 추가
+    if (dealInfo !== undefined) {
+      updateData.deal_info = dealInfo;
+    }
+
     const { error: updateError } = await supabase
       .from('posts')
-      .update({
-        title: title.trim(),
-        content: content,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', postId);
     
     if (updateError) {

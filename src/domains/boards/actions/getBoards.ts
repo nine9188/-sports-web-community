@@ -138,56 +138,42 @@ export async function getBoardPageData(slug: string, currentPage: number, fromPa
     const rootBoardId = findRootBoard(boardData.id, boardsMap);
     const rootBoardSlug = boardsMap[rootBoardId]?.slug || rootBoardId;
     
-    // 팀/리그 데이터 병렬 요청
+    // 팀/리그 데이터 처리
     let teamData = null;
     let leagueData = null;
-    
-    if (boardData.team_id || boardData.league_id) {
-      const [teamResult, leagueResult] = await Promise.all([
-        boardData.team_id 
-          ? supabase
-              .from('teams')
-              .select('*')
-              .eq('id', boardData.team_id)
-              .single()
-          : Promise.resolve({ data: null }),
-          
-        boardData.league_id 
-          ? supabase
-              .from('leagues')
-              .select('*')
-              .eq('id', boardData.league_id)
-              .single()
-          : Promise.resolve({ data: null })
-      ]);
-      
-      // 팀 데이터 처리
-      if (teamResult.data) {
-        const team = teamResult.data;
-        teamData = {
-          team: {
-            id: team.id,
-            name: team.name,
-            country: team.country || '',
-            founded: team.founded || 0,
-            logo: team.logo || 'https://via.placeholder.com/80'
-          },
-          venue: {
-            name: team.venue_name || 'Unknown',
-            city: team.venue_city || '',
-            capacity: team.venue_capacity || 0
-          }
-        };
-      }
-      
-      // 리그 데이터 처리
-      if (leagueResult.data) {
-        const league = leagueResult.data;
+
+    // 팀 데이터: boards 테이블의 logo를 직접 사용
+    if (boardData.team_id && boardData.logo) {
+      teamData = {
+        team: {
+          id: boardData.team_id,
+          name: boardData.name,
+          country: '',
+          founded: 0,
+          logo: boardData.logo
+        },
+        venue: {
+          name: '',
+          city: '',
+          capacity: 0
+        }
+      };
+    }
+
+    // 리그 데이터 처리
+    if (boardData.league_id) {
+      const { data: leagueResult } = await supabase
+        .from('leagues')
+        .select('*')
+        .eq('id', boardData.league_id)
+        .single();
+
+      if (leagueResult) {
         leagueData = {
-          id: league.id,
-          name: league.name,
-          country: league.country || '',
-          logo: league.logo || 'https://via.placeholder.com/80'
+          id: leagueResult.id,
+          name: leagueResult.name,
+          country: leagueResult.country || '',
+          logo: leagueResult.logo || 'https://via.placeholder.com/80'
         };
       }
     }

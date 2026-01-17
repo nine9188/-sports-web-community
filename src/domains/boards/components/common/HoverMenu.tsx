@@ -216,19 +216,30 @@ export default function HoverMenu({
     };
   }, [isMobile, hoveredBoard, childBoardsMap]);
 
-  // 메뉴 위치 설정 - 호버된 보드가 바뀔 때만 실행
+  // 메뉴 위치 설정 - 오른쪽으로 넘어가면 왼쪽으로 밀기
   useEffect(() => {
-    if (!hoveredBoard || !menuItemsRef.current[hoveredBoard]) return;
-    
-    // DOM 읽기 작업을 requestAnimationFrame으로 최적화
-    requestAnimationFrame(() => {
-      const menuItem = menuItemsRef.current[hoveredBoard];
-      if (menuItem) {
-        const parentLeft = menuItem.offsetLeft;
-        setMenuPosition({ left: parentLeft });
+    if (!hoveredBoard || !menuItemsRef.current[hoveredBoard] || !containerRef.current) return;
+
+    const menuItem = menuItemsRef.current[hoveredBoard];
+    const container = containerRef.current;
+
+    if (menuItem && container) {
+      const dropdownWidth = 650;
+      const containerWidth = container.offsetWidth;
+
+      let left = menuItem.offsetLeft;
+
+      // 오른쪽으로 넘어가면 왼쪽으로 밀기
+      if (left + dropdownWidth > containerWidth) {
+        left = containerWidth - dropdownWidth;
       }
-    });
-  }, [hoveredBoard]);
+
+      // 왼쪽이 0 미만이면 0
+      if (left < 0) left = 0;
+
+      setMenuPosition({ left });
+    }
+  }, [hoveredBoard, childBoardsMap]);
 
   // 하위 메뉴 그리드로 나누기
   const createGridLayout = useCallback((childBoards: ChildBoard[]) => {
@@ -238,16 +249,15 @@ export default function HoverMenu({
         : a.name.localeCompare(b.name)
     );
 
-    // 카테고리 개수에 따라 그리드 열 수 결정 (최대 5개)
-    const gridCols = Math.min(sortedChildBoards.length, 5);
-    const gridColsClass = `grid-cols-${gridCols}`;
+    // 그리드 열 수 고정 (5열)
+    const gridCols = 5;
 
     // 마지막 행 시작 인덱스 계산
     const totalItems = sortedChildBoards.length;
     const lastRowStartIndex = totalItems - (totalItems % gridCols || gridCols);
 
     return (
-      <div className={`grid ${gridColsClass}`}>
+      <div className="grid grid-cols-5">
         {sortedChildBoards.map((childBoard: ChildBoard, index: number) => {
           // 마지막 열인지 확인 (0-indexed이므로 +1)
           const isLastCol = (index + 1) % gridCols === 0;
@@ -284,39 +294,40 @@ export default function HoverMenu({
 
   // 메뉴 UI 렌더링
   return (
-    <div className="bg-white dark:bg-[#1D1D1D] rounded-lg mb-4 border border-black/7 dark:border-0">
-      <div className="px-4 py-2.5 relative" ref={containerRef}>
+    <div className="bg-white dark:bg-[#1D1D1D] rounded-lg mb-4 border border-black/7 dark:border-0 overflow-visible">
+      <div className="px-4 py-2.5 relative overflow-visible" ref={containerRef}>
         {/* 네비게이션 바 */}
-        <nav className="flex items-center justify-between gap-1" ref={navRef}>
-          {/* 게시판 목록 */}
-          <div className="flex items-center gap-1 flex-1 overflow-x-auto">
-            {/* 전체 버튼 - 최상위 게시판으로 이동하도록 수정 */}
-            <Link
-              href={`/boards/${rootBoardSlug || rootBoardId}`}
-              data-board="all"
-              className={`px-2 py-1 text-xs sm:text-sm whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 ${
-                !currentBoardId ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
-              }`}
+        <nav className="flex items-center justify-between gap-2" ref={navRef}>
+          {/* 전체 버튼 - 세로 중앙 정렬 */}
+          <Link
+            href={`/boards/${rootBoardSlug || rootBoardId}`}
+            data-board="all"
+            className={`px-2 py-1 text-xs sm:text-sm whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 flex-shrink-0 ${
+              currentBoardId === rootBoardId ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
+            }`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-3 w-3 sm:h-4 sm:w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-3 w-3 sm:h-4 sm:w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                />
-              </svg>
-              전체
-            </Link>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+              />
+            </svg>
+            전체
+          </Link>
 
-            {/* 보이는 상위 게시판들 */}
-            {visibleBoards.map((topBoard) => (
+          {/* 게시판 탭들 - flex-wrap */}
+          <div className="flex items-center justify-between gap-1 flex-1">
+            <div className="flex items-center gap-1 flex-1 flex-wrap">
+              {/* 보이는 상위 게시판들 */}
+              {visibleBoards.map((topBoard) => (
               <div
                 key={topBoard.id}
                 className="relative"
@@ -368,38 +379,39 @@ export default function HoverMenu({
                 </Link>
               </div>
             ))}
-          </div>
+            </div>
 
-          {/* 드롭다운 버튼 (숨겨진 게시판이 있을 때만) - 오른쪽 고정 */}
-          {hiddenBoards.length > 0 && (
-            <button
-              onClick={toggleMobileDropdown}
-              data-dropdown-toggle
-              className="flex items-center justify-center px-2 py-1 text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md transition-colors flex-shrink-0"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className={`h-4 w-4 transition-transform ${
-                  mobileDropdownOpen ? 'rotate-180' : ''
-                }`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+            {/* 드롭다운 버튼 (숨겨진 게시판이 있을 때만) - 오른쪽 고정 */}
+            {hiddenBoards.length > 0 && (
+              <button
+                onClick={toggleMobileDropdown}
+                data-dropdown-toggle
+                className="flex items-center justify-center px-2 py-1 text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md transition-colors flex-shrink-0"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
-          )}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className={`h-4 w-4 transition-transform ${
+                    mobileDropdownOpen ? 'rotate-180' : ''
+                  }`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+            )}
+          </div>
         </nav>
 
         {/* 숨겨진 게시판들을 위한 드롭다운 메뉴 */}
         {mobileDropdownOpen && hiddenBoards.length > 0 && (
-          <div className="mt-2 pt-2 border-t border-black/7 dark:border-white/10">
+          <div className="mt-2">
             <div className="flex flex-wrap gap-1">
               {hiddenBoards.map((topBoard) => (
                 <div
@@ -476,13 +488,11 @@ export default function HoverMenu({
                 ref={menuRef}
                 onMouseEnter={() => handleMenuEnter(hoveredBoard)}
                 onMouseLeave={() => handleMenuClose()}
-                className="absolute bg-white dark:bg-[#1D1D1D] shadow-lg border border-black/7 dark:border-white/10 z-40 top-[100%] -mt-1 overflow-hidden"
-                style={{ 
-                  left: `${menuPosition.left}px`, 
-                  marginTop: '-7px', 
-                  borderRadius: '0.5rem',
-                  minWidth: `${Math.min(getChildBoards(hoveredBoard).length, 5) * 100}px`,
-                  maxWidth: '700px'
+                className="absolute bg-white dark:bg-[#1D1D1D] shadow-lg border border-black/7 dark:border-white/10 z-[100] top-[100%] overflow-hidden rounded-lg"
+                style={{
+                  left: `${menuPosition.left}px`,
+                  marginTop: '-7px',
+                  width: '650px'
                 }}
               >
                 {createGridLayout(getChildBoards(hoveredBoard))}

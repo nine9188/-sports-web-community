@@ -464,15 +464,15 @@ const BoardSelector = React.memo(({
 
       {/* 선택된 게시판 표시 */}
       {isSelectionComplete() ? (
-        <div className="px-3 py-2 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800">
-          <span className="text-sm text-green-700 dark:text-green-300">
-            ✓ 선택된 게시판: <span className="font-medium">{getSelectedBoardName()}</span>
+        <div className="px-3 py-2 bg-[#F5F5F5] dark:bg-[#262626] rounded-md border border-black/7 dark:border-white/10">
+          <span className="text-sm text-gray-700 dark:text-gray-300">
+            선택된 게시판: <span className="font-medium">{getSelectedBoardName()}</span>
           </span>
         </div>
       ) : selectedTop ? (
-        <div className="px-3 py-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-md border border-yellow-200 dark:border-yellow-800">
-          <span className="text-sm text-yellow-700 dark:text-yellow-300">
-            ⚠ 하위 게시판을 선택해주세요
+        <div className="px-3 py-2 bg-[#F5F5F5] dark:bg-[#262626] rounded-md border border-black/7 dark:border-white/10">
+          <span className="text-sm text-gray-500 dark:text-gray-400">
+            하위 게시판을 선택해주세요
           </span>
         </div>
       ) : null}

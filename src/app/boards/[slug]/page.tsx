@@ -80,17 +80,17 @@ export async function generateMetadata({
   }
 }
 
-export default async function BoardDetailPage({ 
+export default async function BoardDetailPage({
   params,
-  searchParams 
-}: { 
+  searchParams
+}: {
   params: Promise<{ slug: string }>,
-  searchParams: Promise<{ page?: string; from?: string }>
+  searchParams: Promise<{ page?: string; from?: string; store?: string }>
 }) {
   try {
     // 파라미터 및 쿼리 매개변수 추출
     const { slug } = await params;
-    const { page = '1', from: fromParam } = await searchParams;
+    const { page = '1', from: fromParam, store } = await searchParams;
     
     // 페이지 값이 유효하지 않으면 기본값 1로 설정
     const currentPage = isNaN(parseInt(page, 10)) || parseInt(page, 10) < 1 ? 1 : parseInt(page, 10);
@@ -119,7 +119,8 @@ export default async function BoardDetailPage({
       currentBoardId: result.boardData.id,
       page: currentPage,
       limit: 20,
-      fromParam
+      fromParam,
+      store
     });
     
     // API 데이터를 레이아웃 호환 형식으로 변환
@@ -269,6 +270,7 @@ export default async function BoardDetailPage({
         slug={slug}
         rootBoardId={result.rootBoardId || ''}
         rootBoardSlug={result.rootBoardSlug || undefined}
+        viewType={result.boardData.view_type}
         // 서버에서 미리 가져온 데이터 전달
         posts={finalPosts}
         topBoards={topBoards}

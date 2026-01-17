@@ -16,6 +16,8 @@ import PostFooter from '../post/PostFooter';
 import ShopPagination from '@/domains/shop/components/ShopPagination';
 import CommentSection from '../post/CommentSection';
 import PostList from '../post/PostList';
+import { HotdealInfoBox } from '../hotdeal';
+import type { DealInfo } from '../../types/hotdeal';
 
 // 호버 메뉴만 지연 로딩 (덜 중요한 컴포넌트)
 const HoverMenu = dynamic(() => import('../common/HoverMenu'), {
@@ -57,6 +59,7 @@ interface PostDetailLayoutProps {
     post_number: number;
     is_hidden?: boolean;
     is_deleted?: boolean;
+    deal_info?: DealInfo | null;
     profiles?: {
       nickname: string | null;
       public_id?: string | null;
@@ -257,7 +260,7 @@ export default function PostDetailLayout({
       {/* 2. 게시글 본문 (상세 정보) */}
       <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 shadow-sm overflow-hidden mb-4">
         {/* 게시글 헤더 컴포넌트 */}
-        <MemoizedPostHeader 
+        <MemoizedPostHeader
           title={post.title}
           author={author}
           createdAt={post.created_at || ''}
@@ -265,8 +268,20 @@ export default function PostDetailLayout({
           likes={post.likes || 0}
           boardName={post.board?.name || '게시판'}
           commentCount={comments?.length || 0}
+          isEnded={Boolean(post.deal_info?.is_ended)}
         />
-        
+
+        {/* 핫딜 정보박스 - 핫딜 게시판일 때만 표시 */}
+        {post.deal_info && (
+          <div className="px-4 sm:px-6 py-4 border-t border-black/5 dark:border-white/10">
+            <HotdealInfoBox
+              dealInfo={post.deal_info}
+              postId={post.id}
+              isAuthor={isAuthor}
+            />
+          </div>
+        )}
+
         {/* 게시글 본문 컴포넌트 */}
         <PostContent content={post.content || ''} meta={post.meta || null} />
         

@@ -66,10 +66,11 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
     // 게시판 이름 표시 (로고 포함)
     const teamId = typeof notice.team_id === 'string' ? parseInt(notice.team_id, 10) : notice.team_id;
     const leagueId = typeof notice.league_id === 'string' ? parseInt(notice.league_id, 10) : notice.league_id;
+    const boardLinkUrl = `/boards/${boardSlug}`;
 
     if (teamId || leagueId) {
       return (
-        <div className="flex items-center">
+        <Link href={boardLinkUrl} className="flex items-center hover:underline">
           <div className="relative w-5 h-5 mr-1">
             <UnifiedSportsImage
               imageId={teamId || leagueId || 0}
@@ -87,11 +88,11 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
                 style={{maxWidth: '85px'}}>
             {notice.board?.name || notice.board_name || '-'}
           </span>
-        </div>
+        </Link>
       );
     } else {
       return (
-        <div className="flex items-center">
+        <Link href={boardLinkUrl} className="flex items-center hover:underline">
           <div className="relative w-5 h-5 mr-1">
             <Image
               src="/logo/4590 로고2 이미지크기 275X200 누끼제거 버전.png"
@@ -107,10 +108,10 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
                 style={{maxWidth: '85px'}}>
             {notice.board?.name || notice.board_name || '-'}
           </span>
-        </div>
+        </Link>
       );
     }
-  }, [showBoardName, notice.notice_type, notice.is_must_read, notice.team_id, notice.league_id, notice.board?.name, notice.board_name]);
+  }, [showBoardName, notice.notice_type, notice.is_must_read, notice.team_id, notice.league_id, notice.board?.name, notice.board_name, boardSlug]);
 
   // 모바일 뷰
   if (isMobile) {

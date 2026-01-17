@@ -1,6 +1,7 @@
 'use server';
 
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import type { DealInfo } from '../types/hotdeal';
 
 export interface PopularPost {
   id: string;
@@ -21,6 +22,8 @@ export interface PopularPost {
   formattedDate?: string;
   team_id?: string | number | null;
   league_id?: string | number | null;
+  deal_info?: DealInfo | null;
+  content?: string;
 }
 
 /**
@@ -76,6 +79,8 @@ export async function getBoardPopularPosts(boardId: string) {
       likes,
       views,
       created_at,
+      content,
+      deal_info,
       boards!inner(slug, name, team_id, league_id),
       profiles!inner(id, nickname, level, icon_id, public_id)
     `)
@@ -96,6 +101,8 @@ export async function getBoardPopularPosts(boardId: string) {
       likes,
       views,
       created_at,
+      content,
+      deal_info,
       boards!inner(slug, name, team_id, league_id),
       profiles!inner(id, nickname, level, icon_id, public_id)
     `)
@@ -190,7 +197,9 @@ export async function getBoardPopularPosts(boardId: string) {
         created_at: post.created_at,
         formattedDate: formattedDate,
         team_id: post.boards.team_id,
-        league_id: post.boards.league_id
+        league_id: post.boards.league_id,
+        content: post.content,
+        deal_info: post.deal_info || null
       };
     });
   };

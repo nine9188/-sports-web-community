@@ -2,6 +2,8 @@
  * PostList 컴포넌트 타입 정의
  */
 
+import type { DealInfo } from '../../../types/hotdeal';
+
 /**
  * 게시글 variant 타입
  */
@@ -35,6 +37,7 @@ export interface Post {
   formattedDate?: string;
   is_hidden?: boolean;
   is_deleted?: boolean;
+  deal_info?: DealInfo | null;
 }
 
 /**

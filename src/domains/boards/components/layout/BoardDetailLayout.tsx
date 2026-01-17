@@ -13,6 +13,8 @@ import PostList from '../post/PostList';
 import PopularPostList from '../post/PopularPostList';
 import ShopPagination from '@/domains/shop/components/ShopPagination';
 import { NoticeList } from '../notice';
+import { StoreFilterMenu } from '../hotdeal';
+import { isHotdealBoard } from '../../utils/hotdeal';
 import { Breadcrumb } from '../../types/board/data';
 import { Board } from '../../types/board';
 import type { LayoutPost, PopularPost } from '@/domains/boards/types/post';
@@ -91,6 +93,8 @@ interface BoardDetailLayoutProps {
   filterComponent?: React.ReactNode;
   // 리스트 스타일 타입 (기본: text, 카드형: card)
   listVariant?: 'text' | 'card';
+  // 뷰 타입 (DB의 view_type)
+  viewType?: 'text' | 'image-table' | 'list';
 }
 
 // 메모이제이션된 컴포넌트들
@@ -118,9 +122,10 @@ export default function BoardDetailLayout({
   popularPosts,
   notices,
   filterComponent,
-  listVariant = 'text'
+  listVariant = 'text',
+  viewType: propViewType
 }: BoardDetailLayoutProps) {
-  const viewType = boardData.view_type;
+  const viewType = propViewType || boardData.view_type;
 
   // 게시판 방문 기록
   useEffect(() => {
@@ -134,7 +139,7 @@ export default function BoardDetailLayout({
   }, [boardData.id, boardData.slug, boardData.name]);
 
   return (
-    <div className="container mx-auto overflow-x-hidden" data-current-page={currentPage}>
+    <div className="container mx-auto" data-current-page={currentPage}>
       <div>
         <MemoizedBoardBreadcrumbs breadcrumbs={breadcrumbs} />
       </div>
@@ -224,6 +229,11 @@ export default function BoardDetailLayout({
             isServerFetched: true
           }}
         />
+      )}
+
+      {/* 쇼핑몰 필터 메뉴 - 핫딜 게시판일 때만 표시 */}
+      {isHotdealBoard(slug) && (
+        <StoreFilterMenu boardSlug={slug} />
       )}
 
       {/* 게시글 목록 - listVariant에 따라 다른 컴포넌트 렌더링 */}

@@ -39,7 +39,8 @@ export function convertApiPostsToLayoutPosts(apiPosts: ApiPost[]): LayoutPost[] 
     team_logo: post.team_logo,
     league_id: typeof post.league_id === 'string' ? parseInt(post.league_id, 10) : post.league_id as number | null,
     league_name: post.league_name,
-    league_logo: post.league_logo
+    league_logo: post.league_logo,
+    deal_info: post.deal_info || null
   }));
 }
 

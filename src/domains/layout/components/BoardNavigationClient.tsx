@@ -2,45 +2,82 @@
 
 import React, { useState, useRef, useMemo } from 'react';
 import Link from 'next/link';
-import { ChevronDown, ShoppingBag } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Board } from '../types/board';
 import {
   SearchBar,
   TopLevelBoard,
-  MegaDropdownMenu,
+  SimpleDropdownMenu,
   MobileBoardModal
 } from './navigation';
 
 // 가상 네비게이션 Board 데이터
-const createNavBoards = (): Board[] => [
-  {
-    id: 'nav-posts',
-    name: '전체/인기',
-    slug: 'all',
-    parent_id: null,
-    display_order: -2,
-    children: [
-      { id: 'nav-all', name: '전체글', slug: 'all', parent_id: 'nav-posts', display_order: 0, children: [] },
-      { id: 'nav-popular', name: '인기글', slug: 'popular', parent_id: 'nav-posts', display_order: 1, children: [] }
-    ]
-  },
-  {
-    id: 'nav-football',
-    name: '라이브스코어',
-    slug: 'livescore/football',
-    parent_id: null,
-    display_order: 999,
-    children: [
-      { id: 'nav-livescore', name: '라이브스코어', slug: 'livescore/football', parent_id: 'nav-football', display_order: 0, children: [] },
-      { id: 'nav-transfers', name: '이적시장', slug: 'transfers', parent_id: 'nav-football', display_order: 1, children: [] },
-      { id: 'nav-datacenter', name: '데이터센터', slug: 'livescore/football/leagues', parent_id: 'nav-football', display_order: 2, children: [] }
-    ]
-  }
-];
+const createNavBoards = (boards: Board[]): Board[] => {
+  // 실제 보드에서 필요한 것들 찾기 - 스포츠
+  const soccerBoard = boards.find(b => b.slug === 'soccer');
+  const kleagueBoard = boards.find(b => b.slug === 'k-league');
+  const newsBoard = boards.find(b => b.slug === 'news');
+  const dataAnalysisBoard = boards.find(b => b.slug === 'data-analysis');
+
+  // 실제 보드에서 필요한 것들 찾기 - 커뮤니티
+  const freeBoard = boards.find(b => b.slug === 'free');
+  const hotdealBoard = boards.find(b => b.slug === 'hotdeal');
+  const marketBoard = boards.find(b => b.slug === 'market');
+  const reviewBoard = boards.find(b => b.slug === 'review');
+  const creativeBoard = boards.find(b => b.slug === 'creative');
+
+  return [
+    {
+      id: 'nav-posts',
+      name: '전체/인기',
+      slug: 'all',
+      parent_id: null,
+      display_order: -2,
+      children: [
+        { id: 'nav-all', name: '전체글', slug: 'all', parent_id: 'nav-posts', display_order: 0, children: [] },
+        { id: 'nav-popular', name: '인기글', slug: 'popular', parent_id: 'nav-posts', display_order: 1, children: [] }
+      ]
+    },
+    {
+      id: 'nav-sports',
+      name: '스포츠',
+      slug: 'soccer',
+      parent_id: null,
+      display_order: -1,
+      children: [
+        ...(soccerBoard ? [{ ...soccerBoard, name: '해외축구', parent_id: 'nav-sports', display_order: 0 }] : []),
+        ...(kleagueBoard ? [{ ...kleagueBoard, name: '국내축구', parent_id: 'nav-sports', display_order: 1 }] : []),
+        ...(newsBoard ? [{ ...newsBoard, name: '축구소식', parent_id: 'nav-sports', display_order: 2 }] : []),
+        ...(dataAnalysisBoard ? [{ ...dataAnalysisBoard, name: '데이터분석', parent_id: 'nav-sports', display_order: 3 }] : [])
+      ]
+    },
+    {
+      id: 'nav-community',
+      name: '커뮤니티',
+      slug: 'free',
+      parent_id: null,
+      display_order: 50,
+      children: [
+        ...(freeBoard ? [{ ...freeBoard, name: '자유게시판', parent_id: 'nav-community', display_order: 0 }] : []),
+        ...(hotdealBoard ? [{ ...hotdealBoard, name: '핫딜', parent_id: 'nav-community', display_order: 1 }] : []),
+        ...(marketBoard ? [{ ...marketBoard, name: '자유마켓', parent_id: 'nav-community', display_order: 2 }] : []),
+        ...(reviewBoard ? [{ ...reviewBoard, name: '인증/후기', parent_id: 'nav-community', display_order: 3 }] : []),
+        ...(creativeBoard ? [{ ...creativeBoard, name: '창작', parent_id: 'nav-community', display_order: 4 }] : [])
+      ]
+    },
+    // 개별 링크들 (드롭다운 없음)
+    { id: 'nav-livescore', name: '라이브스코어', slug: 'livescore/football', parent_id: null, display_order: 100, children: [] },
+    { id: 'nav-transfers', name: '이적시장', slug: 'transfers', parent_id: null, display_order: 101, children: [] },
+    { id: 'nav-datacenter', name: '데이터센터', slug: 'livescore/football/leagues', parent_id: null, display_order: 102, children: [] }
+  ];
+};
+
+// 네비에서 제외할 보드 slug 목록 (가상 그룹으로 묶이거나 제외됨)
+const EXCLUDED_BOARD_SLUGS = ['soccer', 'k-league', 'news', 'data-analysis', 'youtube', 'free', 'hotdeal', 'market', 'review', 'creative'];
 
 // 가상 보드 중 /boards/ 경로를 사용하는 보드 ID 목록
-const BOARD_PATH_NAV_IDS = ['nav-posts', 'nav-all', 'nav-popular'];
+const BOARD_PATH_NAV_IDS = ['nav-posts', 'nav-all', 'nav-popular', 'nav-sports', 'nav-community'];
 
 // Props 타입 정의
 interface BoardNavigationClientProps {
@@ -58,16 +95,28 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
   const router = useRouter();
 
   // 가상 보드 데이터 생성
-  const navBoards = useMemo(() => createNavBoards(), []);
+  const navBoards = useMemo(() => createNavBoards(boards), [boards]);
 
-  // 전체 보드 (가상 글 + 실제 게시판 + 가상 축구)
+  // 전체 보드 (가상 그룹 + 나머지 실제 게시판 + 개별 링크)
   const allBoards = useMemo(() => {
     const postsBoard = navBoards.find(b => b.id === 'nav-posts');
-    const footballBoard = navBoards.find(b => b.id === 'nav-football');
+    const sportsBoard = navBoards.find(b => b.id === 'nav-sports');
+    const communityBoard = navBoards.find(b => b.id === 'nav-community');
+    const livescoreLink = navBoards.find(b => b.id === 'nav-livescore');
+    const transfersLink = navBoards.find(b => b.id === 'nav-transfers');
+    const datacenterLink = navBoards.find(b => b.id === 'nav-datacenter');
+
+    // 제외할 보드 필터링
+    const filteredBoards = boards.filter(b => !EXCLUDED_BOARD_SLUGS.includes(b.slug || ''));
+
     return [
       ...(postsBoard ? [postsBoard] : []),
-      ...boards,
-      ...(footballBoard ? [footballBoard] : [])
+      ...(sportsBoard ? [sportsBoard] : []),
+      ...(communityBoard ? [communityBoard] : []),
+      ...filteredBoards,
+      ...(livescoreLink ? [livescoreLink] : []),
+      ...(transfersLink ? [transfersLink] : []),
+      ...(datacenterLink ? [datacenterLink] : [])
     ];
   }, [boards, navBoards]);
 
@@ -98,14 +147,12 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
       return;
     }
 
-    // 메가 드롭다운: nav 바로 아래 전체 너비
+    // 심플 드롭다운: 호버된 요소 바로 아래
     const rect = element.getBoundingClientRect();
-    const navElement = element.closest('nav');
-    const navBottom = navElement ? navElement.getBoundingClientRect().bottom : rect.bottom;
 
     setDropdownPosition({
-      top: navBottom,
-      left: 0
+      top: rect.bottom,
+      left: rect.left + rect.width / 2
     });
 
     setHoveredBoard(boardId);
@@ -180,13 +227,12 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
             />
           ))}
 
-          {/* 아이콘샵 링크 */}
+          {/* 상점 링크 */}
           <Link
             href="/shop"
-            className="px-2 py-1 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded flex items-center gap-1 shrink-0 whitespace-nowrap snap-center transition-colors"
+            className="px-2 py-1 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded shrink-0 whitespace-nowrap snap-center transition-colors"
           >
-            <ShoppingBag className="h-3.5 w-3.5" />
-            샵
+            상점
           </Link>
 
           {/* 관리자 페이지 링크 - 관리자에게만 표시 */}
@@ -205,9 +251,9 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
           <SearchBar />
         </div>
 
-        {/* 메가 드롭다운 메뉴 */}
+        {/* 심플 드롭다운 메뉴 */}
         {hoveredBoardData && dropdownPosition && (
-          <MegaDropdownMenu
+          <SimpleDropdownMenu
             board={hoveredBoardData}
             position={dropdownPosition}
             onClose={closeDropdown}
@@ -263,10 +309,9 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
 
           <Link
             href="/shop"
-            className="px-2 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded flex items-center gap-1 shrink-0 transition-colors"
+            className="px-2 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded shrink-0 transition-colors"
           >
-            <ShoppingBag className="h-3 w-3" />
-            샵
+            상점
           </Link>
 
           {/* 관리자 페이지 링크 - 관리자에게만 표시 */}

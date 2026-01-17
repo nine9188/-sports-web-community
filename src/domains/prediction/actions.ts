@@ -476,35 +476,23 @@ async function generateLeaguePredictionPost(
     
     console.log(`🔮 ${league.name} 예측 분석 시작 (${matches.length}경기)`)
     
-    // 게시판 찾기 및 여러 게시판 설정
-    const targetBoardIds: string[] = []
-    
+    // 게시판 찾기 (리그 게시판 우선, 없으면 해외축구 게시판 fallback)
+    let targetBoardId: string | null = null
+
     // 1. 리그 전용 게시판 확인
     const boardSlug = await getBoardSlugByLeagueId(league.id)
     if (boardSlug) {
       const boardId = await getBoardIdBySlug(boardSlug)
       if (boardId) {
-        targetBoardIds.push(boardId)
+        targetBoardId = boardId
         console.log(`🎯 ${league.name} (ID: ${league.id}) → 리그 게시판: ${boardSlug}`)
       }
     }
-    
-    // 2. 해외축구 게시판은 항상 추가 (fallback 및 추가 노출용)
-    targetBoardIds.push(OVERSEAS_FOOTBALL_BOARD_ID)
-    console.log(`🌍 해외축구 게시판도 추가`)
-    
-    // 3. 중복 제거
-    const uniqueBoardIds = [...new Set(targetBoardIds)]
-    
-    if (uniqueBoardIds.length === 0) {
-      console.log(`❌ ${league.name} (ID: ${league.id}) - 등록할 게시판이 없음`)
-      return {
-        league_id: league.id,
-        league_name: league.name,
-        status: 'skipped',
-        message: `등록할 게시판이 없습니다 (리그 ID: ${league.id})`,
-        matches_count: matches.length
-      }
+
+    // 2. 리그 게시판이 없으면 해외축구 게시판 사용 (fallback)
+    if (!targetBoardId) {
+      targetBoardId = OVERSEAS_FOOTBALL_BOARD_ID
+      console.log(`🌍 ${league.name} (ID: ${league.id}) → 해외축구 게시판 (fallback)`)
     }
     
     // 각 경기에 대한 예측 분석 생성 (Predictions API 사용)
@@ -667,25 +655,24 @@ async function generateLeaguePredictionPost(
       prediction_data: predictionDataList.filter(data => data !== null) // null 값 제거
     }
 
-    // 게시글 작성 (여러 게시판에 동시 등록)
-    const result = await createPostWithMultipleBoards(
+    // 게시글 작성 (단일 게시판에 등록, 상위 게시판에는 자동 노출됨)
+    const result = await createPredictionPost(
       title,
       JSON.stringify(tiptapContent),
-      uniqueBoardIds,
+      targetBoardId,
       PREDICTION_BOT_USER_ID,
-      'prediction',
-      ['데이터분석', league.name, '경기예측'],
+      ['AI분석', league.name, '경기예측'],
       metaData
     )
-    
+
     if (result.success) {
-      console.log(`✅ ${league.name} 예측 분석 게시글 작성 완료 (${result.boardCount || 1}개 게시판)`)
+      console.log(`✅ ${league.name} 예측 분석 게시글 작성 완료`)
       return {
         league_id: league.id,
         league_name: league.name,
         status: 'success',
         post_id: result.postId,
-        message: `${matches.length}경기 예측 분석 완료 (${result.boardCount || 1}개 게시판에 등록)`,
+        message: `${matches.length}경기 예측 분석 완료`,
         matches_count: matches.length
       }
     } else {
@@ -961,76 +948,53 @@ export async function generateSingleLeaguePrediction(
   }
 }
 
-// 게시글을 여러 게시판에 등록하는 함수
-async function createPostWithMultipleBoards(
+// 예측 분석 게시글 생성 (단일 게시판)
+async function createPredictionPost(
   title: string,
   content: string,
-  boardIds: string[],
+  boardId: string,
   userId: string,
-  category: string = 'prediction',
   tags: string[] = [],
   meta: Record<string, unknown> | null = null
-): Promise<{ success: boolean; postId?: string; error?: string; boardCount?: number }> {
+): Promise<{ success: boolean; postId?: string; error?: string }> {
   const supabase = createSupabaseClient()
-  
+
   try {
     console.log(`📝 게시글 생성: ${title}`)
-    console.log(`📋 대상 게시판: ${boardIds.length}개 - ${boardIds.join(', ')}`)
-    
-    // 1. 먼저 메인 게시판(첫 번째)에 게시글 생성
-    const mainBoardId = boardIds[0]
-    
+    console.log(`📋 대상 게시판: ${boardId}`)
+
     const { data: post, error: postError } = await supabase
       .from('posts')
       .insert({
         title,
         content,
-        board_id: mainBoardId, // 메인 게시판 ID
+        board_id: boardId,
         user_id: userId,
-        category,
+        category: 'prediction',
         tags,
         meta,
         status: 'published'
       })
       .select()
       .single()
-    
+
     if (postError || !post) {
       console.error('❌ 게시글 생성 실패:', postError)
       return { success: false, error: postError?.message || '게시글 생성 실패' }
     }
-    
+
     console.log(`✅ 게시글 생성 완료: ${post.id}`)
-    
-    // 2. 모든 게시판에 관계 생성 (post_boards 테이블)
-    const postBoardRelations = boardIds.map(boardId => ({
-      post_id: post.id,
-      board_id: boardId
-    }))
-    
-    const { error: relationError } = await supabase
-      .from('post_boards')
-      .insert(postBoardRelations)
-    
-    if (relationError) {
-      console.error('❌ 게시판 관계 생성 실패:', relationError)
-      // 게시글은 이미 생성되었으므로 성공으로 처리하되 경고 로그
-      console.warn('⚠️ 일부 게시판에만 등록됨')
-    } else {
-      console.log(`✅ ${boardIds.length}개 게시판에 관계 생성 완료`)
+
+    return {
+      success: true,
+      postId: post.id
     }
-    
-    return { 
-      success: true, 
-      postId: post.id,
-      boardCount: boardIds.length
-    }
-    
+
   } catch (error) {
     console.error('❌ 게시글 생성 중 오류:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : '알 수 없는 오류' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '알 수 없는 오류'
     }
   }
 } 

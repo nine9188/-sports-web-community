@@ -13,7 +13,8 @@ docs/
 ├── hot-system/                  # HOT 게시글 시스템
 ├── notifications/               # 알림 시스템
 ├── reward-system/               # 보상 시스템
-├── livescore/                   # 라이브스코어 시스템 ✨ NEW
+├── hotdeal/                     # 핫딜 시스템 ✨ NEW
+├── livescore/                   # 라이브스코어 시스템
 ├── player-fixtures/             # 선수 경기 기록 API
 ├── seo/                         # SEO 개선 가이드
 ├── auth-refactoring/            # 인증 리팩토링 기록
@@ -44,7 +45,34 @@ docs/
 
 ---
 
-## ⚽ 라이브스코어 시스템 ✨ NEW
+## 💰 핫딜 시스템 ✨ NEW
+
+가전, 패션, 식품 등 다양한 카테고리의 핫딜 정보를 관리하는 시스템입니다.
+
+| 문서 | 설명 | 상태 |
+|------|------|------|
+| [hotdeal-system.md](./boards/hotdeal-system.md) | 핫딜 시스템 전체 문서 (구조, 컴포넌트, 사용 가이드) | ✅ 완료 |
+| [hotdeal-implementation.md](./boards/hotdeal-implementation.md) | 핫딜 구현 계획 (초기 설계 문서) | 📋 참고용 |
+
+**주요 기능**:
+- ✅ 핫딜 정보 등록 (상품명, 가격, 할인율, 배송비, 쇼핑몰 URL)
+- ✅ URL 입력 시 쇼핑몰 자동 감지
+- ✅ 종료 관리 (품절/마감 등 사유별 처리)
+- ✅ 쇼핑몰별 필터링 (StoreFilterMenu)
+- ✅ 리스트/상세 페이지 통합
+- ✅ `[종료]` 배지 + 취소선 표시
+
+**구현 완료**:
+- ✅ Phase 1: 타입 & 유틸리티 (types/hotdeal, utils/hotdeal)
+- ✅ Phase 2: 상세페이지 (HotdealInfoBox)
+- ✅ Phase 3: 글쓰기 (HotdealFormFields)
+- ✅ Phase 4: 리스트 (종료 표시)
+- ✅ Phase 5: 관리 기능 (HotdealEndButton, endDeal)
+- ✅ Phase 6: 쇼핑몰 필터링 (StoreFilterMenu)
+
+---
+
+## ⚽ 라이브스코어 시스템
 
 실시간 축구 경기 정보를 제공하는 라이브스코어 시스템입니다.
 
@@ -189,5 +217,5 @@ HOT 게시글은 조회수, 좋아요, 댓글을 기반으로 인기 게시글�
 ---
 
 **문서 작성일**: 2025-12-03
-**최종 업데이트**: 2026-01-14
-**버전**: 1.4.0
+**최종 업데이트**: 2026-01-16
+**버전**: 1.6.0

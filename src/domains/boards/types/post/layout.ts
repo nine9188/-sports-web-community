@@ -1,3 +1,5 @@
+import type { DealInfo } from '../hotdeal';
+
 /**
  * 레이아웃/페이지에서 사용하는 게시글 타입
  *
@@ -29,6 +31,7 @@ export interface LayoutPost {
   league_id?: number | null;
   league_name?: string | null;
   league_logo?: string | null;
+  deal_info?: DealInfo | null;
 }
 
 /**
@@ -62,6 +65,7 @@ export interface ApiPost {
   league_id?: string | number | null;
   league_name?: string | null;
   league_logo?: string | null;
+  deal_info?: DealInfo | null;
 }
 
 /**

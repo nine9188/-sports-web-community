@@ -4,27 +4,27 @@ import { TeamMapping } from './index';
 // K리그 ID
 export const K_LEAGUE_ID = 292;
 
-// K리그 팀 매핑 데이터
+// K리그1 2026 시즌 팀 매핑 데이터 (12팀)
 export const K_LEAGUE_TEAMS: TeamMapping[] = [
   {
+    id: 2745,
+    name_ko: '부천',
+    name_en: 'Bucheon FC 1995',
+    country_ko: '한국',
+    country_en: 'South-Korea',
+    code: 'BCH'
+  },
+  {
     id: 2746,
-    name_ko: '강원 FC',
+    name_ko: '강원',
     name_en: 'Gangwon FC',
     country_ko: '한국',
     country_en: 'South-Korea',
     code: 'GAN'
   },
   {
-    id: 2747,
-    name_ko: '대구 FC',
-    name_en: 'Daegu FC',
-    country_ko: '한국',
-    country_en: 'South-Korea',
-    code: 'DAE'
-  },
-  {
     id: 2748,
-    name_ko: 'FC 안양',
+    name_ko: '안양',
     name_en: 'FC Anyang',
     country_ko: '한국',
     country_en: 'South-Korea',
@@ -32,23 +32,15 @@ export const K_LEAGUE_TEAMS: TeamMapping[] = [
   },
   {
     id: 2750,
-    name_ko: '대전 하나 시티즌',
+    name_ko: '대전',
     name_en: 'Daejeon Citizen',
     country_ko: '한국',
     country_en: 'South-Korea',
     code: 'DAE'
   },
   {
-    id: 2756,
-    name_ko: '수원 FC',
-    name_en: 'Suwon City FC',
-    country_ko: '한국',
-    country_en: 'South-Korea',
-    code: 'SUW'
-  },
-  {
     id: 2759,
-    name_ko: '광주 FC',
+    name_ko: '광주',
     name_en: 'Gwangju FC',
     country_ko: '한국',
     country_en: 'South-Korea',
@@ -56,7 +48,7 @@ export const K_LEAGUE_TEAMS: TeamMapping[] = [
   },
   {
     id: 2761,
-    name_ko: '제주 유나이티드',
+    name_ko: '제주',
     name_en: 'Jeju United FC',
     country_ko: '한국',
     country_en: 'South-Korea',
@@ -64,15 +56,23 @@ export const K_LEAGUE_TEAMS: TeamMapping[] = [
   },
   {
     id: 2762,
-    name_ko: '전북 현대 모터스',
+    name_ko: '전북',
     name_en: 'Jeonbuk Motors',
     country_ko: '한국',
     country_en: 'South-Korea',
     code: 'JEO'
   },
   {
+    id: 2763,
+    name_ko: '인천',
+    name_en: 'Incheon United',
+    country_ko: '한국',
+    country_en: 'South-Korea',
+    code: 'ICN'
+  },
+  {
     id: 2764,
-    name_ko: '포항 스틸러스',
+    name_ko: '포항',
     name_en: 'Pohang Steelers',
     country_ko: '한국',
     country_en: 'South-Korea',
@@ -80,7 +80,7 @@ export const K_LEAGUE_TEAMS: TeamMapping[] = [
   },
   {
     id: 2766,
-    name_ko: 'FC 서울',
+    name_ko: '서울',
     name_en: 'FC Seoul',
     country_ko: '한국',
     country_en: 'South-Korea',
@@ -88,7 +88,7 @@ export const K_LEAGUE_TEAMS: TeamMapping[] = [
   },
   {
     id: 2767,
-    name_ko: '울산 현대',
+    name_ko: '울산',
     name_en: 'Ulsan Hyundai FC',
     country_ko: '한국',
     country_en: 'South-Korea',
@@ -96,11 +96,11 @@ export const K_LEAGUE_TEAMS: TeamMapping[] = [
   },
   {
     id: 2768,
-    name_ko: '김천 상무',
+    name_ko: '김천',
     name_en: 'Gimcheon Sangmu FC',
     country_ko: '한국',
     country_en: 'South-Korea',
-    code: 'SAN'
+    code: 'GIM'
   }
 ];
 
@@ -112,8 +112,8 @@ export function getKLeagueTeamById(id: number): TeamMapping | undefined {
 // 팀 이름으로 K리그 팀 검색하기 (한글/영문 모두 검색 가능)
 export function searchKLeagueTeamsByName(name: string): TeamMapping[] {
   const lowercaseName = name.toLowerCase();
-  return K_LEAGUE_TEAMS.filter(team => 
-    team.name_ko.includes(name) || 
+  return K_LEAGUE_TEAMS.filter(team =>
+    team.name_ko.includes(name) ||
     team.name_en.toLowerCase().includes(lowercaseName)
   );
-} 
+}

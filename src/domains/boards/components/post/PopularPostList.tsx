@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ThumbsUp } from 'lucide-react';
@@ -8,6 +8,8 @@ import { AuthorLink } from '@/domains/user/components';
 import { extractFirstImageUrl } from './postlist/utils';
 import { getProxiedImageUrl } from '@/shared/utils/imageProxy';
 import { renderContentTypeIcons } from './postlist/components/shared/PostRenderers';
+import { formatPrice, getDiscountRate } from '../../utils/hotdeal';
+import type { DealInfo } from '../../types/hotdeal';
 
 interface Post {
   id: string;
@@ -30,6 +32,7 @@ interface Post {
   content?: string;
   team_logo?: string | null;
   league_logo?: string | null;
+  deal_info?: DealInfo | null;
 }
 
 interface PopularPostListProps {
@@ -66,6 +69,11 @@ export default function PopularPostList({
         const thumbnailUrl = getProxiedImageUrl(originalUrl); // 프록시 URL로 변환
         const postUrl = `/boards/${post.board_slug}/${post.post_number}`;
         const isLast = index === posts.length - 1;
+
+        // 핫딜 정보 계산
+        const dealInfo = post.deal_info;
+        const discountRate = dealInfo ? getDiscountRate(dealInfo.price, dealInfo.original_price) : null;
+
         return (
           <div
             key={post.id}
@@ -121,14 +129,29 @@ export default function PopularPostList({
                 </div>
               </Link>
 
+              {/* 핫딜 가격 정보 */}
+              {dealInfo && (
+                <div className="flex items-center gap-1.5 mb-2">
+                  <span className="text-sm font-bold text-red-600 dark:text-red-400">
+                    {formatPrice(dealInfo.price)}
+                  </span>
+                  {discountRate && (
+                    <span className="text-xs font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-1 py-0.5 rounded">
+                      {discountRate}%
+                    </span>
+                  )}
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    {dealInfo.shipping}
+                  </span>
+                </div>
+              )}
+
               {/* 메타 정보 - 모바일 3줄, 데스크톱 1줄 */}
               <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs text-gray-500 dark:text-gray-400">
                 {/* 줄 2 (모바일) / 그룹 1 (데스크톱): 카테고리 + 작성자 */}
                 <div className="flex items-center gap-2">
-                  <Link href={`/boards/${post.board_slug}`}>
-                    <span className="px-2 py-0.5 rounded bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors">
-                      {post.board_name}
-                    </span>
+                  <Link href={`/boards/${post.board_slug}`} className="hover:underline text-gray-700 dark:text-gray-300">
+                    {post.board_name}
                   </Link>
 
                   <AuthorLink
