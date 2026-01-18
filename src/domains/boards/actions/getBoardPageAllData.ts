@@ -10,18 +10,20 @@ import type { LayoutPost } from '../types/post/layout';
 import type { Post } from '../types/post';
 
 export interface BoardPageAllData {
-  // 게시판 정보
+  // 게시판 정보 (Board 타입과 호환)
   boardData: {
     id: string;
     name: string;
     slug: string;
-    description?: string | null;
-    parent_id?: string | null;
-    team_id?: number | null;
-    league_id?: number | null;
-    view_type?: string | null;
-    logo?: string | null;
-    [key: string]: unknown;
+    description: string | null;
+    parent_id: string | null;
+    team_id: number | null;
+    league_id: number | null;
+    view_type?: 'list' | 'image-table';
+    logo: string | null;
+    display_order: number | null;
+    access_level: string | null;
+    views: number | null;
   };
   breadcrumbs: Array<{
     id: string;
@@ -51,7 +53,7 @@ export interface BoardPageAllData {
   isLoggedIn: boolean;
   rootBoardId: string;
   rootBoardSlug: string;
-  viewType: string | null;
+  viewType?: 'text' | 'image-table' | 'list';
 
   // 게시글 정보
   posts: LayoutPost[];
@@ -60,7 +62,10 @@ export interface BoardPageAllData {
     itemsPerPage: number;
     currentPage: number;
   };
-  popularPosts: PopularPost[];
+  popularPosts: {
+    todayPosts: PopularPost[];
+    weekPosts: PopularPost[];
+  };
   notices: Post[];
 
   // HoverMenu 정보
@@ -144,11 +149,30 @@ export async function getBoardPageAllData(
     noticesData
   );
 
-  // 4. 통합 데이터 반환
+  // 4. viewType 변환 (string → 'text' | 'image-table' | 'list')
+  const viewType = (() => {
+    const vt = boardData.view_type;
+    if (vt === 'list' || vt === 'image-table' || vt === 'text') {
+      return vt;
+    }
+    return undefined;
+  })();
+
+  // 5. 통합 데이터 반환
   return {
     boardData: {
-      ...boardData,
-      slug: boardData.slug || ''
+      id: boardData.id,
+      name: boardData.name,
+      slug: boardData.slug || '',
+      description: boardData.description || null,
+      parent_id: boardData.parent_id || null,
+      team_id: boardData.team_id || null,
+      league_id: boardData.league_id || null,
+      view_type: viewType === 'text' ? undefined : viewType,
+      logo: boardData.logo || null,
+      display_order: boardData.display_order ?? null,
+      access_level: boardData.access_level || null,
+      views: boardData.views ?? null
     },
     breadcrumbs: boardResult.breadcrumbs || [],
     teamData: boardResult.teamData || null,
@@ -156,7 +180,7 @@ export async function getBoardPageAllData(
     isLoggedIn: boardResult.isLoggedIn || false,
     rootBoardId: boardResult.rootBoardId || '',
     rootBoardSlug: boardResult.rootBoardSlug || '',
-    viewType: boardData.view_type || null,
+    viewType,
     posts,
     pagination,
     popularPosts,
