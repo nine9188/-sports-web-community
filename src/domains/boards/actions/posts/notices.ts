@@ -315,6 +315,44 @@ export async function getGlobalNotices(): Promise<Post[]> {
 }
 
 /**
+ * 게시판 페이지에 필요한 모든 공지사항 데이터를 한번에 조회
+ * page.tsx에서 getNotices를 여러번 호출하던 것을 통합
+ *
+ * @param boardData - 게시판 정보 (id, slug 필요)
+ * @returns 공지사항 데이터 (allNotices, headerNotices, boardNotices)
+ */
+export async function getNoticesForBoard(boardData: { id: string; slug: string }): Promise<{
+  allNotices: Post[];
+  headerNotices: Post[];
+  boardNotices: Post[];
+}> {
+  const isNoticeBoard = boardData.slug === 'notice' || boardData.slug === 'notices';
+
+  if (isNoticeBoard) {
+    // 공지사항 게시판: allNotices(모든 공지) + headerNotices(해당 게시판 공지)
+    const [allNotices, headerNotices] = await Promise.all([
+      getNotices(),                    // 모든 공지
+      getNotices(boardData.id)         // 전체 공지 + 공지사항 게시판 공지
+    ]);
+
+    return {
+      allNotices,
+      headerNotices,
+      boardNotices: []
+    };
+  } else {
+    // 일반 게시판: 전체 공지 + 해당 게시판 공지
+    const boardNotices = await getNotices(boardData.id);
+
+    return {
+      allNotices: [],
+      headerNotices: [],
+      boardNotices
+    };
+  }
+}
+
+/**
  * 특정 게시판 공지만 조회
  * @param boardId - 게시판 ID
  * @returns 해당 게시판 공지 목록 (notice_boards 배열에 boardId가 포함된 공지)

@@ -33,9 +33,11 @@ export function AuthProvider({
   children: React.ReactNode;
   initialSession?: Session | null;
 }) {
-  const [user, setUser] = useState<User | null>(null);
+  // initialSession에서 user를 초기값으로 설정 (서버-클라이언트 동기화)
+  const [user, setUser] = useState<User | null>(initialSession?.user ?? null);
   const [session, setSession] = useState<Session | null>(initialSession);
-  const [isLoading, setIsLoading] = useState(true);
+  // initialSession이 있으면 이미 인증된 상태이므로 로딩 완료
+  const [isLoading, setIsLoading] = useState(!initialSession);
   const [supabase] = useState(() => {
     // 클라이언트에서만 생성 (SSR 안전)
     if (typeof window === 'undefined') return null;

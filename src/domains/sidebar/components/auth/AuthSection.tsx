@@ -1,8 +1,11 @@
-import { Suspense } from 'react';
 import Link from 'next/link';
 import { Button } from '@/shared/components/ui';
-import ServerUserProfile from './ServerUserProfile';
-import { getSidebarUserProfile } from '../../actions/userProfile';
+import ClientUserProfile from './ClientUserProfile';
+import { FullUserDataWithSession } from '@/shared/types/user';
+
+interface AuthSectionProps {
+  userData: FullUserDataWithSession | null;
+}
 
 // 로그인하지 않은 사용자를 위한 UI
 function GuestAuthSection() {
@@ -28,20 +31,24 @@ function GuestAuthSection() {
   );
 }
 
-// 서버 컴포넌트 - 사용자 인증 상태를 확인하고 적절한 UI 렌더링
-export default async function AuthSection() {
-  // 서버에서 사용자 프로필 데이터 확인
-  const profileData = await getSidebarUserProfile();
-  
+// props로 userData를 받아서 렌더링 (더 이상 서버에서 fetch하지 않음)
+export default function AuthSection({ userData }: AuthSectionProps) {
   // 로그인 상태에 따라 다른 UI 렌더링
-  return profileData ? (
-    <Suspense fallback={
-      <div className="text-center py-4">
-        <p className="text-sm text-muted-foreground">로딩 중...</p>
-      </div>
-    }>
-      <ServerUserProfile />
-    </Suspense>
+  return userData ? (
+    <ClientUserProfile profileData={{
+      id: userData.id,
+      nickname: userData.nickname,
+      email: userData.email,
+      level: userData.level,
+      exp: userData.exp,
+      points: userData.points,
+      icon_id: userData.icon_id,
+      icon_url: userData.icon_url,
+      icon_name: userData.icon_name,
+      postCount: userData.postCount,
+      commentCount: userData.commentCount,
+      is_admin: userData.is_admin
+    }} />
   ) : (
     <GuestAuthSection />
   );

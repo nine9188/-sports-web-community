@@ -13,11 +13,9 @@ import { UserProfileModalProvider } from '@/domains/user/context/UserProfileModa
 import AuthStateManager from '@/shared/components/AuthStateManager';
 import SuspensionPopup from '@/shared/components/SuspensionPopup';
 import AttendanceChecker from '@/shared/components/AttendanceChecker';
-import { HeaderUserData } from '@/domains/layout/types/header';
 import { Board } from '@/domains/layout/types/board';
 import { MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
-
-import { Session } from '@supabase/supabase-js';
+import { FullUserDataWithSession, HeaderUserData } from '@/shared/types/user';
 
 interface RootLayoutClientProps {
   children: React.ReactNode;
@@ -25,12 +23,9 @@ interface RootLayoutClientProps {
   rightSidebar: React.ReactNode;
   authSection: React.ReactNode;
   leagueStandingsComponent: React.ReactNode;
-  headerUserData?: HeaderUserData | null;
+  fullUserData?: FullUserDataWithSession | null;
   headerBoards?: Board[];
   headerIsAdmin?: boolean;
-  initialIconUrl?: string;
-  initialIconName?: string;
-  initialSession?: Session | null;
   liveScoreData?: MultiDayMatchesResult;
 }
 
@@ -40,14 +35,30 @@ export default function RootLayoutClient({
   rightSidebar,
   authSection,
   leagueStandingsComponent,
-  headerUserData,
+  fullUserData,
   headerBoards,
   headerIsAdmin,
-  initialIconUrl = '',
-  initialIconName = '',
-  initialSession = null,
   liveScoreData
 }: RootLayoutClientProps) {
+  // fullUserData에서 필요한 데이터 추출
+  const initialSession = fullUserData?.session ?? null;
+  const initialIconUrl = fullUserData?.icon_url ?? '';
+  const initialIconName = fullUserData?.icon_name ?? '';
+
+  // HeaderUserData 형태로 변환 (AuthStateManager에 전달)
+  const headerUserData: HeaderUserData | null = fullUserData ? {
+    id: fullUserData.id,
+    nickname: fullUserData.nickname,
+    email: fullUserData.email,
+    level: fullUserData.level,
+    exp: fullUserData.exp,
+    points: fullUserData.points,
+    iconInfo: fullUserData.icon_url ? {
+      iconUrl: fullUserData.icon_url,
+      iconName: fullUserData.icon_name || undefined
+    } : null,
+    isAdmin: fullUserData.is_admin
+  } : null;
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const pathname = usePathname();
@@ -184,6 +195,7 @@ export default function RootLayoutClient({
                   headerBoards={headerBoards}
                   headerIsAdmin={headerIsAdmin}
                   liveScoreData={liveScoreData}
+                  fullUserData={fullUserData}
                   isOpen={deferredIsOpen}
                   onClose={closeSidebar}
                   isProfileOpen={deferredIsProfileOpen}

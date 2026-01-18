@@ -9,7 +9,7 @@ import { Search, ArrowLeft } from 'lucide-react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import BoardNavigationClient from './BoardNavigationClient';
 import { ThemeToggle } from '@/shared/components/ThemeToggle';
-import { HeaderUserData } from '@/domains/layout/types/header';
+import { HeaderUserData } from '@/shared/types/user';
 import { useIcon } from '@/shared/context/IconContext';
 import UserIcon from '@/shared/components/UserIcon';
 import { Board } from '../types/board';

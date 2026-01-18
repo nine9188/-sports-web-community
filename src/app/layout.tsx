@@ -7,11 +7,12 @@ import AuthSection from '@/domains/sidebar/components/auth/AuthSection';
 import { fetchStandingsData } from '@/domains/sidebar/actions/football';
 import LeagueStandings from '@/domains/sidebar/components/league/LeagueStandings';
 import { RightSidebar } from '@/domains/sidebar/components';
-import { getHeaderUserData, getBoardsForNavigation } from '@/domains/layout/actions';
+import { getBoardsForNavigation } from '@/domains/layout/actions';
 import { fetchMultiDayMatches } from '@/domains/livescore/actions/footballApi';
 import { generatePageMetadata } from '@/shared/utils/metadataNew';
 import { getUIThemeSettings } from '@/domains/ui-theme/actions';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
+import { getFullUserData } from '@/shared/actions/user';
 import Script from 'next/script';
 
 // 동적 렌더링 설정
@@ -61,11 +62,6 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // 서버에서 초기 세션 가져오기 (SSR 지원)
-  
-  // AuthSection 컴포넌트 생성 - 이제 서버 컴포넌트이므로 props 불필요
-  const authSection = <AuthSection />;
-  
   // 서버 컴포넌트에서 BoardNavigation 생성
   const boardNav = <BoardNavigation />;
 
@@ -78,14 +74,17 @@ export default async function RootLayout({
   // 리그 순위 컴포넌트 생성
   const leagueStandingsComponent = <LeagueStandings initialLeague="premier" initialStandings={standingsData} />;
 
-  // 헤더 데이터 및 라이브스코어 데이터, UI 테마 설정, SEO 설정 가져오기
-  const [headerUserData, headerBoardsData, liveScoreData, uiTheme, seoSettings] = await Promise.all([
-    getHeaderUserData(),
+  // 통합 사용자 데이터, 게시판, 라이브스코어, UI 테마, SEO 설정 병렬 fetch
+  const [fullUserData, headerBoardsData, liveScoreData, uiTheme, seoSettings] = await Promise.all([
+    getFullUserData(),
     getBoardsForNavigation(),
     fetchMultiDayMatches().catch(() => undefined),
     getUIThemeSettings(),
     getSeoSettings()
   ]);
+
+  // AuthSection 컴포넌트 생성 - fullUserData를 props로 전달
+  const authSection = <AuthSection userData={fullUserData} />;
 
   // Tailwind 클래스를 CSS Variable 값으로 변환
   const borderRadiusMap: Record<string, string> = {
@@ -155,7 +154,7 @@ export default async function RootLayout({
           rightSidebar={<RightSidebar />}
           authSection={authSection}
           leagueStandingsComponent={leagueStandingsComponent}
-          headerUserData={headerUserData}
+          fullUserData={fullUserData}
           headerBoards={headerBoardsData.boardData}
           headerIsAdmin={headerBoardsData.isAdmin}
           liveScoreData={liveScoreData}

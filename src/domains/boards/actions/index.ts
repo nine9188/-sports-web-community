@@ -4,6 +4,8 @@
 // 각 액션 파일에서 함수들 재내보내기
 export * from './getBoards';
 export * from './getPosts';
+export * from './getBoardPageAllData';
+export * from './getHoverMenuData';
 
 // getPostDetails에서 getComments를 제외한 모든 함수 내보내기
 export { 

@@ -3,12 +3,12 @@
 import React, { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/shared/context/AuthContext';
-import Header from '@/domains/layout/components/Header';
+import HeaderClient from '@/domains/layout/components/HeaderClient';
 import Footer from '@/shared/components/Footer';
 import Sidebar from '@/domains/sidebar/components/Sidebar';
 import ProfileSidebar from '@/domains/sidebar/components/ProfileSidebar';
 import { UniversalChatbot } from '@/domains/chatbot/components/UniversalChatbot';
-import { HeaderUserData } from '@/domains/layout/types/header';
+import { HeaderUserData, FullUserDataWithSession } from '@/shared/types/user';
 import { Board } from '@/domains/layout/types/board';
 import { MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
 
@@ -23,6 +23,7 @@ const AuthStateManager = React.memo(function AuthStateManager({
   headerBoards,
   headerIsAdmin,
   liveScoreData,
+  fullUserData,
   isOpen,
   onClose,
   isProfileOpen,
@@ -38,6 +39,7 @@ const AuthStateManager = React.memo(function AuthStateManager({
   headerBoards?: Board[],
   headerIsAdmin?: boolean,
   liveScoreData?: MultiDayMatchesResult,
+  fullUserData?: FullUserDataWithSession | null,
   isOpen: boolean,
   onClose: () => void,
   isProfileOpen: boolean,
@@ -58,10 +60,11 @@ const AuthStateManager = React.memo(function AuthStateManager({
   
   return (
     <div className="flex flex-col min-h-screen w-full">
-      <Header
+      <HeaderClient
         onProfileClick={onProfileClick}
+        isSidebarOpen={false}
         initialUserData={headerUserData}
-        boards={headerBoards}
+        boards={headerBoards || []}
         isAdmin={headerIsAdmin}
         liveScoreData={liveScoreData}
       />
@@ -77,6 +80,7 @@ const AuthStateManager = React.memo(function AuthStateManager({
         <ProfileSidebar
           isOpen={isProfileOpen}
           onClose={onProfileClose}
+          userData={fullUserData}
         />
         <main className="flex-1 mt-4 mb-4 md:px-4 w-full min-w-0 box-border bg-transparent">
           {children}

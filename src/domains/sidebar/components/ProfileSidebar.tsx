@@ -6,126 +6,51 @@ import { useIcon } from '@/shared/context/IconContext';
 import UserProfile from './auth/UserProfile';
 import AttendanceCalendar from '@/shared/components/AttendanceCalendar';
 import Link from 'next/link';
-import { toast } from 'react-toastify';
-import { useCallback, useState, useEffect } from 'react';
-import { getSupabaseBrowser } from '@/shared/lib/supabase';
+import { useCallback, useMemo } from 'react';
+import { useLogout } from '@/shared/hooks/useLogout';
+import { FullUserDataWithSession } from '@/shared/types/user';
 
 interface ProfileSidebarProps {
   isOpen: boolean;
   onClose: () => void;
-}
-
-interface ProfileData {
-  id?: string;
-  username?: string | null;
-  email?: string | null;
-  nickname?: string | null;
-  full_name?: string | null;
-  avatar_url?: string | null;
-  level?: number | null;
-  exp?: number | null;
-  points?: number | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-  postCount?: number;
-  commentCount?: number;
-  icon_id?: number | null;
-  icon_url?: string | null;
-  is_admin?: boolean | null;
+  userData?: FullUserDataWithSession | null;
 }
 
 export default function ProfileSidebar({
   isOpen,
   onClose,
+  userData,
 }: ProfileSidebarProps) {
-  const { user, logoutUser } = useAuth();
-  const { iconUrl, updateUserIconState } = useIcon();
-  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const { user } = useAuth();
+  const { iconUrl } = useIcon();
+  const { logout } = useLogout();
 
-  // user가 있으면 즉시 기본 프로필 데이터 설정 (IconContext 활용)
-  useEffect(() => {
-    if (user) {
-      const userMetadata = user.user_metadata || {};
-      setProfileData({
-        id: user.id,
-        username: userMetadata.username || null,
-        email: user.email || null,
-        nickname: userMetadata.nickname || null,
-        full_name: userMetadata.full_name || null,
-        avatar_url: userMetadata.avatar_url || null,
-        level: userMetadata.level || null,
-        exp: userMetadata.exp || null,
-        points: userMetadata.points || null,
-        icon_url: iconUrl || null,
-        is_admin: userMetadata.is_admin || false,
-        postCount: 0,
-        commentCount: 0,
-      });
-    } else {
-      setProfileData(null);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, iconUrl]);
+  // 서버에서 전달받은 userData를 UserProfile 형식으로 변환 (useMemo로 최적화)
+  const profileData = useMemo(() => {
+    if (!userData) return null;
 
-  // 프로필 데이터 추가 로드 (게시글/댓글 수) - 백그라운드에서 실행
-  useEffect(() => {
-    const fetchAdditionalData = async () => {
-      if (!user || !isOpen) return;
-
-      try {
-        const supabase = getSupabaseBrowser();
-
-        // 게시글 수와 댓글 수만 조회 (병렬 처리)
-        const [{ count: postCount }, { count: commentCount }] = await Promise.all([
-          supabase
-            .from('posts')
-            .select('id', { count: 'exact', head: true })
-            .eq('user_id', user.id),
-          supabase
-            .from('comments')
-            .select('id', { count: 'exact', head: true })
-            .eq('user_id', user.id)
-        ]);
-
-        // 기존 profileData에 카운트만 업데이트
-        setProfileData(prev => prev ? {
-          ...prev,
-          postCount: postCount || 0,
-          commentCount: commentCount || 0,
-        } : null);
-      } catch (error) {
-        console.error('게시글/댓글 수 가져오기 오류:', error);
-      }
+    return {
+      id: userData.id,
+      username: userData.username || null,
+      email: userData.email || null,
+      nickname: userData.nickname || null,
+      level: userData.level || null,
+      exp: userData.exp || null,
+      points: userData.points || null,
+      // IconContext에서 최신 아이콘 URL 사용 (실시간 업데이트 반영)
+      icon_url: iconUrl || userData.icon_url || null,
+      is_admin: userData.is_admin || false,
+      // 서버에서 이미 가져온 통계 데이터 사용 (클라이언트 fetch 불필요)
+      postCount: userData.postCount || 0,
+      commentCount: userData.commentCount || 0,
     };
-
-    if (isOpen && user) {
-      fetchAdditionalData();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, isOpen]);
+  }, [userData, iconUrl]);
 
   // 로그아웃 처리
   const handleLogout = useCallback(async () => {
-    try {
-      // 사이드바 닫기
-      onClose();
-
-      // AuthContext의 logoutUser 함수 사용
-      await logoutUser();
-
-      // 아이콘 상태 초기화
-      updateUserIconState('', '');
-
-      // 성공 토스트
-      toast.success('로그아웃되었습니다.');
-
-      // 확실한 페이지 새로고침을 위해 window.location 사용
-      window.location.href = '/';
-    } catch (error) {
-      console.error('로그아웃 오류:', error);
-      toast.error('로그아웃 중 오류가 발생했습니다.');
-    }
-  }, [logoutUser, updateUserIconState, onClose]);
+    onClose();
+    await logout();
+  }, [logout, onClose]);
 
   // 메뉴 아이템 클릭 시 사이드바 닫기
   const handleMenuClick = () => {

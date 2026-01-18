@@ -11,7 +11,7 @@ export { deletePost } from './delete';
 export { likePost, dislikePost, getUserPostAction } from './likes';
 
 // 공지사항 조회 관련
-export { getNotices, getGlobalNotices, getBoardNotices } from './notices';
+export { getNotices, getGlobalNotices, getBoardNotices, getNoticesForBoard } from './notices';
 
 // 공지사항 설정 관련 (관리자)
 export { setPostAsNotice, removeNotice, updateNoticeOrder, updateNoticeType } from './setNotice';
