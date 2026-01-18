@@ -4,7 +4,7 @@ import { Suspense, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { PostSearchResults, CommentSearchResults, TeamSearchResults } from '@/domains/search'
 import type { PostSearchResult, CommentSearchResult, TeamSearchResult } from '@/domains/search/types'
-import Tabs, { TabItem } from '@/shared/ui/tabs'
+import { TabList, type TabItem } from '@/shared/components/ui'
 import Pagination from './Pagination'
 import Spinner from '@/shared/components/Spinner';
 
@@ -172,7 +172,7 @@ export default function SearchResultsContainer({
     <div className={`space-y-4 ${className}`}>
       {/* 검색어가 있을 때 항상 네비게이션 탭 표시 */}
       {query && (
-        <Tabs
+        <TabList
           tabs={searchTabs}
           activeTab={currentTabUI}
           onTabChange={handleTabClick}

@@ -19,7 +19,7 @@ import { detectStoreFromUrl, isHotdealBoard, formatPrice } from '../../utils/hot
 
 // MatchCard 확장 로딩 함수
 const loadMatchCardExtension = async () => {
-  const { MatchCardExtension } = await import('@/shared/ui/tiptap/MatchCardExtension');
+  const { MatchCardExtension } = await import('@/shared/components/editor/tiptap/MatchCardExtension');
   return MatchCardExtension;
 };
 
@@ -132,13 +132,13 @@ export default function PostEditForm({
           TeamCardExt,
           PlayerCardExt
         ] = await Promise.all([
-          import('@/shared/ui/tiptap/YoutubeExtension').then(mod => mod.YoutubeExtension),
-          import('@/shared/ui/tiptap/VideoExtension').then(mod => mod.Video),
+          import('@/shared/components/editor/tiptap/YoutubeExtension').then(mod => mod.YoutubeExtension),
+          import('@/shared/components/editor/tiptap/VideoExtension').then(mod => mod.Video),
           loadMatchCardExtension(),
-          import('@/shared/ui/tiptap/extensions/social-embeds').then(mod => mod.SocialEmbedExtension),
-          import('@/shared/ui/tiptap/extensions/social-embeds').then(mod => mod.AutoSocialEmbedExtension),
-          import('@/shared/ui/tiptap/TeamCardExtension').then(mod => mod.TeamCardExtension),
-          import('@/shared/ui/tiptap/PlayerCardExtension').then(mod => mod.PlayerCardExtension)
+          import('@/shared/components/editor/tiptap/extensions/social-embeds').then(mod => mod.SocialEmbedExtension),
+          import('@/shared/components/editor/tiptap/extensions/social-embeds').then(mod => mod.AutoSocialEmbedExtension),
+          import('@/shared/components/editor/tiptap/TeamCardExtension').then(mod => mod.TeamCardExtension),
+          import('@/shared/components/editor/tiptap/PlayerCardExtension').then(mod => mod.PlayerCardExtension)
         ]);
 
         // 기본 확장에 추가 확장 병합

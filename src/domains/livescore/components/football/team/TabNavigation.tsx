@@ -2,7 +2,7 @@
 
 import { useCallback, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Tabs, { TabItem } from '@/shared/ui/tabs';
+import { TabList, type TabItem } from '@/shared/components/ui';
 
 interface TabNavigationProps {
   teamId: string;
@@ -50,7 +50,7 @@ export default function TabNavigation({ teamId, activeTab = 'overview' }: TabNav
   }, [router, teamId, activeTab, isChangingTab]);
   
   return (
-    <Tabs
+    <TabList
       tabs={tabs}
       activeTab={activeTab}
       onTabChange={handleTabChange}

@@ -21,7 +21,7 @@ declare global {
 }
 
 import { toast } from 'react-toastify';
-import Tabs, { TabItem } from '@/shared/ui/tabs';
+import { TabList, type TabItem } from '@/shared/components/ui';
 import { RefreshCw, Check, X, Target, Eye } from 'lucide-react';
 import { formatDate } from '@/shared/utils/date';
 import Spinner from '@/shared/components/Spinner';
@@ -380,7 +380,7 @@ export default function PredictionAdminPage() {
         </p>
       </div>
       
-      <Tabs
+      <TabList
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={(tabId) => setActiveTab(tabId as 'matches' | 'automation')}

@@ -330,11 +330,18 @@ function ActionButton({ action, active, count, onClick, disabled }: {
 }) {
   const label = action === 'like' ? '좋아요' : '싫어요';
 
+  const getColorClass = () => {
+    if (active) {
+      return action === 'like'
+        ? 'text-blue-500 dark:text-blue-400 font-medium'
+        : 'text-red-500 dark:text-red-400 font-medium';
+    }
+    return 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300';
+  };
+
   return (
     <button
-      className={`flex items-center text-xs space-x-1 ${
-        active ? 'text-gray-900 dark:text-[#F0F0F0] font-medium' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-      } transition-colors disabled:opacity-50`}
+      className={`flex items-center text-xs space-x-1 ${getColorClass()} transition-colors disabled:opacity-50`}
       onClick={onClick}
       disabled={disabled}
       aria-label={label}

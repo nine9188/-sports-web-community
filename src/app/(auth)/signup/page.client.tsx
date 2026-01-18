@@ -1296,7 +1296,7 @@ export default function SignupPage() {
           <div className="mt-8 text-center">
             <p className="text-gray-600 dark:text-gray-400">
               이미 계정이 있으신가요?{' '}
-              <Link href="/signin" className="text-slate-600 dark:text-gray-300 hover:text-slate-800 dark:hover:text-[#F0F0F0] hover:underline">
+              <Link href="/signin" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">
                 로그인
               </Link>
             </p>
@@ -1305,8 +1305,8 @@ export default function SignupPage() {
       </div>
 
       <div className="mt-8 flex space-x-4 text-sm text-gray-500 dark:text-gray-400">
-        <Link href="/terms" className="hover:text-gray-700 dark:hover:text-gray-300">이용약관</Link>
-        <Link href="/privacy" className="hover:text-gray-700 dark:hover:text-gray-300">개인정보처리방침</Link>
+        <Link href="/terms" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">이용약관</Link>
+        <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">개인정보처리방침</Link>
       </div>
     </div>
   );

@@ -8,7 +8,7 @@ import {
   Undo, Redo, Youtube as YoutubeIcon, Video as VideoIcon, Share2, Users
 } from 'lucide-react';
 import type { MatchData } from '@/domains/livescore/actions/footballApi';
-import type { SocialPlatform } from '@/shared/ui/tiptap/extensions/social-embeds';
+import type { SocialPlatform } from '@/shared/components/editor/tiptap/extensions/social-embeds';
 import type { TeamMapping } from '@/domains/livescore/constants/teams';
 import type { Player } from '@/domains/livescore/actions/teams/squad';
 import Spinner from '@/shared/components/Spinner';

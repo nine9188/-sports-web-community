@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import Script from 'next/script';
 import { getPostPageData } from '@/domains/boards/actions';
 import PostDetailLayout from '@/domains/boards/components/layout/PostDetailLayout';
-import ErrorMessage from '@/shared/ui/error-message';
+import ErrorMessage from '@/shared/components/ui/error-message';
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';

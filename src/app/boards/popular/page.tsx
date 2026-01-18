@@ -2,7 +2,7 @@ import { getAllPopularPosts } from '@/domains/boards/actions/getAllPopularPosts'
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import PopularPageClient from './PopularPageClient';
 import { convertApiPostsToLayoutPosts } from '@/domains/boards/utils/post/postUtils';
-import ErrorMessage from '@/shared/ui/error-message';
+import ErrorMessage from '@/shared/components/ui/error-message';
 import { generatePageMetadataWithDefaults } from '@/shared/utils/metadataNew';
 
 // 동적 렌더링 강제 설정

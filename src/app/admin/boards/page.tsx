@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Button } from '@/shared/ui/button';
+import { Button } from '@/shared/components/ui';
 import { toast } from 'react-toastify';
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { ArrowUp, ArrowDown, ChevronRight, ChevronsRight } from 'lucide-react';

@@ -10,7 +10,7 @@ declare global {
 }
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { toast } from 'react-toastify';
-import Tabs, { TabItem } from '@/shared/ui/tabs';
+import { TabList, type TabItem } from '@/shared/components/ui';
 import { RefreshCw, Plus, Trash2, Check, X, ExternalLink } from 'lucide-react';
 import { formatDate } from '@/shared/utils/date';
 import Spinner from '@/shared/components/Spinner';
@@ -379,7 +379,7 @@ export default function RSSAdminPage() {
     <div className="container p-6">
       <h1 className="text-2xl font-bold mb-6">RSS 피드 관리</h1>
       
-      <Tabs
+      <TabList
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={(tabId) => setActiveTab(tabId as 'feeds' | 'add' | 'automation')}

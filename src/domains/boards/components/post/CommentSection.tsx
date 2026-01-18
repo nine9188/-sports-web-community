@@ -325,7 +325,7 @@ export default function CommentSection({
             <button
               type="button"
               onClick={cancelReply}
-              className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+              className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors"
             >
               취소
             </button>

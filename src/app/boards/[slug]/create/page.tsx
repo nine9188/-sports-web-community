@@ -2,7 +2,7 @@ import React from 'react';
 import PostEditForm from '@/domains/boards/components/post/PostEditForm';
 import { getCreatePostData } from '@/domains/boards/actions';
 import { Metadata } from 'next';
-import ErrorMessage from '@/shared/ui/error-message';
+import ErrorMessage from '@/shared/components/ui/error-message';
 import { cache } from 'react';
 
 // 캐시된 데이터 가져오기 함수 - 중복 호출 방지

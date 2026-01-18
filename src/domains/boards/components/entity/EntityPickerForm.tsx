@@ -366,7 +366,7 @@ export function EntityPickerForm({
                   <button
                     type="button"
                     onClick={() => selectedTeam && loadPlayers(selectedTeam.id)}
-                    className="mt-3 text-xs text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+                    className="mt-3 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors"
                   >
                     다시 시도
                   </button>

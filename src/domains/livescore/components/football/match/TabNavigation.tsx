@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useMatchData, TabType } from './context/MatchDataContext';
-import Tabs, { TabItem } from '@/shared/ui/tabs';
+import { TabList, type TabItem } from '@/shared/components/ui';
 
 interface TabNavigationProps {
   activeTab?: string | null;
@@ -49,7 +49,7 @@ export default function TabNavigation({ activeTab }: TabNavigationProps) {
   };
 
   return (
-    <Tabs
+    <TabList
       tabs={tabs}
       activeTab={currentTab}
       onTabChange={handleTabChange}

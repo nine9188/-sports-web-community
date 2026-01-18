@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { getBoardPageAllData } from '@/domains/boards/actions/getBoardPageAllData';
 import BoardDetailLayout from '@/domains/boards/components/layout/BoardDetailLayout';
-import ErrorMessage from '@/shared/ui/error-message';
+import ErrorMessage from '@/shared/components/ui/error-message';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
 

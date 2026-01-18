@@ -326,11 +326,11 @@ function LoginContent() {
 
         {/* 아이디/비밀번호 찾기 */}
         <div className="mt-4 text-center text-gray-600 dark:text-gray-400">
-          <Link href="/help/account-recovery?tab=id" className="hover:text-slate-800 dark:hover:text-[#F0F0F0] hover:underline text-sm">
+          <Link href="/help/account-recovery?tab=id" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline text-sm transition-colors">
             아이디 찾기
           </Link>
           <span className="mx-2">ㅣ</span>
-          <Link href="/help/account-recovery?tab=password" className="hover:text-slate-800 dark:hover:text-[#F0F0F0] hover:underline text-sm">
+          <Link href="/help/account-recovery?tab=password" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline text-sm transition-colors">
             비밀번호 찾기
           </Link>
         </div>
@@ -359,7 +359,7 @@ function LoginContent() {
         <div className="mt-8 text-center">
           <p className="text-gray-600 dark:text-gray-400">
             아직 4590 Football 회원이 아니신가요?{' '}
-            <Link href="/signup" className="text-slate-600 dark:text-gray-300 hover:text-slate-800 dark:hover:text-[#F0F0F0] hover:underline font-medium">
+            <Link href="/signup" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline font-medium transition-colors">
               회원가입
             </Link>
           </p>
@@ -389,8 +389,8 @@ export default function SignInPage() {
         <LoginContent />
       </Suspense>
       <div className="mt-8 flex space-x-4 text-sm text-gray-500 dark:text-gray-400">
-        <Link href="/terms" className="hover:text-gray-700 dark:hover:text-gray-300">이용약관</Link>
-        <Link href="/privacy" className="hover:text-gray-700 dark:hover:text-gray-300">개인정보처리방침</Link>
+        <Link href="/terms" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">이용약관</Link>
+        <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">개인정보처리방침</Link>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { detectPlatform, type SocialPlatform } from '@/shared/ui/tiptap/extensions/social-embeds';
+import { detectPlatform, type SocialPlatform } from '@/shared/components/editor/tiptap/extensions/social-embeds';
 
 interface SocialEmbedFormProps {
   onCancel: () => void;

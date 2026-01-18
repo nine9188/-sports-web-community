@@ -3,7 +3,7 @@
 import { useCallback, useState, useEffect } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { usePlayerData } from './context/PlayerDataContext';
-import Tabs, { TabItem } from '@/shared/ui/tabs';
+import { TabList, type TabItem } from '@/shared/components/ui';
 
 interface PlayerTabNavigationProps {
   activeTab?: string;
@@ -72,7 +72,7 @@ export default function PlayerTabNavigation({ activeTab = 'stats' }: PlayerTabNa
   }, [router, pathname, searchParams, currentTab, setCurrentTab, isChangingTab]);
   
   return (
-    <Tabs
+    <TabList
       tabs={tabs}
       activeTab={currentTabUI}
       onTabChange={handleTabChange}

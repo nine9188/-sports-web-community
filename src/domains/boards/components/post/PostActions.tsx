@@ -116,8 +116,8 @@ export default function PostActions({
         disabled={isLiking || isDisliking}
         className={`flex items-center gap-1 px-4 py-2 rounded-full text-sm font-medium transition-colors shadow-sm ${
           userAction === 'like'
-            ? 'bg-blue-500 text-white hover:bg-blue-600'
-            : 'bg-gray-50 border border-gray-200 text-gray-700 hover:bg-blue-50 hover:text-blue-500 hover:border-blue-200'
+            ? 'bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-700'
+            : 'bg-gray-50 dark:bg-[#262626] border border-black/7 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
         }`}
       >
         <ThumbsUp size={16} className={userAction === 'like' ? 'text-white' : ''} />
@@ -129,8 +129,8 @@ export default function PostActions({
         disabled={isLiking || isDisliking}
         className={`flex items-center gap-1 px-4 py-2 rounded-full text-sm font-medium transition-colors shadow-sm ${
           userAction === 'dislike'
-            ? 'bg-red-500 text-white hover:bg-red-600'
-            : 'bg-gray-50 border border-gray-200 text-gray-700 hover:bg-red-50 hover:text-red-500 hover:border-red-200'
+            ? 'bg-red-500 dark:bg-red-600 text-white hover:bg-red-600 dark:hover:bg-red-700'
+            : 'bg-gray-50 dark:bg-[#262626] border border-black/7 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
         }`}
       >
         <ThumbsDown size={16} className={userAction === 'dislike' ? 'text-white' : ''} />

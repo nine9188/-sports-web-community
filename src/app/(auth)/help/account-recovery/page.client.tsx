@@ -510,7 +510,7 @@ function AccountRecoveryContent() {
         <div className="mt-8 text-center">
           <p className="text-gray-600 dark:text-gray-400">
             계정이 기억나셨나요?{' '}
-            <Link href="/signin" className="text-slate-600 dark:text-gray-300 hover:text-slate-800 dark:hover:text-[#F0F0F0] hover:underline font-medium">
+            <Link href="/signin" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline font-medium transition-colors">
               로그인
             </Link>
           </p>
@@ -518,8 +518,8 @@ function AccountRecoveryContent() {
 
         {/* 약관/개인정보 링크 */}
         <div className="mt-8 flex justify-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
-          <Link href="/terms" className="hover:text-gray-700 dark:hover:text-gray-300">이용약관</Link>
-          <Link href="/privacy" className="hover:text-gray-700 dark:hover:text-gray-300">개인정보처리방침</Link>
+          <Link href="/terms" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">이용약관</Link>
+          <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">개인정보처리방침</Link>
         </div>
       </div>
     </div>

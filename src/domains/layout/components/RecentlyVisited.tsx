@@ -64,7 +64,7 @@ const RecentlyVisited = React.memo(function RecentlyVisited() {
                     >
                       <Link
                         href={getHref(board.slug)}
-                        className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                        className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors"
                       >
                         {board.name}
                       </Link>
@@ -112,7 +112,7 @@ const RecentlyVisited = React.memo(function RecentlyVisited() {
                     >
                       <Link
                         href={getHref(board.slug)}
-                        className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors whitespace-nowrap"
+                        className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors whitespace-nowrap"
                       >
                         {board.name}
                       </Link>

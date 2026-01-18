@@ -2,7 +2,7 @@
  * PostList 메인 컴포넌트
  *
  * - 모바일/데스크톱 감지 후 적절한 컴포넌트 렌더링
- * - 공통 wrapper (header, footer, ScrollArea) 관리
+ * - 공통 wrapper (header, footer) 관리
  *
  * 이 파일은 100줄 이하로 유지하여 가독성 확보
  */
@@ -10,7 +10,6 @@
 'use client';
 
 import React, { useDeferredValue } from 'react';
-import { ScrollArea } from '@/shared/ui/scroll-area';
 import { PostListProps } from './types';
 import { useIsMobile } from './hooks';
 import { PostListSkeleton } from './components/shared/PostListSkeleton';
@@ -62,8 +61,8 @@ export default function PostList({
       )}
 
       {/* Main Content */}
-      <ScrollArea
-        className={`h-full w-full overflow-x-hidden ${isMobile && maxHeight?.startsWith('sm:') ? '' : ''}`}
+      <div
+        className="h-full w-full overflow-y-auto overflow-x-hidden"
         style={{
           maxHeight: (() => {
             if (!maxHeight) return 'none';
@@ -104,7 +103,7 @@ export default function PostList({
             maxHeight={maxHeight}
           />
         )}
-      </ScrollArea>
+      </div>
 
       {/* Footer */}
       {footerContent && <div>{footerContent}</div>}

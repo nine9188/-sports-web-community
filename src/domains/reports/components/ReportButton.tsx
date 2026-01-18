@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { Flag, AlertTriangle } from 'lucide-react';
-import { Button } from '@/shared/ui/button';
 import {
+  Button,
   Dialog,
   DialogContent,
   DialogHeader,
@@ -11,16 +11,14 @@ import {
   DialogFooter,
   DialogTitle,
   DialogTrigger,
-  DialogCloseButton
-} from '@/shared/ui/dialog';
-import {
-  Select,
+  DialogCloseButton,
+  SelectRadix as Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from '@/shared/ui/select';
-import { Textarea } from '@/shared/ui/textarea';
+  SelectValue,
+  Textarea
+} from '@/shared/components/ui';
 import { toast } from 'react-toastify';
 import { createReport } from '../actions';
 import { REPORT_REASONS, ReportTargetType, ReportReason } from '../types';

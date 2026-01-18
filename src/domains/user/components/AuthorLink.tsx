@@ -5,24 +5,22 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { User, Flag, AlertTriangle } from 'lucide-react';
 import UserIcon from '@/shared/components/UserIcon';
-import { Button } from '@/shared/ui/button';
 import {
+  Button,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogBody,
   DialogFooter,
   DialogTitle,
-  DialogCloseButton
-} from '@/shared/ui/dialog';
-import {
-  Select,
+  DialogCloseButton,
+  SelectRadix as Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from '@/shared/ui/select';
-import { Textarea } from '@/shared/ui/textarea';
+  SelectValue,
+  Textarea
+} from '@/shared/components/ui';
 import { toast } from 'react-toastify';
 import { createReport } from '@/domains/reports/actions';
 import { REPORT_REASONS, ReportReason } from '@/domains/reports/types';

@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import Tabs, { TabItem } from '@/shared/ui/tabs';
+import { TabList, type TabItem } from '@/shared/components/ui';
 
 /**
  * 설정 페이지 탭 네비게이션 컴포넌트
@@ -40,7 +40,7 @@ export default function SettingsTabs() {
   }, [pathname, router, isChangingTab]);
 
   return (
-    <Tabs
+    <TabList
       tabs={tabs}
       activeTab={pathname}
       onTabChange={handleTabChange}

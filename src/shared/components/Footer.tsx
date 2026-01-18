@@ -47,10 +47,10 @@ export default function Footer() {
 
           {/* 링크 */}
           <div className="flex gap-6 text-sm text-gray-700 dark:text-gray-300 items-center">
-            <Link href="/terms" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors">
+            <Link href="/terms" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">
               이용약관
             </Link>
-            <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors">
+            <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">
               개인정보처리방침
             </Link>
             <button

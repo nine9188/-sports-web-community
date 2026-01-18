@@ -2,7 +2,7 @@ import React from 'react';
 import { notFound, redirect } from 'next/navigation';
 import { getPostEditData } from '@/domains/boards/actions';
 import PostEditForm from '@/domains/boards/components/post/PostEditForm';
-import ErrorMessage from '@/shared/ui/error-message';
+import ErrorMessage from '@/shared/components/ui/error-message';
 
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';

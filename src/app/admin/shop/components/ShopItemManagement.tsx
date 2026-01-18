@@ -2,8 +2,7 @@
 
 import { useState, useRef, useMemo, Fragment } from 'react';
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
-import { Card } from '@/shared/ui/card';
-import Tabs, { TabItem } from '@/shared/ui/tabs';
+import { Card, TabList, type TabItem } from '@/shared/components/ui';
 import { Button } from '@/shared/components/ui/button';
 import Image from 'next/image';
 import { Trash2 } from 'lucide-react';
@@ -552,7 +551,7 @@ export default function ShopItemManagement({ teams, leagues, storageImages, shop
         <h2 className="text-xl font-semibold mb-4">등록된 아이콘 목록</h2>
         
         {/* 카테고리 탭 */}
-        <Tabs
+        <TabList
           tabs={categoryTabs}
           activeTab={activeCategoryTab}
           onTabChange={handleCategoryChange}

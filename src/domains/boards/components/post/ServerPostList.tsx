@@ -2,7 +2,6 @@
 import { fetchPosts } from '@/domains/boards/actions';
 import PostList from './PostList';
 import { Suspense } from 'react';
-import { ScrollArea } from '@/shared/ui/scroll-area';
 
 // ServerPostList에 필요한 props 정의
 interface ServerPostListProps {
@@ -25,14 +24,14 @@ interface ServerPostListProps {
 // 인라인 로딩 컴포넌트
 function PostListSkeleton() {
   return (
-    <div className="mb-4 bg-white rounded-lg border overflow-hidden">
-      <ScrollArea className="max-h-[500px]">
+    <div className="mb-4 bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
+      <div className="max-h-[500px] overflow-y-auto">
         <div className="p-4 space-y-2">
           {Array(10).fill(0).map((_, i) => (
-            <div key={i} className="h-5 bg-gray-100 rounded animate-pulse"></div>
+            <div key={i} className="h-5 bg-[#EAEAEA] dark:bg-[#333333] rounded animate-pulse"></div>
           ))}
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 }

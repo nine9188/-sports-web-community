@@ -5,41 +5,13 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
-import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
+import { Container, ContainerHeader, ContainerTitle, ContainerContent, Pagination } from '@/shared/components/ui';
 import { useRouter } from 'next/navigation';
 import { useState, useMemo } from 'react';
 import { FixtureData } from '@/domains/livescore/types/player';
 import { EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
-
-// 페이지네이션 버튼 컴포넌트
-const PaginationButton = ({ 
-  children, 
-  onClick, 
-  active = false,
-  disabled = false
-}: { 
-  children: React.ReactNode; 
-  onClick: () => void; 
-  active?: boolean;
-  disabled?: boolean;
-}) => {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={`h-8 w-8 p-0 rounded-md flex items-center justify-center text-sm font-medium transition-colors
-        ${active 
-          ? "bg-blue-600 text-white hover:bg-blue-700" 
-          : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"}
-        ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
-      `}
-    >
-      {children}
-    </button>
-  );
-};
 
 // Props 타입 정의
 interface PlayerFixturesProps {
@@ -217,76 +189,6 @@ export default function PlayerFixtures({
       totalPages: pages
     };
   }, [fixturesData.data, currentPage, itemsPerPage]);
-
-  // 페이지네이션 구성 함수
-  const renderPagination = () => {
-    if (totalPages <= 1) return null;
-
-    const generatePageNumbers = () => {
-      const pageNumbers = [];
-      const maxPagesToShow = 5;
-      
-      let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
-      const endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
-      
-      if (endPage - startPage + 1 < maxPagesToShow) {
-        startPage = Math.max(1, endPage - maxPagesToShow + 1);
-      }
-      
-      for (let i = startPage; i <= endPage; i++) {
-        pageNumbers.push(i);
-      }
-      
-      return pageNumbers;
-    };
-
-    return (
-      <div className="flex justify-center items-center gap-1 my-4">
-        {/* 처음 페이지 버튼 */}
-        <PaginationButton 
-          onClick={() => setCurrentPage(1)} 
-          disabled={currentPage === 1}
-        >
-          &lt;&lt;
-        </PaginationButton>
-        
-        {/* 이전 페이지 버튼 */}
-        <PaginationButton 
-          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} 
-          disabled={currentPage === 1}
-        >
-          &lt;
-        </PaginationButton>
-        
-        {/* 페이지 번호 */}
-        {generatePageNumbers().map(page => (
-          <PaginationButton 
-            key={page} 
-            onClick={() => setCurrentPage(page)} 
-            active={currentPage === page}
-          >
-            {page}
-          </PaginationButton>
-        ))}
-        
-        {/* 다음 페이지 버튼 */}
-        <PaginationButton 
-          onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} 
-          disabled={currentPage === totalPages}
-        >
-          &gt;
-        </PaginationButton>
-        
-        {/* 마지막 페이지 버튼 */}
-        <PaginationButton 
-          onClick={() => setCurrentPage(totalPages)} 
-          disabled={currentPage === totalPages}
-        >
-          &gt;&gt;
-        </PaginationButton>
-      </div>
-    );
-  };
 
   // 데이터가 없을 때 표시
   if (!fixturesData.data || !Array.isArray(fixturesData.data) || fixturesData.data.length === 0) {
@@ -515,7 +417,13 @@ export default function PlayerFixtures({
       ))}
       
       {/* 페이지네이션 */}
-      {renderPagination()}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        mode="button"
+        maxButtons={5}
+      />
     </div>
   );
 } 

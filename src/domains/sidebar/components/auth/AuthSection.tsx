@@ -21,11 +21,11 @@ function GuestAuthSection() {
         </Link>
       </Button>
       <div className="flex justify-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-2">
-        <Link href="/help/account-recovery?tab=id" className="hover:underline dark:hover:text-blue-400">아이디 찾기</Link>
+        <Link href="/help/account-recovery?tab=id" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">아이디 찾기</Link>
         <span className="text-gray-300 dark:text-gray-600">|</span>
-        <Link href="/help/account-recovery?tab=password" className="hover:underline dark:hover:text-blue-400">비밀번호 찾기</Link>
+        <Link href="/help/account-recovery?tab=password" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">비밀번호 찾기</Link>
         <span className="text-gray-300 dark:text-gray-600">|</span>
-        <Link href="/signup" className="hover:underline dark:hover:text-blue-400">회원가입</Link>
+        <Link href="/signup" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">회원가입</Link>
       </div>
     </>
   );

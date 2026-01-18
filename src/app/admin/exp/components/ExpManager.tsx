@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { toast } from 'react-toastify';
-import { Button } from '@/shared/ui/button';
+import { Button } from '@/shared/components/ui';
 import { Award } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { 

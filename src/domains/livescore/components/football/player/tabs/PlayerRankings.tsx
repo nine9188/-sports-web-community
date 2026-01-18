@@ -4,8 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { FaMedal } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
-import { Container, ContainerContent } from '@/shared/components/ui';
-import Tabs from '@/shared/ui/tabs';
+import { Container, ContainerContent, TabList } from '@/shared/components/ui';
 import { EmptyState } from '@/domains/livescore/components/common';
 import { RankingsData, PlayerRanking } from '@/domains/livescore/types/player';
 import { getTeamById } from '@/domains/livescore/constants/teams';
@@ -77,7 +76,7 @@ export default function PlayerRankings({
   return (
     <div className="space-y-4">
       {/* 랭킹 타입 선택 */}
-      <Tabs
+      <TabList
         tabs={rankingTypes}
         activeTab={rankingType}
         onTabChange={setRankingType}
