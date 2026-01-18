@@ -1148,3 +1148,56 @@ useEffect(() => { /* 클라이언트 DB fetch */ }, [user?.id, isOpen]);
 - ✅ `npm run build` 성공
 - ✅ TypeScript 타입 체크 통과
 - ✅ 런타임 에러 없음
+
+---
+
+## 11. UserProfile.tsx 통합 (2026-01-18)
+
+### 11.1 문제점
+
+| 컴포넌트 | 줄 수 | 문제 |
+|----------|-------|------|
+| `UserProfile.tsx` | 258줄 | 클라이언트 DB fetch, 복잡한 아이콘 로직, useEffect 체인 |
+| `ClientUserProfile.tsx` | 85줄 | 깔끔, props 기반 |
+
+**두 컴포넌트가 동일한 UI를 렌더링하고 있었음**
+
+### 11.2 해결
+
+1. `ClientUserProfile.tsx`에 `showActions` prop 추가
+2. `ProfileSidebar`에서 `ClientUserProfile` 사용으로 변경
+3. `UserProfile.tsx` 삭제
+
+### 11.3 삭제된 코드
+
+```typescript
+// UserProfile.tsx에서 삭제된 문제 코드들
+
+// 1. 클라이언트 DB fetch (lines 140-188)
+useEffect(() => {
+  const fetchProfileData = async () => {
+    const supabase = getSupabaseBrowser();
+    const { data: profile } = await supabase.from('profiles')...
+    const { count: postCount } = await supabase.from('posts')...
+    const { count: commentCount } = await supabase.from('comments')...
+  };
+}, [user, profileData]);
+
+// 2. 복잡한 아이콘 로딩 로직 (lines 86-137)
+const loadAdditionalIconInfo = useCallback(async () => {
+  const iconInfo = await getUserIconInfo(userId);
+  // ... 복잡한 상태 업데이트
+}, [...]);
+
+// 3. 중복 타입 정의 (lines 19-36)
+interface ProfileData { ... }
+```
+
+### 11.4 최종 결과
+
+| 항목 | 이전 | 이후 |
+|------|------|------|
+| 프로필 컴포넌트 | 2개 (343줄) | 1개 (105줄) |
+| 클라이언트 DB fetch | 있음 | **없음** |
+| useEffect 개수 | 4개 | 0개 |
+| 코드 감소 | - | ~238줄 |
