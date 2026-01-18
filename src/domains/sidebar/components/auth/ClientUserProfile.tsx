@@ -5,7 +5,6 @@ import { Coins } from 'lucide-react';
 import UserIcon from '@/shared/components/UserIcon';
 import UserStats from './UserStats';
 import ProfileActions from './ProfileActions';
-import { SidebarUserProfile } from '../../actions/userProfile';
 import {
   LEVEL_EXP_REQUIREMENTS,
   calculateLevelProgress,
@@ -13,11 +12,32 @@ import {
   getLevelIconUrl
 } from '@/shared/utils/level-icons';
 
-interface ClientUserProfileProps {
-  profileData: SidebarUserProfile;
+// 프로필 데이터 타입 (SidebarUserData와 호환)
+interface ProfileData {
+  id?: string;
+  nickname: string | null;
+  level: number;
+  exp: number;
+  points: number;
+  icon_url: string | null;
+  postCount: number;
+  commentCount: number;
 }
 
-export default function ClientUserProfile({ profileData }: ClientUserProfileProps) {
+interface ClientUserProfileProps {
+  profileData: ProfileData | null;
+  showActions?: boolean;
+}
+
+export default function ClientUserProfile({ profileData, showActions = true }: ClientUserProfileProps) {
+  // null 체크
+  if (!profileData) {
+    return (
+      <div className="text-center py-4">
+        <p className="text-sm text-gray-500">로딩 중...</p>
+      </div>
+    );
+  }
   // 아이콘 URL 결정 - 커스텀 아이콘이 있으면 사용, 없으면 레벨 기본 아이콘
   const displayIconUrl = useMemo(() => {
     return profileData.icon_url || getLevelIconUrl(profileData.level);
@@ -79,7 +99,7 @@ export default function ClientUserProfile({ profileData }: ClientUserProfileProp
         postCount={profileData.postCount}
         commentCount={profileData.commentCount}
       />
-      <ProfileActions />
+      {showActions && <ProfileActions />}
     </div>
   );
 } 

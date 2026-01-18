@@ -3,7 +3,7 @@
 import { X, User, LogOut, UserCog, PenSquare } from 'lucide-react';
 import { useAuth } from '@/shared/context/AuthContext';
 import { useIcon } from '@/shared/context/IconContext';
-import UserProfile from './auth/UserProfile';
+import ClientUserProfile from './auth/ClientUserProfile';
 import AttendanceCalendar from '@/shared/components/AttendanceCalendar';
 import Link from 'next/link';
 import { useCallback, useMemo } from 'react';
@@ -95,7 +95,7 @@ export default function ProfileSidebar({
             <>
               {/* 사용자 프로필 정보 섹션 */}
               <div className="p-4 border-b border-black/7 dark:border-white/10">
-                <UserProfile profileData={profileData} showActions={false} />
+                <ClientUserProfile profileData={profileData} showActions={false} />
               </div>
 
               {/* 출석 현황 (미니 캘린더) */}
