@@ -7,6 +7,7 @@ import { Notification } from '../types/notification';
 import NotificationItem from './NotificationItem';
 import { filterOldReadNotifications } from '../utils/filterNotifications';
 import Spinner from '@/shared/components/Spinner';
+import { Button } from '@/shared/components/ui';
 
 interface MobileNotificationModalProps {
   isOpen: boolean;
@@ -84,19 +85,21 @@ export default function MobileNotificationModal({
           </h2>
           <div className="flex items-center gap-2">
             {unreadCount > 0 && (
-              <button
+              <Button
+                variant="ghost"
                 onClick={onMarkAllRead}
-                className="text-xs text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-2 py-1 rounded transition-colors"
+                className="text-xs text-gray-700 dark:text-gray-300 px-2 py-1 h-auto"
               >
                 전체 읽음
-              </button>
+              </Button>
             )}
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onClose}
-              className="p-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-full transition-colors outline-none focus:outline-none"
             >
               <X className="h-4 w-4" />
-            </button>
+            </Button>
           </div>
         </div>
 

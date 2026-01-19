@@ -57,7 +57,7 @@ export default function ExpForm({
           {/* 경험치 진행 바 */}
           <div className="w-full bg-[#F5F5F5] dark:bg-[#262626] rounded-full h-2.5">
             <div
-              className="bg-slate-800 dark:bg-[#F0F0F0] h-2.5 rounded-full transition-all"
+              className="bg-[#262626] dark:bg-[#F0F0F0] h-2.5 rounded-full transition-all"
               style={{ width: `${progressPercentage}%` }}
             ></div>
           </div>

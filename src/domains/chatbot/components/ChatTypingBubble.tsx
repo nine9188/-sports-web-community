@@ -11,7 +11,7 @@ export function ChatTypingBubble() {
 
       {/* Typing Bubble */}
       <div className={cn(
-        'max-w-xs lg:max-w-md px-4 py-3 rounded-2xl rounded-bl-md',
+        'max-w-xs lg:max-w-md px-4 py-3 rounded-lg rounded-bl-md',
         'bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0]',
         'shadow-sm border border-black/7 dark:border-white/0'
       )}>

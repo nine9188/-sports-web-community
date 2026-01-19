@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+import { Button } from '@/shared/components/ui';
 import { toast } from 'react-toastify';
 import { changePassword } from '@/domains/settings';
 import TurnstileWidget from '@/shared/components/TurnstileWidget';
@@ -153,13 +154,15 @@ export default function PasswordForm({ isOAuthAccount = false }: PasswordFormPro
               disabled={isLoading || isOAuthAccount}
               className={`w-full px-3 py-2 border ${errors.currentPassword ? 'border-red-500 dark:border-red-500' : 'border-black/7 dark:border-white/10'} rounded-md shadow-sm bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] disabled:bg-[#EAEAEA] disabled:dark:bg-[#333333] disabled:cursor-not-allowed transition-colors`}
             />
-            <button
+            <Button
               type="button"
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors"
+              variant="ghost"
+              size="icon"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 h-full"
               onClick={() => setShowCurrentPassword(!showCurrentPassword)}
             >
               {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
+            </Button>
           </div>
           {errors.currentPassword && (
             <p className="text-xs text-red-500 dark:text-red-400">{errors.currentPassword}</p>
@@ -181,13 +184,15 @@ export default function PasswordForm({ isOAuthAccount = false }: PasswordFormPro
               disabled={isLoading || isOAuthAccount}
               className={`w-full px-3 py-2 border ${errors.newPassword ? 'border-red-500 dark:border-red-500' : 'border-black/7 dark:border-white/10'} rounded-md shadow-sm bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] disabled:bg-[#EAEAEA] disabled:dark:bg-[#333333] disabled:cursor-not-allowed transition-colors`}
             />
-            <button
+            <Button
               type="button"
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors"
+              variant="ghost"
+              size="icon"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 h-full"
               onClick={() => setShowNewPassword(!showNewPassword)}
             >
               {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
+            </Button>
           </div>
           {errors.newPassword ? (
             <p className="text-xs text-red-500 dark:text-red-400">{errors.newPassword}</p>
@@ -211,13 +216,15 @@ export default function PasswordForm({ isOAuthAccount = false }: PasswordFormPro
               disabled={isLoading || isOAuthAccount}
               className={`w-full px-3 py-2 border ${errors.confirmPassword ? 'border-red-500 dark:border-red-500' : 'border-black/7 dark:border-white/10'} rounded-md shadow-sm bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] disabled:bg-[#EAEAEA] disabled:dark:bg-[#333333] disabled:cursor-not-allowed transition-colors`}
             />
-            <button
+            <Button
               type="button"
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors"
+              variant="ghost"
+              size="icon"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 h-full"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             >
               {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
+            </Button>
           </div>
           {errors.confirmPassword && (
             <p className="text-xs text-red-500 dark:text-red-400">{errors.confirmPassword}</p>
@@ -226,14 +233,15 @@ export default function PasswordForm({ isOAuthAccount = false }: PasswordFormPro
 
         {/* 제출 버튼 */}
         <div className="pt-4 flex justify-end">
-          <button
+          <Button
             type="submit"
+            variant="primary"
             disabled={isLoading || isOAuthAccount}
-            className="px-4 py-2 bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed flex items-center rounded-md transition-colors"
-            >
+            className="flex items-center"
+          >
             {isLoading && <Spinner size="xs" className="mr-2" />}
             <span className="text-sm">비밀번호 변경</span>
-          </button>
+          </Button>
         </div>
       </form>
     </div>

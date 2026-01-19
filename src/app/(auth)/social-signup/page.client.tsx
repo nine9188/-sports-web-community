@@ -6,6 +6,7 @@ import { useAuth } from '@/shared/context/AuthContext'
 import { getSupabaseBrowser } from '@/shared/lib/supabase'
 import { toast } from 'react-toastify'
 import Spinner from '@/shared/components/Spinner';
+import { Button } from '@/shared/components/ui';
 
 export default function SocialSignupPage() {
   const router = useRouter()
@@ -261,7 +262,7 @@ export default function SocialSignupPage() {
                 className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 transition-colors ${
                   nicknameError 
                     ? 'border-red-500 focus:ring-red-300' 
-                    : 'border-gray-300 focus:ring-blue-500'
+                    : 'border-black/7 dark:border-white/10 focus:ring-gray-500'
                 }`}
                 placeholder="사용하실 닉네임을 입력하세요"
                 required
@@ -283,13 +284,14 @@ export default function SocialSignupPage() {
             )}
           </div>
 
-          <button
+          <Button
             type="submit"
+            variant="primary"
             disabled={loading || !nickname.trim() || !!nicknameError || isCheckingNickname}
-            className="w-full py-3 px-4 bg-slate-700 hover:bg-slate-800 text-white font-medium rounded-md transition-colors disabled:opacity-50"
+            className="w-full py-3 h-auto"
           >
             {loading ? '처리 중...' : '회원가입 완료'}
-          </button>
+          </Button>
         </form>
       </div>
     </div>

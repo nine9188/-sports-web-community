@@ -2,6 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { X } from 'lucide-react';
+import { Button } from '@/shared/components/ui';
 import { ChildBoard, TopBoard } from './types';
 
 interface MobileBottomSheetProps {
@@ -42,26 +44,15 @@ export default function MobileBottomSheet({
           <h3 className="text-xs sm:text-sm text-gray-900 dark:text-[#F0F0F0]">
             {boardName || '게시판 이동'}
           </h3>
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="p-1 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors text-gray-700 dark:text-gray-300"
+            className="w-6 h-6 text-gray-700 dark:text-gray-300"
             aria-label="닫기"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+            <X className="h-4 w-4" />
+          </Button>
         </div>
 
         {/* 콘텐츠 */}

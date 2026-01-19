@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button, Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 import { BoardCollectionData } from './types';
 
 // 상수 정의
@@ -106,46 +107,51 @@ export default function BoardCollectionWidgetClient({ boardsData }: BoardCollect
   return (
     <>
       {/* 데스크톱 버전 */}
-      <div className="hidden md:block bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
+      <Container className="hidden md:block bg-white dark:bg-[#1D1D1D]">
         {/* 헤더 */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
-          <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">게시판</h3>
+        <ContainerHeader className="justify-between">
+          <ContainerTitle>게시판</ContainerTitle>
           {/* 페이지네이션 */}
           <div className="flex items-center gap-2 flex-shrink-0">
             <span className="text-sm text-gray-600 dark:text-gray-400">
               {selectedBoardIndex + 1} / {totalBoards}
             </span>
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={handlePrev}
-              className="p-1 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-700 dark:text-gray-300"
+              className="w-6 h-6 text-gray-700 dark:text-gray-300"
               aria-label="이전"
             >
               <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={handleNext}
-              className="p-1 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-700 dark:text-gray-300"
+              className="w-6 h-6 text-gray-700 dark:text-gray-300"
               aria-label="다음"
             >
               <ChevronRight className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
-        </div>
+        </ContainerHeader>
 
         {/* 게시판 탭 */}
         <div className="flex border-b border-black/5 dark:border-white/10">
           {boardsData.map((data, index) => (
-            <button
+            <Button
               key={data.board.id}
+              variant="ghost"
               onClick={() => setSelectedBoardIndex(index)}
-              className={`flex-1 text-xs py-2 px-1 transition-colors whitespace-nowrap ${
+              className={`flex-1 text-xs py-2 px-1 h-auto rounded-none whitespace-nowrap ${
                 index === selectedBoardIndex
-                  ? 'bg-white dark:bg-[#1D1D1D] border-b-2 border-slate-800 dark:border-white font-medium text-gray-900 dark:text-[#F0F0F0]'
+                  ? 'bg-white dark:bg-[#1D1D1D] border-b-2 border-[#262626] dark:border-[#F0F0F0] font-medium text-gray-900 dark:text-[#F0F0F0]'
                   : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-400 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
               }`}
             >
               {data.board.name}
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -184,48 +190,53 @@ export default function BoardCollectionWidgetClient({ boardsData }: BoardCollect
             </div>
           )}
         </div>
-      </div>
+      </Container>
 
       {/* 모바일 버전 - ContainerHeader + 탭 패턴 */}
-      <div className="md:hidden bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
+      <Container className="md:hidden bg-white dark:bg-[#1D1D1D]">
         {/* ContainerHeader - h-12 */}
-        <div className="h-12 flex items-center justify-between px-4 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10">
-          <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">게시판</h3>
+        <ContainerHeader className="justify-between">
+          <ContainerTitle>게시판</ContainerTitle>
           <div className="flex items-center gap-2 flex-shrink-0">
             <span className="text-xs text-gray-600 dark:text-gray-400">
               {selectedBoardIndex + 1} / {totalBoards}
             </span>
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={handlePrev}
-              className="p-1 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-700 dark:text-gray-300"
+              className="w-6 h-6 text-gray-700 dark:text-gray-300"
               aria-label="이전 게시판"
             >
               <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={handleNext}
-              className="p-1 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-700 dark:text-gray-300"
+              className="w-6 h-6 text-gray-700 dark:text-gray-300"
               aria-label="다음 게시판"
             >
               <ChevronRight className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
-        </div>
+        </ContainerHeader>
 
         {/* 게시판 탭 (균등 배분) */}
         <div className="flex border-b border-black/5 dark:border-white/10">
           {boardsData.map((data, index) => (
-            <button
+            <Button
               key={data.board.id}
+              variant="ghost"
               onClick={() => setSelectedBoardIndex(index)}
-              className={`flex-1 text-xs py-2 px-1 transition-colors whitespace-nowrap ${
+              className={`flex-1 text-xs py-2 px-1 h-auto rounded-none whitespace-nowrap ${
                 index === selectedBoardIndex
-                  ? 'bg-white dark:bg-[#1D1D1D] border-b-2 border-slate-800 dark:border-white font-medium text-gray-900 dark:text-[#F0F0F0]'
+                  ? 'bg-white dark:bg-[#1D1D1D] border-b-2 border-[#262626] dark:border-[#F0F0F0] font-medium text-gray-900 dark:text-[#F0F0F0]'
                   : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-400 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
               }`}
             >
               {data.board.name}
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -245,7 +256,7 @@ export default function BoardCollectionWidgetClient({ boardsData }: BoardCollect
             ))
           )}
         </div>
-      </div>
+      </Container>
     </>
   );
 }

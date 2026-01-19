@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { Button, Container } from '@/shared/components/ui';
 import { POPULAR_STORES } from '../../types/hotdeal';
 
 interface StoreFilterMenuProps {
@@ -52,13 +53,14 @@ export default function StoreFilterMenu({ boardSlug }: StoreFilterMenuProps) {
   };
 
   return (
-    <div className="bg-white dark:bg-[#1D1D1D] rounded-lg mb-4 border border-black/7 dark:border-0 overflow-visible">
+    <Container className="bg-white dark:bg-[#1D1D1D] mb-4 overflow-visible">
       <div className="px-4 py-2.5 relative overflow-visible">
         <nav className="flex items-center justify-between gap-2">
           {/* 전체 버튼 - 세로 중앙 정렬 */}
-          <button
+          <Button
+            variant="ghost"
             onClick={selectAll}
-            className={`px-2 py-1 text-xs sm:text-sm whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 flex-shrink-0 ${
+            className={`px-2 py-1 h-auto text-xs sm:text-sm whitespace-nowrap flex items-center gap-1 text-gray-700 dark:text-gray-300 flex-shrink-0 ${
               selectedStores.length === 0 ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
             }`}
           >
@@ -77,7 +79,7 @@ export default function StoreFilterMenu({ boardSlug }: StoreFilterMenuProps) {
               />
             </svg>
             전체
-          </button>
+          </Button>
 
           {/* 쇼핑몰 필터 탭들 - flex-wrap */}
           <div className="flex items-center gap-1 flex-1 flex-wrap">
@@ -85,20 +87,21 @@ export default function StoreFilterMenu({ boardSlug }: StoreFilterMenuProps) {
               const isSelected = selectedStores.includes(store);
 
               return (
-                <button
+                <Button
                   key={store}
+                  variant="ghost"
                   onClick={() => toggleStore(store)}
-                  className={`px-2 py-1 text-xs sm:text-sm whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 ${
+                  className={`px-2 py-1 h-auto text-xs sm:text-sm whitespace-nowrap flex items-center gap-1 text-gray-700 dark:text-gray-300 ${
                     isSelected ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
                   }`}
                 >
                   {store}
-                </button>
+                </Button>
               );
             })}
           </div>
         </nav>
       </div>
-    </div>
+    </Container>
   );
 }

@@ -1,8 +1,9 @@
+import Link from 'next/link';
 import { fetchPosts } from '@/domains/boards/actions';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import BoardDetailLayout from '@/domains/boards/components/layout/BoardDetailLayout';
 import { convertApiPostsToLayoutPosts } from '@/domains/boards/utils/post/postUtils';
-import ErrorMessage from '@/shared/components/ui/error-message';
+import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
 import { generatePageMetadataWithDefaults } from '@/shared/utils/metadataNew';
 
 // 동적 렌더링 강제 설정
@@ -128,7 +129,13 @@ export default async function AllPostsPage({
   } catch (error) {
     console.error("AllPostsPage Error:", error);
     return (
-      <ErrorMessage message="전체 게시글을 불러오는 중 오류가 발생했습니다." />
+      <div className="container mx-auto">
+        <div className={errorBoxStyles}>
+          <h2 className={errorTitleStyles}>오류가 발생했습니다</h2>
+          <p className={errorMessageStyles}>전체 게시글을 불러오는 중 오류가 발생했습니다.</p>
+          <Link href="/" className={errorLinkStyles}>메인페이지로 이동</Link>
+        </div>
+      </div>
     );
   }
 }

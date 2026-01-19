@@ -201,7 +201,7 @@ export default function TermsPage() {
           </section>
 
           {/* 부칙 */}
-          <section className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-8">
+          <section className="border-t border-black/5 dark:border-white/10 pt-6 mt-8">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0]">부칙</h2>
             <p>본 약관은 2025년 1월 1일부터 시행됩니다.</p>
           </section>
@@ -209,7 +209,7 @@ export default function TermsPage() {
         </div>
 
         {/* 하단 링크 */}
-        <div className="mt-10 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center text-sm text-gray-700 dark:text-gray-300">
+        <div className="mt-10 pt-6 border-t border-black/5 dark:border-white/10 flex justify-between items-center text-sm text-gray-700 dark:text-gray-300">
           <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">
             개인정보처리방침 보기
           </Link>

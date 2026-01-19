@@ -1,4 +1,3 @@
-export * from './contentUtils';
 export {
   populateEmptyMatchCards,
   registerMatchCardHoverHandler,

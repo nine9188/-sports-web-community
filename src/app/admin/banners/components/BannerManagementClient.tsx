@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Banner, BannerPosition, BannerType, BANNER_POSITION_CONFIGS, BANNER_TYPE_INFO } from '@/domains/widgets/types/banner';
 import { createBanner, updateBanner, deleteBanner, uploadBannerImage } from '@/domains/widgets/actions/banners';
 import { toast } from 'react-toastify';
+import { Button } from '@/shared/components/ui';
 
 interface BannerManagementClientProps {
   initialBanners: Banner[];
@@ -253,13 +254,13 @@ export default function BannerManagementClient({ initialBanners }: BannerManagem
           </select>
         </div>
         
-        <button
+        <Button
           onClick={() => setShowCreateForm(true)}
           disabled={isPending}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          variant="primary"
         >
           + 새 배너 추가
-        </button>
+        </Button>
       </div>
 
       {/* 배너 생성 폼 */}
@@ -362,13 +363,14 @@ export default function BannerManagementClient({ initialBanners }: BannerManagem
                             unoptimized
                           />
                         </div>
-                        <button
+                        <Button
                           type="button"
                           onClick={() => setCreateForm({ ...createForm, image_url: '' })}
-                          className="absolute top-6 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
+                          variant="destructive"
+                          className="absolute top-6 right-2 rounded-full w-6 h-6 p-0 text-xs"
                         >
                           ×
-                        </button>
+                        </Button>
                       </div>
                     )}
                     
@@ -440,20 +442,20 @@ export default function BannerManagementClient({ initialBanners }: BannerManagem
           </div>
           
           <div className="flex gap-2 mt-6">
-            <button
+            <Button
               onClick={handleCreateBanner}
               disabled={isPending}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              variant="primary"
             >
               생성
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setShowCreateForm(false)}
               disabled={isPending}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              variant="outline"
             >
               취소
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -557,13 +559,14 @@ export default function BannerManagementClient({ initialBanners }: BannerManagem
                             unoptimized
                           />
                         </div>
-                        <button
+                        <Button
                           type="button"
                           onClick={() => setEditForm({ ...editForm, image_url: '' })}
-                          className="absolute top-6 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
+                          variant="destructive"
+                          className="absolute top-6 right-2 rounded-full w-6 h-6 p-0 text-xs"
                         >
                           ×
-                        </button>
+                        </Button>
                       </div>
                     )}
                     
@@ -631,20 +634,20 @@ export default function BannerManagementClient({ initialBanners }: BannerManagem
           </div>
           
           <div className="flex gap-2 mt-6">
-            <button
+            <Button
               onClick={handleEditBanner}
               disabled={isPending}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              variant="primary"
             >
               수정 완료
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={cancelEditBanner}
               disabled={isPending}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              variant="outline"
             >
               취소
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -714,33 +717,35 @@ export default function BannerManagementClient({ initialBanners }: BannerManagem
               
               {/* 액션 버튼 */}
               <div className="flex gap-1 pt-2">
-                <button
+                <Button
                   onClick={() => startEditBanner(banner)}
                   disabled={isPending}
-                  className="flex-1 px-3 py-1 text-xs bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  variant="secondary"
+                  size="sm"
+                  className="flex-1 text-xs"
                 >
                   수정
-                </button>
-                
-                <button
+                </Button>
+
+                <Button
                   onClick={() => toggleBannerActive(banner)}
                   disabled={isPending}
-                  className={`flex-1 px-3 py-1 text-xs rounded-md transition-colors ${
-                    banner.is_active
-                      ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
-                      : 'bg-green-100 text-green-800 hover:bg-green-200'
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 text-xs"
                 >
                   {banner.is_active ? '비활성화' : '활성화'}
-                </button>
-                
-                <button
+                </Button>
+
+                <Button
                   onClick={() => handleDeleteBanner(banner.id)}
                   disabled={isPending}
-                  className="flex-1 px-3 py-1 text-xs bg-red-100 text-red-800 rounded-md hover:bg-red-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  variant="destructive"
+                  size="sm"
+                  className="flex-1 text-xs"
                 >
                   삭제
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -757,12 +762,12 @@ export default function BannerManagementClient({ initialBanners }: BannerManagem
               : `${ACTIVE_BANNER_POSITIONS.find(c => c.position === selectedPosition)?.name} 위치에 배너가 없습니다.`
             }
           </p>
-          <button
+          <Button
             onClick={() => setShowCreateForm(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            variant="primary"
           >
             첫 배너 추가하기
-          </button>
+          </Button>
         </div>
       )}
     </div>

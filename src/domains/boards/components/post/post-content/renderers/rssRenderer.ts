@@ -22,7 +22,7 @@ export function renderRssHeader(rssPost: RssPost): string {
       </div>` : ''}
       <div class="flex justify-between items-center mb-4">
         <a href="${sourceUrl}" target="_blank" rel="noopener noreferrer"
-          class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-slate-800 dark:bg-[#3F3F3F] rounded-md hover:bg-slate-700 dark:hover:bg-[#4A4A4A] transition-colors">
+          class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#262626] dark:bg-[#3F3F3F] rounded-md hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
           </svg>

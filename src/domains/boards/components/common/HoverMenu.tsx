@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { ChildBoard, TopBoard, HoverMenuProps, MobileBottomSheet } from './hover-menu';
+import { Button, Container } from '@/shared/components/ui';
 
 export default function HoverMenu({
   currentBoardId,
@@ -294,7 +295,7 @@ export default function HoverMenu({
 
   // 메뉴 UI 렌더링
   return (
-    <div className="bg-white dark:bg-[#1D1D1D] rounded-lg mb-4 border border-black/7 dark:border-0 overflow-visible">
+    <Container className="bg-white dark:bg-[#1D1D1D] mb-4 overflow-visible">
       <div className="px-4 py-2.5 relative overflow-visible" ref={containerRef}>
         {/* 네비게이션 바 */}
         <nav className="flex items-center justify-between gap-2" ref={navRef}>
@@ -383,10 +384,12 @@ export default function HoverMenu({
 
             {/* 드롭다운 버튼 (숨겨진 게시판이 있을 때만) - 오른쪽 고정 */}
             {hiddenBoards.length > 0 && (
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={toggleMobileDropdown}
                 data-dropdown-toggle
-                className="flex items-center justify-center px-2 py-1 text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md transition-colors flex-shrink-0"
+                className="h-auto w-auto px-2 py-1 text-gray-700 dark:text-gray-300 flex-shrink-0"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -404,7 +407,7 @@ export default function HoverMenu({
                     d="M19 9l-7 7-7-7"
                   />
                 </svg>
-              </button>
+              </Button>
             )}
           </div>
         </nav>
@@ -501,6 +504,6 @@ export default function HoverMenu({
           </>
         )}
       </div>
-    </div>
+    </Container>
   );
 }

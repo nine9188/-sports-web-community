@@ -214,7 +214,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
               homeLineup.startXI?.length || 0,
               awayLineup.startXI?.length || 0
             ) }).map((_, index) => (
-              <tr key={`startXI-${index}`} className={index % 2 === 0 ? 'bg-white dark:bg-[#1D1D1D]' : 'bg-gray-50 dark:bg-[#2D2D2D]'}>
+              <tr key={`startXI-${index}`} className={index % 2 === 0 ? 'bg-white dark:bg-[#1D1D1D]' : 'bg-[#F5F5F5] dark:bg-[#2D2D2D]'}>
                 <td className="border-r border-black/5 dark:border-white/10">
                   {homeLineup.startXI && index < homeLineup.startXI.length && (
                     <div
@@ -233,10 +233,10 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                             priority={index < 5} // 처음 5명은 우선 로딩
                             width={"w-10"}
                             height={"h-10"}
-                            className="border-2 border-gray-200 dark:border-gray-700"
+                            className="border border-black/7 dark:border-white/10"
                           />
                         ) : (
-                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-gray-100 dark:bg-gray-800 rounded-full border-2 border-gray-200 dark:border-gray-700">
+                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full border border-black/7 dark:border-white/10">
                             {homeLineup.startXI[index].player.number || '-'}
                           </div>
                         )}
@@ -280,10 +280,10 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                             priority={index < 5} // 처음 5명은 우선 로딩
                             width={"w-10"}
                             height={"h-10"}
-                            className="border-2 border-gray-200 dark:border-gray-700"
+                            className="border border-black/7 dark:border-white/10"
                           />
                         ) : (
-                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-gray-100 dark:bg-gray-800 rounded-full border-2 border-gray-200 dark:border-gray-700">
+                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full border border-black/7 dark:border-white/10">
                             {awayLineup.startXI[index].player.number || '-'}
                           </div>
                         )}
@@ -330,7 +330,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
               homeLineup.substitutes?.length || 0,
               awayLineup.substitutes?.length || 0
             ) }).map((_, index) => (
-              <tr key={`subs-${index}`} className={index % 2 === 0 ? 'bg-white dark:bg-[#1D1D1D]' : 'bg-gray-50 dark:bg-[#2D2D2D]'}>
+              <tr key={`subs-${index}`} className={index % 2 === 0 ? 'bg-white dark:bg-[#1D1D1D]' : 'bg-[#F5F5F5] dark:bg-[#2D2D2D]'}>
                 <td className="w-1/2 border-r border-black/5 dark:border-white/10">
                   {homeLineup.substitutes && index < homeLineup.substitutes.length && (
                     <div
@@ -348,7 +348,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                             playerId={homeLineup.substitutes[index].player.id}
                           />
                         ) : (
-                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-gray-100 dark:bg-gray-800 rounded-full border-2 border-gray-200 dark:border-gray-700">
+                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full border border-black/7 dark:border-white/10">
                             {homeLineup.substitutes[index].player.number || '-'}
                           </div>
                         )}
@@ -391,7 +391,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                             playerId={awayLineup.substitutes[index].player.id}
                           />
                         ) : (
-                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-gray-100 dark:bg-gray-800 rounded-full border-2 border-gray-200 dark:border-gray-700">
+                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full border border-black/7 dark:border-white/10">
                             {awayLineup.substitutes[index].player.number || '-'}
                           </div>
                         )}
@@ -445,7 +445,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                           variant="circle"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 flex items-center justify-center">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                           </svg>
@@ -468,7 +468,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                           variant="circle"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 flex items-center justify-center">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                           </svg>
@@ -534,10 +534,10 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                           priority={index < 5}
                           width="w-10"
                           height="h-10"
-                          className="border-2 border-gray-200 dark:border-gray-700"
+                          className="border border-black/7 dark:border-white/10"
                         />
                       ) : (
-                        <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-gray-100 dark:bg-gray-800 rounded-full border-2 border-gray-200 dark:border-gray-700">
+                        <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full border border-black/7 dark:border-white/10">
                           {item.player.number || '-'}
                         </div>
                       )}
@@ -585,7 +585,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                           playerId={item.player.id}
                         />
                       ) : (
-                        <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-gray-100 dark:bg-gray-800 rounded-full border-2 border-gray-200 dark:border-gray-700">
+                        <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full border border-black/7 dark:border-white/10">
                           {item.player.number || '-'}
                         </div>
                       )}
@@ -630,7 +630,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                       variant="circle"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 flex items-center justify-center">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
@@ -690,10 +690,10 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                           priority={index < 5}
                           width="w-10"
                           height="h-10"
-                          className="border-2 border-gray-200 dark:border-gray-700"
+                          className="border border-black/7 dark:border-white/10"
                         />
                       ) : (
-                        <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-gray-100 dark:bg-gray-800 rounded-full border-2 border-gray-200 dark:border-gray-700">
+                        <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full border border-black/7 dark:border-white/10">
                           {item.player.number || '-'}
                         </div>
                       )}
@@ -741,7 +741,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                           playerId={item.player.id}
                         />
                       ) : (
-                        <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-gray-100 dark:bg-gray-800 rounded-full border-2 border-gray-200 dark:border-gray-700">
+                        <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full border border-black/7 dark:border-white/10">
                           {item.player.number || '-'}
                         </div>
                       )}
@@ -786,7 +786,7 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
                       variant="circle"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 flex items-center justify-center">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>

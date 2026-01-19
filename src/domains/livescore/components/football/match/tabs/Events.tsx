@@ -198,7 +198,7 @@ function Events({ events: propsEvents }: EventsProps) {
             className="w-full h-full object-contain group-hover:brightness-75 transition-all"
           />
         ) : (
-          <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 text-xs">
+          <div className="w-full h-full bg-[#EAEAEA] dark:bg-[#333333] flex items-center justify-center text-gray-400 dark:text-gray-500 text-xs">
             로고 없음
           </div>
         )}

@@ -127,11 +127,11 @@
   .widget-container,
   .card-container,
   .panel-container {
-    @apply border bg-white dark:bg-slate-900 dark:border-gray-800 rounded-dynamic-mobile md:rounded-dynamic;
+    @apply border bg-white dark:bg-[#1D1D1D] dark:border-white/10 rounded-dynamic-mobile md:rounded-dynamic;
   }
 
   .header-background {
-    @apply bg-white dark:bg-slate-950;
+    @apply bg-white dark:bg-[#1A1A1A];
     backdrop-filter: blur(8px);
   }
   
@@ -146,7 +146,7 @@
   }
   
   [role="menuitem"]:hover {
-    @apply bg-gray-100 dark:bg-gray-800 !important;
+    @apply bg-[#F5F5F5] dark:bg-[#262626] !important;
   }
 }
 

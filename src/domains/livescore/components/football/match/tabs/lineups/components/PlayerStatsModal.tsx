@@ -5,7 +5,19 @@ import { useState, useEffect } from 'react';
 import { fetchCachedPlayerStats, PlayerStatsResponse } from '@/domains/livescore/actions/match/playerStats';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
-import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
+import {
+  Container,
+  ContainerHeader,
+  ContainerTitle,
+  ContainerContent,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogCloseButton,
+  DialogBody,
+} from '@/shared/components/ui';
 import Spinner from '@/shared/components/Spinner';
 
 interface PlayerStatsModalProps {
@@ -57,8 +69,6 @@ export default function PlayerStatsModal({
     loadPlayerStats();
   }, [isOpen, playerId, matchId, playerInfo.name]);
 
-  if (!isOpen) return null;
-
   const stats = playerStats?.response?.statistics?.[0] || {} as {
     team?: { id?: number; name?: string };
     games?: { minutes?: number; number?: number; position?: string; rating?: string; captain?: boolean };
@@ -74,24 +84,14 @@ export default function PlayerStatsModal({
   const showData = playerStats?.success && playerStats.response;
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-black rounded-xl w-full max-w-md max-h-[80vh] flex flex-col shadow-xl border border-black/7 dark:border-0 overflow-hidden">
-        {/* 헤더 */}
-        <div className="flex-shrink-0 flex items-center justify-between h-12 px-3 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
-          <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">선수 개인 통계</h3>
-          <button
-            onClick={onClose}
-            className="text-gray-500 dark:text-gray-400 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] p-2 rounded transition-colors outline-none focus:outline-none"
-            aria-label="닫기"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-md max-h-[80vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>선수 개인 통계</DialogTitle>
+          <DialogCloseButton />
+        </DialogHeader>
 
-        {/* 내용 */}
-        <div className="flex-1 overflow-y-auto bg-white dark:bg-black">
+        <DialogBody className="flex-1 overflow-y-auto">
           {/* 로딩 */}
           {isLoading && (
             <div className="py-16 text-center">
@@ -109,12 +109,12 @@ export default function PlayerStatsModal({
                 </svg>
               </div>
               <p className="text-gray-900 dark:text-[#F0F0F0] mb-4">{error}</p>
-              <button
+              <Button
+                variant="secondary"
                 onClick={onClose}
-                className="px-4 py-2 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
               >
                 닫기
-              </button>
+              </Button>
             </div>
           )}
 
@@ -130,12 +130,12 @@ export default function PlayerStatsModal({
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
                 {playerStats?.message || '경기가 시작되지 않았거나 데이터가 아직 제공되지 않았습니다.'}
               </p>
-              <button
+              <Button
+                variant="secondary"
                 onClick={onClose}
-                className="px-4 py-2 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
               >
                 닫기
-              </button>
+              </Button>
             </div>
           )}
 
@@ -144,7 +144,7 @@ export default function PlayerStatsModal({
             <>
               {/* 선수 기본 정보 */}
               <div className="px-4 pt-3">
-                <Container className="mb-4">
+                <Container className="mb-4 dark:border dark:border-white/10">
                   <ContainerContent className="text-center">
                     <div className="relative w-28 h-28 mx-auto mb-4">
                       <div className="relative w-28 h-28">
@@ -192,7 +192,7 @@ export default function PlayerStatsModal({
               {/* 통계 */}
               <div className="px-4 pb-8">
                 {/* 기본 정보 */}
-                <Container className="mb-4">
+                <Container className="mb-4 dark:border dark:border-white/10">
                   <ContainerHeader>
                     <ContainerTitle>기본 정보</ContainerTitle>
                   </ContainerHeader>
@@ -215,7 +215,7 @@ export default function PlayerStatsModal({
                 {/* 필드 플레이어 전용 */}
                 {playerInfo.pos !== 'G' && (
                   <>
-                    <Container className="mb-4">
+                    <Container className="mb-4 dark:border dark:border-white/10">
                       <ContainerHeader>
                         <ContainerTitle>공격 스탯</ContainerTitle>
                       </ContainerHeader>
@@ -243,7 +243,7 @@ export default function PlayerStatsModal({
                       </ContainerContent>
                     </Container>
 
-                    <Container className="mb-4">
+                    <Container className="mb-4 dark:border dark:border-white/10">
                       <ContainerHeader>
                         <ContainerTitle>드리블 & 듀얼</ContainerTitle>
                       </ContainerHeader>
@@ -274,7 +274,7 @@ export default function PlayerStatsModal({
                 )}
 
                 {/* 패스 */}
-                <Container className="mb-4">
+                <Container className="mb-4 dark:border dark:border-white/10">
                   <ContainerHeader>
                     <ContainerTitle>패스</ContainerTitle>
                   </ContainerHeader>
@@ -299,7 +299,7 @@ export default function PlayerStatsModal({
                 </Container>
 
                 {/* 파울 & 카드 */}
-                <Container className="mb-4">
+                <Container className="mb-4 dark:border dark:border-white/10">
                   <ContainerHeader>
                     <ContainerTitle>파울 & 카드</ContainerTitle>
                   </ContainerHeader>
@@ -329,7 +329,7 @@ export default function PlayerStatsModal({
 
                 {/* 골키퍼 전용 */}
                 {playerInfo.pos === 'G' && (
-                  <Container className="mb-4">
+                  <Container className="mb-4 dark:border dark:border-white/10">
                     <ContainerHeader>
                       <ContainerTitle>골키퍼 스탯</ContainerTitle>
                     </ContainerHeader>
@@ -358,7 +358,7 @@ export default function PlayerStatsModal({
                 <div className="mt-4 mb-4">
                   <Link
                     href={`/livescore/football/player/${playerId}`}
-                    className="block w-full py-3 px-3 bg-slate-800 dark:bg-[#3F3F3F] text-white font-medium rounded-lg shadow hover:bg-slate-700 dark:hover:bg-[#4A4A4A] transition-colors text-lg text-center"
+                    className="block w-full py-3 px-3 bg-[#262626] dark:bg-[#3F3F3F] text-white font-medium rounded-lg shadow hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] transition-colors text-lg text-center"
                   >
                     선수 정보 더보기
                   </Link>
@@ -366,8 +366,8 @@ export default function PlayerStatsModal({
               </div>
             </>
           )}
-        </div>
-      </div>
-    </div>
+        </DialogBody>
+      </DialogContent>
+    </Dialog>
   );
 }

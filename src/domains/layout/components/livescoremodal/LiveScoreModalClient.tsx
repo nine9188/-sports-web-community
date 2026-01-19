@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Clock } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Button } from '@/shared/components/ui';
 import { faFutbol } from '@fortawesome/free-solid-svg-icons';
 import Link from 'next/link';
 import { MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
@@ -54,12 +55,14 @@ export default function LiveScoreModalClient({ isOpen, onClose, initialData }: L
               <p className="text-xs text-gray-500 dark:text-gray-400">최근 3일간 주요 경기</p>
             </div>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="p-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-full transition-colors"
+            className="rounded-full h-9 w-9"
           >
             <X className="h-4 w-4 text-gray-900 dark:text-[#F0F0F0]" />
-          </button>
+          </Button>
         </div>
 
         {/* 날짜 선택 탭 */}
@@ -69,17 +72,18 @@ export default function LiveScoreModalClient({ isOpen, onClose, initialData }: L
             { key: 'today', label: '오늘' },
             { key: 'tomorrow', label: '내일' }
           ].map(({ key, label }) => (
-            <button
+            <Button
               key={key}
+              variant="ghost"
               onClick={() => handleTabChange(key as 'yesterday' | 'today' | 'tomorrow')}
-              className={`flex-1 py-3 text-sm font-medium transition-colors ${
+              className={`flex-1 py-3 text-sm font-medium rounded-none h-auto ${
                 selectedDate === key
-                  ? 'bg-white dark:bg-[#1D1D1D] border-b-2 border-slate-800 dark:border-white text-gray-900 dark:text-[#F0F0F0]'
-                  : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
+                  ? 'bg-white dark:bg-[#1D1D1D] border-b-2 border-[#262626] dark:border-[#F0F0F0] text-gray-900 dark:text-[#F0F0F0]'
+                  : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300'
               }`}
             >
               {label}
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -97,7 +101,7 @@ export default function LiveScoreModalClient({ isOpen, onClose, initialData }: L
           <Link
             href="/livescore/football"
             onClick={onClose}
-            className="block w-full text-center py-2 px-4 bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-sm font-medium rounded-lg transition-colors"
+            className="block w-full text-center py-2 px-4 bg-[#262626] dark:bg-[#3F3F3F] text-white hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] text-sm font-medium rounded-lg transition-colors"
           >
             전체 라이브스코어 보기
           </Link>

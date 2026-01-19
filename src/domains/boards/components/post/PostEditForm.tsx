@@ -12,7 +12,7 @@ import EditorToolbar from '@/domains/boards/components/createnavigation/EditorTo
 import { toast } from 'react-toastify';
 import { createPost, updatePost } from '@/domains/boards/actions/posts/index';
 import { Board } from '@/domains/boards/types/board';
-import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui/container';
+import { Container, ContainerHeader, ContainerTitle, ContainerContent, Button, SelectRadix as Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui';
 import { useEditorHandlers } from './post-edit-form/hooks';
 import { POPULAR_STORES, SHIPPING_OPTIONS, DealInfo } from '../../types/hotdeal';
 import { detectStoreFromUrl, isHotdealBoard, formatPrice } from '../../utils/hotdeal';
@@ -542,7 +542,7 @@ export default function PostEditForm({
 
           {/* 핫딜 정보 필드 - 핫딜 게시글일 때 표시 (생성/수정 모두) */}
           {isHotdeal && (
-            <div className="space-y-4 border-t border-gray-200 dark:border-gray-700 pt-6">
+            <div className="space-y-4 border-t border-black/7 dark:border-white/10 pt-6">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                 <h3 className="text-lg font-bold text-gray-900 dark:text-[#F0F0F0]">
@@ -570,19 +570,18 @@ export default function PostEditForm({
                 <label htmlFor="store" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
                   쇼핑몰 <span className="text-red-500">*</span>
                 </label>
-                <select
-                  id="store"
-                  value={store}
-                  onChange={(e) => setStore(e.target.value)}
-                  className="w-full px-3 py-2 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] focus:outline-none"
-                >
-                  <option value="">선택하세요</option>
-                  {POPULAR_STORES.map((storeName) => (
-                    <option key={storeName} value={storeName}>
-                      {storeName}
-                    </option>
-                  ))}
-                </select>
+                <Select value={store || undefined} onValueChange={setStore}>
+                  <SelectTrigger id="store">
+                    <SelectValue placeholder="선택하세요" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {POPULAR_STORES.map((storeName) => (
+                      <SelectItem key={storeName} value={storeName}>
+                        {storeName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* 상품명 */}
@@ -649,19 +648,18 @@ export default function PostEditForm({
                 <label htmlFor="shipping" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
                   배송비 <span className="text-red-500">*</span>
                 </label>
-                <select
-                  id="shipping"
-                  value={shipping}
-                  onChange={(e) => setShipping(e.target.value)}
-                  className="w-full px-3 py-2 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] focus:outline-none"
-                >
-                  <option value="">선택하세요</option>
-                  {SHIPPING_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
+                <Select value={shipping || undefined} onValueChange={setShipping}>
+                  <SelectTrigger id="shipping">
+                    <SelectValue placeholder="선택하세요" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SHIPPING_OPTIONS.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
@@ -706,21 +704,21 @@ export default function PostEditForm({
 
           {/* 버튼 영역 */}
           <div className="flex justify-end space-x-2 mt-6">
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={() => router.back()}
               disabled={isSubmitting}
-              className="bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-4 py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               취소
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
+              variant="primary"
               disabled={isSubmitting}
-              className="bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A] px-4 py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (isCreateMode ? '게시 중...' : '저장 중...') : (isCreateMode ? '게시하기' : '저장하기')}
-            </button>
+            </Button>
           </div>
 
         </form>

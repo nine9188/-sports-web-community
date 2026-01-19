@@ -1,11 +1,26 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { X, Inbox, AlertCircle, Check, Info, ChevronDown, User } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Spinner from '@/shared/components/Spinner';
-import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
-import { Tabs, TabButton } from '@/shared/components/ui/tabs';
+import {
+  Container, ContainerHeader, ContainerTitle,
+  Button,
+  Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogCloseButton, DialogBody, DialogFooter,
+  SelectRadix, SelectTrigger, SelectValue, SelectContent, SelectItem,
+  Pagination
+} from '@/shared/components/ui';
+import { Tabs, TabButton, TabList, type TabItem } from '@/shared/components/ui/tabs';
+import {
+  badgeBaseStyles, badgeDefault, badgeSuccess, badgeWarning, badgeError, badgeInfo,
+  wdlBadgeBaseStyles, wdlWin, wdlDraw, wdlLose,
+  alertBaseStyles, alertBgSuccess, alertBgWarning, alertBgError, alertBgInfo,
+  alertTextSuccess, alertTextWarning, alertTextError, alertTextInfo,
+  errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles,
+  cardStyles, cardHeaderStyles, cardTitleStyles, cardSimpleStyles
+} from '@/shared/styles';
 
 export default function UIShowcasePage() {
   const [activeTab, setActiveTab] = useState('colors');
@@ -16,6 +31,9 @@ export default function UIShowcasePage() {
   const [demoTab, setDemoTab] = useState(0);
   const [toggleOn, setToggleOn] = useState(false);
   const [checkboxChecked, setCheckboxChecked] = useState(false);
+  // UI 컴포넌트 데모용 state
+  const [selectValue, setSelectValue] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
   const tabs = [
     { id: 'colors', label: '색상' },
@@ -25,6 +43,7 @@ export default function UIShowcasePage() {
     { id: 'badges', label: '뱃지' },
     { id: 'cards', label: '카드' },
     { id: 'interactive', label: '인터랙티브' },
+    { id: 'ui-components', label: 'UI 컴포넌트' },
     { id: 'tables', label: '테이블' },
     { id: 'states', label: '상태' },
   ];
@@ -315,37 +334,45 @@ export default function UIShowcasePage() {
           {/* Badges */}
           {activeTab === 'badges' && (
             <>
-              <Section title="뱃지 스타일">
+              <Section title="뱃지 스타일 (스타일 상수)">
                 <div className="flex flex-wrap gap-3">
-                  <span className="px-2 py-0.5 text-xs rounded bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300">
+                  <span className={`${badgeBaseStyles} ${badgeDefault}`}>
                     Default
                   </span>
-                  <span className="px-2 py-0.5 text-xs rounded bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">
+                  <span className={`${badgeBaseStyles} ${badgeSuccess}`}>
                     Success
                   </span>
-                  <span className="px-2 py-0.5 text-xs rounded bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400">
+                  <span className={`${badgeBaseStyles} ${badgeWarning}`}>
                     Warning
                   </span>
-                  <span className="px-2 py-0.5 text-xs rounded bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400">
+                  <span className={`${badgeBaseStyles} ${badgeError}`}>
                     Error
                   </span>
-                  <span className="px-2 py-0.5 text-xs rounded bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400">
+                  <span className={`${badgeBaseStyles} ${badgeInfo}`}>
                     Info
                   </span>
                 </div>
+                <div className="mt-4 p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded text-xs font-mono text-gray-600 dark:text-gray-400">
+                  <p>import {'{'} badgeBaseStyles, badgeSuccess {'}'} from &apos;@/shared/styles&apos;;</p>
+                  <p className="mt-1">&lt;span className={'{`${badgeBaseStyles} ${badgeSuccess}`}'}&gt;Success&lt;/span&gt;</p>
+                </div>
               </Section>
 
-              <Section title="승무패 (W/D/L)">
+              <Section title="승무패 (W/D/L) (스타일 상수)">
                 <div className="flex gap-2">
-                  <div className="w-6 h-6 flex items-center justify-center rounded text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">
+                  <div className={`${wdlBadgeBaseStyles} ${wdlWin}`}>
                     W
                   </div>
-                  <div className="w-6 h-6 flex items-center justify-center rounded text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400">
+                  <div className={`${wdlBadgeBaseStyles} ${wdlDraw}`}>
                     D
                   </div>
-                  <div className="w-6 h-6 flex items-center justify-center rounded text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400">
+                  <div className={`${wdlBadgeBaseStyles} ${wdlLose}`}>
                     L
                   </div>
+                </div>
+                <div className="mt-4 p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded text-xs font-mono text-gray-600 dark:text-gray-400">
+                  <p>import {'{'} wdlBadgeBaseStyles, wdlWin {'}'} from &apos;@/shared/styles&apos;;</p>
+                  <p className="mt-1">&lt;div className={'{`${wdlBadgeBaseStyles} ${wdlWin}`}'}&gt;W&lt;/div&gt;</p>
                 </div>
               </Section>
 
@@ -368,7 +395,7 @@ export default function UIShowcasePage() {
           {/* Cards */}
           {activeTab === 'cards' && (
             <>
-              <Section title="Container">
+              <Section title="Container (컴포넌트)">
                 <Container>
                   <ContainerHeader>
                     <ContainerTitle>컨테이너 제목</ContainerTitle>
@@ -377,6 +404,35 @@ export default function UIShowcasePage() {
                     <p className="text-gray-700 dark:text-gray-300">컨테이너 내용입니다.</p>
                   </div>
                 </Container>
+              </Section>
+
+              <Section title="Card (스타일 상수)">
+                <div className="space-y-4">
+                  {/* 헤더 있는 카드 */}
+                  <div className={cardStyles}>
+                    <div className={cardHeaderStyles}>
+                      <h3 className={cardTitleStyles}>카드 제목</h3>
+                    </div>
+                    <div className="p-6">
+                      <p className="text-gray-700 dark:text-gray-300">카드 내용입니다.</p>
+                    </div>
+                  </div>
+
+                  {/* 간단한 카드 */}
+                  <div className={cardSimpleStyles}>
+                    <h3 className="text-xl font-semibold mb-4">간단한 카드</h3>
+                    <p className="text-gray-700 dark:text-gray-300">패딩만 있는 심플 카드입니다.</p>
+                  </div>
+                </div>
+                <div className="mt-4 p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded text-xs font-mono text-gray-600 dark:text-gray-400">
+                  <p>import {'{'} cardStyles, cardHeaderStyles, cardTitleStyles, cardSimpleStyles {'}'} from &apos;@/shared/styles&apos;;</p>
+                  <p className="mt-2">&lt;div className={'{cardStyles}'}&gt;</p>
+                  <p className="ml-2">&lt;div className={'{cardHeaderStyles}'}&gt;</p>
+                  <p className="ml-4">&lt;h3 className={'{cardTitleStyles}'}&gt;제목&lt;/h3&gt;</p>
+                  <p className="ml-2">&lt;/div&gt;</p>
+                  <p className="ml-2">&lt;div className=&quot;p-6&quot;&gt;내용&lt;/div&gt;</p>
+                  <p>&lt;/div&gt;</p>
+                </div>
               </Section>
 
               <Section title="Modal">
@@ -418,37 +474,51 @@ export default function UIShowcasePage() {
           {/* Interactive */}
           {activeTab === 'interactive' && (
             <>
-              <Section title="Tabs">
+              <Section title="TabList (권장)">
                 <div className="space-y-6">
-                  {/* Default Style */}
+                  {/* TabList - default variant */}
                   <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Default (배경)</p>
-                    <Tabs>
-                      <TabButton active={demoTab === 0} onClick={() => setDemoTab(0)}>탭 1</TabButton>
-                      <TabButton active={demoTab === 1} onClick={() => setDemoTab(1)}>탭 2</TabButton>
-                      <TabButton active={demoTab === 2} onClick={() => setDemoTab(2)}>탭 3</TabButton>
-                    </Tabs>
-                  </div>
-                  {/* Underline Style */}
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Underline (밑줄)</p>
-                    <Tabs>
-                      <TabButton variant="underline" active={demoTab === 0} onClick={() => setDemoTab(0)}>탭 1</TabButton>
-                      <TabButton variant="underline" active={demoTab === 1} onClick={() => setDemoTab(1)}>탭 2</TabButton>
-                      <TabButton variant="underline" active={demoTab === 2} onClick={() => setDemoTab(2)}>탭 3</TabButton>
-                    </Tabs>
-                  </div>
-                  {/* Fill Style */}
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Fill (채움)</p>
-                    <div className="max-w-xs">
-                      <Tabs className="bg-[#F5F5F5] dark:bg-[#262626] rounded-t-lg">
-                        <TabButton variant="fill" active={demoTab === 0} onClick={() => setDemoTab(0)} className="py-2">탭 1</TabButton>
-                        <TabButton variant="fill" active={demoTab === 1} onClick={() => setDemoTab(1)} className="py-2">탭 2</TabButton>
-                        <TabButton variant="fill" active={demoTab === 2} onClick={() => setDemoTab(2)} className="py-2">탭 3</TabButton>
-                      </Tabs>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">variant=&quot;default&quot; - 메인 탭 (사이드바, 경기상세 등)</p>
+                    <div className="max-w-md">
+                      <TabList
+                        tabs={[
+                          { id: 'tab1', label: '탭 1' },
+                          { id: 'tab2', label: '탭 2', count: 5 },
+                          { id: 'tab3', label: '탭 3' },
+                        ] as TabItem[]}
+                        activeTab={demoTab === 0 ? 'tab1' : demoTab === 1 ? 'tab2' : 'tab3'}
+                        onTabChange={(id) => setDemoTab(id === 'tab1' ? 0 : id === 'tab2' ? 1 : 2)}
+                        showCount
+                      />
                     </div>
                   </div>
+                  {/* TabList - minimal variant */}
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">variant=&quot;minimal&quot; - 심플 탭 (검색결과, 설정 등)</p>
+                    <div className="max-w-md">
+                      <TabList
+                        tabs={[
+                          { id: 'tab1', label: '탭 1' },
+                          { id: 'tab2', label: '탭 2' },
+                          { id: 'tab3', label: '탭 3' },
+                        ] as TabItem[]}
+                        activeTab={demoTab === 0 ? 'tab1' : demoTab === 1 ? 'tab2' : 'tab3'}
+                        onTabChange={(id) => setDemoTab(id === 'tab1' ? 0 : id === 'tab2' ? 1 : 2)}
+                        variant="minimal"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </Section>
+
+              <Section title="TabButton (프리미티브 - 특수 케이스용)">
+                <div className="space-y-4">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">개별 탭 버튼이 필요한 경우에만 사용. 일반적으로 TabList 권장.</p>
+                  <Tabs>
+                    <TabButton active={demoTab === 0} onClick={() => setDemoTab(0)}>탭 1</TabButton>
+                    <TabButton active={demoTab === 1} onClick={() => setDemoTab(1)}>탭 2</TabButton>
+                    <TabButton active={demoTab === 2} onClick={() => setDemoTab(2)}>탭 3</TabButton>
+                  </Tabs>
                 </div>
               </Section>
 
@@ -553,6 +623,174 @@ export default function UIShowcasePage() {
             </>
           )}
 
+          {/* UI Components - 공유 컴포넌트 */}
+          {activeTab === 'ui-components' && (
+            <>
+              <Section title="Dialog (Radix)">
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    Radix Dialog 기반 모달 컴포넌트. 접근성, 애니메이션, 포커스 트랩 자동 지원.
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    {/* 기본 Dialog */}
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="primary">기본 Dialog</Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Dialog 제목</DialogTitle>
+                          <DialogCloseButton />
+                        </DialogHeader>
+                        <DialogBody>
+                          <p className="text-gray-700 dark:text-gray-300">
+                            Radix Dialog 기반의 모달입니다. ESC 키로 닫기, 외부 클릭으로 닫기,
+                            포커스 트랩 등이 자동으로 지원됩니다.
+                          </p>
+                        </DialogBody>
+                        <DialogFooter>
+                          <Button variant="outline">취소</Button>
+                          <Button variant="primary">확인</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+
+                    {/* 확인 Dialog */}
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="destructive">삭제 확인</Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>삭제 확인</DialogTitle>
+                          <DialogCloseButton />
+                        </DialogHeader>
+                        <DialogBody>
+                          <p className="text-gray-700 dark:text-gray-300">
+                            정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+                          </p>
+                        </DialogBody>
+                        <DialogFooter>
+                          <Button variant="outline">취소</Button>
+                          <Button variant="destructive">삭제</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+
+                    {/* 폼 Dialog */}
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline">폼 Dialog</Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>정보 입력</DialogTitle>
+                          <DialogCloseButton />
+                        </DialogHeader>
+                        <DialogBody>
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                이름
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="이름을 입력하세요"
+                                className="w-full px-3 py-2 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-400"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                이메일
+                              </label>
+                              <input
+                                type="email"
+                                placeholder="이메일을 입력하세요"
+                                className="w-full px-3 py-2 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-400"
+                              />
+                            </div>
+                          </div>
+                        </DialogBody>
+                        <DialogFooter>
+                          <Button variant="outline">취소</Button>
+                          <Button variant="primary">저장</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </div>
+              </Section>
+
+              <Section title="SelectRadix (Radix)">
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    Radix Select 기반 드롭다운. 키보드 네비게이션, 접근성 자동 지원.
+                  </p>
+                  <div className="max-w-xs">
+                    <SelectRadix value={selectValue} onValueChange={setSelectValue}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="옵션을 선택하세요" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="option1">옵션 1</SelectItem>
+                        <SelectItem value="option2">옵션 2</SelectItem>
+                        <SelectItem value="option3">옵션 3</SelectItem>
+                        <SelectItem value="option4">옵션 4</SelectItem>
+                      </SelectContent>
+                    </SelectRadix>
+                    {selectValue && (
+                      <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                        선택된 값: <span className="font-medium text-gray-900 dark:text-[#F0F0F0]">{selectValue}</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </Section>
+
+              <Section title="Pagination">
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    페이지네이션 컴포넌트. URL 모드와 버튼 모드 지원.
+                  </p>
+                  <div className="bg-[#F5F5F5] dark:bg-[#262626] rounded-lg p-4">
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={10}
+                      onPageChange={setCurrentPage}
+                      mode="button"
+                    />
+                    <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                      현재 페이지: <span className="font-medium text-gray-900 dark:text-[#F0F0F0]">{currentPage}</span> / 10
+                    </p>
+                  </div>
+                </div>
+              </Section>
+
+              <Section title="Button Variants">
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    공유 Button 컴포넌트의 모든 variant.
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    <Button variant="default">Default</Button>
+                    <Button variant="primary">Primary</Button>
+                    <Button variant="secondary">Secondary</Button>
+                    <Button variant="destructive">Destructive</Button>
+                    <Button variant="outline">Outline</Button>
+                    <Button variant="ghost">Ghost</Button>
+                    <Button variant="link">Link</Button>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3 mt-4">
+                    <Button variant="primary" size="sm">Small</Button>
+                    <Button variant="primary" size="default">Default</Button>
+                    <Button variant="primary" size="lg">Large</Button>
+                    <Button variant="ghost" size="icon"><User className="h-4 w-4" /></Button>
+                  </div>
+                </div>
+              </Section>
+            </>
+          )}
+
           {/* Tables */}
           {activeTab === 'tables' && (
             <Section title="테이블">
@@ -637,24 +875,47 @@ export default function UIShowcasePage() {
                 </div>
               </Section>
 
-              <Section title="Alerts">
+              <Section title="Alerts (스타일 상수)">
                 <div className="space-y-3 max-w-md">
-                  <div className="flex items-start gap-3 p-4 rounded-lg bg-green-100 dark:bg-green-900/30">
-                    <Check className="w-5 h-5 text-green-800 dark:text-green-400 flex-shrink-0" />
-                    <p className="text-sm text-green-800 dark:text-green-400">성공적으로 저장되었습니다.</p>
+                  <div className={`${alertBaseStyles} ${alertBgSuccess}`}>
+                    <Check className={`w-5 h-5 ${alertTextSuccess} flex-shrink-0`} />
+                    <p className={`text-sm ${alertTextSuccess}`}>성공적으로 저장되었습니다.</p>
                   </div>
-                  <div className="flex items-start gap-3 p-4 rounded-lg bg-yellow-100 dark:bg-yellow-900/30">
-                    <AlertCircle className="w-5 h-5 text-yellow-800 dark:text-yellow-400 flex-shrink-0" />
-                    <p className="text-sm text-yellow-800 dark:text-yellow-400">주의가 필요합니다.</p>
+                  <div className={`${alertBaseStyles} ${alertBgWarning}`}>
+                    <AlertCircle className={`w-5 h-5 ${alertTextWarning} flex-shrink-0`} />
+                    <p className={`text-sm ${alertTextWarning}`}>주의가 필요합니다.</p>
                   </div>
-                  <div className="flex items-start gap-3 p-4 rounded-lg bg-red-100 dark:bg-red-900/30">
-                    <X className="w-5 h-5 text-red-800 dark:text-red-400 flex-shrink-0" />
-                    <p className="text-sm text-red-800 dark:text-red-400">에러가 발생했습니다.</p>
+                  <div className={`${alertBaseStyles} ${alertBgError}`}>
+                    <X className={`w-5 h-5 ${alertTextError} flex-shrink-0`} />
+                    <p className={`text-sm ${alertTextError}`}>에러가 발생했습니다.</p>
                   </div>
-                  <div className="flex items-start gap-3 p-4 rounded-lg bg-blue-100 dark:bg-blue-900/30">
-                    <Info className="w-5 h-5 text-blue-800 dark:text-blue-400 flex-shrink-0" />
-                    <p className="text-sm text-blue-800 dark:text-blue-400">참고 정보입니다.</p>
+                  <div className={`${alertBaseStyles} ${alertBgInfo}`}>
+                    <Info className={`w-5 h-5 ${alertTextInfo} flex-shrink-0`} />
+                    <p className={`text-sm ${alertTextInfo}`}>참고 정보입니다.</p>
                   </div>
+                </div>
+                <div className="mt-4 p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded text-xs font-mono text-gray-600 dark:text-gray-400">
+                  <p>import {'{'} alertBaseStyles, alertBgError, alertTextError {'}'} from &apos;@/shared/styles&apos;;</p>
+                  <p className="mt-1">&lt;div className={'{`${alertBaseStyles} ${alertBgError}`}'}&gt;</p>
+                  <p className="ml-2">&lt;X className={'{`w-5 h-5 ${alertTextError}`}'} /&gt;</p>
+                  <p className="ml-2">&lt;p className={'{`text-sm ${alertTextError}`}'}&gt;에러&lt;/p&gt;</p>
+                  <p>&lt;/div&gt;</p>
+                </div>
+              </Section>
+
+              <Section title="Error Box (스타일 상수)">
+                <div className={errorBoxStyles}>
+                  <h2 className={errorTitleStyles}>오류가 발생했습니다</h2>
+                  <p className={errorMessageStyles}>페이지를 불러오는 중 문제가 발생했습니다.</p>
+                  <Link href="/" className={errorLinkStyles}>메인페이지로 이동</Link>
+                </div>
+                <div className="mt-4 p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded text-xs font-mono text-gray-600 dark:text-gray-400">
+                  <p>import {'{'} errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles {'}'} from &apos;@/shared/styles&apos;;</p>
+                  <p className="mt-2">&lt;div className={'{errorBoxStyles}'}&gt;</p>
+                  <p className="ml-2">&lt;h2 className={'{errorTitleStyles}'}&gt;제목&lt;/h2&gt;</p>
+                  <p className="ml-2">&lt;p className={'{errorMessageStyles}'}&gt;메시지&lt;/p&gt;</p>
+                  <p className="ml-2">&lt;Link href=&quot;/&quot; className={'{errorLinkStyles}'}&gt;링크&lt;/Link&gt;</p>
+                  <p>&lt;/div&gt;</p>
                 </div>
               </Section>
             </>

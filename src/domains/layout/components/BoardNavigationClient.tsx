@@ -11,6 +11,7 @@ import {
   SimpleDropdownMenu,
   MobileBoardModal
 } from './navigation';
+import { Button } from '@/shared/components/ui';
 
 // 가상 네비게이션 Board 데이터
 const createNavBoards = (boards: Board[]): Board[] => {
@@ -267,13 +268,14 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
       <div className="md:hidden flex items-center justify-between gap-2 w-full">
         {/* 네비게이션 링크들 */}
         <div className="flex items-center gap-1 overflow-x-auto min-w-0 flex-1">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setIsMobileModalOpen(true)}
-            className="px-2 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded flex items-center gap-1 shrink-0 transition-colors"
+            className="px-2 py-1.5 h-auto text-xs font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1 shrink-0"
           >
             게시판
             <ChevronDown className="h-3 w-3" />
-          </button>
+          </Button>
 
           <Link
             href="/livescore/football"

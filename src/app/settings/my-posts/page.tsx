@@ -4,7 +4,7 @@ import { Metadata } from 'next';
 import { getMyPosts } from '@/domains/settings/actions/my-posts';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import MyPostsContent from '@/domains/settings/components/my-posts/MyPostsContent';
-import PostsPagination from '@/domains/settings/components/my-posts/PostsPagination';
+import { Container, ContainerContent, Pagination } from '@/shared/components/ui';
 import Spinner from '@/shared/components/Spinner';
 
 export const metadata: Metadata = {
@@ -52,12 +52,14 @@ export default async function MyPostsPage({
 
     return (
       <div className="space-y-4">
-        <div className="mb-4 bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden p-4">
-          <h2 className="text-xl font-semibold mb-1 text-gray-900 dark:text-[#F0F0F0]">내가 쓴 글</h2>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
-            내가 작성한 게시글 목록을 확인할 수 있습니다.
-          </p>
-        </div>
+        <Container className="mb-4 bg-white dark:bg-[#1D1D1D]">
+          <ContainerContent>
+            <h2 className="text-xl font-semibold mb-1 text-gray-900 dark:text-[#F0F0F0]">내가 쓴 글</h2>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
+              내가 작성한 게시글 목록을 확인할 수 있습니다.
+            </p>
+          </ContainerContent>
+        </Container>
 
         <Suspense fallback={
           <div className="flex justify-center py-8">
@@ -71,10 +73,14 @@ export default async function MyPostsPage({
           />
         </Suspense>
 
-        <PostsPagination
-          currentPage={page}
-          totalPages={totalPages}
-        />
+        <div className="px-4 sm:px-6">
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            mode="url"
+            withMargin={false}
+          />
+        </div>
       </div>
     );
   } catch (error) {

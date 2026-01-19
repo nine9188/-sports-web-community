@@ -1,9 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import MatchStatsChart from './MatchStatsChart';
 import PredictionChart from '@/domains/prediction/components/PredictionChart';
-import { parseMatchStatsFromText } from './post-content/parsers';
 import {
   renderTipTapDoc,
   renderRssHeader,
@@ -17,10 +15,7 @@ import {
   updateMatchCardImages,
   setupMatchCardHover,
   cleanupMatchCardHover,
-  registerMatchCardHoverHandler,
-  convertChartData,
-  hasMatchDataInText,
-  isMatchHeader
+  registerMatchCardHoverHandler
 } from './post-content/utils';
 import type { TipTapDoc, RssPost, PostContentProps } from './post-content/types';
 
@@ -91,63 +86,6 @@ export default function PostContent({ content, meta }: PostContentProps) {
   const processEmbeds = useCallback(() => {
     if (!contentRef.current || !isMounted) return;
     const rootElement = contentRef.current;
-
-    // 차트 데이터 처리
-    let chartDataToRender = null;
-
-    if (meta?.chart_data && Array.isArray(meta.chart_data)) {
-      chartDataToRender = meta.chart_data.map((data: Record<string, unknown>) => convertChartData(data));
-    } else {
-      const textContent = rootElement.textContent || '';
-      if (hasMatchDataInText(textContent)) {
-        const parsedData = parseMatchStatsFromText(textContent);
-        if (parsedData) {
-          chartDataToRender = [parsedData];
-        }
-      }
-    }
-
-    // 차트 렌더링
-    if (chartDataToRender && Array.isArray(chartDataToRender)) {
-      const matchHeaders = rootElement.querySelectorAll('h2, h3');
-
-      matchHeaders.forEach((header, index) => {
-        if (index < chartDataToRender.length && chartDataToRender[index]) {
-          const chartData = chartDataToRender[index];
-
-          const existingChart = header.nextElementSibling?.querySelector('.match-stats-chart');
-          if (existingChart) return;
-
-          const headerText = header.textContent || '';
-          if (!isMatchHeader(headerText)) return;
-
-          const chartContainer = document.createElement('div');
-          chartContainer.className = 'chart-container';
-
-          import('react-dom/client').then(({ createRoot }) => {
-            const root = createRoot(chartContainer);
-            root.render(
-              React.createElement(MatchStatsChart, {
-                homeTeam: chartData.homeTeam || { name: '홈팀' },
-                awayTeam: chartData.awayTeam || { name: '원정팀' },
-                bettingOdds: chartData.bettingOdds || null
-              })
-            );
-          }).catch(() => {
-            chartContainer.innerHTML = `
-              <div class="match-stats-chart-container my-8 p-6 bg-red-50 border border-red-200 rounded-xl">
-                <div class="text-center text-red-600">
-                  <p class="font-medium">차트를 로드할 수 없습니다</p>
-                  <p class="text-sm mt-1">페이지를 새로고침해 주세요</p>
-                </div>
-              </div>
-            `;
-          });
-
-          header.parentNode?.insertBefore(chartContainer, header.nextSibling);
-        }
-      });
-    }
 
     // 소셜 임베드 처리
     const socialEmbedElements = rootElement.querySelectorAll('div[data-type="social-embed"]');

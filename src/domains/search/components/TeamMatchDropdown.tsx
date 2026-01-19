@@ -7,6 +7,7 @@ import { getTeamMatches, type TeamMatch } from '../actions/teamMatches'
 import { getLeagueName } from '@/domains/livescore/constants/league-mappings'
 import { getTeamById } from '@/domains/livescore/constants/teams'
 import Spinner from '@/shared/components/Spinner';
+import { Button } from '@/shared/components/ui';
 
 // 캐시 유효성 검사 (5분)
 const CACHE_DURATION = 5 * 60 * 1000 // 5분
@@ -129,9 +130,11 @@ export function TeamMatchDropdownButton({
   }, [team, isExpanded, onToggle, getCachedMatches, isTeamLoading])
 
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="icon"
       onClick={handleToggle}
-      className="ml-1 sm:ml-2 p-1 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors flex-shrink-0 text-gray-700 dark:text-gray-300"
+      className="ml-1 sm:ml-2 p-1 h-auto w-auto flex-shrink-0 text-gray-700 dark:text-gray-300"
       title={isExpanded ? '경기 정보 숨기기' : '경기 정보 보기'}
     >
       <svg
@@ -142,7 +145,7 @@ export function TeamMatchDropdownButton({
       >
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
       </svg>
-    </button>
+    </Button>
   )
 }
 

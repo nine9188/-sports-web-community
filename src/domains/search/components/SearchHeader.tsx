@@ -1,13 +1,10 @@
 'use client'
 
-import SearchBar from './SearchBar'
-
 interface SearchHeaderProps {
   title?: string
   description?: string
   initialQuery?: string
   className?: string
-  showSearchBar?: boolean
 }
 
 export default function SearchHeader({
@@ -15,7 +12,6 @@ export default function SearchHeader({
   description = "게시글, 댓글, 팀을 검색해보세요",
   initialQuery = "",
   className = "",
-  showSearchBar = false
 }: SearchHeaderProps) {
 
   const trimmedQuery = (initialQuery || '').trim()
@@ -32,16 +28,6 @@ export default function SearchHeader({
           )}
         </div>
       </div>
-      
-      {showSearchBar && (
-        <div className="p-4 sm:p-6">
-          <SearchBar 
-            initialQuery={initialQuery}
-            placeholder="게시글, 댓글, 팀 검색..."
-            className="w-full"
-          />
-        </div>
-      )}
     </div>
   )
 } 

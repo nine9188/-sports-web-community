@@ -11,6 +11,7 @@ import { CommentType } from "@/domains/boards/types/post/comment";
 import { buildCommentTree } from "@/domains/boards/utils/comment/commentUtils";
 import Comment from "./Comment";
 import { Button } from "@/shared/components/ui/button";
+import { Container, ContainerHeader, ContainerTitle } from "@/shared/components/ui";
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
 
 // 내부 디바운스 함수 구현
@@ -291,13 +292,13 @@ export default function CommentSection({
   }, [treeComments, currentUserId, handleUpdate, handleDelete, handleReply, postOwnerId]);
 
   return (
-    <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden mb-4">
+    <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
       {/* 댓글 헤더 */}
-      <div className="h-12 px-4 flex items-center bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10">
-        <h3 className="font-bold text-sm text-gray-900 dark:text-[#F0F0F0]">
+      <ContainerHeader>
+        <ContainerTitle>
           댓글 <span className="text-gray-900 dark:text-[#F0F0F0]">{comments.length}</span>개
-        </h3>
-      </div>
+        </ContainerTitle>
+      </ContainerHeader>
 
       {/* 댓글 목록 */}
       <div className="divide-y divide-gray-100 dark:divide-white/10">
@@ -322,13 +323,15 @@ export default function CommentSection({
               <span className="font-medium">{replyToNickname}</span>
               <span className="ml-1">님에게 답글 작성 중</span>
             </div>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={cancelReply}
-              className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors"
+              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-[#F0F0F0]"
             >
               취소
-            </button>
+            </Button>
           </div>
         )}
         
@@ -364,6 +367,6 @@ export default function CommentSection({
           </div>
         </form>
       </div>
-    </div>
+    </Container>
   );
 } 

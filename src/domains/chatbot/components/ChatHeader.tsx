@@ -2,6 +2,7 @@
 
 import { ChevronLeft, List, MessageCircle } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
+import { Button } from '@/shared/components/ui';
 
 interface ChatHeaderProps {
   currentView: 'chat' | 'conversations';
@@ -29,13 +30,15 @@ export function ChatHeader({
       {/* Left Section */}
       <div className="flex items-center space-x-3">
         {currentView === 'chat' && canGoBack && (
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={handleBackClick}
-            className="p-1 rounded-full hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0"
+            className="rounded-full h-8 w-8"
             aria-label="대화 목록으로 돌아가기"
           >
-            <ChevronLeft className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-          </button>
+            <ChevronLeft className="w-5 h-5" />
+          </Button>
         )}
         
         <div className="flex items-center space-x-2">

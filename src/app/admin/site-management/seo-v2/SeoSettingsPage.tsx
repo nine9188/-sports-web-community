@@ -11,6 +11,7 @@ import {
   updatePageSeo,
   deletePageSeo,
 } from '@/domains/seo/actions/seoSettings';
+import { Button } from '@/shared/components/ui';
 
 // 지원하는 페이지 목록 (기본값 포함)
 const PREDEFINED_PAGES = [
@@ -324,14 +325,14 @@ export default function SeoSettingsPage({ initialSettings, boards }: Props) {
             />
           </div>
 
-          <button
+          <Button
             onClick={handleSaveGlobal}
             disabled={isLoading}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+            variant="primary"
           >
             <Save className="w-4 h-4" />
             {isLoading ? '저장 중...' : '전역 설정 저장'}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -344,13 +345,15 @@ export default function SeoSettingsPage({ initialSettings, boards }: Props) {
               각 페이지의 메타 제목과 설명을 커스터마이징할 수 있습니다.
             </p>
           </div>
-          <button
+          <Button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+            variant="primary"
+            size="sm"
+            className="bg-green-600 hover:bg-green-700"
           >
             <Plus className="w-4 h-4" />
             직접 추가
-          </button>
+          </Button>
         </div>
 
         {/* 미리 정의된 페이지 목록 */}
@@ -385,21 +388,23 @@ export default function SeoSettingsPage({ initialSettings, boards }: Props) {
                     </div>
                   </div>
                   <div className="flex gap-2 ml-4">
-                    <button
+                    <Button
                       onClick={() => handleStartEdit(page.path, page)}
-                      className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+                      variant="outline"
+                      size="sm"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                       수정
-                    </button>
+                    </Button>
                     {hasOverride && (
-                      <button
+                      <Button
                         onClick={() => handleDeletePage(page.path)}
-                        className="flex items-center gap-1 px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-md hover:bg-red-50"
+                        variant="destructive"
+                        size="sm"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                         초기화
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -436,25 +441,29 @@ export default function SeoSettingsPage({ initialSettings, boards }: Props) {
                             )}
                           </div>
                           <div className="flex gap-2">
-                            <button
+                            <Button
                               onClick={() => handleStartEdit(boardPath, {
                                 path: boardPath,
                                 name: board.name,
                                 defaultTitle: `${board.name} - 4590 Football`,
                                 defaultDescription: `${board.name} 게시판입니다.`,
                               })}
-                              className="flex items-center gap-1 px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50"
+                              variant="outline"
+                              size="sm"
+                              className="text-xs px-2 py-1 h-auto"
                             >
                               <Edit2 className="w-3 h-3" />
                               수정
-                            </button>
+                            </Button>
                             {hasOverride && (
-                              <button
+                              <Button
                                 onClick={() => handleDeletePage(boardPath)}
-                                className="flex items-center gap-1 px-2 py-1 text-xs text-red-600 border border-red-200 rounded hover:bg-red-50"
+                                variant="destructive"
+                                size="sm"
+                                className="text-xs px-2 py-1 h-auto"
                               >
                                 <Trash2 className="w-3 h-3" />
-                              </button>
+                              </Button>
                             )}
                           </div>
                         </div>
@@ -487,24 +496,28 @@ export default function SeoSettingsPage({ initialSettings, boards }: Props) {
                                     )}
                                   </div>
                                   <div className="flex gap-1">
-                                    <button
+                                    <Button
                                       onClick={() => handleStartEdit(childPath, {
                                         path: childPath,
                                         name: child.name,
                                         defaultTitle: `${child.name} - 4590 Football`,
                                         defaultDescription: `${child.name} 게시판입니다.`,
                                       })}
-                                      className="flex items-center gap-1 px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50"
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-xs px-2 py-1 h-auto"
                                     >
                                       <Edit2 className="w-3 h-3" />
-                                    </button>
+                                    </Button>
                                     {childHasOverride && (
-                                      <button
+                                      <Button
                                         onClick={() => handleDeletePage(childPath)}
-                                        className="text-xs text-red-600 border border-red-200 rounded px-2 py-1 hover:bg-red-50"
+                                        variant="destructive"
+                                        size="sm"
+                                        className="text-xs px-2 py-1 h-auto"
                                       >
                                         <Trash2 className="w-3 h-3" />
-                                      </button>
+                                      </Button>
                                     )}
                                   </div>
                                 </div>
@@ -552,20 +565,22 @@ export default function SeoSettingsPage({ initialSettings, boards }: Props) {
                           </div>
                         </div>
                         <div className="flex gap-2 ml-4">
-                          <button
+                          <Button
                             onClick={() => handleStartEdit(path)}
-                            className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+                            variant="outline"
+                            size="sm"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                             수정
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             onClick={() => handleDeletePage(path)}
-                            className="flex items-center gap-1 px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-md hover:bg-red-50"
+                            variant="destructive"
+                            size="sm"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                             삭제
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     </div>

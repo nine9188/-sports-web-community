@@ -8,6 +8,7 @@ import { deleteNotifications } from '@/domains/notifications/actions/delete';
 import { Notification, NotificationType } from '@/domains/notifications/types/notification';
 import NotificationItem from '@/domains/notifications/components/NotificationItem';
 import Spinner from '@/shared/components/Spinner';
+import { Button } from '@/shared/components/ui';
 
 type FilterType = 'all' | 'unread';
 type TypeFilter = 'all' | NotificationType;
@@ -165,13 +166,14 @@ export default function NotificationsPage() {
 
         {/* 타입 필터 드롭다운 */}
         <div className="relative">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors outline-none focus:outline-none"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 h-auto"
           >
             {notificationTypeLabels[typeFilter]}
             <ChevronDown className="w-3.5 h-3.5" />
-          </button>
+          </Button>
 
           {isDropdownOpen && (
             <>
@@ -184,20 +186,21 @@ export default function NotificationsPage() {
               {/* 드롭다운 메뉴 */}
               <div className="absolute right-0 top-full mt-1 w-40 bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-lg shadow-lg z-20 py-1 max-h-80 overflow-y-auto">
                 {(Object.keys(notificationTypeLabels) as TypeFilter[]).map((type) => (
-                  <button
+                  <Button
                     key={type}
+                    variant="ghost"
                     onClick={() => {
                       setTypeFilter(type);
                       setIsDropdownOpen(false);
                     }}
-                    className={`w-full text-left px-3 py-2 text-xs transition-colors outline-none focus:outline-none ${
+                    className={`w-full justify-start px-3 py-2 text-xs h-auto rounded-none ${
                       typeFilter === type
                         ? 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] font-medium'
                         : 'text-gray-700 dark:text-gray-300 hover:bg-[#F5F5F5] dark:hover:bg-[#262626]'
                     }`}
                   >
                     {notificationTypeLabels[type]}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </>
@@ -207,11 +210,12 @@ export default function NotificationsPage() {
 
       {/* 필터 탭 */}
       <div className="flex border-b border-black/5 dark:border-white/10">
-        <button
+        <Button
+          variant="ghost"
           onClick={() => setFilter('all')}
-          className={`flex-1 h-12 px-4 text-sm font-medium transition-colors outline-none focus:outline-none ${
+          className={`flex-1 h-12 px-4 text-sm font-medium rounded-none ${
             filter === 'all'
-              ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] border-b-2 border-slate-800 dark:border-white'
+              ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] border-b-2 border-[#262626] dark:border-[#F0F0F0]'
               : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
           }`}
         >
@@ -219,41 +223,44 @@ export default function NotificationsPage() {
           <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
             ({notifications.length})
           </span>
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="ghost"
           onClick={() => setFilter('unread')}
-          className={`flex-1 h-12 px-4 text-sm font-medium transition-colors outline-none focus:outline-none ${
+          className={`flex-1 h-12 px-4 text-sm font-medium rounded-none ${
             filter === 'unread'
-              ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] border-b-2 border-slate-800 dark:border-white'
+              ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] border-b-2 border-[#262626] dark:border-[#F0F0F0]'
               : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
           }`}
         >
           안 읽음
           {unreadCount > 0 && (
-            <span className="ml-2 px-1.5 py-0.5 text-xs font-semibold bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-full">
+            <span className="ml-2 px-1.5 py-0.5 text-xs font-semibold bg-[#262626] dark:bg-[#F0F0F0] text-white dark:text-black rounded-full">
               {unreadCount}
             </span>
           )}
-        </button>
+        </Button>
       </div>
 
       {/* 액션 버튼 */}
       {filteredNotifications.length > 0 && (
         <div className="flex items-center gap-2 px-4 py-2 border-b border-black/5 dark:border-white/10 bg-white dark:bg-[#1D1D1D]">
-          <button
+          <Button
+            variant="ghost"
             onClick={handleToggleSelectAll}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors outline-none focus:outline-none"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 h-auto"
           >
             {isAllSelected ? '전체 해제' : '전체 선택'}
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="ghost"
             onClick={handleDeleteSelected}
             disabled={selectedIds.size === 0}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded transition-colors outline-none focus:outline-none ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium h-auto ${
               selectedIds.size === 0
                 ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
-                : 'text-red-600 dark:text-red-400 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
+                : 'text-red-600 dark:text-red-400'
             }`}
           >
             <Trash2 className="w-3.5 h-3.5" />
@@ -263,20 +270,21 @@ export default function NotificationsPage() {
                 ({selectedIds.size})
               </span>
             )}
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="ghost"
             onClick={handleMarkAllAsRead}
             disabled={unreadCount === 0}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded transition-colors outline-none focus:outline-none ml-auto ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium h-auto ml-auto ${
               unreadCount === 0
                 ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
+                : 'text-gray-700 dark:text-gray-300'
             }`}
           >
             <CheckCheck className="w-3.5 h-3.5" />
             전체 읽음
-          </button>
+          </Button>
         </div>
       )}
 

@@ -1,14 +1,15 @@
 import { Metadata } from 'next';
-import { 
+import {
   checkUserAuth
 } from '@/domains/settings/actions/auth';
-import { 
-  getUserExpHistory, 
-  getUserExpLevel 
+import {
+  getUserExpHistory,
+  getUserExpLevel
 } from '@/domains/settings/actions/exp';
 import ExpForm from '@/domains/settings/components/exp/ExpForm';
 import ExpHistory from '@/domains/settings/components/exp/ExpHistory';
 import LevelList from '@/domains/settings/components/exp/LevelList';
+import { Container, ContainerContent } from '@/shared/components/ui';
 
 export const metadata: Metadata = {
   title: '경험치 및 레벨 - 설정',
@@ -34,18 +35,20 @@ export default async function ExpPage() {
   
   return (
     <div className="space-y-4">
-      <div className="mb-4 bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden p-4">
-        <h2 className="text-xl font-semibold mb-1 text-gray-900 dark:text-[#F0F0F0]">경험치 및 레벨</h2>
-        <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
-          현재 레벨과 경험치 획득 내역을 확인합니다.
-        </p>
-        {/* 경험치 정보 컴포넌트 */}
-        <ExpForm
-          userId={userId}
-          userExp={userExp}
-          userLevel={userLevel}
-        />
-      </div>
+      <Container className="mb-4 bg-white dark:bg-[#1D1D1D]">
+        <ContainerContent>
+          <h2 className="text-xl font-semibold mb-1 text-gray-900 dark:text-[#F0F0F0]">경험치 및 레벨</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
+            현재 레벨과 경험치 획득 내역을 확인합니다.
+          </p>
+          {/* 경험치 정보 컴포넌트 */}
+          <ExpForm
+            userId={userId}
+            userExp={userExp}
+            userLevel={userLevel}
+          />
+        </ContainerContent>
+      </Container>
 
       {/* 레벨 목록 컴포넌트 */}
       <LevelList currentLevel={userLevel} />

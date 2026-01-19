@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { ChevronsDown, ChevronsUp, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import Calendar from '@/shared/components/Calendar';
+import { Button, Container } from '@/shared/components/ui';
 
 interface NavigationBarProps {
   searchKeyword: string;
@@ -89,37 +90,44 @@ export default function NavigationBar({
   const maxDate = new Date(currentYear + 1, 11, 31);
 
   return (
-    <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
+    <Container className="bg-white dark:bg-[#1D1D1D]">
       {/* 헤더: 날짜 네비게이션 */}
       <div className="h-12 bg-[#F5F5F5] dark:bg-[#262626] px-4 flex items-center justify-between border-b border-black/5 dark:border-white/10">
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={handlePrevDay}
-          className="p-1 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors outline-none focus:outline-none"
+          className="h-8 w-8"
         >
-          <ChevronLeft className="w-5 h-5 text-gray-900 dark:text-[#F0F0F0]" />
-        </button>
+          <ChevronLeft className="w-5 h-5" />
+        </Button>
 
         <div className="flex items-center gap-2">
-          <button
+          <Button
+            variant="ghost"
             onClick={handleToday}
-            className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0] hover:text-gray-700 dark:hover:text-gray-300 transition-colors outline-none focus:outline-none"
+            className="text-sm font-semibold h-auto px-2 py-1"
           >
             {formatDate(selectedDate)}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => setShowCalendar(true)}
-            className="p-1 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors outline-none focus:outline-none"
+            className="h-8 w-8"
           >
-            <ChevronDown className="w-4 h-4 text-gray-900 dark:text-[#F0F0F0]" />
-          </button>
+            <ChevronDown className="w-4 h-4" />
+          </Button>
         </div>
 
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={handleNextDay}
-          className="p-1 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors outline-none focus:outline-none"
+          className="h-8 w-8"
         >
-          <ChevronRight className="w-5 h-5 text-gray-900 dark:text-[#F0F0F0]" />
-        </button>
+          <ChevronRight className="w-5 h-5" />
+        </Button>
       </div>
 
       {/* 캘린더 모달 */}
@@ -141,13 +149,10 @@ export default function NavigationBar({
       {/* 본문: 검색 및 필터 */}
       <div className="p-4">
         <div className="flex items-center gap-2 md:gap-4">
-          <button
+          <Button
+            variant={showLiveOnly ? 'primary' : 'secondary'}
             onClick={handleLiveClick}
-            className={`h-10 flex items-center gap-2 px-3 md:px-4 rounded-lg font-medium text-sm md:text-base transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
-              showLiveOnly
-                ? 'bg-slate-800 dark:bg-[#3F3F3F] text-white'
-                : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-            }`}
+            className="h-10 px-3 md:px-4 font-medium text-sm md:text-base"
           >
             <div className="flex items-center gap-2">
               <div className={`w-2 h-2 rounded-full ${
@@ -160,7 +165,7 @@ export default function NavigationBar({
                 </span>
               )}
             </div>
-          </button>
+          </Button>
 
           <div className="flex-1">
             <input
@@ -172,9 +177,10 @@ export default function NavigationBar({
             />
           </div>
 
-          <button
+          <Button
+            variant="secondary"
+            size="icon"
             onClick={onToggleExpandAll}
-            className="h-10 w-10 flex items-center justify-center rounded-lg bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
             title={allExpanded ? '모두 닫기' : '모두 열기'}
           >
             {allExpanded ? (
@@ -182,9 +188,9 @@ export default function NavigationBar({
             ) : (
               <ChevronsDown className="w-5 h-5" />
             )}
-          </button>
+          </Button>
         </div>
       </div>
-    </div>
+    </Container>
   );
 } 

@@ -5,6 +5,7 @@ import { getUserIcons, getCurrentUserIcon } from '@/domains/settings/actions/ico
 import { IconForm } from '@/domains/settings/components/icons';
 import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
 import { Metadata } from 'next';
+import { Container, ContainerContent } from '@/shared/components/ui';
 
 export const metadata: Metadata = {
   title: '아이콘 설정 - 설정',
@@ -51,12 +52,14 @@ export default async function IconSettingsPage() {
   
   return (
     <div className="space-y-4">
-      <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden p-4">
-        <h2 className="text-xl font-semibold mb-1 text-gray-900 dark:text-[#F0F0F0]">아이콘 설정</h2>
-        <p className="text-gray-500 dark:text-gray-400 text-sm">
-          프로필에 표시될 아이콘을 선택하고 관리합니다.
-        </p>
-      </div>
+      <Container className="bg-white dark:bg-[#1D1D1D]">
+        <ContainerContent>
+          <h2 className="text-xl font-semibold mb-1 text-gray-900 dark:text-[#F0F0F0]">아이콘 설정</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
+            프로필에 표시될 아이콘을 선택하고 관리합니다.
+          </p>
+        </ContainerContent>
+      </Container>
 
       <Suspense fallback={<IconSettingsLoading />}>
         <IconSettingsContent userId={user.id} userLevel={userLevel} />

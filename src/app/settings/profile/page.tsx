@@ -4,6 +4,7 @@ import { getUserProfile } from '@/domains/settings/actions/profile';
 import { ProfileForm } from '@/domains/settings/components';
 import { checkSuspensionStatus } from '@/shared/utils/suspension-guard';
 import SuspensionNotice from '@/shared/components/SuspensionNotice';
+import { Container, ContainerContent } from '@/shared/components/ui';
 
 export const metadata: Metadata = {
   title: '프로필 설정',
@@ -38,20 +39,22 @@ export default async function ProfileSettingsPage() {
         <SuspensionNotice suspensionInfo={suspensionInfo} />
       )}
 
-      <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden p-4">
-        <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-[#F0F0F0]">기본 정보</h2>
+      <Container className="bg-white dark:bg-[#1D1D1D]">
+        <ContainerContent>
+          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-[#F0F0F0]">기본 정보</h2>
 
-        <ProfileForm
-          initialData={{
-            id: profileData.id,
-            nickname: profileData.nickname,
-            email: profileData.email || user.email || null,
-            full_name: profileData.full_name,
-            created_at: user?.created_at,
-            last_sign_in_at: user?.last_sign_in_at,
-          }}
-        />
-      </div>
+          <ProfileForm
+            initialData={{
+              id: profileData.id,
+              nickname: profileData.nickname,
+              email: profileData.email || user.email || null,
+              full_name: profileData.full_name,
+              created_at: user?.created_at,
+              last_sign_in_at: user?.last_sign_in_at,
+            }}
+          />
+        </ContainerContent>
+      </Container>
     </div>
   );
 } 

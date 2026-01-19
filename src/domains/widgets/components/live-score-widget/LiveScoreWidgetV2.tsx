@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { ChevronDown, ChevronUp, ChevronsDown, ChevronsUp } from 'lucide-react';
+import { Button, Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import type { League, LiveScoreWidgetV2Props } from './types';
@@ -113,26 +114,24 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
   // 경기가 없을 때
   if (leagues.length === 0) {
     return (
-      <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
+      <Container className="bg-white dark:bg-[#1D1D1D]">
         {/* 위젯 헤더 */}
-        <div className="h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10">
-          <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
-            오늘·내일 경기
-          </span>
+        <ContainerHeader className="justify-between">
+          <ContainerTitle>오늘·내일 경기</ContainerTitle>
           <Link
             href="/livescore/football"
             className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
           >
             전체 경기
           </Link>
-        </div>
+        </ContainerHeader>
         {/* Empty State */}
         <div className="h-14 flex items-center justify-center px-4 text-center">
           <p className="text-sm text-gray-500 dark:text-gray-400">
             예정된 경기가 없습니다
           </p>
         </div>
-      </div>
+      </Container>
     );
   }
 
@@ -144,21 +143,20 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
         const isFirst = index === 0;
 
         return (
-          <div
+          <Container
             key={league.id}
-            className="bg-white dark:bg-[#1D1D1D] rounded-lg overflow-hidden border border-black/7 dark:border-0"
+            className="bg-white dark:bg-[#1D1D1D]"
           >
             {/* 첫 번째 리그일 때만 위젯 헤더 표시 */}
             {isFirst && (
-              <div className="h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10">
-                <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
-                  오늘·내일 경기
-                </span>
+              <ContainerHeader className="justify-between">
+                <ContainerTitle>오늘·내일 경기</ContainerTitle>
                 <div className="flex items-center gap-3">
                   {/* 전체 펼치기/접기 버튼 */}
-                  <button
+                  <Button
+                    variant="ghost"
                     onClick={toggleAll}
-                    className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1"
+                    className="h-auto px-1 py-0.5 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1"
                     title={allExpanded ? '모두 접기' : '모두 펼치기'}
                   >
                     {allExpanded ? (
@@ -172,7 +170,7 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
                         <span>펼치기</span>
                       </>
                     )}
-                  </button>
+                  </Button>
                   <Link
                     href="/livescore/football"
                     className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
@@ -180,13 +178,14 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
                     전체 경기
                   </Link>
                 </div>
-              </div>
+              </ContainerHeader>
             )}
 
             {/* 리그 헤더 */}
-            <button
+            <Button
+              variant="ghost"
               onClick={() => toggleLeague(league.id)}
-              className="w-full h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
+              className="w-full h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-none"
             >
               <div className="flex items-center gap-3">
                 {league.logo && league.leagueIdNumber ? (
@@ -216,7 +215,7 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
                   <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                 )}
               </div>
-            </button>
+            </Button>
 
             {/* 경기 목록 */}
             {isExpanded && (
@@ -303,7 +302,7 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
                 ))}
               </div>
             )}
-          </div>
+          </Container>
         );
       })}
     </div>

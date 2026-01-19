@@ -151,7 +151,7 @@ export default function UnifiedSportsImage({
   if (hasError) {
     return (
       <div
-        className={`${containerClasses} flex items-center justify-center bg-gray-100 dark:bg-gray-800`}
+        className={`${containerClasses} flex items-center justify-center bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10`}
         style={containerStyle}
       >
         {showFallback && fallbackContent ? fallbackContent : null}

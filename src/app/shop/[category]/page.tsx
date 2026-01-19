@@ -8,7 +8,7 @@ import {
   getUserItems 
 } from '@/domains/shop/actions/actions'
 import CategoryFilter from '@/domains/shop/components/CategoryFilter'
-import ShopPagination from '@/domains/shop/components/ShopPagination'
+import { Pagination } from '@/shared/components/ui'
 import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui'
 
 // 동적 렌더링 강제 설정 추가
@@ -111,7 +111,13 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           initialActiveCategory={catParam ?? 'all'}
         />
 
-        <ShopPagination page={page} pageSize={pageSize} total={total} />
+        {total > pageSize && (
+          <Pagination
+            currentPage={page}
+            totalPages={Math.ceil(total / pageSize)}
+            mode="url"
+          />
+        )}
       </div>
     )
   } catch (error) {

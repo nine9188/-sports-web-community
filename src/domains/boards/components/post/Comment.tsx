@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { User } from 'lucide-react';
 import UserIcon from '@/shared/components/UserIcon';
+import { Button } from '@/shared/components/ui';
 import { likeComment, dislikeComment } from '@/domains/boards/actions/comments/index';
 import { CommentType } from '@/domains/boards/types/post/comment';
 import ReportButton from '@/domains/reports/components/ReportButton';
@@ -138,7 +139,7 @@ export default function Comment({
     <>
       <div 
         id={`comment-${comment.id}`}
-        className={`border-b border-gray-100 dark:border-white/10 py-3 px-4 transition-colors hover:bg-gray-50 dark:hover:bg-[#252525] ${isReply ? 'pl-12 bg-gray-50/50 dark:bg-[#1A1A1A]' : ''}`}
+        className={`border-b border-black/5 dark:border-white/10 py-3 px-4 transition-colors hover:bg-[#F5F5F5] dark:hover:bg-[#252525] ${isReply ? 'pl-12 bg-[#F5F5F5]/50 dark:bg-[#1A1A1A]' : ''}`}
       >
         <div className="flex space-x-2">
           {/* 대댓글 표시 아이콘 */}
@@ -174,7 +175,7 @@ export default function Comment({
                       {comment.profiles?.nickname || '알 수 없음'}
                     </button>
                     {isAuthorDropdownOpen && (
-                      <div className="absolute left-0 top-full mt-1 z-50 min-w-[120px] bg-white dark:bg-[#2D2D2D] border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1">
+                      <div className="absolute left-0 top-full mt-1 z-50 min-w-[120px] bg-white dark:bg-[#2D2D2D] border border-black/7 dark:border-white/10 rounded-lg shadow-lg py-1">
                         <Link
                           href={`/user/${comment.profiles.public_id}`}
                           onClick={() => setIsAuthorDropdownOpen(false)}
@@ -192,7 +193,7 @@ export default function Comment({
                   </span>
                 )}
                 {isPostOwner && isCommentOwner && (
-                  <span className="text-xs bg-gray-100 dark:bg-[#333333] text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full">작성자</span>
+                  <span className="text-xs bg-[#F5F5F5] dark:bg-[#333333] text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full">작성자</span>
                 )}
               </div>
               <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-2">{formatDate(comment.created_at || '')}</span>
@@ -209,8 +210,8 @@ export default function Comment({
                   rows={3}
                 />
                 <div className="flex justify-end space-x-2 mt-2">
-                  <button onClick={handleCancel} className="px-3 py-1 text-xs text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-[#333333] rounded-md hover:bg-gray-200 dark:hover:bg-[#404040]">취소</button>
-                  <button onClick={handleSave} className="px-3 py-1 text-xs text-white bg-slate-800 dark:bg-[#3F3F3F] rounded-md hover:bg-slate-700 dark:hover:bg-[#4A4A4A]" disabled={!editContent.trim()}>저장</button>
+                  <Button variant="secondary" size="sm" onClick={handleCancel} className="px-3 py-1 text-xs h-auto">취소</Button>
+                  <Button variant="primary" size="sm" onClick={handleSave} className="px-3 py-1 text-xs h-auto" disabled={!editContent.trim()}>저장</Button>
                 </div>
               </div>
             )}
@@ -221,15 +222,16 @@ export default function Comment({
                 <ActionButton action="dislike" active={userAction === 'dislike'} count={dislikes} onClick={handleDislike} disabled={isLiking || isDisliking || !currentUserId} />
                 {/* 답글 버튼 - 원댓글에만 표시 (대댓글에는 표시 안 함) */}
                 {!isReply && currentUserId && onReply && (
-                  <button
+                  <Button
+                    variant="ghost"
                     onClick={() => onReply(comment.id)}
-                    className="flex items-center text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                    className="flex items-center text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 h-auto px-0 py-0"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                     </svg>
                     답글
-                  </button>
+                  </Button>
                 )}
               </div>
 
@@ -239,8 +241,8 @@ export default function Comment({
                 )}
                 {isCommentOwner && !isEditing && (
                   <>
-                    <button onClick={handleEdit} className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">수정</button>
-                    <button onClick={() => onDelete(comment.id)} className="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300">삭제</button>
+                    <Button variant="ghost" onClick={handleEdit} className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 h-auto px-0 py-0">수정</Button>
+                    <Button variant="ghost" onClick={() => onDelete(comment.id)} className="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 h-auto px-0 py-0">삭제</Button>
                   </>
                 )}
               </div>
@@ -271,7 +273,7 @@ export default function Comment({
 
 function DeletedCommentUI({ isReply = false }: { isReply?: boolean }) {
   return (
-    <div className={`border-b border-gray-100 dark:border-white/10 py-3 px-4 bg-red-50 dark:bg-red-950/20 ${isReply ? 'pl-12' : ''}`}>
+    <div className={`border-b border-black/5 dark:border-white/10 py-3 px-4 bg-red-50 dark:bg-red-950/20 ${isReply ? 'pl-12' : ''}`}>
       <div className="flex items-center py-2">
         {isReply && (
           <svg className="w-4 h-4 text-red-300 dark:text-red-700 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -303,7 +305,7 @@ function HiddenCommentUI({ hiddenUntil, isReply = false }: { hiddenUntil?: strin
   };
 
   return (
-    <div className={`border-b border-gray-100 dark:border-white/10 py-3 px-4 bg-gray-50 dark:bg-[#252525] ${isReply ? 'pl-12' : ''}`}>
+    <div className={`border-b border-black/5 dark:border-white/10 py-3 px-4 bg-[#F5F5F5] dark:bg-[#252525] ${isReply ? 'pl-12' : ''}`}>
       <div className="flex items-center py-2">
         {isReply && (
           <svg className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">

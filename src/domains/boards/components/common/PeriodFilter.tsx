@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Button, Container } from '@/shared/components/ui';
 
 interface PeriodFilterProps {
   currentPeriod: string;
@@ -25,22 +26,23 @@ export default function PeriodFilter({ currentPeriod }: PeriodFilterProps) {
   };
 
   return (
-    <div className="overflow-hidden bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0">
+    <Container className="bg-white dark:bg-[#1D1D1D]">
       <div className="flex">
         {periods.map((period) => (
-          <button
+          <Button
             key={period.value}
+            variant={currentPeriod === period.value ? 'ghost' : 'secondary'}
             onClick={() => handlePeriodChange(period.value)}
-            className={`flex-1 h-12 text-xs px-1 transition-colors font-medium ${
+            className={`flex-1 h-12 text-xs px-1 font-medium rounded-none ${
               currentPeriod === period.value
-                ? 'bg-white dark:bg-[#1D1D1D] border-b-2 border-slate-800 dark:border-white text-gray-900 dark:text-[#F0F0F0]'
-                : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-400 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
+                ? 'bg-white dark:bg-[#1D1D1D] border-b-2 border-[#262626] dark:border-[#F0F0F0] text-gray-900 dark:text-[#F0F0F0] hover:bg-white dark:hover:bg-[#1D1D1D]'
+                : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-400'
             }`}
           >
             {period.label}
-          </button>
+          </Button>
         ))}
       </div>
-    </div>
+    </Container>
   );
 }

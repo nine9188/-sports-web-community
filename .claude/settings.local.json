@@ -56,7 +56,10 @@
       "Bash(node replace-spinners.js)",
       "Bash(node replace-all-spinners.js)",
       "WebFetch(domain:www.api-football.com)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(npm run lint)",
+      "Bash(npx next lint:*)",
+      "Bash(npx eslint:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

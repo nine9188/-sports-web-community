@@ -6,6 +6,7 @@ import { Match } from '@/domains/livescore/types/match';
 import MatchCard from '../MatchCard';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
+import { Button, Container } from '@/shared/components/ui';
 
 interface LeagueMatchListProps {
   matches: Match[];
@@ -68,13 +69,13 @@ export default function LeagueMatchList({ matches, allExpanded = true }: LeagueM
 
   if (matches.length === 0) {
     return (
-      <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
+      <Container className="bg-white dark:bg-[#1D1D1D]">
         <div className="h-14 flex items-center justify-center px-4 text-center">
           <p className="text-sm text-gray-500 dark:text-gray-400">
             경기 일정이 없습니다.
           </p>
         </div>
-      </div>
+      </Container>
     );
   }
 
@@ -84,14 +85,15 @@ export default function LeagueMatchList({ matches, allExpanded = true }: LeagueM
         const isExpanded = expandedLeagues.has(group.leagueId);
 
         return (
-          <div
+          <Container
             key={group.leagueId}
-            className="bg-white dark:bg-[#1D1D1D] rounded-lg overflow-hidden border border-black/7 dark:border-0"
+            className="bg-white dark:bg-[#1D1D1D]"
           >
             {/* 리그 헤더 */}
-            <button
+            <Button
+              variant="header"
               onClick={() => toggleLeague(group.leagueId)}
-              className="w-full h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
+              className="w-full h-12 px-4 flex items-center justify-between rounded-none"
             >
               <div className="flex items-center gap-3">
                 {group.logo && group.leagueId ? (
@@ -119,7 +121,7 @@ export default function LeagueMatchList({ matches, allExpanded = true }: LeagueM
                   <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                 )}
               </div>
-            </button>
+            </Button>
 
             {/* 경기 목록 */}
             {isExpanded && (
@@ -133,7 +135,7 @@ export default function LeagueMatchList({ matches, allExpanded = true }: LeagueM
                 ))}
               </div>
             )}
-          </div>
+          </Container>
         );
       })}
     </div>

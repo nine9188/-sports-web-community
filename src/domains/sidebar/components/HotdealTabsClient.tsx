@@ -9,6 +9,7 @@ import {
   Flame,
   Percent,
 } from 'lucide-react';
+import { Container, ContainerHeader, ContainerTitle, TabList, type TabItem } from '@/shared/components/ui';
 import { formatPrice, getDiscountRate } from '@/domains/boards/utils/hotdeal';
 import type { HotdealPostsData, HotdealTabType, HotdealSidebarPost } from '../types/hotdeal';
 
@@ -71,37 +72,28 @@ export function HotdealTabsClient({ postsData }: HotdealTabsClientProps) {
   const currentPosts = getCurrentPosts();
 
   return (
-    <div className="mb-4 bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0">
+    <Container className="mb-4 bg-white dark:bg-[#1D1D1D]">
       {/* 헤더 */}
-      <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center border-b border-black/5 dark:border-white/10 rounded-t-lg">
-        <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">핫딜 베스트</h3>
-        <span className="text-xs text-gray-500 dark:text-gray-400 ml-auto">
+      <ContainerHeader className="justify-between">
+        <ContainerTitle>핫딜 베스트</ContainerTitle>
+        <span className="text-xs text-gray-500 dark:text-gray-400">
           {postsData.windowDays ? `최근 ${postsData.windowDays}일 기준` : '최근 3일 기준'}
         </span>
-      </div>
+      </ContainerHeader>
 
       {/* 탭 */}
-      <div className="flex border-b border-black/5 dark:border-white/10">
-        {[
-          { id: 'hot', label: 'HOT', icon: <Flame className="h-3 w-3 mr-0.5" /> },
-          { id: 'discount', label: '할인율', icon: <Percent className="h-3 w-3 mr-0.5" /> },
-          { id: 'likes', label: '추천수', icon: <ThumbsUp className="h-3 w-3 mr-0.5" /> },
-          { id: 'comments', label: '댓글수', icon: <MessageSquare className="h-3 w-3 mr-0.5" /> },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as HotdealTabType)}
-            className={`flex-1 text-xs py-2 px-2 flex items-center justify-center transition-colors ${
-              activeTab === tab.id
-                ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] font-medium border-b-2 border-slate-800 dark:border-white'
-                : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-            }`}
-          >
-            {tab.icon}
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <TabList
+        tabs={[
+          { id: 'hot', label: 'HOT', icon: <Flame className="h-3 w-3" /> },
+          { id: 'discount', label: '할인율', icon: <Percent className="h-3 w-3" /> },
+          { id: 'likes', label: '추천수', icon: <ThumbsUp className="h-3 w-3" /> },
+          { id: 'comments', label: '댓글수', icon: <MessageSquare className="h-3 w-3" /> },
+        ] as TabItem[]}
+        activeTab={activeTab}
+        onTabChange={(id) => setActiveTab(id as HotdealTabType)}
+        variant="contained"
+        className="mb-0"
+      />
 
       {/* 게시글 리스트 */}
       <div>
@@ -159,6 +151,6 @@ export function HotdealTabsClient({ postsData }: HotdealTabsClientProps) {
           </ul>
         )}
       </div>
-    </div>
+    </Container>
   );
 }

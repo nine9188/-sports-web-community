@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Edit2, Ticket } from 'lucide-react';
+import { Button } from '@/shared/components/ui';
 import { formatDate } from '@/shared/utils/date';
 import AttendanceCalendar from '@/shared/components/AttendanceCalendar';
 import NicknameChangeModal from './NicknameChangeModal';
@@ -84,21 +85,25 @@ export default function ProfileForm({ initialData }: ProfileFormProps) {
             className="flex-1 px-3 py-2 border border-black/7 dark:border-white/10 bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] rounded-md shadow-sm cursor-not-allowed outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
           />
           {ticketCount > 0 ? (
-            <button
+            <Button
+              variant="secondary"
               onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-1.5 px-4 py-2 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors whitespace-nowrap outline-none focus:outline-none"
+              className="flex items-center gap-1.5 whitespace-nowrap"
             >
               <Edit2 className="h-4 w-4" />
               변경
-            </button>
+            </Button>
           ) : (
-            <a
-              href="/shop?category=special-items"
-              className="flex items-center gap-1.5 px-4 py-2 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors whitespace-nowrap outline-none focus:outline-none"
+            <Button
+              asChild
+              variant="secondary"
+              className="flex items-center gap-1.5 whitespace-nowrap"
             >
-              <Ticket className="h-4 w-4" />
-              구매
-            </a>
+              <a href="/shop?category=special-items">
+                <Ticket className="h-4 w-4" />
+                구매
+              </a>
+            </Button>
           )}
         </div>
         <p className="text-xs text-gray-500 dark:text-gray-400">

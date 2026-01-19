@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import { validateResetToken, resetPasswordWithToken } from '@/domains/auth/actions';
 import Link from 'next/link';
 import { EyeIcon, EyeOffIcon, AlertCircle, Check } from 'lucide-react';
+import { Button } from '@/shared/components/ui';
 
 // SearchParams를 사용하는 컴포넌트 분리
 function ResetPasswordContent() {
@@ -167,14 +168,14 @@ function ResetPasswordContent() {
 
           <div className="space-y-3">
             <Link href="/help/account-recovery?tab=password" className="block">
-              <button className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white font-medium rounded-md transition-colors">
+              <Button variant="primary" className="w-full py-3 h-auto">
                 새 재설정 링크 요청
-              </button>
+              </Button>
             </Link>
             <Link href="/signin" className="block">
-              <button className="w-full py-3 px-4 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#F5F5F5] dark:hover:bg-[#262626] font-medium rounded-md transition-colors">
+              <Button variant="outline" className="w-full py-3 h-auto">
                 로그인하기
-              </button>
+              </Button>
             </Link>
           </div>
 
@@ -255,9 +256,11 @@ function ResetPasswordContent() {
               {passwordValid && !passwordError && (
                 <Check className="h-5 w-5 text-green-500" />
               )}
-              <button
+              <Button
                 type="button"
-                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
                 onClick={() => setShowPassword(!showPassword)}
                 tabIndex={-1}
               >
@@ -266,7 +269,7 @@ function ResetPasswordContent() {
                 ) : (
                   <EyeIcon className="h-5 w-5" />
                 )}
-              </button>
+              </Button>
             </div>
           </div>
           {passwordError && (
@@ -302,9 +305,11 @@ function ResetPasswordContent() {
               {confirmPasswordValid && !confirmPasswordError && (
                 <Check className="h-5 w-5 text-green-500" />
               )}
-              <button
+              <Button
                 type="button"
-                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 tabIndex={-1}
               >
@@ -313,7 +318,7 @@ function ResetPasswordContent() {
                 ) : (
                   <EyeIcon className="h-5 w-5" />
                 )}
-              </button>
+              </Button>
             </div>
           </div>
           {confirmPasswordError && (
@@ -324,13 +329,14 @@ function ResetPasswordContent() {
           )}
         </div>
 
-        <button
+        <Button
           type="submit"
+          variant="primary"
+          className="w-full py-3 h-auto"
           disabled={loading || !passwordValid || !confirmPasswordValid}
-          className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? '처리 중...' : '비밀번호 변경'}
-        </button>
+        </Button>
       </form>
 
         <div className="mt-8 text-center">

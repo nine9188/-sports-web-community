@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Copy, Check } from 'lucide-react';
 import { getReferralStats, type ReferralStats } from '@/shared/actions/referral-actions';
 import { REFERRAL_REWARDS, REFERRAL_MILESTONES } from '@/shared/constants/rewards';
+import { Button } from '@/shared/components/ui';
 
 interface ReferralSectionProps {
   userId: string;
@@ -54,9 +55,11 @@ export default function ReferralSection({ userId }: ReferralSectionProps) {
       <div className="p-4 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm text-gray-700 dark:text-gray-300">내 추천 코드</span>
-          <button
+          <Button
+            variant="primary"
+            size="sm"
             onClick={handleCopyCode}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 dark:bg-[#3F3F3F] text-white text-xs rounded-md hover:bg-slate-700 dark:hover:bg-[#4A4A4A] transition-colors outline-none focus:outline-none"
+            className="gap-1.5 text-xs h-7 px-3"
           >
             {copied ? (
               <>
@@ -69,7 +72,7 @@ export default function ReferralSection({ userId }: ReferralSectionProps) {
                 복사
               </>
             )}
-          </button>
+          </Button>
         </div>
         <div className="font-mono text-lg font-bold text-gray-900 dark:text-[#F0F0F0] tracking-wider">
           {stats.referralCode}

@@ -3,6 +3,7 @@
 import { useState, useRef, KeyboardEvent } from 'react';
 import { Send, Paperclip } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
+import { Button } from '@/shared/components/ui';
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -50,19 +51,16 @@ export function ChatInput({
     <div className="p-4 border-t border-black/5 dark:border-white/10 bg-white dark:bg-[#1D1D1D]">
       <form onSubmit={handleSubmit} className="flex items-end space-x-3">
         {/* Attachment Button (placeholder) */}
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           disabled={disabled}
-          className={cn(
-            'flex-shrink-0 p-2 rounded-full transition-colors',
-            'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]',
-            'outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0',
-            disabled && 'opacity-50 cursor-not-allowed'
-          )}
+          className="flex-shrink-0 rounded-full"
           aria-label="파일 첨부"
         >
           <Paperclip className="w-5 h-5" />
-        </button>
+        </Button>
 
         {/* Text Input */}
         <div className="flex-1 relative">
@@ -75,11 +73,11 @@ export function ChatInput({
             placeholder={placeholder}
             rows={1}
             className={cn(
-              'w-full px-4 py-3 pr-12 rounded-2xl border border-black/7 dark:border-white/10',
+              'w-full px-4 py-3 pr-12 rounded-lg border border-black/7 dark:border-white/10',
               'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0]',
               'outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0',
-              'focus:bg-[#EAEAEA] dark:focus:bg-[#333333] focus:border-gray-400 dark:focus:border-gray-600',
-              'resize-none overflow-hidden',
+              'focus:bg-[#EAEAEA] dark:focus:bg-[#333333]',
+              'resize-none overflow-hidden transition-colors',
               'placeholder-gray-500 dark:placeholder-gray-400',
               disabled && 'opacity-50 cursor-not-allowed bg-[#F5F5F5] dark:bg-[#262626]'
             )}
@@ -88,21 +86,20 @@ export function ChatInput({
         </div>
 
         {/* Send Button */}
-        <button
+        <Button
           type="submit"
+          variant="primary"
+          size="icon"
           disabled={disabled || !message.trim()}
           className={cn(
-            'flex-shrink-0 p-3 rounded-full transition-all duration-200',
-            'bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A]',
-            'outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0',
-            'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-slate-800 dark:disabled:hover:bg-[#3F3F3F]',
+            'flex-shrink-0 rounded-full transition-all duration-200',
             'active:scale-95 transform',
             message.trim() && !disabled && 'hover:scale-105'
           )}
           aria-label="메시지 전송"
         >
           <Send className="w-5 h-5" />
-        </button>
+        </Button>
       </form>
       
       {/* Helper Text */}

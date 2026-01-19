@@ -93,7 +93,7 @@ export function Pagination({
   const buttonBase = 'p-2 rounded border border-black/7 dark:border-0 text-sm transition-colors';
   const buttonDefault = 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]';
   const buttonDisabled = 'opacity-40 pointer-events-none';
-  const buttonActive = 'bg-slate-800 dark:bg-[#3F3F3F] text-white';
+  const buttonActive = 'bg-[#262626] dark:bg-[#3F3F3F] text-white';
 
   // 버튼/링크 렌더링 헬퍼
   const renderNavButton = (

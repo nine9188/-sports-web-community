@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { toast } from 'react-toastify';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
+import { Button, Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 import { 
   savePrediction,
   getUserPrediction,
@@ -44,14 +45,15 @@ const PredictionButton: React.FC<PredictionButtonProps> = ({
   onClick
 }) => {
   return (
-    <button
+    <Button
+      variant={isActive ? 'secondary' : 'outline'}
       onClick={onClick}
       disabled={isLoading || !canPredict}
-      className={`p-4 rounded-lg border-2 transition-colors flex flex-col items-center justify-center relative outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
+      className={`p-4 h-auto rounded-lg border-2 flex flex-col items-center justify-center relative ${
         isActive
-          ? 'border-slate-800 dark:border-[#F0F0F0] bg-[#EAEAEA] dark:bg-[#333333]'
-          : 'border-black/7 dark:border-white/10 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-      } ${isLoading || !canPredict ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+          ? 'border-gray-800 dark:border-[#F0F0F0]'
+          : 'border-black/7 dark:border-white/10'
+      }`}
     >
       <div className="relative w-8 h-8 mb-1">
         {type === 'draw' ? (
@@ -79,11 +81,11 @@ const PredictionButton: React.FC<PredictionButtonProps> = ({
         </div>
       )}
       {isActive && (
-        <div className="absolute -top-1 -right-1 w-4 h-4 bg-slate-800 dark:bg-[#F0F0F0] rounded-full flex items-center justify-center">
+        <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#262626] dark:bg-[#F0F0F0] rounded-full flex items-center justify-center">
           <span className="text-white dark:text-[#1D1D1D] text-xs">✓</span>
         </div>
       )}
-    </button>
+    </Button>
   );
 };
 
@@ -320,11 +322,11 @@ export default function MatchPredictionClient({
   const statusMessage = getMatchStatusMessage();
   
   return (
-    <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 mb-3">
+    <Container className="bg-white dark:bg-[#1D1D1D] mb-3">
       {/* 헤더 */}
-      <div className="h-12 flex items-center px-4 border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] rounded-t-lg">
-        <h3 className="font-semibold text-sm text-gray-900 dark:text-[#F0F0F0]">승부 예측</h3>
-      </div>
+      <ContainerHeader>
+        <ContainerTitle>승부 예측</ContainerTitle>
+      </ContainerHeader>
 
       {/* 상태 메시지 */}
       {statusMessage && (
@@ -351,14 +353,15 @@ export default function MatchPredictionClient({
           />
           
           {/* 무승부 */}
-          <button
+          <Button
+            variant={prediction === 'draw' ? 'secondary' : 'outline'}
             onClick={() => handlePrediction('draw')}
             disabled={isLoading || !canPredict}
-            className={`p-3 rounded-lg border-2 transition-colors relative outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
+            className={`p-3 h-auto rounded-lg border-2 relative ${
               prediction === 'draw'
-                ? 'border-slate-800 dark:border-[#F0F0F0] bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]'
-                : 'border-black/7 dark:border-white/10 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-700 dark:text-gray-300'
-            } ${isLoading || !canPredict ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                ? 'border-gray-800 dark:border-[#F0F0F0]'
+                : 'border-black/7 dark:border-white/10'
+            }`}
           >
             <div className="text-center">
               <div className="text-xs font-medium mb-1">무승부</div>
@@ -370,11 +373,11 @@ export default function MatchPredictionClient({
               )}
             </div>
             {prediction === 'draw' && (
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-slate-800 dark:bg-[#F0F0F0] rounded-full flex items-center justify-center">
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#262626] dark:bg-[#F0F0F0] rounded-full flex items-center justify-center">
                 <span className="text-white dark:text-[#1D1D1D] text-xs">✓</span>
               </div>
             )}
-          </button>
+          </Button>
           
           {/* 원정팀 승리 */}
           <PredictionButton
@@ -427,7 +430,7 @@ export default function MatchPredictionClient({
                 </div>
                 <div className="flex-1 bg-[#EAEAEA] dark:bg-[#333333] rounded-full h-2 mr-2">
                   <div
-                    className="bg-slate-800 dark:bg-[#F0F0F0] h-2 rounded-full transition-all duration-300"
+                    className="bg-[#262626] dark:bg-[#F0F0F0] h-2 rounded-full transition-all duration-300"
                     style={{ width: `${stats.home_percentage}%` }}
                   ></div>
                 </div>
@@ -468,7 +471,7 @@ export default function MatchPredictionClient({
                 </div>
                 <div className="flex-1 bg-[#EAEAEA] dark:bg-[#333333] rounded-full h-2 mr-2">
                   <div
-                    className="bg-slate-800 dark:bg-[#F0F0F0] h-2 rounded-full transition-all duration-300"
+                    className="bg-[#262626] dark:bg-[#F0F0F0] h-2 rounded-full transition-all duration-300"
                     style={{ width: `${stats.away_percentage}%` }}
                   ></div>
                 </div>
@@ -480,6 +483,6 @@ export default function MatchPredictionClient({
           </div>
         )}
       </div>
-    </div>
+    </Container>
   );
 }

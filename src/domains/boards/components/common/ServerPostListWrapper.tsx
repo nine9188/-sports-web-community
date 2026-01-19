@@ -3,6 +3,7 @@ import React from 'react';
 import { fetchPosts } from '@/domains/boards/actions';
 import PostList from '@/domains/boards/components/post/PostList';
 import { Suspense } from 'react';
+import { Container } from '@/shared/components/ui';
 
 // ServerPostList에 필요한 props 정의
 interface ServerPostListWrapperProps {
@@ -25,13 +26,13 @@ interface ServerPostListWrapperProps {
 // 인라인 로딩 컴포넌트
 function PostListSkeleton() {
   return (
-    <div className="mb-4 bg-white rounded-lg border overflow-hidden">
+    <Container className="mb-4 bg-white dark:bg-[#1D1D1D]">
       <div className="p-4 space-y-2">
         {Array(10).fill(0).map((_, i) => (
-          <div key={i} className="h-5 bg-gray-100 rounded animate-pulse"></div>
+          <div key={i} className="h-5 bg-[#EAEAEA] dark:bg-[#333333] rounded animate-pulse"></div>
         ))}
       </div>
-    </div>
+    </Container>
   );
 }
 

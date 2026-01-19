@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import Link from 'next/link';
 import { Board } from '../../types/board';
+import { Button } from '@/shared/components/ui';
 
 interface MegaDropdownMenuProps {
   board: Board;
@@ -98,12 +99,13 @@ const MegaDropdownMenu = React.memo(function MegaDropdownMenu({
                   board.children
                     .sort((a, b) => a.display_order - b.display_order)
                     .map(secondLevel => (
-                      <button
+                      <Button
                         key={secondLevel.id}
-                        className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
+                        variant="ghost"
+                        className={`w-full justify-start px-3 py-2 h-auto text-sm ${
                           selectedSecondLevel?.id === secondLevel.id
                             ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] font-medium'
-                            : 'text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
+                            : 'text-gray-700 dark:text-gray-300'
                         }`}
                         onMouseEnter={() => setSelectedSecondLevel(secondLevel)}
                         onClick={() => {
@@ -111,7 +113,7 @@ const MegaDropdownMenu = React.memo(function MegaDropdownMenu({
                           onClose();
                         }}
                       >
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between w-full">
                           <span>{secondLevel.name}</span>
                           {secondLevel.children && secondLevel.children.length > 0 && (
                             <span className="text-xs text-gray-400 ml-2">
@@ -119,7 +121,7 @@ const MegaDropdownMenu = React.memo(function MegaDropdownMenu({
                             </span>
                           )}
                         </div>
-                      </button>
+                      </Button>
                     ))
                 ) : (
                   <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">

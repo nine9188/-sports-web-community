@@ -10,17 +10,17 @@ import { SidebarProps } from '../types';
 function LeagueStandingsSkeleton() {
   return (
     <div className="border rounded-md overflow-hidden hidden md:block animate-pulse">
-      <div className="bg-slate-800 text-white py-2 px-3 text-sm font-medium">
+      <div className="bg-[#262626] text-white py-2 px-3 text-sm font-medium">
         축구 팀순위
       </div>
       <div className="flex border-b">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="flex-1 h-7 bg-gray-200"></div>
+          <div key={i} className="flex-1 h-7 bg-[#EAEAEA] dark:bg-[#333333]"></div>
         ))}
       </div>
       <div className="p-3 space-y-2">
         {[...Array(10)].map((_, i) => (
-          <div key={i} className="h-5 w-full bg-gray-200 rounded"></div>
+          <div key={i} className="h-5 w-full bg-[#EAEAEA] dark:bg-[#333333] rounded"></div>
         ))}
       </div>
     </div>
@@ -88,7 +88,7 @@ export default function Sidebar({
           ${isOpen ? 'translate-x-0' : 'translate-x-full'} lg:hidden`}
       >
         {/* 모바일 닫기 버튼 */}
-        <div className="flex items-center justify-between h-14 border-b border-gray-200 px-4">
+        <div className="flex items-center justify-between h-14 border-b border-black/7 dark:border-white/10 px-4">
           <span className="font-medium text-gray-900">커뮤니티</span>
           <Button
             variant="ghost"

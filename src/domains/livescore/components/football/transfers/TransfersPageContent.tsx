@@ -74,7 +74,7 @@ const formatTransferTypeMobile = (type: string): string => {
 import { TransferFilters } from '@/domains/livescore/components/football/transfers';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
-import ShopPagination from '@/domains/shop/components/ShopPagination';
+import { Pagination } from '@/shared/components/ui';
 import { memo } from 'react';
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
@@ -95,7 +95,7 @@ const TeamLogo = memo(({ teamName, teamId, size = 20 }: { teamName: string; team
           className={`object-contain ${sizeClass} rounded`}
         />
       ) : (
-        <div className={`${sizeClass} bg-gray-200 flex items-center justify-center text-gray-400 text-xs rounded`}>
+        <div className={`${sizeClass} bg-[#EAEAEA] dark:bg-[#333333] flex items-center justify-center text-gray-400 dark:text-gray-500 text-xs rounded`}>
           <span style={{ fontSize: `${size * 0.3}px` }}>로고</span>
         </div>
       )}
@@ -263,7 +263,7 @@ export default async function TransfersPageContent({
   const currentPage = parseInt(page);
   const itemsPerPage = 20;
 
-  // 페이지 링크는 ShopPagination이 처리하므로 별도 함수 불필요
+  // 페이지 링크는 Pagination이 처리하므로 별도 함수 불필요
 
   // 서버에서 캐싱된 데이터 로드
   let transfers: TransferMarketData[] = [];
@@ -283,7 +283,7 @@ export default async function TransfersPageContent({
   const paginatedTransfers = transfers.slice(startIndex, endIndex);
   const totalPages = Math.ceil(totalCount / itemsPerPage);
 
-  // 페이지 번호 생성은 ShopPagination 내부 로직 사용
+  // 페이지 번호 생성은 Pagination 내부 로직 사용
 
 
 
@@ -616,10 +616,10 @@ export default async function TransfersPageContent({
       {/* 페이지네이션 */}
       {totalPages > 1 && (
         <div className="-mt-4 md:mt-0">
-          <ShopPagination
-            page={currentPage}
-            pageSize={itemsPerPage}
-            total={totalCount}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            mode="url"
             withMargin={false}
           />
         </div>

@@ -10,6 +10,7 @@ import Calendar from '@/shared/components/Calendar';
 import { getMatchesByDate } from '@/domains/boards/actions/matches';
 import type { MatchData } from '@/domains/livescore/actions/footballApi';
 import Spinner from '@/shared/components/Spinner';
+import { Button } from '@/shared/components/ui';
 
 // 경기 데이터를 위한 인터페이스
 interface League {
@@ -167,9 +168,10 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
             <div className="flex space-x-2">
               {/* 날짜 선택 버튼 */}
               <div className="relative flex-1">
-                <button
+                <Button
                   ref={calendarButtonRef}
                   type="button"
+                  variant="secondary"
                   onClick={() => {
                     if (!calendar && calendarButtonRef.current) {
                       const rect = calendarButtonRef.current.getBoundingClientRect();
@@ -180,11 +182,11 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
                     }
                     setCalendar(!calendar);
                   }}
-                  className="w-full flex items-center px-3 py-1.5 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#1D1D1D] text-xs text-gray-900 dark:text-[#F0F0F0] hover:bg-[#F5F5F5] dark:hover:bg-[#262626] transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                  className="w-full flex items-center px-3 py-1.5 text-xs justify-start"
                 >
                   <CalendarIcon className="mr-2 h-3 w-3 text-gray-500 dark:text-gray-400" />
                   <span>{format(selectedDate, 'PPP (eee)', { locale: ko })}</span>
-                </button>
+                </Button>
               </div>
               
               {/* 검색 입력 필드 */}
@@ -235,8 +237,9 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
                   
                   <div className="space-y-1.5">
                     {group.matches.map((match: Match) => (
-                      <button
+                      <Button
                         key={match.id || match.fixture?.id}
+                        variant="ghost"
                         onClick={() => {
                           const matchId = (match.id || match.fixture?.id)?.toString() || '';
                           // MatchData 타입에 맞게 변환
@@ -281,7 +284,7 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
                           onMatchAdd(matchId, matchData);
                           onCancel();
                         }}
-                        className="w-full text-left bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-md p-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                        className="w-full text-left bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-md p-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] h-auto"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center flex-1 min-w-0">
@@ -318,13 +321,13 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
                         </div>
                         
                         <div className="text-[10px] text-gray-500 mt-1.5">
-                          {match.status.code === 'FT' ? '경기 종료' : 
-                           match.status.code === 'NS' ? '경기 예정' : 
+                          {match.status.code === 'FT' ? '경기 종료' :
+                           match.status.code === 'NS' ? '경기 예정' :
                            match.status.code === 'LIVE' || match.status.code === '1H' || match.status.code === '2H' ? (
                             <span className="text-green-600 font-medium">진행 중 {match.status.elapsed && `(${match.status.elapsed}')`}</span>
                            ) : match.status.name || ''}
                         </div>
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>
@@ -335,13 +338,15 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
         
         <div className="p-4 border-t border-black/7 dark:border-white/10">
           <div className="flex justify-end">
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={onCancel}
-              className="bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-3 py-1.5 rounded-md text-xs transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="text-xs"
             >
               취소
-            </button>
+            </Button>
           </div>
         </div>
       </div>

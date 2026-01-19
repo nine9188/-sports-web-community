@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { PenLine, Edit, Trash } from 'lucide-react';
 import { deletePost } from '@/domains/boards/actions/posts/index';
 import ReportButton from '@/domains/reports/components/ReportButton';
+import { Button } from '@/shared/components/ui';
 
 interface PostFooterProps {
   boardSlug: string;
@@ -71,38 +72,48 @@ export default function PostFooter({
     buttonSlots.push({
       key: 'write',
       element: (
-        <Link
-          href={`/boards/${boardSlug}/create`}
-          className="inline-flex flex-row items-center justify-center text-xs sm:text-sm text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md transition-colors px-2 py-1 gap-1"
+        <Button
+          variant="ghost"
+          size="sm"
+          asChild
+          className="text-xs sm:text-sm gap-1"
         >
-          <PenLine className="h-3 w-3 sm:h-4 sm:w-4" />
-          <span>글쓰기</span>
-        </Link>
+          <Link href={`/boards/${boardSlug}/create`}>
+            <PenLine className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span>글쓰기</span>
+          </Link>
+        </Button>
       )
     });
     buttonSlots.push({
       key: 'edit',
       element: (
-        <Link
-          href={`/boards/${boardSlug}/${postNumber}/edit`}
-          className="inline-flex flex-row items-center justify-center text-xs sm:text-sm text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md transition-colors px-2 py-1 gap-1"
+        <Button
+          variant="ghost"
+          size="sm"
+          asChild
+          className="text-xs sm:text-sm gap-1"
         >
-          <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
-          <span>수정</span>
-        </Link>
+          <Link href={`/boards/${boardSlug}/${postNumber}/edit`}>
+            <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span>수정</span>
+          </Link>
+        </Button>
       )
     });
     buttonSlots.push({
       key: 'delete',
       element: (
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={handleDelete}
           disabled={isDeleting}
-          className="inline-flex flex-row items-center justify-center text-xs sm:text-sm text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-md transition-colors disabled:opacity-50 px-2 py-1 gap-1"
+          className="text-xs sm:text-sm text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 gap-1"
         >
           <Trash className="h-3 w-3 sm:h-4 sm:w-4" />
           <span>{isDeleting ? '삭제 중...' : '삭제'}</span>
-        </button>
+        </Button>
       )
     });
   } else {
@@ -110,13 +121,17 @@ export default function PostFooter({
     buttonSlots.push(showWriteButton ? {
       key: 'write',
       element: (
-        <Link
-          href={`/boards/${boardSlug}/create`}
-          className="inline-flex flex-row items-center justify-center text-xs sm:text-sm text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md transition-colors px-2 py-1 gap-1"
+        <Button
+          variant="ghost"
+          size="sm"
+          asChild
+          className="text-xs sm:text-sm gap-1"
         >
-          <PenLine className="h-3 w-3 sm:h-4 sm:w-4" />
-          <span>글쓰기</span>
-        </Link>
+          <Link href={`/boards/${boardSlug}/create`}>
+            <PenLine className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span>글쓰기</span>
+          </Link>
+        </Button>
       )
     } : { key: 'placeholder-1', element: <div /> });
 

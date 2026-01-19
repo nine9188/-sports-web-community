@@ -2,7 +2,7 @@
 
 import { TeamStatsData } from '@/domains/livescore/types/stats';
 import { useFormationDisplay } from '../hooks/useFormationDisplay';
-import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui/container';
+import { Container, ContainerHeader, ContainerTitle, ContainerContent, Button } from '@/shared/components/ui';
 
 interface FormationStatsProps {
   stats: TeamStatsData;
@@ -37,7 +37,7 @@ export default function FormationStats({ stats }: FormationStatsProps) {
               </div>
               
               <div className="w-3/5">
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                <div className="w-full bg-[#EAEAEA] dark:bg-[#333333] rounded-full h-2">
                   <div 
                     className="bg-blue-500 dark:bg-blue-600 h-2 rounded-full" 
                     style={{ 
@@ -51,12 +51,13 @@ export default function FormationStats({ stats }: FormationStatsProps) {
 
           {/* 더보기 버튼 (5개 이상일 경우) */}
           {lineups.length > 5 && (
-            <button
+            <Button
+              variant="ghost"
               onClick={toggleFormations}
-              className="mt-2 text-sm text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-3 py-1 rounded transition-colors focus:outline-none"
+              className="mt-2 text-sm h-auto px-3 py-1"
             >
               {showAllFormations ? '접기' : '더 보기'}
-            </button>
+            </Button>
           )}
         </div>
       </ContainerContent>

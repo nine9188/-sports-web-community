@@ -12,6 +12,7 @@ import type { SocialPlatform } from '@/shared/components/editor/tiptap/extension
 import type { TeamMapping } from '@/domains/livescore/constants/teams';
 import type { Player } from '@/domains/livescore/actions/teams/squad';
 import Spinner from '@/shared/components/Spinner';
+import { Button } from '@/shared/components/ui';
 
 // 리그 정보 인터페이스
 interface LeagueInfo {
@@ -108,57 +109,67 @@ export default function EditorToolbar({
   return (
     <div className="border border-black/7 dark:border-white/10 rounded-t-md flex flex-wrap items-center p-2 gap-1 bg-[#F5F5F5] dark:bg-[#262626]">
       {/* 텍스트 스타일 버튼 */}
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         onClick={() => editor.chain().focus().toggleBold().run()}
-        className={`p-2 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0] ${editor.isActive('bold') ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
+        className={`h-auto w-auto p-2 text-gray-900 dark:text-[#F0F0F0] ${editor.isActive('bold') ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
         title="굵게"
       >
         <Bold size={18} />
-      </button>
-      
-      <button
+      </Button>
+
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         onClick={() => editor.chain().focus().toggleItalic().run()}
-        className={`p-2 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0] ${editor.isActive('italic') ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
+        className={`h-auto w-auto p-2 text-gray-900 dark:text-[#F0F0F0] ${editor.isActive('italic') ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
         title="기울임꼴"
       >
         <Italic size={18} />
-      </button>
+      </Button>
       
       <div className="w-px h-6 bg-black/7 dark:bg-white/10 mx-1"></div>
       
       {/* 목록 버튼 */}
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         onClick={() => editor.chain().focus().toggleBulletList().run()}
-        className={`p-2 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0] ${editor.isActive('bulletList') ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
+        className={`h-auto w-auto p-2 text-gray-900 dark:text-[#F0F0F0] ${editor.isActive('bulletList') ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
         title="글머리 기호 목록"
       >
         <List size={18} />
-      </button>
-      
-      <button
+      </Button>
+
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        className={`p-2 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0] ${editor.isActive('orderedList') ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
+        className={`h-auto w-auto p-2 text-gray-900 dark:text-[#F0F0F0] ${editor.isActive('orderedList') ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
         title="번호 매기기 목록"
       >
         <ListOrdered size={18} />
-      </button>
+      </Button>
       
       <div className="w-px h-6 bg-black/7 dark:bg-white/10 mx-1"></div>
       
       {/* 이미지 버튼과 드롭다운 - 지연 로딩 */}
       <div className="relative">
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           onClick={() => handleToggleDropdown('image')}
-          className={`p-2 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0] ${showImageModal ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
+          className={`h-auto w-auto p-2 text-gray-900 dark:text-[#F0F0F0] ${showImageModal ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
           title="이미지 추가"
         >
           <ImageIcon size={18} />
-        </button>
+        </Button>
         
         {showImageModal && (
           <Suspense fallback={<FormLoadingSpinner />}>
@@ -174,14 +185,16 @@ export default function EditorToolbar({
       
       {/* 링크 버튼과 드롭다운 - 지연 로딩 */}
       <div className="relative">
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           onClick={() => handleToggleDropdown('link')}
-          className={`p-2 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0] ${showLinkModal ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
+          className={`h-auto w-auto p-2 text-gray-900 dark:text-[#F0F0F0] ${showLinkModal ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
           title="링크 추가"
         >
           <LinkIcon size={18} />
-        </button>
+        </Button>
         
         {showLinkModal && (
           <Suspense fallback={<FormLoadingSpinner />}>
@@ -196,15 +209,17 @@ export default function EditorToolbar({
       
       {/* 유튜브 버튼과 드롭다운 - 지연 로딩 */}
       <div className="relative">
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           onClick={() => handleToggleDropdown('youtube')}
-          className={`p-2 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0] ${showYoutubeModal ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''} ${!extensionsLoaded ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`h-auto w-auto p-2 text-gray-900 dark:text-[#F0F0F0] ${showYoutubeModal ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''} ${!extensionsLoaded ? 'opacity-50 cursor-not-allowed' : ''}`}
           title={extensionsLoaded ? "YouTube 동영상 추가" : "에디터 로딩 중..."}
           disabled={!extensionsLoaded}
         >
           <YoutubeIcon size={18} />
-        </button>
+        </Button>
         
         {showYoutubeModal && (
           <Suspense fallback={<FormLoadingSpinner />}>
@@ -219,15 +234,17 @@ export default function EditorToolbar({
       
       {/* 비디오 버튼과 드롭다운 - 지연 로딩 */}
       <div className="relative">
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           onClick={() => handleToggleDropdown('video')}
-          className={`p-2 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0] ${showVideoModal ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''} ${!extensionsLoaded ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`h-auto w-auto p-2 text-gray-900 dark:text-[#F0F0F0] ${showVideoModal ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''} ${!extensionsLoaded ? 'opacity-50 cursor-not-allowed' : ''}`}
           title={extensionsLoaded ? "동영상 파일 추가" : "에디터 로딩 중..."}
           disabled={!extensionsLoaded}
         >
           <VideoIcon size={18} />
-        </button>
+        </Button>
         
         {showVideoModal && (
           <Suspense fallback={<FormLoadingSpinner />}>
@@ -242,15 +259,17 @@ export default function EditorToolbar({
       
       {/* 소셜 미디어 임베드 버튼과 드롭다운 - 지연 로딩 */}
       <div className="relative">
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           onClick={() => handleToggleDropdown('social')}
-          className={`p-2 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0] ${showSocialModal ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''} ${!extensionsLoaded ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`h-auto w-auto p-2 text-gray-900 dark:text-[#F0F0F0] ${showSocialModal ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''} ${!extensionsLoaded ? 'opacity-50 cursor-not-allowed' : ''}`}
           title={extensionsLoaded ? "소셜 미디어 임베드" : "에디터 로딩 중..."}
           disabled={!extensionsLoaded}
         >
           <Share2 size={18} />
-        </button>
+        </Button>
 
         {showSocialModal && (
           <Suspense fallback={<FormLoadingSpinner />}>
@@ -268,14 +287,16 @@ export default function EditorToolbar({
 
       {/* 경기 결과 버튼과 드롭다운 - 지연 로딩 */}
       <div className="relative">
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           onClick={() => handleToggleDropdown('match')}
-          className={`p-2 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0] ${showMatchModal ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
+          className={`h-auto w-auto p-2 text-gray-900 dark:text-[#F0F0F0] ${showMatchModal ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
           title="경기 결과 추가"
         >
           <Image src="/icons/live.png" alt="경기 결과" width={18} height={18} className="dark:invert" />
-        </button>
+        </Button>
 
         {showMatchModal && (
           <Suspense fallback={<FormLoadingSpinner />}>
@@ -294,15 +315,17 @@ export default function EditorToolbar({
 
       {/* 팀/선수 선택 버튼과 모달 */}
       <div className="relative">
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           onClick={() => handleToggleDropdown('entity')}
-          className={`p-2 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0] ${showEntityModal ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''} ${!extensionsLoaded ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`h-auto w-auto p-2 text-gray-900 dark:text-[#F0F0F0] ${showEntityModal ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''} ${!extensionsLoaded ? 'opacity-50 cursor-not-allowed' : ''}`}
           title={extensionsLoaded ? "팀/선수 추가" : "에디터 로딩 중..."}
           disabled={!extensionsLoaded}
         >
           <Users size={18} />
-        </button>
+        </Button>
 
         {showEntityModal && (
           <Suspense fallback={<FormLoadingSpinner />}>
@@ -319,25 +342,29 @@ export default function EditorToolbar({
       <div className="w-px h-6 bg-black/7 dark:bg-white/10 mx-1"></div>
       
       {/* 실행 취소/다시 실행 버튼 */}
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         onClick={() => editor.chain().focus().undo().run()}
         disabled={!editor.can().undo()}
-        className="p-2 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0] disabled:opacity-50"
+        className="h-auto w-auto p-2 text-gray-900 dark:text-[#F0F0F0]"
         title="실행 취소"
       >
         <Undo size={18} />
-      </button>
-      
-      <button
+      </Button>
+
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         onClick={() => editor.chain().focus().redo().run()}
         disabled={!editor.can().redo()}
-        className="p-2 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0] disabled:opacity-50"
+        className="h-auto w-auto p-2 text-gray-900 dark:text-[#F0F0F0]"
         title="다시 실행"
       >
         <Redo size={18} />
-      </button>
+      </Button>
     </div>
   );
 } 

@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { type SidebarData } from '@/domains/livescore/actions/match/sidebarData';
+import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 
 // 매치 데이터 타입 정의
 interface MatchDataType {
@@ -96,32 +97,32 @@ export function MatchInfoSection({
   // 에러 상태
   if (error) {
     return (
-      <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 mb-4">
-        <div className="px-4 py-3 border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
-          <h3 className="font-semibold text-sm text-red-700 dark:text-red-400">오류 발생</h3>
-        </div>
+      <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
+        <ContainerHeader>
+          <ContainerTitle className="text-red-700 dark:text-red-400">오류 발생</ContainerTitle>
+        </ContainerHeader>
         <div className="p-4">
           <div className="text-center text-sm text-red-500 dark:text-red-400 py-4">
             {error}
           </div>
         </div>
-      </div>
+      </Container>
     );
   }
 
   // 데이터가 없는 경우
   if (!matchData) {
     return (
-      <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 mb-4">
-        <div className="h-12 flex items-center px-4 border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] rounded-t-lg">
-          <h3 className="font-semibold text-sm text-gray-900 dark:text-[#F0F0F0]">경기 상세정보</h3>
-        </div>
+      <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
+        <ContainerHeader>
+          <ContainerTitle>경기 상세정보</ContainerTitle>
+        </ContainerHeader>
         <div className="px-4 py-4">
           <div className="text-center text-sm text-gray-500 dark:text-gray-400 py-4">
             경기 정보를 찾을 수 없습니다.
           </div>
         </div>
-      </div>
+      </Container>
     );
   }
 
@@ -149,11 +150,11 @@ export function MatchInfoSection({
   return (
     <>
       {/* 경기 상세정보 섹션 */}
-      <div className="bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 mb-3">
+      <Container className="bg-white dark:bg-[#1D1D1D] rounded-none md:rounded-lg mb-3">
         {/* 헤더 */}
-        <div className="h-12 flex items-center px-4 border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] md:rounded-t-lg">
-          <h3 className="font-semibold text-sm text-gray-900 dark:text-[#F0F0F0]">경기 상세정보</h3>
-        </div>
+        <ContainerHeader className="md:rounded-t-lg">
+          <ContainerTitle>경기 상세정보</ContainerTitle>
+        </ContainerHeader>
 
         {/* 경기 상세 정보 */}
         <div className="px-4 py-3">
@@ -234,8 +235,8 @@ export function MatchInfoSection({
             )}
           </div>
         </div>
-      </div>
-      
+      </Container>
+
       {/* showOnlyMatchInfo가 false일 때만 승무패 예측과 응원 댓글 표시 */}
       {!showOnlyMatchInfo && (
         <>

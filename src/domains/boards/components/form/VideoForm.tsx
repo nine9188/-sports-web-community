@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { AlertCircle, FileVideo } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { Button } from '@/shared/components/ui';
 
 interface VideoFormProps {
   onCancel: () => void;
@@ -275,15 +276,16 @@ export default function VideoForm({
         <div className="p-4">
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={handleFileButtonClick}
-                className="bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] px-3 py-2 text-xs rounded-md border border-black/7 dark:border-white/10 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors flex-shrink-0 flex items-center outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                 disabled={isUploading}
+                className="px-3 py-2 text-xs flex-shrink-0 flex items-center"
               >
                 <FileVideo className="h-3 w-3 mr-1" />
                 파일 선택
-              </button>
+              </Button>
               <input
                 type="file"
                 accept="video/*"
@@ -332,7 +334,7 @@ export default function VideoForm({
               <div>
                 <div className="w-full bg-[#EAEAEA] dark:bg-[#333333] rounded-full h-2.5">
                   <div
-                    className="bg-slate-800 dark:bg-[#F0F0F0] h-2.5 rounded-full transition-all duration-300"
+                    className="bg-[#262626] dark:bg-[#F0F0F0] h-2.5 rounded-full transition-all duration-300"
                     style={{ width: `${uploadProgress}%` }}
                   ></div>
                 </div>
@@ -340,13 +342,14 @@ export default function VideoForm({
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     업로드 중... {uploadProgress}%
                   </p>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
                     onClick={handleCancelUpload}
-                    className="text-xs text-red-500 hover:text-red-700 underline outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                    className="text-xs text-red-500 hover:text-red-700 underline p-0 h-auto"
                   >
                     취소
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -357,33 +360,38 @@ export default function VideoForm({
                   <AlertCircle className="h-3 w-3 mr-1" />
                   <span className="flex-1">{error}</span>
                 </div>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={handleRetry}
-                  className="text-xs text-gray-900 dark:text-[#F0F0F0] hover:text-gray-700 dark:hover:text-gray-300 underline ml-2 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                  className="text-xs text-gray-900 dark:text-[#F0F0F0] hover:text-gray-700 dark:hover:text-gray-300 underline ml-2 p-0 h-auto"
                 >
                   재시도
-                </button>
+                </Button>
               </div>
             )}
 
             <div className="flex justify-end space-x-2 pt-2">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={onCancel}
                 disabled={isUploading}
-                className="bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-3 py-1.5 rounded-md text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="text-xs"
               >
                 취소
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="primary"
+                size="sm"
                 onClick={handleSubmit}
                 disabled={!selectedFile || isUploading}
-                className="bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A] px-3 py-1.5 rounded-md text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="text-xs"
               >
                 {isUploading ? '업로드 중...' : '확인'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

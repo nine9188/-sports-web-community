@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
+import { Button } from '@/shared/components/ui';
 
 interface ChatModalProps {
   isOpen: boolean;
@@ -33,7 +34,7 @@ export function ChatModal({ isOpen, onClose, children }: ChatModalProps) {
         ref={modalRef}
         className={cn(
           'pointer-events-auto',
-          'relative bg-white dark:bg-[#1D1D1D] rounded-t-2xl md:rounded-2xl shadow-2xl',
+          'relative bg-white dark:bg-[#1D1D1D] rounded-t-lg md:rounded-lg shadow-2xl',
           'transition-all duration-300 ease-out',
           'w-full h-[85vh] md:w-96 md:h-[600px]',
           'md:m-6 md:mb-20',
@@ -43,13 +44,15 @@ export function ChatModal({ isOpen, onClose, children }: ChatModalProps) {
         )}
       >
         {/* Close Button */}
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0"
+          className="absolute top-4 right-4 z-10 rounded-full"
           aria-label="채팅 닫기"
         >
-          <X className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-        </button>
+          <X className="w-5 h-5" />
+        </Button>
 
         {/* Modal Content */}
         <div className="flex-1 flex flex-col overflow-hidden">

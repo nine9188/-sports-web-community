@@ -3,6 +3,7 @@
 import React from 'react';
 import { ExpHistoryItem } from '@/domains/settings/types';
 import { formatDate } from '@/domains/settings/hooks';
+import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 
 interface ExpHistoryProps {
   expHistory: ExpHistoryItem[];
@@ -26,17 +27,17 @@ export default function ExpHistory({ expHistory = [], isLoading, error }: ExpHis
   }
 
   return (
-    <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
-      <div className="px-4 py-3 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
-        <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">경험치 내역</h3>
-      </div>
+    <Container className="bg-white dark:bg-[#1D1D1D]">
+      <ContainerHeader className="h-auto py-3">
+        <ContainerTitle>경험치 내역</ContainerTitle>
+      </ContainerHeader>
 
       {isEmpty ? (
         <EmptyState />
       ) : (
         <ExpHistoryTable expHistory={expHistory} />
       )}
-    </div>
+    </Container>
   );
 }
 

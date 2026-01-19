@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Pagination } from '@/shared/components/ui/pagination';
+import { TabList, type TabItem } from '@/shared/components/ui';
 import { useUserPosts, useUserComments } from '@/domains/user/hooks';
 import PostList from '@/domains/boards/components/post/postlist/PostListMain';
 import { FileText, MessageSquare } from 'lucide-react';
@@ -26,42 +27,17 @@ export default function UserActivityTabs({ publicId }: UserActivityTabsProps) {
       {/* 탭 + 리스트 컨테이너 */}
       <div className="bg-white dark:bg-[#1D1D1D] md:rounded-b-lg md:border md:border-black/7 md:dark:border-0 md:border-t-0 overflow-hidden">
         {/* 탭 */}
-        <div className="flex h-12">
-          <button
-            onClick={() => setActiveTab('posts')}
-            className={`flex-1 h-12 text-xs flex items-center justify-center gap-1.5 transition-colors ${
-              activeTab === 'posts'
-                ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] font-medium border-b-2 border-slate-800 dark:border-white'
-                : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-400 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-            }`}
-          >
-            <FileText className="w-4 h-4" />
-            <span>작성글</span>
-            {postsData.totalCount > 0 && (
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                ({postsData.totalCount})
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab('comments')}
-            className={`flex-1 h-12 text-xs flex items-center justify-center gap-1.5 transition-colors ${
-              activeTab === 'comments'
-                ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] font-medium border-b-2 border-slate-800 dark:border-white'
-                : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-400 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-            }`}
-          >
-            <MessageSquare className="w-4 h-4" />
-            <span>댓글</span>
-            {commentsData.totalCount > 0 && (
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                ({commentsData.totalCount})
-              </span>
-            )}
-          </button>
-        </div>
-        {/* 탭-콘텐츠 구분선 */}
-        <div className="border-b-2 border-black/5 dark:border-white/10" />
+        <TabList
+          tabs={[
+            { id: 'posts', label: '작성글', icon: <FileText className="w-4 h-4" />, count: postsData.totalCount },
+            { id: 'comments', label: '댓글', icon: <MessageSquare className="w-4 h-4" />, count: commentsData.totalCount },
+          ] as TabItem[]}
+          activeTab={activeTab}
+          onTabChange={(id) => setActiveTab(id as 'posts' | 'comments')}
+          variant="contained"
+          showCount
+          className="mb-0"
+        />
 
         {/* 탭 콘텐츠 - PostList */}
         {currentData.loading && currentData.posts.length === 0 ? (

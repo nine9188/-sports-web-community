@@ -20,15 +20,15 @@ focus:ring-4 focus:ring-blue-300
 bg-blue-400 animate-ping
 
 // ✅ 수정된 코드
-bg-slate-800 dark:bg-[#3F3F3F]
-hover:bg-slate-700 dark:hover:bg-[#4A4A4A]
+bg-[#262626] dark:bg-[#3F3F3F]
+hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A]
 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0
-bg-slate-400 dark:bg-slate-500 animate-ping
+bg-gray-400 dark:bg-gray-500 animate-ping
 ```
 
 **테스트 체크리스트:**
 - [ ] 플로팅 버튼 클릭 → 챗봇 열림/닫힘
-- [ ] Light 모드에서 버튼 색상 확인 (slate-800)
+- [ ] Light 모드에서 버튼 색상 확인 (#262626)
 - [ ] Dark 모드에서 버튼 색상 확인 ([#3F3F3F])
 - [ ] 호버 시 색상 변화 확인
 - [ ] 호버 시 툴팁 "고객센터 문의" 표시
@@ -54,8 +54,8 @@ text-gray-900 dark:text-[#F0F0F0]
 focus:bg-[#EAEAEA] dark:focus:bg-[#333333]
 
 // 전송 버튼
-bg-slate-800 dark:bg-[#3F3F3F]
-hover:bg-slate-700 dark:hover:bg-[#4A4A4A]
+bg-[#262626] dark:bg-[#3F3F3F]
+hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A]
 ```
 
 **테스트 체크리스트:**
@@ -81,8 +81,8 @@ bg-[#F5F5F5] dark:bg-[#262626]
 bg-[#EAEAEA] dark:bg-[#333333]
 
 // 새 대화 버튼
-bg-slate-800 dark:bg-[#3F3F3F]
-hover:bg-slate-700 dark:hover:bg-[#4A4A4A]
+bg-[#262626] dark:bg-[#3F3F3F]
+hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A]
 
 // 활성 대화
 bg-[#EAEAEA] dark:bg-[#333333]
@@ -147,10 +147,10 @@ bg-[#EAEAEA] dark:bg-[#333333]
 text-gray-700 dark:text-gray-300
 
 // 사용자 메시지
-bg-slate-800 dark:bg-[#3F3F3F] text-white
+bg-[#262626] dark:bg-[#3F3F3F] text-white
 
 // 사용자 아바타
-bg-slate-800 dark:bg-[#3F3F3F]
+bg-[#262626] dark:bg-[#3F3F3F]
 
 // 봇 메시지
 bg-[#F5F5F5] dark:bg-[#262626]
@@ -190,8 +190,8 @@ text-gray-900 dark:text-[#F0F0F0]
 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]
 
 // Primary 칩 버튼
-bg-slate-800 dark:bg-[#3F3F3F]
-hover:bg-slate-700 dark:hover:bg-[#4A4A4A]
+bg-[#262626] dark:bg-[#3F3F3F]
+hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A]
 text-white
 
 // 포커스 스타일
@@ -284,8 +284,8 @@ bg-green-50 dark:bg-green-900/20
 text-green-700 dark:text-green-300
 
 // 제출 버튼
-bg-slate-800 dark:bg-[#3F3F3F]
-hover:bg-slate-700 dark:hover:bg-[#4A4A4A]
+bg-[#262626] dark:bg-[#3F3F3F]
+hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A]
 
 // 취소 버튼
 border-gray-300 dark:border-gray-600
@@ -472,8 +472,8 @@ text-gray-700 dark:text-gray-300
 ### 버튼
 | 요소 | Light Mode | Dark Mode |
 |------|-----------|-----------|
-| Primary Button | `bg-slate-800` | `bg-[#3F3F3F]` |
-| Primary Hover | `bg-slate-700` | `bg-[#4A4A4A]` |
+| Primary Button | `bg-[#262626]` | `bg-[#3F3F3F]` |
+| Primary Hover | `hover:bg-[#3F3F3F]` | `bg-[#4A4A4A]` |
 
 ### 상태별 색상
 | 상태 | Light Mode | Dark Mode |

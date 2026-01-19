@@ -36,8 +36,8 @@
 - 사용 위치: 모든 버튼 hover 상태
 
 **Button Colors**
-- ✅ `bg-slate-800 dark:bg-[#3F3F3F]` - Primary 버튼에 올바르게 적용됨
-- ✅ `hover:bg-slate-700 dark:hover:bg-[#4A4A4A]` - Hover 상태 준수
+- ✅ `bg-[#262626] dark:bg-[#3F3F3F]` - Primary 버튼에 올바르게 적용됨
+- ✅ `hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A]` - Hover 상태 준수
 
 #### 1.2 Focus 스타일 준수
 
@@ -542,7 +542,7 @@ className="relative bg-white dark:bg-[#1D1D1D] rounded-t-2xl md:rounded-2xl
 
 **1. Ripple 효과**
 ```typescript
-<div className="absolute inset-0 rounded-full bg-slate-400 dark:bg-slate-500
+<div className="absolute inset-0 rounded-full bg-gray-400 dark:bg-gray-500
   animate-ping opacity-20" />
 ```
 ✅ 주목도 높은 핑 애니메이션
@@ -558,7 +558,7 @@ className="relative bg-white dark:bg-[#1D1D1D] rounded-t-2xl md:rounded-2xl
 **3. 툴팁 애니메이션**
 ```typescript
 <div className="absolute bottom-full right-0 mb-2 px-3 py-1
-  bg-gray-800 dark:bg-gray-700 text-white text-sm rounded-lg
+  bg-[#262626] dark:bg-[#333333] text-white text-sm rounded-lg
   whitespace-nowrap animate-in fade-in-0 zoom-in-95 duration-200">
 ```
 ✅ 부드러운 툴팁 표시

@@ -1,110 +1,64 @@
 'use server';
 
+import { cache } from 'react';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { BoardMap, ChildBoardsMap } from '../types/board';
 import { getBoardLevel, getFilteredBoardIds, findRootBoard, generateBoardBreadcrumbs } from '../utils/board/boardHierarchy';
 import { BoardsResponse, Board, HierarchicalBoard } from '@/domains/boards/types';
+import { getCachedAllBoards, getCachedBoardBySlugOrId, getCachedBoardMaps } from './getCachedBoards';
 
 /**
  * 모든 게시판 목록을 가져옵니다.
+ * @deprecated getCachedAllBoards() 사용 권장
  */
-export async function getAllBoards() {
-  const supabase = await getSupabaseServer();
-  const { data, error } = await supabase
-    .from('boards')
-    .select('*')
-    .order('name');
-    
-  if (error) {
-    throw new Error('게시판 목록을 가져오는 중 오류가 발생했습니다.');
-  }
-  
-  return data;
-}
+export const getAllBoards = cache(async () => {
+  return getCachedAllBoards();
+});
 
 /**
  * 게시판 정보를 슬러그 또는 ID로 가져옵니다.
+ * @deprecated getCachedBoardBySlugOrId() 사용 권장
  */
-export async function getBoardBySlugOrId(slugOrId: string) {
-  const supabase = await getSupabaseServer();
-  let query = supabase.from('boards').select('*');
-  
-  // 슬러그가 숫자로만 구성된 경우 ID로 처리
-  if (/^\d+$/.test(slugOrId)) {
-    query = query.eq('id', slugOrId);
-  } else {
-    query = query.eq('slug', slugOrId);
-  }
-  
-  const { data, error } = await query.single();
-  
-  if (error) {
+export const getBoardBySlugOrId = cache(async (slugOrId: string) => {
+  const board = await getCachedBoardBySlugOrId(slugOrId);
+  if (!board) {
     throw new Error('게시판을 찾을 수 없습니다.');
   }
-  
-  return data;
-}
+  return board;
+});
 
 /**
  * 게시판 페이지에 필요한 모든 데이터를 가져옵니다.
+ *
+ * 최적화: getCachedBoardMaps()를 사용하여 boards 테이블 중복 조회 제거
+ * - Before: boards 테이블 2회 조회 (slug 조회 + 전체 조회)
+ * - After: 캐시된 데이터에서 조회 (같은 요청 내 재사용)
  */
 export async function getBoardPageData(slug: string, currentPage: number, fromParam?: string) {
   try {
     const supabase = await getSupabaseServer();
-    
-    // 사용자 인증 확인 (로그인 상태)
-    const { data: userData } = await supabase.auth.getUser();
-    const isLoggedIn = !!userData?.user;
-    
+
     // 병렬로 데이터 요청 처리
-    const [boardResult, allBoardsResult] = await Promise.all([
-      // 1. 현재 slug로 게시판 정보 조회
-      supabase
-        .from('boards')
-        .select('*')
-        .eq('slug', slug)
-        .single(),
-      
-      // 2. 모든 게시판 조회 (계층 구조 파악을 위해)
-      supabase
-        .from('boards')
-        .select('*')
+    const [userResult, cachedMaps] = await Promise.all([
+      // 1. 사용자 인증 확인 (로그인 상태)
+      supabase.auth.getUser(),
+      // 2. 캐시된 게시판 맵 데이터 조회 (중복 DB 조회 제거)
+      getCachedBoardMaps()
     ]);
-    
+
+    const isLoggedIn = !!userResult.data?.user;
+    const { boardsMap, childBoardsMap, boardNameMap, allBoards } = cachedMaps;
+
+    // 캐시된 데이터에서 slug로 게시판 찾기
+    const boardData = allBoards.find(b => b.slug === slug);
+
     // 게시판 검증
-    if (boardResult.error) {
+    if (!boardData) {
       return {
         success: false,
         error: '게시판을 찾을 수 없습니다.'
       };
     }
-    
-    const boardData = boardResult.data;
-    const allBoardsData = allBoardsResult.data || [];
-    
-    // 3. 게시판 계층 구조 설정
-    const boardsMap: BoardMap = {};
-    const childBoardsMap: ChildBoardsMap = {};
-    const boardNameMap: Record<string, string> = {};
-    
-    // 모든 게시판 정보 맵핑
-    allBoardsData.forEach(board => {
-      const safeBoard = {
-        ...board,
-        slug: board.slug || board.id,
-        display_order: board.display_order || 0
-      };
-      boardsMap[board.id] = safeBoard;
-      boardNameMap[board.id] = board.name;
-      
-      // 부모 ID 기준으로 자식 게시판 맵핑
-      if (board.parent_id) {
-        if (!childBoardsMap[board.parent_id]) {
-          childBoardsMap[board.parent_id] = [];
-        }
-        childBoardsMap[board.parent_id].push(safeBoard);
-      }
-    });
     
     // 4. 브레드크럼 생성
     const safeBoardData = {
@@ -225,26 +179,17 @@ function buildHierarchicalBoards(boards: Board[]): HierarchicalBoard[] {
 
 /**
  * 게시판 목록 조회
+ *
+ * 최적화: getCachedAllBoards()를 사용하여 캐시된 데이터 활용
+ * - 같은 요청 내에서 여러 번 호출되어도 1번만 DB 조회
  */
-export async function getBoards(): Promise<BoardsResponse> {
+export const getBoards = cache(async (): Promise<BoardsResponse> => {
   try {
-    const supabase = await getSupabaseServer();
-    const { data, error } = await supabase
-      .from('boards')
-      .select('id, name, parent_id, display_order, slug, team_id, league_id, description, access_level, logo, views, view_type')
-      .order('display_order', { ascending: true })
-      .order('name');
-
-    if (error) {
-      console.error('게시판 목록 조회 오류:', error);
-      throw new Error('게시판 목록 조회 실패');
-    }
-
-    const boards = (data || []) as Board[];
+    const boards = await getCachedAllBoards() as Board[];
     const hierarchical = buildHierarchicalBoards(boards);
     return { boards, hierarchical };
   } catch (error) {
     console.error('게시판 데이터 불러오기 오류:', error);
     return { boards: [], hierarchical: [] };
   }
-} 
+}); 

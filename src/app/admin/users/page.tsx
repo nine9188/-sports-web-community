@@ -7,6 +7,7 @@ import { useAuth } from '@/shared/context/AuthContext';
 import SuspensionManager from '@/domains/admin/components/SuspensionManager';
 import { checkUserSuspension, getAllUsersWithLastAccess } from '@/domains/admin/actions/suspension';
 import { confirmUserEmail, getAllUsersEmailStatus } from '@/domains/admin/actions/email-verification';
+import { Button } from '@/shared/components/ui';
 
 interface User {
   id: string;
@@ -266,46 +267,49 @@ export default function UsersAdminPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="space-y-2">
-                        <button
+                        <Button
+                          variant="link"
                           onClick={() => toggleAdminStatus(user.id, user.is_admin)}
-                          className={`block ${
-                            user.is_admin 
-                              ? 'text-red-600 hover:text-red-900' 
+                          className={`block p-0 h-auto ${
+                            user.is_admin
+                              ? 'text-red-600 hover:text-red-900'
                               : 'text-blue-600 hover:text-blue-900'
                           }`}
                           disabled={user.id === currentUser?.id || processingIds.includes(user.id)}
                           title={
-                            user.id === currentUser?.id 
-                              ? '자신의 권한은 변경할 수 없습니다' 
+                            user.id === currentUser?.id
+                              ? '자신의 권한은 변경할 수 없습니다'
                               : processingIds.includes(user.id)
                                 ? '처리 중...'
                                 : ''
                           }
                         >
-                          {processingIds.includes(user.id) 
-                            ? '처리 중...' 
-                            : user.is_admin 
-                              ? '관리자 권한 해제' 
+                          {processingIds.includes(user.id)
+                            ? '처리 중...'
+                            : user.is_admin
+                              ? '관리자 권한 해제'
                               : '관리자 권한 부여'}
-                        </button>
-                        
-                        <button
+                        </Button>
+
+                        <Button
+                          variant="link"
                           onClick={() => openSuspensionModal(user)}
-                          className="block text-orange-600 hover:text-orange-900"
+                          className="block p-0 h-auto text-orange-600 hover:text-orange-900"
                           disabled={user.id === currentUser?.id}
                           title={user.id === currentUser?.id ? '자신의 계정은 정지할 수 없습니다' : ''}
                         >
                           계정 정지 관리
-                        </button>
+                        </Button>
 
                         {!user.email_confirmed && (
-                          <button
+                          <Button
+                            variant="link"
                             onClick={() => handleConfirmEmail(user.id)}
-                            className="block text-emerald-600 hover:text-emerald-900"
+                            className="block p-0 h-auto text-emerald-600 hover:text-emerald-900"
                             disabled={processingIds.includes(user.id)}
                           >
                             {processingIds.includes(user.id) ? '처리 중...' : '이메일 인증 처리'}
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </td>
@@ -330,12 +334,14 @@ export default function UsersAdminPage() {
                 <h3 className="text-lg font-medium text-gray-900">
                   계정 정지 관리
                 </h3>
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setShowSuspensionModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 h-8 w-8"
                 >
                   ✕
-                </button>
+                </Button>
               </div>
               
               <SuspensionManager

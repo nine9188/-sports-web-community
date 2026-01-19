@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { User, Mail, Clock } from 'lucide-react';
+import { Button } from '@/shared/components/ui';
 
 // 계정 정보 인터페이스 정의
 interface AccountInfo {
@@ -121,16 +122,16 @@ function AccountFoundContent() {
             </div>
 
             <div className="space-y-3">
-              <Link href="/signin" className="block">
-                <button className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white font-medium rounded-md transition-colors">
+              <Button asChild variant="primary" className="w-full py-3 h-auto">
+                <Link href="/signin">
                   로그인하기
-                </button>
-              </Link>
-              <Link href="/help/account-recovery?tab=password" className="block">
-                <button className="w-full py-3 px-4 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#F5F5F5] dark:hover:bg-[#262626] font-medium rounded-md transition-colors">
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full py-3 h-auto">
+                <Link href="/help/account-recovery?tab=password">
                   비밀번호 찾기
-                </button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           </div>
         )}
@@ -150,16 +151,16 @@ function AccountFoundContent() {
             </div>
 
             <div className="space-y-3">
-              <Link href="/signin" className="block">
-                <button className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white font-medium rounded-md transition-colors">
+              <Button asChild variant="primary" className="w-full py-3 h-auto">
+                <Link href="/signin">
                   로그인하기
-                </button>
-              </Link>
-              <Link href="/help/account-recovery" className="block">
-                <button className="w-full py-3 px-4 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#F5F5F5] dark:hover:bg-[#262626] font-medium rounded-md transition-colors">
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full py-3 h-auto">
+                <Link href="/help/account-recovery">
                   계정 찾기
-                </button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           </div>
         )}

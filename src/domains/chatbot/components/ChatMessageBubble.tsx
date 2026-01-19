@@ -135,7 +135,7 @@ export function ChatMessageBubble({
       {/* Avatar */}
       <div className={cn(
         'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center',
-        isUser ? 'bg-slate-800 dark:bg-[#3F3F3F]' : 'bg-[#F5F5F5] dark:bg-[#262626]'
+        isUser ? 'bg-[#262626] dark:bg-[#3F3F3F]' : 'bg-[#F5F5F5] dark:bg-[#262626]'
       )}>
         {isUser ? (
           <User className="w-4 h-4 text-white" />
@@ -152,9 +152,9 @@ export function ChatMessageBubble({
       )}>
         {/* Message Bubble */}
         <div className={cn(
-          'px-4 py-3 rounded-2xl shadow-sm',
+          'px-4 py-3 rounded-lg shadow-sm',
           isUser
-            ? 'bg-slate-800 dark:bg-[#3F3F3F] text-white rounded-br-md'
+            ? 'bg-[#262626] dark:bg-[#3F3F3F] text-white rounded-br-md'
             : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] rounded-bl-md border border-black/7 dark:border-white/0'
         )}>
           <p className="text-sm whitespace-pre-wrap break-words">

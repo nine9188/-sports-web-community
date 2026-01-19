@@ -5,6 +5,7 @@ import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { toast } from 'react-toastify';
 import { Youtube, Plus, Trash2, RefreshCw, Code } from 'lucide-react';
 import Spinner from '@/shared/components/Spinner';
+import { Button } from '@/shared/components/ui';
 
 interface YoutubeChannel {
   id: string;
@@ -317,22 +318,22 @@ CREATE POLICY admin_all ON public.youtube_channels
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">유튜브 크롤러 관리</h1>
         <div className="flex space-x-2">
-          <button
+          <Button
             onClick={() => setShowSql(!showSql)}
-            className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+            variant="secondary"
           >
             <Code className="w-4 h-4 mr-1" />
             테이블 생성 SQL {showSql ? '숨기기' : '보기'}
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setIsAdding(!isAdding)}
-            className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+            variant="primary"
           >
             {isAdding ? '취소' : <>
               <Plus className="w-4 h-4 mr-1" />
               채널 추가
             </>}
-          </button>
+          </Button>
         </div>
       </div>
       
@@ -341,12 +342,13 @@ CREATE POLICY admin_all ON public.youtube_channels
         <div className="bg-gray-900 text-gray-100 p-4 rounded-md overflow-x-auto">
           <div className="flex justify-between items-center mb-2">
             <h3 className="font-medium text-white">테이블 생성/업데이트 SQL</h3>
-            <button 
+            <Button
               onClick={copySQL}
-              className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded-md text-sm"
+              variant="secondary"
+              size="sm"
             >
               복사하기
-            </button>
+            </Button>
           </div>
           <pre className="text-sm whitespace-pre-wrap">{createTableSQL}</pre>
           <p className="mt-4 text-yellow-300 text-sm">
@@ -469,21 +471,21 @@ ALTER TABLE public.youtube_channels ADD COLUMN IF NOT EXISTS playlist_id TEXT;`}
               </label>
             </div>
             
-            <div className="flex justify-end pt-2">
-              <button
+            <div className="flex justify-end pt-2 gap-2">
+              <Button
                 type="button"
                 onClick={resetForm}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50 mr-2"
+                variant="outline"
               >
                 취소
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
+                variant="primary"
                 disabled={isLoading}
               >
                 {isLoading ? '처리 중...' : '채널 추가'}
-              </button>
+              </Button>
             </div>
           </form>
         </div>
@@ -557,22 +559,25 @@ ALTER TABLE public.youtube_channels ADD COLUMN IF NOT EXISTS playlist_id TEXT;`}
                         {channel.auto_publish ? '자동 발행' : '수동 발행'}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-right text-sm">
-                        <button
+                        <Button
                           onClick={() => runCrawler(channel)}
-                          className="px-3 py-1.5 text-blue-600 hover:bg-blue-50 rounded-md border border-blue-200 inline-flex items-center mr-2"
+                          variant="outline"
+                          size="sm"
+                          className="mr-2"
                           disabled={isLoading}
                         >
                           <RefreshCw className="h-4 w-4 mr-1" />
                           크롤링
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           onClick={() => deleteChannel(channel.id)}
-                          className="px-3 py-1.5 text-red-600 hover:bg-red-50 rounded-md border border-red-200 inline-flex items-center"
+                          variant="destructive"
+                          size="sm"
                           disabled={isLoading}
                         >
                           <Trash2 className="h-4 w-4 mr-1" />
                           삭제
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   );

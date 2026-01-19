@@ -4,6 +4,7 @@ import ItemCard from './ItemCard'
 import PurchaseModal from './PurchaseModal'
 import { ShopItem } from '../types'
 import { useShopItems } from '../hooks/useShopItems'
+import { Button } from '@/shared/components/ui'
 
 interface ItemGridProps {
   items: ShopItem[]
@@ -80,7 +81,7 @@ export default function ItemGrid({
                 {userItems.includes(item.id) ? (
                   <span className="inline-flex items-center justify-center h-7 px-2 text-xs rounded bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] border border-black/7 dark:border-0">보유 중</span>
                 ) : (
-                  <button onClick={() => handleSelectItem(item)} className="inline-flex items-center justify-center h-7 px-3 text-xs rounded bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0">구매</button>
+                  <Button onClick={() => handleSelectItem(item)} variant="secondary" className="h-7 px-3 text-xs">구매</Button>
                 )}
               </td>
             </tr>

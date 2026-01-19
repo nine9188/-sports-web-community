@@ -4,8 +4,7 @@ import { Suspense, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { PostSearchResults, CommentSearchResults, TeamSearchResults } from '@/domains/search'
 import type { PostSearchResult, CommentSearchResult, TeamSearchResult } from '@/domains/search/types'
-import { TabList, type TabItem } from '@/shared/components/ui'
-import Pagination from './Pagination'
+import { TabList, type TabItem, Pagination } from '@/shared/components/ui'
 import Spinner from '@/shared/components/Spinner';
 
 interface SearchResultsContainerProps {
@@ -227,32 +226,35 @@ export default function SearchResultsContainer({
       ))}
 
       {/* 카드 목록 하단 공통 페이지네이션 (posts/comments 전용) */}
-      {query && type === 'posts' && pagination.posts.total > 0 && (
-        <div className="mt-3">
+      {query && type === 'posts' && pagination.posts.total > 20 && (
+        <div className="mt-3 px-4 sm:px-6">
           <Pagination
             currentPage={page}
-            totalItems={pagination.posts.total}
-            itemsPerPage={20}
+            totalPages={Math.ceil(pagination.posts.total / 20)}
+            mode="url"
+            withMargin={false}
           />
         </div>
       )}
 
-      {query && type === 'comments' && pagination.comments.total > 0 && (
-        <div className="mt-3">
+      {query && type === 'comments' && pagination.comments.total > 20 && (
+        <div className="mt-3 px-4 sm:px-6">
           <Pagination
             currentPage={page}
-            totalItems={pagination.comments.total}
-            itemsPerPage={20}
+            totalPages={Math.ceil(pagination.comments.total / 20)}
+            mode="url"
+            withMargin={false}
           />
         </div>
       )}
 
-      {query && type === 'teams' && pagination.teams.total > 0 && (
-        <div className="mt-3">
+      {query && type === 'teams' && pagination.teams.total > 20 && (
+        <div className="mt-3 px-4 sm:px-6">
           <Pagination
             currentPage={page}
-            totalItems={pagination.teams.total}
-            itemsPerPage={20}
+            totalPages={Math.ceil(pagination.teams.total / 20)}
+            mode="url"
+            withMargin={false}
           />
         </div>
       )}

@@ -48,7 +48,7 @@ export default function Spinner({ size = 'md', className = '' }: SpinnerProps) {
 
   return (
     <div
-      className={`${sizeClasses[size]} border-gray-300 dark:border-gray-600 border-t-gray-900 dark:border-t-[#F0F0F0] rounded-full animate-spin ${className}`}
+      className={`${sizeClasses[size]} border-black/20 dark:border-white/20 border-t-gray-900 dark:border-t-[#F0F0F0] rounded-full animate-spin ${className}`}
       role="status"
       aria-label="로딩 중"
     />

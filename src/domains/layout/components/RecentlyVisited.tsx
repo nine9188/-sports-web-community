@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { ChevronDown, X, Trash2 } from 'lucide-react';
 import { useRecentlyVisited } from '../hooks/useRecentlyVisited';
+import { Button } from '@/shared/components/ui';
 
 // 게시판이 아닌 페이지들 (boards prefix 불필요)
 const NON_BOARD_PREFIXES = ['shop', 'livescore', 'transfers', 'admin', 'settings'];
@@ -45,12 +46,14 @@ const RecentlyVisited = React.memo(function RecentlyVisited() {
               <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
                 최근방문
               </span>
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={toggleExpanded}
-                className="p-1 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors"
+                className="h-7 w-7"
               >
                 <ChevronDown className="h-4 w-4 text-gray-500 rotate-180 transition-transform" />
-              </button>
+              </Button>
             </div>
 
             {/* 태그들 */}
@@ -68,25 +71,28 @@ const RecentlyVisited = React.memo(function RecentlyVisited() {
                       >
                         {board.name}
                       </Link>
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => removeBoard(board.id)}
-                        className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="h-5 w-5 p-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <X className="h-3 w-3" />
-                      </button>
+                      </Button>
                     </div>
                   ))}
                 </div>
 
                 {/* 전체 삭제 */}
                 <div className="flex justify-end mt-2">
-                  <button
+                  <Button
+                    variant="ghost"
                     onClick={clearAll}
-                    className="flex items-center gap-1 px-2 py-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors"
+                    className="h-auto px-2 py-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                   >
-                    <Trash2 className="h-3 w-3" />
+                    <Trash2 className="h-3 w-3 mr-1" />
                     전체 삭제
-                  </button>
+                  </Button>
                 </div>
               </>
             ) : (
@@ -116,12 +122,14 @@ const RecentlyVisited = React.memo(function RecentlyVisited() {
                       >
                         {board.name}
                       </Link>
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => removeBoard(board.id)}
-                        className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                        className="h-5 w-5 p-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
                       >
                         <X className="h-3 w-3" />
-                      </button>
+                      </Button>
                     </div>
                   ))}
                 </div>
@@ -132,12 +140,14 @@ const RecentlyVisited = React.memo(function RecentlyVisited() {
               )}
             </div>
 
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={toggleExpanded}
-              className="p-1 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors shrink-0"
+              className="h-7 w-7 shrink-0"
             >
               <ChevronDown className="h-4 w-4 text-gray-500 transition-transform" />
-            </button>
+            </Button>
           </div>
         )}
       </div>

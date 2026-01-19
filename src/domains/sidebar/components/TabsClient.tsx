@@ -9,6 +9,7 @@ import {
   MessageSquare,
   Flame,
 } from 'lucide-react';
+import { Container, ContainerHeader, ContainerTitle, TabList, type TabItem } from '@/shared/components/ui';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { TopicPostsData, TabType, TopicPost } from '../types';
@@ -71,35 +72,26 @@ export function TopicTabsClient({ postsData }: TopicTabsClientProps) {
   const currentPosts = getCurrentPosts();
   
   return (
-    <div className="mb-4 bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0">
-      <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center border-b border-black/5 dark:border-white/10 rounded-t-lg">
-        <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">인기글</h3>
-        <span className="text-xs text-gray-500 dark:text-gray-400 ml-auto">
+    <Container className="mb-4 bg-white dark:bg-[#1D1D1D]">
+      <ContainerHeader className="justify-between">
+        <ContainerTitle>인기글</ContainerTitle>
+        <span className="text-xs text-gray-500 dark:text-gray-400">
           {postsData.windowDays ? `최근 ${postsData.windowDays}일 기준` : '최근 24시간 기준'}
         </span>
-      </div>
+      </ContainerHeader>
 
-      <div className="flex border-b border-black/5 dark:border-white/10">
-        {[
-          { id: 'hot', label: 'HOT', icon: <Flame className="h-3 w-3 mr-0.5" /> },
-          { id: 'views', label: '조회수', icon: <Eye className="h-3 w-3 mr-0.5" /> },
-          { id: 'likes', label: '추천수', icon: <ThumbsUp className="h-3 w-3 mr-0.5" /> },
-          { id: 'comments', label: '댓글수', icon: <MessageSquare className="h-3 w-3 mr-0.5" /> }
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as TabType)}
-            className={`flex-1 text-xs py-2 px-2 flex items-center justify-center transition-colors ${
-              activeTab === tab.id
-                ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] font-medium border-b-2 border-slate-800 dark:border-white'
-                : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-            }`}
-          >
-            {tab.icon}
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <TabList
+        tabs={[
+          { id: 'hot', label: 'HOT', icon: <Flame className="h-3 w-3" /> },
+          { id: 'views', label: '조회수', icon: <Eye className="h-3 w-3" /> },
+          { id: 'likes', label: '추천수', icon: <ThumbsUp className="h-3 w-3" /> },
+          { id: 'comments', label: '댓글수', icon: <MessageSquare className="h-3 w-3" /> }
+        ] as TabItem[]}
+        activeTab={activeTab}
+        onTabChange={(id) => setActiveTab(id as TabType)}
+        variant="contained"
+        className="mb-0"
+      />
 
       <div>
         {currentPosts.length === 0 ? (
@@ -151,6 +143,6 @@ export function TopicTabsClient({ postsData }: TopicTabsClientProps) {
           </ul>
         )}
       </div>
-    </div>
+    </Container>
   );
 } 

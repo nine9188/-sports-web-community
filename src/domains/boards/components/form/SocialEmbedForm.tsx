@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { detectPlatform, type SocialPlatform } from '@/shared/components/editor/tiptap/extensions/social-embeds';
+import { Button } from '@/shared/components/ui';
 
 interface SocialEmbedFormProps {
   onCancel: () => void;
@@ -151,21 +152,25 @@ export default function SocialEmbedForm({ onCancel, onSocialEmbedAdd, isOpen }: 
             </div>
 
             <div className="flex justify-end space-x-2 pt-2">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={handleCancel}
-                className="px-3 py-1.5 text-sm rounded-md bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="text-sm"
               >
                 취소
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="primary"
+                size="sm"
                 onClick={() => handleSubmit()}
                 disabled={!detectedPlatform}
-                className="px-3 py-1.5 text-sm rounded-md bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="text-sm"
               >
                 추가
-              </button>
+              </Button>
             </div>
           </div>
         </div>

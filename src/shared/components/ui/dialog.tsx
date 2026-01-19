@@ -29,16 +29,45 @@ const DialogOverlay = React.forwardRef<
 ))
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
+interface DialogContentProps
+  extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
+  variant?: 'default' | 'bottomSheet'
+}
+
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => (
+  DialogContentProps
+>(({ className, children, variant = 'default', ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-[50%] top-[50%] z-[9999] grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] rounded-lg overflow-hidden",
+        // 공통 스타일
+        "fixed z-[9999] w-full bg-white dark:bg-[#1D1D1D] shadow-lg duration-200 overflow-hidden",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out",
+        // variant별 스타일
+        variant === 'default' && [
+          "left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]",
+          "max-w-lg border border-black/7 dark:border-white/10 rounded-lg",
+          "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+          "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+          "data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%]",
+          "data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
+        ],
+        variant === 'bottomSheet' && [
+          // 모바일: 바텀시트
+          "bottom-0 left-0 right-0 rounded-t-2xl max-h-[85vh]",
+          "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+          // 데스크탑: 센터 모달
+          "md:bottom-auto md:left-[50%] md:top-[50%] md:right-auto",
+          "md:translate-x-[-50%] md:translate-y-[-50%]",
+          "md:max-w-md md:rounded-lg md:max-h-[80vh]",
+          "md:border md:border-black/7 md:dark:border-white/10",
+          "md:data-[state=closed]:slide-out-to-bottom-0 md:data-[state=open]:slide-in-from-bottom-0",
+          "md:data-[state=closed]:fade-out-0 md:data-[state=open]:fade-in-0",
+          "md:data-[state=closed]:zoom-out-95 md:data-[state=open]:zoom-in-95",
+        ],
         className
       )}
       {...props}
@@ -55,7 +84,7 @@ const DialogHeader = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "h-12 px-4 flex items-center border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]",
+      "h-12 px-4 flex items-center flex-shrink-0 border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]",
       className
     )}
     {...props}
@@ -80,7 +109,7 @@ const DialogFooter = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "px-4 py-4 border-t border-black/5 dark:border-white/10 flex gap-2",
+      "px-4 py-4 flex-shrink-0 border-t border-black/5 dark:border-white/10 flex gap-2",
       className
     )}
     {...props}

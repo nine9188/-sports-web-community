@@ -2,8 +2,9 @@
 
 import { useState, useRef, useMemo, Fragment } from 'react';
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
-import { Card, TabList, type TabItem } from '@/shared/components/ui';
+import { TabList, type TabItem } from '@/shared/components/ui';
 import { Button } from '@/shared/components/ui/button';
+import { cardSimpleStyles } from '@/shared/styles';
 import Image from 'next/image';
 import { Trash2 } from 'lucide-react';
 import { ShopCategory as BaseShopCategory } from '@/domains/shop/types';
@@ -328,7 +329,7 @@ export default function ShopItemManagement({ teams, leagues, storageImages, shop
   return (
     <div className="space-y-6">
       {/* 아이템 추가 폼 */}
-      <Card className="p-6">
+      <div className={cardSimpleStyles}>
         <h2 className="text-xl font-semibold mb-4">새 아이콘 추가</h2>
         <form onSubmit={editingItem ? handleUpdateItem : handleSubmit} className="space-y-4">
           {/* 이미지 소스 선택 */}
@@ -544,10 +545,10 @@ export default function ShopItemManagement({ teams, leagues, storageImages, shop
             )}
           </div>
         </form>
-      </Card>
+      </div>
 
       {/* 아이템 목록 */}
-      <Card className="p-6">
+      <div className={cardSimpleStyles}>
         <h2 className="text-xl font-semibold mb-4">등록된 아이콘 목록</h2>
         
         {/* 카테고리 탭 */}
@@ -599,7 +600,7 @@ export default function ShopItemManagement({ teams, leagues, storageImages, shop
             </div>
           ))}
         </div>
-      </Card>
+      </div>
     </div>
   );
 } 

@@ -1,3 +1,5 @@
+import Spinner from '@/shared/components/Spinner';
+
 export default function LoadingSkeleton() {
   return (
     <div className="flex items-center justify-center h-32">

@@ -4,6 +4,7 @@ import { formatMessageTime } from '../utils';
 import { ChatConversation } from '../types';
 import { MessageCircle, Clock } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
+import { Button } from '@/shared/components/ui';
 
 interface ChatConversationListProps {
   conversations: ChatConversation[];
@@ -58,18 +59,14 @@ export function ChatConversationList({
         {/* 새 대화 버튼 */}
         {onNewConversation && (
           <div className="flex-shrink-0 p-4 border-t border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
-            <button
+            <Button
+              variant="primary"
               onClick={onNewConversation}
-              className={cn(
-                'w-full px-4 py-3 text-sm font-medium rounded-lg transition-colors',
-                'bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A]',
-                'outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0',
-                'flex items-center justify-center space-x-2'
-              )}
+              className="w-full py-3"
             >
-              <MessageCircle className="w-4 h-4" />
+              <MessageCircle className="w-4 h-4 mr-2" />
               <span>새 대화 시작</span>
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -82,13 +79,13 @@ export function ChatConversationList({
       <div className="flex-1 overflow-y-auto min-h-0">
         <div className="divide-y divide-black/5 dark:divide-white/10">
           {conversations.map((conversation) => (
-            <button
+            <Button
               key={conversation.id}
+              variant="ghost"
               onClick={() => onConversationSelect(conversation.id)}
               className={cn(
-                'w-full p-4 text-left hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors',
-                'outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333]',
-                activeConversationId === conversation.id && 'bg-[#EAEAEA] dark:bg-[#333333] border-r-2 border-gray-700 dark:border-gray-300'
+                'w-full p-4 text-left justify-start rounded-none h-auto',
+                activeConversationId === conversation.id && 'bg-[#EAEAEA] dark:bg-[#333333] border-r-2 border-[#262626] dark:border-[#F0F0F0]'
               )}
             >
               <div className="flex items-start space-x-3">
@@ -128,7 +125,7 @@ export function ChatConversationList({
                   </div>
                 </div>
               </div>
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -136,18 +133,14 @@ export function ChatConversationList({
       {/* 새 대화 버튼 */}
       {onNewConversation && (
         <div className="flex-shrink-0 p-4 border-t border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
-          <button
+          <Button
+            variant="primary"
             onClick={onNewConversation}
-            className={cn(
-              'w-full px-4 py-3 text-sm font-medium rounded-lg transition-colors',
-              'bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A]',
-              'outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0',
-              'flex items-center justify-center space-x-2'
-            )}
+            className="w-full py-3"
           >
-            <MessageCircle className="w-4 h-4" />
+            <MessageCircle className="w-4 h-4 mr-2" />
             <span>새 대화 시작</span>
-          </button>
+          </Button>
         </div>
       )}
     </div>

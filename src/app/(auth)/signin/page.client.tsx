@@ -8,6 +8,7 @@ import { useAuth } from '@/shared/context/AuthContext';
 import { EyeIcon, EyeOffIcon, AlertCircle, Check } from 'lucide-react';
 import { signIn, resendConfirmationByUsername } from '@/domains/auth/actions';
 import KakaoLoginButton from '@/domains/auth/components/KakaoLoginButton';
+import { Button } from '@/shared/components/ui';
 
 // SearchParams를 사용하는 로그인 컴포넌트
 function LoginContent() {
@@ -189,7 +190,7 @@ function LoginContent() {
   };
 
   return (
-    <div className="max-w-md w-full md:bg-white md:dark:bg-[#2D2D2D] md:rounded-2xl md:shadow-lg md:border md:border-black/10 md:dark:border-white/10 md:p-8">
+    <div className="max-w-md w-full md:bg-white md:dark:bg-[#2D2D2D] md:rounded-lg md:shadow-lg md:border md:border-black/10 md:dark:border-white/10 md:p-8">
       {/* 헤더 */}
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">4590 Football 로그인</h2>
@@ -257,9 +258,11 @@ function LoginContent() {
               placeholder="비밀번호"
               required
             />
-            <button
+            <Button
               type="button"
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400"
+              variant="ghost"
+              size="icon"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 h-8 w-8 text-gray-500 dark:text-gray-400"
               onClick={handleTogglePassword}
               tabIndex={-1}
             >
@@ -268,7 +271,7 @@ function LoginContent() {
               ) : (
                 <EyeIcon className="h-5 w-5" />
               )}
-            </button>
+            </Button>
           </div>
           {passwordError && (
             <p className="mt-1 text-sm text-red-600 flex items-center">
@@ -284,7 +287,7 @@ function LoginContent() {
             type="checkbox"
             checked={rememberUsername}
             onChange={() => setRememberUsername(!rememberUsername)}
-            className="h-4 w-4 text-slate-600 border-gray-300 dark:border-white/10 rounded focus:ring-slate-500"
+            className="h-4 w-4 text-gray-600 border-black/7 dark:border-white/10 rounded focus:ring-gray-500"
           />
           <label htmlFor="remember-username" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
             아이디 기억하기
@@ -303,26 +306,28 @@ function LoginContent() {
                 <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
                   회원가입 시 입력한 이메일로 발송된 인증 메일을 확인해주세요.
                 </p>
-                <button
+                <Button
                   type="button"
+                  variant="link"
                   onClick={handleResendEmail}
                   disabled={resendingEmail}
-                  className="mt-2 text-xs text-yellow-800 dark:text-yellow-200 hover:underline disabled:opacity-50"
+                  className="mt-2 p-0 h-auto text-xs text-yellow-800 dark:text-yellow-200"
                 >
                   {resendingEmail ? '발송 중...' : '인증 이메일 재발송'}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
         )}
 
-        <button
+        <Button
           type="submit"
+          variant="primary"
           disabled={loading || !usernameValid || !passwordValid}
-          className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white font-medium rounded-md transition-colors disabled:opacity-50"
+          className="w-full py-3 h-auto"
         >
           {loading ? '로그인 중...' : '로그인'}
-        </button>
+        </Button>
 
         {/* 아이디/비밀번호 찾기 */}
         <div className="mt-4 text-center text-gray-600 dark:text-gray-400">
@@ -375,13 +380,13 @@ export default function SignInPage() {
       <Suspense fallback={
         <div className="max-w-md w-full">
           <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-2"></div>
-            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2"></div>
-            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-8"></div>
+            <div className="h-8 bg-[#EAEAEA] dark:bg-[#333333] rounded w-48 mb-2"></div>
+            <div className="h-4 bg-[#EAEAEA] dark:bg-[#333333] rounded w-full mb-2"></div>
+            <div className="h-4 bg-[#EAEAEA] dark:bg-[#333333] rounded w-3/4 mb-8"></div>
             <div className="space-y-4">
-              <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
-              <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
-              <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div className="h-12 bg-[#EAEAEA] dark:bg-[#333333] rounded"></div>
+              <div className="h-12 bg-[#EAEAEA] dark:bg-[#333333] rounded"></div>
+              <div className="h-12 bg-[#EAEAEA] dark:bg-[#333333] rounded"></div>
             </div>
           </div>
         </div>

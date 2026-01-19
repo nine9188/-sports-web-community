@@ -178,7 +178,7 @@ export default function Squad({ initialSquad, initialStats, isLoading: externalL
                           }}
                         >
                           <td className="px-2 sm:px-4 md:px-6 py-2 whitespace-nowrap">
-                            <div className="w-8 h-8 md:w-10 md:h-10 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden flex-shrink-0">
+                            <div className="w-8 h-8 md:w-10 md:h-10 bg-[#F5F5F5] dark:bg-[#333333] rounded-full overflow-hidden flex-shrink-0">
                               <UnifiedSportsImage
                                 imageId={member.id}
                                 imageType={position === 'Coach' ? ImageType.Coachs : ImageType.Players}

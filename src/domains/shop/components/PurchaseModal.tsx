@@ -4,6 +4,16 @@ import Image from 'next/image'
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage'
 import { ImageType } from '@/shared/types/image'
 import { ShopItem } from '../types'
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogCloseButton,
+  DialogBody,
+  DialogFooter,
+} from '@/shared/components/ui'
 
 // API-Sports URL 유틸리티 함수들
 function isApiSportsUrl(url: string): boolean {
@@ -46,29 +56,14 @@ export default function PurchaseModal({
   const remainingPoints = Math.max(userPoints - item.price, 0)
   const lackingPoints = Math.max(item.price - userPoints, 0)
   return (
-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4" role="dialog" aria-modal="true" aria-labelledby="purchase-title">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50" onClick={onCancel} />
+    <Dialog open={true} onOpenChange={(open) => !open && onCancel()}>
+      <DialogContent variant="bottomSheet" className="grid grid-rows-[auto,1fr,auto] min-h-[50vh] md:min-h-fit md:h-auto">
+        <DialogHeader>
+          <DialogTitle>구매 확인</DialogTitle>
+          <DialogCloseButton />
+        </DialogHeader>
 
-      {/* Sheet / Dialog */}
-      <div className="relative w-full md:max-w-md bg-white dark:bg-[#1D1D1D] rounded-t-2xl md:rounded-lg shadow-xl grid grid-rows-[auto,1fr,auto] min-h-[50vh] max-h-[70vh] md:min-h-fit md:max-h-fit md:h-auto overflow-hidden">
-        {/* Header */}
-        <div className="h-12 px-4 md:px-6 border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] relative flex items-center">
-          <h2 id="purchase-title" className="text-sm md:text-base font-bold text-center md:text-left text-gray-900 dark:text-[#F0F0F0] flex-1">구매 확인</h2>
-          <button
-            type="button"
-            onClick={onCancel}
-            aria-label="닫기"
-            className="h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-5 w-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M18 6L6 18" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="px-4 md:px-6 py-4 md:py-4 overflow-y-auto">
+        <DialogBody className="px-4 md:px-6 py-4 overflow-y-auto">
 
           <div className="flex items-center gap-3 mb-4">
             <div className="w-5 h-5 relative flex-shrink-0">
@@ -147,40 +142,40 @@ export default function PurchaseModal({
             </div>
           )}
 
-        </div>
+        </DialogBody>
 
-        {/* Footer: Bottom sheet style with context-aware CTA */}
-        <div className="p-4 md:p-6 border-t border-black/5 dark:border-white/10 flex flex-col gap-2 pb-[env(safe-area-inset-bottom)]">
+        <DialogFooter className="flex-col gap-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
           {isLoggedIn ? (
-            <div className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+            <div className="text-sm text-gray-700 dark:text-gray-300 mb-3 w-full">
               <p className="font-medium text-gray-900 dark:text-[#F0F0F0]">이 아이템을 구매하시겠습니까?</p>
               <p className="mt-1">구매 후에는 환불이 불가능합니다.</p>
             </div>
           ) : (
-            <div className="text-sm text-gray-700 dark:text-gray-300 mb-3 text-center">
+            <div className="text-sm text-gray-700 dark:text-gray-300 mb-3 text-center w-full">
               <p className="font-medium text-gray-900 dark:text-[#F0F0F0]">회원만 구매가 가능합니다</p>
               <p className="mt-1">로그인 후 이용해주세요</p>
             </div>
           )}
           {isLoggedIn ? (
-            <button
+            <Button
               onClick={onConfirm}
-              className="w-full h-12 px-3 text-base bg-slate-800 dark:bg-[#3F3F3F] text-white rounded-lg hover:bg-slate-700 dark:hover:bg-[#4A4A4A] disabled:bg-[#EAEAEA] dark:disabled:bg-[#333333] disabled:text-gray-500 dark:disabled:text-gray-400 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 active:scale-[0.98] transition mb-3 md:mb-2"
+              variant="primary"
+              className="w-full h-12 px-3 text-base rounded-lg active:scale-[0.98] transition"
               disabled={isProcessing || !canAfford}
             >
               {isProcessing ? '처리 중...' : '구매하기'}
-            </button>
+            </Button>
           ) : (
             <a
               href="/signin"
-              className="w-full h-12 px-3 text-base bg-slate-800 dark:bg-[#3F3F3F] text-white rounded-lg hover:bg-slate-700 dark:hover:bg-[#4A4A4A] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 active:scale-[0.98] transition mb-3 md:mb-2 text-center inline-flex items-center justify-center"
+              className="w-full h-12 px-3 text-base bg-[#262626] dark:bg-[#3F3F3F] text-white rounded-lg hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 active:scale-[0.98] transition text-center inline-flex items-center justify-center"
               aria-label="로그인하기"
             >
               로그인하기
             </a>
           )}
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 } 

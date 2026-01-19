@@ -54,7 +54,7 @@ const TabButton = React.forwardRef<
   const fillClasses = cn(
     "flex-1 text-xs",
     active
-      ? "bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] border-b-2 border-slate-800 dark:border-white"
+      ? "bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] border-b-2 border-[#262626] dark:border-[#F0F0F0]"
       : "bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-400 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]"
   );
 
@@ -105,7 +105,7 @@ export interface TabListProps {
   isChangingTab?: boolean;
   className?: string;
   showCount?: boolean;
-  variant?: 'default' | 'minimal';
+  variant?: 'default' | 'minimal' | 'contained';
 }
 
 /**
@@ -138,13 +138,43 @@ function TabList({
     onTabChange(tabId);
   }, [tabs, isChangingTab, onTabChange]);
 
-  const baseClasses = variant === 'minimal'
-    ? 'flex border-b border-black/7 dark:border-white/10 overflow-x-auto no-scrollbar'
-    : 'bg-[#F5F5F5] dark:bg-[#262626] rounded-lg border border-black/7 dark:border-0 overflow-hidden flex overflow-x-auto no-scrollbar';
+  // variant별 컨테이너 스타일
+  const containerClasses = {
+    default: 'bg-[#F5F5F5] dark:bg-[#262626] rounded-lg border border-black/7 dark:border-0 overflow-hidden flex overflow-x-auto no-scrollbar',
+    minimal: 'flex border-b border-black/7 dark:border-white/10 overflow-x-auto no-scrollbar',
+    contained: 'flex border-b border-black/5 dark:border-white/10 overflow-x-auto no-scrollbar'
+  };
+
+  // variant별 버튼 스타일
+  const getButtonClasses = (isActive: boolean, tab: TabItem) => {
+    const baseButton = 'transition-colors';
+    const mobileClass = tab.mobileOnly ? 'xl:hidden' : '';
+    const disabledClass = tab.disabled ? 'opacity-50 cursor-not-allowed' : '';
+
+    if (variant === 'minimal') {
+      return `${baseButton} py-2 px-3 ${isActive
+        ? 'border-b-2 border-[#262626] dark:border-[#F0F0F0] font-medium text-gray-900 dark:text-[#F0F0F0]'
+        : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
+      } ${mobileClass}`;
+    }
+
+    if (variant === 'contained') {
+      return `${baseButton} py-2 px-2 h-auto flex items-center justify-center text-xs flex-1 whitespace-nowrap ${isActive
+        ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] font-medium border-b-2 border-[#262626] dark:border-[#F0F0F0]'
+        : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
+      } ${mobileClass} ${disabledClass}`;
+    }
+
+    // default
+    return `${baseButton} h-12 px-3 flex items-center justify-center text-xs font-medium flex-1 whitespace-nowrap ${isActive
+      ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] font-semibold border-b-2 border-[#262626] dark:border-[#F0F0F0]'
+      : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
+    } ${mobileClass} ${disabledClass}`;
+  };
 
   return (
-    <div className={`mb-4 ${className}`}>
-      <div className={baseClasses}>
+    <div className={cn('mb-4', className)}>
+      <div className={containerClasses[variant]}>
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
 
@@ -159,18 +189,7 @@ function TabList({
             </>
           );
 
-          const buttonClasses = variant === 'minimal'
-            ? `py-2 px-3 ${isActive
-                ? 'border-b-2 border-slate-800 dark:border-white font-medium text-gray-900 dark:text-[#F0F0F0]'
-                : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-              } ${tab.mobileOnly ? 'xl:hidden' : ''}`
-            : `h-12 px-3 flex items-center justify-center text-xs font-medium flex-1 whitespace-nowrap transition-colors ${
-                isActive
-                  ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] font-semibold border-b-2 border-slate-800 dark:border-white'
-                  : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-              } ${tab.mobileOnly ? 'xl:hidden' : ''} ${
-                tab.disabled ? 'opacity-50 cursor-not-allowed' : ''
-              }`;
+          const buttonClasses = getButtonClasses(isActive, tab);
 
           return (
             <button
@@ -182,7 +201,7 @@ function TabList({
             >
               {tabLabel}
               {isChangingTab && isActive && (
-                <span className="ml-1 inline-block h-3 w-3 animate-pulse rounded-full bg-gray-300 dark:bg-gray-600"></span>
+                <span className="ml-1 inline-block h-3 w-3 animate-pulse rounded-full bg-[#D1D1D1] dark:bg-[#4A4A4A]"></span>
               )}
             </button>
           );

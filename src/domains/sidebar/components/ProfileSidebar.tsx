@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useCallback, useMemo } from 'react';
 import { useLogout } from '@/shared/hooks/useLogout';
 import { FullUserDataWithSession } from '@/shared/types/user';
+import { Button } from '@/shared/components/ui';
 
 interface ProfileSidebarProps {
   isOpen: boolean;
@@ -78,14 +79,15 @@ export default function ProfileSidebar({
           <span className="font-medium text-gray-900 dark:text-[#F0F0F0]">
             {user ? '프로필' : '로그인'}
           </span>
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
             className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-[#EAEAEA] dark:hover:bg-[#333333] active:bg-[#EAEAEA] dark:active:bg-[#333333] transition-colors duration-150"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             <X className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-          </button>
+          </Button>
         </div>
 
         {/* 컨텐츠 영역 */}
@@ -128,13 +130,14 @@ export default function ProfileSidebar({
                 </Link>
 
                 {/* 로그아웃 */}
-                <button
+                <Button
+                  variant="ghost"
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 p-3 rounded-lg bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-left"
+                  className="w-full flex items-center gap-3 p-3 h-auto rounded-lg bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors justify-start"
                 >
                   <LogOut className="h-5 w-5 text-red-600 dark:text-red-400" />
                   <span className="text-sm font-medium text-red-600 dark:text-red-400">로그아웃</span>
-                </button>
+                </Button>
               </div>
             </>
           ) : (
@@ -152,7 +155,7 @@ export default function ProfileSidebar({
                 <div className="space-y-3">
                   <Link
                     href="/signin"
-                    className="block w-full bg-slate-800 dark:bg-[#3F3F3F] text-white py-3 px-4 rounded-lg font-medium hover:bg-slate-700 dark:hover:bg-[#4A4A4A] transition-colors"
+                    className="block w-full bg-[#262626] dark:bg-[#3F3F3F] text-white py-3 px-4 rounded-lg font-medium hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] transition-colors"
                     onClick={handleMenuClick}
                   >
                     로그인

@@ -3,6 +3,16 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, AlertTriangle } from 'lucide-react';
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogCloseButton,
+  DialogBody,
+  DialogFooter,
+} from '@/shared/components/ui';
 import { deleteAccount } from '@/domains/settings/actions/account';
 
 interface AccountDeleteFormProps {
@@ -98,52 +108,55 @@ export default function AccountDeleteForm({ email, nickname }: AccountDeleteForm
         </div>
 
         <div className="flex justify-end mt-4">
-          <button
+          <Button
             type="submit"
-            className="inline-flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 dark:bg-red-700 hover:bg-red-700 dark:hover:bg-red-800 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors"
+            variant="destructive"
             disabled={isLoading}
           >
             {isLoading ? '처리 중...' : '회원 탈퇴'}
-          </button>
+          </Button>
         </div>
       </form>
 
       {/* 확인 모달 */}
-      {isConfirmOpen && (
-        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-[#1D1D1D] rounded-lg p-6 max-w-md w-full mx-4 border border-black/7 dark:border-white/10">
-            <div className="mb-4 flex items-start">
-              <AlertTriangle className="h-5 w-5 text-red-500 dark:text-red-600 mr-2 flex-shrink-0 mt-0.5" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-[#F0F0F0]">회원 탈퇴 확인</h3>
-            </div>
+      <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>회원 탈퇴 확인</DialogTitle>
+            <DialogCloseButton />
+          </DialogHeader>
 
-            <div className="text-sm text-gray-700 dark:text-gray-300 mb-6">
-              <p className="mb-2">정말로 계정을 삭제하시겠습니까?</p>
-              <p className="mb-2">계정 삭제 시 모든 데이터가 영구적으로 삭제되며, 복구할 수 없습니다.</p>
-              <p className="font-medium text-red-600 dark:text-red-400">이 작업은 되돌릴 수 없습니다.</p>
+          <DialogBody>
+            <div className="flex gap-3">
+              <AlertTriangle className="h-5 w-5 text-red-500 dark:text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-gray-700 dark:text-gray-300">
+                <p className="mb-2">정말로 계정을 삭제하시겠습니까?</p>
+                <p className="mb-2">계정 삭제 시 모든 데이터가 영구적으로 삭제되며, 복구할 수 없습니다.</p>
+                <p className="font-medium text-red-600 dark:text-red-400">이 작업은 되돌릴 수 없습니다.</p>
+              </div>
             </div>
+          </DialogBody>
 
-            <div className="flex justify-end space-x-3">
-              <button
-                type="button"
-                onClick={handleCancelDelete}
-                className="inline-flex justify-center py-2 px-4 border border-black/7 dark:border-white/10 text-sm font-medium rounded-md text-gray-900 dark:text-[#F0F0F0] bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors"
-                disabled={isLoading}
-              >
-                취소
-              </button>
-              <button
-                type="button"
-                onClick={handleDeleteAccount}
-                className="inline-flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 dark:bg-red-700 hover:bg-red-700 dark:hover:bg-red-800 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors"
-                disabled={isLoading}
-              >
-                {isLoading ? '처리 중...' : '삭제 확인'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          <DialogFooter className="justify-end">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleCancelDelete}
+              disabled={isLoading}
+            >
+              취소
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleDeleteAccount}
+              disabled={isLoading}
+            >
+              {isLoading ? '처리 중...' : '삭제 확인'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

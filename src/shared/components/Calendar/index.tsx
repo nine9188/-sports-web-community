@@ -137,7 +137,7 @@ export default function Calendar({ selectedDate, onDateSelect, onClose, minDate,
           </button>
           <button
             onClick={handleConfirm}
-            className="px-3 py-2 text-sm font-semibold bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A] rounded transition-colors outline-none focus:outline-none"
+            className="px-3 py-2 text-sm font-semibold bg-[#262626] dark:bg-[#3F3F3F] text-white hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] rounded transition-colors outline-none focus:outline-none"
           >
             확인
           </button>
@@ -199,8 +199,8 @@ function DayGrid({
             disabled={isDisabled}
             className={`
               h-8 flex items-center justify-center rounded text-sm transition-colors outline-none focus:outline-none
-              ${isSelected ? 'bg-slate-800 dark:bg-[#3F3F3F] text-white font-semibold' : ''}
-              ${!isSelected && isToday_ ? 'ring-1 ring-slate-400 dark:ring-slate-500' : ''}
+              ${isSelected ? 'bg-[#262626] dark:bg-[#3F3F3F] text-white font-semibold' : ''}
+              ${!isSelected && isToday_ ? 'ring-1 ring-[#262626] dark:ring-[#3F3F3F]' : ''}
               ${!isCurrentMonth ? 'text-gray-400 dark:text-gray-600' : 'text-gray-900 dark:text-[#F0F0F0]'}
               ${!isSelected && !isDisabled ? 'hover:bg-[#F5F5F5] dark:hover:bg-[#262626]' : ''}
               ${isDisabled ? 'opacity-40 cursor-not-allowed' : ''}
@@ -245,7 +245,7 @@ function MonthGrid({
             disabled={isDisabled}
             className={`
               h-12 flex items-center justify-center rounded-lg text-sm font-medium transition-colors outline-none focus:outline-none
-              ${isSelected ? 'bg-slate-800 dark:bg-[#3F3F3F] text-white' : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'}
+              ${isSelected ? 'bg-[#262626] dark:bg-[#3F3F3F] text-white' : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'}
               ${isDisabled ? 'opacity-40 cursor-not-allowed' : ''}
             `}
           >
@@ -290,7 +290,7 @@ function YearGrid({
             disabled={isDisabled}
             className={`
               h-12 flex items-center justify-center rounded-lg text-sm font-medium transition-colors outline-none focus:outline-none
-              ${isSelected ? 'bg-slate-800 dark:bg-[#3F3F3F] text-white' : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'}
+              ${isSelected ? 'bg-[#262626] dark:bg-[#3F3F3F] text-white' : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'}
               ${isDisabled ? 'opacity-40 cursor-not-allowed' : ''}
             `}
           >

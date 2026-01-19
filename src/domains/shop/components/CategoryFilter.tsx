@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import ReactDOM from 'react-dom'
 import { ShopItem } from '../types'
 import ItemGrid from '@/domains/shop/components/ItemGrid'
+import { Button } from '@/shared/components/ui'
 
 interface CategoryFilterProps {
   items: ShopItem[]
@@ -302,17 +303,18 @@ export default function CategoryFilter({
             {/* 카테고리 목록 */}
             <div className="flex items-center gap-1 flex-1 overflow-x-auto">
               {/* 전체 버튼 */}
-              <button
+              <Button
                 onClick={() => {
                   setActiveCategory('all')
                   updateUrlCategory('all')
                 }}
-                className={`px-2 py-1 text-xs sm:text-sm whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 ${
+                variant="ghost"
+                className={`px-2 py-1 h-auto text-xs sm:text-sm whitespace-nowrap flex items-center gap-1 ${
                   activeCategory === 'all' ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
                 }`}
               >
                 전체
-              </button>
+              </Button>
 
               {/* 보이는 카테고리들 */}
               {visibleCategories.map((category) => (
@@ -338,9 +340,10 @@ export default function CategoryFilter({
                     handleMenuClose()
                   }}
                 >
-                  <button
+                  <Button
                     onClick={handleCategoryClick(category.id)}
-                    className={`px-2 py-1 text-xs sm:text-sm whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 ${
+                    variant="ghost"
+                    className={`px-2 py-1 h-auto text-xs sm:text-sm whitespace-nowrap flex items-center gap-1 ${
                       activeCategory === category.id.toString()
                         ? 'bg-[#EAEAEA] dark:bg-[#333333]'
                         : ''
@@ -363,16 +366,17 @@ export default function CategoryFilter({
                         />
                       </svg>
                     )}
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
 
             {/* 드롭다운 버튼 (숨겨진 카테고리가 있을 때만) */}
             {hiddenCategories.length > 0 && (
-              <button
+              <Button
                 onClick={toggleMobileDropdown}
-                className="flex items-center justify-center px-2 py-1 text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md transition-colors flex-shrink-0"
+                variant="ghost"
+                className="px-2 py-1 h-auto flex-shrink-0"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -390,7 +394,7 @@ export default function CategoryFilter({
                     d="M19 9l-7 7-7-7"
                   />
                 </svg>
-              </button>
+              </Button>
             )}
           </nav>
 
@@ -420,9 +424,10 @@ export default function CategoryFilter({
                       handleMenuClose()
                     }}
                   >
-                    <button
+                    <Button
                       onClick={handleCategoryClick(category.id)}
-                      className={`px-2 py-1 text-xs sm:text-sm whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 ${
+                      variant="ghost"
+                      className={`px-2 py-1 h-auto text-xs sm:text-sm whitespace-nowrap flex items-center gap-1 ${
                         activeCategory === category.id.toString()
                           ? 'bg-[#EAEAEA] dark:bg-[#333333]'
                           : ''
@@ -445,7 +450,7 @@ export default function CategoryFilter({
                           />
                         </svg>
                       )}
-                    </button>
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -479,7 +484,7 @@ export default function CategoryFilter({
                     return a.name.localeCompare(b.name)
                   })
                   .map((sub) => (
-                    <button
+                    <Button
                       key={sub.id}
                       onClick={() => {
                         const id = sub.id.toString()
@@ -487,15 +492,16 @@ export default function CategoryFilter({
                         updateUrlCategory(id)
                         setHoveredCategory(null)
                       }}
-                      className={`px-3 py-2.5 text-[10px] sm:text-xs text-center transition-colors text-gray-900 dark:text-[#F0F0F0] whitespace-nowrap overflow-hidden text-ellipsis border-b border-r border-black/5 dark:border-white/10 ${
+                      variant="ghost"
+                      className={`px-3 py-2.5 h-auto text-[10px] sm:text-xs text-center text-gray-900 dark:text-[#F0F0F0] whitespace-nowrap overflow-hidden text-ellipsis border-b border-r border-black/5 dark:border-white/10 rounded-none ${
                         activeCategory === sub.id.toString()
                           ? 'bg-[#EAEAEA] dark:bg-[#333333]'
-                          : 'bg-white dark:bg-[#1D1D1D] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
+                          : 'bg-white dark:bg-[#1D1D1D]'
                       }`}
                       title={sub.name}
                     >
                       {sub.name}
-                    </button>
+                    </Button>
                   ))}
               </div>
             </div>
@@ -527,19 +533,21 @@ export default function CategoryFilter({
               <h3 className="text-xs sm:text-sm text-gray-900 dark:text-[#F0F0F0]">
                 {bottomSheetCategoryData.name}
               </h3>
-              <button
+              <Button
                 onClick={() => setBottomSheetCategory(null)}
-                className="p-1 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors text-gray-700 dark:text-gray-300"
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
                 aria-label="닫기"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
-              </button>
+              </Button>
             </div>
             {/* 콘텐츠 */}
             <div className="max-h-96 overflow-y-auto">
-              <button
+              <Button
                 onClick={() => {
                   if (bottomSheetCategory == null) return
                   const id = bottomSheetCategory.toString()
@@ -547,10 +555,11 @@ export default function CategoryFilter({
                   updateUrlCategory(id)
                   setBottomSheetCategory(null)
                 }}
-                className="w-full text-left px-4 py-2.5 text-xs sm:text-sm bg-white dark:bg-[#1D1D1D] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] block transition-colors border-b border-black/5 dark:border-white/10"
+                variant="ghost"
+                className="w-full text-left justify-start px-4 py-2.5 h-auto text-xs sm:text-sm bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-none border-b border-black/5 dark:border-white/10"
               >
                 {bottomSheetCategoryData.name} 전체 보기
-              </button>
+              </Button>
               {bottomSheetCategoryData.subcategories
                 .sort((a, b) => {
                   if (a.display_order !== undefined && b.display_order !== undefined) {
@@ -561,7 +570,7 @@ export default function CategoryFilter({
                   return a.name.localeCompare(b.name)
                 })
                 .map((sub, index, arr) => (
-                  <button
+                  <Button
                     key={sub.id}
                     onClick={() => {
                       const id = sub.id.toString()
@@ -569,16 +578,17 @@ export default function CategoryFilter({
                       updateUrlCategory(id)
                       setBottomSheetCategory(null)
                     }}
-                    className={`w-full text-left px-4 py-2.5 text-xs sm:text-sm text-gray-900 dark:text-[#F0F0F0] block transition-colors ${
+                    variant="ghost"
+                    className={`w-full text-left justify-start px-4 py-2.5 h-auto text-xs sm:text-sm text-gray-900 dark:text-[#F0F0F0] rounded-none ${
                       index < arr.length - 1 ? 'border-b border-black/5 dark:border-white/10' : ''
                     } ${
                       activeCategory === sub.id.toString()
                         ? 'bg-[#EAEAEA] dark:bg-[#333333]'
-                        : 'bg-white dark:bg-[#1D1D1D] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
+                        : 'bg-white dark:bg-[#1D1D1D]'
                     }`}
                   >
                     {sub.name}
-                  </button>
+                  </Button>
                 ))}
             </div>
           </div>

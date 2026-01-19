@@ -10,8 +10,8 @@
 | **bg-primary** | `bg-white` | `dark:bg-[#1D1D1D]` | 메인 컨테이너, 카드 |
 | **bg-secondary** | `bg-[#F5F5F5]` | `dark:bg-[#262626]` | 헤더, 비활성 탭 |
 | **bg-tertiary** | `bg-[#EAEAEA]` | `dark:bg-[#333333]` | 호버, 활성 상태 |
-| **bg-button** | `bg-slate-800` | `dark:bg-[#3F3F3F]` | Primary 버튼 |
-| **bg-button-hover** | `hover:bg-slate-700` | `dark:hover:bg-[#4A4A4A]` | 버튼 호버 |
+| **bg-button** | `bg-[#262626]` | `dark:bg-[#3F3F3F]` | Primary 버튼 |
+| **bg-button-hover** | `hover:bg-[#3F3F3F]` | `dark:hover:bg-[#4A4A4A]` | 버튼 호버 |
 
 #### 텍스트 색상
 | 이름 | Light | Dark | 용도 |
@@ -93,7 +93,7 @@
 
 ```tsx
 {/* Primary */}
-<button className="bg-slate-800 dark:bg-[#3F3F3F] text-white px-4 py-2 rounded-md hover:bg-slate-700 dark:hover:bg-[#4A4A4A] transition-colors">
+<button className="bg-[#262626] dark:bg-[#3F3F3F] text-white px-4 py-2 rounded-md hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] transition-colors">
   확인
 </button>
 
@@ -116,17 +116,37 @@
 ### 2.2 Input
 
 ```tsx
+import { focusStyles, inputBaseStyles } from '@/shared/styles';
+import { cn } from '@/shared/utils/cn';
+
 <input
   type="text"
   placeholder="입력하세요"
-  className="w-full px-3 py-2 rounded-md border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-slate-800 dark:focus:ring-white/30 transition-colors"
+  className={cn(
+    'w-full px-3 py-2 rounded-md',
+    inputBaseStyles,
+    focusStyles
+  )}
+/>
+
+{/* 또는 인라인 */}
+<input
+  type="text"
+  placeholder="입력하세요"
+  className="w-full px-3 py-2 rounded-md border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] transition-colors"
 />
 ```
 
 ### 2.3 Select
 
 ```tsx
-<select className="w-full px-3 py-2 rounded-md border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] focus:outline-none focus:ring-2 focus:ring-slate-800 dark:focus:ring-white/30">
+import { focusStyles, inputGrayBgStyles } from '@/shared/styles';
+
+<select className={cn(
+  'w-full px-3 py-2 rounded-md',
+  inputGrayBgStyles,
+  focusStyles
+)}>
   <option>옵션 1</option>
   <option>옵션 2</option>
 </select>
@@ -135,40 +155,40 @@
 ### 2.4 Textarea
 
 ```tsx
+import { focusStyles, inputBaseStyles } from '@/shared/styles';
+
 <textarea
   placeholder="내용을 입력하세요"
   rows={4}
-  className="w-full px-3 py-2 rounded-md border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-slate-800 dark:focus:ring-white/30 resize-none"
+  className={cn(
+    'w-full px-3 py-2 rounded-md resize-none',
+    inputBaseStyles,
+    focusStyles
+  )}
 />
 ```
 
-### 2.5 Badge
+### 2.5 Badge (스타일 상수)
+
+> **스타일 상수 사용** - `@/shared/styles`에서 import
 
 ```tsx
+import { badgeBaseStyles, badgeDefault, badgeSuccess, badgeWarning, badgeError, badgeInfo } from '@/shared/styles';
+
 {/* Default */}
-<span className="px-2 py-0.5 text-xs rounded bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300">
-  기본
-</span>
+<span className={`${badgeBaseStyles} ${badgeDefault}`}>기본</span>
 
 {/* Success */}
-<span className="px-2 py-0.5 text-xs rounded bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">
-  성공
-</span>
+<span className={`${badgeBaseStyles} ${badgeSuccess}`}>성공</span>
 
 {/* Warning */}
-<span className="px-2 py-0.5 text-xs rounded bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400">
-  주의
-</span>
+<span className={`${badgeBaseStyles} ${badgeWarning}`}>주의</span>
 
 {/* Error */}
-<span className="px-2 py-0.5 text-xs rounded bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400">
-  에러
-</span>
+<span className={`${badgeBaseStyles} ${badgeError}`}>에러</span>
 
 {/* Info */}
-<span className="px-2 py-0.5 text-xs rounded bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400">
-  정보
-</span>
+<span className={`${badgeBaseStyles} ${badgeInfo}`}>정보</span>
 ```
 
 ### 2.6 Avatar
@@ -198,7 +218,7 @@ const [on, setOn] = useState(false);
 <button
   onClick={() => setOn(!on)}
   className={`relative w-11 h-6 rounded-full transition-colors ${
-    on ? 'bg-slate-800 dark:bg-[#F0F0F0]' : 'bg-[#EAEAEA] dark:bg-[#333333]'
+    on ? 'bg-[#262626] dark:bg-[#F0F0F0]' : 'bg-[#EAEAEA] dark:bg-[#333333]'
   }`}
 >
   <div
@@ -218,7 +238,7 @@ const [on, setOn] = useState(false);
 <label className="flex items-center gap-2 cursor-pointer">
   <input
     type="checkbox"
-    className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-slate-800 focus:ring-slate-800 dark:focus:ring-white/30 bg-white dark:bg-[#1D1D1D]"
+    className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-[#262626] focus:ring-[#262626] dark:focus:ring-white/30 bg-white dark:bg-[#1D1D1D]"
   />
   <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">라벨</span>
 </label>
@@ -228,7 +248,7 @@ const [on, setOn] = useState(false);
   <input
     type="radio"
     name="group"
-    className="w-4 h-4 border-gray-300 dark:border-gray-600 text-slate-800 focus:ring-slate-800 dark:focus:ring-white/30 bg-white dark:bg-[#1D1D1D]"
+    className="w-4 h-4 border-gray-300 dark:border-gray-600 text-[#262626] focus:ring-[#262626] dark:focus:ring-white/30 bg-white dark:bg-[#1D1D1D]"
   />
   <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">옵션</span>
 </label>
@@ -238,7 +258,7 @@ const [on, setOn] = useState(false);
 
 ## 3. 복합 컴포넌트
 
-### 3.1 Card / Container
+### 3.1 Container (컴포넌트)
 
 ```tsx
 import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
@@ -262,6 +282,27 @@ import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/
 - 높이: `h-12`
 - 배경: `bg-[#F5F5F5] dark:bg-[#262626]`
 - 구분선: `border-b border-black/5 dark:border-white/10`
+
+### 3.1.1 Card (스타일 상수)
+
+> 단순 카드 레이아웃에는 스타일 상수를 사용합니다.
+
+```tsx
+import { cardStyles, cardHeaderStyles, cardTitleStyles, cardContentStyles, cardSimpleStyles } from '@/shared/styles';
+
+{/* 헤더 포함 Card */}
+<div className={cardStyles}>
+  <div className={cardHeaderStyles}>
+    <h3 className={cardTitleStyles}>제목</h3>
+  </div>
+  <div className={cardContentStyles}>내용</div>
+</div>
+
+{/* 단순 Card */}
+<div className={cardSimpleStyles}>
+  <p>내용</p>
+</div>
+```
 
 ### 3.2 Modal
 
@@ -475,40 +516,68 @@ const [open, setOpen] = useState(false);
 - **Backdrop**: 외부 클릭 닫기용 (선택)
 - **z-index**: backdrop `z-10`, popover `z-20`
 
-### 3.10 Alert (인라인 메시지)
+### 3.10 Alert (스타일 상수)
+
+> **스타일 상수 사용** - `@/shared/styles`에서 import
 
 ```tsx
+import {
+  alertBaseStyles,
+  alertBgSuccess, alertBgWarning, alertBgError, alertBgInfo,
+  alertTextSuccess, alertTextWarning, alertTextError, alertTextInfo
+} from '@/shared/styles';
+
 {/* Success */}
-<div className="flex items-start gap-3 p-4 rounded-lg bg-green-100 dark:bg-green-900/30">
-  <Check className="w-5 h-5 text-green-800 dark:text-green-400 flex-shrink-0" />
-  <p className="text-sm text-green-800 dark:text-green-400">성공 메시지</p>
+<div className={`${alertBaseStyles} ${alertBgSuccess}`}>
+  <Check className={`w-5 h-5 ${alertTextSuccess} flex-shrink-0`} />
+  <p className={`text-sm ${alertTextSuccess}`}>성공 메시지</p>
 </div>
 
 {/* Error */}
-<div className="flex items-start gap-3 p-4 rounded-lg bg-red-100 dark:bg-red-900/30">
-  <X className="w-5 h-5 text-red-800 dark:text-red-400 flex-shrink-0" />
-  <p className="text-sm text-red-800 dark:text-red-400">에러 메시지</p>
+<div className={`${alertBaseStyles} ${alertBgError}`}>
+  <X className={`w-5 h-5 ${alertTextError} flex-shrink-0`} />
+  <p className={`text-sm ${alertTextError}`}>에러 메시지</p>
 </div>
 
 {/* Warning */}
-<div className="flex items-start gap-3 p-4 rounded-lg bg-yellow-100 dark:bg-yellow-900/30">
-  <AlertCircle className="w-5 h-5 text-yellow-800 dark:text-yellow-400 flex-shrink-0" />
-  <p className="text-sm text-yellow-800 dark:text-yellow-400">경고 메시지</p>
+<div className={`${alertBaseStyles} ${alertBgWarning}`}>
+  <AlertCircle className={`w-5 h-5 ${alertTextWarning} flex-shrink-0`} />
+  <p className={`text-sm ${alertTextWarning}`}>경고 메시지</p>
 </div>
 
 {/* Info */}
-<div className="flex items-start gap-3 p-4 rounded-lg bg-blue-100 dark:bg-blue-900/30">
-  <Info className="w-5 h-5 text-blue-800 dark:text-blue-400 flex-shrink-0" />
-  <p className="text-sm text-blue-800 dark:text-blue-400">정보 메시지</p>
+<div className={`${alertBaseStyles} ${alertBgInfo}`}>
+  <Info className={`w-5 h-5 ${alertTextInfo} flex-shrink-0`} />
+  <p className={`text-sm ${alertTextInfo}`}>정보 메시지</p>
 </div>
 ```
 
 **Alert 규칙:**
-- **레이아웃**: `flex items-start gap-3`
+- **레이아웃**: `flex items-start gap-3` (alertBaseStyles에 포함)
 - **패딩**: `p-4`
 - **라운드**: `rounded-lg`
 - **아이콘**: 좌측에 `w-5 h-5 flex-shrink-0`
 - Toast와 다름: 페이지에 고정 표시 (팝업 아님)
+
+### 3.11 Error Box (페이지 에러)
+
+> 전체 페이지 에러 표시용
+
+```tsx
+import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
+
+<div className={errorBoxStyles}>
+  <h2 className={errorTitleStyles}>오류가 발생했습니다</h2>
+  <p className={errorMessageStyles}>페이지를 불러오는 중 문제가 발생했습니다.</p>
+  <Link href="/" className={errorLinkStyles}>메인페이지로 이동</Link>
+</div>
+```
+
+**Error Box 규칙:**
+- **레이아웃**: 가운데 정렬 (`text-center`)
+- **배경**: `bg-white dark:bg-[#1D1D1D]`
+- **테두리**: `border border-black/7 dark:border-0`
+- **패딩**: `p-6`
 
 ---
 
@@ -563,20 +632,57 @@ import Spinner from '@/shared/components/Spinner';
 
 ### 4.4 Skeleton
 
+> **공통 Skeleton 컴포넌트 사용** - `@/shared/components/skeletons`
+
 ```tsx
+import {
+  TextSkeleton, TextBlockSkeleton,
+  AvatarSkeleton, CardSkeleton,
+  ListSkeleton, GridSkeleton,
+  TableSkeleton, ProfileSkeleton
+} from '@/shared/components/skeletons';
+
+{/* 텍스트 스켈레톤 */}
+<TextSkeleton width="w-1/2" />
+<TextBlockSkeleton lines={3} />
+
+{/* 아바타 스켈레톤 */}
+<AvatarSkeleton size="md" />
+
+{/* 카드 스켈레톤 */}
+<CardSkeleton hasHeader={true} lines={3} />
+
+{/* 리스트 스켈레톤 */}
+<ListSkeleton count={5} hasAvatar={false} />
+
+{/* 그리드 스켈레톤 */}
+<GridSkeleton count={12} cols={4} />
+
+{/* 테이블 스켈레톤 */}
+<TableSkeleton rows={5} cols={4} />
+
+{/* 프로필 스켈레톤 */}
+<ProfileSkeleton />
+```
+
+**또는 스타일 상수 직접 사용:**
+
+```tsx
+import { skeletonBase, skeletonText, skeletonHeader } from '@/shared/styles';
+
 {/* 텍스트 스켈레톤 */}
 <div className="space-y-2">
-  <div className="h-4 bg-[#EAEAEA] dark:bg-[#333333] rounded animate-pulse w-3/4" />
-  <div className="h-4 bg-[#EAEAEA] dark:bg-[#333333] rounded animate-pulse w-full" />
-  <div className="h-4 bg-[#EAEAEA] dark:bg-[#333333] rounded animate-pulse w-5/6" />
+  <div className={`${skeletonText} w-3/4`} />
+  <div className={`${skeletonText} w-full`} />
+  <div className={`${skeletonText} w-5/6`} />
 </div>
 
 {/* 아바타 + 텍스트 스켈레톤 */}
 <div className="flex items-center gap-3">
-  <div className="w-10 h-10 rounded-full bg-[#EAEAEA] dark:bg-[#333333] animate-pulse" />
+  <div className="w-10 h-10 rounded-full bg-[#F5F5F5] dark:bg-[#262626] animate-pulse" />
   <div className="flex-1 space-y-2">
-    <div className="h-4 bg-[#EAEAEA] dark:bg-[#333333] rounded animate-pulse w-1/2" />
-    <div className="h-3 bg-[#EAEAEA] dark:bg-[#333333] rounded animate-pulse w-3/4" />
+    <div className={`${skeletonText} w-1/2`} />
+    <div className={`${skeletonText} w-3/4 opacity-60`} />
   </div>
 </div>
 ```
@@ -648,7 +754,7 @@ bg-gray-800 (slate-800과 혼용)
 bg-black
 
 /* ✅ 통일 */
-bg-slate-800 dark:bg-[#3F3F3F]
+bg-[#262626] dark:bg-[#3F3F3F]
 ```
 
 ---
@@ -681,10 +787,40 @@ import Tabs from '@/shared/ui/tabs';          // 레거시
 | **Pagination** | `@/shared/components/ui` | 페이지네이션 |
 | **Select** | `@/shared/components/ui` | 드롭다운 선택 |
 | **Tabs, TabButton** | `@/shared/components/ui` | 탭 UI |
-| **Card** | `@/shared/components/ui` | 카드 레이아웃 |
+| **Dialog** | `@/shared/components/ui` | 모달/다이얼로그 |
 | **Spinner** | `@/shared/components/Spinner` | 로딩 스피너 |
 
-### 6.3 금지 사항
+### 6.3 스타일 상수로 대체된 요소
+
+> 아래 요소들은 컴포넌트 대신 **스타일 상수**를 사용합니다.
+> `@/shared/styles`에서 import하여 사용하세요.
+
+| 요소 | 스타일 상수 | 용도 |
+|------|-------------|------|
+| **Badge** | `badgeBaseStyles`, `badgeSuccess`, etc. | 상태 뱃지 |
+| **Card** | `cardStyles`, `cardSimpleStyles`, etc. | 카드 레이아웃 |
+| **Alert** | `alertBaseStyles`, `alertBgError`, etc. | 인라인 알림 |
+| **ErrorBox** | `errorBoxStyles`, `errorTitleStyles`, etc. | 페이지 에러 |
+
+```tsx
+// 예시: Badge
+import { badgeBaseStyles, badgeSuccess } from '@/shared/styles';
+<span className={`${badgeBaseStyles} ${badgeSuccess}`}>성공</span>
+
+// 예시: Card
+import { cardSimpleStyles } from '@/shared/styles';
+<div className={cardSimpleStyles}>내용</div>
+
+// 예시: Error Box
+import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
+<div className={errorBoxStyles}>
+  <h2 className={errorTitleStyles}>오류</h2>
+  <p className={errorMessageStyles}>메시지</p>
+  <Link href="/" className={errorLinkStyles}>돌아가기</Link>
+</div>
+```
+
+### 6.4 금지 사항
 
 ```tsx
 // ❌ 인라인 PaginationButton 구현 금지
@@ -704,7 +840,17 @@ import Spinner from '@/shared/components/Spinner';
 <Spinner size="md" />
 ```
 
-### 6.4 레거시 폴더 (`@/shared/ui/`)
+```tsx
+// ❌ Badge/Card 컴포넌트 사용 금지 (삭제됨)
+import { Badge, Card } from '@/shared/components/ui';  // 존재하지 않음!
+
+// ✅ 스타일 상수 사용
+import { badgeBaseStyles, badgeSuccess, cardSimpleStyles } from '@/shared/styles';
+<span className={`${badgeBaseStyles} ${badgeSuccess}`}>뱃지</span>
+<div className={cardSimpleStyles}>카드</div>
+```
+
+### 6.5 레거시 폴더 (`@/shared/ui/`)
 
 > ⚠️ `src/shared/ui/` 폴더는 레거시입니다.
 > 새 코드에서는 사용하지 마세요.
@@ -716,13 +862,191 @@ import Spinner from '@/shared/components/Spinner';
 
 ---
 
-## 7. 참조
+## 7. 공유 스타일 상수
 
-- **UI 쇼케이스**: `/ui` 페이지에서 모든 컴포넌트 확인 가능
-- **공통 컴포넌트**: `src/shared/components/ui/`
-- **Spinner**: `src/shared/components/Spinner.tsx`
-- **마이그레이션 가이드**: `docs/refactoring/ui-migration.md`
+> **중요**: 입력 필드, 포커스, 호버 스타일은 `@/shared/styles`에서 import하여 사용합니다.
+
+### 7.1 스타일 파일 구조
+
+```
+src/shared/styles/
+├── index.ts      # 전체 re-export
+├── focus.ts      # 포커스 스타일
+├── input.ts      # 입력 필드 스타일
+├── hover.ts      # 호버 스타일
+├── badge.ts      # 뱃지 스타일
+├── alert.ts      # 알림/에러박스 스타일
+└── card.ts       # 카드 스타일
+```
+
+### 7.2 포커스 스타일 (focus.ts)
+
+```tsx
+// 입력 필드용 포커스 (배경색 변경 방식)
+export const focusStyles = 'outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333]';
+
+// 버튼용 포커스 (링 없음)
+export const buttonFocusStyles = 'outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0';
+```
+
+**포커스 패턴 규칙:**
+- ❌ `focus:ring-*` 사용 금지
+- ✅ `focus:bg-[#EAEAEA] dark:focus:bg-[#333333]` 사용 (배경색 변경)
+
+### 7.3 입력 필드 스타일 (input.ts)
+
+```tsx
+// 흰색 배경 (기본 Input)
+export const inputBaseStyles = 'border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 disabled:cursor-not-allowed disabled:opacity-50 transition-colors';
+
+// 회색 배경 (Textarea, Select)
+export const inputGrayBgStyles = 'border border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 disabled:cursor-not-allowed disabled:opacity-50 transition-colors';
+
+// disabled 상태
+export const inputDisabledStyles = 'disabled:bg-[#EAEAEA] dark:disabled:bg-[#333333] disabled:cursor-not-allowed';
+```
+
+### 7.4 호버 스타일 (hover.ts)
+
+```tsx
+// 배경 호버
+export const hoverStyles = 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333]';
+
+// 텍스트 호버
+export const hoverTextStyles = 'hover:text-gray-700 dark:hover:text-gray-300';
+```
+
+### 7.5 뱃지 스타일 (badge.ts)
+
+```tsx
+// 기본 뱃지
+export const badgeBaseStyles = 'px-2 py-0.5 text-xs rounded';
+
+// 색상 variants
+export const badgeDefault = 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300';
+export const badgeSuccess = 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400';
+export const badgeWarning = 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400';
+export const badgeError = 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400';
+export const badgeInfo = 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400';
+
+// W/D/L 뱃지 (스포츠 결과용)
+export const wdlBadgeBaseStyles = 'w-6 h-6 flex items-center justify-center rounded text-xs font-medium';
+export const wdlWin = 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400';
+export const wdlDraw = 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400';
+export const wdlLose = 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400';
+
+// 사용 예시
+<span className={`${badgeBaseStyles} ${badgeSuccess}`}>성공</span>
+<span className={`${wdlBadgeBaseStyles} ${wdlWin}`}>W</span>
+```
+
+### 7.6 알림/에러박스 스타일 (alert.ts)
+
+```tsx
+// 인라인 Alert (상태 메시지)
+export const alertBaseStyles = 'flex items-start gap-3 p-4 rounded-lg';
+export const alertBgSuccess = 'bg-green-100 dark:bg-green-900/30';
+export const alertBgWarning = 'bg-yellow-100 dark:bg-yellow-900/30';
+export const alertBgError = 'bg-red-100 dark:bg-red-900/30';
+export const alertBgInfo = 'bg-blue-100 dark:bg-blue-900/30';
+export const alertTextSuccess = 'text-green-800 dark:text-green-400';
+export const alertTextWarning = 'text-yellow-800 dark:text-yellow-400';
+export const alertTextError = 'text-red-800 dark:text-red-400';
+export const alertTextInfo = 'text-blue-800 dark:text-blue-400';
+
+// 페이지 레벨 Error Box (전체 페이지 에러용)
+export const errorBoxStyles = 'bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 p-6 text-center';
+export const errorTitleStyles = 'text-xl font-semibold mb-3 text-gray-900 dark:text-[#F0F0F0]';
+export const errorMessageStyles = 'text-sm text-gray-700 dark:text-gray-300 mb-4';
+export const errorLinkStyles = 'inline-block bg-[#262626] dark:bg-[#3F3F3F] text-white hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] px-4 py-2 rounded text-sm transition-colors';
+
+// 인라인 Alert 사용 예시
+<div className={`${alertBaseStyles} ${alertBgError}`}>
+  <X className={`w-5 h-5 ${alertTextError} flex-shrink-0`} />
+  <p className={`text-sm ${alertTextError}`}>에러 메시지</p>
+</div>
+
+// Error Box 사용 예시 (페이지 에러)
+<div className={errorBoxStyles}>
+  <h2 className={errorTitleStyles}>오류가 발생했습니다</h2>
+  <p className={errorMessageStyles}>페이지를 불러오는 중 문제가 발생했습니다.</p>
+  <Link href="/" className={errorLinkStyles}>메인페이지로 이동</Link>
+</div>
+```
+
+### 7.7 카드 스타일 (card.ts)
+
+```tsx
+// 기본 Card (헤더 포함)
+export const cardStyles = 'rounded-lg bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] border border-black/5 dark:border-0 overflow-hidden';
+export const cardHeaderStyles = 'flex flex-col space-y-1.5 px-6 py-4 bg-[#F5F5F5] dark:bg-[#262626] rounded-t-lg';
+export const cardTitleStyles = 'text-2xl font-semibold leading-none tracking-tight';
+export const cardDescriptionStyles = 'text-sm text-gray-500 dark:text-gray-400';
+export const cardContentStyles = 'p-6 pt-0';
+export const cardFooterStyles = 'flex items-center p-6 pt-0';
+
+// Simple Card (단순 컨테이너)
+export const cardSimpleStyles = 'rounded-lg bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] border border-black/5 dark:border-0 p-6';
+
+// 사용 예시 (헤더 포함)
+<div className={cardStyles}>
+  <div className={cardHeaderStyles}>
+    <h3 className={cardTitleStyles}>제목</h3>
+    <p className={cardDescriptionStyles}>설명</p>
+  </div>
+  <div className={cardContentStyles}>내용</div>
+</div>
+
+// 사용 예시 (단순 컨테이너)
+<div className={cardSimpleStyles}>
+  <p>내용</p>
+</div>
+```
+
+### 7.8 사용 예시
+
+```tsx
+import { focusStyles, inputBaseStyles, hoverStyles } from '@/shared/styles';
+import { cn } from '@/shared/utils/cn';
+
+// 기본 Input
+<input className={cn('w-full px-3 py-2 rounded-md', inputBaseStyles, focusStyles)} />
+
+// 에러 상태 Input (조건부 border)
+<input className={cn(
+  'w-full px-3 py-2 rounded-md',
+  hasError ? 'border border-red-500' : inputBaseStyles,
+  focusStyles
+)} />
+
+// 호버 가능한 버튼
+<button className={cn('px-4 py-2 rounded-md', hoverStyles)}>
+  클릭
+</button>
+```
 
 ---
 
-*마지막 업데이트: 2026-01-18*
+## 8. 참조
+
+- **UI 쇼케이스**: `/ui` 페이지에서 모든 컴포넌트/스타일 확인 가능
+- **공통 컴포넌트**: `src/shared/components/ui/`
+- **공유 스타일 상수**: `src/shared/styles/`
+- **Spinner**: `src/shared/components/Spinner.tsx`
+- **마이그레이션 가이드**: `docs/refactoring/ui-migration.md`
+
+### 8.1 스타일 상수 요약
+
+| 파일 | 주요 export |
+|------|------------|
+| `focus.ts` | `focusStyles`, `buttonFocusStyles` |
+| `input.ts` | `inputBaseStyles`, `inputGrayBgStyles` |
+| `hover.ts` | `hoverStyles`, `hoverTextStyles` |
+| `badge.ts` | `badgeBaseStyles`, `badgeSuccess`, `wdlWin` 등 |
+| `alert.ts` | `alertBaseStyles`, `alertBgError`, `errorBoxStyles` 등 |
+| `card.ts` | `cardStyles`, `cardSimpleStyles` 등 |
+| `skeleton.ts` | `skeletonBase`, `skeletonText`, `skeletonHeader` 등 |
+
+---
+
+*마지막 업데이트: 2026-01-19*

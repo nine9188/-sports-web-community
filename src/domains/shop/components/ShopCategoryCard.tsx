@@ -36,7 +36,7 @@ export default function ShopCategoryCard({ category }: ShopCategoryCardProps) {
           </h2>
           <p className="text-gray-700 dark:text-gray-300 mt-2">{category.description || `${category.name} 아이템을 구매해보세요.`}</p>
           <div className="mt-4 text-right">
-            <span className="inline-block px-4 py-2 bg-slate-800 dark:bg-[#3F3F3F] text-white rounded-md group-hover:bg-slate-700 dark:group-hover:bg-[#4A4A4A] transition-colors">
+            <span className="inline-block px-4 py-2 bg-[#262626] dark:bg-[#3F3F3F] text-white rounded-md group-hover:bg-[#3F3F3F] dark:group-hover:bg-[#4A4A4A] transition-colors">
               구경하기
             </span>
           </div>

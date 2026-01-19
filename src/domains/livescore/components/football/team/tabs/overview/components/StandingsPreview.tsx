@@ -7,7 +7,7 @@ import { StandingDisplay } from '@/domains/livescore/types/standings';
 import { findTeamStanding, getDisplayStandings, getLeagueInfo, getLeagueForStandings } from '../utils/standingUtils';
 import FormDisplay from './FormDisplay';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
-import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui/container';
+import { Container, ContainerHeader, ContainerTitle, Button } from '@/shared/components/ui';
 
 interface StandingsPreviewProps {
   standings: StandingDisplay[] | undefined;
@@ -141,9 +141,10 @@ export default function StandingsPreview({ standings, teamId, safeLeague, onTabC
       </div>
       
       {/* 전체 순위 보기 버튼 */}
-      <button
+      <Button
+        variant="secondary"
         onClick={() => onTabChange('standings')}
-        className="w-full p-3 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors border-t border-black/5 dark:border-white/10 outline-none focus:outline-none"
+        className="w-full rounded-none rounded-b-lg border-t border-black/5 dark:border-white/10"
       >
         <div className="flex items-center justify-center gap-1">
           <span className="text-sm font-medium">전체 순위 보기</span>
@@ -161,7 +162,7 @@ export default function StandingsPreview({ standings, teamId, safeLeague, onTabC
             />
           </svg>
         </div>
-      </button>
+      </Button>
     </Container>
   );
 } 

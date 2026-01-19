@@ -2,6 +2,7 @@
 
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import type { DealInfo } from '../types/hotdeal';
+import { getCachedChildBoardIds } from './getCachedBoards';
 
 export interface PopularPost {
   id: string;
@@ -27,30 +28,11 @@ export interface PopularPost {
 }
 
 /**
- * 게시판의 모든 하위 게시판 ID를 재귀적으로 가져오는 함수
- */
-async function getAllChildBoardIds(supabase: any, boardId: string): Promise<string[]> {
-  const boardIds = [boardId];
-
-  // 직접 하위 게시판 가져오기
-  const { data: childBoards } = await supabase
-    .from('boards')
-    .select('id')
-    .eq('parent_id', boardId);
-
-  if (childBoards && childBoards.length > 0) {
-    for (const child of childBoards) {
-      // 재귀적으로 하위의 하위 게시판도 가져오기
-      const subChildIds = await getAllChildBoardIds(supabase, child.id);
-      boardIds.push(...subChildIds);
-    }
-  }
-
-  return boardIds;
-}
-
-/**
  * 게시판별 인기 게시글 조회 (하위 게시판 포함)
+ *
+ * 최적화: getCachedChildBoardIds()를 사용하여 하위 게시판 조회 최적화
+ * - Before: 재귀적으로 boards 테이블 N번 조회
+ * - After: 캐시된 데이터에서 계산 (같은 요청 내 0번 추가 조회)
  */
 export async function getBoardPopularPosts(boardId: string) {
   const supabase = await getSupabaseServer();
@@ -66,8 +48,8 @@ export async function getBoardPopularPosts(boardId: string) {
   weekStart.setDate(now.getDate() - diff);
   weekStart.setHours(0, 0, 0, 0);
 
-  // 현재 게시판과 모든 하위 게시판 ID 가져오기
-  const allBoardIds = await getAllChildBoardIds(supabase, boardId);
+  // 현재 게시판과 모든 하위 게시판 ID 가져오기 (캐시된 데이터 활용)
+  const allBoardIds = await getCachedChildBoardIds(boardId);
 
   // 오늘 BEST (좋아요 기준) - 현재 게시판 + 모든 하위 게시판
   const { data: todayPosts, error: todayError } = await supabase

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { toast } from 'react-toastify';
 import { sendIdRecoveryCode, findUsernameWithCode, sendPasswordResetLink } from '@/domains/auth/actions';
 import { AlertCircle, Check, Mail, User } from 'lucide-react';
+import { Button, TabList, type TabItem } from '@/shared/components/ui';
 
 // SearchParams를 사용하는 내용 컴포넌트
 function AccountRecoveryContent() {
@@ -256,28 +257,16 @@ function AccountRecoveryContent() {
         </p>
 
         {/* 탭 메뉴 */}
-        <div className="flex border-b border-black/7 dark:border-white/10 mb-6">
-          <button
-            className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'id'
-                ? 'border-slate-800 dark:border-white text-gray-900 dark:text-[#F0F0F0] bg-white dark:bg-[#1D1D1D]'
-                : 'border-transparent text-gray-700 dark:text-gray-300 bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-            }`}
-            onClick={() => changeTab('id')}
-          >
-            아이디 찾기
-          </button>
-          <button
-            className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'password'
-                ? 'border-slate-800 dark:border-white text-gray-900 dark:text-[#F0F0F0] bg-white dark:bg-[#1D1D1D]'
-                : 'border-transparent text-gray-700 dark:text-gray-300 bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-            }`}
-            onClick={() => changeTab('password')}
-          >
-            비밀번호 찾기
-          </button>
-        </div>
+        <TabList
+          tabs={[
+            { id: 'id', label: '아이디 찾기' },
+            { id: 'password', label: '비밀번호 찾기' },
+          ] as TabItem[]}
+          activeTab={activeTab}
+          onTabChange={(id) => changeTab(id as 'id' | 'password')}
+          variant="contained"
+          className="mb-6"
+        />
       </div>
 
       {/* 콘텐츠 영역 - 최소 높이 설정 */}
@@ -308,7 +297,7 @@ function AccountRecoveryContent() {
                   fullNameError ? 'border-red-500' :
                   fullNameValid ? 'border-green-500' :
                   'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
-                } ${verificationSent ? 'bg-gray-100 dark:bg-[#262626]' : ''}`}
+                } ${verificationSent ? 'bg-[#F5F5F5] dark:bg-[#262626]' : ''}`}
                 placeholder="가입시 입력한 이름"
                 readOnly={verificationSent}
                 required
@@ -345,7 +334,7 @@ function AccountRecoveryContent() {
                   emailError ? 'border-red-500' :
                   emailValid ? 'border-green-500' :
                   'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
-                } ${verificationSent ? 'bg-gray-100 dark:bg-[#262626]' : ''}`}
+                } ${verificationSent ? 'bg-[#F5F5F5] dark:bg-[#262626]' : ''}`}
                 placeholder="가입시 사용한 이메일"
                 readOnly={verificationSent}
                 required
@@ -357,7 +346,7 @@ function AccountRecoveryContent() {
               )}
               {verificationSent && (
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <Mail className="h-5 w-5 text-slate-500" />
+                  <Mail className="h-5 w-5 text-gray-500" />
                 </div>
               )}
             </div>
@@ -371,14 +360,15 @@ function AccountRecoveryContent() {
 
           {!verificationSent && (
             <div>
-              <button
+              <Button
                 type="button"
+                variant="primary"
                 onClick={sendVerificationCode}
                 disabled={loading || !emailValid || !fullNameValid}
-                className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 h-auto"
               >
                 {loading ? '발송중...' : '인증코드 받기'}
-              </button>
+              </Button>
             </div>
           )}
           
@@ -421,29 +411,31 @@ function AccountRecoveryContent() {
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                 이메일로 받은 인증 코드를 입력해주세요. 인증 코드는 5분간 유효합니다.
               </p>
-              <button
+              <Button
                 type="button"
+                variant="link"
                 onClick={() => {
                   setVerificationSent(false);
                   setVerificationCode('');
                   setCodeValid(false);
                   setCodeError('');
                 }}
-                className="text-xs text-slate-600 hover:text-slate-800 hover:underline mt-1"
+                className="text-xs text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 p-0 h-auto mt-1"
               >
                 다른 이메일로 재발송
-              </button>
+              </Button>
             </div>
           )}
           
           {verificationSent && (
-            <button
+            <Button
               type="submit"
+              variant="primary"
               disabled={loading || !codeValid}
-              className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white font-medium rounded-md transition-colors disabled:opacity-50"
+              className="w-full py-3 h-auto"
             >
               {loading ? '처리 중...' : '아이디 찾기'}
-            </button>
+            </Button>
           )}
           </form>
         </div>
@@ -496,13 +488,14 @@ function AccountRecoveryContent() {
             </p>
           </div>
           
-          <button
+          <Button
             type="submit"
+            variant="primary"
             disabled={loading || !usernameValid}
-            className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white font-medium rounded-md transition-colors disabled:opacity-50"
+            className="w-full py-3 h-auto"
           >
             {loading ? '발송 중...' : '재설정 링크 받기'}
-          </button>
+          </Button>
           </form>
         </div>
       )}
@@ -532,13 +525,13 @@ export default function AccountRecoveryPage() {
     <Suspense fallback={
       <div className="max-w-md w-full">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-48 mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-3/4 mb-8"></div>
+          <div className="h-8 bg-[#EAEAEA] dark:bg-[#333333] rounded w-48 mb-2"></div>
+          <div className="h-4 bg-[#EAEAEA] dark:bg-[#333333] rounded w-full mb-2"></div>
+          <div className="h-4 bg-[#EAEAEA] dark:bg-[#333333] rounded w-3/4 mb-8"></div>
           <div className="space-y-4">
-            <div className="h-12 bg-gray-200 rounded"></div>
-            <div className="h-12 bg-gray-200 rounded"></div>
-            <div className="h-12 bg-gray-200 rounded"></div>
+            <div className="h-12 bg-[#EAEAEA] dark:bg-[#333333] rounded"></div>
+            <div className="h-12 bg-[#EAEAEA] dark:bg-[#333333] rounded"></div>
+            <div className="h-12 bg-[#EAEAEA] dark:bg-[#333333] rounded"></div>
           </div>
         </div>
       </div>

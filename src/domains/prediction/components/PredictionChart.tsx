@@ -148,7 +148,7 @@ function FormBadge({ result }: { result: string }) {
       case 'L':
         return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400';
       default:
-        return 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400';
+        return 'bg-[#F5F5F5] dark:bg-[#333333] text-gray-500 dark:text-gray-400';
     }
   };
 
@@ -462,7 +462,7 @@ function TeamDetailCard({ team, label, predictedGoals }: { team: TeamData; label
         {[0, 1, 2, 3].map((i) => {
           const lineup = league?.lineups?.[i];
           return (
-            <span key={i} className="text-[10px] px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-gray-700 dark:text-gray-300 text-center truncate">
+            <span key={i} className="text-[10px] px-1.5 py-0.5 bg-[#F5F5F5] dark:bg-[#262626] rounded text-gray-700 dark:text-gray-300 text-center truncate">
               {lineup ? (
                 <>{lineup.formation} <span className="text-gray-400">({lineup.played})</span></>
               ) : (
@@ -608,7 +608,7 @@ export default function PredictionChart({
                 <Tooltip content={({ active, payload, label }) => {
                   if (active && payload?.length) {
                     return (
-                      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded p-1.5 shadow text-[10px]">
+                      <div className="bg-white dark:bg-[#262626] border border-black/7 dark:border-white/10 rounded p-1.5 shadow text-[10px]">
                         <p className="font-medium text-gray-900 dark:text-gray-100 mb-0.5">{label}</p>
                         {payload.map((e, i) => <p key={i} style={{ color: e.color }}>{e.name}: {e.value}%</p>)}
                       </div>
@@ -674,7 +674,7 @@ export default function PredictionChart({
                     <span className={`text-right flex-1 truncate ${match.teams.home.winner ? 'font-bold text-green-600 dark:text-green-400' : match.teams.home.winner === false ? 'text-red-500' : ''}`}>
                       {matchHomeNameKo}
                     </span>
-                    <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded font-bold text-gray-900 dark:text-[#F0F0F0] min-w-[44px] text-center">
+                    <span className="px-2 py-0.5 bg-[#F5F5F5] dark:bg-[#262626] rounded font-bold text-gray-900 dark:text-[#F0F0F0] min-w-[44px] text-center">
                       {match.goals.home}-{match.goals.away}
                     </span>
                     <span className={`text-left flex-1 truncate ${match.teams.away.winner ? 'font-bold text-green-600 dark:text-green-400' : match.teams.away.winner === false ? 'text-red-500' : ''}`}>

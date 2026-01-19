@@ -18,9 +18,10 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-  Textarea
+  SelectValue
 } from '@/shared/components/ui';
+import { focusStyles, inputGrayBgStyles } from '@/shared/styles';
+import { cn } from '@/shared/utils/cn';
 import { toast } from 'react-toastify';
 import { createReport } from '@/domains/reports/actions';
 import { REPORT_REASONS, ReportReason } from '@/domains/reports/types';
@@ -194,14 +195,15 @@ export default function AuthorLink({
               프로필 보기
             </Link>
             {oddsUserId && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={handleReportClick}
-                className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] flex items-center gap-2 transition-colors"
+                className="w-full px-3 py-2 h-auto justify-start text-sm text-gray-700 dark:text-gray-300 rounded-none"
               >
-                <Flag className="w-4 h-4" />
+                <Flag className="w-4 h-4 mr-2" />
                 신고하기
-              </button>
+              </Button>
             )}
           </div>,
           document.body
@@ -242,7 +244,8 @@ export default function AuthorLink({
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                   상세 설명 (선택사항)
                 </label>
-                <Textarea
+                <textarea
+                  className={cn('w-full min-h-[80px] rounded-md px-3 py-2 text-sm resize-none', inputGrayBgStyles, focusStyles)}
                   value={description}
                   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
                   placeholder="신고 사유에 대한 자세한 설명을 입력해주세요..."

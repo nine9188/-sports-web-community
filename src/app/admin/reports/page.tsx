@@ -19,6 +19,7 @@ import { ReportWithReporter, ReportStatus, ReportTargetType } from '@/domains/re
 import SuspensionManager from '@/domains/admin/components/SuspensionManager';
 import { formatDate } from '@/shared/utils/date';
 import Spinner from '@/shared/components/Spinner';
+import { Button } from '@/shared/components/ui';
 
 export default function ReportsAdminPage() {
   const [reports, setReports] = useState<ReportWithReporter[]>([]);
@@ -357,23 +358,25 @@ export default function ReportsAdminPage() {
             <option value="match_comment">응원 댓글</option>
           </select>
 
-          <button 
+          <Button
+            variant="outline"
             onClick={fetchReports}
             disabled={isLoading}
-            className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            className="px-3 py-2"
           >
             새로고침
-          </button>
+          </Button>
 
-          <button 
+          <Button
+            variant="outline"
             onClick={handleAutoRestore}
             disabled={isLoading}
-            className="px-3 py-2 border border-orange-300 rounded-md text-sm font-medium text-orange-700 bg-orange-50 hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50 flex items-center gap-2"
+            className="px-3 py-2 border-orange-300 text-orange-700 bg-orange-50 hover:bg-orange-100 flex items-center gap-2"
             title="7일이 지난 숨김 처리된 콘텐츠를 자동으로 복구합니다"
           >
             <RefreshCw className="w-4 h-4" />
             자동 복구
-          </button>
+          </Button>
         </div>
       </div>
 

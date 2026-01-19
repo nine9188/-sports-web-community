@@ -8,6 +8,7 @@ import { useIcon } from '@/shared/context/IconContext';
 import UserIcon from '@/shared/components/UserIcon';
 import { HeaderUserData } from '@/shared/types/user';
 import { useLogout } from '@/shared/hooks/useLogout';
+import { Button } from '@/shared/components/ui';
 
 interface UserProfileClientProps {
   userData: HeaderUserData | null;
@@ -61,10 +62,11 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
   if (userData) {
     return (
       <div className="hidden md:block relative" ref={profileDropdownRef}>
-        <button
+        <Button
+          variant="ghost"
           data-testid="user-menu"
           onClick={toggleDropdown}
-          className="flex items-center space-x-1 px-3 py-2 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
+          className="flex items-center space-x-1 px-3 py-2 h-auto"
         >
           <div className="w-5 h-5 relative rounded-full overflow-hidden">
             <UserIcon
@@ -77,7 +79,7 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
           </div>
           <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">{userData.nickname || '사용자'}</span>
           <FontAwesomeIcon icon={faChevronDown} className="h-3 w-3 text-gray-900 dark:text-[#F0F0F0]" />
-        </button>
+        </Button>
 
         {/* 드롭다운 메뉴 */}
         {isDropdownOpen && (
@@ -101,14 +103,15 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
               <FontAwesomeIcon icon={faUser} className="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
               프로필 설정
             </Link>
-            <button
+            <Button
+              variant="ghost"
               data-testid="logout-button"
               onClick={handleLogout}
-              className="flex items-center w-full px-4 py-2.5 text-sm text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
+              className="flex items-center justify-start w-full px-4 py-2.5 h-auto rounded-none text-sm text-gray-900 dark:text-[#F0F0F0]"
             >
               <FontAwesomeIcon icon={faSignOutAlt} className="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
               로그아웃
-            </button>
+            </Button>
           </div>
         )}
       </div>

@@ -8,6 +8,7 @@ import { fetchLeagueTeams } from '@/domains/livescore/actions/footballApi'
 import { fetchTeamSquad, type Player } from '@/domains/livescore/actions/teams/squad'
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players'
 import { ChevronLeft, Users, User } from 'lucide-react'
+import { Button, TabList, type TabItem } from '@/shared/components/ui'
 import Spinner from '@/shared/components/Spinner';
 
 // 주요 리그
@@ -233,13 +234,15 @@ export function EntityPickerForm({
         <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center justify-between border-b border-black/10 dark:border-white/15">
           <div className="flex items-center gap-2">
             {step !== 'league' && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={handleBack}
-                className="p-1 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
+                className="w-6 h-6"
               >
                 <ChevronLeft className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-              </button>
+              </Button>
             )}
             <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
               {activeTab === 'team' ? '팀 선택' : '선수 선택'}
@@ -248,30 +251,20 @@ export function EntityPickerForm({
         </div>
 
         {/* 탭 */}
-        <div className="flex border-b border-black/5 dark:border-white/10">
-          {[
-            { id: 'team', label: '팀', icon: <Users className="h-3.5 w-3.5 mr-1" /> },
-            { id: 'player', label: '선수', icon: <User className="h-3.5 w-3.5 mr-1" /> },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => handleTabChange(tab.id as Tab)}
-              className={`flex-1 text-xs py-2.5 px-2 flex items-center justify-center transition-colors outline-none focus:outline-none ${
-                activeTab === tab.id
-                  ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] font-medium border-b-2 border-slate-800 dark:border-white'
-                  : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-              }`}
-            >
-              {tab.icon}
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        <TabList
+          tabs={[
+            { id: 'team', label: '팀', icon: <Users className="h-3.5 w-3.5" /> },
+            { id: 'player', label: '선수', icon: <User className="h-3.5 w-3.5" /> },
+          ] as TabItem[]}
+          activeTab={activeTab}
+          onTabChange={(id) => handleTabChange(id as Tab)}
+          variant="contained"
+          className="mb-0"
+        />
 
-        {/* 브레드크럼 */}
+        {/* 브레드크럼 - 탭과 연결 */}
         {step !== 'league' && (
-          <div className="flex items-center gap-2 px-4 py-2 text-xs text-gray-500 dark:text-gray-400 border-b border-black/5 dark:border-white/5 bg-[#FAFAFA] dark:bg-[#232323]">
+          <div className="flex items-center gap-2 px-4 py-2 text-xs text-gray-500 dark:text-gray-400 bg-[#FAFAFA] dark:bg-[#232323]">
             <span>{selectedLeagueName}</span>
             {selectedTeam && (
               <>
@@ -363,13 +356,14 @@ export function EntityPickerForm({
               ) : playerError ? (
                 <div className="flex flex-col items-center justify-center h-40 text-center px-4">
                   <span className="text-red-500 dark:text-red-400 text-xs">{playerError}</span>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
                     onClick={() => selectedTeam && loadPlayers(selectedTeam.id)}
-                    className="mt-3 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors"
+                    className="mt-3 h-auto px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-[#F0F0F0]"
                   >
                     다시 시도
-                  </button>
+                  </Button>
                 </div>
               ) : players.length === 0 ? (
                 <div className="flex items-center justify-center h-40 text-gray-500 dark:text-gray-400 text-xs">
@@ -390,7 +384,7 @@ export function EntityPickerForm({
                       >
                         {/* 선수 이미지 */}
                         <div className="relative">
-                          <div className="w-8 h-8 rounded-full border border-gray-200 dark:border-gray-700 overflow-hidden">
+                          <div className="w-8 h-8 rounded-full border border-black/7 dark:border-white/10 overflow-hidden">
                             <UnifiedSportsImage
                               imageId={player.id}
                               imageType={ImageType.Players}
@@ -434,13 +428,14 @@ export function EntityPickerForm({
         {/* 하단 버튼 */}
         <div className="p-4 border-t border-black/7 dark:border-white/10">
           <div className="flex justify-end">
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={handleClose}
-              className="bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-3 py-1.5 rounded-md text-xs transition-colors outline-none focus:outline-none"
+              className="px-3 py-1.5 text-xs"
             >
               취소
-            </button>
+            </Button>
           </div>
         </div>
       </div>

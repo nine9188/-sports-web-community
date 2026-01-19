@@ -75,7 +75,7 @@ export default function ClientUserProfile({ profileData, showActions = true }: C
           {/* 레벨 진행률 */}
           <div className="w-full h-1.5 bg-[#EAEAEA] dark:bg-[#333333] rounded-full overflow-hidden">
             <div
-              className="h-full bg-slate-800 dark:bg-[#F0F0F0] rounded-full"
+              className="h-full bg-[#262626] dark:bg-[#F0F0F0] rounded-full"
               style={{ width: `${calculateLevelProgress(profileData.level, profileData.exp)}%` }}
             ></div>
           </div>

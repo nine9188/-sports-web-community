@@ -1,7 +1,8 @@
 import { Metadata } from 'next';
+import Link from 'next/link';
 import { getBoardPageAllData } from '@/domains/boards/actions/getBoardPageAllData';
 import BoardDetailLayout from '@/domains/boards/components/layout/BoardDetailLayout';
-import ErrorMessage from '@/shared/components/ui/error-message';
+import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
 
@@ -97,13 +98,24 @@ export default async function BoardDetailPage({
     if ('error' in result) {
       if (result.notFound) {
         return (
-          <ErrorMessage
-            title="게시판을 찾을 수 없습니다"
-            message={result.error}
-          />
+          <div className="container mx-auto">
+            <div className={errorBoxStyles}>
+              <h2 className={errorTitleStyles}>게시판을 찾을 수 없습니다</h2>
+              <p className={errorMessageStyles}>{result.error}</p>
+              <Link href="/" className={errorLinkStyles}>메인페이지로 이동</Link>
+            </div>
+          </div>
         );
       }
-      return <ErrorMessage message={result.error} />;
+      return (
+        <div className="container mx-auto">
+          <div className={errorBoxStyles}>
+            <h2 className={errorTitleStyles}>오류가 발생했습니다</h2>
+            <p className={errorMessageStyles}>{result.error}</p>
+            <Link href="/" className={errorLinkStyles}>메인페이지로 이동</Link>
+          </div>
+        </div>
+      );
     }
 
     // 4. 레이아웃 렌더링
@@ -136,7 +148,13 @@ export default async function BoardDetailPage({
   } catch (error) {
     console.error("BoardDetailPage Error:", error);
     return (
-      <ErrorMessage message="게시판 정보를 불러오는 중 오류가 발생했습니다." />
+      <div className="container mx-auto">
+        <div className={errorBoxStyles}>
+          <h2 className={errorTitleStyles}>오류가 발생했습니다</h2>
+          <p className={errorMessageStyles}>게시판 정보를 불러오는 중 오류가 발생했습니다.</p>
+          <Link href="/" className={errorLinkStyles}>메인페이지로 이동</Link>
+        </div>
+      </div>
     );
   }
 }

@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
+import { Button } from '@/shared/components/ui';
 import { renderContentTypeIcons } from '../post/postlist/components/shared/PostRenderers';
 
 interface PopularPost {
@@ -105,9 +106,11 @@ export default function BoardPopularPosts({
             <span className="text-xs text-gray-600 dark:text-gray-400">
               {activeTab === 'today' ? '1' : '2'} / 2
             </span>
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setActiveTab(activeTab === 'today' ? 'week' : 'today')}
-              className="p-1 rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-700 dark:text-gray-300"
+              className="w-6 h-6 text-gray-700 dark:text-gray-300"
               aria-label={activeTab === 'today' ? '이번주 BEST' : '오늘 BEST'}
             >
               {activeTab === 'today' ? (
@@ -115,7 +118,7 @@ export default function BoardPopularPosts({
               ) : (
                 <ChevronLeft className="w-4 h-4" />
               )}
-            </button>
+            </Button>
           </div>
         </div>
         <table className="w-full border-collapse">

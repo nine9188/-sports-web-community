@@ -404,7 +404,7 @@ const BoardSelector = React.memo(({
           <div
             className={`w-full border border-black/7 dark:border-white/10 rounded-md px-3 py-2 flex justify-between items-center transition-colors ${
               !selectedTop || !hasMidBoards
-                ? 'bg-gray-100 dark:bg-[#1A1A1A] text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                ? 'bg-[#F5F5F5] dark:bg-[#1A1A1A] text-gray-400 dark:text-gray-600 cursor-not-allowed'
                 : 'bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] cursor-pointer'
             }`}
             onClick={selectedTop && hasMidBoards ? toggleMidDropdown : undefined}
@@ -435,7 +435,7 @@ const BoardSelector = React.memo(({
           <div
             className={`w-full border border-black/7 dark:border-white/10 rounded-md px-3 py-2 flex justify-between items-center transition-colors ${
               !selectedMid || !hasBottomBoards
-                ? 'bg-gray-100 dark:bg-[#1A1A1A] text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                ? 'bg-[#F5F5F5] dark:bg-[#1A1A1A] text-gray-400 dark:text-gray-600 cursor-not-allowed'
                 : 'bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] cursor-pointer'
             }`}
             onClick={selectedMid && hasBottomBoards ? toggleBottomDropdown : undefined}

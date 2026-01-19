@@ -4,8 +4,17 @@ import React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { fetchLeagueTeams, LeagueTeam } from '@/domains/livescore/actions/footballApi';
-import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
-import { Select } from '@/shared/components/ui/select';
+import {
+  Container,
+  ContainerHeader,
+  ContainerTitle,
+  SelectRadix as Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+  Button
+} from '@/shared/components/ui';
 
 // 팀 데이터 메모리 캐시 (컴포넌트 외부에 위치)
 const teamsCache = new Map<string, LeagueTeam[]>();
@@ -134,10 +143,11 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-2">
             <ContainerTitle>필터</ContainerTitle>
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => setIsOpen(prev => !prev)}
-              className="md:hidden inline-flex items-center text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+              className="md:hidden inline-flex items-center text-xs h-auto px-1 py-0"
               aria-expanded={isOpen}
               aria-controls="transfer-filters-body"
             >
@@ -150,14 +160,15 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
                 <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.108l3.71-3.878a.75.75 0 111.08 1.04l-4.25 4.44a.75.75 0 01-1.08 0l-4.25-4.44a.75.75 0 01.02-1.06z" clipRule="evenodd" />
               </svg>
               {isOpen ? '접기' : '펼치기'}
-            </button>
+            </Button>
           </div>
-          <button
+          <Button
+            variant="ghost"
             onClick={clearAllFilters}
-            className="text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+            className="text-xs h-auto px-2 py-1"
           >
             전체 초기화
-          </button>
+          </Button>
         </div>
       </ContainerHeader>
 
@@ -170,16 +181,20 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
           </label>
           <Select
             value={currentFilters.league?.toString() || 'all'}
-            onChange={(value) => updateFilter('league', value)}
-            options={[
-              { value: 'all', label: '전체 리그' },
-              { value: '39', label: '프리미어리그' },
-              { value: '140', label: '라리가' },
-              { value: '135', label: '세리에A' },
-              { value: '78', label: '분데스리가' },
-              { value: '61', label: '리그1' },
-            ]}
-          />
+            onValueChange={(value) => updateFilter('league', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="전체 리그" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">전체 리그</SelectItem>
+              <SelectItem value="39">프리미어리그</SelectItem>
+              <SelectItem value="140">라리가</SelectItem>
+              <SelectItem value="135">세리에A</SelectItem>
+              <SelectItem value="78">분데스리가</SelectItem>
+              <SelectItem value="61">리그1</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* 팀 선택 */}
@@ -189,29 +204,31 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
           </label>
           <Select
             value={currentFilters.team?.toString() || 'all'}
-            onChange={(value) => updateFilter('team', value)}
+            onValueChange={(value) => updateFilter('team', value)}
             disabled={!currentFilters.league || currentFilters.league === 'all'}
-            placeholder={
-              !currentFilters.league || currentFilters.league === 'all' 
-                ? '먼저 리그를 선택하세요' 
-                : loadingTeams ? '팀 목록 로딩 중...' : '전체 팀'
-            }
-            options={[
-              { 
-                value: 'all', 
-                label: !currentFilters.league || currentFilters.league === 'all' 
-                  ? '먼저 리그를 선택하세요' 
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={
+                !currentFilters.league || currentFilters.league === 'all'
+                  ? '먼저 리그를 선택하세요'
                   : loadingTeams ? '팀 목록 로딩 중...' : '전체 팀'
-              },
-              ...(currentFilters.league && currentFilters.league !== 'all' && !loadingTeams
-                ? availableTeams.map((team) => ({
-                    value: team.id.toString(),
-                    label: `${team.name}${team.isWinner ? ' 🏆' : ''}`
-                  }))
-                : []
-              )
-            ]}
-          />
+              } />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {!currentFilters.league || currentFilters.league === 'all'
+                  ? '먼저 리그를 선택하세요'
+                  : loadingTeams ? '팀 목록 로딩 중...' : '전체 팀'}
+              </SelectItem>
+              {currentFilters.league && currentFilters.league !== 'all' && !loadingTeams &&
+                availableTeams.map((team) => (
+                  <SelectItem key={team.id} value={team.id.toString()}>
+                    {team.name}{team.isWinner ? ' 🏆' : ''}
+                  </SelectItem>
+                ))
+              }
+            </SelectContent>
+          </Select>
         </div>
 
         {/* 이적 유형 */}
@@ -221,29 +238,30 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
           </label>
           <Select
             value={currentFilters.type || 'all'}
-            onChange={(value) => updateFilter('type', value)}
+            onValueChange={(value) => updateFilter('type', value)}
             disabled={!currentFilters.league || currentFilters.league === 'all'}
-            placeholder={
-              !currentFilters.league || currentFilters.league === 'all' 
-                ? '먼저 리그를 선택하세요' 
-                : '전체'
-            }
-            options={[
-              { 
-                value: 'all', 
-                label: !currentFilters.league || currentFilters.league === 'all' 
-                  ? '먼저 리그를 선택하세요' 
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={
+                !currentFilters.league || currentFilters.league === 'all'
+                  ? '먼저 리그를 선택하세요'
                   : '전체'
-              },
-              ...(currentFilters.league && currentFilters.league !== 'all'
-                ? [
-                    { value: 'in', label: '영입' },
-                    { value: 'out', label: '방출' }
-                  ]
-                : []
-              )
-            ]}
-          />
+              } />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {!currentFilters.league || currentFilters.league === 'all'
+                  ? '먼저 리그를 선택하세요'
+                  : '전체'}
+              </SelectItem>
+              {currentFilters.league && currentFilters.league !== 'all' && (
+                <>
+                  <SelectItem value="in">영입</SelectItem>
+                  <SelectItem value="out">방출</SelectItem>
+                </>
+              )}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* 활성 필터 표시 */}
@@ -258,45 +276,49 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
                    currentFilters.league?.toString() === '135' ? '세리에A' :
                    currentFilters.league?.toString() === '78' ? '분데스리가' :
                    currentFilters.league?.toString() === '61' ? '리그1' : '선택된 리그'}
-                  <button
+                  <Button
+                    variant="ghost"
                     onClick={() => updateFilter('league', 'all')}
-                    className="ml-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                    className="ml-2 h-auto p-0 text-base"
                   >
                     ×
-                  </button>
+                  </Button>
                 </span>
               )}
               {currentFilters.team && (
                 <span className="inline-flex items-center px-3 py-1 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-sm rounded-full">
                   {availableTeams.find(t => t.id === parseInt(currentFilters.team?.toString() || '0'))?.name || '선택된 팀'}
-                  <button
+                  <Button
+                    variant="ghost"
                     onClick={() => updateFilter('team', 'all')}
-                    className="ml-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                    className="ml-2 h-auto p-0 text-base"
                   >
                     ×
-                  </button>
+                  </Button>
                 </span>
               )}
               {currentFilters.type && currentFilters.league && currentFilters.league !== 'all' && (
                 <span className="inline-flex items-center px-3 py-1 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-sm rounded-full">
                   {currentFilters.type === 'in' ? '영입' : '방출'}
-                  <button
+                  <Button
+                    variant="ghost"
                     onClick={() => updateFilter('type', 'all')}
-                    className="ml-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                    className="ml-2 h-auto p-0 text-base"
                   >
                     ×
-                  </button>
+                  </Button>
                 </span>
               )}
               {currentFilters.season && currentFilters.season !== 2025 && (
                 <span className="inline-flex items-center px-3 py-1 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-sm rounded-full">
                   {currentFilters.season}
-                  <button
+                  <Button
+                    variant="ghost"
                     onClick={() => updateFilter('season', '2025')}
-                    className="ml-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                    className="ml-2 h-auto p-0 text-base"
                   >
                     ×
-                  </button>
+                  </Button>
                 </span>
               )}
             </div>

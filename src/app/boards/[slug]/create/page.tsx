@@ -1,8 +1,9 @@
 import React from 'react';
+import Link from 'next/link';
 import PostEditForm from '@/domains/boards/components/post/PostEditForm';
 import { getCreatePostData } from '@/domains/boards/actions';
 import { Metadata } from 'next';
-import ErrorMessage from '@/shared/components/ui/error-message';
+import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
 import { cache } from 'react';
 
 // 캐시된 데이터 가져오기 함수 - 중복 호출 방지
@@ -11,14 +12,14 @@ const getCachedCreatePostData = cache(async (slug: string) => {
 });
 
 // 메타데이터 생성 함수 - 간소화
-export async function generateMetadata({ 
-  params 
-}: { 
-  params: Promise<{ slug: string }> 
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   try {
     const { slug } = await params;
-    
+
     if (!slug) {
       return {
         title: '새 글 작성',
@@ -37,7 +38,7 @@ export async function generateMetadata({
   } catch (error) {
     console.error('메타데이터 생성 오류:', error);
   }
-  
+
   return {
     title: '새 글 작성',
     description: '게시판에 새 글을 작성합니다.'
@@ -45,34 +46,38 @@ export async function generateMetadata({
 }
 
 // 서버 컴포넌트
-export default async function CreatePostPage({ 
-  params 
-}: { 
-  params: Promise<{ slug: string }> 
+export default async function CreatePostPage({
+  params
+}: {
+  params: Promise<{ slug: string }>
 }) {
   try {
     const { slug } = await params;
-    
+
     if (!slug) {
       return (
-        <ErrorMessage 
-          message="게시판 정보가 올바르지 않습니다." 
-          backLink="/boards"
-          backText="게시판 목록으로"
-        />
+        <div className="container mx-auto">
+          <div className={errorBoxStyles}>
+            <h2 className={errorTitleStyles}>오류가 발생했습니다</h2>
+            <p className={errorMessageStyles}>게시판 정보가 올바르지 않습니다.</p>
+            <Link href="/boards" className={errorLinkStyles}>게시판 목록으로</Link>
+          </div>
+        </div>
       );
     }
 
     // 캐시된 데이터 사용 - 중복 호출 방지
     const result = await getCachedCreatePostData(slug);
-    
+
     if (!result.success || !result.board) {
       return (
-        <ErrorMessage 
-          message={result.error || '게시판 정보를 불러오는 중 오류가 발생했습니다.'} 
-          backLink="/boards"
-          backText="게시판 목록으로"
-        />
+        <div className="container mx-auto">
+          <div className={errorBoxStyles}>
+            <h2 className={errorTitleStyles}>오류가 발생했습니다</h2>
+            <p className={errorMessageStyles}>{result.error || '게시판 정보를 불러오는 중 오류가 발생했습니다.'}</p>
+            <Link href="/boards" className={errorLinkStyles}>게시판 목록으로</Link>
+          </div>
+        </div>
       );
     }
 
@@ -96,12 +101,13 @@ export default async function CreatePostPage({
   } catch (error) {
     console.error('CreatePostPage 오류:', error);
     return (
-      <ErrorMessage 
-        title="오류"
-        message="게시판 정보를 불러오는 중 오류가 발생했습니다."
-        backLink="/boards"
-        backText="게시판 목록으로"
-      />
+      <div className="container mx-auto">
+        <div className={errorBoxStyles}>
+          <h2 className={errorTitleStyles}>오류</h2>
+          <p className={errorMessageStyles}>게시판 정보를 불러오는 중 오류가 발생했습니다.</p>
+          <Link href="/boards" className={errorLinkStyles}>게시판 목록으로</Link>
+        </div>
+      </div>
     );
   }
-} 
+}

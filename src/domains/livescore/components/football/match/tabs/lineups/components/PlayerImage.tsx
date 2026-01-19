@@ -55,7 +55,7 @@ export default memo(function PlayerImage({
       fallbackContent={fallbackContent}
     />
   ) : (
-    <div className={`${width} ${height} bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center ${className}`}>
+    <div className={`${width} ${height} bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 rounded-full flex items-center justify-center ${className}`}>
       {fallbackContent}
     </div>
   );

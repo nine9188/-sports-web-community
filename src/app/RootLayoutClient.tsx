@@ -9,7 +9,6 @@ import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from '@/shared/context/AuthContext';
 import { IconProvider } from '@/shared/context/IconContext';
 import { ThemeProvider } from '@/shared/context/ThemeContext';
-import { UserProfileModalProvider } from '@/domains/user/context/UserProfileModalContext';
 import AuthStateManager from '@/shared/components/AuthStateManager';
 import SuspensionPopup from '@/shared/components/SuspensionPopup';
 import AttendanceChecker from '@/shared/components/AttendanceChecker';
@@ -182,34 +181,32 @@ export default function RootLayoutClient({
       >
         <AuthProvider initialSession={initialSession}>
           <IconProvider initialIconUrl={initialIconUrl} initialIconName={initialIconName}>
-            <UserProfileModalProvider>
-              {isIndependentLayout ? (
-                children
-              ) : (
-                <AuthStateManager
-                  authSection={authSection}
-                  boardNavigation={boardNavigation}
-                  leagueStandingsComponent={leagueStandingsComponent}
-                  rightSidebar={rightSidebar}
-                  headerUserData={headerUserData}
-                  headerBoards={headerBoards}
-                  headerIsAdmin={headerIsAdmin}
-                  liveScoreData={liveScoreData}
-                  fullUserData={fullUserData}
-                  isOpen={deferredIsOpen}
-                  onClose={closeSidebar}
-                  isProfileOpen={deferredIsProfileOpen}
-                  onProfileClose={closeProfileSidebar}
-                  onProfileClick={toggleProfileSidebar}
-                >
-                  {children}
-                </AuthStateManager>
-              )}
+            {isIndependentLayout ? (
+              children
+            ) : (
+              <AuthStateManager
+                authSection={authSection}
+                boardNavigation={boardNavigation}
+                leagueStandingsComponent={leagueStandingsComponent}
+                rightSidebar={rightSidebar}
+                headerUserData={headerUserData}
+                headerBoards={headerBoards}
+                headerIsAdmin={headerIsAdmin}
+                liveScoreData={liveScoreData}
+                fullUserData={fullUserData}
+                isOpen={deferredIsOpen}
+                onClose={closeSidebar}
+                isProfileOpen={deferredIsProfileOpen}
+                onProfileClose={closeProfileSidebar}
+                onProfileClick={toggleProfileSidebar}
+              >
+                {children}
+              </AuthStateManager>
+            )}
 
-              <ToastContainer {...toastConfig} />
-              <SuspensionPopup />
-              <AttendanceChecker />
-            </UserProfileModalProvider>
+            <ToastContainer {...toastConfig} />
+            <SuspensionPopup />
+            <AttendanceChecker />
           </IconProvider>
         </AuthProvider>
       </ThemeProvider>

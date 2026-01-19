@@ -13,6 +13,7 @@ import KakaoLoginButton from '@/domains/auth/components/KakaoLoginButton';
 import TurnstileWidget from '@/shared/components/TurnstileWidget';
 import { TermsContent, PrivacyContent } from '@/shared/components/legal';
 import Calendar from '@/shared/components/Calendar';
+import { Button } from '@/shared/components/ui';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -648,7 +649,7 @@ export default function SignupPage() {
 
   return (
     <div className="flex flex-col justify-center items-center min-h-[calc(100vh-120px)]">
-      <div className="max-w-md w-full md:bg-white md:dark:bg-[#2D2D2D] md:rounded-2xl md:shadow-lg md:border md:border-black/10 md:dark:border-white/10 md:p-8">
+      <div className="max-w-md w-full md:bg-white md:dark:bg-[#2D2D2D] md:rounded-lg md:shadow-lg md:border md:border-black/10 md:dark:border-white/10 md:p-8">
         {/* 헤더 */}
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">4590 Football 회원가입</h2>
@@ -676,7 +677,7 @@ export default function SignupPage() {
           {!showEmailStep && (
             <div className="space-y-4">
               {/* 전체 동의 */}
-              <label className="flex items-center p-3 bg-slate-100 dark:bg-[#333333] rounded-lg cursor-pointer border border-black/7 dark:border-white/10">
+              <label className="flex items-center p-3 bg-[#F5F5F5] dark:bg-[#333333] rounded-lg cursor-pointer border border-black/7 dark:border-white/10">
                 <input
                   type="checkbox"
                   checked={agreeTerms && agreePrivacy}
@@ -684,7 +685,7 @@ export default function SignupPage() {
                     setAgreeTerms(e.target.checked);
                     setAgreePrivacy(e.target.checked);
                   }}
-                  className="h-5 w-5 text-slate-600 border-gray-300 dark:border-white/20 rounded focus:ring-slate-500"
+                  className="h-4 w-4 text-gray-600 border-black/7 dark:border-white/10 rounded focus:ring-gray-500"
                 />
                 <span className="ml-3 text-gray-900 dark:text-[#F0F0F0] font-semibold">
                   전체 동의
@@ -693,12 +694,12 @@ export default function SignupPage() {
 
               {/* 이용약관 동의 */}
               <div className="border border-black/7 dark:border-white/10 rounded-lg overflow-hidden">
-                <label className="flex items-center p-3 bg-gray-50 dark:bg-[#262626] cursor-pointer">
+                <label className="flex items-center p-3 bg-[#F5F5F5] dark:bg-[#262626] cursor-pointer">
                   <input
                     type="checkbox"
                     checked={agreeTerms}
                     onChange={(e) => setAgreeTerms(e.target.checked)}
-                    className="h-5 w-5 text-slate-600 border-gray-300 dark:border-white/20 rounded focus:ring-slate-500"
+                    className="h-4 w-4 text-gray-600 border-black/7 dark:border-white/10 rounded focus:ring-gray-500"
                   />
                   <span className="ml-3 text-gray-900 dark:text-[#F0F0F0] font-medium">
                     이용약관에 동의합니다 <span className="text-red-500 text-sm">(필수)</span>
@@ -711,12 +712,12 @@ export default function SignupPage() {
 
               {/* 개인정보 수집 동의 */}
               <div className="border border-black/7 dark:border-white/10 rounded-lg overflow-hidden">
-                <label className="flex items-center p-3 bg-gray-50 dark:bg-[#262626] cursor-pointer">
+                <label className="flex items-center p-3 bg-[#F5F5F5] dark:bg-[#262626] cursor-pointer">
                   <input
                     type="checkbox"
                     checked={agreePrivacy}
                     onChange={(e) => setAgreePrivacy(e.target.checked)}
-                    className="h-5 w-5 text-slate-600 border-gray-300 dark:border-white/20 rounded focus:ring-slate-500"
+                    className="h-4 w-4 text-gray-600 border-black/7 dark:border-white/10 rounded focus:ring-gray-500"
                   />
                   <span className="ml-3 text-gray-900 dark:text-[#F0F0F0] font-medium">
                     개인정보 수집과 이용에 동의합니다 <span className="text-red-500 text-sm">(필수)</span>
@@ -728,14 +729,15 @@ export default function SignupPage() {
               </div>
 
               {/* 다음 버튼 */}
-              <button
+              <Button
                 type="button"
+                variant="primary"
                 onClick={handleAgreeSubmit}
                 disabled={!agreeTerms || !agreePrivacy || !captchaToken}
-                className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md transition-colors disabled:opacity-50"
+                className="w-full py-3 h-auto"
               >
                 다음
-              </button>
+              </Button>
             </div>
           )}
 
@@ -767,14 +769,14 @@ export default function SignupPage() {
                     required
                     disabled={showNameStep}
                   />
-                  <button
+                  <Button
                     type="button"
+                    variant="primary"
                     onClick={checkEmail}
                     disabled={isCheckingEmail || !emailValid || showNameStep}
-                    className="px-4 py-2 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md disabled:opacity-50"
                   >
                     {isCheckingEmail ? '확인 중...' : '중복 확인'}
-                  </button>
+                  </Button>
                 </div>
                 {emailError && (
                   <p className="mt-1 text-sm text-red-600 flex items-center">
@@ -795,14 +797,15 @@ export default function SignupPage() {
                 )}
                 {!showNameStep && (
                   <div className="mt-2">
-                    <button
+                    <Button
                       type="button"
+                      variant="primary"
                       onClick={handleEmailSubmit}
                       disabled={!emailChecked || !emailAvailable || isLoading}
-                      className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md transition-colors disabled:opacity-50"
+                      className="w-full py-3 h-auto"
                     >
                       {isLoading ? '처리 중...' : '계속하기'}
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
@@ -857,14 +860,15 @@ export default function SignupPage() {
                 )}
                 {!showBirthStep && (
                   <div className="mt-2">
-                    <button
+                    <Button
                       type="button"
+                      variant="primary"
                       onClick={handleNameSubmit}
                       disabled={!fullNameValid || isLoading}
-                      className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md transition-colors disabled:opacity-50"
+                      className="w-full py-3 h-auto"
                     >
                       {isLoading ? '처리 중...' : '계속하기'}
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
@@ -903,14 +907,16 @@ export default function SignupPage() {
                     disabled={showIdStep}
                   />
                   {/* 캘린더 아이콘 버튼 */}
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => setShowCalendar(true)}
                     disabled={showIdStep}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors outline-none focus:outline-none"
+                    className="absolute right-1 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 h-8 w-8"
                   >
                     <CalendarIcon className="h-5 w-5" />
-                  </button>
+                  </Button>
 
                   {/* 캘린더 팝업 */}
                   {showCalendar && (
@@ -946,14 +952,15 @@ export default function SignupPage() {
                 )}
                 {!showIdStep && (
                   <div className="mt-2">
-                    <button
+                    <Button
                       type="button"
+                      variant="primary"
                       onClick={handleBirthSubmit}
                       disabled={!birthDate || birthDate.length < 10 || isLoading}
-                      className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md transition-colors disabled:opacity-50"
+                      className="w-full py-3 h-auto"
                     >
                       {isLoading ? '처리 중...' : '계속하기'}
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
@@ -995,14 +1002,14 @@ export default function SignupPage() {
                     required
                     disabled={showNicknameStep}
                   />
-                  <button
+                  <Button
                     type="button"
+                    variant="primary"
                     onClick={checkUsername}
                     disabled={isCheckingUsername || !username || validateUsername(username) !== '' || showNicknameStep}
-                    className="px-4 py-2 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md disabled:opacity-50"
                   >
                     {isCheckingUsername ? '확인 중...' : '중복 확인'}
-                  </button>
+                  </Button>
                 </div>
                 {usernameMessage && (
                   <p className={`text-sm mt-1 flex items-center ${
@@ -1017,14 +1024,15 @@ export default function SignupPage() {
                 )}
                 {!showNicknameStep && (
                   <div className="mt-2">
-                    <button
+                    <Button
                       type="button"
+                      variant="primary"
                       onClick={handleIdSubmit}
                       disabled={!usernameChecked || !usernameAvailable || isLoading}
-                      className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md transition-colors disabled:opacity-50"
+                      className="w-full py-3 h-auto"
                     >
                       {isLoading ? '처리 중...' : '계속하기'}
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
@@ -1066,14 +1074,14 @@ export default function SignupPage() {
                     required
                     disabled={showPasswordStep}
                   />
-                  <button
+                  <Button
                     type="button"
+                    variant="primary"
                     onClick={checkNickname}
                     disabled={isCheckingNickname || !nickname || validateNickname(nickname) !== '' || showPasswordStep}
-                    className="px-4 py-2 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md disabled:opacity-50"
                   >
                     {isCheckingNickname ? '확인 중...' : '중복 확인'}
-                  </button>
+                  </Button>
                 </div>
                 {nicknameMessage && (
                   <p className={`text-sm mt-1 flex items-center ${
@@ -1089,14 +1097,15 @@ export default function SignupPage() {
 
                 {!showPasswordStep && (
                   <div className="mt-4">
-                    <button
+                    <Button
                       type="button"
+                      variant="primary"
                       onClick={handleNicknameSubmit}
                       disabled={!nicknameChecked || !nicknameAvailable || isLoading}
-                      className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md transition-colors disabled:opacity-50"
+                      className="w-full py-3 h-auto"
                     >
                       {isLoading ? '처리 중...' : '계속하기'}
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
@@ -1126,14 +1135,16 @@ export default function SignupPage() {
                     placeholder="비밀번호"
                     required
                   />
-                  <button
+                  <Button
                     type="button"
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 h-8 w-8"
                     onClick={() => setShowPassword(!showPassword)}
                     tabIndex={-1}
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
+                  </Button>
                 </div>
                 
                 {/* 비밀번호 안내 메시지 */}
@@ -1237,14 +1248,14 @@ export default function SignupPage() {
                     placeholder="예: a1b2c3d4"
                     maxLength={8}
                   />
-                  <button
+                  <Button
                     type="button"
+                    variant="primary"
                     onClick={checkReferralCode}
                     disabled={isCheckingReferral || !referralCode.trim()}
-                    className="px-4 py-2 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md disabled:opacity-50"
                   >
                     {isCheckingReferral ? '확인 중...' : '확인'}
-                  </button>
+                  </Button>
                 </div>
                 {referralMessage && (
                   <p className={`text-sm mt-2 flex items-center ${
@@ -1260,13 +1271,14 @@ export default function SignupPage() {
               </div>
 
               <div className="mt-2">
-                <button
+                <Button
                   type="submit"
+                  variant="primary"
                   disabled={isLoading || !passwordValid || !confirmPasswordValid || !emailValid || !usernameChecked || !usernameAvailable || !nicknameChecked || !nicknameAvailable}
-                  className="w-full p-3 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white rounded-md transition-colors disabled:opacity-50 mt-4"
+                  className="w-full py-3 h-auto mt-4"
                 >
                   {isLoading ? '처리 중...' : '계정 생성하기'}
-                </button>
+                </Button>
               </div>
             </div>
           )}

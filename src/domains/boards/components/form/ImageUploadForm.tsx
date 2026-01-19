@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { Button } from '@/shared/components/ui';
 
 interface ImageUploadFormProps {
   onCancel: () => void;
@@ -101,24 +102,26 @@ export default function ImageUploadForm({
         <div className="p-4">
           <div className="border-b border-black/5 dark:border-white/10 mb-4">
             <div className="flex gap-4">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => handleTabChange('file')}
-                className={`px-1 py-1 text-xs transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${activeTab === 'file'
+                className={`px-1 py-1 text-xs rounded-none ${activeTab === 'file'
                   ? 'border-b-2 border-gray-900 dark:border-[#F0F0F0] text-gray-900 dark:text-[#F0F0F0] font-medium'
                   : 'text-gray-700 dark:text-gray-300 hover:text-gray-600 dark:hover:text-gray-200'}`}
               >
                 파일
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => handleTabChange('link')}
-                className={`px-1 py-1 text-xs transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${activeTab === 'link'
+                className={`px-1 py-1 text-xs rounded-none ${activeTab === 'link'
                   ? 'border-b-2 border-gray-900 dark:border-[#F0F0F0] text-gray-900 dark:text-[#F0F0F0] font-medium'
                   : 'text-gray-700 dark:text-gray-300 hover:text-gray-600 dark:hover:text-gray-200'}`}
               >
                 주소
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -126,13 +129,14 @@ export default function ImageUploadForm({
             {activeTab === 'file' ? (
               <>
                 <div className="flex items-center space-x-2">
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
                     onClick={handleFileButtonClick}
-                    className="bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] px-3 py-2 text-xs rounded-md border border-black/7 dark:border-white/10 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors flex-shrink-0 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                    className="px-3 py-2 text-xs flex-shrink-0"
                   >
                     파일 선택
-                  </button>
+                  </Button>
                   <input
                     type="file"
                     accept="image/*"
@@ -183,22 +187,26 @@ export default function ImageUploadForm({
             )}
 
             <div className="flex justify-end space-x-2 pt-2">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={handleCancelClick}
                 onMouseDown={(e) => e.stopPropagation()}
-                className="bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-3 py-1.5 rounded-md text-xs transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="text-xs"
               >
                 취소
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="primary"
+                size="sm"
                 onClick={handleSubmit}
                 disabled={(activeTab === 'file' && !selectedFile) || (activeTab === 'link' && !imageUrl)}
-                className="bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A] px-3 py-1.5 rounded-md text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="text-xs"
               >
                 확인
-              </button>
+              </Button>
             </div>
           </div>
         </div>

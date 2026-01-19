@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { toast } from 'react-toastify';
+import { Button, Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 import { 
   createSupportComment,
   getSupportComments,
@@ -172,9 +173,10 @@ function CommentItem({
 
           {/* 좋아요/싫어요 버튼 (댓글 내용 아래로 이동, 크기 축소) */}
           <div className="flex items-center space-x-1 text-xs transition-all">
-            <button
+            <Button
+              variant="ghost"
               onClick={() => onLike(comment.id)}
-              className={`flex items-center space-x-1 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
+              className={`flex items-center space-x-1 h-auto px-1 py-0 text-xs ${
                 comment.is_liked
                   ? 'text-red-500 dark:text-red-400'
                   : 'text-gray-500 dark:text-gray-400 hover:text-red-400 dark:hover:text-red-400'
@@ -184,10 +186,11 @@ function CommentItem({
               {comment.likes_count > 0 && (
                 <span className="font-medium text-xs">{comment.likes_count}</span>
               )}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
               onClick={() => onDislike(comment.id)}
-              className={`flex items-center space-x-1 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
+              className={`flex items-center space-x-1 h-auto px-1 py-0 text-xs ${
                 comment.is_disliked
                   ? 'text-red-500 dark:text-red-400'
                   : 'text-gray-500 dark:text-gray-400 hover:text-red-400 dark:hover:text-red-400'
@@ -197,7 +200,7 @@ function CommentItem({
               {(comment.dislikes_count && comment.dislikes_count > 0) && (
                 <span className="font-medium text-xs">{comment.dislikes_count}</span>
               )}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -407,24 +410,21 @@ export default function SupportCommentsSection({
   // };
 
   return (
-    <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 mb-3">
+    <Container className="bg-white dark:bg-[#1D1D1D] mb-3">
       {/* 헤더 */}
-      <div className="h-12 flex items-center px-4 border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] rounded-t-lg">
-        <h3 className="font-semibold text-sm text-gray-900 dark:text-[#F0F0F0]">응원 댓글</h3>
-      </div>
+      <ContainerHeader>
+        <ContainerTitle>응원 댓글</ContainerTitle>
+      </ContainerHeader>
 
       {/* 댓글 작성 폼 - 개선된 UI */}
       <div className="p-4 border-b border-black/5 dark:border-white/10">
         <div className="space-y-3">
           {/* 응원팀 선택 - 상단으로 이동 */}
           <div className="flex space-x-2 w-full">
-            <button
+            <Button
+              variant={selectedTeam === 'home' ? 'primary' : 'ghost'}
               onClick={() => setSelectedTeam('home')}
-              className={`flex-1 px-2 py-1 text-xs rounded transition-colors whitespace-nowrap outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
-                selectedTeam === 'home'
-                  ? 'bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A]'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-              }`}
+              className="flex-1 px-2 py-1 text-xs h-auto whitespace-nowrap"
             >
               <span className="truncate block">
                 {(() => {
@@ -432,14 +432,11 @@ export default function SupportCommentsSection({
                   return teamName.length > 7 ? `${teamName.slice(0, 7)}...` : teamName;
                 })()}
               </span>
-            </button>
-            <button
+            </Button>
+            <Button
+              variant={selectedTeam === 'away' ? 'primary' : 'ghost'}
               onClick={() => setSelectedTeam('away')}
-              className={`flex-1 px-2 py-1 text-xs rounded transition-colors whitespace-nowrap outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
-                selectedTeam === 'away'
-                  ? 'bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A]'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-              }`}
+              className="flex-1 px-2 py-1 text-xs h-auto whitespace-nowrap"
             >
               <span className="truncate block">
                 {(() => {
@@ -447,17 +444,14 @@ export default function SupportCommentsSection({
                   return teamName.length > 7 ? `${teamName.slice(0, 7)}...` : teamName;
                 })()}
               </span>
-            </button>
-            <button
+            </Button>
+            <Button
+              variant={selectedTeam === 'neutral' ? 'primary' : 'ghost'}
               onClick={() => setSelectedTeam('neutral')}
-              className={`flex-1 px-2 py-1 text-xs rounded transition-colors whitespace-nowrap outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
-                selectedTeam === 'neutral'
-                  ? 'bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A]'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-              }`}
+              className="flex-1 px-2 py-1 text-xs h-auto whitespace-nowrap"
             >
               중립
-            </button>
+            </Button>
           </div>
 
           {/* 댓글 입력창 */}
@@ -479,13 +473,14 @@ export default function SupportCommentsSection({
 
           {/* 등록 버튼 */}
           <div className="flex justify-end">
-            <button
+            <Button
+              variant="primary"
               onClick={handleSubmitComment}
               disabled={!newComment.trim() || !isLoggedIn || isSubmitting}
-              className="px-3 py-1 bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-xs rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="px-3 py-1 text-xs h-auto"
             >
               {isSubmitting ? '작성중...' : '등록'}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -493,46 +488,34 @@ export default function SupportCommentsSection({
       {/* 필터링 탭 - 댓글 목록 위로 이동 */}
       <div className="px-4 py-2 border-b border-black/5 dark:border-white/10">
         <div className="flex space-x-1">
-          <button
+          <Button
+            variant={activeTab === 'all' ? 'primary' : 'ghost'}
             onClick={() => handleTabChange('all')}
-            className={`px-2 py-1 text-xs rounded transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
-              activeTab === 'all'
-                ? 'bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A]'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-            }`}
+            className="px-2 py-1 text-xs h-auto"
           >
             전체
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={activeTab === 'home' ? 'primary' : 'ghost'}
             onClick={() => handleTabChange('home')}
-            className={`px-2 py-1 text-xs rounded transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
-              activeTab === 'home'
-                ? 'bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A]'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-            }`}
+            className="px-2 py-1 text-xs h-auto"
           >
             홈
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={activeTab === 'away' ? 'primary' : 'ghost'}
             onClick={() => handleTabChange('away')}
-            className={`px-2 py-1 text-xs rounded transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
-              activeTab === 'away'
-                ? 'bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A]'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-            }`}
+            className="px-2 py-1 text-xs h-auto"
           >
             원정
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={activeTab === 'neutral' ? 'primary' : 'ghost'}
             onClick={() => handleTabChange('neutral')}
-            className={`px-2 py-1 text-xs rounded transition-colors outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
-              activeTab === 'neutral'
-                ? 'bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A]'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-            }`}
+            className="px-2 py-1 text-xs h-auto"
           >
             중립
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -558,6 +541,6 @@ export default function SupportCommentsSection({
           </div>
         )}
       </div>
-    </div>
+    </Container>
   );
 } 

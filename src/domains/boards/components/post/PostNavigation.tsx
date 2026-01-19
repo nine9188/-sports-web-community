@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, ListOrdered } from 'lucide-react';
+import { Button, Container } from '@/shared/components/ui';
 
 interface PostNavigationProps {
   boardSlug: string;
@@ -16,61 +17,77 @@ export default function PostNavigation({ boardSlug, prevPost, nextPost }: PostNa
     {
       key: 'prev',
       element: prevPost ? (
-        <Link 
-          href={`/boards/${boardSlug}/${prevPost.post_number}`}
-          className="inline-flex flex-row items-center justify-center text-xs sm:text-sm text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md transition-colors px-2 py-1 gap-1"
+        <Button
+          variant="ghost"
+          size="sm"
+          asChild
+          className="text-xs sm:text-sm gap-1"
         >
-          <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
-          <span>이전글</span>
-        </Link>
+          <Link href={`/boards/${boardSlug}/${prevPost.post_number}`}>
+            <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span>이전글</span>
+          </Link>
+        </Button>
       ) : (
-        <button 
+        <Button
+          variant="ghost"
+          size="sm"
           disabled
-          className="inline-flex flex-row items-center justify-center text-xs sm:text-sm text-gray-400 dark:text-gray-600 cursor-not-allowed px-2 py-1 gap-1"
+          className="text-xs sm:text-sm text-gray-400 dark:text-gray-600 gap-1"
         >
           <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
           <span>이전글</span>
-        </button>
+        </Button>
       )
     },
     // 목록 버튼 (항상 표시)
     {
       key: 'list',
       element: (
-        <Link 
-          href={`/boards/${boardSlug}`}
-          className="inline-flex flex-row items-center justify-center text-xs sm:text-sm text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md transition-colors px-2 py-1 gap-1"
+        <Button
+          variant="ghost"
+          size="sm"
+          asChild
+          className="text-xs sm:text-sm gap-1"
         >
-          <ListOrdered className="h-3 w-3 sm:h-4 sm:w-4" />
-          <span>목록</span>
-        </Link>
+          <Link href={`/boards/${boardSlug}`}>
+            <ListOrdered className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span>목록</span>
+          </Link>
+        </Button>
       )
     },
     // 다음글 버튼 (항상 표시)
     {
       key: 'next',
       element: nextPost ? (
-        <Link 
-          href={`/boards/${boardSlug}/${nextPost.post_number}`}
-          className="inline-flex flex-row items-center justify-center text-xs sm:text-sm text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md transition-colors px-2 py-1 gap-1"
+        <Button
+          variant="ghost"
+          size="sm"
+          asChild
+          className="text-xs sm:text-sm gap-1"
         >
-          <span>다음글</span>
-          <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
-        </Link>
+          <Link href={`/boards/${boardSlug}/${nextPost.post_number}`}>
+            <span>다음글</span>
+            <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
+          </Link>
+        </Button>
       ) : (
-        <button 
+        <Button
+          variant="ghost"
+          size="sm"
           disabled
-          className="inline-flex flex-row items-center justify-center text-xs sm:text-sm text-gray-400 dark:text-gray-600 cursor-not-allowed px-2 py-1 gap-1"
+          className="text-xs sm:text-sm text-gray-400 dark:text-gray-600 gap-1"
         >
           <span>다음글</span>
           <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
-        </button>
+        </Button>
       )
     }
   ];
 
   return (
-    <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 mb-4">
+    <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
       <div className="h-12 px-4 flex flex-row items-center justify-around">
         {buttons.map((button) => (
           <div key={button.key} className="flex-1 text-center">
@@ -78,6 +95,6 @@ export default function PostNavigation({ boardSlug, prevPost, nextPost }: PostNa
           </div>
         ))}
       </div>
-    </div>
+    </Container>
   );
 } 

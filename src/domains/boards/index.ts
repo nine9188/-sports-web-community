@@ -45,8 +45,6 @@ export { default as ClientHoverMenu } from './components/common/ClientHoverMenu'
 // 게시판 컴포넌트 내보내기
 export { default as BoardTeamInfo } from './components/board/BoardTeamInfo';
 export { default as LeagueInfo } from './components/board/LeagueInfo';
-export { default as ClientBoardList } from './components/board/ClientBoardList';
-export { default as ServerBoardList } from './components/board/ServerBoardList';
 
 // 게시글 컴포넌트 내보내기
 export { default as PostHeader } from './components/post/PostHeader';

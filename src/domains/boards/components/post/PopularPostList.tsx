@@ -10,6 +10,7 @@ import { getProxiedImageUrl } from '@/shared/utils/imageProxy';
 import { renderContentTypeIcons } from './postlist/components/shared/PostRenderers';
 import { formatPrice, getDiscountRate } from '../../utils/hotdeal';
 import type { DealInfo } from '../../types/hotdeal';
+import { Container } from '@/shared/components/ui';
 
 interface Post {
   id: string;
@@ -48,22 +49,22 @@ export default function PopularPostList({
 }: PopularPostListProps) {
   if (loading) {
     return (
-      <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 p-8">
+      <Container className="bg-white dark:bg-[#1D1D1D] p-8">
         <div className="text-center text-gray-500 dark:text-gray-400">로딩 중...</div>
-      </div>
+      </Container>
     );
   }
 
   if (!posts || posts.length === 0) {
     return (
-      <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 p-8">
+      <Container className="bg-white dark:bg-[#1D1D1D] p-8">
         <div className="text-center text-gray-500 dark:text-gray-400">{emptyMessage}</div>
-      </div>
+      </Container>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
+    <Container className="bg-white dark:bg-[#1D1D1D]">
       {posts.map((post, index) => {
         const originalUrl = extractFirstImageUrl(post.content);
         const thumbnailUrl = getProxiedImageUrl(originalUrl); // 프록시 URL로 변환
@@ -188,6 +189,6 @@ export default function PopularPostList({
           </div>
         );
       })}
-    </div>
+    </Container>
   );
 }

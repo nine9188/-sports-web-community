@@ -45,9 +45,9 @@ export default function ClientHoverMenu({
     return (
       <div className="border-b bg-white">
         <div className="flex h-12 items-center px-4">
-          <div className="h-5 w-20 bg-gray-200 animate-pulse rounded"></div>
-          <div className="h-5 w-24 ml-4 bg-gray-200 animate-pulse rounded"></div>
-          <div className="h-5 w-20 ml-4 bg-gray-200 animate-pulse rounded"></div>
+          <div className="h-5 w-20 bg-[#EAEAEA] dark:bg-[#333333] animate-pulse rounded"></div>
+          <div className="h-5 w-24 ml-4 bg-[#EAEAEA] dark:bg-[#333333] animate-pulse rounded"></div>
+          <div className="h-5 w-20 ml-4 bg-[#EAEAEA] dark:bg-[#333333] animate-pulse rounded"></div>
         </div>
       </div>
     );

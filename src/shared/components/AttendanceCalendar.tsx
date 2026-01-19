@@ -213,7 +213,7 @@ function MiniCalendar({
             >
               <span className={`text-[10px] mb-1 ${
                 isToday
-                  ? 'text-slate-700 dark:text-white font-medium'
+                  ? 'text-gray-700 dark:text-white font-medium'
                   : 'text-gray-500 dark:text-gray-400'
               }`}>
                 {dayLabels[index]}
@@ -225,7 +225,7 @@ function MiniCalendar({
                     : isAttended
                       ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400'
                       : isToday
-                        ? 'bg-slate-200 dark:bg-[#3F3F3F] text-slate-700 dark:text-white font-medium'
+                        ? 'bg-gray-200 dark:bg-[#3F3F3F] text-gray-700 dark:text-white font-medium'
                         : 'bg-white dark:bg-[#1D1D1D] text-gray-500 dark:text-gray-400'
                 }`}
               >
@@ -464,7 +464,7 @@ function FullCalendar({
                         <div className={`w-3 h-3 rounded-full border ${
                           isCurrent
                             ? 'border-yellow-500 bg-yellow-100 dark:bg-yellow-900/30'
-                            : 'border-gray-300 dark:border-gray-600'
+                            : 'border-black/7 dark:border-white/10'
                         }`} />
                       )}
                       <span className={`${
@@ -488,7 +488,7 @@ function FullCalendar({
 
                   {/* 진행률 바 (현재 목표만 표시) */}
                   {isCurrent && !isAchieved && (
-                    <div className="mt-1 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div className="mt-1 h-1 bg-[#EAEAEA] dark:bg-[#333333] rounded-full overflow-hidden">
                       <div
                         className="h-full bg-yellow-500 dark:bg-yellow-400 rounded-full transition-all"
                         style={{ width: `${progress}%` }}

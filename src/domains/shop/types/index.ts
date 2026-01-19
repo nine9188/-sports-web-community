@@ -35,7 +35,7 @@ export const TIER_TEXT_COLORS: Record<ItemTier, string> = {
 
 // 등급별 배경 색상
 export const TIER_BG_COLORS: Record<ItemTier, string> = {
-  common: 'bg-gray-100 dark:bg-gray-800',
+  common: 'bg-[#F5F5F5] dark:bg-[#262626]',
   rare: 'bg-blue-100 dark:bg-blue-900/30',
   epic: 'bg-purple-100 dark:bg-purple-900/30',
   legendary: 'bg-yellow-100 dark:bg-yellow-900/30',
@@ -58,13 +58,13 @@ export interface ShopItem {
   description: string | null
   image_url: string
   price: number
-  tier: ItemTier  // Phase 3: 등급 추가
+  tier?: ItemTier | null  // Phase 3: 등급 추가 (optional for DB compatibility)
   is_default: boolean | null
   is_active: boolean | null
   created_at: string | null
   // 소모품 관련 필드
-  is_consumable: boolean | null
-  consumable_type: ConsumableType | null
+  is_consumable?: boolean | null
+  consumable_type?: ConsumableType | null
   category?: {
     name: string
   } | null

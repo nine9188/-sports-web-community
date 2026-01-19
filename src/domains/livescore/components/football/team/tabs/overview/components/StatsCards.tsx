@@ -3,6 +3,7 @@
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
+import { Button, Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 
 // Overview에서 전달받는 stats 타입
 interface OverviewStats {
@@ -69,11 +70,11 @@ export default function StatsCards({ stats, onTabChange }: StatsCardsProps) {
   const safeCleanSheet = stats.clean_sheet?.total || 0;
 
   return (
-    <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
+    <Container className="bg-white dark:bg-[#1D1D1D]">
       {/* 기본 정보 섹션 */}
-      <div className="h-12 px-4 flex items-center bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
-        <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">기본 정보</span>
-      </div>
+      <ContainerHeader>
+        <ContainerTitle>기본 정보</ContainerTitle>
+      </ContainerHeader>
       {/* 소제목 */}
       <div className="flex bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
         <div className="flex-1 py-2 text-center text-[10px] font-medium text-gray-500 dark:text-gray-400">리그 정보</div>
@@ -103,7 +104,7 @@ export default function StatsCards({ stats, onTabChange }: StatsCardsProps) {
               <span>{safeLeague.country || '-'}</span>
             </div>
           </div>
-          <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-8 bg-gray-200 dark:bg-gray-600" />
+          <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-8 bg-[#EAEAEA] dark:bg-[#333333]" />
         </div>
 
         {/* 최근 5경기 */}
@@ -141,29 +142,29 @@ export default function StatsCards({ stats, onTabChange }: StatsCardsProps) {
       <div className="flex items-center py-3">
         <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
           {totalPlayed}
-          <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
+          <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-[#EAEAEA] dark:bg-[#333333]" />
         </div>
         <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
           {safeFixtures.wins.total}
-          <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
+          <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-[#EAEAEA] dark:bg-[#333333]" />
         </div>
         <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
           {safeFixtures.draws.total}
-          <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
+          <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-[#EAEAEA] dark:bg-[#333333]" />
         </div>
         <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
           {safeFixtures.loses.total}
-          <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
+          <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-[#EAEAEA] dark:bg-[#333333]" />
         </div>
         <div className="flex-1 text-center relative">
           <div className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">{safeGoals.for.total}</div>
           <div className="text-[9px] text-gray-400 dark:text-gray-500">({safeGoals.for.average})</div>
-          <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
+          <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-[#EAEAEA] dark:bg-[#333333]" />
         </div>
         <div className="flex-1 text-center relative">
           <div className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">{safeGoals.against.total}</div>
           <div className="text-[9px] text-gray-400 dark:text-gray-500">({safeGoals.against.average})</div>
-          <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
+          <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-[#EAEAEA] dark:bg-[#333333]" />
         </div>
         <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
           {safeCleanSheet}
@@ -171,9 +172,10 @@ export default function StatsCards({ stats, onTabChange }: StatsCardsProps) {
       </div>
 
       {/* 자세한 통계 보기 버튼 */}
-      <button
+      <Button
+        variant="secondary"
         onClick={() => onTabChange('stats')}
-        className="w-full p-3 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors border-t border-black/5 dark:border-white/10 outline-none focus:outline-none"
+        className="w-full rounded-none rounded-b-lg border-t border-black/5 dark:border-white/10"
       >
         <div className="flex items-center justify-center gap-1">
           <span className="text-sm font-medium">자세한 통계 보기</span>
@@ -191,7 +193,7 @@ export default function StatsCards({ stats, onTabChange }: StatsCardsProps) {
             />
           </svg>
         </div>
-      </button>
-    </div>
+      </Button>
+    </Container>
   );
 }

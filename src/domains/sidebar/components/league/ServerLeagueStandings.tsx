@@ -6,17 +6,17 @@ import LeagueStandings from './LeagueStandings';
 function LeagueStandingsSkeleton() {
   return (
     <div className="border rounded-lg overflow-hidden animate-pulse">
-      <div className="bg-slate-800 text-white py-2 px-3 text-sm font-medium">
+      <div className="bg-[#262626] text-white py-2 px-3 text-sm font-medium">
         축구 팀순위
       </div>
-      <div className="flex border-b">
+      <div className="flex border-b border-black/5 dark:border-white/10">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="flex-1 h-7 bg-gray-200"></div>
+          <div key={i} className="flex-1 h-7 bg-[#EAEAEA] dark:bg-[#333333]"></div>
         ))}
       </div>
       <div className="p-3 space-y-2">
         {[...Array(10)].map((_, i) => (
-          <div key={i} className="h-5 w-full bg-gray-200 rounded-lg"></div>
+          <div key={i} className="h-5 w-full bg-[#EAEAEA] dark:bg-[#333333] rounded-lg"></div>
         ))}
       </div>
     </div>

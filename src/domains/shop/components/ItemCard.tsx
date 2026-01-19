@@ -6,6 +6,7 @@ import { ShopItem } from '../types'
 import { getTeamDisplayName, searchTeamsByName } from '@teams'
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage'
 import { ImageType } from '@/shared/types/image'
+import { Button } from '@/shared/components/ui'
 
 interface ItemCardProps {
   item: ShopItem
@@ -123,21 +124,22 @@ export default function ItemCard({ item, isOwned, onPurchase }: ItemCardProps) {
               보유 중
             </span>
           ) : (
-            <button
+            <Button
               onClick={(e) => { e.stopPropagation(); startTransition(() => onPurchase()) }}
-              className={`h-8 px-2 text-[12px] font-medium rounded whitespace-nowrap text-center outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors ${
+              variant="secondary"
+              className={`h-8 px-2 text-[12px] font-medium whitespace-nowrap ${
                 isPending
-                  ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-700 dark:text-gray-300 cursor-wait'
+                  ? 'cursor-wait'
                   : item.is_default
-                    ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-700 dark:text-gray-300 cursor-not-allowed'
-                    : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
+                    ? 'cursor-not-allowed'
+                    : ''
               }`}
               disabled={isPending || !!item.is_default}
               aria-busy={isPending}
               aria-live="polite"
             >
               {item.is_default ? '기본' : isPending ? '구매중…' : '구매'}
-            </button>
+            </Button>
           )}
         </div>
       </div>

@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { MyCommentItem } from '../../types';
 import { formatDate } from '@/shared/utils/date';
+import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 
 interface MyCommentListProps {
   comments: MyCommentItem[];
@@ -15,11 +16,11 @@ export default function MyCommentList({
   totalCount = 0
 }: MyCommentListProps) {
   return (
-    <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
-      <div className="px-4 py-3 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10 flex justify-between items-center">
-        <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">댓글 목록</h3>
+    <Container className="bg-white dark:bg-[#1D1D1D]">
+      <ContainerHeader className="h-auto py-3 justify-between">
+        <ContainerTitle>댓글 목록</ContainerTitle>
         <span className="text-sm text-gray-500 dark:text-gray-400">총 {totalCount}개</span>
-      </div>
+      </ContainerHeader>
 
       {comments.length === 0 ? (
         <div className="p-8 text-center text-gray-500 dark:text-gray-400 bg-[#F5F5F5] dark:bg-[#262626] bg-opacity-50">
@@ -77,6 +78,6 @@ export default function MyCommentList({
           </table>
         </div>
       )}
-    </div>
+    </Container>
   );
 }

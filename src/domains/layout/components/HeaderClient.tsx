@@ -20,6 +20,7 @@ import MobileHamburgerModal from './MobileHamburgerModal';
 import RecentlyVisited from './RecentlyVisited';
 import { MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
 import { NotificationBell } from '@/domains/notifications/components';
+import { Button } from '@/shared/components/ui';
 
 type HeaderClientProps = {
   onProfileClick: () => void;
@@ -89,13 +90,15 @@ const SearchModal = React.memo(function SearchModal({
       {/* 모바일: 상단 검색 패널만 고정 */}
       <div className="fixed top-0 left-0 right-0 bg-white dark:bg-[#1D1D1D] border-b border-black/5 dark:border-white/10 p-3 pointer-events-auto">
         <form onSubmit={handleSearch} className="flex items-center gap-2">
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             type="button"
             onClick={() => router.back()}
-            className="p-2 rounded-full active:bg-[#EAEAEA] dark:active:bg-[#333333] transition-colors"
+            className="rounded-full h-9 w-9"
           >
             <ArrowLeft className="h-4 w-4" />
-          </button>
+          </Button>
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400" />
             <input
@@ -108,13 +111,14 @@ const SearchModal = React.memo(function SearchModal({
               autoFocus
             />
           </div>
-          <button
+          <Button
+            variant="primary"
             type="submit"
             disabled={!searchQuery.trim()}
-            className="px-3 py-2 text-sm font-medium bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#333333] disabled:bg-[#F5F5F5] dark:disabled:bg-[#262626] disabled:text-gray-500 dark:disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+            className="px-3 py-2 h-auto disabled:bg-[#F5F5F5] dark:disabled:bg-[#262626] disabled:text-gray-500 dark:disabled:text-gray-400"
           >
             검색
-          </button>
+          </Button>
         </form>
       </div>
     </div>,
@@ -198,10 +202,12 @@ export default function HeaderClient({
         {/* 모바일 버전(md 미만): 프로필 사이드바 트리거 */}
         <div className="md:hidden">
           {userData ? (
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               data-testid="user-menu-mobile"
               onClick={onProfileClick}
-              className="flex items-center justify-center w-9 h-9 rounded-full active:bg-[#EAEAEA] dark:active:bg-[#333333] transition-colors duration-150"
+              className="rounded-full h-9 w-9"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               <UserIcon
@@ -211,16 +217,18 @@ export default function HeaderClient({
                 alt="프로필 이미지"
                 className="rounded-full object-cover"
               />
-            </button>
+            </Button>
           ) : (
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               data-testid="user-menu-mobile"
               onClick={onProfileClick}
-              className="flex items-center justify-center w-9 h-9 rounded-full active:bg-[#EAEAEA] dark:active:bg-[#333333] transition-colors duration-150"
+              className="rounded-full h-9 w-9"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               <FontAwesomeIcon icon={faUser} className="h-4 w-4" />
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -259,14 +267,16 @@ export default function HeaderClient({
                   {renderAuthState}
                 </div>
 
-                <button
-                  className="lg:hidden flex items-center justify-center w-9 h-9 rounded-full active:bg-[#EAEAEA] dark:active:bg-[#333333] transition-colors duration-150"
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="lg:hidden rounded-full h-9 w-9"
                   onClick={toggleMobileMenu}
                   onTouchEnd={handleMobileMenuTouch}
                   style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
                   <FontAwesomeIcon icon={faBars} className="h-4 w-4" />
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -291,9 +301,10 @@ export default function HeaderClient({
                   />
                 </Link>
                 {/* 라이브스코어 버튼 */}
-                <button
+                <Button
+                  variant="ghost"
                   onClick={toggleLiveScore}
-                  className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg active:bg-[#EAEAEA] dark:active:bg-[#333333] transition-colors duration-150"
+                  className="flex items-center gap-1.5 px-2 py-1.5 h-auto rounded-lg"
                   style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
                   <span className={`relative flex h-2 w-2 ${hasTodayMatches ? '' : 'opacity-50'}`}>
@@ -307,30 +318,34 @@ export default function HeaderClient({
                     )}
                   </span>
                   <span className="text-xs text-gray-700 dark:text-gray-300 font-medium whitespace-nowrap">경기일정</span>
-                </button>
+                </Button>
               </div>
               <div className="flex flex-1 items-center justify-end space-x-1">
                 {/* 검색 아이콘 */}
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={goToSearchPage}
-                  className="flex items-center justify-center w-9 h-9 rounded-full active:bg-[#EAEAEA] dark:active:bg-[#333333] transition-colors duration-150"
+                  className="rounded-full h-9 w-9"
                   style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
                   <Search className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-                </button>
+                </Button>
 
                 <div className="min-w-[40px] h-9">
                   {renderAuthState}
                 </div>
 
-                <button
-                  className="lg:hidden flex items-center justify-center w-9 h-9 rounded-full active:bg-[#EAEAEA] dark:active:bg-[#333333] transition-colors duration-150"
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="lg:hidden rounded-full h-9 w-9"
                   onClick={toggleMobileMenu}
                   onTouchEnd={handleMobileMenuTouch}
                   style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
                   <FontAwesomeIcon icon={faBars} className="h-4 w-4" />
-                </button>
+                </Button>
               </div>
             </div>
           </div>

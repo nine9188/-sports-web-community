@@ -5,6 +5,7 @@ import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/compon
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { useTeamData } from './context/TeamDataContext';
+import { Container } from '@/shared/components/ui';
 
 // 팀 정보를 위한 기본 인터페이스
 interface TeamData {
@@ -132,7 +133,7 @@ export default function TeamHeader({ team, teamId, isLoading: externalLoading, e
 
 
   return (
-    <div className="mb-4 bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
+    <Container className="mb-4 bg-white dark:bg-[#1D1D1D]">
       <div className="flex flex-col md:flex-row items-start">
         {/* 팀 로고 및 기본 정보 */}
         <div className="flex items-center p-2 md:p-4 md:w-96 flex-shrink-0">
@@ -222,6 +223,6 @@ export default function TeamHeader({ team, teamId, isLoading: externalLoading, e
           </div>
         )}
       </div>
-    </div>
+    </Container>
   );
 } 

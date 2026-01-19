@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { CheckCircle } from 'lucide-react';
 import { useEffect } from 'react';
+import { Button } from '@/shared/components/ui';
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
 
 export default function EmailConfirmedPage() {
@@ -52,14 +53,14 @@ export default function EmailConfirmedPage() {
 
               <div className="space-y-3">
                 <Link href="/signin" className="block">
-                  <button className="w-full py-3 px-4 bg-slate-800 dark:bg-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A] text-white font-medium rounded-md transition-colors">
+                  <Button className="w-full py-3 px-4 h-auto font-medium">
                     로그인하기
-                  </button>
+                  </Button>
                 </Link>
                 <Link href="/" className="block">
-                  <button className="w-full py-3 px-4 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#F5F5F5] dark:hover:bg-[#262626] font-medium rounded-md transition-colors">
+                  <Button variant="outline" className="w-full py-3 px-4 h-auto font-medium">
                     메인으로
-                  </button>
+                  </Button>
                 </Link>
               </div>
             </div>

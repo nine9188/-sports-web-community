@@ -34,7 +34,7 @@ export default function NoticeAdminSection({
           id="isNotice"
           checked={isNotice}
           onChange={(e) => setIsNotice(e.target.checked)}
-          className="w-4 h-4 text-blue-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
+          className="w-4 h-4 text-blue-600 bg-white dark:bg-[#333333] border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
         />
         <label htmlFor="isNotice" className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
           공지로 등록
@@ -89,7 +89,7 @@ export default function NoticeAdminSection({
                     {allBoardsFlat.map((board) => (
                       <label
                         key={board.id}
-                        className="flex items-center p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer"
+                        className="flex items-center p-2 hover:bg-[#F5F5F5] dark:hover:bg-[#333333] rounded cursor-pointer"
                       >
                         <input
                           type="checkbox"

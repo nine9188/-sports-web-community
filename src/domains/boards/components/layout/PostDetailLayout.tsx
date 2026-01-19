@@ -13,7 +13,7 @@ import PostHeader from '../post/PostHeader';
 import PostContent from '../post/PostContent';
 import PostActions from '../post/PostActions';
 import PostFooter from '../post/PostFooter';
-import ShopPagination from '@/domains/shop/components/ShopPagination';
+import { Container, Pagination } from '@/shared/components/ui';
 import CommentSection from '../post/CommentSection';
 import PostList from '../post/PostList';
 import { HotdealInfoBox } from '../hotdeal';
@@ -31,7 +31,7 @@ const MemoizedPostHeader = memo(PostHeader);
 const MemoizedPostNavigation = memo(PostNavigation);
 const MemoizedPostActions = memo(PostActions);
 const MemoizedPostFooter = memo(PostFooter);
-const MemoizedShopPagination = memo(ShopPagination);
+const MemoizedPagination = memo(Pagination);
 const MemoizedCommentSection = memo(CommentSection);
 const MemoizedPostList = memo(PostList);
 
@@ -239,7 +239,7 @@ export default function PostDetailLayout({
           <p className="text-gray-700 dark:text-gray-300 mb-2">이 게시글은 신고 처리로 인해 일시적으로 숨김 처리되었습니다.</p>
           <p className="text-sm text-gray-500 dark:text-gray-400">7일 후 다시 검토됩니다.</p>
           <div className="mt-6">
-            <Link href={`/boards/${slug}`} className="inline-flex items-center px-4 py-2 bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A] rounded-md transition-colors">
+            <Link href={`/boards/${slug}`} className="inline-flex items-center px-4 py-2 bg-[#262626] dark:bg-[#3F3F3F] text-white hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] rounded-md transition-colors">
               게시판으로 돌아가기
             </Link>
           </div>
@@ -258,7 +258,7 @@ export default function PostDetailLayout({
       
       
       {/* 2. 게시글 본문 (상세 정보) */}
-      <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 shadow-sm overflow-hidden mb-4">
+      <Container className="bg-white dark:bg-[#1D1D1D] shadow-sm mb-4">
         {/* 게시글 헤더 컴포넌트 */}
         <MemoizedPostHeader
           title={post.title}
@@ -321,7 +321,7 @@ export default function PostDetailLayout({
             </ul>
           </div>
         )}
-      </div>
+      </Container>
       
       {/* 4. 게시글 하단 버튼 영역 */}
       <MemoizedPostFooter 
@@ -389,10 +389,10 @@ export default function PostDetailLayout({
       {/* 10. 페이지네이션 */}
       {totalPages > 1 && (
         <div className="px-4 sm:px-6">
-          <MemoizedShopPagination
-            page={currentPage}
-            pageSize={20}
-            total={totalPages * 20}
+          <MemoizedPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            mode="url"
             withMargin={false}
           />
         </div>

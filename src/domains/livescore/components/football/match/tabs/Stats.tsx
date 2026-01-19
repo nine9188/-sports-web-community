@@ -109,7 +109,7 @@ const StatItem = memo(({ homeValue, awayValue, koreanLabel, index = 0 }: {
         <span className="font-medium text-sm w-8 text-right mr-2 text-gray-900 dark:text-[#F0F0F0]">{homeValue || '0'}</span>
 
         {/* 그래프 컨테이너 - 회색 배경에 컬러 바 */}
-        <div className="w-full bg-gray-200 dark:bg-gray-700 relative" style={{ height: '4px' }}>
+        <div className="w-full bg-[#EAEAEA] dark:bg-[#333333] relative" style={{ height: '4px' }}>
           {/* 중앙 기준점 (보이지 않는 구분선) */}
           <div className="absolute left-1/2 top-0 h-full w-0"></div>
           
@@ -531,9 +531,9 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
               <ContainerContent>
                 <HorizontalScrollContainer>
                   <table className="min-w-max divide-y divide-gray-200 text-sm">
-                    <thead className="bg-gray-50 dark:bg-[#262626] whitespace-nowrap">
+                    <thead className="bg-[#F5F5F5] dark:bg-[#262626] whitespace-nowrap">
                       <tr>
-                        <th className="sticky left-0 z-10 bg-gray-50 dark:bg-[#262626] px-2 py-2 text-left font-medium text-gray-700 dark:text-gray-300 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-32 min-w-[8rem] max-w-[8rem]">선수</th>
+                        <th className="sticky left-0 z-10 bg-[#F5F5F5] dark:bg-[#262626] px-2 py-2 text-left font-medium text-gray-700 dark:text-gray-300 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-32 min-w-[8rem] max-w-[8rem]">선수</th>
                         <th 
                           className="px-3 py-2 text-center font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
                           onClick={() => handleHomeSort('position')}
@@ -642,7 +642,7 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
                           const displayName = koreanName || player.playerName || String(player.playerId);
                           
                           return (
-                            <tr key={`home-${player.playerId}`} className="hover:bg-gray-50 dark:hover:bg-[#262626]">
+                            <tr key={`home-${player.playerId}`} className="hover:bg-[#F5F5F5] dark:hover:bg-[#262626]">
                               <td className="sticky left-0 z-10 bg-white dark:bg-[#1D1D1D] px-2 py-2 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-32 min-w-[8rem] max-w-[8rem]">
                                 <Link 
                                   href={`/livescore/football/player/${player.playerId}`}
@@ -721,9 +721,9 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
               <ContainerContent>
                 <HorizontalScrollContainer>
                   <table className="min-w-max divide-y divide-gray-200 text-sm">
-                    <thead className="bg-gray-50 dark:bg-[#262626] whitespace-nowrap">
+                    <thead className="bg-[#F5F5F5] dark:bg-[#262626] whitespace-nowrap">
                       <tr>
-                        <th className="sticky left-0 z-10 bg-gray-50 dark:bg-[#262626] px-2 py-2 text-left font-medium text-gray-700 dark:text-gray-300 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-32 min-w-[8rem] max-w-[8rem]">선수</th>
+                        <th className="sticky left-0 z-10 bg-[#F5F5F5] dark:bg-[#262626] px-2 py-2 text-left font-medium text-gray-700 dark:text-gray-300 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-32 min-w-[8rem] max-w-[8rem]">선수</th>
                         <th
                           className="px-3 py-2 text-center font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors"
                           onClick={() => handleAwaySort('position')}
@@ -832,7 +832,7 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
                           const displayName = koreanName || player.playerName || String(player.playerId);
                           
                           return (
-                            <tr key={`away-${player.playerId}`} className="hover:bg-gray-50 dark:hover:bg-[#262626]">
+                            <tr key={`away-${player.playerId}`} className="hover:bg-[#F5F5F5] dark:hover:bg-[#262626]">
                               <td className="sticky left-0 z-10 bg-white dark:bg-[#1D1D1D] px-2 py-2 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-32 min-w-[8rem] max-w-[8rem]">
                                 <Link 
                                   href={`/livescore/football/player/${player.playerId}`}

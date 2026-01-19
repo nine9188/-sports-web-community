@@ -9,6 +9,7 @@ import { trackSearchResultClick } from '../actions/searchLogs'
 import { getTeamMatches, type TeamMatch } from '../actions/teamMatches'
 import TeamMatchDropdownButton, { TeamMatchExpandedRow } from './TeamMatchDropdown'
 import Spinner from '@/shared/components/Spinner';
+import { Button } from '@/shared/components/ui';
 
 // 캐시 유효성 검사 (5분)
 const CACHE_DURATION = 5 * 60 * 1000 // 5분
@@ -279,19 +280,20 @@ export default function TeamSearchResults({
       {/* 기존 더보기 버튼 (팀 탭에서만 사용) */}
       {currentType === 'teams' && hasMore && (
         <div className="text-center pt-6">
-          <button
+          <Button
+            variant="ghost"
             onClick={onLoadMore}
             disabled={isLoading}
             className={`
               px-6 py-3 rounded-lg font-medium transition-colors
               ${isLoading
                 ? 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-400 cursor-not-allowed'
-                : 'bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A]'
+                : 'bg-[#262626] dark:bg-[#3F3F3F] text-white hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A]'
               }
             `}
           >
             {isLoading ? '로딩중...' : '더보기'}
-          </button>
+          </Button>
         </div>
       )}
     </div>
@@ -364,12 +366,13 @@ function TeamRowWithMatches({
             <div className="min-w-0 flex-1 overflow-hidden">
               <div className="font-medium text-gray-900 dark:text-[#F0F0F0] flex items-center text-xs sm:text-sm min-w-0">
                 {/* 팀 이름 - 클릭 시 팀 페이지로 이동 */}
-                <button
+                <Button
+                  variant="ghost"
                   onClick={handleTeamPageClick}
-                  className="truncate hover:underline transition-colors text-left min-w-0 flex-1"
+                  className="truncate hover:underline transition-colors text-left min-w-0 flex-1 p-0 h-auto font-medium"
                 >
                   {team.display_name}
-                </button>
+                </Button>
                 
                 {/* 드롭다운 토글 버튼 */}
                 <TeamMatchDropdownButton

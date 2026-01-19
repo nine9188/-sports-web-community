@@ -34,7 +34,7 @@ export default function FormDisplay({ form, maxLength = 5, reverse = false }: Fo
             textColor = 'text-red-800 dark:text-red-400';
             break;
           default:
-            bgColor = 'bg-gray-200 dark:bg-gray-700';
+            bgColor = 'bg-[#EAEAEA] dark:bg-[#333333]';
             textColor = 'text-gray-700 dark:text-gray-300';
         }
         

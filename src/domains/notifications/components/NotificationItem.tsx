@@ -152,7 +152,7 @@ export default function NotificationItem({ notification, onRead, isSelected, onT
             checked={isSelected}
             onChange={handleCheckboxChange}
             onClick={(e) => e.stopPropagation()}
-            className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-[#F0F0F0] focus:ring-gray-900 dark:focus:ring-[#F0F0F0] cursor-pointer"
+            className="w-4 h-4 rounded border-black/7 dark:border-white/10 text-gray-900 dark:text-[#F0F0F0] focus:ring-gray-900 dark:focus:ring-[#F0F0F0] cursor-pointer"
           />
         </div>
       )}

@@ -6,6 +6,7 @@ import { SiteSetting } from '@/domains/site-config/types';
 import { updateMultipleSiteSettings } from '@/domains/site-config/actions';
 import { toast } from 'react-toastify';
 import { Palette } from 'lucide-react';
+import { Button } from '@/shared/components/ui';
 
 interface BrandingSettingsFormProps {
   initialSettings: SiteSetting[];
@@ -187,20 +188,20 @@ export default function BrandingSettingsForm({ initialSettings }: BrandingSettin
       {/* 저장 버튼 */}
       <div className="bg-white shadow rounded-lg">
         <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={() => router.back()}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
           >
             취소
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
+            variant="primary"
             disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? '저장 중...' : '저장'}
-          </button>
+          </Button>
         </div>
       </div>
     </form>

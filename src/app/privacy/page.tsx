@@ -106,21 +106,21 @@ export default function PrivacyPage() {
             <p>서비스는 원활한 서비스 제공을 위해 다음과 같이 개인정보 처리 업무를 위탁하고 있습니다.</p>
 
             <div className="overflow-x-auto mt-4">
-              <table className="min-w-full border border-gray-300 dark:border-gray-600 text-sm">
+              <table className="min-w-full border border-black/10 dark:border-white/10 text-sm">
                 <thead>
                   <tr className="bg-gray-100 dark:bg-[#2D2D2D]">
-                    <th className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-left text-gray-900 dark:text-[#F0F0F0]">수탁업체</th>
-                    <th className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-left text-gray-900 dark:text-[#F0F0F0]">위탁 업무</th>
+                    <th className="border border-black/10 dark:border-white/10 px-4 py-2 text-left text-gray-900 dark:text-[#F0F0F0]">수탁업체</th>
+                    <th className="border border-black/10 dark:border-white/10 px-4 py-2 text-left text-gray-900 dark:text-[#F0F0F0]">위탁 업무</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr className="bg-white dark:bg-[#1D1D1D]">
-                    <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-gray-900 dark:text-gray-300">Supabase Inc.</td>
-                    <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-gray-900 dark:text-gray-300">데이터베이스 호스팅, 인증 서비스</td>
+                    <td className="border border-black/10 dark:border-white/10 px-4 py-2 text-gray-900 dark:text-gray-300">Supabase Inc.</td>
+                    <td className="border border-black/10 dark:border-white/10 px-4 py-2 text-gray-900 dark:text-gray-300">데이터베이스 호스팅, 인증 서비스</td>
                   </tr>
                   <tr className="bg-white dark:bg-[#1D1D1D]">
-                    <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-gray-900 dark:text-gray-300">Vercel Inc.</td>
-                    <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-gray-900 dark:text-gray-300">웹 호스팅 서비스</td>
+                    <td className="border border-black/10 dark:border-white/10 px-4 py-2 text-gray-900 dark:text-gray-300">Vercel Inc.</td>
+                    <td className="border border-black/10 dark:border-white/10 px-4 py-2 text-gray-900 dark:text-gray-300">웹 호스팅 서비스</td>
                   </tr>
                 </tbody>
               </table>
@@ -198,7 +198,7 @@ export default function PrivacyPage() {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0]">제11조 (개인정보 보호책임자)</h2>
             <p>서비스는 개인정보 처리에 관한 업무를 총괄해서 책임지고, 개인정보 처리와 관련한 이용자의 불만처리 및 피해구제 등을 위하여 아래와 같이 개인정보 보호책임자를 지정하고 있습니다.</p>
 
-            <div className="bg-gray-50 dark:bg-[#2D2D2D] p-4 rounded-lg mt-4">
+            <div className="bg-[#F5F5F5] dark:bg-[#2D2D2D] p-4 rounded-lg mt-4">
               <p className="text-gray-900 dark:text-[#F0F0F0]"><strong>개인정보 보호책임자</strong></p>
               <ul className="list-none mt-2 space-y-1 text-gray-700 dark:text-gray-300">
                 <li>담당: 4590 Football 운영팀</li>
@@ -253,7 +253,7 @@ export default function PrivacyPage() {
           </section>
 
           {/* 부칙 */}
-          <section className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-8">
+          <section className="border-t border-black/5 dark:border-white/10 pt-6 mt-8">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0]">부칙</h2>
             <p>본 개인정보처리방침은 2025년 1월 1일부터 시행됩니다.</p>
           </section>
@@ -261,7 +261,7 @@ export default function PrivacyPage() {
         </div>
 
         {/* 하단 링크 */}
-        <div className="mt-10 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center text-sm text-gray-700 dark:text-gray-300">
+        <div className="mt-10 pt-6 border-t border-black/5 dark:border-white/10 flex justify-between items-center text-sm text-gray-700 dark:text-gray-300">
           <Link href="/terms" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">
             이용약관 보기
           </Link>

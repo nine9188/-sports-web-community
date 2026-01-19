@@ -11,6 +11,7 @@ import { ErrorState, LoadingState } from '@/domains/livescore/components/common/
 import { MatchEvent } from '@/domains/livescore/types/match';
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 import { getLeagueName } from '@/domains/livescore/constants/league-mappings';
+import { Container } from '@/shared/components/ui';
 
 // MatchData 타입 정의
 interface MatchDataType {
@@ -208,7 +209,7 @@ const MatchHeader = memo(() => {
   return (
     <div className="w-full md:max-w-screen-xl md:mx-auto">
       {/* 통합된 매치 헤더 카드 */}
-      <div className="mb-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 overflow-hidden">
+      <Container className="mb-4 bg-white dark:bg-[#1D1D1D] rounded-none md:rounded-lg">
         {/* 리그 정보 및 경기 상태 */}
         <div className="h-12 flex items-center justify-between border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] md:rounded-t-lg px-4">
           {/* 리그 정보 - 모바일: 왼쪽 / 데스크톱: 왼쪽 1/3 */}
@@ -451,7 +452,7 @@ const MatchHeader = memo(() => {
             </div>
           )}
         </div>
-      </div>
+      </Container>
     </div>
   );
 });

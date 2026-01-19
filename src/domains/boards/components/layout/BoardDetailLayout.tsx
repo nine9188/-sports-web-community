@@ -11,7 +11,7 @@ import BoardPopularPosts from '../board/BoardPopularPosts';
 import ClientHoverMenu from '../common/ClientHoverMenu';
 import PostList from '../post/PostList';
 import PopularPostList from '../post/PopularPostList';
-import ShopPagination from '@/domains/shop/components/ShopPagination';
+import { Pagination } from '@/shared/components/ui';
 import { NoticeList } from '../notice';
 import { StoreFilterMenu } from '../hotdeal';
 import { isHotdealBoard } from '../../utils/hotdeal';
@@ -101,7 +101,7 @@ interface BoardDetailLayoutProps {
 const MemoizedBoardBreadcrumbs = memo(BoardBreadcrumbs);
 const MemoizedPostList = memo(PostList);
 const MemoizedClientHoverMenu = memo(ClientHoverMenu);
-const MemoizedShopPagination = memo(ShopPagination);
+const MemoizedPagination = memo(Pagination);
 const MemoizedBoardPopularPosts = memo(BoardPopularPosts);
 const MemoizedNoticeList = memo(NoticeList);
 
@@ -268,10 +268,10 @@ export default function BoardDetailLayout({
           {/* 페이지네이션 (중앙) */}
           <div className="flex-1 flex justify-center">
             {pagination && Math.ceil(pagination.totalItems / pagination.itemsPerPage) > 1 && (
-              <MemoizedShopPagination
-                page={pagination.currentPage}
-                pageSize={pagination.itemsPerPage}
-                total={pagination.totalItems}
+              <MemoizedPagination
+                currentPage={pagination.currentPage}
+                totalPages={Math.ceil(pagination.totalItems / pagination.itemsPerPage)}
+                mode="url"
                 withMargin={false}
               />
             )}

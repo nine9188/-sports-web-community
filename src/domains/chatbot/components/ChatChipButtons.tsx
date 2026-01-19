@@ -2,6 +2,7 @@
 
 import { ChipButton, ChipType } from '../types';
 import { CHIP_BUTTONS } from '../utils';
+import { Button } from '@/shared/components/ui';
 import { cn } from '@/shared/utils/cn';
 
 interface ChatChipButtonsProps {
@@ -23,17 +24,16 @@ export function ChatChipButtons({ onChipClick, disabled = false, className, filt
       className
     )}>
       {buttonsToShow.map((chip) => (
-        <button
+        <Button
           key={chip.id}
+          variant="secondary"
           onClick={() => onChipClick(chip)}
           disabled={disabled}
           className={cn(
-            'px-4 py-2 text-sm font-medium rounded-full transition-all duration-200',
-            'border border-gray-300 dark:border-gray-600 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0]',
-            'hover:bg-[#EAEAEA] dark:hover:bg-[#333333] hover:shadow-sm',
-            'outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0',
+            'px-4 py-2 h-auto rounded-full transition-all duration-200',
+            'border border-black/7 dark:border-white/10',
+            'hover:shadow-sm',
             'active:scale-95',
-            disabled && 'opacity-50 cursor-not-allowed hover:bg-[#F5F5F5] dark:hover:bg-[#262626]',
             'transform hover:scale-105'
           )}
           aria-label={`${chip.label} 선택`}
@@ -41,7 +41,7 @@ export function ChatChipButtons({ onChipClick, disabled = false, className, filt
           <span className="flex items-center space-x-1">
             <span>{chip.label}</span>
           </span>
-        </button>
+        </Button>
       ))}
     </div>
   );
@@ -54,28 +54,27 @@ interface SingleChipButtonProps {
   variant?: 'primary' | 'secondary';
 }
 
-export function SingleChipButton({ 
-  label, 
-  onClick, 
+export function SingleChipButton({
+  label,
+  onClick,
   disabled = false,
-  variant = 'secondary' 
+  variant = 'secondary'
 }: SingleChipButtonProps) {
   return (
-    <button
+    <Button
+      variant={variant === 'primary' ? 'primary' : 'secondary'}
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'px-4 py-2 text-sm font-medium rounded-full transition-all duration-200',
-        'outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0',
+        'px-4 py-2 h-auto rounded-full transition-all duration-200',
         'active:scale-95 transform hover:scale-105',
         variant === 'primary'
-          ? 'bg-slate-800 dark:bg-[#3F3F3F] text-white border border-slate-800 dark:border-[#3F3F3F] hover:bg-slate-700 dark:hover:bg-[#4A4A4A]'
-          : 'border border-gray-300 dark:border-gray-600 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]',
-        disabled && 'opacity-50 cursor-not-allowed'
+          ? 'border border-[#262626] dark:border-[#3F3F3F]'
+          : 'border border-black/7 dark:border-white/10'
       )}
       aria-label={label}
     >
       {label}
-    </button>
+    </Button>
   );
 }

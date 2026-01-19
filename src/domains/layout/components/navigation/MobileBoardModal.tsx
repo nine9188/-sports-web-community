@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { ChevronDown, X, ShoppingBag, Search, FileText, Flame } from 'lucide-react';
 import { Board } from '../../types/board';
 import { ThemeToggle } from '@/shared/components/ThemeToggle';
+import { Button } from '@/shared/components/ui';
 
 interface MobileBoardModalProps {
   boards: Board[];
@@ -92,12 +93,14 @@ const MobileBoardModal = React.memo(function MobileBoardModal({
         {/* 헤더 - 고정 */}
         <div className="flex items-center justify-between p-4 border-b border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
           <h2 className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0]">게시판 선택</h2>
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="p-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-full transition-colors"
+            className="rounded-full h-9 w-9"
           >
             <X className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
 
         {/* 테마 토글 - 고정 */}
@@ -208,13 +211,14 @@ const MobileBoardModal = React.memo(function MobileBoardModal({
               // 검색 결과
               <div>
                 {filteredBoards.map(board => (
-                  <button
+                  <Button
                     key={board.id}
+                    variant="ghost"
                     onClick={() => handleBoardClick(board)}
-                    className="w-full text-left px-4 py-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]"
+                    className="w-full justify-start px-4 py-3 h-auto rounded-none text-gray-900 dark:text-[#F0F0F0]"
                   >
                     <div className="text-sm font-medium">{board.name}</div>
-                  </button>
+                  </Button>
                 ))}
                 {filteredBoards.length === 0 && (
                   <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm">
@@ -228,12 +232,13 @@ const MobileBoardModal = React.memo(function MobileBoardModal({
                 {boards.map(board => (
                   <div key={board.id}>
                     {/* 1단계: 크기 줄임, 다른 버튼들과 동일한 크기 */}
-                    <button
+                    <Button
+                      variant="ghost"
                       onClick={() => handleBoardClick(board)}
-                      className="w-full text-left px-4 py-3 bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
+                      className="w-full justify-start px-4 py-3 h-auto rounded-none bg-[#F5F5F5] dark:bg-[#262626]"
                     >
                       <div className="font-semibold text-gray-900 dark:text-[#F0F0F0] text-sm">{board.name}</div>
-                    </button>
+                    </Button>
 
                     {/* 2단계: 항상 표시됨 */}
                     {board.children && board.children.length > 0 && (
@@ -244,25 +249,27 @@ const MobileBoardModal = React.memo(function MobileBoardModal({
                             <div key={child.id}>
                               <div className="flex items-center">
                                 {/* 2단계 게시판 이름 */}
-                                <button
+                                <Button
+                                  variant="ghost"
                                   onClick={() => handleBoardClick(child)}
-                                  className="flex-1 text-left px-4 py-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-sm transition-colors text-gray-900 dark:text-[#F0F0F0]"
+                                  className="flex-1 justify-start px-4 py-3 h-auto rounded-none text-sm text-gray-900 dark:text-[#F0F0F0]"
                                 >
                                   {child.name}
-                                </button>
+                                </Button>
 
                                 {/* 3단계 하위 메뉴가 있는 경우에만 펼치기/접기 버튼 */}
                                 {child.children && child.children.length > 0 && (
-                                  <button
+                                  <Button
+                                    variant="ghost"
                                     onClick={() => toggleExpanded(child.id)}
-                                    className="px-4 py-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] border-l border-black/5 dark:border-white/10 transition-colors"
+                                    className="px-4 py-3 h-auto rounded-none border-l border-black/5 dark:border-white/10"
                                   >
                                     <ChevronDown
                                       className={`h-3 w-3 transition-transform ${
                                         expandedBoards.has(child.id) ? 'rotate-180' : ''
                                       }`}
                                     />
-                                  </button>
+                                  </Button>
                                 )}
                               </div>
 
@@ -272,13 +279,14 @@ const MobileBoardModal = React.memo(function MobileBoardModal({
                                   {child.children
                                     .sort((a, b) => a.display_order - b.display_order)
                                     .map(grandChild => (
-                                      <button
+                                      <Button
                                         key={grandChild.id}
+                                        variant="ghost"
                                         onClick={() => handleBoardClick(grandChild)}
-                                        className="w-full text-left px-4 py-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-sm text-gray-900 dark:text-[#F0F0F0] transition-colors"
+                                        className="w-full justify-start px-4 py-3 h-auto rounded-none text-sm text-gray-900 dark:text-[#F0F0F0]"
                                       >
                                         ┗ {grandChild.name}
-                                      </button>
+                                      </Button>
                                     ))}
                                 </div>
                               )}

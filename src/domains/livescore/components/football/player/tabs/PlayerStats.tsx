@@ -37,7 +37,7 @@ const LeagueLogo = memo(({ name, leagueId }: { name: string; leagueId?: number }
           className="w-5 h-5 md:w-6 md:h-6 object-contain"
         />
       ) : (
-        <div className="w-5 h-5 md:w-6 md:h-6 bg-gray-200 flex items-center justify-center text-gray-400 text-xs rounded">
+        <div className="w-5 h-5 md:w-6 md:h-6 bg-[#EAEAEA] dark:bg-[#333333] flex items-center justify-center text-gray-400 dark:text-gray-500 text-xs rounded">
           리그
         </div>
       )}
@@ -61,7 +61,7 @@ const TeamLogo = memo(({ name, teamId }: { name: string; teamId?: number }) => {
           className="w-5 h-5 md:w-6 md:h-6 object-contain"
         />
       ) : (
-        <div className="w-5 h-5 md:w-6 md:h-6 bg-gray-200 flex items-center justify-center text-gray-400 text-xs rounded">
+        <div className="w-5 h-5 md:w-6 md:h-6 bg-[#EAEAEA] dark:bg-[#333333] flex items-center justify-center text-gray-400 dark:text-gray-500 text-xs rounded">
           팀
         </div>
       )}

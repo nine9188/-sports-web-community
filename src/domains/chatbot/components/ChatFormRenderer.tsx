@@ -5,6 +5,7 @@ import { FormConfig, FormField } from '../types';
 import { cn } from '@/shared/utils/cn';
 import { Check, Send, X } from 'lucide-react';
 import Spinner from '@/shared/components/Spinner';
+import { Button, SelectRadix as Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui';
 
 interface ChatFormRendererProps {
   formConfig: FormConfig;
@@ -124,18 +125,32 @@ export function ChatFormRenderer({
         </label>
         
         {field.type === 'select' ? (
-          <select
-            {...commonProps}
-            value={value}
-            onChange={(e) => handleInputChange(field.name, e.target.value)}
+          <Select
+            value={value || undefined}
+            onValueChange={(val) => handleInputChange(field.name, val)}
+            disabled={isDisabled}
           >
-            <option value="">선택해주세요</option>
-            {field.options?.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger
+              id={field.name}
+              className={cn(
+                error
+                  ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20'
+                  : (isSubmitted || isLocalSubmitted)
+                    ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20'
+                    : '',
+                isDisabled && 'opacity-75 cursor-not-allowed'
+              )}
+            >
+              <SelectValue placeholder="선택해주세요" />
+            </SelectTrigger>
+            <SelectContent>
+              {field.options?.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         ) : field.type === 'textarea' ? (
           <textarea
             {...commonProps}
@@ -187,7 +202,7 @@ export function ChatFormRenderer({
       (isSubmitted || isLocalSubmitted)
         ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20'
         : isSubmitting
-          ? 'border-gray-300 dark:border-gray-600 bg-[#F5F5F5] dark:bg-[#262626]'
+          ? 'border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]'
           : 'border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D]',
       (isSubmitting || isLocalSubmitted) && 'pointer-events-none'
     )}>
@@ -203,45 +218,34 @@ export function ChatFormRenderer({
 
         <div className="flex justify-end space-x-3 pt-2">
           {onCancel && (
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={onCancel}
               disabled={isSubmitting || isLocalSubmitted}
-              className={cn(
-                'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
-                'border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-[#F0F0F0] bg-white dark:bg-[#1D1D1D]',
-                'hover:bg-[#F5F5F5] dark:hover:bg-[#262626] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0',
-                (isSubmitting || isLocalSubmitted) && 'opacity-50 cursor-not-allowed'
-              )}
             >
               <X className="w-4 h-4 mr-1" />
               취소
-            </button>
+            </Button>
           )}
-          
-          <button
+
+          <Button
             type="submit"
+            variant="primary"
             disabled={isSubmitting || isLocalSubmitted}
-            className={cn(
-              'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
-              'bg-slate-800 dark:bg-[#3F3F3F] text-white border border-slate-800 dark:border-[#3F3F3F]',
-              'hover:bg-slate-700 dark:hover:bg-[#4A4A4A] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0',
-              'disabled:opacity-50 disabled:cursor-not-allowed',
-              'flex items-center space-x-2'
-            )}
           >
             {isSubmitting ? (
               <>
                 <Spinner size="xs" />
-                <span>제출 중...</span>
+                <span className="ml-2">제출 중...</span>
               </>
             ) : (
               <>
                 <Send className="w-4 h-4" />
-                <span>{formConfig.submit_label}</span>
+                <span className="ml-2">{formConfig.submit_label}</span>
               </>
             )}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

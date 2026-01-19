@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, startTransition } from 'react';
 import { NoticeItem, type NoticeListPost } from './NoticeItem';
+import { Container } from '@/shared/components/ui';
 
 interface NoticeListProps {
   notices: NoticeListPost[];
@@ -58,9 +59,9 @@ export function NoticeList({
     }
 
     return (
-      <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 p-0 m-0">
+      <Container className="bg-white dark:bg-[#1D1D1D] p-0 m-0">
         {emptyContent}
-      </div>
+      </Container>
     );
   }
 
@@ -135,15 +136,15 @@ export function NoticeList({
   // standalone={true}일 때는 컨테이너 포함
   if (isMobile) {
     return (
-      <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden p-0 m-0">
+      <Container className="bg-white dark:bg-[#1D1D1D] p-0 m-0">
         {mobileContent}
-      </div>
+      </Container>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden p-0 m-0">
+    <Container className="bg-white dark:bg-[#1D1D1D] p-0 m-0">
       {desktopContent}
-    </div>
+    </Container>
   );
 }

@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, X } from 'lucide-react';
+import { Button } from '@/shared/components/ui';
 
 const SearchBar = React.memo(function SearchBar() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -50,16 +51,18 @@ const SearchBar = React.memo(function SearchBar() {
             hover:bg-[#EAEAEA] dark:hover:bg-[#333333]`}
         />
         {searchQuery && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => {
               setSearchQuery('');
               inputRef.current?.focus();
             }}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-full transition-colors"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 h-auto w-auto rounded-full"
           >
             <X className="h-3 w-3 text-gray-400" />
-          </button>
+          </Button>
         )}
       </div>
     </form>

@@ -5,6 +5,7 @@ import * as SelectPrimitive from "@radix-ui/react-select"
 import { Check, ChevronDown, ChevronUp } from "lucide-react"
 
 import { cn } from "@/shared/utils/cn"
+import { focusStyles, inputGrayBgStyles, hoverStyles } from '@/shared/styles'
 
 const Select = SelectPrimitive.Root
 
@@ -19,7 +20,9 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-10 w-full items-center justify-between rounded-md border border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] px-3 py-2 text-sm text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] disabled:cursor-not-allowed disabled:opacity-50 transition-colors [&>span]:line-clamp-1",
+      "flex h-10 w-full items-center justify-between rounded-md px-3 py-2 text-sm [&>span]:line-clamp-1",
+      inputGrayBgStyles,
+      focusStyles,
       className
     )}
     {...props}
@@ -112,7 +115,9 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-pointer select-none items-center py-2 pl-8 pr-2 text-sm outline-none focus:bg-[#EAEAEA] dark:focus:bg-[#333333] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] data-[disabled]:pointer-events-none data-[disabled]:opacity-50 transition-colors",
+      "relative flex w-full cursor-pointer select-none items-center py-2 pl-8 pr-2 text-sm outline-none text-gray-900 dark:text-[#F0F0F0] data-[disabled]:pointer-events-none data-[disabled]:opacity-50 transition-colors",
+      "focus:bg-[#EAEAEA] dark:focus:bg-[#333333]",
+      hoverStyles,
       className
     )}
     {...props}

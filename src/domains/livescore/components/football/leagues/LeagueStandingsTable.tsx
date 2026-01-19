@@ -105,7 +105,7 @@ const getFormStyle = (result: string) => {
     case 'W': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400';
     case 'D': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400';
     case 'L': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400';
-    default: return 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300';
+    default: return 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-700 dark:text-gray-300';
   }
 };
 

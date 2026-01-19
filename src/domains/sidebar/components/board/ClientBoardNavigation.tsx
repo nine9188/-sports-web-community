@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ChevronDown, ChevronRight, Flame, Timer, ArrowLeftRight, Database, ShoppingBag, FileText } from 'lucide-react';
+import { Button } from '@/shared/components/ui';
 import { BoardNavigationData, HierarchicalBoard } from '../../types';
 
 // 빠른 이동 메뉴 항목 (전체글 제외 - 별도 처리)
@@ -48,16 +49,18 @@ const BoardCategoryItem = ({
           style={{ paddingLeft: `${depth * 12 + 16}px` }}
         >
           {hasChildren ? (
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => toggleCategory(board.id)}
-              className="mr-1.5 flex-shrink-0 text-gray-400 dark:text-gray-500"
+              className="mr-1.5 flex-shrink-0 text-gray-400 dark:text-gray-500 h-auto w-auto p-0"
             >
               {isExpanded ? (
                 <ChevronDown className="h-4 w-4" />
               ) : (
                 <ChevronRight className="h-4 w-4" />
               )}
-            </button>
+            </Button>
           ) : (
             <div className="w-5 h-5 mr-1.5"></div>
           )}
@@ -167,7 +170,7 @@ export default function ClientBoardNavigation({
       })}
 
       {/* 구분선 */}
-      <div className="my-2 mx-4 border-t border-gray-200 dark:border-gray-700" />
+      <div className="my-2 mx-4 border-t border-black/7 dark:border-white/10" />
 
       {/* 게시판 목록 */}
       {initialData.rootBoards.map((board) => (

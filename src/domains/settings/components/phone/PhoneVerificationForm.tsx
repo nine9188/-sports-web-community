@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { sendPhoneVerificationCode, verifyPhoneCode, getPhoneVerificationStatus } from '../../actions/phone';
+import { Button } from '@/shared/components/ui';
 
 interface PhoneVerificationFormProps {
   userId: string;
@@ -139,12 +140,13 @@ export default function PhoneVerificationForm({ userId }: PhoneVerificationFormP
               disabled
               className="flex-1 px-3 py-2 border border-black/7 dark:border-white/10 bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] rounded-md cursor-not-allowed"
             />
-            <button
+            <Button
+              variant="secondary"
               disabled
-              className="px-4 py-2 bg-[#EAEAEA] dark:bg-[#333333] text-gray-500 dark:text-gray-400 rounded-md cursor-not-allowed"
+              className="whitespace-nowrap"
             >
               인증완료
-            </button>
+            </Button>
           </div>
           <p className="text-sm text-gray-700 dark:text-gray-300">
             인증이 완료되었습니다.
@@ -178,22 +180,25 @@ export default function PhoneVerificationForm({ userId }: PhoneVerificationFormP
               className="w-full px-3 py-2 pr-8 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-md outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] disabled:bg-[#EAEAEA] dark:disabled:bg-[#333333] disabled:cursor-not-allowed transition-colors"
             />
             {phoneNumber && step !== 'verify' && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={handleClearPhone}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 outline-none focus:outline-none"
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
               >
                 <X className="h-4 w-4" />
-              </button>
+              </Button>
             )}
           </div>
-          <button
+          <Button
+            variant="secondary"
             onClick={handleSendCode}
             disabled={isLoading || countdown > 0 || !phoneNumber.trim()}
-            className="px-4 py-2 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap outline-none focus:outline-none"
+            className="whitespace-nowrap"
           >
             {countdown > 0 ? `${countdown}초` : '인증번호 받기'}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -211,22 +216,25 @@ export default function PhoneVerificationForm({ userId }: PhoneVerificationFormP
               className="w-full px-3 py-2 pr-8 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-md outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] disabled:bg-[#EAEAEA] dark:disabled:bg-[#333333] disabled:cursor-not-allowed transition-colors"
             />
             {code && step === 'verify' && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={handleClearCode}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 outline-none focus:outline-none"
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
               >
                 <X className="h-4 w-4" />
-              </button>
+              </Button>
             )}
           </div>
-          <button
+          <Button
+            variant="secondary"
             onClick={handleVerifyCode}
             disabled={step !== 'verify' || isLoading || code.length !== 6}
-            className="px-4 py-2 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap outline-none focus:outline-none"
+            className="whitespace-nowrap"
           >
             인증하기
-          </button>
+          </Button>
         </div>
 
         {/* 메시지 */}

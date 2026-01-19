@@ -10,6 +10,7 @@ import UserIcon from '@/shared/components/UserIcon';
 import { getLevelIconUrl } from '@/shared/utils/level-icons';
 import LevelList from '../exp/LevelList';
 import Spinner from '@/shared/components/Spinner';
+import { Button, Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 
 interface IconFormProps {
   userId: string;
@@ -101,12 +102,12 @@ export default function IconForm({
   return (
     <div className="space-y-4">
       {/* 현재 아이콘 정보 */}
-      <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
-        <div className="px-4 py-3 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
-          <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">현재 사용 중인 아이콘</h3>
-        </div>
+      <Container className="bg-white dark:bg-[#1D1D1D]">
+        <ContainerHeader className="h-auto py-3">
+          <ContainerTitle>현재 사용 중인 아이콘</ContainerTitle>
+        </ContainerHeader>
 
-        <div className="p-4">
+        <ContainerContent>
           <div className="flex items-center">
             {/* 현재 아이콘 표시 */}
             <div className="mr-2">
@@ -121,27 +122,28 @@ export default function IconForm({
               <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{displayIconName}</div>
             </div>
           </div>
-        </div>
-      </div>
+        </ContainerContent>
+      </Container>
 
       {/* 레벨별 아이콘 가이드 */}
       <LevelList currentLevel={userLevel} />
 
       {/* 아이콘 선택 영역 */}
-      <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
-        <div className="px-4 py-3 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
-          <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">아이콘 선택</h3>
-        </div>
+      <Container className="bg-white dark:bg-[#1D1D1D]">
+        <ContainerHeader className="h-auto py-3">
+          <ContainerTitle>아이콘 선택</ContainerTitle>
+        </ContainerHeader>
 
-        <div className="p-4">
+        <ContainerContent>
           <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-4">
             {/* 기본 레벨 아이콘 */}
-            <button
+            <Button
+              variant="ghost"
               onClick={() => handleIconSelect(null)}
               disabled={isLoading}
-              className={`relative p-2 rounded-lg border-2 transition-colors aspect-square flex items-center justify-center outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
+              className={`relative p-2 rounded-lg border-2 transition-colors aspect-square h-auto flex items-center justify-center ${
                 selectedIconId === null
-                  ? 'border-slate-800 dark:border-white bg-[#EAEAEA] dark:bg-[#333333]'
+                  ? 'border-[#262626] dark:border-[#F0F0F0] bg-[#EAEAEA] dark:bg-[#333333]'
                   : 'border-black/7 dark:border-white/10 hover:border-black/15 dark:hover:border-white/20 hover:bg-[#F5F5F5] dark:hover:bg-[#262626]'
               }`}
               title={`레벨 ${userLevel} 기본 아이콘`}
@@ -157,23 +159,24 @@ export default function IconForm({
               </div>
 
               {selectedIconId === null && (
-                <div className="absolute top-1 right-1 bg-slate-800 dark:bg-[#F0F0F0] rounded-full p-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white dark:text-slate-800" viewBox="0 0 20 20" fill="currentColor">
+                <div className="absolute top-1 right-1 bg-[#262626] dark:bg-[#F0F0F0] rounded-full p-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white dark:text-[#262626]" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                 </div>
               )}
-            </button>
+            </Button>
 
             {/* 구매한 아이콘 목록 */}
             {userIcons.map((icon) => (
-              <button
+              <Button
                 key={icon.id}
+                variant="ghost"
                 onClick={() => handleIconSelect(icon.id)}
                 disabled={isLoading}
-                className={`relative p-2 rounded-lg border-2 transition-colors aspect-square flex items-center justify-center outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
+                className={`relative p-2 rounded-lg border-2 transition-colors aspect-square h-auto flex items-center justify-center ${
                   selectedIconId === icon.id
-                    ? 'border-slate-800 dark:border-white bg-[#EAEAEA] dark:bg-[#333333]'
+                    ? 'border-[#262626] dark:border-[#F0F0F0] bg-[#EAEAEA] dark:bg-[#333333]'
                     : 'border-black/7 dark:border-white/10 hover:border-black/15 dark:hover:border-white/20 hover:bg-[#F5F5F5] dark:hover:bg-[#262626]'
                 }`}
                 title={icon.name}
@@ -189,13 +192,13 @@ export default function IconForm({
                 </div>
 
                 {selectedIconId === icon.id && (
-                  <div className="absolute top-1 right-1 bg-slate-800 dark:bg-[#F0F0F0] rounded-full p-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white dark:text-slate-800" viewBox="0 0 20 20" fill="currentColor">
+                  <div className="absolute top-1 right-1 bg-[#262626] dark:bg-[#F0F0F0] rounded-full p-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white dark:text-[#262626]" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   </div>
                 )}
-              </button>
+              </Button>
             ))}
           </div>
 
@@ -207,17 +210,18 @@ export default function IconForm({
             >
               더 많은 아이콘 보기 →
             </Link>
-            <button
+            <Button
+              variant="primary"
               onClick={handleSaveIcon}
               disabled={isLoading || selectedIconId === currentIconId}
-              className="px-4 py-2 bg-slate-800 dark:bg-[#3F3F3F] text-white hover:bg-slate-700 dark:hover:bg-[#4A4A4A] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed flex items-center rounded-md transition-colors"
+              className="gap-2"
             >
-              {isLoading && <Spinner size="xs" className="mr-2" />}
+              {isLoading && <Spinner size="xs" />}
               <span className="text-sm">아이콘 저장</span>
-            </button>
+            </Button>
           </div>
-        </div>
-      </div>
+        </ContainerContent>
+      </Container>
     </div>
   );
 }

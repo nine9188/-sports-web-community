@@ -36,7 +36,7 @@ const TeamLogo = memo(({ teamName, teamId }: { teamName: string; teamId?: number
           className="object-contain w-6 h-6"
         />
       ) : (
-        <div className="w-6 h-6 bg-gray-200 flex items-center justify-center text-gray-400 text-xs rounded">
+        <div className="w-6 h-6 bg-[#EAEAEA] dark:bg-[#333333] flex items-center justify-center text-gray-400 dark:text-gray-500 text-xs rounded">
           로고 없음
         </div>
       )}
@@ -171,7 +171,7 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
       case 'W': return tableStyles.formBadgeWin;
       case 'D': return tableStyles.formBadgeDraw;
       case 'L': return tableStyles.formBadgeLoss;
-      default: return 'bg-gray-200 text-gray-700';
+      default: return 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-700 dark:text-gray-300';
     }
   }, []);
   

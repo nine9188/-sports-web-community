@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { LEVEL_EXP_REQUIREMENTS, getLevelIconUrl } from '@/shared/utils/level-icons';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import UserIcon from '@/shared/components/UserIcon';
+import { Button, Container } from '@/shared/components/ui';
 
 interface LevelListProps {
   currentLevel: number;
@@ -25,7 +26,7 @@ export default function LevelList({ currentLevel }: LevelListProps) {
   };
 
   return (
-    <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
+    <Container className="bg-white dark:bg-[#1D1D1D]">
       <AccordionHeader
         isOpen={isOpen}
         onClick={toggleAccordion}
@@ -48,7 +49,7 @@ export default function LevelList({ currentLevel }: LevelListProps) {
           />
         </div>
       )}
-    </div>
+    </Container>
   );
 }
 
@@ -62,9 +63,10 @@ interface AccordionHeaderProps {
  */
 function AccordionHeader({ isOpen, onClick }: AccordionHeaderProps) {
   return (
-    <button
+    <Button
+      variant="header"
       onClick={onClick}
-      className={`w-full px-4 py-3 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] border-b ${isOpen ? 'border-black/5 dark:border-white/10' : 'border-transparent'}`}
+      className={`w-full px-4 py-3 h-auto flex items-center justify-between rounded-none border-b ${isOpen ? 'border-black/5 dark:border-white/10' : 'border-transparent'}`}
     >
       <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">레벨 및 아이콘 목록</h3>
       {isOpen ? (
@@ -72,7 +74,7 @@ function AccordionHeader({ isOpen, onClick }: AccordionHeaderProps) {
       ) : (
         <ChevronDown className="h-5 w-5 text-gray-500 dark:text-gray-400" />
       )}
-    </button>
+    </Button>
   );
 }
 

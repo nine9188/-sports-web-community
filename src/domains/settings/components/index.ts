@@ -5,7 +5,6 @@
 // 내 댓글 관련 컴포넌트
 export { default as MyCommentList } from './my-comments/MyCommentList';
 export { default as MyCommentsContent } from './my-comments/MyCommentsContent';
-export { default as PostsPagination } from './my-comments/PostsPagination';
 
 // 비밀번호 관리 컴포넌트
 export { default as PasswordForm } from '@/domains/settings/components/password/PasswordForm';

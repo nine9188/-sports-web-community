@@ -158,8 +158,8 @@ export function renderTipTapNode(node: TipTapNode): string {
     // 다른 소셜 플랫폼 (Twitter, Instagram, TikTok, LinkedIn)
     return `
       <div data-type="social-embed" data-platform="${platform}" data-url="${url}" class="my-6">
-        <div class="social-embed-placeholder p-4 bg-gray-100 dark:bg-gray-800 rounded-lg text-center">
-          <p class="text-sm text-gray-500">소셜 미디어 콘텐츠 로딩 중...</p>
+        <div class="social-embed-placeholder p-4 bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 rounded-lg text-center">
+          <p class="text-sm text-gray-500 dark:text-gray-400">소셜 미디어 콘텐츠 로딩 중...</p>
         </div>
       </div>
     `;

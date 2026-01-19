@@ -58,7 +58,7 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
       case 'W': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400';
       case 'D': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400';
       case 'L': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400';
-      default: return 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300';
+      default: return 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-700 dark:text-gray-300';
     }
   }, []);
 
@@ -362,7 +362,7 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
             <div className="border-t border-black/5 dark:border-white/10 my-1"></div>
             
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-[#EAEAEA] dark:bg-[#333333] border border-gray-300 dark:border-gray-600 rounded-sm"></div>
+              <div className="w-4 h-4 bg-[#EAEAEA] dark:bg-[#333333] border border-black/10 dark:border-white/20 rounded-sm"></div>
               <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">현재 팀</span>
             </div>
           </div>

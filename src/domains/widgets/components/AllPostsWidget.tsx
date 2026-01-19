@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { fetchPosts } from '@/domains/boards/actions';
 import PostList from '@/domains/boards/components/post/PostList';
+import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 
 // 서버 컴포넌트로 변경 - 직접 데이터 로드
 export default async function AllPostsWidget() {
@@ -47,14 +48,14 @@ export default async function AllPostsWidget() {
 
     // 오류 발생 시 기본 UI 표시
     return (
-      <div className="h-full bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0">
-        <div className="h-12 px-4 flex items-center bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10">
-          <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">최신 게시글</h3>
-        </div>
-        <div className="p-6 text-center">
+      <Container className="h-full bg-white dark:bg-[#1D1D1D]">
+        <ContainerHeader>
+          <ContainerTitle>최신 게시글</ContainerTitle>
+        </ContainerHeader>
+        <ContainerContent className="text-center">
           <p className="text-gray-500 dark:text-gray-400">게시글을 불러오는 중 오류가 발생했습니다.</p>
-        </div>
-      </div>
+        </ContainerContent>
+      </Container>
     );
   }
 } 

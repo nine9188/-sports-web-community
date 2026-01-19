@@ -1,7 +1,7 @@
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getCategoryItemsPaginated, getUserItems, getUserPoints, getShopCategories } from '@/domains/shop/actions/actions';
 import CategoryFilter from '@/domains/shop/components/CategoryFilter';
-import ShopPagination from '@/domains/shop/components/ShopPagination';
+import { Pagination } from '@/shared/components/ui';
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 import { generatePageMetadataWithDefaults } from '@/shared/utils/metadataNew';
 
@@ -45,7 +45,7 @@ export default async function ShopPage({ searchParams }: Props) {
   const filterCategories = rootCategoriesRaw.map((c) => ({
     id: c.id,
     name: c.name,
-    display_order: c.display_order,
+    display_order: c.display_order ?? undefined,
     subcategories: (childrenByParent.get(c.id) ?? []).sort((a, b) => a.name.localeCompare(b.name)),
   }));
 
@@ -126,7 +126,7 @@ export default async function ShopPage({ searchParams }: Props) {
             <p className="text-gray-900 dark:text-[#F0F0F0] text-sm sm:text-base">아이템을 구매하고 사용하려면 로그인이 필요합니다.</p>
             <a 
               href="/signin" 
-              className="mt-2 inline-block px-3 py-2 sm:px-4 sm:py-2 bg-slate-800 dark:bg-[#3F3F3F] text-white rounded-md hover:bg-slate-700 dark:hover:bg-[#4A4A4A] transition-colors text-sm outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="mt-2 inline-block px-3 py-2 sm:px-4 sm:py-2 bg-[#262626] dark:bg-[#3F3F3F] text-white rounded-md hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] transition-colors text-sm outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
             >
               로그인하기
             </a>
@@ -134,7 +134,13 @@ export default async function ShopPage({ searchParams }: Props) {
         ) : null}
       />
 
-      <ShopPagination page={page} pageSize={pageSize} total={total} />
+      {total > pageSize && (
+        <Pagination
+          currentPage={page}
+          totalPages={Math.ceil(total / pageSize)}
+          mode="url"
+        />
+      )}
 
       {/* 루트 카테고리가 없을 경우 */}
       {(!rootCategoriesRaw || rootCategoriesRaw.length === 0) && (

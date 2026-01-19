@@ -106,7 +106,7 @@ export default function SuspensionPopup() {
       />
 
       {/* 팝업 컨텐츠 */}
-      <div className="relative bg-white dark:bg-[#1D1D1D] rounded-xl shadow-2xl max-w-md w-full mx-auto overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative bg-white dark:bg-[#1D1D1D] rounded-lg shadow-2xl max-w-md w-full mx-auto overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         {/* 헤더 - 빨간색 배경 */}
         <div className="bg-red-500 text-white px-6 py-4">
           <div className="flex items-center justify-between">
@@ -144,7 +144,7 @@ export default function SuspensionPopup() {
           {/* 정지 사유 */}
           <div className="space-y-2">
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300">정지 사유</p>
-            <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
+            <div className="p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
               <p className="text-sm text-gray-800 dark:text-gray-200">{reason}</p>
             </div>
           </div>
@@ -170,7 +170,7 @@ export default function SuspensionPopup() {
         <div className="px-6 pb-6 flex gap-3">
           <button
             onClick={handleClose}
-            className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-lg transition-colors"
           >
             닫기
           </button>

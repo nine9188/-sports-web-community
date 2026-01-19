@@ -5,6 +5,7 @@ import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { Bell, Users, Send, CheckCircle, XCircle, Clock, History } from 'lucide-react';
 import { createAdminNoticeWithLog, createBroadcastNotification, getNotificationLogs } from '@/domains/notifications/actions';
 import Spinner from '@/shared/components/Spinner';
+import { Button } from '@/shared/components/ui';
 
 interface User {
   id: string;
@@ -215,13 +216,13 @@ export default function NotificationSendPage() {
                 </p>
               </div>
             </div>
-            <button
+            <Button
               onClick={() => setShowHistory(!showHistory)}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-[#2D2D2D] hover:bg-gray-200 dark:hover:bg-[#3D3D3D] text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
+              variant="secondary"
             >
-              <History className="w-5 h-5" />
+              <History className="w-5 h-5 mr-2" />
               {showHistory ? '발송 폼 보기' : '발송 기록 보기'}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -356,27 +357,21 @@ export default function NotificationSendPage() {
                   발송 대상
                 </label>
                 <div className="flex gap-2">
-                  <button
+                  <Button
                     onClick={() => setSendMode('all')}
-                    className={`flex-1 py-2 px-4 rounded-lg border transition-colors ${
-                      sendMode === 'all'
-                        ? 'bg-blue-500 text-white border-blue-500'
-                        : 'bg-white dark:bg-[#2D2D2D] border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300'
-                    }`}
+                    variant={sendMode === 'all' ? 'primary' : 'outline'}
+                    className="flex-1"
                   >
-                    <Users className="w-4 h-4 inline mr-2" />
+                    <Users className="w-4 h-4 mr-2" />
                     전체 사용자
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={() => setSendMode('selected')}
-                    className={`flex-1 py-2 px-4 rounded-lg border transition-colors ${
-                      sendMode === 'selected'
-                        ? 'bg-blue-500 text-white border-blue-500'
-                        : 'bg-white dark:bg-[#2D2D2D] border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300'
-                    }`}
+                    variant={sendMode === 'selected' ? 'primary' : 'outline'}
+                    className="flex-1"
                   >
                     선택한 사용자 ({selectedUserIds.size}명)
-                  </button>
+                  </Button>
                 </div>
               </div>
 

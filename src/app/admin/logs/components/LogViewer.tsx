@@ -2,19 +2,15 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
   Button,
-  Input,
-  Badge,
   SelectRadix as Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
 } from '@/shared/components/ui'
+import { focusStyles, inputBaseStyles, cardStyles, cardHeaderStyles, cardTitleStyles, badgeBaseStyles } from '@/shared/styles'
+import { cn } from '@/shared/utils/cn'
 import Spinner from '@/shared/components/Spinner';
 import {
   getApplicationLogs,
@@ -170,14 +166,14 @@ export default function LogViewer() {
 
   if (error) {
     return (
-      <Card>
-        <CardContent className="p-6">
+      <div className={cardStyles}>
+        <div className="p-6">
           <div className="text-center text-red-600">
             <p className="mb-4">{error}</p>
             <Button onClick={fetchLogs}>다시 시도</Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     )
   }
 
@@ -186,54 +182,54 @@ export default function LogViewer() {
       {/* 통계 대시보드 */}
       {statistics && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
+          <div className={cardStyles}>
+            <div className="p-4">
               <div className="text-2xl font-bold">{statistics.totalLogs.toLocaleString()}</div>
-              <p className="text-sm text-gray-600">오늘 총 로그</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400">오늘 총 로그</p>
+            </div>
+          </div>
+
+          <div className={cardStyles}>
+            <div className="p-4">
               <div className="text-2xl font-bold text-red-600">{statistics.errorCount.toLocaleString()}</div>
-              <p className="text-sm text-gray-600">오늘 에러</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400">오늘 에러</p>
+            </div>
+          </div>
+
+          <div className={cardStyles}>
+            <div className="p-4">
               <div className="text-sm space-y-1">
                 {Object.entries(statistics.levelStats).map(([level, count]) => (
                   <div key={level} className="flex justify-between">
-                    <Badge className={LEVEL_COLORS[level as LogLevel]}>{level}</Badge>
+                    <span className={cn(badgeBaseStyles, LEVEL_COLORS[level as LogLevel])}>{level}</span>
                     <span>{count}</span>
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
+            </div>
+          </div>
+
+          <div className={cardStyles}>
+            <div className="p-4">
               <div className="text-sm space-y-1">
                 {Object.entries(statistics.categoryStats).slice(0, 4).map(([category, count]) => (
                   <div key={category} className="flex justify-between">
-                    <Badge className={CATEGORY_COLORS[category as LogCategory]}>{category}</Badge>
+                    <span className={cn(badgeBaseStyles, CATEGORY_COLORS[category as LogCategory])}>{category}</span>
                     <span>{count}</span>
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       )}
 
       {/* 필터 영역 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>필터</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className={cardStyles}>
+        <div className={cardHeaderStyles}>
+          <h3 className={cardTitleStyles}>필터</h3>
+        </div>
+        <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4">
             <Select value={filters.level || 'all'} onValueChange={(value) => handleFilterChange('level', value === 'all' ? '' : value)}>
               <SelectTrigger>
@@ -265,33 +261,38 @@ export default function LogViewer() {
               </SelectContent>
             </Select>
 
-            <Input
+            <input
+              className={cn('h-10 w-full rounded-md px-3 py-2 text-sm', inputBaseStyles, focusStyles)}
               placeholder="액션"
               value={filters.action}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFilterChange('action', e.target.value)}
             />
 
-            <Input
+            <input
+              className={cn('h-10 w-full rounded-md px-3 py-2 text-sm', inputBaseStyles, focusStyles)}
               placeholder="사용자 ID"
               value={filters.userId}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFilterChange('userId', e.target.value)}
             />
 
-            <Input
+            <input
+              className={cn('h-10 w-full rounded-md px-3 py-2 text-sm', inputBaseStyles, focusStyles)}
               type="datetime-local"
               placeholder="시작 날짜"
               value={filters.startDate}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFilterChange('startDate', e.target.value)}
             />
 
-            <Input
+            <input
+              className={cn('h-10 w-full rounded-md px-3 py-2 text-sm', inputBaseStyles, focusStyles)}
               type="datetime-local"
               placeholder="종료 날짜"
               value={filters.endDate}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFilterChange('endDate', e.target.value)}
             />
 
-            <Input
+            <input
+              className={cn('h-10 w-full rounded-md px-3 py-2 text-sm', inputBaseStyles, focusStyles)}
               placeholder="검색"
               value={filters.search}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFilterChange('search', e.target.value)}
@@ -306,17 +307,17 @@ export default function LogViewer() {
               필터 초기화
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* 로그 테이블 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
+      <div className={cardStyles}>
+        <div className={cardHeaderStyles}>
+          <h3 className={cardTitleStyles}>
             로그 목록 ({totalCount.toLocaleString()}개)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h3>
+        </div>
+        <div className="p-6">
           {loading ? (
             <div className="text-center py-8">
               <Spinner size="lg" className="mx-auto" />
@@ -333,12 +334,12 @@ export default function LogViewer() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <Badge className={LEVEL_COLORS[log.level as LogLevel]}>
+                        <span className={cn(badgeBaseStyles, LEVEL_COLORS[log.level as LogLevel])}>
                           {log.level}
-                        </Badge>
-                        <Badge className={CATEGORY_COLORS[log.category as LogCategory]}>
+                        </span>
+                        <span className={cn(badgeBaseStyles, CATEGORY_COLORS[log.category as LogCategory])}>
                           {log.category}
-                        </Badge>
+                        </span>
                         <span className="text-sm font-medium">{log.action}</span>
                         <span className="text-xs text-gray-500">
                           {new Date(log.created_at).toLocaleString()}
@@ -454,8 +455,8 @@ export default function LogViewer() {
               </Button>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 } 

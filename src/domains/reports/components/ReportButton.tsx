@@ -16,9 +16,10 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-  Textarea
+  SelectValue
 } from '@/shared/components/ui';
+import { focusStyles, inputGrayBgStyles } from '@/shared/styles';
+import { cn } from '@/shared/utils/cn';
 import { toast } from 'react-toastify';
 import { createReport } from '../actions';
 import { REPORT_REASONS, ReportTargetType, ReportReason } from '../types';
@@ -139,7 +140,8 @@ export default function ReportButton({
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
               상세 설명 (선택사항)
             </label>
-            <Textarea
+            <textarea
+              className={cn('w-full min-h-[80px] rounded-md px-3 py-2 text-sm resize-none', inputGrayBgStyles, focusStyles)}
               value={description}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
               placeholder="신고 사유에 대한 자세한 설명을 입력해주세요..."

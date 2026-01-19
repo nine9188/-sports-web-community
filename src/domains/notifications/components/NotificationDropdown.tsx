@@ -6,6 +6,7 @@ import { Notification } from '../types/notification';
 import NotificationItem from './NotificationItem';
 import { filterOldReadNotifications } from '../utils/filterNotifications';
 import Spinner from '@/shared/components/Spinner';
+import { Button } from '@/shared/components/ui';
 
 interface NotificationDropdownProps {
   notifications: Notification[];
@@ -38,12 +39,13 @@ export default function NotificationDropdown({
           알림 {unreadCount > 0 && <span className="text-gray-500 dark:text-gray-400">({unreadCount})</span>}
         </h3>
         {unreadCount > 0 && (
-          <button
+          <Button
+            variant="ghost"
             onClick={onMarkAllRead}
-            className="text-xs text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-2 py-1 rounded transition-colors"
+            className="text-xs text-gray-700 dark:text-gray-300 px-2 py-1 h-auto"
           >
             전체 읽음
-          </button>
+          </Button>
         )}
       </div>
 

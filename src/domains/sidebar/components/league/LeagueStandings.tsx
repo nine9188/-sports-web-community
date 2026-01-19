@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
+import { Container, ContainerHeader, ContainerTitle, TabList, type TabItem } from '@/shared/components/ui';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { StandingsData, League } from '../../types';
@@ -151,55 +151,43 @@ export default function LeagueStandings({
   };
 
   return (
-    <Container className="hidden md:block">
+    <Container className="hidden md:block bg-white dark:bg-[#1D1D1D]">
       <ContainerHeader>
         <ContainerTitle>축구 팀순위</ContainerTitle>
       </ContainerHeader>
 
       {/* 리그 선택 탭 */}
-      <div className="league-tabs flex border-b border-black/5 dark:border-white/10">
-        {LEAGUES.map(league => (
-          <button
-            key={league.id}
-            onClick={() => setActiveLeague(league.id)}
-            className={`flex-1 text-xs py-2 px-1 transition-colors ${
-              activeLeague === league.id
-                ? 'bg-white dark:bg-[#1D1D1D] border-b-2 border-slate-800 dark:border-white font-medium text-gray-900 dark:text-[#F0F0F0]'
-                : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-400 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-            }`}
-          >
-            {league.name}
-          </button>
-        ))}
-      </div>
+      <TabList
+        tabs={LEAGUES.map(league => ({ id: league.id, label: league.name })) as TabItem[]}
+        activeTab={activeLeague}
+        onTabChange={setActiveLeague}
+        variant="contained"
+        className="mb-0"
+      />
 
-      {/* 선택된 리그 정보 */}
-      <div className="league-info px-3 py-2 border-b border-black/5 dark:border-white/10 bg-white dark:bg-[#1D1D1D]">
-        <div className="flex items-center gap-2">
-          {standings?.league?.logo && (
-            <div className="w-5 h-5 relative">
-              <UnifiedSportsImage
-                imageId={standings.league.id}
-                imageType={ImageType.Leagues}
-                alt={standings.league.name}
-                width={20}
-                height={20}
-                className="object-contain"
-              />
-            </div>
-          )}
-          <span className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
-            {LEAGUES.find(l => l.id === activeLeague)?.fullName || ''}
+      {/* 선택된 리그 정보 - 탭과 연결 */}
+      {standings && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-[#FAFAFA] dark:bg-[#232323]">
+          <UnifiedSportsImage
+            imageId={LEAGUES.find(l => l.id === activeLeague)?.apiId || 39}
+            imageType={ImageType.Leagues}
+            alt={LEAGUES.find(l => l.id === activeLeague)?.fullName || ''}
+            width={20}
+            height={20}
+            className="object-contain"
+          />
+          <span className="text-xs text-gray-600 dark:text-gray-400">
+            {LEAGUES.find(l => l.id === activeLeague)?.fullName}
           </span>
         </div>
-      </div>
+      )}
 
       {/* 순위표 */}
-      <div className="py-1.5 pb-0 min-h-[200px] bg-white dark:bg-[#1D1D1D]">
+      <div className="min-h-[200px]">
         {loading ? (
           <div className="p-3 space-y-2">
             {[...Array(10)].map((_, i) => (
-              <div key={i} className="h-5 w-full bg-gray-200 dark:bg-[#262626] animate-pulse rounded-lg"></div>
+              <div key={i} className="h-5 w-full bg-[#EAEAEA] dark:bg-[#333333] animate-pulse rounded-lg"></div>
             ))}
           </div>
         ) : error ? (

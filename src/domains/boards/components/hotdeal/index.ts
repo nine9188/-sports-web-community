@@ -4,6 +4,5 @@
  */
 
 export { HotdealInfoBox } from './HotdealInfoBox';
-export { HotdealFormFields } from './HotdealFormFields';
 export { HotdealEndButton } from './HotdealEndButton';
 export { default as StoreFilterMenu } from './StoreFilterMenu';
