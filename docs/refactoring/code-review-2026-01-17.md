@@ -553,10 +553,10 @@ e2e/:          설정만 있음
 
 **현재:**
 - Vercel Analytics (기본)
-- 에러 트래킹: 없음 ❌
+- 에러 트래킹: ✅ Sentry 도입 완료
 
 **권장:**
-- Sentry 또는 LogRocket 도입
+- ~~Sentry 또는 LogRocket 도입~~ ✅ 완료
 - API 응답 시간 모니터링
 - 사용자 행동 분석
 
@@ -676,7 +676,7 @@ hover:text-blue-600    /* 금지된 파란색 호버 */
 | 13 | boards 도메인 분할 | 149 → 50 파일 | 상 | 구조 |
 | 14 | livescore 도메인 분할 | 160 → 50 파일 | 상 | 구조 |
 | 15 | UI_GUIDELINES.md 재정리 | 가이드 품질 | 중 | UI |
-| 16 | Sentry 도입 | 에러 모니터링 | 중 | 운영 |
+| 16 | Sentry 도입 | 에러 모니터링 | 중 | 운영 | ✅ 완료 |
 
 ### 15.5 장기 (1개월+)
 
@@ -934,6 +934,33 @@ getCachedBoardMaps()        // 계층 구조 맵 (boardsMap, childBoardsMap)
 - 같은 요청 내 중복 fetch 완전 제거
 - Supabase API 비용 ~60% 절감 예상
 
+### 20.7 Sentry 에러 모니터링 도입 (2026-01-20)
+
+**생성된 파일:**
+- `sentry.client.config.ts` - 클라이언트 에러 추적
+- `sentry.server.config.ts` - 서버 에러 추적
+- `sentry.edge.config.ts` - Edge Runtime 에러 추적
+
+**수정된 파일:**
+- `next.config.js` - withSentryConfig 래핑
+- `src/instrumentation.ts` - Sentry 초기화 + onRequestError
+- `src/app/global-error.tsx` - 전역 에러 Sentry 전송
+
+**환경 설정:**
+- `.env.local` - NEXT_PUBLIC_SENTRY_DSN 추가
+- Sentry 조직: 4590-football
+- Sentry 프로젝트: javascript-nextjs
+
+**MCP 연동:**
+- Sentry MCP 서버 연결 완료
+- Claude Code에서 직접 이슈 조회/관리 가능
+
+**결과:**
+- 프로덕션 에러 실시간 모니터링
+- 스택 트레이스, 사용자 컨텍스트 자동 수집
+- `/monitoring` 터널 라우트로 애드블로커 우회
+- 소스맵 자동 업로드 (CI 환경)
+
 ---
 
 ## 21. 상세 분석 문서
@@ -948,11 +975,12 @@ getCachedBoardMaps()        // 계층 구조 맵 (boardsMap, childBoardsMap)
 | [ui-violations.md](./ui-violations.md) | UI 가이드라인 위반 분석 (~106개 파일) |
 | [error-boundaries.md](./error-boundaries.md) | 도메인별 error.tsx 구현 |
 | [api-caching-strategy.md](./api-caching-strategy.md) | 외부 API 캐싱 전략 (#11) |
+| [streaming-suspense.md](./streaming-suspense.md) | Streaming/Suspense 도입 계획 (#18) |
 | [../UI_GUIDELINES.md](../UI_GUIDELINES.md) | UI 디자인 시스템 가이드라인 |
 
 ---
 
 *작성일: 2026-01-17*
-*마지막 업데이트: 2026-01-19*
+*마지막 업데이트: 2026-01-20*
 *검토 범위: 전체 코드베이스 (774개 파일)*
 *추가 분석 기준: 서버 액션/캐시, API 비용, UX, 보안, 테스팅, 배포*

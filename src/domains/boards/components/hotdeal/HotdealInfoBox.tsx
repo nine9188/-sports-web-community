@@ -93,19 +93,19 @@ export function HotdealInfoBox({ dealInfo, postId, isAuthor }: HotdealInfoBoxPro
             가격
           </div>
           <div className="flex-1 px-4 py-3">
-            <div className="flex items-baseline gap-2">
+            <div className="flex items-center gap-2">
               {/* 정가가 있으면 할인 표시 */}
               {dealInfo.original_price && discountRate && (
                 <>
                   <span className="text-sm text-gray-400 dark:text-gray-500 line-through">
                     {formatPrice(dealInfo.original_price)}
                   </span>
-                  <span className="text-xs font-bold text-orange-600 dark:text-orange-400">
+                  <span className="text-sm font-bold text-orange-600 dark:text-orange-400">
                     {discountRate}%↓
                   </span>
                 </>
               )}
-              <span className="text-base font-bold text-red-600 dark:text-red-400">
+              <span className="text-sm font-bold text-red-600 dark:text-red-400">
                 {formatPrice(dealInfo.price)}
               </span>
             </div>

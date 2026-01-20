@@ -591,15 +591,71 @@ export default function SignupPage() {
     }
   };
 
-  // 최종 회원가입 제출
+  // 폼 제출 핸들러 (엔터 키 처리를 위해 현재 단계에 맞게 분기)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    // 약관 동의 단계
+    if (!showEmailStep) {
+      handleAgreeSubmit();
+      return;
+    }
+
+    // 이메일 단계
+    if (showEmailStep && !showNameStep) {
+      if (emailChecked && emailAvailable) {
+        setShowNameStep(true);
+      } else if (emailValid && !emailChecked) {
+        // 이메일 유효하지만 중복확인 안됨 - 중복확인 실행
+        checkEmail();
+      }
+      return;
+    }
+
+    // 이름 단계
+    if (showNameStep && !showBirthStep) {
+      if (validateFullName(fullName)) {
+        setShowBirthStep(true);
+      }
+      return;
+    }
+
+    // 생년월일 단계
+    if (showBirthStep && !showIdStep) {
+      if (validateBirthDate(birthDate)) {
+        setShowIdStep(true);
+      }
+      return;
+    }
+
+    // 아이디 단계
+    if (showIdStep && !showNicknameStep) {
+      if (usernameChecked && usernameAvailable) {
+        setShowNicknameStep(true);
+      } else if (username && validateUsername(username) === '' && !usernameChecked) {
+        // 아이디 유효하지만 중복확인 안됨 - 중복확인 실행
+        checkUsername();
+      }
+      return;
+    }
+
+    // 닉네임 단계
+    if (showNicknameStep && !showPasswordStep) {
+      if (nicknameChecked && nicknameAvailable) {
+        setShowPasswordStep(true);
+      } else if (nickname && validateNickname(nickname) === '' && !nicknameChecked) {
+        // 닉네임 유효하지만 중복확인 안됨 - 중복확인 실행
+        checkNickname();
+      }
+      return;
+    }
+
+    // 최종 회원가입 단계
     if (!usernameChecked || !usernameAvailable) {
       toast.error('아이디 중복 확인을 해주세요.');
       return;
     }
-    
+
     if (!nicknameChecked || !nicknameAvailable) {
       toast.error('닉네임 중복 확인을 해주세요.');
       return;
@@ -608,10 +664,14 @@ export default function SignupPage() {
       toast.error('봇 검증을 완료해주세요.');
       return;
     }
-    
+
+    if (!passwordValid || !confirmPasswordValid) {
+      return;
+    }
+
     try {
       setIsLoading(true);
-      
+
       const result = await signUp(email, password, {
         username,
         full_name: fullName,
@@ -619,7 +679,7 @@ export default function SignupPage() {
         birth_date: birthDate.replace(/\./g, '-'), // YYYY.MM.DD -> YYYY-MM-DD
         ...(referralValid && referralCode.trim() ? { referral_code: referralCode.trim() } : {})
       }, captchaToken);
-      
+
       if (result.success) {
         // 중복 토스트 제거 - signin 페이지의 message 파라미터만 사용
         router.push('/signin?message=회원가입이 완료되었습니다. 이메일을 확인하고 로그인해주세요.');
@@ -759,11 +819,11 @@ export default function SignupPage() {
                       setEmailMessage('');
                     }}
                     onBlur={() => validateEmail(email)}
-                    className={`flex-1 px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none transition-colors ${
-                      emailError ? 'border-red-500' :
-                      emailChecked && !emailAvailable ? 'border-red-500' :
-                      emailChecked && emailAvailable ? 'border-green-500' :
-                      'border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
+                    className={`flex-1 px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
+                      emailError ? 'border-red-500 dark:border-red-400' :
+                      emailChecked && !emailAvailable ? 'border-red-500 dark:border-red-400' :
+                      emailChecked && emailAvailable ? 'border-green-500 dark:border-green-400' :
+                      'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
                     }`}
                     placeholder="이메일 주소"
                     required
@@ -837,10 +897,10 @@ export default function SignupPage() {
                     onBlur={() => {
                       if (fullName) validateFullName(fullName);
                     }}
-                    className={`w-full p-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none transition-colors ${
-                      fullNameError ? 'border-red-500' :
-                      fullNameValid ? 'border-green-500' :
-                      'border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
+                    className={`w-full p-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
+                      fullNameError ? 'border-red-500 dark:border-red-400' :
+                      fullNameValid ? 'border-green-500 dark:border-green-400' :
+                      'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
                     }`}
                     placeholder="이름"
                     required
@@ -891,20 +951,24 @@ export default function SignupPage() {
                     onChange={(e) => {
                       const formatted = formatBirthDate(e.target.value);
                       setBirthDate(formatted);
-                      setBirthError('');
-                      setBirthValid(false);
+                      // 10자리 완성 시 자동 검증
+                      if (formatted.length === 10) {
+                        validateBirthDate(formatted);
+                      } else {
+                        setBirthError('');
+                        setBirthValid(false);
+                      }
                     }}
                     onBlur={() => {
                       if (birthDate) validateBirthDate(birthDate);
                     }}
-                    className={`w-full p-3 pr-10 border rounded-md focus:outline-none transition-colors ${
-                      birthError ? 'border-red-500' :
-                      birthValid ? 'border-green-500' :
-                      'border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
+                    className={`w-full p-3 pr-10 border rounded-md focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
+                      birthError ? 'border-red-500 dark:border-red-400' :
+                      birthValid ? 'border-green-500 dark:border-green-400' :
+                      'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
                     }`}
                     placeholder="YYYY.MM.DD"
                     maxLength={10}
-                    disabled={showIdStep}
                   />
                   {/* 캘린더 아이콘 버튼 */}
                   <Button
@@ -912,7 +976,6 @@ export default function SignupPage() {
                     variant="ghost"
                     size="icon"
                     onClick={() => setShowCalendar(true)}
-                    disabled={showIdStep}
                     className="absolute right-1 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 h-8 w-8"
                   >
                     <CalendarIcon className="h-5 w-5" />
@@ -930,6 +993,7 @@ export default function SignupPage() {
                           const formatted = `${year}.${month}.${day}`;
                           setBirthDate(formatted);
                           validateBirthDate(formatted);
+                          setShowCalendar(false);
                         }}
                         onClose={() => setShowCalendar(false)}
                         maxDate={new Date()}
@@ -956,7 +1020,7 @@ export default function SignupPage() {
                       type="button"
                       variant="primary"
                       onClick={handleBirthSubmit}
-                      disabled={!birthDate || birthDate.length < 10 || isLoading}
+                      disabled={!birthValid || isLoading}
                       className="w-full py-3 h-auto"
                     >
                       {isLoading ? '처리 중...' : '계속하기'}
@@ -993,10 +1057,10 @@ export default function SignupPage() {
                         setUsernameMessage('');
                       }
                     }}
-                    className={`flex-1 p-3 border rounded-md bg-white focus:outline-none transition-colors ${
-                      usernameChecked && !usernameAvailable ? 'border-red-500 ' : 
-                      usernameChecked && usernameAvailable ? 'border-green-500 ' : 
-                      'border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
+                    className={`flex-1 p-3 border rounded-md focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
+                      usernameChecked && !usernameAvailable ? 'border-red-500 dark:border-red-400' :
+                      usernameChecked && usernameAvailable ? 'border-green-500 dark:border-green-400' :
+                      'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
                     }`}
                     placeholder="아이디"
                     required
@@ -1065,10 +1129,10 @@ export default function SignupPage() {
                         setNicknameMessage('');
                       }
                     }}
-                    className={`flex-1 p-3 border rounded-md bg-white focus:outline-none transition-colors ${
-                      nicknameChecked && !nicknameAvailable ? 'border-red-500 ' : 
-                      nicknameChecked && nicknameAvailable ? 'border-green-500 ' : 
-                      'border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
+                    className={`flex-1 p-3 border rounded-md focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
+                      nicknameChecked && !nicknameAvailable ? 'border-red-500 dark:border-red-400' :
+                      nicknameChecked && nicknameAvailable ? 'border-green-500 dark:border-green-400' :
+                      'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
                     }`}
                     placeholder="닉네임"
                     required
@@ -1127,10 +1191,10 @@ export default function SignupPage() {
                       if (confirmPassword) validateConfirmPassword(confirmPassword);
                     }}
                     onBlur={() => validatePassword(password)}
-                    className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none transition-colors ${
-                      passwordError ? 'border-red-500 ' : 
-                      passwordValid ? 'border-green-500 ' : 
-                      'border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
+                    className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
+                      passwordError ? 'border-red-500 dark:border-red-400' :
+                      passwordValid ? 'border-green-500 dark:border-green-400' :
+                      'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
                     }`}
                     placeholder="비밀번호"
                     required
@@ -1201,10 +1265,10 @@ export default function SignupPage() {
                       validateConfirmPassword(e.target.value);
                     }}
                     onBlur={() => validateConfirmPassword(confirmPassword)}
-                    className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none transition-colors ${
-                      confirmPasswordError ? 'border-red-500 ' : 
-                      confirmPasswordValid ? 'border-green-500 ' : 
-                      'border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
+                    className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
+                      confirmPasswordError ? 'border-red-500 dark:border-red-400' :
+                      confirmPasswordValid ? 'border-green-500 dark:border-green-400' :
+                      'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
                     }`}
                     placeholder="비밀번호 확인"
                     required
@@ -1240,10 +1304,10 @@ export default function SignupPage() {
                       setReferralMessage('');
                       setReferrerNickname('');
                     }}
-                    className={`flex-1 p-3 border rounded-md focus:outline-none transition-colors ${
-                      referralChecked && !referralValid && referralCode.trim() ? 'border-red-500' :
-                      referralChecked && referralValid ? 'border-green-500' :
-                      'border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
+                    className={`flex-1 p-3 border rounded-md focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
+                      referralChecked && !referralValid && referralCode.trim() ? 'border-red-500 dark:border-red-400' :
+                      referralChecked && referralValid ? 'border-green-500 dark:border-green-400' :
+                      'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
                     }`}
                     placeholder="예: a1b2c3d4"
                     maxLength={8}

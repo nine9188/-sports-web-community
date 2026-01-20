@@ -125,11 +125,11 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
             <div className="flex items-center gap-2 mb-1 text-xs text-gray-500 dark:text-gray-400">
               <span>{dealInfo.store}</span>
               <span className="text-gray-300 dark:text-gray-600">|</span>
-              <span>{formatPrice(dealInfo.price)}</span>
+              <span className="text-red-600 dark:text-red-400 font-bold">{formatPrice(dealInfo.price)}</span>
               {discountRate && (
                 <>
                   <span className="text-gray-300 dark:text-gray-600">|</span>
-                  <span>{discountRate}%</span>
+                  <span className="text-orange-600 dark:text-orange-400 font-medium">{discountRate}%↓</span>
                 </>
               )}
               <span className="text-gray-300 dark:text-gray-600">|</span>

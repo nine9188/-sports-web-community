@@ -891,50 +891,95 @@ api-sports.io:
 ## 11. 체크리스트
 
 ### Phase 0: 팬아웃 중복 제거
-- [ ] 경기 상세 페이지 데이터 흐름 분석
-- [ ] 기존 fetch 함수 → React `cache()` 래핑
-- [ ] 중복 호출 패턴 식별 및 정리
-- [ ] Suspense boundary 추가 (탭별 lazy loading)
+- [x] 경기 상세 페이지 데이터 흐름 분석
+- [x] 기존 fetch 함수 → React `cache()` 래핑
+- [x] 중복 호출 패턴 식별 및 정리
+- [ ] Suspense boundary 추가 (탭별 lazy loading) - 추후 진행
 
 ### Phase 1: 캐싱 유틸리티
-- [ ] `src/shared/utils/apiCache.ts` 생성
-- [ ] `export type CleanParams` + `export normalizeParams()`
-- [ ] `export buildFootballApiUrlFromClean()` (정규화된 params용)
-- [ ] `export buildFootballApiUrl()` (raw params용 편의 함수)
-- [ ] `API_CACHE_POLICY` 정책 테이블
-- [ ] `getMatchCacheTTL()` 상태/시간 기반 TTL (seconds 자동 변환)
-- [ ] `resolveCachePolicy()` endpoint + CleanParams + **reason** 반환
-- [ ] `src/shared/utils/footballApi.ts` - `fetchFootball()`
-  - [ ] reason 로깅 (TTL 결정 근거 추적)
-  - [ ] 429/5xx 재시도 (exponential backoff)
-- [ ] `.env` 설정
-  - [ ] `FOOTBALL_API_PROVIDER` (apisports / rapidapi)
-  - [ ] `ENABLE_CACHE_TAGS` (true / false, 기본 false)
+- [x] `src/shared/utils/apiCache.ts` 생성
+- [x] `export type CleanParams` + `export normalizeParams()`
+- [x] `export buildFootballApiUrlFromClean()` (정규화된 params용)
+- [x] `export buildFootballApiUrl()` (raw params용 편의 함수)
+- [x] `API_CACHE_POLICY` 정책 테이블
+- [x] `getMatchCacheTTL()` 상태/시간 기반 TTL (seconds 자동 변환)
+- [x] `resolveCachePolicy()` endpoint + CleanParams + **reason** 반환
+- [x] `src/shared/utils/footballApi.ts` - `fetchFootball()`
+  - [x] reason 로깅 (TTL 결정 근거 추적)
+  - [x] 429/5xx 재시도 (exponential backoff)
+- [x] `.env` 설정 (코드에 기본값 포함)
+  - [x] `FOOTBALL_API_PROVIDER` (apisports / rapidapi)
+  - [x] `ENABLE_CACHE_TAGS` (true / false, 기본 false)
 
 ### Phase 2: 정적 데이터
-- [ ] `teams/team.ts` 마이그레이션
-- [ ] `player/player.ts` 마이그레이션
-- [ ] `footballApi.ts` - `fetchLeagueDetails()` 등
+- [x] `teams/team.ts` 마이그레이션
+- [x] `player/player.ts` 마이그레이션
+- [x] `footballApi.ts` - 모든 함수 마이그레이션 완료
+  - [x] `fetchMatchesByDate()`
+  - [x] `fetchMultiDayMatches()`
+  - [x] `fetchMatchDetails()`
+  - [x] `fetchLeagueDetails()`
+  - [x] `fetchLeagueTeams()`
+  - [x] `fetchTeamTrophies()`
+  - [x] `fetchLeagueWinner()`
+  - [x] `fetchCupFinal()`
+  - [x] `fetchCupWinner()`
 
 ### Phase 3: 준정적 데이터
-- [ ] `teams/standings.ts` 마이그레이션
-- [ ] `teams/squad.ts` 마이그레이션
-- [ ] `teams/player-stats.ts` 마이그레이션
+- [x] `teams/standings.ts` 마이그레이션
+- [x] `teams/squad.ts` 마이그레이션
+- [x] `teams/player-stats.ts` 마이그레이션
+- [x] `teams/matches.ts` 마이그레이션
 
 ### Phase 4: 조건부 캐싱
-- [ ] `fetchMatchesByDate()` 상태별 TTL
-- [ ] `match/*` 조건부 캐싱
-- [ ] 종료 직후 window 적용
+- [x] `fetchMatchesByDate()` 상태별 TTL
+- [x] `match/*` 조건부 캐싱
+  - [x] `utils/matchDataApi.ts`
+  - [x] `match/eventData.ts`
+  - [x] `match/lineupData.ts`
+  - [x] `match/statsData.ts`
+- [x] 종료 직후 window 적용 (getMatchCacheTTL)
 
 ### Phase 5: 검증
-- [ ] 로깅 확인
-- [ ] api-sports 대시보드 호출 수 비교
-- [ ] 문서 업데이트
+- [x] 빌드 성공 확인 (2026-01-19)
+- [ ] 로깅 확인 - 배포 후 진행
+- [ ] api-sports 대시보드 호출 수 비교 - 배포 후 진행
+- [x] 문서 업데이트
+
+---
+
+## 12. 구현 완료 현황 (2026-01-19)
+
+### 생성된 파일
+| 파일 | 설명 |
+|------|------|
+| `src/shared/utils/apiCache.ts` | 캐시 정책 테이블, URL 빌더, TTL 유틸리티 |
+| `src/shared/utils/footballApi.ts` | 통합 fetchFootball() 함수 |
+
+### 마이그레이션된 파일 (11개)
+| 파일 | TTL 정책 |
+|------|----------|
+| `teams/team.ts` | teams: 24h, leagues: 24h, teams/statistics: 1h |
+| `player/player.ts` | players: 24h |
+| `teams/standings.ts` | leagues: 24h, standings: 1h |
+| `teams/squad.ts` | players/squads: 1h, coachs: 1h |
+| `teams/player-stats.ts` | leagues: 24h, players: 24h |
+| `teams/matches.ts` | fixtures: 동적 (15m 기본) |
+| `utils/matchDataApi.ts` | fixtures: 상태 기반 동적 (30s~15m) |
+| `match/eventData.ts` | fixtures/events: 상태 기반 동적 |
+| `match/lineupData.ts` | fixtures/lineups: 상태 기반 동적 |
+| `match/statsData.ts` | fixtures/statistics: 상태 기반 동적 |
+| `footballApi.ts` | 9개 함수 마이그레이션 (fetchMatchesByDate, fetchMultiDayMatches, fetchMatchDetails, fetchLeagueDetails, fetchLeagueTeams, fetchTeamTrophies, fetchLeagueWinner, fetchCupFinal, fetchCupWinner) |
+
+### 남은 작업 (추후 진행)
+- [ ] Suspense boundary 추가 (탭별 lazy loading)
+- [ ] 배포 후 로깅/대시보드 모니터링
+- [ ] api-sports 호출 수 모니터링 및 비용 절감 확인
 
 ---
 
 *작성일: 2026-01-19*
 *마지막 업데이트: 2026-01-19*
 *태스크: #11 외부 API 캐싱 강화*
-*예상 소요: 3-5일*
-*예상 효과: API 호출 70% 절감*
+*상태: ✅ 구현 완료*
+*예상 효과: API 호출 70% 절감, ~$40/월 비용 절감*

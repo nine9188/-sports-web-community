@@ -447,8 +447,8 @@ export function getPostTitleText(post: Post): string {
  * 게시글 제목 CSS 클래스 반환 (삭제/숨김 스타일)
  */
 export function getPostTitleClassName(post: Post, isCurrentPost: boolean): string {
-  const baseClass = 'text-xs';
-  const fontClass = isCurrentPost ? 'font-medium' : '';
+  const baseClass = 'text-sm';
+  const fontClass = isCurrentPost ? 'font-medium' : 'font-medium';
   const colorClass = 'text-gray-900 dark:text-[#F0F0F0]';
   const stateClass = isDeletedPost(post)
     ? 'text-red-500 dark:text-red-400'

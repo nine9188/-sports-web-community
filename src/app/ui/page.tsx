@@ -19,7 +19,8 @@ import {
   alertBaseStyles, alertBgSuccess, alertBgWarning, alertBgError, alertBgInfo,
   alertTextSuccess, alertTextWarning, alertTextError, alertTextInfo,
   errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles,
-  cardStyles, cardHeaderStyles, cardTitleStyles, cardSimpleStyles
+  cardStyles, cardHeaderStyles, cardTitleStyles, cardSimpleStyles,
+  inputBaseStyles, inputGrayBgStyles, focusStyles
 } from '@/shared/styles';
 
 export default function UIShowcasePage() {
@@ -200,44 +201,92 @@ export default function UIShowcasePage() {
           {/* Inputs */}
           {activeTab === 'inputs' && (
             <>
-              <Section title="Input">
+              <Section title="Input (스타일 상수)">
                 <div className="space-y-4 max-w-md">
-                  <input
-                    type="text"
-                    placeholder="기본 입력"
-                    className="w-full px-3 py-2 rounded-md border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-slate-800 dark:focus:ring-white/30 transition-colors"
-                  />
-                  <input
-                    type="text"
-                    placeholder="에러 상태"
-                    className="w-full px-3 py-2 rounded-md border-2 border-red-500 dark:border-red-400 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none"
-                  />
-                  <input
-                    type="text"
-                    placeholder="비활성"
-                    disabled
-                    className="w-full px-3 py-2 rounded-md border border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] text-gray-400 dark:text-gray-500 cursor-not-allowed"
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">기본 입력 (흰색 배경)</label>
+                    <input
+                      type="text"
+                      placeholder="inputBaseStyles + focusStyles"
+                      className={`w-full px-3 py-2 rounded-md ${inputBaseStyles} ${focusStyles}`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">회색 배경</label>
+                    <input
+                      type="text"
+                      placeholder="inputGrayBgStyles + focusStyles"
+                      className={`w-full px-3 py-2 rounded-md ${inputGrayBgStyles} ${focusStyles}`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">에러 상태</label>
+                    <input
+                      type="text"
+                      placeholder="border-red-500 dark:border-red-400"
+                      className={`w-full px-3 py-2 rounded-md ${inputBaseStyles} ${focusStyles} !border-red-500 dark:!border-red-400`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">성공 상태</label>
+                    <input
+                      type="text"
+                      placeholder="border-green-500 dark:border-green-400"
+                      className={`w-full px-3 py-2 rounded-md ${inputBaseStyles} ${focusStyles} !border-green-500 dark:!border-green-400`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">비활성</label>
+                    <input
+                      type="text"
+                      placeholder="disabled"
+                      disabled
+                      className={`w-full px-3 py-2 rounded-md ${inputBaseStyles}`}
+                    />
+                  </div>
+                </div>
+                <div className="mt-4 p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded text-xs font-mono text-gray-600 dark:text-gray-400">
+                  <p>import {'{'} inputBaseStyles, focusStyles {'}'} from &apos;@/shared/styles&apos;;</p>
+                  <p className="mt-2">&lt;input className={'{`... ${inputBaseStyles} ${focusStyles}`}'} /&gt;</p>
+                  <p className="mt-2 text-gray-500">{'// 에러: !border-red-500 dark:!border-red-400 추가'}</p>
+                  <p className="mt-1 text-gray-500">{'// 성공: !border-green-500 dark:!border-green-400 추가'}</p>
                 </div>
               </Section>
 
-              <Section title="Select">
+              <Section title="Select (스타일 상수)">
                 <div className="max-w-md">
-                  <select className="w-full px-3 py-2 rounded-md border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] focus:outline-none focus:ring-2 focus:ring-slate-800 dark:focus:ring-white/30">
+                  <select className={`w-full px-3 py-2 rounded-md ${inputBaseStyles} ${focusStyles}`}>
                     <option>옵션 1</option>
                     <option>옵션 2</option>
                     <option>옵션 3</option>
                   </select>
                 </div>
+                <div className="mt-4 p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded text-xs font-mono text-gray-600 dark:text-gray-400">
+                  <p>&lt;select className={'{`... ${inputBaseStyles} ${focusStyles}`}'}&gt;</p>
+                </div>
               </Section>
 
-              <Section title="Textarea">
-                <div className="max-w-md">
-                  <textarea
-                    placeholder="내용을 입력하세요"
-                    rows={4}
-                    className="w-full px-3 py-2 rounded-md border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-slate-800 dark:focus:ring-white/30 resize-none"
-                  />
+              <Section title="Textarea (스타일 상수)">
+                <div className="space-y-4 max-w-md">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">흰색 배경</label>
+                    <textarea
+                      placeholder="inputBaseStyles + focusStyles"
+                      rows={3}
+                      className={`w-full px-3 py-2 rounded-md resize-none ${inputBaseStyles} ${focusStyles}`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">회색 배경</label>
+                    <textarea
+                      placeholder="inputGrayBgStyles + focusStyles"
+                      rows={3}
+                      className={`w-full px-3 py-2 rounded-md resize-none ${inputGrayBgStyles} ${focusStyles}`}
+                    />
+                  </div>
+                </div>
+                <div className="mt-4 p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded text-xs font-mono text-gray-600 dark:text-gray-400">
+                  <p>&lt;textarea className={'{`... resize-none ${inputBaseStyles} ${focusStyles}`}'} /&gt;</p>
                 </div>
               </Section>
             </>
@@ -696,7 +745,7 @@ export default function UIShowcasePage() {
                               <input
                                 type="text"
                                 placeholder="이름을 입력하세요"
-                                className="w-full px-3 py-2 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-400"
+                                className={`w-full px-3 py-2 rounded-md ${inputBaseStyles} ${focusStyles}`}
                               />
                             </div>
                             <div>
@@ -706,7 +755,7 @@ export default function UIShowcasePage() {
                               <input
                                 type="email"
                                 placeholder="이메일을 입력하세요"
-                                className="w-full px-3 py-2 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-400"
+                                className={`w-full px-3 py-2 rounded-md ${inputBaseStyles} ${focusStyles}`}
                               />
                             </div>
                           </div>

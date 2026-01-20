@@ -12,7 +12,7 @@ import ClientHoverMenu from '../common/ClientHoverMenu';
 import PostList from '../post/PostList';
 import PopularPostList from '../post/PopularPostList';
 import { Pagination } from '@/shared/components/ui';
-import { NoticeList } from '../notice';
+import { NoticeList, type NoticeListPost } from '../notice';
 import { StoreFilterMenu } from '../hotdeal';
 import { isHotdealBoard } from '../../utils/hotdeal';
 import { Breadcrumb } from '../../types/board/data';
@@ -88,7 +88,7 @@ interface BoardDetailLayoutProps {
     weekPosts: PopularPost[];
   };
   // 공지사항 데이터
-  notices?: NoticePost[];
+  notices?: NoticeListPost[];
   // 커스텀 필터 컴포넌트 (인기글 기간 필터 등)
   filterComponent?: React.ReactNode;
   // 리스트 스타일 타입 (기본: text, 카드형: card)

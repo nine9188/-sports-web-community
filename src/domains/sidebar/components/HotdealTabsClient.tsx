@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
   Eye,
@@ -11,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Container, ContainerHeader, ContainerTitle, TabList, type TabItem } from '@/shared/components/ui';
 import { formatPrice, getDiscountRate } from '@/domains/boards/utils/hotdeal';
+import { HOTDEAL_BOARD_SLUGS } from '@/domains/boards/types/hotdeal';
 import type { HotdealPostsData, HotdealTabType, HotdealSidebarPost } from '../types/hotdeal';
 
 interface HotdealTabsClientProps {
@@ -18,7 +20,18 @@ interface HotdealTabsClientProps {
 }
 
 export function HotdealTabsClient({ postsData }: HotdealTabsClientProps) {
+  const pathname = usePathname();
   const [activeTab, setActiveTab] = useState<HotdealTabType>('hot');
+
+  // 현재 페이지가 핫딜 게시판인지 확인
+  const isHotdealPage = HOTDEAL_BOARD_SLUGS.some(slug =>
+    pathname?.startsWith(`/boards/${slug}`)
+  );
+
+  // 핫딜 게시판이 아니면 렌더링하지 않음
+  if (!isHotdealPage) {
+    return null;
+  }
 
   // 현재 탭에 맞는 게시글 배열 가져오기
   const getCurrentPosts = (): HotdealSidebarPost[] => {

@@ -294,8 +294,8 @@ function AccountRecoveryContent() {
                 }}
                 onBlur={() => validateFullName(fullName)}
                 className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
-                  fullNameError ? 'border-red-500' :
-                  fullNameValid ? 'border-green-500' :
+                  fullNameError ? 'border-red-500 dark:border-red-400' :
+                  fullNameValid ? 'border-green-500 dark:border-green-400' :
                   'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
                 } ${verificationSent ? 'bg-[#F5F5F5] dark:bg-[#262626]' : ''}`}
                 placeholder="가입시 입력한 이름"
@@ -331,8 +331,8 @@ function AccountRecoveryContent() {
                 }}
                 onBlur={() => validateEmail(email)}
                 className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
-                  emailError ? 'border-red-500' :
-                  emailValid ? 'border-green-500' :
+                  emailError ? 'border-red-500 dark:border-red-400' :
+                  emailValid ? 'border-green-500 dark:border-green-400' :
                   'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
                 } ${verificationSent ? 'bg-[#F5F5F5] dark:bg-[#262626]' : ''}`}
                 placeholder="가입시 사용한 이메일"
@@ -388,8 +388,8 @@ function AccountRecoveryContent() {
                   }}
                   onBlur={() => validateCode(verificationCode)}
                   className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
-                    codeError ? 'border-red-500' :
-                    codeValid ? 'border-green-500' :
+                    codeError ? 'border-red-500 dark:border-red-400' :
+                    codeValid ? 'border-green-500 dark:border-green-400' :
                     'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
                   }`}
                   placeholder="6자리 인증코드"
@@ -463,8 +463,8 @@ function AccountRecoveryContent() {
                 }}
                 onBlur={() => validateUsername(username)}
                 className={`w-full px-4 py-3 pl-12 border rounded-md md:rounded-md max-md:rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
-                  usernameError ? 'border-red-500' :
-                  usernameValid ? 'border-green-500' :
+                  usernameError ? 'border-red-500 dark:border-red-400' :
+                  usernameValid ? 'border-green-500 dark:border-green-400' :
                   'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
                 }`}
                 placeholder="가입시 설정한 아이디"

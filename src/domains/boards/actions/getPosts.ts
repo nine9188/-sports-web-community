@@ -14,6 +14,7 @@ import {
 } from './posts/fetchPostsHelpers';
 
 import type { DealInfo } from '../types/hotdeal';
+import { HOTDEAL_BOARD_SLUGS } from '../types/hotdeal';
 
 // Supabase 쿼리 결과 타입 (raw)
 interface RawPostData {
@@ -82,11 +83,12 @@ interface FetchPostsParams {
   page?: number;
   fromParam?: string;
   store?: string; // 쇼핑몰 필터
+  excludeHotdeal?: boolean; // 핫딜 게시판 제외 여부
 }
 
 export async function fetchPosts(params: FetchPostsParams): Promise<PostsResponse> {
   try {
-    const { boardId, boardIds, currentBoardId, limit = 20, page = 1, fromParam, store } = params;
+    const { boardId, boardIds, currentBoardId, limit = 20, page = 1, fromParam, store, excludeHotdeal = true } = params;
     const offset = (page - 1) * limit;
 
     const supabase = await getSupabaseServer();
@@ -148,6 +150,19 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
       targetBoardsFilter = targetBoardIds;
     }
 
+    // 핫딜 게시판 ID 조회 (excludeHotdeal이 true이고 전체 게시글 조회시)
+    let hotdealBoardIds: string[] = [];
+    if (excludeHotdeal && !currentBoardFilter && !targetBoardsFilter) {
+      const { data: hotdealBoards } = await supabase
+        .from('boards')
+        .select('id')
+        .in('slug', HOTDEAL_BOARD_SLUGS as unknown as string[]);
+
+      if (hotdealBoards) {
+        hotdealBoardIds = hotdealBoards.map(b => b.id);
+      }
+    }
+
     // 쿼리 구성
     let postsQuery = supabase
       .from('posts')
@@ -169,6 +184,13 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
       postsQuery = postsQuery.eq('board_id', currentBoardFilter);
     } else if (targetBoardsFilter?.length) {
       postsQuery = postsQuery.in('board_id', targetBoardsFilter);
+    }
+
+    // 핫딜 게시판 제외 필터 적용
+    if (hotdealBoardIds.length > 0) {
+      for (const hotdealId of hotdealBoardIds) {
+        postsQuery = postsQuery.neq('board_id', hotdealId);
+      }
     }
 
     // 쇼핑몰 필터 적용 (핫딜 게시판) - 다중 선택 지원
@@ -194,6 +216,13 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
       countQuery = countQuery.eq('board_id', currentBoardFilter);
     } else if (targetBoardsFilter?.length) {
       countQuery = countQuery.in('board_id', targetBoardsFilter);
+    }
+
+    // 핫딜 게시판 제외 필터 적용 (카운트)
+    if (hotdealBoardIds.length > 0) {
+      for (const hotdealId of hotdealBoardIds) {
+        countQuery = countQuery.neq('board_id', hotdealId);
+      }
     }
 
     // 쇼핑몰 필터 적용 (카운트) - 다중 선택 지원

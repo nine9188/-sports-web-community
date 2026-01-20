@@ -123,6 +123,7 @@ export default function Calendar({ selectedDate, onDateSelect, onClose, minDate,
       {/* Footer */}
       <div className="h-12 bg-[#F5F5F5] dark:bg-[#262626] px-3 flex items-center justify-between">
         <button
+          type="button"
           onClick={handleToday}
           className="px-3 py-2 text-sm font-medium text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors outline-none focus:outline-none"
         >
@@ -130,12 +131,14 @@ export default function Calendar({ selectedDate, onDateSelect, onClose, minDate,
         </button>
         <div className="flex gap-2">
           <button
+            type="button"
             onClick={onClose}
             className="px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors outline-none focus:outline-none"
           >
             취소
           </button>
           <button
+            type="button"
             onClick={handleConfirm}
             className="px-3 py-2 text-sm font-semibold bg-[#262626] dark:bg-[#3F3F3F] text-white hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] rounded transition-colors outline-none focus:outline-none"
           >
@@ -194,6 +197,7 @@ function DayGrid({
 
         return (
           <button
+            type="button"
             key={idx}
             onClick={() => !isDisabled && onDateSelect(day)}
             disabled={isDisabled}
@@ -240,6 +244,7 @@ function MonthGrid({
 
         return (
           <button
+            type="button"
             key={idx}
             onClick={() => !isDisabled && onMonthSelect(month)}
             disabled={isDisabled}
@@ -285,6 +290,7 @@ function YearGrid({
 
         return (
           <button
+            type="button"
             key={idx}
             onClick={() => !isDisabled && onYearSelect(year)}
             disabled={isDisabled}

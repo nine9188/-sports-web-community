@@ -29,7 +29,7 @@ function PostListSkeleton() {
       <div className="max-h-[500px] overflow-y-auto">
         <div className="p-4 space-y-2">
           {Array(10).fill(0).map((_, i) => (
-            <div key={i} className="h-5 bg-[#EAEAEA] dark:bg-[#333333] rounded animate-pulse"></div>
+            <div key={i} className="h-5 bg-[#F5F5F5] dark:bg-[#262626] rounded animate-pulse"></div>
           ))}
         </div>
       </div>

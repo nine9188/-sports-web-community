@@ -3,6 +3,7 @@
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi'
 import { fetchTeamPlayerStats } from '@/domains/livescore/actions/teams/player-stats'
 import { fetchTeamSquad } from '@/domains/livescore/actions/teams/squad'
+import { getPlayerKoreanName } from '@/domains/livescore/constants/players'
 
 type TeamId = number
 
@@ -277,42 +278,19 @@ export async function fetchTeamTopPlayers(teamId: TeamId): Promise<TeamTopPlayer
 	if (statsRes.success && statsRes.data) {
 		for (const [idStr, s] of Object.entries(statsRes.data)) {
 			const id = Number(idStr)
-			players.push({ playerId: id, name: idToName.get(id), goals: (s as PlayerStats).goals || 0, assists: (s as PlayerStats).assists || 0 })
+			// 1순위: 스쿼드에서 가져온 이름, 2순위: 로컬 한글 매핑
+			const squadName = idToName.get(id)
+			const koreanName = getPlayerKoreanName(id)
+			const displayName = squadName || koreanName || undefined
+			players.push({ playerId: id, name: displayName, goals: (s as PlayerStats).goals || 0, assists: (s as PlayerStats).assists || 0 })
 		}
 	}
 
 	const topScorers = [...players].sort((a, b) => b.goals - a.goals).slice(0, 5)
 	const topAssist = [...players].sort((a, b) => b.assists - a.assists).slice(0, 5)
 
-	// 이름이 비어있는 경우 players API로 보강 (테스트 페이지용 보강)
-	const now = new Date()
-	const year = now.getFullYear()
-	const month = now.getMonth() + 1
-	const season = month >= 7 ? year : year - 1
-
-	async function fillNames(items: TopPlayerItem[]): Promise<TopPlayerItem[]> {
-		const missingIds = items.filter(p => !p.name).map(p => p.playerId)
-		if (missingIds.length === 0) return items
-		const results = await Promise.all(missingIds.map(async (id) => {
-			try {
-				const res = await fetchFromFootballApi('players', { id, season })
-				const name = res?.response?.[0]?.player?.name as string | undefined
-				return { id, name }
-			} catch {
-				return { id, name: undefined }
-			}
-		}))
-		const idToName2 = new Map<number, string>()
-		results.forEach(r => { if (r.name) idToName2.set(r.id, r.name) })
-		return items.map(it => it.name ? it : { ...it, name: idToName2.get(it.playerId) })
-	}
-
-	const [scorersFilled, assistFilled] = await Promise.all([
-		fillNames(topScorers),
-		fillNames(topAssist)
-	])
-
-	return { teamId, topScorers: scorersFilled, topAssist: assistFilled }
+	// API 호출 없이 로컬 매핑만 사용 (성능 최적화)
+	return { teamId, topScorers, topAssist }
 }
 
 export async function getHeadToHeadTestData(teamA: TeamId, teamB: TeamId, last: number = 5): Promise<HeadToHeadTestData> {

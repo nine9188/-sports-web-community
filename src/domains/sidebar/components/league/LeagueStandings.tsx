@@ -187,7 +187,7 @@ export default function LeagueStandings({
         {loading ? (
           <div className="p-3 space-y-2">
             {[...Array(10)].map((_, i) => (
-              <div key={i} className="h-5 w-full bg-[#EAEAEA] dark:bg-[#333333] animate-pulse rounded-lg"></div>
+              <div key={i} className="h-5 w-full bg-[#F5F5F5] dark:bg-[#262626] animate-pulse rounded-lg"></div>
             ))}
           </div>
         ) : error ? (

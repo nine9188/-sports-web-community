@@ -245,8 +245,8 @@ function ResetPasswordContent() {
               }}
               onBlur={() => validatePassword(password)}
               className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
-                passwordError ? 'border-red-500' :
-                passwordValid ? 'border-green-500' :
+                passwordError ? 'border-red-500 dark:border-red-400' :
+                passwordValid ? 'border-green-500 dark:border-green-400' :
                 'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
               }`}
               placeholder="새 비밀번호 (최소 6자)"
@@ -294,8 +294,8 @@ function ResetPasswordContent() {
               }}
               onBlur={() => validateConfirmPassword(confirmPassword)}
               className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
-                confirmPasswordError ? 'border-red-500' :
-                confirmPasswordValid ? 'border-green-500' :
+                confirmPasswordError ? 'border-red-500 dark:border-red-400' :
+                confirmPasswordValid ? 'border-green-500 dark:border-green-400' :
                 'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
               }`}
               placeholder="새 비밀번호 확인"

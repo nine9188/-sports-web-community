@@ -59,7 +59,13 @@
       "Bash(npm run dev:*)",
       "Bash(npm run lint)",
       "Bash(npx next lint:*)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(npm run test:run:*)",
+      "Bash(for d in */)",
+      "Bash(git reset:*)",
+      "Bash(git clean:*)",
+      "Bash(claude mcp add:*)",
+      "mcp__sentry__update_issue"
     ]
   },
   "enableAllProjectMcpServers": true,

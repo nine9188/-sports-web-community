@@ -3,6 +3,7 @@
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { cache } from 'react';
 import { TopicPost } from '../types';
+import { HOTDEAL_BOARD_SLUGS } from '@/domains/boards/types/hotdeal';
 
 /**
  * 슬라이딩 윈도우 방식 HOT 인기글 조회
@@ -90,6 +91,18 @@ export const getHotPosts = cache(async (
       }
     });
 
+    // 핫딜 게시판 제외한 게시글만 필터링
+    const hotdealBoardIds = new Set(
+      (boardsData || [])
+        .filter((board) => board.slug && HOTDEAL_BOARD_SLUGS.includes(board.slug as any))
+        .map((board) => board.id)
+    );
+    const filteredPostsData = postsData.filter(post => !hotdealBoardIds.has(post.board_id));
+
+    if (filteredPostsData.length === 0) {
+      return { posts: [], windowDays, stats: { totalPosts: 0, avgScore: 0 } };
+    }
+
     // Step 4: 팀/리그 정보 가져오기
     const teamIds = (boardsData || [])
       .filter((b) => b.team_id)
@@ -122,7 +135,7 @@ export const getHotPosts = cache(async (
 
     // Step 5: 댓글 수 구하기
     const commentCounts: Record<string, number> = {};
-    const postIds = postsData.map(post => post.id);
+    const postIds = filteredPostsData.map(post => post.id);
 
     if (postIds.length > 0) {
       const { data: commentsData } = await supabase
@@ -140,7 +153,7 @@ export const getHotPosts = cache(async (
         });
       }
 
-      postsData.forEach(post => {
+      filteredPostsData.forEach(post => {
         if (!(post.id in commentCounts)) {
           commentCounts[post.id] = 0;
         }
@@ -149,7 +162,7 @@ export const getHotPosts = cache(async (
 
     // Step 6: 복합 점수 계산 및 정렬
     const now = Date.now();
-    const scoredPosts = postsData.map(post => {
+    const scoredPosts = filteredPostsData.map(post => {
       const boardInfo = post.board_id && boardMap[post.board_id]
         ? boardMap[post.board_id]
         : { name: '알 수 없음', slug: post.board_id || '', team_id: null, league_id: null };
@@ -219,7 +232,7 @@ export const getHotPosts = cache(async (
       posts: result,
       windowDays,
       stats: {
-        totalPosts: postsData.length,
+        totalPosts: filteredPostsData.length,
         avgScore
       }
     };

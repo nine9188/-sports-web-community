@@ -15,12 +15,12 @@ function LeagueStandingsSkeleton() {
       </div>
       <div className="flex border-b">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="flex-1 h-7 bg-[#EAEAEA] dark:bg-[#333333]"></div>
+          <div key={i} className="flex-1 h-7 bg-[#F5F5F5] dark:bg-[#262626]"></div>
         ))}
       </div>
       <div className="p-3 space-y-2">
         {[...Array(10)].map((_, i) => (
-          <div key={i} className="h-5 w-full bg-[#EAEAEA] dark:bg-[#333333] rounded"></div>
+          <div key={i} className="h-5 w-full bg-[#F5F5F5] dark:bg-[#262626] rounded"></div>
         ))}
       </div>
     </div>

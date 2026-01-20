@@ -4,6 +4,7 @@ import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { cache } from 'react';
 import { TopicPost } from '../types';
 import { getHotPosts } from './getHotPosts';
+import { HOTDEAL_BOARD_SLUGS } from '@/domains/boards/types/hotdeal';
 
 /**
  * 인기글 목록을 유형별로 조회하는 서버 액션
@@ -112,15 +113,28 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
     
     validBoards.forEach((board) => {
       if (board && board.id) {
-        boardMap[board.id] = { 
-          name: board.name || '', 
-          slug: board.slug || board.id, 
-          team_id: board.team_id || null, 
-          league_id: board.league_id || null 
+        boardMap[board.id] = {
+          name: board.name || '',
+          slug: board.slug || board.id,
+          team_id: board.team_id || null,
+          league_id: board.league_id || null
         };
       }
     });
-    
+
+    // 핫딜 게시판 제외한 게시글만 필터링
+    const hotdealBoardIds = new Set(
+      validBoards
+        .filter((board) => board.slug && HOTDEAL_BOARD_SLUGS.includes(board.slug as any))
+        .map((board) => board.id)
+    );
+    const filteredValidPosts = validPosts.filter(post => !hotdealBoardIds.has(post.board_id));
+
+    // 필터링 후 빈 배열인 경우 빠르게 반환
+    if (filteredValidPosts.length === 0) {
+      return [];
+    }
+
     // 4. 팀 및 리그 정보 가져오기
     const teamIds = validBoards
       .filter((b) => b.team_id)
@@ -158,7 +172,7 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
     
     // 6. 댓글 수 구하기 - 최적화된 단일 쿼리
     const commentCounts: Record<string, number> = {};
-    const postIds = validPosts.map(post => post.id);
+    const postIds = filteredValidPosts.map(post => post.id);
 
     if (postIds.length > 0) {
       // 모든 게시물의 댓글을 한 번에 가져와서 그룹화
@@ -179,17 +193,17 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
       }
 
       // 댓글이 없는 게시물은 0으로 초기화
-      validPosts.forEach(post => {
+      filteredValidPosts.forEach(post => {
         if (!(post.id in commentCounts)) {
           commentCounts[post.id] = 0;
         }
       });
     }
-    
+
     // 7. 처리된 데이터 생성
     const processedPosts: TopicPost[] = [];
-    
-    for (const post of validPosts) {
+
+    for (const post of filteredValidPosts) {
       if (!post || !post.id) continue;
       
       const boardInfo = post.board_id && boardMap[post.board_id]

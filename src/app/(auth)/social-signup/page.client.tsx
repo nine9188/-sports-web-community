@@ -260,8 +260,8 @@ export default function SocialSignupPage() {
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
                 className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 transition-colors ${
-                  nicknameError 
-                    ? 'border-red-500 focus:ring-red-300' 
+                  nicknameError
+                    ? 'border-red-500 dark:border-red-400 focus:ring-red-300'
                     : 'border-black/7 dark:border-white/10 focus:ring-gray-500'
                 }`}
                 placeholder="사용하실 닉네임을 입력하세요"
