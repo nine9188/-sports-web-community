@@ -81,6 +81,12 @@ export async function getChatFlowResponse(
         type: 'message',
         content: '무엇을 도와드릴까요?'
       });
+
+      // 칩버튼 다시 표시
+      steps.push({
+        type: 'chips',
+        chips: CHIP_BUTTONS.map(chip => chip.label)
+      });
     } else {
       // Smart response based on user input
       if (!userInput || userInput.trim() === '') {
@@ -201,6 +207,18 @@ export async function handleFormSubmission(
       conversationId,
       '더 도와드릴게 있을까요?',
       'bot'
+    );
+
+    // Add delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Show completion chips (괜찮아요 / 네 다른문의 할게요)
+    await sendMessage(
+      conversationId,
+      '',
+      'chips',
+      undefined,
+      { showCompletion: true }
     );
 
     return { success: true };

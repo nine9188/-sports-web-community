@@ -5,5 +5,7 @@ export interface Board {
   slug: string | null;
   display_order: number;
   parent_id: string | null;
+  team_id?: number | null;
+  league_id?: number | null;
   children?: Board[];
 } 

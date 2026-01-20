@@ -129,12 +129,12 @@ export default function NotificationItem({ notification, onRead, isSelected, onT
   return (
     <div
       className={`flex items-center transition-colors relative ${
-        !notification.is_read ? 'bg-[#F5F5F5] dark:bg-[#262626]' : ''
+        !notification.is_read ? 'bg-[#EAEAEA] dark:bg-[#333333]' : 'bg-white dark:bg-[#1D1D1D]'
       } ${isSelected ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
     >
       {/* 왼쪽 세로 바 (안읽은 알림 표시) */}
       {!notification.is_read && (
-        <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500" />
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#262626] dark:bg-[#F0F0F0]" />
       )}
 
       {/* 체크박스 영역 - 링크와 분리 */}

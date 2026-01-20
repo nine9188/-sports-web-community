@@ -3,7 +3,7 @@
 import { useCallback, useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faSignOutAlt, faChevronDown, faPenToSquare } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faSignOutAlt, faChevronDown, faPenToSquare, faComment, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { useIcon } from '@/shared/context/IconContext';
 import UserIcon from '@/shared/components/UserIcon';
 import { HeaderUserData } from '@/shared/types/user';
@@ -46,6 +46,12 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
     await logout();
   }, [logout]);
 
+  // 문의하기 (챗봇 열기)
+  const handleOpenChatbot = useCallback(() => {
+    setIsDropdownOpen(false);
+    window.dispatchEvent(new CustomEvent('open-chatbot', { detail: { mode: 'auto' } }));
+  }, []);
+
   // 드롭다운 메뉴 닫기 (외부 클릭 감지)
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -83,35 +89,89 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
 
         {/* 드롭다운 메뉴 */}
         {isDropdownOpen && (
-          <div
-            className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#1D1D1D] shadow-lg border border-black/7 dark:border-white/10 z-50 overflow-hidden"
-            style={{ borderRadius: '0.5rem' }}
-          >
-            <Link
-              href="/boards/soccer/create"
-              className="flex items-center px-4 py-2.5 text-sm text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors border-b border-black/5 dark:border-white/10"
-              onClick={() => setIsDropdownOpen(false)}
-            >
-              <FontAwesomeIcon icon={faPenToSquare} className="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
-              글쓰기
-            </Link>
-            <Link
-              href="/settings/profile"
-              className="flex items-center px-4 py-2.5 text-sm text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors border-b border-black/5 dark:border-white/10"
-              onClick={() => setIsDropdownOpen(false)}
-            >
-              <FontAwesomeIcon icon={faUser} className="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
-              프로필 설정
-            </Link>
-            <Button
-              variant="ghost"
-              data-testid="logout-button"
-              onClick={handleLogout}
-              className="flex items-center justify-start w-full px-4 py-2.5 h-auto rounded-none text-sm text-gray-900 dark:text-[#F0F0F0]"
-            >
-              <FontAwesomeIcon icon={faSignOutAlt} className="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
-              로그아웃
-            </Button>
+          <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-[#1D1D1D] shadow-xl border border-black/7 dark:border-white/10 rounded-xl z-50 overflow-hidden">
+            {/* 프로필 헤더 섹션 */}
+            <div className="px-4 py-3 border-b border-black/5 dark:border-white/10">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 relative rounded-full overflow-hidden">
+                  <UserIcon
+                    iconUrl={userData?.iconInfo?.iconUrl || iconUrl}
+                    level={userLevel}
+                    size={20}
+                    alt={userData?.iconInfo?.iconName || iconName || '프로필 이미지'}
+                    className="object-cover"
+                  />
+                </div>
+                <span className="font-semibold text-sm text-gray-900 dark:text-[#F0F0F0]">
+                  {userData.nickname || '사용자'}
+                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  Lv.{userLevel}
+                </span>
+              </div>
+            </div>
+
+            {/* 메뉴 항목들 */}
+            <div>
+              {/* 글쓰기 */}
+              <Link
+                href="/boards/soccer/create"
+                className="flex items-center w-full px-4 py-2.5 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
+                onClick={() => setIsDropdownOpen(false)}
+              >
+                <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-[#333333] flex items-center justify-center">
+                  <FontAwesomeIcon icon={faPenToSquare} className="h-4 w-4 text-gray-700 dark:text-gray-300" />
+                </div>
+                <span className="flex-1 ml-3 text-left text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                  글쓰기
+                </span>
+                <FontAwesomeIcon icon={faChevronRight} className="h-4 w-4 text-gray-400" />
+              </Link>
+
+              {/* 프로필 설정 */}
+              <Link
+                href="/settings/profile"
+                className="flex items-center w-full px-4 py-2.5 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
+                onClick={() => setIsDropdownOpen(false)}
+              >
+                <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-[#333333] flex items-center justify-center">
+                  <FontAwesomeIcon icon={faUser} className="h-4 w-4 text-gray-700 dark:text-gray-300" />
+                </div>
+                <span className="flex-1 ml-3 text-left text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                  프로필 설정
+                </span>
+                <FontAwesomeIcon icon={faChevronRight} className="h-4 w-4 text-gray-400" />
+              </Link>
+
+              {/* 문의하기 */}
+              <button
+                onClick={handleOpenChatbot}
+                className="flex items-center w-full px-4 py-2.5 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
+              >
+                <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-[#333333] flex items-center justify-center">
+                  <FontAwesomeIcon icon={faComment} className="h-4 w-4 text-gray-700 dark:text-gray-300" />
+                </div>
+                <span className="flex-1 ml-3 text-left text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                  문의하기
+                </span>
+                <FontAwesomeIcon icon={faChevronRight} className="h-4 w-4 text-gray-400" />
+              </button>
+
+              {/* 로그아웃 */}
+              <button
+                data-testid="logout-button"
+                onClick={handleLogout}
+                className="flex items-center w-full px-4 py-2.5 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
+              >
+                <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-[#333333] flex items-center justify-center">
+                  <FontAwesomeIcon icon={faSignOutAlt} className="h-4 w-4 text-gray-700 dark:text-gray-300" />
+                </div>
+                <span className="flex-1 ml-3 text-left text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                  로그아웃
+                </span>
+                <FontAwesomeIcon icon={faChevronRight} className="h-4 w-4 text-gray-400" />
+              </button>
+            </div>
           </div>
         )}
       </div>

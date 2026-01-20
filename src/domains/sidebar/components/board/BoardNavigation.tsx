@@ -1,13 +1,13 @@
-import { getBoardsData } from '../../actions/boards';
+import { getBoardsForNavigation } from '@/domains/layout/actions';
 import ClientBoardNavigation from './ClientBoardNavigation';
 
 // 서버 컴포넌트 (기본 내보내기) - Suspense 제거하고 바로 렌더링
 export default async function BoardNavigation() {
   try {
-    // 서버 측에서 데이터 가져오기 (캐싱 적용) - 로딩 없이 바로
-    const initialData = await getBoardsData();
-    
-    return <ClientBoardNavigation initialData={initialData} />;
+    // 서버 측에서 데이터 가져오기 (캐싱 적용) - 헤더와 동일한 액션 사용
+    const { boardData, totalPostCount } = await getBoardsForNavigation({ includeTotalPostCount: true });
+
+    return <ClientBoardNavigation initialData={{ rootBoards: boardData, totalPostCount }} />;
   } catch (error) {
     console.error('게시판 데이터 가져오기 오류:', error);
     // 에러 발생 시 에러 메시지 표시

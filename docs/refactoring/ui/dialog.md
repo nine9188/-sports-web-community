@@ -22,6 +22,7 @@
 | `src/domains/settings/components/account-delete/AccountDeleteForm.tsx` | 계정 삭제 확인 | default |
 | `src/domains/livescore/components/football/match/tabs/lineups/components/PlayerStatsModal.tsx` | 선수 통계 모달 | default |
 | `src/domains/shop/components/PurchaseModal.tsx` | 구매 확인 모달 | bottomSheet |
+여백 확인
 | `src/domains/settings/components/profile/NicknameChangeModal.tsx` | 닉네임 변경 | bottomSheet |
 
 ---

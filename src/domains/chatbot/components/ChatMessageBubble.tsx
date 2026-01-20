@@ -59,6 +59,7 @@ export function ChatMessageBubble({
   if (isChips && message.form_data) {
     const isCompletion = message.form_data.showCompletion;
     const chipLabels = message.form_data.chips as string[] | undefined;
+    const isClicked = message.form_data.is_clicked === true;
 
     return (
       <div className="flex items-start space-x-3 animate-in fade-in-0 slide-in-from-left-2 duration-300">
@@ -71,16 +72,16 @@ export function ChatMessageBubble({
         <div className="max-w-xs lg:max-w-md w-full">
           <Suspense fallback={<div className="animate-pulse bg-[#F5F5F5] dark:bg-[#262626] h-10 rounded-lg" />}>
             {isCompletion ? (
-              <div className="flex space-x-2 justify-center">
+              <div className="flex space-x-2">
                 <SingleChipButton
                   label="괜찮아요"
                   onClick={() => onChipClick && onChipClick({ label: '괜찮아요' })}
-                  disabled={false}
+                  disabled={isClicked}
                 />
                 <SingleChipButton
                   label="네 다른문의 할게요"
                   onClick={() => onChipClick && onChipClick({ label: '네 다른문의 할게요' })}
-                  disabled={false}
+                  disabled={isClicked}
                   variant="primary"
                 />
               </div>
@@ -88,14 +89,14 @@ export function ChatMessageBubble({
               // Show only specified chips
               <ChatChipButtons
                 onChipClick={onChipClick || (() => {})}
-                disabled={false}
+                disabled={isClicked}
                 filterLabels={chipLabels}
               />
             ) : (
               // Show all chips as fallback
               <ChatChipButtons
                 onChipClick={onChipClick || (() => {})}
-                disabled={false}
+                disabled={isClicked}
               />
             )}
           </Suspense>

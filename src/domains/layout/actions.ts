@@ -4,17 +4,24 @@ import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { cache } from 'react';
 import { Board } from './types/board';
 
-/**
- * 헤더 네비게이션용 게시판 데이터를 서버에서 미리 로드
- * 캐싱을 적용하여 성능 최적화
- */
-export const getBoardsForNavigation = cache(async (): Promise<{
+interface GetBoardsOptions {
+  includeTotalPostCount?: boolean;
+}
+
+interface GetBoardsResult {
   boardData: Board[];
   isAdmin: boolean;
-}> => {
+  totalPostCount?: number;
+}
+
+/**
+ * 헤더/사이드바 네비게이션용 게시판 데이터를 서버에서 미리 로드
+ * 캐싱을 적용하여 성능 최적화
+ */
+export const getBoardsForNavigation = cache(async (options?: GetBoardsOptions): Promise<GetBoardsResult> => {
   try {
     const supabase = await getSupabaseServer();
-    
+
     // 현재 사용자의 관리자 권한 확인
     let isAdmin = false;
     try {
@@ -30,13 +37,22 @@ export const getBoardsForNavigation = cache(async (): Promise<{
     } catch {
       // 관리자 권한 확인 실패해도 계속 진행
     }
-    
-    // 게시판 데이터 가져오기
-    const { data: boards, error } = await supabase
+
+    // 게시판 데이터와 전체 글 개수를 병렬로 가져오기
+    const boardsPromise = supabase
       .from('boards')
       .select('id, name, parent_id, display_order, slug, team_id, league_id')
       .order('display_order', { ascending: true })
       .order('name');
+
+    const postsCountPromise = options?.includeTotalPostCount
+      ? supabase.from('posts').select('*', { count: 'exact', head: true })
+      : Promise.resolve({ count: undefined });
+
+    const [boardsResult, postsCountResult] = await Promise.all([boardsPromise, postsCountPromise]);
+
+    const { data: boards, error } = boardsResult;
+    const totalPostCount = postsCountResult.count ?? undefined;
     
     if (error) {
       console.error('게시판 데이터 조회 오류:', error);
@@ -82,8 +98,8 @@ export const getBoardsForNavigation = cache(async (): Promise<{
     
     sortBoards(rootBoards);
     
-    return { boardData: rootBoards, isAdmin };
-    
+    return { boardData: rootBoards, isAdmin, totalPostCount };
+
   } catch (error) {
     console.error('게시판 데이터 로드 오류:', error);
     return { boardData: [], isAdmin: false };

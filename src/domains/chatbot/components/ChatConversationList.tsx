@@ -12,14 +12,16 @@ interface ChatConversationListProps {
   activeConversationId?: string;
   isLoading?: boolean;
   onNewConversation?: () => void;
+  getUnreadCount?: (conversationId: string) => number;
 }
 
-export function ChatConversationList({ 
-  conversations, 
-  onConversationSelect, 
+export function ChatConversationList({
+  conversations,
+  onConversationSelect,
   activeConversationId,
   isLoading = false,
-  onNewConversation 
+  onNewConversation,
+  getUnreadCount
 }: ChatConversationListProps) {
   if (isLoading) {
     return (
@@ -78,55 +80,70 @@ export function ChatConversationList({
       {/* 대화 목록 */}
       <div className="flex-1 overflow-y-auto min-h-0">
         <div className="divide-y divide-black/5 dark:divide-white/10">
-          {conversations.map((conversation) => (
-            <Button
-              key={conversation.id}
-              variant="ghost"
-              onClick={() => onConversationSelect(conversation.id)}
-              className={cn(
-                'w-full p-4 text-left justify-start rounded-none h-auto',
-                activeConversationId === conversation.id && 'bg-[#EAEAEA] dark:bg-[#333333] border-r-2 border-[#262626] dark:border-[#F0F0F0]'
-              )}
-            >
-              <div className="flex items-start space-x-3">
-                {/* Conversation Icon */}
-                <div className={cn(
-                  'flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center',
-                  conversation.status === 'active' ? 'bg-green-100 dark:bg-green-900/20' : 'bg-[#F5F5F5] dark:bg-[#262626]'
-                )}>
-                  <MessageCircle className={cn(
-                    'w-5 h-5',
-                    conversation.status === 'active' ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'
-                  )} />
-                </div>
+          {conversations.map((conversation) => {
+            const unreadCount = getUnreadCount ? getUnreadCount(conversation.id) : 0;
 
-                {/* Conversation Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between mb-1">
-                    <h4 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
-                      {conversation.title}
-                    </h4>
-                    <div className="flex items-center space-x-1 text-xs text-gray-700 dark:text-gray-300 ml-2">
-                      <Clock className="w-3 h-3" />
-                      <span>{formatMessageTime(conversation.last_message_at)}</span>
+            return (
+              <Button
+                key={conversation.id}
+                variant="ghost"
+                onClick={() => onConversationSelect(conversation.id)}
+                className={cn(
+                  'w-full p-4 text-left justify-start rounded-none h-auto',
+                  activeConversationId === conversation.id && 'bg-[#EAEAEA] dark:bg-[#333333] border-r-2 border-[#262626] dark:border-[#F0F0F0]'
+                )}
+              >
+                <div className="flex items-start space-x-3">
+                  {/* Conversation Icon with Unread Badge */}
+                  <div className="relative flex-shrink-0">
+                    <div className={cn(
+                      'w-10 h-10 rounded-full flex items-center justify-center',
+                      conversation.status === 'active' ? 'bg-green-100 dark:bg-green-900/20' : 'bg-[#F5F5F5] dark:bg-[#262626]'
+                    )}>
+                      <MessageCircle className={cn(
+                        'w-5 h-5',
+                        conversation.status === 'active' ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'
+                      )} />
+                    </div>
+                    {/* Unread Badge */}
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-red-500 text-white text-xs font-bold rounded-full">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Conversation Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between mb-1">
+                      <h4 className={cn(
+                        'text-sm truncate',
+                        unreadCount > 0 ? 'font-bold text-gray-900 dark:text-[#F0F0F0]' : 'font-medium text-gray-900 dark:text-[#F0F0F0]'
+                      )}>
+                        {conversation.title}
+                      </h4>
+                      <div className="flex items-center space-x-1 text-xs text-gray-700 dark:text-gray-300 ml-2">
+                        <Clock className="w-3 h-3" />
+                        <span>{formatMessageTime(conversation.last_message_at)}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className={cn(
+                        'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium',
+                        conversation.status === 'active' ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200' :
+                        conversation.status === 'completed' ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-800 dark:text-[#F0F0F0]' :
+                        'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300'
+                      )}>
+                        {conversation.status === 'active' ? '진행중' :
+                         conversation.status === 'completed' ? '완료' : '종료'}
+                      </span>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <span className={cn(
-                      'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium',
-                      conversation.status === 'active' ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200' :
-                      conversation.status === 'completed' ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-800 dark:text-[#F0F0F0]' :
-                      'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300'
-                    )}>
-                      {conversation.status === 'active' ? '진행중' :
-                       conversation.status === 'completed' ? '완료' : '종료'}
-                    </span>
-                  </div>
                 </div>
-              </div>
-            </Button>
-          ))}
+              </Button>
+            );
+          })}
         </div>
       </div>
 

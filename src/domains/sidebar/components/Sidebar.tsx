@@ -35,14 +35,15 @@ export default function Sidebar({
   authSection,
 }: SidebarProps) {
   return (
-    <>
-      {/* Overlay - 모바일에서만 표시 */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/70 z-[999] lg:hidden pointer-events-auto"
-          onClick={onClose}
-        />
-      )}
+    <div className="contents" suppressHydrationWarning>
+      {/* Overlay - 모바일에서만 표시, CSS로 visibility 제어 */}
+      <div
+        className={`fixed inset-0 bg-black/70 z-[999] lg:hidden transition-opacity duration-300 ${
+          isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={onClose}
+        suppressHydrationWarning
+      />
 
       {/* 데스크탑 사이드바 (왼쪽에 고정) */}
       <div
@@ -121,6 +122,6 @@ export default function Sidebar({
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

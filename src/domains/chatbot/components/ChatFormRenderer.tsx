@@ -6,6 +6,7 @@ import { cn } from '@/shared/utils/cn';
 import { Check, Send, X } from 'lucide-react';
 import Spinner from '@/shared/components/Spinner';
 import { Button, SelectRadix as Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui';
+import { focusStyles, inputGrayBgStyles } from '@/shared/styles';
 
 interface ChatFormRendererProps {
   formConfig: FormConfig;
@@ -98,16 +99,11 @@ export function ChatFormRenderer({
       required: field.required,
       disabled: isDisabled,
       className: cn(
-        'w-full px-3 py-2 border rounded-lg transition-colors',
-        'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0]',
-        'outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0',
-        'focus:bg-[#EAEAEA] dark:focus:bg-[#333333]',
-        error
-          ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20'
-          : (isSubmitted || isLocalSubmitted)
-            ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20'
-            : 'border-black/7 dark:border-white/10 hover:border-gray-400 dark:hover:border-gray-600',
-        isDisabled && 'opacity-75 cursor-not-allowed'
+        'w-full px-3 py-2 rounded-md',
+        inputGrayBgStyles,
+        focusStyles,
+        error && '!border-red-500 dark:!border-red-400',
+        (isSubmitted || isLocalSubmitted) && '!border-green-500 dark:!border-green-400'
       )
     };
 
@@ -133,12 +129,8 @@ export function ChatFormRenderer({
             <SelectTrigger
               id={field.name}
               className={cn(
-                error
-                  ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20'
-                  : (isSubmitted || isLocalSubmitted)
-                    ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20'
-                    : '',
-                isDisabled && 'opacity-75 cursor-not-allowed'
+                error && '!border-red-500 dark:!border-red-400',
+                (isSubmitted || isLocalSubmitted) && '!border-green-500 dark:!border-green-400'
               )}
             >
               <SelectValue placeholder="선택해주세요" />

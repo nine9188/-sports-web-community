@@ -119,7 +119,7 @@ export async function getBoardPageAllData(
       boardIds: boardResult.filteredBoardIds,
       currentBoardId: boardData.id,
       page: currentPage,
-      limit: 20,
+      limit: 30,
       fromParam,
       store
     }),

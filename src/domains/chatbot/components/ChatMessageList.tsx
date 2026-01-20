@@ -28,11 +28,26 @@ export function ChatMessageList({
 }: ChatMessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const prevMessageCountRef = useRef(messages.length);
+  const prevMessageCountRef = useRef(0);
+  const prevFirstMessageIdRef = useRef<string | null>(null);
 
-  // Optimized scroll: only scroll when new messages are added or typing starts
+  // 대화 전환 또는 초기 로드 시 스크롤
+  const firstMessageId = messages[0]?.id || null;
+
   useEffect(() => {
-    if (containerRef.current) {
+    if (containerRef.current && messages.length > 0) {
+      // 새로운 대화가 열렸을 때 (첫 메시지 ID가 변경됨)
+      if (prevFirstMessageIdRef.current !== firstMessageId) {
+        scrollToBottom(containerRef.current);
+        prevFirstMessageIdRef.current = firstMessageId;
+        prevMessageCountRef.current = messages.length;
+      }
+    }
+  }, [firstMessageId, messages.length]);
+
+  // 새 메시지 추가 또는 타이핑 시 스크롤
+  useEffect(() => {
+    if (containerRef.current && prevFirstMessageIdRef.current === firstMessageId) {
       const shouldScroll = messages.length > prevMessageCountRef.current || isTyping;
 
       if (shouldScroll) {
@@ -41,7 +56,7 @@ export function ChatMessageList({
 
       prevMessageCountRef.current = messages.length;
     }
-  }, [messages.length, isTyping]);
+  }, [messages.length, isTyping, firstMessageId]);
 
   useEffect(() => {
     const container = containerRef.current;

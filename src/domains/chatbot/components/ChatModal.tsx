@@ -3,7 +3,6 @@
 import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
-import { Button } from '@/shared/components/ui';
 
 interface ChatModalProps {
   isOpen: boolean;
@@ -43,16 +42,14 @@ export function ChatModal({ isOpen, onClose, children }: ChatModalProps) {
           'border border-black/7 dark:border-white/0'
         )}
       >
-        {/* Close Button */}
-        <Button
-          variant="ghost"
-          size="icon"
+        {/* Close Button - 공통 DialogCloseButton 스타일 */}
+        <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 rounded-full"
+          className="absolute top-4 right-4 z-10 h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors outline-none focus:outline-none"
           aria-label="채팅 닫기"
         >
-          <X className="w-5 h-5" />
-        </Button>
+          <X className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+        </button>
 
         {/* Modal Content */}
         <div className="flex-1 flex flex-col overflow-hidden">

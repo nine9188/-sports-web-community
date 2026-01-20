@@ -1,17 +1,9 @@
 // 사이드바 관련 타입 정의
 import { ReactNode } from 'react';
+import { Board } from '@/domains/layout/types/board';
 
-// 계층형 게시판 구조 타입
-export interface HierarchicalBoard {
-  id: string;
-  name: string;
-  slug: string;
-  parent_id: string | null;
-  display_order: number;
-  team_id: number | null;
-  league_id: number | null;
-  children: HierarchicalBoard[];
-}
+// 계층형 게시판 구조 타입 - layout의 Board 타입 사용
+export type HierarchicalBoard = Board;
 
 // 프로필 데이터 타입
 export interface ProfileData {

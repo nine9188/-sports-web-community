@@ -42,6 +42,9 @@ export const CHATBOT_MESSAGES = {
   NO_CONVERSATIONS: '대화 내역이 없습니다',
   START_NEW_CONVERSATION: '새 대화 시작하기',
 
+  // 대화 만료
+  CONVERSATION_EXPIRED: '하루동안 채팅이 진행되지 않아 채팅을 종료합니다.',
+
   // 입력 플레이스홀더
   PLACEHOLDER_MESSAGE: '메시지를 입력하세요...',
 

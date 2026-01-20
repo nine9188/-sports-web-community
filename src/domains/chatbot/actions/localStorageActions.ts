@@ -172,6 +172,33 @@ export class LocalChatStorage {
     this.saveData();
   }
 
+  markChipsAsClicked(conversationId: string, messageId?: string): void {
+    if (!this.data || !this.data.messages[conversationId]) return;
+
+    const messages = this.data.messages[conversationId];
+
+    if (messageId) {
+      // 특정 메시지 업데이트
+      const msg = messages.find(m => m.id === messageId);
+      if (msg && msg.type === 'chips' && msg.form_data) {
+        msg.form_data = { ...msg.form_data, is_clicked: true };
+        msg.updated_at = new Date().toISOString();
+      }
+    } else {
+      // 가장 최근의 클릭되지 않은 chips 메시지 찾기
+      for (let i = messages.length - 1; i >= 0; i--) {
+        const msg = messages[i];
+        if (msg.type === 'chips' && msg.form_data && !msg.form_data.is_clicked) {
+          msg.form_data = { ...msg.form_data, is_clicked: true };
+          msg.updated_at = new Date().toISOString();
+          break;
+        }
+      }
+    }
+
+    this.saveData();
+  }
+
   updateConversationStatus(conversationId: string, status: 'active' | 'completed' | 'closed'): void {
     if (!this.data) return;
 

@@ -3,6 +3,7 @@
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { ChatConversation } from '../types';
+import { CHATBOT_MESSAGES } from '../constants/messages';
 
 export async function createConversation(
   userId: string,
@@ -71,7 +72,52 @@ export async function getConversations(
       return { success: false, error: error.message };
     }
 
-    const conversations: ChatConversation[] = (data || []).map((conv) => ({
+    const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+    // 하루 이상 지난 active 대화들을 자동으로 종료
+    const expiredConversations = (data || []).filter((conv) => {
+      if (conv.status !== 'active') return false;
+      const lastMessageAt = new Date(conv.last_message_at || conv.created_at);
+      return lastMessageAt < oneDayAgo;
+    });
+
+    // 만료된 대화들 처리
+    for (const conv of expiredConversations) {
+      // 1. 시스템 메시지 추가
+      await supabase
+        .from('chat_messages')
+        .insert({
+          conversation_id: conv.id,
+          type: 'system',
+          content: CHATBOT_MESSAGES.CONVERSATION_EXPIRED,
+          is_read: false,
+          created_at: now.toISOString(),
+          updated_at: now.toISOString(),
+        });
+
+      // 2. 대화 상태를 completed로 변경
+      await supabase
+        .from('chat_conversations')
+        .update({
+          status: 'completed',
+          updated_at: now.toISOString(),
+        })
+        .eq('id', conv.id);
+    }
+
+    // 만료된 대화가 있으면 데이터를 다시 조회
+    let finalData = data;
+    if (expiredConversations.length > 0) {
+      const { data: refreshedData } = await supabase
+        .from('chat_conversations')
+        .select('*')
+        .eq('user_id', userId)
+        .order('last_message_at', { ascending: false });
+      finalData = refreshedData || data;
+    }
+
+    const conversations: ChatConversation[] = (finalData || []).map((conv) => ({
       id: conv.id,
       user_id: conv.user_id,
       title: conv.title || '대화',
