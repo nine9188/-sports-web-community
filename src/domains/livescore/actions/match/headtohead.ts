@@ -4,8 +4,29 @@ import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi'
 import { fetchTeamPlayerStats } from '@/domains/livescore/actions/teams/player-stats'
 import { fetchTeamSquad } from '@/domains/livescore/actions/teams/squad'
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players'
+import { cache } from 'react'
 
 type TeamId = number
+
+// Power 데이터 캐시 (TTL: 30분 - H2H는 변동이 느림)
+interface PowerCacheEntry {
+  data: HeadToHeadTestData
+  timestamp: number
+}
+
+const powerCache = new Map<string, PowerCacheEntry>()
+const POWER_CACHE_TTL = 30 * 60 * 1000 // 30분
+
+function getPowerCacheKey(teamA: TeamId, teamB: TeamId, last: number): string {
+  // 팀 ID 정렬하여 A-B, B-A가 같은 캐시 키를 사용하도록
+  const [id1, id2] = [teamA, teamB].sort((a, b) => a - b)
+  return `power-${id1}-${id2}-${last}`
+}
+
+function isPowerCacheValid(entry: PowerCacheEntry | undefined): boolean {
+  if (!entry) return false
+  return Date.now() - entry.timestamp < POWER_CACHE_TTL
+}
 
 interface BasicTeamInfo {
 	id: number
@@ -310,5 +331,47 @@ export async function getHeadToHeadTestData(teamA: TeamId, teamB: TeamId, last: 
 		topPlayers: { teamA: topA, teamB: topB }
 	}
 }
+
+// 캐시된 Power 데이터 가져오기 (서버 프리로드용)
+// TTL: 30분 (H2H 데이터는 변동이 느리므로 긴 TTL 적용)
+export async function fetchCachedPowerData(
+	teamA: TeamId,
+	teamB: TeamId,
+	last: number = 5
+): Promise<{ success: boolean; data?: HeadToHeadTestData; error?: string }> {
+	try {
+		if (!teamA || !teamB) {
+			return { success: false, error: '팀 ID가 필요합니다' }
+		}
+
+		const cacheKey = getPowerCacheKey(teamA, teamB, last)
+		const cacheEntry = powerCache.get(cacheKey)
+
+		// 캐시가 유효하면 바로 반환
+		if (isPowerCacheValid(cacheEntry)) {
+			return { success: true, data: cacheEntry!.data }
+		}
+
+		// 캐시가 없거나 만료된 경우 새로 가져오기
+		const data = await getHeadToHeadTestData(teamA, teamB, last)
+
+		// 캐시에 저장
+		powerCache.set(cacheKey, {
+			data,
+			timestamp: Date.now()
+		})
+
+		return { success: true, data }
+	} catch (error) {
+		console.error('[fetchCachedPowerData] 오류:', error)
+		return {
+			success: false,
+			error: error instanceof Error ? error.message : '전력 데이터를 불러오는데 실패했습니다'
+		}
+	}
+}
+
+// React cache로 래핑된 버전 (동일 렌더링 사이클 내 중복 호출 방지)
+export const getCachedPowerData = cache(fetchCachedPowerData)
 
 

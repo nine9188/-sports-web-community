@@ -6,6 +6,7 @@ import MatchHeader from '@/domains/livescore/components/football/match/MatchHead
 import { MatchInfoSection } from '@/domains/livescore/components/football/match/sidebar/MatchSidebar';
 import { fetchCachedMatchFullData, MatchFullDataResponse } from '@/domains/livescore/actions/match/matchData';
 import { getCachedSidebarData } from '@/domains/livescore/actions/match/sidebarData';
+import { getCachedPowerData } from '@/domains/livescore/actions/match/headtohead';
 import { MatchDataProvider } from '@/domains/livescore/components/football/match/context/MatchDataContext';
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
@@ -174,16 +175,28 @@ export default async function MatchPage({
       return notFound();
     }
 
-    // 사이드바 데이터 미리 로드
-    const sidebarDataResult = await getCachedSidebarData(matchId);
+    // 사이드바 데이터와 power 데이터를 병렬로 미리 로드
+    const homeTeamId = matchData.homeTeam?.id;
+    const awayTeamId = matchData.awayTeam?.id;
+
+    const [sidebarDataResult, powerDataResult] = await Promise.all([
+      getCachedSidebarData(matchId),
+      // power 데이터는 기본 탭이거나 power 탭일 때 프리로드
+      (homeTeamId && awayTeamId && (!initialTab || initialTab === 'power'))
+        ? getCachedPowerData(homeTeamId, awayTeamId, 5)
+        : Promise.resolve({ success: false })
+    ]);
+
     const sidebarData = sidebarDataResult.success ? sidebarDataResult.data : null;
-    
+    const powerData = powerDataResult.success ? powerDataResult.data : undefined;
+
     return (
       <div className="container">
         <MatchDataProvider
           initialMatchId={matchId}
           initialTab={initialTab ?? undefined}
           initialData={matchData}
+          initialPowerData={powerData}
         >
           <div className="flex gap-4">
             {/* 메인 콘텐츠 */}

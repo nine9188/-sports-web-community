@@ -89,13 +89,15 @@ interface MatchDataProviderProps {
   initialMatchId?: string;
   initialTab?: string;
   initialData?: Partial<MatchFullDataResponse>;
+  initialPowerData?: HeadToHeadTestData;
 }
 
 export function MatchDataProvider({
   children,
   initialMatchId,
   initialTab = 'power',
-  initialData = {}
+  initialData = {},
+  initialPowerData
 }: MatchDataProviderProps) {
   // initialData에 있는 탭들을 미리 loadedTabs에 추가
   const getInitialLoadedTabs = (): Set<string> => {
@@ -116,7 +118,10 @@ export function MatchDataProvider({
     if (initialData.standings !== undefined) {
       tabs.add(`${initialMatchId}-standings`);
     }
-    // power 탭은 별도 로직이므로 초기 데이터에서는 제외
+    // power 탭: 서버에서 프리로드된 데이터가 있으면 로드 완료로 표시
+    if (initialPowerData !== undefined) {
+      tabs.add(`${initialMatchId}-power`);
+    }
 
     return tabs;
   };
@@ -141,7 +146,8 @@ export function MatchDataProvider({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentTab, setCurrentTab] = useState<TabType>(initialTab as TabType);
-  const [powerData, setPowerData] = useState<HeadToHeadTestData | undefined>(undefined);
+  // power 데이터: 서버에서 프리로드된 데이터가 있으면 초기값으로 사용
+  const [powerData, setPowerData] = useState<HeadToHeadTestData | undefined>(initialPowerData);
 
   // 탭별 로드 완료 상태 추적 (initialData에 있는 탭들은 미리 로드된 것으로 표시)
   const [loadedTabs, setLoadedTabs] = useState<Set<string>>(() => getInitialLoadedTabs());
