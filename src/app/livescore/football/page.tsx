@@ -57,7 +57,8 @@ export default async function FootballLiveScorePage({
         id: match.id,
         status: {
           code: match.status.code,
-          name: match.status.name
+          name: match.status.name,
+          elapsed: match.status.elapsed
         },
         time: {
           date: match.time.date,

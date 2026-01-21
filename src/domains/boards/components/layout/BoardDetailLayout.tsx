@@ -208,8 +208,8 @@ export default function BoardDetailLayout({
         </div>
       )}
 
-      {/* 인기 게시글 위젯 - 공지사항 아래 표시 */}
-      {popularPosts && (popularPosts.todayPosts.length > 0 || popularPosts.weekPosts.length > 0) && (
+      {/* 인기 게시글 위젯 - 공지사항 아래 표시 (항상 4칸 표시) */}
+      {popularPosts && (
         <MemoizedBoardPopularPosts
           todayPosts={popularPosts.todayPosts}
           weekPosts={popularPosts.weekPosts}

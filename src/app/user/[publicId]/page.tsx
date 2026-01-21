@@ -42,7 +42,11 @@ export default async function UserProfilePage({ params }: PageProps) {
       </div>
 
       {/* 탭 + 리스트 + 페이지네이션 */}
-      <UserActivityTabs publicId={publicId} />
+      <UserActivityTabs
+        publicId={publicId}
+        initialPostCount={profile.post_count}
+        initialCommentCount={profile.comment_count}
+      />
     </main>
   );
 }

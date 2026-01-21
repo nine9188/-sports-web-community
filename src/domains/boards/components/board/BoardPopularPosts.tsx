@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui';
 import { renderContentTypeIcons } from '../post/postlist/components/shared/PostRenderers';
+import { skeletonText } from '@/shared/styles';
 
 interface PopularPost {
   id: string;
@@ -35,62 +36,99 @@ interface BoardPopularPostsProps {
   todayPosts: PopularPost[];
   weekPosts: PopularPost[];
   className?: string;
+  isLoading?: boolean;
 }
 
 export default function BoardPopularPosts({
   todayPosts,
   weekPosts,
-  className = ''
+  className = '',
+  isLoading = false,
 }: BoardPopularPostsProps) {
   const [activeTab, setActiveTab] = useState<'today' | 'week'>('today');
 
   const currentPosts = activeTab === 'today' ? todayPosts : weekPosts;
   const tabLabel = activeTab === 'today' ? '오늘 BEST' : '이번주 BEST';
 
+  // 스켈레톤 행 렌더링
+  const renderSkeletonRows = () => {
+    return Array(4).fill(0).map((_, i) => (
+      <tr
+        key={`skeleton-${i}`}
+        className={i !== 3 ? 'border-b border-black/5 dark:border-white/10' : ''}
+      >
+        <td className="py-1.5 px-3 align-middle w-6">
+          <span className="text-xs font-bold text-gray-500 dark:text-gray-400 leading-none">
+            {i + 1}
+          </span>
+        </td>
+        <td className="py-1.5 pr-3 align-middle">
+          <div className={`${skeletonText} h-3 w-full max-w-[200px]`} />
+        </td>
+      </tr>
+    ));
+  };
+
   const renderTableRows = (posts: PopularPost[]) => {
-    if (posts.length === 0) {
-      return (
-        <tr>
-          <td colSpan={2} className="px-4 py-8 text-center text-xs text-gray-500 dark:text-gray-400">
-            인기 게시글이 없습니다
-          </td>
-        </tr>
-      );
+    const displayedPosts = posts.slice(0, 4);
+    const rows = [];
+
+    // 항상 4개의 행을 렌더링
+    for (let i = 0; i < 4; i++) {
+      const post = displayedPosts[i];
+      const isLast = i === 3;
+
+      if (post) {
+        rows.push(
+          <tr
+            key={post.id}
+            className={`hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors ${
+              !isLast ? 'border-b border-black/5 dark:border-white/10' : ''
+            }`}
+          >
+            <td className="py-1.5 px-3 align-middle w-6">
+              <span className="text-xs font-bold text-gray-500 dark:text-gray-400 leading-none">
+                {i + 1}
+              </span>
+            </td>
+            <td className="py-1.5 pr-3 align-middle max-w-0">
+              <Link href={`/boards/${post.board_slug}/${post.post_number}`} className="block w-full overflow-hidden" prefetch={false}>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs truncate text-gray-900 dark:text-[#F0F0F0]">
+                    {post.title}
+                  </span>
+                  {renderContentTypeIcons(post)}
+                  {post.comment_count > 0 && (
+                    <span className="text-xs text-orange-600 dark:text-orange-400 flex-shrink-0 whitespace-nowrap">
+                      [{post.comment_count}]
+                    </span>
+                  )}
+                </div>
+              </Link>
+            </td>
+          </tr>
+        );
+      } else {
+        // 빈 행 렌더링
+        rows.push(
+          <tr
+            key={`empty-${i}`}
+            className={!isLast ? 'border-b border-black/5 dark:border-white/10' : ''}
+          >
+            <td className="py-1.5 px-3 align-middle w-6">
+              <span className="text-xs font-bold text-gray-500 dark:text-gray-400 leading-none">
+                {i + 1}
+              </span>
+            </td>
+            <td className="py-1.5 pr-3 align-middle">
+              <span className="text-xs text-gray-400 dark:text-gray-500">-</span>
+            </td>
+          </tr>
+        );
+      }
     }
 
-    const displayedPosts = posts.slice(0, 4);
-    return displayedPosts.map((post, index) => {
-      const isLast = index === displayedPosts.length - 1;
-      return (
-        <tr
-          key={post.id}
-          className={`hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors ${
-            !isLast ? 'border-b border-black/5 dark:border-white/10' : ''
-          }`}
-        >
-          <td className="py-1.5 px-3 align-middle w-6">
-            <span className="text-xs font-bold text-gray-500 dark:text-gray-400 leading-none">
-              {index + 1}
-            </span>
-          </td>
-          <td className="py-1.5 pr-3 align-middle max-w-0">
-            <Link href={`/boards/${post.board_slug}/${post.post_number}`} className="block w-full overflow-hidden" prefetch={false}>
-              <div className="flex items-center gap-1">
-                <span className="text-xs truncate text-gray-900 dark:text-[#F0F0F0]">
-                  {post.title}
-                </span>
-                {renderContentTypeIcons(post)}
-                {post.comment_count > 0 && (
-                  <span className="text-xs text-orange-600 dark:text-orange-400 flex-shrink-0 whitespace-nowrap">
-                    [{post.comment_count}]
-                  </span>
-                )}
-              </div>
-            </Link>
-          </td>
-        </tr>
-      );
-    });
+    return rows;
   };
 
   return (
@@ -123,7 +161,7 @@ export default function BoardPopularPosts({
         </div>
         <table className="w-full border-collapse">
           <tbody>
-            {renderTableRows(currentPosts)}
+            {isLoading ? renderSkeletonRows() : renderTableRows(currentPosts)}
           </tbody>
         </table>
       </div>
@@ -139,7 +177,7 @@ export default function BoardPopularPosts({
             </div>
             <table className="w-full border-collapse">
               <tbody>
-                {renderTableRows(todayPosts)}
+                {isLoading ? renderSkeletonRows() : renderTableRows(todayPosts)}
               </tbody>
             </table>
           </div>
@@ -152,7 +190,7 @@ export default function BoardPopularPosts({
             </div>
             <table className="w-full border-collapse">
               <tbody>
-                {renderTableRows(weekPosts)}
+                {isLoading ? renderSkeletonRows() : renderTableRows(weekPosts)}
               </tbody>
             </table>
           </div>

@@ -304,6 +304,54 @@ import Spinner from '@/shared/components/Spinner';
 - ❌ Use different border colors or styles
 - ❌ Use any old spinner components (LoadingState, etc.)
 
+### Pagination
+
+**Location**: `src/shared/components/ui/pagination.tsx`
+
+**Usage Rules**:
+- 페이지네이션은 항상 **컨테이너 밖**에 배치
+- 위 여백 없이 아래 여백만 사용 (`pb-4`)
+- `totalPages > 1`일 때만 표시
+
+**Props**:
+- `currentPage`: 현재 페이지 (1부터 시작)
+- `totalPages`: 전체 페이지 수
+- `onPageChange`: 페이지 변경 콜백 (button 모드)
+- `mode`: `'url'` (Link 기반) 또는 `'button'` (콜백 기반)
+- `maxButtons`: 표시할 최대 페이지 버튼 수 (기본값: 5)
+
+**Example**:
+```tsx
+import { Pagination } from '@/shared/components/ui';
+
+// 컨테이너 구조
+<>
+  <div className="bg-white dark:bg-[#1D1D1D] ...">
+    {/* 메인 콘텐츠 */}
+  </div>
+
+  {/* 페이지네이션 - 컨테이너 밖, 위 여백 없음 */}
+  {totalPages > 1 && (
+    <div className="pb-4">
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        mode="button"
+        maxButtons={5}
+      />
+    </div>
+  )}
+</>
+```
+
+**필터 변경 시 페이지 리셋**:
+```tsx
+useEffect(() => {
+  setCurrentPage(1);
+}, [filter, typeFilter]);
+```
+
 ## Path Aliases
 
 Configured in `tsconfig.json`:

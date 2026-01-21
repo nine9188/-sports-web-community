@@ -1,14 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Bell, CheckCheck, Trash2, ChevronDown } from 'lucide-react';
 import { markNotificationAsRead, markAllNotificationsAsRead } from '@/domains/notifications/actions/read';
 import { deleteNotifications } from '@/domains/notifications/actions/delete';
 import { NotificationType } from '@/domains/notifications/types/notification';
 import NotificationItem from '@/domains/notifications/components/NotificationItem';
 import Spinner from '@/shared/components/Spinner';
-import { Button } from '@/shared/components/ui';
+import { Button, Pagination } from '@/shared/components/ui';
 import { useNotifications, useNotificationCache } from '@/domains/notifications/hooks/useNotificationQueries';
+
+const ITEMS_PER_PAGE = 15;
 
 type FilterType = 'all' | 'unread';
 type TypeFilter = 'all' | NotificationType;
@@ -32,6 +34,7 @@ export default function NotificationsPage() {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // React Query로 알림 데이터 관리
   const { data, isLoading } = useNotifications(100);
@@ -80,12 +83,22 @@ export default function NotificationsPage() {
     });
   };
 
-  // 전체 선택/해제
+  // 전체 선택/해제 (현재 페이지 기준)
   const handleToggleSelectAll = () => {
-    if (selectedIds.size === filteredNotifications.length) {
-      setSelectedIds(new Set());
+    if (isAllSelected) {
+      // 현재 페이지 아이템만 선택 해제
+      setSelectedIds(prev => {
+        const newSet = new Set(prev);
+        paginatedNotifications.forEach(n => newSet.delete(n.id));
+        return newSet;
+      });
     } else {
-      setSelectedIds(new Set(filteredNotifications.map(n => n.id)));
+      // 현재 페이지 아이템 선택 추가
+      setSelectedIds(prev => {
+        const newSet = new Set(prev);
+        paginatedNotifications.forEach(n => newSet.add(n.id));
+        return newSet;
+      });
     }
   };
 
@@ -114,22 +127,38 @@ export default function NotificationsPage() {
   };
 
   // 필터링된 알림 목록
-  const filteredNotifications = notifications.filter(notification => {
-    // 읽음/안읽음 필터
-    if (filter === 'unread' && notification.is_read) {
-      return false;
-    }
-    // 타입 필터
-    if (typeFilter !== 'all' && notification.type !== typeFilter) {
-      return false;
-    }
-    return true;
-  });
+  const filteredNotifications = useMemo(() => {
+    return notifications.filter(notification => {
+      // 읽음/안읽음 필터
+      if (filter === 'unread' && notification.is_read) {
+        return false;
+      }
+      // 타입 필터
+      if (typeFilter !== 'all' && notification.type !== typeFilter) {
+        return false;
+      }
+      return true;
+    });
+  }, [notifications, filter, typeFilter]);
 
-  // 전체 선택 여부
-  const isAllSelected = filteredNotifications.length > 0 && selectedIds.size === filteredNotifications.length;
+  // 필터 변경 시 페이지 리셋
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, typeFilter]);
+
+  // 페이지네이션 계산
+  const totalPages = Math.ceil(filteredNotifications.length / ITEMS_PER_PAGE);
+  const paginatedNotifications = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredNotifications.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredNotifications, currentPage]);
+
+  // 전체 선택 여부 (현재 페이지 기준)
+  const isAllSelected = paginatedNotifications.length > 0 &&
+    paginatedNotifications.every(n => selectedIds.has(n.id));
 
   return (
+    <>
     <div className="bg-white dark:bg-[#1D1D1D] md:border md:border-black/7 md:dark:border-0 md:rounded-lg">
       {/* 헤더 */}
       <div className="h-12 px-4 bg-[#F5F5F5] dark:bg-[#262626] md:rounded-t-lg border-b border-black/5 dark:border-white/10 flex items-center justify-between">
@@ -277,7 +306,7 @@ export default function NotificationsPage() {
         </div>
       ) : filteredNotifications.length > 0 ? (
         <div className="divide-y divide-black/5 dark:divide-white/10 overflow-hidden md:rounded-b-lg">
-          {filteredNotifications.map((notification) => (
+          {paginatedNotifications.map((notification) => (
             <NotificationItem
               key={notification.id}
               notification={notification}
@@ -301,5 +330,19 @@ export default function NotificationsPage() {
         </div>
       )}
     </div>
+
+    {/* 페이지네이션 - 컨테이너 밖 */}
+    {!isLoading && totalPages > 1 && (
+      <div className="pb-4">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          mode="button"
+          maxButtons={5}
+        />
+      </div>
+    )}
+  </>
   );
 }

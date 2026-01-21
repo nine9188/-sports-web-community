@@ -206,8 +206,8 @@ export default function CommentSection({
 
         {/* 답글 대상 표시 */}
         {replyTo && replyToNickname && (
-          <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-md flex items-center justify-between">
-            <div className="flex items-center text-sm text-blue-700 dark:text-blue-400">
+          <div className="mb-3 p-3 bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 rounded-md flex items-center justify-between">
+            <div className="flex items-center text-sm text-gray-900 dark:text-[#F0F0F0]">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
               </svg>

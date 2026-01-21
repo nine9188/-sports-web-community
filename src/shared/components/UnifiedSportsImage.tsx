@@ -159,7 +159,27 @@ export default function UnifiedSportsImage({
     );
   }
 
-  // Next.js Image 렌더링 - 자동 최적화 및 CDN 캐싱
+  // 작은 이미지(48px 이하)는 일반 img 태그로 직접 로드 (Next.js 최적화 우회 → 더 빠름)
+  const useNativeImg = finalWidth <= 48 && finalHeight <= 48;
+
+  if (useNativeImg) {
+    return (
+      <div className={containerClasses} style={containerStyle}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={alt}
+          width={finalWidth}
+          height={finalHeight}
+          loading={loading}
+          onError={() => setHasError(true)}
+          className={`w-full h-full ${finalFit === 'contain' ? 'object-contain' : 'object-cover'}`}
+        />
+      </div>
+    );
+  }
+
+  // 큰 이미지는 Next.js Image로 최적화
   return (
     <div className={containerClasses} style={containerStyle}>
       <Image

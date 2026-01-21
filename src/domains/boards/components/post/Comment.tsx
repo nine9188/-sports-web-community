@@ -156,7 +156,7 @@ export default function Comment({
     <>
       <div 
         id={`comment-${comment.id}`}
-        className={`border-b border-black/5 dark:border-white/10 py-3 px-4 transition-colors hover:bg-[#F5F5F5] dark:hover:bg-[#252525] ${isReply ? 'pl-12 bg-[#F5F5F5]/50 dark:bg-[#1A1A1A]' : ''}`}
+        className={`border-b border-black/5 dark:border-white/10 py-3 px-4 ${isReply ? 'pl-12 bg-[#F5F5F5]/50 dark:bg-[#1A1A1A]' : ''}`}
       >
         <div className="flex space-x-2">
           {/* 대댓글 표시 아이콘 */}
