@@ -11,8 +11,8 @@ export default async function BrandingPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">브랜딩 관리</h1>
-        <p className="mt-1 text-sm text-gray-600">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0]">브랜딩 관리</h1>
+        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
           로고, 파비콘, 색상 등 브랜딩 요소를 관리합니다
         </p>
       </div>
@@ -20,9 +20,9 @@ export default async function BrandingPage() {
       <BrandingSettingsForm initialSettings={settings} />
 
       {/* 브랜딩 가이드 */}
-      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-        <h4 className="font-semibold text-purple-900 mb-2">🎨 브랜딩 가이드</h4>
-        <ul className="space-y-1 text-sm text-purple-800">
+      <div className="bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 rounded-lg p-4">
+        <h4 className="font-semibold text-gray-900 dark:text-[#F0F0F0] mb-2">브랜딩 가이드</h4>
+        <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
           <li>• <strong>로고</strong>: SVG 또는 PNG 형식 권장 (투명 배경)</li>
           <li>• <strong>파비콘</strong>: 16x16, 32x32, 192x192 크기 준비</li>
           <li>• <strong>OG 이미지</strong>: 1200x630px (SNS 공유용)</li>
@@ -32,166 +32,166 @@ export default async function BrandingPage() {
       </div>
 
       {/* 파비콘 상태 확인 */}
-      <div className="bg-white shadow rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">파비콘 상태</h3>
+      <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0] mb-4">파비콘 상태</h3>
         <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
             <div className="flex items-center gap-3">
               <img src="/favicon.ico" alt="favicon" className="w-8 h-8" />
               <div>
-                <p className="text-sm font-medium text-gray-900">favicon.ico (48x48)</p>
-                <p className="text-xs text-gray-500">/public/favicon.ico - 브라우저 탭 아이콘</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">favicon.ico (48x48)</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">/public/favicon.ico - 브라우저 탭 아이콘</p>
               </div>
             </div>
-            <span className="text-xs text-green-600 font-medium">✓ 적용됨</span>
+            <span className="text-xs text-green-600 dark:text-green-400 font-medium">✓ 적용됨</span>
           </div>
 
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
             <div className="flex items-center gap-3">
               <img src="/apple-icon.png" alt="apple-icon" className="w-8 h-8 rounded" />
               <div>
-                <p className="text-sm font-medium text-gray-900">Apple Touch Icon (180x180)</p>
-                <p className="text-xs text-gray-500">/public/apple-icon.png - iOS 홈 화면용</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">Apple Touch Icon (180x180)</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">/public/apple-icon.png - iOS 홈 화면용</p>
               </div>
             </div>
-            <span className="text-xs text-green-600 font-medium">✓ 적용됨</span>
+            <span className="text-xs text-green-600 dark:text-green-400 font-medium">✓ 적용됨</span>
           </div>
 
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
             <div className="flex items-center gap-3">
               <img src="/icon-96.png" alt="icon-96" className="w-8 h-8 rounded" />
               <div>
-                <p className="text-sm font-medium text-gray-900">Desktop Icon (96x96)</p>
-                <p className="text-xs text-gray-500">/public/icon-96.png - 데스크톱 바로가기용</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">Desktop Icon (96x96)</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">/public/icon-96.png - 데스크톱 바로가기용</p>
               </div>
             </div>
-            <span className="text-xs text-green-600 font-medium">✓ 적용됨</span>
+            <span className="text-xs text-green-600 dark:text-green-400 font-medium">✓ 적용됨</span>
           </div>
 
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
             <div className="flex items-center gap-3">
               <img src="/icon-192.png" alt="icon-192" className="w-8 h-8 rounded" />
               <div>
-                <p className="text-sm font-medium text-gray-900">Web App Icon (192x192)</p>
-                <p className="text-xs text-gray-500">/public/icon-192.png - PWA용</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">Web App Icon (192x192)</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">/public/icon-192.png - PWA용</p>
               </div>
             </div>
-            <span className="text-xs text-green-600 font-medium">✓ 적용됨</span>
+            <span className="text-xs text-green-600 dark:text-green-400 font-medium">✓ 적용됨</span>
           </div>
 
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
             <div className="flex items-center gap-3">
               <img src="/icon-512.png" alt="icon-512" className="w-8 h-8 rounded" />
               <div>
-                <p className="text-sm font-medium text-gray-900">Web App Icon (512x512)</p>
-                <p className="text-xs text-gray-500">/public/icon-512.png - PWA 고해상도용</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">Web App Icon (512x512)</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">/public/icon-512.png - PWA 고해상도용</p>
               </div>
             </div>
-            <span className="text-xs text-green-600 font-medium">✓ 적용됨</span>
+            <span className="text-xs text-green-600 dark:text-green-400 font-medium">✓ 적용됨</span>
           </div>
 
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
             <div className="flex items-center gap-3">
               <img src="/og-image.png" alt="og-image" className="w-16 h-8 rounded object-cover" />
               <div>
-                <p className="text-sm font-medium text-gray-900">OG Image (1200x630)</p>
-                <p className="text-xs text-gray-500">/public/og-image.png - SNS 공유용</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">OG Image (1200x630)</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">/public/og-image.png - SNS 공유용</p>
               </div>
             </div>
-            <span className="text-xs text-green-600 font-medium">✓ 적용됨</span>
+            <span className="text-xs text-green-600 dark:text-green-400 font-medium">✓ 적용됨</span>
           </div>
 
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
             <div>
-              <p className="text-sm font-medium text-gray-900">Web App Manifest</p>
-              <p className="text-xs text-gray-500">/public/site.webmanifest</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">Web App Manifest</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">/public/site.webmanifest</p>
             </div>
             <a
               href="/site.webmanifest"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+              className="text-xs text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium"
             >
               확인 →
             </a>
           </div>
         </div>
 
-        <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-          <p className="text-xs text-blue-800">
-            <strong>💡 확인 방법:</strong> 브라우저 탭에서 파비콘이 표시되는지 확인하거나,
-            <code className="mx-1 px-1 bg-blue-100 rounded">npx realfavicon check 3000</code>
+        <div className="mt-4 p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
+          <p className="text-xs text-gray-600 dark:text-gray-400">
+            <strong>확인 방법:</strong> 브라우저 탭에서 파비콘이 표시되는지 확인하거나,
+            <code className="mx-1 px-1 bg-gray-200 dark:bg-[#363636] rounded">npx realfavicon check 3000</code>
             명령어로 검증할 수 있습니다.
           </p>
         </div>
       </div>
 
       {/* 배포 환경 테스트 도구 */}
-      <div className="bg-white shadow rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">🧪 배포 환경 테스트</h3>
+      <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0] mb-4">배포 환경 테스트</h3>
         <div className="space-y-4">
           <div>
-            <h4 className="text-sm font-semibold text-gray-800 mb-2">파비콘 테스트</h4>
+            <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">파비콘 테스트</h4>
             <div className="space-y-2">
               <a
                 href="https://realfavicongenerator.net/favicon_checker"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block px-4 py-2 text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg border border-blue-200 transition-colors"
+                className="block px-4 py-2 text-sm bg-[#F5F5F5] dark:bg-[#262626] hover:bg-gray-200 dark:hover:bg-[#363636] text-gray-700 dark:text-gray-300 rounded-lg border border-black/7 dark:border-white/10 transition-colors"
               >
-                🔍 RealFaviconGenerator Checker - 모든 플랫폼 파비콘 확인
+                RealFaviconGenerator Checker - 모든 플랫폼 파비콘 확인
               </a>
-              <p className="text-xs text-gray-600 ml-4">
+              <p className="text-xs text-gray-600 dark:text-gray-400 ml-4">
                 • 배포 URL 입력하여 모든 기기/브라우저에서 파비콘 확인
               </p>
             </div>
           </div>
 
           <div>
-            <h4 className="text-sm font-semibold text-gray-800 mb-2">OG 이미지 & 메타데이터 테스트</h4>
+            <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">OG 이미지 & 메타데이터 테스트</h4>
             <div className="space-y-2">
               <a
                 href="https://www.opengraph.xyz/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block px-4 py-2 text-sm bg-green-50 hover:bg-green-100 text-green-700 rounded-lg border border-green-200 transition-colors"
+                className="block px-4 py-2 text-sm bg-[#F5F5F5] dark:bg-[#262626] hover:bg-gray-200 dark:hover:bg-[#363636] text-gray-700 dark:text-gray-300 rounded-lg border border-black/7 dark:border-white/10 transition-colors"
               >
-                📱 OpenGraph.xyz - OG 이미지 미리보기
+                OpenGraph.xyz - OG 이미지 미리보기
               </a>
               <a
                 href="https://cards-dev.twitter.com/validator"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block px-4 py-2 text-sm bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-lg border border-sky-200 transition-colors"
+                className="block px-4 py-2 text-sm bg-[#F5F5F5] dark:bg-[#262626] hover:bg-gray-200 dark:hover:bg-[#363636] text-gray-700 dark:text-gray-300 rounded-lg border border-black/7 dark:border-white/10 transition-colors"
               >
-                🐦 Twitter Card Validator - 트위터 카드 확인
+                Twitter Card Validator - 트위터 카드 확인
               </a>
               <a
                 href="https://developers.facebook.com/tools/debug/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block px-4 py-2 text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg border border-blue-200 transition-colors"
+                className="block px-4 py-2 text-sm bg-[#F5F5F5] dark:bg-[#262626] hover:bg-gray-200 dark:hover:bg-[#363636] text-gray-700 dark:text-gray-300 rounded-lg border border-black/7 dark:border-white/10 transition-colors"
               >
-                📘 Facebook Debugger - 페이스북 공유 미리보기
+                Facebook Debugger - 페이스북 공유 미리보기
               </a>
               <a
                 href="https://www.linkedin.com/post-inspector/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block px-4 py-2 text-sm bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg border border-indigo-200 transition-colors"
+                className="block px-4 py-2 text-sm bg-[#F5F5F5] dark:bg-[#262626] hover:bg-gray-200 dark:hover:bg-[#363636] text-gray-700 dark:text-gray-300 rounded-lg border border-black/7 dark:border-white/10 transition-colors"
               >
-                💼 LinkedIn Post Inspector - 링크드인 공유 확인
+                LinkedIn Post Inspector - 링크드인 공유 확인
               </a>
-              <p className="text-xs text-gray-600 ml-4">
+              <p className="text-xs text-gray-600 dark:text-gray-400 ml-4">
                 • 배포 URL 입력하여 각 플랫폼에서 어떻게 보이는지 확인<br />
                 • OG 이미지가 1200x630px인지, 제대로 로드되는지 확인
               </p>
             </div>
           </div>
 
-          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <h4 className="text-sm font-semibold text-yellow-900 mb-2">⚠️ 주의사항</h4>
-            <ul className="space-y-1 text-xs text-yellow-800">
+          <div className="mt-4 p-4 bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 rounded-lg">
+            <h4 className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0] mb-2">주의사항</h4>
+            <ul className="space-y-1 text-xs text-gray-600 dark:text-gray-400">
               <li>• <strong>캐시 문제:</strong> SNS는 OG 이미지를 캐싱하므로, 이미지 변경 시 위 도구에서 캐시를 강제로 갱신해야 합니다</li>
               <li>• <strong>절대 URL:</strong> OG 이미지는 반드시 절대 경로로 설정 (예: https://yourdomain.com/og-image.png)</li>
               <li>• <strong>HTTPS 필수:</strong> 대부분의 SNS는 HTTPS URL만 지원합니다</li>
@@ -200,13 +200,13 @@ export default async function BrandingPage() {
             </ul>
           </div>
 
-          <div className="mt-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
-            <h4 className="text-sm font-semibold text-purple-900 mb-2">🍎 Safari 제안 카드 최적화</h4>
-            <p className="text-xs text-purple-800 mb-2">
-              Safari는 일반적으로 화면 스냅샷을 제안 카드에 사용하지만, 
+          <div className="mt-4 p-4 bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 rounded-lg">
+            <h4 className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0] mb-2">Safari 제안 카드 최적화</h4>
+            <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+              Safari는 일반적으로 화면 스냅샷을 제안 카드에 사용하지만,
               특정 메타태그를 추가하면 OG 이미지를 우선 표시합니다.
             </p>
-            <ul className="space-y-1 text-xs text-purple-800">
+            <ul className="space-y-1 text-xs text-gray-600 dark:text-gray-400">
               <li>• <strong>확장 OG 태그:</strong> og:image:secure_url, twitter:image 등 자동 추가됨</li>
               <li>• <strong>이미지 형식:</strong> JPG 권장 (Safari가 JPG를 더 선호)</li>
               <li>• <strong>캐시 관리:</strong> Safari는 제안 카드를 강하게 캐싱하므로 변경 후 시간 필요</li>

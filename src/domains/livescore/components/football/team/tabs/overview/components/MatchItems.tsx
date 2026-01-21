@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -48,6 +49,8 @@ interface MatchItemsProps {
   teamId: number;
 }
 
+const DISPLAY_LIMIT = 5;
+
 export default function MatchItems({ matches, teamId }: MatchItemsProps) {
   const router = useRouter();
 
@@ -56,52 +59,49 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
     router.push(`/livescore/football/match/${fixtureId}`);
   };
 
+  // 경기 필터링 로직 - 종료된 경기 (최신순) - 5개만
+  const recentMatches = useMemo(() => {
+    if (!matches) return [];
+    return matches
+      .filter(match =>
+        match.fixture.status.short === 'FT' ||
+        match.fixture.status.short === 'AET' ||
+        match.fixture.status.short === 'PEN' ||
+        match.fixture.status.short === 'FT_PEN' ||
+        match.fixture.status.short === 'AWD' ||
+        match.fixture.status.short === 'WO' ||
+        match.fixture.status.short === 'CANC'
+      )
+      .sort((a, b) => new Date(b.fixture.date).getTime() - new Date(a.fixture.date).getTime())
+      .slice(0, DISPLAY_LIMIT);
+  }, [matches]);
+
+  // 예정된 경기 필터링 (날짜순) - 5개만
+  const upcomingMatches = useMemo(() => {
+    if (!matches) return [];
+    return matches
+      .filter(match =>
+        match.fixture.status.short === 'NS' ||
+        match.fixture.status.short === 'TBD' ||
+        match.fixture.status.short === 'SUSP' ||
+        match.fixture.status.short === 'PST' ||
+        match.fixture.status.short === '1H' ||
+        match.fixture.status.short === '2H' ||
+        match.fixture.status.short === 'HT' ||
+        match.fixture.status.short === 'ET' ||
+        match.fixture.status.short === 'BT' ||
+        match.fixture.status.short === 'P' ||
+        match.fixture.status.short === 'INT' ||
+        match.fixture.status.short === 'LIVE'
+      )
+      .sort((a, b) => new Date(a.fixture.date).getTime() - new Date(b.fixture.date).getTime())
+      .slice(0, DISPLAY_LIMIT);
+  }, [matches]);
+
   // 매치 데이터가 없으면 null 반환
   if (!matches || matches.length === 0) {
     return null;
   }
-
-  // 경기 필터링 로직
-  const recentMatches = matches
-    ? matches
-        .filter(match => 
-          // 경기가 이미 종료된 경우
-          match.fixture.status.short === 'FT' || 
-          match.fixture.status.short === 'AET' ||
-          match.fixture.status.short === 'PEN' ||
-          match.fixture.status.short === 'FT_PEN' ||
-          // 추가적인 종료 상태 처리
-          match.fixture.status.short === 'AWD' || // Awarded (결정된 경기)
-          match.fixture.status.short === 'WO' || // Walkover (몰수승)
-          match.fixture.status.short === 'CANC' // Cancelled but with result
-        )
-        .sort((a, b) => new Date(b.fixture.date).getTime() - new Date(a.fixture.date).getTime())
-        .slice(0, 5)
-    : [];
-
-  // 예정된 경기 필터링
-  const upcomingMatches = matches
-    ? matches
-        .filter(match => 
-          // 예정된 경기 또는 향후 일정
-          match.fixture.status.short === 'NS' || // Not Started
-          match.fixture.status.short === 'TBD' || // To Be Defined
-          match.fixture.status.short === 'SUSP' || // Suspended
-          match.fixture.status.short === 'PST' || // Postponed
-          match.fixture.status.short === 'CANC' || // Cancelled
-          // 현재 진행 중인 경기도 예정된 경기에 포함
-          match.fixture.status.short === '1H' || // 전반전
-          match.fixture.status.short === '2H' || // 후반전
-          match.fixture.status.short === 'HT' || // 하프타임
-          match.fixture.status.short === 'ET' || // 연장전
-          match.fixture.status.short === 'BT' || // 승부차기 전
-          match.fixture.status.short === 'P' || // 승부차기
-          match.fixture.status.short === 'INT' || // 경기 중단
-          match.fixture.status.short === 'LIVE' // 라이브
-        )
-        .sort((a, b) => new Date(a.fixture.date).getTime() - new Date(b.fixture.date).getTime())
-        .slice(0, 5)
-    : [];
 
   return (
     <div className="space-y-4">

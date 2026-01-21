@@ -46,42 +46,160 @@ export default function TeamLoading() {
       </div>
 
       {/* 탭 콘텐츠 - 개요 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* 최근 경기 */}
+      <div className="space-y-4">
+        {/* 1. 기본 정보 + 시즌 통계 (StatsCards) */}
         <div className={skeletonCard}>
+          {/* 기본 정보 헤더 */}
           <div className="h-12 px-4 flex items-center bg-[#F5F5F5] dark:bg-[#262626]">
-            <div className={`${skeletonText} w-20`} />
+            <div className={`${skeletonText} w-16`} />
           </div>
-          <div className="p-4 space-y-3">
-            {Array(5).fill(0).map((_, i) => (
-              <div key={i} className="flex items-center gap-2">
+          {/* 소제목 */}
+          <div className="flex bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
+            <div className="flex-1 py-2 flex justify-center">
+              <div className={`${skeletonText} w-14`} />
+            </div>
+            <div className="flex-1 py-2 flex justify-center">
+              <div className={`${skeletonText} w-14`} />
+            </div>
+          </div>
+          {/* 리그 정보 + 최근 5경기 */}
+          <div className="flex items-center py-3">
+            <div className="flex-1 flex items-center justify-center gap-2">
+              <div className={`${skeletonBase} w-6 h-6 rounded`} />
+              <div className="space-y-1">
+                <div className={`${skeletonText} w-20`} />
                 <div className={`${skeletonText} w-16`} />
-                <div className={`${skeletonBase} w-5 h-5 rounded`} />
-                <div className={`${skeletonText} w-20`} />
-                <div className={`${skeletonText} w-10`} />
-                <div className={`${skeletonBase} w-5 h-5 rounded`} />
-                <div className={`${skeletonText} w-20`} />
+              </div>
+            </div>
+            <div className="flex-1 flex items-center justify-center gap-1">
+              {Array(5).fill(0).map((_, i) => (
+                <div key={i} className={`${skeletonBase} w-6 h-6 rounded`} />
+              ))}
+            </div>
+          </div>
+          {/* 시즌 통계 헤더 */}
+          <div className="h-12 px-4 flex items-center bg-[#F5F5F5] dark:bg-[#262626] border-y border-black/5 dark:border-white/10">
+            <div className={`${skeletonText} w-16`} />
+          </div>
+          {/* 시즌 통계 소제목 */}
+          <div className="flex bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
+            {Array(7).fill(0).map((_, i) => (
+              <div key={i} className="flex-1 py-2 flex justify-center">
+                <div className={`${skeletonText} w-8`} />
               </div>
             ))}
+          </div>
+          {/* 시즌 통계 데이터 */}
+          <div className="flex items-center py-3">
+            {Array(7).fill(0).map((_, i) => (
+              <div key={i} className="flex-1 flex justify-center">
+                <div className={`${skeletonText} w-6`} />
+              </div>
+            ))}
+          </div>
+          {/* 자세한 통계 보기 버튼 */}
+          <div className="h-10 border-t border-black/5 dark:border-white/10 flex items-center justify-center">
+            <div className={`${skeletonText} w-24`} />
           </div>
         </div>
 
-        {/* 리그 순위 */}
+        {/* 2. 리그 순위 (StandingsPreview) */}
+        <div className={skeletonCard}>
+          <div className="h-12 px-4 flex items-center gap-2 bg-[#F5F5F5] dark:bg-[#262626]">
+            <div className={`${skeletonBase} w-6 h-6 rounded`} />
+            <div className={`${skeletonText} w-20`} />
+          </div>
+          {/* 테이블 헤더 */}
+          <div className="flex items-center bg-[#F5F5F5] dark:bg-[#262626] px-3 py-2">
+            <div className={`${skeletonText} w-6`} />
+            <div className={`${skeletonText} w-24 ml-3`} />
+            <div className="flex-1" />
+            <div className="flex gap-3">
+              {Array(4).fill(0).map((_, i) => (
+                <div key={i} className={`${skeletonText} w-6`} />
+              ))}
+            </div>
+          </div>
+          {/* 테이블 바디 */}
+          {Array(5).fill(0).map((_, i) => (
+            <div key={i} className="flex items-center px-3 py-2 border-b border-black/5 dark:border-white/10">
+              <div className={`${skeletonText} w-6`} />
+              <div className="flex items-center gap-2 ml-3">
+                <div className={`${skeletonBase} w-5 h-5 rounded`} />
+                <div className={`${skeletonText} w-20`} />
+              </div>
+              <div className="flex-1" />
+              <div className="flex gap-3">
+                {Array(4).fill(0).map((_, j) => (
+                  <div key={j} className={`${skeletonText} w-6`} />
+                ))}
+              </div>
+            </div>
+          ))}
+          {/* 전체 순위 보기 버튼 */}
+          <div className="h-10 border-t border-black/5 dark:border-white/10 flex items-center justify-center">
+            <div className={`${skeletonText} w-24`} />
+          </div>
+        </div>
+
+        {/* 3. 최근 경기 (MatchItems) */}
+        <div className={skeletonCard}>
+          <div className="h-12 px-4 flex items-center bg-[#F5F5F5] dark:bg-[#262626]">
+            <div className={`${skeletonText} w-16`} />
+          </div>
+          {/* 테이블 헤더 */}
+          <div className="flex items-center bg-[#F5F5F5] dark:bg-[#262626] h-10 px-2">
+            <div className={`${skeletonText} w-10`} />
+            <div className={`${skeletonText} w-8 ml-2`} />
+            <div className="flex-1 flex justify-center">
+              <div className={`${skeletonText} w-10`} />
+            </div>
+            <div className={`${skeletonText} w-10`} />
+          </div>
+          {/* 테이블 바디 */}
+          {Array(5).fill(0).map((_, i) => (
+            <div key={i} className="flex items-center h-12 px-2 border-b border-black/5 dark:border-white/10">
+              <div className={`${skeletonText} w-10`} />
+              <div className={`${skeletonBase} w-5 h-5 rounded ml-2`} />
+              <div className="flex-1 flex items-center justify-center gap-1">
+                <div className={`${skeletonText} w-16`} />
+                <div className={`${skeletonBase} w-5 h-5 rounded`} />
+                <div className={`${skeletonText} w-8`} />
+                <div className={`${skeletonBase} w-5 h-5 rounded`} />
+                <div className={`${skeletonText} w-16`} />
+              </div>
+              <div className={`${skeletonBase} w-6 h-6 rounded`} />
+            </div>
+          ))}
+        </div>
+
+        {/* 4. 예정된 경기 (MatchItems) */}
         <div className={skeletonCard}>
           <div className="h-12 px-4 flex items-center bg-[#F5F5F5] dark:bg-[#262626]">
             <div className={`${skeletonText} w-20`} />
           </div>
-          <div className="p-4 space-y-2">
-            {Array(5).fill(0).map((_, i) => (
-              <div key={i} className="flex items-center gap-3">
+          {/* 테이블 헤더 */}
+          <div className="flex items-center bg-[#F5F5F5] dark:bg-[#262626] h-10 px-2">
+            <div className={`${skeletonText} w-14`} />
+            <div className={`${skeletonText} w-8 ml-2`} />
+            <div className="flex-1 flex justify-center">
+              <div className={`${skeletonText} w-10`} />
+            </div>
+          </div>
+          {/* 테이블 바디 */}
+          {Array(5).fill(0).map((_, i) => (
+            <div key={i} className="flex items-center h-12 px-2 border-b border-black/5 dark:border-white/10">
+              <div className={`${skeletonText} w-14`} />
+              <div className={`${skeletonBase} w-5 h-5 rounded ml-2`} />
+              <div className="flex-1 flex items-center justify-center gap-1">
+                <div className={`${skeletonText} w-16`} />
+                <div className={`${skeletonBase} w-5 h-5 rounded`} />
                 <div className={`${skeletonText} w-6`} />
                 <div className={`${skeletonBase} w-5 h-5 rounded`} />
-                <div className={`${skeletonText} flex-1`} />
-                <div className={`${skeletonText} w-8`} />
-                <div className={`${skeletonText} w-8`} />
+                <div className={`${skeletonText} w-16`} />
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

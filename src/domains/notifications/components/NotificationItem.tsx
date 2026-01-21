@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Notification } from '../types/notification';
-import { formatDate } from '@/shared/utils/date';
+import { formatDate } from '@/shared/utils/dateUtils';
 
 interface NotificationItemProps {
   notification: Notification;

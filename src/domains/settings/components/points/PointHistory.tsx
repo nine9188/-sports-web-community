@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { PointHistoryItem } from '../../actions/points';
-import { formatDate } from '@/shared/utils/date';
+import { formatDate } from '@/shared/utils/dateUtils';
 import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 
 interface PointHistoryProps {

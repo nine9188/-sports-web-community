@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { useMatchData, TabType } from './context/MatchDataContext';
+import { useCallback } from 'react';
 import { TabList, type TabItem } from '@/shared/components/ui';
 
 interface TabNavigationProps {
-  activeTab?: string | null;
+  activeTab?: string;
+  onTabChange?: (tabId: string) => void;
 }
 
 const tabs: TabItem[] = [
@@ -18,40 +17,17 @@ const tabs: TabItem[] = [
   { id: 'standings', label: '순위' }
 ];
 
-export default function TabNavigation({ activeTab }: TabNavigationProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const { currentTab, setCurrentTab } = useMatchData();
-
-  // activeTab prop이 변경되면 컨텍스트 상태 동기화
-  useEffect(() => {
-    if (activeTab) {
-      setCurrentTab(activeTab as TabType);
-    }
-  }, [activeTab, setCurrentTab]);
-
-  // 탭 변경 처리
-  const handleTabChange = (tabId: string) => {
-    setCurrentTab(tabId as TabType);
-
-    const params = new URLSearchParams(searchParams?.toString() || '');
-
-    // power가 기본 탭이므로 power일 때는 파라미터 제거
-    if (tabId === 'power') {
-      params.delete('tab');
-    } else {
-      params.set('tab', tabId);
-    }
-
-    const newUrl = `${pathname}${params.toString() ? `?${params.toString()}` : ''}`;
-    router.push(newUrl, { scroll: false });
-  };
+export default function TabNavigation({ activeTab = 'power', onTabChange }: TabNavigationProps) {
+  // 탭 변경 처리 - 부모 컴포넌트에게 알림
+  const handleTabChange = useCallback((tabId: string) => {
+    if (tabId === activeTab) return;
+    onTabChange?.(tabId);
+  }, [activeTab, onTabChange]);
 
   return (
     <TabList
       tabs={tabs}
-      activeTab={currentTab}
+      activeTab={activeTab}
       onTabChange={handleTabChange}
     />
   );

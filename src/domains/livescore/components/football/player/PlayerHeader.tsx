@@ -5,11 +5,11 @@ import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { Container, ContainerContent } from '@/shared/components/ui';
 import { ErrorState, PlayerProfileLoadingState } from '@/domains/livescore/components/common/CommonComponents';
-import { usePlayerData } from './context/PlayerDataContext';
+import { usePlayerInfo } from '@/domains/livescore/hooks';
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
-import type { PlayerStatistic } from '@/domains/livescore/types/player';
+import type { PlayerStatistic, PlayerData } from '@/domains/livescore/types/player';
 
 // 포지션 한글 매핑
 const POSITION_MAP: Record<string, string> = {
@@ -23,21 +23,33 @@ const getPositionKorean = (position: string): string => {
   return POSITION_MAP[position] || position;
 };
 
+// Props 타입
+interface PlayerHeaderProps {
+  playerId: string;
+  initialData?: PlayerData;
+}
+
 // 메모이제이션으로 불필요한 리렌더링 방지
-const PlayerHeader = memo(function PlayerHeader() {
-  // 컨텍스트에서 선수 데이터 가져오기
-  const { playerData, isLoading, error } = usePlayerData();
+const PlayerHeader = memo(function PlayerHeader({
+  playerId,
+  initialData
+}: PlayerHeaderProps) {
+  // React Query 훅으로 선수 데이터 가져오기
+  const { data: playerData, isLoading, error } = usePlayerInfo(playerId);
+
+  // 초기 데이터 또는 쿼리 데이터 사용
+  const displayData = playerData || initialData;
 
   // 데이터가 없고 로딩 중일 때만 로딩 UI 표시
-  if (!playerData && isLoading) {
+  if (!displayData && isLoading) {
     return <PlayerProfileLoadingState />;
   }
 
   if (error) {
-    return <ErrorState message={error} />;
+    return <ErrorState message={error.message} />;
   }
 
-  if (!playerData || !playerData.info) {
+  if (!displayData || !displayData.info) {
     return <ErrorState message="선수 정보를 불러올 수 없습니다." />;
   }
 
@@ -56,9 +68,9 @@ const PlayerHeader = memo(function PlayerHeader() {
   };
 
   // 통계 데이터 가져오기
-  const statistics = playerData.statistics || [];
+  const statistics = displayData.statistics || [];
   const playerStats: PlayerStatistic | null = statistics.length > 0 ? statistics[0] : null;
-  
+
   // 포지션 정보 가져오기
   const position = playerStats?.games?.position || '';
 
@@ -73,9 +85,9 @@ const PlayerHeader = memo(function PlayerHeader() {
           {/* 이미지 컨테이너 */}
           <div className="relative w-16 h-16 md:w-20 md:h-20 flex-shrink-0">
             <UnifiedSportsImage
-              imageId={playerData.info.id}
+              imageId={displayData.info.id}
               imageType={ImageType.Players}
-              alt={playerData.info.name}
+              alt={displayData.info.name}
               size="xxl"
               variant="circle"
               className="w-full h-full"
@@ -98,7 +110,7 @@ const PlayerHeader = memo(function PlayerHeader() {
           {/* 이름, 팀, 포지션 */}
           <div className="flex-1 min-w-0">
             <h1 className="text-base md:text-lg font-bold truncate text-gray-900 dark:text-[#F0F0F0]">
-              {getPlayerKoreanName(playerData.info.id) || playerData.info.name}
+              {getPlayerKoreanName(displayData.info.id) || displayData.info.name}
             </h1>
             <div className="flex items-center gap-2 mt-1">
               {mainTeamStats?.team && (
@@ -132,27 +144,27 @@ const PlayerHeader = memo(function PlayerHeader() {
       </div>
       <div className="flex items-center py-3">
         <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
-          {playerData.info.height || '-'}
+          {displayData.info.height || '-'}
           <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-[#EAEAEA] dark:bg-[#333333]" />
         </div>
         <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
-          {playerData.info.weight || '-'}
+          {displayData.info.weight || '-'}
           <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-[#EAEAEA] dark:bg-[#333333]" />
         </div>
         <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
-          {formatBirthDate(playerData.info.birth.date)}
+          {formatBirthDate(displayData.info.birth.date)}
           <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-[#EAEAEA] dark:bg-[#333333]" />
         </div>
         <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
-          {playerData.info.age}세
+          {displayData.info.age}세
           <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-[#EAEAEA] dark:bg-[#333333]" />
         </div>
         <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] truncate px-1">
-          {playerData.info.birth.country || '-'}
+          {displayData.info.birth.country || '-'}
         </div>
       </div>
     </Container>
   );
 });
 
-export default PlayerHeader; 
+export default PlayerHeader;

@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
+import { EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
-import { useTeamData } from './context/TeamDataContext';
 import { Container } from '@/shared/components/ui';
+import { TeamResponse } from '@/domains/livescore/actions/teams/team';
 
 // 팀 정보를 위한 기본 인터페이스
 interface TeamData {
@@ -31,104 +30,24 @@ interface VenueData {
 
 // 팀 헤더 컴포넌트 props
 interface TeamHeaderProps {
-  team?: { 
-    team?: TeamData; 
-    venue?: VenueData | null;
-  } | TeamData | Record<string, unknown>;
-  teamId?: string;  // 직접 데이터를 불러와야 할 경우 사용
-  isLoading?: boolean;
-  error?: string | null;
+  initialData?: TeamResponse;
 }
 
-export default function TeamHeader({ team, teamId, isLoading: externalLoading, error: externalError }: TeamHeaderProps) {
-  const { teamData } = useTeamData();
-  const [internalTeam, setInternalTeam] = useState<TeamHeaderProps['team']>(team || teamData?.team);
-  const [internalLoading, setInternalLoading] = useState(!team && !teamData?.team && !!teamId);
-  const [internalError, setInternalError] = useState<string | null>(null);
-  
-  // 외부에서 제공된 데이터가 없고 teamId가 제공된 경우, 직접 데이터 로드
-  useEffect(() => {
-    if (team) {
-      setInternalTeam(team);
-      setInternalLoading(false);
-      return;
-    }
-
-    // 컨텍스트에서 teamData가 있으면 사용
-    if (teamData?.team) {
-      setInternalTeam(teamData.team);
-      setInternalLoading(false);
-      return;
-    }
-
-    if (!teamId) {
-      setInternalError("팀 ID나 팀 데이터가 필요합니다.");
-      setInternalLoading(false);
-      return;
-    }
-
-    // teamId가 있는 경우 데이터를 불러오는 로직을 추가할 수 있음
-    // 예: loadTeamData(teamId)
-    // 여기서는 직접 데이터를 불러오지 않고 외부에서 주입받도록 변경
-    setInternalLoading(false);
-  }, [team, teamId, teamData]);
-
-  // team prop이 변경되면 내부 상태 업데이트
-  useEffect(() => {
-    if (team) {
-      setInternalTeam(team);
-      setInternalLoading(false);
-    } else if (teamData?.team) {
-      setInternalTeam(teamData.team);
-      setInternalLoading(false);
-    }
-  }, [team, teamData]);
-  
-  // 로딩 상태 처리 - 외부 로딩 상태를 우선적으로 사용
-  const isLoadingState = externalLoading !== undefined ? externalLoading : internalLoading;
-  
-  // 에러 상태 처리 - 외부 에러를 우선적으로 사용
-  const errorState = externalError || internalError;
-  
-  // 로딩 상태 표시
-  if (isLoadingState) {
-    return <LoadingState message="팀 정보를 불러오는 중..." />;
-  }
-
-  // 에러 상태 처리
-  if (errorState) {
-    return <ErrorState message={errorState} />;
-  }
-
+/**
+ * 팀 헤더 컴포넌트
+ *
+ * 서버에서 미리 로드된 데이터를 props로 받아 렌더링합니다.
+ * Context 의존성 제거로 더 단순하고 예측 가능한 동작.
+ */
+export default function TeamHeader({ initialData }: TeamHeaderProps) {
   // 팀 데이터가 없는 경우 처리
-  if (!internalTeam || (typeof internalTeam === 'object' && Object.keys(internalTeam).length === 0)) {
+  if (!initialData?.team) {
     return <EmptyState title="팀 정보가 없습니다" message="현재 이 팀에 대한 정보를 제공할 수 없습니다." />;
   }
-  
-  // API 응답이 중첩되어 있는지 확인 후 적절한 구조 추출
-  let teamInfo: TeamData;
-  let venue: VenueData | null;
-  
-  // API 응답 구조에 따라 데이터 추출 방식 분기
-  if ('team' in internalTeam && internalTeam.team) {
-    teamInfo = internalTeam.team as TeamData;
-    venue = 'venue' in internalTeam && internalTeam.venue ? internalTeam.venue as VenueData : null;
-  } else if ('id' in internalTeam && 'name' in internalTeam) {
-    teamInfo = internalTeam as TeamData;
-    venue = null;
-  } else {
-    // 어떤 구조에도 맞지 않는 경우 기본값 제공
-    teamInfo = {
-      id: 0,
-      name: '팀명 없음',
-      code: '',
-      country: '',
-      founded: 0,
-      national: false,
-      logo: ''
-    };
-    venue = null;
-  }
+
+  // 데이터 추출
+  const teamInfo: TeamData = initialData.team.team as TeamData;
+  const venue: VenueData | null = initialData.team.venue as VenueData | null;
 
 
 

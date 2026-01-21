@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Bell, CheckCheck, Trash2, ChevronDown } from 'lucide-react';
-import { getNotifications } from '@/domains/notifications/actions/get';
 import { markNotificationAsRead, markAllNotificationsAsRead } from '@/domains/notifications/actions/read';
 import { deleteNotifications } from '@/domains/notifications/actions/delete';
-import { Notification, NotificationType } from '@/domains/notifications/types/notification';
+import { NotificationType } from '@/domains/notifications/types/notification';
 import NotificationItem from '@/domains/notifications/components/NotificationItem';
 import Spinner from '@/shared/components/Spinner';
 import { Button } from '@/shared/components/ui';
+import { useNotifications, useNotificationCache } from '@/domains/notifications/hooks/useNotificationQueries';
 
 type FilterType = 'all' | 'unread';
 type TypeFilter = 'all' | NotificationType;
@@ -28,43 +28,28 @@ const notificationTypeLabels: Record<TypeFilter, string> = {
 };
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<FilterType>('all');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
-  const [isLoading, setIsLoading] = useState(true);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  // 알림 목록 조회
-  const fetchNotifications = async () => {
-    setIsLoading(true);
-    try {
-      const response = await getNotifications(100); // 최대 100개 조회
-      if (response.success && response.notifications) {
-        setNotifications(response.notifications);
-        setUnreadCount(response.unreadCount || 0);
-      }
-    } catch (error) {
-      console.error('알림 목록 조회 실패:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // React Query로 알림 데이터 관리
+  const { data, isLoading } = useNotifications(100);
+  const notifications = data?.notifications ?? [];
+  const unreadCount = data?.unreadCount ?? 0;
 
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
+  // 캐시 업데이트 유틸리티
+  const {
+    markAsRead,
+    markAllAsRead,
+    deleteNotifications: deleteFromCache,
+  } = useNotificationCache();
 
   // 알림 읽음 처리
   const handleMarkAsRead = async (id: string) => {
     const result = await markNotificationAsRead(id);
     if (result.success) {
-      // 로컬 상태 업데이트
-      setNotifications(prev =>
-        prev.map(n => n.id === id ? { ...n, is_read: true } : n)
-      );
-      setUnreadCount(prev => Math.max(0, prev - 1));
+      markAsRead(id);
     }
   };
 
@@ -78,10 +63,7 @@ export default function NotificationsPage() {
 
     const result = await markAllNotificationsAsRead();
     if (result.success) {
-      setNotifications(prev =>
-        prev.map(n => ({ ...n, is_read: true }))
-      );
-      setUnreadCount(0);
+      markAllAsRead();
     }
   };
 
@@ -118,16 +100,13 @@ export default function NotificationsPage() {
     }
 
     // 삭제 API 호출
-    const result = await deleteNotifications(Array.from(selectedIds));
+    const idsToDelete = Array.from(selectedIds);
+    const result = await deleteNotifications(idsToDelete);
 
     if (result.success) {
-      // 로컬 상태에서 제거
-      setNotifications(prev => prev.filter(n => !selectedIds.has(n.id)));
+      // 캐시에서 제거
+      deleteFromCache(idsToDelete);
       setSelectedIds(new Set());
-
-      // 읽지 않은 알림 수 재계산
-      const newUnreadCount = notifications.filter(n => !n.is_read && !selectedIds.has(n.id)).length;
-      setUnreadCount(newUnreadCount);
     } else {
       // 삭제 실패 시 에러 메시지 표시
       alert(result.error || '알림 삭제에 실패했습니다.');

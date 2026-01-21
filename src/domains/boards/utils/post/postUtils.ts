@@ -6,7 +6,7 @@ import { CommentType } from '../../types/post/comment';
 import { BoardData } from '../../types/board/data';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
-import { formatDate } from '@/shared/utils/date';
+import { formatDate } from '@/shared/utils/dateUtils';
 
 /**
  * API 응답 게시글을 레이아웃용 게시글로 변환합니다.

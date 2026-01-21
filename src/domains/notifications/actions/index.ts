@@ -10,7 +10,8 @@ export {
   createAdminNoticeNotification,
   createBroadcastNotification,
   createAdminNoticeWithLog,
-  getNotificationLogs
+  getNotificationLogs,
+  getUsersForAdminNotification
 } from './create';
 
 export { getNotifications, getUnreadNotificationCount } from './get';

@@ -1,6 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
-import { formatDate } from '@/shared/utils/date';
+import { formatDate } from '@/shared/utils/dateUtils';
 import type { Json } from '@/shared/types/supabase';
 import type { Post, PostsResponse } from '../getPosts';
 import type { DealInfo } from '../../types/hotdeal';

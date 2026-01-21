@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import type { PostSearchResult } from '../types'
 import { trackSearchResultClick } from '../actions/searchLogs'
-import { formatDate } from '@/shared/utils/date'
+import { formatDate } from '@/shared/utils/dateUtils'
 import Spinner from '@/shared/components/Spinner';
 
 interface PostSearchResultsProps {

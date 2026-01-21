@@ -2,7 +2,7 @@
 
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
-import { formatDate } from '@/shared/utils/date';
+import { formatDate } from '@/shared/utils/dateUtils';
 import { PaginationParams, ActionResponse } from '../types';
 import { Post } from '@/domains/boards/components/post/postlist/types';
 

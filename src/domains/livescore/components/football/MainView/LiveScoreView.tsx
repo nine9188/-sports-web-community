@@ -1,151 +1,50 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
-import { format } from 'date-fns';
+import { useState, useEffect, useMemo } from 'react';
 import NavigationBar from './NavigationBar/index';
 import LeagueMatchList from './LeagueMatchList/index';
 import { Match } from '../../../types/match';
-import { fetchMatchesByDate, MatchData } from '../../../actions/footballApi';
-import { getTeamById } from '../../../constants/teams/index';
-import { getLeagueById } from '../../../constants/league-mappings';
-import { isLiveMatch, countLiveMatches } from '../../../constants/match-status';
-
-// 기본 이미지 URL - 로고가 없을 때 사용
-const DEFAULT_TEAM_LOGO = 'https://cdn.sportmonks.com/images/soccer/team_placeholder.png';
+import { useLiveScore } from '../../../hooks/useLiveScoreQueries';
+import { isLiveMatch } from '../../../constants/match-status';
 
 interface LiveScoreViewProps {
   initialMatches: Match[];
   initialDate: string;
 }
 
+/**
+ * LiveScoreView - React Query 기반 라이브스코어 뷰
+ *
+ * 개선사항:
+ * - useState + setInterval 수동 폴링 → React Query refetchInterval 자동 폴링
+ * - 수동 캐싱 → React Query 자동 캐싱
+ * - 수동 prefetch → React Query prefetchQuery
+ *
+ * 폴링 정책:
+ * - LIVE 모드: 30초마다 갱신
+ * - 오늘 날짜: 60초마다 갱신
+ * - 과거/미래 날짜: 폴링 없음 (캐시 사용)
+ */
 export default function LiveScoreView({
   initialMatches,
   initialDate
 }: LiveScoreViewProps) {
-  // 날짜 상태 초기화
+  // UI 상태 관리
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     return initialDate ? new Date(initialDate) : new Date();
   });
-  
-  // 초기 매치 데이터로 상태 초기화
-  const [matches, setMatches] = useState<Match[]>(initialMatches);
-  const [loading, setLoading] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [showLiveOnly, setShowLiveOnly] = useState(false);
-  const [liveMatchCount, setLiveMatchCount] = useState(0);
   const [allExpanded, setAllExpanded] = useState(true);
 
-  // 컴포넌트 마운트 시 실시간 경기 수 계산
-  useEffect(() => {
-    setLiveMatchCount(countLiveMatches(initialMatches));
-  }, [initialMatches]);
-
-  // 오늘이 아닌 날짜를 볼 때만 라이브 경기 수 폴링 (60초 간격)
-  useEffect(() => {
-    const today = format(new Date(), 'yyyy-MM-dd');
-    const selected = format(selectedDate, 'yyyy-MM-dd');
-
-    // 오늘 날짜를 보고 있으면 fetchMatches에서 업데이트하므로 폴링 불필요
-    if (today === selected) {
-      return;
-    }
-
-    const fetchTodayLiveCount = async () => {
-      try {
-        const todayMatches = await fetchMatchesByDate(today);
-        setLiveMatchCount(countLiveMatches(todayMatches));
-      } catch (error) {
-        console.error('라이브 경기 수 업데이트 실패:', error);
-      }
-    };
-
-    // 즉시 실행
-    fetchTodayLiveCount();
-
-    // 60초마다 라이브 경기 수 업데이트
-    const intervalId = setInterval(fetchTodayLiveCount, 60000);
-
-    return () => clearInterval(intervalId);
-  }, [selectedDate]);
-
-  // 날짜 변경 시 Server Action 호출
-  const fetchMatches = useCallback(async (date: Date, keepPreviousData = false) => {
-    // 이전 데이터 유지 옵션이 false일 때만 로딩 표시
-    if (!keepPreviousData) {
-      setLoading(true);
-    }
-
-    try {
-      const formattedDate = format(date, 'yyyy-MM-dd');
-
-      // Server Action 직접 호출
-      const matchesData = await fetchMatchesByDate(formattedDate);
-      
-      // MatchData를 클라이언트 Match 타입으로 변환 (+ 팀/리그 정보 매핑)
-      const processedMatches: Match[] = matchesData.map((match: MatchData) => {
-        // 한국어 팀명과 리그명 매핑
-        const leagueInfo = match.league?.id ? getLeagueById(match.league.id) : null;
-        const homeTeamInfo = match.teams?.home?.id ? getTeamById(match.teams.home.id) : null;
-        const awayTeamInfo = match.teams?.away?.id ? getTeamById(match.teams.away.id) : null;
-        
-        // 매핑된 정보 사용 (있는 경우)
-        const homeTeamName = homeTeamInfo?.name_ko || match.teams.home.name;
-        const awayTeamName = awayTeamInfo?.name_ko || match.teams.away.name;
-        const leagueName = leagueInfo?.nameKo || match.league.name;
-        
-        return {
-          id: match.id,
-          status: {
-            code: match.status.code,
-            name: match.status.name,
-            elapsed: match.status.elapsed
-          },
-          time: {
-            date: match.time.date,
-            time: match.time.timestamp
-          },
-          league: {
-            id: match.league.id,
-            name: leagueName, // 매핑된 리그 이름 사용
-            country: match.league.country,
-            logo: match.league.logo || '',
-            flag: match.league.flag || ''
-          },
-          teams: {
-            home: {
-              id: match.teams.home.id,
-              name: homeTeamName, // 매핑된 팀 이름 사용
-              img: match.teams.home.logo || DEFAULT_TEAM_LOGO,
-              score: match.goals.home,
-              form: '',
-              formation: ''
-            },
-            away: {
-              id: match.teams.away.id,
-              name: awayTeamName, // 매핑된 팀 이름 사용
-              img: match.teams.away.logo || DEFAULT_TEAM_LOGO,
-              score: match.goals.away,
-              form: '',
-              formation: ''
-            }
-          }
-        };
-      });
-      
-      setMatches(processedMatches);
-
-      // 오늘 날짜를 조회한 경우 라이브 카운트도 업데이트
-      const today = format(new Date(), 'yyyy-MM-dd');
-      if (formattedDate === today) {
-        setLiveMatchCount(countLiveMatches(processedMatches));
-      }
-    } catch (error) {
-      console.error('경기 데이터 불러오기 오류:', error);
-      setMatches([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // React Query로 경기 데이터 및 라이브 카운트 관리
+  // - 자동 폴링 (LIVE 모드: 30초, 오늘: 60초)
+  // - 자동 캐싱 (5분)
+  // - 인접 날짜 자동 프리페칭
+  const { matches, isLoading, liveMatchCount } = useLiveScore(selectedDate, {
+    initialMatches,
+    showLiveOnly,
+  });
 
   // KST 자정 롤오버: 자정(KST) 도달 시 자동으로 오늘로 갱신
   useEffect(() => {
@@ -153,13 +52,11 @@ export default function LiveScoreView({
       const nowUtc = new Date();
       const kstNow = new Date(nowUtc.getTime() + 9 * 60 * 60 * 1000);
       const nextKstMidnight = new Date(kstNow);
-      nextKstMidnight.setHours(24, 0, 0, 0); // KST 기준 다음 자정
+      nextKstMidnight.setHours(24, 0, 0, 0);
       const msUntilNext = nextKstMidnight.getTime() - kstNow.getTime();
 
       const timeoutId = setTimeout(() => {
-        // 자정 도달 시 오늘 날짜로 변경 (로컬 now 사용, 포맷은 하위에서 처리)
         setSelectedDate(new Date());
-        // 다음 날 자정 다시 예약
         scheduleNextKstMidnight();
       }, msUntilNext);
 
@@ -172,52 +69,24 @@ export default function LiveScoreView({
     };
   }, []);
 
-  // 날짜가 변경될 때 데이터 다시 불러오기 (개선된 버전)
-  useEffect(() => {
-    // 날짜가 변경되었을 때마다 항상 fetchMatches 호출 (이전 데이터 유지하면서 백그라운드 업데이트)
-    fetchMatches(selectedDate, true);
+  // 필터링된 매치 목록 (검색어 + LIVE 필터)
+  const filteredMatches = useMemo(() => {
+    return matches.filter(match => {
+      // LIVE 필터
+      if (showLiveOnly && !isLiveMatch(match.status.code)) {
+        return false;
+      }
 
-  }, [selectedDate, fetchMatches, initialDate]);
-
-  // 인접 날짜 데이터 프리페칭 (백그라운드에서 미리 로드)
-  useEffect(() => {
-    const prefetchAdjacentDates = async () => {
-      const yesterday = new Date(selectedDate);
-      yesterday.setDate(yesterday.getDate() - 1);
-
-      const tomorrow = new Date(selectedDate);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-
-      // 백그라운드에서 어제/내일 데이터 캐시에 미리 로드
-      Promise.all([
-        fetchMatchesByDate(format(yesterday, 'yyyy-MM-dd')),
-        fetchMatchesByDate(format(tomorrow, 'yyyy-MM-dd'))
-      ]).catch(() => {
-        // 프리페칭 실패는 무시 (사용자 경험에 영향 없음)
-      });
-    };
-
-    // 현재 날짜 데이터 로드 완료 후 인접 날짜 프리페칭
-    const timer = setTimeout(prefetchAdjacentDates, 500);
-    return () => clearTimeout(timer);
-  }, [selectedDate]);
-
-  // 필터링된 매치 목록
-  const filteredMatches = matches.filter(match => {
-    // LIVE 필터
-    if (showLiveOnly && !isLiveMatch(match.status.code)) {
-      return false;
-    }
-
-    // 검색어 필터
-    if (searchKeyword) {
-      const searchLower = searchKeyword.toLowerCase();
-      return match.league.name.toLowerCase().includes(searchLower) ||
-             match.teams.home.name.toLowerCase().includes(searchLower) ||
-             match.teams.away.name.toLowerCase().includes(searchLower);
-    }
-    return true;
-  });
+      // 검색어 필터
+      if (searchKeyword) {
+        const searchLower = searchKeyword.toLowerCase();
+        return match.league.name.toLowerCase().includes(searchLower) ||
+               match.teams.home.name.toLowerCase().includes(searchLower) ||
+               match.teams.away.name.toLowerCase().includes(searchLower);
+      }
+      return true;
+    });
+  }, [matches, showLiveOnly, searchKeyword]);
 
   // 날짜 변경 핸들러
   const handleDateChange = (newDate: Date) => {
@@ -249,7 +118,7 @@ export default function LiveScoreView({
       </div>
 
       <div>
-        {loading ? (
+        {isLoading ? (
           <div className="space-y-4">
             {/* 스켈레톤 - 여러 리그와 매치 */}
             {[1, 2, 3].map((section) => (
@@ -295,4 +164,4 @@ export default function LiveScoreView({
       </div>
     </div>
   );
-} 
+}

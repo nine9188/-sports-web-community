@@ -1,6 +1,6 @@
 'use server'
 
-import { getSupabaseAction } from '@/shared/lib/supabase/server'
+import { getSupabaseAction, getSupabaseAdmin } from '@/shared/lib/supabase/server'
 
 // 관리자 권한 확인 함수
 async function checkAdminPermission() {
@@ -255,6 +255,114 @@ export async function getExpHistory(limit: number = 50) {
     return {
       success: false,
       error: error instanceof Error ? error.message : '경험치 내역 조회 중 오류가 발생했습니다.'
+    }
+  }
+}
+
+// =============================================
+// 아이콘 상점 관리 (관리자 전용)
+// =============================================
+
+interface ShopItemInput {
+  name: string
+  description?: string
+  image_url: string
+  price: number
+  category_id: number
+  is_default?: boolean
+  is_active?: boolean
+}
+
+// 아이콘 등록 (관리자 전용)
+export async function createShopItem(item: ShopItemInput) {
+  try {
+    const { supabase } = await checkAdminPermission()
+
+    const { data, error } = await supabase
+      .from('shop_items')
+      .insert([{
+        name: item.name,
+        description: item.description || `${item.name} 아이콘입니다.`,
+        image_url: item.image_url,
+        price: item.price,
+        category_id: item.category_id,
+        is_default: item.is_default ?? false,
+        is_active: item.is_active ?? true,
+      }])
+      .select()
+      .single()
+
+    if (error) {
+      console.error('아이콘 등록 실패:', error)
+      throw new Error(`아이콘 등록 실패: ${error.message}`)
+    }
+
+    return {
+      success: true,
+      item: data
+    }
+  } catch (error) {
+    console.error('아이콘 등록 오류:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '아이콘 등록 중 오류가 발생했습니다.'
+    }
+  }
+}
+
+// 아이콘 수정 (관리자 전용)
+export async function updateShopItem(itemId: number, updates: Partial<ShopItemInput>) {
+  try {
+    const { supabase } = await checkAdminPermission()
+
+    const { data, error } = await supabase
+      .from('shop_items')
+      .update(updates)
+      .eq('id', itemId)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('아이콘 수정 실패:', error)
+      throw new Error(`아이콘 수정 실패: ${error.message}`)
+    }
+
+    return {
+      success: true,
+      item: data
+    }
+  } catch (error) {
+    console.error('아이콘 수정 오류:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '아이콘 수정 중 오류가 발생했습니다.'
+    }
+  }
+}
+
+// 아이콘 삭제 (관리자 전용)
+export async function deleteShopItem(itemId: number) {
+  try {
+    const { supabase } = await checkAdminPermission()
+
+    const { error } = await supabase
+      .from('shop_items')
+      .delete()
+      .eq('id', itemId)
+
+    if (error) {
+      console.error('아이콘 삭제 실패:', error)
+      throw new Error(`아이콘 삭제 실패: ${error.message}`)
+    }
+
+    return {
+      success: true
+    }
+  } catch (error) {
+    console.error('아이콘 삭제 오류:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '아이콘 삭제 중 오류가 발생했습니다.'
     }
   }
 } 

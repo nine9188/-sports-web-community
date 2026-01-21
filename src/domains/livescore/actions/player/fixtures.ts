@@ -117,8 +117,8 @@ const API_CONFIG = {
   chunkDelay: 500,
   maxRetries: 3,
   baseBackoffDelay: 1000,
-  requestTimeout: 10000, // 10초 타임아웃
-  maxConcurrency: 3,     // 최대 동시 요청 수
+  requestTimeout: 10000,
+  maxConcurrency: 3,
 };
 
 // ============================================
@@ -481,103 +481,119 @@ export async function fetchPlayerFixtures(
     const completedFixtures = allFixtures.filter(f => f.fixture.status.short === 'FT');
     const totalFixtures = completedFixtures.length;
 
-    // 3. 각 경기의 선수 통계 가져오기 (청크 + 딜레이)
+    // 3. 선수 통계 가져오기 (ids 파라미터로 한 번에 20개씩 요청 - 최적화!)
     const fixturesWithStats: Array<FixtureWithStats | null> = [];
     const failedFixtureIds: number[] = [];
 
-    for (let i = 0; i < completedFixtures.length; i += API_CONFIG.chunkSize) {
-      const chunk = completedFixtures.slice(i, i + API_CONFIG.chunkSize);
+    // fixture ID 목록 추출
+    const fixtureIds = completedFixtures.map(f => f.fixture.id);
+
+    // 20개씩 청크로 나눠서 요청 (API 제한)
+    const BATCH_SIZE = 20;
+
+    for (let i = 0; i < fixtureIds.length; i += BATCH_SIZE) {
+      const batchIds = fixtureIds.slice(i, i + BATCH_SIZE);
+      const idsParam = batchIds.join('-');
 
       // 청크 간 딜레이
       if (i > 0) {
         await new Promise(resolve => setTimeout(resolve, API_CONFIG.chunkDelay));
       }
 
-      const chunkResults = await Promise.all(
-        chunk.map(async (fixture) => {
-          const fixtureId = fixture.fixture.id;
+      // 한 번에 여러 경기 데이터 요청 (players 통계 포함)
+      const batchResult = await fetchWithRateLimit(
+        `${API_CONFIG.baseUrl}/fixtures?ids=${idsParam}`,
+        fetchOptions
+      );
 
-          const statsResult = await fetchWithRateLimit(
-            `${API_CONFIG.baseUrl}/fixtures/players?fixture=${fixtureId}`,
-            fetchOptions
-          );
+      if (!batchResult.ok || !batchResult.data) {
+        console.error(`[fetchPlayerFixtures] Batch request failed: ${batchResult.error}`);
+        failedFixtureIds.push(...batchIds);
+        continue;
+      }
 
-          if (!statsResult.ok || !statsResult.data) {
-            console.error(`[fetchPlayerFixtures] Failed fixture ${fixtureId}: ${statsResult.error}`);
-            failedFixtureIds.push(fixtureId);
-            return null;
-          }
-
-          const statsData = statsResult.data as {
-            response?: Array<{
-              players: Array<{
-                player: { id: number };
-                statistics: Array<{
-                  games?: { minutes?: number; rating?: number | null; position?: string | null; number?: number | null };
-                  shots?: { total?: number; on?: number };
-                  goals?: { total?: number; assists?: number; conceded?: number; saves?: number | null };
-                  passes?: { total?: number; key?: number; accuracy?: string };
-                  cards?: { yellow?: number; red?: number };
-                }>;
+      const batchData = batchResult.data as {
+        response?: Array<{
+          fixture: { id: number; date: string; timestamp: number; status: { short: string; [key: string]: string | number | boolean } };
+          league: { id: number; name: string; logo: string; country?: string };
+          teams: {
+            home: { id: number; name: string; logo: string };
+            away: { id: number; name: string; logo: string };
+          };
+          goals: { home: number | null; away: number | null };
+          players?: Array<{
+            team: { id: number };
+            players: Array<{
+              player: { id: number };
+              statistics: Array<{
+                games?: { minutes?: number; rating?: number | null; position?: string | null; number?: number | null };
+                shots?: { total?: number; on?: number };
+                goals?: { total?: number; assists?: number; conceded?: number; saves?: number | null };
+                passes?: { total?: number; key?: number; accuracy?: string };
+                cards?: { yellow?: number; red?: number };
               }>;
             }>;
-          };
+          }>;
+        }>;
+      };
 
-          // 선수 통계 찾기
-          let playerStats = null;
-          for (const teamStats of statsData.response || []) {
-            const found = teamStats.players.find(p => p.player.id === playerId);
+      // 각 경기에서 선수 통계 추출
+      for (const fixtureData of batchData.response || []) {
+        // 선수 통계 찾기
+        let playerStats = null;
+
+        if (fixtureData.players) {
+          for (const teamPlayers of fixtureData.players) {
+            const found = teamPlayers.players.find(p => p.player.id === playerId);
             if (found) {
               playerStats = found.statistics[0];
               break;
             }
           }
+        }
 
-          // 선수가 참여하지 않은 경기는 건너뛰기 (실패 아님)
-          if (!playerStats) return null;
+        // 선수가 참여하지 않은 경기는 건너뛰기 (실패 아님)
+        if (!playerStats) continue;
 
-          const defaultStats = {
-            games: { minutes: 0, rating: null, position: null, number: null },
-            shots: { total: 0, on: 0 },
-            goals: { total: 0, assists: 0, conceded: 0, saves: null },
-            passes: { total: 0, key: 0, accuracy: "0" },
-            cards: { yellow: 0, red: 0 }
-          };
+        const defaultStats = {
+          games: { minutes: 0, rating: null, position: null, number: null },
+          shots: { total: 0, on: 0 },
+          goals: { total: 0, assists: 0, conceded: 0, saves: null },
+          passes: { total: 0, key: 0, accuracy: "0" },
+          cards: { yellow: 0, red: 0 }
+        };
 
-          return {
-            fixture: {
-              id: fixture.fixture.id,
-              date: fixture.fixture.date,
-              status: fixture.fixture.status,
-              timestamp: fixture.fixture.timestamp
-            },
-            league: {
-              id: fixture.league.id,
-              name: fixture.league.name,
-              logo: fixture.league.logo,
-              country: fixture.league.country || ''
-            },
-            teams: {
-              home: { id: fixture.teams.home.id, name: fixture.teams.home.name, logo: fixture.teams.home.logo },
-              away: { id: fixture.teams.away.id, name: fixture.teams.away.name, logo: fixture.teams.away.logo },
-              playerTeamId: teamId
-            },
-            goals: {
-              home: fixture.goals.home?.toString() || '0',
-              away: fixture.goals.away?.toString() || '0'
-            },
-            statistics: {
-              games: { ...defaultStats.games, ...(playerStats?.games || {}) },
-              shots: { ...defaultStats.shots, ...(playerStats?.shots || {}) },
-              goals: { ...defaultStats.goals, ...(playerStats?.goals || {}) },
-              passes: { ...defaultStats.passes, ...(playerStats?.passes || {}) },
-              cards: { ...defaultStats.cards, ...(playerStats?.cards || {}) }
-            }
-          } as FixtureWithStats;
-        })
-      );
-
-      fixturesWithStats.push(...chunkResults);
+        fixturesWithStats.push({
+          fixture: {
+            id: fixtureData.fixture.id,
+            date: fixtureData.fixture.date,
+            status: fixtureData.fixture.status,
+            timestamp: fixtureData.fixture.timestamp
+          },
+          league: {
+            id: fixtureData.league.id,
+            name: fixtureData.league.name,
+            logo: fixtureData.league.logo,
+            country: fixtureData.league.country || ''
+          },
+          teams: {
+            home: { id: fixtureData.teams.home.id, name: fixtureData.teams.home.name, logo: fixtureData.teams.home.logo },
+            away: { id: fixtureData.teams.away.id, name: fixtureData.teams.away.name, logo: fixtureData.teams.away.logo },
+            playerTeamId: teamId
+          },
+          goals: {
+            home: fixtureData.goals.home?.toString() || '0',
+            away: fixtureData.goals.away?.toString() || '0'
+          },
+          statistics: {
+            games: { ...defaultStats.games, ...(playerStats?.games || {}) },
+            shots: { ...defaultStats.shots, ...(playerStats?.shots || {}) },
+            goals: { ...defaultStats.goals, ...(playerStats?.goals || {}) },
+            passes: { ...defaultStats.passes, ...(playerStats?.passes || {}) },
+            cards: { ...defaultStats.cards, ...(playerStats?.cards || {}) }
+          }
+        } as FixtureWithStats);
+      }
     }
 
     // 유효한 경기 필터링 (출전 시간 > 0)

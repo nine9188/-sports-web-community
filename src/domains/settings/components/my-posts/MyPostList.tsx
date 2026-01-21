@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { MyPostItem } from '../../types/posts';
-import { formatDate } from '@/shared/utils/date';
+import { formatDate } from '@/shared/utils/dateUtils';
 import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 
 interface MyPostListProps {

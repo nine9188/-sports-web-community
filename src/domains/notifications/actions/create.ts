@@ -593,6 +593,44 @@ export async function createUnsuspensionNotification({
 }
 
 /**
+ * 관리자 공지 발송용 사용자 목록 조회
+ */
+export async function getUsersForAdminNotification(): Promise<{
+  success: boolean;
+  users?: Array<{
+    id: string;
+    nickname: string;
+    email: string;
+    level: number;
+  }>;
+  error?: string;
+}> {
+  try {
+    const supabase = getSupabaseAdmin();
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, nickname, email, level')
+      .or('is_suspended.is.null,is_suspended.eq.false')
+      .order('level', { ascending: false })
+      .limit(100);
+
+    if (error) {
+      console.error('사용자 목록 조회 실패:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, users: data || [] };
+  } catch (error) {
+    console.error('사용자 목록 조회 중 예외:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '사용자 목록 조회 중 오류가 발생했습니다.'
+    };
+  }
+}
+
+/**
  * 알림 발송 기록 조회
  */
 export async function getNotificationLogs(limit: number = 50): Promise<{

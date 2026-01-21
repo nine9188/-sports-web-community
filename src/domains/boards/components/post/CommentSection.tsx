@@ -1,34 +1,12 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { 
-  createComment,
-  deleteComment,
-  updateComment,
-  getComments
-} from "@/domains/boards/actions/comments/index";
+import React, { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { CommentType } from "@/domains/boards/types/post/comment";
-import { buildCommentTree } from "@/domains/boards/utils/comment/commentUtils";
+import { useComments } from "@/domains/boards/hooks/post/useComments";
 import Comment from "./Comment";
 import { Button } from "@/shared/components/ui/button";
 import { Container, ContainerHeader, ContainerTitle } from "@/shared/components/ui";
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
-
-// 내부 디바운스 함수 구현
-function debounce<T extends (...args: unknown[]) => unknown>(
-  func: T,
-  wait: number
-): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout | null = null;
-  
-  return function(...args: Parameters<T>) {
-    if (timeout) clearTimeout(timeout);
-    timeout = setTimeout(() => {
-      func(...args);
-      timeout = null;
-    }, wait);
-  };
-}
 
 interface CommentSectionProps {
   postId: string;
@@ -38,54 +16,41 @@ interface CommentSectionProps {
   currentUserId?: string | null;
 }
 
-export default function CommentSection({ 
-  postId, 
-  postOwnerId, 
-  currentUserId: propCurrentUserId = null 
+export default function CommentSection({
+  postId,
+  postOwnerId,
+  currentUserId: propCurrentUserId = null
 }: CommentSectionProps) {
-  const [comments, setComments] = useState<CommentType[]>([]);
   const [content, setContent] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(propCurrentUserId);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [replyToNickname, setReplyToNickname] = useState<string | null>(null);
   const replyFormRef = useRef<HTMLTextAreaElement>(null);
 
+  // React Query 기반 댓글 훅
+  const {
+    comments,
+    treeComments,
+    commentCount,
+    isLoading,
+    isCreating,
+    createComment,
+    updateComment,
+    deleteComment,
+    likeComment,
+    dislikeComment,
+    isLiking
+  } = useComments({ postId });
+
   // Supabase 클라이언트 (SSR 안전)
   const supabase = useMemo(() => {
-    if (typeof window === 'undefined') return null as any;
+    if (typeof window === 'undefined') return null;
     return getSupabaseBrowser();
   }, []);
 
-  // 댓글 데이터 업데이트 함수 최적화 - 사용자 액션 정보 포함
-  const updateComments = useCallback(async () => {
-    try {
-      const response = await getComments(postId);
-      if (response && response.success && response.comments && response.comments.length >= 0) {
-        setComments(response.comments);
-      } else {
-
-      }
-    } catch {
-
-    }
-  }, [postId]);
-
-  // 초기 댓글 로딩
-  useEffect(() => {
-    updateComments();
-  }, [updateComments]);
-
-  // 디바운스된 업데이트 함수
-  const debouncedUpdateComments = useMemo(() => 
-    debounce(updateComments, 300),
-    [updateComments]
-  );
-
   // 사용자 정보 가져오기 (props로 받지 않은 경우에만)
   useEffect(() => {
-    // SSR 환경이거나 supabase가 없는 경우 스킵
     if (!supabase || propCurrentUserId !== null) {
       return;
     }
@@ -112,32 +77,6 @@ export default function CommentSection({
     };
   }, [supabase, propCurrentUserId]);
 
-  // 실시간 댓글 업데이트 구독 - 별도 effect로 분리
-  useEffect(() => {
-    // SSR 환경이거나 supabase가 없는 경우 스킵
-    if (!supabase) {
-      return;
-    }
-
-    const channel = supabase
-      .channel(`post-comments-${postId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "comments",
-          filter: `post_id=eq.${postId}`,
-        },
-        debouncedUpdateComments
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [postId, supabase, debouncedUpdateComments]);
-
   // 답글 시작 핸들러
   const handleReply = useCallback((parentId: string) => {
     const parentComment = comments.find(c => c.id === parentId);
@@ -161,81 +100,38 @@ export default function CommentSection({
   // 댓글 제출 핸들러
   const handleCommentSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!content.trim()) return;
-    
-    setIsSubmitting(true);
+
     setErrorMessage(null);
-    
+
     try {
-      const result = await createComment({
-        postId,
-        content: content.trim(),
-        parentId: replyTo
-      });
-      
-      if (!result.success) {
-        if (result.error === '로그인이 필요합니다.') {
-          setErrorMessage('댓글을 작성하려면 로그인이 필요합니다.');
-          alert('댓글을 작성하려면 로그인이 필요합니다.');
-          return;
-        }
-        
-        setErrorMessage(result.error || '댓글 작성에 실패했습니다.');
-        alert(result.error || '댓글 작성에 실패했습니다.');
-        return;
-      }
-      
-      if (result.comment) {
-        // 새 댓글에 userAction 초기값 설정
-        const newComment = { ...result.comment, userAction: null } as CommentType;
-        setComments(prevComments => [...prevComments, newComment]);
-        setContent('');
-        setReplyTo(null);
-        setReplyToNickname(null);
-        setErrorMessage(null);
-      }
-      
+      await createComment(content.trim(), replyTo);
+      setContent('');
+      setReplyTo(null);
+      setReplyToNickname(null);
+      setErrorMessage(null);
     } catch (error) {
       const message = error instanceof Error ? error.message : '댓글 작성 중 오류가 발생했습니다.';
       setErrorMessage(message);
-      alert(message);
-    } finally {
-      setIsSubmitting(false);
+
+      if (message === '로그인이 필요합니다.') {
+        alert('댓글을 작성하려면 로그인이 필요합니다.');
+      } else {
+        alert(message);
+      }
     }
-  }, [postId, content, replyTo]);
-  
+  }, [content, replyTo, createComment]);
+
   // 댓글 수정 핸들러
   const handleUpdate = useCallback(async (commentId: string, updatedContent: string) => {
     try {
-      
-      // API 요청 대신 server action 직접 호출
-      const result = await updateComment(commentId, updatedContent);
-      
-      if (!result.success) {
-        throw new Error(result.error || '댓글 수정에 실패했습니다.');
-      }
-      
-      // 댓글 목록 업데이트 - 기존 userAction 상태 유지
-      if (result.comment) {
-        setComments(prevComments => 
-          prevComments.map(comment => {
-            if (comment.id === commentId) {
-              // 기존 userAction 상태 유지
-              return { ...result.comment as CommentType, userAction: comment.userAction };
-            }
-            return comment;
-          })
-        );
-      } else {
-        // 데이터가 반환되지 않은 경우 전체 목록 새로고침
-        await updateComments();
-      }
+      await updateComment(commentId, updatedContent);
     } catch (error) {
       throw error;
     }
-  }, [updateComments]);
-  
+  }, [updateComment]);
+
   // 댓글 삭제 핸들러
   const handleDelete = useCallback(async (commentId: string) => {
     if (!confirm('정말 이 댓글을 삭제하시겠습니까?')) {
@@ -243,44 +139,39 @@ export default function CommentSection({
     }
 
     try {
-      
-      // API 요청 대신 server action 직접 호출
-      const result = await deleteComment(commentId);
-      
-      if (!result.success) {
-        throw new Error(result.error || '댓글 삭제에 실패했습니다.');
-      }
-      
-      // 댓글 목록에서 삭제된 댓글 제거
-      setComments(prevComments => 
-        prevComments.filter(comment => comment.id !== commentId)
-      );
+      await deleteComment(commentId);
     } catch (error) {
       alert(error instanceof Error ? error.message : '댓글 삭제 중 오류가 발생했습니다.');
     }
-  }, []);
+  }, [deleteComment]);
 
   // 텍스트영역 변경 핸들러
   const handleTextareaChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value);
   }, []);
 
-  // 댓글 계층 구조로 변환
-  const treeComments = useMemo(() => {
-    return buildCommentTree(comments);
-  }, [comments]);
-
   // 댓글 목록 메모이제이션 (계층 구조 렌더링)
   const commentsList = useMemo(() => {
+    if (isLoading) {
+      return (
+        <div className="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+          댓글을 불러오는 중...
+        </div>
+      );
+    }
+
     return treeComments.length > 0 ? (
       treeComments.map((comment) => (
         <Comment
           key={comment.id}
           comment={comment}
-          currentUserId={currentUserId} 
-          onUpdate={handleUpdate} 
+          currentUserId={currentUserId}
+          onUpdate={handleUpdate}
           onDelete={handleDelete}
           onReply={handleReply}
+          onLike={likeComment}
+          onDislike={dislikeComment}
+          isLiking={isLiking}
           isPostOwner={currentUserId === postOwnerId}
         />
       ))
@@ -289,14 +180,14 @@ export default function CommentSection({
         아직 댓글이 없습니다. 첫 댓글을 남겨보세요!
       </div>
     );
-  }, [treeComments, currentUserId, handleUpdate, handleDelete, handleReply, postOwnerId]);
+  }, [treeComments, currentUserId, handleUpdate, handleDelete, handleReply, postOwnerId, likeComment, dislikeComment, isLiking, isLoading]);
 
   return (
     <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
       {/* 댓글 헤더 */}
       <ContainerHeader>
         <ContainerTitle>
-          댓글 <span className="text-gray-900 dark:text-[#F0F0F0]">{comments.length}</span>개
+          댓글 <span className="text-gray-900 dark:text-[#F0F0F0]">{commentCount}</span>개
         </ContainerTitle>
       </ContainerHeader>
 
@@ -312,7 +203,7 @@ export default function CommentSection({
             {errorMessage}
           </div>
         )}
-        
+
         {/* 답글 대상 표시 */}
         {replyTo && replyToNickname && (
           <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-md flex items-center justify-between">
@@ -334,7 +225,7 @@ export default function CommentSection({
             </Button>
           </div>
         )}
-        
+
         <form className="space-y-3" onSubmit={handleCommentSubmit}>
           <textarea
             ref={replyFormRef}
@@ -344,7 +235,7 @@ export default function CommentSection({
             value={content}
             onChange={handleTextareaChange}
             required
-            disabled={isSubmitting}
+            disabled={isCreating}
           />
           <div className="flex justify-end gap-2">
             {replyTo && (
@@ -352,7 +243,7 @@ export default function CommentSection({
                 type="button"
                 variant="ghost"
                 onClick={cancelReply}
-                disabled={isSubmitting}
+                disabled={isCreating}
               >
                 취소
               </Button>
@@ -360,13 +251,13 @@ export default function CommentSection({
             <Button
               type="submit"
               variant="primary"
-              disabled={isSubmitting || !content.trim()}
+              disabled={isCreating || !content.trim()}
             >
-              {isSubmitting ? '작성 중...' : (replyTo ? '답글 작성' : '댓글 작성')}
+              {isCreating ? '작성 중...' : (replyTo ? '답글 작성' : '댓글 작성')}
             </Button>
           </div>
         </form>
       </div>
     </Container>
   );
-} 
+}

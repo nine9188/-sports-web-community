@@ -1,27 +1,27 @@
 'use client';
 
-import { useState, memo, useEffect, useMemo, useRef } from 'react';
+import { memo, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { useMatchData, isStatsTabData } from '@/domains/livescore/components/football/match/context/MatchDataContext';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
-import { fetchMatchPlayerStats } from '@/domains/livescore/actions/match/matchPlayerStats';
+import { MatchPlayerStatsResponse } from '@/domains/livescore/actions/match/matchPlayerStats';
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 
 import { TeamStats, Team } from '@/domains/livescore/types/match';
 import Spinner from '@/shared/components/Spinner';
+import { useState } from 'react';
 
 interface StatsProps {
-  matchId: string;
   matchData: {
     stats?: TeamStats[];
     homeTeam?: Team;
     awayTeam?: Team;
   };
+  // 서버에서 프리로드된 선수 통계 데이터
+  initialMatchPlayerStats?: MatchPlayerStatsResponse;
 }
 
 // 팀 로고 컴포넌트 - 메모이제이션
@@ -179,15 +179,15 @@ const SortIcon = ({ field, currentField, direction }: { field: string; currentFi
   );
 };
 
-const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
-  const { tabData, isTabLoading, tabLoadError, matchData } = useMatchData();
-  
-  // 상태 관리
-  const [stats, setStats] = useState<TeamStats[]>(propsMatchData?.stats || []);
-  const [homeTeam, setHomeTeam] = useState<Team | undefined>(propsMatchData?.homeTeam);
-  const [awayTeam, setAwayTeam] = useState<Team | undefined>(propsMatchData?.awayTeam);
-  const [loading, setLoading] = useState(isTabLoading || !propsMatchData?.stats?.length);
-  const [error, setError] = useState<string | null>(tabLoadError || null);
+const Stats = memo(({ matchData: propsMatchData, initialMatchPlayerStats }: StatsProps) => {
+  // props에서 데이터 직접 추출 (서버에서 프리로드된 데이터)
+  const stats = propsMatchData?.stats || [];
+  const homeTeam = propsMatchData?.homeTeam;
+  const awayTeam = propsMatchData?.awayTeam;
+
+  // 로딩 상태는 더 이상 필요 없음 (서버에서 미리 로드)
+  const loading = false;
+  const error = null;
 
   // 정렬 상태 관리 (홈팀)
   const [homeSortField, setHomeSortField] = useState<string>('minutes');
@@ -204,55 +204,8 @@ const Stats = memo(({ matchData: propsMatchData }: StatsProps) => {
   const homePlayersRef = useRef(null);
   const awayPlayersRef = useRef(null);
 
-  // matchId 추출
-  const fixtureId = useMemo(() => {
-    if (!matchData || !('fixture' in (matchData as Record<string, unknown>))) return null;
-    return String((matchData as { fixture: { id: number } }).fixture?.id);
-  }, [matchData]);
-
-  // React Query로 선수 통계 가져오기 (새로운 통합 액션 사용)
-  const { data: playerStatsData } = useQuery({
-    queryKey: ['matchPlayerStats', fixtureId],
-    queryFn: () => fixtureId ? fetchMatchPlayerStats(fixtureId) : null,
-    enabled: !!fixtureId,
-    staleTime: 2 * 60 * 1000, // 2분
-    gcTime: 10 * 60 * 1000, // 10분
-  });
-
-  // props로 받은 데이터 업데이트
-  useEffect(() => {
-    if (propsMatchData) {
-      if (propsMatchData.stats && propsMatchData.stats.length > 0) {
-        setStats(propsMatchData.stats);
-        setLoading(false);
-      }
-
-      if (propsMatchData.homeTeam) {
-        setHomeTeam(propsMatchData.homeTeam);
-      }
-
-      if (propsMatchData.awayTeam) {
-        setAwayTeam(propsMatchData.awayTeam);
-      }
-    } else if (tabData && isStatsTabData(tabData) && tabData.stats && tabData.stats.length > 0) {
-      setStats(tabData.stats);
-      setLoading(false);
-
-      if (matchData) {
-        const homeTeamData = (matchData as { teams?: { home?: Team } })?.teams?.home;
-        const awayTeamData = (matchData as { teams?: { away?: Team } })?.teams?.away;
-
-        if (homeTeamData) setHomeTeam(homeTeamData);
-        if (awayTeamData) setAwayTeam(awayTeamData);
-      }
-    }
-  }, [propsMatchData, tabData, matchData, isTabLoading]);
-
-  // 로딩, 에러 상태 업데이트
-  useEffect(() => {
-    setLoading(isTabLoading);
-    if (tabLoadError) setError(tabLoadError);
-  }, [isTabLoading, tabLoadError]);
+  // 서버에서 프리로드된 선수 통계 데이터 사용 (클라이언트 fetch 제거)
+  const playerStatsData = initialMatchPlayerStats;
 
   // 통계 항목 매핑 (API에서 사용하는 키값 -> 표시 레이블)
   const statMappings = useMemo(() => [

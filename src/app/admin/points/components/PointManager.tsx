@@ -7,7 +7,13 @@ import { Button } from '@/shared/components/ui/button';
 import { Coins } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { getPointHistory } from '@/shared/actions/admin-actions';
-import { formatDate } from '@/shared/utils/date';
+import { formatDate } from '@/shared/utils/dateUtils';
+import Spinner from '@/shared/components/Spinner';
+import { Pagination } from '@/shared/components/ui/pagination';
+import { inputBaseStyles, focusStyles } from '@/shared/styles';
+import { cn } from '@/shared/utils/cn';
+
+const ITEMS_PER_PAGE = 5;
 
 interface UserInfo {
   id: string;
@@ -36,10 +42,19 @@ export default function PointManager({ adminUser, selectedUser, onRefreshData }:
   const [pointAmount, setPointAmount] = useState(0);
   const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // 페이지네이션 계산
+  const totalPages = Math.ceil(pointHistory.length / ITEMS_PER_PAGE);
+  const paginatedHistory = pointHistory.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   // 선택한 사용자가 변경될 때 내역 불러오기
   useEffect(() => {
     if (selectedUser) {
+      setCurrentPage(1); // 사용자 변경 시 페이지 초기화
       fetchPointHistory(selectedUser.id);
     }
   }, [selectedUser]);
@@ -175,60 +190,60 @@ export default function PointManager({ adminUser, selectedUser, onRefreshData }:
   // 선택된 사용자가 없는 경우
   if (!selectedUser) {
     return (
-      <div className="bg-white rounded-lg shadow p-6 h-full flex items-center justify-center">
+      <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-white/10 p-6 h-full flex items-center justify-center">
         <div className="text-center">
-          <Coins className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">좌측에서 사용자를 선택하세요</p>
+          <Coins className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+          <p className="text-gray-500 dark:text-gray-400">좌측에서 사용자를 선택하세요</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow p-6 h-full">
+    <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-white/10 p-6 h-full">
       <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-2">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0] mb-2">
           {selectedUser.nickname || '사용자'}님의 포인트 관리
         </h2>
-        
-        <div className="flex items-center space-x-2 text-sm text-gray-500 mb-4">
+
+        <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mb-4">
           <span>현재 포인트:</span>
-          <span className="font-bold text-blue-600">{selectedUser.points || 0} P</span>
+          <span className="font-bold text-gray-700 dark:text-gray-300">{selectedUser.points || 0} P</span>
         </div>
-        
+
         <form onSubmit={handleAdjustPoints} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">포인트 금액</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">포인트 금액</label>
               <div className="relative">
                 <input
                   type="number"
                   value={pointAmount}
                   onChange={e => setPointAmount(Number(e.target.value))}
-                  className="w-full p-2 border rounded-md"
+                  className={cn("w-full p-2 pr-10 rounded-md", inputBaseStyles, focusStyles)}
                   placeholder="예: 100 또는 -50"
                 />
-                <div className="absolute inset-y-0 right-3 flex items-center text-gray-500">
+                <div className="absolute inset-y-0 right-3 flex items-center text-gray-500 dark:text-gray-400">
                   <Coins className="h-4 w-4" />
                 </div>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 양수는 포인트 추가, 음수는 차감입니다.
               </p>
             </div>
-            
+
             <div>
-              <label className="block text-sm font-medium mb-1">사유</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">사유</label>
               <input
                 type="text"
                 value={reason}
                 onChange={e => setReason(e.target.value)}
-                className="w-full p-2 border rounded-md"
+                className={cn("w-full p-2 rounded-md", inputBaseStyles, focusStyles)}
                 placeholder="예: 이벤트 보상"
               />
             </div>
           </div>
-          
+
           <div className="flex justify-end">
             <Button
               type="submit"
@@ -240,51 +255,61 @@ export default function PointManager({ adminUser, selectedUser, onRefreshData }:
           </div>
         </form>
       </div>
-      
+
       {/* 포인트 내역 */}
       <div>
-        <h3 className="text-lg font-medium mb-3">최근 포인트 내역</h3>
-        
+        <h3 className="text-lg font-medium text-gray-900 dark:text-[#F0F0F0] mb-3">최근 포인트 내역</h3>
+
         {loadingHistory ? (
           <div className="text-center py-6">
-            <p>로딩 중...</p>
+            <Spinner size="md" className="mx-auto" />
+            <p className="text-gray-500 dark:text-gray-400 mt-2">로딩 중...</p>
           </div>
         ) : pointHistory.length > 0 ? (
-          <div className="border rounded-md overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">일시</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">사유</th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">포인트</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">관리자</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {pointHistory.map(history => (
-                  <tr key={history.id}>
-                    <td className="px-4 py-2 text-sm text-gray-500">
-                      {history.created_at ? (formatDate(history.created_at as string) || '-') : '-'}
-                    </td>
-                    <td className="px-4 py-2 text-sm">
-                      {history.reason}
-                    </td>
-                    <td className={`px-4 py-2 text-sm font-medium text-right ${
-                      history.points > 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {history.points > 0 ? `+${history.points}` : history.points}
-                    </td>
-                    <td className="px-4 py-2 text-sm text-gray-500">
-                      {history.admin_id ? '관리자' : '시스템'}
-                    </td>
+          <>
+            <div className="border border-black/7 dark:border-white/10 rounded-md overflow-hidden">
+              <table className="min-w-full divide-y divide-black/7 dark:divide-white/10">
+                <thead className="bg-[#F5F5F5] dark:bg-[#262626]">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">일시</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">사유</th>
+                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">포인트</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">관리자</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="bg-white dark:bg-[#1D1D1D] divide-y divide-black/7 dark:divide-white/10">
+                  {paginatedHistory.map(history => (
+                    <tr key={history.id}>
+                      <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                        {history.created_at ? (formatDate(history.created_at as string) || '-') : '-'}
+                      </td>
+                      <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">
+                        {history.reason}
+                      </td>
+                      <td className={`px-4 py-2 text-sm font-medium text-right ${
+                        history.points > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                      }`}>
+                        {history.points > 0 ? `+${history.points}` : history.points}
+                      </td>
+                      <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                        {history.admin_id ? '관리자' : '시스템'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              mode="button"
+              maxButtons={5}
+            />
+          </>
         ) : (
-          <div className="text-center py-6 bg-gray-50 rounded-md">
-            <p className="text-gray-500">포인트 내역이 없습니다.</p>
+          <div className="text-center py-6 bg-[#F5F5F5] dark:bg-[#262626] rounded-md">
+            <p className="text-gray-500 dark:text-gray-400">포인트 내역이 없습니다.</p>
           </div>
         )}
       </div>

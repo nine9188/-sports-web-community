@@ -4,7 +4,6 @@ import { useState, useEffect, memo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
-import { useMatchData, isStandingsTabData } from '@/domains/livescore/components/football/match/context/MatchDataContext';
 import { Standing, StandingsData, Team } from '@/domains/livescore/types/match';
 import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
 import { getLeagueName } from '@/domains/livescore/constants/league-mappings';
@@ -59,51 +58,15 @@ const tableStyles = {
 
 const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
   const router = useRouter();
-  const { tabData, isTabLoading, tabLoadError, matchData } = useMatchData();
-  
-  // 상태 관리
-  const [standings, setStandings] = useState<StandingsData | null>(propsMatchData?.standings || null);
-  const [homeTeamId, setHomeTeamId] = useState<number | null>(propsMatchData?.homeTeam?.id || null);
-  const [awayTeamId, setAwayTeamId] = useState<number | null>(propsMatchData?.awayTeam?.id || null);
-  const [loading, setLoading] = useState(isTabLoading || !propsMatchData?.standings);
-  const [error, setError] = useState<string | null>(tabLoadError || null);
-  
-  // matchData prop이 변경될 때 상태 업데이트
-  useEffect(() => {
-    if (propsMatchData) {
-      // 순위 데이터 설정
-      if (propsMatchData.standings) {
-        setStandings(propsMatchData.standings);
-        setLoading(false);
-      }
-      
-      // 팀 정보 설정
-      if (propsMatchData.homeTeam) {
-        setHomeTeamId(propsMatchData.homeTeam.id);
-      }
-      
-      if (propsMatchData.awayTeam) {
-        setAwayTeamId(propsMatchData.awayTeam.id);
-      }
-    } else if (tabData && isStandingsTabData(tabData) && tabData.standings) {
-      setStandings(tabData.standings);
-      setLoading(false);
-      
-      if (matchData) {
-        const homeTeamData = (matchData as { teams?: { home?: Team } })?.teams?.home;
-        const awayTeamData = (matchData as { teams?: { away?: Team } })?.teams?.away;
-        
-        if (homeTeamData?.id) setHomeTeamId(homeTeamData.id);
-        if (awayTeamData?.id) setAwayTeamId(awayTeamData.id);
-      }
-    }
-  }, [propsMatchData, tabData, matchData]);
-  
-  // 로딩, 에러 상태 업데이트
-  useEffect(() => {
-    setLoading(isTabLoading);
-    if (tabLoadError) setError(tabLoadError);
-  }, [isTabLoading, tabLoadError]);
+
+  // props에서 데이터 직접 추출 (서버에서 프리로드된 데이터)
+  const standings = propsMatchData?.standings || null;
+  const homeTeamId = propsMatchData?.homeTeam?.id || null;
+  const awayTeamId = propsMatchData?.awayTeam?.id || null;
+
+  // 로딩 상태는 더 이상 필요 없음 (서버에서 미리 로드)
+  const loading = false;
+  const error = null;
   
   // getStatusColor 함수를 useCallback으로 감싸기
   const getStatusColor = useCallback((description: string) => {

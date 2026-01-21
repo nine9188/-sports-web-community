@@ -1,16 +1,17 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useTransition } from 'react';
+import React, { useState, useRef } from 'react';
 import { format } from 'date-fns';
+import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { ko } from 'date-fns/locale';
 import { CalendarIcon, Search } from 'lucide-react';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import Calendar from '@/shared/components/Calendar';
-import { getMatchesByDate } from '@/domains/boards/actions/matches';
 import type { MatchData } from '@/domains/livescore/actions/footballApi';
 import Spinner from '@/shared/components/Spinner';
 import { Button } from '@/shared/components/ui';
+import { useMatchesByDate } from '@/domains/boards/hooks/useMatchFormQueries';
 
 // 경기 데이터를 위한 인터페이스
 interface League {
@@ -67,51 +68,20 @@ interface MatchResultFormProps {
 export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchResultFormProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [searchQuery, setSearchQuery] = useState('');
-  const [matches, setMatches] = useState<Match[]>([]);
-  const [loading, setLoading] = useState(false);
   const [calendar, setCalendar] = useState(false);
   const [calendarPosition, setCalendarPosition] = useState({ top: 0, left: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
   const calendarButtonRef = useRef<HTMLButtonElement>(null);
-  const [, startTransition] = useTransition();
+
+  // React Query로 경기 데이터 관리
+  const formattedDate = format(selectedDate, 'yyyy-MM-dd');
+  const {
+    data: matches = [],
+    isLoading: loading,
+  } = useMatchesByDate(formattedDate, { enabled: isOpen });
 
   // 외부 클릭 감지 - 캘린더가 열려있을 때는 무시
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      // 캘린더가 열려있으면 외부 클릭 무시
-      if (calendar) return;
-
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        onCancel();
-      }
-    }
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen, onCancel, calendar]);
-
-  // 서버액션으로 경기 데이터 불러오기
-  useEffect(() => {
-    if (!isOpen) return;
-    setLoading(true);
-    const fetchMatches = async () => {
-      try {
-        const formattedDate = format(selectedDate, 'yyyy-MM-dd');
-        const data = await getMatchesByDate(formattedDate);
-        setMatches(data || []);
-      } catch {
-        setMatches([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    startTransition(fetchMatches);
-  }, [isOpen, selectedDate]);
+  useClickOutside(dropdownRef, onCancel, isOpen && !calendar);
 
   // 날짜 변경 핸들러
   const handleDateChange = (date: Date | null) => {

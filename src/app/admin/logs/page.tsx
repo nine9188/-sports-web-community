@@ -4,10 +4,10 @@ import Spinner from '@/shared/components/Spinner';
 
 export default function AdminLogsPage() {
   return (
-    <div className="container mx-auto py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">시스템 로그 관리</h1>
-        <p className="text-gray-600">
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold mb-2 text-gray-900 dark:text-[#F0F0F0]">시스템 로그 관리</h1>
+        <p className="text-gray-600 dark:text-gray-400">
           모든 사용자 활동과 시스템 이벤트를 조회하고 분석할 수 있습니다.
         </p>
       </div>

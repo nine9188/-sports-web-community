@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { Notification } from '../types/notification';
-import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '../actions';
+import { markNotificationAsRead, markAllNotificationsAsRead } from '../actions';
 import NotificationDropdown from './NotificationDropdown';
 import MobileNotificationModal from './MobileNotificationModal';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { Button } from '@/shared/components/ui';
+import { useNotifications, useNotificationCache } from '../hooks/useNotificationQueries';
 
 interface NotificationBellProps {
   userId: string | null;
@@ -16,14 +17,24 @@ interface NotificationBellProps {
 
 export default function NotificationBell({ userId, initialUnreadCount = 0 }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
-  const [isLoading, setIsLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const supabase = getSupabaseBrowser();
-  
+
   // 모바일 여부 감지 (md breakpoint: 768px)
   const isMobile = useMediaQuery('(max-width: 767px)');
+
+  // React Query로 알림 데이터 관리
+  const {
+    data,
+    isLoading,
+    refetch,
+  } = useNotifications(20, { enabled: !!userId });
+
+  const notifications = data?.notifications ?? [];
+  const unreadCount = data?.unreadCount ?? initialUnreadCount;
+
+  // 캐시 업데이트 유틸리티
+  const { addNotification, markAsRead, markAllAsRead } = useNotificationCache();
 
   // 드롭다운 외부 클릭 감지 (데스크톱에서만)
   useEffect(() => {
@@ -44,37 +55,12 @@ export default function NotificationBell({ userId, initialUnreadCount = 0 }: Not
     };
   }, [isOpen, isMobile]);
 
-  // 알림 목록 로드
-  const loadNotifications = useCallback(async () => {
-    if (!userId) return;
-    
-    setIsLoading(true);
-    try {
-      const result = await getNotifications(20);
-      if (result.success && result.notifications) {
-        setNotifications(result.notifications);
-        setUnreadCount(result.unreadCount || 0);
-      }
-    } catch (error) {
-      console.error('알림 로드 오류:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [userId]);
-
-  // 컴포넌트 마운트 시 초기 알림 개수 로드 (로그인 직후)
-  useEffect(() => {
-    if (userId) {
-      loadNotifications();
-    }
-  }, [userId, loadNotifications]);
-
   // 모달/드롭다운 열릴 때 알림 새로고침
   useEffect(() => {
     if (isOpen && userId) {
-      loadNotifications();
+      refetch();
     }
-  }, [isOpen, userId, loadNotifications]);
+  }, [isOpen, userId, refetch]);
 
   // 실시간 알림 구독
   useEffect(() => {
@@ -91,14 +77,8 @@ export default function NotificationBell({ userId, initialUnreadCount = 0 }: Not
           filter: `user_id=eq.${userId}`
         },
         (payload: { new: Notification }) => {
-          // 새 알림이 들어오면 카운트 증가
-          setUnreadCount(prev => prev + 1);
-
-          // 모달/드롭다운이 열려있으면 목록도 업데이트
-          if (isOpen) {
-            const newNotification = payload.new;
-            setNotifications(prev => [newNotification, ...prev]);
-          }
+          // 새 알림 캐시에 추가 (카운트도 자동 증가)
+          addNotification(payload.new);
         }
       )
       .subscribe();
@@ -106,16 +86,13 @@ export default function NotificationBell({ userId, initialUnreadCount = 0 }: Not
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, supabase, isOpen]);
+  }, [userId, supabase, addNotification]);
 
   // 단일 알림 읽음 처리
   const handleMarkRead = async (notificationId: string) => {
     const result = await markNotificationAsRead(notificationId);
     if (result.success) {
-      setNotifications(prev =>
-        prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
-      );
-      setUnreadCount(prev => Math.max(0, prev - 1));
+      markAsRead(notificationId);
     }
   };
 
@@ -123,15 +100,14 @@ export default function NotificationBell({ userId, initialUnreadCount = 0 }: Not
   const handleMarkAllRead = async () => {
     const result = await markAllNotificationsAsRead();
     if (result.success) {
-      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-      setUnreadCount(0);
+      markAllAsRead();
     }
   };
 
   // 모달/드롭다운 닫기
-  const handleClose = useCallback(() => {
+  const handleClose = () => {
     setIsOpen(false);
-  }, []);
+  };
 
   // 로그인하지 않은 경우 표시 안 함
   if (!userId) return null;

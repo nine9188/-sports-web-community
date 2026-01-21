@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { toast } from 'react-toastify';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { Button, Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
-import { 
+import {
   savePrediction,
   getUserPrediction,
   getPredictionStats,
@@ -136,27 +137,61 @@ interface MatchDataType {
 }
 
 // 승무패 예측 섹션 컴포넌트
-export default function MatchPredictionClient({ 
+export default function MatchPredictionClient({
   matchData,
   initialPrediction,
   initialStats
-}: { 
+}: {
   matchData: MatchDataType;
   initialPrediction?: MatchPrediction | null;
   initialStats?: PredictionStats | null;
 }) {
   const pathname = usePathname();
   const matchId = pathname?.split('/').pop() || '';
-  
-  const [prediction, setPrediction] = useState<PredictionType | null>(
-    initialPrediction?.prediction_type as PredictionType || null
-  );
-  const [stats, setStats] = useState<PredictionStats | null>(initialStats || null);
+  const queryClient = useQueryClient();
+
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const homeTeam = matchData.teams?.home;
   const awayTeam = matchData.teams?.away;
   const fixture = matchData.fixture;
+
+  // React Query로 사용자 예측 로드
+  const { data: userPredictionData } = useQuery({
+    queryKey: ['userPrediction', matchId],
+    queryFn: async () => {
+      const result = await getUserPrediction(matchId);
+      return result.success && result.data ? result.data : null;
+    },
+    enabled: !!matchId,
+    initialData: initialPrediction,
+    staleTime: 5 * 60 * 1000, // 5분
+    gcTime: 10 * 60 * 1000, // 10분
+  });
+
+  // React Query로 예측 통계 로드
+  const { data: statsData } = useQuery({
+    queryKey: ['predictionStats', matchId],
+    queryFn: async () => {
+      const result = await getPredictionStats(matchId);
+      if (result.success && result.data) {
+        return {
+          home_percentage: result.data.home_percentage,
+          draw_percentage: result.data.draw_percentage,
+          away_percentage: result.data.away_percentage,
+          total_votes: result.data.total_votes || 0
+        };
+      }
+      return null;
+    },
+    enabled: !!matchId,
+    initialData: initialStats,
+    staleTime: 2 * 60 * 1000, // 2분
+    gcTime: 10 * 60 * 1000, // 10분
+  });
+
+  const prediction = userPredictionData?.prediction_type as PredictionType | null;
+  const stats = statsData;
 
   // 경기 상태 확인 함수
   const isMatchFinished = () => {
@@ -179,48 +214,10 @@ export default function MatchPredictionClient({
     return null;
   };
 
-  // 초기 데이터 로드
-  useEffect(() => {
-    const loadInitialData = async () => {
-      if (!matchId || (initialPrediction !== undefined && initialStats !== undefined)) return;
-      
-      try {
-        // 사용자 예측과 통계를 병렬로 가져오기
-        const [userPredictionResult, statsResult] = await Promise.all([
-          getUserPrediction(matchId),
-          getPredictionStats(matchId)
-        ]);
-
-        // 사용자 예측 설정
-        if (userPredictionResult.success && userPredictionResult.data) {
-          const predictionData = userPredictionResult.data;
-          setPrediction(predictionData.prediction_type as PredictionType);
-        }
-
-        // 통계 설정
-        if (statsResult.success && statsResult.data) {
-          const rawStats = statsResult.data;
-          setStats({
-            home_percentage: rawStats.home_percentage,
-            draw_percentage: rawStats.draw_percentage,
-            away_percentage: rawStats.away_percentage,
-            total_votes: rawStats.total_votes || 0
-          });
-        } else if (!statsResult.success) {
-          toast.error(`예측 통계 로드 실패: ${statsResult.error}`);
-        }
-      } catch (error) {
-        toast.error(`데이터 로드 중 오류 발생: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
-      }
-    };
-
-    loadInitialData();
-  }, [matchId, initialPrediction, initialStats]);
-
   // 예측 처리
   const handlePrediction = async (type: PredictionType) => {
     if (!matchId) return;
-    
+
     // 경기가 끝났거나 시작된 경우 예측 불가
     if (isMatchFinished() || isMatchStarted()) {
       const message = getMatchStatusMessage();
@@ -229,30 +226,31 @@ export default function MatchPredictionClient({
       }
       return;
     }
-    
+
     // 같은 예측을 다시 클릭하면 취소
     if (prediction === type) {
       return;
     }
 
     setIsLoading(true);
-    
+
     try {
       const result = await savePrediction(matchId, type);
-      
+
       if (result.success) {
-        setPrediction(type);
+        // React Query 캐시 업데이트 - 사용자 예측
+        queryClient.setQueryData(['userPrediction', matchId], { prediction_type: type });
         toast.success(result.message || '예측이 저장되었습니다!');
-        
+
         // 통계 업데이트가 필요한 경우 별도로 호출
         const hasStatsUpdate = (obj: unknown): obj is { needsStatsUpdate: boolean } => {
           return typeof obj === 'object' && obj !== null && 'needsStatsUpdate' in obj;
         };
-        
+
         if (hasStatsUpdate(result) && result.needsStatsUpdate) {
           try {
             const statsUpdateResult = await updatePredictionStatsManually(matchId);
-            
+
             if (!statsUpdateResult.success) {
               console.error('통계 업데이트 실패:', statsUpdateResult.error);
             }
@@ -260,21 +258,9 @@ export default function MatchPredictionClient({
             console.error('통계 업데이트 예외:', statsError);
           }
         }
-        
-        // 통계 새로고침
-        const statsResult = await getPredictionStats(matchId);
-        
-        if (statsResult.success && statsResult.data) {
-          const rawStats = statsResult.data;
-          setStats({
-            home_percentage: rawStats.home_percentage,
-            draw_percentage: rawStats.draw_percentage,
-            away_percentage: rawStats.away_percentage,
-            total_votes: rawStats.total_votes || 0
-          });
-        } else if (!statsResult.success) {
-          toast.error(`통계 업데이트 실패: ${statsResult.error}`);
-        }
+
+        // 통계 캐시 무효화 및 새로고침
+        queryClient.invalidateQueries({ queryKey: ['predictionStats', matchId] });
       } else {
         // 에러 타입에 따라 다른 메시지 표시
         const hasError = (obj: unknown): obj is { error: unknown } => {
@@ -282,9 +268,9 @@ export default function MatchPredictionClient({
         };
 
         const errorFromResult = hasError(result) ? result.error : undefined;
-        
+
         let errorMessage = '예측 저장에 실패했습니다.';
-        
+
         if (!errorFromResult || errorFromResult === '' || (typeof errorFromResult === 'object' && Object.keys(errorFromResult).length === 0)) {
           errorMessage = '서버에서 알 수 없는 오류가 발생했습니다. 다시 시도해주세요.';
         } else if (typeof errorFromResult === 'string') {
@@ -300,18 +286,18 @@ export default function MatchPredictionClient({
         } else {
           errorMessage = String(errorFromResult || '알 수 없는 오류가 발생했습니다.');
         }
-        
+
         toast.error(errorMessage);
       }
     } catch (error) {
       let errorMessage = '예측 저장 중 오류가 발생했습니다.';
-      
+
       if (error instanceof TypeError && error.message.includes('fetch')) {
         errorMessage = '네트워크 연결을 확인해주세요.';
       } else if (error instanceof Error) {
         errorMessage = `오류: ${error.message}`;
       }
-      
+
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);

@@ -1,15 +1,16 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { useClickOutside } from '@/shared/hooks/useClickOutside'
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage'
 import { ImageType } from '@/shared/types/image'
-import { getTeamById, type TeamMapping } from '@/domains/livescore/constants/teams'
-import { fetchLeagueTeams } from '@/domains/livescore/actions/footballApi'
-import { fetchTeamSquad, type Player } from '@/domains/livescore/actions/teams/squad'
+import { type TeamMapping } from '@/domains/livescore/constants/teams'
+import { type Player } from '@/domains/livescore/actions/teams/squad'
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players'
 import { ChevronLeft, Users, User } from 'lucide-react'
 import { Button, TabList, type TabItem } from '@/shared/components/ui'
 import Spinner from '@/shared/components/Spinner';
+import { useLeagueTeams, useTeamPlayers } from '@/domains/boards/hooks/useEntityQueries';
 
 // 주요 리그
 const LEAGUES = [
@@ -48,108 +49,44 @@ export function EntityPickerForm({
   const [step, setStep] = useState<Step>('league')
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // 외부 클릭 감지
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        handleClose()
-      }
-    }
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [isOpen])
-
   // 선택 상태
   const [selectedLeagueId, setSelectedLeagueId] = useState<number | null>(null)
   const [selectedTeam, setSelectedTeam] = useState<TeamMapping | null>(null)
 
-  // 데이터
-  const [teams, setTeams] = useState<TeamMapping[]>([])
-  const [players, setPlayers] = useState<Player[]>([])
-  const [isLoadingTeams, setIsLoadingTeams] = useState(false)
-  const [isLoadingPlayers, setIsLoadingPlayers] = useState(false)
-  const [playerError, setPlayerError] = useState<string | null>(null)
-  const [teamError, setTeamError] = useState<string | null>(null)
+  // React Query로 데이터 관리 (의존 쿼리)
+  const {
+    data: teams = [],
+    isLoading: isLoadingTeams,
+    error: teamsError
+  } = useLeagueTeams(selectedLeagueId);
+
+  const {
+    data: players = [],
+    isLoading: isLoadingPlayers,
+    error: playersError,
+    refetch: refetchPlayers
+  } = useTeamPlayers(activeTab === 'player' ? selectedTeam?.id ?? null : null);
+
+  // 에러 메시지 변환
+  const teamError = teamsError ? '팀 목록을 불러올 수 없습니다' : null;
+  const playerError = playersError ? '선수 정보를 불러올 수 없습니다' : null;
 
 
-  // 리그 선택 시 팀 목록 로드 (API에서)
+  // 리그 선택 시 자동으로 팀 목록 step으로 이동
   useEffect(() => {
-    if (selectedLeagueId) {
-      setIsLoadingTeams(true)
-      setTeamError(null)
-
-      fetchLeagueTeams(selectedLeagueId.toString())
-        .then(apiTeams => {
-          // API 팀 데이터에 한국어 이름 매핑
-          const mappedTeams: TeamMapping[] = apiTeams.map(apiTeam => {
-            const localTeam = getTeamById(apiTeam.id)
-            return {
-              id: apiTeam.id,
-              name_ko: localTeam?.name_ko || apiTeam.name, // 매핑 없으면 영어 이름 사용
-              name_en: apiTeam.name,
-              country_ko: localTeam?.country_ko,
-              country_en: localTeam?.country_en,
-              code: localTeam?.code,
-              logo: apiTeam.logo
-            }
-          })
-          setTeams(mappedTeams)
-          setStep('team')
-        })
-        .catch(error => {
-          console.error('팀 목록 로드 실패:', error)
-          setTeams([])
-          setTeamError('팀 목록을 불러올 수 없습니다')
-        })
-        .finally(() => {
-          setIsLoadingTeams(false)
-        })
+    if (selectedLeagueId && teams.length > 0 && step === 'league') {
+      setStep('team')
     }
-  }, [selectedLeagueId])
-
-  // 팀 선택 시 선수 목록 로드 (선수 탭일 때만)
-  const loadPlayers = useCallback(async (teamId: number) => {
-    setIsLoadingPlayers(true)
-    setPlayerError(null)
-    try {
-      const response = await fetchTeamSquad(String(teamId))
-      if (response.success && response.data) {
-        // Coach 제외하고 Player만 필터링
-        const playerList = response.data.filter(
-          (item): item is Player => item.position !== 'Coach'
-        )
-        setPlayers(playerList)
-      } else {
-        setPlayers([])
-        setPlayerError(response.message || '선수 정보를 불러올 수 없습니다')
-      }
-    } catch (error) {
-      console.error('선수 로드 실패:', error)
-      setPlayers([])
-      setPlayerError(error instanceof Error ? error.message : '선수 정보를 불러올 수 없습니다')
-    } finally {
-      setIsLoadingPlayers(false)
-    }
-  }, [])
+  }, [selectedLeagueId, teams.length, step])
 
   // 뒤로가기
   const handleBack = () => {
     if (step === 'player') {
       setStep('team')
       setSelectedTeam(null)
-      setPlayers([])
-      setPlayerError(null)
     } else if (step === 'team') {
       setStep('league')
       setSelectedLeagueId(null)
-      setTeams([])
-      setTeamError(null)
     }
   }
 
@@ -159,10 +96,6 @@ export function EntityPickerForm({
     setStep('league')
     setSelectedLeagueId(null)
     setSelectedTeam(null)
-    setTeams([])
-    setPlayers([])
-    setPlayerError(null)
-    setTeamError(null)
   }
 
   // 리그 선택
@@ -184,10 +117,9 @@ export function EntityPickerForm({
       }
       handleClose()
     } else {
-      // 선수 탭: 선수 목록으로 이동
+      // 선수 탭: 선수 목록으로 이동 (React Query가 자동으로 데이터 로드)
       setSelectedTeam(team)
       setStep('player')
-      loadPlayers(team.id)
     }
   }
 
@@ -205,12 +137,11 @@ export function EntityPickerForm({
     setStep('league')
     setSelectedLeagueId(null)
     setSelectedTeam(null)
-    setTeams([])
-    setPlayers([])
-    setPlayerError(null)
-    setTeamError(null)
     onClose()
   }
+
+  // 외부 클릭 감지
+  useClickOutside(dropdownRef, handleClose, isOpen)
 
   // 선택된 리그 이름
   const selectedLeagueName = LEAGUES.find(l => l.id === selectedLeagueId)?.name
@@ -359,7 +290,7 @@ export function EntityPickerForm({
                   <Button
                     type="button"
                     variant="ghost"
-                    onClick={() => selectedTeam && loadPlayers(selectedTeam.id)}
+                    onClick={() => refetchPlayers()}
                     className="mt-3 h-auto px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-[#F0F0F0]"
                   >
                     다시 시도

@@ -19,8 +19,8 @@ export default async function Page() {
   if (!settings) {
     return (
       <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-800">SEO 설정을 불러올 수 없습니다.</p>
+        <div className="bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 rounded-lg p-4">
+          <p className="text-gray-900 dark:text-[#F0F0F0]">SEO 설정을 불러올 수 없습니다.</p>
         </div>
       </div>
     );

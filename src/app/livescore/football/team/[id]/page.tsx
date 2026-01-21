@@ -1,12 +1,8 @@
 import { Metadata } from 'next';
-import { TabContent, TabNavigation, TeamHeader } from '@/domains/livescore/components/football/team';
-import { fetchTeamFullData } from '@/domains/livescore/actions/teams/team';
-import { ErrorState } from '@/domains/livescore/components/common/CommonComponents';
 import { notFound } from 'next/navigation';
-import { TeamDataProvider } from '@/domains/livescore/components/football/team/context/TeamDataContext';
-import { Suspense } from 'react';
+import TeamPageClient, { TeamTabType } from '@/domains/livescore/components/football/team/TeamPageClient';
+import { fetchTeamFullData } from '@/domains/livescore/actions/teams/team';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
-import Spinner from '@/shared/components/Spinner';
 
 interface TeamPageProps {
   params: Promise<{ id: string }>;
@@ -85,55 +81,41 @@ export async function generateMetadata({
   }
 }
 
+// 유효한 탭 목록
+const VALID_TABS: TeamTabType[] = ['overview', 'fixtures', 'standings', 'squad', 'stats'];
+
 export default async function TeamPage({ params, searchParams }: TeamPageProps) {
   const { id } = await params;
   const { tab = 'overview' } = await searchParams;
-  
-  try {
-    // 탭에 따라 필요한 데이터만 가져오기 위한 옵션 설정
-    const options = {
-      fetchMatches: tab === 'overview',
-      fetchSquad: tab === 'squad',
-      fetchPlayerStats: tab === 'squad',
-      fetchStandings: tab === 'overview' || tab === 'standings'
-    };
 
-    // 필요한 모든 데이터를 한 번에 가져오기
-    const teamFullData = await fetchTeamFullData(id, options);
-    
-    if (!teamFullData.success || !teamFullData.teamData?.team) {
+  try {
+    // 유효한 탭인지 확인
+    const initialTab = VALID_TABS.includes(tab as TeamTabType)
+      ? (tab as TeamTabType)
+      : 'overview';
+
+    // 모든 탭 데이터를 서버에서 미리 로드 (빠른 탭 전환을 위해)
+    const initialData = await fetchTeamFullData(id, {
+      fetchMatches: true,      // overview, fixtures 탭용
+      fetchSquad: true,        // squad 탭용
+      fetchPlayerStats: true,  // squad, stats 탭용
+      fetchStandings: true     // overview, standings 탭용
+    });
+
+    if (!initialData.success || !initialData.teamData?.team) {
       notFound();
     }
-    
-    // 컨텍스트에 제공할 초기 데이터
-    const initialData = {
-      teamData: teamFullData.teamData,
-      matchesData: teamFullData.matches,
-      squadData: teamFullData.squad,
-      playerStats: teamFullData.playerStats,
-      standingsData: teamFullData.standings
-    };
-    
+
+    // 클라이언트 컴포넌트에 데이터 전달
     return (
-      <div className="container mx-auto w-full">
-        <TeamDataProvider initialTeamId={id} initialTab={tab} initialData={initialData}>
-          <Suspense fallback={
-            <div className="mb-4 bg-white rounded-lg border p-4">
-              <div className="flex justify-center items-center py-8">
-                <Spinner size="xl" className="mx-auto" />
-                <span className="ml-3 text-gray-600">팀 정보를 불러오는 중...</span>
-              </div>
-            </div>
-          }>
-            <TeamHeader />
-          </Suspense>
-          <TabNavigation teamId={id} activeTab={tab} />
-          <TabContent teamId={id} tab={tab} />
-        </TeamDataProvider>
-      </div>
+      <TeamPageClient
+        teamId={id}
+        initialTab={initialTab}
+        initialData={initialData}
+      />
     );
   } catch (error) {
     console.error('팀 페이지 로딩 오류:', error);
-    return <ErrorState message="팀 정보를 불러오는데 실패했습니다. API 서버에 연결할 수 없거나 요청한 데이터가 존재하지 않습니다." />;
+    notFound();
   }
 } 

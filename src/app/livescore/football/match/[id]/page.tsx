@@ -1,18 +1,18 @@
 import { Metadata } from 'next';
-import { MatchHeaderSkeleton } from '@/domains/livescore/components/common/HeadersUI';
-import TabNavigation from '@/domains/livescore/components/football/match/TabNavigation';
-import TabContent from '@/domains/livescore/components/football/match/TabContent';
-import MatchHeader from '@/domains/livescore/components/football/match/MatchHeader';
-import { MatchInfoSection } from '@/domains/livescore/components/football/match/sidebar/MatchSidebar';
 import { fetchCachedMatchFullData, MatchFullDataResponse } from '@/domains/livescore/actions/match/matchData';
 import { getCachedSidebarData } from '@/domains/livescore/actions/match/sidebarData';
 import { getCachedPowerData } from '@/domains/livescore/actions/match/headtohead';
-import { MatchDataProvider } from '@/domains/livescore/components/football/match/context/MatchDataContext';
-import { Suspense } from 'react';
+import { fetchPlayerRatingsAndCaptains } from '@/domains/livescore/actions/match/playerStats';
+import { fetchMatchPlayerStats } from '@/domains/livescore/actions/match/matchPlayerStats';
+import MatchPageClient, { MatchTabType } from '@/domains/livescore/components/football/match/MatchPageClient';
 import { notFound } from 'next/navigation';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
+
+// 유효한 탭 목록
+const VALID_TABS: MatchTabType[] = ['power', 'events', 'lineups', 'stats', 'standings', 'support'];
+const DEFAULT_TAB: MatchTabType = 'power';
 
 // 경기 메타데이터 생성
 export async function generateMetadata({
@@ -117,60 +117,74 @@ const isCacheValid = (cacheEntry: CacheEntry | undefined): boolean => {
   return Date.now() - cacheEntry.timestamp < CACHE_TTL;
 };
 
-// 페이지 캐시 설정
-export const revalidate = 300; // 5분마다 재검증
-export const dynamic = 'force-dynamic';
+// NOTE: Team/Player 페이지와 동일하게 export 설정 없음
+// 탭 전환 시 불필요한 서버 호출 방지
+// in-memory 캐시(dataCache)로 데이터 신선도 관리
 
-// 페이지 컴포넌트 - 서버 컴포넌트
-export default async function MatchPage({ 
+/**
+ * ============================================
+ * 서버 컴포넌트 + 클라이언트 탭 전환 패턴
+ * ============================================
+ *
+ * Player, Team 페이지와 동일한 패턴 적용
+ *
+ * ## 핵심 원리
+ *
+ * 1. **서버 컴포넌트 (이 파일)**
+ *    - 모든 탭 데이터를 미리 로드
+ *    - URL에서 초기 탭 결정
+ *    - 클라이언트 컴포넌트에 데이터 전달
+ *
+ * 2. **클라이언트 래퍼 (MatchPageClient)**
+ *    - useState로 현재 탭 상태 관리
+ *    - 탭 변경 시 shallow URL 업데이트 (페이지 리로드 없음)
+ *    - 초기 데이터로 즉시 렌더링
+ */
+export default async function MatchPage({
   params,
-  searchParams 
-}: { 
+  searchParams
+}: {
   params: Promise<{ id: string }>,
   searchParams: Promise<{ tab?: string }>
 }) {
   try {
-    // URL에서 ID 및 탭 가져오기 - params와 searchParams를 await으로 처리
+    // URL에서 ID 및 탭 가져오기
     const { id: matchId } = await params;
     const { tab } = await searchParams;
-    
-    const initialTab: string | undefined = tab ?? undefined;
-    
-    // 캐시 키 생성
-    const cacheKey = `match-${matchId}-${initialTab}`;
-    
+
+    // 탭 유효성 검증 후 초기 탭 결정
+    const initialTab: MatchTabType = tab && VALID_TABS.includes(tab as MatchTabType)
+      ? (tab as MatchTabType)
+      : DEFAULT_TAB;
+
+    // 캐시 키 생성 (모든 탭 데이터 로드하므로 탭 파라미터 불필요)
+    const cacheKey = `match-${matchId}-all`;
+
     // 캐시된 데이터 확인
     let matchData;
     const cacheEntry = dataCache.get(cacheKey);
-    
+
     if (cacheEntry && isCacheValid(cacheEntry)) {
-      // 유효한 캐시 데이터가 있으면 사용
       matchData = cacheEntry.data;
     } else {
-      // 캐시된 데이터가 없거나 만료된 경우에만 서버 액션 호출
-      
-      // 각 탭에 필요한 데이터만 선별적으로 로드
+      // 모든 탭 데이터를 서버에서 프리로드
       const options = {
-        // power 또는 기본 탭(null)에서도 이벤트를 프리로드하여 헤더 득점 정보 표시 보장
-        fetchEvents: initialTab === 'events' || initialTab === 'lineups' || initialTab === 'power' || !initialTab,
-        fetchLineups: initialTab === 'lineups',
-        fetchStats: initialTab === 'stats',
-        fetchStandings: initialTab === 'standings' || initialTab === 'power', // power 탭도 standings 데이터 필요
-        fetchPlayersStats: initialTab === 'lineups', // 라인업 탭일 때 선수 통계 데이터도 함께 가져오기
-        fetchPower: initialTab === 'power' || !initialTab // power 탭이거나 기본 탭일 때
+        fetchEvents: true,     // events, lineups, 헤더에서 사용
+        fetchLineups: true,    // lineups 탭
+        fetchStats: true,      // stats 탭
+        fetchStandings: true,  // standings, power 탭
       };
-      
-      // 초기 데이터 로드 - 서버에서 필요한 데이터만 프리로드
+
       matchData = await fetchCachedMatchFullData(matchId, options);
-      
-      // 결과를 타임스탬프와 함께 캐시에 저장
+
+      // 결과를 캐시에 저장
       dataCache.set(cacheKey, {
         data: matchData,
         timestamp: Date.now()
       });
     }
-    
-    // 기본 데이터 로드 실패 시 오류 페이지로 이동
+
+    // 기본 데이터 로드 실패 시 404 페이지
     if (!matchData.success) {
       return notFound();
     }
@@ -179,12 +193,17 @@ export default async function MatchPage({
     const homeTeamId = matchData.homeTeam?.id;
     const awayTeamId = matchData.awayTeam?.id;
 
-    const [sidebarDataResult, powerDataResult] = await Promise.all([
+    // 모든 탭에서 필요한 데이터를 병렬로 프리로드 (탭 전환 시 서버 호출 방지)
+    const [sidebarDataResult, powerDataResult, playerRatingsResult, matchPlayerStatsResult] = await Promise.all([
       getCachedSidebarData(matchId),
-      // power 데이터는 기본 탭이거나 power 탭일 때 프리로드
-      (homeTeamId && awayTeamId && (!initialTab || initialTab === 'power'))
+      // power 데이터는 항상 프리로드 (기본 탭이 power이므로)
+      (homeTeamId && awayTeamId)
         ? getCachedPowerData(homeTeamId, awayTeamId, 5)
-        : Promise.resolve({ success: false })
+        : Promise.resolve({ success: false }),
+      // Lineups 탭용 선수 평점/주장 데이터
+      fetchPlayerRatingsAndCaptains(matchId),
+      // Stats 탭용 선수 통계 데이터
+      fetchMatchPlayerStats(matchId)
     ]);
 
     const sidebarData = sidebarDataResult.success ? sidebarDataResult.data : null;
@@ -192,44 +211,15 @@ export default async function MatchPage({
 
     return (
       <div className="container">
-        <MatchDataProvider
-          initialMatchId={matchId}
-          initialTab={initialTab ?? undefined}
+        <MatchPageClient
+          matchId={matchId}
+          initialTab={initialTab}
           initialData={matchData}
           initialPowerData={powerData}
-        >
-          <div className="flex gap-4">
-            {/* 메인 콘텐츠 */}
-            <div className="flex-1 min-w-0">
-              {/* 헤더를 탭 외부에 배치하여 탭 전환 시 다시 로드되지 않도록 함 */}
-              <Suspense fallback={<MatchHeaderSkeleton />}>
-                <MatchHeader />
-              </Suspense>
-              
-              {/* 모바일용 경기 상세정보 - 헤더와 탭 사이에 배치 */}
-              <div className="xl:hidden mb-4">
-                <MatchInfoSection 
-                  showOnlyMatchInfo={true} 
-                  initialData={matchData.matchData}
-                  sidebarData={sidebarData}
-                />
-              </div>
-              
-              <TabNavigation activeTab={initialTab} />
-              
-              {/* 탭 콘텐츠 */}
-              <TabContent />
-            </div>
-
-            {/* 사이드바 - 데스크탑에서만 표시 */}
-            <aside className="hidden xl:block w-[300px] shrink-0">
-              <MatchInfoSection 
-                initialData={matchData.matchData}
-                sidebarData={sidebarData}
-              />
-            </aside>
-          </div>
-        </MatchDataProvider>
+          initialPlayerRatings={playerRatingsResult}
+          initialMatchPlayerStats={matchPlayerStatsResult}
+          sidebarData={sidebarData}
+        />
       </div>
     );
   } catch (error) {

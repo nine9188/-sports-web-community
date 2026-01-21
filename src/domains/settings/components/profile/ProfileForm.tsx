@@ -1,14 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Calendar, Clock, Edit2, Ticket } from 'lucide-react';
 import { Button } from '@/shared/components/ui';
-import { formatDate } from '@/shared/utils/date';
+import { formatDate } from '@/shared/utils/dateUtils';
 import AttendanceCalendar from '@/shared/components/AttendanceCalendar';
 import NicknameChangeModal from './NicknameChangeModal';
 import ReferralSection from './ReferralSection';
 import PhoneVerificationForm from '../phone/PhoneVerificationForm';
-import { getNicknameTicketCount } from '@/domains/shop/actions/consumables';
+import { useNicknameTicketCount, useNicknameTicketCache } from '../../hooks/useProfileQueries';
 
 interface ProfileFormProps {
   initialData: {
@@ -23,16 +23,15 @@ interface ProfileFormProps {
 
 export default function ProfileForm({ initialData }: ProfileFormProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [ticketCount, setTicketCount] = useState(0);
   const [nickname, setNickname] = useState(initialData.nickname || '');
 
-  useEffect(() => {
-    getNicknameTicketCount(initialData.id).then(setTicketCount);
-  }, [initialData.id]);
+  // React Query로 티켓 개수 관리
+  const { data: ticketCount = 0 } = useNicknameTicketCount(initialData.id);
+  const { decrementTicketCount } = useNicknameTicketCache();
 
   const handleNicknameChange = (newNickname: string) => {
     setNickname(newNickname);
-    setTicketCount(prev => Math.max(0, prev - 1));
+    decrementTicketCount(initialData.id);
   };
 
   return (

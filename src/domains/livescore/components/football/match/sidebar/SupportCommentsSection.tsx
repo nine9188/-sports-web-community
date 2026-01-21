@@ -4,8 +4,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { toast } from 'react-toastify';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
-import { 
+import {
   createSupportComment,
   getSupportComments,
   toggleCommentLike,
@@ -209,17 +210,17 @@ function CommentItem({
 }
 
 // 메인 응원 댓글 섹션 컴포넌트
-export default function SupportCommentsSection({ 
+export default function SupportCommentsSection({
   matchData,
   initialComments
-}: { 
+}: {
   matchData: MatchDataType;
   initialComments?: SupportComment[];
 }) {
   const pathname = usePathname();
   const matchId = pathname?.split('/').pop() || '';
-  
-  const [allComments, setAllComments] = useState<SupportComment[]>(initialComments || []);
+  const queryClient = useQueryClient();
+
   const [newComment, setNewComment] = useState('');
   const [selectedTeam, setSelectedTeam] = useState<TeamType>('neutral');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -230,6 +231,21 @@ export default function SupportCommentsSection({
   const homeTeam = matchData.teams?.home;
   const awayTeam = matchData.teams?.away;
 
+  // React Query로 댓글 로드
+  const { data: commentsData } = useQuery({
+    queryKey: ['supportComments', matchId],
+    queryFn: async () => {
+      const result = await getSupportComments(matchId);
+      return result.success && result.data ? result.data : [];
+    },
+    enabled: !!matchId,
+    initialData: initialComments,
+    staleTime: 2 * 60 * 1000, // 2분
+    gcTime: 10 * 60 * 1000, // 10분
+  });
+
+  const allComments = commentsData ?? [];
+
   // 필터링된 댓글 계산
   const filteredComments = allComments.filter(comment => {
     if (activeTab === 'all') return true;
@@ -239,7 +255,7 @@ export default function SupportCommentsSection({
   // 로그인 상태 체크
   useEffect(() => {
     const supabase = getSupabaseBrowser();
-    
+
     const checkAuth = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -259,7 +275,7 @@ export default function SupportCommentsSection({
       if (session) {
         // 보안 강화: getUser()로 실제 인증 확인
         const { data: { user }, error } = await supabase.auth.getUser();
-        
+
         if (!error && user) {
           setIsLoggedIn(true);
           setCurrentUserId(user.id);
@@ -278,27 +294,10 @@ export default function SupportCommentsSection({
     };
   }, []);
 
-  // 댓글 목록 로드 - useCallback으로 감싸서 dependency 문제 해결
-  const loadComments = useCallback(async () => {
-    if (!matchId) return;
-    
-    try {
-      const result = await getSupportComments(matchId);
-      
-      if (result.success && result.data) {
-        setAllComments(result.data);
-      }
-    } catch {
-      // 에러 처리는 조용히 진행
-    }
-  }, [matchId]);
-
-  // 초기 댓글이 없는 경우에만 로드
-  useEffect(() => {
-    if (initialComments === undefined) {
-      loadComments();
-    }
-  }, [matchId, loadComments, initialComments]);
+  // 댓글 새로고침 함수
+  const refreshComments = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['supportComments', matchId] });
+  }, [queryClient, matchId]);
 
   // 탭 변경 핸들러 - 클라이언트 필터링만
   const handleTabChange = (tab: TeamType | 'all') => {
@@ -318,17 +317,17 @@ export default function SupportCommentsSection({
         selectedTeam,
         newComment.trim()
       );
-      
+
       if (result.success) {
         setNewComment('');
-        await loadComments(); // 댓글 목록 새로고침
+        refreshComments(); // 댓글 목록 새로고침
       }
     } catch {
       // 에러 처리는 조용히 진행
     } finally {
       setIsSubmitting(false);
     }
-  }, [matchId, newComment, selectedTeam, isLoggedIn, loadComments]);
+  }, [matchId, newComment, selectedTeam, isLoggedIn, refreshComments]);
 
   // 댓글 좋아요 토글
   const handleLikeComment = async (commentId: string) => {
@@ -339,21 +338,25 @@ export default function SupportCommentsSection({
 
     try {
       const result = await toggleCommentLike(commentId);
-      
+
       if (result.success) {
-        setAllComments(prev => prev.map(comment => {
-          if (comment.id === commentId) {
-            return {
-              ...comment,
-              is_liked: result.userAction === 'like',
-              is_disliked: result.userAction === 'dislike',
-              userAction: result.userAction,
-              likes_count: result.likes_count || 0,
-              dislikes_count: result.dislikes_count || 0
-            };
-          }
-          return comment;
-        }));
+        // React Query 캐시 업데이트
+        queryClient.setQueryData(['supportComments', matchId], (prev: SupportComment[] | undefined) => {
+          if (!prev) return prev;
+          return prev.map(comment => {
+            if (comment.id === commentId) {
+              return {
+                ...comment,
+                is_liked: result.userAction === 'like',
+                is_disliked: result.userAction === 'dislike',
+                userAction: result.userAction,
+                likes_count: result.likes_count || 0,
+                dislikes_count: result.dislikes_count || 0
+              };
+            }
+            return comment;
+          });
+        });
       } else {
         toast.error(result.error || '좋아요 처리 중 오류가 발생했습니다.');
       }
@@ -372,21 +375,25 @@ export default function SupportCommentsSection({
 
     try {
       const result = await dislikeMatchComment(commentId);
-      
+
       if (result.success) {
-        setAllComments(prev => prev.map(comment => {
-          if (comment.id === commentId) {
-            return {
-              ...comment,
-              is_liked: result.userAction === 'like',
-              is_disliked: result.userAction === 'dislike',
-              userAction: result.userAction,
-              likes_count: result.likes_count || 0,
-              dislikes_count: result.dislikes_count || 0
-            };
-          }
-          return comment;
-        }));
+        // React Query 캐시 업데이트
+        queryClient.setQueryData(['supportComments', matchId], (prev: SupportComment[] | undefined) => {
+          if (!prev) return prev;
+          return prev.map(comment => {
+            if (comment.id === commentId) {
+              return {
+                ...comment,
+                is_liked: result.userAction === 'like',
+                is_disliked: result.userAction === 'dislike',
+                userAction: result.userAction,
+                likes_count: result.likes_count || 0,
+                dislikes_count: result.dislikes_count || 0
+              };
+            }
+            return comment;
+          });
+        });
       } else {
         toast.error(result.error || '싫어요 처리 중 오류가 발생했습니다.');
       }

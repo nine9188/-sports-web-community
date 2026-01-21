@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Container, ContainerHeader, ContainerTitle, TabList, type TabItem } from '@/shared/components/ui';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { StandingsData, League } from '../../types';
-import { fetchStandingsData } from '../../actions/football';
+import { useLeagueStandings } from '../../hooks/useLeagueQueries';
 import { MAJOR_LEAGUE_IDS } from '@/domains/livescore/constants/league-mappings';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 
@@ -18,15 +18,6 @@ const LEAGUES: League[] = [
   { id: 'serieA', name: '세리에A', fullName: '세리에 A', apiId: MAJOR_LEAGUE_IDS.SERIE_A },
   { id: 'ligue1', name: '리그앙', fullName: '리그 1', apiId: MAJOR_LEAGUE_IDS.LIGUE_1 },
 ];
-
-// 클라이언트 사이드 메모리 캐시 (컴포넌트 외부에 정의하여 인스턴스 간 공유)
-const clientCache = new Map<string, {
-  data: StandingsData;
-  timestamp: number;
-}>();
-
-// 캐시 유효 시간 (10분)
-const CACHE_DURATION = 10 * 60 * 1000;
 
 // 팀 이름 짧게 표시 (최대 8자)
 const shortenTeamName = (name: string) => {
@@ -45,106 +36,42 @@ interface LeagueStandingsProps {
   initialStandings?: StandingsData | null;
 }
 
+/**
+ * LeagueStandings - React Query 기반 리그 순위 컴포넌트
+ *
+ * 개선사항:
+ * - Map 기반 수동 캐싱 제거 → React Query 자동 캐싱 (10분)
+ * - loadingRef 중복 요청 방지 제거 → React Query 자동 중복 제거
+ * - useState/useEffect 상태 관리 간소화
+ */
 export default function LeagueStandings({
   initialLeague = 'premier',
   initialStandings = null,
 }: LeagueStandingsProps) {
-  // 상태 관리
+  // UI 상태 관리
   const [activeLeague, setActiveLeague] = useState(initialLeague);
-  const [standings, setStandings] = useState<StandingsData | null>(initialStandings);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
   const [isMobile, setIsMobile] = useState(false);
-  const loadingRef = useRef<Record<string, boolean>>({});
+  const router = useRouter();
 
-  // 초기 데이터가 있으면 캐시에 저장
-  useEffect(() => {
-    if (initialStandings && initialLeague) {
-      clientCache.set(initialLeague, {
-        data: initialStandings,
-        timestamp: Date.now()
-      });
-    }
-  }, [initialLeague, initialStandings]);
+  // React Query로 리그 순위 데이터 관리
+  const { standings, isLoading, error } = useLeagueStandings(activeLeague, {
+    initialData: activeLeague === initialLeague ? initialStandings : undefined,
+    enabled: !isMobile, // 모바일에서는 비활성화
+  });
 
   // 모바일 환경 체크
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    
+
     return () => {
       window.removeEventListener('resize', checkMobile);
     };
   }, []);
-
-  // 캐시에서 데이터 가져오기
-  const getCachedData = (leagueId: string): StandingsData | null => {
-    const cached = clientCache.get(leagueId);
-    if (!cached) return null;
-    
-    // 캐시 유효성 검사
-    if (Date.now() - cached.timestamp > CACHE_DURATION) {
-      clientCache.delete(leagueId);
-      return null;
-    }
-    
-    return cached.data;
-  };
-
-  // 리그 선택 시 데이터 가져오기
-  useEffect(() => {
-    if (isMobile) return;
-
-    // 이미 로딩 중인지 확인
-    if (loadingRef.current[activeLeague]) return;
-
-    // 캐시에서 먼저 확인
-    const cachedData = getCachedData(activeLeague);
-    if (cachedData) {
-      setStandings(cachedData);
-      return;
-    }
-
-    async function loadStandings() {
-      try {
-        // 중복 요청 방지
-        if (loadingRef.current[activeLeague]) return;
-        loadingRef.current[activeLeague] = true;
-        
-        setLoading(true);
-        setError(null);
-        
-        // 서버 액션 직접 호출
-        const data = await fetchStandingsData(activeLeague);
-        
-        if (data) {
-          // 캐시에 저장
-          clientCache.set(activeLeague, {
-            data,
-            timestamp: Date.now()
-          });
-          setStandings(data);
-        } else {
-          setError('데이터를 불러올 수 없습니다.');
-        }
-      } catch (err) {
-        console.error('리그 순위 데이터 로드 실패:', err);
-        setError('데이터를 불러오는데 실패했습니다.');
-      } finally {
-        setLoading(false);
-        loadingRef.current[activeLeague] = false;
-      }
-    }
-    
-    loadStandings();
-  }, [activeLeague, isMobile]);
-
-  // SSR 일관성을 위해 모바일에서도 마크업은 유지하고 CSS로 숨김 처리 (hidden md:block)
 
   const handleTeamClick = (teamId: number) => {
     router.push(`/livescore/football/team/${teamId}?tab=overview`);
@@ -184,7 +111,7 @@ export default function LeagueStandings({
 
       {/* 순위표 */}
       <div className="min-h-[200px]">
-        {loading ? (
+        {isLoading ? (
           <div className="p-3 space-y-2">
             {[...Array(10)].map((_, i) => (
               <div key={i} className="h-5 w-full bg-[#F5F5F5] dark:bg-[#262626] animate-pulse rounded-lg"></div>
@@ -267,4 +194,4 @@ export default function LeagueStandings({
       </div>
     </Container>
   );
-} 
+}

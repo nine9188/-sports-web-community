@@ -42,52 +42,40 @@ interface MatchesResponse {
 }
 
 /**
- * 특정 팀의 최근 경기 및 예정 경기 목록을 가져오는 서버 액션
+ * 특정 팀의 시즌 전체 경기 목록을 가져오는 서버 액션
  * @param teamId 팀 ID
- * @returns 경기 목록
+ * @returns 경기 목록 (시즌 전체)
  */
 export async function fetchTeamMatches(teamId: string): Promise<MatchesResponse> {
   try {
     if (!teamId) {
       throw new Error('팀 ID는 필수입니다');
     }
-    
+
     // 현재 월을 기준으로 시즌 계산 (7월 기준)
     const today = new Date();
     const currentMonth = today.getMonth() + 1;
     const currentYear = today.getFullYear();
     const season = currentMonth < 7 ? currentYear - 1 : currentYear;
-    
-    // 최근 10경기와 다음 5경기를 병렬로 가져오기
-    const [lastMatchesResponse, nextMatchesResponse] = await Promise.all([
-      fetch(`https://v3.football.api-sports.io/fixtures?team=${teamId}&season=${season}&last=10`, {
+
+    // 시즌 전체 경기 가져오기 (과거 + 예정 경기 모두 포함)
+    const response = await fetch(
+      `https://v3.football.api-sports.io/fixtures?team=${teamId}&season=${season}`,
+      {
         headers: {
           'x-rapidapi-host': 'v3.football.api-sports.io',
           'x-rapidapi-key': process.env.FOOTBALL_API_KEY || '',
         },
         cache: 'no-store'
-      }),
-      fetch(`https://v3.football.api-sports.io/fixtures?team=${teamId}&next=5`, {
-        headers: {
-          'x-rapidapi-host': 'v3.football.api-sports.io',
-          'x-rapidapi-key': process.env.FOOTBALL_API_KEY || '',
-        },
-        cache: 'no-store'
-      })
-    ]);
-    
-    if (!lastMatchesResponse.ok || !nextMatchesResponse.ok) {
+      }
+    );
+
+    if (!response.ok) {
       throw new Error('경기 정보를 가져오는데 실패했습니다');
     }
-    
-    const lastMatches = await lastMatchesResponse.json();
-    const nextMatches = await nextMatchesResponse.json();
-    
-    // 두 결과 합치기
-    const matches = [
-      ...(nextMatches.response || []),
-      ...(lastMatches.response || [])
-    ];
+
+    const data = await response.json();
+    const matches = data.response || [];
     
     // 팀 매핑 정보 적용
     const mappedMatches = matches.map(match => {

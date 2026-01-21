@@ -8,7 +8,8 @@ import { Button } from '@/shared/components/ui';
 import { likeComment, dislikeComment } from '@/domains/boards/actions/comments/index';
 import { CommentType } from '@/domains/boards/types/post/comment';
 import ReportButton from '@/domains/reports/components/ReportButton';
-import { formatDate } from '@/shared/utils/date';
+import { formatDate } from '@/shared/utils/dateUtils';
+import { useClickOutside } from '@/shared/hooks/useClickOutside';
 
 interface CommentProps {
   comment: CommentType & {
@@ -18,6 +19,9 @@ interface CommentProps {
   onUpdate: (id: string, content: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   onReply?: (parentId: string) => void;
+  onLike?: (commentId: string) => Promise<void>;
+  onDislike?: (commentId: string) => Promise<void>;
+  isLiking?: boolean;
   isPostOwner?: boolean;
   isReply?: boolean;
 }
@@ -28,6 +32,9 @@ export default function Comment({
   onUpdate,
   onDelete,
   onReply,
+  onLike,
+  onDislike,
+  isLiking: parentIsLiking = false,
   isPostOwner = false,
   isReply = false
 }: CommentProps) {
@@ -46,21 +53,7 @@ export default function Comment({
   const isDeleted = comment.is_deleted === true;
 
   // 외부 클릭 시 작성자 드롭다운 닫기
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (authorDropdownRef.current && !authorDropdownRef.current.contains(event.target as Node)) {
-        setIsAuthorDropdownOpen(false);
-      }
-    };
-
-    if (isAuthorDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isAuthorDropdownOpen]);
+  useClickOutside(authorDropdownRef, () => setIsAuthorDropdownOpen(false), isAuthorDropdownOpen);
 
   const handleAuthorToggle = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -91,7 +84,19 @@ export default function Comment({
   };
 
   const handleLike = async () => {
-    if (isLiking || isDisliking || !currentUserId) return;
+    if (parentIsLiking || isLiking || isDisliking || !currentUserId) return;
+
+    // 부모에서 제공한 핸들러 사용 (React Query)
+    if (onLike) {
+      try {
+        await onLike(comment.id);
+      } catch {
+        alert('좋아요 처리 중 오류가 발생했습니다.');
+      }
+      return;
+    }
+
+    // Fallback: 직접 API 호출 (legacy)
     setIsLiking(true);
     try {
       const result = await likeComment(comment.id);
@@ -110,7 +115,19 @@ export default function Comment({
   };
 
   const handleDislike = async () => {
-    if (isLiking || isDisliking || !currentUserId) return;
+    if (parentIsLiking || isLiking || isDisliking || !currentUserId) return;
+
+    // 부모에서 제공한 핸들러 사용 (React Query)
+    if (onDislike) {
+      try {
+        await onDislike(comment.id);
+      } catch {
+        alert('싫어요 처리 중 오류가 발생했습니다.');
+      }
+      return;
+    }
+
+    // Fallback: 직접 API 호출 (legacy)
     setIsDisliking(true);
     try {
       const result = await dislikeComment(comment.id);
@@ -218,8 +235,8 @@ export default function Comment({
 
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <ActionButton action="like" active={userAction === 'like'} count={likes} onClick={handleLike} disabled={isLiking || isDisliking || !currentUserId} />
-                <ActionButton action="dislike" active={userAction === 'dislike'} count={dislikes} onClick={handleDislike} disabled={isLiking || isDisliking || !currentUserId} />
+                <ActionButton action="like" active={userAction === 'like'} count={likes} onClick={handleLike} disabled={parentIsLiking || isLiking || isDisliking || !currentUserId} />
+                <ActionButton action="dislike" active={userAction === 'dislike'} count={dislikes} onClick={handleDislike} disabled={parentIsLiking || isLiking || isDisliking || !currentUserId} />
                 {/* 답글 버튼 - 원댓글에만 표시 (대댓글에는 표시 안 함) */}
                 {!isReply && currentUserId && onReply && (
                   <Button
@@ -261,6 +278,9 @@ export default function Comment({
               currentUserId={currentUserId}
               onUpdate={onUpdate}
               onDelete={onDelete}
+              onLike={onLike}
+              onDislike={onDislike}
+              isLiking={parentIsLiking}
               isPostOwner={isPostOwner}
               isReply={true}
             />

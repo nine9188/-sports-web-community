@@ -5,13 +5,13 @@ import Link from 'next/link';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 
-import { useMatchData } from '@/domains/livescore/components/football/match/context/MatchDataContext';
-import { formatDateToKorean } from '@/domains/livescore/utils/dateUtils';
-import { ErrorState, LoadingState } from '@/domains/livescore/components/common/CommonComponents';
+import { formatDateToKorean } from '@/shared/utils/dateUtils';
+import { ErrorState } from '@/domains/livescore/components/common/CommonComponents';
 import { MatchEvent } from '@/domains/livescore/types/match';
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 import { getLeagueName } from '@/domains/livescore/constants/league-mappings';
 import { Container } from '@/shared/components/ui';
+import { MatchFullDataResponse } from '@/domains/livescore/actions/match/matchData';
 
 // MatchData 타입 정의
 interface MatchDataType {
@@ -67,13 +67,20 @@ interface MatchDataType {
   };
 }
 
-const MatchHeader = memo(() => {
-  const { 
-    matchData, 
-    eventsData, 
-    isLoading: contextLoading, 
-    error: contextError 
-  } = useMatchData();
+interface MatchHeaderProps {
+  initialData: MatchFullDataResponse;
+}
+
+/**
+ * 매치 헤더 컴포넌트
+ *
+ * 서버에서 미리 로드된 데이터(initialData)를 받아 헤더를 렌더링합니다.
+ * Context 의존성 제거로 더 단순하고 예측 가능한 동작.
+ */
+const MatchHeader = memo(({ initialData }: MatchHeaderProps) => {
+  // initialData에서 데이터 추출
+  const matchData = initialData.matchData;
+  const eventsData = initialData.events;
 
   // 타입 캐스팅을 가장 먼저 처리
   const typedMatchData = matchData as MatchDataType;
@@ -166,24 +173,13 @@ const MatchHeader = memo(() => {
     };
   }, [matchInfo]);
 
-  // 헤더는 기본 경기 정보만 필요하므로 탭 로딩과 분리
-  // 기본 매치 데이터가 있으면 헤더를 표시하고, 탭별 로딩은 무시
-  const hasBasicMatchData = matchInfo && 
-    matchInfo.fixture && 
-    matchInfo.homeTeam && 
+  // 헤더는 기본 경기 정보만 필요
+  const hasBasicMatchData = matchInfo &&
+    matchInfo.fixture &&
+    matchInfo.homeTeam &&
     matchInfo.awayTeam;
 
-  // 로딩 상태 - 기본 경기 정보가 없을 때만 로딩 표시
-  if (contextLoading && !hasBasicMatchData) {
-    return <LoadingState message="경기 정보를 불러오는 중..." />;
-  }
-
-  // 에러 상태 - 기본 경기 정보가 없고 에러가 있을 때만 표시
-  if (contextError && !hasBasicMatchData) {
-    return <ErrorState message={contextError} />;
-  }
-
-  // 매치 데이터가 없는 경우 - 기본 경기 정보가 없을 때만 에러 표시
+  // 매치 데이터가 없는 경우 에러 표시
   if (!hasBasicMatchData) {
     return <ErrorState message="경기 데이터를 찾을 수 없습니다." />;
   }

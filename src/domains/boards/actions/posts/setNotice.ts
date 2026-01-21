@@ -260,6 +260,38 @@ export async function updateNoticeType(
 /**
  * 공지 대상 게시판 변경
  */
+/**
+ * 게시글 번호로 게시글 ID 조회
+ */
+export async function getPostIdByNumber(postNumber: number): Promise<{ success: true; postId: string } | { success: false; error: string }> {
+  try {
+    const isAdmin = await checkAdminPermission();
+    if (!isAdmin) {
+      return { success: false, error: ERROR_MESSAGES.UNAUTHORIZED };
+    }
+
+    const supabase = await getSupabaseServer();
+    if (!supabase) {
+      return { success: false, error: ERROR_MESSAGES.SUPABASE_ERROR };
+    }
+
+    const { data, error } = await supabase
+      .from('posts')
+      .select('id')
+      .eq('post_number', postNumber)
+      .single();
+
+    if (error || !data) {
+      return { success: false, error: `게시글 번호 "${postNumber}"를 찾을 수 없습니다.` };
+    }
+
+    return { success: true, postId: data.id };
+  } catch (error) {
+    console.error('게시글 조회 오류:', error);
+    return { success: false, error: '게시글 조회 중 오류가 발생했습니다.' };
+  }
+}
+
 export async function updateNoticeBoards(postId: string, boardIds: string[]): Promise<SetNoticeResult> {
   try {
     if (!boardIds || boardIds.length === 0) {

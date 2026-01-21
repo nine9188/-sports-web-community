@@ -5,8 +5,10 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Trash2, Plus } from 'lucide-react';
+import { GripVertical, Trash2 } from 'lucide-react';
 import { getAllBoards, getBoardCollectionSettings, saveBoardCollectionSettings } from '@/domains/widgets/actions/boardCollectionSettings';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select-radix';
+import Spinner from '@/shared/components/Spinner';
 
 interface Board {
   id: string;
@@ -31,18 +33,18 @@ function SortableItem({ board, onRemove }: { board: SelectedBoard; onRemove: (id
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-3 p-3 bg-white border rounded-lg"
+      className="flex items-center gap-3 p-3 bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-lg"
     >
       <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
-        <GripVertical className="w-5 h-5 text-gray-400" />
+        <GripVertical className="w-5 h-5 text-gray-400 dark:text-gray-500" />
       </button>
       <div className="flex-1">
-        <span className="font-medium">{board.name}</span>
-        <span className="text-sm text-gray-500 ml-2">({board.slug})</span>
+        <span className="font-medium text-gray-900 dark:text-[#F0F0F0]">{board.name}</span>
+        <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">({board.slug})</span>
       </div>
       <button
         onClick={() => onRemove(board.id)}
-        className="p-2 text-red-600 hover:bg-red-50 rounded"
+        className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
       >
         <Trash2 className="w-4 h-4" />
       </button>
@@ -160,8 +162,10 @@ export default function BoardCollectionWidgetSettingsPage() {
     return (
       <div className="p-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-bold mb-6">게시판 모음 위젯 설정</h1>
-          <p className="text-gray-500">로딩 중...</p>
+          <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-[#F0F0F0]">게시판 모음 위젯 설정</h1>
+          <div className="flex items-center justify-center py-12">
+            <Spinner size="md" />
+          </div>
         </div>
       </div>
     );
@@ -170,32 +174,35 @@ export default function BoardCollectionWidgetSettingsPage() {
   return (
     <div className="p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">게시판 모음 위젯 설정</h1>
+        <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-[#F0F0F0]">게시판 모음 위젯 설정</h1>
 
         {/* 게시판 추가 */}
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <h2 className="text-lg font-semibold mb-3">게시판 추가</h2>
-          <select
-            className="w-full p-2 border rounded"
-            onChange={(e) => handleAddBoard(e.target.value)}
+        <div className="mb-6 p-4 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg border border-black/7 dark:border-white/10">
+          <h2 className="text-lg font-semibold mb-3 text-gray-900 dark:text-[#F0F0F0]">게시판 추가</h2>
+          <Select
             value=""
+            onValueChange={(value) => handleAddBoard(value)}
           >
-            <option value="">게시판을 선택하세요</option>
-            {allBoards
-              .filter((b) => !selectedBoards.some((sb) => sb.id === b.id))
-              .map((board) => (
-                <option key={board.id} value={board.id}>
-                  {board.name} ({board.slug})
-                </option>
-              ))}
-          </select>
+            <SelectTrigger>
+              <SelectValue placeholder="게시판을 선택하세요" />
+            </SelectTrigger>
+            <SelectContent>
+              {allBoards
+                .filter((b) => !selectedBoards.some((sb) => sb.id === b.id))
+                .map((board) => (
+                  <SelectItem key={board.id} value={board.id}>
+                    {board.name} ({board.slug})
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* 선택된 게시판 목록 (드래그 가능) */}
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-3">표시할 게시판 (드래그로 순서 변경)</h2>
+          <h2 className="text-lg font-semibold mb-3 text-gray-900 dark:text-[#F0F0F0]">표시할 게시판 (드래그로 순서 변경)</h2>
           {selectedBoards.length === 0 ? (
-            <p className="text-gray-500">선택된 게시판이 없습니다.</p>
+            <p className="text-gray-500 dark:text-gray-400">선택된 게시판이 없습니다.</p>
           ) : (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={selectedBoards.map((b) => b.id)} strategy={verticalListSortingStrategy}>
@@ -214,7 +221,7 @@ export default function BoardCollectionWidgetSettingsPage() {
           <button
             onClick={handleSave}
             disabled={saving || selectedBoards.length === 0}
-            className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-[#262626] dark:bg-[#3F3F3F] text-white rounded hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
           >
             {saving ? '저장 중...' : '저장'}
           </button>

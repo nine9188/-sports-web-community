@@ -3,7 +3,6 @@ import Formation from './Formation';
 import PlayerImage from './components/PlayerImage';
 import PlayerEvents from './components/PlayerEvents';
 import PlayerStatsModal from './components/PlayerStatsModal';
-import usePlayerStats from './hooks/usePlayerStats';
 import { TeamLineup, MatchEvent } from '@/domains/livescore/types/match';
 import { EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
@@ -11,6 +10,7 @@ import { ImageType } from '@/shared/types/image';
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
+import { PlayerRatingsAndCaptains } from '@/domains/livescore/actions/match/playerStats';
 
 interface Player {
   id: number;
@@ -48,9 +48,11 @@ interface LineupsProps {
       };
     };
   };
+  // 서버에서 프리로드된 선수 평점/주장 데이터
+  initialPlayerRatings?: PlayerRatingsAndCaptains;
 }
 
-export default function Lineups({ matchId, matchData }: LineupsProps) {
+export default function Lineups({ matchId, matchData, initialPlayerRatings }: LineupsProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<{
     id: number;
@@ -64,7 +66,9 @@ export default function Lineups({ matchId, matchData }: LineupsProps) {
     };
   } | null>(null);
 
-  const { playersRatings, captainIds } = usePlayerStats(matchId);
+  // 서버에서 프리로드된 데이터 사용 (클라이언트 fetch 제거)
+  const playersRatings = initialPlayerRatings?.ratings ?? {};
+  const captainIds = initialPlayerRatings?.captainIds ?? [];
 
   // 주장 여부 확인 헬퍼 함수 (lineup API 데이터 또는 player stats API 데이터 사용)
   const isCaptain = (playerId: number, lineupCaptain?: boolean): boolean => {

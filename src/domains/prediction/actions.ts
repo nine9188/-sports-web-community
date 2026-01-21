@@ -874,23 +874,29 @@ export async function testPredictionGeneration(targetDate: string) {
   }
 }
 
-// 단일 리그 예측 분석 생성
+// 단일 리그 예측 분석 생성 (선택적 경기 ID 목록 지원)
 export async function generateSingleLeaguePrediction(
   targetDate: string,
   leagueId: number,
-  triggerType: 'manual' | 'github_actions' | 'cron' = 'manual'
+  triggerType: 'manual' | 'github_actions' | 'cron' = 'manual',
+  matchIds?: number[]  // 선택적 경기 ID 목록
 ): Promise<PredictionResult> {
   const startTime = Date.now()
-  
+
   try {
-    console.log(`🎯 단일 리그 예측 분석 시작 (리그 ID: ${leagueId}, 날짜: ${targetDate})`)
-    
+    console.log(`🎯 단일 리그 예측 분석 시작 (리그 ID: ${leagueId}, 날짜: ${targetDate}, 선택된 경기: ${matchIds?.length || '전체'})`)
+
     // 해당 날짜의 경기 조회
     const allMatches = await getUpcomingMatches(targetDate)
-    
+
     // 특정 리그의 경기만 필터링
-    const leagueMatches = allMatches.filter(match => match.league.id === leagueId)
-    
+    let leagueMatches = allMatches.filter(match => match.league.id === leagueId)
+
+    // matchIds가 제공되면 해당 경기만 추가 필터링
+    if (matchIds && matchIds.length > 0) {
+      leagueMatches = leagueMatches.filter(match => matchIds.includes(match.id))
+    }
+
     if (leagueMatches.length === 0) {
       return {
         league_id: leagueId,
@@ -900,16 +906,16 @@ export async function generateSingleLeaguePrediction(
         matches_count: 0
       }
     }
-    
+
     // 리그별 그룹화
     const leagueGroup = {
       league: leagueMatches[0].league,
       matches: leagueMatches
     }
-    
+
     // 예측 분석 생성
     const result = await generateLeaguePredictionPost(leagueGroup, targetDate)
-    
+
     // 로그 저장
     const executionTime = Date.now() - startTime
     await savePredictionLog(
@@ -919,14 +925,14 @@ export async function generateSingleLeaguePrediction(
       result.status === 'success' ? 1 : 0,
       result.status === 'error' ? result.message : undefined,
       executionTime,
-      { single_league: true, league_id: leagueId }
+      { single_league: true, league_id: leagueId, selected_match_ids: matchIds }
     )
-    
+
     return result
-    
+
   } catch (error) {
     console.error(`단일 리그 예측 분석 실패 (리그 ID: ${leagueId}):`, error)
-    
+
     const executionTime = Date.now() - startTime
     await savePredictionLog(
       triggerType,
@@ -935,9 +941,9 @@ export async function generateSingleLeaguePrediction(
       0,
       error instanceof Error ? error.message : '알 수 없는 오류',
       executionTime,
-      { single_league: true, league_id: leagueId }
+      { single_league: true, league_id: leagueId, selected_match_ids: matchIds }
     )
-    
+
     return {
       league_id: leagueId,
       league_name: `리그 ID ${leagueId}`,

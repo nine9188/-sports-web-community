@@ -17,30 +17,6 @@ export default async function ShopAdminPage() {
 
     const supabase = await getSupabaseServer();
 
-    // 팀 데이터 가져오기
-    const { data: teams, error: teamsError } = await supabase
-      .from('teams')
-      .select('id, name, logo')
-      .not('logo', 'is', null)
-      .order('name');
-
-    if (teamsError) {
-      console.error('팀 데이터 로딩 오류:', teamsError);
-      return notFound();
-    }
-
-    // 리그 데이터 가져오기
-    const { data: leagues, error: leaguesError } = await supabase
-      .from('leagues')
-      .select('id, name, logo')
-      .not('logo', 'is', null)
-      .order('name');
-
-    if (leaguesError) {
-      console.error('리그 데이터 로딩 오류:', leaguesError);
-      return notFound();
-    }
-
     // 스토리지의 이미지 목록 가져오기
     const { data: storageFiles, error: storageError } = await supabase
       .storage
@@ -75,16 +51,14 @@ export default async function ShopAdminPage() {
       .order('display_order', { ascending: true });
 
     return (
-      <div className="space-y-8">
+      <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">아이콘 상점 관리</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0]">아이콘 상점 관리</h1>
         </div>
-        
-        <ShopItemManagement 
-          teams={teams || []} 
-          leagues={leagues || []}
+
+        <ShopItemManagement
           storageImages={storageImages}
-          shopItems={shopItems || []} 
+          shopItems={shopItems || []}
           categories={categories || []}
         />
       </div>

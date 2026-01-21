@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { MyCommentItem } from '../../types';
-import { formatDate } from '@/shared/utils/date';
+import { formatDate } from '@/shared/utils/dateUtils';
 import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 
 interface MyCommentListProps {

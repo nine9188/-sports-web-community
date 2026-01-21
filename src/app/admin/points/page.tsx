@@ -67,9 +67,9 @@ export default function PointsManagementPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">포인트 관리</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0]">포인트 관리</h1>
         <Button onClick={refreshData} variant="outline">새로고침</Button>
       </div>
       
