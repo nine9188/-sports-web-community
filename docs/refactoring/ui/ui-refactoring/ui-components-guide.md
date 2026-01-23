@@ -1,6 +1,6 @@
 # UI 컴포넌트 가이드
 
-> 최종 업데이트: 2026-01-19
+> 최종 업데이트: 2026-01-22
 
 ## 개요
 
@@ -20,7 +20,7 @@
 | **Dialog** | `dialog.tsx` | 2곳 | Radix Dialog + 애니메이션 + 접근성 | [dialog.md](./ui/dialog.md) |
 | **Tabs** | `tabs.tsx` | 10곳 | 콜백, 상태관리, variants | [tabs.md](./ui/tabs.md) |
 | **Pagination** | `pagination.tsx` | 3곳 | URL/button 모드, 페이지 계산 로직 | [pagination.md](./ui/pagination.md) |
-| **SelectRadix** | `select-radix.tsx` | 4곳 | Radix Select 프리미티브 | [select-radix.md](./ui/select-radix.md) |
+| **NativeSelect** | `select-native.tsx` | 11곳 | 스크롤 잠금 없는 커스텀 드롭다운 | [select-radix.md](./ui/select-radix.md) |
 | **Container** | `container.tsx` | 36곳 | 레이아웃 추상화, 일관성 | [container.md](./ui/container.md) |
 
 > 각 컴포넌트의 상세 사용 현황, 미사용(커스텀 구현) 목록, 마이그레이션 계획은 상세 문서를 참고하세요.
@@ -61,7 +61,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter,
   Pagination,
   TabList, type TabItem,
-  SelectRadix, SelectTrigger, SelectContent, SelectItem, SelectValue
+  NativeSelect
 } from '@/shared/components/ui';
 ```
 
@@ -194,26 +194,28 @@ import { Pagination } from '@/shared/components/ui';
 />
 ```
 
-### SelectRadix
+### NativeSelect
 
-드롭다운 선택 컴포넌트 (Radix 기반).
+드롭다운 선택 컴포넌트 (스크롤 잠금 없음).
 
 ```tsx
-import {
-  SelectRadix as Select, SelectTrigger, SelectValue,
-  SelectContent, SelectItem
-} from '@/shared/components/ui';
+import { NativeSelect } from '@/shared/components/ui';
 
-<Select value={value} onValueChange={setValue}>
-  <SelectTrigger>
-    <SelectValue placeholder="선택하세요" />
-  </SelectTrigger>
-  <SelectContent>
-    <SelectItem value="option1">옵션 1</SelectItem>
-    <SelectItem value="option2">옵션 2</SelectItem>
-  </SelectContent>
-</Select>
+const OPTIONS = [
+  { value: 'option1', label: '옵션 1' },
+  { value: 'option2', label: '옵션 2' },
+];
+
+<NativeSelect
+  value={value}
+  onValueChange={setValue}
+  options={OPTIONS}
+  placeholder="선택하세요"
+  disabled={false}
+/>
 ```
+
+> **Note**: `SelectRadix`는 deprecated됨. 스크롤 잠금 문제로 `NativeSelect` 사용 권장.
 
 ---
 
@@ -228,7 +230,8 @@ src/shared/components/ui/
 ├── dialog.tsx        # Dialog (Radix Dialog)
 ├── tabs.tsx          # Tabs, TabList (상태 관리)
 ├── pagination.tsx    # Pagination (URL/버튼 모드)
-├── select-radix.tsx  # SelectRadix (Radix Select)
+├── select-native.tsx # NativeSelect (커스텀 드롭다운, 권장)
+├── select-radix.tsx  # SelectRadix (deprecated, 스크롤 잠금 문제)
 ├── badge.tsx         # Badge (cva)
 └── error-message.tsx # ErrorMessage (에러 표시)
 
@@ -245,6 +248,8 @@ src/shared/styles/
 
 | 날짜 | 변경 내용 |
 |-----|----------|
+| 2026-01-22 | `NativeSelect` 추가, 모든 `SelectRadix` 사용처 마이그레이션 완료 |
+| 2026-01-22 | `SelectRadix` deprecated (스크롤 잠금 문제) |
 | 2026-01-19 | `select.tsx` 삭제, `TransferFilters.tsx`를 `SelectRadix`로 마이그레이션 |
 | 2026-01-19 | `input.tsx`, `textarea.tsx` 삭제 → 스타일 상수로 대체 |
 | 2026-01-19 | `src/shared/styles/` 폴더 생성 |

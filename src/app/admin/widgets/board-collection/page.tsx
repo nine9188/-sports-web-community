@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Trash2 } from 'lucide-react';
 import { getAllBoards, getBoardCollectionSettings, saveBoardCollectionSettings } from '@/domains/widgets/actions/boardCollectionSettings';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select-radix';
+import { NativeSelect } from '@/shared/components/ui';
 import Spinner from '@/shared/components/Spinner';
 
 interface Board {
@@ -139,6 +139,16 @@ export default function BoardCollectionWidgetSettingsPage() {
     });
   }
 
+  // 선택 가능한 게시판 옵션 목록
+  const boardOptions = useMemo(() => {
+    return allBoards
+      .filter((b) => !selectedBoards.some((sb) => sb.id === b.id))
+      .map((board) => ({
+        value: board.id,
+        label: `${board.name} (${board.slug})`
+      }));
+  }, [allBoards, selectedBoards]);
+
   // 저장
   async function handleSave() {
     setSaving(true);
@@ -179,23 +189,12 @@ export default function BoardCollectionWidgetSettingsPage() {
         {/* 게시판 추가 */}
         <div className="mb-6 p-4 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg border border-black/7 dark:border-white/10">
           <h2 className="text-lg font-semibold mb-3 text-gray-900 dark:text-[#F0F0F0]">게시판 추가</h2>
-          <Select
+          <NativeSelect
             value=""
             onValueChange={(value) => handleAddBoard(value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="게시판을 선택하세요" />
-            </SelectTrigger>
-            <SelectContent>
-              {allBoards
-                .filter((b) => !selectedBoards.some((sb) => sb.id === b.id))
-                .map((board) => (
-                  <SelectItem key={board.id} value={board.id}>
-                    {board.name} ({board.slug})
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
+            options={boardOptions}
+            placeholder="게시판을 선택하세요"
+          />
         </div>
 
         {/* 선택된 게시판 목록 (드래그 가능) */}

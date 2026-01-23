@@ -34,7 +34,7 @@ export function ChatHeader({
             variant="ghost"
             size="icon"
             onClick={handleBackClick}
-            className="rounded-full h-8 w-8"
+            className="rounded-md h-8 w-8"
             aria-label="대화 목록으로 돌아가기"
           >
             <ChevronLeft className="w-5 h-5" />

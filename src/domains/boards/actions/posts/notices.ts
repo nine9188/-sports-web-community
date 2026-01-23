@@ -117,6 +117,26 @@ export async function getNotices(boardId?: string): Promise<Post[]> {
       };
       comments?: Array<{ count: number }>;
     }>;
+    // Custom ordering: must-read (any type) first, then global, then board, each by created_at desc.
+    const noticeGroupRank = (notice: { is_must_read?: boolean; notice_type?: NoticeType | null }) => {
+      if (notice.is_must_read) return 0;
+      if (notice.notice_type === 'global') return 1;
+      if (notice.notice_type === 'board') return 2;
+      return 3;
+    };
+    const noticeCreatedAtTs = (value?: string) => {
+      if (!value) return 0;
+      const ts = Date.parse(value);
+      return Number.isNaN(ts) ? 0 : ts;
+    };
+
+    typedNoticesData.sort((a, b) => {
+      const groupDiff = noticeGroupRank(a) - noticeGroupRank(b);
+      if (groupDiff !== 0) return groupDiff;
+
+      return noticeCreatedAtTs(b.created_at) - noticeCreatedAtTs(a.created_at);
+    });
+
 
     // 사용자 아이콘 정보 가져오기
     const userIconMap: Record<number, string> = {};
@@ -420,3 +440,4 @@ export async function getBoardNotices(boardId: string): Promise<Post[]> {
     return [];
   }
 }
+

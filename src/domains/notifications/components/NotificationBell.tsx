@@ -161,4 +161,3 @@ export default function NotificationBell({ userId, initialUnreadCount = 0 }: Not
     </>
   );
 }
-

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { fetchLeagueTeams, LeagueTeam } from '@/domains/livescore/actions/footballApi';
@@ -8,13 +8,18 @@ import {
   Container,
   ContainerHeader,
   ContainerTitle,
-  SelectRadix as Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
+  NativeSelect,
   Button
 } from '@/shared/components/ui';
+
+const LEAGUE_OPTIONS = [
+  { value: 'all', label: '전체 리그' },
+  { value: '39', label: '프리미어리그' },
+  { value: '140', label: '라리가' },
+  { value: '135', label: '세리에A' },
+  { value: '78', label: '분데스리가' },
+  { value: '61', label: '리그1' },
+];
 
 // 팀 데이터 메모리 캐시 (컴포넌트 외부에 위치)
 const teamsCache = new Map<string, LeagueTeam[]>();
@@ -137,6 +142,43 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
     router.push('/transfers');
   };
 
+  // 팀 옵션 생성
+  const teamOptions = useMemo(() => {
+    const options = [];
+    const placeholder = !currentFilters.league || currentFilters.league === 'all'
+      ? '먼저 리그를 선택하세요'
+      : loadingTeams ? '팀 목록 로딩 중...' : '전체 팀';
+
+    options.push({ value: 'all', label: placeholder });
+
+    if (currentFilters.league && currentFilters.league !== 'all' && !loadingTeams) {
+      availableTeams.forEach((team) => {
+        options.push({
+          value: team.id.toString(),
+          label: `${team.name}${team.isWinner ? ' 🏆' : ''}`
+        });
+      });
+    }
+
+    return options;
+  }, [currentFilters.league, loadingTeams, availableTeams]);
+
+  // 이적 유형 옵션
+  const typeOptions = useMemo(() => {
+    const placeholder = !currentFilters.league || currentFilters.league === 'all'
+      ? '먼저 리그를 선택하세요'
+      : '전체';
+
+    const options = [{ value: 'all', label: placeholder }];
+
+    if (currentFilters.league && currentFilters.league !== 'all') {
+      options.push({ value: 'in', label: '영입' });
+      options.push({ value: 'out', label: '방출' });
+    }
+
+    return options;
+  }, [currentFilters.league]);
+
   return (
     <Container className="overflow-visible">
       <ContainerHeader>
@@ -179,22 +221,12 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
           <label className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-2">
             리그 <span className="text-red-500">*</span>
           </label>
-          <Select
+          <NativeSelect
             value={currentFilters.league?.toString() || 'all'}
             onValueChange={(value) => updateFilter('league', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="전체 리그" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">전체 리그</SelectItem>
-              <SelectItem value="39">프리미어리그</SelectItem>
-              <SelectItem value="140">라리가</SelectItem>
-              <SelectItem value="135">세리에A</SelectItem>
-              <SelectItem value="78">분데스리가</SelectItem>
-              <SelectItem value="61">리그1</SelectItem>
-            </SelectContent>
-          </Select>
+            options={LEAGUE_OPTIONS}
+            placeholder="전체 리그"
+          />
         </div>
 
         {/* 팀 선택 */}
@@ -202,33 +234,13 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
           <label className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-2">
             팀
           </label>
-          <Select
+          <NativeSelect
             value={currentFilters.team?.toString() || 'all'}
             onValueChange={(value) => updateFilter('team', value)}
             disabled={!currentFilters.league || currentFilters.league === 'all'}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={
-                !currentFilters.league || currentFilters.league === 'all'
-                  ? '먼저 리그를 선택하세요'
-                  : loadingTeams ? '팀 목록 로딩 중...' : '전체 팀'
-              } />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">
-                {!currentFilters.league || currentFilters.league === 'all'
-                  ? '먼저 리그를 선택하세요'
-                  : loadingTeams ? '팀 목록 로딩 중...' : '전체 팀'}
-              </SelectItem>
-              {currentFilters.league && currentFilters.league !== 'all' && !loadingTeams &&
-                availableTeams.map((team) => (
-                  <SelectItem key={team.id} value={team.id.toString()}>
-                    {team.name}{team.isWinner ? ' 🏆' : ''}
-                  </SelectItem>
-                ))
-              }
-            </SelectContent>
-          </Select>
+            options={teamOptions}
+            placeholder="전체 팀"
+          />
         </div>
 
         {/* 이적 유형 */}
@@ -236,32 +248,13 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
           <label className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-2">
             이적 유형
           </label>
-          <Select
+          <NativeSelect
             value={currentFilters.type || 'all'}
             onValueChange={(value) => updateFilter('type', value)}
             disabled={!currentFilters.league || currentFilters.league === 'all'}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={
-                !currentFilters.league || currentFilters.league === 'all'
-                  ? '먼저 리그를 선택하세요'
-                  : '전체'
-              } />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">
-                {!currentFilters.league || currentFilters.league === 'all'
-                  ? '먼저 리그를 선택하세요'
-                  : '전체'}
-              </SelectItem>
-              {currentFilters.league && currentFilters.league !== 'all' && (
-                <>
-                  <SelectItem value="in">영입</SelectItem>
-                  <SelectItem value="out">방출</SelectItem>
-                </>
-              )}
-            </SelectContent>
-          </Select>
+            options={typeOptions}
+            placeholder="전체"
+          />
         </div>
 
         {/* 활성 필터 표시 */}

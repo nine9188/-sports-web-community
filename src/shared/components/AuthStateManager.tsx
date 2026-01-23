@@ -22,6 +22,7 @@ const AuthStateManager = React.memo(function AuthStateManager({
   headerUserData,
   headerBoards,
   headerIsAdmin,
+  headerTotalPostCount,
   liveScoreData,
   fullUserData,
   isOpen,
@@ -38,6 +39,7 @@ const AuthStateManager = React.memo(function AuthStateManager({
   headerUserData?: HeaderUserData | null,
   headerBoards?: Board[],
   headerIsAdmin?: boolean,
+  headerTotalPostCount?: number,
   liveScoreData?: MultiDayMatchesResult,
   fullUserData?: FullUserDataWithSession | null,
   isOpen: boolean,
@@ -66,6 +68,7 @@ const AuthStateManager = React.memo(function AuthStateManager({
         initialUserData={headerUserData}
         boards={headerBoards || []}
         isAdmin={headerIsAdmin}
+        totalPostCount={headerTotalPostCount}
         liveScoreData={liveScoreData}
       />
       <div className="flex flex-1 w-full md:max-w-[1400px] md:mx-auto bg-transparent">

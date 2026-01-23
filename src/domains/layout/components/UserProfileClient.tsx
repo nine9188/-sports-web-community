@@ -72,7 +72,7 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
           variant="ghost"
           data-testid="user-menu"
           onClick={toggleDropdown}
-          className="flex items-center space-x-1 px-3 py-2 h-auto"
+          className="flex items-center space-x-1 h-10 px-3"
         >
           <div className="w-5 h-5 relative rounded-full overflow-hidden">
             <UserIcon

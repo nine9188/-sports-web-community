@@ -227,36 +227,30 @@ export default function SearchResultsContainer({
 
       {/* 카드 목록 하단 공통 페이지네이션 (posts/comments 전용) */}
       {query && type === 'posts' && pagination.posts.total > 20 && (
-        <div className="mt-3 px-4 sm:px-6">
-          <Pagination
-            currentPage={page}
-            totalPages={Math.ceil(pagination.posts.total / 20)}
-            mode="url"
-            withMargin={false}
-          />
-        </div>
+        <Pagination
+          currentPage={page}
+          totalPages={Math.ceil(pagination.posts.total / 20)}
+          mode="url"
+          withMargin={false}
+        />
       )}
 
       {query && type === 'comments' && pagination.comments.total > 20 && (
-        <div className="mt-3 px-4 sm:px-6">
-          <Pagination
-            currentPage={page}
-            totalPages={Math.ceil(pagination.comments.total / 20)}
-            mode="url"
-            withMargin={false}
-          />
-        </div>
+        <Pagination
+          currentPage={page}
+          totalPages={Math.ceil(pagination.comments.total / 20)}
+          mode="url"
+          withMargin={false}
+        />
       )}
 
       {query && type === 'teams' && pagination.teams.total > 20 && (
-        <div className="mt-3 px-4 sm:px-6">
-          <Pagination
-            currentPage={page}
-            totalPages={Math.ceil(pagination.teams.total / 20)}
-            mode="url"
-            withMargin={false}
-          />
-        </div>
+        <Pagination
+          currentPage={page}
+          totalPages={Math.ceil(pagination.teams.total / 20)}
+          mode="url"
+          withMargin={false}
+        />
       )}
     </div>
   )

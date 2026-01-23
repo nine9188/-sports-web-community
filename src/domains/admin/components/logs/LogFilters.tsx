@@ -1,14 +1,27 @@
 'use client';
 
-import {
-  Button,
-  SelectRadix as Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/components/ui';
+import { Button, NativeSelect } from '@/shared/components/ui';
 import type { LogFilters as LogFiltersType } from './types';
+
+const LEVEL_OPTIONS = [
+  { value: 'all', label: '모든 레벨' },
+  { value: 'DEBUG', label: 'DEBUG' },
+  { value: 'INFO', label: 'INFO' },
+  { value: 'WARN', label: 'WARN' },
+  { value: 'ERROR', label: 'ERROR' },
+  { value: 'FATAL', label: 'FATAL' },
+];
+
+const CATEGORY_OPTIONS = [
+  { value: 'all', label: '모든 카테고리' },
+  { value: 'auth', label: '인증' },
+  { value: 'api', label: 'API' },
+  { value: 'database', label: '데이터베이스' },
+  { value: 'user_action', label: '사용자 액션' },
+  { value: 'system', label: '시스템' },
+  { value: 'admin', label: '관리자' },
+  { value: 'security', label: '보안' },
+];
 
 interface LogFiltersProps {
   filters: LogFiltersType;
@@ -29,41 +42,19 @@ export function LogFilters({ filters, isLoading, onFilterChange, onSearch, onRes
       </div>
       <div className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4">
-          <Select
+          <NativeSelect
             value={filters.level || 'all'}
             onValueChange={(value) => onFilterChange('level', value === 'all' ? '' : value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="레벨" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">모든 레벨</SelectItem>
-              <SelectItem value="DEBUG">DEBUG</SelectItem>
-              <SelectItem value="INFO">INFO</SelectItem>
-              <SelectItem value="WARN">WARN</SelectItem>
-              <SelectItem value="ERROR">ERROR</SelectItem>
-              <SelectItem value="FATAL">FATAL</SelectItem>
-            </SelectContent>
-          </Select>
+            options={LEVEL_OPTIONS}
+            placeholder="레벨"
+          />
 
-          <Select
+          <NativeSelect
             value={filters.category || 'all'}
             onValueChange={(value) => onFilterChange('category', value === 'all' ? '' : value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="카테고리" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">모든 카테고리</SelectItem>
-              <SelectItem value="auth">인증</SelectItem>
-              <SelectItem value="api">API</SelectItem>
-              <SelectItem value="database">데이터베이스</SelectItem>
-              <SelectItem value="user_action">사용자 액션</SelectItem>
-              <SelectItem value="system">시스템</SelectItem>
-              <SelectItem value="admin">관리자</SelectItem>
-              <SelectItem value="security">보안</SelectItem>
-            </SelectContent>
-          </Select>
+            options={CATEGORY_OPTIONS}
+            placeholder="카테고리"
+          />
 
           <input
             className={inputClassName}

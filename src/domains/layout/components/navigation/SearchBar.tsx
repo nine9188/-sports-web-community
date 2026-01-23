@@ -59,7 +59,7 @@ const SearchBar = React.memo(function SearchBar() {
               setSearchQuery('');
               inputRef.current?.focus();
             }}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 h-auto w-auto rounded-full"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 h-auto w-auto rounded-md"
           >
             <X className="h-3 w-3 text-gray-400" />
           </Button>

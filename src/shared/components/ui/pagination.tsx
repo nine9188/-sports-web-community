@@ -1,9 +1,14 @@
-'use client';
+"use client";
 
-import React, { useMemo } from 'react';
-import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import React, { useMemo } from "react";
+import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 
 /**
  * Pagination 컴포넌트 Props
@@ -20,7 +25,7 @@ interface PaginationProps {
   /** 페이지 변경 콜백 (mode="button"일 때 필수) */
   onPageChange?: (page: number) => void;
   /** 모드: "url" (Link 사용) 또는 "button" (버튼 사용) */
-  mode?: 'url' | 'button';
+  mode?: "url" | "button";
   /** 표시할 최대 버튼 수 */
   maxButtons?: number;
   /** 상단 마진 적용 여부 */
@@ -53,10 +58,10 @@ export function Pagination({
   currentPage,
   totalPages,
   onPageChange,
-  mode = 'button',
+  mode = "button",
   maxButtons = 7,
   withMargin = false,
-  className = '',
+  className = "",
   withBorder = false,
 }: PaginationProps) {
   const pathname = usePathname();
@@ -76,9 +81,9 @@ export function Pagination({
   const buildHref = (targetPage: number) => {
     const params = new URLSearchParams(searchParams?.toString());
     if (targetPage <= 1) {
-      params.delete('page');
+      params.delete("page");
     } else {
-      params.set('page', String(targetPage));
+      params.set("page", String(targetPage));
     }
     const queryString = params.toString();
     return queryString ? `${pathname}?${queryString}` : pathname;
@@ -90,21 +95,23 @@ export function Pagination({
   const nextPage = Math.min(totalPages, currentPage + 1);
 
   // 스타일 클래스
-  const buttonBase = 'p-2 rounded border border-black/7 dark:border-0 text-sm transition-colors';
-  const buttonDefault = 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]';
-  const buttonDisabled = 'opacity-40 pointer-events-none';
-  const buttonActive = 'bg-[#262626] dark:bg-[#3F3F3F] text-white';
+  const buttonBase =
+    "p-2 rounded border border-black/7 dark:border-0 text-sm transition-colors";
+  const buttonDefault =
+    "bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]";
+  const buttonDisabled = "opacity-40 pointer-events-none";
+  const buttonActive = "bg-[#262626] dark:bg-[#3F3F3F] text-white";
 
   // 버튼/링크 렌더링 헬퍼
   const renderNavButton = (
     targetPage: number,
     disabled: boolean,
     ariaLabel: string,
-    icon: React.ReactNode
+    icon: React.ReactNode,
   ) => {
     const className = `${buttonBase} ${disabled ? `${buttonDefault} ${buttonDisabled}` : buttonDefault}`;
 
-    if (mode === 'url') {
+    if (mode === "url") {
       return (
         <Link
           href={buildHref(targetPage)}
@@ -133,14 +140,14 @@ export function Pagination({
   const renderPageButton = (page: number, index: number) => {
     const isActive = page === currentPage;
     const hideOnMobile = pages.length === 7 && (index === 0 || index === 6);
-    const className = `${buttonBase} px-3 ${isActive ? buttonActive : buttonDefault} ${hideOnMobile ? 'hidden md:flex' : 'flex'}`;
+    const className = `${buttonBase} px-3 ${isActive ? buttonActive : buttonDefault} ${hideOnMobile ? "hidden md:flex" : "flex"}`;
 
-    if (mode === 'url') {
+    if (mode === "url") {
       return (
         <Link
           key={page}
           href={buildHref(page)}
-          aria-current={isActive ? 'page' : undefined}
+          aria-current={isActive ? "page" : undefined}
           className={className}
         >
           {page}
@@ -152,7 +159,7 @@ export function Pagination({
       <button
         key={page}
         onClick={() => onPageChange?.(page)}
-        aria-current={isActive ? 'page' : undefined}
+        aria-current={isActive ? "page" : undefined}
         className={className}
       >
         {page}
@@ -160,28 +167,50 @@ export function Pagination({
     );
   };
 
-  const borderClass = withBorder ? 'border-t border-black/5 dark:border-white/10' : '';
-  const marginClass = withMargin ? 'mt-4' : '';
+  const borderClass = withBorder
+    ? "border-t border-black/5 dark:border-white/10"
+    : "";
+  const marginClass = withMargin ? "mt-4" : "";
 
   return (
     <nav
-      className={`flex items-center justify-center gap-1 p-4 ${borderClass} ${marginClass} ${className}`}
+      className={`flex items-center justify-center gap-1 px-4 ${borderClass} ${marginClass} ${className}`}
       aria-label="페이지네이션"
     >
       {/* 첫 페이지 */}
-      {renderNavButton(1, currentPage === 1, '첫 페이지', <ChevronsLeft className="w-4 h-4" />)}
+      {renderNavButton(
+        1,
+        currentPage === 1,
+        "첫 페이지",
+        <ChevronsLeft className="w-4 h-4" />,
+      )}
 
       {/* 이전 페이지 */}
-      {renderNavButton(prevPage, currentPage === 1, '이전 페이지', <ChevronLeft className="w-4 h-4" />)}
+      {renderNavButton(
+        prevPage,
+        currentPage === 1,
+        "이전 페이지",
+        <ChevronLeft className="w-4 h-4" />,
+      )}
 
       {/* 페이지 번호들 */}
       {pages.map((p, index) => renderPageButton(p, index))}
 
       {/* 다음 페이지 */}
-      {renderNavButton(nextPage, currentPage === totalPages, '다음 페이지', <ChevronRight className="w-4 h-4" />)}
+      {renderNavButton(
+        nextPage,
+        currentPage === totalPages,
+        "다음 페이지",
+        <ChevronRight className="w-4 h-4" />,
+      )}
 
       {/* 마지막 페이지 */}
-      {renderNavButton(totalPages, currentPage === totalPages, '마지막 페이지', <ChevronsRight className="w-4 h-4" />)}
+      {renderNavButton(
+        totalPages,
+        currentPage === totalPages,
+        "마지막 페이지",
+        <ChevronsRight className="w-4 h-4" />,
+      )}
     </nav>
   );
 }

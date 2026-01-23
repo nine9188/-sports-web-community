@@ -59,7 +59,7 @@ export default function LiveScoreModalClient({ isOpen, onClose, initialData }: L
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="rounded-full h-9 w-9"
+            className="rounded-md h-9 w-9"
           >
             <X className="h-4 w-4 text-gray-900 dark:text-[#F0F0F0]" />
           </Button>

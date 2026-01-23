@@ -1,23 +1,24 @@
-'use client';
+"use client";
 
-import React, { memo, useEffect } from 'react';
-import { addRecentlyVisited } from '@/domains/layout/utils/recentlyVisited';
-import Link from 'next/link';
-import { PenLine } from 'lucide-react';
-import BoardBreadcrumbs from '../common/BoardBreadcrumbs';
-import BoardTeamInfo from '../board/BoardTeamInfo';
-import LeagueInfo from '../board/LeagueInfo';
-import BoardPopularPosts from '../board/BoardPopularPosts';
-import ClientHoverMenu from '../common/ClientHoverMenu';
-import PostList from '../post/PostList';
-import PopularPostList from '../post/PopularPostList';
-import { Pagination } from '@/shared/components/ui';
-import { NoticeList, type NoticeListPost } from '../notice';
-import { StoreFilterMenu } from '../hotdeal';
-import { isHotdealBoard } from '../../utils/hotdeal';
-import { Breadcrumb } from '../../types/board/data';
-import { Board } from '../../types/board';
-import type { LayoutPost, PopularPost } from '@/domains/boards/types/post';
+import React, { memo, useEffect } from "react";
+import { addRecentlyVisited } from "@/domains/layout/utils/recentlyVisited";
+import Link from "next/link";
+import { PenLine } from "lucide-react";
+import BoardBreadcrumbs from "../common/BoardBreadcrumbs";
+import BoardTeamInfo from "../board/BoardTeamInfo";
+import LeagueInfo from "../board/LeagueInfo";
+import BoardPopularPosts from "../board/BoardPopularPosts";
+import ClientHoverMenu from "../common/ClientHoverMenu";
+import PostList from "../post/PostList";
+import PopularPostList from "../post/PopularPostList";
+import { Pagination } from "@/shared/components/ui";
+import { NoticeList, type NoticeListPost } from "../notice";
+import { StoreFilterMenu } from "../hotdeal";
+import BoardSearchBar from "../board/BoardSearchBar";
+import { isHotdealBoard } from "../../utils/hotdeal";
+import { Breadcrumb } from "../../types/board/data";
+import { Board } from "../../types/board";
+import type { LayoutPost, PopularPost } from "@/domains/boards/types/post";
 
 // LayoutPost를 Post로 alias (기존 코드 호환)
 type Post = LayoutPost;
@@ -92,9 +93,11 @@ interface BoardDetailLayoutProps {
   // 커스텀 필터 컴포넌트 (인기글 기간 필터 등)
   filterComponent?: React.ReactNode;
   // 리스트 스타일 타입 (기본: text, 카드형: card)
-  listVariant?: 'text' | 'card';
+  listVariant?: "text" | "card";
   // 뷰 타입 (DB의 view_type)
-  viewType?: 'text' | 'image-table' | 'list';
+  viewType?: "text" | "image-table" | "list";
+  // 검색어 (검색 모드일 때)
+  searchQuery?: string;
 }
 
 // 메모이제이션된 컴포넌트들
@@ -122,8 +125,9 @@ export default function BoardDetailLayout({
   popularPosts,
   notices,
   filterComponent,
-  listVariant = 'text',
-  viewType: propViewType
+  listVariant = "text",
+  viewType: propViewType,
+  searchQuery,
 }: BoardDetailLayoutProps) {
   const viewType = propViewType || boardData.view_type;
 
@@ -133,7 +137,7 @@ export default function BoardDetailLayout({
       addRecentlyVisited({
         id: boardData.id,
         slug: boardData.slug || boardData.id,
-        name: boardData.name
+        name: boardData.name,
       });
     }
   }, [boardData.id, boardData.slug, boardData.name]);
@@ -143,6 +147,18 @@ export default function BoardDetailLayout({
       <div>
         <MemoizedBoardBreadcrumbs breadcrumbs={breadcrumbs} />
       </div>
+
+      {/* 커스텀 필터 컴포넌트 (예: 인기글 기간 필터) */}
+      {filterComponent && <div className="mb-4">{filterComponent}</div>}
+
+      {/* 인기 게시글 위젯 - 헤더 공지보다 먼저 표시 (항상 4칸 표시) */}
+      {popularPosts && (
+        <MemoizedBoardPopularPosts
+          todayPosts={popularPosts.todayPosts}
+          weekPosts={popularPosts.weekPosts}
+          className="mb-4"
+        />
+      )}
 
       {teamData && (
         <div className="mb-4 bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 rounded-lg shadow-sm overflow-hidden">
@@ -181,13 +197,15 @@ export default function BoardDetailLayout({
         <div className="mb-4 bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 rounded-lg shadow-sm overflow-hidden">
           {/* 게시판 헤더 */}
           <div className="h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
-            <h2 className="text-sm font-semibold truncate text-gray-900 dark:text-[#F0F0F0]">{boardData.name}</h2>
+            <h2 className="text-sm font-semibold truncate text-gray-900 dark:text-[#F0F0F0]">
+              {boardData.name}
+            </h2>
             {isLoggedIn && (
               <Link
                 href={`/boards/${slug}/create`}
                 aria-label="글쓰기"
                 title="글쓰기"
-                className="p-2 rounded-full hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors flex-shrink-0"
+                className="p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors flex-shrink-0"
               >
                 <PenLine className="h-4 w-4 text-gray-900 dark:text-[#F0F0F0]" />
               </Link>
@@ -201,22 +219,6 @@ export default function BoardDetailLayout({
         </div>
       )}
 
-      {/* 커스텀 필터 컴포넌트 (예: 인기글 기간 필터) */}
-      {filterComponent && (
-        <div className="mb-4">
-          {filterComponent}
-        </div>
-      )}
-
-      {/* 인기 게시글 위젯 - 공지사항 아래 표시 (항상 4칸 표시) */}
-      {popularPosts && (
-        <MemoizedBoardPopularPosts
-          todayPosts={popularPosts.todayPosts}
-          weekPosts={popularPosts.weekPosts}
-          className="mb-4"
-        />
-      )}
-
       {/* 호버 메뉴 - 클라이언트 컴포넌트로 전환 */}
       {topBoards && hoverChildBoardsMap && (
         <MemoizedClientHoverMenu
@@ -226,25 +228,23 @@ export default function BoardDetailLayout({
           prefetchedData={{
             topBoards: topBoards,
             childBoardsMap: hoverChildBoardsMap,
-            isServerFetched: true
+            isServerFetched: true,
           }}
         />
       )}
 
       {/* 쇼핑몰 필터 메뉴 - 핫딜 게시판일 때만 표시 */}
-      {isHotdealBoard(slug) && (
-        <StoreFilterMenu boardSlug={slug} />
-      )}
+      {isHotdealBoard(slug) && <StoreFilterMenu boardSlug={slug} />}
 
       {/* 게시글 목록 - listVariant에 따라 다른 컴포넌트 렌더링 */}
       {/* 공지사항 게시판은 NoticeList 사용 */}
-      {(slug === 'notice' || slug === 'notices') ? (
+      {slug === "notice" || slug === "notices" ? (
         <MemoizedNoticeList
           notices={posts}
           showBoardName={true}
           emptyMessage="아직 공지사항이 없습니다."
         />
-      ) : listVariant === 'card' ? (
+      ) : listVariant === "card" ? (
         <PopularPostList
           posts={posts}
           loading={false}
@@ -258,37 +258,48 @@ export default function BoardDetailLayout({
           showBoard={true}
           className="mt-2 overflow-x-hidden"
           emptyMessage="아직 작성된 게시글이 없습니다."
-          variant={viewType === 'image-table' ? 'image-table' : 'text'}
+          variant={viewType === "image-table" ? "image-table" : "text"}
         />
       )}
 
-      {/* 페이지네이션 & 글쓰기 버튼 영역 */}
-      {(pagination && Math.ceil(pagination.totalItems / pagination.itemsPerPage) > 1) || isLoggedIn ? (
-        <div className="flex items-center justify-between mt-4 px-4 sm:px-0">
-          {/* 페이지네이션 (중앙) */}
-          <div className="flex-1 flex justify-center">
-            {pagination && Math.ceil(pagination.totalItems / pagination.itemsPerPage) > 1 && (
-              <MemoizedPagination
-                currentPage={pagination.currentPage}
-                totalPages={Math.ceil(pagination.totalItems / pagination.itemsPerPage)}
-                mode="url"
-                withMargin={false}
-              />
+      {/* 검색바 */}
+      <div className="mt-4 px-4 sm:px-0 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="w-full sm:w-1/2">
+          <BoardSearchBar slug={slug} />
+        </div>
+        {isLoggedIn && (
+          <Link
+            href={`/boards/${slug}/create`}
+            className="flex items-center justify-center gap-1 px-3 py-2 border border-black/7 dark:border-0 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded text-sm transition-colors whitespace-nowrap min-h-[36px]"
+          >
+            <PenLine className="h-4 w-4" />
+            <span className="hidden sm:inline">글쓰기</span>
+          </Link>
+        )}
+      </div>
+
+      {/* 검색 결과 표시 */}
+      {searchQuery && (
+        <div className="mt-2 px-4 sm:px-0 text-sm text-gray-600 dark:text-gray-400">
+          <span className="font-medium">&apos;{searchQuery}&apos;</span> 검색
+          결과: {pagination?.totalItems || 0}건
+        </div>
+      )}
+
+      {/* 페이지네이션 영역 */}
+      {pagination &&
+      Math.ceil(pagination.totalItems / pagination.itemsPerPage) > 1 ? (
+        <div className="flex items-center justify-center px-4 sm:px-0 mt-4">
+          <MemoizedPagination
+            currentPage={pagination.currentPage}
+            totalPages={Math.ceil(
+              pagination.totalItems / pagination.itemsPerPage,
             )}
-          </div>
-          
-          {/* 글쓰기 버튼 (오른쪽) */}
-          {isLoggedIn && (
-            <Link
-              href={`/boards/${slug}/create`}
-              className="flex items-center justify-center gap-1 px-3 py-2 border border-black/7 dark:border-0 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded text-sm transition-colors whitespace-nowrap ml-2 min-h-[36px]"
-            >
-              <PenLine className="h-4 w-4" />
-              <span className="hidden sm:inline">글쓰기</span>
-            </Link>
-          )}
+            mode="url"
+            withMargin={false}
+          />
         </div>
       ) : null}
     </div>
   );
-} 
+}

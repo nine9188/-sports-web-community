@@ -116,7 +116,7 @@ export default function PostActions({
         variant="ghost"
         onClick={handleLike}
         disabled={isLiking || isDisliking}
-        className={`rounded-full shadow-sm border ${
+        className={`rounded-md shadow-sm border ${
           userAction === 'like'
             ? 'bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600 hover:bg-blue-600 dark:hover:bg-blue-700'
             : 'bg-[#F5F5F5] dark:bg-[#262626] border-black/7 dark:border-white/10'
@@ -130,7 +130,7 @@ export default function PostActions({
         variant="ghost"
         onClick={handleDislike}
         disabled={isLiking || isDisliking}
-        className={`rounded-full shadow-sm border ${
+        className={`rounded-md shadow-sm border ${
           userAction === 'dislike'
             ? 'bg-red-500 dark:bg-red-600 text-white border-red-500 dark:border-red-600 hover:bg-red-600 dark:hover:bg-red-700'
             : 'bg-[#F5F5F5] dark:bg-[#262626] border-black/7 dark:border-white/10'

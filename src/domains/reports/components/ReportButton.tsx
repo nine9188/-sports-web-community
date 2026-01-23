@@ -12,17 +12,19 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogCloseButton,
-  SelectRadix as Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
+  NativeSelect
 } from '@/shared/components/ui';
 import { focusStyles, inputGrayBgStyles } from '@/shared/styles';
 import { cn } from '@/shared/utils/cn';
 import { toast } from 'react-toastify';
 import { createReport } from '../actions';
 import { REPORT_REASONS, ReportTargetType, ReportReason } from '../types';
+
+// 신고 사유 옵션
+const REPORT_REASON_OPTIONS = Object.entries(REPORT_REASONS).map(([, value]) => ({
+  value,
+  label: value
+}));
 
 interface ReportButtonProps {
   targetType: ReportTargetType;
@@ -121,18 +123,12 @@ export default function ReportButton({
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
               신고 사유 <span className="text-red-500">*</span>
             </label>
-            <Select value={reason} onValueChange={(value: ReportReason) => setReason(value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="신고 사유를 선택해주세요" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(REPORT_REASONS).map(([key, value]) => (
-                  <SelectItem key={key} value={value}>
-                    {value}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <NativeSelect
+              value={reason || ''}
+              onValueChange={(value) => setReason(value as ReportReason)}
+              options={REPORT_REASON_OPTIONS}
+              placeholder="신고 사유를 선택해주세요"
+            />
           </div>
 
           {/* 상세 설명 */}

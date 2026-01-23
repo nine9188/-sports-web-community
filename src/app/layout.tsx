@@ -77,7 +77,7 @@ export default async function RootLayout({
   // 통합 사용자 데이터, 게시판, 라이브스코어, UI 테마, SEO 설정 병렬 fetch
   const [fullUserData, headerBoardsData, liveScoreData, uiTheme, seoSettings] = await Promise.all([
     getFullUserData(),
-    getBoardsForNavigation(),
+    getBoardsForNavigation({ includeTotalPostCount: true }),
     fetchMultiDayMatches().catch(() => undefined),
     getUIThemeSettings(),
     getSeoSettings()
@@ -157,6 +157,7 @@ export default async function RootLayout({
           fullUserData={fullUserData}
           headerBoards={headerBoardsData.boardData}
           headerIsAdmin={headerBoardsData.isAdmin}
+          headerTotalPostCount={headerBoardsData.totalPostCount}
           liveScoreData={liveScoreData}
         >
           {children}

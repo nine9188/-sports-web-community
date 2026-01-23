@@ -1,9 +1,24 @@
 'use client';
 
 import { Filter, RefreshCw } from 'lucide-react';
-import { Button } from '@/shared/components/ui';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select-radix';
+import { Button, NativeSelect } from '@/shared/components/ui';
 import type { ReportStatus, ReportTargetType } from './types';
+
+const STATUS_OPTIONS = [
+  { value: 'all', label: '전체 상태' },
+  { value: 'pending', label: '대기 중' },
+  { value: 'reviewed', label: '검토 완료' },
+  { value: 'dismissed', label: '기각' },
+  { value: 'resolved', label: '해결' },
+];
+
+const TYPE_OPTIONS = [
+  { value: 'all', label: '전체 유형' },
+  { value: 'post', label: '게시글' },
+  { value: 'comment', label: '댓글' },
+  { value: 'user', label: '사용자' },
+  { value: 'match_comment', label: '응원 댓글' },
+];
 
 interface ReportFiltersProps {
   statusFilter: ReportStatus | 'all';
@@ -32,37 +47,19 @@ export function ReportFilters({
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">필터:</span>
         </div>
 
-        <Select
+        <NativeSelect
           value={statusFilter}
           onValueChange={(value) => onStatusFilterChange(value as ReportStatus | 'all')}
-        >
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="전체 상태" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">전체 상태</SelectItem>
-            <SelectItem value="pending">대기 중</SelectItem>
-            <SelectItem value="reviewed">검토 완료</SelectItem>
-            <SelectItem value="dismissed">기각</SelectItem>
-            <SelectItem value="resolved">해결</SelectItem>
-          </SelectContent>
-        </Select>
+          options={STATUS_OPTIONS}
+          triggerClassName="w-40"
+        />
 
-        <Select
+        <NativeSelect
           value={typeFilter}
           onValueChange={(value) => onTypeFilterChange(value as ReportTargetType | 'all')}
-        >
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="전체 유형" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">전체 유형</SelectItem>
-            <SelectItem value="post">게시글</SelectItem>
-            <SelectItem value="comment">댓글</SelectItem>
-            <SelectItem value="user">사용자</SelectItem>
-            <SelectItem value="match_comment">응원 댓글</SelectItem>
-          </SelectContent>
-        </Select>
+          options={TYPE_OPTIONS}
+          triggerClassName="w-40"
+        />
 
         <Button
           variant="outline"

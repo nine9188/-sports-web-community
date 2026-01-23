@@ -34,4 +34,5 @@ export {
   SelectScrollUpButton,
   SelectScrollDownButton,
 } from './select-radix';
+export { NativeSelect } from './select-native';
 export { Tabs, TabButton, TabList, TabContent, TabPanel, type TabItem, type TabListProps } from './tabs';

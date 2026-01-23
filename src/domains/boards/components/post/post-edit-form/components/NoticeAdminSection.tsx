@@ -10,8 +10,6 @@ interface NoticeAdminSectionProps {
   setNoticeType: (value: 'global' | 'board') => void;
   noticeBoards: string[];
   setNoticeBoards: (boards: string[]) => void;
-  noticeOrder: number;
-  setNoticeOrder: (order: number) => void;
   allBoardsFlat: Board[];
 }
 
@@ -22,8 +20,6 @@ export default function NoticeAdminSection({
   setNoticeType,
   noticeBoards,
   setNoticeBoards,
-  noticeOrder,
-  setNoticeOrder,
   allBoardsFlat
 }: NoticeAdminSectionProps) {
   return (
@@ -119,20 +115,6 @@ export default function NoticeAdminSection({
             </div>
           )}
 
-          {/* 공지 순서 */}
-          <div className="space-y-2">
-            <label htmlFor="noticeOrder" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
-              공지 순서 (낮은 숫자가 먼저 표시됨)
-            </label>
-            <input
-              type="number"
-              id="noticeOrder"
-              value={noticeOrder}
-              onChange={(e) => setNoticeOrder(parseInt(e.target.value, 10) || 0)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] focus:outline-none focus:ring-2 focus:ring-blue-500"
-              min="0"
-            />
-          </div>
         </div>
       )}
     </div>

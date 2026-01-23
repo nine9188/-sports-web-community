@@ -1,9 +1,20 @@
 'use client';
 
-import { Button } from '@/shared/components/ui';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select-radix';
+import { useMemo } from 'react';
+import { Button, NativeSelect } from '@/shared/components/ui';
 import { generateSlug, getParentLevel } from './utils';
 import type { Board, BoardFormData } from './types';
+
+const ACCESS_LEVEL_OPTIONS = [
+  { value: 'public', label: '공개' },
+  { value: 'members', label: '회원 전용' },
+  { value: 'admin', label: '관리자 전용' },
+];
+
+const VIEW_TYPE_OPTIONS = [
+  { value: 'list', label: '일반 목록' },
+  { value: 'image-table', label: '이미지형 테이블' },
+];
 
 interface BoardFormProps {
   formData: BoardFormData;
@@ -26,6 +37,35 @@ export function BoardForm({
 }: BoardFormProps) {
   const inputClassName =
     'w-full px-3 py-2 rounded-md bg-white dark:bg-[#262626] border border-black/7 dark:border-white/10 text-gray-900 dark:text-[#F0F0F0] focus:outline-none focus:ring-2 focus:ring-gray-400';
+
+  const parentBoardOptions = useMemo(() => {
+    const options = [{ value: '__none__', label: '없음 (최상위 게시판)' }];
+
+    boards
+      .filter((board) => {
+        if (editingBoard && board.id === editingBoard.id) return false;
+        if (editingBoard) {
+          const isChild = (parentId: string): boolean => {
+            const directChildren = boards.filter((b) => b.parent_id === parentId);
+            return directChildren.some(
+              (child) => child.id === board.id || isChild(child.id)
+            );
+          };
+          if (isChild(editingBoard.id)) return false;
+        }
+        return true;
+      })
+      .forEach((board) => {
+        const level = getParentLevel(boards, board.id);
+        const indent = '　'.repeat(level);
+        options.push({
+          value: board.id,
+          label: `${indent}${level > 0 ? '└ ' : ''}${board.name}`
+        });
+      });
+
+    return options;
+  }, [boards, editingBoard]);
 
   return (
     <div className="bg-white dark:bg-[#1D1D1D] shadow overflow-hidden sm:rounded-lg mb-8 p-6 border border-black/7 dark:border-white/10">
@@ -97,39 +137,26 @@ export function BoardForm({
           <label htmlFor="access_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             접근 권한
           </label>
-          <Select
+          <NativeSelect
             value={formData.access_level}
             onValueChange={(value) => onFormDataChange({ ...formData, access_level: value })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="접근 권한 선택" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="public">공개</SelectItem>
-              <SelectItem value="members">회원 전용</SelectItem>
-              <SelectItem value="admin">관리자 전용</SelectItem>
-            </SelectContent>
-          </Select>
+            options={ACCESS_LEVEL_OPTIONS}
+            placeholder="접근 권한 선택"
+          />
         </div>
 
         <div>
           <label htmlFor="view_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             게시판 유형
           </label>
-          <Select
+          <NativeSelect
             value={formData.view_type}
             onValueChange={(value) =>
               onFormDataChange({ ...formData, view_type: value as 'list' | 'image-table' })
             }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="게시판 유형 선택" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="list">일반 목록</SelectItem>
-              <SelectItem value="image-table">이미지형 테이블</SelectItem>
-            </SelectContent>
-          </Select>
+            options={VIEW_TYPE_OPTIONS}
+            placeholder="게시판 유형 선택"
+          />
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
             이미지형 테이블: 우측 썸네일이 포함된 목록 UI
           </p>
@@ -139,47 +166,14 @@ export function BoardForm({
           <label htmlFor="parent_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             상위 게시판 (선택사항)
           </label>
-          <Select
+          <NativeSelect
             value={formData.parent_id || '__none__'}
             onValueChange={(value) =>
               onFormDataChange({ ...formData, parent_id: value === '__none__' ? '' : value })
             }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="상위 게시판 선택" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__none__">없음 (최상위 게시판)</SelectItem>
-              {boards
-                .filter((board) => {
-                  if (editingBoard && board.id === editingBoard.id) return false;
-
-                  if (editingBoard) {
-                    const isChild = (parentId: string): boolean => {
-                      const directChildren = boards.filter((b) => b.parent_id === parentId);
-                      return directChildren.some(
-                        (child) => child.id === board.id || isChild(child.id)
-                      );
-                    };
-                    if (isChild(editingBoard.id)) return false;
-                  }
-
-                  return true;
-                })
-                .map((board) => {
-                  const level = getParentLevel(boards, board.id);
-                  const indent = '　'.repeat(level);
-
-                  return (
-                    <SelectItem key={board.id} value={board.id}>
-                      {indent}
-                      {level > 0 ? '└ ' : ''}
-                      {board.name}
-                    </SelectItem>
-                  );
-                })}
-            </SelectContent>
-          </Select>
+            options={parentBoardOptions}
+            placeholder="상위 게시판 선택"
+          />
         </div>
 
         <div>

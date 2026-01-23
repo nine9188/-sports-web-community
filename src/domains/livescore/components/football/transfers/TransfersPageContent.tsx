@@ -615,14 +615,12 @@ export default async function TransfersPageContent({
 
       {/* 페이지네이션 */}
       {totalPages > 1 && (
-        <div className="-mt-4 md:mt-0">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            mode="url"
-            withMargin={false}
-          />
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          mode="url"
+          withMargin={false}
+        />
       )}
 
     </div>

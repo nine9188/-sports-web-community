@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { FormConfig, FormField } from '../types';
 import { cn } from '@/shared/utils/cn';
 import { Check, Send, X } from 'lucide-react';
 import Spinner from '@/shared/components/Spinner';
-import { Button, SelectRadix as Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui';
+import { Button, NativeSelect } from '@/shared/components/ui';
 import { focusStyles, inputGrayBgStyles } from '@/shared/styles';
 
 interface ChatFormRendererProps {
@@ -121,28 +121,17 @@ export function ChatFormRenderer({
         </label>
         
         {field.type === 'select' ? (
-          <Select
-            value={value || undefined}
+          <NativeSelect
+            value={value || ''}
             onValueChange={(val) => handleInputChange(field.name, val)}
             disabled={isDisabled}
-          >
-            <SelectTrigger
-              id={field.name}
-              className={cn(
-                error && '!border-red-500 dark:!border-red-400',
-                (isSubmitted || isLocalSubmitted) && '!border-green-500 dark:!border-green-400'
-              )}
-            >
-              <SelectValue placeholder="선택해주세요" />
-            </SelectTrigger>
-            <SelectContent>
-              {field.options?.map(option => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            options={field.options?.map(option => ({ value: option.value, label: option.label })) || []}
+            placeholder="선택해주세요"
+            triggerClassName={cn(
+              error && '!border-red-500 dark:!border-red-400',
+              (isSubmitted || isLocalSubmitted) && '!border-green-500 dark:!border-green-400'
+            )}
+          />
         ) : field.type === 'textarea' ? (
           <textarea
             {...commonProps}

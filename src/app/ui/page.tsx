@@ -9,9 +9,16 @@ import {
   Container, ContainerHeader, ContainerTitle,
   Button,
   Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogCloseButton, DialogBody, DialogFooter,
-  SelectRadix, SelectTrigger, SelectValue, SelectContent, SelectItem,
+  NativeSelect,
   Pagination
 } from '@/shared/components/ui';
+
+const SELECT_OPTIONS = [
+  { value: 'option1', label: '옵션 1' },
+  { value: 'option2', label: '옵션 2' },
+  { value: 'option3', label: '옵션 3' },
+  { value: 'option4', label: '옵션 4' },
+];
 import { Tabs, TabButton, TabList, type TabItem } from '@/shared/components/ui/tabs';
 import {
   badgeBaseStyles, badgeDefault, badgeSuccess, badgeWarning, badgeError, badgeInfo,
@@ -770,23 +777,18 @@ export default function UIShowcasePage() {
                 </div>
               </Section>
 
-              <Section title="SelectRadix (Radix)">
+              <Section title="NativeSelect">
                 <div className="space-y-4">
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                    Radix Select 기반 드롭다운. 키보드 네비게이션, 접근성 자동 지원.
+                    커스텀 드롭다운. 스크롤 잠금 없이 Radix 스타일 유지.
                   </p>
                   <div className="max-w-xs">
-                    <SelectRadix value={selectValue} onValueChange={setSelectValue}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="옵션을 선택하세요" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="option1">옵션 1</SelectItem>
-                        <SelectItem value="option2">옵션 2</SelectItem>
-                        <SelectItem value="option3">옵션 3</SelectItem>
-                        <SelectItem value="option4">옵션 4</SelectItem>
-                      </SelectContent>
-                    </SelectRadix>
+                    <NativeSelect
+                      value={selectValue}
+                      onValueChange={setSelectValue}
+                      options={SELECT_OPTIONS}
+                      placeholder="옵션을 선택하세요"
+                    />
                     {selectValue && (
                       <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                         선택된 값: <span className="font-medium text-gray-900 dark:text-[#F0F0F0]">{selectValue}</span>

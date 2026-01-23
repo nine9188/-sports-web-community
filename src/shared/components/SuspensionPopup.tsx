@@ -116,7 +116,7 @@ export default function SuspensionPopup() {
             </div>
             <button
               onClick={handleClose}
-              className="p-1 hover:bg-white/20 rounded-full transition-colors"
+              className="p-1 hover:bg-white/20 rounded-md transition-colors"
               aria-label="닫기"
             >
               <X className="h-5 w-5" />

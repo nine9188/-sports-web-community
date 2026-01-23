@@ -71,6 +71,9 @@ export interface BoardPageAllData {
   // HoverMenu 정보
   topBoards: HoverMenuBoard[];
   hoverChildBoardsMap: Record<string, HoverMenuBoard[]>;
+
+  // 검색용 게시판 ID 배열
+  filteredBoardIds: string[];
 }
 
 export interface BoardPageError {
@@ -186,6 +189,7 @@ export async function getBoardPageAllData(
     popularPosts,
     notices,
     topBoards: hoverMenuData.topBoards,
-    hoverChildBoardsMap: hoverMenuData.childBoardsMap
+    hoverChildBoardsMap: hoverMenuData.childBoardsMap,
+    filteredBoardIds: boardResult.filteredBoardIds || [boardData.id]
   };
 }

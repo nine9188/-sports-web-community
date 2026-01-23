@@ -56,7 +56,7 @@ export function ChatInput({
           variant="ghost"
           size="icon"
           disabled={disabled}
-          className="flex-shrink-0 rounded-full"
+          className="flex-shrink-0 rounded-md"
           aria-label="파일 첨부"
         >
           <Paperclip className="w-5 h-5" />
@@ -92,7 +92,7 @@ export function ChatInput({
           size="icon"
           disabled={disabled || !message.trim()}
           className={cn(
-            'flex-shrink-0 rounded-full transition-all duration-200',
+            'flex-shrink-0 rounded-md transition-all duration-200',
             'active:scale-95 transform',
             message.trim() && !disabled && 'hover:scale-105'
           )}

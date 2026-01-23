@@ -104,19 +104,18 @@ This project uses **Next.js Server Actions** instead of traditional API routes:
 - Use `revalidatePath()` or `revalidateTag()` for cache invalidation
 
 **Example**:
+
 ```typescript
 // domains/boards/actions/getBoards.ts
-'use server';
+"use server";
 
-import { createClient } from '@/shared/api/supabaseServer';
+import { createClient } from "@/shared/api/supabaseServer";
 
 export async function getAllBoards() {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('boards')
-    .select('*');
+  const { data, error } = await supabase.from("boards").select("*");
 
-  if (error) throw new Error('Failed to fetch boards');
+  if (error) throw new Error("Failed to fetch boards");
   return data;
 }
 ```
@@ -126,19 +125,21 @@ export async function getAllBoards() {
 **Two distinct Supabase clients**:
 
 - **Client Components**: Use `createClient()` from `@/shared/api/supabase`
-  ```tsx
-  'use client'
-  import { createClient } from '@/shared/api/supabase'
 
-  const supabase = createClient()
+  ```tsx
+  "use client";
+  import { createClient } from "@/shared/api/supabase";
+
+  const supabase = createClient();
   ```
 
 - **Server Components/Actions**: Use `createClient()` from `@/shared/api/supabaseServer`
-  ```tsx
-  'use server'
-  import { createClient } from '@/shared/api/supabaseServer'
 
-  const supabase = await createClient()
+  ```tsx
+  "use server";
+  import { createClient } from "@/shared/api/supabaseServer";
+
+  const supabase = await createClient();
   ```
 
 ### 3. Async Params Handling
@@ -147,7 +148,11 @@ export async function getAllBoards() {
 
 ```typescript
 // ✅ Correct
-export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
   const { slug } = await params;
 }
 
@@ -158,6 +163,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
 ```
 
 This applies to:
+
 - `page.tsx`
 - `layout.tsx`
 - `generateMetadata()`
@@ -179,22 +185,26 @@ Each domain follows this structure:
 This project follows **Toss Frontend Guidelines** (see `.cursor/rules/toss-frontend-rules.mdc`):
 
 **Readability**:
+
 - Name magic numbers as constants
 - Abstract complex logic into dedicated components
 - Separate conditional rendering into distinct components
 - Use named variables for complex boolean conditions
 
 **Predictability**:
+
 - Standardize return types (e.g., all React Query hooks return `UseQueryResult`)
 - Use consistent validation patterns (discriminated unions)
 - Avoid hidden side effects in functions
 
 **Cohesion**:
+
 - Organize code by feature/domain, not just by type
 - Keep related logic close together
 - Consider form-level vs field-level cohesion
 
 **Coupling**:
+
 - Avoid premature abstraction
 - Use component composition over prop drilling
 - Break down broad state management into focused hooks
@@ -206,25 +216,33 @@ This project follows **Toss Frontend Guidelines** (see `.cursor/rules/toss-front
 This project uses a consistent color system across all components. Always follow these patterns:
 
 #### Dark Mode Support
+
 All UI components must support dark mode using Tailwind's `dark:` prefix:
+
 - Background: `bg-white dark:bg-[#1D1D1D]`
 - Secondary Background: `bg-gray-50 dark:bg-[#2D2D2D]`
 - Text: `text-gray-900 dark:text-gray-100`
 - Borders: `border-gray-200 dark:border-gray-700`
 
 #### Sport Result Colors (W/D/L)
+
 Use these colors consistently for match results:
+
 - **Win (W)**: `bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400`
 - **Draw (D)**: `bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400`
 - **Loss (L)**: `bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400`
 
 #### Success/Attendance Colors
+
 Use these colors for success states, attendance, checkmarks:
+
 - **Background**: `bg-green-100 dark:bg-green-900/30`
 - **Text/Icon**: `text-green-800 dark:text-green-400`
 
 #### Team Role Colors (Home/Away)
+
 Use these colors for home/away team indicators:
+
 - **Home Team**:
   - Background: `bg-blue-50 dark:bg-blue-900/30`
   - Hover: `hover:bg-blue-200 dark:hover:bg-blue-800/50`
@@ -235,7 +253,9 @@ Use these colors for home/away team indicators:
   - Badge: `bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200`
 
 #### Standings Status Colors
+
 League standings qualification zones:
+
 - **Champions League**: `bg-green-400`
 - **Europa League**: `bg-blue-400`
 - **Conference League**: `bg-cyan-400`
@@ -244,23 +264,28 @@ League standings qualification zones:
 ### Shared UI Components
 
 Use shared UI components from `@/shared/components/ui` for consistency:
+
 - `Container`: Wrapper for content sections
 - `ContainerHeader`: Section header
 - `ContainerTitle`: Section title
 - `ContainerContent`: Section content wrapper
 
 Example usage:
+
 ```tsx
-import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
+import {
+  Container,
+  ContainerHeader,
+  ContainerTitle,
+  ContainerContent,
+} from "@/shared/components/ui";
 
 <Container className="bg-white dark:bg-[#1D1D1D]">
   <ContainerHeader>
     <ContainerTitle>Section Title</ContainerTitle>
   </ContainerHeader>
-  <ContainerContent>
-    {/* content */}
-  </ContainerContent>
-</Container>
+  <ContainerContent>{/* content */}</ContainerContent>
+</Container>;
 ```
 
 ### Loading Spinner
@@ -270,6 +295,7 @@ import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/
 **Location**: `src/shared/components/Spinner.tsx`
 
 **Size Variants**:
+
 - `xs` - 16px (w-4 h-4) - For inline text or small buttons
 - `sm` - 20px (w-5 h-5) - For small UI elements
 - `md` - 24px (w-6 h-6) - Default, for general use
@@ -277,12 +303,14 @@ import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/
 - `xl` - 40px (w-10 h-10) - For full-page loading states
 
 **Style**:
+
 - Border: `border-2` with `border-gray-300 dark:border-gray-600`
 - Top border accent: `border-t-gray-900 dark:border-t-[#F0F0F0]`
 - Shape: `rounded-full` (circular)
 - Animation: `animate-spin`
 
 **Usage**:
+
 ```tsx
 import Spinner from '@/shared/components/Spinner';
 
@@ -299,6 +327,7 @@ import Spinner from '@/shared/components/Spinner';
 ```
 
 **DO NOT**:
+
 - ❌ Use `Loader2` from lucide-react
 - ❌ Create custom spinner divs with `animate-spin`
 - ❌ Use different border colors or styles
@@ -308,44 +337,33 @@ import Spinner from '@/shared/components/Spinner';
 
 **Location**: `src/shared/components/ui/pagination.tsx`
 
-**Usage Rules**:
-- 페이지네이션은 항상 **컨테이너 밖**에 배치
-- 위 여백 없이 아래 여백만 사용 (`pb-4`)
-- `totalPages > 1`일 때만 표시
+**Standard Pattern**: Pagination 여백은 다음 표준 패턴을 따릅니다.
+
+```tsx
+import { Pagination } from '@/shared/components/ui';
+
+// space-y-4 컨테이너 내부: withMargin={false}
+<div className="space-y-4">
+  <Content />
+  <Pagination withMargin={false} />
+</div>
+
+// 독립 사용: withMargin={true}
+<Content />
+<Pagination withMargin={true} />
+```
 
 **Props**:
+
 - `currentPage`: 현재 페이지 (1부터 시작)
 - `totalPages`: 전체 페이지 수
 - `onPageChange`: 페이지 변경 콜백 (button 모드)
 - `mode`: `'url'` (Link 기반) 또는 `'button'` (콜백 기반)
+- `withMargin`: 상단 여백 포함 여부 (기본값: 독립使用时 true, space-y-4 내부 사용시 false)
 - `maxButtons`: 표시할 최대 페이지 버튼 수 (기본값: 5)
 
-**Example**:
-```tsx
-import { Pagination } from '@/shared/components/ui';
+**Filter Reset on Change**:
 
-// 컨테이너 구조
-<>
-  <div className="bg-white dark:bg-[#1D1D1D] ...">
-    {/* 메인 콘텐츠 */}
-  </div>
-
-  {/* 페이지네이션 - 컨테이너 밖, 위 여백 없음 */}
-  {totalPages > 1 && (
-    <div className="pb-4">
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-        mode="button"
-        maxButtons={5}
-      />
-    </div>
-  )}
-</>
-```
-
-**필터 변경 시 페이지 리셋**:
 ```tsx
 useEffect(() => {
   setCurrentPage(1);
@@ -365,6 +383,7 @@ Configured in `tsconfig.json`:
 ## Database Schema
 
 Key Supabase tables:
+
 - `boards` - Community boards/forums
 - `posts` - User posts
 - `comments` - Post comments
@@ -379,17 +398,20 @@ Key Supabase tables:
 1. **TypeScript/ESLint**: Build errors are currently ignored (`ignoreBuildErrors: true`). Fix types incrementally, don't add more `any` types.
 
 2. **Image Optimization**: Next.js Image component is configured for:
+
    - `media.api-sports.io` (sports data API)
    - `vnjjfhsuzoxcljqqwwvx.supabase.co` (Supabase storage)
    - `cdn.footballist.co.kr`
    - `i.ytimg.com` (YouTube thumbnails)
 
 3. **Testing Strategy**:
+
    - Unit tests with Vitest for utilities and hooks
    - E2E tests with Playwright for critical user flows
    - Use `npm run test:all` before committing major changes
 
 4. **Server vs Client Components**:
+
    - Default to Server Components when possible
    - Use `'use client'` only when needed (interactivity, browser APIs, hooks)
    - Server Actions handle mutations and data fetching
@@ -437,6 +459,7 @@ All project documentation is centralized in the [`docs/`](123/1234/docs/README.m
 - **[docs/guides/](123/1234/docs/guides/)** - Testing and deployment guides
 
 **Quick Links**:
+
 - [HOT Score Calculation](123/1234/docs/hot-system/score-calculation.md)
 - [Notification System Overview](123/1234/docs/notifications/system-overview.md)
 - [Testing HOT Notifications](123/1234/docs/guides/testing-hot-notifications.md)
@@ -444,6 +467,7 @@ All project documentation is centralized in the [`docs/`](123/1234/docs/README.m
 ## Migration Status
 
 The project is in **active migration** from API routes to Server Actions:
+
 - ✅ Most board operations migrated to server actions
 - ✅ Domain structure established
 - ⚠️ Some legacy API routes remain in `src/app/api/` (RSS auto-fetch, team sync)

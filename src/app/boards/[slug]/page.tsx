@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { getBoardPageAllData } from '@/domains/boards/actions/getBoardPageAllData';
+import { searchBoardPosts } from '@/domains/boards/actions/posts';
 import BoardDetailLayout from '@/domains/boards/components/layout/BoardDetailLayout';
 import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
@@ -81,15 +82,16 @@ export default async function BoardDetailPage({
   searchParams
 }: {
   params: Promise<{ slug: string }>,
-  searchParams: Promise<{ page?: string; from?: string; store?: string }>
+  searchParams: Promise<{ page?: string; from?: string; store?: string; search?: string; searchType?: string }>
 }) {
   try {
     // 1. 파라미터 추출
     const { slug } = await params;
-    const { page = '1', from: fromParam, store } = await searchParams;
+    const { page = '1', from: fromParam, store, search, searchType } = await searchParams;
     const currentPage = isNaN(parseInt(page, 10)) || parseInt(page, 10) < 1
       ? 1
       : parseInt(page, 10);
+    const searchQuery = search?.trim() || '';
 
     // 2. 통합 데이터 fetch (단일 호출)
     const result = await getBoardPageAllData(slug, currentPage, fromParam, store);
@@ -118,7 +120,33 @@ export default async function BoardDetailPage({
       );
     }
 
-    // 4. 레이아웃 렌더링
+    // 4. 검색 모드인 경우 검색 결과로 대체
+    let posts = result.posts;
+    let pagination = result.pagination;
+
+    if (searchQuery) {
+      const validSearchTypes = ['title_content', 'title', 'content', 'comment', 'nickname'] as const;
+      const searchTypeValue = validSearchTypes.includes(searchType as any)
+        ? (searchType as typeof validSearchTypes[number])
+        : 'title_content';
+
+      const searchResult = await searchBoardPosts({
+        boardIds: result.filteredBoardIds,
+        query: searchQuery,
+        searchType: searchTypeValue,
+        page: currentPage,
+        limit: 30,
+      });
+
+      posts = searchResult.data;
+      pagination = {
+        totalItems: searchResult.meta.totalItems,
+        itemsPerPage: searchResult.meta.itemsPerPage,
+        currentPage: searchResult.meta.currentPage,
+      };
+    }
+
+    // 5. 레이아웃 렌더링
     return (
       <BoardDetailLayout
         boardData={{
@@ -137,12 +165,13 @@ export default async function BoardDetailPage({
         rootBoardId={result.rootBoardId}
         rootBoardSlug={result.rootBoardSlug}
         viewType={result.viewType}
-        posts={result.posts}
+        posts={posts}
         topBoards={result.topBoards}
         hoverChildBoardsMap={result.hoverChildBoardsMap}
-        pagination={result.pagination}
-        popularPosts={result.popularPosts}
-        notices={result.notices}
+        pagination={pagination}
+        popularPosts={searchQuery ? undefined : result.popularPosts}
+        notices={searchQuery ? undefined : result.notices}
+        searchQuery={searchQuery}
       />
     );
   } catch (error) {

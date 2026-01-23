@@ -1,3 +1,7 @@
+// 게시글 검색 관련
+export { searchBoardPosts } from './search';
+export type { SearchType } from './search';
+
 // 게시글 생성 관련
 export { createPost, createPostWithParams } from './create';
 

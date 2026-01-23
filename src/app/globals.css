@@ -173,7 +173,7 @@
   [data-radix-popper-content-wrapper] {
     background: transparent !important;
   }
-  
+
   /* 드롭다운 메뉴 항목 스타일 */
   [role="menuitem"] {
     @apply cursor-pointer !important;

@@ -30,6 +30,7 @@ type HeaderClientProps = {
   isAdmin?: boolean;
   renderMode?: 'full' | 'logo-and-mobile' | 'navigation';
   liveScoreData?: MultiDayMatchesResult;
+  totalPostCount?: number;
 };
 
 // 검색 모달 컴포넌트
@@ -95,7 +96,7 @@ const SearchModal = React.memo(function SearchModal({
             size="icon"
             type="button"
             onClick={() => router.back()}
-            className="rounded-full h-9 w-9"
+            className="rounded-md h-9 w-9"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -132,7 +133,8 @@ export default function HeaderClient({
   initialUserData,
   boards,
   isAdmin = false,
-  liveScoreData
+  liveScoreData,
+  totalPostCount
 }: HeaderClientProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLiveScoreOpen, setIsLiveScoreOpen] = useState(false);
@@ -190,7 +192,7 @@ export default function HeaderClient({
   // 인증 상태에 따른 렌더링 결정
   const renderAuthState = useMemo(() => {
     return (
-      <div className="flex items-center space-x-1">
+      <div className="flex items-center gap-0.5">
         {/* 알림 벨 - 로그인한 사용자에게만 표시 */}
         {userData && (
           <NotificationBell userId={userData.id} />
@@ -207,7 +209,7 @@ export default function HeaderClient({
               size="icon"
               data-testid="user-menu-mobile"
               onClick={onProfileClick}
-              className="rounded-full h-9 w-9"
+              className="rounded-md h-10 w-10"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               <UserIcon
@@ -224,10 +226,10 @@ export default function HeaderClient({
               size="icon"
               data-testid="user-menu-mobile"
               onClick={onProfileClick}
-              className="rounded-full h-9 w-9"
+              className="rounded-md h-10 w-10"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
-              <FontAwesomeIcon icon={faUser} className="h-4 w-4" />
+              <FontAwesomeIcon icon={faUser} className="h-5 w-5" />
             </Button>
           )}
         </div>
@@ -259,23 +261,23 @@ export default function HeaderClient({
               </Link>
             </div>
             <div className="flex flex-1 items-center justify-end space-x-4">
-              <div className="flex items-center space-x-1">
+              <div className="flex items-center gap-0.5">
                 {/* 테마 토글 버튼 */}
                 <ThemeToggle />
 
-                <div className="min-w-[40px] h-9">
+                <div className="min-w-[40px] h-10 flex items-center">
                   {renderAuthState}
                 </div>
 
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="lg:hidden rounded-full h-9 w-9"
+                  className="lg:hidden rounded-md h-10 w-10"
                   onClick={toggleMobileMenu}
                   onTouchEnd={handleMobileMenuTouch}
                   style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
-                  <FontAwesomeIcon icon={faBars} className="h-4 w-4" />
+                  <FontAwesomeIcon icon={faBars} className="h-5 w-5" />
                 </Button>
               </div>
             </div>
@@ -326,25 +328,25 @@ export default function HeaderClient({
                   variant="ghost"
                   size="icon"
                   onClick={goToSearchPage}
-                  className="rounded-full h-9 w-9"
+                  className="rounded-md h-10 w-10"
                   style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
-                  <Search className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                  <Search className="h-5 w-5 text-gray-600 dark:text-gray-300" />
                 </Button>
 
-                <div className="min-w-[40px] h-9">
+                <div className="min-w-[40px] h-10 flex items-center">
                   {renderAuthState}
                 </div>
 
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="lg:hidden rounded-full h-9 w-9"
+                  className="lg:hidden rounded-md h-10 w-10"
                   onClick={toggleMobileMenu}
                   onTouchEnd={handleMobileMenuTouch}
                   style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
-                  <FontAwesomeIcon icon={faBars} className="h-4 w-4" />
+                  <FontAwesomeIcon icon={faBars} className="h-5 w-5" />
                 </Button>
               </div>
             </div>
@@ -368,6 +370,7 @@ export default function HeaderClient({
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
         isAdmin={isAdmin}
+        totalPostCount={totalPostCount}
       />
 
       {/* 라이브스코어 모달 */}

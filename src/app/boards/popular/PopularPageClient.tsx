@@ -89,7 +89,6 @@ export default function PopularPageClient({
       topBoards={topBoards}
       hoverChildBoardsMap={hoverChildBoardsMap}
       pagination={pagination}
-      popularPosts={{ todayPosts: [], weekPosts: [] }}
       filterComponent={<PeriodFilter currentPeriod={period} />}
       listVariant="card"
     />

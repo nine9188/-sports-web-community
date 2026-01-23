@@ -12,10 +12,14 @@ import EditorToolbar from '@/domains/boards/components/createnavigation/EditorTo
 import { toast } from 'react-toastify';
 import { createPost, updatePost } from '@/domains/boards/actions/posts/index';
 import { Board } from '@/domains/boards/types/board';
-import { Container, ContainerHeader, ContainerTitle, ContainerContent, Button, SelectRadix as Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui';
+import { Container, ContainerHeader, ContainerTitle, ContainerContent, Button, NativeSelect } from '@/shared/components/ui';
 import { useEditorHandlers } from './post-edit-form/hooks';
 import { POPULAR_STORES, SHIPPING_OPTIONS, DealInfo } from '../../types/hotdeal';
 import { detectStoreFromUrl, isHotdealBoard, formatPrice } from '../../utils/hotdeal';
+
+// 핫딜 옵션
+const STORE_OPTIONS = POPULAR_STORES.map(storeName => ({ value: storeName, label: storeName }));
+const SHIPPING_SELECT_OPTIONS = SHIPPING_OPTIONS.map(option => ({ value: option, label: option }));
 
 // MatchCard 확장 로딩 함수
 const loadMatchCardExtension = async () => {
@@ -570,18 +574,12 @@ export default function PostEditForm({
                 <label htmlFor="store" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
                   쇼핑몰 <span className="text-red-500">*</span>
                 </label>
-                <Select value={store || undefined} onValueChange={setStore}>
-                  <SelectTrigger id="store">
-                    <SelectValue placeholder="선택하세요" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {POPULAR_STORES.map((storeName) => (
-                      <SelectItem key={storeName} value={storeName}>
-                        {storeName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <NativeSelect
+                  value={store || ''}
+                  onValueChange={setStore}
+                  options={STORE_OPTIONS}
+                  placeholder="선택하세요"
+                />
               </div>
 
               {/* 상품명 */}
@@ -648,18 +646,12 @@ export default function PostEditForm({
                 <label htmlFor="shipping" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
                   배송비 <span className="text-red-500">*</span>
                 </label>
-                <Select value={shipping || undefined} onValueChange={setShipping}>
-                  <SelectTrigger id="shipping">
-                    <SelectValue placeholder="선택하세요" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SHIPPING_OPTIONS.map((option) => (
-                      <SelectItem key={option} value={option}>
-                        {option}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <NativeSelect
+                  value={shipping || ''}
+                  onValueChange={setShipping}
+                  options={SHIPPING_SELECT_OPTIONS}
+                  placeholder="선택하세요"
+                />
               </div>
 
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">

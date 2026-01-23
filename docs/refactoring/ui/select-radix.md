@@ -1,79 +1,68 @@
-# SelectRadix 컴포넌트 사용 현황
+# SelectRadix 컴포넌트 (Deprecated)
 
-> 최종 업데이트: 2026-01-19
+> 최종 업데이트: 2026-01-22
 
-## 개요
+## 주의: NativeSelect로 마이그레이션됨
 
-`src/shared/components/ui/select-radix.tsx` - Radix Select 기반 드롭다운 컴포넌트.
+`SelectRadix`는 Radix Select 기반으로 드롭다운이 열릴 때 **스크롤 잠금 문제**가 있습니다.
+`body`에 `data-scroll-locked="1"` 속성이 추가되어 페이지 스크롤바가 사라지는 현상이 발생합니다.
 
----
-
-## 사용 중 (6곳)
-
-| 파일 | 용도 |
-|-----|------|
-| `src/domains/user/components/AuthorLink.tsx` | 사용자 옵션 선택 |
-| `src/domains/livescore/components/football/transfers/TransferFilters.tsx` | 이적 필터 선택 |
-| `src/domains/reports/components/ReportButton.tsx` | 신고 유형 선택 |
-| `src/app/admin/logs/components/LogViewer.tsx` | 로그 필터 선택 |
-| `src/domains/boards/components/post/PostEditForm.tsx` | 핫딜 정보 (쇼핑몰, 배송비) |
-| `src/domains/chatbot/components/ChatFormRenderer.tsx` | 챗봇 동적 폼 |
+모든 사용처가 **NativeSelect**로 마이그레이션되었습니다.
 
 ---
 
-## 미사용 (네이티브 select) - Admin 11곳
-
-### Admin 영역 (11곳) - 보류
-
-| 파일 |
-|-----|
-| `src/app/admin/banners/components/BannerManagementClient.tsx` |
-| `src/app/admin/reports/page.tsx` |
-| `src/app/admin/youtube/page.tsx` |
-| `src/app/admin/boards/page.tsx` |
-| `src/app/admin/shop/components/ShopItemManagement.tsx` |
-| `src/app/admin/rss/page.tsx` |
-| `src/app/admin/prediction/page.tsx` |
-| `src/app/admin/test-kleague/page.tsx` |
-| `src/app/admin/test-teams/page.tsx` |
-| `src/app/admin/widgets/board-collection/page.tsx` |
-| `src/domains/admin/components/SuspensionManager.tsx` |
-
----
-
-## 마이그레이션 완료
-
-### PostEditForm.tsx (2026-01-19)
-
-- 쇼핑몰 선택 (`store`) → SelectRadix
-- 배송비 선택 (`shipping`) → SelectRadix
-- ~~`HotdealFormFields.tsx`~~ → 미사용 코드로 삭제됨
-
-### ChatFormRenderer.tsx (2026-01-19)
-
-- 동적 폼 select 필드 → SelectRadix
-- `value || undefined` 패턴으로 빈 값 처리
-
----
-
-## 사용 예시
+## NativeSelect 사용법
 
 ```tsx
-import {
-  SelectRadix as Select, SelectTrigger, SelectValue,
-  SelectContent, SelectItem
-} from '@/shared/components/ui';
+import { NativeSelect } from '@/shared/components/ui';
 
-<Select value={value} onValueChange={setValue}>
-  <SelectTrigger>
-    <SelectValue placeholder="선택하세요" />
-  </SelectTrigger>
-  <SelectContent>
-    <SelectItem value="option1">옵션 1</SelectItem>
-    <SelectItem value="option2">옵션 2</SelectItem>
-  </SelectContent>
-</Select>
+const OPTIONS = [
+  { value: 'option1', label: '옵션 1' },
+  { value: 'option2', label: '옵션 2' },
+  { value: 'option3', label: '옵션 3' },
+];
+
+<NativeSelect
+  value={value}
+  onValueChange={setValue}
+  options={OPTIONS}
+  placeholder="선택하세요"
+  disabled={false}
+  triggerClassName="w-40"
+/>
 ```
+
+### Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `value` | `string` | - | 선택된 값 |
+| `onValueChange` | `(value: string) => void` | - | 값 변경 콜백 |
+| `options` | `{ value: string; label: string }[]` | - | 옵션 목록 |
+| `placeholder` | `string` | `"선택"` | 플레이스홀더 |
+| `disabled` | `boolean` | `false` | 비활성화 여부 |
+| `className` | `string` | - | 컨테이너 className |
+| `triggerClassName` | `string` | - | 트리거 버튼 className |
+| `contentClassName` | `string` | - | 드롭다운 컨텐츠 className |
+| `itemClassName` | `string` | - | 아이템 className |
+
+---
+
+## 마이그레이션 완료 목록
+
+| 파일 | 마이그레이션 날짜 |
+|-----|-----------------|
+| `src/domains/boards/components/board/BoardSearchBar.tsx` | 2026-01-22 |
+| `src/domains/admin/components/logs/LogFilters.tsx` | 2026-01-22 |
+| `src/domains/admin/components/boards/BoardForm.tsx` | 2026-01-22 |
+| `src/domains/admin/components/reports/ReportFilters.tsx` | 2026-01-22 |
+| `src/app/admin/widgets/board-collection/page.tsx` | 2026-01-22 |
+| `src/domains/chatbot/components/ChatFormRenderer.tsx` | 2026-01-22 |
+| `src/app/ui/page.tsx` | 2026-01-22 |
+| `src/domains/livescore/components/football/transfers/TransferFilters.tsx` | 2026-01-22 |
+| `src/domains/boards/components/post/PostEditForm.tsx` | 2026-01-22 |
+| `src/domains/user/components/AuthorLink.tsx` | 2026-01-22 |
+| `src/domains/reports/components/ReportButton.tsx` | 2026-01-22 |
 
 ---
 
@@ -81,6 +70,7 @@ import {
 
 | 날짜 | 변경 내용 |
 |-----|----------|
-| 2026-01-19 | ChatFormRenderer.tsx 마이그레이션 완료 (일반 영역 완료) |
-| 2026-01-19 | PostEditForm.tsx 마이그레이션 완료, HotdealFormFields.tsx 삭제 |
+| 2026-01-22 | 모든 사용처 NativeSelect로 마이그레이션, SelectRadix deprecated |
+| 2026-01-19 | ChatFormRenderer.tsx 마이그레이션 완료 |
+| 2026-01-19 | PostEditForm.tsx 마이그레이션 완료 |
 | 2026-01-19 | 초기 문서 작성 |

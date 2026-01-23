@@ -1,49 +1,56 @@
-'use client';
+﻿'use client';
 
 import { useTheme } from 'next-themes';
-import { useEffect, useState } from 'react';
-import { Moon, Sun, Monitor } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
+import { Button } from '@/shared/components/ui';
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const { setTheme } = useTheme();
 
-  // 클라이언트에서만 렌더링 (hydration 방지)
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return (
-      <div className="w-9 h-9 rounded-lg bg-white dark:bg-[#1D1D1D] animate-pulse" />
-    );
-  }
-
-  const themes = [
-    { name: 'light', icon: Sun, label: '라이트' },
-    { name: 'dark', icon: Moon, label: '다크' },
-    { name: 'system', icon: Monitor, label: '시스템' },
-  ];
+  const handleToggle = () => {
+    const isDark =
+      typeof document !== 'undefined' &&
+      document.documentElement.classList.contains('dark');
+    setTheme(isDark ? 'light' : 'dark');
+  };
 
   return (
-    <div className="flex items-center gap-1 p-1 bg-white dark:bg-[#1D1D1D] rounded-lg">
-      {themes.map(({ name, icon: Icon, label }) => (
-        <button
-          key={name}
-          onClick={() => setTheme(name)}
-          className={`
-            p-2 rounded-md transition-colors
-            ${theme === name
-              ? 'bg-[#EAEAEA] dark:bg-[#333333] text-blue-600 dark:text-blue-400'
-              : 'bg-white dark:bg-[#1D1D1D] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-            }
-          `}
-          aria-label={`${label} 모드`}
-          title={`${label} 모드`}
+    <div className="flex items-center">
+      <div className="hidden md:block">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleToggle}
+          className="rounded-md"
+          aria-label="테마 전환"
+          title="테마 전환"
         >
-          <Icon className="w-4 h-4" />
-        </button>
-      ))}
+          <Sun className="h-5 w-5 dark:hidden" aria-hidden="true" />
+          <Moon className="h-5 w-5 hidden dark:block" aria-hidden="true" />
+        </Button>
+      </div>
+      <div className="flex md:hidden gap-0.5">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setTheme('light')}
+          className="rounded-md bg-[#EAEAEA] text-blue-600 hover:bg-[#EAEAEA] dark:bg-transparent dark:text-gray-300 dark:hover:bg-[#333333]"
+          aria-label="라이트 모드"
+          title="라이트 모드"
+        >
+          <Sun className="h-5 w-5" aria-hidden="true" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setTheme('dark')}
+          className="rounded-md bg-transparent text-gray-700 dark:bg-[#333333] dark:text-blue-400"
+          aria-label="다크 모드"
+          title="다크 모드"
+        >
+          <Moon className="h-5 w-5" aria-hidden="true" />
+        </Button>
+      </div>
     </div>
   );
 }

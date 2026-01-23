@@ -25,6 +25,7 @@ interface RootLayoutClientProps {
   fullUserData?: FullUserDataWithSession | null;
   headerBoards?: Board[];
   headerIsAdmin?: boolean;
+  headerTotalPostCount?: number;
   liveScoreData?: MultiDayMatchesResult;
 }
 
@@ -37,6 +38,7 @@ export default function RootLayoutClient({
   fullUserData,
   headerBoards,
   headerIsAdmin,
+  headerTotalPostCount,
   liveScoreData
 }: RootLayoutClientProps) {
   // fullUserData에서 필요한 데이터 추출
@@ -192,6 +194,7 @@ export default function RootLayoutClient({
                 headerUserData={headerUserData}
                 headerBoards={headerBoards}
                 headerIsAdmin={headerIsAdmin}
+                headerTotalPostCount={headerTotalPostCount}
                 liveScoreData={liveScoreData}
                 fullUserData={fullUserData}
                 isOpen={deferredIsOpen}

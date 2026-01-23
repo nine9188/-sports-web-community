@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import Spinner from '@/shared/components/Spinner';
-import { Pagination } from '@/shared/components/ui/pagination';
-import type { ExpHistoryItem } from './types';
+import Spinner from "@/shared/components/Spinner";
+import { Pagination } from "@/shared/components/ui/pagination";
+import type { ExpHistoryItem } from "./types";
 
 interface ExpHistoryTableProps {
   history: ExpHistoryItem[];
@@ -31,7 +31,9 @@ export function ExpHistoryTable({
   if (history.length === 0) {
     return (
       <div className="text-center py-6 bg-[#F5F5F5] dark:bg-[#262626] rounded-md">
-        <p className="text-gray-500 dark:text-gray-400">경험치 내역이 없습니다.</p>
+        <p className="text-gray-500 dark:text-gray-400">
+          경험치 내역이 없습니다.
+        </p>
       </div>
     );
   }
@@ -57,26 +59,35 @@ export function ExpHistoryTable({
             {history.map((item) => (
               <tr key={item.id}>
                 <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
-                  {new Date(item.created_at || '').toLocaleString('ko-KR', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
+                  {new Date(item.created_at || "").toLocaleString("ko-KR", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
                   })}
                 </td>
                 <td
-                  className={`px-4 py-2 text-sm font-medium text-right ${item.exp > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+                  className={`px-4 py-2 text-sm font-medium text-right ${item.exp > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
                 >
                   {item.exp > 0 ? `+${item.exp}` : item.exp}
                 </td>
-                <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">{item.reason}</td>
+                <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">
+                  {item.reason}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={onPageChange} mode="button" maxButtons={5} />
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={onPageChange}
+        mode="button"
+        maxButtons={5}
+        withMargin={true}
+      />
     </>
   );
 }

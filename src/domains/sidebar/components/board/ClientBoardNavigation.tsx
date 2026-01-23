@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronDown, ChevronRight, Flame, Timer, ArrowLeftRight, Database, ShoppingBag, FileText } from 'lucide-react';
+import { ChevronDown, ChevronRight, Flame, Timer, ArrowLeftRight, Database, ShoppingBag, FileText, Settings } from 'lucide-react';
 import { Button } from '@/shared/components/ui';
 import { BoardNavigationData, HierarchicalBoard } from '../../types';
 import { Board } from '@/domains/layout/types/board';
@@ -94,6 +94,7 @@ type BoardCategoryItemProps = {
   depth?: number;
   expandedCategories: Set<string>;
   toggleCategory: (id: string) => void;
+  onNavigate?: () => void;
 };
 
 // 게시판 카테고리 아이템 컴포넌트
@@ -102,7 +103,8 @@ const BoardCategoryItem = ({
   pathname,
   depth = 0,
   expandedCategories,
-  toggleCategory
+  toggleCategory,
+  onNavigate
 }: BoardCategoryItemProps) => {
   const boardSlug = board.slug || board.id;
   const isActive = pathname === `/boards/${boardSlug}`;
@@ -158,6 +160,7 @@ const BoardCategoryItem = ({
       <div>
         <Link
           href={`/boards/${boardSlug}`}
+          onClick={onNavigate}
           className={`flex items-center text-sm py-2 px-4 transition-colors ${
             isActive
               ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] font-medium'
@@ -175,9 +178,13 @@ const BoardCategoryItem = ({
 
 // 클라이언트 게시판 내비게이션 컴포넌트
 export default function ClientBoardNavigation({
-  initialData
+  initialData,
+  onNavigate,
+  showAdminLink
 }: {
-  initialData: BoardNavigationData
+  initialData: BoardNavigationData;
+  onNavigate?: () => void;
+  showAdminLink?: boolean;
 }) {
   const pathname = usePathname() || '';
   // 스포츠, 커뮤니티 그룹 기본 열림 상태
@@ -200,6 +207,7 @@ export default function ClientBoardNavigation({
   };
 
   const isAllPostsActive = pathname === '/boards/all';
+  const showTotalCount = typeof initialData.totalPostCount === 'number';
 
   // 숫자 포맷팅 (1000 이상이면 K 단위로)
   const formatCount = (count: number) => {
@@ -214,6 +222,7 @@ export default function ClientBoardNavigation({
       {/* 전체글 (개수 표시) */}
       <Link
         href="/boards/all"
+        onClick={onNavigate}
         className={`flex items-center justify-between text-sm py-2 px-4 transition-colors ${
           isAllPostsActive
             ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] font-medium'
@@ -224,9 +233,11 @@ export default function ClientBoardNavigation({
           <FileText className="w-4 h-4 text-gray-500 dark:text-gray-400" />
           <span>전체글</span>
         </div>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
-          {formatCount(initialData.totalPostCount || 0)}
-        </span>
+        {showTotalCount && (
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            {formatCount(initialData.totalPostCount || 0)}
+          </span>
+        )}
       </Link>
 
       {/* 빠른 이동 메뉴 */}
@@ -236,6 +247,7 @@ export default function ClientBoardNavigation({
           <Link
             key={item.href}
             href={item.href}
+            onClick={onNavigate}
             className={`flex items-center gap-3 text-sm py-2 px-4 transition-colors ${
               isActive
                 ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] font-medium'
@@ -247,6 +259,20 @@ export default function ClientBoardNavigation({
           </Link>
         );
       })}
+      {showAdminLink && (
+        <Link
+          href="/admin"
+          onClick={onNavigate}
+          className={`flex items-center gap-3 text-sm py-2 px-4 transition-colors ${
+            pathname.startsWith('/admin')
+              ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] font-medium'
+              : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]'
+          }`}
+        >
+          <Settings className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+          <span>관리자</span>
+        </Link>
+      )}
 
       {/* 구분선 */}
       <div className="my-2 mx-4 border-t border-black/7 dark:border-white/10" />
@@ -259,6 +285,7 @@ export default function ClientBoardNavigation({
           pathname={pathname}
           expandedCategories={expandedCategories}
           toggleCategory={toggleCategory}
+          onNavigate={onNavigate}
         />
       ))}
     </div>

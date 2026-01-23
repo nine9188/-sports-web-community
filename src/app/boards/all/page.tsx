@@ -122,7 +122,6 @@ export default async function AllPostsPage({
           itemsPerPage: postsData.meta.itemsPerPage,
           currentPage: postsData.meta.currentPage
         }}
-        popularPosts={{ todayPosts: [], weekPosts: [] }}
         listVariant="card"
       />
     );
