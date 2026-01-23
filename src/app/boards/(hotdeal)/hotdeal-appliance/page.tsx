@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
+import { siteConfig } from '@/shared/config';
 import HotdealBoardPage from '../_shared/HotdealBoardPage';
 
 const SLUG = 'hotdeal-appliance';
@@ -13,8 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
     const supabase = await getSupabaseServer();
     const seoSettings = await getSeoSettings();
 
-    const siteUrl = seoSettings?.site_url || 'https://4590.co.kr';
-    const siteName = seoSettings?.site_name || '4590 Football';
+    const siteName = seoSettings?.site_name || siteConfig.name;
     const pagePath = `/boards/${SLUG}`;
 
     const pageOverride = seoSettings?.page_overrides?.[pagePath];
@@ -34,7 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
     const title = pageOverride?.title || `${board.name} - ${siteName}`;
     const description = pageOverride?.description || board.description || `${board.name} 게시판의 최신 글을 확인하세요.`;
-    const url = `${siteUrl}/boards/${SLUG}`;
+    const url = siteConfig.getCanonical(pagePath);
 
     return {
       title,
@@ -45,12 +45,14 @@ export async function generateMetadata(): Promise<Metadata> {
         url,
         type: 'website',
         siteName,
-        locale: 'ko_KR',
+        locale: siteConfig.locale,
+        images: [siteConfig.getDefaultOgImageObject(title)],
       },
       twitter: {
         card: 'summary_large_image',
         title,
         description,
+        images: [siteConfig.defaultOgImage],
       },
       alternates: {
         canonical: url,

@@ -1,12 +1,25 @@
 import React from 'react';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
+import { Metadata } from 'next';
 import { getPostEditData } from '@/domains/boards/actions';
 import PostEditForm from '@/domains/boards/components/post/PostEditForm';
 import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
 
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
+
+// 메타데이터 - noindex 설정
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: '글 수정',
+    description: '게시글을 수정합니다.',
+    robots: {
+      index: false,
+      follow: false,
+    },
+  };
+}
 
 export default async function EditPostPage({ params }: { params: Promise<{ slug: string, postNumber: string }> }) {
   try {

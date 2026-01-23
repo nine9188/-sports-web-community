@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { getSupabaseServer } from "@/shared/lib/supabase/server";
+import { getSeoSettings } from "@/domains/seo/actions/seoSettings";
+import { siteConfig } from '@/shared/config';
 import {
   getShopCategory,
   getCategoryItemsPaginated,
@@ -26,20 +28,53 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { category } = await params;
-  const categoryData = await getShopCategory(category);
+  try {
+    const { category } = await params;
+    const categoryData = await getShopCategory(category);
+    const seoSettings = await getSeoSettings();
 
-  if (!categoryData) {
+    const siteName = seoSettings?.site_name || siteConfig.name;
+
+    if (!categoryData) {
+      return {
+        title: '상점 - ' + siteName,
+        description: '상품을 구매하세요.',
+      };
+    }
+
+    const title = `${categoryData.name} | 상점 - ${siteName}`;
+    const description = `${categoryData.name} 아이템을 구매하세요.`;
+    const url = siteConfig.getCanonical(`/shop/${category}`);
+
     return {
-      title: "상점",
-      description: "상품을 구매하세요.",
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        url,
+        type: 'website',
+        siteName,
+        locale: siteConfig.locale,
+        images: [siteConfig.getDefaultOgImageObject(title)],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title,
+        description,
+        images: [siteConfig.defaultOgImage],
+      },
+      alternates: {
+        canonical: url,
+      },
+    };
+  } catch (error) {
+    console.error('[ShopCategoryPage generateMetadata] 오류:', error);
+    return {
+      title: '상점 - 4590 Football',
+      description: '상품을 구매하세요.',
     };
   }
-
-  return {
-    title: `${categoryData.name} | 상점`,
-    description: `${categoryData.name} 아이템을 구매하세요.`,
-  };
 }
 
 export default async function CategoryPage({ params, searchParams }: Props) {

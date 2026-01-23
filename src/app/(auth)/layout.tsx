@@ -3,15 +3,15 @@ import { Metadata } from 'next';
 import '../globals.css';
 import Link from 'next/link';
 import Image from 'next/image';
+import { siteConfig } from '@/shared/config';
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://4590.co.kr';
-const authTitle = '로그인 - 4590 Football';
-const authDescription = '4590 Football 로그인, 회원가입, 계정 복구 등 인증 페이지입니다.';
+const authTitle = `로그인 - ${siteConfig.name}`;
+const authDescription = `${siteConfig.name} 로그인, 회원가입, 계정 복구 등 인증 페이지입니다.`;
 
 export const metadata: Metadata = {
   title: {
     default: authTitle,
-    template: '%s | 4590 Football',
+    template: `%s | ${siteConfig.name}`,
   },
   description: authDescription,
   robots: {
@@ -27,24 +27,17 @@ export const metadata: Metadata = {
   openGraph: {
     title: authTitle,
     description: authDescription,
-    url: siteUrl + '/signin',
-    siteName: '4590 Football',
-    images: [
-      {
-        url: siteUrl + '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: '4590 Football',
-      },
-    ],
+    url: siteConfig.getUrl('/signin'),
+    siteName: siteConfig.name,
+    images: [siteConfig.getDefaultOgImageObject(siteConfig.name)],
     type: 'website',
-    locale: 'ko_KR',
+    locale: siteConfig.locale,
   },
   twitter: {
     card: 'summary_large_image',
     title: authTitle,
     description: authDescription,
-    images: [siteUrl + '/og-image.png'],
+    images: [siteConfig.defaultOgImage],
   },
 };
 

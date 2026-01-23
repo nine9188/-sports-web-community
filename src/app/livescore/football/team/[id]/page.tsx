@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import TeamPageClient, { TeamTabType } from '@/domains/livescore/components/football/team/TeamPageClient';
 import { fetchTeamFullData } from '@/domains/livescore/actions/teams/team';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
+import { siteConfig } from '@/shared/config';
 
 interface TeamPageProps {
   params: Promise<{ id: string }>;
@@ -19,8 +20,7 @@ export async function generateMetadata({
     const { id } = await params;
     const seoSettings = await getSeoSettings();
 
-    const siteUrl = seoSettings?.site_url || 'https://4590.co.kr';
-    const siteName = seoSettings?.site_name || '4590 Football';
+    const siteName = seoSettings?.site_name || siteConfig.name;
 
     // 팀 데이터 조회 (최소한의 옵션으로)
     const teamData = await fetchTeamFullData(id, {
@@ -38,11 +38,10 @@ export async function generateMetadata({
     }
 
     const team = teamData.teamData.team.team;
-    const venue = teamData.teamData.team.venue;
 
     const title = `${team.name} | 팀 정보 - ${siteName}`;
     const description = `${team.name}의 경기 일정, 순위, 선수단, 통계 정보를 확인하세요.${team.country ? ` ${team.country}` : ''}${team.founded ? ` (창단: ${team.founded}년)` : ''}`;
-    const url = `${siteUrl}/livescore/football/team/${id}`;
+    const url = siteConfig.getCanonical(`/livescore/football/team/${id}`);
 
     return {
       title,
@@ -52,21 +51,15 @@ export async function generateMetadata({
         description,
         url,
         type: 'website',
-        images: team.logo ? [
-          {
-            url: team.logo,
-            width: 120,
-            height: 120,
-            alt: team.name,
-          },
-        ] : undefined,
+        images: [siteConfig.getDefaultOgImageObject(title)],
         siteName,
-        locale: 'ko_KR',
+        locale: siteConfig.locale,
       },
       twitter: {
-        card: 'summary',
+        card: 'summary_large_image',
         title,
         description,
+        images: [siteConfig.defaultOgImage],
       },
       alternates: {
         canonical: url,
@@ -75,7 +68,7 @@ export async function generateMetadata({
   } catch (error) {
     console.error('[TeamPage generateMetadata] 오류:', error);
     return {
-      title: '팀 정보 - 4590 Football',
+      title: `팀 정보 - ${siteConfig.name}`,
       description: '축구 팀 정보, 경기 일정, 선수단을 확인하세요.',
     };
   }

@@ -7,6 +7,7 @@ import { fetchMatchPlayerStats } from '@/domains/livescore/actions/match/matchPl
 import MatchPageClient, { MatchTabType } from '@/domains/livescore/components/football/match/MatchPageClient';
 import { notFound } from 'next/navigation';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
+import { siteConfig } from '@/shared/config';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
 
@@ -24,8 +25,7 @@ export async function generateMetadata({
     const { id } = await params;
     const seoSettings = await getSeoSettings();
 
-    const siteUrl = seoSettings?.site_url || 'https://4590.co.kr';
-    const siteName = seoSettings?.site_name || '4590 Football';
+    const siteName = seoSettings?.site_name || siteConfig.name;
 
     // 경기 데이터 조회 (최소한의 옵션으로)
     const matchData = await fetchCachedMatchFullData(id, {
@@ -60,7 +60,7 @@ export async function generateMetadata({
 
     const title = `${homeTeam} ${score} ${awayTeam} | ${leagueName}`;
     const description = `${leagueName} - ${homeTeam} vs ${awayTeam} 경기 정보, 라인업, 통계, 하이라이트를 확인하세요.`;
-    const url = `${siteUrl}/livescore/football/match/${id}`;
+    const url = siteConfig.getCanonical(`/livescore/football/match/${id}`);
 
     return {
       title,
@@ -70,21 +70,15 @@ export async function generateMetadata({
         description,
         url,
         type: 'website',
-        images: match.league.logo ? [
-          {
-            url: match.league.logo,
-            width: 80,
-            height: 80,
-            alt: leagueName,
-          },
-        ] : undefined,
+        images: [siteConfig.getDefaultOgImageObject(title)],
         siteName,
-        locale: 'ko_KR',
+        locale: siteConfig.locale,
       },
       twitter: {
-        card: 'summary',
+        card: 'summary_large_image',
         title,
         description,
+        images: [siteConfig.defaultOgImage],
       },
       alternates: {
         canonical: url,
@@ -93,7 +87,7 @@ export async function generateMetadata({
   } catch (error) {
     console.error('[MatchPage generateMetadata] 오류:', error);
     return {
-      title: '경기 정보 - 4590 Football',
+      title: `경기 정보 - ${siteConfig.name}`,
       description: '축구 경기 정보, 라인업, 통계를 확인하세요.',
     };
   }
@@ -199,7 +193,7 @@ export default async function MatchPage({
       // power 데이터는 항상 프리로드 (기본 탭이 power이므로)
       (homeTeamId && awayTeamId)
         ? getCachedPowerData(homeTeamId, awayTeamId, 5)
-        : Promise.resolve({ success: false }),
+        : Promise.resolve({ success: false, data: undefined }),
       // Lineups 탭용 선수 평점/주장 데이터
       fetchPlayerRatingsAndCaptains(matchId),
       // Stats 탭용 선수 통계 데이터

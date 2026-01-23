@@ -17,13 +17,19 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
+  const robotsConfig = {
+    index: false,
+    follow: false,
+  };
+
   try {
     const { slug } = await params;
 
     if (!slug) {
       return {
         title: '새 글 작성',
-        description: '게시판에 새 글을 작성합니다.'
+        description: '게시판에 새 글을 작성합니다.',
+        robots: robotsConfig,
       };
     }
 
@@ -32,7 +38,8 @@ export async function generateMetadata({
     if (result.success && result.board) {
       return {
         title: `새 글 작성 - ${result.board.name}`,
-        description: `${result.board.name} 게시판에 새 글을 작성합니다.`
+        description: `${result.board.name} 게시판에 새 글을 작성합니다.`,
+        robots: robotsConfig,
       };
     }
   } catch (error) {
@@ -41,7 +48,8 @@ export async function generateMetadata({
 
   return {
     title: '새 글 작성',
-    description: '게시판에 새 글을 작성합니다.'
+    description: '게시판에 새 글을 작성합니다.',
+    robots: robotsConfig,
   };
 }
 

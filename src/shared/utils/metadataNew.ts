@@ -1,20 +1,19 @@
 import { Metadata } from 'next';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
+import { siteConfig } from '@/shared/config';
 
 interface DefaultMeta {
   title: string;
   description: string;
 }
 
-const defaultSiteName = '4590 Football';
-const defaultSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://4590.co.kr';
-const defaultOgImage = '/og-image.png';
-
-const normalizeBaseUrl = (url: string) => url.replace(/\/+$/, '');
-const buildUrl = (baseUrl: string, path: string) => {
-  const normalizedBase = normalizeBaseUrl(baseUrl);
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${normalizedBase}${normalizedPath}`;
+/**
+ * 이미지 경로로부터 MIME 타입을 결정합니다.
+ */
+const getImageType = (path: string): string => {
+  return path.endsWith('.jpg') || path.endsWith('.jpeg')
+    ? 'image/jpeg'
+    : 'image/png';
 };
 
 /**
@@ -27,14 +26,14 @@ export async function generatePageMetadataWithDefaults(
 ): Promise<Metadata> {
   try {
     const seoSettings = await getSeoSettings();
-    const siteUrl = seoSettings?.site_url || defaultSiteUrl;
-    const siteName = seoSettings?.site_name || defaultSiteName;
-    const ogImagePath = seoSettings?.og_image || defaultOgImage;
-    const ogImage = buildUrl(siteUrl, ogImagePath);
-    const canonicalUrl = buildUrl(siteUrl, pagePath);
-    const imageType = ogImagePath.endsWith('.jpg') || ogImagePath.endsWith('.jpeg')
-      ? 'image/jpeg'
-      : 'image/png';
+
+    // siteConfig 기반, seoSettings 우선
+    const siteName = seoSettings?.site_name || siteConfig.name;
+
+    // OG 이미지: siteConfig.getOgImage()로 절대 URL 처리 (http:// 체크 포함)
+    const ogImage = siteConfig.getOgImage(seoSettings?.og_image);
+    const canonicalUrl = siteConfig.getCanonical(pagePath);
+    const imageType = getImageType(ogImage);
 
     // 페이지별 오버라이드 확인
     const pageOverride = seoSettings?.page_overrides?.[pagePath];
@@ -60,7 +59,7 @@ export async function generatePageMetadataWithDefaults(
           alt: title,
           type: imageType,
         }],
-        locale: 'ko_KR',
+        locale: siteConfig.locale,
         type: 'website',
       },
       twitter: {
@@ -72,15 +71,6 @@ export async function generatePageMetadataWithDefaults(
       },
       alternates: {
         canonical: canonicalUrl,
-      },
-      other: {
-        'og:image:secure_url': ogImage,
-        'og:image:type': imageType,
-        'og:image:width': '1200',
-        'og:image:height': '630',
-        'og:image:alt': title,
-        'twitter:image': ogImage,
-        'image': ogImage,
       },
     };
   } catch (error) {
@@ -98,22 +88,22 @@ export async function generatePageMetadataWithDefaults(
 export async function generatePageMetadata(pagePath: string): Promise<Metadata> {
   try {
     const seoSettings = await getSeoSettings();
-    const siteUrl = seoSettings?.site_url || defaultSiteUrl;
-    const siteName = seoSettings?.site_name || defaultSiteName;
-    const ogImagePath = seoSettings?.og_image || defaultOgImage;
-    const ogImage = buildUrl(siteUrl, ogImagePath);
-    const canonicalUrl = buildUrl(siteUrl, pagePath);
-    const imageType = ogImagePath.endsWith('.jpg') || ogImagePath.endsWith('.jpeg')
-      ? 'image/jpeg'
-      : 'image/png';
+
+    // siteConfig 기반, seoSettings 우선
+    const siteName = seoSettings?.site_name || siteConfig.name;
+
+    // OG 이미지: siteConfig.getOgImage()로 절대 URL 처리 (http:// 체크 포함)
+    const ogImage = siteConfig.getOgImage(seoSettings?.og_image);
+    const canonicalUrl = siteConfig.getCanonical(pagePath);
+    const imageType = getImageType(ogImage);
 
     if (!seoSettings) {
       // DB 조회 실패 시 기본값
       return {
-        title: defaultSiteName,
+        title: siteConfig.name,
         description: '축구 커뮤니티',
         openGraph: {
-          title: defaultSiteName,
+          title: siteConfig.name,
           description: '축구 커뮤니티',
           url: canonicalUrl,
           siteName,
@@ -121,29 +111,20 @@ export async function generatePageMetadata(pagePath: string): Promise<Metadata> 
             url: ogImage,
             width: 1200,
             height: 630,
-            alt: defaultSiteName,
+            alt: siteConfig.name,
             type: imageType,
           }],
-          locale: 'ko_KR',
+          locale: siteConfig.locale,
           type: 'website',
         },
         twitter: {
           card: 'summary_large_image',
-          title: defaultSiteName,
+          title: siteConfig.name,
           description: '축구 커뮤니티',
           images: [ogImage],
         },
         alternates: {
           canonical: canonicalUrl,
-        },
-        other: {
-          'og:image:secure_url': ogImage,
-          'og:image:type': imageType,
-          'og:image:width': '1200',
-          'og:image:height': '630',
-          'og:image:alt': defaultSiteName,
-          'twitter:image': ogImage,
-          'image': ogImage,
         },
       };
     }
@@ -156,10 +137,6 @@ export async function generatePageMetadata(pagePath: string): Promise<Metadata> 
     const description = pageOverride?.description || seoSettings.default_description;
     const keywords = pageOverride?.keywords || seoSettings.default_keywords;
 
-    // OG 이미지 절대 URL
-    
-    // 이미지 확장자로 MIME 타입 결정 (Safari는 JPG 선호하지만 PNG도 지원)
-
     return {
       title,
       description,
@@ -169,14 +146,14 @@ export async function generatePageMetadata(pagePath: string): Promise<Metadata> 
         description,
         url: canonicalUrl,
         siteName,
-        images: [{ 
-          url: ogImage, 
-          width: 1200, 
+        images: [{
+          url: ogImage,
+          width: 1200,
           height: 630,
           alt: title,
           type: imageType,
         }],
-        locale: 'ko_KR',
+        locale: siteConfig.locale,
         type: 'website',
       },
       twitter: {
@@ -189,21 +166,11 @@ export async function generatePageMetadata(pagePath: string): Promise<Metadata> 
       alternates: {
         canonical: canonicalUrl,
       },
-      // Safari 제안 카드 최적화를 위한 추가 메타태그 (DCInside 방식)
-      other: {
-        'og:image:secure_url': ogImage,
-        'og:image:type': imageType,
-        'og:image:width': '1200',
-        'og:image:height': '630',
-        'og:image:alt': title,
-        'twitter:image': ogImage,
-        'image': ogImage, // Safari가 우선 인식하는 비공식 태그
-      },
     };
   } catch (error) {
     console.error('[generatePageMetadata] 오류:', error);
     return {
-      title: '4590 Football',
+      title: siteConfig.name,
       description: '축구 커뮤니티',
     };
   }

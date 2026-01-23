@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import PlayerPageClient from '@/domains/livescore/components/football/player/PlayerPageClient';
 import { fetchPlayerFullData, PlayerFullDataResponse } from '@/domains/livescore/actions/player/data';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
+import { siteConfig } from '@/shared/config';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 import type { PlayerTabType } from '@/domains/livescore/hooks';
@@ -42,8 +43,7 @@ export async function generateMetadata({
     const { id } = await params;
     const seoSettings = await getSeoSettings();
 
-    const siteUrl = seoSettings?.site_url || 'https://4590.co.kr';
-    const siteName = seoSettings?.site_name || '4590 Football';
+    const siteName = seoSettings?.site_name || siteConfig.name;
 
     // 선수 데이터 조회 (최소한의 옵션으로)
     const playerData = await fetchPlayerFullData(id, {
@@ -75,7 +75,7 @@ export async function generateMetadata({
 
     const title = `${playerName} | 선수 정보 - ${siteName}`;
     const description = `${playerName}${player.nationality ? ` (${player.nationality})` : ''}${currentTeam ? ` - ${currentTeam}` : ''}${position ? ` ${position}` : ''}. 시즌 통계, 경기 기록, 프로필 정보를 확인하세요.`;
-    const url = `${siteUrl}/livescore/football/player/${id}`;
+    const url = siteConfig.getCanonical(`/livescore/football/player/${id}`);
 
     return {
       title,
@@ -85,21 +85,15 @@ export async function generateMetadata({
         description,
         url,
         type: 'profile',
-        images: player.photo ? [
-          {
-            url: player.photo,
-            width: 120,
-            height: 120,
-            alt: player.name,
-          },
-        ] : undefined,
+        images: [siteConfig.getDefaultOgImageObject(title)],
         siteName,
-        locale: 'ko_KR',
+        locale: siteConfig.locale,
       },
       twitter: {
-        card: 'summary',
+        card: 'summary_large_image',
         title,
         description,
+        images: [siteConfig.defaultOgImage],
       },
       alternates: {
         canonical: url,
@@ -108,7 +102,7 @@ export async function generateMetadata({
   } catch (error) {
     console.error('[PlayerPage generateMetadata] 오류:', error);
     return {
-      title: '선수 정보 - 4590 Football',
+      title: `선수 정보 - ${siteConfig.name}`,
       description: '축구 선수 정보, 통계, 경기 기록을 확인하세요.',
     };
   }

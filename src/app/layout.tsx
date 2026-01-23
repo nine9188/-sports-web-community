@@ -12,6 +12,7 @@ import { fetchMultiDayMatches } from '@/domains/livescore/actions/footballApi';
 import { generatePageMetadata } from '@/shared/utils/metadataNew';
 import { getUIThemeSettings } from '@/domains/ui-theme/actions';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
+import { siteConfig } from '@/shared/config';
 import { getFullUserData } from '@/shared/actions/user';
 import Script from 'next/script';
 
@@ -24,9 +25,12 @@ const inter = Inter({ subsets: ['latin'] });
 
 // 동적 메타데이터 생성 (DB에서 설정값 가져옴)
 export async function generateMetadata() {
+  const seoSettings = await getSeoSettings();
+  const siteUrl = seoSettings?.site_url || siteConfig.url;
   const metadata = await generatePageMetadata('/');
 
   return {
+    metadataBase: new URL(siteUrl),
     ...metadata,
     icons: {
       icon: [
@@ -103,8 +107,8 @@ export default async function RootLayout({
   const mobileRadius = borderRadiusMap[uiTheme.borderRadiusMobile] || '0';
 
   // WebSite 구조화 데이터 (Schema.org)
-  const siteUrl = seoSettings?.site_url || 'https://4590.co.kr';
-  const siteName = seoSettings?.site_name || '4590 Football';
+  const siteUrl = seoSettings?.site_url || siteConfig.url;
+  const siteName = seoSettings?.site_name || siteConfig.name;
   const siteDescription = seoSettings?.default_description || '축구 팬들을 위한 커뮤니티. 실시간 라이브스코어, 게시판, 이적시장 정보를 확인하세요.';
 
   const websiteSchema = {

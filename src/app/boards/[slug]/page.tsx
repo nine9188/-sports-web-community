@@ -6,6 +6,8 @@ import BoardDetailLayout from '@/domains/boards/components/layout/BoardDetailLay
 import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
+import { siteConfig } from '@/shared/config';
+import { convertApiPostsToLayoutPosts } from '@/domains/boards/utils/post/postUtils';
 
 // 동적 렌더링 강제 설정
 export const dynamic = 'force-dynamic';
@@ -22,8 +24,7 @@ export async function generateMetadata({
     const supabase = await getSupabaseServer();
     const seoSettings = await getSeoSettings();
 
-    const siteUrl = seoSettings?.site_url || 'https://4590.co.kr';
-    const siteName = seoSettings?.site_name || '4590 Football';
+    const siteName = seoSettings?.site_name || siteConfig.name;
     const pagePath = `/boards/${slug}`;
 
     // page_overrides 확인 (관리자 설정 우선)
@@ -46,7 +47,7 @@ export async function generateMetadata({
     // 관리자 설정 우선, 없으면 기본값 사용
     const title = pageOverride?.title || `${board.name} - ${siteName}`;
     const description = pageOverride?.description || board.description || `${board.name} 게시판의 최신 글을 확인하세요.`;
-    const url = `${siteUrl}/boards/${slug}`;
+    const url = siteConfig.getCanonical(pagePath);
 
     return {
       title,
@@ -57,12 +58,14 @@ export async function generateMetadata({
         url,
         type: 'website',
         siteName,
-        locale: 'ko_KR',
+        locale: siteConfig.locale,
+        images: [siteConfig.getDefaultOgImageObject(title)],
       },
       twitter: {
         card: 'summary_large_image',
         title,
         description,
+        images: [siteConfig.defaultOgImage],
       },
       alternates: {
         canonical: url,
@@ -71,7 +74,7 @@ export async function generateMetadata({
   } catch (error) {
     console.error('[BoardPage generateMetadata] 오류:', error);
     return {
-      title: '게시판 - 4590 Football',
+      title: `게시판 - ${siteConfig.name}`,
       description: '축구 커뮤니티 게시판',
     };
   }
@@ -126,8 +129,11 @@ export default async function BoardDetailPage({
 
     if (searchQuery) {
       const validSearchTypes = ['title_content', 'title', 'content', 'comment', 'nickname'] as const;
-      const searchTypeValue = validSearchTypes.includes(searchType as any)
-        ? (searchType as typeof validSearchTypes[number])
+      type ValidSearchType = (typeof validSearchTypes)[number];
+      const isValidSearchType = (value: string | undefined): value is ValidSearchType =>
+        typeof value === 'string' && (validSearchTypes as readonly string[]).includes(value);
+      const searchTypeValue: ValidSearchType = isValidSearchType(searchType)
+        ? searchType
         : 'title_content';
 
       const searchResult = await searchBoardPosts({
@@ -138,7 +144,7 @@ export default async function BoardDetailPage({
         limit: 30,
       });
 
-      posts = searchResult.data;
+      posts = convertApiPostsToLayoutPosts(searchResult.data);
       pagination = {
         totalItems: searchResult.meta.totalItems,
         itemsPerPage: searchResult.meta.itemsPerPage,

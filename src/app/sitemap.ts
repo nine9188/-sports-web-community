@@ -1,10 +1,11 @@
 import { MetadataRoute } from 'next';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
+import { siteConfig } from '@/shared/config';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const seoSettings = await getSeoSettings();
-  const baseUrl = seoSettings?.site_url || 'https://example.com';
+  const baseUrl = seoSettings?.site_url || siteConfig.url;
 
   // 정적 페이지
   const staticPages: MetadataRoute.Sitemap = [

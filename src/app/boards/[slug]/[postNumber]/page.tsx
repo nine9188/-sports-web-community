@@ -9,6 +9,7 @@ import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles }
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
+import { siteConfig } from '@/shared/config';
 
 // 동적 렌더링 강제 설정 추가
 export const dynamic = 'force-dynamic';
@@ -25,8 +26,7 @@ export async function generateMetadata({
     const supabase = await getSupabaseServer();
     const seoSettings = await getSeoSettings();
 
-    const siteUrl = seoSettings?.site_url || 'https://4590.co.kr';
-    const siteName = seoSettings?.site_name || '4590 Football';
+    const siteName = seoSettings?.site_name || siteConfig.name;
 
     // 1. 먼저 게시판 정보 조회 (slug로)
     const { data: board } = await supabase
@@ -72,7 +72,7 @@ export async function generateMetadata({
 
     const boardName = board.name || '게시판';
     const title = `${post.title} - ${boardName}`;
-    const url = `${siteUrl}/boards/${slug}/${postNumber}`;
+    const url = siteConfig.getCanonical(`/boards/${slug}/${postNumber}`);
 
     return {
       title,
@@ -85,12 +85,14 @@ export async function generateMetadata({
         publishedTime: post.created_at ?? undefined,
         modifiedTime: post.updated_at ?? undefined,
         siteName,
-        locale: 'ko_KR',
+        locale: siteConfig.locale,
+        images: [siteConfig.getDefaultOgImageObject(title)],
       },
       twitter: {
         card: 'summary_large_image',
         title,
         description: description || `${boardName}의 게시글입니다.`,
+        images: [siteConfig.defaultOgImage],
       },
       alternates: {
         canonical: url,
@@ -99,7 +101,7 @@ export async function generateMetadata({
   } catch (error) {
     console.error('[PostPage generateMetadata] 오류:', error);
     return {
-      title: '게시글 - 4590 Football',
+      title: `게시글 - ${siteConfig.name}`,
       description: '축구 커뮤니티 게시글',
     };
   }
@@ -290,9 +292,8 @@ export default async function PostDetailPage({
 
     // Article 구조화 데이터 생성
     const seoSettings = await getSeoSettings();
-    const siteUrl = seoSettings?.site_url || 'https://4590.co.kr';
-    const siteName = seoSettings?.site_name || '4590 Football';
-    const postUrl = `${siteUrl}/boards/${slug}/${postNumber}`;
+    const siteName = seoSettings?.site_name || siteConfig.name;
+    const postUrl = siteConfig.getCanonical(`/boards/${slug}/${postNumber}`);
 
     // 본문에서 설명 추출
     let articleDescription = '';
