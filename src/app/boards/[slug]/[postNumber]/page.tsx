@@ -293,6 +293,7 @@ export default async function PostDetailPage({
     // Article 구조화 데이터 생성
     const seoSettings = await getSeoSettings();
     const siteName = seoSettings?.site_name || siteConfig.name;
+    const siteUrl = seoSettings?.site_url || siteConfig.url;
     const postUrl = siteConfig.getCanonical(`/boards/${slug}/${postNumber}`);
 
     // 본문에서 설명 추출

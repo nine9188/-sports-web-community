@@ -16,6 +16,7 @@ export interface MyPostItem {
   tags: string[] | null;
   board_id: string;
   board_name?: string;
+  board_slug?: string;
   status: string | null;
   post_number: number;
 }

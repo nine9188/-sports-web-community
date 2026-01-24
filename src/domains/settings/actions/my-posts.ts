@@ -77,22 +77,24 @@ export async function getMyPosts(
         const boardIds = formattedData
           .filter(post => post.board_id)
           .map(post => post.board_id);
-          
+
         if (boardIds.length > 0) {
           const { data: boards } = await supabase
             .from('boards')
-            .select('id, name')
+            .select('id, name, slug')
             .in('id', boardIds);
-            
+
           if (boards) {
             // 게시판 정보 매핑
             const boardMap = new Map(
-              boards.map((board: { id: string; name: string }) => [board.id, board.name])
+              boards.map((board: { id: string; name: string; slug: string }) => [board.id, { name: board.name, slug: board.slug }])
             );
-            
+
             formattedData.forEach(post => {
               if (post.board_id && boardMap.has(post.board_id)) {
-                post.board_name = boardMap.get(post.board_id);
+                const boardInfo = boardMap.get(post.board_id);
+                post.board_name = boardInfo?.name;
+                post.board_slug = boardInfo?.slug;
               }
             });
           }

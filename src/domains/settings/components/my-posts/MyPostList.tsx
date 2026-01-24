@@ -49,7 +49,7 @@ export default function MyPostList({
               {posts.map((post) => (
                 <tr key={post.id} className="hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors">
                   <td className="px-4 py-4 text-sm max-w-[220px] overflow-hidden">
-                    <Link href={`/board/${post.board_id}/post/${post.id}`} className={`font-medium truncate block ${
+                    <Link href={`/boards/${post.board_slug}/${post.post_number}`} className={`font-medium truncate block ${
                       post.title === '[신고에 의해 삭제됨]' || post.title.includes('[삭제된 게시글]')
                         ? 'text-red-500 dark:text-red-400'
                         : post.title === '[신고에 의해 숨김 처리됨]' || post.title.includes('[숨김 처리된 게시글]')
