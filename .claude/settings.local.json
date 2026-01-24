@@ -65,7 +65,13 @@
       "Bash(git reset:*)",
       "Bash(git clean:*)",
       "Bash(claude mcp add:*)",
-      "mcp__sentry__update_issue"
+      "mcp__sentry__update_issue",
+      "mcp__sentry__search_issues",
+      "mcp__sentry__search_events",
+      "mcp__sentry__find_releases",
+      "Bash(npx next build)",
+      "Bash(node node_modules/.bin/next build:*)",
+      "Bash(node:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
