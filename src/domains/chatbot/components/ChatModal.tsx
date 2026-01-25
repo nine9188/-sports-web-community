@@ -27,7 +27,7 @@ export function ChatModal({ isOpen, onClose, children }: ChatModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-0 right-0 z-50 flex items-end justify-end pointer-events-none">
+    <div className="fixed inset-x-0 bottom-0 md:inset-auto md:bottom-0 md:right-0 z-50 flex items-end justify-end pointer-events-none">
       {/* Modal Container - only the modal itself receives pointer events */}
       <div
         ref={modalRef}
