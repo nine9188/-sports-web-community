@@ -15,6 +15,7 @@ import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
 import { siteConfig } from '@/shared/config';
 import { getFullUserData } from '@/shared/actions/user';
 import Script from 'next/script';
+import { Analytics } from '@vercel/analytics/next';
 
 // 동적 렌더링 설정
 export const dynamic = 'force-dynamic';
@@ -166,6 +167,7 @@ export default async function RootLayout({
         >
           {children}
         </RootLayoutClient>
+        <Analytics />
       </body>
     </html>
   );
