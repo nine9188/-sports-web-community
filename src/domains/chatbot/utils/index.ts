@@ -1,6 +1,6 @@
-import { ChipType, ChipButton, FormConfig } from '../types';
+// UI 컴포넌트용 유틸
 
-export const CHIP_BUTTONS: ChipButton[] = [
+export const CHIP_BUTTONS = [
   {
     id: 'community_inquiry',
     type: 'community_inquiry',
@@ -250,101 +250,17 @@ export const CHIP_BUTTONS: ChipButton[] = [
   }
 ];
 
-export const getChipButton = (type: ChipType): ChipButton | undefined => {
-  return CHIP_BUTTONS.find(chip => chip.type === type);
-};
-
-export const generateConversationTitle = (firstMessage: string): string => {
-  const maxLength = 30;
-  const cleaned = firstMessage.replace(/[^\w\s가-힣]/g, '').trim();
-  return cleaned.length > maxLength 
-    ? cleaned.substring(0, maxLength) + '...' 
-    : cleaned || '새로운 대화';
-};
-
-export const formatMessageTime = (timestamp: string): string => {
+export function formatMessageTime(timestamp: string): string {
   const date = new Date(timestamp);
   const now = new Date();
-  const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-  
-  if (diffInMinutes < 1) return '방금 전';
-  if (diffInMinutes < 60) return `${diffInMinutes}분 전`;
-  
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  if (diffInHours < 24) return `${diffInHours}시간 전`;
-  
-  const diffInDays = Math.floor(diffInHours / 24);
-  if (diffInDays < 7) return `${diffInDays}일 전`;
-  
+  const diff = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+
+  if (diff < 1) return '방금 전';
+  if (diff < 60) return `${diff}분 전`;
+  if (diff < 1440) return `${Math.floor(diff / 60)}시간 전`;
   return date.toLocaleDateString('ko-KR');
-};
+}
 
-export const scrollToBottom = (element: HTMLElement) => {
+export function scrollToBottom(element: HTMLElement) {
   element.scrollTop = element.scrollHeight;
-};
-
-export const generateMessageId = (): string => {
-  return `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-};
-
-export const generateConversationId = (): string => {
-  return `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-};
-
-// 로컬 세션 관련 유틸리티
-export const LOCAL_STORAGE_KEYS = {
-  CHAT_SESSION: 'chatbot_local_session',
-  CHAT_DATA: 'chatbot_local_data'
-} as const;
-
-export const generateLocalSessionId = (): string => {
-  return `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-};
-
-export const createLocalSession = () => {
-  const now = new Date();
-  const expiresAt = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30일 후 만료
-  
-  return {
-    id: generateLocalSessionId(),
-    created_at: now.toISOString(),
-    expires_at: expiresAt.toISOString()
-  };
-};
-
-export const isSessionExpired = (expiresAt: string): boolean => {
-  return new Date() > new Date(expiresAt);
-};
-
-export const getLocalChatData = () => {
-  if (typeof window === 'undefined') return null;
-  
-  try {
-    const data = localStorage.getItem(LOCAL_STORAGE_KEYS.CHAT_DATA);
-    return data ? JSON.parse(data) : null;
-  } catch (error) {
-    console.error('Error getting local chat data:', error);
-    return null;
-  }
-};
-
-export const saveLocalChatData = (data: any) => {
-  if (typeof window === 'undefined') return;
-  
-  try {
-    localStorage.setItem(LOCAL_STORAGE_KEYS.CHAT_DATA, JSON.stringify(data));
-  } catch (error) {
-    console.error('Error saving local chat data:', error);
-  }
-};
-
-export const clearLocalChatData = () => {
-  if (typeof window === 'undefined') return;
-  
-  try {
-    localStorage.removeItem(LOCAL_STORAGE_KEYS.CHAT_DATA);
-    localStorage.removeItem(LOCAL_STORAGE_KEYS.CHAT_SESSION);
-  } catch (error) {
-    console.error('Error clearing local chat data:', error);
-  }
-};
+}

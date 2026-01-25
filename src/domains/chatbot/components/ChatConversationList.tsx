@@ -29,11 +29,11 @@ export function ChatConversationList({
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="animate-pulse">
-              <div className="flex items-center space-x-3 p-3 rounded-lg bg-[#F5F5F5] dark:bg-[#262626]">
-                <div className="w-10 h-10 bg-[#EAEAEA] dark:bg-[#333333] rounded-full" />
+              <div className="flex items-center space-x-3 p-3 rounded-none bg-[#F5F5F5] dark:bg-[#262626]">
+                <div className="w-10 h-10 bg-[#EAEAEA] dark:bg-[#333333] rounded-none" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-[#EAEAEA] dark:bg-[#333333] rounded w-3/4" />
-                  <div className="h-3 bg-[#EAEAEA] dark:bg-[#333333] rounded w-1/2" />
+                  <div className="h-4 bg-[#EAEAEA] dark:bg-[#333333] rounded-none w-3/4" />
+                  <div className="h-3 bg-[#EAEAEA] dark:bg-[#333333] rounded-none w-1/2" />
                 </div>
               </div>
             </div>
@@ -98,11 +98,11 @@ export function ChatConversationList({
                   <div className="relative flex-shrink-0">
                     <div className={cn(
                       'w-10 h-10 rounded-full flex items-center justify-center',
-                      conversation.status === 'active' ? 'bg-green-100 dark:bg-green-900/20' : 'bg-[#F5F5F5] dark:bg-[#262626]'
+                      conversation.status === 'active' ? 'bg-[#262626] dark:bg-[#3F3F3F]' : 'bg-[#F5F5F5] dark:bg-[#262626]'
                     )}>
                       <MessageCircle className={cn(
                         'w-5 h-5',
-                        conversation.status === 'active' ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'
+                        conversation.status === 'active' ? 'text-white' : 'text-gray-500 dark:text-gray-400'
                       )} />
                     </div>
                     {/* Unread Badge */}
@@ -130,8 +130,8 @@ export function ChatConversationList({
 
                     <div className="flex items-center justify-between">
                       <span className={cn(
-                        'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium',
-                        conversation.status === 'active' ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200' :
+                        'inline-flex items-center px-2 py-1 rounded-none text-xs font-medium',
+                        conversation.status === 'active' ? 'bg-[#262626] dark:bg-[#3F3F3F] text-white' :
                         conversation.status === 'completed' ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-800 dark:text-[#F0F0F0]' :
                         'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300'
                       )}>

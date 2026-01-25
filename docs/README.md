@@ -10,10 +10,11 @@
 docs/
 ├── README.md (이 파일)
 ├── QUICK_START.md               # 빠른 시작 가이드
+├── chatbot/                     # 챗봇 시스템 ✨ NEW
 ├── hot-system/                  # HOT 게시글 시스템
 ├── notifications/               # 알림 시스템
 ├── reward-system/               # 보상 시스템
-├── hotdeal/                     # 핫딜 시스템 ✨ NEW
+├── hotdeal/                     # 핫딜 시스템
 ├── livescore/                   # 라이브스코어 시스템
 ├── player-fixtures/             # 선수 경기 기록 API
 ├── seo/                         # SEO 개선 가이드
@@ -24,7 +25,32 @@ docs/
 
 ---
 
-## 🎁 보상 시스템 ✨ NEW
+## 💬 챗봇 시스템 ✨ NEW
+
+SSR을 이용한 최적화 대화형 챗봇 시스템입니다.
+
+| 문서 | 설명 | 상태 |
+|------|------|------|
+| [README.md](./chatbot/README.md) | 챗봇 시스템 전체 개요 | ✅ 완료 |
+| [architecture-improvements.md](./chatbot/architecture-improvements.md) | 아키텍처 개선 계획 | 📋 계획 |
+
+**주요 기능**:
+- ✅ 플로팅 버튼 + 모달/패널형 UI
+- ✅ 인증/비인증 사용자 분리 (Supabase DB / localStorage)
+- ✅ 6개 칩버튼 카테고리 (문의, 신고, 버그 등)
+- ✅ 동적 폼 렌더링
+- ✅ 카카오톡 스타일 읽음 표시
+- ✅ 타이핑 버블 ("..." 애니메이션)
+
+**개선 예정**:
+- ⏳ role/kind 분리 (메시지 타입 구조 개선)
+- ⏳ 읽음 테이블 분리 (멀티 디바이스 지원)
+- ⏳ 중복 방지 메커니즘 (client_message_id)
+- ⏳ typing 타이머 취소 로직
+
+---
+
+## 🎁 보상 시스템
 
 사용자 활동에 대한 경험치(XP)와 포인트(P) 보상 시스템입니다.
 

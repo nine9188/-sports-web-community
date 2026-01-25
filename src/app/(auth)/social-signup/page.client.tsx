@@ -24,20 +24,19 @@ export default function SocialSignupPage() {
         return
       }
 
-      // 사용자가 없으면 강제로 세션 확인
+      // 사용자가 없으면 강제로 인증 확인
       if (!user) {
         try {
           const supabase = getSupabaseBrowser()
-          
-          // 강제로 세션 새로고침 시도
-          const { data: { session } } = await supabase.auth.getSession()
-          if (session) {
-            // 세션이 있으면 AuthContext가 업데이트될 때까지 잠시 대기
+
+          // getUser()로 인증된 사용자 정보 확인
+          const { data: { user: currentUser }, error } = await supabase.auth.getUser()
+
+          if (!error && currentUser) {
+            // 사용자가 있으면 AuthContext가 업데이트될 때까지 잠시 대기
             setTimeout(() => checkAuthAndProfile(), 1000)
             return
           }
-          
-          const { data: { user: currentUser }, error } = await supabase.auth.getUser()
           
           if (error || !currentUser) {
             // 5초 대기 후에도 사용자 정보가 없으면 로그인 페이지로

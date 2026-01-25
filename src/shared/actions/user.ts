@@ -20,14 +20,11 @@ export const getFullUserData = cache(async (): Promise<FullUserDataWithSession |
   try {
     const supabase = await getSupabaseServer();
 
-    // 1. 인증 확인 및 세션 가져오기
+    // 1. 인증 확인 (getUser는 서버에서 인증된 데이터 반환)
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return null;
     }
-
-    // 세션도 가져오기
-    const { data: { session } } = await supabase.auth.getSession();
 
     // 2. 모든 데이터 병렬 fetch
     const [profileResult, postCountResult, commentCountResult] = await Promise.all([
@@ -99,7 +96,7 @@ export const getFullUserData = cache(async (): Promise<FullUserDataWithSession |
       postCount,
       commentCount,
       is_admin: profile.is_admin || false,
-      session
+      session: null
     };
   } catch (error) {
     console.error('사용자 데이터 로드 오류:', error);

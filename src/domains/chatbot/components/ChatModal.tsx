@@ -36,7 +36,7 @@ export function ChatModal({ isOpen, onClose, children }: ChatModalProps) {
           'relative bg-white dark:bg-[#1D1D1D] rounded-t-lg md:rounded-lg shadow-2xl',
           'transition-all duration-300 ease-out',
           'w-full h-[85vh] md:w-96 md:h-[600px]',
-          'md:m-6 md:mb-20',
+          'md:m-6 md:mb-24',
           'flex flex-col overflow-hidden',
           'animate-in slide-in-from-bottom-full md:slide-in-from-right-full',
           'border border-black/7 dark:border-white/0'

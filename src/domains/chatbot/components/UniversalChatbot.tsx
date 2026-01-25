@@ -1,37 +1,16 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
-import { useAuth } from '@/shared/context/AuthContext';
+import { useEffect, useState, useRef } from 'react';
 import { ChatModal } from './ChatModal';
 import { ChatFloatingButton } from './ChatFloatingButton';
 import { ChatHeader } from './ChatHeader';
 import { ChatConversationList } from './ChatConversationList';
 import { ChatMessageList } from './ChatMessageList';
 import { ChatInput } from './ChatInput';
-import { localChatStorage } from '../actions/localStorageActions';
-import { useLocalChatbot } from '../hooks/useLocalChatbot';
-import { useChatbot } from '../hooks/useChatbot';
+import { useSimpleChatbot } from '../hooks/useSimpleChatbot';
 
-function hasFormSubmitting(obj: any): obj is { isFormSubmitting: boolean } {
-  return !!obj && typeof obj.isFormSubmitting === 'boolean';
-}
-
-// 인증된 사용자용 컴포넌트 - useChatbot 훅 사용
-function AuthChatbot({ userId }: { userId: string }) {
-  const chatbot = useChatbot(userId);
-
-  return <ChatbotInner chatbot={chatbot} isAuthenticated={true} userId={userId} />;
-}
-
-// 비로그인 사용자용 컴포넌트 - useLocalChatbot 훅 사용
-function LocalChatbot() {
-  const chatbot = useLocalChatbot();
-
-  return <ChatbotInner chatbot={chatbot} isAuthenticated={false} userId="anonymous" />;
-}
-
-// 공통 UI
-function ChatbotInner({ chatbot, isAuthenticated, userId }: { chatbot: any; isAuthenticated: boolean; userId: string }) {
+export function UniversalChatbot() {
+  const chatbot = useSimpleChatbot();
   const [launcherVisible, setLauncherVisible] = useState(false);
 
   const toggleChatRef = useRef(chatbot.toggleChat);
@@ -87,16 +66,12 @@ function ChatbotInner({ chatbot, isAuthenticated, userId }: { chatbot: any; isAu
     };
   }, []);
 
-  const handleMessageRead = useCallback((messageId: string) => {
-    localChatStorage.markMessageAsRead(messageId);
-  }, []);
-
   const currentMessages = chatbot.activeConversation
     ? chatbot.messages[chatbot.activeConversation] || []
     : [];
 
   const activeConversation = chatbot.conversations.find(
-    (conv: any) => conv.id === chatbot.activeConversation
+    (conv) => conv.id === chatbot.activeConversation
   );
 
   return (
@@ -105,7 +80,7 @@ function ChatbotInner({ chatbot, isAuthenticated, userId }: { chatbot: any; isAu
         <ChatFloatingButton
           onClick={chatbot.toggleChat}
           isOpen={chatbot.isOpen}
-          unreadCount={chatbot.totalUnreadCount || 0}
+          unreadCount={chatbot.totalUnreadCount}
         />
       )}
 
@@ -124,8 +99,9 @@ function ChatbotInner({ chatbot, isAuthenticated, userId }: { chatbot: any; isAu
               conversations={chatbot.conversations}
               onConversationSelect={chatbot.selectConversation}
               activeConversationId={chatbot.activeConversation || undefined}
-              isLoading={chatbot.isLoading}
+              isLoading={false}
               onNewConversation={chatbot.startNewConversation}
+              getUnreadCount={chatbot.getUnreadCount}
             />
           </div>
         ) : (
@@ -133,17 +109,24 @@ function ChatbotInner({ chatbot, isAuthenticated, userId }: { chatbot: any; isAu
             <ChatMessageList
               messages={currentMessages}
               isTyping={chatbot.isTyping}
-              isLoading={chatbot.isLoading}
-              onMessageRead={handleMessageRead}
+              isLoading={false}
+              onMessageRead={chatbot.markMessageAsRead}
               onFormSubmit={chatbot.handleFormSubmit}
               onChipClick={chatbot.handleChipClick}
-              isFormSubmitting={hasFormSubmitting(chatbot) ? chatbot.isFormSubmitting : false}
+              isFormSubmitting={false}
             />
-            <ChatInput
-              onSendMessage={chatbot.sendUserMessage}
-              disabled={chatbot.isTyping || chatbot.isLoading}
-              placeholder="메시지를 입력하세요..."
-            />
+            {activeConversation?.status !== 'completed' && (
+              <ChatInput
+                onSendMessage={chatbot.sendUserMessage}
+                disabled={false}
+                placeholder="메시지를 입력하세요..."
+              />
+            )}
+            {activeConversation?.status === 'completed' && (
+              <div className="p-4 border-t border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] text-center">
+                <p className="text-sm text-gray-500 dark:text-gray-400">대화가 종료되었습니다</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -155,20 +138,4 @@ function ChatbotInner({ chatbot, isAuthenticated, userId }: { chatbot: any; isAu
       </ChatModal>
     </>
   );
-}
-
-export function UniversalChatbot() {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return null;
-  }
-
-  // 인증 상태에 따라 다른 컴포넌트 렌더링
-  // 각 컴포넌트는 내부에서 자체 훅을 호출하므로 훅 규칙 위반 없음
-  if (user) {
-    return <AuthChatbot userId={user.id} />;
-  }
-
-  return <LocalChatbot />;
 }

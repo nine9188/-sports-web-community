@@ -62,26 +62,32 @@ export function ChatMessageList({
     const container = containerRef.current;
     if (!container || !onMessageRead) return;
 
-    const handleScroll = () => {
-      const unreadMessages = messages.filter(msg => !msg.is_read && msg.type === 'bot');
-      
+    const checkVisibleMessages = () => {
+      const unreadMessages = messages.filter(msg => msg.is_read === false && msg.type !== 'user');
+
       unreadMessages.forEach(message => {
         const messageElement = document.getElementById(`message-${message.id}`);
         if (messageElement) {
           const rect = messageElement.getBoundingClientRect();
           const containerRect = container.getBoundingClientRect();
-          
-          if (rect.top >= containerRect.top && rect.bottom <= containerRect.bottom) {
+
+          // 메시지가 컨테이너 안에 보이면 읽음 처리
+          if (rect.top >= containerRect.top - 50 && rect.bottom <= containerRect.bottom + 50) {
             onMessageRead(message.id);
           }
         }
       });
     };
 
-    container.addEventListener('scroll', handleScroll);
-    handleScroll(); // Check on mount
-    
-    return () => container.removeEventListener('scroll', handleScroll);
+    container.addEventListener('scroll', checkVisibleMessages);
+
+    // 메시지 변경 시 바로 체크
+    const timeoutId = setTimeout(checkVisibleMessages, 100);
+
+    return () => {
+      container.removeEventListener('scroll', checkVisibleMessages);
+      clearTimeout(timeoutId);
+    };
   }, [messages, onMessageRead]);
 
   if (isLoading) {
@@ -97,7 +103,7 @@ export function ChatMessageList({
       ref={containerRef}
       className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth"
     >
-      {messages.length === 0 ? (
+      {messages.length === 0 && !isTyping ? (
         <div className="flex items-center justify-center h-full">
           <div className="text-center text-gray-700 dark:text-gray-300">
             <p className="text-sm">메시지가 없습니다</p>
@@ -120,9 +126,9 @@ export function ChatMessageList({
               />
             </div>
           ))}
-          
+
           {isTyping && <ChatTypingBubble />}
-          
+
           <div ref={messagesEndRef} />
         </>
       )}

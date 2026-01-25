@@ -10,17 +10,17 @@ import { Suspense } from 'react';
 // Dynamic imports for better code splitting
 const ChatChipButtons = dynamic(() => import('./ChatChipButtons').then(m => ({ default: m.ChatChipButtons })), {
   ssr: false,
-  loading: () => <div className="animate-pulse bg-[#F5F5F5] dark:bg-[#262626] h-10 rounded-lg" />
+  loading: () => <div className="animate-pulse bg-[#F5F5F5] dark:bg-[#262626] h-10 rounded-none" />
 });
 
 const SingleChipButton = dynamic(() => import('./ChatChipButtons').then(m => ({ default: m.SingleChipButton })), {
   ssr: false,
-  loading: () => <div className="animate-pulse bg-[#F5F5F5] dark:bg-[#262626] h-10 w-24 rounded-lg" />
+  loading: () => <div className="animate-pulse bg-[#F5F5F5] dark:bg-[#262626] h-10 w-24 rounded-none" />
 });
 
 const ChatFormRenderer = dynamic(() => import('./ChatFormRenderer').then(m => ({ default: m.ChatFormRenderer })), {
   ssr: false,
-  loading: () => <div className="animate-pulse bg-[#F5F5F5] dark:bg-[#262626] h-40 rounded-lg" />
+  loading: () => <div className="animate-pulse bg-[#F5F5F5] dark:bg-[#262626] h-40 rounded-none" />
 });
 
 interface ChatMessageBubbleProps {
@@ -49,7 +49,7 @@ export function ChatMessageBubble({
   if (isSystem) {
     return (
       <div className="flex justify-center my-4">
-        <div className="px-3 py-1 bg-[#EAEAEA] dark:bg-[#333333] text-gray-700 dark:text-gray-300 text-xs rounded-full border border-black/5 dark:border-white/10">
+        <div className="px-3 py-1 bg-[#EAEAEA] dark:bg-[#333333] text-gray-700 dark:text-gray-300 text-xs rounded-none border border-black/5 dark:border-white/10">
           {message.content}
         </div>
       </div>
@@ -60,6 +60,7 @@ export function ChatMessageBubble({
     const isCompletion = message.form_data.showCompletion;
     const chipLabels = message.form_data.chips as string[] | undefined;
     const isClicked = message.form_data.is_clicked === true;
+    const selectedLabel = message.form_data.selected_label as string | undefined;
 
     return (
       <div className="flex items-start space-x-3 animate-in fade-in-0 slide-in-from-left-2 duration-300">
@@ -70,33 +71,34 @@ export function ChatMessageBubble({
 
         {/* Chips Content */}
         <div className="max-w-xs lg:max-w-md w-full">
-          <Suspense fallback={<div className="animate-pulse bg-[#F5F5F5] dark:bg-[#262626] h-10 rounded-lg" />}>
+          <Suspense fallback={<div className="animate-pulse bg-[#F5F5F5] dark:bg-[#262626] h-10 rounded-none" />}>
             {isCompletion ? (
               <div className="flex space-x-2">
                 <SingleChipButton
                   label="괜찮아요"
                   onClick={() => onChipClick && onChipClick({ label: '괜찮아요' })}
                   disabled={isClicked}
+                  isSelected={selectedLabel === '괜찮아요'}
                 />
                 <SingleChipButton
                   label="네 다른문의 할게요"
                   onClick={() => onChipClick && onChipClick({ label: '네 다른문의 할게요' })}
                   disabled={isClicked}
-                  variant="primary"
+                  isSelected={selectedLabel === '네 다른문의 할게요'}
                 />
               </div>
             ) : chipLabels && chipLabels.length > 0 ? (
-              // Show only specified chips
               <ChatChipButtons
                 onChipClick={onChipClick || (() => {})}
                 disabled={isClicked}
                 filterLabels={chipLabels}
+                selectedLabel={selectedLabel}
               />
             ) : (
-              // Show all chips as fallback
               <ChatChipButtons
                 onChipClick={onChipClick || (() => {})}
                 disabled={isClicked}
+                selectedLabel={selectedLabel}
               />
             )}
           </Suspense>
@@ -115,12 +117,13 @@ export function ChatMessageBubble({
 
         {/* Form Content */}
         <div className="max-w-xs lg:max-w-md">
-          <Suspense fallback={<div className="animate-pulse bg-[#F5F5F5] dark:bg-[#262626] h-40 rounded-lg" />}>
+          <Suspense fallback={<div className="animate-pulse bg-[#F5F5F5] dark:bg-[#262626] h-40 rounded-none" />}>
             <ChatFormRenderer
               formConfig={message.form_data}
               onSubmit={onFormSubmit || (() => {})}
               isSubmitting={isFormSubmitting}
-              messageSubmitted={message.is_submitted}
+              messageSubmitted={message.form_data?.is_submitted === true}
+              initialData={message.form_data?.submitted_data}
             />
           </Suspense>
         </div>
@@ -153,10 +156,10 @@ export function ChatMessageBubble({
       )}>
         {/* Message Bubble */}
         <div className={cn(
-          'px-4 py-3 rounded-lg shadow-sm',
+          'px-4 py-3 rounded-none shadow-sm border',
           isUser
-            ? 'bg-[#262626] dark:bg-[#3F3F3F] text-white rounded-br-md'
-            : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] rounded-bl-md border border-black/7 dark:border-white/0'
+            ? 'bg-[#262626] dark:bg-[#3F3F3F] text-white border-black/7 dark:border-white/0'
+            : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] border-black/7 dark:border-white/0'
         )}>
           <p className="text-sm whitespace-pre-wrap break-words">
             {message.content}

@@ -49,57 +49,58 @@ export function ChatInput({
 
   return (
     <div className="p-4 border-t border-black/5 dark:border-white/10 bg-white dark:bg-[#1D1D1D]">
-      <form onSubmit={handleSubmit} className="flex items-end space-x-3">
+      <form onSubmit={handleSubmit} className="flex items-center gap-2">
         {/* Attachment Button (placeholder) */}
-        <Button
+        <button
           type="button"
-          variant="ghost"
-          size="icon"
           disabled={disabled}
-          className="flex-shrink-0 rounded-md"
+          className={cn(
+            'flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-md',
+            'text-gray-700 dark:text-gray-300',
+            'hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors',
+            disabled && 'opacity-50 cursor-not-allowed'
+          )}
           aria-label="파일 첨부"
         >
           <Paperclip className="w-5 h-5" />
-        </Button>
+        </button>
 
         {/* Text Input */}
-        <div className="flex-1 relative">
-          <textarea
-            ref={textareaRef}
-            value={message}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            disabled={disabled}
-            placeholder={placeholder}
-            rows={1}
-            className={cn(
-              'w-full px-4 py-3 pr-12 rounded-lg border border-black/7 dark:border-white/10',
-              'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0]',
-              'outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0',
-              'focus:bg-[#EAEAEA] dark:focus:bg-[#333333]',
-              'resize-none overflow-hidden transition-colors',
-              'placeholder-gray-500 dark:placeholder-gray-400',
-              disabled && 'opacity-50 cursor-not-allowed bg-[#F5F5F5] dark:bg-[#262626]'
-            )}
-            style={{ minHeight: '48px', maxHeight: '120px' }}
-          />
-        </div>
+        <textarea
+          ref={textareaRef}
+          value={message}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          disabled={disabled}
+          placeholder={placeholder}
+          rows={1}
+          className={cn(
+            'flex-1 min-w-0 px-3 h-10 rounded-none border border-black/7 dark:border-white/10',
+            'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0]',
+            'outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0',
+            'focus:bg-[#EAEAEA] dark:focus:bg-[#333333]',
+            'resize-none overflow-hidden transition-colors leading-10',
+            'placeholder-gray-500 dark:placeholder-gray-400',
+            disabled && 'opacity-50 cursor-not-allowed bg-[#F5F5F5] dark:bg-[#262626]'
+          )}
+          style={{ maxHeight: '120px' }}
+        />
 
         {/* Send Button */}
-        <Button
+        <button
           type="submit"
-          variant="primary"
-          size="icon"
           disabled={disabled || !message.trim()}
           className={cn(
-            'flex-shrink-0 rounded-md transition-all duration-200',
-            'active:scale-95 transform',
-            message.trim() && !disabled && 'hover:scale-105'
+            'flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-md',
+            'bg-[#262626] dark:bg-[#3F3F3F] text-white',
+            'hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] transition-all duration-200',
+            'active:scale-95',
+            (disabled || !message.trim()) && 'opacity-50 cursor-not-allowed'
           )}
           aria-label="메시지 전송"
         >
           <Send className="w-5 h-5" />
-        </Button>
+        </button>
       </form>
       
       {/* Helper Text */}

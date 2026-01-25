@@ -15,6 +15,7 @@ interface ChatFormRendererProps {
   isSubmitting?: boolean;
   isSubmitted?: boolean;
   messageSubmitted?: boolean; // 메시지 레벨의 제출 상태
+  initialData?: Record<string, any>; // 저장된 폼 데이터
 }
 
 export function ChatFormRenderer({
@@ -23,9 +24,10 @@ export function ChatFormRenderer({
   onCancel,
   isSubmitting = false,
   isSubmitted = false,
-  messageSubmitted = false
+  messageSubmitted = false,
+  initialData
 }: ChatFormRendererProps) {
-  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [formData, setFormData] = useState<Record<string, any>>(initialData || {});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLocalSubmitted, setIsLocalSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -99,21 +101,20 @@ export function ChatFormRenderer({
       required: field.required,
       disabled: isDisabled,
       className: cn(
-        'w-full px-3 py-2 rounded-md',
+        'w-full px-3 py-2 rounded-none',
         inputGrayBgStyles,
         focusStyles,
-        error && '!border-red-500 dark:!border-red-400',
-        (isSubmitted || isLocalSubmitted) && '!border-green-500 dark:!border-green-400'
+        error && '!border-red-500 dark:!border-red-400'
       )
     };
 
     return (
       <div key={field.name} className="space-y-1">
-        <label 
+        <label
           htmlFor={field.name}
           className={cn(
             'block text-sm font-medium',
-            error ? 'text-red-700 dark:text-red-400' : (isSubmitted || isLocalSubmitted) ? 'text-green-700 dark:text-green-400' : 'text-gray-900 dark:text-[#F0F0F0]'
+            error ? 'text-red-700 dark:text-red-400' : 'text-gray-900 dark:text-[#F0F0F0]'
           )}
         >
           {field.label}
@@ -128,9 +129,10 @@ export function ChatFormRenderer({
             options={field.options?.map(option => ({ value: option.value, label: option.label })) || []}
             placeholder="선택해주세요"
             triggerClassName={cn(
-              error && '!border-red-500 dark:!border-red-400',
-              (isSubmitted || isLocalSubmitted) && '!border-green-500 dark:!border-green-400'
+              'rounded-none',
+              error && '!border-red-500 dark:!border-red-400'
             )}
+            contentClassName="rounded-none"
           />
         ) : field.type === 'textarea' ? (
           <textarea
@@ -159,51 +161,36 @@ export function ChatFormRenderer({
     );
   };
 
-  if (isSubmitted || isLocalSubmitted || messageSubmitted) {
-    return (
-      <div className={cn(
-        'p-4 rounded-lg border border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20',
-        'animate-in fade-in-0 zoom-in-95 duration-300'
-      )}>
-        <div className="flex items-center space-x-2 text-green-800 dark:text-green-200 mb-2">
-          <Check className="w-5 h-5" />
-          <h4 className="font-medium">제출 완료</h4>
-        </div>
-        <p className="text-sm text-green-700 dark:text-green-300">
-          {formConfig.success_message || '요청이 접수되었습니다. 확인 후 처리해 드리겠습니다.'}
-        </p>
-      </div>
-    );
-  }
+  const isCompleted = isSubmitted || isLocalSubmitted || messageSubmitted;
 
   return (
     <div className={cn(
-      'p-4 rounded-lg border shadow-sm',
+      'p-4 rounded-none border shadow-sm',
       'animate-in fade-in-0 slide-in-from-bottom-2 duration-300',
-      (isSubmitted || isLocalSubmitted)
-        ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20'
+      isCompleted
+        ? 'border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] opacity-60'
         : isSubmitting
           ? 'border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]'
           : 'border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D]',
-      (isSubmitting || isLocalSubmitted) && 'pointer-events-none'
+      isCompleted && 'pointer-events-none'
     )}>
       <form onSubmit={handleSubmit} className="space-y-4">
         {formConfig.fields.map(renderField)}
 
         {/* Submit Error Display */}
         {submitError && (
-          <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 animate-in fade-in-0 slide-in-from-top-1">
+          <div className="p-3 rounded-none bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 animate-in fade-in-0 slide-in-from-top-1">
             <p className="text-sm text-red-700 dark:text-red-300">{submitError}</p>
           </div>
         )}
 
         <div className="flex justify-end space-x-3 pt-2">
-          {onCancel && (
+          {onCancel && !isCompleted && (
             <Button
               type="button"
               variant="outline"
               onClick={onCancel}
-              disabled={isSubmitting || isLocalSubmitted}
+              disabled={isSubmitting || isCompleted}
             >
               <X className="w-4 h-4 mr-1" />
               취소
@@ -212,13 +199,18 @@ export function ChatFormRenderer({
 
           <Button
             type="submit"
-            variant="primary"
-            disabled={isSubmitting || isLocalSubmitted}
+            variant={isCompleted ? 'secondary' : 'primary'}
+            disabled={isSubmitting || isCompleted}
           >
             {isSubmitting ? (
               <>
                 <Spinner size="xs" />
                 <span className="ml-2">제출 중...</span>
+              </>
+            ) : isCompleted ? (
+              <>
+                <Check className="w-4 h-4" />
+                <span className="ml-2">제출 완료</span>
               </>
             ) : (
               <>
