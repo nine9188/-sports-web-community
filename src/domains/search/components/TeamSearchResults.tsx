@@ -6,7 +6,8 @@ import { useState, useCallback, useMemo } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import type { TeamSearchResult } from '../types'
 import { trackSearchResultClick } from '../actions/searchLogs'
-import { getTeamMatches, type TeamMatch } from '../actions/teamMatches'
+// 통합된 함수 사용 (search/actions/teamMatches.ts 대신)
+import { getTeamMatchesRecent, type Match } from '@/domains/livescore/actions/teams/matches'
 import TeamMatchDropdownButton, { TeamMatchExpandedRow } from './TeamMatchDropdown'
 import Spinner from '@/shared/components/Spinner';
 import { Button } from '@/shared/components/ui';
@@ -17,7 +18,7 @@ const CACHE_DURATION = 5 * 60 * 1000 // 5분
 // 팀 매치 캐시 타입
 interface TeamMatchCache {
   [teamId: number]: {
-    data: TeamMatch[]
+    data: Match[]
     timestamp: number
     loading: boolean
   }
@@ -118,9 +119,9 @@ export default function TeamSearchResults({
     }))
 
     try {
-      const result = await getTeamMatches(team.team_id, 5) // 최근 5경기만
-      
-      if (result.success) {
+      const result = await getTeamMatchesRecent(team.team_id, 5) // 최근 5경기만
+
+      if (result.success && result.data) {
         // 캐시에 데이터 저장
         setTeamMatchCache(prev => ({
           ...prev,

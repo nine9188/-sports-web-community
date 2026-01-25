@@ -1,4 +1,4 @@
-import { fetchMatchesByDate, MatchData } from '@/domains/livescore/actions/footballApi';
+import { fetchMatchesByDateCached, MatchData } from '@/domains/livescore/actions/footballApi';
 import LiveScoreView from '@/domains/livescore/components/football/MainView/LiveScoreView';
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 import { getTeamById } from '@/domains/livescore/constants/teams/index';
@@ -39,7 +39,8 @@ export default async function FootballLiveScorePage({
   
   try {
     // Server Action을 직접 호출하여 데이터 가져오기
-    const matchesData = await fetchMatchesByDate(dateParam);
+    // 캐시된 버전 사용 - layout.tsx와 같은 날짜면 데이터 공유 (API 중복 호출 방지)
+    const matchesData = await fetchMatchesByDateCached(dateParam);
     
     // MatchData 타입을 클라이언트 컴포넌트의 Match 타입으로 변환 (+ 팀/리그 정보 매핑)
     const processedMatches: Match[] = matchesData.map((match: MatchData) => {

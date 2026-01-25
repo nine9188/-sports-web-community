@@ -18,7 +18,7 @@ import LiveScoreModal from './livescoremodal';
 import UserProfileClient from './UserProfileClient';
 import MobileHamburgerModal from './MobileHamburgerModal';
 import RecentlyVisited from './RecentlyVisited';
-import { MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
+import { TodayMatchesResult } from '@/domains/livescore/actions/footballApi';
 import { NotificationBell } from '@/domains/notifications/components';
 import { Button } from '@/shared/components/ui';
 
@@ -29,7 +29,7 @@ type HeaderClientProps = {
   boards: Board[];
   isAdmin?: boolean;
   renderMode?: 'full' | 'logo-and-mobile' | 'navigation';
-  liveScoreData?: MultiDayMatchesResult;
+  liveScoreData?: TodayMatchesResult;
   totalPostCount?: number;
 };
 

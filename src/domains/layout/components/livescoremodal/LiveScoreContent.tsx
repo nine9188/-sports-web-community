@@ -1,14 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MatchData, MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
+import { useQuery } from '@tanstack/react-query';
+import { MatchData, TodayMatchesResult, fetchMatchesByDateLabel } from '@/domains/livescore/actions/footballApi';
 import { Trophy } from 'lucide-react';
 import MatchItem from './MatchItem';
+import Spinner from '@/shared/components/Spinner';
 
 interface LiveScoreContentProps {
   selectedDate: 'yesterday' | 'today' | 'tomorrow';
   onClose: () => void;
-  initialData?: MultiDayMatchesResult;
+  initialData?: TodayMatchesResult;
 }
 
 // 리그 우선순위 (숫자가 낮을수록 우선)
@@ -67,41 +69,103 @@ function sortByStatus(matches: MatchData[]): MatchData[] {
   });
 }
 
+// 날짜 라벨 변환
+const getDateLabel = (date: 'yesterday' | 'today' | 'tomorrow'): string => {
+  switch (date) {
+    case 'yesterday': return '어제';
+    case 'today': return '오늘';
+    case 'tomorrow': return '내일';
+  }
+};
+
 export default function LiveScoreContent({ selectedDate, onClose, initialData }: LiveScoreContentProps) {
-  // initialData가 있으면 그걸 계속 사용 (3일치 모두 포함)
-  const cachedData = initialData?.success && initialData.data ? initialData.data : null;
+  // 오늘 데이터는 SSR initialData에서 가져옴
+  const todayMatches = initialData?.success && initialData.data?.today?.matches
+    ? initialData.data.today.matches
+    : [];
 
-  const [matches, setMatches] = useState<MatchData[]>(() => {
-    if (cachedData) {
-      const dateMatches = cachedData['today']?.matches || [];
-      return sortByStatus(
-        dateMatches.map(match => ({
-          ...match,
-          displayDate: '오늘'
-        }))
-      );
-    }
-    return [];
+  // 어제/내일 데이터는 React Query로 lazy load (탭 선택 시에만 fetch)
+  const { data: yesterdayData, isLoading: isLoadingYesterday, error: errorYesterday } = useQuery({
+    queryKey: ['livescore-modal', 'yesterday'],
+    queryFn: () => fetchMatchesByDateLabel('yesterday'),
+    enabled: selectedDate === 'yesterday', // 어제 탭 선택 시에만 fetch
+    staleTime: 5 * 60 * 1000, // 5분
+    gcTime: 10 * 60 * 1000, // 10분
   });
-  const [error, setError] = useState(false);
 
-  // selectedDate 변경 시 cachedData에서 해당 날짜 데이터 가져오기
+  const { data: tomorrowData, isLoading: isLoadingTomorrow, error: errorTomorrow } = useQuery({
+    queryKey: ['livescore-modal', 'tomorrow'],
+    queryFn: () => fetchMatchesByDateLabel('tomorrow'),
+    enabled: selectedDate === 'tomorrow', // 내일 탭 선택 시에만 fetch
+    staleTime: 5 * 60 * 1000, // 5분
+    gcTime: 10 * 60 * 1000, // 10분
+  });
+
+  // 현재 선택된 탭에 따라 데이터 결정
+  const [matches, setMatches] = useState<MatchData[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
   useEffect(() => {
-    if (cachedData) {
-      const dateMatches = cachedData[selectedDate]?.matches || [];
-      const dateLabel = selectedDate === 'yesterday' ? '어제' : selectedDate === 'today' ? '오늘' : '내일';
-      const sortedMatches = sortByStatus(
-        dateMatches.map(match => ({
-          ...match,
-          displayDate: dateLabel
-        }))
-      );
-      setMatches(sortedMatches);
-      setError(false);
-    }
-  }, [selectedDate, cachedData]);
+    const dateLabel = getDateLabel(selectedDate);
 
-  if (!cachedData && error) {
+    switch (selectedDate) {
+      case 'today':
+        // 오늘은 SSR 데이터 사용
+        setMatches(sortByStatus(
+          todayMatches.map(match => ({ ...match, displayDate: dateLabel }))
+        ));
+        setIsLoading(false);
+        setHasError(false);
+        break;
+
+      case 'yesterday':
+        if (isLoadingYesterday) {
+          setIsLoading(true);
+          setHasError(false);
+        } else if (errorYesterday || !yesterdayData?.success) {
+          setIsLoading(false);
+          setHasError(true);
+          setMatches([]);
+        } else {
+          setMatches(sortByStatus(
+            (yesterdayData?.matches || []).map(match => ({ ...match, displayDate: dateLabel }))
+          ));
+          setIsLoading(false);
+          setHasError(false);
+        }
+        break;
+
+      case 'tomorrow':
+        if (isLoadingTomorrow) {
+          setIsLoading(true);
+          setHasError(false);
+        } else if (errorTomorrow || !tomorrowData?.success) {
+          setIsLoading(false);
+          setHasError(true);
+          setMatches([]);
+        } else {
+          setMatches(sortByStatus(
+            (tomorrowData?.matches || []).map(match => ({ ...match, displayDate: dateLabel }))
+          ));
+          setIsLoading(false);
+          setHasError(false);
+        }
+        break;
+    }
+  }, [selectedDate, todayMatches, yesterdayData, tomorrowData, isLoadingYesterday, isLoadingTomorrow, errorYesterday, errorTomorrow]);
+
+  // 로딩 중
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-32">
+        <Spinner size="md" />
+      </div>
+    );
+  }
+
+  // 에러
+  if (hasError) {
     return (
       <div className="flex flex-col items-center justify-center h-32 text-gray-500">
         <Trophy className="h-8 w-8 mb-2" />
@@ -110,6 +174,7 @@ export default function LiveScoreContent({ selectedDate, onClose, initialData }:
     );
   }
 
+  // 경기 없음
   if (matches.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-32 text-gray-500">

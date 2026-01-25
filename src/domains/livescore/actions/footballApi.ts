@@ -161,6 +161,19 @@ export interface MultiDayMatchesResult {
   error?: string;
 }
 
+// 오늘 경기만 포함하는 결과 타입 (모달 최적화용)
+export interface TodayMatchesResult {
+  success: boolean;
+  date?: string;
+  meta?: {
+    totalMatches: number;
+  };
+  data?: {
+    today: { matches: MatchData[] };
+  };
+  error?: string;
+}
+
 export const fetchFromFootballApi = async (endpoint: string, params: Record<string, string | number> = {}) => {
   // URL 파라미터 구성
   const queryParams = new URLSearchParams();
@@ -283,6 +296,11 @@ export async function fetchMatchesByDate(date: string): Promise<MatchData[]> {
 
 import { cache } from 'react';
 
+// 특정 날짜의 경기 정보 가져오기 (캐시 적용 버전) - 같은 렌더 사이클 내 중복 호출 방지
+export const fetchMatchesByDateCached = cache(async (date: string): Promise<MatchData[]> => {
+  return fetchMatchesByDate(date);
+});
+
 // 어제, 오늘, 내일 경기 데이터를 한 번에 가져오기 - cache 적용
 export const fetchMultiDayMatches = cache(async (): Promise<MultiDayMatchesResult> => {
   // KST 기준 날짜 문자열 생성 유틸 (yyyy-MM-dd)
@@ -298,11 +316,11 @@ export const fetchMultiDayMatches = cache(async (): Promise<MultiDayMatchesResul
   const tomorrowFormatted = toKstDateString(new Date(nowUtc.getTime() + 24 * 60 * 60 * 1000));
 
   try {
-    // 병렬로 3일치 데이터 가져오기
+    // 병렬로 3일치 데이터 가져오기 - 캐시된 버전 사용
     const [yesterdayMatches, todayMatches, tomorrowMatches] = await Promise.all([
-      fetchMatchesByDate(yesterdayFormatted),
-      fetchMatchesByDate(todayFormatted),
-      fetchMatchesByDate(tomorrowFormatted)
+      fetchMatchesByDateCached(yesterdayFormatted),
+      fetchMatchesByDateCached(todayFormatted),
+      fetchMatchesByDateCached(tomorrowFormatted)
     ]);
 
     const totalMatches = yesterdayMatches.length + todayMatches.length + tomorrowMatches.length;
@@ -333,6 +351,84 @@ export const fetchMultiDayMatches = cache(async (): Promise<MultiDayMatchesResul
     };
   }
 });
+
+// 오늘 경기만 가져오기 (모달 최적화용) - cache 적용
+export const fetchTodayMatchesOnly = cache(async (): Promise<TodayMatchesResult> => {
+  // KST 기준 오늘 날짜 문자열 생성
+  const toKstDateString = (baseUtc: Date) => {
+    const kst = new Date(baseUtc.getTime() + 9 * 60 * 60 * 1000);
+    return kst.toISOString().split('T')[0];
+  };
+
+  const nowUtc = new Date();
+  const todayFormatted = toKstDateString(nowUtc);
+
+  try {
+    // 캐시된 버전 사용 - page.tsx와 같은 데이터 공유
+    const todayMatches = await fetchMatchesByDateCached(todayFormatted);
+
+    const result: TodayMatchesResult = {
+      success: true,
+      date: todayFormatted,
+      meta: {
+        totalMatches: todayMatches.length
+      },
+      data: {
+        today: { matches: todayMatches }
+      }
+    };
+
+    return JSON.parse(JSON.stringify(result));
+  } catch {
+    return {
+      success: false,
+      error: '데이터를 가져오는데 실패했습니다.'
+    };
+  }
+});
+
+// 특정 날짜의 경기 가져오기 (어제/내일 lazy load용)
+export async function fetchMatchesByDateLabel(dateLabel: 'yesterday' | 'today' | 'tomorrow'): Promise<{
+  success: boolean;
+  date?: string;
+  matches?: MatchData[];
+  error?: string;
+}> {
+  const toKstDateString = (baseUtc: Date) => {
+    const kst = new Date(baseUtc.getTime() + 9 * 60 * 60 * 1000);
+    return kst.toISOString().split('T')[0];
+  };
+
+  const nowUtc = new Date();
+  let targetDate: string;
+
+  switch (dateLabel) {
+    case 'yesterday':
+      targetDate = toKstDateString(new Date(nowUtc.getTime() - 24 * 60 * 60 * 1000));
+      break;
+    case 'today':
+      targetDate = toKstDateString(nowUtc);
+      break;
+    case 'tomorrow':
+      targetDate = toKstDateString(new Date(nowUtc.getTime() + 24 * 60 * 60 * 1000));
+      break;
+  }
+
+  try {
+    // 캐시된 버전 사용 - 같은 날짜면 데이터 공유
+    const matches = await fetchMatchesByDateCached(targetDate);
+    return {
+      success: true,
+      date: targetDate,
+      matches: JSON.parse(JSON.stringify(matches))
+    };
+  } catch {
+    return {
+      success: false,
+      error: '데이터를 가져오는데 실패했습니다.'
+    };
+  }
+}
 
 // 위젯용 빅매치 필터링 함수
 export const fetchBigMatches = cache(async (): Promise<MultiDayMatchesResult> => {

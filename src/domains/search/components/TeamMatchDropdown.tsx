@@ -3,7 +3,8 @@
 import Image from 'next/image'
 import { useState, useCallback } from 'react'
 import type { TeamSearchResult } from '../types'
-import { getTeamMatches, type TeamMatch } from '../actions/teamMatches'
+// 통합된 함수 사용 (search/actions/teamMatches.ts 대신)
+import { getTeamMatchesRecent, type Match } from '@/domains/livescore/actions/teams/matches'
 import { getLeagueName } from '@/domains/livescore/constants/league-mappings'
 import { getTeamById } from '@/domains/livescore/constants/teams'
 import Spinner from '@/shared/components/Spinner';
@@ -15,7 +16,7 @@ const CACHE_DURATION = 5 * 60 * 1000 // 5분
 // 팀 매치 캐시 타입
 interface TeamMatchCache {
   [teamId: number]: {
-    data: TeamMatch[]
+    data: Match[]
     timestamp: number
     loading: boolean
   }
@@ -30,7 +31,7 @@ interface TeamMatchDropdownButtonProps {
 interface TeamMatchExpandedRowProps {
   team: TeamSearchResult
   isExpanded: boolean
-  matches: TeamMatch[]
+  matches: Match[]
   loading: boolean
 }
 
@@ -92,9 +93,9 @@ export function TeamMatchDropdownButton({
     }))
 
     try {
-      const result = await getTeamMatches(team.team_id, 5) // 최근 5경기만
-      
-      if (result.success) {
+      const result = await getTeamMatchesRecent(team.team_id, 5) // 최근 5경기만
+
+      if (result.success && result.data) {
         // 캐시에 데이터 저장
         setTeamMatchCache(prev => ({
           ...prev,
@@ -208,7 +209,7 @@ export function TeamMatchExpandedRow({
 export default TeamMatchDropdownButton
 
 // 개별 매치 아이템 컴포넌트
-function MatchItem({ match, teamId }: { match: TeamMatch; teamId: number }) {
+function MatchItem({ match, teamId }: { match: Match; teamId: number }) {
   const isHome = match.teams.home.id === teamId
   const opponent = isHome ? match.teams.away : match.teams.home
   const teamScore = isHome ? match.goals.home : match.goals.away

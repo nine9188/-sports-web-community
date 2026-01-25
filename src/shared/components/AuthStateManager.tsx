@@ -10,7 +10,7 @@ import ProfileSidebar from '@/domains/sidebar/components/ProfileSidebar';
 import { UniversalChatbot } from '@/domains/chatbot/components/UniversalChatbot';
 import { HeaderUserData, FullUserDataWithSession } from '@/shared/types/user';
 import { Board } from '@/domains/layout/types/board';
-import { MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
+import { TodayMatchesResult } from '@/domains/livescore/actions/footballApi';
 
 // AuthStateManager를 React.memo로 최적화
 const AuthStateManager = React.memo(function AuthStateManager({
@@ -40,7 +40,7 @@ const AuthStateManager = React.memo(function AuthStateManager({
   headerBoards?: Board[],
   headerIsAdmin?: boolean,
   headerTotalPostCount?: number,
-  liveScoreData?: MultiDayMatchesResult,
+  liveScoreData?: TodayMatchesResult,
   fullUserData?: FullUserDataWithSession | null,
   isOpen: boolean,
   onClose: () => void,

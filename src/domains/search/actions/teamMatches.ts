@@ -1,5 +1,15 @@
 'use server'
 
+/**
+ * @deprecated 이 파일의 함수들은 더 이상 사용되지 않습니다.
+ * 대신 '@/domains/livescore/actions/teams/matches'의 통합 함수를 사용하세요:
+ *
+ * - getTeamMatches → getTeamMatchesRecent 또는 fetchTeamMatchesUnified
+ * - getMatchDetails → fetchMatchDetails (@/domains/livescore/actions/footballApi)
+ *
+ * @see {@link @/domains/livescore/actions/teams/matches}
+ */
+
 // footballApi.ts의 함수 import
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi'
 
@@ -73,7 +83,10 @@ export interface TeamMatch {
   }
 }
 
-// 팀의 최근/예정 경기 가져오기
+/**
+ * 팀의 최근/예정 경기 가져오기
+ * @deprecated getTeamMatchesRecent from '@/domains/livescore/actions/teams/matches' 사용
+ */
 export async function getTeamMatches(teamId: number, limit: number = 10): Promise<{
   success: boolean
   data: TeamMatch[]

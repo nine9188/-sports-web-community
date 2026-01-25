@@ -8,13 +8,15 @@ import { fetchStandingsData } from '@/domains/sidebar/actions/football';
 import LeagueStandings from '@/domains/sidebar/components/league/LeagueStandings';
 import { RightSidebar } from '@/domains/sidebar/components';
 import { getBoardsForNavigation } from '@/domains/layout/actions';
-import { fetchMultiDayMatches } from '@/domains/livescore/actions/footballApi';
+import { fetchTodayMatchesOnly } from '@/domains/livescore/actions/footballApi';
 import { generatePageMetadata } from '@/shared/utils/metadataNew';
 import { getUIThemeSettings } from '@/domains/ui-theme/actions';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
 import { siteConfig } from '@/shared/config';
 import { getFullUserData } from '@/shared/actions/user';
 import Script from 'next/script';
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 // 동적 렌더링 설정
 export const dynamic = 'force-dynamic';
@@ -78,11 +80,12 @@ export default async function RootLayout({
   // 리그 순위 컴포넌트 생성
   const leagueStandingsComponent = <LeagueStandings initialLeague="premier" initialStandings={standingsData} />;
 
-  // 통합 사용자 데이터, 게시판, 라이브스코어, UI 테마, SEO 설정 병렬 fetch
+  // 통합 사용자 데이터, 게시판, 라이브스코어(오늘만), UI 테마, SEO 설정 병렬 fetch
+  // 최적화: 어제/내일 데이터는 모달에서 lazy load (API 3회 → 1회)
   const [fullUserData, headerBoardsData, liveScoreData, uiTheme, seoSettings] = await Promise.all([
     getFullUserData(),
     getBoardsForNavigation({ includeTotalPostCount: true }),
-    fetchMultiDayMatches().catch(() => undefined),
+    fetchTodayMatchesOnly().catch(() => undefined),
     getUIThemeSettings(),
     getSeoSettings()
   ]);
@@ -166,6 +169,9 @@ export default async function RootLayout({
         >
           {children}
         </RootLayoutClient>
+        {/* Vercel Analytics & Speed Insights */}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
