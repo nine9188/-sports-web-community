@@ -71,7 +71,8 @@
       "mcp__sentry__find_releases",
       "Bash(npx next build)",
       "Bash(node node_modules/.bin/next build:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(xxd:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

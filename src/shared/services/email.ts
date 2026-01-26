@@ -17,6 +17,56 @@ interface EmailTemplate {
   html: string;
 }
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://4590football.com';
+const LOGO_WHITE_URL = `${SITE_URL}/logo/4590football-logo-white.png`;
+
+/**
+ * 다크모드 대응 이메일 레이아웃 래퍼
+ */
+function emailLayout(content: string): string {
+  return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light only">
+  <meta name="supported-color-schemes" content="light only">
+  <style>
+    :root { color-scheme: light only; }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f3f4f6;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f3f4f6;">
+    <tr>
+      <td align="center" style="padding: 20px 0;">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; width: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; border-radius: 8px; overflow: hidden;">
+          <!-- Header -->
+          <tr>
+            <td align="center" style="background-color: #1f2937; padding: 32px 20px;">
+              <img src="${LOGO_WHITE_URL}" alt="4590 football" width="160" style="display: block; height: auto; margin: 0 auto;" />
+            </td>
+          </tr>
+          <!-- Content -->
+          <tr>
+            <td>
+              ${content}
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 20px; background-color: #f9fafb; text-align: center;">
+              <p style="margin: 0; color: #9ca3af; font-size: 12px;">&copy; 2025 4590 football. All rights reserved.</p>
+              <p style="margin: 5px 0 0 0; color: #9ca3af; font-size: 12px;">이 이메일은 자동으로 발송되었습니다.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
 /**
  * 이메일 발송 기본 함수 (Brevo SMTP 사용)
  */
@@ -41,18 +91,12 @@ async function sendEmail({ to, subject, html }: EmailTemplate) {
 }
 
 /**
- * 아이디 찾기 인증 코드 이메일 발송
+ * 아이디 찾기 결과 이메일 발송
  */
 export async function sendIdRecoveryEmail(email: string, verificationCode: string, username: string) {
   const subject = '[4590 football] 아이디 찾기 - 인증코드';
-  const html = `
-    <div style="max-width: 600px; margin: 0 auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-      <div style="background: linear-gradient(135deg, #374151 0%, #4b5563 100%); padding: 40px 20px; text-align: center;">
-        <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">4590 football</h1>
-        <p style="color: #d1d5db; margin: 10px 0 0 0; font-size: 16px;">스포츠 커뮤니티</p>
-      </div>
-
-      <div style="padding: 40px 20px; background: white;">
+  const html = emailLayout(`
+      <div style="padding: 40px 24px; background: white;">
         <h2 style="color: #1f2937; margin: 0 0 20px 0; font-size: 24px;">아이디 찾기 결과</h2>
 
         <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 20px 0;">
@@ -67,19 +111,13 @@ export async function sendIdRecoveryEmail(email: string, verificationCode: strin
         </div>
 
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${process.env.NEXT_PUBLIC_SITE_URL}/signin"
+          <a href="${SITE_URL}/signin"
              style="display: inline-block; background: #374151; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">
             로그인하기
           </a>
         </div>
       </div>
-
-      <div style="padding: 20px; background: #f9fafb; text-align: center; color: #6b7280; font-size: 12px;">
-        <p style="margin: 0;">© 2024 4590 football. All rights reserved.</p>
-        <p style="margin: 5px 0 0 0;">이 이메일은 자동으로 발송되었습니다.</p>
-      </div>
-    </div>
-  `;
+  `);
 
   return sendEmail({ to: email, subject, html });
 }
@@ -88,17 +126,11 @@ export async function sendIdRecoveryEmail(email: string, verificationCode: strin
  * 비밀번호 재설정 이메일 발송
  */
 export async function sendPasswordResetEmail(email: string, resetToken: string, username: string) {
-  const resetUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/help/reset-password?token=${resetToken}`;
+  const resetUrl = `${SITE_URL}/help/reset-password?token=${resetToken}`;
   const subject = '[4590 football] 비밀번호 재설정 요청';
 
-  const html = `
-    <div style="max-width: 600px; margin: 0 auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-      <div style="background: linear-gradient(135deg, #374151 0%, #4b5563 100%); padding: 40px 20px; text-align: center;">
-        <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">4590 football</h1>
-        <p style="color: #d1d5db; margin: 10px 0 0 0; font-size: 16px;">스포츠 커뮤니티</p>
-      </div>
-
-      <div style="padding: 40px 20px; background: white;">
+  const html = emailLayout(`
+      <div style="padding: 40px 24px; background: white;">
         <h2 style="color: #1f2937; margin: 0 0 20px 0; font-size: 24px;">비밀번호 재설정</h2>
 
         <p style="color: #6b7280; line-height: 1.6; margin: 0 0 20px 0;">
@@ -132,13 +164,7 @@ export async function sendPasswordResetEmail(email: string, resetToken: string, 
           <span style="color: #374151; word-break: break-all;">${resetUrl}</span>
         </p>
       </div>
-
-      <div style="padding: 20px; background: #f9fafb; text-align: center; color: #6b7280; font-size: 12px;">
-        <p style="margin: 0;">© 2024 4590 football. All rights reserved.</p>
-        <p style="margin: 5px 0 0 0;">이 이메일은 자동으로 발송되었습니다.</p>
-      </div>
-    </div>
-  `;
+  `);
 
   return sendEmail({ to: email, subject, html });
 }
@@ -147,17 +173,11 @@ export async function sendPasswordResetEmail(email: string, resetToken: string, 
  * 회원가입 이메일 인증 발송
  */
 export async function sendSignupVerificationEmail(email: string, verificationToken: string, username: string) {
-  const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/verify-email?token=${verificationToken}`;
+  const verifyUrl = `${SITE_URL}/auth/verify-email?token=${verificationToken}`;
   const subject = '[4590 football] 회원가입 이메일 인증';
 
-  const html = `
-    <div style="max-width: 600px; margin: 0 auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-      <div style="background: linear-gradient(135deg, #374151 0%, #4b5563 100%); padding: 40px 20px; text-align: center;">
-        <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">4590 football</h1>
-        <p style="color: #d1d5db; margin: 10px 0 0 0; font-size: 16px;">스포츠 커뮤니티</p>
-      </div>
-
-      <div style="padding: 40px 20px; background: white;">
+  const html = emailLayout(`
+      <div style="padding: 40px 24px; background: white;">
         <h2 style="color: #1f2937; margin: 0 0 20px 0; font-size: 24px;">회원가입을 환영합니다!</h2>
 
         <p style="color: #6b7280; line-height: 1.6; margin: 0 0 20px 0;">
@@ -192,13 +212,7 @@ export async function sendSignupVerificationEmail(email: string, verificationTok
           <span style="color: #374151; word-break: break-all;">${verifyUrl}</span>
         </p>
       </div>
-
-      <div style="padding: 20px; background: #f9fafb; text-align: center; color: #6b7280; font-size: 12px;">
-        <p style="margin: 0;">© 2024 4590 football. All rights reserved.</p>
-        <p style="margin: 5px 0 0 0;">이 이메일은 자동으로 발송되었습니다.</p>
-      </div>
-    </div>
-  `;
+  `);
 
   return sendEmail({ to: email, subject, html });
 }
@@ -209,14 +223,8 @@ export async function sendSignupVerificationEmail(email: string, verificationTok
 export async function sendVerificationCodeEmail(email: string, verificationCode: string) {
   const subject = '[4590 football] 아이디 찾기 - 인증코드';
 
-  const html = `
-    <div style="max-width: 600px; margin: 0 auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-      <div style="background: linear-gradient(135deg, #374151 0%, #4b5563 100%); padding: 40px 20px; text-align: center;">
-        <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">4590 football</h1>
-        <p style="color: #d1d5db; margin: 10px 0 0 0; font-size: 16px;">스포츠 커뮤니티</p>
-      </div>
-
-      <div style="padding: 40px 20px; background: white;">
+  const html = emailLayout(`
+      <div style="padding: 40px 24px; background: white;">
         <h2 style="color: #1f2937; margin: 0 0 20px 0; font-size: 24px;">아이디 찾기 인증</h2>
 
         <p style="color: #6b7280; line-height: 1.6; margin: 0 0 20px 0;">
@@ -237,13 +245,7 @@ export async function sendVerificationCodeEmail(email: string, verificationCode:
           </p>
         </div>
       </div>
-
-      <div style="padding: 20px; background: #f9fafb; text-align: center; color: #6b7280; font-size: 12px;">
-        <p style="margin: 0;">© 2024 4590 football. All rights reserved.</p>
-        <p style="margin: 5px 0 0 0;">이 이메일은 자동으로 발송되었습니다.</p>
-      </div>
-    </div>
-  `;
+  `);
 
   return sendEmail({ to: email, subject, html });
 }
