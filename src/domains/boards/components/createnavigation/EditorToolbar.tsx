@@ -41,7 +41,6 @@ interface EditorToolbarProps {
   showSocialModal: boolean;
   showEntityModal: boolean;
   handleToggleDropdown: (dropdown: 'image' | 'link' | 'youtube' | 'video' | 'match' | 'social' | 'entity') => void;
-  handleFileUpload: (file: File, caption: string) => Promise<void>;
   handleAddImage: (url: string, caption?: string) => void;
   handleAddLink: (url: string, text?: string) => void;
   handleAddYoutube: (url: string, caption?: string) => void;
@@ -73,7 +72,6 @@ export default function EditorToolbar({
   showSocialModal,
   showEntityModal,
   handleToggleDropdown,
-  handleFileUpload,
   handleAddImage,
   handleAddLink,
   handleAddYoutube,
@@ -173,9 +171,8 @@ export default function EditorToolbar({
         
         {showImageModal && (
           <Suspense fallback={<FormLoadingSpinner />}>
-            <ImageUploadForm 
+            <ImageUploadForm
               onCancel={() => closeModal('image')}
-              onFileUpload={handleFileUpload}
               onImageUrlAdd={handleAddImage}
               isOpen={showImageModal}
             />

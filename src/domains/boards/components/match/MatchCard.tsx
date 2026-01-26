@@ -6,6 +6,7 @@ import { useTheme } from 'next-themes';
 import type { MatchCardProps } from '@/shared/types/matchCard';
 import { getStatusInfo, DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
 import { getTeamById } from '@teams';
+import { LEAGUE_NAMES_MAP } from '@/domains/livescore/constants/league-mappings';
 
 const SUPABASE_URL = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co';
 
@@ -43,6 +44,10 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
   const homeTeamName = homeTeamMapping?.name_ko || homeTeam.name;
   const awayTeamName = awayTeamMapping?.name_ko || awayTeam.name;
 
+  // 리그 한국어 이름 매핑
+  const leagueId = typeof league.id === 'string' ? parseInt(league.id, 10) : league.id;
+  const leagueName = (leagueId && LEAGUE_NAMES_MAP[leagueId]) || league.name;
+
   // 통합 유틸리티 사용
   const statusInfo = getStatusInfo(status);
   const statusText = statusInfo.text;
@@ -63,14 +68,14 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
             <div className="league-logo-box">
               <img
                 src={leagueLogo}
-                alt={league.name}
+                alt={leagueName}
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}
               />
             </div>
           )}
-          <span className="league-name">{league.name}</span>
+          <span className="league-name">{leagueName}</span>
         </div>
       </div>
 

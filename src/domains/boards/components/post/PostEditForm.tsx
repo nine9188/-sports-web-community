@@ -235,7 +235,6 @@ export default function PostEditForm({
     showSocialModal,
     showEntityModal,
     handleToggleDropdown,
-    handleFileUpload,
     handleAddImage,
     handleAddYoutube,
     handleAddVideo,
@@ -246,8 +245,7 @@ export default function PostEditForm({
     handleAddPlayer
   } = useEditorHandlers({
     editor,
-    extensionsLoaded,
-    supabase
+    extensionsLoaded
   });
 
   useEffect(() => {
@@ -677,7 +675,6 @@ export default function PostEditForm({
               showSocialModal={showSocialModal}
               showEntityModal={showEntityModal}
               handleToggleDropdown={handleToggleDropdown}
-              handleFileUpload={handleFileUpload}
               handleAddImage={handleAddImage}
               handleAddLink={handleAddLink}
               handleAddYoutube={handleAddYoutube}

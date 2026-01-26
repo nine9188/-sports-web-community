@@ -9,6 +9,7 @@
 
 import type { MatchStatus, MatchStatusInfo, ImageUrlPair } from '@/shared/types/matchCard';
 import { getTeamById } from '@/domains/livescore/constants/teams';
+import { LEAGUE_NAMES_MAP } from '@/domains/livescore/constants/league-mappings';
 
 /**
  * 다크모드 전용 이미지가 있는 리그 ID 목록
@@ -271,6 +272,10 @@ export function generateMatchCardHtml(
   const homeTeamName = homeTeamMapping?.name_ko || homeTeam.name;
   const awayTeamName = awayTeamMapping?.name_ko || awayTeam.name;
 
+  // 한글 리그명 매핑
+  const leagueId = typeof league.id === 'string' ? parseInt(league.id, 10) : league.id;
+  const leagueName = (leagueId && LEAGUE_NAMES_MAP[leagueId]) || league.name;
+
   // 이미지 URL 생성
   const leagueImages = getImageUrls(league.logo, league.id, 'leagues');
   const homeTeamImages = getImageUrls(homeTeam.logo, homeTeam.id, 'teams');
@@ -299,7 +304,8 @@ export function generateMatchCardHtml(
       statusInfo,
       dataMatchAttr,
       homeTeamName,
-      awayTeamName
+      awayTeamName,
+      leagueName
     );
   }
 
@@ -317,11 +323,11 @@ export function generateMatchCardHtml(
                 src="${leagueImages.light}"
                 data-light-src="${leagueImages.light}"
                 data-dark-src="${leagueImages.dark}"
-                alt="${league.name}"
+                alt="${leagueName}"
                 onerror="this.onerror=null;this.src='/placeholder.png';"
               />
             </div>
-            <span class="league-name">${league.name}</span>
+            <span class="league-name">${leagueName}</span>
           </div>
         </div>
 
@@ -386,7 +392,8 @@ function generateInlineStyleHtml(
   statusInfo: MatchStatusInfo,
   dataMatchAttr: string,
   homeTeamName: string,
-  awayTeamName: string
+  awayTeamName: string,
+  leagueName: string
 ): string {
   const statusStyle = statusInfo.isLive ? 'color: #059669; font-weight: 500;' : '';
 
@@ -416,11 +423,11 @@ function generateInlineStyleHtml(
               src="${leagueImages.light}"
               data-light-src="${leagueImages.light}"
               data-dark-src="${leagueImages.dark}"
-              alt="${league.name}"
+              alt="${leagueName}"
               style="width: 24px; height: 24px; object-fit: contain; margin-right: 8px;"
               onerror="this.onerror=null;this.src='/placeholder.png';"
             />
-            <span style="font-size: 14px; font-weight: 500; color: #4b5563;">${league.name}</span>
+            <span style="font-size: 14px; font-weight: 500; color: #4b5563;">${leagueName}</span>
           </div>
         </div>
 

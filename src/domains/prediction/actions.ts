@@ -3,7 +3,8 @@
 import { createClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi'
-import { getMajorLeagueIds } from '@/domains/livescore/constants/league-mappings'
+import { getMajorLeagueIds, LEAGUE_NAMES_MAP } from '@/domains/livescore/constants/league-mappings'
+import { getTeamById } from '@teams'
 
 // Predictions API 타입
 interface MinuteStats {
@@ -130,6 +131,17 @@ interface PredictionApiData {
   }>;
 }
 
+// 팀 이름 한국어 가져오기 (매핑 없으면 원본 이름 사용)
+function getTeamNameKo(teamId: number, fallbackName: string): string {
+  const team = getTeamById(teamId)
+  return team?.name_ko || fallbackName
+}
+
+// 리그 이름 한국어 가져오기 (매핑 없으면 원본 이름 사용)
+function getLeagueNameKo(leagueId: number, fallbackName: string): string {
+  return LEAGUE_NAMES_MAP[leagueId] || fallbackName
+}
+
 // API 라우트용 Supabase 클라이언트 생성
 function createSupabaseClient() {
   return createClient(
@@ -179,25 +191,26 @@ export async function fetchPredictionPreview(fixtureId: number): Promise<{
 
 // Predictions 데이터를 게시글 형식으로 변환 (상세 버전)
 function formatPredictionContent(
-  prediction: PredictionApiData,
-  match: UpcomingMatch
+  prediction: PredictionApiData
 ): string {
   const { predictions, comparison, teams, h2h } = prediction
   const homeTeam = teams.home
   const awayTeam = teams.away
+  const homeNameKo = getTeamNameKo(homeTeam.id, homeTeam.name)
+  const awayNameKo = getTeamNameKo(awayTeam.id, awayTeam.name)
 
   // 승률 예측
   const percentSection = `📊 승률 예측
-• ${homeTeam.name} 승리: ${predictions.percent.home}
+• ${homeNameKo} 승리: ${predictions.percent.home}
 • 무승부: ${predictions.percent.draw}
-• ${awayTeam.name} 승리: ${predictions.percent.away}`
+• ${awayNameKo} 승리: ${predictions.percent.away}`
 
   // 예상 골 & 언더/오버
   let goalsSection = ''
   if (predictions.goals.home && predictions.goals.away) {
     goalsSection = `\n\n⚽ 예상 골
-• ${homeTeam.name}: ${predictions.goals.home}골
-• ${awayTeam.name}: ${predictions.goals.away}골`
+• ${homeNameKo}: ${predictions.goals.home}골
+• ${awayNameKo}: ${predictions.goals.away}골`
     if (predictions.under_over) {
       goalsSection += `\n• 언더/오버: ${predictions.under_over}`
     }
@@ -211,7 +224,8 @@ function formatPredictionContent(
   // 예상 승자
   let winnerSection = ''
   if (predictions.winner?.name) {
-    winnerSection = `\n\n🏆 예상 승자: ${predictions.winner.name}`
+    const winnerNameKo = predictions.winner.id ? getTeamNameKo(predictions.winner.id, predictions.winner.name) : predictions.winner.name
+    winnerSection = `\n\n🏆 예상 승자: ${winnerNameKo}`
     if (predictions.winner.comment) {
       winnerSection += ` (${predictions.winner.comment})`
     }
@@ -220,7 +234,7 @@ function formatPredictionContent(
   // 팀 비교 분석 (7개 지표)
   const comparisonSection = `\n\n📈 팀 비교 분석 (7개 지표)
 ┌─────────────────────────────────────┐
-│ 지표           │ ${homeTeam.name.substring(0, 8).padEnd(8)} │ ${awayTeam.name.substring(0, 8).padEnd(8)} │
+│ 지표           │ ${homeNameKo.substring(0, 8).padEnd(8)} │ ${awayNameKo.substring(0, 8).padEnd(8)} │
 ├─────────────────────────────────────┤
 │ 최근 폼        │ ${comparison.form.home.padStart(8)} │ ${comparison.form.away.padStart(8)} │
 │ 공격력         │ ${comparison.att.home.padStart(8)} │ ${comparison.att.away.padStart(8)} │
@@ -234,13 +248,13 @@ function formatPredictionContent(
   // 최근 5경기 폼 (상세)
   const formSection = `\n\n🔥 최근 5경기 분석
 
-[${homeTeam.name}]
+[${homeNameKo}]
 • 폼: ${homeTeam.last_5?.form || 'N/A'}
 • 공격력: ${homeTeam.last_5?.att || 'N/A'} | 수비력: ${homeTeam.last_5?.def || 'N/A'}
 • 득점: ${homeTeam.last_5?.goals?.for?.total || 0}골 (평균 ${homeTeam.last_5?.goals?.for?.average || 0})
 • 실점: ${homeTeam.last_5?.goals?.against?.total || 0}골 (평균 ${homeTeam.last_5?.goals?.against?.average || 0})
 
-[${awayTeam.name}]
+[${awayNameKo}]
 • 폼: ${awayTeam.last_5?.form || 'N/A'}
 • 공격력: ${awayTeam.last_5?.att || 'N/A'} | 수비력: ${awayTeam.last_5?.def || 'N/A'}
 • 득점: ${awayTeam.last_5?.goals?.for?.total || 0}골 (평균 ${awayTeam.last_5?.goals?.for?.average || 0})
@@ -254,7 +268,7 @@ function formatPredictionContent(
     if (homeTeam.league?.fixtures) {
       const hf = homeTeam.league.fixtures
       const hg = homeTeam.league.goals
-      seasonSection += `\n\n[${homeTeam.name}]
+      seasonSection += `\n\n[${homeNameKo}]
 • 경기: ${hf.played?.total || 0} (홈 ${hf.played?.home || 0}, 원정 ${hf.played?.away || 0})
 • 승/무/패: ${hf.wins?.total || 0}/${hf.draws?.total || 0}/${hf.loses?.total || 0}
 • 득점: ${hg?.for?.total?.total || 0} (평균 ${hg?.for?.average?.total || '-'})
@@ -270,7 +284,7 @@ function formatPredictionContent(
     if (awayTeam.league?.fixtures) {
       const af = awayTeam.league.fixtures
       const ag = awayTeam.league.goals
-      seasonSection += `\n\n[${awayTeam.name}]
+      seasonSection += `\n\n[${awayNameKo}]
 • 경기: ${af.played?.total || 0} (홈 ${af.played?.home || 0}, 원정 ${af.played?.away || 0})
 • 승/무/패: ${af.wins?.total || 0}/${af.draws?.total || 0}/${af.loses?.total || 0}
 • 득점: ${ag?.for?.total?.total || 0} (평균 ${ag?.for?.average?.total || '-'})
@@ -302,7 +316,7 @@ function formatPredictionContent(
     }).join('\n')
 
     h2hSection = `\n\n🏆 상대전적 (최근 ${h2h.length}경기)
-• 전적: ${homeTeam.name} ${homeWins}승 / 무승부 ${draws} / ${awayTeam.name} ${awayWins}승
+• 전적: ${homeNameKo} ${homeWins}승 / 무승부 ${draws} / ${awayNameKo} ${awayWins}승
 
 ${recentH2h}`
   }
@@ -500,21 +514,23 @@ async function generateLeaguePredictionPost(
     const predictionDataList: (PredictionApiData | null)[] = []
 
     for (const match of matches) {
+      const matchHomeNameKo = getTeamNameKo(match.teams.home.id, match.teams.home.name)
+      const matchAwayNameKo = getTeamNameKo(match.teams.away.id, match.teams.away.name)
       try {
-        console.log(`🎯 경기 예측: ${match.teams.home.name} vs ${match.teams.away.name}`)
+        console.log(`🎯 경기 예측: ${matchHomeNameKo} vs ${matchAwayNameKo}`)
         const predictionData = await fetchPredictions(match.id)
 
         if (predictionData) {
-          const formattedContent = formatPredictionContent(predictionData, match)
-          predictionContents.push(`${match.teams.home.name} vs ${match.teams.away.name}\n\n${formattedContent}`)
+          const formattedContent = formatPredictionContent(predictionData)
+          predictionContents.push(`${matchHomeNameKo} vs ${matchAwayNameKo}\n\n${formattedContent}`)
           predictionDataList.push(predictionData)
         } else {
-          predictionContents.push(`${match.teams.home.name} vs ${match.teams.away.name}\n\n예측 데이터를 불러올 수 없습니다.`)
+          predictionContents.push(`${matchHomeNameKo} vs ${matchAwayNameKo}\n\n예측 데이터를 불러올 수 없습니다.`)
           predictionDataList.push(null)
         }
       } catch (error) {
         console.error(`경기 예측 실패 (${match.id}):`, error)
-        predictionContents.push(`${match.teams.home.name} vs ${match.teams.away.name}\n\n예측 분석을 생성할 수 없습니다. 데이터 부족 또는 시스템 오류로 인해 이 경기의 분석을 생성하지 못했습니다.`)
+        predictionContents.push(`${matchHomeNameKo} vs ${matchAwayNameKo}\n\n예측 분석을 생성할 수 없습니다. 데이터 부족 또는 시스템 오류로 인해 이 경기의 분석을 생성하지 못했습니다.`)
         predictionDataList.push(null)
       }
     }
@@ -525,10 +541,11 @@ async function generateLeaguePredictionPost(
       day: 'numeric'
     })
     
-    const title = `${formattedDate} ${league.name} 경기 예측 분석`
-    
+    const leagueNameKo = getLeagueNameKo(league.id, league.name)
+    const title = `${formattedDate} ${leagueNameKo} 경기 예측 분석`
+
     // 자연스러운 게시글 내용 구성 (Tiptap 형식)
-    const introText = `${league.name}에서 ${matches.length}경기가 예정되어 있습니다. 각 경기의 전망을 살펴보겠습니다.`
+    const introText = `${leagueNameKo}에서 ${matches.length}경기가 예정되어 있습니다. 각 경기의 전망을 살펴보겠습니다.`
     
     const tiptapContent = {
       type: 'doc',
@@ -661,7 +678,7 @@ async function generateLeaguePredictionPost(
       JSON.stringify(tiptapContent),
       targetBoardId,
       PREDICTION_BOT_USER_ID,
-      ['AI분석', league.name, '경기예측'],
+      ['AI분석', leagueNameKo, '경기예측'],
       metaData
     )
 

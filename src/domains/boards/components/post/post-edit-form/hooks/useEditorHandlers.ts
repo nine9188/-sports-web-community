@@ -5,7 +5,6 @@ import { Editor } from '@tiptap/react';
 import { toast } from 'react-toastify';
 import { MatchData } from '@/domains/livescore/actions/footballApi';
 import { generateMatchCardHTML } from '@/shared/utils/matchCardRenderer';
-import { SupabaseClient } from '@supabase/supabase-js';
 import type { TeamMapping } from '@/domains/livescore/constants/teams';
 import type { Player } from '@/domains/livescore/actions/teams/squad';
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
@@ -20,7 +19,6 @@ interface LeagueInfo {
 interface UseEditorHandlersProps {
   editor: Editor | null;
   extensionsLoaded: boolean;
-  supabase: SupabaseClient | null;
 }
 
 interface UseEditorHandlersReturn {
@@ -42,7 +40,6 @@ interface UseEditorHandlersReturn {
   setShowEntityModal: (show: boolean) => void;
   // 핸들러
   handleToggleDropdown: (dropdown: 'match' | 'link' | 'video' | 'image' | 'youtube' | 'social' | 'entity') => void;
-  handleFileUpload: (file: File, caption: string) => Promise<void>;
   handleAddImage: (url: string, caption?: string) => void;
   handleAddYoutube: (url: string, caption?: string) => Promise<void>;
   handleAddVideo: (videoUrl: string, caption: string) => Promise<void>;
@@ -55,8 +52,7 @@ interface UseEditorHandlersReturn {
 
 export function useEditorHandlers({
   editor,
-  extensionsLoaded,
-  supabase
+  extensionsLoaded
 }: UseEditorHandlersProps): UseEditorHandlersReturn {
   // 모달 상태
   const [showImageModal, setShowImageModal] = useState(false);
@@ -124,54 +120,31 @@ export function useEditorHandlers({
     }
   }, [showImageModal, showYoutubeModal, showVideoModal, showMatchModal, showLinkModal, showSocialModal, showEntityModal, closeAllModals]);
 
-  // 파일 업로드 처리
-  const handleFileUpload = useCallback(async (file: File, caption: string) => {
-    if (!file || !editor || !supabase) return;
+  // URL 이미지 추가 (파일 업로드는 ImageUploadForm에서 직접 처리)
+  const handleAddImage = useCallback((url: string, caption?: string) => {
+    if (!editor) {
+      toast.error('에디터가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+    if (!url || !url.trim()) {
+      toast.error('이미지 URL을 입력해주세요.');
+      return;
+    }
 
     try {
-      const timestamp = new Date().getTime();
-      const randomString = Math.random().toString(36).substring(2, 8);
-      const safeFileName = file.name.replace(/[^a-zA-Z0-9.]/g, '_');
-      const fileName = `upload_${timestamp}_${randomString}_${safeFileName}`;
+      const result = editor.chain().focus().setImage({ src: url, alt: caption || "" }).run();
 
-      const { error } = await supabase
-        .storage
-        .from('post-images')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: true
-        });
-
-      if (error) {
-        throw new Error(`파일 업로드 실패: ${error.message}`);
+      if (!result) {
+        console.error('이미지 삽입 명령 실패: setImage 반환값 false');
+        toast.error('이미지를 에디터에 삽입하지 못했습니다.');
+        return;
       }
 
-      const { data: urlData } = supabase
-        .storage
-        .from('post-images')
-        .getPublicUrl(fileName);
-
-      if (!urlData.publicUrl) {
-        throw new Error('파일 URL을 가져올 수 없습니다.');
-      }
-
-      editor.chain().focus().setImage({
-        src: urlData.publicUrl,
-        alt: caption || file.name
-      }).run();
-
       setShowImageModal(false);
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류';
-      alert(`이미지 업로드 중 오류가 발생했습니다: ${errorMessage}`);
-    }
-  }, [editor, supabase]);
-
-  // URL 이미지 추가
-  const handleAddImage = useCallback((url: string, caption?: string) => {
-    if (editor) {
-      editor.chain().focus().setImage({ src: url, alt: caption || "" }).run();
-      setShowImageModal(false);
+      toast.success('이미지가 추가되었습니다.');
+    } catch (error) {
+      console.error('이미지 URL 추가 오류:', error);
+      toast.error('이미지를 추가하는데 실패했습니다.');
     }
   }, [editor]);
 
@@ -432,7 +405,6 @@ export function useEditorHandlers({
     setShowSocialModal,
     setShowEntityModal,
     handleToggleDropdown,
-    handleFileUpload,
     handleAddImage,
     handleAddYoutube,
     handleAddVideo,
