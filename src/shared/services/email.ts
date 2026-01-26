@@ -18,7 +18,7 @@ interface EmailTemplate {
 }
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://4590football.com';
-const LOGO_WHITE_URL = `${SITE_URL}/logo/4590football-logo-white.png`;
+const LOGO_EMAIL_URL = `${SITE_URL}/logo/4590football-logo-email.png`;
 
 /**
  * 다크모드 대응 이메일 레이아웃 래퍼
@@ -40,10 +40,10 @@ function emailLayout(content: string): string {
     <tr>
       <td align="center" style="padding: 20px 0;">
         <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; width: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; border-radius: 8px; overflow: hidden;">
-          <!-- Header -->
+          <!-- Header: 이미지 자체에 배경색 포함 (Gmail 다크모드 대응) -->
           <tr>
-            <td align="center" style="background-color: #1f2937; padding: 32px 20px;">
-              <img src="${LOGO_WHITE_URL}" alt="4590 football" width="160" style="display: block; height: auto; margin: 0 auto;" />
+            <td align="center" style="padding: 0; font-size: 0; line-height: 0;">
+              <img src="${LOGO_EMAIL_URL}" alt="4590 football" width="600" style="display: block; width: 100%; max-width: 600px; height: auto;" />
             </td>
           </tr>
           <!-- Content -->
