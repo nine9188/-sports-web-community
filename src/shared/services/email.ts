@@ -18,7 +18,7 @@ interface EmailTemplate {
 }
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://4590football.com';
-const LOGO_EMAIL_URL = `${SITE_URL}/logo/4590football-logo-email.png?v=2`;
+const LOGO_EMAIL_URL = `${SITE_URL}/logo/4590football-logo-email.png?v=4`;
 
 /**
  * 다크모드 대응 이메일 레이아웃 래퍼
