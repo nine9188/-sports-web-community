@@ -8,16 +8,16 @@ import {
 import CategoryFilter from "@/domains/shop/components/CategoryFilter";
 import { Pagination } from "@/shared/components/ui";
 import TrackPageVisit from "@/domains/layout/components/TrackPageVisit";
-import { generatePageMetadataWithDefaults } from "@/shared/utils/metadataNew";
+import { buildMetadata } from "@/shared/utils/metadataNew";
 
 // 동적 렌더링 강제 설정 추가
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
-  return generatePageMetadataWithDefaults("/shop", {
-    title: "상점 - 4590 Football",
-    description:
-      "포인트로 다양한 아이템을 구매하세요. 아이콘, 닉네임 변경권 등.",
+  return buildMetadata({
+    title: "상점",
+    description: "포인트로 다양한 아이템을 구매하세요. 아이콘, 닉네임 변경권 등.",
+    path: "/shop",
   });
 }
 

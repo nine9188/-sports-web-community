@@ -302,6 +302,7 @@ export const fetchMatchesByDateCached = cache(async (date: string): Promise<Matc
 });
 
 // 어제, 오늘, 내일 경기 데이터를 한 번에 가져오기 - cache 적용
+// 참고: API-Football의 from/to 파라미터는 league/season 필수 → date 파라미터 3회 병렬 호출 사용
 export const fetchMultiDayMatches = cache(async (): Promise<MultiDayMatchesResult> => {
   // KST 기준 날짜 문자열 생성 유틸 (yyyy-MM-dd)
   const toKstDateString = (baseUtc: Date) => {
@@ -341,7 +342,7 @@ export const fetchMultiDayMatches = cache(async (): Promise<MultiDayMatchesResul
         tomorrow: { matches: tomorrowMatches }
       }
     };
-    
+
     // JSON 직렬화로 안전한 객체 보장
     return JSON.parse(JSON.stringify(result));
   } catch {

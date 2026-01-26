@@ -1,21 +1,15 @@
 import { searchContent } from '@/domains/search/actions'
 import { SearchHeader, SearchResultsContainer } from '@/domains/search'
 import type { PostSearchResult, CommentSearchResult, TeamSearchResult } from '@/domains/search/types'
-import { generatePageMetadataWithDefaults } from '@/shared/utils/metadataNew'
+import { buildMetadata } from '@/shared/utils/metadataNew'
 
 export async function generateMetadata() {
-  const metadata = await generatePageMetadataWithDefaults('/search', {
-    title: '검색 - 4590 Football',
+  return buildMetadata({
+    title: '검색',
     description: '게시글, 댓글, 팀 정보를 통합 검색하세요.',
+    path: '/search',
+    noindex: true,
   });
-
-  return {
-    ...metadata,
-    robots: {
-      index: false,
-      follow: true,
-    },
-  };
 }
 
 interface SearchPageProps {

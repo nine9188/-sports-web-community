@@ -6,6 +6,7 @@ import { AlertCircle, Check } from 'lucide-react';
 import { useNicknameTicket } from '@/domains/shop/actions/consumables';
 import { toast } from 'react-toastify';
 import Spinner from '@/shared/components/Spinner';
+import { siteConfig } from '@/shared/config';
 import {
   Button,
   Dialog,
@@ -98,7 +99,7 @@ export default function NicknameChangeModal({
           <div className="mb-4 p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
             <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <Image
-                src="/logo/4590 로고2 이미지크기 275X200 누끼제거 버전.png"
+                src={siteConfig.logo}
                 alt="변경권"
                 width={16}
                 height={16}

@@ -17,6 +17,7 @@ import { renderContentTypeIcons, renderAuthor, renderBoardLogo } from '../shared
 import { getProxiedImageUrl } from '@/shared/utils/imageProxy';
 import { AuthorLink } from '@/domains/user/components';
 import { formatPrice, getDiscountRate } from '@/domains/boards/utils/hotdeal';
+import { siteConfig } from '@/shared/config';
 
 /**
  * 데스크톱 게시글 아이템 (비가상화)
@@ -89,7 +90,7 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
               />
             ) : (
               <Image
-                src="/logo/4590 로고2 이미지크기 275X200 누끼제거 버전.png"
+                src={siteConfig.logo}
                 alt="사이트 로고"
                 fill
                 sizes="96px"

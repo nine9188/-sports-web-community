@@ -6,13 +6,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Button } from '@/shared/components/ui';
 import { faFutbol } from '@fortawesome/free-solid-svg-icons';
 import Link from 'next/link';
-import { TodayMatchesResult } from '@/domains/livescore/actions/footballApi';
+import { MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
 import LiveScoreContent from './LiveScoreContent';
 
 interface LiveScoreModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialData?: TodayMatchesResult;
+  initialData?: MultiDayMatchesResult;
 }
 
 export default function LiveScoreModalClient({ isOpen, onClose, initialData }: LiveScoreModalProps) {

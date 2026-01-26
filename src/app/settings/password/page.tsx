@@ -4,7 +4,7 @@ import { PasswordForm } from '@/domains/settings/components';
 import { Container, ContainerContent } from '@/shared/components/ui';
 
 export const metadata: Metadata = {
-  title: '비밀번호 변경 - 설정',
+  title: '비밀번호 변경',
   description: '계정 보안을 위해 비밀번호를 변경합니다.',
 };
 

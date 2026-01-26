@@ -10,10 +10,24 @@ import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
 import { siteConfig } from '@/shared/config';
+import { buildMetadata } from '@/shared/utils/metadataNew';
 
 // 동적 렌더링 강제 설정 추가
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+/**
+ * 게시글 본문에서 설명 추출 (HTML 태그 제거)
+ */
+function extractDescription(content: unknown): string {
+  if (!content) return '';
+  const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
+  return contentStr
+    .replace(/<[^>]*>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 160);
+}
 
 // 게시글 메타데이터 생성
 export async function generateMetadata({
@@ -21,90 +35,52 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string; postNumber: string }>
 }): Promise<Metadata> {
-  try {
-    const { slug, postNumber } = await params;
-    const supabase = await getSupabaseServer();
-    const seoSettings = await getSeoSettings();
+  const { slug, postNumber } = await params;
+  const supabase = await getSupabaseServer();
 
-    const siteName = seoSettings?.site_name || siteConfig.name;
+  // 1. 게시판 정보 조회
+  const { data: board } = await supabase
+    .from('boards')
+    .select('id, name')
+    .eq('slug', slug)
+    .single();
 
-    // 1. 먼저 게시판 정보 조회 (slug로)
-    const { data: board } = await supabase
-      .from('boards')
-      .select('id, name')
-      .eq('slug', slug)
-      .single();
-
-    if (!board) {
-      return {
-        title: '게시판을 찾을 수 없습니다',
-        description: '요청하신 게시판이 존재하지 않습니다.',
-      };
-    }
-
-    // 2. 게시글 정보 조회 (board_id + post_number로)
-    const { data: post } = await supabase
-      .from('posts')
-      .select('title, content, created_at, updated_at')
-      .eq('board_id', board.id)
-      .eq('post_number', Number(postNumber))
-      .single();
-
-    if (!post) {
-      return {
-        title: '게시글을 찾을 수 없습니다',
-        description: '요청하신 게시글이 존재하지 않습니다.',
-      };
-    }
-
-    // 본문에서 설명 추출 (HTML 태그 제거, 160자 제한)
-    let description = '';
-    if (post.content) {
-      const contentStr = typeof post.content === 'string'
-        ? post.content
-        : JSON.stringify(post.content);
-      description = contentStr
-        .replace(/<[^>]*>/g, '')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .slice(0, 160);
-    }
-
-    const boardName = board.name || '게시판';
-    const title = `${post.title} - ${boardName}`;
-    const url = siteConfig.getCanonical(`/boards/${slug}/${postNumber}`);
-
-    return {
-      title,
-      description: description || `${boardName}의 게시글입니다.`,
-      openGraph: {
-        title,
-        description: description || `${boardName}의 게시글입니다.`,
-        url,
-        type: 'article',
-        publishedTime: post.created_at ?? undefined,
-        modifiedTime: post.updated_at ?? undefined,
-        siteName,
-        locale: siteConfig.locale,
-        images: [siteConfig.getDefaultOgImageObject(title)],
-      },
-      twitter: {
-        card: 'summary_large_image',
-        title,
-        description: description || `${boardName}의 게시글입니다.`,
-        images: [siteConfig.defaultOgImage],
-      },
-      alternates: {
-        canonical: url,
-      },
-    };
-  } catch (error) {
-    console.error('[PostPage generateMetadata] 오류:', error);
-    return {
-      title: `게시글 - ${siteConfig.name}`,
-      description: '축구 커뮤니티 게시글',
-    };
+  if (!board) {
+    return buildMetadata({
+      title: '게시판을 찾을 수 없습니다',
+      description: '요청하신 게시판이 존재하지 않습니다.',
+      path: `/boards/${slug}/${postNumber}`,
+      noindex: true,
+    });
   }
+
+  // 2. 게시글 정보 조회
+  const { data: post } = await supabase
+    .from('posts')
+    .select('title, content, created_at, updated_at')
+    .eq('board_id', board.id)
+    .eq('post_number', Number(postNumber))
+    .single();
+
+  if (!post) {
+    return buildMetadata({
+      title: '게시글을 찾을 수 없습니다',
+      description: '요청하신 게시글이 존재하지 않습니다.',
+      path: `/boards/${slug}/${postNumber}`,
+      noindex: true,
+    });
+  }
+
+  const description = extractDescription(post.content) || `${board.name} 게시판의 게시글입니다.`;
+
+  return buildMetadata({
+    title: `${post.title} - ${board.name}`,
+    description,
+    path: `/boards/${slug}/${postNumber}`,
+    type: 'article',
+    publishedTime: post.created_at ?? undefined,
+    modifiedTime: post.updated_at ?? undefined,
+  });
 }
 
 export default async function PostDetailPage({ 
@@ -325,7 +301,7 @@ export default async function PostDetailPage({
         name: siteName,
         logo: {
           '@type': 'ImageObject',
-          url: `${siteUrl}/logo/4590 로고2 이미지크기 275X200 누끼제거 버전.png`
+          url: `${siteUrl}${siteConfig.logo}`
         }
       },
       mainEntityOfPage: {

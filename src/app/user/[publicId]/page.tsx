@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { getPublicProfile } from '@/domains/user/actions';
 import { PublicProfileCard } from '@/domains/user/components';
 import UserActivityTabs from './UserActivityTabs';
+import { buildMetadata } from '@/shared/utils/metadataNew';
 
 interface PageProps {
   params: Promise<{ publicId: string }>;
@@ -13,15 +14,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const result = await getPublicProfile(publicId);
 
   if (!result.success || !result.data) {
-    return {
+    return buildMetadata({
       title: '프로필을 찾을 수 없습니다',
-    };
+      description: '요청하신 사용자의 프로필을 찾을 수 없습니다.',
+      path: `/user/${publicId}`,
+      noindex: true,
+    });
   }
 
-  return {
+  return buildMetadata({
     title: `${result.data.nickname}님의 프로필`,
     description: `${result.data.nickname}님의 프로필 페이지입니다. 레벨 ${result.data.level}, 작성글 ${result.data.post_count}개, 댓글 ${result.data.comment_count}개`,
-  };
+    path: `/user/${publicId}`,
+    noindex: true,
+  });
 }
 
 export default async function UserProfilePage({ params }: PageProps) {

@@ -15,6 +15,7 @@ import { renderContentTypeIcons } from '../shared/PostRenderers';
 import { getProxiedImageUrl } from '@/shared/utils/imageProxy';
 import { AuthorLink } from '@/domains/user/components';
 import { formatPrice, getDiscountRate } from '@/domains/boards/utils/hotdeal';
+import { siteConfig } from '@/shared/config';
 
 export const MobilePostItem = React.memo(function MobilePostItem({
   post,
@@ -73,7 +74,7 @@ export const MobilePostItem = React.memo(function MobilePostItem({
               />
             ) : (
               <Image
-                src="/logo/4590 로고2 이미지크기 275X200 누끼제거 버전.png"
+                src={siteConfig.logo}
                 alt="사이트 로고"
                 fill
                 sizes="80px"

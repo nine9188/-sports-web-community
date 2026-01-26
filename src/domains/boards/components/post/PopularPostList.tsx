@@ -11,6 +11,7 @@ import { renderContentTypeIcons } from './postlist/components/shared/PostRendere
 import { formatPrice, getDiscountRate } from '../../utils/hotdeal';
 import type { DealInfo } from '../../types/hotdeal';
 import { Container } from '@/shared/components/ui';
+import { siteConfig } from '@/shared/config';
 
 interface Post {
   id: string;
@@ -103,7 +104,7 @@ export default function PopularPostList({
                   />
                 ) : (
                   <Image
-                    src="/logo/4590 로고2 이미지크기 275X200 누끼제거 버전.png"
+                    src={siteConfig.logo}
                     alt="사이트 로고"
                     fill
                     sizes="(max-width: 640px) 80px, 96px"

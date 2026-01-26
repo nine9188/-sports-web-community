@@ -5,8 +5,7 @@ import { searchBoardPosts } from '@/domains/boards/actions/posts';
 import BoardDetailLayout from '@/domains/boards/components/layout/BoardDetailLayout';
 import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
-import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
-import { siteConfig } from '@/shared/config';
+import { buildMetadata } from '@/shared/utils/metadataNew';
 import { convertApiPostsToLayoutPosts } from '@/domains/boards/utils/post/postUtils';
 
 // 동적 렌더링 강제 설정
@@ -19,65 +18,30 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
-  try {
-    const { slug } = await params;
-    const supabase = await getSupabaseServer();
-    const seoSettings = await getSeoSettings();
+  const { slug } = await params;
+  const supabase = await getSupabaseServer();
 
-    const siteName = seoSettings?.site_name || siteConfig.name;
-    const pagePath = `/boards/${slug}`;
+  // 게시판 정보 조회
+  const { data: board } = await supabase
+    .from('boards')
+    .select('name, description')
+    .eq('slug', slug)
+    .single();
 
-    // page_overrides 확인 (관리자 설정 우선)
-    const pageOverride = seoSettings?.page_overrides?.[pagePath];
-
-    // 게시판 정보 조회
-    const { data: board } = await supabase
-      .from('boards')
-      .select('name, description')
-      .eq('slug', slug)
-      .single();
-
-    if (!board) {
-      return {
-        title: '게시판을 찾을 수 없습니다',
-        description: '요청하신 게시판이 존재하지 않습니다.',
-      };
-    }
-
-    // 관리자 설정 우선, 없으면 기본값 사용
-    const title = pageOverride?.title || `${board.name} - ${siteName}`;
-    const description = pageOverride?.description || board.description || `${board.name} 게시판의 최신 글을 확인하세요.`;
-    const url = siteConfig.getCanonical(pagePath);
-
-    return {
-      title,
-      description,
-      openGraph: {
-        title,
-        description,
-        url,
-        type: 'website',
-        siteName,
-        locale: siteConfig.locale,
-        images: [siteConfig.getDefaultOgImageObject(title)],
-      },
-      twitter: {
-        card: 'summary_large_image',
-        title,
-        description,
-        images: [siteConfig.defaultOgImage],
-      },
-      alternates: {
-        canonical: url,
-      },
-    };
-  } catch (error) {
-    console.error('[BoardPage generateMetadata] 오류:', error);
-    return {
-      title: `게시판 - ${siteConfig.name}`,
-      description: '축구 커뮤니티 게시판',
-    };
+  if (!board) {
+    return buildMetadata({
+      title: '게시판을 찾을 수 없습니다',
+      description: '요청하신 게시판이 존재하지 않습니다.',
+      path: `/boards/${slug}`,
+      noindex: true,
+    });
   }
+
+  return buildMetadata({
+    title: board.name,
+    description: board.description || `${board.name} 게시판의 최신 글을 확인하세요.`,
+    path: `/boards/${slug}`,
+  });
 }
 
 export default async function BoardDetailPage({

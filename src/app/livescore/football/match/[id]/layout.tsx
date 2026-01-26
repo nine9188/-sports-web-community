@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 
 // 메타데이터 정의
 export const metadata: Metadata = {
-  title: '경기 정보 | 라이브스코어',
+  title: '경기 정보 - 라이브스코어',
   description: '축구 경기의 상세 정보, 이벤트, 라인업, 통계 및 순위를 확인하세요.',
 };
 

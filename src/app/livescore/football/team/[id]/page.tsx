@@ -2,8 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import TeamPageClient, { TeamTabType } from '@/domains/livescore/components/football/team/TeamPageClient';
 import { fetchTeamFullData } from '@/domains/livescore/actions/teams/team';
-import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
-import { siteConfig } from '@/shared/config';
+import { buildMetadata } from '@/shared/utils/metadataNew';
 
 interface TeamPageProps {
   params: Promise<{ id: string }>;
@@ -16,62 +15,33 @@ export async function generateMetadata({
 }: {
   params: Promise<{ id: string }>
 }): Promise<Metadata> {
-  try {
-    const { id } = await params;
-    const seoSettings = await getSeoSettings();
+  const { id } = await params;
 
-    const siteName = seoSettings?.site_name || siteConfig.name;
+  // 팀 데이터 조회 (최소한의 옵션으로)
+  const teamData = await fetchTeamFullData(id, {
+    fetchMatches: false,
+    fetchSquad: false,
+    fetchPlayerStats: false,
+    fetchStandings: false,
+  });
 
-    // 팀 데이터 조회 (최소한의 옵션으로)
-    const teamData = await fetchTeamFullData(id, {
-      fetchMatches: false,
-      fetchSquad: false,
-      fetchPlayerStats: false,
-      fetchStandings: false,
+  if (!teamData.success || !teamData.teamData?.team?.team) {
+    return buildMetadata({
+      title: '팀 정보를 찾을 수 없습니다',
+      description: '요청하신 팀 정보가 존재하지 않습니다.',
+      path: `/livescore/football/team/${id}`,
+      noindex: true,
     });
-
-    if (!teamData.success || !teamData.teamData?.team?.team) {
-      return {
-        title: '팀 정보를 찾을 수 없습니다',
-        description: '요청하신 팀 정보가 존재하지 않습니다.',
-      };
-    }
-
-    const team = teamData.teamData.team.team;
-
-    const title = `${team.name} | 팀 정보 - ${siteName}`;
-    const description = `${team.name}의 경기 일정, 순위, 선수단, 통계 정보를 확인하세요.${team.country ? ` ${team.country}` : ''}${team.founded ? ` (창단: ${team.founded}년)` : ''}`;
-    const url = siteConfig.getCanonical(`/livescore/football/team/${id}`);
-
-    return {
-      title,
-      description,
-      openGraph: {
-        title,
-        description,
-        url,
-        type: 'website',
-        images: [siteConfig.getDefaultOgImageObject(title)],
-        siteName,
-        locale: siteConfig.locale,
-      },
-      twitter: {
-        card: 'summary_large_image',
-        title,
-        description,
-        images: [siteConfig.defaultOgImage],
-      },
-      alternates: {
-        canonical: url,
-      },
-    };
-  } catch (error) {
-    console.error('[TeamPage generateMetadata] 오류:', error);
-    return {
-      title: `팀 정보 - ${siteConfig.name}`,
-      description: '축구 팀 정보, 경기 일정, 선수단을 확인하세요.',
-    };
   }
+
+  const team = teamData.teamData.team.team;
+  const description = `${team.name}의 경기 일정, 순위, 선수단, 통계 정보를 확인하세요.${team.country ? ` ${team.country}` : ''}${team.founded ? ` (창단: ${team.founded}년)` : ''}`;
+
+  return buildMetadata({
+    title: `${team.name} - 팀 정보`,
+    description,
+    path: `/livescore/football/team/${id}`,
+  });
 }
 
 // 유효한 탭 목록

@@ -6,8 +6,7 @@ import { fetchPlayerRatingsAndCaptains } from '@/domains/livescore/actions/match
 import { fetchMatchPlayerStats } from '@/domains/livescore/actions/match/matchPlayerStats';
 import MatchPageClient, { MatchTabType } from '@/domains/livescore/components/football/match/MatchPageClient';
 import { notFound } from 'next/navigation';
-import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
-import { siteConfig } from '@/shared/config';
+import { buildMetadata } from '@/shared/utils/metadataNew';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
 
@@ -21,76 +20,47 @@ export async function generateMetadata({
 }: {
   params: Promise<{ id: string }>
 }): Promise<Metadata> {
-  try {
-    const { id } = await params;
-    const seoSettings = await getSeoSettings();
+  const { id } = await params;
 
-    const siteName = seoSettings?.site_name || siteConfig.name;
+  // 경기 데이터 조회 (최소한의 옵션으로)
+  const matchData = await fetchCachedMatchFullData(id, {
+    fetchEvents: false,
+    fetchLineups: false,
+    fetchStats: false,
+    fetchStandings: false,
+  });
 
-    // 경기 데이터 조회 (최소한의 옵션으로)
-    const matchData = await fetchCachedMatchFullData(id, {
-      fetchEvents: false,
-      fetchLineups: false,
-      fetchStats: false,
-      fetchStandings: false,
+  if (!matchData.success || !matchData.match) {
+    return buildMetadata({
+      title: '경기 정보를 찾을 수 없습니다',
+      description: '요청하신 경기 정보가 존재하지 않습니다.',
+      path: `/livescore/football/match/${id}`,
+      noindex: true,
     });
-
-    if (!matchData.success || !matchData.match) {
-      return {
-        title: '경기 정보를 찾을 수 없습니다',
-        description: '요청하신 경기 정보가 존재하지 않습니다.',
-      };
-    }
-
-    const { match } = matchData;
-
-    // 매핑 파일에서 한글 이름 조회
-    const homeTeamMapping = getTeamById(match.teams.home.id);
-    const awayTeamMapping = getTeamById(match.teams.away.id);
-    const leagueMapping = getLeagueById(match.league.id);
-    const homeTeam = homeTeamMapping?.name_ko || match.teams.home.name;
-    const awayTeam = awayTeamMapping?.name_ko || match.teams.away.name;
-    const leagueName = leagueMapping?.nameKo || match.league.name;
-
-    // 스코어 표시 (경기 시작 전이면 'vs', 아니면 실제 스코어)
-    const isNotStarted = ['TBD', 'NS'].includes(match.status.code);
-    const score = isNotStarted
-      ? 'vs'
-      : `${match.goals.home} - ${match.goals.away}`;
-
-    const title = `${homeTeam} ${score} ${awayTeam} | ${leagueName}`;
-    const description = `${leagueName} - ${homeTeam} vs ${awayTeam} 경기 정보, 라인업, 통계, 하이라이트를 확인하세요.`;
-    const url = siteConfig.getCanonical(`/livescore/football/match/${id}`);
-
-    return {
-      title,
-      description,
-      openGraph: {
-        title,
-        description,
-        url,
-        type: 'website',
-        images: [siteConfig.getDefaultOgImageObject(title)],
-        siteName,
-        locale: siteConfig.locale,
-      },
-      twitter: {
-        card: 'summary_large_image',
-        title,
-        description,
-        images: [siteConfig.defaultOgImage],
-      },
-      alternates: {
-        canonical: url,
-      },
-    };
-  } catch (error) {
-    console.error('[MatchPage generateMetadata] 오류:', error);
-    return {
-      title: `경기 정보 - ${siteConfig.name}`,
-      description: '축구 경기 정보, 라인업, 통계를 확인하세요.',
-    };
   }
+
+  const { match } = matchData;
+
+  // 매핑 파일에서 한글 이름 조회
+  const homeTeamMapping = getTeamById(match.teams.home.id);
+  const awayTeamMapping = getTeamById(match.teams.away.id);
+  const leagueMapping = getLeagueById(match.league.id);
+  const homeTeam = homeTeamMapping?.name_ko || match.teams.home.name;
+  const awayTeam = awayTeamMapping?.name_ko || match.teams.away.name;
+  const leagueName = leagueMapping?.nameKo || match.league.name;
+
+  // 스코어 표시 (경기 시작 전이면 'vs', 아니면 실제 스코어)
+  const isNotStarted = ['TBD', 'NS'].includes(match.status.code);
+  const score = isNotStarted ? 'vs' : `${match.goals.home} - ${match.goals.away}`;
+
+  const title = `${homeTeam} ${score} ${awayTeam} - ${leagueName}`;
+  const description = `${leagueName} - ${homeTeam} vs ${awayTeam} 경기 정보, 라인업, 통계, 하이라이트를 확인하세요.`;
+
+  return buildMetadata({
+    title,
+    description,
+    path: `/livescore/football/match/${id}`,
+  });
 }
 
 // 캐시 항목 인터페이스

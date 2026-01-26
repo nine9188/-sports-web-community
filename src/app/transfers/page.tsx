@@ -2,12 +2,13 @@ import { Suspense } from 'react';
 import { TransfersPageContent } from '@/domains/livescore/components/football/transfers';
 import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
-import { generatePageMetadataWithDefaults } from '@/shared/utils/metadataNew';
+import { buildMetadata } from '@/shared/utils/metadataNew';
 
 export async function generateMetadata() {
-  return generatePageMetadataWithDefaults('/transfers', {
-    title: '이적시장 - 4590 Football',
+  return buildMetadata({
+    title: '이적시장',
     description: '최신 축구 이적 소식, 영입 정보, 방출 소식을 실시간으로 확인하세요.',
+    path: '/transfers',
   });
 }
 

@@ -5,7 +5,7 @@ import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { Container, ContainerContent } from '@/shared/components/ui';
 
 export const metadata: Metadata = {
-  title: '회원 탈퇴 | 설정',
+  title: '회원 탈퇴',
   description: '계정을 삭제하고 서비스를 탈퇴합니다.'
 };
 

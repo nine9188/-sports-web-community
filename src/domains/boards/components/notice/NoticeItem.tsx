@@ -9,6 +9,7 @@ import { NoticeBadge } from './NoticeBadge';
 import AuthorLink from '@/domains/user/components/AuthorLink';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
+import { siteConfig } from '@/shared/config';
 
 /**
  * NoticeList/NoticeItem에서 사용하는 게시글 타입
@@ -95,7 +96,7 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
         <Link href={boardLinkUrl} className="flex items-center hover:underline">
           <div className="relative w-5 h-5 mr-1">
             <Image
-              src="/logo/4590 로고2 이미지크기 275X200 누끼제거 버전.png"
+              src={siteConfig.logo}
               alt={notice.board?.name || notice.board_name || ''}
               width={20}
               height={20}

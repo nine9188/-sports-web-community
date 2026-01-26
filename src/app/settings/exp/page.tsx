@@ -12,7 +12,7 @@ import LevelList from '@/domains/settings/components/exp/LevelList';
 import { Container, ContainerContent } from '@/shared/components/ui';
 
 export const metadata: Metadata = {
-  title: '경험치 및 레벨 - 설정',
+  title: '경험치 및 레벨',
   description: '경험치 획득 내역 및 레벨 정보를 확인합니다.',
 };
 

@@ -2,8 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import PlayerPageClient from '@/domains/livescore/components/football/player/PlayerPageClient';
 import { fetchPlayerFullData, PlayerFullDataResponse } from '@/domains/livescore/actions/player/data';
-import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
-import { siteConfig } from '@/shared/config';
+import { buildMetadata } from '@/shared/utils/metadataNew';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 import type { PlayerTabType } from '@/domains/livescore/hooks';
@@ -14,23 +13,6 @@ import type { PlayerTabType } from '@/domains/livescore/hooks';
  * ============================================
  *
  * 클라이언트 사이드 탭 전환 패턴을 사용합니다.
- *
- * ## 역할
- *
- * 1. URL에서 playerId, tab 파라미터 추출
- * 2. 초기 탭에 필요한 데이터만 서버에서 로드
- * 3. PlayerPageClient에 데이터 전달
- *
- * ## 탭 전환 흐름
- *
- * 1. 초기 로드: 서버에서 데이터 fetch → 클라이언트로 전달
- * 2. 탭 전환: 클라이언트에서 React Query로 처리 (서버 리로드 없음)
- * 3. URL 업데이트: window.history.replaceState (shallow)
- *
- * ## 캐싱
- *
- * - 서버: 5분 캐시 (dataCache Map)
- * - 클라이언트: React Query 캐시 (CACHE_STRATEGIES)
  */
 
 // 선수 메타데이터 생성
@@ -39,73 +21,45 @@ export async function generateMetadata({
 }: {
   params: Promise<{ id: string }>
 }): Promise<Metadata> {
-  try {
-    const { id } = await params;
-    const seoSettings = await getSeoSettings();
+  const { id } = await params;
 
-    const siteName = seoSettings?.site_name || siteConfig.name;
+  // 선수 데이터 조회 (최소한의 옵션으로)
+  const playerData = await fetchPlayerFullData(id, {
+    fetchSeasons: false,
+    fetchStats: false,
+    fetchFixtures: false,
+    fetchTrophies: false,
+    fetchTransfers: false,
+    fetchInjuries: false,
+    fetchRankings: false,
+  });
 
-    // 선수 데이터 조회 (최소한의 옵션으로)
-    const playerData = await fetchPlayerFullData(id, {
-      fetchSeasons: false,
-      fetchStats: false,
-      fetchFixtures: false,
-      fetchTrophies: false,
-      fetchTransfers: false,
-      fetchInjuries: false,
-      fetchRankings: false,
+  if (!playerData.success || !playerData.playerData?.info) {
+    return buildMetadata({
+      title: '선수 정보를 찾을 수 없습니다',
+      description: '요청하신 선수 정보가 존재하지 않습니다.',
+      path: `/livescore/football/player/${id}`,
+      noindex: true,
     });
-
-    if (!playerData.success || !playerData.playerData?.info) {
-      return {
-        title: '선수 정보를 찾을 수 없습니다',
-        description: '요청하신 선수 정보가 존재하지 않습니다.',
-      };
-    }
-
-    const player = playerData.playerData.info;
-    const statistics = playerData.playerData.statistics;
-
-    // 한글 매핑
-    const playerName = getPlayerKoreanName(player.id) || player.name;
-    const teamId = statistics?.[0]?.team?.id;
-    const teamMapping = teamId ? getTeamById(teamId) : null;
-    const currentTeam = teamMapping?.name_ko || statistics?.[0]?.team?.name || '';
-    const position = statistics?.[0]?.games?.position || '';
-
-    const title = `${playerName} | 선수 정보 - ${siteName}`;
-    const description = `${playerName}${player.nationality ? ` (${player.nationality})` : ''}${currentTeam ? ` - ${currentTeam}` : ''}${position ? ` ${position}` : ''}. 시즌 통계, 경기 기록, 프로필 정보를 확인하세요.`;
-    const url = siteConfig.getCanonical(`/livescore/football/player/${id}`);
-
-    return {
-      title,
-      description,
-      openGraph: {
-        title,
-        description,
-        url,
-        type: 'profile',
-        images: [siteConfig.getDefaultOgImageObject(title)],
-        siteName,
-        locale: siteConfig.locale,
-      },
-      twitter: {
-        card: 'summary_large_image',
-        title,
-        description,
-        images: [siteConfig.defaultOgImage],
-      },
-      alternates: {
-        canonical: url,
-      },
-    };
-  } catch (error) {
-    console.error('[PlayerPage generateMetadata] 오류:', error);
-    return {
-      title: `선수 정보 - ${siteConfig.name}`,
-      description: '축구 선수 정보, 통계, 경기 기록을 확인하세요.',
-    };
   }
+
+  const player = playerData.playerData.info;
+  const statistics = playerData.playerData.statistics;
+
+  // 한글 매핑
+  const playerName = getPlayerKoreanName(player.id) || player.name;
+  const teamId = statistics?.[0]?.team?.id;
+  const teamMapping = teamId ? getTeamById(teamId) : null;
+  const currentTeam = teamMapping?.name_ko || statistics?.[0]?.team?.name || '';
+  const position = statistics?.[0]?.games?.position || '';
+
+  const description = `${playerName}${player.nationality ? ` (${player.nationality})` : ''}${currentTeam ? ` - ${currentTeam}` : ''}${position ? ` ${position}` : ''}. 시즌 통계, 경기 기록, 프로필 정보를 확인하세요.`;
+
+  return buildMetadata({
+    title: `${playerName} - 선수 정보`,
+    description,
+    path: `/livescore/football/player/${id}`,
+  });
 }
 
 // 캐시 항목 인터페이스

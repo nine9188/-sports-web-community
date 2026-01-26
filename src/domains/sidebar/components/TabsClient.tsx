@@ -13,6 +13,7 @@ import { Container, ContainerHeader, ContainerTitle, TabList, type TabItem } fro
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { TopicPostsData, TabType, TopicPost } from '../types';
+import { siteConfig } from '@/shared/config';
 import { renderContentTypeIcons } from '@/domains/boards/components/post/postlist/components/shared/PostRenderers';
 
 interface TopicTabsClientProps {
@@ -123,7 +124,7 @@ export function TopicTabsClient({ postsData }: TopicTabsClientProps) {
                       ) : (
                         <div className="relative w-5 h-5 flex-shrink-0">
                           <Image
-                            src="/logo/4590 로고2 이미지크기 275X200 누끼제거 버전.png"
+                            src={siteConfig.logo}
                             alt={post.board_name}
                             width={20}
                             height={20}

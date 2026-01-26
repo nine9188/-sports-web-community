@@ -1,16 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { MatchData, TodayMatchesResult, fetchMatchesByDateLabel } from '@/domains/livescore/actions/footballApi';
+import { useMemo } from 'react';
+import { MatchData, MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
 import { Trophy } from 'lucide-react';
 import MatchItem from './MatchItem';
-import Spinner from '@/shared/components/Spinner';
 
 interface LiveScoreContentProps {
   selectedDate: 'yesterday' | 'today' | 'tomorrow';
   onClose: () => void;
-  initialData?: TodayMatchesResult;
+  initialData?: MultiDayMatchesResult;
 }
 
 // 리그 우선순위 (숫자가 낮을수록 우선)
@@ -46,7 +44,7 @@ const getLeaguePriority = (leagueId?: number): number => {
 
 // 경기 정렬 함수 (상태 우선 -> 리그 우선순위)
 function sortByStatus(matches: MatchData[]): MatchData[] {
-  return matches.sort((a, b) => {
+  return [...matches].sort((a, b) => {
     // 1. 경기 상태 우선순위 (진행중 > 예정 > 종료)
     const codeOf = (m: MatchData) => (m?.status?.code || '').toUpperCase();
     const rankOf = (code: string) => {
@@ -79,93 +77,33 @@ const getDateLabel = (date: 'yesterday' | 'today' | 'tomorrow'): string => {
 };
 
 export default function LiveScoreContent({ selectedDate, onClose, initialData }: LiveScoreContentProps) {
-  // 오늘 데이터는 SSR initialData에서 가져옴
-  const todayMatches = initialData?.success && initialData.data?.today?.matches
-    ? initialData.data.today.matches
-    : [];
+  // SSR 3일치 데이터에서 선택된 날짜의 경기 추출 (React Query 불필요)
+  const matches = useMemo(() => {
+    if (!initialData?.success || !initialData.data) {
+      return [];
+    }
 
-  // 어제/내일 데이터는 React Query로 lazy load (탭 선택 시에만 fetch)
-  const { data: yesterdayData, isLoading: isLoadingYesterday, error: errorYesterday } = useQuery({
-    queryKey: ['livescore-modal', 'yesterday'],
-    queryFn: () => fetchMatchesByDateLabel('yesterday'),
-    enabled: selectedDate === 'yesterday', // 어제 탭 선택 시에만 fetch
-    staleTime: 5 * 60 * 1000, // 5분
-    gcTime: 10 * 60 * 1000, // 10분
-  });
-
-  const { data: tomorrowData, isLoading: isLoadingTomorrow, error: errorTomorrow } = useQuery({
-    queryKey: ['livescore-modal', 'tomorrow'],
-    queryFn: () => fetchMatchesByDateLabel('tomorrow'),
-    enabled: selectedDate === 'tomorrow', // 내일 탭 선택 시에만 fetch
-    staleTime: 5 * 60 * 1000, // 5분
-    gcTime: 10 * 60 * 1000, // 10분
-  });
-
-  // 현재 선택된 탭에 따라 데이터 결정
-  const [matches, setMatches] = useState<MatchData[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasError, setHasError] = useState(false);
-
-  useEffect(() => {
     const dateLabel = getDateLabel(selectedDate);
+    let rawMatches: MatchData[] = [];
 
     switch (selectedDate) {
-      case 'today':
-        // 오늘은 SSR 데이터 사용
-        setMatches(sortByStatus(
-          todayMatches.map(match => ({ ...match, displayDate: dateLabel }))
-        ));
-        setIsLoading(false);
-        setHasError(false);
-        break;
-
       case 'yesterday':
-        if (isLoadingYesterday) {
-          setIsLoading(true);
-          setHasError(false);
-        } else if (errorYesterday || !yesterdayData?.success) {
-          setIsLoading(false);
-          setHasError(true);
-          setMatches([]);
-        } else {
-          setMatches(sortByStatus(
-            (yesterdayData?.matches || []).map(match => ({ ...match, displayDate: dateLabel }))
-          ));
-          setIsLoading(false);
-          setHasError(false);
-        }
+        rawMatches = initialData.data.yesterday?.matches || [];
         break;
-
+      case 'today':
+        rawMatches = initialData.data.today?.matches || [];
+        break;
       case 'tomorrow':
-        if (isLoadingTomorrow) {
-          setIsLoading(true);
-          setHasError(false);
-        } else if (errorTomorrow || !tomorrowData?.success) {
-          setIsLoading(false);
-          setHasError(true);
-          setMatches([]);
-        } else {
-          setMatches(sortByStatus(
-            (tomorrowData?.matches || []).map(match => ({ ...match, displayDate: dateLabel }))
-          ));
-          setIsLoading(false);
-          setHasError(false);
-        }
+        rawMatches = initialData.data.tomorrow?.matches || [];
         break;
     }
-  }, [selectedDate, todayMatches, yesterdayData, tomorrowData, isLoadingYesterday, isLoadingTomorrow, errorYesterday, errorTomorrow]);
 
-  // 로딩 중
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-32">
-        <Spinner size="md" />
-      </div>
-    );
-  }
+    // displayDate 추가 후 정렬
+    return sortByStatus(rawMatches.map(match => ({ ...match, displayDate: dateLabel })));
+  }, [initialData, selectedDate]);
 
-  // 에러
-  if (hasError) {
+  // 데이터 로드 실패
+  if (!initialData?.success) {
     return (
       <div className="flex flex-col items-center justify-center h-32 text-gray-500">
         <Trophy className="h-8 w-8 mb-2" />

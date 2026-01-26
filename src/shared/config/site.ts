@@ -11,8 +11,14 @@ export const siteConfig = {
   // 기본 설정
   url: siteUrl,
   name: '4590 Football',
-  defaultOgImage: `${siteUrl}/og-image.png`,
+  description: '실시간 축구 경기 일정과 스코어, 팀·선수 정보를 확인하고, 축구 팬들과 함께 소통할 수 있는 커뮤니티 플랫폼입니다.',
+  keywords: ['축구', '축구 커뮤니티', '실시간 스코어', '프리미어리그', 'EPL', '라리가', '세리에A', '분데스리가', 'K리그'],
   locale: 'ko_KR',
+  twitterHandle: '@4590football',
+
+  // 로고 및 이미지
+  logo: '/logo/4590football-logo.png',
+  defaultOgImage: `${siteUrl}/og-image.png`,
 
   // URL 빌더
   getUrl: (path: string) => {

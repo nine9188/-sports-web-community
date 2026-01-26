@@ -1,10 +1,12 @@
-﻿﻿import { generatePageMetadataWithDefaults } from '@/shared/utils/metadataNew';
+import { buildMetadata } from '@/shared/utils/metadataNew';
 import ResetPasswordPageClient from './page.client';
 
 export async function generateMetadata() {
-  return generatePageMetadataWithDefaults('/help/reset-password', {
-    title: '비밀번호 재설정 - 4590 Football',
+  return buildMetadata({
+    title: '비밀번호 재설정',
     description: '비밀번호 재설정 페이지입니다.',
+    path: '/help/reset-password',
+    noindex: true,
   });
 }
 

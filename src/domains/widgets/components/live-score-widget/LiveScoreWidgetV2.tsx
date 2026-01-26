@@ -224,6 +224,7 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
                   <Link
                     key={match.id}
                     href={`/livescore/football/match/${match.id}`}
+                    prefetch={false}
                     className={`
                       flex items-center h-12 px-4 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors
                       ${idx !== league.matches.length - 1 ? 'border-b border-black/5 dark:border-white/10' : ''}

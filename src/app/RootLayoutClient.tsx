@@ -13,7 +13,7 @@ import AuthStateManager from '@/shared/components/AuthStateManager';
 import SuspensionPopup from '@/shared/components/SuspensionPopup';
 import AttendanceChecker from '@/shared/components/AttendanceChecker';
 import { Board } from '@/domains/layout/types/board';
-import { TodayMatchesResult } from '@/domains/livescore/actions/footballApi';
+import { MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
 import { FullUserDataWithSession, HeaderUserData } from '@/shared/types/user';
 
 interface RootLayoutClientProps {
@@ -26,7 +26,7 @@ interface RootLayoutClientProps {
   headerBoards?: Board[];
   headerIsAdmin?: boolean;
   headerTotalPostCount?: number;
-  liveScoreData?: TodayMatchesResult;
+  liveScoreData?: MultiDayMatchesResult;
 }
 
 export default function RootLayoutClient({

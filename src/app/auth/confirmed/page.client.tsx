@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { siteConfig } from '@/shared/config';
 import { CheckCircle } from 'lucide-react';
 import { useEffect } from 'react';
 import { Button } from '@/shared/components/ui';
@@ -24,7 +25,7 @@ export default function EmailConfirmedPage() {
           <Link href="/" className="inline-block">
             <div className="flex items-center gap-2">
               <Image
-                src="/logo/4590 로고2 이미지크기 275X200 누끼제거 버전.png"
+                src={siteConfig.logo}
                 alt="로고"
                 width={124}
                 height={60}

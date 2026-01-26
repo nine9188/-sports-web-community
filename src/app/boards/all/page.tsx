@@ -4,16 +4,18 @@ import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import BoardDetailLayout from '@/domains/boards/components/layout/BoardDetailLayout';
 import { convertApiPostsToLayoutPosts } from '@/domains/boards/utils/post/postUtils';
 import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
-import { generatePageMetadataWithDefaults } from '@/shared/utils/metadataNew';
+import { buildMetadata } from '@/shared/utils/metadataNew';
 
 // 동적 렌더링 강제 설정
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function generateMetadata() {
-  return generatePageMetadataWithDefaults('/boards/all', {
-    title: '전체글 - 4590 Football',
+  return buildMetadata({
+    title: '전체글',
     description: '모든 게시판의 최신 게시글을 한곳에서 확인하세요.',
+    path: '/boards/all',
+    noindex: true,
   });
 }
 

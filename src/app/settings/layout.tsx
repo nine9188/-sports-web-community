@@ -5,17 +5,14 @@ import { getCurrentUser } from '@/domains/auth/actions';
 import SettingsAuthGuardClient from '@/domains/settings/components/common/SettingsAuthGuardClient';
 
 export const metadata: Metadata = {
-  title: '설정 - 4590 Football',
+  title: {
+    template: '%s - 4590 Football',
+    default: '설정 - 4590 Football',
+  },
   description: '계정 설정 및 개인 정보 관리',
   robots: {
     index: false,
     follow: false,
-    nocache: true,
-    googleBot: {
-      index: false,
-      follow: false,
-      noimageindex: true,
-    },
   },
 };
 

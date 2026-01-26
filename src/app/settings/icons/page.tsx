@@ -8,7 +8,7 @@ import { Metadata } from 'next';
 import { Container, ContainerContent } from '@/shared/components/ui';
 
 export const metadata: Metadata = {
-  title: '아이콘 설정 - 설정',
+  title: '아이콘 설정',
   description: '프로필 아이콘을 변경하고 관리합니다.',
 };
 

@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import BackButton from '@/shared/components/BackButton';
-import { generatePageMetadataWithDefaults } from '@/shared/utils/metadataNew';
+import { buildMetadata } from '@/shared/utils/metadataNew';
 
 export async function generateMetadata() {
-  return generatePageMetadataWithDefaults('/terms', {
-    title: '이용약관 - 4590 Football',
+  return buildMetadata({
+    title: '이용약관',
     description: '4590 Football 서비스 이용약관을 확인하세요.',
+    path: '/terms',
+    noindex: true,
   });
 }
 

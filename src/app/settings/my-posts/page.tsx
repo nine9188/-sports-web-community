@@ -8,7 +8,7 @@ import { Container, ContainerContent, Pagination } from '@/shared/components/ui'
 import Spinner from '@/shared/components/Spinner';
 
 export const metadata: Metadata = {
-  title: '내가 쓴 글 - 설정',
+  title: '내가 쓴 글',
   description: '내가 작성한 게시글 목록을 확인할 수 있습니다.',
 };
 

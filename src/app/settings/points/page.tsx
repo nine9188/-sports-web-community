@@ -6,7 +6,7 @@ import { PointsForm, PointHistory } from '@/domains/settings/components/points';
 import { Container, ContainerContent } from '@/shared/components/ui';
 
 export const metadata: Metadata = {
-  title: '포인트 내역 - 설정',
+  title: '포인트 내역',
   description: '보유한 포인트와 사용 내역을 확인합니다.',
 };
 

@@ -13,12 +13,13 @@ import { HeaderUserData } from '@/shared/types/user';
 import { useIcon } from '@/shared/context/IconContext';
 import UserIcon from '@/shared/components/UserIcon';
 import { Board } from '../types/board';
+import { siteConfig } from '@/shared/config';
 import ReactDOM from 'react-dom';
 import LiveScoreModal from './livescoremodal';
 import UserProfileClient from './UserProfileClient';
 import MobileHamburgerModal from './MobileHamburgerModal';
 import RecentlyVisited from './RecentlyVisited';
-import { TodayMatchesResult } from '@/domains/livescore/actions/footballApi';
+import { MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
 import { NotificationBell } from '@/domains/notifications/components';
 import { Button } from '@/shared/components/ui';
 
@@ -29,7 +30,7 @@ type HeaderClientProps = {
   boards: Board[];
   isAdmin?: boolean;
   renderMode?: 'full' | 'logo-and-mobile' | 'navigation';
-  liveScoreData?: TodayMatchesResult;
+  liveScoreData?: MultiDayMatchesResult;
   totalPostCount?: number;
 };
 
@@ -144,7 +145,7 @@ export default function HeaderClient({
   const isSearchPage = (pathname || '').startsWith('/search');
 
   // 기본 로고 URL 사용
-  const logoUrl = '/logo/4590 로고2 이미지크기 275X200 누끼제거 버전.png';
+  const logoUrl = siteConfig.logo;
 
   // 서버에서 전달받은 사용자 데이터 사용
   const userData = initialUserData;
@@ -252,7 +253,7 @@ export default function HeaderClient({
               <Link href="/" className="flex items-center space-x-2">
                 <Image
                   src={logoUrl}
-                  alt="SPORTS 로고"
+                  alt="4590football logo"
                   width={124}
                   height={60}
                   priority

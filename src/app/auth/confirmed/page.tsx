@@ -1,24 +1,13 @@
-﻿﻿import { generatePageMetadataWithDefaults } from '@/shared/utils/metadataNew';
+import { buildMetadata } from '@/shared/utils/metadataNew';
 import EmailConfirmedPageClient from './page.client';
 
 export async function generateMetadata() {
-  const metadata = await generatePageMetadataWithDefaults('/auth/confirmed', {
-    title: '이메일 인증 완료 - 4590 Football',
+  return buildMetadata({
+    title: '이메일 인증 완료',
     description: '이메일 인증 완료 안내 페이지입니다.',
+    path: '/auth/confirmed',
+    noindex: true,
   });
-  return {
-    ...metadata,
-    robots: {
-      index: false,
-      follow: false,
-      nocache: true,
-      googleBot: {
-        index: false,
-        follow: false,
-        noimageindex: true,
-      },
-    },
-  };
 }
 
 export default function EmailConfirmedPage() {

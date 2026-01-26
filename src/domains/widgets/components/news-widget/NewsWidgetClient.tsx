@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { formatDate } from '@/shared/utils/dateUtils';
+import { siteConfig } from '@/shared/config';
 import { NewsItem } from './types';
 
 // ==================== 타입 정의 ====================
@@ -15,7 +16,7 @@ type ImageLoadingState = 'loading' | 'loaded' | 'error' | 'timeout';
 
 // ==================== 상수 ====================
 const IMAGE_TIMEOUT_MS = 5000;
-const FALLBACK_LOGO = '/logo/4590 로고2 이미지크기 275X200 누끼제거 버전.png';
+const FALLBACK_LOGO = siteConfig.logo;
 const BLUR_DATA_URL = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q==";
 
 const CARD_STYLES = {
@@ -160,7 +161,6 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
                   onLoad={() => handleImageLoad(news[0].id)}
                   onLoadStart={() => handleImageLoadStart(news[0].id)}
                   onError={() => handleImageError(news[0].id)}
-                  priority
                   sizes="(max-width: 768px) 100vw, 50vw"
                   spinnerSize="lg"
                 />

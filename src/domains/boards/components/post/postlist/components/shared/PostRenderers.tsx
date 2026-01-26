@@ -28,6 +28,7 @@ import { ImageType } from '@/shared/types/image';
 import { AuthorLink } from '@/domains/user/components';
 import { Post } from '../../types';
 import { checkContentType } from '../../utils';
+import { siteConfig } from '@/shared/config';
 
 /**
  * 콘텐츠 타입 아이콘 렌더링
@@ -201,7 +202,7 @@ export function renderBoardLogo(post: Post): React.ReactNode {
       <Link href={boardLink} className="flex items-center hover:underline">
         <div className="relative w-5 h-5 mr-1">
           <Image
-            src="/logo/4590 로고2 이미지크기 275X200 누끼제거 버전.png"
+            src={siteConfig.logo}
             alt={post.board_name}
             width={20}
             height={20}

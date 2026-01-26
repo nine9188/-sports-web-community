@@ -4,16 +4,18 @@ import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import PopularPageClient from './PopularPageClient';
 import { convertApiPostsToLayoutPosts } from '@/domains/boards/utils/post/postUtils';
 import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
-import { generatePageMetadataWithDefaults } from '@/shared/utils/metadataNew';
+import { buildMetadata } from '@/shared/utils/metadataNew';
 
 // 동적 렌더링 강제 설정
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function generateMetadata() {
-  return generatePageMetadataWithDefaults('/boards/popular', {
-    title: '인기글 - 4590 Football',
+  return buildMetadata({
+    title: '인기글',
     description: '가장 인기 있는 게시글을 확인하세요. 좋아요가 많은 순서로 정렬됩니다.',
+    path: '/boards/popular',
+    noindex: true,
   });
 }
 

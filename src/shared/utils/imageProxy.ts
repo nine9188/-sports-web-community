@@ -4,6 +4,8 @@
  * 외부 이미지 URL을 프록시 URL로 변환
  */
 
+import { siteConfig } from '@/shared/config';
+
 const SUPABASE_STORAGE_DOMAIN = 'vnjjfhsuzoxcljqqwwvx.supabase.co';
 const API_SPORTS_DOMAIN = 'media.api-sports.io';
 
@@ -66,7 +68,7 @@ export function getImageProps(url: string | null | undefined) {
 
   if (!proxiedUrl) {
     return {
-      src: '/logo/4590 로고2 이미지크기 275X200 누끼제거 버전.png', // 기본 이미지
+      src: siteConfig.logo, // 기본 이미지
       unoptimized: false,
     };
   }

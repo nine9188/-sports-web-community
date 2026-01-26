@@ -11,7 +11,7 @@ const authDescription = `${siteConfig.name} 로그인, 회원가입, 계정 복�
 export const metadata: Metadata = {
   title: {
     default: authTitle,
-    template: `%s | ${siteConfig.name}`,
+    template: `%s - ${siteConfig.name}`,
   },
   description: authDescription,
   robots: {
@@ -57,7 +57,7 @@ export default function AuthLayout({
           <Link href="/" className="inline-block">
             <div className="flex items-center gap-2">
               <Image
-                src="/logo/4590 로고2 이미지크기 275X200 누끼제거 버전.png"
+                src={siteConfig.logo}
                 alt="로고"
                 width={124}
                 height={60}

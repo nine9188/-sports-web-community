@@ -1,8 +1,6 @@
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { getSupabaseServer } from "@/shared/lib/supabase/server";
-import { getSeoSettings } from "@/domains/seo/actions/seoSettings";
-import { siteConfig } from '@/shared/config';
 import {
   getShopCategory,
   getCategoryItemsPaginated,
@@ -16,6 +14,7 @@ import {
   ContainerHeader,
   ContainerTitle,
 } from "@/shared/components/ui";
+import { buildMetadata } from "@/shared/utils/metadataNew";
 
 // 동적 렌더링 강제 설정 추가
 export const dynamic = "force-dynamic";
@@ -27,54 +26,51 @@ interface Props {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  try {
-    const { category } = await params;
-    const categoryData = await getShopCategory(category);
-    const seoSettings = await getSeoSettings();
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
+  const { category } = await params;
+  const sp = await (searchParams ?? Promise.resolve({}));
+  const categoryData = await getShopCategory(category);
 
-    const siteName = seoSettings?.site_name || siteConfig.name;
-
-    if (!categoryData) {
-      return {
-        title: '상점 - ' + siteName,
-        description: '상품을 구매하세요.',
-      };
-    }
-
-    const title = `${categoryData.name} | 상점 - ${siteName}`;
-    const description = `${categoryData.name} 아이템을 구매하세요.`;
-    const url = siteConfig.getCanonical(`/shop/${category}`);
-
-    return {
-      title,
-      description,
-      openGraph: {
-        title,
-        description,
-        url,
-        type: 'website',
-        siteName,
-        locale: siteConfig.locale,
-        images: [siteConfig.getDefaultOgImageObject(title)],
-      },
-      twitter: {
-        card: 'summary_large_image',
-        title,
-        description,
-        images: [siteConfig.defaultOgImage],
-      },
-      alternates: {
-        canonical: url,
-      },
-    };
-  } catch (error) {
-    console.error('[ShopCategoryPage generateMetadata] 오류:', error);
-    return {
-      title: '상점 - 4590 Football',
-      description: '상품을 구매하세요.',
-    };
+  // 카테고리 없음 → noindex
+  if (!categoryData) {
+    return buildMetadata({
+      title: "상점",
+      description: "상품을 구매하세요.",
+      path: `/shop/${category}`,
+      noindex: true,
+    });
   }
+
+  // 카테고리 아이템 수 체크
+  const allCategoryIds = [categoryData.id];
+  (categoryData.subcategories || []).forEach((child) => {
+    allCategoryIds.push(child.id);
+    (child.subcategories || []).forEach((grandchild) => {
+      allCategoryIds.push(grandchild.id);
+    });
+  });
+  const { total } = await getCategoryItemsPaginated(allCategoryIds, 1, 1);
+
+  // 필터/정렬 파라미터 체크 (cat, page 등)
+  const hasFilterParams = sp["cat"] || sp["page"];
+
+  // 아이템 0개 → noindex
+  if (total === 0) {
+    return buildMetadata({
+      title: `${categoryData.name} - 상점`,
+      description: `${categoryData.name} 아이템을 구매하세요.`,
+      path: `/shop/${category}`,
+      noindex: true,
+    });
+  }
+
+  // 필터 파라미터 있으면 canonical을 기본 URL로 고정 (중복 방지)
+  return buildMetadata({
+    title: `${categoryData.name} - 상점`,
+    description: `${categoryData.name} 아이템을 구매하세요.`,
+    path: `/shop/${category}`,
+    noindex: hasFilterParams ? true : false,
+  });
 }
 
 export default async function CategoryPage({ params, searchParams }: Props) {

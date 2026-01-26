@@ -5,52 +5,43 @@ import { getCreatePostData } from '@/domains/boards/actions';
 import { Metadata } from 'next';
 import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
 import { cache } from 'react';
+import { buildMetadata } from '@/shared/utils/metadataNew';
 
 // 캐시된 데이터 가져오기 함수 - 중복 호출 방지
 const getCachedCreatePostData = cache(async (slug: string) => {
   return await getCreatePostData(slug);
 });
 
-// 메타데이터 생성 함수 - 간소화
+// 메타데이터 생성 함수
 export async function generateMetadata({
   params
 }: {
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
-  const robotsConfig = {
-    index: false,
-    follow: false,
-  };
-
   try {
     const { slug } = await params;
 
-    if (!slug) {
-      return {
-        title: '새 글 작성',
-        description: '게시판에 새 글을 작성합니다.',
-        robots: robotsConfig,
-      };
-    }
-
-    // 캐시된 데이터 사용
-    const result = await getCachedCreatePostData(slug);
-    if (result.success && result.board) {
-      return {
-        title: `새 글 작성 - ${result.board.name}`,
-        description: `${result.board.name} 게시판에 새 글을 작성합니다.`,
-        robots: robotsConfig,
-      };
+    if (slug) {
+      const result = await getCachedCreatePostData(slug);
+      if (result.success && result.board) {
+        return buildMetadata({
+          title: `새 글 작성 - ${result.board.name}`,
+          description: `${result.board.name} 게시판에 새 글을 작성합니다.`,
+          path: `/boards/${slug}/create`,
+          noindex: true,
+        });
+      }
     }
   } catch (error) {
     console.error('메타데이터 생성 오류:', error);
   }
 
-  return {
+  return buildMetadata({
     title: '새 글 작성',
     description: '게시판에 새 글을 작성합니다.',
-    robots: robotsConfig,
-  };
+    path: '/boards/create',
+    noindex: true,
+  });
 }
 
 // 서버 컴포넌트
