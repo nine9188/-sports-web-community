@@ -1,12 +1,16 @@
 import { checkUserAuth } from '@/domains/settings';
-import { Metadata } from 'next';
 import { PasswordForm } from '@/domains/settings/components';
 import { Container, ContainerContent } from '@/shared/components/ui';
+import { buildMetadata } from '@/shared/utils/metadataNew';
 
-export const metadata: Metadata = {
-  title: '비밀번호 변경',
-  description: '계정 보안을 위해 비밀번호를 변경합니다.',
-};
+export async function generateMetadata() {
+  return buildMetadata({
+    title: '비밀번호 변경',
+    description: '계정 보안을 위해 비밀번호를 변경합니다.',
+    path: '/settings/password',
+    noindex: true,
+  });
+}
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;

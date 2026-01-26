@@ -1,16 +1,20 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
-import { Metadata } from 'next';
 import { getMyPosts } from '@/domains/settings/actions/my-posts';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import MyPostsContent from '@/domains/settings/components/my-posts/MyPostsContent';
 import { Container, ContainerContent, Pagination } from '@/shared/components/ui';
 import Spinner from '@/shared/components/Spinner';
+import { buildMetadata } from '@/shared/utils/metadataNew';
 
-export const metadata: Metadata = {
-  title: '내가 쓴 글',
-  description: '내가 작성한 게시글 목록을 확인할 수 있습니다.',
-};
+export async function generateMetadata() {
+  return buildMetadata({
+    title: '내가 쓴 글',
+    description: '내가 작성한 게시글 목록을 확인할 수 있습니다.',
+    path: '/settings/my-posts',
+    noindex: true,
+  });
+}
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;

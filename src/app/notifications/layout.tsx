@@ -1,21 +1,15 @@
-import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/domains/auth/actions';
+import { buildMetadata } from '@/shared/utils/metadataNew';
 
-export const metadata: Metadata = {
-  title: '알림 - 4590 Football',
-  description: '실시간 알림을 확인하세요.',
-  robots: {
-    index: false,
-    follow: false,
-    nocache: true,
-    googleBot: {
-      index: false,
-      follow: false,
-      noimageindex: true,
-    },
-  },
-};
+export async function generateMetadata() {
+  return buildMetadata({
+    title: '알림',
+    description: '실시간 알림을 확인하세요.',
+    path: '/notifications',
+    noindex: true,
+  });
+}
 
 export const dynamic = 'force-dynamic';
 

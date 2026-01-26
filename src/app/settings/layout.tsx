@@ -1,20 +1,17 @@
-import type { Metadata } from 'next';
 import SettingsTabs from '@/domains/settings/components/common/SettingsTabs';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/domains/auth/actions';
 import SettingsAuthGuardClient from '@/domains/settings/components/common/SettingsAuthGuardClient';
+import { buildMetadata } from '@/shared/utils/metadataNew';
 
-export const metadata: Metadata = {
-  title: {
-    template: '%s - 4590 Football',
-    default: '설정 - 4590 Football',
-  },
-  description: '계정 설정 및 개인 정보 관리',
-  robots: {
-    index: false,
-    follow: false,
-  },
-};
+export async function generateMetadata() {
+  return buildMetadata({
+    title: '설정',
+    description: '계정 설정 및 개인 정보 관리',
+    path: '/settings',
+    noindex: true,
+  });
+}
 
 export const dynamic = 'force-dynamic';
 

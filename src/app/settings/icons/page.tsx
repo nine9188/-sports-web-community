@@ -4,13 +4,17 @@ import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getUserIcons, getCurrentUserIcon } from '@/domains/settings/actions/icons';
 import { IconForm } from '@/domains/settings/components/icons';
 import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
-import { Metadata } from 'next';
 import { Container, ContainerContent } from '@/shared/components/ui';
+import { buildMetadata } from '@/shared/utils/metadataNew';
 
-export const metadata: Metadata = {
-  title: '아이콘 설정',
-  description: '프로필 아이콘을 변경하고 관리합니다.',
-};
+export async function generateMetadata() {
+  return buildMetadata({
+    title: '아이콘 설정',
+    description: '프로필 아이콘을 변경하고 관리합니다.',
+    path: '/settings/icons',
+    noindex: true,
+  });
+}
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;

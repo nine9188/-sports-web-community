@@ -1,45 +1,18 @@
 import React from 'react';
-import { Metadata } from 'next';
 import '../globals.css';
 import Link from 'next/link';
 import Image from 'next/image';
 import { siteConfig } from '@/shared/config';
+import { buildMetadata } from '@/shared/utils/metadataNew';
 
-const authTitle = `로그인 - ${siteConfig.name}`;
-const authDescription = `${siteConfig.name} 로그인, 회원가입, 계정 복구 등 인증 페이지입니다.`;
-
-export const metadata: Metadata = {
-  title: {
-    default: authTitle,
-    template: `%s - ${siteConfig.name}`,
-  },
-  description: authDescription,
-  robots: {
-    index: false,
-    follow: false,
-    nocache: true,
-    googleBot: {
-      index: false,
-      follow: false,
-      noimageindex: true,
-    },
-  },
-  openGraph: {
-    title: authTitle,
-    description: authDescription,
-    url: siteConfig.getUrl('/signin'),
-    siteName: siteConfig.name,
-    images: [siteConfig.getDefaultOgImageObject(siteConfig.name)],
-    type: 'website',
-    locale: siteConfig.locale,
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: authTitle,
-    description: authDescription,
-    images: [siteConfig.defaultOgImage],
-  },
-};
+export async function generateMetadata() {
+  return buildMetadata({
+    title: '로그인',
+    description: '로그인, 회원가입, 계정 복구 등 인증 페이지입니다.',
+    path: '/signin',
+    noindex: true,
+  });
+}
 
 /**
  * 인증 페이지용 특수 레이아웃

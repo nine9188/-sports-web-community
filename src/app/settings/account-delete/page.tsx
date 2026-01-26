@@ -1,13 +1,17 @@
-import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { AccountDeleteForm } from '@/domains/settings/components';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { Container, ContainerContent } from '@/shared/components/ui';
+import { buildMetadata } from '@/shared/utils/metadataNew';
 
-export const metadata: Metadata = {
-  title: '회원 탈퇴',
-  description: '계정을 삭제하고 서비스를 탈퇴합니다.'
-};
+export async function generateMetadata() {
+  return buildMetadata({
+    title: '회원 탈퇴',
+    description: '계정을 삭제하고 서비스를 탈퇴합니다.',
+    path: '/settings/account-delete',
+    noindex: true,
+  });
+}
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;

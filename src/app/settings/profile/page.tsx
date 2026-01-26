@@ -1,15 +1,19 @@
-import { Metadata } from 'next';
 import { checkUserAuth } from '@/domains/settings/actions/auth';
 import { getUserProfile } from '@/domains/settings/actions/profile';
 import { ProfileForm } from '@/domains/settings/components';
 import { checkSuspensionStatus } from '@/shared/utils/suspension-guard';
 import SuspensionNotice from '@/shared/components/SuspensionNotice';
 import { Container, ContainerContent } from '@/shared/components/ui';
+import { buildMetadata } from '@/shared/utils/metadataNew';
 
-export const metadata: Metadata = {
-  title: '프로필 설정',
-  description: '계정 및 프로필 정보를 관리합니다.',
-};
+export async function generateMetadata() {
+  return buildMetadata({
+    title: '프로필 설정',
+    description: '계정 및 프로필 정보를 관리합니다.',
+    path: '/settings/profile',
+    noindex: true,
+  });
+}
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;

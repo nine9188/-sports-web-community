@@ -5,10 +5,10 @@ import { buildMetadata } from '@/shared/utils/metadataNew';
 
 export async function generateMetadata() {
   return buildMetadata({
-    title: '4590 Football',
-    description: '실시간 축구 경기 일정과 스코어, 팀·선수 정보를 확인하고, 축구 팬들과 함께 소통할 수 있는 커뮤니티 플랫폼',
+    title: '4590 Football - 실시간 축구 스코어, 경기 일정, 팀·선수 정보, 축구 커뮤니티',
+    description: '프리미어리그(EPL), 라리가, 세리에A, 챔피언스리그 등 주요 리그의 실시간 라이브스코어와 경기 일정, 팀·선수 통계 정보를 제공하며 축구 팬들과 소통할 수 있는 플랫폼입니다.',
     path: '/',
-    titleOnly: true, // 홈페이지는 사이트 이름만
+    titleOnly: true,
   });
 }
 

@@ -1,4 +1,3 @@
-import { Metadata } from 'next';
 import {
   checkUserAuth
 } from '@/domains/settings/actions/auth';
@@ -10,11 +9,16 @@ import ExpForm from '@/domains/settings/components/exp/ExpForm';
 import ExpHistory from '@/domains/settings/components/exp/ExpHistory';
 import LevelList from '@/domains/settings/components/exp/LevelList';
 import { Container, ContainerContent } from '@/shared/components/ui';
+import { buildMetadata } from '@/shared/utils/metadataNew';
 
-export const metadata: Metadata = {
-  title: '경험치 및 레벨',
-  description: '경험치 획득 내역 및 레벨 정보를 확인합니다.',
-};
+export async function generateMetadata() {
+  return buildMetadata({
+    title: '경험치 및 레벨',
+    description: '경험치 획득 내역 및 레벨 정보를 확인합니다.',
+    path: '/settings/exp',
+    noindex: true,
+  });
+}
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
