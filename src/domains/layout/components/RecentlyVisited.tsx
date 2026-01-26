@@ -24,17 +24,13 @@ const RecentlyVisited = React.memo(function RecentlyVisited() {
   const {
     recentBoards,
     isExpanded,
-    isMounted,
+    isLoaded,
     removeBoard,
     clearAll,
     toggleExpanded
   } = useRecentlyVisited();
 
-  // SSR 보호
-  if (!isMounted) {
-    return null;
-  }
-
+  // 항상 동일한 컨테이너 구조를 렌더링 — SSR과 클라이언트가 같은 DOM을 생성
   return (
     <div className="bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
       <div className="w-full max-w-[1400px] mx-auto px-4">
@@ -96,9 +92,11 @@ const RecentlyVisited = React.memo(function RecentlyVisited() {
                 </div>
               </>
             ) : (
-              <p className="text-xs text-gray-700 dark:text-gray-300">
-                방문한 페이지가 없습니다
-              </p>
+              isLoaded && (
+                <p className="text-xs text-gray-700 dark:text-gray-300">
+                  방문한 페이지가 없습니다
+                </p>
+              )
             )}
           </div>
         ) : (
@@ -134,9 +132,11 @@ const RecentlyVisited = React.memo(function RecentlyVisited() {
                   ))}
                 </div>
               ) : (
-                <span className="text-xs text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                  방문한 페이지가 없습니다
-                </span>
+                isLoaded && (
+                  <span className="text-xs text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                    방문한 페이지가 없습니다
+                  </span>
+                )
               )}
             </div>
 

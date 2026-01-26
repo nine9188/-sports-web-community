@@ -14,19 +14,17 @@ import {
 export function useRecentlyVisited() {
   const [recentBoards, setRecentBoards] = useState<RecentBoard[]>([]);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   // 초기 로드 (SSR 안전)
   useEffect(() => {
-    setIsMounted(true);
     setRecentBoards(getRecentlyVisited());
     setIsExpanded(getExpandedState());
+    setIsLoaded(true);
   }, []);
 
   // storage 이벤트 리스너 (다른 탭/컴포넌트 동기화)
   useEffect(() => {
-    if (!isMounted) return;
-
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'recently_visited_boards') {
         setRecentBoards(getRecentlyVisited());
@@ -35,7 +33,7 @@ export function useRecentlyVisited() {
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, [isMounted]);
+  }, []);
 
   // 게시판 추가
   const addBoard = useCallback((board: Omit<RecentBoard, 'visitedAt'>) => {
@@ -67,7 +65,7 @@ export function useRecentlyVisited() {
   return {
     recentBoards,
     isExpanded,
-    isMounted,
+    isLoaded,
     addBoard,
     removeBoard,
     clearAll,
