@@ -4,6 +4,7 @@ import { getCachedSidebarData } from '@/domains/livescore/actions/match/sidebarD
 import { getCachedPowerData } from '@/domains/livescore/actions/match/headtohead';
 import { fetchPlayerRatingsAndCaptains } from '@/domains/livescore/actions/match/playerStats';
 import { fetchMatchPlayerStats } from '@/domains/livescore/actions/match/matchPlayerStats';
+import { getMatchCacheBulk, setMatchCache } from '@/domains/livescore/actions/match/matchCache';
 import MatchPageClient, { MatchTabType } from '@/domains/livescore/components/football/match/MatchPageClient';
 import { notFound } from 'next/navigation';
 import { buildMetadata } from '@/shared/utils/metadataNew';
@@ -156,22 +157,86 @@ export default async function MatchPage({
     // 사이드바 데이터와 power 데이터를 병렬로 미리 로드
     const homeTeamId = matchData.homeTeam?.id;
     const awayTeamId = matchData.awayTeam?.id;
+    const numericMatchId = parseInt(matchId, 10);
+    const isFinished = matchData.match?.status?.code === 'FT';
 
-    // 모든 탭에서 필요한 데이터를 병렬로 프리로드 (탭 전환 시 서버 호출 방지)
-    const [sidebarDataResult, powerDataResult, playerRatingsResult, matchPlayerStatsResult] = await Promise.all([
-      getCachedSidebarData(matchId),
-      // power 데이터는 항상 프리로드 (기본 탭이 power이므로)
-      (homeTeamId && awayTeamId)
-        ? getCachedPowerData(homeTeamId, awayTeamId, 5)
-        : Promise.resolve({ success: false, data: undefined }),
-      // Lineups 탭용 선수 평점/주장 데이터
-      fetchPlayerRatingsAndCaptains(matchId),
-      // Stats 탭용 선수 통계 데이터
-      fetchMatchPlayerStats(matchId)
-    ]);
+    // FT 경기: L2 캐시에서 power, playerRatings, matchPlayerStats 조회
+    let powerDataResult: { success: boolean; data?: unknown } = { success: false };
+    let playerRatingsResult: unknown = null;
+    let matchPlayerStatsResult: unknown = null;
+    let sidebarDataResult: { success: boolean; data?: unknown } = { success: false };
+
+    if (isFinished) {
+      // 캐시 벌크 조회 (1회 쿼리)
+      const [cachedExtra, sidebarResult] = await Promise.all([
+        getMatchCacheBulk(numericMatchId, ['power', 'playerRatings', 'matchPlayerStats']),
+        getCachedSidebarData(matchId),
+      ]);
+      sidebarDataResult = sidebarResult;
+
+      const hasPower = !!cachedExtra['power'];
+      const hasRatings = !!cachedExtra['playerRatings'];
+      const hasStats = !!cachedExtra['matchPlayerStats'];
+
+      if (hasPower) {
+        powerDataResult = cachedExtra['power'] as { success: boolean; data?: unknown };
+      }
+      if (hasRatings) {
+        playerRatingsResult = cachedExtra['playerRatings'];
+      }
+      if (hasStats) {
+        matchPlayerStatsResult = cachedExtra['matchPlayerStats'];
+      }
+
+      // 캐시에 없는 것만 API에서 가져옴
+      const apiPromises: Promise<void>[] = [];
+
+      if (!hasPower && homeTeamId && awayTeamId) {
+        apiPromises.push(
+          getCachedPowerData(homeTeamId, awayTeamId, 5).then(r => {
+            powerDataResult = r;
+            setMatchCache(numericMatchId, 'power', r).catch(() => {});
+          })
+        );
+      }
+      if (!hasRatings) {
+        apiPromises.push(
+          fetchPlayerRatingsAndCaptains(matchId).then(r => {
+            playerRatingsResult = r;
+            setMatchCache(numericMatchId, 'playerRatings', r).catch(() => {});
+          })
+        );
+      }
+      if (!hasStats) {
+        apiPromises.push(
+          fetchMatchPlayerStats(matchId).then(r => {
+            matchPlayerStatsResult = r;
+            setMatchCache(numericMatchId, 'matchPlayerStats', r).catch(() => {});
+          })
+        );
+      }
+
+      if (apiPromises.length > 0) await Promise.all(apiPromises);
+    } else {
+      // 비종료 경기: 기존대로 모든 API 병렬 호출
+      const [sResult, pResult, rResult, stsResult] = await Promise.all([
+        getCachedSidebarData(matchId),
+        (homeTeamId && awayTeamId)
+          ? getCachedPowerData(homeTeamId, awayTeamId, 5)
+          : Promise.resolve({ success: false, data: undefined }),
+        fetchPlayerRatingsAndCaptains(matchId),
+        fetchMatchPlayerStats(matchId)
+      ]);
+      sidebarDataResult = sResult;
+      powerDataResult = pResult;
+      playerRatingsResult = rResult;
+      matchPlayerStatsResult = stsResult;
+    }
 
     const sidebarData = sidebarDataResult.success ? sidebarDataResult.data : null;
-    const powerData = powerDataResult.success ? powerDataResult.data : undefined;
+    const powerData = (powerDataResult as { success?: boolean; data?: unknown }).success
+      ? (powerDataResult as { data?: unknown }).data
+      : undefined;
 
     return (
       <div className="container">

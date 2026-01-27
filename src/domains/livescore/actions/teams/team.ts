@@ -2,6 +2,7 @@
 
 import { cache } from 'react';
 import { getTeamById } from '@/domains/livescore/constants/teams';
+import { getTeamCache, setTeamCache } from './teamCache';
 
 // 팀 정보 인터페이스
 export interface TeamData {
@@ -281,9 +282,34 @@ export const fetchTeamFullData = cache(
     }
   ): Promise<TeamFullDataResponse> => {
     try {
-      // 항상 기본 팀 데이터는 가져옵니다
-      const teamData = await fetchTeamData(teamId);
-      
+      const numericTeamId = parseInt(teamId, 10);
+      const currentYear = new Date().getFullYear();
+      const currentSeason = new Date().getMonth() > 6 ? currentYear : currentYear - 1;
+
+      // ============================================
+      // L2 (Supabase) 캐시 래퍼
+      // ============================================
+      async function withCache<T>(
+        dataType: 'info' | 'stats' | 'matches' | 'squad' | 'playerStats' | 'standings',
+        fetcher: () => Promise<T>,
+        season?: number
+      ): Promise<T> {
+        const cached = await getTeamCache(numericTeamId, dataType, season);
+        if (cached.data !== null && cached.fresh) {
+          return cached.data as T;
+        }
+        const freshData = await fetcher();
+        setTeamCache(numericTeamId, dataType, freshData, season).catch(() => {});
+        return freshData;
+      }
+
+      // 기본 팀 데이터 (info + stats 통합)
+      const teamData = await withCache<TeamResponse>(
+        'info',
+        () => fetchTeamData(teamId),
+        currentSeason
+      );
+
       if (!teamData.success) {
         return {
           success: false,
@@ -297,28 +323,28 @@ export const fetchTeamFullData = cache(
       const dataTypes: string[] = [];
 
       if (options.fetchMatches) {
-        promises.push(getTeamMatches(teamId));
+        promises.push(withCache('matches', () => getTeamMatches(teamId), currentSeason));
         dataTypes.push('matches');
       }
 
       if (options.fetchSquad) {
-        promises.push(getTeamSquad(teamId));
+        promises.push(withCache('squad', () => getTeamSquad(teamId), currentSeason));
         dataTypes.push('squad');
       }
 
       if (options.fetchPlayerStats) {
-        promises.push(getTeamPlayerStats(teamId));
+        promises.push(withCache('playerStats', () => getTeamPlayerStats(teamId), currentSeason));
         dataTypes.push('playerStats');
       }
 
       if (options.fetchStandings) {
-        promises.push(getTeamStandings(teamId));
+        promises.push(withCache('standings', () => getTeamStandings(teamId), currentSeason));
         dataTypes.push('standings');
       }
 
       // 모든 데이터 병렬로 요청
       const results = await Promise.all(promises);
-      
+
       // 결과 조합
       const response: TeamFullDataResponse = {
         success: true,

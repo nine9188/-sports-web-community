@@ -2,13 +2,14 @@
 
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
-import { 
-  parseTransferFee, 
-  sortTransfersByDate, 
-  calculateTransferStats, 
+import {
+  parseTransferFee,
+  sortTransfersByDate,
+  calculateTransferStats,
   getLeagueName,
-  TransferStats 
+  TransferStats
 } from '../../utils/transferUtils';
+import { getTeamCache, setTeamCache } from '../teams/teamCache';
 
 // 이적 데이터 타입 정의
 export interface TransferMarketData {
@@ -106,8 +107,12 @@ export const fetchTeamTransfers = cache(async (
       return null;
     }
 
-  
-    
+    // L2 Supabase 캐시 확인
+    const cached = await getTeamCache(teamId, 'transfers');
+    if (cached.data !== null && cached.fresh) {
+      return cached.data as TeamTransfersData;
+    }
+
     // 캐싱된 API 호출 함수
     const cachedApiCall = unstable_cache(
       async (teamId: number) => {
@@ -134,12 +139,8 @@ export const fetchTeamTransfers = cache(async (
 
     const data = await cachedApiCall(teamId);
 
-
-
-
     // player/transfers.ts와 동일한 검증 로직
     if (!data.response || !Array.isArray(data.response) || data.response.length === 0) {
-
       return {
         team: { id: teamId, name: '', logo: '' },
         transfers: { in: [], out: [] }
@@ -147,7 +148,12 @@ export const fetchTeamTransfers = cache(async (
     }
 
     // 데이터 처리 (시즌 필터링 제거됨)
-    return processTeamTransferData(data, teamId);
+    const result = processTeamTransferData(data, teamId);
+
+    // L2 Supabase에 저장
+    setTeamCache(teamId, 'transfers', result).catch(() => {});
+
+    return result;
 
   } catch (error) {
     console.error('팀 이적 정보 가져오기 오류:', error);

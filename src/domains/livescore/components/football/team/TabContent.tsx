@@ -8,6 +8,7 @@ import {
   convertStandingsData
 } from '../../../utils/teamDataUtils';
 import { LoadingState, ErrorState } from '@/domains/livescore/components/common/CommonComponents';
+import SidebarRelatedPosts from '@/domains/sidebar/components/SidebarRelatedPosts';
 import { Match as ApiMatch } from '@/domains/livescore/actions/teams/matches';
 import { Match as UIMatch } from './tabs/overview/components/MatchItems';
 import { FixturesTab } from './tabs/fixtures';
@@ -94,6 +95,9 @@ export default function TabContent({ teamId, tab, initialData }: TabContentProps
             isLoading={false}
             error={null}
           />
+          <div className="xl:hidden">
+            <SidebarRelatedPosts />
+          </div>
         </Suspense>
       );
 

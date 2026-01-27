@@ -3,6 +3,7 @@ import { getHotPosts } from '../actions/getHotPosts';
 import { getHotdealBestPosts } from '../actions/getHotdealBestPosts';
 import { TopicTabsClient } from './TabsClient';
 import { HotdealTabsClient } from './HotdealTabsClient';
+import SidebarRelatedPosts from './SidebarRelatedPosts';
 
 export default async function RightSidebar() {
   try {
@@ -28,6 +29,7 @@ export default async function RightSidebar() {
       <aside className="hidden xl:block w-[300px] shrink-0">
         <div className="h-full pt-4">
           <TopicTabsClient postsData={postsData} />
+          <SidebarRelatedPosts />
           <HotdealTabsClient postsData={hotdealData} />
         </div>
       </aside>
@@ -54,6 +56,7 @@ export default async function RightSidebar() {
       <aside className="hidden xl:block w-[300px] shrink-0">
         <div className="h-full pt-4">
           <TopicTabsClient postsData={emptyData} />
+          <SidebarRelatedPosts />
           <HotdealTabsClient postsData={emptyHotdealData} />
         </div>
       </aside>

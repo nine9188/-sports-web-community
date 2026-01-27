@@ -102,7 +102,7 @@ export default function TeamPageClient({
   }, [currentTab, pathname, searchParams]);
 
   return (
-    <div className="container mx-auto w-full">
+    <>
       {/* TeamHeader - 초기 데이터 전달 */}
       <Suspense fallback={
         <div className="mb-4 bg-white dark:bg-[#1D1D1D] rounded-lg border dark:border-gray-700 p-4">
@@ -128,6 +128,6 @@ export default function TeamPageClient({
         tab={currentTab}
         initialData={initialData}
       />
-    </div>
+    </>
   );
 }

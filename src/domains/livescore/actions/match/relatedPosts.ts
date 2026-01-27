@@ -19,21 +19,48 @@ export interface RelatedPost {
 }
 
 /**
- * 매치 관련 게시글 조회
- * 1순위: 해당 매치 카드가 삽입된 글
- * 2순위: 해당 팀 관련 글 (팀카드, 선수카드, 매치카드에 포함된 팀)
- * 3순위: 해당 팀 게시판의 게시글 (boards.team_id 매칭)
+ * 통합 관련 게시글 조회
+ *
+ * 매치/팀/선수 페이지에서 공통으로 사용
+ * - 매치: { matchId, teamIds: [홈, 원정] }
+ * - 팀:   { teamIds: [팀ID] }
+ * - 선수: { playerIds: [선수ID], teamIds: [소속팀ID] }
  */
+export interface RelatedPostsParams {
+  matchId?: string;
+  teamIds?: number[];
+  playerIds?: number[];
+  limit?: number;
+}
+
 export const getRelatedPosts = cache(async (
-  matchId: string,
+  params: RelatedPostsParams | string,
   homeTeamId?: number,
   awayTeamId?: number,
-  limit: number = 10
+  legacyLimit?: number
 ): Promise<RelatedPost[]> => {
+  // 하위 호환: 기존 (matchId, homeTeamId, awayTeamId, limit) 호출 지원
+  const p: RelatedPostsParams = typeof params === 'string'
+    ? {
+        matchId: params,
+        teamIds: [homeTeamId, awayTeamId].filter(Boolean) as number[],
+        limit: legacyLimit,
+      }
+    : params;
+
+  const { matchId, teamIds = [], playerIds = [], limit = 10 } = p;
+
   try {
     const supabase = await getSupabaseServer();
 
-    const teamIds = [homeTeamId, awayTeamId].filter(Boolean) as number[];
+    // .or() 필터 조건 생성
+    const orConditions: string[] = [];
+    if (matchId) orConditions.push(`match_id.eq.${matchId}`);
+    if (teamIds.length > 0) orConditions.push(`team_id.in.(${teamIds.join(',')})`);
+    if (playerIds.length > 0) orConditions.push(`player_id.in.(${playerIds.join(',')})`);
+
+    // 조건이 없으면 빈 배열 반환
+    if (orConditions.length === 0) return [];
 
     // 카드 링크 기반 조회 + 팀 게시판 게시글 조회를 병렬 실행
     const [cardResult, boardResult] = await Promise.all([
@@ -60,15 +87,10 @@ export const getRelatedPosts = cache(async (
             comments(count)
           )
         `)
-        .or(
-          [
-            `match_id.eq.${matchId}`,
-            ...(teamIds.length > 0 ? [`team_id.in.(${teamIds.join(',')})`] : [])
-          ].join(',')
-        )
+        .or(orConditions.join(','))
         .limit(50),
 
-      // 2) 팀 게시판 게시글 (boards.team_id가 매치 팀과 일치)
+      // 2) 팀 게시판 게시글 (boards.team_id 매칭)
       teamIds.length > 0
         ? supabase
             .from('posts')
@@ -93,7 +115,7 @@ export const getRelatedPosts = cache(async (
         : Promise.resolve({ data: null, error: null }),
     ]);
 
-    // 중복 게시글 제거 + 우선순위 정렬
+    // 중복 게시글 제거
     const postMap = new Map<string, RelatedPost & { priority: number }>();
 
     // 카드 링크 결과 처리
@@ -114,7 +136,7 @@ export const getRelatedPosts = cache(async (
 
         if (!post?.id) continue;
 
-        const priority = row.match_id === matchId && row.card_type === 'match' ? 0 : 1;
+        const priority = matchId && row.match_id === matchId && row.card_type === 'match' ? 0 : 1;
         const contentStr = typeof post.content === 'object' ? JSON.stringify(post.content) : String(post.content || '');
 
         const existing = postMap.get(post.id);

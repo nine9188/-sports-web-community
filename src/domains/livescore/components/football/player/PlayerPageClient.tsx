@@ -125,7 +125,7 @@ export default function PlayerPageClient({
   }, [currentTab, pathname, searchParams]);
 
   return (
-    <div className="container">
+    <>
       {/* PlayerHeader - playerId와 초기 데이터 전달 */}
       <PlayerHeader
         playerId={playerId}
@@ -146,6 +146,6 @@ export default function PlayerPageClient({
           initialData={initialData}
         />
       </Suspense>
-    </div>
+    </>
   );
 }

@@ -118,6 +118,9 @@ export default function PlayerStats({ statistics: initialStatistics }: PlayerSta
 
         return (
           <div key={`${stat.league.id}-${index}`} className="space-y-4">
+            {index > 0 && (
+              <hr className="border-black/5 dark:border-white/10" />
+            )}
             {isGoalkeeper ? (
               <>
                 {/* 골키퍼: 리그헤더 + 기본 정보 + 공격 통계 */}

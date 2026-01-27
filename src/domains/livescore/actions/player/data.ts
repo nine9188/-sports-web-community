@@ -9,6 +9,7 @@ import { fetchPlayerTrophies } from './trophies';
 import { fetchPlayerTransfers } from './transfers';
 import { fetchPlayerInjuries } from './injuries';
 import { fetchPlayerRankings } from './rankings';
+import { getPlayerCache, setPlayerCache } from './playerCache';
 
 // 서버 데이터 캐싱을 위한 맵 (ID-탭 기반으로 캐싱)
 const serverDataCache = new Map<string, PlayerFullDataResponse>();
@@ -275,77 +276,123 @@ export const fetchPlayerFullData = async (
           rankings?: Promise<RankingsData>;
         } = {};
         
+        // ============================================
+        // L2 (Supabase) 캐시 확인 → miss 시 API 호출 → 저장
+        // ============================================
+
+        /**
+         * L2 캐시 래퍼: Supabase 캐시 확인 후 miss이면 fetcher 실행, 결과 저장
+         */
+        async function withCache<T>(
+          dataType: 'info' | 'stats' | 'fixtures' | 'trophies' | 'transfers' | 'injuries' | 'seasons',
+          fetcher: () => Promise<T>,
+          season?: number
+        ): Promise<T> {
+          // L2 캐시 조회
+          const cached = await getPlayerCache(playerIdNum, dataType, season);
+          if (cached.data !== null && cached.fresh) {
+            return cached.data as T;
+          }
+
+          // stale 데이터가 있으면 백그라운드 갱신 (stale-while-revalidate)
+          // 여기서는 단순히 API 호출
+          const freshData = await fetcher();
+
+          // L2 캐시에 저장 (비동기, 실패해도 무시)
+          setPlayerCache(playerIdNum, dataType, freshData, season).catch(() => {});
+
+          return freshData;
+        }
+
         // 기본 선수 데이터는 항상 가져옴
-        apiPromises.playerData = fetchCachedPlayerData(playerId);
-        
+        apiPromises.playerData = withCache<PlayerData>(
+          'info',
+          () => fetchCachedPlayerData(playerId)
+        );
+
         // 모든 사용 가능한 시즌 목록 가져오기 (필요한 경우)
         if (loadOptions.fetchSeasons || loadOptions.fetchFixtures) {
           apiPromises.allSeasons = getCachedSeasons();
         }
-        
+
         // 선택적으로 다른 데이터 로드
         if (loadOptions.fetchSeasons) {
-          // 이 선수의 특정 시즌 데이터와 함께 전체 시즌 목록도 활용
-          apiPromises.seasons = fetchPlayerSeasons(playerIdNum);
+          apiPromises.seasons = withCache<number[]>(
+            'seasons',
+            () => fetchPlayerSeasons(playerIdNum)
+          );
         }
-        
+
         if (loadOptions.fetchStats) {
-          // 현재 시즌과 이전 시즌 데이터 모두 로드 시도
-          apiPromises.statistics = fetchPlayerStats(playerIdNum, currentSeason)
-            .then(async (stats) => {
-              // 현재 시즌 데이터가 없거나 비어있으면 이전 시즌 데이터 시도
+          apiPromises.statistics = withCache<PlayerStatistic[]>(
+            'stats',
+            async () => {
+              const stats = await fetchPlayerStats(playerIdNum, currentSeason);
               if (!stats || stats.length === 0) {
                 const prevSeasonStats = await fetchPlayerStats(playerIdNum, currentSeason - 1);
                 return prevSeasonStats || [];
               }
               return stats;
-            });
+            },
+            currentSeason
+          );
         }
-        
+
         if (loadOptions.fetchFixtures) {
-          // 피클스처 데이터 로드
-          apiPromises.fixtures = fetchPlayerFixtures(playerIdNum)
-            .then(async (fixtures) => {
-              // fixtures 결과가 있더라도 반환 타입이 일관되도록 보장
-              return {
-                data: fixtures?.data || [],
-                status: fixtures?.status || 'success',
-                message: fixtures?.message
-              };
-            })
-            .catch(() => {
-              return { 
-                data: [],
-                status: 'error',
-                message: '피클스처 데이터를 가져오는데 실패했습니다.' 
-              };
-            });
+          apiPromises.fixtures = withCache<{ data: FixtureData[]; status?: string; message?: string }>(
+            'fixtures',
+            async () => {
+              try {
+                const fixtures = await fetchPlayerFixtures(playerIdNum);
+                return {
+                  data: fixtures?.data || [],
+                  status: fixtures?.status || 'success',
+                  message: fixtures?.message
+                };
+              } catch {
+                return {
+                  data: [],
+                  status: 'error',
+                  message: '피클스처 데이터를 가져오는데 실패했습니다.'
+                };
+              }
+            },
+            currentSeason
+          );
         }
-        
+
         if (loadOptions.fetchTrophies) {
-          apiPromises.trophies = fetchPlayerTrophies(playerIdNum);
+          apiPromises.trophies = withCache<TrophyData[]>(
+            'trophies',
+            () => fetchPlayerTrophies(playerIdNum)
+          );
         }
-        
+
         if (loadOptions.fetchTransfers) {
-          apiPromises.transfers = fetchPlayerTransfers(playerIdNum);
+          apiPromises.transfers = withCache<TransferData[]>(
+            'transfers',
+            () => fetchPlayerTransfers(playerIdNum)
+          );
         }
-        
+
         if (loadOptions.fetchInjuries) {
-          apiPromises.injuries = fetchPlayerInjuries(playerIdNum)
-            .then(injuries => {
-              return injuries;
-            })
-            .catch(error => {
-              console.error(`[fetchPlayerFullData] 부상 데이터 로드 오류:`, error);
-              return [];
-            });
+          apiPromises.injuries = withCache<InjuryData[]>(
+            'injuries',
+            async () => {
+              try {
+                return await fetchPlayerInjuries(playerIdNum);
+              } catch (error) {
+                console.error(`[fetchPlayerFullData] 부상 데이터 로드 오류:`, error);
+                return [];
+              }
+            }
+          );
         }
-        
+
         if (loadOptions.fetchRankings) {
-          // 선수의 현재 리그 ID를 가져오기 위해 먼저 선수 데이터를 기다림
+          // 랭킹은 캐시 대상 아님 (다른 선수 데이터 포함)
           apiPromises.rankings = apiPromises.playerData!.then(async (playerData) => {
-            // 선수의 최근 통계에서 리그 ID 추출
-            const currentLeagueId = playerData?.statistics?.[0]?.league?.id || 39; // 기본값: 프리미어리그
+            const currentLeagueId = playerData?.statistics?.[0]?.league?.id || 39;
             return fetchPlayerRankings(playerIdNum, currentLeagueId);
           });
         }

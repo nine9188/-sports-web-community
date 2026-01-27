@@ -75,7 +75,10 @@
       "Bash(xxd:*)",
       "Bash(wmic process where \"name=''node.exe''\" get ProcessId,WorkingSetSize,CommandLine /format:list)",
       "Bash(tasklist:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(curl:*)",
+      "Bash(python -m json.tool:*)",
+      "Bash(git log:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

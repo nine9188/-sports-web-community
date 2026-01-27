@@ -8,6 +8,7 @@ import { fetchMatchStats } from './statsData';
 import { fetchCachedLeagueStandings } from './standingsData';
 import { TeamLineup } from './lineupData';
 import { TeamStats } from './statsData';
+import { getMatchCache, setMatchCache } from './matchCache';
 // PlayerStats import 제거: 평점은 fetchPlayerRatings(), 풀 데이터는 fetchCachedPlayerStats() 사용
 import { cache } from 'react';
 
@@ -44,18 +45,85 @@ export async function fetchMatchFullData(
   } = {}
 ): Promise<MatchFullDataResponse> {
   try {
+    const numericMatchId = parseInt(matchId, 10);
+
+    // ============================================
+    // L2 (Supabase) 캐시 확인 — 종료된 경기(FT) 영구 캐시
+    // ============================================
+    const cached = await getMatchCache(numericMatchId, 'full');
+    if (cached) {
+      const cachedResponse = cached as MatchFullDataResponse;
+
+      // standings는 실시간이므로 캐시에서 제외됨 → 필요하면 새로 가져옴
+      if (options.fetchStandings && cachedResponse.match?.league?.id) {
+        const season = (cachedResponse.matchData as Record<string, unknown>)?.league
+          ? ((cachedResponse.matchData as Record<string, { season?: number }>).league?.season)
+          : undefined;
+
+        const standings = await fetchCachedLeagueStandings(
+          cachedResponse.match.league.id,
+          season
+        );
+        if (standings.success && standings.data?.league) {
+          const leagueData = standings.data.league;
+          const transformedStandings: Standing[][] = [];
+          if (leagueData.standings) {
+            leagueData.standings.forEach(standingGroup => {
+              const transformedGroup: Standing[] = [];
+              standingGroup.forEach(item => {
+                if (item && item.rank !== undefined && item.team &&
+                    item.team.id !== undefined && item.team.name !== undefined &&
+                    item.team.logo !== undefined && item.points !== undefined &&
+                    item.goalsDiff !== undefined && item.all) {
+                  transformedGroup.push({
+                    rank: item.rank,
+                    team: { id: item.team.id, name: item.team.name, logo: item.team.logo },
+                    points: item.points,
+                    goalsDiff: item.goalsDiff,
+                    form: item.form,
+                    description: item.description,
+                    all: {
+                      played: item.all.played ?? 0, win: item.all.win ?? 0,
+                      draw: item.all.draw ?? 0, lose: item.all.lose ?? 0,
+                      goals: { for: item.all.goals?.for ?? 0, against: item.all.goals?.against ?? 0 }
+                    }
+                  });
+                }
+              });
+              if (transformedGroup.length > 0) transformedStandings.push(transformedGroup);
+            });
+          }
+          cachedResponse.standings = {
+            standings: {
+              league: {
+                id: leagueData.id ?? 0, name: leagueData.name ?? '',
+                logo: leagueData.logo ?? '', name_ko: leagueData.name_ko ?? '',
+                season: leagueData.season, standings: transformedStandings
+              }
+            }
+          };
+        }
+      }
+
+      return cachedResponse;
+    }
+
+    // ============================================
+    // 캐시 미스 → API에서 가져오기
+    // ============================================
+
     // 기본 매치 정보는 항상 가져옴
     const matchData = await fetchCachedMatchData(matchId);
-    
+
     if (!matchData.success || !matchData.data) {
       return {
         success: false,
         error: matchData.error || '매치 정보를 찾을 수 없습니다.'
       };
     }
-    
+
     const data = matchData.data;
-    
+
     // 응답 객체 초기화
     const response: MatchFullDataResponse = {
       success: true,
@@ -231,7 +299,14 @@ export async function fetchMatchFullData(
     if (promises.length > 0) {
       await Promise.all(promises);
     }
-    
+
+    // FT인 경우 L2 캐시에 저장 (standings 제외 — 실시간 데이터)
+    if (response.match?.status?.code === 'FT') {
+      const cacheData = { ...response };
+      delete cacheData.standings;
+      setMatchCache(numericMatchId, 'full', cacheData).catch(() => {});
+    }
+
     return response;
   } catch (error) {
     console.error('매치 전체 데이터 로딩 오류:', error);
