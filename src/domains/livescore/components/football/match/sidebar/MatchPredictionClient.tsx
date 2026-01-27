@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -134,6 +135,10 @@ interface MatchDataType {
       logo?: string;
     };
   };
+  goals?: {
+    home?: number | null;
+    away?: number | null;
+  };
 }
 
 // 승무패 예측 섹션 컴포넌트
@@ -204,15 +209,23 @@ export default function MatchPredictionClient({
     return !['NS', 'TBD', 'PST'].includes(status || '');
   };
 
-  const getMatchStatusMessage = () => {
-    if (isMatchFinished()) {
-      return '경기가 종료되어 예측할 수 없습니다';
-    }
-    if (isMatchStarted()) {
-      return '경기가 시작되어 예측할 수 없습니다';
-    }
-    return null;
+  const isMatchInProgress = () => {
+    return isMatchStarted() && !isMatchFinished();
   };
+
+  // 경기 결과로 실제 승무패 판별
+  const getMatchResult = (): PredictionType | null => {
+    if (!isMatchFinished()) return null;
+    const homeGoals = matchData.goals?.home;
+    const awayGoals = matchData.goals?.away;
+    if (homeGoals == null || awayGoals == null) return null;
+    if (homeGoals > awayGoals) return 'home';
+    if (homeGoals < awayGoals) return 'away';
+    return 'draw';
+  };
+
+  const matchResult = getMatchResult();
+  const isPredictionCorrect = prediction && matchResult ? prediction === matchResult : null;
 
   // 예측 처리
   const handlePrediction = async (type: PredictionType) => {
@@ -220,10 +233,7 @@ export default function MatchPredictionClient({
 
     // 경기가 끝났거나 시작된 경우 예측 불가
     if (isMatchFinished() || isMatchStarted()) {
-      const message = getMatchStatusMessage();
-      if (message) {
-        toast.error(message);
-      }
+      toast.error(isMatchFinished() ? '경기가 종료되어 예측할 수 없습니다' : '경기가 진행 중이라 예측할 수 없습니다');
       return;
     }
 
@@ -305,24 +315,28 @@ export default function MatchPredictionClient({
   };
 
   const canPredict = !isMatchFinished() && !isMatchStarted();
-  const statusMessage = getMatchStatusMessage();
-  
+  const finished = isMatchFinished();
+  const inProgress = isMatchInProgress();
+
   return (
-    <Container className="bg-white dark:bg-[#1D1D1D] mb-3">
+    <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
       {/* 헤더 */}
       <ContainerHeader>
-        <ContainerTitle>승부 예측</ContainerTitle>
+        <ContainerTitle className="flex items-center gap-2">
+          승부 예측
+          {finished && (
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
+              경기 종료
+            </span>
+          )}
+          {inProgress && (
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+              진행 중
+            </span>
+          )}
+        </ContainerTitle>
       </ContainerHeader>
 
-      {/* 상태 메시지 */}
-      {statusMessage && (
-        <div className="px-4 py-2 bg-yellow-50 dark:bg-yellow-900/20 border-b border-black/5 dark:border-white/10">
-          <p className="text-xs text-yellow-700 dark:text-yellow-400 text-center">
-            {statusMessage}
-          </p>
-        </div>
-      )}
-      
       {/* 예측 버튼들 */}
       <div className="p-4">
         <div className="grid grid-cols-3 gap-2">
@@ -337,7 +351,7 @@ export default function MatchPredictionClient({
             percentage={stats?.home_percentage}
             onClick={() => handlePrediction('home')}
           />
-          
+
           {/* 무승부 */}
           <Button
             variant={prediction === 'draw' ? 'secondary' : 'outline'}
@@ -364,7 +378,7 @@ export default function MatchPredictionClient({
               </div>
             )}
           </Button>
-          
+
           {/* 원정팀 승리 */}
           <PredictionButton
             type="away"
@@ -377,9 +391,42 @@ export default function MatchPredictionClient({
             onClick={() => handlePrediction('away')}
           />
         </div>
-        
-        {/* 예측 결과 */}
-        {prediction && (
+
+        {/* 경기 종료 + 예측 결과 */}
+        {finished && prediction && isPredictionCorrect !== null && (
+          <div className={`mt-3 p-3 rounded-lg text-center ${
+            isPredictionCorrect
+              ? 'bg-green-100 dark:bg-green-900/30'
+              : 'bg-red-100 dark:bg-red-900/30'
+          }`}>
+            <div className={`text-sm font-medium mb-1 ${
+              isPredictionCorrect
+                ? 'text-green-800 dark:text-green-400'
+                : 'text-red-800 dark:text-red-400'
+            }`}>
+              {isPredictionCorrect ? '예측 적중!' : '아쉽게 빗나갔습니다'}
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              내 예측: {prediction === 'home' && `${homeTeam?.name_ko || homeTeam?.name || '홈팀'} 승`}
+              {prediction === 'draw' && '무승부'}
+              {prediction === 'away' && `${awayTeam?.name_ko || awayTeam?.name || '원정팀'} 승`}
+              {' / '}
+              결과: {matchData.goals?.home ?? 0} - {matchData.goals?.away ?? 0}
+            </div>
+          </div>
+        )}
+
+        {/* 경기 종료인데 예측 안한 경우 */}
+        {finished && !prediction && (
+          <div className="mt-3 p-2 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
+            <div className="text-xs text-center text-gray-500 dark:text-gray-400">
+              이 경기는 예측에 참여하지 않았습니다
+            </div>
+          </div>
+        )}
+
+        {/* 진행 전 예측 표시 (경기 시작 전 or 진행 중) */}
+        {!finished && prediction && (
           <div className="mt-3 p-2 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
             <div className="text-xs text-center text-gray-700 dark:text-gray-300">
               내 예측: <span className="font-medium text-gray-900 dark:text-[#F0F0F0]">
@@ -397,7 +444,7 @@ export default function MatchPredictionClient({
             <div className="text-xs text-gray-700 dark:text-gray-300 mb-2 text-center">
               총 {stats.total_votes}명이 예측했습니다
             </div>
-            
+
             {/* 통계 바 */}
             <div className="space-y-2">
               {/* 홈팀 */}
@@ -467,6 +514,16 @@ export default function MatchPredictionClient({
               </div>
             </div>
           </div>
+        )}
+
+        {/* 경기 종료 시 다른 경기 예측하기 링크 */}
+        {finished && (
+          <Link
+            href="/livescore/football"
+            className="mt-3 block w-full py-2.5 text-xs text-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-lg transition-colors"
+          >
+            다른 경기 예측하기 →
+          </Link>
         )}
       </div>
     </Container>

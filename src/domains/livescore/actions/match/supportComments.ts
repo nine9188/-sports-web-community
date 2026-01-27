@@ -25,6 +25,7 @@ export interface SupportComment {
   user_profile?: {
     username?: string;
     nickname?: string;
+    public_id?: string;
     icon_id?: number;
     shop_items?: {
       image_url?: string;
@@ -71,6 +72,7 @@ export const getSupportComments = cache(async (matchId: string) => {
         id,
         username,
         nickname,
+        public_id,
         icon_id,
         shop_items:icon_id (
           image_url
@@ -126,6 +128,7 @@ export const getSupportComments = cache(async (matchId: string) => {
         user_profile: profile ? {
           username: profile.username || undefined,
           nickname: profile.nickname || undefined,
+          public_id: profile.public_id || undefined,
           icon_id: profile.icon_id || undefined,
           shop_items: profile.shop_items && (profile.shop_items as any)?.image_url ? { // eslint-disable-line @typescript-eslint/no-explicit-any
             image_url: (profile.shop_items as any).image_url || undefined // eslint-disable-line @typescript-eslint/no-explicit-any

@@ -32,7 +32,7 @@ export default function BoardTeamInfo({ teamData, boardId, boardSlug, isLoggedIn
   // 데이터 유효성 검사
   if (!teamData || !teamData.team || !teamData.venue) {
     return (
-      <div className={`h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10 ${className}`}>
+      <div className={`h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] ${className}`}>
         <p className="text-sm text-gray-900 dark:text-[#F0F0F0]">팀 정보를 불러올 수 없습니다.</p>
         {isLoggedIn && (
           <Link
@@ -51,7 +51,7 @@ export default function BoardTeamInfo({ teamData, boardId, boardSlug, isLoggedIn
   const { team, venue } = teamData;
 
   return (
-    <div className={`h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10 ${className}`}>
+    <div className={`h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] ${className}`}>
       <div className="flex items-center gap-2 min-w-0">
         {/* 팀 로고 */}
         <div className="relative w-6 h-6 flex-shrink-0">

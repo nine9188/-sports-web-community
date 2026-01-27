@@ -287,7 +287,7 @@ export default function HeaderClient({
       </header>
 
       {/* 모바일: 헤더 + 최근방문 sticky / 데스크탑: nav + 최근방문 sticky */}
-      <div className="sticky top-0 z-50 bg-white dark:bg-[#1D1D1D] shadow-sm">
+      <div className="sticky top-0 z-50 bg-white dark:bg-[#1D1D1D]">
         {/* 모바일 헤더 - sticky 영역 안에 포함 */}
         <div className="md:hidden border-b border-black/7 dark:border-white/10">
           <div className="w-full max-w-[1400px] mx-auto relative z-[999]">

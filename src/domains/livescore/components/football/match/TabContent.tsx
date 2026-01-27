@@ -7,12 +7,14 @@ import Standings from './tabs/Standings';
 import Power from './tabs/Power';
 import MatchPredictionClient from './sidebar/MatchPredictionClient';
 import SupportCommentsSection from './sidebar/SupportCommentsSection';
+import RelatedPosts from './sidebar/RelatedPosts';
 import { EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import { MatchFullDataResponse } from '@/domains/livescore/actions/match/matchData';
 import { HeadToHeadTestData } from '@/domains/livescore/actions/match/headtohead';
 import { PlayerRatingsAndCaptains } from '@/domains/livescore/actions/match/playerStats';
 import { MatchPlayerStatsResponse } from '@/domains/livescore/actions/match/matchPlayerStats';
 import { MatchTabType } from './MatchPageClient';
+import type { RelatedPost } from '@/domains/livescore/actions/match/relatedPosts';
 
 interface TabContentProps {
   matchId: string;
@@ -21,6 +23,7 @@ interface TabContentProps {
   initialPowerData?: HeadToHeadTestData;
   initialPlayerRatings?: PlayerRatingsAndCaptains;
   initialMatchPlayerStats?: MatchPlayerStatsResponse;
+  relatedPosts?: RelatedPost[];
 }
 
 /**
@@ -29,7 +32,7 @@ interface TabContentProps {
  * 서버에서 미리 로드된 데이터(initialData)를 받아 현재 탭에 맞는 컴포넌트를 렌더링합니다.
  * Context 의존성 제거로 더 단순하고 예측 가능한 동작.
  */
-export default function TabContent({ matchId, currentTab, initialData, initialPowerData, initialPlayerRatings, initialMatchPlayerStats }: TabContentProps) {
+export default function TabContent({ matchId, currentTab, initialData, initialPowerData, initialPlayerRatings, initialMatchPlayerStats, relatedPosts }: TabContentProps) {
   // initialData에서 데이터 추출
   const { events, lineups, stats, standings, homeTeam, awayTeam, matchData } = initialData;
 
@@ -112,6 +115,7 @@ export default function TabContent({ matchId, currentTab, initialData, initialPo
         <div className="space-y-4">
           <MatchPredictionClient matchData={matchData || {}} />
           <SupportCommentsSection matchData={matchData || {}} />
+          <RelatedPosts posts={relatedPosts ?? []} />
         </div>
       );
 

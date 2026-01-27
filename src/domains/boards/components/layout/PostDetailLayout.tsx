@@ -300,7 +300,7 @@ export default function PostDetailLayout({
       </div>
 
       {/* 2. 게시글 본문 (상세 정보) */}
-      <Container className="bg-white dark:bg-[#1D1D1D] shadow-sm mb-4">
+      <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
         {/* 게시글 헤더 컴포넌트 */}
         <MemoizedPostHeader
           title={post.title}

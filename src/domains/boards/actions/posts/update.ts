@@ -3,6 +3,7 @@
 import { checkSuspensionGuard } from '@/shared/utils/suspension-guard';
 import { logUserAction } from '@/shared/actions/log-actions';
 import { getSupabaseAction } from '@/shared/lib/supabase/server';
+import { extractCardLinks } from '@/domains/boards/utils/post/extractCardLinks';
 import type { PostActionResponse } from './utils';
 import type { DealInfo } from '../../types/hotdeal';
 
@@ -117,7 +118,25 @@ export async function updatePost(
     }
     
     const boardSlug = (postData.boards as { slug: string } | null)?.slug;
-    
+
+    // 카드 링크 갱신 (기존 삭제 → 새로 삽입)
+    try {
+      const parsedContent = typeof content === 'string' && content.startsWith('{')
+        ? JSON.parse(content)
+        : content;
+      const cardLinks = extractCardLinks(parsedContent);
+
+      await supabase.from('post_card_links').delete().eq('post_id', postId);
+
+      if (cardLinks.length > 0) {
+        await supabase
+          .from('post_card_links')
+          .insert(cardLinks.map(link => ({ ...link, post_id: postId })));
+      }
+    } catch (cardErr) {
+      console.error('카드 링크 갱신 실패:', cardErr);
+    }
+
     // 게시글 수정 성공 로그 기록
     await logUserAction(
       'POST_UPDATE',

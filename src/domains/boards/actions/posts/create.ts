@@ -6,6 +6,7 @@ import { checkReferralMilestone } from '@/shared/actions/referral-actions';
 import { checkSuspensionGuard } from '@/shared/utils/suspension-guard';
 import { logUserAction, logError } from '@/shared/actions/log-actions';
 import { getSupabaseAction } from '@/shared/lib/supabase/server';
+import { extractCardLinks } from '@/domains/boards/utils/post/extractCardLinks';
 import type { PostActionResponse } from './utils';
 
 type CreatePostResult = {
@@ -93,6 +94,18 @@ async function createPostInternal(params: {
 
     if (!data) {
       return { success: false, error: '게시글 생성은 되었으나 데이터를 받아오지 못했습니다.' };
+    }
+
+    // 카드 링크 저장 (실패해도 게시글 생성은 성공)
+    try {
+      const cardLinks = extractCardLinks(data.content);
+      if (cardLinks.length > 0) {
+        await supabase
+          .from('post_card_links')
+          .insert(cardLinks.map(link => ({ ...link, post_id: data.id })));
+      }
+    } catch (cardErr) {
+      console.error('카드 링크 저장 실패:', cardErr);
     }
 
     // 로그 및 보상 처리 (실패해도 게시글 생성은 성공)

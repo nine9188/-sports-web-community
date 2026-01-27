@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { CommentType } from "@/domains/boards/types/post/comment";
 import { useComments } from "@/domains/boards/hooks/post/useComments";
 import Comment from "./Comment";
@@ -21,12 +22,15 @@ export default function CommentSection({
   postOwnerId,
   currentUserId: propCurrentUserId = null
 }: CommentSectionProps) {
+  const router = useRouter();
   const [content, setContent] = useState('');
   const [currentUserId, setCurrentUserId] = useState<string | null>(propCurrentUserId);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [replyToNickname, setReplyToNickname] = useState<string | null>(null);
   const replyFormRef = useRef<HTMLTextAreaElement>(null);
+
+  const isLoggedIn = currentUserId !== null;
 
   // React Query 기반 댓글 훅
   const {
@@ -204,59 +208,82 @@ export default function CommentSection({
           </div>
         )}
 
-        {/* 답글 대상 표시 */}
-        {replyTo && replyToNickname && (
-          <div className="mb-3 p-3 bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 rounded-md flex items-center justify-between">
-            <div className="flex items-center text-sm text-gray-900 dark:text-[#F0F0F0]">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-              </svg>
-              <span className="font-medium">{replyToNickname}</span>
-              <span className="ml-1">님에게 답글 작성 중</span>
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={cancelReply}
-              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-[#F0F0F0]"
-            >
-              취소
-            </Button>
+        {!isLoggedIn ? (
+          /* 비로그인 상태 */
+          <div
+            className="relative cursor-pointer"
+            onClick={() => {
+              if (confirm('로그인이 필요합니다. 로그인 페이지로 이동하시겠습니까?')) {
+                router.push('/signin');
+              }
+            }}
+          >
+            <textarea
+              className="w-full px-3 py-3 border border-black/7 dark:border-white/10 bg-gray-50 dark:bg-[#262626] text-gray-400 dark:text-gray-500 rounded-lg text-sm placeholder-gray-400 dark:placeholder-gray-500 resize-none pointer-events-none"
+              rows={3}
+              placeholder="댓글을 작성하려면 로그인해주세요."
+              disabled
+              readOnly
+            />
           </div>
-        )}
-
-        <form className="space-y-3" onSubmit={handleCommentSubmit}>
-          <textarea
-            ref={replyFormRef}
-            className="w-full px-3 py-3 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg text-sm placeholder-gray-500 dark:placeholder-gray-500 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors duration-200 resize-none"
-            rows={3}
-            placeholder={replyTo ? "답글을 작성해주세요..." : "댓글을 작성해주세요..."}
-            value={content}
-            onChange={handleTextareaChange}
-            required
-            disabled={isCreating}
-          />
-          <div className="flex justify-end gap-2">
-            {replyTo && (
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={cancelReply}
-                disabled={isCreating}
-              >
-                취소
-              </Button>
+        ) : (
+          /* 로그인 상태 */
+          <>
+            {/* 답글 대상 표시 */}
+            {replyTo && replyToNickname && (
+              <div className="mb-3 p-3 bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 rounded-md flex items-center justify-between">
+                <div className="flex items-center text-sm text-gray-900 dark:text-[#F0F0F0]">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                  </svg>
+                  <span className="font-medium">{replyToNickname}</span>
+                  <span className="ml-1">님에게 답글 작성 중</span>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={cancelReply}
+                  className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-[#F0F0F0]"
+                >
+                  취소
+                </Button>
+              </div>
             )}
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={isCreating || !content.trim()}
-            >
-              {isCreating ? '작성 중...' : (replyTo ? '답글 작성' : '댓글 작성')}
-            </Button>
-          </div>
-        </form>
+
+            <form className="space-y-3" onSubmit={handleCommentSubmit}>
+              <textarea
+                ref={replyFormRef}
+                className="w-full px-3 py-3 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg text-sm placeholder-gray-500 dark:placeholder-gray-500 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors duration-200 resize-none"
+                rows={3}
+                placeholder={replyTo ? "답글을 작성해주세요..." : "댓글을 작성해주세요..."}
+                value={content}
+                onChange={handleTextareaChange}
+                required
+                disabled={isCreating}
+              />
+              <div className="flex justify-end gap-2">
+                {replyTo && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={cancelReply}
+                    disabled={isCreating}
+                  >
+                    취소
+                  </Button>
+                )}
+                <Button
+                  type="submit"
+                  variant="primary"
+                  disabled={isCreating || !content.trim()}
+                >
+                  {isCreating ? '작성 중...' : (replyTo ? '답글 작성' : '댓글 작성')}
+                </Button>
+              </div>
+            </form>
+          </>
+        )}
       </div>
     </Container>
   );

@@ -161,7 +161,7 @@ export default function BoardDetailLayout({
       )}
 
       {teamData && (
-        <div className="mb-4 bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 rounded-lg shadow-sm overflow-hidden">
+        <div className="mb-4 bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 rounded-lg overflow-hidden">
           <BoardTeamInfo
             teamData={teamData}
             boardId={boardData.id}
@@ -177,7 +177,7 @@ export default function BoardDetailLayout({
       )}
 
       {leagueData && (
-        <div className="mb-4 bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 rounded-lg shadow-sm overflow-hidden">
+        <div className="mb-4 bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 rounded-lg overflow-hidden">
           <LeagueInfo
             leagueData={leagueData}
             boardId={boardData.id}
@@ -194,9 +194,9 @@ export default function BoardDetailLayout({
 
       {/* 팀/리그 정보가 없는 게시판: 게시판 이름 + 공지사항 통합 */}
       {!teamData && !leagueData && (
-        <div className="mb-4 bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 rounded-lg shadow-sm overflow-hidden">
+        <div className="mb-4 bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 rounded-lg overflow-hidden">
           {/* 게시판 헤더 */}
-          <div className="h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
+          <div className="h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626]">
             <h2 className="text-sm font-semibold truncate text-gray-900 dark:text-[#F0F0F0]">
               {boardData.name}
             </h2>

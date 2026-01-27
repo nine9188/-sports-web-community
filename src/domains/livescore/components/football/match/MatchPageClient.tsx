@@ -11,6 +11,7 @@ import { HeadToHeadTestData } from '@/domains/livescore/actions/match/headtohead
 import { PlayerRatingsAndCaptains } from '@/domains/livescore/actions/match/playerStats';
 import { MatchPlayerStatsResponse } from '@/domains/livescore/actions/match/matchPlayerStats';
 import { MatchInfoSection } from './sidebar/MatchSidebar';
+import { type SidebarData } from '@/domains/livescore/actions/match/sidebarData';
 
 /**
  * ============================================
@@ -48,7 +49,7 @@ interface MatchPageClientProps {
   initialPowerData?: HeadToHeadTestData;
   initialPlayerRatings?: PlayerRatingsAndCaptains;
   initialMatchPlayerStats?: MatchPlayerStatsResponse;
-  sidebarData?: unknown;
+  sidebarData?: SidebarData | null;
 }
 
 export default function MatchPageClient({
@@ -135,6 +136,7 @@ export default function MatchPageClient({
           initialPowerData={initialPowerData}
           initialPlayerRatings={initialPlayerRatings}
           initialMatchPlayerStats={initialMatchPlayerStats}
+          relatedPosts={sidebarData?.relatedPosts}
         />
       </div>
 

@@ -25,7 +25,7 @@ export default function LeagueInfo({ leagueData, boardId, boardSlug, isLoggedIn 
   // 데이터가 없으면 기본 UI 반환
   if (!leagueData) {
     return (
-      <div className={`h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10 ${className}`}>
+      <div className={`h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] ${className}`}>
         <p className="text-sm text-gray-500 dark:text-gray-400">리그 정보를 불러올 수 없습니다.</p>
         {isLoggedIn && (
           <Link
@@ -42,7 +42,7 @@ export default function LeagueInfo({ leagueData, boardId, boardSlug, isLoggedIn 
   }
 
   return (
-    <div className={`h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10 ${className}`}>
+    <div className={`h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] ${className}`}>
       <div className="flex items-center gap-2 min-w-0">
         {/* 리그 로고 */}
         <div className="relative w-6 h-6 flex-shrink-0">

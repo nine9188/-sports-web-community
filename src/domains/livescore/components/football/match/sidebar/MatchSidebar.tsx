@@ -54,6 +54,7 @@ interface MatchDataType {
 // 승무패 예측 섹션 컴포넌트 - 클라이언트 컴포넌트로 분리
 import MatchPredictionClient from './MatchPredictionClient';
 import SupportCommentsSection from './SupportCommentsSection';
+import RelatedPosts from './RelatedPosts';
 
 // 매치 정보 섹션 컴포넌트 - export 추가
 export function MatchInfoSection({ 
@@ -150,7 +151,7 @@ export function MatchInfoSection({
   return (
     <>
       {/* 경기 상세정보 섹션 */}
-      <Container className="bg-white dark:bg-[#1D1D1D] rounded-none md:rounded-lg mb-3">
+      <Container className="bg-white dark:bg-[#1D1D1D] rounded-none md:rounded-lg mb-4">
         {/* 헤더 */}
         <ContainerHeader className="md:rounded-t-lg">
           <ContainerTitle>경기 상세정보</ContainerTitle>
@@ -248,10 +249,13 @@ export function MatchInfoSection({
           />
           
           {/* 응원 댓글 섹션 - 클라이언트 컴포넌트 */}
-          <SupportCommentsSection 
-            matchData={matchData} 
+          <SupportCommentsSection
+            matchData={matchData}
             initialComments={sidebarData?.comments}
           />
+
+          {/* 관련 게시글 섹션 */}
+          <RelatedPosts posts={sidebarData?.relatedPosts ?? []} />
         </>
       )}
     </>

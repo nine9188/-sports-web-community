@@ -146,6 +146,7 @@ const BoardCategoryItem = ({
                 depth={depth + 1}
                 expandedCategories={expandedCategories}
                 toggleCategory={toggleCategory}
+                onNavigate={onNavigate}
               />
             ))}
           </div>

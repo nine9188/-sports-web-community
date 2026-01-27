@@ -72,7 +72,10 @@
       "Bash(npx next build)",
       "Bash(node node_modules/.bin/next build:*)",
       "Bash(node:*)",
-      "Bash(xxd:*)"
+      "Bash(xxd:*)",
+      "Bash(wmic process where \"name=''node.exe''\" get ProcessId,WorkingSetSize,CommandLine /format:list)",
+      "Bash(tasklist:*)",
+      "Bash(taskkill:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

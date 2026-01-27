@@ -1,21 +1,17 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { usePathname } from 'next/navigation';
-import Image from 'next/image';
-import { toast } from 'react-toastify';
+import { usePathname, useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 import {
   createSupportComment,
   getSupportComments,
-  toggleCommentLike,
-  dislikeMatchComment,
   type TeamType,
   type SupportComment
 } from '@/domains/livescore/actions/match/supportComments';
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
-import ReportButton from '@/domains/reports/components/ReportButton';
+import { AuthorLink } from '@/domains/user/components';
 
 // 매치 데이터 타입 정의
 interface MatchDataType {
@@ -36,18 +32,10 @@ interface MatchDataType {
 }
 
 // 댓글 아이템 컴포넌트
-function CommentItem({ 
-  comment, 
-  onLike,
-  onDislike,
-  currentUserId,
-  isLoggedIn
-}: { 
+function CommentItem({
+  comment,
+}: {
   comment: SupportComment;
-  onLike: (commentId: string) => void;
-  onDislike: (commentId: string) => void;
-  currentUserId?: string;
-  isLoggedIn: boolean;
 }) {
   const formatTimeAgo = (dateString: string) => {
     const now = new Date();
@@ -69,9 +57,6 @@ function CommentItem({
     }
   };
 
-  const isAuthor = currentUserId === comment.user_id;
-  const showReportButton = isLoggedIn && !isAuthor;
-  
   // 댓글이 숨김 처리되었는지 확인
   const isHidden = 'is_hidden' in comment && comment.is_hidden === true;
   
@@ -117,94 +102,26 @@ function CommentItem({
 
   return (
     <div className="p-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors">
-      <div className="flex items-start space-x-3">
-        {/* 사용자 아이콘 */}
-        <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
-          comment.user_profile?.shop_items?.image_url
-            ? 'bg-transparent'
-            : 'bg-gradient-to-br from-slate-400 to-slate-600 dark:from-slate-500 dark:to-slate-700'
-        }`}>
-          {comment.user_profile?.shop_items?.image_url ? (
-            <Image
-              src={comment.user_profile.shop_items.image_url}
-              alt="user icon"
-              width={28}
-              height={28}
-              className="rounded-full object-cover"
-            />
-          ) : (
-            <span className="text-xs text-white font-bold">
-              {comment.user_profile?.nickname?.charAt(0)?.toUpperCase() || '?'}
-            </span>
-          )}
-        </div>
-
-        <div className="flex-1 min-w-0">
-          {/* 사용자 정보 */}
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
-                {comment.user_profile?.nickname || '익명'}
-              </span>
-              <span className="text-xs">
-                {getTeamEmoji(comment.team_type)}
-              </span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                {formatTimeAgo(comment.created_at || '')}
-              </span>
-            </div>
-            
-            {/* 신고 버튼 (날짜 옆으로 이동) */}
-            {showReportButton && (
-              <ReportButton
-                targetType="match_comment"
-                targetId={comment.id}
-                variant="ghost"
-                size="sm"
-                showText={false}
-                className="text-xs text-gray-400 hover:text-gray-600 p-1"
-              />
-            )}
-          </div>
-
-          {/* 댓글 내용 */}
-          <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 leading-relaxed">
-            {comment.content}
-          </p>
-
-          {/* 좋아요/싫어요 버튼 (댓글 내용 아래로 이동, 크기 축소) */}
-          <div className="flex items-center space-x-1 text-xs transition-all">
-            <Button
-              variant="ghost"
-              onClick={() => onLike(comment.id)}
-              className={`flex items-center space-x-1 h-auto px-1 py-0 text-xs ${
-                comment.is_liked
-                  ? 'text-red-500 dark:text-red-400'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-red-400 dark:hover:text-red-400'
-              }`}
-            >
-              <span className="text-xs">좋아요</span>
-              {comment.likes_count > 0 && (
-                <span className="font-medium text-xs">{comment.likes_count}</span>
-              )}
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => onDislike(comment.id)}
-              className={`flex items-center space-x-1 h-auto px-1 py-0 text-xs ${
-                comment.is_disliked
-                  ? 'text-red-500 dark:text-red-400'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-red-400 dark:hover:text-red-400'
-              }`}
-            >
-              <span className="text-xs">싫어요</span>
-              {(comment.dislikes_count && comment.dislikes_count > 0) && (
-                <span className="font-medium text-xs">{comment.dislikes_count}</span>
-              )}
-            </Button>
-          </div>
-        </div>
+      {/* 닉네임 줄 */}
+      <div className="flex items-center space-x-2 mb-1">
+        <AuthorLink
+          nickname={comment.user_profile?.nickname || '익명'}
+          publicId={comment.user_profile?.public_id}
+          oddsUserId={comment.user_id}
+          showIcon={false}
+        />
+        <span className="text-xs">
+          {getTeamEmoji(comment.team_type)}
+        </span>
+        <span className="text-xs text-gray-500 dark:text-gray-400">
+          {formatTimeAgo(comment.created_at || '')}
+        </span>
       </div>
+
+      {/* 댓글 내용 */}
+      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+        {comment.content}
+      </p>
     </div>
   );
 }
@@ -218,6 +135,7 @@ export default function SupportCommentsSection({
   initialComments?: SupportComment[];
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const matchId = pathname?.split('/').pop() || '';
   const queryClient = useQueryClient();
 
@@ -225,8 +143,8 @@ export default function SupportCommentsSection({
   const [selectedTeam, setSelectedTeam] = useState<TeamType>('neutral');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState<TeamType | 'all'>('all');
+  const [visibleCount, setVisibleCount] = useState(10);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
 
   const homeTeam = matchData.teams?.home;
   const awayTeam = matchData.teams?.away;
@@ -260,10 +178,8 @@ export default function SupportCommentsSection({
       try {
         const { data: { user } } = await supabase.auth.getUser();
         setIsLoggedIn(!!user);
-        setCurrentUserId(user?.id);
       } catch {
         setIsLoggedIn(false);
-        setCurrentUserId(undefined);
       }
     };
 
@@ -278,14 +194,11 @@ export default function SupportCommentsSection({
 
         if (!error && user) {
           setIsLoggedIn(true);
-          setCurrentUserId(user.id);
         } else {
           setIsLoggedIn(false);
-          setCurrentUserId(undefined);
-        }
+          }
       } else {
         setIsLoggedIn(false);
-        setCurrentUserId(undefined);
       }
     });
 
@@ -302,6 +215,7 @@ export default function SupportCommentsSection({
   // 탭 변경 핸들러 - 클라이언트 필터링만
   const handleTabChange = (tab: TeamType | 'all') => {
     setActiveTab(tab);
+    setVisibleCount(10);
   };
 
   // 댓글 작성
@@ -329,95 +243,8 @@ export default function SupportCommentsSection({
     }
   }, [matchId, newComment, selectedTeam, isLoggedIn, refreshComments]);
 
-  // 댓글 좋아요 토글
-  const handleLikeComment = async (commentId: string) => {
-    if (!isLoggedIn) {
-      toast.error('로그인이 필요합니다.');
-      return;
-    }
-
-    try {
-      const result = await toggleCommentLike(commentId);
-
-      if (result.success) {
-        // React Query 캐시 업데이트
-        queryClient.setQueryData(['supportComments', matchId], (prev: SupportComment[] | undefined) => {
-          if (!prev) return prev;
-          return prev.map(comment => {
-            if (comment.id === commentId) {
-              return {
-                ...comment,
-                is_liked: result.userAction === 'like',
-                is_disliked: result.userAction === 'dislike',
-                userAction: result.userAction,
-                likes_count: result.likes_count || 0,
-                dislikes_count: result.dislikes_count || 0
-              };
-            }
-            return comment;
-          });
-        });
-      } else {
-        toast.error(result.error || '좋아요 처리 중 오류가 발생했습니다.');
-      }
-    } catch (error) {
-      console.error('좋아요 처리 오류:', error);
-      toast.error('좋아요 처리 중 오류가 발생했습니다.');
-    }
-  };
-
-  // 댓글 싫어요 토글
-  const handleDislikeComment = async (commentId: string) => {
-    if (!isLoggedIn) {
-      toast.error('로그인이 필요합니다.');
-      return;
-    }
-
-    try {
-      const result = await dislikeMatchComment(commentId);
-
-      if (result.success) {
-        // React Query 캐시 업데이트
-        queryClient.setQueryData(['supportComments', matchId], (prev: SupportComment[] | undefined) => {
-          if (!prev) return prev;
-          return prev.map(comment => {
-            if (comment.id === commentId) {
-              return {
-                ...comment,
-                is_liked: result.userAction === 'like',
-                is_disliked: result.userAction === 'dislike',
-                userAction: result.userAction,
-                likes_count: result.likes_count || 0,
-                dislikes_count: result.dislikes_count || 0
-              };
-            }
-            return comment;
-          });
-        });
-      } else {
-        toast.error(result.error || '싫어요 처리 중 오류가 발생했습니다.');
-      }
-    } catch (error) {
-      console.error('싫어요 처리 오류:', error);
-      toast.error('싫어요 처리 중 오류가 발생했습니다.');
-    }
-  };
-
-  // 댓글 새로고침 함수 (필요시 사용)
-  // const handleRefreshComments = async () => {
-  //   if (!matchId || isRefreshing) return;
-  //   
-  //   setIsRefreshing(true);
-  //   try {
-  //     loadComments();
-  //     toast.success('댓글을 새로고침했습니다!');
-  //   } catch {
-  //     toast.error('댓글 새로고침에 실패했습니다.');
-  //   }
-  // };
-
   return (
-    <Container className="bg-white dark:bg-[#1D1D1D] mb-3">
+    <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
       {/* 헤더 */}
       <ContainerHeader>
         <ContainerTitle>응원 댓글</ContainerTitle>
@@ -425,71 +252,92 @@ export default function SupportCommentsSection({
 
       {/* 댓글 작성 폼 - 개선된 UI */}
       <div className="p-4 border-b border-black/5 dark:border-white/10">
-        <div className="space-y-3">
-          {/* 응원팀 선택 - 상단으로 이동 */}
-          <div className="flex space-x-2 w-full">
-            <Button
-              variant={selectedTeam === 'home' ? 'primary' : 'ghost'}
-              onClick={() => setSelectedTeam('home')}
-              className="flex-1 px-2 py-1 text-xs h-auto whitespace-nowrap"
-            >
-              <span className="truncate block">
-                {(() => {
-                  const teamName = homeTeam?.name_ko || homeTeam?.name || '홈';
-                  return teamName.length > 7 ? `${teamName.slice(0, 7)}...` : teamName;
-                })()}
-              </span>
-            </Button>
-            <Button
-              variant={selectedTeam === 'away' ? 'primary' : 'ghost'}
-              onClick={() => setSelectedTeam('away')}
-              className="flex-1 px-2 py-1 text-xs h-auto whitespace-nowrap"
-            >
-              <span className="truncate block">
-                {(() => {
-                  const teamName = awayTeam?.name_ko || awayTeam?.name || '원정';
-                  return teamName.length > 7 ? `${teamName.slice(0, 7)}...` : teamName;
-                })()}
-              </span>
-            </Button>
-            <Button
-              variant={selectedTeam === 'neutral' ? 'primary' : 'ghost'}
-              onClick={() => setSelectedTeam('neutral')}
-              className="flex-1 px-2 py-1 text-xs h-auto whitespace-nowrap"
-            >
-              중립
-            </Button>
-          </div>
-
-          {/* 댓글 입력창 */}
-          <div className="relative">
+        {!isLoggedIn ? (
+          /* 비로그인 상태 */
+          <div
+            className="relative cursor-pointer"
+            onClick={() => {
+              if (confirm('로그인이 필요합니다. 로그인 페이지로 이동하시겠습니까?')) {
+                router.push('/signin');
+              }
+            }}
+          >
             <textarea
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder={isLoggedIn ? "응원 댓글을 남겨보세요..." : "로그인이 필요합니다."}
-              className="w-full px-3 py-3 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg text-sm resize-none outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] placeholder-gray-400 dark:placeholder-gray-500 transition-colors"
-              rows={3}
-              maxLength={300}
-              disabled={!isLoggedIn || isSubmitting}
+              className="w-full px-3 py-3 border border-black/7 dark:border-white/10 bg-gray-50 dark:bg-[#262626] text-gray-400 dark:text-gray-500 rounded-lg text-sm placeholder-gray-400 dark:placeholder-gray-500 resize-none pointer-events-none"
+              rows={2}
+              placeholder="댓글을 작성하려면 로그인해주세요."
+              disabled
+              readOnly
             />
-            {/* 글자 수 표시 */}
-            <div className="absolute bottom-2 right-3 text-xs text-gray-500 dark:text-gray-400">
-              {newComment.length}/300
+          </div>
+        ) : (
+          /* 로그인 상태 */
+          <div className="space-y-3">
+            {/* 응원팀 선택 - 상단으로 이동 */}
+            <div className="flex space-x-2 w-full">
+              <Button
+                variant={selectedTeam === 'home' ? 'primary' : 'ghost'}
+                onClick={() => setSelectedTeam('home')}
+                className="flex-1 px-2 py-1 text-xs h-auto whitespace-nowrap"
+              >
+                <span className="truncate block">
+                  {(() => {
+                    const teamName = homeTeam?.name_ko || homeTeam?.name || '홈';
+                    return teamName.length > 7 ? `${teamName.slice(0, 7)}...` : teamName;
+                  })()}
+                </span>
+              </Button>
+              <Button
+                variant={selectedTeam === 'away' ? 'primary' : 'ghost'}
+                onClick={() => setSelectedTeam('away')}
+                className="flex-1 px-2 py-1 text-xs h-auto whitespace-nowrap"
+              >
+                <span className="truncate block">
+                  {(() => {
+                    const teamName = awayTeam?.name_ko || awayTeam?.name || '원정';
+                    return teamName.length > 7 ? `${teamName.slice(0, 7)}...` : teamName;
+                  })()}
+                </span>
+              </Button>
+              <Button
+                variant={selectedTeam === 'neutral' ? 'primary' : 'ghost'}
+                onClick={() => setSelectedTeam('neutral')}
+                className="flex-1 px-2 py-1 text-xs h-auto whitespace-nowrap"
+              >
+                중립
+              </Button>
+            </div>
+
+            {/* 댓글 입력창 */}
+            <div className="relative">
+              <textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="응원 댓글을 남겨보세요..."
+                className="w-full px-3 py-3 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg text-sm resize-none outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] placeholder-gray-400 dark:placeholder-gray-500 transition-colors"
+                rows={2}
+                maxLength={300}
+                disabled={isSubmitting}
+              />
+              {/* 글자 수 표시 */}
+              <div className="absolute bottom-2 right-3 text-xs text-gray-500 dark:text-gray-400">
+                {newComment.length}/300
+              </div>
+            </div>
+
+            {/* 등록 버튼 */}
+            <div className="flex justify-end">
+              <Button
+                variant="primary"
+                onClick={handleSubmitComment}
+                disabled={!newComment.trim() || isSubmitting}
+                className="px-3 py-1 text-xs h-auto"
+              >
+                {isSubmitting ? '작성중...' : '등록'}
+              </Button>
             </div>
           </div>
-
-          {/* 등록 버튼 */}
-          <div className="flex justify-end">
-            <Button
-              variant="primary"
-              onClick={handleSubmitComment}
-              disabled={!newComment.trim() || !isLoggedIn || isSubmitting}
-              className="px-3 py-1 text-xs h-auto"
-            >
-              {isSubmitting ? '작성중...' : '등록'}
-            </Button>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* 필터링 탭 - 댓글 목록 위로 이동 */}
@@ -534,18 +382,26 @@ export default function SupportCommentsSection({
             <p className="text-xs mt-1">첫 번째 응원 댓글을 남겨보세요!</p>
           </div>
         ) : (
-          <div className="divide-y divide-black/5 dark:divide-white/10">
-            {filteredComments.map((comment) => (
-              <CommentItem
-                key={comment.id}
-                comment={comment}
-                onLike={handleLikeComment}
-                onDislike={handleDislikeComment}
-                currentUserId={currentUserId}
-                isLoggedIn={isLoggedIn}
-              />
-            ))}
-          </div>
+          <>
+            <div className="divide-y divide-black/5 dark:divide-white/10">
+              {filteredComments.slice(0, visibleCount).map((comment) => (
+                <CommentItem
+                  key={comment.id}
+                  comment={comment}
+                />
+              ))}
+            </div>
+            {visibleCount < filteredComments.length && (
+              <div className="p-3 border-t border-black/5 dark:border-white/10">
+                <button
+                  onClick={() => setVisibleCount(prev => prev + 10)}
+                  className="w-full py-2 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-lg transition-colors"
+                >
+                  더보기 ({filteredComments.length - visibleCount}개 남음)
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </Container>

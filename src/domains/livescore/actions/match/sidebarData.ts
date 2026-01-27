@@ -4,6 +4,7 @@ import { cache } from 'react';
 import { fetchCachedMatchData } from '@/domains/livescore/utils/matchDataApi';
 import { getUserPrediction, getPredictionStats, type MatchPrediction, type PredictionStats } from './predictions';
 import { getSupportComments, type SupportComment } from './supportComments';
+import { getRelatedPosts, type RelatedPost } from './relatedPosts';
 
 // 사이드바 전체 데이터 타입
 export interface SidebarData {
@@ -11,6 +12,7 @@ export interface SidebarData {
   userPrediction: MatchPrediction | null;
   predictionStats: PredictionStats | null;
   comments: SupportComment[];
+  relatedPosts: RelatedPost[];
 }
 
 // 사이드바 전체 데이터를 한 번에 가져오는 함수
@@ -20,20 +22,9 @@ export const getCachedSidebarData = cache(async (matchId: string): Promise<{
   error?: string;
 }> => {
   try {
-    // 모든 데이터를 병렬로 가져오기
-    const [
-      matchDataResult,
-      userPredictionResult,
-      predictionStatsResult,
-      commentsResult
-    ] = await Promise.all([
-      fetchCachedMatchData(matchId),
-      getUserPrediction(matchId),
-      getPredictionStats(matchId),
-      getSupportComments(matchId)
-    ]);
+    // 매치 데이터 먼저 가져오기 (팀 ID 필요)
+    const matchDataResult = await fetchCachedMatchData(matchId);
 
-    // 매치 데이터가 없으면 실패
     if (!matchDataResult.success || !matchDataResult.data) {
       return {
         success: false,
@@ -41,13 +32,32 @@ export const getCachedSidebarData = cache(async (matchId: string): Promise<{
       };
     }
 
+    const matchData = matchDataResult.data as unknown as Record<string, unknown>;
+    const teams = matchData.teams as { home?: { id?: number }; away?: { id?: number } } | undefined;
+    const homeTeamId = teams?.home?.id;
+    const awayTeamId = teams?.away?.id;
+
+    // 나머지 데이터를 병렬로 가져오기
+    const [
+      userPredictionResult,
+      predictionStatsResult,
+      commentsResult,
+      relatedPostsResult
+    ] = await Promise.all([
+      getUserPrediction(matchId),
+      getPredictionStats(matchId),
+      getSupportComments(matchId),
+      getRelatedPosts(matchId, homeTeamId, awayTeamId, 10)
+    ]);
+
     return {
       success: true,
       data: {
-        matchData: matchDataResult.data as unknown as Record<string, unknown>,
+        matchData,
         userPrediction: userPredictionResult.success ? userPredictionResult.data as MatchPrediction : null,
         predictionStats: predictionStatsResult.success ? predictionStatsResult.data as PredictionStats : null,
-        comments: commentsResult.success && Array.isArray(commentsResult.data) ? commentsResult.data as SupportComment[] : []
+        comments: commentsResult.success && Array.isArray(commentsResult.data) ? commentsResult.data as SupportComment[] : [],
+        relatedPosts: relatedPostsResult ?? []
       }
     };
   } catch (error) {
