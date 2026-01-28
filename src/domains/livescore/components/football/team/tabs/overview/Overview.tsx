@@ -3,11 +3,16 @@
 import React from 'react';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import StatsCards from './components/StatsCards';
+import SeasonHighlights from './components/SeasonHighlights';
 import StandingsPreview from './components/StandingsPreview';
+import RecentTransfers from './components/RecentTransfers';
 import MatchItems from './components/MatchItems';
 import { Match } from './components/MatchItems';
 import { StandingDisplay } from '@/domains/livescore/types/standings';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
+import { PlayerStats } from '@/domains/livescore/actions/teams/player-stats';
+import { Player, Coach } from '@/domains/livescore/actions/teams/squad';
+import { TeamTransfersData } from '@/domains/livescore/actions/teams/transfers';
 
 // 팀 정보 타입
 interface Team {
@@ -78,26 +83,32 @@ interface OverviewProps {
   stats?: Stats;
   matches?: Match[];
   standings?: StandingDisplay[];
-  onTabChange?: (tab: string) => void;
+  playerStats?: Record<number, PlayerStats>;
+  squad?: (Player | Coach)[];
+  transfers?: TeamTransfersData;
+  onTabChange?: (tab: string, subTab?: string) => void;
   teamId: number;
   isLoading?: boolean;
   error?: string | null;
 }
 
-export default function Overview({ 
-  team, 
-  stats, 
-  matches, 
-  standings, 
-  onTabChange, 
-  teamId, 
-  isLoading, 
-  error 
+export default function Overview({
+  team,
+  stats,
+  matches,
+  standings,
+  playerStats,
+  squad,
+  transfers,
+  onTabChange,
+  teamId,
+  isLoading,
+  error
 }: OverviewProps) {
   // 탭 변경 핸들러 (메모이제이션으로 불필요한 렌더링 방지)
-  const handleTabChange = React.useCallback((tab: string) => {
+  const handleTabChange = React.useCallback((tab: string, subTab?: string) => {
     if (onTabChange) {
-      onTabChange(tab);
+      onTabChange(tab, subTab);
     }
   }, [onTabChange]);
   
@@ -126,25 +137,40 @@ export default function Overview({
     <div className="space-y-4">
       {/* 1. 리그 정보 + 기본 통계 */}
       {stats && (
-        <StatsCards 
-          stats={stats} 
-          onTabChange={handleTabChange} 
+        <StatsCards
+          stats={stats}
+          onTabChange={handleTabChange}
         />
       )}
 
-      {/* 2. 리그 순위 */}
-      <StandingsPreview 
-        standings={standings} 
-        teamId={teamId} 
+      {/* 2. 최근 경기와 예정된 경기 */}
+      <MatchItems
+        matches={matches}
+        teamId={teamId}
+        onTabChange={handleTabChange}
+      />
+
+      {/* 3. 리그 순위 */}
+      <StandingsPreview
+        standings={standings}
+        teamId={teamId}
         safeLeague={safeLeague}
         onTabChange={handleTabChange}
       />
 
-      {/* 3. 최근 경기와 예정된 경기 */}
-      <MatchItems 
-        matches={matches} 
-        teamId={teamId} 
-      />
+      {/* 4. 시즌 하이라이트 (최다 득점/어시스트) */}
+      {playerStats && squad && (
+        <SeasonHighlights
+          playerStats={playerStats}
+          squad={squad}
+          onTabChange={handleTabChange}
+        />
+      )}
+
+      {/* 5. 최근 이적 */}
+      {transfers && (
+        <RecentTransfers transfers={transfers} onTabChange={handleTabChange} />
+      )}
     </div>
   );
 } 

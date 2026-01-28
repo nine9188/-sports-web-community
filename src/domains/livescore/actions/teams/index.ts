@@ -3,4 +3,5 @@ export * from './matches';
 export * from './player-stats';
 export * from './squad';
 export * from './standings';
-export * from './team'; 
+export * from './transfers';
+export * from './team';

@@ -12,10 +12,11 @@ import SidebarRelatedPosts from '@/domains/sidebar/components/SidebarRelatedPost
 import { Match as ApiMatch } from '@/domains/livescore/actions/teams/matches';
 import { Match as UIMatch } from './tabs/overview/components/MatchItems';
 import { FixturesTab } from './tabs/fixtures';
+import { TransfersTab } from './tabs/transfers';
 import { TeamFullDataResponse } from '@/domains/livescore/actions/teams/team';
 
 // 탭 타입 정의
-type TabType = 'overview' | 'squad' | 'standings' | 'stats' | 'fixtures';
+type TabType = 'overview' | 'squad' | 'standings' | 'stats' | 'fixtures' | 'transfers';
 
 // 탭별 로딩 메시지
 const TAB_LOADING_MESSAGES: Record<TabType, string> = {
@@ -23,7 +24,8 @@ const TAB_LOADING_MESSAGES: Record<TabType, string> = {
   squad: '선수단 정보를 불러오는 중...',
   standings: '순위표를 불러오는 중...',
   stats: '팀 통계를 불러오는 중...',
-  fixtures: '경기 일정을 불러오는 중...'
+  fixtures: '경기 일정을 불러오는 중...',
+  transfers: '이적 정보를 불러오는 중...'
 };
 
 // 탭 컨텐츠 컴포넌트 props
@@ -31,6 +33,7 @@ interface TabContentProps {
   teamId: string;
   tab: string;
   initialData: TeamFullDataResponse;
+  onTabChange?: (tab: string, subTab?: string) => void;
 }
 
 /**
@@ -45,12 +48,12 @@ interface TabContentProps {
  * 2. TeamPageClient → initialData 전달
  * 3. TabContent → 현재 탭에 맞는 데이터 사용
  */
-export default function TabContent({ teamId, tab, initialData }: TabContentProps) {
+export default function TabContent({ teamId, tab, initialData, onTabChange }: TabContentProps) {
   // 팀 ID를 숫자로 변환
   const numericTeamId = parseInt(teamId, 10);
 
   // 데이터 추출
-  const { teamData, matches, squad, playerStats, standings } = initialData;
+  const { teamData, matches, squad, playerStats, standings, transfers } = initialData;
 
   // API 매치 데이터를 UI 매치 데이터로 변환
   const convertMatchesForOverview = useCallback((matchesArray: ApiMatch[] | undefined | null): UIMatch[] | undefined => {
@@ -92,6 +95,10 @@ export default function TabContent({ teamId, tab, initialData }: TabContentProps
             stats={convertTeamStatsForOverview(teamData.stats)}
             matches={convertMatchesForOverview(matches.data)}
             standings={convertStandingsData(standings.data)}
+            playerStats={playerStats?.data}
+            squad={squad?.data}
+            transfers={transfers?.data}
+            onTabChange={onTabChange}
             isLoading={false}
             error={null}
           />
@@ -154,6 +161,15 @@ export default function TabContent({ teamId, tab, initialData }: TabContentProps
           <FixturesTab
             matches={convertMatchesForOverview(matches.data)}
             teamId={numericTeamId}
+          />
+        </Suspense>
+      );
+
+    case 'transfers':
+      return (
+        <Suspense fallback={<LoadingState message={TAB_LOADING_MESSAGES.transfers} />}>
+          <TransfersTab
+            transfers={transfers?.data}
           />
         </Suspense>
       );

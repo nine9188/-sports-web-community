@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useMemo, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
@@ -26,9 +26,21 @@ interface FixturesTabProps {
 
 export default function FixturesTab({ matches, teamId }: FixturesTabProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // URL의 subTab 파라미터에서 초기 탭 가져오기
+  const initialTab = searchParams?.get('subTab') || 'recent';
 
   // 탭 상태
-  const [activeTab, setActiveTab] = useState('recent');
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  // URL의 subTab이 변경되면 activeTab 업데이트
+  useEffect(() => {
+    const subTab = searchParams?.get('subTab');
+    if (subTab && (subTab === 'recent' || subTab === 'upcoming')) {
+      setActiveTab(subTab);
+    }
+  }, [searchParams]);
 
   // 페이지네이션 상태
   const [recentPage, setRecentPage] = useState(1);

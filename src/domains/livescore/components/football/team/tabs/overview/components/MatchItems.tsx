@@ -7,7 +7,7 @@ import { ko } from 'date-fns/locale';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
-import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui/container';
+import { Container, ContainerHeader, ContainerTitle, Button } from '@/shared/components/ui';
 
 // 매치 타입 정의
 export interface Match {
@@ -47,11 +47,12 @@ export interface Match {
 interface MatchItemsProps {
   matches: Match[] | undefined;
   teamId: number;
+  onTabChange?: (tab: string, subTab?: string) => void;
 }
 
 const DISPLAY_LIMIT = 5;
 
-export default function MatchItems({ matches, teamId }: MatchItemsProps) {
+export default function MatchItems({ matches, teamId, onTabChange }: MatchItemsProps) {
   const router = useRouter();
 
   // 매치 페이지로 이동하는 함수
@@ -216,6 +217,32 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
               </tbody>
             </table>
           </div>
+
+      {/* 최근 경기 전체보기 버튼 */}
+      {onTabChange && (
+        <Button
+          variant="secondary"
+          onClick={() => onTabChange('fixtures', 'recent')}
+          className="w-full rounded-none md:rounded-b-lg border-t border-black/5 dark:border-white/10"
+        >
+          <div className="flex items-center justify-center gap-1">
+            <span className="text-sm font-medium">최근 경기 전체보기</span>
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </div>
+        </Button>
+      )}
       </Container>
 
       {/* 예정된 경기 */}
@@ -308,6 +335,32 @@ export default function MatchItems({ matches, teamId }: MatchItemsProps) {
               </tbody>
             </table>
           </div>
+
+      {/* 예정된 경기 전체보기 버튼 */}
+      {onTabChange && (
+        <Button
+          variant="secondary"
+          onClick={() => onTabChange('fixtures', 'upcoming')}
+          className="w-full rounded-none md:rounded-b-lg border-t border-black/5 dark:border-white/10"
+        >
+          <div className="flex items-center justify-center gap-1">
+            <span className="text-sm font-medium">예정된 경기 전체보기</span>
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </div>
+        </Button>
+      )}
       </Container>
     </div>
   );

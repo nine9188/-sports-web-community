@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, Suspense } from 'react';
+import { useState, useCallback, Suspense, useEffect } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import PlayerHeader from './PlayerHeader';
@@ -10,6 +10,7 @@ import { LoadingState } from '@/domains/livescore/components/common/CommonCompon
 import { PlayerFullDataResponse } from '@/domains/livescore/actions/player/data';
 import type { PlayerTabType } from '@/domains/livescore/hooks';
 import { playerKeys } from '@/shared/constants/queryKeys';
+import { scrollToTop } from '@/shared/utils/scroll';
 
 /**
  * ============================================
@@ -123,6 +124,11 @@ export default function PlayerPageClient({
     // router.push는 서버 컴포넌트 리렌더링을 트리거할 수 있음
     window.history.replaceState(null, '', newUrl);
   }, [currentTab, pathname, searchParams]);
+
+  // 탭 변경 후 스크롤 (useEffect로 DOM 업데이트 완료 후 실행)
+  useEffect(() => {
+    scrollToTop('auto');
+  }, [currentTab]);
 
   return (
     <>

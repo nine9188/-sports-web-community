@@ -16,7 +16,7 @@ export default function RelatedPosts({
   posts: RelatedPost[];
 }) {
   return (
-    <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
+    <Container className="bg-white dark:bg-[#1D1D1D] mt-4">
       <ContainerHeader>
         <ContainerTitle>관련 게시글</ContainerTitle>
       </ContainerHeader>

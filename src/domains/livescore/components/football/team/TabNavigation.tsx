@@ -31,6 +31,7 @@ export default function TabNavigation({
     { id: 'fixtures', label: '경기' },
     { id: 'standings', label: '순위' },
     { id: 'squad', label: '선수단' },
+    { id: 'transfers', label: '이적' },
     { id: 'stats', label: '통계' }
   ];
 

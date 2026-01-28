@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, Suspense } from 'react';
+import { useState, useCallback, Suspense, useEffect } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import MatchHeader from './MatchHeader';
 import TabNavigation from './TabNavigation';
@@ -12,6 +12,7 @@ import { PlayerRatingsAndCaptains } from '@/domains/livescore/actions/match/play
 import { MatchPlayerStatsResponse } from '@/domains/livescore/actions/match/matchPlayerStats';
 import { MatchInfoSection } from './sidebar/MatchSidebar';
 import { type SidebarData } from '@/domains/livescore/actions/match/sidebarData';
+import { scrollToTop } from '@/shared/utils/scroll';
 
 /**
  * ============================================
@@ -101,6 +102,11 @@ export default function MatchPageClient({
     // router.push는 서버 컴포넌트 리렌더링을 트리거할 수 있음
     window.history.replaceState(null, '', newUrl);
   }, [currentTab, pathname, searchParams]);
+
+  // 탭 변경 후 스크롤 (useEffect로 DOM 업데이트 완료 후 실행)
+  useEffect(() => {
+    scrollToTop('auto');
+  }, [currentTab]);
 
   return (
     <div className="flex gap-4">

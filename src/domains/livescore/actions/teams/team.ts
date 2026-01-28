@@ -115,6 +115,7 @@ import { fetchCachedTeamMatches as getTeamMatches, Match } from './matches';
 import { fetchCachedTeamSquad as getTeamSquad, Player, Coach } from './squad';
 import { fetchCachedTeamPlayerStats as getTeamPlayerStats, PlayerStats } from './player-stats';
 import { fetchCachedTeamStandings as getTeamStandings, Standing } from './standings';
+import { fetchCachedTeamTransfers as getTeamTransfers, TeamTransfersData } from './transfers';
 
 // 통합 응답 타입 정의
 export interface TeamFullDataResponse {
@@ -125,6 +126,7 @@ export interface TeamFullDataResponse {
   squad?: { success: boolean; data?: (Player | Coach)[]; message: string };
   playerStats?: { success: boolean; data?: Record<number, PlayerStats>; message: string };
   standings?: { success: boolean; data?: Standing[]; message: string };
+  transfers?: { success: boolean; data?: TeamTransfersData; message: string };
   [key: string]: unknown; // 인덱스 시그니처
 }
 
@@ -274,11 +276,12 @@ export const fetchCachedTeamData = cache(
 export const fetchTeamFullData = cache(
   async (
     teamId: string, 
-    options = { 
-      fetchMatches: true, 
-      fetchSquad: true, 
-      fetchPlayerStats: true, 
-      fetchStandings: true 
+    options = {
+      fetchMatches: true,
+      fetchSquad: true,
+      fetchPlayerStats: true,
+      fetchStandings: true,
+      fetchTransfers: true
     }
   ): Promise<TeamFullDataResponse> => {
     try {
@@ -290,7 +293,7 @@ export const fetchTeamFullData = cache(
       // L2 (Supabase) 캐시 래퍼
       // ============================================
       async function withCache<T>(
-        dataType: 'info' | 'stats' | 'matches' | 'squad' | 'playerStats' | 'standings',
+        dataType: 'info' | 'stats' | 'matches' | 'squad' | 'playerStats' | 'standings' | 'transfers',
         fetcher: () => Promise<T>,
         season?: number
       ): Promise<T> {
@@ -340,6 +343,11 @@ export const fetchTeamFullData = cache(
       if (options.fetchStandings) {
         promises.push(withCache('standings', () => getTeamStandings(teamId), currentSeason));
         dataTypes.push('standings');
+      }
+
+      if (options.fetchTransfers) {
+        promises.push(withCache('transfers', () => getTeamTransfers(teamId), currentSeason));
+        dataTypes.push('transfers');
       }
 
       // 모든 데이터 병렬로 요청

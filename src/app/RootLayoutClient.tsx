@@ -15,6 +15,7 @@ import AttendanceChecker from '@/shared/components/AttendanceChecker';
 import { Board } from '@/domains/layout/types/board';
 import { MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
 import { FullUserDataWithSession, HeaderUserData } from '@/shared/types/user';
+import { scrollToTop } from '@/shared/utils/scroll';
 
 interface RootLayoutClientProps {
   children: React.ReactNode;
@@ -131,31 +132,30 @@ export default function RootLayoutClient({
 
 
   
-  // 페이지 전환 감지 및 스크롤 복원 관리 - 디바운스 적용 + startTransition
+  // 페이지 전환 감지 및 스크롤 복원 관리
   useEffect(() => {
     if (pathname && prevPathnameRef.current !== pathname) {
-      const timeoutId = setTimeout(() => {
-        startTransition(() => {
-          // 사이드바가 열려있다면 닫기 (모바일)
-          if (isOpen) {
-            setIsOpen(false);
-          }
-          
-          // 프로필 사이드바가 열려있다면 닫기 (모바일)
-          if (isProfileOpen) {
-            setIsProfileOpen(false);
-          }
+      // Next.js의 자동 스크롤 복원을 막기
+      if ('scrollRestoration' in window.history) {
+        window.history.scrollRestoration = 'manual';
+      }
 
-          
-          // 스크롤 위치 복원
-          window.scrollTo(0, 0);
-          
-          // 경로 변경 저장
-          prevPathnameRef.current = pathname;
-        });
-      }, 50); // 50ms 디바운스
-      
-      return () => clearTimeout(timeoutId);
+      // 페이지 이동 시 즉시 스크롤
+      scrollToTop('auto');
+
+      // 사이드바 닫기는 낮은 우선순위로 처리
+      startTransition(() => {
+        if (isOpen) {
+          setIsOpen(false);
+        }
+
+        if (isProfileOpen) {
+          setIsProfileOpen(false);
+        }
+      });
+
+      // 경로 변경 저장
+      prevPathnameRef.current = pathname;
     }
   }, [pathname, isOpen, isProfileOpen]);
 

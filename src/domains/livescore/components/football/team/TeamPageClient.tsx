@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useCallback, Suspense } from 'react';
+import { useState, useCallback, Suspense, useEffect } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import TeamHeader from './TeamHeader';
 import TabNavigation from './TabNavigation';
 import TabContent from './TabContent';
 import Spinner from '@/shared/components/Spinner';
 import { TeamFullDataResponse } from '@/domains/livescore/actions/teams/team';
+import { scrollToTop } from '@/shared/utils/scroll';
 
 /**
  * ============================================
@@ -44,10 +45,10 @@ import { TeamFullDataResponse } from '@/domains/livescore/actions/teams/team';
  */
 
 // 팀 탭 타입
-export type TeamTabType = 'overview' | 'fixtures' | 'standings' | 'squad' | 'stats';
+export type TeamTabType = 'overview' | 'fixtures' | 'standings' | 'squad' | 'transfers' | 'stats';
 
 // 유효한 탭 목록
-const VALID_TABS: TeamTabType[] = ['overview', 'fixtures', 'standings', 'squad', 'stats'];
+const VALID_TABS: TeamTabType[] = ['overview', 'fixtures', 'standings', 'squad', 'transfers', 'stats'];
 
 interface TeamPageClientProps {
   teamId: string;
@@ -72,15 +73,16 @@ export default function TeamPageClient({
    * 1. 클라이언트 상태 즉시 업데이트 (빠른 UI 반응)
    * 2. URL을 shallow로 업데이트 (페이지 리로드 없이 히스토리만 변경)
    * 3. 이미 로드된 데이터로 즉시 렌더링
+   * 4. 페이지 최상단으로 스크롤
    */
-  const handleTabChange = useCallback((tabId: string) => {
+  const handleTabChange = useCallback((tabId: string, subTab?: string) => {
     const newTab = tabId as TeamTabType;
 
     // 유효하지 않은 탭이면 무시
     if (!VALID_TABS.includes(newTab)) return;
 
-    // 같은 탭이면 무시
-    if (newTab === currentTab) return;
+    // 같은 탭이면 무시 (단, subTab이 있으면 허용)
+    if (newTab === currentTab && !subTab) return;
 
     // 1. 클라이언트 상태 즉시 업데이트
     setCurrentTab(newTab);
@@ -94,12 +96,24 @@ export default function TeamPageClient({
       params.set('tab', newTab);
     }
 
+    // subTab 파라미터 추가
+    if (subTab) {
+      params.set('subTab', subTab);
+    } else {
+      params.delete('subTab');
+    }
+
     const newUrl = `${pathname}${params.toString() ? `?${params.toString()}` : ''}`;
 
     // window.history.replaceState로 shallow 업데이트
     // router.push는 서버 컴포넌트 리렌더링을 트리거할 수 있음
     window.history.replaceState(null, '', newUrl);
   }, [currentTab, pathname, searchParams]);
+
+  // 탭 변경 후 스크롤 (useEffect로 DOM 업데이트 완료 후 실행)
+  useEffect(() => {
+    scrollToTop('auto');
+  }, [currentTab]);
 
   return (
     <>
@@ -127,6 +141,7 @@ export default function TeamPageClient({
         teamId={teamId}
         tab={currentTab}
         initialData={initialData}
+        onTabChange={handleTabChange}
       />
     </>
   );

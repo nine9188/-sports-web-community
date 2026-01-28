@@ -62,7 +62,8 @@ export default async function TeamPage({ params, searchParams }: TeamPageProps) 
       fetchMatches: true,      // overview, fixtures 탭용
       fetchSquad: true,        // squad 탭용
       fetchPlayerStats: true,  // squad, stats 탭용
-      fetchStandings: true     // overview, standings 탭용
+      fetchStandings: true,    // overview, standings 탭용
+      fetchTransfers: true     // overview 탭용
     });
 
     if (!initialData.success || !initialData.teamData?.team) {
