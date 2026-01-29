@@ -394,9 +394,15 @@ export default async function PostDetailPage({
       </>
     );
   } catch (error) {
-    // 오류가 NEXT_NOT_FOUND 관련인지 확인
-    if (error instanceof Error && error.message?.includes('NEXT_NOT_FOUND')) {
-      return notFound();
+    // notFound() 에러는 digest 확인 후 다시 throw
+    if (
+      error &&
+      typeof error === 'object' &&
+      'digest' in error &&
+      typeof error.digest === 'string' &&
+      error.digest.includes('NEXT_NOT_FOUND')
+    ) {
+      throw error;
     }
 
     // 그 외 일반 오류는 사용자 친화적인 에러 페이지 표시
