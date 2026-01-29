@@ -38,6 +38,7 @@ export async function generateMetadata() {
     verification: {
       other: {
         'naver-site-verification': '2b10354399e2b85e4e7aad7ba1aabfcb23eca1e3',
+        'google-adsense-account': 'ca-pub-8892057636180546',
       },
     },
     icons: {
