@@ -95,6 +95,8 @@ const NewsImage = ({
         onLoadStart={onLoadStart}
         onError={onError}
         data-nosnippet="true"  // 검색 크롤러가 OG 이미지로 선택하지 않도록
+        data-pinterest-nopin="true"  // Pinterest 크롤링 방지
+        loading={priority ? undefined : "lazy"}  // 우선순위 없으면 lazy loading
       />
       {/* 호버 오버레이 */}
       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-all pointer-events-none" />
@@ -153,7 +155,7 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
             style={CARD_STYLES.transform}
           >
             <div className="flex flex-col h-full">
-              <div className="relative w-full h-56 md:h-80 lg:h-96 bg-[#F5F5F5] dark:bg-[#262626]">
+              <div className="relative w-full h-48 md:h-64 lg:h-72 bg-[#F5F5F5] dark:bg-[#262626]">
                 <NewsImage
                   item={news[0]}
                   isLoading={isImageLoading(news[0].id)}
