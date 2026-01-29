@@ -42,8 +42,9 @@ export async function generateMetadata() {
         { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
       ],
       apple: [
-        // Safari iOS 공유 이미지 인식을 위한 다양한 사이즈
-        { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
+        // Apple 표준 규약: apple-touch-icon.png (Safari/iOS 공유 이미지)
+        { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+        { url: '/apple-touch-icon-precomposed.png', sizes: '180x180', type: 'image/png' },
         { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
         { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
       ],
@@ -138,6 +139,9 @@ export default async function RootLayout({
       <head>
         <link rel="preconnect" href="https://challenges.cloudflare.com" crossOrigin="" />
         <link rel="dns-prefetch" href="https://challenges.cloudflare.com" />
+        {/* Apple Touch Icon - iOS/Safari 공유 이미지 */}
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon-precomposed.png" />
         {/* Safari 공유 이미지 우선순위 강제 (전통적인 방법) */}
         <link rel="image_src" href={`${siteUrl}/og-image.png`} />
       </head>
