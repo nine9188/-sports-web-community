@@ -31,7 +31,11 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       .single();
       
     if (boardError || !board) {
-      throw new Error('게시판을 찾을 수 없습니다.');
+      return {
+        success: false,
+        notFoundType: 'BOARD' as const,
+        error: '게시판을 찾을 수 없습니다.'
+      };
     }
     
     // 2. 병렬로 데이터 가져오기 - 성능 최적화
@@ -78,7 +82,11 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
     
     const { data: post, error: postError } = postResult;
     if (postError || !post) {
-      throw new Error('게시글을 찾을 수 없습니다.');
+      return {
+        success: false,
+        notFoundType: 'POST' as const,
+        error: '게시글을 찾을 수 없습니다.'
+      };
     }
 
     const { data: boardStructure } = boardStructureResult;

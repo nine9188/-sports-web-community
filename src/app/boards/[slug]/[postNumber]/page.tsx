@@ -112,8 +112,14 @@ export default async function PostDetailPage({
     
     // 서버 액션을 통해 모든 데이터 로드 (page 전달)
     const result = await getPostPageData(slug, postNumber, normalizedFromBoardId, safePage);
-    
+
     if (!result.success) {
+      // 게시글/게시판 없음 → 404 반환
+      if ('notFoundType' in result) {
+        notFound();
+      }
+
+      // 서버 에러 → 에러 메시지 표시
       return (
         <div className="container mx-auto">
           <div className={errorBoxStyles}>
