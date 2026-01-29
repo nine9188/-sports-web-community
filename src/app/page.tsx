@@ -29,8 +29,8 @@ export default function HomePage() {
       {/* 게시글 리스트 위젯 - 즉시 렌더링 */}
       <AllPostsWidget />
 
-      {/* 뉴스 위젯 - 즉시 렌더링 */}
-      <NewsWidget />
+      {/* 뉴스 위젯 - Safari 썸네일 테스트를 위해 임시 주석 처리 */}
+      {/* <NewsWidget /> */}
     </main>
   );
 }
