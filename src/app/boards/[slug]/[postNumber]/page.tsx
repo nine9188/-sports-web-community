@@ -104,34 +104,13 @@ export default async function PostDetailPage({
     const result = await getPostPageData(slug, postNumber, normalizedFromBoardId, safePage);
 
     if (!result.success) {
-      // 게시글/게시판 없음 → 404 반환
-      if ('notFoundType' in result) {
-        notFound();
-      }
-
-      // 서버 에러 → 에러 메시지 표시
-      return (
-        <div className="container mx-auto">
-          <div className={errorBoxStyles}>
-            <h2 className={errorTitleStyles}>오류가 발생했습니다</h2>
-            <p className={errorMessageStyles}>{result.error || '페이지를 불러오는 중 문제가 발생했습니다.'}</p>
-            <Link href="/" className={errorLinkStyles}>메인페이지로 이동</Link>
-          </div>
-        </div>
-      );
+      // 모든 실패 케이스 → 404 반환
+      notFound();
     }
 
     // 결과가 성공적이고 모든 필요한 데이터가 있는지 확인
     if (!result.post || !result.board) {
-      return (
-        <div className="container mx-auto">
-          <div className={errorBoxStyles}>
-            <h2 className={errorTitleStyles}>오류가 발생했습니다</h2>
-            <p className={errorMessageStyles}>게시글 또는 게시판 정보가 없습니다.</p>
-            <Link href="/" className={errorLinkStyles}>메인페이지로 이동</Link>
-          </div>
-        </div>
-      );
+      notFound();
     }
     
     // 타입 호환을 위한 데이터 변환
@@ -394,7 +373,7 @@ export default async function PostDetailPage({
       </>
     );
   } catch (error) {
-    // notFound() 에러는 digest 확인 후 다시 throw
+    // notFound() 에러는 그대로 throw
     if (
       error &&
       typeof error === 'object' &&
@@ -405,15 +384,8 @@ export default async function PostDetailPage({
       throw error;
     }
 
-    // 그 외 일반 오류는 사용자 친화적인 에러 페이지 표시
-    return (
-      <div className="container mx-auto">
-        <div className={errorBoxStyles}>
-          <h2 className={errorTitleStyles}>오류가 발생했습니다</h2>
-          <p className={errorMessageStyles}>페이지를 불러오는 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.</p>
-          <Link href="/" className={errorLinkStyles}>메인페이지로 이동</Link>
-        </div>
-      </div>
-    );
+    // 그 외 일반 오류도 404로 처리 (게시글 페이지 관련 에러는 대부분 찾을 수 없음)
+    console.error('게시글 페이지 오류:', error);
+    notFound();
   }
 } 
