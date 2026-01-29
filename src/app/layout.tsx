@@ -17,6 +17,7 @@ import { getFullUserData } from '@/shared/actions/user';
 import Script from 'next/script';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import Image from 'next/image';
 
 // 동적 렌더링 설정
 export const dynamic = 'force-dynamic';
@@ -34,6 +35,11 @@ export async function generateMetadata() {
   return {
     metadataBase: new URL(siteUrl),
     ...metadata,
+    verification: {
+      other: {
+        'naver-site-verification': '2b10354399e2b85e4e7aad7ba1aabfcb23eca1e3',
+      },
+    },
     icons: {
       icon: [
         { url: '/favicon.ico', sizes: '48x48', type: 'image/x-icon' },
@@ -149,11 +155,13 @@ export default async function RootLayout({
         {/* Safari용 숨겨진 OG 이미지 - DOM에는 존재하지만 시각적으로는 숨김 */}
         {/* Safari는 페이지에서 가장 큰 이미지를 대표 이미지로 선택하므로, */}
         {/* OG 이미지를 1200x630 크기로 숨겨서 배치하여 우선순위를 높임 */}
-        <img
+        <Image
           src={`${siteUrl}/og-image.png`}
           alt="4590 Football"
           width={1200}
           height={630}
+          unoptimized
+          priority={false}
           style={{
             position: 'absolute',
             width: '1200px',
