@@ -158,8 +158,8 @@ export default function BoardCollectionWidgetClient({ boardsData }: BoardCollect
         {/* 컨텐츠 */}
         <div>
           {hasNoPosts ? (
-            <div className="text-center py-8 text-gray-500">
-              <p>아직 게시글이 없습니다.</p>
+            <div className="flex justify-center items-center h-32 text-center">
+              <p className="text-gray-500 dark:text-gray-400">아직 게시글이 없습니다.</p>
             </div>
           ) : (
             /* 텍스트 목록 2열: 왼쪽(1~10) / 오른쪽(11~20) */
@@ -243,8 +243,8 @@ export default function BoardCollectionWidgetClient({ boardsData }: BoardCollect
         {/* 게시글 목록 */}
         <div className="flex flex-col">
           {hasNoPosts ? (
-            <div className="text-center py-8 text-gray-500">
-              <p>아직 게시글이 없습니다.</p>
+            <div className="flex justify-center items-center h-32 text-center">
+              <p className="text-gray-500 dark:text-gray-400">아직 게시글이 없습니다.</p>
             </div>
           ) : (
             currentBoardData.recentPosts.slice(0, POSTS_PER_PAGE).map((post, index) => (

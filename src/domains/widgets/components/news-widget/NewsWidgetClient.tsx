@@ -1,10 +1,11 @@
-'use client';
+﻿'use client';
 
 import { useState, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { formatDate } from '@/shared/utils/dateUtils';
 import { siteConfig } from '@/shared/config';
+import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 import { NewsItem } from './types';
 
 // ==================== 타입 정의 ====================
@@ -134,28 +135,34 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
   // 뉴스 없음 상태
   if (!news.length) {
     return (
-      <div className="mb-2">
-        <div className="flex justify-center items-center h-48 text-gray-500 dark:text-gray-400 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg border border-black/7 dark:border-0 p-3">
-          표시할 게시글이 없습니다.
+      <Container className="bg-white dark:bg-[#1D1D1D]">
+        <ContainerHeader>
+          <ContainerTitle>뉴스</ContainerTitle>
+        </ContainerHeader>
+        <div className="flex justify-center items-center h-32 text-center">
+          <p className="text-gray-500 dark:text-gray-400">아직 게시글이 없습니다.</p>
         </div>
-      </div>
+      </Container>
     );
   }
 
   return (
-    <div className="">
-      {/* 메인 레이아웃: 메인 뉴스(왼쪽) + 작은 뉴스 2x2 그리드(오른쪽) */}
-      <div className="flex flex-col md:flex-row min-h-[300px] md:min-h-[420px]">
-
-        {/* 메인 뉴스 (첫 번째) */}
-        <div className="md:w-1/2 h-auto md:h-full mb-4 md:mb-0 md:mr-4">
+    <Container className="bg-white dark:bg-[#1D1D1D]">
+      <ContainerHeader>
+        <ContainerTitle>뉴스</ContainerTitle>
+      </ContainerHeader>
+      <div className="p-4">
+      {/* 메인 레이아웃: 큰 배너(왼쪽) + 세로 카드 3개(오른쪽) */}
+      <div className="flex flex-col md:flex-row mb-4 gap-4">
+        {/* 큰 배너 (첫 번째) - 왼쪽 */}
+        <div className="md:w-1/2">
           <Link
             href={news[0].url}
-            className="block h-full bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors group touch-manipulation"
+            className="block bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors group touch-manipulation h-full"
             style={CARD_STYLES.transform}
           >
             <div className="flex flex-col h-full">
-              <div className="relative w-full h-48 md:h-64 lg:h-72 bg-[#F5F5F5] dark:bg-[#262626]">
+              <div className="relative w-full h-48 md:h-56 bg-[#F5F5F5] dark:bg-[#262626]">
                 <NewsImage
                   item={news[0]}
                   isLoading={isImageLoading(news[0].id)}
@@ -180,55 +187,30 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
           </Link>
         </div>
 
-        {/* 작은 뉴스 2x2 (2~5번째) */}
-        <div className="md:w-1/2 flex flex-col">
-          {/* 위쪽 2개 */}
-          <div className="flex flex-1 mb-4">
-            {news.slice(1, 3).map((item, index) => (
+        {/* 세로 카드 3개 (2~4번째) - 오른쪽 */}
+        {news.length > 1 && (
+          <div className="md:w-1/2 flex flex-col gap-4">
+            {news.slice(1, 4).map((item) => (
               <Link
                 key={item.id}
                 href={item.url}
-                className={`${CARD_STYLES.base} flex-1 ${index === 0 ? 'mr-4' : ''}`}
+                className={CARD_STYLES.base}
                 style={CARD_STYLES.transform}
               >
-                <div className="flex flex-col h-full">
-                  <div className="relative w-full aspect-[4/3] md:aspect-auto md:flex-1 bg-[#F5F5F5] dark:bg-[#262626]">
-                    <NewsImage
-                      item={item}
-                      isLoading={isImageLoading(item.id)}
-                      hasError={hasImageError(item.id)}
-                      onLoad={() => handleImageLoad(item.id)}
-                      onLoadStart={() => handleImageLoadStart(item.id)}
-                      onError={() => handleImageError(item.id)}
-                      sizes="(max-width: 768px) 50vw, 25vw"
-                      spinnerSize="md"
-                    />
-                  </div>
-                  <div className="p-1.5 md:p-2">
-                    <h3 className="text-[11px] md:text-xs font-medium line-clamp-2 text-gray-900 dark:text-[#F0F0F0] group-hover:underline transition-colors">
+                <div className="flex h-full">
+                  {/* 텍스트 영역 (왼쪽) */}
+                  <div className="flex-1 p-3 flex flex-col justify-between">
+                    <h4 className="text-xs md:text-sm font-medium line-clamp-2 text-gray-900 dark:text-[#F0F0F0] group-hover:underline transition-colors mb-2">
                       {String(item?.title || '제목 없음')}
-                    </h3>
-                    <div className="flex justify-between items-center text-[10px] md:text-xs text-gray-500 dark:text-gray-400 mt-2">
-                      <span className="truncate max-w-[50px] md:max-w-[70px]">{String(item?.source || '출처 없음')}</span>
+                    </h4>
+                    <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+                      <span className="truncate max-w-[120px]">{String(item?.source || '출처 없음')}</span>
                       <span>{formatDate(item?.publishedAt || '')}</span>
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))}
-          </div>
 
-          {/* 아래쪽 2개 */}
-          <div className="flex flex-1">
-            {news.slice(3, 5).map((item, index) => (
-              <Link
-                key={item.id}
-                href={item.url}
-                className={`${CARD_STYLES.base} flex-1 ${index === 0 ? 'mr-4' : ''}`}
-                style={CARD_STYLES.transform}
-              >
-                <div className="flex flex-col h-full">
-                  <div className="relative w-full aspect-[4/3] md:aspect-auto md:flex-1 bg-[#F5F5F5] dark:bg-[#262626]">
+                  {/* 이미지 영역 (오른쪽) */}
+                  <div className="relative w-24 md:w-28 aspect-[1/1] md:aspect-auto md:h-auto flex-shrink-0 bg-[#F5F5F5] dark:bg-[#262626] rounded-r-lg overflow-hidden">
                     <NewsImage
                       item={item}
                       isLoading={isImageLoading(item.id)}
@@ -236,69 +218,62 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
                       onLoad={() => handleImageLoad(item.id)}
                       onLoadStart={() => handleImageLoadStart(item.id)}
                       onError={() => handleImageError(item.id)}
-                      sizes="(max-width: 768px) 50vw, 25vw"
-                      spinnerSize="md"
+                      sizes="(max-width: 768px) 100px, 120px"
+                      spinnerSize="sm"
                     />
-                  </div>
-                  <div className="p-1.5 md:p-2">
-                    <h3 className="text-[11px] md:text-xs font-medium line-clamp-2 text-gray-900 dark:text-[#F0F0F0] group-hover:underline transition-colors">
-                      {String(item?.title || '제목 없음')}
-                    </h3>
-                    <div className="flex justify-between items-center text-[10px] md:text-xs text-gray-500 dark:text-gray-400 mt-2">
-                      <span className="truncate max-w-[50px] md:max-w-[70px]">{String(item?.source || '출처 없음')}</span>
-                      <span>{formatDate(item?.publishedAt || '')}</span>
-                    </div>
                   </div>
                 </div>
               </Link>
             ))}
           </div>
-        </div>
+        )}
       </div>
 
-      {/* 추가 뉴스 2열 리스트 (6~15번째) */}
-      {news.length > 5 && (
-        <div className="mt-4 flex flex-col md:flex-row md:flex-wrap">
-          {news.slice(5, 15).map((item, index) => {
+      {/* 추가 뉴스 2열 리스트 (5~14번째) */}
+      {news.length > 4 && (
+        <div className="flex flex-col md:flex-row md:flex-wrap">
+          {news.slice(4, 14).map((item, index) => {
             const isLeftColumn = index % 2 === 0;
+            const isLastRow = index >= 8; // 마지막 2개 아이템
             return (
               <Link
                 key={item.id}
                 href={item.url}
-                className={`${CARD_STYLES.base} w-full md:w-[calc(50%-8px)] ${isLeftColumn ? 'md:mr-4' : ''} ${index >= 8 ? 'mb-0' : 'mb-4'}`}
+                className={`${CARD_STYLES.base} w-full md:w-[calc(50%-8px)] ${isLeftColumn ? 'md:mr-4' : ''} ${isLastRow ? 'mb-0' : 'mb-4'}`}
                 style={CARD_STYLES.transform}
               >
-              <div className="flex h-full">
-                {/* 텍스트 영역 (왼쪽) */}
-                <div className="flex-1 p-3 flex flex-col justify-between">
-                  <h4 className="text-xs md:text-sm font-medium line-clamp-2 text-gray-900 dark:text-[#F0F0F0] group-hover:underline transition-colors mb-2">
-                    {String(item?.title || '제목 없음')}
-                  </h4>
-                  <div className="flex flex-col text-xs text-gray-500 dark:text-gray-400">
-                    <span className="truncate">{String(item?.source || '출처 없음')}</span>
-                    <span>{formatDate(item?.publishedAt || '')}</span>
+                <div className="flex h-full">
+                  {/* 텍스트 영역 (왼쪽) */}
+                  <div className="flex-1 p-3 flex flex-col justify-between">
+                    <h4 className="text-xs md:text-sm font-medium line-clamp-2 text-gray-900 dark:text-[#F0F0F0] group-hover:underline transition-colors mb-2">
+                      {String(item?.title || '제목 없음')}
+                    </h4>
+                    <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+                      <span className="truncate max-w-[120px]">{String(item?.source || '출처 없음')}</span>
+                      <span>{formatDate(item?.publishedAt || '')}</span>
+                    </div>
+                  </div>
+
+                  {/* 이미지 영역 (오른쪽) */}
+                  <div className="relative w-24 md:w-28 aspect-[1/1] md:aspect-auto md:h-auto flex-shrink-0 bg-[#F5F5F5] dark:bg-[#262626] rounded-r-lg overflow-hidden">
+                    <NewsImage
+                      item={item}
+                      isLoading={isImageLoading(item.id)}
+                      hasError={hasImageError(item.id)}
+                      onLoad={() => handleImageLoad(item.id)}
+                      onLoadStart={() => handleImageLoadStart(item.id)}
+                      onError={() => handleImageError(item.id)}
+                      sizes="(max-width: 768px) 100px, 120px"
+                      spinnerSize="sm"
+                    />
                   </div>
                 </div>
-
-                {/* 이미지 영역 (오른쪽) */}
-                <div className="relative w-20 md:w-24 aspect-[1/1] md:aspect-auto md:h-auto flex-shrink-0 bg-[#F5F5F5] dark:bg-[#262626] rounded-r-lg overflow-hidden">
-                  <NewsImage
-                    item={item}
-                    isLoading={isImageLoading(item.id)}
-                    hasError={hasImageError(item.id)}
-                    onLoad={() => handleImageLoad(item.id)}
-                    onLoadStart={() => handleImageLoadStart(item.id)}
-                    onError={() => handleImageError(item.id)}
-                    sizes="100px"
-                    spinnerSize="sm"
-                  />
-                </div>
-              </div>
-            </Link>
+              </Link>
             );
           })}
         </div>
       )}
-    </div>
+      </div>
+    </Container>
   );
 }

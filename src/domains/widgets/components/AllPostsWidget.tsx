@@ -34,7 +34,7 @@ export default async function AllPostsWidget() {
         <PostList
           posts={postsData.data}
           loading={false} // 로딩 상태는 항상 false (서버 컴포넌트에서 데이터 로드 완료 후 렌더링)
-          emptyMessage="표시할 게시글이 없습니다."
+          emptyMessage="아직 게시글이 없습니다."
           headerContent={headerContent}
           showBoard={true}
           // 🔧 높이 제한 완전 제거 - 모든 게시글이 완전히 보이도록

@@ -15,7 +15,7 @@ interface PostListEmptyProps {
  */
 export function PostListEmpty({ message }: PostListEmptyProps) {
   return (
-    <div className="p-6 text-center">
+    <div className="flex justify-center items-center h-32 text-center">
       <p className="text-gray-500 dark:text-gray-400">{message}</p>
     </div>
   );
