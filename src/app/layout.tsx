@@ -42,7 +42,10 @@ export async function generateMetadata() {
         { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
       ],
       apple: [
+        // Safari iOS 공유 이미지 인식을 위한 다양한 사이즈
         { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
+        { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+        { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
       ],
     },
     manifest: '/site.webmanifest',
@@ -135,8 +138,30 @@ export default async function RootLayout({
       <head>
         <link rel="preconnect" href="https://challenges.cloudflare.com" crossOrigin="" />
         <link rel="dns-prefetch" href="https://challenges.cloudflare.com" />
+        {/* Safari 공유 이미지 우선순위 강제 (전통적인 방법) */}
+        <link rel="image_src" href={`${siteUrl}/og-image.png`} />
       </head>
       <body className="w-full h-full overflow-x-hidden">
+        {/* Safari용 숨겨진 OG 이미지 - DOM에는 존재하지만 시각적으로는 숨김 */}
+        {/* Safari는 페이지에서 가장 큰 이미지를 대표 이미지로 선택하므로, */}
+        {/* OG 이미지를 1200x630 크기로 숨겨서 배치하여 우선순위를 높임 */}
+        <img
+          src={`${siteUrl}/og-image.png`}
+          alt="4590 Football"
+          width={1200}
+          height={630}
+          style={{
+            position: 'absolute',
+            width: '1200px',
+            height: '630px',
+            left: '-9999px',
+            top: '0',
+            opacity: 0,
+            pointerEvents: 'none',
+            zIndex: -1
+          }}
+          aria-hidden="true"
+        />
         {/* WebSite 구조화 데이터 */}
         <Script
           id="website-schema"
