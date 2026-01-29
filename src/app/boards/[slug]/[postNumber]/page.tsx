@@ -46,12 +46,7 @@ export async function generateMetadata({
     .single();
 
   if (!board) {
-    return buildMetadata({
-      title: '게시판을 찾을 수 없습니다',
-      description: '요청하신 게시판이 존재하지 않습니다.',
-      path: `/boards/${slug}/${postNumber}`,
-      noindex: true,
-    });
+    notFound();
   }
 
   // 2. 게시글 정보 조회
@@ -63,12 +58,7 @@ export async function generateMetadata({
     .single();
 
   if (!post) {
-    return buildMetadata({
-      title: '게시글을 찾을 수 없습니다',
-      description: '요청하신 게시글이 존재하지 않습니다.',
-      path: `/boards/${slug}/${postNumber}`,
-      noindex: true,
-    });
+    notFound();
   }
 
   const description = extractDescription(post.content) || `${board.name} 게시판의 게시글입니다.`;
