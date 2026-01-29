@@ -17,7 +17,6 @@ type ImageLoadingState = 'loading' | 'loaded' | 'error' | 'timeout';
 // ==================== 상수 ====================
 const IMAGE_TIMEOUT_MS = 5000;
 const FALLBACK_LOGO = siteConfig.logo;
-const BLUR_DATA_URL = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q==";
 
 const CARD_STYLES = {
   base: "bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors group touch-manipulation",
@@ -95,6 +94,7 @@ const NewsImage = ({
         onLoad={onLoad}
         onLoadStart={onLoadStart}
         onError={onError}
+        data-nosnippet="true"  // 검색 크롤러가 OG 이미지로 선택하지 않도록
       />
       {/* 호버 오버레이 */}
       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-all pointer-events-none" />

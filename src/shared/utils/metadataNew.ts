@@ -13,7 +13,7 @@ import { siteConfig } from '@/shared/config';
 export interface SeoConfig {
   siteName: string;
   siteDescription: string;
-  siteKeywords: string[];
+  siteKeywords: string[] | readonly string[];
   twitterHandle: string;
   defaultOgImage: string;
   siteUrl: string;
@@ -124,13 +124,11 @@ export async function buildMetadata(params: BuildMetadataParams): Promise<Metada
     ? (params.image.startsWith('http') ? params.image : `${config.siteUrl}${params.image}`)
     : config.defaultOgImage;
 
-  // 키워드
-  const keywords = params.keywords || config.siteKeywords;
+  // 키워드 (readonly 배열을 일반 배열로 변환)
+  const keywords = params.keywords || [...config.siteKeywords];
 
   // 이미지 타입
-  const imageType = ogImage.endsWith('.jpg') || ogImage.endsWith('.jpeg')
-    ? 'image/jpeg'
-    : 'image/png';
+  const imageType = getImageType(ogImage);
 
   const metadata: Metadata = {
     title: fullTitle,
@@ -145,6 +143,7 @@ export async function buildMetadata(params: BuildMetadataParams): Promise<Metada
       type: params.type || 'website',
       images: [{
         url: ogImage,
+        secureUrl: ogImage,  // Safari 최적화: property="og:image:secure_url" 생성
         width: 1200,
         height: 630,
         alt: params.title,
@@ -186,9 +185,13 @@ interface DefaultMeta {
  * 이미지 경로로부터 MIME 타입을 결정합니다.
  */
 const getImageType = (path: string): string => {
-  return path.endsWith('.jpg') || path.endsWith('.jpeg')
-    ? 'image/jpeg'
-    : 'image/png';
+  if (path.endsWith('.jpg') || path.endsWith('.jpeg')) {
+    return 'image/jpeg';
+  }
+  if (path.endsWith('.webp')) {
+    return 'image/webp';
+  }
+  return 'image/png';
 };
 
 /**
@@ -229,6 +232,7 @@ export async function generatePageMetadataWithDefaults(
         siteName,
         images: [{
           url: ogImage,
+          secureUrl: ogImage,  // Safari 최적화
           width: 1200,
           height: 630,
           alt: title,
@@ -284,6 +288,7 @@ export async function generatePageMetadata(pagePath: string): Promise<Metadata> 
           siteName,
           images: [{
             url: ogImage,
+            secureUrl: ogImage,  // Safari 최적화
             width: 1200,
             height: 630,
             alt: siteConfig.name,
@@ -323,6 +328,7 @@ export async function generatePageMetadata(pagePath: string): Promise<Metadata> 
         siteName,
         images: [{
           url: ogImage,
+          secureUrl: ogImage,  // Safari 최적화
           width: 1200,
           height: 630,
           alt: title,
