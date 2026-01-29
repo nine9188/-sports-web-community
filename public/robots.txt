@@ -36,3 +36,6 @@ Crawl-delay: 1
 
 # 사이트맵 위치
 Sitemap: https://4590football.com/sitemap.xml
+
+User-agent: Yeti
+Allow:/
