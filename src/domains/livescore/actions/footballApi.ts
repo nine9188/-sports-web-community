@@ -138,9 +138,10 @@ interface ApiPlayer {
 const API_BASE_URL = 'https://v3.football.api-sports.io';
 const API_KEY = process.env.FOOTBALL_API_KEY || '';
 
-// 메모리 캐시
+// 메모리 캐시 (in-memory, 서버 재시작 시 초기화)
+// Next.js fetch 캐시와 이중화하여 최대한 API 호출 방지
 const matchesCache = new Map<string, { data: MatchData[]; timestamp: number }>();
-const CACHE_TTL = 60 * 1000; // 1분
+const CACHE_TTL = 5 * 60 * 1000; // 5분 (Next.js fetch 캐시 60초 + 여유)
 
 // MultiDayMatches 결과 타입 정의
 export interface MultiDayMatchesResult {
@@ -177,31 +178,58 @@ export interface TodayMatchesResult {
 export const fetchFromFootballApi = async (endpoint: string, params: Record<string, string | number> = {}) => {
   // URL 파라미터 구성
   const queryParams = new URLSearchParams();
-  
+
   // timezone 파라미터는 일부 엔드포인트에서만 지원됨
   const timezoneSupportedEndpoints = ['fixtures', 'fixtures/headtohead', 'odds'];
   const shouldAddTimezone = timezoneSupportedEndpoints.some(ep => endpoint.includes(ep));
-  
-  const finalParams = shouldAddTimezone 
+
+  const finalParams = shouldAddTimezone
     ? { timezone: 'Asia/Seoul', ...params }
     : params;
-  
-  Object.entries(finalParams).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      queryParams.append(key, value.toString());
-    }
-  });
+
+  // ⭐ 파라미터 알파벳 순 정렬 (캐시 히트율 100% 보장)
+  // 동일한 파라미터는 항상 동일한 URL을 생성
+  // 예: ?date=2024-01-01&timezone=Asia/Seoul (항상 동일)
+  Object.entries(finalParams)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        queryParams.append(key, value.toString());
+      }
+    });
 
   const url = `${API_BASE_URL}/${endpoint}?${queryParams.toString()}`;
-  
+
+  // ⭐ endpoint별 최적 revalidate 시간 (데이터 특성에 맞춤)
+  const getRevalidateTime = (ep: string): number => {
+    // 실시간성이 중요한 데이터: 짧게
+    if (ep.includes('fixtures')) return 60;           // 경기 정보: 1분
+    if (ep.includes('events')) return 30;             // 경기 이벤트: 30초
+    if (ep.includes('lineups')) return 300;           // 라인업: 5분 (경기 시작 전 확정)
+
+    // 자주 변하지 않는 데이터: 길게
+    if (ep.includes('standings')) return 1800;        // 순위표: 30분 (경기 종료 후 업데이트)
+    if (ep.includes('players/')) return 3600;         // 선수 정보: 1시간
+    if (ep.includes('teams/')) return 3600;           // 팀 정보: 1시간
+    if (ep.includes('transfers')) return 86400;       // 이적 정보: 24시간
+    if (ep.includes('trophies')) return 86400;        // 우승 기록: 24시간
+    if (ep.includes('injuries')) return 3600;         // 부상 정보: 1시간
+
+    // 기본값
+    return 300; // 5분
+  };
+
   try {
     const response = await fetch(url, {
       headers: {
         'x-rapidapi-host': 'v3.football.api-sports.io',
         'x-rapidapi-key': API_KEY,
       },
-      // Next.js revalidate 옵션 제거 (가능한 직렬화 문제 해결)
-      cache: 'no-store'
+      // ⭐ endpoint별 최적 캐시 전략
+      // - fixtures: 1분 (실시간)
+      // - standings: 30분 (느린 업데이트)
+      // - 인스턴스 간 캐시 공유 (Vercel Data Cache)
+      next: { revalidate: getRevalidateTime(endpoint) }
     });
 
     if (!response.ok) {

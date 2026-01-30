@@ -8,8 +8,12 @@ import { useLiveScore } from '../../../hooks/useLiveScoreQueries';
 import { isLiveMatch } from '../../../constants/match-status';
 
 interface LiveScoreViewProps {
-  initialMatches: Match[];
+  initialYesterday: Match[];
+  initialToday: Match[];
+  initialTomorrow: Match[];
   initialDate: string;
+  yesterdayDate: string;
+  tomorrowDate: string;
 }
 
 /**
@@ -18,7 +22,7 @@ interface LiveScoreViewProps {
  * 개선사항:
  * - useState + setInterval 수동 폴링 → React Query refetchInterval 자동 폴링
  * - 수동 캐싱 → React Query 자동 캐싱
- * - 수동 prefetch → React Query prefetchQuery
+ * - 서버 프리로드 → 클라이언트 자동 프리페치 제거 (봇 안전)
  *
  * 폴링 정책:
  * - LIVE 모드: 30초마다 갱신
@@ -26,8 +30,12 @@ interface LiveScoreViewProps {
  * - 과거/미래 날짜: 폴링 없음 (캐시 사용)
  */
 export default function LiveScoreView({
-  initialMatches,
-  initialDate
+  initialYesterday,
+  initialToday,
+  initialTomorrow,
+  initialDate,
+  yesterdayDate,
+  tomorrowDate
 }: LiveScoreViewProps) {
   // UI 상태 관리
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
@@ -40,9 +48,14 @@ export default function LiveScoreView({
   // React Query로 경기 데이터 및 라이브 카운트 관리
   // - 자동 폴링 (LIVE 모드: 30초, 오늘: 60초)
   // - 자동 캐싱 (5분)
-  // - 인접 날짜 자동 프리페칭
+  // - 서버 프리로드 (봇 안전)
   const { matches, isLoading, liveMatchCount } = useLiveScore(selectedDate, {
-    initialMatches,
+    initialYesterday,
+    initialToday,
+    initialTomorrow,
+    yesterdayDate,
+    initialDate,
+    tomorrowDate,
     showLiveOnly,
   });
 

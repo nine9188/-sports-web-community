@@ -94,10 +94,15 @@ export const getHotPosts = cache(async (
     // 핫딜 게시판 제외한 게시글만 필터링
     const hotdealBoardIds = new Set(
       (boardsData || [])
-        .filter((board) => board.slug && HOTDEAL_BOARD_SLUGS.includes(board.slug as any))
+        .filter((board) =>
+          board.slug !== null &&
+          (HOTDEAL_BOARD_SLUGS as readonly string[]).includes(board.slug)
+        )
         .map((board) => board.id)
     );
-    const filteredPostsData = postsData.filter(post => !hotdealBoardIds.has(post.board_id));
+    const filteredPostsData = postsData.filter(post =>
+      post.board_id !== null && !hotdealBoardIds.has(post.board_id)
+    );
 
     if (filteredPostsData.length === 0) {
       return { posts: [], windowDays, stats: { totalPosts: 0, avgScore: 0 } };

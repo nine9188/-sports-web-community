@@ -1,7 +1,6 @@
 'use client';
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { fetchMatchesByDate, MatchData } from '../actions/footballApi';
 import { getTeamById } from '../constants/teams/index';
@@ -109,6 +108,13 @@ export function useMatches(date: Date, options: UseMatchesOptions = {}) {
       : undefined,
     staleTime: 1000 * 60 * 5, // 5분
     gcTime: 1000 * 60 * 30, // 30분
+
+    // ⭐ 봇 안전: refetch 정책 최적화
+    refetchOnMount: false,        // initialData 있으면 마운트 시 refetch 안 함
+    refetchOnWindowFocus: false,  // 포커스 시 refetch 안 함 (폴링으로 충분)
+    refetchOnReconnect: false,    // 재연결 시 refetch 안 함
+
+    // 폴링만 활성화 (LIVE/오늘만)
     refetchInterval,
     refetchIntervalInBackground: false, // 탭이 비활성화되면 폴링 중지
   });
@@ -155,64 +161,57 @@ export function useTodayLiveCount(enabled: boolean = true) {
 
 /**
  * 인접 날짜 데이터 프리페칭 훅
+ *
+ * ⚠️ DEPRECATED: 서버 프리로드로 대체됨 (봇 크롤링 방지)
+ * 이제 page.tsx에서 서버 컴포넌트가 3일치 데이터를 미리 로드합니다.
  */
-export function usePrefetchAdjacentDates(currentDate: Date) {
-  const queryClient = useQueryClient();
-
-  const prefetch = useCallback(async () => {
-    const yesterday = new Date(currentDate);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    const tomorrow = new Date(currentDate);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const yesterdayStr = format(yesterday, 'yyyy-MM-dd');
-    const tomorrowStr = format(tomorrow, 'yyyy-MM-dd');
-
-    // 병렬로 프리페치
-    await Promise.all([
-      queryClient.prefetchQuery({
-        queryKey: liveScoreKeys.matches(yesterdayStr),
-        queryFn: async () => {
-          const data = await fetchMatchesByDate(yesterdayStr);
-          return processMatches(data);
-        },
-        staleTime: 1000 * 60 * 5,
-      }),
-      queryClient.prefetchQuery({
-        queryKey: liveScoreKeys.matches(tomorrowStr),
-        queryFn: async () => {
-          const data = await fetchMatchesByDate(tomorrowStr);
-          return processMatches(data);
-        },
-        staleTime: 1000 * 60 * 5,
-      }),
-    ]).catch(() => {
-      // 프리페칭 실패는 무시
-    });
-  }, [currentDate, queryClient]);
-
-  // 현재 날짜가 변경되면 500ms 후 인접 날짜 프리페칭
-  useEffect(() => {
-    const timer = setTimeout(prefetch, 500);
-    return () => clearTimeout(timer);
-  }, [prefetch]);
+export function usePrefetchAdjacentDates(_currentDate: Date) {
+  // 서버 프리로드를 사용하므로 클라이언트 자동 프리페치 비활성화
+  // 봇이 페이지 방문 시 500ms 후 자동 API 호출되는 것을 방지
 }
 
 /**
  * LiveScoreView에서 사용하는 통합 훅
+ *
+ * ⭐ Option 3 패턴 적용:
+ * - 서버에서 3일치 데이터 프리로드
+ * - 클라이언트 자동 프리페치 제거 (봇 안전)
+ * - initialData 직접 전달 (useEffect 없이 동기적 처리)
  */
 export function useLiveScore(
   selectedDate: Date,
   options: {
-    initialMatches?: Match[];
+    initialYesterday?: Match[];
+    initialToday?: Match[];
+    initialTomorrow?: Match[];
+    yesterdayDate?: string;
+    initialDate?: string;
+    tomorrowDate?: string;
     showLiveOnly?: boolean;
   } = {}
 ) {
-  const { initialMatches, showLiveOnly = false } = options;
+  const {
+    initialYesterday,
+    initialToday,
+    initialTomorrow,
+    yesterdayDate,
+    initialDate,
+    tomorrowDate,
+    showLiveOnly = false
+  } = options;
+
   const formattedDate = format(selectedDate, 'yyyy-MM-dd');
   const todayStr = getTodayKst();
   const isToday = formattedDate === todayStr;
+
+  // ⭐ A안 적용: 날짜별 initialData를 직접 매핑 (useEffect 불필요)
+  // 첫 렌더부터 즉시 데이터 사용, 로딩 스침 없음
+  const getInitialDataForDate = (dateStr: string): Match[] | undefined => {
+    if (dateStr === yesterdayDate && initialYesterday) return initialYesterday;
+    if (dateStr === initialDate && initialToday) return initialToday;
+    if (dateStr === tomorrowDate && initialTomorrow) return initialTomorrow;
+    return undefined;
+  };
 
   // 선택된 날짜의 경기 데이터
   const {
@@ -220,7 +219,10 @@ export function useLiveScore(
     isLoading,
     isFetching,
     liveMatchCount: currentDateLiveCount,
-  } = useMatches(selectedDate, { initialData: initialMatches, showLiveOnly });
+  } = useMatches(selectedDate, {
+    initialData: getInitialDataForDate(formattedDate),
+    showLiveOnly
+  });
 
   // 오늘이 아닌 날짜를 볼 때만 오늘의 라이브 카운트 별도 조회
   const { liveCount: todayLiveCount } = useTodayLiveCount(!isToday);
@@ -228,8 +230,8 @@ export function useLiveScore(
   // 라이브 카운트: 오늘이면 현재 데이터에서, 아니면 별도 쿼리에서
   const liveMatchCount = isToday ? currentDateLiveCount : todayLiveCount;
 
-  // 인접 날짜 프리페칭
-  usePrefetchAdjacentDates(selectedDate);
+  // ⚠️ 서버 프리로드를 사용하므로 클라이언트 자동 프리페치 제거
+  // usePrefetchAdjacentDates(selectedDate); // 제거됨
 
   return {
     matches,
