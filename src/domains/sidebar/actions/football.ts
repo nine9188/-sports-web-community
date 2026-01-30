@@ -18,6 +18,8 @@ const LEAGUE_IDS: Record<string, number> = {
  * React cache로 래핑하여 중복 요청 방지
  */
 export const fetchStandingsData = cache(async (leagueId: string = 'premier'): Promise<StandingsData | null> => {
+  console.log('🔴 [API] LeagueStandings - fetchStandingsData 호출됨:', leagueId);
+
   try {
     // 리그 ID 확인
     const apiLeagueId = LEAGUE_IDS[leagueId];
@@ -35,6 +37,8 @@ export const fetchStandingsData = cache(async (leagueId: string = 'premier'): Pr
     if (!process.env.FOOTBALL_API_KEY) {
       return null;
     }
+
+    console.log('🔴 [API] Sports API 호출 중... (standings, league:', apiLeagueId, ')');
 
     // API 호출 - next.js 캐시 사용 (10분으로 줄임)
     const response = await fetch(
