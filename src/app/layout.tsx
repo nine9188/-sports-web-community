@@ -10,6 +10,10 @@ const inter = Inter({ subsets: ['latin'] });
 // 전역 메타데이터
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 /**
