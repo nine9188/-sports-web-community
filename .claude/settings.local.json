@@ -78,7 +78,8 @@
       "Bash(taskkill:*)",
       "Bash(curl:*)",
       "Bash(python -m json.tool:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(robocopy boards \"\\(site\\)/boards\" /E /MOVE)"
     ]
   },
   "enableAllProjectMcpServers": true,

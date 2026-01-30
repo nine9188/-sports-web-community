@@ -1,204 +1,27 @@
 import './globals.css';
 import { Inter } from 'next/font/google';
-import RootLayoutClient from './RootLayoutClient';
+import RootLayoutProvider from './RootLayoutProvider';
 
-import BoardNavigation from '@/domains/sidebar/components/board/BoardNavigation';
-import AuthSection from '@/domains/sidebar/components/auth/AuthSection';
-import LeagueStandings from '@/domains/sidebar/components/league/LeagueStandings';
-import { RightSidebar } from '@/domains/sidebar/components';
-import { getBoardsForNavigation } from '@/domains/layout/actions';
-import { generatePageMetadata } from '@/shared/utils/metadataNew';
-import { getUIThemeSettings } from '@/domains/ui-theme/actions';
-import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
-import { siteConfig } from '@/shared/config';
-import { getFullUserData } from '@/shared/actions/user';
-import Script from 'next/script';
-import { Analytics } from '@vercel/analytics/next';
-import { SpeedInsights } from '@vercel/speed-insights/next';
-import Image from 'next/image';
-
-// 동적 렌더링 설정
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
-// Inter 폰트 정의를 전역 CSS 클래스로 사용
+// Inter 폰트 정의
 const inter = Inter({ subsets: ['latin'] });
 
-// 동적 메타데이터 생성 (DB에서 설정값 가져옴)
-export async function generateMetadata() {
-  const seoSettings = await getSeoSettings();
-  const siteUrl = seoSettings?.site_url || siteConfig.url;
-  const metadata = await generatePageMetadata('/');
-
-  return {
-    metadataBase: new URL(siteUrl),
-    ...metadata,
-    verification: {
-      other: {
-        'naver-site-verification': '2b10354399e2b85e4e7aad7ba1aabfcb23eca1e3',
-        'google-adsense-account': 'ca-pub-8892057636180546',
-      },
-    },
-    icons: {
-      icon: [
-        { url: '/favicon.ico', sizes: '48x48', type: 'image/x-icon' },
-        { url: '/icon-96.png', sizes: '96x96', type: 'image/png' },
-        { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-        { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
-      ],
-      apple: [
-        // Apple 표준 규약: apple-touch-icon.png (Safari/iOS 공유 이미지)
-        { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
-        { url: '/apple-touch-icon-precomposed.png', sizes: '180x180', type: 'image/png' },
-        { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-        { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
-      ],
-    },
-    manifest: '/site.webmanifest',
-    appleWebApp: {
-      capable: true,
-      title: '4590',
-      statusBarStyle: 'black-translucent',
-    },
-  };
-}
-
-// 뷰포트 설정 - 모바일에서 확대/축소 방지
-export const viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  viewportFit: 'cover'
-};
-
-export default async function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  // 서버 컴포넌트에서 BoardNavigation 생성
-  const boardNav = <BoardNavigation />;
-
-  // 리그 순위 컴포넌트 생성 (클라이언트 사이드 fetch)
-  const leagueStandingsComponent = <LeagueStandings initialLeague="premier" />;
-
-  // 통합 사용자 데이터, 게시판, UI 테마, SEO 설정 병렬 fetch
-  const [fullUserData, headerBoardsData, uiTheme, seoSettings] = await Promise.all([
-    getFullUserData(),
-    getBoardsForNavigation({ includeTotalPostCount: true }),
-    getUIThemeSettings(),
-    getSeoSettings()
-  ]);
-
-  // AuthSection 컴포넌트 생성 - fullUserData를 props로 전달
-  const authSection = <AuthSection userData={fullUserData} />;
-
-  // Tailwind 클래스를 CSS Variable 값으로 변환
-  const borderRadiusMap: Record<string, string> = {
-    'rounded-none': '0',
-    'rounded-sm': '0.125rem',
-    'rounded': '0.25rem',
-    'rounded-md': '0.375rem',
-    'rounded-lg': '0.5rem',
-    'rounded-xl': '0.75rem',
-    'rounded-2xl': '1rem',
-    'rounded-3xl': '1.5rem',
-    'rounded-full': '9999px'
-  };
-
-  const desktopRadius = borderRadiusMap[uiTheme.borderRadiusDesktop] || '0.5rem';
-  const mobileRadius = borderRadiusMap[uiTheme.borderRadiusMobile] || '0';
-
-  // WebSite 구조화 데이터 (Schema.org)
-  const siteUrl = seoSettings?.site_url || siteConfig.url;
-  const siteName = seoSettings?.site_name || siteConfig.name;
-  const siteDescription = seoSettings?.default_description || '축구 팬들을 위한 커뮤니티. 실시간 라이브스코어, 게시판, 이적시장 정보를 확인하세요.';
-
-  const websiteSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: siteName,
-    url: siteUrl,
-    description: siteDescription,
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: {
-        '@type': 'EntryPoint',
-        urlTemplate: `${siteUrl}/search?q={search_term_string}`
-      },
-      'query-input': 'required name=search_term_string'
-    }
-  };
-
+/**
+ * Root Layout (Server Component)
+ *
+ * 완전히 무해한 레이아웃입니다.
+ * - DB 쿼리 없음
+ * - 외부 API 호출 없음
+ *
+ * 404, 에러 페이지를 포함한 모든 페이지에서 실행되지만,
+ * API 호출을 하지 않으므로 비용이 발생하지 않습니다.
+ */
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko" className={`w-full h-full ${inter.className}`} suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://challenges.cloudflare.com" crossOrigin="" />
-        <link rel="dns-prefetch" href="https://challenges.cloudflare.com" />
-        {/* Apple Touch Icon - iOS/Safari 공유 이미지 */}
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon-precomposed.png" />
-        {/* Safari 공유 이미지 우선순위 강제 (전통적인 방법) */}
-        <link rel="image_src" href={`${siteUrl}/og-image.png`} />
-      </head>
+    <html lang="ko" className={inter.className} suppressHydrationWarning>
       <body className="w-full h-full overflow-x-hidden">
-        {/* Safari용 숨겨진 OG 이미지 - DOM에는 존재하지만 시각적으로는 숨김 */}
-        {/* Safari는 페이지에서 가장 큰 이미지를 대표 이미지로 선택하므로, */}
-        {/* OG 이미지를 1200x630 크기로 숨겨서 배치하여 우선순위를 높임 */}
-        <Image
-          src={`${siteUrl}/og-image.png`}
-          alt="4590 Football"
-          width={1200}
-          height={630}
-          unoptimized
-          priority={false}
-          style={{
-            position: 'absolute',
-            width: '1200px',
-            height: '630px',
-            left: '-9999px',
-            top: '0',
-            opacity: 0,
-            pointerEvents: 'none',
-            zIndex: -1
-          }}
-          aria-hidden="true"
-        />
-        {/* WebSite 구조화 데이터 */}
-        <Script
-          id="website-schema"
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(websiteSchema)
-          }}
-        />
-        {/* UI 테마 CSS Variables 적용 */}
-        <Script
-          id="ui-theme-vars"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              document.documentElement.style.setProperty('--border-radius-desktop', '${desktopRadius}');
-              document.documentElement.style.setProperty('--border-radius-mobile', '${mobileRadius}');
-            `
-          }}
-        />
-        <RootLayoutClient
-          boardNavigation={boardNav}
-          rightSidebar={<RightSidebar />}
-          authSection={authSection}
-          leagueStandingsComponent={leagueStandingsComponent}
-          fullUserData={fullUserData}
-          headerBoards={headerBoardsData.boardData}
-          headerIsAdmin={headerBoardsData.isAdmin}
-          headerTotalPostCount={headerBoardsData.totalPostCount}
-        >
+        <RootLayoutProvider>
           {children}
-        </RootLayoutClient>
-        {/* Vercel Analytics & Speed Insights */}
-        <Analytics />
-        <SpeedInsights />
+        </RootLayoutProvider>
       </body>
     </html>
   );

@@ -65,7 +65,8 @@ app/
 
 ```
 app/
-├── layout.tsx                    → 완전히 무해 (html/body, globals.css, providers만)
+├── layout.tsx                    → 서버 컴포넌트 (html/body만, 완전히 무해)
+├── RootLayoutProvider.tsx        → 클라이언트 컴포넌트 (무해한 Provider들)
 ├── not-found.tsx                 → 독립 페이지 (redirect 없이 직접 렌더)
 │
 ├── (auth)/                       → 인증 route group
@@ -75,7 +76,8 @@ app/
 │   └── social-signup/page.tsx
 │
 ├── (site)/                       → 메인 사이트 route group ★★★
-│   ├── layout.tsx               → 사이트 레이아웃 (헤더/사이드바/푸터)
+│   ├── layout.tsx               → 서버: DB 쿼리 + 컴포넌트 생성
+│   ├── SiteLayoutClient.tsx     → 클라이언트: UI 로직 (헤더/사이드바)
 │   ├── page.tsx                 → 메인 페이지 (/)
 │   ├── boards/
 │   ├── shop/
@@ -158,11 +160,32 @@ return <RootLayoutClient ...많은 props... />;
 ```
 
 **수정 후 (무해):**
+
+**`app/layout.tsx` (서버 컴포넌트):**
+```typescript
+import './globals.css';
+import { Inter } from 'next/font/google';
+import RootLayoutProvider from './RootLayoutProvider';
+
+const inter = Inter({ subsets: ['latin'] });
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="ko" className={inter.className} suppressHydrationWarning>
+      <body className="w-full h-full overflow-x-hidden">
+        <RootLayoutProvider>
+          {children}
+        </RootLayoutProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+**`app/RootLayoutProvider.tsx` (클라이언트 컴포넌트):**
 ```typescript
 'use client';
 
-import './globals.css';
-import { Inter } from 'next/font/google';
 import { useMemo } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -171,11 +194,10 @@ import { AuthProvider } from '@/shared/context/AuthContext';
 import { IconProvider } from '@/shared/context/IconContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import SuspensionPopup from '@/shared/components/SuspensionPopup';
+import AttendanceChecker from '@/shared/components/AttendanceChecker';
 
-const inter = Inter({ subsets: ['latin'] });
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  // QueryClient 생성 (무해 - API 호출 안 함)
+export default function RootLayoutProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useMemo(() => new QueryClient({
     defaultOptions: {
       queries: {
@@ -189,21 +211,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   }), []);
 
   return (
-    <html lang="ko" className={inter.className}>
-      <body className="w-full h-full overflow-x-hidden">
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider>
-            <AuthProvider>
-              <IconProvider>
-                {children}
-                <ToastContainer />
-              </IconProvider>
-            </AuthProvider>
-          </ThemeProvider>
-          <ReactQueryDevtools initialIsOpen={false} />
-        </QueryClientProvider>
-      </body>
-    </html>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <AuthProvider>
+          <IconProvider>
+            {children}
+            <ToastContainer />
+            <SuspensionPopup />
+            <AttendanceChecker />
+          </IconProvider>
+        </AuthProvider>
+      </ThemeProvider>
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
   );
 }
 ```
@@ -376,17 +396,17 @@ rm src/app/RootLayoutClient.tsx
 
 | 파일 | 작업 | 내용 |
 |------|------|------|
-| `app/layout.tsx` | 수정 | 완전히 간소화, 무해하게 (API 0) |
-| `app/RootLayoutClient.tsx` | 삭제 | → `(site)/SiteLayoutClient.tsx`로 이동 |
+| `app/layout.tsx` | 수정 | 서버 컴포넌트로 간소화 (html/body만) |
+| `app/RootLayoutProvider.tsx` | 생성 | 클라이언트 Provider (무해한 Provider들) |
+| `app/RootLayoutClient.tsx` | 삭제 | → `RootLayoutProvider.tsx`와 `(site)/SiteLayoutClient.tsx`로 분리 |
 | `app/not-found.tsx` | 수정 | Redirect 제거, 독립 페이지로 |
 | `app/(site)/layout.tsx` | 생성 | 사이트 레이아웃 (헤더/사이드바) |
-| `app/(site)/SiteLayoutClient.tsx` | 생성 | RootLayoutClient 내용 이동 |
+| `app/(site)/SiteLayoutClient.tsx` | 생성 | 사이트 UI 로직 |
 | `app/(site)/page.tsx` | 이동 | `app/page.tsx` → 여기로 |
 | `app/(site)/boards/` | 이동 | `app/boards/` → 여기로 |
 | `app/(site)/shop/` | 이동 | `app/shop/` → 여기로 |
 | `app/(site)/livescore/` | 이동 | `app/livescore/` → 여기로 |
 | `app/(site)/settings/` | 이동 | `app/settings/` → 여기로 |
-| `app/(site)/prediction/` | 이동 | `app/prediction/` → 여기로 |
 | `app/(site)/search/` | 이동 | `app/search/` → 여기로 |
 | `app/(error)/` | 삭제 | 불필요해짐 |
 
@@ -503,8 +523,9 @@ git reset --hard HEAD~1
 
 ```
 봇이 /abc 접근:
-  ├─ Root Layout 실행 (무해)
-  │   └─ ThemeProvider만
+  ├─ Root Layout 실행 (서버, 무해)
+  │   └─ RootLayoutProvider (클라이언트, 무해)
+  │       └─ QueryClient, ThemeProvider, etc (API 0)
   └─ not-found.tsx 렌더링 (독립)
 
 총 외부 API: 0회 ✅
@@ -512,15 +533,16 @@ git reset --hard HEAD~1
 
 ```
 사용자가 / 접근:
-  ├─ Root Layout 실행 (무해)
-  ├─ (site)/layout.tsx 실행
+  ├─ Root Layout 실행 (서버, 무해)
+  │   └─ RootLayoutProvider (클라이언트, 무해)
+  ├─ (site)/layout.tsx 실행 (서버)
   │   ├─ getFullUserData() → Supabase
   │   ├─ getBoardsForNavigation() → Supabase
-  │   └─ SiteLayoutClient
-  │       └─ HeaderClient → fetchTodayMatchCount() → API 1회 ✅
+  │   └─ SiteLayoutClient (클라이언트)
+  │       └─ HeaderClient → fetchTodayMatchCount() → API 호출 ✅
   └─ (site)/page.tsx 렌더링
 
-총 외부 API: 1회 (정상) ✅
+총 외부 API: 클라이언트에서만 발생 (정상) ✅
 ```
 
 ---
