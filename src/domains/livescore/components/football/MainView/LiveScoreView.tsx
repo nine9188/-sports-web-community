@@ -59,6 +59,18 @@ export default function LiveScoreView({
     showLiveOnly,
   });
 
+  // 개발 환경: 프리로드 통계 출력
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📊 [LiveScore] 서버 프리로드 통계:', {
+        어제: initialYesterday.length,
+        오늘: initialToday.length,
+        내일: initialTomorrow.length,
+        총: initialYesterday.length + initialToday.length + initialTomorrow.length,
+      });
+    }
+  }, []);
+
   // KST 자정 롤오버: 자정(KST) 도달 시 자동으로 오늘로 갱신
   useEffect(() => {
     const scheduleNextKstMidnight = () => {

@@ -100,6 +100,7 @@ export function useMatches(date: Date, options: UseMatchesOptions = {}) {
   const query = useQuery({
     queryKey: liveScoreKeys.matches(formattedDate),
     queryFn: async () => {
+      console.log('🔴 [CLIENT] API 호출:', formattedDate);
       const data = await fetchMatchesByDate(formattedDate);
       return processMatches(data);
     },
@@ -207,9 +208,19 @@ export function useLiveScore(
   // ⭐ A안 적용: 날짜별 initialData를 직접 매핑 (useEffect 불필요)
   // 첫 렌더부터 즉시 데이터 사용, 로딩 스침 없음
   const getInitialDataForDate = (dateStr: string): Match[] | undefined => {
-    if (dateStr === yesterdayDate && initialYesterday) return initialYesterday;
-    if (dateStr === initialDate && initialToday) return initialToday;
-    if (dateStr === tomorrowDate && initialTomorrow) return initialTomorrow;
+    if (dateStr === yesterdayDate && initialYesterday) {
+      console.log('✅ [SERVER] 프리로드 데이터 사용 (어제):', dateStr, `${initialYesterday.length}개`);
+      return initialYesterday;
+    }
+    if (dateStr === initialDate && initialToday) {
+      console.log('✅ [SERVER] 프리로드 데이터 사용 (오늘):', dateStr, `${initialToday.length}개`);
+      return initialToday;
+    }
+    if (dateStr === tomorrowDate && initialTomorrow) {
+      console.log('✅ [SERVER] 프리로드 데이터 사용 (내일):', dateStr, `${initialTomorrow.length}개`);
+      return initialTomorrow;
+    }
+    console.log('⚠️ [CLIENT] 프리로드 없음, API 호출 예정:', dateStr);
     return undefined;
   };
 
