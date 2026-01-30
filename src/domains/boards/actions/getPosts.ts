@@ -290,7 +290,7 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
       }
     };
   } catch (error) {
-    console.error('게시물 불러오기 오류:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error); if (!errorMessage.includes('DYNAMIC_SERVER_USAGE') && !errorMessage.includes('cookies')) { console.error('게시물 불러오기 오류:', error); }
     return createEmptyResponse(1, params.limit);
   }
 }
@@ -307,7 +307,7 @@ export async function revalidatePostsData(path: string = '/') {
 
     return { success: true, message: '캐시가 성공적으로 갱신됐습니다.' };
   } catch (error) {
-    console.error('캐시 갱신 오류:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error); if (!errorMessage.includes('DYNAMIC_SERVER_USAGE') && !errorMessage.includes('cookies')) { console.error('캐시 갱신 오류:', error); }
     return { success: false, message: '캐시 갱신 중 오류가 발생했습니다.' };
   }
 }

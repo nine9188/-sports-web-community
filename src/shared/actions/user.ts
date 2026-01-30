@@ -99,7 +99,11 @@ export const getFullUserData = cache(async (): Promise<FullUserDataWithSession |
       session: null
     };
   } catch (error) {
-    console.error('사용자 데이터 로드 오류:', error);
+    // 빌드 단계 로그 오염 방지 (DYNAMIC_SERVER_USAGE는 정상 동작)
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (!errorMessage.includes('DYNAMIC_SERVER_USAGE') && !errorMessage.includes('cookies')) {
+      console.error('사용자 데이터 로드 오류:', error);
+    }
     return null;
   }
 });

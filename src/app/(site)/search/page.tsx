@@ -1,7 +1,12 @@
+import { Suspense } from 'react'
 import { searchContent } from '@/domains/search/actions'
 import { SearchHeader, SearchResultsContainer } from '@/domains/search'
 import type { PostSearchResult, CommentSearchResult, TeamSearchResult } from '@/domains/search/types'
 import { buildMetadata } from '@/shared/utils/metadataNew'
+import Spinner from '@/shared/components/Spinner'
+
+// 동적 렌더링 강제 (검색 페이지는 항상 동적으로 렌더링)
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata() {
   return buildMetadata({
@@ -64,21 +69,27 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   return (
     <div className="container mx-auto">
       {/* 검색 헤더 섹션 */}
-      <SearchHeader 
+      <SearchHeader
         initialQuery={query}
       />
-      
+
       {/* 검색 결과 섹션 */}
-      <SearchResultsContainer
-        query={query}
-        type={type}
-        sort={sort}
-        page={page}
-        posts={posts}
-        comments={comments}
-        teams={teams}
-        pagination={pagination}
-      />
+      <Suspense fallback={
+        <div className="flex items-center justify-center py-12">
+          <Spinner size="lg" />
+        </div>
+      }>
+        <SearchResultsContainer
+          query={query}
+          type={type}
+          sort={sort}
+          page={page}
+          posts={posts}
+          comments={comments}
+          teams={teams}
+          pagination={pagination}
+        />
+      </Suspense>
     </div>
   )
 }

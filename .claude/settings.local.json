@@ -79,7 +79,11 @@
       "Bash(curl:*)",
       "Bash(python -m json.tool:*)",
       "Bash(git log:*)",
-      "Bash(robocopy boards \"\\(site\\)/boards\" /E /MOVE)"
+      "Bash(robocopy boards \"\\(site\\)/boards\" /E /MOVE)",
+      "Bash(if [ -f \".next/build-manifest.json\" ])",
+      "Bash(then echo \"Build completed successfully\")",
+      "Bash(else echo \"Build not completed or failed\")",
+      "Bash(fi)"
     ]
   },
   "enableAllProjectMcpServers": true,

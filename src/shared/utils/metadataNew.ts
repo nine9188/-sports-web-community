@@ -46,9 +46,26 @@ export interface BuildMetadataParams {
 }
 
 /**
- * 전역 SEO 설정 조회 (DB 우선, site.ts 폴백)
+ * 정적 SEO 설정 (빌드/프리렌더용 - DB 접근 없음)
+ *
+ * generateMetadata에서 사용 - cookies() 사용 안 함
+ */
+export function getSeoConfigStatic(): SeoConfig {
+  return {
+    siteName: siteConfig.name,
+    siteDescription: siteConfig.description,
+    siteKeywords: siteConfig.keywords,
+    twitterHandle: siteConfig.twitterHandle,
+    defaultOgImage: siteConfig.defaultOgImage,
+    siteUrl: siteConfig.url,
+  };
+}
+
+/**
+ * 동적 SEO 설정 조회 (런타임용 - DB 우선, site.ts 폴백)
  *
  * React cache()로 요청당 1회만 조회
+ * ⚠️ 주의: cookies()를 사용하므로 generateMetadata에서는 사용 금지
  */
 export const getSeoConfig = cache(async (): Promise<SeoConfig> => {
   try {
@@ -63,15 +80,11 @@ export const getSeoConfig = cache(async (): Promise<SeoConfig> => {
       siteUrl: dbSettings?.site_url || siteConfig.url,
     };
   } catch (error) {
-    console.error('[getSeoConfig] DB 조회 실패, site.ts 폴백 사용:', error);
-    return {
-      siteName: siteConfig.name,
-      siteDescription: siteConfig.description,
-      siteKeywords: siteConfig.keywords,
-      twitterHandle: siteConfig.twitterHandle,
-      defaultOgImage: siteConfig.defaultOgImage,
-      siteUrl: siteConfig.url,
-    };
+    // 런타임 오류만 로깅 (빌드 단계 로그 오염 방지)
+    if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+      console.error('[getSeoConfig] DB 조회 실패, site.ts 폴백 사용:', error);
+    }
+    return getSeoConfigStatic();
   }
 });
 
@@ -106,7 +119,8 @@ export const getSeoConfig = cache(async (): Promise<SeoConfig> => {
  * });
  */
 export async function buildMetadata(params: BuildMetadataParams): Promise<Metadata> {
-  const config = await getSeoConfig();
+  // 정적 설정 사용 (빌드/프리렌더 단계에서 cookies() 사용 방지)
+  const config = getSeoConfigStatic();
 
   // 제목 조합
   const fullTitle = params.titleOnly
@@ -253,7 +267,10 @@ export async function generatePageMetadataWithDefaults(
       },
     };
   } catch (error) {
-    console.error('[generatePageMetadataWithDefaults] 오류:', error);
+    // 빌드 단계 로그 오염 방지
+    if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+      console.error('[generatePageMetadataWithDefaults] 오류:', error);
+    }
     return {
       title: defaults.title,
       description: defaults.description,
@@ -349,7 +366,10 @@ export async function generatePageMetadata(pagePath: string): Promise<Metadata> 
       },
     };
   } catch (error) {
-    console.error('[generatePageMetadata] 오류:', error);
+    // 빌드 단계 로그 오염 방지
+    if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+      console.error('[generatePageMetadata] 오류:', error);
+    }
     return {
       title: siteConfig.name,
       description: '축구 커뮤니티',

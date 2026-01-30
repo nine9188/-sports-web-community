@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState, useCallback, useMemo } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import type { TeamSearchResult } from '../types'
 import { trackSearchResultClick } from '../actions/searchLogs'
 // 통합된 함수 사용 (search/actions/teamMatches.ts 대신)
@@ -53,9 +53,8 @@ export default function TeamSearchResults({
   totalCount = 0,
   pagination
 }: TeamSearchResultsProps) {
-  const searchParams = useSearchParams()
-  const query = propQuery || searchParams?.get('q') || ''
-  const currentType = propCurrentType || searchParams?.get('type') || 'all'
+  const query = propQuery
+  const currentType = propCurrentType
   
   // 확장된 팀 상태 관리
   const [expandedTeamId, setExpandedTeamId] = useState<number | null>(null)

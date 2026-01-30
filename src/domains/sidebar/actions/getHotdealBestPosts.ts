@@ -199,7 +199,7 @@ export async function getHotdealBestPosts(
       windowDays,
     };
   } catch (error) {
-    console.error('[getHotdealBestPosts] 오류:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error); if (!errorMessage.includes('DYNAMIC_SERVER_USAGE') && !errorMessage.includes('cookies')) { console.error('[getHotdealBestPosts] 오류:', error); }
     return createEmptyHotdealData(windowDays);
   }
 }

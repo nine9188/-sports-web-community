@@ -34,7 +34,7 @@ export async function getBoardSettings(): Promise<string[]> {
 
     return defaultBoards?.map(b => b.id) || [];
   } catch (error) {
-    console.error('게시판 설정 조회 오류:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error); if (!errorMessage.includes('DYNAMIC_SERVER_USAGE') && !errorMessage.includes('cookies')) { console.error('게시판 설정 조회 오류:', error); }
     return [];
   }
 }

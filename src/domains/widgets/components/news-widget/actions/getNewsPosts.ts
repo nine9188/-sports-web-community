@@ -70,7 +70,7 @@ export async function getNewsPosts(boardSlug: string): Promise<NewsItem[]> {
 
     return newsItems;
   } catch (error) {
-    console.error('뉴스 게시글 가져오기 오류:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error); if (!errorMessage.includes('DYNAMIC_SERVER_USAGE') && !errorMessage.includes('cookies')) { console.error('뉴스 게시글 가져오기 오류:', error); }
     return [];
   }
 }

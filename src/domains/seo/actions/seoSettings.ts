@@ -38,7 +38,10 @@ export async function getSeoSettings(): Promise<SeoSettings | null> {
     .single();
 
   if (error) {
-    console.error('[getSeoSettings] 오류:', error);
+    // 빌드 단계 로그 오염 방지 (DYNAMIC_SERVER_USAGE는 정상 동작)
+    if (error.message && !error.message.includes('DYNAMIC_SERVER_USAGE') && !error.message.includes('cookies')) {
+      console.error('[getSeoSettings] 오류:', error);
+    }
     return null;
   }
 

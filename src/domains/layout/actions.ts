@@ -55,7 +55,11 @@ export const getBoardsForNavigation = cache(async (options?: GetBoardsOptions): 
     const totalPostCount = postsCountResult.count ?? undefined;
     
     if (error) {
-      console.error('게시판 데이터 조회 오류:', error);
+      // 빌드 단계 로그 오염 방지
+      const errorMessage = error.message || String(error);
+      if (!errorMessage.includes('DYNAMIC_SERVER_USAGE') && !errorMessage.includes('cookies')) {
+        console.error('게시판 데이터 조회 오류:', error);
+      }
       return { boardData: [], isAdmin };
     }
     
@@ -101,7 +105,11 @@ export const getBoardsForNavigation = cache(async (options?: GetBoardsOptions): 
     return { boardData: rootBoards, isAdmin, totalPostCount };
 
   } catch (error) {
-    console.error('게시판 데이터 로드 오류:', error);
+    // 빌드 단계 로그 오염 방지
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (!errorMessage.includes('DYNAMIC_SERVER_USAGE') && !errorMessage.includes('cookies')) {
+      console.error('게시판 데이터 로드 오류:', error);
+    }
     return { boardData: [], isAdmin: false };
   }
 }); 

@@ -237,7 +237,7 @@ export const getHotPosts = cache(async (
       }
     };
   } catch (error) {
-    console.error('인기글 조회 오류:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error); if (!errorMessage.includes('DYNAMIC_SERVER_USAGE') && !errorMessage.includes('cookies')) { console.error('인기글 조회 오류:', error); }
     return { posts: [], windowDays: 1, stats: { totalPosts: 0, avgScore: 0 } };
   }
 });

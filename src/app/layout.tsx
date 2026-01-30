@@ -1,9 +1,16 @@
 import './globals.css';
+import { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import RootLayoutProvider from './RootLayoutProvider';
+import { siteConfig } from '@/shared/config';
 
 // Inter 폰트 정의
 const inter = Inter({ subsets: ['latin'] });
+
+// 전역 메타데이터
+export const metadata: Metadata = {
+  metadataBase: new URL(siteConfig.url),
+};
 
 /**
  * Root Layout (Server Component)
