@@ -6,19 +6,30 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Button } from '@/shared/components/ui';
 import { faFutbol } from '@fortawesome/free-solid-svg-icons';
 import Link from 'next/link';
-import { MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
+import { useQuery } from '@tanstack/react-query';
+import { fetchMultiDayMatches } from '@/domains/livescore/actions/footballApi';
 import LiveScoreContent from './LiveScoreContent';
+import LoadingSkeleton from './LoadingSkeleton';
 
 interface LiveScoreModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialData?: MultiDayMatchesResult;
 }
 
-export default function LiveScoreModalClient({ isOpen, onClose, initialData }: LiveScoreModalProps) {
+export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModalProps) {
   // SSR 보호: 포털은 클라이언트 마운트 후에만 사용
   const [isMounted, setIsMounted] = useState(false);
   const [selectedDate, setSelectedDate] = useState<'yesterday' | 'today' | 'tomorrow'>('today');
+
+  // 모달이 열릴 때만 데이터 fetch (lazy loading)
+  const { data: liveScoreData, isLoading } = useQuery({
+    queryKey: ['multiDayMatches'],
+    queryFn: () => fetchMultiDayMatches(),
+    enabled: isOpen, // 모달 열릴 때만 활성화
+    staleTime: 1000 * 60 * 5, // 5분 캐시
+    gcTime: 1000 * 60 * 10,
+    refetchOnWindowFocus: false,
+  });
 
   useEffect(() => {
     setIsMounted(true);
@@ -89,11 +100,15 @@ export default function LiveScoreModalClient({ isOpen, onClose, initialData }: L
 
         {/* 경기 목록 */}
         <div className="flex-1 overflow-y-auto">
-          <LiveScoreContent
-            selectedDate={selectedDate}
-            onClose={onClose}
-            initialData={initialData}
-          />
+          {isLoading ? (
+            <LoadingSkeleton />
+          ) : (
+            <LiveScoreContent
+              selectedDate={selectedDate}
+              onClose={onClose}
+              initialData={liveScoreData}
+            />
+          )}
         </div>
 
         {/* 푸터 */}

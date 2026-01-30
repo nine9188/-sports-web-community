@@ -388,6 +388,40 @@ export const fetchTodayMatchesOnly = cache(async (): Promise<TodayMatchesResult>
   }
 });
 
+/**
+ * 오늘 경기 수만 반환 (헤더 인디케이터용 경량 함수)
+ * React cache로 중복 호출 방지
+ */
+export const fetchTodayMatchCount = cache(async (): Promise<{
+  success: boolean;
+  count: number;
+}> => {
+  try {
+    // KST 기준 오늘 날짜
+    const toKstDateString = (baseUtc: Date) => {
+      const kst = new Date(baseUtc.getTime() + 9 * 60 * 60 * 1000);
+      return kst.toISOString().split('T')[0];
+    };
+
+    const nowUtc = new Date();
+    const todayFormatted = toKstDateString(nowUtc);
+
+    // 이미 캐시된 fetchMatchesByDateCached 사용
+    const todayMatches = await fetchMatchesByDateCached(todayFormatted);
+
+    return {
+      success: true,
+      count: todayMatches.length
+    };
+  } catch (error) {
+    console.error('오늘 경기 수 조회 실패:', error);
+    return {
+      success: false,
+      count: 0
+    };
+  }
+});
+
 // 특정 날짜의 경기 가져오기 (어제/내일 lazy load용)
 export async function fetchMatchesByDateLabel(dateLabel: 'yesterday' | 'today' | 'tomorrow'): Promise<{
   success: boolean;

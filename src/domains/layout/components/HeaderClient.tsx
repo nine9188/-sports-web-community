@@ -19,9 +19,10 @@ import LiveScoreModal from './livescoremodal';
 import UserProfileClient from './UserProfileClient';
 import MobileHamburgerModal from './MobileHamburgerModal';
 import RecentlyVisited from './RecentlyVisited';
-import { MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
+import { fetchTodayMatchCount } from '@/domains/livescore/actions/footballApi';
 import { NotificationBell } from '@/domains/notifications/components';
 import { Button } from '@/shared/components/ui';
+import { useQuery } from '@tanstack/react-query';
 
 type HeaderClientProps = {
   onProfileClick: () => void;
@@ -30,7 +31,6 @@ type HeaderClientProps = {
   boards: Board[];
   isAdmin?: boolean;
   renderMode?: 'full' | 'logo-and-mobile' | 'navigation';
-  liveScoreData?: MultiDayMatchesResult;
   totalPostCount?: number;
 };
 
@@ -134,7 +134,6 @@ export default function HeaderClient({
   initialUserData,
   boards,
   isAdmin = false,
-  liveScoreData,
   totalPostCount
 }: HeaderClientProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -178,12 +177,18 @@ export default function HeaderClient({
     setIsLiveScoreOpen(!isLiveScoreOpen);
   }, [isLiveScoreOpen]);
 
-  // 오늘 경기 유무 확인
-  const hasTodayMatches = useMemo(() => {
-    if (!liveScoreData?.success || !liveScoreData.data) return false;
-    const todayMatches = liveScoreData.data.today?.matches || [];
-    return todayMatches.length > 0;
-  }, [liveScoreData]);
+  // 클라이언트 사이드에서 오늘 경기 수 조회 (경량)
+  const { data: matchCountData } = useQuery({
+    queryKey: ['todayMatchCount'],
+    queryFn: () => fetchTodayMatchCount(),
+    staleTime: 1000 * 60 * 5, // 5분 캐시
+    gcTime: 1000 * 60 * 10,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+
+  const hasTodayMatches = matchCountData?.success && matchCountData.count > 0;
+  const isLoadingMatches = !matchCountData;
 
   // 모바일 검색: 검색 페이지로 이동하여 모달 노출
   const goToSearchPage = useCallback(() => {
@@ -310,13 +315,23 @@ export default function HeaderClient({
                   className="flex items-center gap-1.5 px-2 py-1.5 h-auto rounded-lg"
                   style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
-                  <span className={`relative flex h-2 w-2 ${hasTodayMatches ? '' : 'opacity-50'}`}>
-                    {hasTodayMatches ? (
+                  <span className={`relative flex h-2 w-2 ${
+                    isLoadingMatches ? 'opacity-30' : hasTodayMatches ? '' : 'opacity-50'
+                  }`}>
+                    {isLoadingMatches ? (
+                      // 로딩 상태 - 회색 펄스
+                      <>
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gray-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-gray-500"></span>
+                      </>
+                    ) : hasTodayMatches ? (
+                      // 경기 있음 - 초록 펄스
                       <>
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                       </>
                     ) : (
+                      // 경기 없음 - 빨강 점
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
                     )}
                   </span>
@@ -378,7 +393,6 @@ export default function HeaderClient({
       <LiveScoreModal
         isOpen={isLiveScoreOpen}
         onClose={() => setIsLiveScoreOpen(false)}
-        initialData={liveScoreData}
       />
 
       {/* 검색 모달: 검색 결과 페이지에서만 표시 */}

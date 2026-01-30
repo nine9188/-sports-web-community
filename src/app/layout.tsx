@@ -4,11 +4,9 @@ import RootLayoutClient from './RootLayoutClient';
 
 import BoardNavigation from '@/domains/sidebar/components/board/BoardNavigation';
 import AuthSection from '@/domains/sidebar/components/auth/AuthSection';
-import { fetchStandingsData } from '@/domains/sidebar/actions/football';
 import LeagueStandings from '@/domains/sidebar/components/league/LeagueStandings';
 import { RightSidebar } from '@/domains/sidebar/components';
 import { getBoardsForNavigation } from '@/domains/layout/actions';
-import { fetchMultiDayMatches } from '@/domains/livescore/actions/footballApi';
 import { generatePageMetadata } from '@/shared/utils/metadataNew';
 import { getUIThemeSettings } from '@/domains/ui-theme/actions';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
@@ -82,21 +80,13 @@ export default async function RootLayout({
   // 서버 컴포넌트에서 BoardNavigation 생성
   const boardNav = <BoardNavigation />;
 
-  // 서버 컴포넌트에서 축구 순위 데이터 가져오기
-  const standingsData = await fetchStandingsData('premier').catch(error => {
-    console.error('축구 순위 데이터 가져오기 실패:', error);
-    return null;
-  });
+  // 리그 순위 컴포넌트 생성 (클라이언트 사이드 fetch)
+  const leagueStandingsComponent = <LeagueStandings initialLeague="premier" />;
 
-  // 리그 순위 컴포넌트 생성
-  const leagueStandingsComponent = <LeagueStandings initialLeague="premier" initialStandings={standingsData} />;
-
-  // 통합 사용자 데이터, 게시판, 라이브스코어(3일), UI 테마, SEO 설정 병렬 fetch
-  // 위젯도 fetchMultiDayMatches 사용하므로 React cache()로 API 1회만 호출됨
-  const [fullUserData, headerBoardsData, liveScoreData, uiTheme, seoSettings] = await Promise.all([
+  // 통합 사용자 데이터, 게시판, UI 테마, SEO 설정 병렬 fetch
+  const [fullUserData, headerBoardsData, uiTheme, seoSettings] = await Promise.all([
     getFullUserData(),
     getBoardsForNavigation({ includeTotalPostCount: true }),
-    fetchMultiDayMatches().catch(() => undefined),
     getUIThemeSettings(),
     getSeoSettings()
   ]);
@@ -203,7 +193,6 @@ export default async function RootLayout({
           headerBoards={headerBoardsData.boardData}
           headerIsAdmin={headerBoardsData.isAdmin}
           headerTotalPostCount={headerBoardsData.totalPostCount}
-          liveScoreData={liveScoreData}
         >
           {children}
         </RootLayoutClient>

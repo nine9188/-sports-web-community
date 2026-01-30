@@ -13,7 +13,6 @@ import AuthStateManager from '@/shared/components/AuthStateManager';
 import SuspensionPopup from '@/shared/components/SuspensionPopup';
 import AttendanceChecker from '@/shared/components/AttendanceChecker';
 import { Board } from '@/domains/layout/types/board';
-import { MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
 import { FullUserDataWithSession, HeaderUserData } from '@/shared/types/user';
 import { scrollToTop } from '@/shared/utils/scroll';
 
@@ -27,7 +26,6 @@ interface RootLayoutClientProps {
   headerBoards?: Board[];
   headerIsAdmin?: boolean;
   headerTotalPostCount?: number;
-  liveScoreData?: MultiDayMatchesResult;
 }
 
 export default function RootLayoutClient({
@@ -39,8 +37,7 @@ export default function RootLayoutClient({
   fullUserData,
   headerBoards,
   headerIsAdmin,
-  headerTotalPostCount,
-  liveScoreData
+  headerTotalPostCount
 }: RootLayoutClientProps) {
   // fullUserData에서 필요한 데이터 추출
   const initialSession = fullUserData?.session ?? null;
@@ -73,17 +70,20 @@ export default function RootLayoutClient({
   // 독립적인 레이아웃이 필요한 경로들 확인
   const isIndependentLayout = useMemo(() => {
     if (!pathname) return false;
-    
+
     // 인증 관련 경로들 (라우트 그룹 (auth) 사용)
     const authPaths = ['/signin', '/signup', '/social-signup'];
     // 독립 레이아웃이 필요한 단일 경로들
     const standaloneRoots = ['/terms', '/privacy'];
-    
-    return pathname.startsWith('/auth/') || 
+    // 에러 페이지 (라우트 그룹 (error) 사용)
+    const errorPaths = ['/not-found'];
+
+    return pathname.startsWith('/auth/') ||
            pathname.startsWith('/admin') ||  // /admin과 /admin/로 시작하는 모든 경로
            pathname.startsWith('/help/') ||
            standaloneRoots.some(root => pathname === root || pathname.startsWith(`${root}/`)) ||
-           authPaths.includes(pathname);
+           authPaths.includes(pathname) ||
+           errorPaths.includes(pathname);
   }, [pathname]);
 
   // queryClient를 useMemo로 최적화하여 불필요한 재생성 방지
@@ -195,7 +195,6 @@ export default function RootLayoutClient({
                 headerBoards={headerBoards}
                 headerIsAdmin={headerIsAdmin}
                 headerTotalPostCount={headerTotalPostCount}
-                liveScoreData={liveScoreData}
                 fullUserData={fullUserData}
                 isOpen={deferredIsOpen}
                 onClose={closeSidebar}
