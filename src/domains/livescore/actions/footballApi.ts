@@ -219,14 +219,19 @@ export const fetchFromFootballApi = async (endpoint: string, params: Record<stri
 
 // 특정 날짜의 경기 정보 가져오기
 export async function fetchMatchesByDate(date: string): Promise<MatchData[]> {
+  console.log('🔴 [API] fetchMatchesByDate 호출됨:', date);
+
   try {
     // 캐시 확인
     const cacheKey = `matches-${date}`;
     const cached = matchesCache.get(cacheKey);
 
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      console.log('✅ [캐시] 캐시된 데이터 사용:', date);
       return cached.data;
     }
+
+    console.log('🔴 [API] Sports API 호출 중... (fixtures, date:', date, ')');
 
     // 타임존은 fetchFromFootballApi에서 자동으로 추가되므로 여기서는 제거
     const data = await fetchFromFootballApi('fixtures', { date });
