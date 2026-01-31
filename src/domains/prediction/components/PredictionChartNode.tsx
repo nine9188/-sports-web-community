@@ -1,8 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { NodeViewWrapper, NodeViewProps } from '@tiptap/react';
-import PredictionChart, { PredictionChartData } from './PredictionChart';
+import type { PredictionChartData } from './PredictionChart';
+import Spinner from '@/shared/components/Spinner';
+
+// Dynamic import로 Recharts 번들을 lazy load
+const PredictionChart = lazy(() => import('./PredictionChart'));
 
 // TipTap 노드 뷰 컴포넌트
 const PredictionChartNode: React.FC<NodeViewProps> = ({ node }) => {
@@ -20,7 +24,13 @@ const PredictionChartNode: React.FC<NodeViewProps> = ({ node }) => {
 
   return (
     <NodeViewWrapper className="prediction-chart-node" data-fixture-id={fixtureId}>
-      <PredictionChart data={chartData} />
+      <Suspense fallback={
+        <div className="flex items-center justify-center py-8">
+          <Spinner size="md" />
+        </div>
+      }>
+        <PredictionChart data={chartData} />
+      </Suspense>
     </NodeViewWrapper>
   );
 };

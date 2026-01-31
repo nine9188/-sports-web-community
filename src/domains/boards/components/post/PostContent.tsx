@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import PredictionChart from '@/domains/prediction/components/PredictionChart';
 import {
   renderTipTapDoc,
   renderRssHeader,
@@ -109,7 +108,10 @@ export default function PostContent({ content, meta }: PostContentProps) {
         const chartContainer = document.createElement('div');
         chartContainer.className = 'prediction-chart-hydrated my-4';
 
-        import('react-dom/client').then(({ createRoot }) => {
+        Promise.all([
+          import('react-dom/client'),
+          import('@/domains/prediction/components/PredictionChart')
+        ]).then(([{ createRoot }, { default: PredictionChart }]) => {
           const root = createRoot(chartContainer);
           root.render(
             React.createElement(PredictionChart, {

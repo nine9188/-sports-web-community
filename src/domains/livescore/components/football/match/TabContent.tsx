@@ -1,10 +1,8 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import Events from './tabs/Events';
-import Lineups from './tabs/lineups/Lineups';
-import Stats from './tabs/Stats';
 import Standings from './tabs/Standings';
-import Power from './tabs/Power';
 import MatchPredictionClient from './sidebar/MatchPredictionClient';
 import SupportCommentsSection from './sidebar/SupportCommentsSection';
 import RelatedPosts from './sidebar/RelatedPosts';
@@ -15,6 +13,32 @@ import { PlayerRatingsAndCaptains } from '@/domains/livescore/actions/match/play
 import { MatchPlayerStatsResponse } from '@/domains/livescore/actions/match/matchPlayerStats';
 import { MatchTabType } from './MatchPageClient';
 import type { RelatedPost } from '@/domains/livescore/actions/match/relatedPosts';
+import Spinner from '@/shared/components/Spinner';
+
+// Dynamic imports로 Framer Motion을 사용하는 컴포넌트 lazy load
+const Lineups = dynamic(() => import('./tabs/lineups/Lineups'), {
+  loading: () => (
+    <div className="flex items-center justify-center py-12">
+      <Spinner size="lg" />
+    </div>
+  ),
+});
+
+const Stats = dynamic(() => import('./tabs/Stats'), {
+  loading: () => (
+    <div className="flex items-center justify-center py-12">
+      <Spinner size="lg" />
+    </div>
+  ),
+});
+
+const Power = dynamic(() => import('./tabs/Power'), {
+  loading: () => (
+    <div className="flex items-center justify-center py-12">
+      <Spinner size="lg" />
+    </div>
+  ),
+});
 
 interface TabContentProps {
   matchId: string;

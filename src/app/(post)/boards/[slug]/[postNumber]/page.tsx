@@ -292,6 +292,21 @@ export default async function PostDetailPage({
     };
 
     // BreadcrumbList 구조화 데이터 생성
+    // item이 없는 breadcrumb는 제외하고 position 재할당
+    const validBreadcrumbs = result.breadcrumbs
+      .map((breadcrumb) => {
+        const breadcrumbPath =
+          breadcrumb.slug && breadcrumb.slug !== '#'
+            ? (breadcrumb.slug.startsWith('/') ? breadcrumb.slug : `/boards/${breadcrumb.slug}`)
+            : undefined;
+
+        return breadcrumbPath ? {
+          name: breadcrumb.name,
+          item: `${siteUrl}${breadcrumbPath}`
+        } : null;
+      })
+      .filter((item): item is { name: string; item: string } => item !== null);
+
     const breadcrumbListItems = [
       {
         '@type': 'ListItem',
@@ -299,22 +314,15 @@ export default async function PostDetailPage({
         name: '홈',
         item: siteUrl
       },
-      ...result.breadcrumbs.map((breadcrumb, index) => {
-        const breadcrumbPath =
-          breadcrumb.slug && breadcrumb.slug !== '#'
-            ? (breadcrumb.slug.startsWith('/') ? breadcrumb.slug : `/boards/${breadcrumb.slug}`)
-            : undefined;
-
-        return {
-          '@type': 'ListItem',
-          position: index + 2,
-          name: breadcrumb.name,
-          item: breadcrumbPath ? `${siteUrl}${breadcrumbPath}` : undefined
-        };
-      }),
+      ...validBreadcrumbs.map((breadcrumb, index) => ({
+        '@type': 'ListItem',
+        position: index + 2,
+        name: breadcrumb.name,
+        item: breadcrumb.item
+      })),
       {
         '@type': 'ListItem',
-        position: result.breadcrumbs.length + 2,
+        position: validBreadcrumbs.length + 2,
         name: result.post.title,
         item: postUrl
       }

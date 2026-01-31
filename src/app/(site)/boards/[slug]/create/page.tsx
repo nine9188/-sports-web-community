@@ -1,11 +1,25 @@
 import React from 'react';
 import Link from 'next/link';
-import PostEditForm from '@/domains/boards/components/post/PostEditForm';
+import dynamic from 'next/dynamic';
 import { getCreatePostData } from '@/domains/boards/actions';
 import { Metadata } from 'next';
 import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
 import { cache } from 'react';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import Spinner from '@/shared/components/Spinner';
+
+// Dynamic import로 Tiptap 에디터 번들을 lazy load
+const PostEditForm = dynamic(
+  () => import('@/domains/boards/components/post/PostEditForm'),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center py-20">
+        <Spinner size="lg" />
+      </div>
+    ),
+    ssr: false
+  }
+);
 
 // 캐시된 데이터 가져오기 함수 - 중복 호출 방지
 const getCachedCreatePostData = cache(async (slug: string) => {
