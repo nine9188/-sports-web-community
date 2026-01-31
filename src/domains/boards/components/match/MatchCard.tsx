@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useTheme } from 'next-themes';
 import type { MatchCardProps } from '@/shared/types/matchCard';
 import { getStatusInfo, DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
@@ -66,9 +67,11 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
         <div style={{ display: 'flex', alignItems: 'center' }}>
           {leagueLogo && (
             <div className="league-logo-box">
-              <img
+              <Image
                 src={leagueLogo}
                 alt={leagueName}
+                width={20}
+                height={20}
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}
@@ -83,9 +86,11 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
         <div className="team-info">
           {homeTeamLogo && (
             <div className="team-logo-box">
-              <img
+              <Image
                 src={homeTeamLogo}
                 alt={homeTeamName}
+                width={24}
+                height={24}
                 onError={(e) => {
                   e.currentTarget.onerror = null;
                   e.currentTarget.src = '/placeholder.png';
@@ -110,9 +115,11 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
         <div className="team-info">
           {awayTeamLogo && (
             <div className="team-logo-box">
-              <img
+              <Image
                 src={awayTeamLogo}
                 alt={awayTeamName}
+                width={24}
+                height={24}
                 onError={(e) => {
                   e.currentTarget.onerror = null;
                   e.currentTarget.src = '/placeholder.png';

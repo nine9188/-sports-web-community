@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
+import dynamicImport from 'next/dynamic';
 import { getCreatePostData } from '@/domains/boards/actions';
 import { Metadata } from 'next';
 import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
@@ -9,15 +9,14 @@ import { buildMetadata } from '@/shared/utils/metadataNew';
 import Spinner from '@/shared/components/Spinner';
 
 // Dynamic import로 Tiptap 에디터 번들을 lazy load
-const PostEditForm = dynamic(
+const PostEditForm = dynamicImport(
   () => import('@/domains/boards/components/post/PostEditForm'),
   {
     loading: () => (
       <div className="flex items-center justify-center py-20">
         <Spinner size="lg" />
       </div>
-    ),
-    ssr: false
+    )
   }
 );
 
