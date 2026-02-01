@@ -5,6 +5,10 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // 최신 브라우저만 타겟팅하여 불필요한 폴리필 제거
+  experimental: {
+    optimizePackageImports: ['@fortawesome/react-fontawesome', '@radix-ui/react-dialog', 'lucide-react'],
+  },
   images: {
     localPatterns: [
       {
