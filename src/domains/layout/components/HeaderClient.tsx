@@ -146,6 +146,14 @@ export default function HeaderClient({
   // 기본 로고 URL 사용
   const logoUrl = siteConfig.logo;
 
+  // 클라이언트 마운트 시 서버 로고 placeholder 숨기기 (LCP 최적화)
+  useEffect(() => {
+    const serverLogo = document.getElementById('server-logo-placeholder');
+    if (serverLogo) {
+      serverLogo.style.display = 'none';
+    }
+  }, []);
+
   // 서버에서 전달받은 사용자 데이터 사용
   const userData = initialUserData;
   
