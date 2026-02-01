@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchLeagueTeams } from '@/domains/livescore/actions/footballApi';
 import { fetchTeamSquad, type Player } from '@/domains/livescore/actions/teams/squad';
 import { getTeamById, type TeamMapping } from '@/domains/livescore/constants/teams';
+import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 
 // Query Keys
 export const entityKeys = {
@@ -51,23 +52,30 @@ export function useLeagueTeams(leagueId: number | null) {
  * 팀별 선수 목록을 가져오는 훅
  * - 팀 선택 시 해당 팀의 선수 목록 로드
  * - Coach 제외하고 Player만 반환
+ * - 선수 한글명도 함께 반환
  */
 export function useTeamPlayers(teamId: number | null) {
   return useQuery({
     queryKey: entityKeys.teamPlayers(teamId ?? 0),
-    queryFn: async (): Promise<Player[]> => {
-      if (!teamId) return [];
+    queryFn: async (): Promise<{ players: Player[]; koreanNames: Record<number, string | null> }> => {
+      if (!teamId) return { players: [], koreanNames: {} };
 
       const response = await fetchTeamSquad(String(teamId));
 
       if (response.success && response.data) {
         // Coach 제외하고 Player만 필터링
-        return response.data.filter(
+        const players = response.data.filter(
           (item): item is Player => item.position !== 'Coach'
         );
+
+        // 선수 한글명 일괄 조회 (DB)
+        const playerIds = players.map(p => p.id);
+        const koreanNames = await getPlayersKoreanNames(playerIds);
+
+        return { players, koreanNames };
       }
 
-      return [];
+      return { players: [], koreanNames: {} };
     },
     enabled: !!teamId,
     staleTime: 1000 * 60 * 30, // 30분

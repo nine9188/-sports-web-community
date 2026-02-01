@@ -7,7 +7,6 @@ import { MatchData } from '@/domains/livescore/actions/footballApi';
 import { generateMatchCardHTML } from '@/shared/utils/matchCardRenderer';
 import type { TeamMapping } from '@/domains/livescore/constants/teams';
 import type { Player } from '@/domains/livescore/actions/teams/squad';
-import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 
 // 리그 정보 인터페이스
 interface LeagueInfo {
@@ -47,7 +46,7 @@ interface UseEditorHandlersReturn {
   handleAddLink: (url: string, text?: string) => void;
   handleAddSocialEmbed: (platform: string, url: string) => void;
   handleAddTeam: (team: TeamMapping, league: LeagueInfo) => void;
-  handleAddPlayer: (player: Player, team: TeamMapping) => void;
+  handleAddPlayer: (player: Player, team: TeamMapping, koreanName?: string) => void;
 }
 
 export function useEditorHandlers({
@@ -349,14 +348,13 @@ export function useEditorHandlers({
   }, [editor, extensionsLoaded]);
 
   // 선수 카드 추가
-  const handleAddPlayer = useCallback((player: Player, team: TeamMapping) => {
+  const handleAddPlayer = useCallback((player: Player, team: TeamMapping, koreanName?: string) => {
     if (!editor || !extensionsLoaded) {
       toast.error('에디터가 준비되지 않았습니다.');
       return;
     }
 
     try {
-      const koreanName = getPlayerKoreanName(player.id);
       const commands = editor.commands as Record<string, (...args: unknown[]) => boolean>;
       if ('setPlayerCard' in commands) {
         const playerData = {

@@ -14,6 +14,7 @@ import { Match as UIMatch } from './tabs/overview/components/MatchItems';
 import { FixturesTab } from './tabs/fixtures';
 import { TransfersTab } from './tabs/transfers';
 import { TeamFullDataResponse } from '@/domains/livescore/actions/teams/team';
+import { PlayerKoreanNames } from './TeamPageClient';
 
 // 탭 타입 정의
 type TabType = 'overview' | 'squad' | 'standings' | 'stats' | 'fixtures' | 'transfers';
@@ -34,6 +35,7 @@ interface TabContentProps {
   tab: string;
   initialData: TeamFullDataResponse;
   onTabChange?: (tab: string, subTab?: string) => void;
+  playerKoreanNames?: PlayerKoreanNames;
 }
 
 /**
@@ -48,7 +50,7 @@ interface TabContentProps {
  * 2. TeamPageClient → initialData 전달
  * 3. TabContent → 현재 탭에 맞는 데이터 사용
  */
-export default function TabContent({ teamId, tab, initialData, onTabChange }: TabContentProps) {
+export default function TabContent({ teamId, tab, initialData, onTabChange, playerKoreanNames = {} }: TabContentProps) {
   // 팀 ID를 숫자로 변환
   const numericTeamId = parseInt(teamId, 10);
 
@@ -101,6 +103,7 @@ export default function TabContent({ teamId, tab, initialData, onTabChange }: Ta
             onTabChange={onTabChange}
             isLoading={false}
             error={null}
+            playerKoreanNames={playerKoreanNames}
           />
           <div className="xl:hidden">
             <SidebarRelatedPosts />
@@ -116,6 +119,7 @@ export default function TabContent({ teamId, tab, initialData, onTabChange }: Ta
             initialStats={playerStats?.data}
             isLoading={false}
             error={null}
+            playerKoreanNames={playerKoreanNames}
           />
         </Suspense>
       );
@@ -170,6 +174,7 @@ export default function TabContent({ teamId, tab, initialData, onTabChange }: Ta
         <Suspense fallback={<LoadingState message={TAB_LOADING_MESSAGES.transfers} />}>
           <TransfersTab
             transfers={transfers?.data}
+            playerKoreanNames={playerKoreanNames}
           />
         </Suspense>
       );

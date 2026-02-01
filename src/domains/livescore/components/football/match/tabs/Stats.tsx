@@ -6,8 +6,8 @@ import Link from 'next/link';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { MatchPlayerStatsResponse } from '@/domains/livescore/actions/match/matchPlayerStats';
-import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 import { getTeamById } from '@/domains/livescore/constants/teams';
+import { PlayerKoreanNames } from '../MatchPageClient';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 
 import { TeamStats, Team } from '@/domains/livescore/types/match';
@@ -22,6 +22,7 @@ interface StatsProps {
   };
   // 서버에서 프리로드된 선수 통계 데이터
   initialMatchPlayerStats?: MatchPlayerStatsResponse;
+  playerKoreanNames?: PlayerKoreanNames;
 }
 
 // 팀 로고 컴포넌트 - 메모이제이션
@@ -179,7 +180,7 @@ const SortIcon = ({ field, currentField, direction }: { field: string; currentFi
   );
 };
 
-const Stats = memo(({ matchData: propsMatchData, initialMatchPlayerStats }: StatsProps) => {
+const Stats = memo(({ matchData: propsMatchData, initialMatchPlayerStats, playerKoreanNames = {} }: StatsProps) => {
   // props에서 데이터 직접 추출 (서버에서 프리로드된 데이터)
   const stats = propsMatchData?.stats || [];
   const homeTeam = propsMatchData?.homeTeam;
@@ -591,7 +592,7 @@ const Stats = memo(({ matchData: propsMatchData, initialMatchPlayerStats }: Stat
                     <tbody className="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-[#1D1D1D] whitespace-nowrap">
                       {sortPlayers(playerStatsData.data.homeTeam.players, homeSortField, homeSortDirection)
                         .map((player) => {
-                          const koreanName = getPlayerKoreanName(player.playerId);
+                          const koreanName = playerKoreanNames[player.playerId];
                           const displayName = koreanName || player.playerName || String(player.playerId);
                           
                           return (
@@ -781,7 +782,7 @@ const Stats = memo(({ matchData: propsMatchData, initialMatchPlayerStats }: Stat
                     <tbody className="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-[#1D1D1D] whitespace-nowrap">
                       {sortPlayers(playerStatsData.data.awayTeam.players, awaySortField, awaySortDirection)
                         .map((player) => {
-                          const koreanName = getPlayerKoreanName(player.playerId);
+                          const koreanName = playerKoreanNames[player.playerId];
                           const displayName = koreanName || player.playerName || String(player.playerId);
                           
                           return (

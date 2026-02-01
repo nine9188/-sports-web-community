@@ -6,7 +6,6 @@ import { ImageType } from '@/shared/types/image';
 import { Container, ContainerContent } from '@/shared/components/ui';
 import { ErrorState, PlayerProfileLoadingState } from '@/domains/livescore/components/common/CommonComponents';
 import { usePlayerInfo } from '@/domains/livescore/hooks';
-import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
 import type { PlayerStatistic, PlayerData } from '@/domains/livescore/types/player';
@@ -27,12 +26,14 @@ const getPositionKorean = (position: string): string => {
 interface PlayerHeaderProps {
   playerId: string;
   initialData?: PlayerData;
+  playerKoreanName?: string | null;
 }
 
 // 메모이제이션으로 불필요한 리렌더링 방지
 const PlayerHeader = memo(function PlayerHeader({
   playerId,
-  initialData
+  initialData,
+  playerKoreanName
 }: PlayerHeaderProps) {
   // React Query 훅으로 선수 데이터 가져오기
   const { data: playerData, isLoading, error } = usePlayerInfo(playerId);
@@ -110,7 +111,7 @@ const PlayerHeader = memo(function PlayerHeader({
           {/* 이름, 팀, 포지션 */}
           <div className="flex-1 min-w-0">
             <h1 className="text-base md:text-lg font-bold truncate text-gray-900 dark:text-[#F0F0F0]">
-              {getPlayerKoreanName(displayData.info.id) || displayData.info.name}
+              {playerKoreanName || displayData.info.name}
             </h1>
             <div className="flex items-center gap-2 mt-1">
               {mainTeamStats?.team && (

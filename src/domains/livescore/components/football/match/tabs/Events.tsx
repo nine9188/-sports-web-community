@@ -8,8 +8,8 @@ import { MatchEvent } from '@/domains/livescore/types/match';
 import { getTeamById, TeamMapping } from '@/domains/livescore/constants/teams';
 import { mapEventToKoreanText } from '@/domains/livescore/constants/event-mappings';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
-import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
+import { PlayerKoreanNames } from '../MatchPageClient';
 
 // 이벤트 타입에 따른 아이콘 반환
 const getEventIcon = (type: string, detail: string) => {
@@ -58,10 +58,11 @@ const getEventIcon = (type: string, detail: string) => {
 interface EventsProps {
   matchId?: string;
   events?: MatchEvent[];
+  playerKoreanNames?: PlayerKoreanNames;
 }
 
 // 메모이제이션을 적용하여 불필요한 리렌더링 방지
-function Events({ events: propsEvents }: EventsProps) {
+function Events({ events: propsEvents, playerKoreanNames = {} }: EventsProps) {
   const [events, setEvents] = useState<MatchEvent[]>(propsEvents || []);
   const [loading, setLoading] = useState(false);
   const [error] = useState<string | null>(null);
@@ -75,7 +76,7 @@ function Events({ events: propsEvents }: EventsProps) {
 
     // 선수 (player) 이름에 링크 적용
     if (event.player?.id && event.player.name) {
-      const koreanPlayerName = getPlayerKoreanName(event.player.id) || event.player.name;
+      const koreanPlayerName = playerKoreanNames[event.player.id] || event.player.name;
       const englishPlayerName = event.player.name;
       
       const newElements: (string | JSX.Element)[] = [];
@@ -109,7 +110,7 @@ function Events({ events: propsEvents }: EventsProps) {
     // 어시스트 (assist) 이름에 링크 적용
     if (event.assist?.id && event.assist.name) {
       const assistId = event.assist.id;
-      const koreanAssistName = getPlayerKoreanName(assistId) || event.assist.name;
+      const koreanAssistName = playerKoreanNames[assistId] || event.assist.name;
       const englishAssistName = event.assist.name;
 
       const newElements: (string | JSX.Element)[] = [];

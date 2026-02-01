@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useCallback } from 'react';
 import Formation from './Formation';
 import PlayerImage from './components/PlayerImage';
@@ -7,8 +9,8 @@ import { TeamLineup, MatchEvent } from '@/domains/livescore/types/match';
 import { EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
-import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 import { getTeamById } from '@/domains/livescore/constants/teams';
+import { PlayerKoreanNames } from '../../MatchPageClient';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import { PlayerRatingsAndCaptains } from '@/domains/livescore/actions/match/playerStats';
 
@@ -50,9 +52,10 @@ interface LineupsProps {
   };
   // 서버에서 프리로드된 선수 평점/주장 데이터
   initialPlayerRatings?: PlayerRatingsAndCaptains;
+  playerKoreanNames?: PlayerKoreanNames;
 }
 
-export default function Lineups({ matchId, matchData, initialPlayerRatings }: LineupsProps) {
+export default function Lineups({ matchId, matchData, initialPlayerRatings, playerKoreanNames = {} }: LineupsProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<{
     id: number;
@@ -159,11 +162,12 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings }: Li
       {/* 포메이션 시각화 - 제일 상단에 배치 */}
       {(homeFormationData && awayFormationData) && (
         <div className="mb-4">
-          <Formation 
-            homeTeamData={homeFormationData} 
+          <Formation
+            homeTeamData={homeFormationData}
             awayTeamData={awayFormationData}
             matchStatus={matchStatus}
             playersRatings={playersRatings}
+            playerKoreanNames={playerKoreanNames}
           />
         </div>
       )}
@@ -253,7 +257,7 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings }: Li
                       <div className="flex-1">
                         <div className="text-xs text-gray-900 dark:text-gray-100">
                           {/* 선수 한국어 이름 매핑 */}
-                          {getPlayerKoreanName(homeLineup.startXI[index].player.id) || homeLineup.startXI[index].player.name}
+                          {playerKoreanNames[homeLineup.startXI[index].player.id] || homeLineup.startXI[index].player.name}
                           {isCaptain(homeLineup.startXI[index].player.id, homeLineup.startXI[index].player.captain) && (
                             <span className="ml-1 text-xs text-yellow-600 dark:text-yellow-400 font-semibold">(주장)</span>
                           )}
@@ -300,7 +304,7 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings }: Li
                       <div className="flex-1">
                         <div className="text-xs text-gray-900 dark:text-gray-100">
                           {/* 선수 한국어 이름 매핑 */}
-                          {getPlayerKoreanName(awayLineup.startXI[index].player.id) || awayLineup.startXI[index].player.name}
+                          {playerKoreanNames[awayLineup.startXI[index].player.id] || awayLineup.startXI[index].player.name}
                           {isCaptain(awayLineup.startXI[index].player.id, awayLineup.startXI[index].player.captain) && (
                             <span className="ml-1 text-xs text-yellow-600 dark:text-yellow-400 font-semibold">(주장)</span>
                           )}
@@ -365,7 +369,7 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings }: Li
                       <div className="flex-1">
                         <div className="text-xs text-gray-900 dark:text-gray-100">
                           {/* 선수 한국어 이름 매핑 */}
-                          {getPlayerKoreanName(homeLineup.substitutes[index].player.id) || homeLineup.substitutes[index].player.name}
+                          {playerKoreanNames[homeLineup.substitutes[index].player.id] || homeLineup.substitutes[index].player.name}
                           {isCaptain(homeLineup.substitutes[index].player.id, homeLineup.substitutes[index].player.captain) && (
                             <span className="ml-1 text-xs text-yellow-600 dark:text-yellow-400 font-semibold">(주장)</span>
                           )}
@@ -408,7 +412,7 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings }: Li
                       <div className="flex-1">
                         <div className="text-xs text-gray-900 dark:text-gray-100">
                           {/* 선수 한국어 이름 매핑 */}
-                          {getPlayerKoreanName(awayLineup.substitutes[index].player.id) || awayLineup.substitutes[index].player.name}
+                          {playerKoreanNames[awayLineup.substitutes[index].player.id] || awayLineup.substitutes[index].player.name}
                           {isCaptain(awayLineup.substitutes[index].player.id, awayLineup.substitutes[index].player.captain) && (
                             <span className="ml-1 text-xs text-yellow-600 dark:text-yellow-400 font-semibold">(주장)</span>
                           )}
@@ -553,7 +557,7 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings }: Li
                     </div>
                     <div className="flex-1">
                       <div className="text-xs text-gray-900 dark:text-gray-100">
-                        {getPlayerKoreanName(item.player.id) || item.player.name}
+                        {playerKoreanNames[item.player.id] || item.player.name}
                         {isCaptain(item.player.id, item.player.captain) && (
                           <span className="ml-1 text-xs text-yellow-600 dark:text-yellow-400 font-semibold">(주장)</span>
                         )}
@@ -601,7 +605,7 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings }: Li
                     </div>
                     <div className="flex-1">
                       <div className="text-xs text-gray-900 dark:text-gray-100">
-                        {getPlayerKoreanName(item.player.id) || item.player.name}
+                        {playerKoreanNames[item.player.id] || item.player.name}
                         {isCaptain(item.player.id, item.player.captain) && (
                           <span className="ml-1 text-xs text-yellow-600 dark:text-yellow-400 font-semibold">(주장)</span>
                         )}
@@ -709,7 +713,7 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings }: Li
                     </div>
                     <div className="flex-1">
                       <div className="text-xs text-gray-900 dark:text-gray-100">
-                        {getPlayerKoreanName(item.player.id) || item.player.name}
+                        {playerKoreanNames[item.player.id] || item.player.name}
                         {isCaptain(item.player.id, item.player.captain) && (
                           <span className="ml-1 text-xs text-yellow-600 dark:text-yellow-400 font-semibold">(주장)</span>
                         )}
@@ -757,7 +761,7 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings }: Li
                     </div>
                     <div className="flex-1">
                       <div className="text-xs text-gray-900 dark:text-gray-100">
-                        {getPlayerKoreanName(item.player.id) || item.player.name}
+                        {playerKoreanNames[item.player.id] || item.player.name}
                         {isCaptain(item.player.id, item.player.captain) && (
                           <span className="ml-1 text-xs text-yellow-600 dark:text-yellow-400 font-semibold">(주장)</span>
                         )}
@@ -815,7 +819,7 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings }: Li
           playerId={selectedPlayer.id}
           matchId={matchId}
           playerInfo={{
-            name: getPlayerKoreanName(selectedPlayer.id) || selectedPlayer.name,
+            name: playerKoreanNames[selectedPlayer.id] || selectedPlayer.name,
             number: selectedPlayer.number,
             pos: selectedPlayer.pos,
             photo: selectedPlayer.photo,

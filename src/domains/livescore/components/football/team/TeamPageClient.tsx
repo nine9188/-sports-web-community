@@ -50,16 +50,21 @@ export type TeamTabType = 'overview' | 'fixtures' | 'standings' | 'squad' | 'tra
 // 유효한 탭 목록
 const VALID_TABS: TeamTabType[] = ['overview', 'fixtures', 'standings', 'squad', 'transfers', 'stats'];
 
+// 선수 한글명 타입
+export type PlayerKoreanNames = Record<number, string | null>;
+
 interface TeamPageClientProps {
   teamId: string;
   initialTab: TeamTabType;
   initialData: TeamFullDataResponse;
+  playerKoreanNames?: PlayerKoreanNames;
 }
 
 export default function TeamPageClient({
   teamId,
   initialTab,
   initialData,
+  playerKoreanNames = {},
 }: TeamPageClientProps) {
   // 클라이언트에서 탭 상태 관리
   const [currentTab, setCurrentTab] = useState<TeamTabType>(initialTab);
@@ -142,6 +147,7 @@ export default function TeamPageClient({
         tab={currentTab}
         initialData={initialData}
         onTabChange={handleTabChange}
+        playerKoreanNames={playerKoreanNames}
       />
     </>
   );

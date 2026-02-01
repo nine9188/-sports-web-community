@@ -9,8 +9,8 @@ import { Button } from '@/shared/components/ui';
 import { Pagination } from '@/shared/components/ui/pagination';
 import { TabList } from '@/shared/components/ui/tabs';
 import { TeamTransfersData } from '@/domains/livescore/actions/teams/transfers';
-import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
+import { PlayerKoreanNames } from '../../TeamPageClient';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -21,6 +21,7 @@ const TRANSFER_TABS = [
 
 interface TransfersTabProps {
   transfers: TeamTransfersData | undefined;
+  playerKoreanNames?: PlayerKoreanNames;
 }
 
 /** YYYY-MM-DD → YYYY.MM.DD */
@@ -54,7 +55,7 @@ function teamName(id: number, fallback: string): string {
   return display.startsWith('팀 ') ? fallback : display;
 }
 
-export default function TransfersTab({ transfers }: TransfersTabProps) {
+export default function TransfersTab({ transfers, playerKoreanNames = {} }: TransfersTabProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -133,7 +134,7 @@ export default function TransfersTab({ transfers }: TransfersTabProps) {
                   <div className="flex-1 min-w-0 flex flex-col justify-center gap-0.5">
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-xs font-medium text-gray-900 dark:text-[#F0F0F0] truncate leading-tight">
-                        {getPlayerKoreanName(transfer.player.id) || transfer.player.name}
+                        {playerKoreanNames[transfer.player.id] || transfer.player.name}
                       </p>
                       <span className="text-xs text-gray-500 dark:text-gray-400 truncate leading-tight flex-shrink-0 max-w-[100px]">
                         {teamName(otherTeam.id, otherTeam.name)}
@@ -197,7 +198,7 @@ export default function TransfersTab({ transfers }: TransfersTabProps) {
                           />
                         </div>
                         <span className="text-xs font-medium text-gray-900 dark:text-[#F0F0F0]">
-                          {getPlayerKoreanName(transfer.player.id) || transfer.player.name}
+                          {playerKoreanNames[transfer.player.id] || transfer.player.name}
                         </span>
                       </div>
                     </td>

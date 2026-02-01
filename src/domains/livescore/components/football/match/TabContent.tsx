@@ -11,7 +11,7 @@ import { MatchFullDataResponse } from '@/domains/livescore/actions/match/matchDa
 import { HeadToHeadTestData } from '@/domains/livescore/actions/match/headtohead';
 import { PlayerRatingsAndCaptains } from '@/domains/livescore/actions/match/playerStats';
 import { MatchPlayerStatsResponse } from '@/domains/livescore/actions/match/matchPlayerStats';
-import { MatchTabType } from './MatchPageClient';
+import { MatchTabType, PlayerKoreanNames } from './MatchPageClient';
 import type { RelatedPost } from '@/domains/livescore/actions/match/relatedPosts';
 import Spinner from '@/shared/components/Spinner';
 
@@ -48,6 +48,7 @@ interface TabContentProps {
   initialPlayerRatings?: PlayerRatingsAndCaptains;
   initialMatchPlayerStats?: MatchPlayerStatsResponse;
   relatedPosts?: RelatedPost[];
+  playerKoreanNames?: PlayerKoreanNames;
 }
 
 /**
@@ -56,7 +57,7 @@ interface TabContentProps {
  * 서버에서 미리 로드된 데이터(initialData)를 받아 현재 탭에 맞는 컴포넌트를 렌더링합니다.
  * Context 의존성 제거로 더 단순하고 예측 가능한 동작.
  */
-export default function TabContent({ matchId, currentTab, initialData, initialPowerData, initialPlayerRatings, initialMatchPlayerStats, relatedPosts }: TabContentProps) {
+export default function TabContent({ matchId, currentTab, initialData, initialPowerData, initialPlayerRatings, initialMatchPlayerStats, relatedPosts, playerKoreanNames = {} }: TabContentProps) {
   // initialData에서 데이터 추출
   const { events, lineups, stats, standings, homeTeam, awayTeam, matchData } = initialData;
 
@@ -68,7 +69,7 @@ export default function TabContent({ matchId, currentTab, initialData, initialPo
   switch (currentTab) {
     case 'events':
       return events && events.length > 0
-        ? <Events events={events} />
+        ? <Events events={events} playerKoreanNames={playerKoreanNames} />
         : <EmptyState title="이벤트 없음" message="이 경기의 이벤트 데이터를 찾을 수 없습니다." />;
 
     case 'lineups':
@@ -116,12 +117,13 @@ export default function TabContent({ matchId, currentTab, initialData, initialPo
           }}
           matchId={matchId}
           initialPlayerRatings={initialPlayerRatings}
+          playerKoreanNames={playerKoreanNames}
         />
       );
 
     case 'stats':
       return stats && stats.length > 0
-        ? <Stats matchData={{ stats, homeTeam: homeTeam || undefined, awayTeam: awayTeam || undefined }} initialMatchPlayerStats={initialMatchPlayerStats} />
+        ? <Stats matchData={{ stats, homeTeam: homeTeam || undefined, awayTeam: awayTeam || undefined }} initialMatchPlayerStats={initialMatchPlayerStats} playerKoreanNames={playerKoreanNames} />
         : <EmptyState title="통계 없음" message="이 경기의 통계 데이터를 찾을 수 없습니다." />;
 
     case 'standings':
@@ -131,7 +133,7 @@ export default function TabContent({ matchId, currentTab, initialData, initialPo
 
     case 'power':
       return initialPowerData && homeTeam && awayTeam
-        ? <Power matchId={matchId} homeTeam={homeTeam} awayTeam={awayTeam} data={{ ...initialPowerData, standings }} />
+        ? <Power matchId={matchId} homeTeam={homeTeam} awayTeam={awayTeam} data={{ ...initialPowerData, standings }} playerKoreanNames={playerKoreanNames} />
         : <EmptyState title="전력 분석 없음" message="이 경기의 전력 데이터를 찾을 수 없습니다." />;
 
     case 'support':

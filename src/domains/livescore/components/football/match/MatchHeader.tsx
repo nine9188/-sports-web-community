@@ -8,10 +8,10 @@ import { ImageType } from '@/shared/types/image';
 import { formatDateToKorean } from '@/shared/utils/dateUtils';
 import { ErrorState } from '@/domains/livescore/components/common/CommonComponents';
 import { MatchEvent } from '@/domains/livescore/types/match';
-import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 import { getLeagueName } from '@/domains/livescore/constants/league-mappings';
 import { Container } from '@/shared/components/ui';
 import { MatchFullDataResponse } from '@/domains/livescore/actions/match/matchData';
+import { PlayerKoreanNames } from './MatchPageClient';
 
 // MatchData 타입 정의
 interface MatchDataType {
@@ -69,6 +69,7 @@ interface MatchDataType {
 
 interface MatchHeaderProps {
   initialData: MatchFullDataResponse;
+  playerKoreanNames?: PlayerKoreanNames;
 }
 
 /**
@@ -77,7 +78,7 @@ interface MatchHeaderProps {
  * 서버에서 미리 로드된 데이터(initialData)를 받아 헤더를 렌더링합니다.
  * Context 의존성 제거로 더 단순하고 예측 가능한 동작.
  */
-const MatchHeader = memo(({ initialData }: MatchHeaderProps) => {
+const MatchHeader = memo(({ initialData, playerKoreanNames = {} }: MatchHeaderProps) => {
   // initialData에서 데이터 추출
   const matchData = initialData.matchData;
   const eventsData = initialData.events;
@@ -377,9 +378,9 @@ const MatchHeader = memo(({ initialData }: MatchHeaderProps) => {
                   {goalEvents
                     .filter((event: MatchEvent) => event.team?.id === homeTeam?.id)
                     .map((event: MatchEvent, index: number) => {
-                      const koreanName = event.player?.id ? getPlayerKoreanName(event.player.id) : null;
+                      const koreanName = event.player?.id ? playerKoreanNames[event.player.id] : null;
                       const displayName = koreanName || event.player?.name || '알 수 없음';
-                      const assistKoreanName = event.assist?.id ? getPlayerKoreanName(event.assist.id) : null;
+                      const assistKoreanName = event.assist?.id ? playerKoreanNames[event.assist.id] : null;
                       const assistDisplayName = assistKoreanName || event.assist?.name;
 
                       return (
@@ -426,9 +427,9 @@ const MatchHeader = memo(({ initialData }: MatchHeaderProps) => {
                   {goalEvents
                     .filter((event: MatchEvent) => event.team?.id === awayTeam?.id)
                     .map((event: MatchEvent, index: number) => {
-                      const koreanName = event.player?.id ? getPlayerKoreanName(event.player.id) : null;
+                      const koreanName = event.player?.id ? playerKoreanNames[event.player.id] : null;
                       const displayName = koreanName || event.player?.name || '알 수 없음';
-                      const assistKoreanName = event.assist?.id ? getPlayerKoreanName(event.assist.id) : null;
+                      const assistKoreanName = event.assist?.id ? playerKoreanNames[event.assist.id] : null;
                       const assistDisplayName = assistKoreanName || event.assist?.name;
 
                       return (

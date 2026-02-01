@@ -6,12 +6,13 @@ import { ImageType } from '@/shared/types/image';
 import { Container, ContainerHeader, ContainerTitle, Button } from '@/shared/components/ui';
 import { PlayerStats } from '@/domains/livescore/actions/teams/player-stats';
 import { Player, Coach } from '@/domains/livescore/actions/teams/squad';
-import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
+import { PlayerKoreanNames } from '../../../TeamPageClient';
 
 interface SeasonHighlightsProps {
   playerStats: Record<number, PlayerStats>;
   squad: (Player | Coach)[];
   onTabChange?: (tab: string) => void;
+  playerKoreanNames?: PlayerKoreanNames;
 }
 
 interface RankedPlayer {
@@ -21,7 +22,7 @@ interface RankedPlayer {
   value: number;
 }
 
-export default function SeasonHighlights({ playerStats, squad, onTabChange }: SeasonHighlightsProps) {
+export default function SeasonHighlights({ playerStats, squad, onTabChange, playerKoreanNames = {} }: SeasonHighlightsProps) {
   const { topScorers, topAssists } = useMemo(() => {
     // squad에서 선수 정보 매핑 (코치 제외)
     const playerMap = new Map<number, { name: string; photo: string }>();
@@ -39,7 +40,7 @@ export default function SeasonHighlights({ playerStats, squad, onTabChange }: Se
       const info = playerMap.get(id);
       if (!info) continue;
 
-      const displayName = getPlayerKoreanName(id) || info.name;
+      const displayName = playerKoreanNames[id] || info.name;
 
       if (stats.goals > 0) {
         scorers.push({ id, name: displayName, photo: info.photo, value: stats.goals });
@@ -56,7 +57,7 @@ export default function SeasonHighlights({ playerStats, squad, onTabChange }: Se
       topScorers: scorers.slice(0, 3),
       topAssists: assisters.slice(0, 3),
     };
-  }, [playerStats, squad]);
+  }, [playerStats, squad, playerKoreanNames]);
 
   if (topScorers.length === 0 && topAssists.length === 0) {
     return null;

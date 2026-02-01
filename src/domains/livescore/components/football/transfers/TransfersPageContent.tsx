@@ -76,8 +76,8 @@ import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { Pagination } from '@/shared/components/ui';
 import { memo } from 'react';
-import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
+import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 
 // 팀 로고 컴포넌트 - Standings와 동일한 방식으로 메모이제이션
 const TeamLogo = memo(({ teamName, teamId, size = 20 }: { teamName: string; teamId?: number; size?: number }) => {
@@ -283,6 +283,10 @@ export default async function TransfersPageContent({
   const paginatedTransfers = transfers.slice(startIndex, endIndex);
   const totalPages = Math.ceil(totalCount / itemsPerPage);
 
+  // 선수 한글명 일괄 조회 (DB)
+  const playerIds = paginatedTransfers.map(t => t.player.id).filter(Boolean);
+  const playerKoreanNames = playerIds.length > 0 ? await getPlayersKoreanNames(playerIds) : {};
+
   // 페이지 번호 생성은 Pagination 내부 로직 사용
 
 
@@ -403,9 +407,9 @@ export default async function TransfersPageContent({
                         <div>
                           <Link
                             href={`/livescore/football/player/${transfer.player.id}`}
-                            className={`${(getPlayerKoreanName(transfer.player.id) || transfer.player.name).length > 15 ? 'text-xs' : 'text-sm'} font-medium text-gray-900 dark:text-[#F0F0F0] hover:underline transition-colors`}
+                            className={`${(playerKoreanNames[transfer.player.id] || transfer.player.name).length > 15 ? 'text-xs' : 'text-sm'} font-medium text-gray-900 dark:text-[#F0F0F0] hover:underline transition-colors`}
                           >
-                            {getPlayerKoreanName(transfer.player.id) || transfer.player.name}
+                            {playerKoreanNames[transfer.player.id] || transfer.player.name}
                           </Link>
                           <div className="text-sm text-gray-700 dark:text-gray-300">
                             {transfer.player.nationality}
@@ -528,9 +532,9 @@ export default async function TransfersPageContent({
                       {/* 선수 이름 */}
                       <Link
                         href={`/livescore/football/player/${transfer.player.id}`}
-                        className={`${(getPlayerKoreanName(transfer.player.id) || transfer.player.name).length > 15 ? 'text-xs' : 'text-sm'} font-semibold text-gray-900 dark:text-[#F0F0F0] hover:underline transition-colors truncate`}
+                        className={`${(playerKoreanNames[transfer.player.id] || transfer.player.name).length > 15 ? 'text-xs' : 'text-sm'} font-semibold text-gray-900 dark:text-[#F0F0F0] hover:underline transition-colors truncate`}
                       >
-                        {getPlayerKoreanName(transfer.player.id) || transfer.player.name}
+                        {playerKoreanNames[transfer.player.id] || transfer.player.name}
                       </Link>
                       
                       {/* 국적 */}

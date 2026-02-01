@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import TeamPageClient, { TeamTabType } from '@/domains/livescore/components/football/team/TeamPageClient';
 import { fetchTeamFullData } from '@/domains/livescore/actions/teams/team';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 
 interface TeamPageProps {
   params: Promise<{ id: string }>;
@@ -70,12 +71,35 @@ export default async function TeamPage({ params, searchParams }: TeamPageProps) 
       notFound();
     }
 
+    // 선수 ID 추출 (squad + transfers)
+    const playerIds: Set<number> = new Set();
+
+    // squad에서 선수 ID 추출
+    if (initialData.squad?.data) {
+      initialData.squad.data.forEach((member: { id?: number }) => {
+        if (member.id) playerIds.add(member.id);
+      });
+    }
+
+    // transfers에서 선수 ID 추출
+    if (initialData.transfers?.data) {
+      initialData.transfers.data.forEach((transfer: { player?: { id?: number } }) => {
+        if (transfer.player?.id) playerIds.add(transfer.player.id);
+      });
+    }
+
+    // 선수 한글명 일괄 조회 (DB)
+    const playerKoreanNames = playerIds.size > 0
+      ? await getPlayersKoreanNames(Array.from(playerIds))
+      : {};
+
     // 클라이언트 컴포넌트에 데이터 전달
     return (
       <TeamPageClient
         teamId={id}
         initialTab={initialTab}
         initialData={initialData}
+        playerKoreanNames={playerKoreanNames}
       />
     );
   } catch (error) {

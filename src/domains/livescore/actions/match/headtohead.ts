@@ -3,7 +3,7 @@
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi'
 import { fetchTeamPlayerStats } from '@/domains/livescore/actions/teams/player-stats'
 import { fetchTeamSquad } from '@/domains/livescore/actions/teams/squad'
-import { getPlayerKoreanName } from '@/domains/livescore/constants/players'
+import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName'
 import { cache } from 'react'
 
 type TeamId = number
@@ -295,14 +295,25 @@ export async function fetchTeamTopPlayers(teamId: TeamId): Promise<TeamTopPlayer
 		}
 	} catch {}
 
+	// 선수 ID 목록 수집
+	const playerIds: number[] = []
+	if (statsRes.success && statsRes.data) {
+		for (const idStr of Object.keys(statsRes.data)) {
+			playerIds.push(Number(idStr))
+		}
+	}
+
+	// 한글명 일괄 조회 (DB)
+	const koreanNames = await getPlayersKoreanNames(playerIds)
+
 	const players: TopPlayerItem[] = []
 	if (statsRes.success && statsRes.data) {
 		for (const [idStr, s] of Object.entries(statsRes.data)) {
 			const id = Number(idStr)
-			// 1순위: 스쿼드에서 가져온 이름, 2순위: 로컬 한글 매핑
+			// 1순위: 한글명, 2순위: 스쿼드에서 가져온 이름
+			const koreanName = koreanNames[id]
 			const squadName = idToName.get(id)
-			const koreanName = getPlayerKoreanName(id)
-			const displayName = squadName || koreanName || undefined
+			const displayName = koreanName || squadName || undefined
 			players.push({ playerId: id, name: displayName, goals: (s as PlayerStats).goals || 0, assists: (s as PlayerStats).assists || 0 })
 		}
 	}
@@ -310,7 +321,6 @@ export async function fetchTeamTopPlayers(teamId: TeamId): Promise<TeamTopPlayer
 	const topScorers = [...players].sort((a, b) => b.goals - a.goals).slice(0, 5)
 	const topAssist = [...players].sort((a, b) => b.assists - a.assists).slice(0, 5)
 
-	// API 호출 없이 로컬 매핑만 사용 (성능 최적화)
 	return { teamId, topScorers, topAssist }
 }
 

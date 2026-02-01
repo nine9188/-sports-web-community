@@ -5,12 +5,13 @@ import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { Container, ContainerHeader, ContainerTitle, Button } from '@/shared/components/ui';
 import { TeamTransfersData } from '@/domains/livescore/actions/teams/transfers';
-import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
+import { PlayerKoreanNames } from '../../../TeamPageClient';
 
 interface RecentTransfersProps {
   transfers: TeamTransfersData;
   onTabChange?: (tab: string, subTab?: string) => void;
+  playerKoreanNames?: PlayerKoreanNames;
 }
 
 /** YYYY-MM-DD → YYYY.MM.DD (타임존 이슈 방지를 위해 문자열 직접 분리) */
@@ -45,7 +46,7 @@ function teamName(id: number, fallback: string): string {
   return display.startsWith('팀 ') ? fallback : display;
 }
 
-export default function RecentTransfers({ transfers, onTabChange }: RecentTransfersProps) {
+export default function RecentTransfers({ transfers, onTabChange, playerKoreanNames = {} }: RecentTransfersProps) {
   const router = useRouter();
   const recentIn = transfers.in.slice(0, 3);
   const recentOut = transfers.out.slice(0, 3);
@@ -104,7 +105,7 @@ export default function RecentTransfers({ transfers, onTabChange }: RecentTransf
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
-                          {getPlayerKoreanName(transfer.player.id) || transfer.player.name}
+                          {playerKoreanNames[transfer.player.id] || transfer.player.name}
                         </p>
                         <div className="flex items-center gap-1 flex-shrink-0">
                           <div className="w-5 h-5 flex-shrink-0">
@@ -150,7 +151,7 @@ export default function RecentTransfers({ transfers, onTabChange }: RecentTransf
                     <div className="flex-1 min-w-0 flex flex-col justify-center gap-0.5">
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-xs font-medium text-gray-900 dark:text-[#F0F0F0] truncate leading-tight">
-                          {getPlayerKoreanName(transfer.player.id) || transfer.player.name}
+                          {playerKoreanNames[transfer.player.id] || transfer.player.name}
                         </p>
                         <span className="text-xs text-gray-500 dark:text-gray-400 truncate leading-tight flex-shrink-0 max-w-[100px]">
                           {teamName(transfer.fromTeam.id, transfer.fromTeam.name)}
@@ -196,7 +197,7 @@ export default function RecentTransfers({ transfers, onTabChange }: RecentTransf
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
-                          {getPlayerKoreanName(transfer.player.id) || transfer.player.name}
+                          {playerKoreanNames[transfer.player.id] || transfer.player.name}
                         </p>
                         <div className="flex items-center gap-1 flex-shrink-0">
                           <div className="w-5 h-5 flex-shrink-0">
@@ -242,7 +243,7 @@ export default function RecentTransfers({ transfers, onTabChange }: RecentTransf
                     <div className="flex-1 min-w-0 flex flex-col justify-center gap-0.5">
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-xs font-medium text-gray-900 dark:text-[#F0F0F0] truncate leading-tight">
-                          {getPlayerKoreanName(transfer.player.id) || transfer.player.name}
+                          {playerKoreanNames[transfer.player.id] || transfer.player.name}
                         </p>
                         <span className="text-xs text-gray-500 dark:text-gray-400 truncate leading-tight flex-shrink-0 max-w-[100px]">
                           {teamName(transfer.toTeam.id, transfer.toTeam.name)}

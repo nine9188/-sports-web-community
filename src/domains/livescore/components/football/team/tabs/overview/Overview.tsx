@@ -13,6 +13,7 @@ import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappin
 import { PlayerStats } from '@/domains/livescore/actions/teams/player-stats';
 import { Player, Coach } from '@/domains/livescore/actions/teams/squad';
 import { TeamTransfersData } from '@/domains/livescore/actions/teams/transfers';
+import { PlayerKoreanNames } from '../../TeamPageClient';
 
 // 팀 정보 타입
 interface Team {
@@ -90,6 +91,7 @@ interface OverviewProps {
   teamId: number;
   isLoading?: boolean;
   error?: string | null;
+  playerKoreanNames?: PlayerKoreanNames;
 }
 
 export default function Overview({
@@ -103,7 +105,8 @@ export default function Overview({
   onTabChange,
   teamId,
   isLoading,
-  error
+  error,
+  playerKoreanNames = {}
 }: OverviewProps) {
   // 탭 변경 핸들러 (메모이제이션으로 불필요한 렌더링 방지)
   const handleTabChange = React.useCallback((tab: string, subTab?: string) => {
@@ -164,12 +167,13 @@ export default function Overview({
           playerStats={playerStats}
           squad={squad}
           onTabChange={handleTabChange}
+          playerKoreanNames={playerKoreanNames}
         />
       )}
 
       {/* 5. 최근 이적 */}
       {transfers && (
-        <RecentTransfers transfers={transfers} onTabChange={handleTabChange} />
+        <RecentTransfers transfers={transfers} onTabChange={handleTabChange} playerKoreanNames={playerKoreanNames} />
       )}
     </div>
   );

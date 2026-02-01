@@ -43,6 +43,9 @@ const VALID_TABS: MatchTabType[] = ['power', 'events', 'lineups', 'stats', 'stan
 // 기본 탭
 const DEFAULT_TAB: MatchTabType = 'power';
 
+// 선수 한글명 매핑 타입
+export type PlayerKoreanNames = Record<number, string | null>;
+
 interface MatchPageClientProps {
   matchId: string;
   initialTab: MatchTabType;
@@ -51,6 +54,7 @@ interface MatchPageClientProps {
   initialPlayerRatings?: PlayerRatingsAndCaptains;
   initialMatchPlayerStats?: MatchPlayerStatsResponse;
   sidebarData?: SidebarData | null;
+  playerKoreanNames?: PlayerKoreanNames;
 }
 
 export default function MatchPageClient({
@@ -61,6 +65,7 @@ export default function MatchPageClient({
   initialPlayerRatings,
   initialMatchPlayerStats,
   sidebarData,
+  playerKoreanNames = {},
 }: MatchPageClientProps) {
   // 클라이언트에서 탭 상태 관리
   const [currentTab, setCurrentTab] = useState<MatchTabType>(initialTab);
@@ -116,6 +121,7 @@ export default function MatchPageClient({
         <Suspense fallback={<MatchHeaderSkeleton />}>
           <MatchHeader
             initialData={initialData}
+            playerKoreanNames={playerKoreanNames}
           />
         </Suspense>
 
@@ -143,6 +149,7 @@ export default function MatchPageClient({
           initialPlayerRatings={initialPlayerRatings}
           initialMatchPlayerStats={initialMatchPlayerStats}
           relatedPosts={sidebarData?.relatedPosts}
+          playerKoreanNames={playerKoreanNames}
         />
       </div>
 

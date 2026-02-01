@@ -10,6 +10,40 @@ import { notFound } from 'next/navigation';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
+import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
+
+// matchData에서 모든 선수 ID 추출
+function extractPlayerIds(matchData: MatchFullDataResponse): number[] {
+  const playerIds: Set<number> = new Set();
+
+  // lineups에서 선수 ID 추출
+  if (matchData.lineups?.response) {
+    const { home, away } = matchData.lineups.response;
+
+    // 홈팀 선발 + 교체
+    home?.startXI?.forEach(p => p.player?.id && playerIds.add(p.player.id));
+    home?.substitutes?.forEach(p => p.player?.id && playerIds.add(p.player.id));
+
+    // 원정팀 선발 + 교체
+    away?.startXI?.forEach(p => p.player?.id && playerIds.add(p.player.id));
+    away?.substitutes?.forEach(p => p.player?.id && playerIds.add(p.player.id));
+  }
+
+  // events에서 선수 ID 추출
+  if (matchData.events) {
+    matchData.events.forEach(event => {
+      if (event.player?.id) playerIds.add(event.player.id);
+      if (event.assist?.id) playerIds.add(event.assist.id);
+    });
+  }
+
+  // match 정보에서 득점자 ID 추출
+  if (matchData.match?.goals) {
+    // goals 객체에 선수 정보가 있을 수 있음
+  }
+
+  return Array.from(playerIds);
+}
 
 // 유효한 탭 목록
 const VALID_TABS: MatchTabType[] = ['power', 'events', 'lineups', 'stats', 'standings', 'support'];
@@ -238,11 +272,16 @@ export default async function MatchPage({
       ? (powerDataResult as { data?: unknown }).data
       : undefined;
 
+    // 선수 한글명 일괄 조회 (DB)
+    const playerIds = extractPlayerIds(matchData);
+    const playerKoreanNames = await getPlayersKoreanNames(playerIds);
+
     return (
       <div className="container">
         <MatchPageClient
           matchId={matchId}
           initialTab={initialTab}
+          playerKoreanNames={playerKoreanNames}
           initialData={matchData}
           initialPowerData={powerData}
           initialPlayerRatings={playerRatingsResult}

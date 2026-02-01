@@ -4,7 +4,7 @@ import PlayerPageClient from '@/domains/livescore/components/football/player/Pla
 import { fetchPlayerFullData, PlayerFullDataResponse } from '@/domains/livescore/actions/player/data';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { getTeamById } from '@/domains/livescore/constants/teams';
-import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
+import { getPlayerKoreanName, getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 import type { PlayerTabType } from '@/domains/livescore/hooks';
 
 /**
@@ -46,8 +46,8 @@ export async function generateMetadata({
   const player = playerData.playerData.info;
   const statistics = playerData.playerData.statistics;
 
-  // 한글 매핑
-  const playerName = getPlayerKoreanName(player.id) || player.name;
+  // 한글 매핑 (서버 액션으로 DB 조회)
+  const playerName = await getPlayerKoreanName(player.id) || player.name;
   const teamId = statistics?.[0]?.team?.id;
   const teamMapping = teamId ? getTeamById(teamId) : null;
   const currentTeam = teamMapping?.name_ko || statistics?.[0]?.team?.name || '';
@@ -139,12 +139,40 @@ export default async function PlayerPage({
       return notFound();
     }
 
+    // 선수 한글명 조회 (DB)
+    const playerNumericId = parseInt(playerId, 10);
+    const playerKoreanName = !isNaN(playerNumericId) ? await getPlayerKoreanName(playerNumericId) : null;
+
+    // Rankings 데이터에서 선수 ID 추출 및 한글명 일괄 조회
+    const rankingsPlayerIds: Set<number> = new Set();
+    const rankings = initialData.rankings;
+    if (rankings) {
+      const rankingLists = [
+        rankings.topScorers,
+        rankings.topAssists,
+        rankings.mostGamesScored,
+        rankings.leastPlayTime,
+        rankings.topRedCards,
+        rankings.topYellowCards,
+      ];
+      rankingLists.forEach(list => {
+        list?.forEach((p: { player?: { id?: number } }) => {
+          if (p.player?.id) rankingsPlayerIds.add(p.player.id);
+        });
+      });
+    }
+    const rankingsKoreanNames = rankingsPlayerIds.size > 0
+      ? await getPlayersKoreanNames(Array.from(rankingsPlayerIds))
+      : {};
+
     // 클라이언트 컴포넌트에 데이터 전달
     return (
       <PlayerPageClient
         playerId={playerId}
         initialTab={initialTab}
         initialData={initialData}
+        playerKoreanName={playerKoreanName}
+        rankingsKoreanNames={rankingsKoreanNames}
       />
     );
   } catch (error) {

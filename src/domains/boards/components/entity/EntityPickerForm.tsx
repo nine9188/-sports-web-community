@@ -6,7 +6,6 @@ import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage'
 import { ImageType } from '@/shared/types/image'
 import { type TeamMapping } from '@/domains/livescore/constants/teams'
 import { type Player } from '@/domains/livescore/actions/teams/squad'
-import { getPlayerKoreanName } from '@/domains/livescore/constants/players'
 import { ChevronLeft, Users, User } from 'lucide-react'
 import { Button, TabList, type TabItem } from '@/shared/components/ui'
 import Spinner from '@/shared/components/Spinner';
@@ -33,7 +32,7 @@ interface EntityPickerFormProps {
   isOpen: boolean
   onClose: () => void
   onSelectTeam: (team: TeamMapping, league: LeagueInfo) => void
-  onSelectPlayer: (player: Player, team: TeamMapping) => void
+  onSelectPlayer: (player: Player, team: TeamMapping, koreanName?: string) => void
 }
 
 type Tab = 'team' | 'player'
@@ -61,11 +60,13 @@ export function EntityPickerForm({
   } = useLeagueTeams(selectedLeagueId);
 
   const {
-    data: players = [],
+    data: playerData = { players: [], koreanNames: {} },
     isLoading: isLoadingPlayers,
     error: playersError,
     refetch: refetchPlayers
   } = useTeamPlayers(activeTab === 'player' ? selectedTeam?.id ?? null : null);
+
+  const { players, koreanNames } = playerData;
 
   // 에러 메시지 변환
   const teamError = teamsError ? '팀 목록을 불러올 수 없습니다' : null;
@@ -126,7 +127,8 @@ export function EntityPickerForm({
   // 선수 선택
   const handlePlayerSelect = (player: Player) => {
     if (selectedTeam) {
-      onSelectPlayer(player, selectedTeam)
+      const koreanName = koreanNames[player.id] || undefined
+      onSelectPlayer(player, selectedTeam, koreanName)
       handleClose()
     }
   }
@@ -303,8 +305,7 @@ export function EntityPickerForm({
               ) : (
                 <div className="grid grid-cols-3 gap-2">
                   {players.map(player => {
-                    const koreanName = getPlayerKoreanName(player.id)
-                    const displayName = koreanName || player.name
+                    const displayName = koreanNames[player.id] || player.name
 
                     return (
                       <button

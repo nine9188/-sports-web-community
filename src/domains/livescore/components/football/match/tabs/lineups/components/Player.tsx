@@ -3,7 +3,7 @@
 import React, { memo, useRef, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import styles from '../styles/formation.module.css';
-import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
+import { PlayerKoreanNames } from '../../../MatchPageClient';
 
 // API-Sports 이미지 URL 직접 생성
 const API_SPORTS_BASE_URL = 'https://media.api-sports.io/football';
@@ -63,6 +63,7 @@ interface PlayerProps {
   awayTeamData: TeamData;
   matchStatus?: string; // 경기 상태 (예: 'FT', 'LIVE', 'NS')
   playersRatings?: Record<number, number>; // 선수 ID별 평점 (예: { 123: 8.5, 456: 7.2 })
+  playerKoreanNames?: PlayerKoreanNames;
 }
 
 // SVG 내부에서 사용할 선수 이미지 컴포넌트
@@ -109,7 +110,7 @@ const SVGPlayerImage = memo(function SVGPlayerImage({ playerId, teamId, onImageL
   );
 });
 
-const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, awayTeamData, playersRatings }: PlayerProps) {
+const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, awayTeamData, playersRatings, playerKoreanNames = {} }: PlayerProps) {
   const textRefs = useRef<{[key: string]: SVGTextElement | null}>({});
   const rectRefs = useRef<{[key: string]: SVGRectElement | null}>({});
   const isMobileCalculated = useMediaQuery('(max-width: 768px)');
@@ -231,7 +232,7 @@ const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, away
       const numberKey = `number-${teamId}-${playerId}`;
       const nameKey = `name-${isHome ? 'home' : 'away'}-${teamId}-${playerId}`;
       
-      const koreanName = getPlayerKoreanName(player.id);
+      const koreanName = playerKoreanNames[player.id];
       const displayName = koreanName || player.name;
       
       // 평점 가져오기 - 평점 데이터가 있으면 무조건 표시

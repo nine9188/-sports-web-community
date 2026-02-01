@@ -54,6 +54,17 @@ export async function fetchMatchFullData(
     if (cached) {
       const cachedResponse = cached as MatchFullDataResponse;
 
+      // 캐시 데이터 완전성 검증: lineups, events, stats가 모두 있어야 캐시 사용
+      const isCacheComplete =
+        cachedResponse.lineups?.response &&
+        cachedResponse.events && cachedResponse.events.length > 0 &&
+        cachedResponse.stats && cachedResponse.stats.length > 0;
+
+      // 불완전한 캐시는 무시하고 API에서 새로 가져옴
+      if (!isCacheComplete) {
+        console.log(`[MatchData] 불완전한 캐시 무시: ${matchId}`);
+      } else {
+
       // standings는 실시간이므로 캐시에서 제외됨 → 필요하면 새로 가져옴
       if (options.fetchStandings && cachedResponse.match?.league?.id) {
         const season = (cachedResponse.matchData as Record<string, unknown>)?.league
@@ -105,11 +116,12 @@ export async function fetchMatchFullData(
         }
       }
 
-      return cachedResponse;
+        return cachedResponse;
+      }
     }
 
     // ============================================
-    // 캐시 미스 → API에서 가져오기
+    // 캐시 미스 또는 불완전한 캐시 → API에서 가져오기
     // ============================================
 
     // 기본 매치 정보는 항상 가져옴
@@ -301,7 +313,13 @@ export async function fetchMatchFullData(
     }
 
     // FT인 경우 L2 캐시에 저장 (standings 제외 — 실시간 데이터)
-    if (response.match?.status?.code === 'FT') {
+    // 단, 필수 데이터(lineups, events, stats)가 모두 있을 때만 캐시
+    const hasCompleteData =
+      response.lineups?.response &&
+      response.events && response.events.length > 0 &&
+      response.stats && response.stats.length > 0;
+
+    if (response.match?.status?.code === 'FT' && hasCompleteData) {
       const cacheData = { ...response };
       delete cacheData.standings;
       setMatchCache(numericMatchId, 'full', cacheData).catch(() => {});

@@ -59,11 +59,11 @@ const InjuriesTab = memo(function InjuriesTab({
 });
 
 const RankingsTab = memo(function RankingsTab({
-  playerId, rankingsData
+  playerId, rankingsData, playerKoreanNames = {}
 }: {
-  playerId: number, rankingsData: RankingsData
+  playerId: number, rankingsData: RankingsData, playerKoreanNames?: Record<number, string | null>
 }) {
-  return <PlayerRankings playerId={playerId} rankingsData={rankingsData} />;
+  return <PlayerRankings playerId={playerId} rankingsData={rankingsData} playerKoreanNames={playerKoreanNames} />;
 });
 
 // 오류 표시 컴포넌트
@@ -83,6 +83,7 @@ interface TabContentProps {
   playerId: string;
   currentTab: PlayerTabType;
   initialData?: Partial<PlayerFullDataResponse>;
+  rankingsKoreanNames?: Record<number, string | null>;
 }
 
 // ============================================
@@ -92,7 +93,8 @@ interface TabContentProps {
 export default function TabContent({
   playerId,
   currentTab,
-  initialData
+  initialData,
+  rankingsKoreanNames = {}
 }: TabContentProps) {
   // React Query 훅으로 데이터 관리
   const {
@@ -185,7 +187,7 @@ export default function TabContent({
         const rankings = rankingsData || {} as RankingsData;
         return (
           <Suspense fallback={<LoadingState message="순위 정보를 불러오는 중..." />}>
-            <RankingsTab playerId={playerIdNum} rankingsData={rankings} />
+            <RankingsTab playerId={playerIdNum} rankingsData={rankings} playerKoreanNames={rankingsKoreanNames} />
           </Suspense>
         );
       }
@@ -197,7 +199,7 @@ export default function TabContent({
           </div>
         );
     }
-  }, [currentTab, statsData, fixturesData, transfersData, trophiesData, injuriesData, rankingsData, playerIdNum, isLoading, error, tabNameMap]);
+  }, [currentTab, statsData, fixturesData, transfersData, trophiesData, injuriesData, rankingsData, playerIdNum, isLoading, error, tabNameMap, rankingsKoreanNames]);
 
   return renderTabContent;
 }

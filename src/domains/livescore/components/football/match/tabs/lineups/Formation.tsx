@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import Field from './components/Field';
 import Player from './components/Player';
+import { PlayerKoreanNames } from '../../MatchPageClient';
 
 // 미디어 쿼리 커스텀 훅
 function useMediaQuery(query: string) {
@@ -60,9 +61,10 @@ interface FormationProps {
   awayTeamData: TeamData;
   matchStatus?: string;
   playersRatings?: Record<number, number>;
+  playerKoreanNames?: PlayerKoreanNames;
 }
 
-export default function Formation({ homeTeamData, awayTeamData, matchStatus, playersRatings }: FormationProps) {
+export default function Formation({ homeTeamData, awayTeamData, matchStatus, playersRatings, playerKoreanNames = {} }: FormationProps) {
   const isMobile = useMediaQuery('(max-width: 768px)');
   
   // 페이지 전체 새로고침 핸들러
@@ -135,6 +137,7 @@ export default function Formation({ homeTeamData, awayTeamData, matchStatus, pla
           awayTeamData={processedAwayTeam}
           matchStatus={matchStatus}
           playersRatings={playersRatings}
+          playerKoreanNames={playerKoreanNames}
         />
       </Field>
     </motion.div>

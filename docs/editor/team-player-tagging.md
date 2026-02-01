@@ -169,12 +169,16 @@ interface Player {
 export const ALLOWED_LEAGUE_IDS = [39, 140, 78, 135, 61, ...]
 ```
 
-**선수 한글 이름:** `src/domains/livescore/constants/players/index.ts`
+**선수 한글 이름:** `src/domains/livescore/actions/player/getKoreanName.ts` (DB 기반)
 ```typescript
-import { getPlayerById } from '@/domains/livescore/constants/players'
+import { getPlayerKoreanName, getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName'
 
-const player = getPlayerById(306) // 손흥민
-// { id: 306, name_ko: '손흥민', name_en: 'Son Heung-Min', team_id: 47, ... }
+// 단일 조회
+const koreanName = await getPlayerKoreanName(306) // '손흥민'
+
+// 일괄 조회
+const koreanNames = await getPlayersKoreanNames([306, 307, 308])
+// { 306: '손흥민', 307: '이강인', 308: null }
 ```
 
 ### Phase 2: Tiptap 확장 (완료 ✅)

@@ -8,16 +8,17 @@ import { Container, ContainerContent, TabList } from '@/shared/components/ui';
 import { EmptyState } from '@/domains/livescore/components/common';
 import { RankingsData, PlayerRanking } from '@/domains/livescore/types/player';
 import { getTeamById } from '@/domains/livescore/constants/teams';
-import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 
 interface PlayerRankingsProps {
   playerId?: number;
   rankingsData?: RankingsData;
+  playerKoreanNames?: Record<number, string | null>;
 }
 
-export default function PlayerRankings({ 
-  playerId, 
-  rankingsData = {}
+export default function PlayerRankings({
+  playerId,
+  rankingsData = {},
+  playerKoreanNames = {}
 }: PlayerRankingsProps) {
   const router = useRouter();
   const [rankingType, setRankingType] = useState('topScorers');
@@ -114,7 +115,7 @@ export default function PlayerRankings({
                 </div>
                 <div className="text-center">
                   <div className="font-bold text-sm text-gray-900 dark:text-[#F0F0F0]">
-                    {getPlayerKoreanName(player.player.id) || player.player.name}
+                    {playerKoreanNames[player.player.id] || player.player.name}
                   </div>
                   <div className="flex items-center justify-center gap-1 mt-1">
                     <div className="relative w-4 h-4">
@@ -191,7 +192,7 @@ export default function PlayerRankings({
                           />
                         </div>
                         <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
-                          {getPlayerKoreanName(player.player.id) || player.player.name}
+                          {playerKoreanNames[player.player.id] || player.player.name}
                         </span>
                       </div>
                     </td>

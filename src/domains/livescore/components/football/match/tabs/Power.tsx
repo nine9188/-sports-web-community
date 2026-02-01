@@ -7,8 +7,8 @@ import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { Team } from '@/domains/livescore/types/match';
 import { StandingsData } from '@/domains/livescore/types/match';
-import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
+import { PlayerKoreanNames } from '../MatchPageClient';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 
@@ -16,6 +16,7 @@ interface PowerProps {
   matchId: string;
   homeTeam: Team;
   awayTeam: Team;
+  playerKoreanNames?: PlayerKoreanNames;
   data: {
     teamA: number;
     teamB: number;
@@ -46,7 +47,7 @@ interface PowerProps {
   };
 }
 
-export default function Power({ data }: PowerProps) {
+export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
   // 팀 메타 추출 (로고/이름)
   const findTeamMeta = (id: number) => {
     const item = data.h2h.items.find((m) => (m.teams.home?.id === id) || (m.teams.away?.id === id))
@@ -576,7 +577,7 @@ export default function Power({ data }: PowerProps) {
           {/* 득점왕 목록 */}
           <div className="space-y-1.5 mb-4">
             {data.topPlayers.teamA.topScorers.map((playerA, index) => {
-              const playerAKoreanName = getPlayerKoreanName(playerA.playerId);
+              const playerAKoreanName = playerKoreanNames[playerA.playerId];
               const playerADisplayName = playerAKoreanName || playerA?.name || `#${playerA?.playerId}`;
 
               return (
@@ -605,7 +606,7 @@ export default function Power({ data }: PowerProps) {
           {/* 도움왕 목록 */}
           <div className="space-y-1.5">
             {data.topPlayers.teamA.topAssist.map((playerA, index) => {
-              const playerAKoreanName = getPlayerKoreanName(playerA.playerId);
+              const playerAKoreanName = playerKoreanNames[playerA.playerId];
               const playerADisplayName = playerAKoreanName || playerA?.name || `#${playerA?.playerId}`;
 
               return (
@@ -652,7 +653,7 @@ export default function Power({ data }: PowerProps) {
           {/* 득점왕 목록 */}
           <div className="space-y-1.5 mb-4">
             {data.topPlayers.teamB.topScorers.map((playerB, index) => {
-              const playerBKoreanName = getPlayerKoreanName(playerB.playerId);
+              const playerBKoreanName = playerKoreanNames[playerB.playerId];
               const playerBDisplayName = playerBKoreanName || playerB?.name || `#${playerB?.playerId}`;
 
               return (
@@ -681,7 +682,7 @@ export default function Power({ data }: PowerProps) {
           {/* 도움왕 목록 */}
           <div className="space-y-1.5">
             {data.topPlayers.teamB.topAssist.map((playerB, index) => {
-              const playerBKoreanName = getPlayerKoreanName(playerB.playerId);
+              const playerBKoreanName = playerKoreanNames[playerB.playerId];
               const playerBDisplayName = playerBKoreanName || playerB?.name || `#${playerB?.playerId}`;
 
               return (
@@ -733,7 +734,7 @@ export default function Power({ data }: PowerProps) {
               {/* 득점왕 목록 */}
               <div className="space-y-1.5 mb-4">
                 {data.topPlayers.teamA.topScorers.map((playerA, index) => {
-                  const playerAKoreanName = getPlayerKoreanName(playerA.playerId);
+                  const playerAKoreanName = playerKoreanNames[playerA.playerId];
                   const playerADisplayName = playerAKoreanName || playerA?.name || `#${playerA?.playerId}`;
 
                   return (
@@ -762,7 +763,7 @@ export default function Power({ data }: PowerProps) {
               {/* 도움왕 목록 */}
               <div className="space-y-1.5">
                 {data.topPlayers.teamA.topAssist.map((playerA, index) => {
-                  const playerAKoreanName = getPlayerKoreanName(playerA.playerId);
+                  const playerAKoreanName = playerKoreanNames[playerA.playerId];
                   const playerADisplayName = playerAKoreanName || playerA?.name || `#${playerA?.playerId}`;
 
                   return (
@@ -809,7 +810,7 @@ export default function Power({ data }: PowerProps) {
               {/* 득점왕 목록 */}
               <div className="space-y-1.5 mb-4">
                 {data.topPlayers.teamB.topScorers.map((playerB, index) => {
-                  const playerBKoreanName = getPlayerKoreanName(playerB.playerId);
+                  const playerBKoreanName = playerKoreanNames[playerB.playerId];
                   const playerBDisplayName = playerBKoreanName || playerB?.name || `#${playerB?.playerId}`;
 
                   return (
@@ -838,7 +839,7 @@ export default function Power({ data }: PowerProps) {
               {/* 도움왕 목록 */}
               <div className="space-y-1.5">
                 {data.topPlayers.teamB.topAssist.map((playerB, index) => {
-                  const playerBKoreanName = getPlayerKoreanName(playerB.playerId);
+                  const playerBKoreanName = playerKoreanNames[playerB.playerId];
                   const playerBDisplayName = playerBKoreanName || playerB?.name || `#${playerB?.playerId}`;
 
                   return (

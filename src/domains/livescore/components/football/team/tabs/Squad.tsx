@@ -6,8 +6,8 @@ import { PlayerStats } from '@/domains/livescore/actions/teams/player-stats';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
-import { getPlayerKoreanName } from '@/domains/livescore/constants/players';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui/container';
+import { PlayerKoreanNames } from '../TeamPageClient';
 
 // 상수 정의 - 감독을 최상단으로 노출, 그 다음 골키퍼, 공격수, 미드필더, 수비수 순
 const POSITION_ORDER = ['Coach', 'Goalkeeper', 'Attacker', 'Midfielder', 'Defender'];
@@ -49,9 +49,10 @@ interface SquadProps {
   initialStats?: Record<number, PlayerStats>;
   isLoading?: boolean;
   error?: string | null;
+  playerKoreanNames?: PlayerKoreanNames;
 }
 
-export default function Squad({ initialSquad, initialStats, isLoading: externalLoading, error: externalError }: SquadProps) {
+export default function Squad({ initialSquad, initialStats, isLoading: externalLoading, error: externalError, playerKoreanNames = {} }: SquadProps) {
   const router = useRouter();
 
   // 데이터 병합 처리를 useMemo를 사용하여 최적화
@@ -96,8 +97,8 @@ export default function Squad({ initialSquad, initialStats, isLoading: externalL
     // 각 그룹 내에서 이름순 정렬
     Object.keys(grouped).forEach(position => {
       grouped[position].sort((a, b) => {
-        const nameA = getPlayerKoreanName(a.id) || a.name;
-        const nameB = getPlayerKoreanName(b.id) || b.name;
+        const nameA = playerKoreanNames[a.id] || a.name;
+        const nameB = playerKoreanNames[b.id] || b.name;
         return nameA.localeCompare(nameB);
       });
     });
@@ -194,7 +195,7 @@ export default function Squad({ initialSquad, initialStats, isLoading: externalL
                           </td>
                           <td className="px-2 sm:px-4 md:px-6 py-2">
                             <div className="font-medium text-xs text-gray-900 dark:text-[#F0F0F0] max-w-[115px] md:max-w-none truncate md:whitespace-normal">
-                              {getPlayerKoreanName(member.id) || member.name}
+                              {playerKoreanNames[member.id] || member.name}
                             </div>
                           </td>
                           <td className="px-1 sm:px-2 md:px-6 py-2 text-xs text-center whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">

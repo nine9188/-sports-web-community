@@ -1,7 +1,6 @@
 'use server'
 
 import { getSupabaseServer } from '@/shared/lib/supabase/server'
-import { getPlayerKoreanName } from '@/domains/livescore/constants/players'
 import { getTeamById } from '@/domains/livescore/constants/teams'
 
 export interface PlayerSearchResult {
@@ -51,6 +50,7 @@ export async function searchPlayers(options: PlayerSearchOptions): Promise<{
         player_id,
         name,
         display_name,
+        korean_name,
         team_id,
         team_name,
         position,
@@ -101,15 +101,13 @@ export async function searchPlayers(options: PlayerSearchOptions): Promise<{
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const playersWithKorean = (players || []).map((player: any) => {
-      // 한국어 이름 매핑
-      const koreanName = getPlayerKoreanName(player.player_id)
       // 팀 한국어 이름 매핑
       const teamMapping = getTeamById(player.team_id)
 
       return {
         ...player,
-        korean_name: koreanName,
-        display_name: koreanName || player.display_name,
+        // korean_name은 이미 DB에서 가져옴
+        display_name: player.korean_name || player.display_name,
         team_name_ko: teamMapping?.name_ko,
         team_logo_url: player.team_logo_url || `https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/${player.team_id}.png`
       }
@@ -176,6 +174,7 @@ export async function getPopularPlayers(limit: number = 12): Promise<PlayerSearc
         player_id,
         name,
         display_name,
+        korean_name,
         team_id,
         team_name,
         position,
@@ -194,13 +193,12 @@ export async function getPopularPlayers(limit: number = 12): Promise<PlayerSearc
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (players || []).map((player: any) => {
-      const koreanName = getPlayerKoreanName(player.player_id)
       const teamMapping = getTeamById(player.team_id)
 
       return {
         ...player,
-        korean_name: koreanName,
-        display_name: koreanName || player.display_name,
+        // korean_name은 이미 DB에서 가져옴
+        display_name: player.korean_name || player.display_name,
         team_name_ko: teamMapping?.name_ko,
         team_logo_url: `https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/${player.team_id}.png`
       }

@@ -70,12 +70,16 @@ interface PlayerPageClientProps {
   playerId: string;
   initialTab: PlayerTabType;
   initialData: PlayerFullDataResponse;
+  playerKoreanName?: string | null;
+  rankingsKoreanNames?: Record<number, string | null>;
 }
 
 export default function PlayerPageClient({
   playerId,
   initialTab,
   initialData,
+  playerKoreanName,
+  rankingsKoreanNames = {},
 }: PlayerPageClientProps) {
   // 클라이언트에서 탭 상태 관리
   const [currentTab, setCurrentTab] = useState<PlayerTabType>(initialTab);
@@ -136,6 +140,7 @@ export default function PlayerPageClient({
       <PlayerHeader
         playerId={playerId}
         initialData={initialData.playerData}
+        playerKoreanName={playerKoreanName}
       />
 
       {/* 탭 네비게이션 - onTabChange 콜백 전달 */}
@@ -150,6 +155,7 @@ export default function PlayerPageClient({
           playerId={playerId}
           currentTab={currentTab}
           initialData={initialData}
+          rankingsKoreanNames={rankingsKoreanNames}
         />
       </Suspense>
     </>
