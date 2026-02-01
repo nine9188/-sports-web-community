@@ -66,13 +66,23 @@ const nextConfig = {
       // webpack의 resolve.fallback을 Turbopack으로 마이그레이션
     },
   },
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
       net: false,
       tls: false,
     };
+
+    // 클라이언트 빌드에서 Next.js 기본 폴리필 제외 (최신 브라우저 타겟)
+    if (!isServer) {
+      // polyfill-module.js를 빈 모듈로 대체
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        'next/dist/build/polyfills/polyfill-module.js': false,
+      };
+    }
+
     return config;
   },
 };
