@@ -29,6 +29,15 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko" className={inter.className} suppressHydrationWarning>
+      <head>
+        {/* LCP 최적화: 로고 이미지 미리 로드 */}
+        <link
+          rel="preload"
+          href="/_next/image?url=%2Flogo%2F4590football-logo.png&w=640&q=75"
+          as="image"
+          fetchPriority="high"
+        />
+      </head>
       <body className="w-full h-full overflow-x-hidden">
         <RootLayoutProvider>
           {children}
