@@ -3,6 +3,7 @@ import BoardCollectionWidgetClient from './BoardCollectionWidgetClient';
 import { getBoardSettings, getBoardsWithPosts, getPostsMetadata } from './actions';
 import { formatBoardPosts } from './utils';
 import { BoardCollectionData } from './types';
+import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 
 /**
  * 게시판 모음 데이터를 가져오는 함수 (병렬 fetch용)
@@ -52,13 +53,32 @@ interface BoardCollectionWidgetProps {
  * 설정된 게시판들의 최신 게시글을 보여줍니다.
  * - 각 게시판당 최대 20개 게시글
  * - 댓글 수, 팀/리그 로고 포함
+ * - LCP 최적화: 첫 번째 게시판이 비어있으면 서버에서 빈 상태 메시지 렌더링
  */
 export default async function BoardCollectionWidget({ initialData }: BoardCollectionWidgetProps = {}) {
   // initialData가 제공되면 바로 사용, 없으면 자체 fetch
   const boardsData = initialData !== undefined ? initialData : await fetchBoardCollectionData();
 
+  // 데이터가 없으면 렌더링 안 함
   if (!boardsData || boardsData.length === 0) {
     return null;
+  }
+
+  // LCP 최적화: 첫 번째 게시판에 게시글이 있는지 체크
+  const firstBoardHasPosts = boardsData[0]?.recentPosts?.length > 0;
+
+  // 첫 번째 게시판이 비어있으면 서버에서 빈 상태 UI 렌더링 (LCP 최적화)
+  if (!firstBoardHasPosts) {
+    return (
+      <Container className="bg-white dark:bg-[#1D1D1D]">
+        <ContainerHeader className="justify-between">
+          <ContainerTitle>게시판</ContainerTitle>
+        </ContainerHeader>
+        <div className="flex justify-center items-center h-32 text-center">
+          <p className="text-gray-500 dark:text-gray-400">아직 게시글이 없습니다.</p>
+        </div>
+      </Container>
+    );
   }
 
   return <BoardCollectionWidgetClient boardsData={boardsData} />;

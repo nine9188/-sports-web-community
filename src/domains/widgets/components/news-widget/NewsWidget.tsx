@@ -1,6 +1,7 @@
 import { getAllNewsPosts } from './actions';
 import NewsWidgetClient from './NewsWidgetClient';
 import { NewsWidgetProps, NewsItem } from './types';
+import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 
 /** 기본 뉴스 게시판 */
 const DEFAULT_BOARD_SLUGS = ['foreign-news', 'domestic-news'];
@@ -22,19 +23,34 @@ interface NewsWidgetServerProps extends NewsWidgetProps {
  * 뉴스 위젯 (서버 컴포넌트)
  *
  * 지정된 게시판들에서 최신 뉴스를 가져와 표시합니다.
+ * LCP 최적화: 뉴스가 없으면 서버에서 빈 상태 메시지 렌더링
  */
 export default async function NewsWidget({ boardSlug, initialData }: NewsWidgetServerProps = {}) {
-  // initialData가 제공되면 바로 사용
+  // initialData가 제공되면 바로 사용, 없으면 자체 fetch
+  let news: NewsItem[];
+
   if (initialData) {
-    return <NewsWidgetClient initialNews={initialData} />;
+    news = initialData;
+  } else {
+    const slugs = boardSlug
+      ? (Array.isArray(boardSlug) ? boardSlug : [boardSlug])
+      : DEFAULT_BOARD_SLUGS;
+    news = await getAllNewsPosts(slugs);
   }
 
-  // 없으면 자체 fetch
-  const slugs = boardSlug
-    ? (Array.isArray(boardSlug) ? boardSlug : [boardSlug])
-    : DEFAULT_BOARD_SLUGS;
-
-  const news = await getAllNewsPosts(slugs);
+  // LCP 최적화: 뉴스가 없으면 서버에서 빈 상태 UI 렌더링
+  if (!news || news.length === 0) {
+    return (
+      <Container className="bg-white dark:bg-[#1D1D1D]">
+        <ContainerHeader>
+          <ContainerTitle>뉴스</ContainerTitle>
+        </ContainerHeader>
+        <div className="flex justify-center items-center h-32 text-center">
+          <p className="text-gray-500 dark:text-gray-400">아직 게시글이 없습니다.</p>
+        </div>
+      </Container>
+    );
+  }
 
   return <NewsWidgetClient initialNews={news} />;
 }
