@@ -1,15 +1,21 @@
 'use client';
 
 import React, { useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/shared/context/AuthContext';
 import HeaderClient from '@/domains/layout/components/HeaderClient';
 import Footer from '@/shared/components/Footer';
-import Sidebar from '@/domains/sidebar/components/Sidebar';
-import ProfileSidebar from '@/domains/sidebar/components/ProfileSidebar';
-import { UniversalChatbot } from '@/domains/chatbot/components/UniversalChatbot';
 import { HeaderUserData, FullUserDataWithSession } from '@/shared/types/user';
 import { Board } from '@/domains/layout/types/board';
+
+// 사이드바 컴포넌트들을 lazy load (모바일에서는 숨겨져있으므로)
+const Sidebar = dynamic(() => import('@/domains/sidebar/components/Sidebar'), { ssr: true });
+const ProfileSidebar = dynamic(() => import('@/domains/sidebar/components/ProfileSidebar'), { ssr: true });
+const UniversalChatbot = dynamic(
+  () => import('@/domains/chatbot/components/UniversalChatbot').then(mod => ({ default: mod.UniversalChatbot })),
+  { ssr: false }
+);
 
 // AuthStateManager를 React.memo로 최적화
 const AuthStateManager = React.memo(function AuthStateManager({
