@@ -3,11 +3,10 @@
  *
  * - CSS 미디어 쿼리로 모바일/데스크톱 분기 (하이드레이션 불일치 방지)
  * - 공통 wrapper (header, footer) 관리
+ * - 서버 컴포넌트로 LCP 최적화 (초기 HTML에 콘텐츠 포함)
  */
 
-'use client';
-
-import React, { useDeferredValue } from 'react';
+import React from 'react';
 import { PostListProps } from './types';
 import { PostListSkeleton } from './components/shared/PostListSkeleton';
 import { PostListEmpty } from './components/shared/PostListEmpty';
@@ -40,8 +39,6 @@ export default function PostList({
   currentBoardId,
   variant = 'text',
 }: PostListProps) {
-  // React 18 동시성 기능: loading 상태를 지연시켜 깜빡임 방지
-  const deferredLoading = useDeferredValue(loading);
 
   // maxHeight 처리: sm: prefix가 있으면 데스크톱에서만 적용
   const getMaxHeightStyle = () => {
@@ -76,7 +73,7 @@ export default function PostList({
         className={`h-full w-full overflow-y-auto overflow-x-hidden ${maxHeightClass}`}
         style={getMaxHeightStyle()}
       >
-        {deferredLoading ? (
+        {loading ? (
           <PostListSkeleton />
         ) : posts.length === 0 ? (
           <PostListEmpty message={emptyMessage} />
