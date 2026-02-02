@@ -1,10 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Clock } from 'lucide-react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { X, Clock, Circle } from 'lucide-react';
 import { Button } from '@/shared/components/ui';
-import { faFutbol } from '@fortawesome/free-solid-svg-icons';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { fetchMultiDayMatches } from '@/domains/livescore/actions/footballApi';
@@ -60,7 +58,7 @@ export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModal
         {/* 헤더 */}
         <div className="flex items-center justify-between p-4 border-b border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
           <div className="flex items-center gap-2">
-            <FontAwesomeIcon icon={faFutbol} className="h-4 w-4 text-green-600" />
+            <Circle className="h-4 w-4 text-green-600 fill-green-600" />
             <div>
               <h2 className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0]">라이브스코어</h2>
               <p className="text-xs text-gray-500 dark:text-gray-400">최근 3일간 주요 경기</p>

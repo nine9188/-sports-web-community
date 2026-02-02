@@ -3,9 +3,7 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faBars } from '@fortawesome/free-solid-svg-icons';
-import { Search, ArrowLeft } from 'lucide-react';
+import { Search, ArrowLeft, User, Menu } from 'lucide-react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import BoardNavigationClient from './BoardNavigationClient';
 import { ThemeToggle } from '@/shared/components/ThemeToggle';
@@ -243,7 +241,7 @@ export default function HeaderClient({
               className="rounded-md h-10 w-10"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
-              <FontAwesomeIcon icon={faUser} className="h-5 w-5" />
+              <User className="h-5 w-5" />
             </Button>
           )}
         </div>
@@ -292,7 +290,7 @@ export default function HeaderClient({
                   onTouchEnd={handleMobileMenuTouch}
                   style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
-                  <FontAwesomeIcon icon={faBars} className="h-5 w-5" />
+                  <Menu className="h-5 w-5" />
                 </Button>
               </div>
             </div>
@@ -372,7 +370,7 @@ export default function HeaderClient({
                   onTouchEnd={handleMobileMenuTouch}
                   style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
-                  <FontAwesomeIcon icon={faBars} className="h-5 w-5" />
+                  <Menu className="h-5 w-5" />
                 </Button>
               </div>
             </div>

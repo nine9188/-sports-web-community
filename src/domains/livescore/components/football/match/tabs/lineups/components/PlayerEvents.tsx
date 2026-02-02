@@ -1,8 +1,6 @@
 'use client';
 
-import { FaFutbol, FaShoePrints } from 'react-icons/fa';
-import { BsCardText, BsCardHeading } from 'react-icons/bs';
-import { IoMdSwap } from 'react-icons/io';
+import { Circle, Footprints, ArrowLeftRight } from 'lucide-react';
 import { MatchEvent } from '@/domains/livescore/types/match';
 
 interface Player {
@@ -54,7 +52,7 @@ export default function PlayerEvents({ player, events }: PlayerEventsProps) {
             // 골
             return (
               <span key={`goal-${index}`} className="inline-flex items-center text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 rounded px-1">
-                <FaFutbol className="text-green-600 dark:text-green-500 mr-0.5" />
+                <Circle className="h-3 w-3 text-green-600 dark:text-green-500 fill-green-600 dark:fill-green-500 mr-0.5" />
                 {timeStr}
               </span>
             );
@@ -62,7 +60,7 @@ export default function PlayerEvents({ player, events }: PlayerEventsProps) {
             // 어시스트
             return (
               <span key={`assist-${index}`} className="inline-flex items-center text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 rounded px-1">
-                <FaShoePrints className="text-blue-600 dark:text-blue-500 mr-0.5" />
+                <Footprints className="h-3 w-3 text-blue-600 dark:text-blue-500 mr-0.5" />
                 {timeStr}
               </span>
             );
@@ -73,7 +71,7 @@ export default function PlayerEvents({ player, events }: PlayerEventsProps) {
               // 옐로카드
               return (
                 <span key={`yellow-${index}`} className="inline-flex items-center text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 rounded px-1">
-                  <BsCardText className="text-yellow-500 dark:text-yellow-500 mr-0.5" />
+                  <span className="inline-block w-2.5 h-3.5 bg-yellow-400 rounded-sm mr-0.5" />
                   {timeStr}
                 </span>
               );
@@ -81,7 +79,7 @@ export default function PlayerEvents({ player, events }: PlayerEventsProps) {
               // 레드카드
               return (
                 <span key={`red-${index}`} className="inline-flex items-center text-xs bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 rounded px-1">
-                  <BsCardHeading className="text-red-600 dark:text-red-500 mr-0.5" />
+                  <span className="inline-block w-2.5 h-3.5 bg-red-500 rounded-sm mr-0.5" />
                   {timeStr}
                 </span>
               );
@@ -117,14 +115,14 @@ export default function PlayerEvents({ player, events }: PlayerEventsProps) {
           if (isIn) {
             return (
               <span key={`in-${index}`} className="inline-flex items-center text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 rounded px-1">
-                <IoMdSwap className="text-green-600 dark:text-green-500 mr-0.5" />
+                <ArrowLeftRight className="h-3 w-3 text-green-600 dark:text-green-500 mr-0.5" />
                 IN {timeStr}
               </span>
             );
           } else if (isOut) {
             return (
               <span key={`out-${index}`} className="inline-flex items-center text-xs bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 rounded px-1">
-                <IoMdSwap className="text-red-600 dark:text-red-500 mr-0.5 rotate-180" />
+                <ArrowLeftRight className="h-3 w-3 text-red-600 dark:text-red-500 mr-0.5 rotate-180" />
                 OUT {timeStr}
               </span>
             );

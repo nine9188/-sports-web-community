@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { FaMedal } from 'react-icons/fa';
+import { Medal } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Container, ContainerContent, TabList } from '@/shared/components/ui';
 import { EmptyState } from '@/domains/livescore/components/common';
@@ -96,8 +96,8 @@ export default function PlayerRankings({
           >
             {player ? (
               <>
-                <FaMedal 
-                  className={`absolute top-2 left-2 text-2xl drop-shadow-md ${getMedalColor(index)}`} 
+                <Medal
+                  className={`absolute top-2 left-2 h-6 w-6 drop-shadow-md ${getMedalColor(index)}`}
                 />
                 <div className="w-16 h-16 relative mb-2">
                   <Image

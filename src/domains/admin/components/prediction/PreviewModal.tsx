@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import {
   Dialog,
   DialogContent,
@@ -11,7 +12,19 @@ import {
 import Spinner from '@/shared/components/Spinner';
 import { InlineEmpty } from '@/shared/components/StateComponents';
 import type { UpcomingMatch, PredictionApiData } from './types';
-import { PredictionPreviewContent } from './PredictionPreviewContent';
+
+// Dynamic import로 Recharts 번들을 lazy load
+const PredictionPreviewContent = dynamic(
+  () => import('./PredictionPreviewContent').then(mod => ({ default: mod.PredictionPreviewContent })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center py-12">
+        <Spinner size="lg" />
+      </div>
+    ),
+  }
+);
 
 interface PreviewModalProps {
   match: UpcomingMatch | null;

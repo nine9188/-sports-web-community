@@ -2,8 +2,7 @@
 
 import { useCallback, useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faSignOutAlt, faChevronDown, faPenToSquare, faComment, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { User, LogOut, ChevronDown, SquarePen, MessageCircle, ChevronRight } from 'lucide-react';
 import { useIcon } from '@/shared/context/IconContext';
 import UserIcon from '@/shared/components/UserIcon';
 import { HeaderUserData } from '@/shared/types/user';
@@ -84,7 +83,7 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
             />
           </div>
           <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">{userData.nickname || '사용자'}</span>
-          <FontAwesomeIcon icon={faChevronDown} className="h-3 w-3 text-gray-900 dark:text-[#F0F0F0]" />
+          <ChevronDown className="h-3 w-3 text-gray-900 dark:text-[#F0F0F0]" />
         </Button>
 
         {/* 드롭다운 메뉴 */}
@@ -120,12 +119,12 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
                 onClick={() => setIsDropdownOpen(false)}
               >
                 <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-[#333333] flex items-center justify-center">
-                  <FontAwesomeIcon icon={faPenToSquare} className="h-4 w-4 text-gray-700 dark:text-gray-300" />
+                  <SquarePen className="h-4 w-4 text-gray-700 dark:text-gray-300" />
                 </div>
                 <span className="flex-1 ml-3 text-left text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
                   글쓰기
                 </span>
-                <FontAwesomeIcon icon={faChevronRight} className="h-4 w-4 text-gray-400" />
+                <ChevronRight className="h-4 w-4 text-gray-400" />
               </Link>
 
               {/* 프로필 설정 */}
@@ -135,12 +134,12 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
                 onClick={() => setIsDropdownOpen(false)}
               >
                 <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-[#333333] flex items-center justify-center">
-                  <FontAwesomeIcon icon={faUser} className="h-4 w-4 text-gray-700 dark:text-gray-300" />
+                  <User className="h-4 w-4 text-gray-700 dark:text-gray-300" />
                 </div>
                 <span className="flex-1 ml-3 text-left text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
                   프로필 설정
                 </span>
-                <FontAwesomeIcon icon={faChevronRight} className="h-4 w-4 text-gray-400" />
+                <ChevronRight className="h-4 w-4 text-gray-400" />
               </Link>
 
               {/* 문의하기 */}
@@ -149,12 +148,12 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
                 className="flex items-center w-full px-4 py-2.5 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
               >
                 <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-[#333333] flex items-center justify-center">
-                  <FontAwesomeIcon icon={faComment} className="h-4 w-4 text-gray-700 dark:text-gray-300" />
+                  <MessageCircle className="h-4 w-4 text-gray-700 dark:text-gray-300" />
                 </div>
                 <span className="flex-1 ml-3 text-left text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
                   문의하기
                 </span>
-                <FontAwesomeIcon icon={faChevronRight} className="h-4 w-4 text-gray-400" />
+                <ChevronRight className="h-4 w-4 text-gray-400" />
               </button>
 
               {/* 로그아웃 */}
@@ -164,12 +163,12 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
                 className="flex items-center w-full px-4 py-2.5 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
               >
                 <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-[#333333] flex items-center justify-center">
-                  <FontAwesomeIcon icon={faSignOutAlt} className="h-4 w-4 text-gray-700 dark:text-gray-300" />
+                  <LogOut className="h-4 w-4 text-gray-700 dark:text-gray-300" />
                 </div>
                 <span className="flex-1 ml-3 text-left text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
                   로그아웃
                 </span>
-                <FontAwesomeIcon icon={faChevronRight} className="h-4 w-4 text-gray-400" />
+                <ChevronRight className="h-4 w-4 text-gray-400" />
               </button>
             </div>
           </div>
