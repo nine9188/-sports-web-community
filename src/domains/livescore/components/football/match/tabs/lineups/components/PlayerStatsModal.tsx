@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { fetchCachedPlayerStats, PlayerStatsResponse } from '@/domains/livescore/actions/match/playerStats';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
@@ -44,30 +44,15 @@ export default function PlayerStatsModal({
   matchId,
   playerInfo
 }: PlayerStatsModalProps) {
-  const [playerStats, setPlayerStats] = useState<PlayerStatsResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!isOpen || !matchId || !playerId) return;
-
-    const loadPlayerStats = async () => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const data = await fetchCachedPlayerStats(matchId, playerId);
-        setPlayerStats(data);
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : '알 수 없는 오류';
-        setError(`선수 통계를 가져오는 중 오류가 발생했습니다: ${errorMessage}`);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadPlayerStats();
-  }, [isOpen, playerId, matchId, playerInfo.name]);
+  // React Query로 클라이언트 캐시 적용 - 같은 선수는 재요청 안함
+  const { data: playerStats, isLoading, error } = useQuery({
+    queryKey: ['playerStats', matchId, playerId],
+    queryFn: () => fetchCachedPlayerStats(matchId, playerId),
+    enabled: isOpen && !!matchId && !!playerId,
+    staleTime: 1000 * 60 * 10, // 10분간 캐시 유지
+    gcTime: 1000 * 60 * 30, // 30분간 가비지 컬렉션 방지
+    refetchOnWindowFocus: false,
+  });
 
   const stats = playerStats?.response?.statistics?.[0] || {} as {
     team?: { id?: number; name?: string };
@@ -108,7 +93,9 @@ export default function PlayerStatsModal({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <p className="text-gray-900 dark:text-[#F0F0F0] mb-4">{error}</p>
+              <p className="text-gray-900 dark:text-[#F0F0F0] mb-4">
+                {error instanceof Error ? error.message : '선수 통계를 가져오는 중 오류가 발생했습니다'}
+              </p>
               <Button
                 variant="secondary"
                 onClick={onClose}
