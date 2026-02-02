@@ -3,6 +3,9 @@ import { AllPostsWidget, NewsWidget, BoardCollectionWidget, BoardQuickLinksWidge
 import LiveScoreWidgetV2 from '@/domains/widgets/components/live-score-widget/index';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 
+// ISR: 60초마다 페이지 재생성 (캐시된 HTML 즉시 제공)
+export const revalidate = 60;
+
 export async function generateMetadata() {
   return buildMetadata({
     title: '4590 Football - 실시간 축구 스코어, 경기 일정, 팀·선수 정보, 축구 커뮤니티',
