@@ -111,28 +111,9 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
 
   const allExpanded = leagues.length > 0 && expandedLeagues.size === leagues.length;
 
-  // 경기가 없을 때
+  // 경기가 없을 때 - 렌더링하지 않음
   if (leagues.length === 0) {
-    return (
-      <Container className="bg-white dark:bg-[#1D1D1D]">
-        {/* 위젯 헤더 */}
-        <ContainerHeader className="justify-between">
-          <ContainerTitle>오늘·내일 경기</ContainerTitle>
-          <Link
-            href="/livescore/football"
-            className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-          >
-            전체 경기
-          </Link>
-        </ContainerHeader>
-        {/* Empty State */}
-        <div className="h-14 flex items-center justify-center px-4 text-center">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            예정된 경기가 없습니다
-          </p>
-        </div>
-      </Container>
-    );
+    return null;
   }
 
   return (

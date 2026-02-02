@@ -132,18 +132,9 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
   const isImageLoading = (id: string) => imageStates[id] === 'loading';
   const hasImageError = (id: string) => imageStates[id] === 'error' || imageStates[id] === 'timeout';
 
-  // 뉴스 없음 상태
+  // 뉴스 없음 - 렌더링하지 않음
   if (!news.length) {
-    return (
-      <Container className="bg-white dark:bg-[#1D1D1D]">
-        <ContainerHeader>
-          <ContainerTitle>뉴스</ContainerTitle>
-        </ContainerHeader>
-        <div className="flex justify-center items-center h-32 text-center">
-          <p className="text-gray-500 dark:text-gray-400">아직 게시글이 없습니다.</p>
-        </div>
-      </Container>
-    );
+    return null;
   }
 
   return (

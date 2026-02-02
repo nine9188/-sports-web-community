@@ -28,6 +28,11 @@ export default async function AllPostsWidget({ initialData }: AllPostsWidgetProp
     // initialData가 제공되면 바로 사용, 없으면 자체 fetch
     const postsData = initialData ?? await fetchAllPostsData();
 
+    // LCP 최적화: 게시글이 없으면 렌더링하지 않음
+    if (!postsData.data || postsData.data.length === 0) {
+      return null;
+    }
+
     // 헤더 컨텐츠 렌더링 - 오른쪽에 > 아이콘 추가
     const headerContent = (
       <div className="w-full h-full flex items-center justify-between">
