@@ -1,8 +1,7 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, lazy, Suspense } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { ThemeProvider } from '@/shared/context/ThemeContext';
 import { AuthProvider } from '@/shared/context/AuthContext';
 import { IconProvider } from '@/shared/context/IconContext';
@@ -10,6 +9,13 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import SuspensionPopup from '@/shared/components/SuspensionPopup';
 import AttendanceChecker from '@/shared/components/AttendanceChecker';
+
+// ReactQueryDevtools는 개발 환경에서만 lazy load
+const ReactQueryDevtools = lazy(() =>
+  import('@tanstack/react-query-devtools').then(mod => ({
+    default: mod.ReactQueryDevtools
+  }))
+);
 
 /**
  * Root Layout Provider (Client Component)
@@ -70,7 +76,11 @@ export default function RootLayoutProvider({ children }: { children: React.React
           </IconProvider>
         </AuthProvider>
       </ThemeProvider>
-      <ReactQueryDevtools initialIsOpen={false} />
+      {process.env.NODE_ENV === 'development' && (
+        <Suspense fallback={null}>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </Suspense>
+      )}
     </QueryClientProvider>
   );
 }
