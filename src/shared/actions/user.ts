@@ -4,6 +4,7 @@ import { cache } from 'react';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
 import { FullUserDataWithSession } from '@/shared/types/user';
+import { getAuthenticatedUser } from './auth';
 
 /**
  * 통합 사용자 데이터 fetch 함수
@@ -20,8 +21,8 @@ export const getFullUserData = cache(async (): Promise<FullUserDataWithSession |
   try {
     const supabase = await getSupabaseServer();
 
-    // 1. 인증 확인 (getUser는 서버에서 인증된 데이터 반환)
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // 1. 인증 확인 (캐시된 함수 사용 - 같은 request 내에서 1번만 호출)
+    const { data: { user }, error: authError } = await getAuthenticatedUser();
     if (authError || !user) {
       return null;
     }

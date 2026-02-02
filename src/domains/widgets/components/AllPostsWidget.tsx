@@ -1,19 +1,32 @@
 import React from 'react';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
-import { fetchPosts } from '@/domains/boards/actions';
+import { fetchPosts, PostsResponse } from '@/domains/boards/actions';
 import PostList from '@/domains/boards/components/post/PostList';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 
+/**
+ * 최신 게시글 데이터를 가져오는 함수 (병렬 fetch용)
+ * page.tsx에서 Promise.all로 호출 가능
+ */
+export async function fetchAllPostsData(): Promise<PostsResponse> {
+  return fetchPosts({
+    limit: 10,
+    page: 1
+    // boardIds를 지정하지 않으면 모든 게시판에서 가져옴
+  });
+}
+
+interface AllPostsWidgetProps {
+  /** 미리 fetch된 데이터 (병렬 fetch 시 사용) */
+  initialData?: PostsResponse;
+}
+
 // 서버 컴포넌트로 변경 - 직접 데이터 로드
-export default async function AllPostsWidget() {
+export default async function AllPostsWidget({ initialData }: AllPostsWidgetProps = {}) {
   try {
-    // fetchPosts 서버 액션을 사용하여 데이터 직접 가져오기
-    const postsData = await fetchPosts({
-      limit: 10,
-      page: 1
-      // boardIds를 지정하지 않으면 모든 게시판에서 가져옴
-    });
+    // initialData가 제공되면 바로 사용, 없으면 자체 fetch
+    const postsData = initialData ?? await fetchAllPostsData();
 
     // 헤더 컨텐츠 렌더링 - 오른쪽에 > 아이콘 추가
     const headerContent = (

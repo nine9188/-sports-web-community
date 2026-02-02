@@ -7,6 +7,7 @@ import LeagueStandings from '@/domains/sidebar/components/league/LeagueStandings
 import { RightSidebar } from '@/domains/sidebar/components';
 import { getBoardsForNavigation } from '@/domains/layout/actions';
 import { getFullUserData } from '@/shared/actions/user';
+import { fetchTodayMatchCount } from '@/domains/livescore/actions/footballApi';
 import SiteLayoutClient from './SiteLayoutClient';
 import { siteConfig } from '@/shared/config';
 
@@ -19,10 +20,11 @@ import { siteConfig } from '@/shared/config';
  * 404나 에러 페이지는 이 레이아웃을 사용하지 않으므로 API 호출이 발생하지 않습니다.
  */
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
-  // 서버 컴포넌트에서 데이터 fetch (Supabase만 - 외부 API 없음!)
-  const [fullUserData, headerBoardsData] = await Promise.all([
+  // 서버 컴포넌트에서 데이터 fetch
+  const [fullUserData, headerBoardsData, matchCountData] = await Promise.all([
     getFullUserData(),
     getBoardsForNavigation({ includeTotalPostCount: true }),
+    fetchTodayMatchCount(), // 서버 캐시 공유 (page.tsx의 fetchLiveScoreData와 동일한 캐시)
   ]);
 
   // 컴포넌트 생성
@@ -66,6 +68,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         headerBoards={headerBoardsData.boardData}
         headerIsAdmin={headerBoardsData.isAdmin}
         headerTotalPostCount={headerBoardsData.totalPostCount}
+        initialMatchCount={matchCountData}
       >
         {children}
       </SiteLayoutClient>

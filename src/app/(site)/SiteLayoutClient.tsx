@@ -17,6 +17,7 @@ interface SiteLayoutClientProps {
   headerBoards?: Board[];
   headerIsAdmin?: boolean;
   headerTotalPostCount?: number;
+  initialMatchCount?: { success: boolean; count: number };
 }
 
 export default function SiteLayoutClient({
@@ -28,7 +29,8 @@ export default function SiteLayoutClient({
   fullUserData,
   headerBoards,
   headerIsAdmin,
-  headerTotalPostCount
+  headerTotalPostCount,
+  initialMatchCount
 }: SiteLayoutClientProps) {
   // HeaderUserData 형태로 변환 (AuthStateManager에 전달)
   const headerUserData: HeaderUserData | null = fullUserData ? {
@@ -126,6 +128,7 @@ export default function SiteLayoutClient({
       headerBoards={headerBoards}
       headerIsAdmin={headerIsAdmin}
       headerTotalPostCount={headerTotalPostCount}
+      initialMatchCount={initialMatchCount}
       fullUserData={fullUserData}
       isOpen={deferredIsOpen}
       onClose={closeSidebar}

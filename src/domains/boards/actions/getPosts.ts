@@ -1,5 +1,6 @@
 'use server';
 
+import { cache } from 'react';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import type { Json } from '@/shared/types/supabase';
 import {
@@ -15,6 +16,24 @@ import {
 
 import type { DealInfo } from '../types/hotdeal';
 import { HOTDEAL_BOARD_SLUGS } from '../types/hotdeal';
+
+/**
+ * 핫딜 게시판 ID 목록을 가져오는 캐시된 함수
+ * 같은 request 내에서 여러 번 호출해도 1번만 실행됨
+ */
+const getHotdealBoardIds = cache(async (): Promise<string[]> => {
+  try {
+    const supabase = await getSupabaseServer();
+    const { data: hotdealBoards } = await supabase
+      .from('boards')
+      .select('id')
+      .in('slug', HOTDEAL_BOARD_SLUGS as unknown as string[]);
+
+    return hotdealBoards?.map(b => b.id) || [];
+  } catch {
+    return [];
+  }
+});
 
 // Supabase 쿼리 결과 타입 (raw)
 interface RawPostData {
@@ -150,17 +169,10 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
       targetBoardsFilter = targetBoardIds;
     }
 
-    // 핫딜 게시판 ID 조회 (excludeHotdeal이 true이고 전체 게시글 조회시)
+    // 핫딜 게시판 ID 조회 (캐시된 함수 사용 - 같은 request 내 1회만 실행)
     let hotdealBoardIds: string[] = [];
     if (excludeHotdeal && !currentBoardFilter && !targetBoardsFilter) {
-      const { data: hotdealBoards } = await supabase
-        .from('boards')
-        .select('id')
-        .in('slug', HOTDEAL_BOARD_SLUGS as unknown as string[]);
-
-      if (hotdealBoards) {
-        hotdealBoardIds = hotdealBoards.map(b => b.id);
-      }
+      hotdealBoardIds = await getHotdealBoardIds();
     }
 
     // 쿼리 구성

@@ -82,6 +82,7 @@ export default function BoardQuickLinksWidget({ items = DEFAULT_ITEMS, className
                 width={28}
                 height={28}
                 className="w-7 h-7 object-contain dark:invert"
+                priority
               />
             ) : (
               <span className="text-2xl">{item.icon ?? '📌'}</span>
@@ -100,6 +101,7 @@ export default function BoardQuickLinksWidget({ items = DEFAULT_ITEMS, className
                 width={20}
                 height={20}
                 className="w-5 h-5 object-contain dark:invert"
+                priority
               />
             ) : (
               <span className="text-xl">{item.icon ?? '📌'}</span>

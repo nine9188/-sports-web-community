@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import '@/styles/post-content.css';
 
 /**
  * Post Layout - 게시글 상세 전용 레이아웃

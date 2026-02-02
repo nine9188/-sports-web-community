@@ -3,6 +3,12 @@ import { AllPostsWidget, NewsWidget, BoardCollectionWidget, BoardQuickLinksWidge
 import LiveScoreWidgetV2 from '@/domains/widgets/components/live-score-widget/index';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 
+// 병렬 fetch를 위한 데이터 함수들 import
+import { fetchLiveScoreData } from '@/domains/widgets/components/live-score-widget/LiveScoreWidgetV2Server';
+import { fetchBoardCollectionData } from '@/domains/widgets/components/board-collection-widget/BoardCollectionWidget';
+import { fetchAllPostsData } from '@/domains/widgets/components/AllPostsWidget';
+import { fetchNewsData } from '@/domains/widgets/components/news-widget/NewsWidget';
+
 // ISR: 60초마다 페이지 재생성 (캐시된 HTML 즉시 제공)
 export const revalidate = 60;
 
@@ -15,8 +21,16 @@ export async function generateMetadata() {
   });
 }
 
-// 메인 페이지 컴포넌트
-export default function HomePage() {
+// 메인 페이지 컴포넌트 - 모든 위젯 데이터를 병렬로 fetch
+export default async function HomePage() {
+  // 모든 위젯 데이터를 병렬로 fetch (TTFB 최적화)
+  const [liveScoreData, boardCollectionData, postsData, newsData] = await Promise.all([
+    fetchLiveScoreData(),
+    fetchBoardCollectionData(),
+    fetchAllPostsData(),
+    fetchNewsData(),
+  ]);
+
   return (
     <main className="bg-transparent space-y-4 overflow-visible">
       {/* 게시판 바로가기 아이콘 - 라이브스코어 상단 */}
@@ -24,16 +38,16 @@ export default function HomePage() {
         <BoardQuickLinksWidget />
       </div>
       {/* LiveScore 위젯 V2 - 새로운 디자인 */}
-      <LiveScoreWidgetV2 />
+      <LiveScoreWidgetV2 initialData={liveScoreData} />
 
       {/* 게시판 모음 위젯 */}
-      <BoardCollectionWidget />
+      <BoardCollectionWidget initialData={boardCollectionData} />
 
       {/* 게시글 리스트 위젯 */}
-      <AllPostsWidget />
+      <AllPostsWidget initialData={postsData} />
 
       {/* 뉴스 위젯 */}
-      <NewsWidget />
+      <NewsWidget initialData={newsData} />
     </main>
   );
 }

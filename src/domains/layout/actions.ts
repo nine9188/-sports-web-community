@@ -3,6 +3,7 @@
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { cache } from 'react';
 import { Board } from './types/board';
+import { getAuthenticatedUser, getUserAdminStatus } from '@/shared/actions/auth';
 
 interface GetBoardsOptions {
   includeTotalPostCount?: boolean;
@@ -22,17 +23,13 @@ export const getBoardsForNavigation = cache(async (options?: GetBoardsOptions): 
   try {
     const supabase = await getSupabaseServer();
 
-    // 현재 사용자의 관리자 권한 확인
+    // 현재 사용자의 관리자 권한 확인 (캐시된 함수 사용)
     let isAdmin = false;
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await getAuthenticatedUser();
       if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('is_admin')
-          .eq('id', user.id)
-          .single();
-        isAdmin = profile?.is_admin || false;
+        const { isAdmin: adminStatus } = await getUserAdminStatus(user.id);
+        isAdmin = adminStatus;
       }
     } catch {
       // 관리자 권한 확인 실패해도 계속 진행

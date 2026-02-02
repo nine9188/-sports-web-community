@@ -103,27 +103,37 @@ function groupMatchesByLeague(
   });
 }
 
-// 서버 컴포넌트
-export default async function LiveScoreWidgetV2Server() {
-  let leagues: League[] = [];
-
+/**
+ * 라이브스코어 데이터를 가져오는 함수 (병렬 fetch용)
+ * page.tsx에서 Promise.all로 호출 가능
+ */
+export async function fetchLiveScoreData(): Promise<League[]> {
   try {
     const result = await fetchBigMatches() as MultiDayMatchesResponse;
 
     if (result.success && result.data) {
-      // 오늘 + 내일 경기 가져오기
       const todayMatches = result.data.today?.matches || [];
       const tomorrowMatches = result.data.tomorrow?.matches || [];
-
-      // 리그별로 그룹화 (오늘+내일 통합, 같은 리그는 하나로)
-      leagues = groupMatchesByLeague(todayMatches, tomorrowMatches);
+      return groupMatchesByLeague(todayMatches, tomorrowMatches);
     } else {
       console.warn('⚠️ LiveScoreWidgetV2: API 응답이 성공하지 않음', result.error);
+      return [];
     }
   } catch (error) {
     console.error('❌ LiveScoreWidgetV2 서버 데이터 로딩 오류:', error);
-    leagues = [];
+    return [];
   }
+}
+
+interface LiveScoreWidgetV2ServerProps {
+  /** 미리 fetch된 데이터 (병렬 fetch 시 사용) */
+  initialData?: League[];
+}
+
+// 서버 컴포넌트
+export default async function LiveScoreWidgetV2Server({ initialData }: LiveScoreWidgetV2ServerProps = {}) {
+  // initialData가 제공되면 바로 사용, 없으면 자체 fetch
+  const leagues = initialData ?? await fetchLiveScoreData();
 
   return <LiveScoreWidgetV2 leagues={leagues} />;
 }
