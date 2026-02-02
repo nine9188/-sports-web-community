@@ -1,8 +1,7 @@
 /**
  * PostList 로딩 스켈레톤 컴포넌트
+ * 서버 컴포넌트 - LCP 최적화
  */
-
-'use client';
 
 import React from 'react';
 
