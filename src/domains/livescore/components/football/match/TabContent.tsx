@@ -9,11 +9,86 @@ import RelatedPosts from './sidebar/RelatedPosts';
 import { EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import { MatchFullDataResponse } from '@/domains/livescore/actions/match/matchData';
 import { HeadToHeadTestData } from '@/domains/livescore/actions/match/headtohead';
-import { PlayerRatingsAndCaptains } from '@/domains/livescore/actions/match/playerStats';
+import { AllPlayerStatsResponse, PlayerStatsData } from '@/domains/livescore/types/lineup';
 import { MatchPlayerStatsResponse } from '@/domains/livescore/actions/match/matchPlayerStats';
 import { MatchTabType, PlayerKoreanNames } from './MatchPageClient';
 import type { RelatedPost } from '@/domains/livescore/actions/match/relatedPosts';
 import Spinner from '@/shared/components/Spinner';
+
+/**
+ * AllPlayerStatsResponse를 Stats 컴포넌트가 사용하는 MatchPlayerStatsResponse 형식으로 변환
+ */
+function convertToMatchPlayerStats(
+  allPlayerStats: AllPlayerStatsResponse | null | undefined,
+  homeTeamId?: number,
+  awayTeamId?: number
+): MatchPlayerStatsResponse | undefined {
+  if (!allPlayerStats?.success || !allPlayerStats.allPlayersData?.length) {
+    return undefined;
+  }
+
+  // 팀별로 선수 그룹화
+  const homePlayersData: PlayerStatsData[] = [];
+  const awayPlayersData: PlayerStatsData[] = [];
+
+  for (const playerData of allPlayerStats.allPlayersData) {
+    const teamId = playerData.statistics?.[0]?.team?.id;
+    if (teamId === homeTeamId) {
+      homePlayersData.push(playerData);
+    } else if (teamId === awayTeamId) {
+      awayPlayersData.push(playerData);
+    }
+  }
+
+  // 첫 번째 선수의 팀 정보 추출
+  const homeTeamInfo = homePlayersData[0]?.statistics?.[0]?.team;
+  const awayTeamInfo = awayPlayersData[0]?.statistics?.[0]?.team;
+
+  const convertPlayer = (p: PlayerStatsData) => {
+    const stats = p.statistics?.[0];
+    return {
+      playerId: p.player.id,
+      playerName: p.player.name,
+      playerNumber: p.player.number,
+      position: p.player.pos,
+      minutes: stats?.games?.minutes ?? 0,
+      rating: stats?.games?.rating,
+      goals: stats?.goals?.total ?? 0,
+      assists: stats?.goals?.assists ?? 0,
+      shotsTotal: stats?.shots?.total ?? 0,
+      shotsOn: stats?.shots?.on ?? 0,
+      passesTotal: stats?.passes?.total ?? 0,
+      passesKey: stats?.passes?.key ?? 0,
+      passesAccuracy: stats?.passes?.accuracy ?? '0',
+      dribblesAttempts: stats?.dribbles?.attempts ?? 0,
+      dribblesSuccess: stats?.dribbles?.success ?? 0,
+      duelsTotal: stats?.duels?.total ?? 0,
+      duelsWon: stats?.duels?.won ?? 0,
+      foulsCommitted: stats?.fouls?.committed ?? 0,
+      yellowCards: stats?.cards?.yellow ?? 0,
+      redCards: stats?.cards?.red ?? 0,
+    };
+  };
+
+  return {
+    success: true,
+    data: {
+      homeTeam: homeTeamInfo ? {
+        id: homeTeamInfo.id,
+        name: homeTeamInfo.name,
+        logo: homeTeamInfo.logo,
+        players: homePlayersData.map(convertPlayer),
+      } : null,
+      awayTeam: awayTeamInfo ? {
+        id: awayTeamInfo.id,
+        name: awayTeamInfo.name,
+        logo: awayTeamInfo.logo,
+        players: awayPlayersData.map(convertPlayer),
+      } : null,
+    },
+    message: '선수 통계를 성공적으로 변환했습니다',
+  };
+}
 
 // Dynamic imports로 Framer Motion을 사용하는 컴포넌트 lazy load
 const Lineups = dynamic(() => import('./tabs/lineups/Lineups'), {
@@ -45,8 +120,8 @@ interface TabContentProps {
   currentTab: MatchTabType;
   initialData: MatchFullDataResponse;
   initialPowerData?: HeadToHeadTestData;
-  initialPlayerRatings?: PlayerRatingsAndCaptains;
-  initialMatchPlayerStats?: MatchPlayerStatsResponse;
+  // 통합된 선수 통계 데이터 (평점, 주장, 전체 통계 포함)
+  allPlayerStats?: AllPlayerStatsResponse | null;
   relatedPosts?: RelatedPost[];
   playerKoreanNames?: PlayerKoreanNames;
 }
@@ -57,7 +132,7 @@ interface TabContentProps {
  * 서버에서 미리 로드된 데이터(initialData)를 받아 현재 탭에 맞는 컴포넌트를 렌더링합니다.
  * Context 의존성 제거로 더 단순하고 예측 가능한 동작.
  */
-export default function TabContent({ matchId, currentTab, initialData, initialPowerData, initialPlayerRatings, initialMatchPlayerStats, relatedPosts, playerKoreanNames = {} }: TabContentProps) {
+export default function TabContent({ matchId, currentTab, initialData, initialPowerData, allPlayerStats, relatedPosts, playerKoreanNames = {} }: TabContentProps) {
   // initialData에서 데이터 추출
   const { events, lineups, stats, standings, homeTeam, awayTeam, matchData } = initialData;
 
@@ -116,14 +191,16 @@ export default function TabContent({ matchId, currentTab, initialData, initialPo
             fixture
           }}
           matchId={matchId}
-          initialPlayerRatings={initialPlayerRatings}
+          allPlayerStats={allPlayerStats}
           playerKoreanNames={playerKoreanNames}
         />
       );
 
     case 'stats':
+      // AllPlayerStatsResponse를 Stats 컴포넌트 형식으로 변환
+      const matchPlayerStats = convertToMatchPlayerStats(allPlayerStats, homeTeam?.id, awayTeam?.id);
       return stats && stats.length > 0
-        ? <Stats matchData={{ stats, homeTeam: homeTeam || undefined, awayTeam: awayTeam || undefined }} initialMatchPlayerStats={initialMatchPlayerStats} playerKoreanNames={playerKoreanNames} />
+        ? <Stats matchData={{ stats, homeTeam: homeTeam || undefined, awayTeam: awayTeam || undefined }} initialMatchPlayerStats={matchPlayerStats} playerKoreanNames={playerKoreanNames} />
         : <EmptyState title="통계 없음" message="이 경기의 통계 데이터를 찾을 수 없습니다." />;
 
     case 'standings':

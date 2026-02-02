@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
-import { fetchCachedPlayerStats, PlayerStatsResponse } from '@/domains/livescore/actions/match/playerStats';
+import { useMemo } from 'react';
 import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
 import { ImageType } from '@/shared/types/image';
+import { PlayerStatsData } from '@/domains/livescore/types/lineup';
 import {
   Container,
   ContainerHeader,
@@ -13,18 +13,15 @@ import {
   Button,
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogCloseButton,
   DialogBody,
 } from '@/shared/components/ui';
-import Spinner from '@/shared/components/Spinner';
 
 interface PlayerStatsModalProps {
   isOpen: boolean;
   onClose: () => void;
   playerId: number;
-  matchId: string;
   playerInfo: {
     name: string;
     number: string;
@@ -35,26 +32,32 @@ interface PlayerStatsModalProps {
       name: string;
     };
   };
+  // 서버에서 프리로드된 전체 선수 데이터
+  allPlayersData: PlayerStatsData[];
+  // 선수 네비게이션
+  onPrevPlayer?: () => void;
+  onNextPlayer?: () => void;
+  hasPrev?: boolean;
+  hasNext?: boolean;
 }
 
 export default function PlayerStatsModal({
   isOpen,
   onClose,
   playerId,
-  matchId,
-  playerInfo
+  playerInfo,
+  allPlayersData,
+  onPrevPlayer,
+  onNextPlayer,
+  hasPrev = false,
+  hasNext = false,
 }: PlayerStatsModalProps) {
-  // React Query로 클라이언트 캐시 적용 - 같은 선수는 재요청 안함
-  const { data: playerStats, isLoading, error } = useQuery({
-    queryKey: ['playerStats', matchId, playerId],
-    queryFn: () => fetchCachedPlayerStats(matchId, playerId),
-    enabled: isOpen && !!matchId && !!playerId,
-    staleTime: 1000 * 60 * 10, // 10분간 캐시 유지
-    gcTime: 1000 * 60 * 30, // 30분간 가비지 컬렉션 방지
-    refetchOnWindowFocus: false,
-  });
+  // 전달받은 데이터에서 현재 선수 찾기 (API 호출 없음)
+  const playerStats = useMemo(() => {
+    return allPlayersData.find(p => p.player.id === playerId) ?? null;
+  }, [allPlayersData, playerId]);
 
-  const stats = playerStats?.response?.statistics?.[0] || {} as {
+  const stats = playerStats?.statistics?.[0] || {} as {
     team?: { id?: number; name?: string };
     games?: { minutes?: number; number?: number; position?: string; rating?: string; captain?: boolean };
     goals?: { total?: number; conceded?: number; assists?: number; saves?: number };
@@ -66,47 +69,101 @@ export default function PlayerStatsModal({
     cards?: { yellow?: number; red?: number };
     penalty?: { saved?: number };
   };
-  const showData = playerStats?.success && playerStats.response;
+  const showData = !!playerStats;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-md max-h-[80vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle>선수 개인 통계</DialogTitle>
-          <DialogCloseButton />
-        </DialogHeader>
+        {/* 접근성을 위한 숨겨진 타이틀 */}
+        <DialogTitle className="sr-only">{playerInfo.name} 선수 통계</DialogTitle>
+
+        {/* 선수 기본 정보 헤더 */}
+        <div className="relative text-center pt-4 pb-3 px-4 border-b border-black/5 dark:border-white/10">
+          {/* 닫기 버튼 - 우측 상단 고정 */}
+          <div className="absolute top-2 right-2">
+            <DialogCloseButton />
+          </div>
+
+          {/* 선수 이미지 + 좌우 네비게이션 */}
+          <div className="flex items-center justify-center gap-4 mb-3">
+            {/* 이전 선수 버튼 */}
+            <button
+              onClick={onPrevPlayer}
+              disabled={!hasPrev}
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                hasPrev
+                  ? 'bg-gray-100 dark:bg-[#2D2D2D] hover:bg-gray-200 dark:hover:bg-[#3D3D3D] text-gray-700 dark:text-gray-300'
+                  : 'bg-gray-50 dark:bg-[#252525] text-gray-300 dark:text-gray-600 cursor-not-allowed'
+              }`}
+              aria-label="이전 선수"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+
+            {/* 선수 이미지 */}
+            <div className="relative w-20 h-20">
+              <div className="relative w-20 h-20">
+                <div className="absolute inset-0 rounded-full border-2 border-white dark:border-[#1D1D1D] shadow-lg"></div>
+                <UnifiedSportsImage
+                  imageId={playerId}
+                  imageType={ImageType.Players}
+                  alt={playerInfo.name}
+                  size="xxl"
+                  variant="circle"
+                  className="!w-20 !h-20"
+                />
+              </div>
+              {playerInfo.team?.id && (
+                <div
+                  className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full shadow flex items-center justify-center"
+                  style={{ backgroundColor: '#ffffff' }}
+                >
+                  <UnifiedSportsImage
+                    imageId={playerInfo.team.id}
+                    imageType={ImageType.Teams}
+                    alt={playerInfo.team?.name || '팀 로고'}
+                    size="sm"
+                    variant="square"
+                    fit="contain"
+                    className="w-5 h-5"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* 다음 선수 버튼 */}
+            <button
+              onClick={onNextPlayer}
+              disabled={!hasNext}
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                hasNext
+                  ? 'bg-gray-100 dark:bg-[#2D2D2D] hover:bg-gray-200 dark:hover:bg-[#3D3D3D] text-gray-700 dark:text-gray-300'
+                  : 'bg-gray-50 dark:bg-[#252525] text-gray-300 dark:text-gray-600 cursor-not-allowed'
+              }`}
+              aria-label="다음 선수"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+          <h2 className="text-base font-bold mb-1 text-gray-900 dark:text-[#F0F0F0]">{playerInfo.name}</h2>
+          <div className="flex items-center justify-center gap-3 text-xs text-gray-700 dark:text-gray-300">
+            <span>#{playerInfo.number}</span>
+            <span>{playerInfo.pos}</span>
+            {stats.games?.captain && (
+              <span className="px-1.5 py-0.5 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded text-xs">
+                주장
+              </span>
+            )}
+          </div>
+        </div>
 
         <DialogBody className="flex-1 overflow-y-auto">
-          {/* 로딩 */}
-          {isLoading && (
-            <div className="py-16 text-center">
-              <Spinner size="xl" className="mx-auto mb-4" />
-              <p className="text-gray-700 dark:text-gray-300">선수 통계를 불러오는 중...</p>
-            </div>
-          )}
-
-          {/* 에러 */}
-          {!isLoading && error && (
-            <div className="py-16 text-center px-4">
-              <div className="text-red-500 dark:text-red-400 mb-4">
-                <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <p className="text-gray-900 dark:text-[#F0F0F0] mb-4">
-                {error instanceof Error ? error.message : '선수 통계를 가져오는 중 오류가 발생했습니다'}
-              </p>
-              <Button
-                variant="secondary"
-                onClick={onClose}
-              >
-                닫기
-              </Button>
-            </div>
-          )}
-
           {/* 데이터 없음 */}
-          {!isLoading && !error && !showData && (
+          {!showData && (
             <div className="py-16 text-center px-4">
               <div className="text-gray-500 dark:text-gray-400 mb-4">
                 <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -115,7 +172,7 @@ export default function PlayerStatsModal({
               </div>
               <p className="text-gray-900 dark:text-[#F0F0F0] mb-2">선수 통계를 불러올 수 없습니다</p>
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                {playerStats?.message || '경기가 시작되지 않았거나 데이터가 아직 제공되지 않았습니다.'}
+                경기가 시작되지 않았거나 데이터가 아직 제공되지 않았습니다.
               </p>
               <Button
                 variant="secondary"
@@ -127,57 +184,8 @@ export default function PlayerStatsModal({
           )}
 
           {/* 데이터 표시 */}
-          {!isLoading && !error && showData && (
-            <>
-              {/* 선수 기본 정보 */}
-              <div className="px-4 pt-3">
-                <Container className="mb-4 dark:border dark:border-white/10">
-                  <ContainerContent className="text-center">
-                    <div className="relative w-28 h-28 mx-auto mb-4">
-                      <div className="relative w-28 h-28">
-                        <div className="absolute inset-0 rounded-full border-4 border-white dark:border-[#1D1D1D] shadow-lg"></div>
-                        <UnifiedSportsImage
-                          imageId={playerId}
-                          imageType={ImageType.Players}
-                          alt={playerInfo.name}
-                          size="xxl"
-                          variant="circle"
-                          className="w-full h-full"
-                        />
-                      </div>
-                      {stats.team?.id && (
-                        <div
-                          className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full shadow-lg flex items-center justify-center"
-                          style={{ backgroundColor: '#ffffff' }}
-                        >
-                          <UnifiedSportsImage
-                            imageId={stats.team.id}
-                            imageType={ImageType.Teams}
-                            alt={stats.team?.name || '팀 로고'}
-                            size="md"
-                            variant="square"
-                            fit="contain"
-                            className="w-8 h-8"
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <h2 className="text-xl font-bold mb-1 text-gray-900 dark:text-[#F0F0F0]">{playerInfo.name}</h2>
-                    <div className="flex items-center justify-center gap-4 text-sm text-gray-700 dark:text-gray-300">
-                      <span>#{playerInfo.number}</span>
-                      <span>{playerInfo.pos}</span>
-                      {stats.games?.captain && (
-                        <span className="px-2 py-0.5 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded text-xs">
-                          주장
-                        </span>
-                      )}
-                    </div>
-                  </ContainerContent>
-                </Container>
-              </div>
-
-              {/* 통계 */}
-              <div className="px-4 pb-8">
+          {showData && (
+            <div className="px-4 py-4">
                 {/* 기본 정보 */}
                 <Container className="mb-4 dark:border dark:border-white/10">
                   <ContainerHeader>
@@ -342,16 +350,15 @@ export default function PlayerStatsModal({
                 )}
 
                 {/* 선수 상세 정보 링크 */}
-                <div className="mt-4 mb-4">
+                <div className="mt-4">
                   <Link
                     href={`/livescore/football/player/${playerId}`}
-                    className="block w-full py-3 px-3 bg-[#262626] dark:bg-[#3F3F3F] text-white font-medium rounded-lg shadow hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] transition-colors text-lg text-center"
+                    className="block w-full py-2.5 px-3 bg-[#262626] dark:bg-[#3F3F3F] text-white font-medium rounded-lg shadow hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] transition-colors text-sm text-center"
                   >
                     선수 정보 더보기
                   </Link>
                 </div>
-              </div>
-            </>
+            </div>
           )}
         </DialogBody>
       </DialogContent>

@@ -1,129 +1,81 @@
 'use server';
 
 import { cache } from 'react';
+import { getMatchCache, setMatchCache } from './matchCache';
+import type {
+  PlayerStatsData,
+  AllPlayerStatsResponse,
+  PlayerRatingsAndCaptains,
+} from '../../types/lineup';
 
-export interface Player {
-  id: number;
-  name: string;
-  photo: string;
-  number?: number;
-  pos?: string;
-}
+// 타입은 types/lineup.ts에서 직접 import하세요
+// 'use server' 파일에서는 타입 re-export가 지원되지 않습니다
 
-export interface Team {
-  id: number;
-  name: string;
-  logo: string;
-}
+// 종료된 경기 상태 목록 (데이터 불변)
+const FINISHED_STATUSES = ['FT', 'AET', 'PEN'];
 
-export interface PlayerGames {
-  minutes?: number;
-  number?: number;
-  position?: string;
-  rating?: string;
-  captain?: boolean;
-  substitute?: boolean;
-}
-
-export interface PlayerShots {
-  total?: number;
-  on?: number;
-}
-
-export interface PlayerGoals {
-  total?: number;
-  conceded?: number;
-  assists?: number;
-  saves?: number;
-}
-
-export interface PlayerPasses {
-  total?: number;
-  key?: number;
-  accuracy?: string;
-}
-
-export interface PlayerTackles {
-  total?: number;
-  blocks?: number;
-  interceptions?: number;
-}
-
-export interface PlayerDuels {
-  total?: number;
-  won?: number;
-}
-
-export interface PlayerDribbles {
-  attempts?: number;
-  success?: number;
-  past?: number;
-}
-
-export interface PlayerFouls {
-  drawn?: number;
-  committed?: number;
-}
-
-export interface PlayerCards {
-  yellow?: number;
-  red?: number;
-}
-
-export interface PlayerPenalty {
-  won?: number;
-  committed?: number;
-  scored?: number;
-  missed?: number;
-  saved?: number;
-}
-
-export interface PlayerStatistics {
-  team: Team;
-  games: PlayerGames;
-  offsides?: number;
-  shots: PlayerShots;
-  goals: PlayerGoals;
-  passes: PlayerPasses;
-  tackles: PlayerTackles;
-  duels: PlayerDuels;
-  dribbles: PlayerDribbles;
-  fouls: PlayerFouls;
-  cards: PlayerCards;
-  penalty: PlayerPenalty;
-  [key: string]: any;
-}
-
-export interface PlayerStats {
-  player: Player;
-  statistics: PlayerStatistics[];
-}
-
-export interface PlayerStatsResponse {
-  success: boolean;
-  response: PlayerStats | null;
-  message: string;
-}
-
-async function fetchPlayerStats(matchId: string, playerId: number): Promise<PlayerStatsResponse> {
+/**
+ * 전체 선수 통계 데이터 가져오기 (통합 함수)
+ * - API 1회 호출로 모든 데이터 획득
+ * - 종료된 경기는 DB 캐시 활용
+ * - 평점, 주장 정보도 함께 추출
+ */
+async function fetchAllPlayerStatsInternal(
+  matchId: string,
+  matchStatus?: string
+): Promise<AllPlayerStatsResponse> {
   try {
-    if (!matchId || !playerId) {
+    if (!matchId) {
       return {
         success: false,
-        response: null,
-        message: '매치 ID와 선수 ID가 필요합니다'
+        allPlayersData: [],
+        ratings: {},
+        captainIds: [],
+        message: '매치 ID가 필요합니다',
       };
     }
 
+    const numericMatchId = parseInt(matchId, 10);
+    const isFinished = matchStatus && FINISHED_STATUSES.includes(matchStatus);
+
+    // ============================================
+    // 종료된 경기: DB 캐시 확인
+    // ============================================
+    if (isFinished) {
+      const cached = await getMatchCache(numericMatchId, 'matchPlayerStats');
+
+      if (cached) {
+        // 캐시 데이터 형식 확인 - AllPlayerStatsResponse 형식인지 또는 raw response 형식인지
+        const cachedAny = cached as Record<string, unknown>;
+
+        // 새 형식 (AllPlayerStatsResponse)
+        if ('allPlayersData' in cachedAny && Array.isArray(cachedAny.allPlayersData)) {
+          return cached as AllPlayerStatsResponse;
+        }
+
+        // 구 형식 (raw API response)
+        const cachedData = cached as { response?: unknown[] };
+        const responseArray = cachedData?.response;
+
+        if (Array.isArray(responseArray) && responseArray.length > 0) {
+          return extractAllDataFromResponse(responseArray);
+        }
+      }
+    }
+
+    // ============================================
+    // API 호출
+    // ============================================
     if (!process.env.FOOTBALL_API_KEY) {
       return {
         success: false,
-        response: null,
-        message: 'API 키가 설정되지 않았습니다'
+        allPlayersData: [],
+        ratings: {},
+        captainIds: [],
+        message: 'API 키가 설정되지 않았습니다',
       };
     }
 
-    // 전체 경기 선수 통계를 가져옵니다 (개별 선수 API보다 안정적)
     const response = await fetch(
       `https://v3.football.api-sports.io/fixtures/players?fixture=${matchId}`,
       {
@@ -131,223 +83,218 @@ async function fetchPlayerStats(matchId: string, playerId: number): Promise<Play
           'x-rapidapi-host': 'v3.football.api-sports.io',
           'x-rapidapi-key': process.env.FOOTBALL_API_KEY,
         },
-        next: { revalidate: 120 }
+        next: { revalidate: 120 },
       }
     );
 
     if (!response.ok) {
       return {
         success: false,
-        response: null,
-        message: `API 응답 오류: ${response.status}`
+        allPlayersData: [],
+        ratings: {},
+        captainIds: [],
+        message: `API 응답 오류: ${response.status}`,
       };
     }
 
     const data = await response.json();
 
-    // 응답 검증
     if (!data?.response?.length) {
       return {
         success: false,
-        response: null,
-        message: '경기 데이터를 찾을 수 없습니다'
+        allPlayersData: [],
+        ratings: {},
+        captainIds: [],
+        message: '경기 데이터를 찾을 수 없습니다',
       };
     }
 
-    // 모든 팀에서 해당 선수 찾기
-    let playerData = null;
-    let teamData = null;
+    // ============================================
+    // 종료된 경기: DB 캐시 저장
+    // ============================================
+    const result = extractAllDataFromResponse(data.response);
 
-    for (const team of data.response) {
-      if (!team?.players?.length) continue;
-      
-      const found = team.players.find((p: any) => p.player?.id === playerId);
-      if (found) {
-        playerData = found;
-        teamData = team;
-        break;
-      }
+    if (isFinished) {
+      // 새 형식(AllPlayerStatsResponse)으로 저장
+      setMatchCache(numericMatchId, 'matchPlayerStats', result).catch(() => {});
     }
 
-    if (!playerData) {
-      return {
-        success: false,
-        response: null,
-        message: '해당 선수의 통계를 찾을 수 없습니다'
-      };
-    }
-
-    if (!playerData.statistics?.length) {
-      return {
-        success: false,
-        response: null,
-        message: '선수 통계 데이터가 없습니다'
-      };
-    }
-
-    // 응답 구성
-    const formattedPlayerStats: PlayerStats = {
-      player: {
-        id: playerData.player.id,
-        name: playerData.player.name,
-        photo: `https://media.api-sports.io/football/players/${playerData.player.id}.png`,
-        number: playerData.statistics[0]?.games?.number,
-        pos: playerData.statistics[0]?.games?.position
-      },
-      statistics: playerData.statistics.map((stat: any) => ({
-        ...stat,
-        team: stat?.team || {
-          id: teamData.team.id,
-          name: teamData.team.name,
-          logo: teamData.team.logo
-        }
-      }))
-    };
-
-    return {
-      success: true,
-      response: formattedPlayerStats,
-      message: '선수 통계 데이터를 성공적으로 가져왔습니다'
-    };
-
+    return result;
   } catch (error) {
     return {
       success: false,
-      response: null,
-      message: error instanceof Error ? error.message : '알 수 없는 오류'
+      allPlayersData: [],
+      ratings: {},
+      captainIds: [],
+      message: error instanceof Error ? error.message : '알 수 없는 오류',
     };
   }
 }
 
-export const fetchCachedPlayerStats = cache(fetchPlayerStats);
-
 /**
- * 평점 + 주장 정보를 함께 가져오는 경량 액션 (포메이션/라인업용)
+ * API 응답에서 전체 데이터 추출 (선수 목록, 평점, 주장)
  */
-export interface PlayerRatingsAndCaptains {
-  ratings: Record<number, number>;
-  captainIds: number[]; // 주장 선수 ID 목록
+function extractAllDataFromResponse(responseData: unknown[]): AllPlayerStatsResponse {
+  const allPlayersData: PlayerStatsData[] = [];
+  const ratings: Record<number, number> = {};
+  const captainIds: number[] = [];
+
+  for (const teamStats of responseData) {
+    const team = teamStats as { team?: { id: number; name: string; logo: string }; players?: unknown[] };
+    if (!team?.players?.length) continue;
+
+    for (const playerData of team.players) {
+      const p = playerData as {
+        player?: { id: number; name: string; photo?: string };
+        statistics?: Array<{
+          team?: { id: number; name: string; logo: string };
+          games?: { rating?: string; captain?: boolean; number?: number; position?: string };
+          [key: string]: unknown;
+        }>;
+      };
+
+      if (!p?.player?.id) continue;
+
+      const playerId = p.player.id;
+      const stats = p.statistics?.[0];
+
+      // 전체 선수 데이터 수집
+      allPlayersData.push({
+        player: {
+          id: playerId,
+          name: p.player.name,
+          photo: p.player.photo || `https://media.api-sports.io/football/players/${playerId}.png`,
+          number: stats?.games?.number,
+          pos: stats?.games?.position,
+        },
+        statistics: (p.statistics || []).map((stat) => ({
+          team: stat?.team || team.team || { id: 0, name: '', logo: '' },
+          games: stat?.games || {},
+          offsides: (stat?.offsides as number) || 0,
+          shots: (stat?.shots as { total?: number; on?: number }) || {},
+          goals: (stat?.goals as { total?: number; conceded?: number; assists?: number; saves?: number }) || {},
+          passes: (stat?.passes as { total?: number; key?: number; accuracy?: string }) || {},
+          tackles: (stat?.tackles as { total?: number; blocks?: number; interceptions?: number }) || {},
+          duels: (stat?.duels as { total?: number; won?: number }) || {},
+          dribbles: (stat?.dribbles as { attempts?: number; success?: number; past?: number }) || {},
+          fouls: (stat?.fouls as { drawn?: number; committed?: number }) || {},
+          cards: (stat?.cards as { yellow?: number; red?: number }) || {},
+          penalty: (stat?.penalty as { won?: number; committed?: number; scored?: number; missed?: number; saved?: number }) || {},
+        })),
+      });
+
+      // 평점 추출
+      const rating = stats?.games?.rating;
+      if (rating) {
+        const ratingValue = typeof rating === 'string' ? parseFloat(rating) : Number(rating);
+        if (!isNaN(ratingValue) && ratingValue > 0) {
+          ratings[playerId] = ratingValue;
+        }
+      }
+
+      // 주장 여부
+      if (stats?.games?.captain) {
+        captainIds.push(playerId);
+      }
+    }
+  }
+
+  return {
+    success: true,
+    allPlayersData,
+    ratings,
+    captainIds,
+    message: '선수 통계 데이터를 성공적으로 가져왔습니다',
+  };
 }
 
-async function fetchPlayerRatingsAndCaptainsInternal(matchId: string): Promise<PlayerRatingsAndCaptains> {
-  try {
-    if (!matchId || !process.env.FOOTBALL_API_KEY) {
-      return { ratings: {}, captainIds: [] };
-    }
+/**
+ * 전체 선수 데이터에서 특정 선수 찾기 (내부 헬퍼 함수)
+ */
+function getPlayerFromAllStats(
+  allPlayersData: PlayerStatsData[],
+  playerId: number
+): PlayerStatsData | null {
+  return allPlayersData.find((p) => p.player.id === playerId) || null;
+}
 
-    const response = await fetch(
-      `https://v3.football.api-sports.io/fixtures/players?fixture=${matchId}`,
-      {
-        headers: {
-          'x-rapidapi-host': 'v3.football.api-sports.io',
-          'x-rapidapi-key': process.env.FOOTBALL_API_KEY,
-        },
-        next: { revalidate: 120 }
-      }
-    );
+// ============================================
+// Export: 캐시 적용된 함수들
+// ============================================
 
-    if (!response.ok) return { ratings: {}, captainIds: [] };
+export const fetchAllPlayerStats = cache(fetchAllPlayerStatsInternal);
 
-    const data = await response.json();
-    if (!data?.response?.length) return { ratings: {}, captainIds: [] };
-
-    const ratings: Record<number, number> = {};
-    const captainIds: number[] = [];
-
-    for (const teamStats of data.response) {
-      if (!teamStats?.players?.length) continue;
-
-      for (const player of teamStats.players) {
-        if (!player?.player?.id) continue;
-
-        const playerId = player.player.id;
-        const stats = player.statistics?.[0];
-
-        // 평점 추출
-        const rating = stats?.games?.rating;
-        if (rating) {
-          const ratingValue = typeof rating === 'string' ? parseFloat(rating) : Number(rating);
-          if (!isNaN(ratingValue) && ratingValue > 0) {
-            ratings[playerId] = ratingValue;
-          }
-        }
-
-        // 주장 여부 확인
-        if (stats?.games?.captain) {
-          captainIds.push(playerId);
-        }
-      }
-    }
-
-    return { ratings, captainIds };
-  } catch {
-    return { ratings: {}, captainIds: [] };
-  }
+/**
+ * 평점 + 주장 정보만 가져오기 (하위 호환)
+ * 내부적으로 fetchAllPlayerStats 사용
+ */
+async function fetchPlayerRatingsAndCaptainsInternal(
+  matchId: string,
+  matchStatus?: string
+): Promise<PlayerRatingsAndCaptains> {
+  const result = await fetchAllPlayerStatsInternal(matchId, matchStatus);
+  return {
+    ratings: result.ratings,
+    captainIds: result.captainIds,
+  };
 }
 
 export const fetchPlayerRatingsAndCaptains = cache(fetchPlayerRatingsAndCaptainsInternal);
 
 /**
- * 평점만 가져오는 경량 액션 (하위 호환성 유지)
+ * 평점만 가져오기 (하위 호환)
  */
-async function fetchPlayerRatingsInternal(matchId: string): Promise<Record<number, number>> {
-  const result = await fetchPlayerRatingsAndCaptainsInternal(matchId);
+async function fetchPlayerRatingsInternal(
+  matchId: string,
+  matchStatus?: string
+): Promise<Record<number, number>> {
+  const result = await fetchAllPlayerStatsInternal(matchId, matchStatus);
   return result.ratings;
 }
 
 export const fetchPlayerRatings = cache(fetchPlayerRatingsInternal);
 
 /**
- * 여러 선수의 통계를 한 번에 가져오는 함수
+ * 개별 선수 통계 가져오기 (하위 호환)
+ * - 이미 전체 데이터가 있으면 필터링만 수행
+ * - 없으면 fetchAllPlayerStats 호출
  */
-async function fetchMultiplePlayerStatsInternal(
-  matchId: string,
-  playerIds: number[]
-): Promise<Record<number, any>> {
-  try {
-    if (!matchId || !playerIds.length || !process.env.FOOTBALL_API_KEY) {
-      return {};
-    }
-
-    const response = await fetch(
-      `https://v3.football.api-sports.io/fixtures/players?fixture=${matchId}`,
-      {
-        headers: {
-          'x-rapidapi-host': 'v3.football.api-sports.io',
-          'x-rapidapi-key': process.env.FOOTBALL_API_KEY,
-        },
-        next: { revalidate: 120 }
-      }
-    );
-
-    if (!response.ok) return {};
-
-    const data = await response.json();
-    if (!data?.response?.length) return {};
-
-    const statsMap: Record<number, any> = {};
-
-    for (const teamStats of data.response) {
-      if (!teamStats?.players?.length) continue;
-
-      for (const player of teamStats.players) {
-        if (!player?.player?.id || !playerIds.includes(player.player.id)) continue;
-
-        statsMap[player.player.id] = {
-          response: [
-            {
-              player: player.player,
-              statistics: player.statistics || []
-            }
-          ]
-        };
-      }
-    }
-
-    return statsMap;
-  } catch {
-    return {};
-  }
+export interface PlayerStatsResponse {
+  success: boolean;
+  response: PlayerStatsData | null;
+  message: string;
 }
 
-export const fetchCachedMultiplePlayerStats = cache(fetchMultiplePlayerStatsInternal);
+async function fetchPlayerStatsInternal(
+  matchId: string,
+  playerId: number,
+  matchStatus?: string
+): Promise<PlayerStatsResponse> {
+  const allData = await fetchAllPlayerStatsInternal(matchId, matchStatus);
+
+  if (!allData.success) {
+    return {
+      success: false,
+      response: null,
+      message: allData.message || '데이터를 가져올 수 없습니다',
+    };
+  }
+
+  const playerStats = getPlayerFromAllStats(allData.allPlayersData, playerId);
+
+  if (!playerStats) {
+    return {
+      success: false,
+      response: null,
+      message: '해당 선수의 통계를 찾을 수 없습니다',
+    };
+  }
+
+  return {
+    success: true,
+    response: playerStats,
+    message: '선수 통계 데이터를 성공적으로 가져왔습니다',
+  };
+}
+
+export const fetchCachedPlayerStats = cache(fetchPlayerStatsInternal);

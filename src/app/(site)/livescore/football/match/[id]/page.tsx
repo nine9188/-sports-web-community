@@ -2,8 +2,8 @@ import { Metadata } from 'next';
 import { fetchCachedMatchFullData, MatchFullDataResponse } from '@/domains/livescore/actions/match/matchData';
 import { getCachedSidebarData } from '@/domains/livescore/actions/match/sidebarData';
 import { getCachedPowerData } from '@/domains/livescore/actions/match/headtohead';
-import { fetchPlayerRatingsAndCaptains } from '@/domains/livescore/actions/match/playerStats';
-import { fetchMatchPlayerStats } from '@/domains/livescore/actions/match/matchPlayerStats';
+import { fetchAllPlayerStats } from '@/domains/livescore/actions/match/playerStats';
+import type { AllPlayerStatsResponse } from '@/domains/livescore/types/lineup';
 import { getMatchCacheBulk, setMatchCache } from '@/domains/livescore/actions/match/matchCache';
 import MatchPageClient, { MatchTabType } from '@/domains/livescore/components/football/match/MatchPageClient';
 import { notFound } from 'next/navigation';
@@ -194,32 +194,36 @@ export default async function MatchPage({
     const numericMatchId = parseInt(matchId, 10);
     const isFinished = matchData.match?.status?.code === 'FT';
 
-    // FT 경기: L2 캐시에서 power, playerRatings, matchPlayerStats 조회
+    // FT 경기: L2 캐시에서 power, matchPlayerStats 조회
+    // (playerRatings는 matchPlayerStats에 통합됨)
     let powerDataResult: { success: boolean; data?: unknown } = { success: false };
-    let playerRatingsResult: unknown = null;
-    let matchPlayerStatsResult: unknown = null;
+    let allPlayerStatsResult: AllPlayerStatsResponse | null = null;
     let sidebarDataResult: { success: boolean; data?: unknown } = { success: false };
 
     if (isFinished) {
       // 캐시 벌크 조회 (1회 쿼리)
       const [cachedExtra, sidebarResult] = await Promise.all([
-        getMatchCacheBulk(numericMatchId, ['power', 'playerRatings', 'matchPlayerStats']),
+        getMatchCacheBulk(numericMatchId, ['power', 'matchPlayerStats']),
         getCachedSidebarData(matchId),
       ]);
       sidebarDataResult = sidebarResult;
 
       const hasPower = !!cachedExtra['power'];
-      const hasRatings = !!cachedExtra['playerRatings'];
-      const hasStats = !!cachedExtra['matchPlayerStats'];
+      const hasPlayerStats = !!cachedExtra['matchPlayerStats'];
 
       if (hasPower) {
         powerDataResult = cachedExtra['power'] as { success: boolean; data?: unknown };
       }
-      if (hasRatings) {
-        playerRatingsResult = cachedExtra['playerRatings'];
-      }
-      if (hasStats) {
-        matchPlayerStatsResult = cachedExtra['matchPlayerStats'];
+      if (hasPlayerStats) {
+        const cached = cachedExtra['matchPlayerStats'] as Record<string, unknown>;
+
+        // 캐시 형식 확인 - 새 형식(AllPlayerStatsResponse) 또는 구 형식(response array)
+        if ('allPlayersData' in cached && Array.isArray(cached.allPlayersData)) {
+          allPlayerStatsResult = cached as AllPlayerStatsResponse;
+        } else {
+          // 구 형식이거나 잘못된 형식이면 다시 fetch
+          allPlayerStatsResult = null;
+        }
       }
 
       // 캐시에 없는 것만 API에서 가져옴
@@ -233,18 +237,12 @@ export default async function MatchPage({
           })
         );
       }
-      if (!hasRatings) {
+      // 통합된 fetchAllPlayerStats 사용 (API 1회 호출로 모든 데이터 획득)
+      // 캐시가 없거나 구 형식인 경우 API 호출
+      if (!allPlayerStatsResult) {
         apiPromises.push(
-          fetchPlayerRatingsAndCaptains(matchId).then(r => {
-            playerRatingsResult = r;
-            setMatchCache(numericMatchId, 'playerRatings', r).catch(() => {});
-          })
-        );
-      }
-      if (!hasStats) {
-        apiPromises.push(
-          fetchMatchPlayerStats(matchId).then(r => {
-            matchPlayerStatsResult = r;
+          fetchAllPlayerStats(matchId, matchData.match?.status?.code).then(r => {
+            allPlayerStatsResult = r;
             setMatchCache(numericMatchId, 'matchPlayerStats', r).catch(() => {});
           })
         );
@@ -252,19 +250,17 @@ export default async function MatchPage({
 
       if (apiPromises.length > 0) await Promise.all(apiPromises);
     } else {
-      // 비종료 경기: 기존대로 모든 API 병렬 호출
-      const [sResult, pResult, rResult, stsResult] = await Promise.all([
+      // 비종료 경기: 통합 API 병렬 호출 (기존 2개 → 1개로 통합)
+      const [sResult, pResult, playerStatsResult] = await Promise.all([
         getCachedSidebarData(matchId),
         (homeTeamId && awayTeamId)
           ? getCachedPowerData(homeTeamId, awayTeamId, 5)
           : Promise.resolve({ success: false, data: undefined }),
-        fetchPlayerRatingsAndCaptains(matchId),
-        fetchMatchPlayerStats(matchId)
+        fetchAllPlayerStats(matchId, matchData.match?.status?.code)
       ]);
       sidebarDataResult = sResult;
       powerDataResult = pResult;
-      playerRatingsResult = rResult;
-      matchPlayerStatsResult = stsResult;
+      allPlayerStatsResult = playerStatsResult;
     }
 
     const sidebarData = sidebarDataResult.success ? sidebarDataResult.data : null;
@@ -284,8 +280,7 @@ export default async function MatchPage({
           playerKoreanNames={playerKoreanNames}
           initialData={matchData}
           initialPowerData={powerData}
-          initialPlayerRatings={playerRatingsResult}
-          initialMatchPlayerStats={matchPlayerStatsResult}
+          allPlayerStats={allPlayerStatsResult}
           sidebarData={sidebarData}
         />
       </div>

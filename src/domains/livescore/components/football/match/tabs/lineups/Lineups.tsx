@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from 'react';
 import Formation from './Formation';
-import PlayerImage from './components/PlayerImage';
 import PlayerEvents from './components/PlayerEvents';
 import PlayerStatsModal from './components/PlayerStatsModal';
 import { TeamLineup, MatchEvent } from '@/domains/livescore/types/match';
@@ -12,7 +11,7 @@ import { ImageType } from '@/shared/types/image';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 import { PlayerKoreanNames } from '../../MatchPageClient';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
-import { PlayerRatingsAndCaptains } from '@/domains/livescore/actions/match/playerStats';
+import { AllPlayerStatsResponse, PlayerStatsData } from '@/domains/livescore/types/lineup';
 
 interface Player {
   id: number;
@@ -50,12 +49,12 @@ interface LineupsProps {
       };
     };
   };
-  // 서버에서 프리로드된 선수 평점/주장 데이터
-  initialPlayerRatings?: PlayerRatingsAndCaptains;
+  // 서버에서 프리로드된 전체 선수 통계 데이터 (평점, 주장, 통계 포함)
+  allPlayerStats?: AllPlayerStatsResponse | null;
   playerKoreanNames?: PlayerKoreanNames;
 }
 
-export default function Lineups({ matchId, matchData, initialPlayerRatings, playerKoreanNames = {} }: LineupsProps) {
+export default function Lineups({ matchId, matchData, allPlayerStats, playerKoreanNames = {} }: LineupsProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<{
     id: number;
@@ -68,10 +67,16 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings, play
       name: string;
     };
   } | null>(null);
+  // 현재 팀의 선수 목록과 인덱스 (네비게이션용)
+  const [teamPlayers, setTeamPlayers] = useState<Player[]>([]);
+  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
 
   // 서버에서 프리로드된 데이터 사용 (클라이언트 fetch 제거)
-  const playersRatings = initialPlayerRatings?.ratings ?? {};
-  const captainIds = initialPlayerRatings?.captainIds ?? [];
+  const playersRatings = allPlayerStats?.ratings ?? {};
+  const captainIds = allPlayerStats?.captainIds ?? [];
+
+  // 전체 선수 통계 데이터 (모달에서 사용)
+  const allPlayersData = allPlayerStats?.allPlayersData ?? [];
 
   // 주장 여부 확인 헬퍼 함수 (lineup API 데이터 또는 player stats API 데이터 사용)
   const isCaptain = (playerId: number, lineupCaptain?: boolean): boolean => {
@@ -126,7 +131,10 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings, play
   }, []);
   
 
-  const handlePlayerClick = useCallback((player: Player, teamId: number, teamName: string) => {
+  const handlePlayerClick = useCallback((player: Player, teamId: number, teamName: string, allPlayers: Player[]) => {
+    const index = allPlayers.findIndex(p => p.id === player.id);
+    setTeamPlayers(allPlayers);
+    setCurrentPlayerIndex(index >= 0 ? index : 0);
     setSelectedPlayer({
       id: player.id,
       name: player.name,
@@ -142,6 +150,39 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings, play
     setIsModalOpen(false);
   }, []);
 
+  // 선수 네비게이션
+  const handlePrevPlayer = useCallback(() => {
+    if (currentPlayerIndex > 0 && selectedPlayer) {
+      const newIndex = currentPlayerIndex - 1;
+      const player = teamPlayers[newIndex];
+      setCurrentPlayerIndex(newIndex);
+      setSelectedPlayer({
+        ...selectedPlayer,
+        id: player.id,
+        name: player.name,
+        number: player.number.toString(),
+        pos: player.pos || '',
+        photo: player.photo,
+      });
+    }
+  }, [currentPlayerIndex, teamPlayers, selectedPlayer]);
+
+  const handleNextPlayer = useCallback(() => {
+    if (currentPlayerIndex < teamPlayers.length - 1 && selectedPlayer) {
+      const newIndex = currentPlayerIndex + 1;
+      const player = teamPlayers[newIndex];
+      setCurrentPlayerIndex(newIndex);
+      setSelectedPlayer({
+        ...selectedPlayer,
+        id: player.id,
+        name: player.name,
+        number: player.number.toString(),
+        pos: player.pos || '',
+        photo: player.photo,
+      });
+    }
+  }, [currentPlayerIndex, teamPlayers, selectedPlayer]);
+
   const matchStatus = matchData?.fixture?.status?.short;
 
   if (!lineups) {
@@ -152,7 +193,17 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings, play
   const awayTeam = matchData?.awayTeam || { id: 0, name: '원정팀', logo: '/placeholder-team.png' };
   const homeLineup = lineups.home;
   const awayLineup = lineups.away;
-  
+
+  // 팀별 전체 선수 목록 (선발 + 교체) - 네비게이션용
+  const homeAllPlayers: Player[] = [
+    ...(homeLineup.startXI?.map(item => item.player) || []),
+    ...(homeLineup.substitutes?.map(item => item.player) || [])
+  ];
+  const awayAllPlayers: Player[] = [
+    ...(awayLineup.startXI?.map(item => item.player) || []),
+    ...(awayLineup.substitutes?.map(item => item.player) || [])
+  ];
+
   // 포메이션 데이터 준비
   const homeFormationData = prepareFormationData(homeLineup);
   const awayFormationData = prepareFormationData(awayLineup);
@@ -230,21 +281,22 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings, play
                       onClick={() => handlePlayerClick(
                         homeLineup.startXI[index].player,
                         homeTeam.id,
-                        homeTeam.name
+                        homeTeam.name,
+                        homeAllPlayers
                       )}
                     >
                       <div className="relative">
                         {homeLineup.startXI[index].player.id ? (
-                          <PlayerImage
+                          <UnifiedSportsImage
+                            imageId={homeLineup.startXI[index].player.id}
+                            imageType={ImageType.Players}
                             alt={`${homeLineup.startXI[index].player.name} 선수 사진`}
-                            playerId={homeLineup.startXI[index].player.id}
-                            priority={index < 5} // 처음 5명은 우선 로딩
-                            width={"w-10"}
-                            height={"h-10"}
-                            className="border border-black/7 dark:border-white/10"
-                          />
+                            size="lg"
+                            variant="circle"
+                            priority={index < 5}
+                                                      />
                         ) : (
-                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full border border-black/7 dark:border-white/10">
+                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full">
                             {homeLineup.startXI[index].player.number || '-'}
                           </div>
                         )}
@@ -275,23 +327,24 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings, play
                     <div
                       className="flex items-center gap-3 cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors py-2 px-4"
                       onClick={() => handlePlayerClick(
-                        awayLineup.startXI[index].player, 
-                        awayTeam.id, 
-                        awayTeam.name
+                        awayLineup.startXI[index].player,
+                        awayTeam.id,
+                        awayTeam.name,
+                        awayAllPlayers
                       )}
                     >
                       <div className="relative">
                         {awayLineup.startXI[index].player.id ? (
-                          <PlayerImage 
+                          <UnifiedSportsImage
+                            imageId={awayLineup.startXI[index].player.id}
+                            imageType={ImageType.Players}
                             alt={`${awayLineup.startXI[index].player.name} 선수 사진`}
-                            playerId={awayLineup.startXI[index].player.id}
-                            priority={index < 5} // 처음 5명은 우선 로딩
-                            width={"w-10"}
-                            height={"h-10"}
-                            className="border border-black/7 dark:border-white/10"
-                          />
+                            size="lg"
+                            variant="circle"
+                            priority={index < 5}
+                                                      />
                         ) : (
-                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full border border-black/7 dark:border-white/10">
+                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full">
                             {awayLineup.startXI[index].player.number || '-'}
                           </div>
                         )}
@@ -346,17 +399,21 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings, play
                       onClick={() => handlePlayerClick(
                         homeLineup.substitutes[index].player,
                         homeTeam.id,
-                        homeTeam.name
+                        homeTeam.name,
+                        homeAllPlayers
                       )}
                     >
                       <div className="relative">
                         {homeLineup.substitutes[index].player.id ? (
-                          <PlayerImage
+                          <UnifiedSportsImage
+                            imageId={homeLineup.substitutes[index].player.id}
+                            imageType={ImageType.Players}
                             alt={`${homeLineup.substitutes[index].player.name} 선수 사진`}
-                            playerId={homeLineup.substitutes[index].player.id}
-                          />
+                            size="lg"
+                            variant="circle"
+                                                      />
                         ) : (
-                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full border border-black/7 dark:border-white/10">
+                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full">
                             {homeLineup.substitutes[index].player.number || '-'}
                           </div>
                         )}
@@ -387,19 +444,23 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings, play
                     <div
                       className="flex items-center gap-3 cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors py-2 px-4"
                       onClick={() => handlePlayerClick(
-                        awayLineup.substitutes[index].player, 
-                        awayTeam.id, 
-                        awayTeam.name
+                        awayLineup.substitutes[index].player,
+                        awayTeam.id,
+                        awayTeam.name,
+                        awayAllPlayers
                       )}
                     >
                       <div className="relative">
                         {awayLineup.substitutes[index].player.id ? (
-                          <PlayerImage 
+                          <UnifiedSportsImage
+                            imageId={awayLineup.substitutes[index].player.id}
+                            imageType={ImageType.Players}
                             alt={`${awayLineup.substitutes[index].player.name} 선수 사진`}
-                            playerId={awayLineup.substitutes[index].player.id}
-                          />
+                            size="lg"
+                            variant="circle"
+                                                      />
                         ) : (
-                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full border border-black/7 dark:border-white/10">
+                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full">
                             {awayLineup.substitutes[index].player.number || '-'}
                           </div>
                         )}
@@ -451,7 +512,7 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings, play
                           alt={`${homeLineup.coach?.name || '감독'} 사진`}
                           size="lg"
                           variant="circle"
-                        />
+                                                  />
                       ) : (
                         <div className="w-10 h-10 rounded-full bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 flex items-center justify-center">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -474,7 +535,7 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings, play
                           alt={`${awayLineup.coach?.name || '감독'} 사진`}
                           size="lg"
                           variant="circle"
-                        />
+                                                  />
                       ) : (
                         <div className="w-10 h-10 rounded-full bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 flex items-center justify-center">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -532,20 +593,20 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings, play
                   <div
                     key={`home-start-${index}`}
                     className="flex items-center gap-3 cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors py-2 px-4"
-                    onClick={() => handlePlayerClick(item.player, homeTeam.id, homeTeam.name)}
+                    onClick={() => handlePlayerClick(item.player, homeTeam.id, homeTeam.name, homeAllPlayers)}
                   >
                     <div className="relative">
                       {item.player.id ? (
-                        <PlayerImage
+                        <UnifiedSportsImage
+                          imageId={item.player.id}
+                          imageType={ImageType.Players}
                           alt={`${item.player.name} 선수 사진`}
-                          playerId={item.player.id}
+                          size="lg"
+                          variant="circle"
                           priority={index < 5}
-                          width="w-10"
-                          height="h-10"
-                          className="border border-black/7 dark:border-white/10"
-                        />
+                                                  />
                       ) : (
-                        <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full border border-black/7 dark:border-white/10">
+                        <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full">
                           {item.player.number || '-'}
                         </div>
                       )}
@@ -584,16 +645,19 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings, play
                   <div
                     key={`home-sub-${index}`}
                     className="flex items-center gap-3 cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors py-2 px-4"
-                    onClick={() => handlePlayerClick(item.player, homeTeam.id, homeTeam.name)}
+                    onClick={() => handlePlayerClick(item.player, homeTeam.id, homeTeam.name, homeAllPlayers)}
                   >
                     <div className="relative">
                       {item.player.id ? (
-                        <PlayerImage
+                        <UnifiedSportsImage
+                          imageId={item.player.id}
+                          imageType={ImageType.Players}
                           alt={`${item.player.name} 선수 사진`}
-                          playerId={item.player.id}
-                        />
+                          size="lg"
+                          variant="circle"
+                                                  />
                       ) : (
-                        <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full border border-black/7 dark:border-white/10">
+                        <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full">
                           {item.player.number || '-'}
                         </div>
                       )}
@@ -636,7 +700,7 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings, play
                       alt={`${homeLineup.coach?.name || '감독'} 사진`}
                       size="lg"
                       variant="circle"
-                    />
+                                          />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 flex items-center justify-center">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -688,20 +752,20 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings, play
                   <div
                     key={`away-start-${index}`}
                     className="flex items-center gap-3 cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors py-2 px-4"
-                    onClick={() => handlePlayerClick(item.player, awayTeam.id, awayTeam.name)}
+                    onClick={() => handlePlayerClick(item.player, awayTeam.id, awayTeam.name, awayAllPlayers)}
                   >
                     <div className="relative">
                       {item.player.id ? (
-                        <PlayerImage
+                        <UnifiedSportsImage
+                          imageId={item.player.id}
+                          imageType={ImageType.Players}
                           alt={`${item.player.name} 선수 사진`}
-                          playerId={item.player.id}
+                          size="lg"
+                          variant="circle"
                           priority={index < 5}
-                          width="w-10"
-                          height="h-10"
-                          className="border border-black/7 dark:border-white/10"
-                        />
+                                                  />
                       ) : (
-                        <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full border border-black/7 dark:border-white/10">
+                        <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full">
                           {item.player.number || '-'}
                         </div>
                       )}
@@ -740,16 +804,19 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings, play
                   <div
                     key={`away-sub-${index}`}
                     className="flex items-center gap-3 cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors py-2 px-4"
-                    onClick={() => handlePlayerClick(item.player, awayTeam.id, awayTeam.name)}
+                    onClick={() => handlePlayerClick(item.player, awayTeam.id, awayTeam.name, awayAllPlayers)}
                   >
                     <div className="relative">
                       {item.player.id ? (
-                        <PlayerImage
+                        <UnifiedSportsImage
+                          imageId={item.player.id}
+                          imageType={ImageType.Players}
                           alt={`${item.player.name} 선수 사진`}
-                          playerId={item.player.id}
-                        />
+                          size="lg"
+                          variant="circle"
+                                                  />
                       ) : (
-                        <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full border border-black/7 dark:border-white/10">
+                        <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full">
                           {item.player.number || '-'}
                         </div>
                       )}
@@ -792,7 +859,7 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings, play
                       alt={`${awayLineup.coach?.name || '감독'} 사진`}
                       size="lg"
                       variant="circle"
-                    />
+                                          />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 flex items-center justify-center">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -817,7 +884,6 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings, play
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           playerId={selectedPlayer.id}
-          matchId={matchId}
           playerInfo={{
             name: playerKoreanNames[selectedPlayer.id] || selectedPlayer.name,
             number: selectedPlayer.number,
@@ -828,6 +894,11 @@ export default function Lineups({ matchId, matchData, initialPlayerRatings, play
               name: getTeamDisplayName(selectedPlayer.team.id, selectedPlayer.team.name)
             }
           }}
+          allPlayersData={allPlayersData}
+          onPrevPlayer={handlePrevPlayer}
+          onNextPlayer={handleNextPlayer}
+          hasPrev={currentPlayerIndex > 0}
+          hasNext={currentPlayerIndex < teamPlayers.length - 1}
         />
       )}
     </div>

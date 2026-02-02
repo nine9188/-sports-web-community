@@ -8,8 +8,7 @@ import TabContent from './TabContent';
 import { MatchHeaderSkeleton } from '@/domains/livescore/components/common/HeadersUI';
 import { MatchFullDataResponse } from '@/domains/livescore/actions/match/matchData';
 import { HeadToHeadTestData } from '@/domains/livescore/actions/match/headtohead';
-import { PlayerRatingsAndCaptains } from '@/domains/livescore/actions/match/playerStats';
-import { MatchPlayerStatsResponse } from '@/domains/livescore/actions/match/matchPlayerStats';
+import { AllPlayerStatsResponse } from '@/domains/livescore/types/lineup';
 import { MatchInfoSection } from './sidebar/MatchSidebar';
 import { type SidebarData } from '@/domains/livescore/actions/match/sidebarData';
 import { scrollToTop } from '@/shared/utils/scroll';
@@ -51,8 +50,8 @@ interface MatchPageClientProps {
   initialTab: MatchTabType;
   initialData: MatchFullDataResponse;
   initialPowerData?: HeadToHeadTestData;
-  initialPlayerRatings?: PlayerRatingsAndCaptains;
-  initialMatchPlayerStats?: MatchPlayerStatsResponse;
+  // 통합된 선수 통계 데이터 (평점, 주장, 전체 통계 포함)
+  allPlayerStats?: AllPlayerStatsResponse | null;
   sidebarData?: SidebarData | null;
   playerKoreanNames?: PlayerKoreanNames;
 }
@@ -62,8 +61,7 @@ export default function MatchPageClient({
   initialTab,
   initialData,
   initialPowerData,
-  initialPlayerRatings,
-  initialMatchPlayerStats,
+  allPlayerStats,
   sidebarData,
   playerKoreanNames = {},
 }: MatchPageClientProps) {
@@ -146,8 +144,7 @@ export default function MatchPageClient({
           currentTab={currentTab}
           initialData={initialData}
           initialPowerData={initialPowerData}
-          initialPlayerRatings={initialPlayerRatings}
-          initialMatchPlayerStats={initialMatchPlayerStats}
+          allPlayerStats={allPlayerStats}
           relatedPosts={sidebarData?.relatedPosts}
           playerKoreanNames={playerKoreanNames}
         />

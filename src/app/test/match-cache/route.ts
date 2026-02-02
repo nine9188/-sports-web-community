@@ -1,7 +1,6 @@
 import { fetchCachedMatchFullData } from '@/domains/livescore/actions/match/matchData';
 import { getCachedPowerData } from '@/domains/livescore/actions/match/headtohead';
-import { fetchPlayerRatingsAndCaptains } from '@/domains/livescore/actions/match/playerStats';
-import { fetchMatchPlayerStats } from '@/domains/livescore/actions/match/matchPlayerStats';
+import { fetchAllPlayerStats } from '@/domains/livescore/actions/match/playerStats';
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 
@@ -23,20 +22,17 @@ export async function GET(request: Request) {
 
   const elapsed1 = Date.now() - startTime;
 
-  // 2. 헤드투헤드 + 선수 평점 + 선수 통계
+  // 2. 헤드투헤드 + 선수 통계 (통합 함수)
   let powerData = null;
-  let playerRatings = null;
-  let matchPlayerStats = null;
+  let allPlayerStats = null;
 
   if (matchData.success && matchData.homeTeam && matchData.awayTeam) {
-    const [p, r, s] = await Promise.all([
+    const [p, playerStats] = await Promise.all([
       getCachedPowerData(matchData.homeTeam.id, matchData.awayTeam.id, 5),
-      fetchPlayerRatingsAndCaptains(matchId),
-      fetchMatchPlayerStats(matchId),
+      fetchAllPlayerStats(matchId, matchData.match?.status?.code),
     ]);
     powerData = p;
-    playerRatings = r;
-    matchPlayerStats = s;
+    allPlayerStats = playerStats;
   }
 
   const totalElapsed = Date.now() - startTime;
@@ -62,8 +58,7 @@ export async function GET(request: Request) {
       stats: JSON.stringify(matchData.stats || []).length,
       standings: JSON.stringify(matchData.standings || {}).length,
       power: JSON.stringify(powerData || {}).length,
-      playerRatings: JSON.stringify(playerRatings || {}).length,
-      matchPlayerStats: JSON.stringify(matchPlayerStats || {}).length,
+      allPlayerStats: JSON.stringify(allPlayerStats || {}).length,
     },
     teams: matchData.match ? `${matchData.match.teams.home.name} vs ${matchData.match.teams.away.name}` : null,
   });

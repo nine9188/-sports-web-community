@@ -49,6 +49,7 @@ interface UnifiedSportsImageProps {
   priority?: boolean;
   fit?: 'cover' | 'contain';
   className?: string;
+  showBorder?: boolean; // 테두리 표시 여부
   // ApiSportsImage 호환용 props
   width?: number;
   height?: number;
@@ -78,6 +79,7 @@ export default function UnifiedSportsImage({
   loading = 'lazy',
   priority = false,
   className = '',
+  showBorder = false,
   fit,
   width,
   height,
@@ -134,6 +136,9 @@ export default function UnifiedSportsImage({
   const finalWidth = width ?? sizeValues[size].width;
   const finalHeight = height ?? sizeValues[size].height;
 
+  // 테두리 클래스
+  const borderClasses = showBorder ? 'border border-black/7 dark:border-white/10' : '';
+
   // 컨테이너 클래스 생성
   const containerClasses = [
     useCustomSize ? '' : sizeClasses[size],
@@ -141,6 +146,7 @@ export default function UnifiedSportsImage({
     'relative',
     'flex-shrink-0',
     'overflow-hidden',
+    borderClasses,
     className
   ].filter(Boolean).join(' ');
 
@@ -170,7 +176,7 @@ export default function UnifiedSportsImage({
         priority={priority}
         loading={priority ? undefined : loading}
         onError={() => setHasError(true)}
-        className={`w-full h-full ${finalFit === 'contain' ? 'object-contain' : 'object-cover'}`}
+        className={`w-full h-full ${finalFit === 'contain' ? 'object-contain' : 'object-cover'} ${shapeClasses[variant]}`}
         sizes={`${finalWidth}px`}
       />
     </div>
