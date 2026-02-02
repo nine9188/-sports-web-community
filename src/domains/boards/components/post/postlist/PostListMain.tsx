@@ -1,17 +1,14 @@
 /**
  * PostList 메인 컴포넌트
  *
- * - 모바일/데스크톱 감지 후 적절한 컴포넌트 렌더링
+ * - CSS 미디어 쿼리로 모바일/데스크톱 분기 (하이드레이션 불일치 방지)
  * - 공통 wrapper (header, footer) 관리
- *
- * 이 파일은 100줄 이하로 유지하여 가독성 확보
  */
 
 'use client';
 
 import React, { useDeferredValue } from 'react';
 import { PostListProps } from './types';
-import { useIsMobile } from './hooks';
 import { PostListSkeleton } from './components/shared/PostListSkeleton';
 import { PostListEmpty } from './components/shared/PostListEmpty';
 import { MobilePostList } from './components/mobile/MobilePostList';
@@ -43,11 +40,25 @@ export default function PostList({
   currentBoardId,
   variant = 'text',
 }: PostListProps) {
-  // 모바일/데스크톱 감지
-  const isMobile = useIsMobile();
-
   // React 18 동시성 기능: loading 상태를 지연시켜 깜빡임 방지
   const deferredLoading = useDeferredValue(loading);
+
+  // maxHeight 처리: sm: prefix가 있으면 데스크톱에서만 적용
+  const getMaxHeightStyle = () => {
+    if (!maxHeight) return {};
+
+    // sm: prefix가 있으면 CSS로 처리 (모바일: none, 데스크톱: 값)
+    if (maxHeight.startsWith('sm:')) {
+      return {}; // CSS 클래스로 처리
+    }
+
+    return { maxHeight };
+  };
+
+  // sm: prefix maxHeight를 위한 CSS 클래스
+  const maxHeightClass = maxHeight?.startsWith('sm:')
+    ? `max-h-none sm:max-h-[${maxHeight.replace('sm:', '')}]`
+    : '';
 
   return (
     <div
@@ -62,46 +73,33 @@ export default function PostList({
 
       {/* Main Content */}
       <div
-        className="h-full w-full overflow-y-auto overflow-x-hidden"
-        style={{
-          maxHeight: (() => {
-            if (!maxHeight) return 'none';
-
-            // 모바일에서 sm: prefix 처리
-            if (isMobile && maxHeight.startsWith('sm:')) {
-              return 'none'; // 모바일에서는 높이 제한 없음
-            }
-
-            // 데스크톱에서 sm: prefix 제거
-            if (maxHeight.startsWith('sm:')) {
-              return maxHeight.replace('sm:', '');
-            }
-
-            return maxHeight;
-          })(),
-        }}
+        className={`h-full w-full overflow-y-auto overflow-x-hidden ${maxHeightClass}`}
+        style={getMaxHeightStyle()}
       >
         {deferredLoading ? (
           <PostListSkeleton />
         ) : posts.length === 0 ? (
           <PostListEmpty message={emptyMessage} />
-        ) : isMobile ? (
-          <MobilePostList
-            posts={posts}
-            currentPostId={currentPostId}
-            currentBoardId={currentBoardId}
-            variant={variant}
-            maxHeight={maxHeight}
-          />
         ) : (
-          <DesktopPostList
-            posts={posts}
-            currentPostId={currentPostId}
-            currentBoardId={currentBoardId}
-            showBoard={showBoard}
-            variant={variant}
-            maxHeight={maxHeight}
-          />
+          <>
+            {/* 모바일: sm 미만에서만 표시 (CSS 분기) */}
+            <MobilePostList
+              posts={posts}
+              currentPostId={currentPostId}
+              currentBoardId={currentBoardId}
+              variant={variant}
+              maxHeight={maxHeight}
+            />
+            {/* 데스크톱: sm 이상에서만 표시 (CSS 분기) */}
+            <DesktopPostList
+              posts={posts}
+              currentPostId={currentPostId}
+              currentBoardId={currentBoardId}
+              showBoard={showBoard}
+              variant={variant}
+              maxHeight={maxHeight}
+            />
+          </>
         )}
       </div>
 
