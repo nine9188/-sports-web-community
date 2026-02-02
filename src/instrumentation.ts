@@ -1,18 +1,7 @@
 // Next.js instrumentation file
 // 앱 시작 시 한 번 실행됩니다
 
-import * as Sentry from "@sentry/nextjs";
-
 export async function register() {
-  // Sentry 초기화
-  if (process.env.NEXT_RUNTIME === 'nodejs') {
-    await import("../sentry.server.config");
-  }
-
-  if (process.env.NEXT_RUNTIME === 'edge') {
-    await import("../sentry.edge.config");
-  }
-
   // Node.js 환경에서만 실행
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     // 원본 console.error 저장
@@ -42,6 +31,3 @@ export async function register() {
     }
   }
 }
-
-// Sentry 에러 캡처
-export const onRequestError = Sentry.captureRequestError;
