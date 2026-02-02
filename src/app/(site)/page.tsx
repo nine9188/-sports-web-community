@@ -12,7 +12,7 @@ export async function generateMetadata() {
   });
 }
 
-// 메인 페이지 컴포넌트 - 모든 로딩 제거하고 즉시 렌더링
+// 메인 페이지 컴포넌트
 export default function HomePage() {
   return (
     <main className="bg-transparent space-y-4 overflow-visible">
@@ -26,10 +26,10 @@ export default function HomePage() {
       {/* 게시판 모음 위젯 */}
       <BoardCollectionWidget />
 
-      {/* 게시글 리스트 위젯 - 즉시 렌더링 */}
+      {/* 게시글 리스트 위젯 */}
       <AllPostsWidget />
 
-      {/* 뉴스 위젯 - 즉시 렌더링 */}
+      {/* 뉴스 위젯 */}
       <NewsWidget />
     </main>
   );

@@ -4,8 +4,12 @@ import { Inter } from 'next/font/google';
 import RootLayoutProvider from './RootLayoutProvider';
 import { siteConfig } from '@/shared/config';
 
-// Inter 폰트 정의
-const inter = Inter({ subsets: ['latin'] });
+// Inter 폰트 정의 - display: swap으로 FOIT 방지
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  preload: true,
+});
 
 // 전역 메타데이터
 export const metadata: Metadata = {
@@ -33,8 +37,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* LCP 최적화: 로고 이미지 미리 로드 */}
         <link
           rel="preload"
-          href="/_next/image?url=%2Flogo%2F4590football-logo.png&w=640&q=75"
+          href="/logo/4590football-logo.png"
           as="image"
+          type="image/png"
           fetchPriority="high"
         />
       </head>

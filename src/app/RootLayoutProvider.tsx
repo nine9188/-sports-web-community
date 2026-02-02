@@ -5,10 +5,18 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/shared/context/ThemeContext';
 import { AuthProvider } from '@/shared/context/AuthContext';
 import { IconProvider } from '@/shared/context/IconContext';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import SuspensionPopup from '@/shared/components/SuspensionPopup';
-import AttendanceChecker from '@/shared/components/AttendanceChecker';
+
+// 초기 로딩에 필수적이지 않은 컴포넌트들을 lazy load
+const ToastContainer = lazy(() =>
+  import('react-toastify').then(mod => {
+    // CSS도 함께 로드
+    import('react-toastify/dist/ReactToastify.css');
+    return { default: mod.ToastContainer };
+  })
+);
+
+const SuspensionPopup = lazy(() => import('@/shared/components/SuspensionPopup'));
+const AttendanceChecker = lazy(() => import('@/shared/components/AttendanceChecker'));
 
 // ReactQueryDevtools는 개발 환경에서만 lazy load
 const ReactQueryDevtools = lazy(() =>
@@ -70,9 +78,11 @@ export default function RootLayoutProvider({ children }: { children: React.React
         <AuthProvider>
           <IconProvider>
             {children}
-            <ToastContainer {...toastConfig} />
-            <SuspensionPopup />
-            <AttendanceChecker />
+            <Suspense fallback={null}>
+              <ToastContainer {...toastConfig} />
+              <SuspensionPopup />
+              <AttendanceChecker />
+            </Suspense>
           </IconProvider>
         </AuthProvider>
       </ThemeProvider>
