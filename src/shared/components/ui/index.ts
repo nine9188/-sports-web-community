@@ -22,17 +22,5 @@ export {
   DialogCloseButton,
 } from './dialog';
 export { Pagination } from './pagination';
-export {
-  Select as SelectRadix,
-  SelectGroup,
-  SelectValue,
-  SelectTrigger,
-  SelectContent,
-  SelectLabel,
-  SelectItem,
-  SelectSeparator,
-  SelectScrollUpButton,
-  SelectScrollDownButton,
-} from './select-radix';
 export { NativeSelect } from './select-native';
 export { Tabs, TabButton, TabList, TabContent, TabPanel, type TabItem, type TabListProps } from './tabs';

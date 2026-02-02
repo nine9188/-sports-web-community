@@ -22,7 +22,6 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@radix-ui/react-dialog": "^1.1.14",
-    "@radix-ui/react-select": "^2.2.5",
     "@radix-ui/react-slot": "^1.2.0",
     "@solapi/mcp-server": "^1.7.2",
     "@supabase/ssr": "^0.6.1",
