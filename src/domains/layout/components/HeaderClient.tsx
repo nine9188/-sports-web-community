@@ -96,8 +96,9 @@ const SearchModal = React.memo(function SearchModal({
             type="button"
             onClick={() => router.back()}
             className="rounded-md h-9 w-9"
+            aria-label="뒤로 가기"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           </Button>
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400" />
@@ -222,12 +223,13 @@ export default function HeaderClient({
               onClick={onProfileClick}
               className="rounded-md h-10 w-10"
               style={{ WebkitTapHighlightColor: 'transparent' }}
+              aria-label="프로필 메뉴 열기"
             >
               <UserIcon
                 iconUrl={userData?.iconInfo?.iconUrl || iconUrl}
                 level={userLevel}
                 size={20}
-                alt="프로필 이미지"
+                alt=""
                 className="rounded-full object-cover"
               />
             </Button>
@@ -239,8 +241,9 @@ export default function HeaderClient({
               onClick={onProfileClick}
               className="rounded-md h-10 w-10"
               style={{ WebkitTapHighlightColor: 'transparent' }}
+              aria-label="로그인 메뉴 열기"
             >
-              <User className="h-5 w-5" />
+              <User className="h-5 w-5" aria-hidden="true" />
             </Button>
           )}
         </div>
@@ -288,8 +291,9 @@ export default function HeaderClient({
                   onClick={toggleMobileMenu}
                   onTouchEnd={handleMobileMenuTouch}
                   style={{ WebkitTapHighlightColor: 'transparent' }}
+                  aria-label="메뉴 열기"
                 >
-                  <Menu className="h-5 w-5" />
+                  <Menu className="h-5 w-5" aria-hidden="true" />
                 </Button>
               </div>
             </div>
@@ -353,8 +357,9 @@ export default function HeaderClient({
                   onClick={goToSearchPage}
                   className="rounded-md h-10 w-10"
                   style={{ WebkitTapHighlightColor: 'transparent' }}
+                  aria-label="검색"
                 >
-                  <Search className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                  <Search className="h-5 w-5 text-gray-600 dark:text-gray-300" aria-hidden="true" />
                 </Button>
 
                 <div className="min-w-[40px] h-10 flex items-center">
@@ -368,8 +373,9 @@ export default function HeaderClient({
                   onClick={toggleMobileMenu}
                   onTouchEnd={handleMobileMenuTouch}
                   style={{ WebkitTapHighlightColor: 'transparent' }}
+                  aria-label="메뉴 열기"
                 >
-                  <Menu className="h-5 w-5" />
+                  <Menu className="h-5 w-5" aria-hidden="true" />
                 </Button>
               </div>
             </div>

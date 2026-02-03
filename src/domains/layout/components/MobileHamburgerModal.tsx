@@ -76,8 +76,9 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
             size="icon"
             onClick={onClose}
             className="rounded-md h-9 w-9"
+            aria-label="메뉴 닫기"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
 

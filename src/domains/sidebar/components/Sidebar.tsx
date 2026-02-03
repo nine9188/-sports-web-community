@@ -95,8 +95,9 @@ export default function Sidebar({
             variant="ghost"
             size="icon"
             onClick={onClose}
+            aria-label="사이드바 닫기"
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5" aria-hidden="true" />
           </Button>
         </div>
 

@@ -151,12 +151,12 @@ export default function AuthorLink({
   const content = (
     <>
       {showIcon && (
-        <div className="mr-0.5 flex-shrink-0">
+        <div className="mr-0.5 flex-shrink-0" aria-hidden="true">
           <UserIcon
             iconUrl={iconUrl}
             level={level}
             size={iconSize}
-            alt={nickname || '익명'}
+            alt=""
           />
         </div>
       )}

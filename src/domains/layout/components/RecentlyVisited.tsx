@@ -47,8 +47,9 @@ const RecentlyVisited = React.memo(function RecentlyVisited() {
                 size="icon"
                 onClick={toggleExpanded}
                 className="h-7 w-7"
+                aria-label="최근방문 접기"
               >
-                <ChevronDown className="h-4 w-4 text-gray-500 rotate-180 transition-transform" />
+                <ChevronDown className="h-4 w-4 text-gray-500 rotate-180 transition-transform" aria-hidden="true" />
               </Button>
             </div>
 
@@ -72,8 +73,9 @@ const RecentlyVisited = React.memo(function RecentlyVisited() {
                         size="icon"
                         onClick={() => removeBoard(board.id)}
                         className="h-5 w-5 p-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
+                        aria-label={`${board.name} 삭제`}
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-3 w-3" aria-hidden="true" />
                       </Button>
                     </div>
                   ))}
@@ -125,8 +127,9 @@ const RecentlyVisited = React.memo(function RecentlyVisited() {
                         size="icon"
                         onClick={() => removeBoard(board.id)}
                         className="h-5 w-5 p-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                        aria-label={`${board.name} 삭제`}
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-3 w-3" aria-hidden="true" />
                       </Button>
                     </div>
                   ))}
@@ -145,8 +148,9 @@ const RecentlyVisited = React.memo(function RecentlyVisited() {
               size="icon"
               onClick={toggleExpanded}
               className="h-7 w-7 shrink-0"
+              aria-label="최근방문 펼치기"
             >
-              <ChevronDown className="h-4 w-4 text-gray-500 transition-transform" />
+              <ChevronDown className="h-4 w-4 text-gray-500 transition-transform" aria-hidden="true" />
             </Button>
           </div>
         )}

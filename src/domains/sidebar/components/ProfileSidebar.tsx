@@ -85,8 +85,9 @@ export default function ProfileSidebar({
             onClick={onClose}
             className="flex items-center justify-center w-9 h-9 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] active:bg-[#EAEAEA] dark:active:bg-[#333333] transition-colors duration-150"
             style={{ WebkitTapHighlightColor: 'transparent' }}
+            aria-label="프로필 사이드바 닫기"
           >
-            <X className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+            <X className="h-5 w-5 text-gray-600 dark:text-gray-300" aria-hidden="true" />
           </Button>
         </div>
 
