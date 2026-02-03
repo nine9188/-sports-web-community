@@ -2,7 +2,11 @@ import React from 'react';
 import { fetchBigMatches, MatchData as FootballMatchData } from '@/domains/livescore/actions/footballApi';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
-import LiveScoreWidgetV2 from './LiveScoreWidgetV2';
+import { Container } from '@/shared/components/ui';
+import LeagueToggleClient from './LeagueToggleClient';
+import LeagueHeader from './LeagueHeader';
+import MatchCardServer from './MatchCardServer';
+import WidgetHeader from './WidgetHeader';
 import type { League, Match } from './types';
 
 // API 응답 타입 정의
@@ -130,10 +134,58 @@ interface LiveScoreWidgetV2ServerProps {
   initialData?: League[];
 }
 
-// 서버 컴포넌트
+/**
+ * 라이브스코어 위젯 V2 서버 컴포넌트
+ *
+ * 구조:
+ * - 서버: 리그/경기 목록 HTML 렌더링 (LCP 최적화)
+ * - 클라이언트: 펼침/접기 토글만 담당
+ *
+ * 렌더링 흐름:
+ * 1. 서버에서 leagues 데이터로 전체 HTML 생성
+ * 2. LeagueToggleClient가 각 리그 섹션을 감싸서 토글 기능 제공
+ * 3. 클라이언트는 서버 HTML을 그대로 show/hide만 처리
+ */
 export default async function LiveScoreWidgetV2Server({ initialData }: LiveScoreWidgetV2ServerProps = {}) {
   // initialData가 제공되면 바로 사용, 없으면 자체 fetch
   const leagues = initialData ?? await fetchLiveScoreData();
 
-  return <LiveScoreWidgetV2 leagues={leagues} />;
+  // 경기가 없을 때 - 렌더링하지 않음
+  if (leagues.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-4">
+      {leagues.map((league, index) => {
+        const isFirst = index === 0;
+
+        return (
+          <Container
+            key={league.id}
+            className="bg-white dark:bg-[#1D1D1D]"
+          >
+            {/* 첫 번째 리그일 때만 위젯 헤더 표시 (서버 렌더링) */}
+            {isFirst && <WidgetHeader />}
+
+            {/* 리그 섹션: 클라이언트 토글 + 서버 렌더링 콘텐츠 */}
+            <LeagueToggleClient
+              defaultExpanded={isFirst}
+              matchCount={league.matches.length}
+              header={<LeagueHeader league={league} />}
+            >
+              {/* 경기 목록 - 서버에서 렌더링 */}
+              {league.matches.map((match, idx) => (
+                <MatchCardServer
+                  key={match.id}
+                  match={match}
+                  isLast={idx === league.matches.length - 1}
+                />
+              ))}
+            </LeagueToggleClient>
+          </Container>
+        );
+      })}
+    </div>
+  );
 }
