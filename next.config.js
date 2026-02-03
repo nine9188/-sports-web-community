@@ -4,6 +4,10 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // CSS 최적화: critical CSS 인라인
+  experimental: {
+    optimizeCss: true,
+  },
   images: {
     localPatterns: [
       {
