@@ -48,12 +48,12 @@ export default function ClientUserProfile({ profileData, showActions = true }: C
       <div className="py-3 px-4 bg-[#F5F5F5] dark:bg-[#262626] rounded-md">
         {/* 닉네임 행: 아이콘 + 닉네임을 같은 라인에 배치 */}
         <div className="flex items-center gap-2 mb-1.5">
-          <div className="w-5 h-5 relative rounded-full overflow-hidden flex-shrink-0">
+          <div className="w-5 h-5 relative rounded-full overflow-hidden flex-shrink-0" aria-hidden="true">
             <UserIcon
               iconUrl={displayIconUrl}
               level={profileData.level}
               size={20}
-              alt={`${profileData.nickname || '사용자'} 프로필`}
+              alt=""
               className="object-cover"
             />
           </div>

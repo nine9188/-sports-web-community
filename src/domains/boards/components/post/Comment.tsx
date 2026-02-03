@@ -168,12 +168,12 @@ export default function Comment({
             </div>
           )}
           
-          <div className="w-5 h-5 relative rounded-full overflow-hidden flex-shrink-0">
-            <UserIcon 
+          <div className="w-5 h-5 relative rounded-full overflow-hidden flex-shrink-0" aria-hidden="true">
+            <UserIcon
               iconUrl={comment.profiles?.icon_url || null}
               level={comment.profiles?.level || 1}
               size={20}
-              alt={comment.profiles?.nickname || '사용자'}
+              alt=""
               className="object-cover"
               priority
             />

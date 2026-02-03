@@ -20,12 +20,14 @@ export default function PublicProfileCard({ profile }: PublicProfileCardProps) {
         <div className="flex items-center">
           {/* 아이콘 + 닉네임 */}
           <div className="flex items-center gap-2">
-            <UserIcon
-              iconUrl={profile.icon_url}
-              level={profile.level}
-              size={24}
-              alt={`${profile.nickname} 프로필`}
-            />
+            <div aria-hidden="true">
+              <UserIcon
+                iconUrl={profile.icon_url}
+                level={profile.level}
+                size={24}
+                alt=""
+              />
+            </div>
             <span className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0]">
               {profile.nickname}
             </span>
@@ -61,12 +63,14 @@ export default function PublicProfileCard({ profile }: PublicProfileCardProps) {
         {/* 첫째 줄: 아이콘 + 닉네임 + 레벨 + 아이디 */}
         <div className="flex items-center">
           <div className="flex items-center gap-2">
-            <UserIcon
-              iconUrl={profile.icon_url}
-              level={profile.level}
-              size={20}
-              alt={`${profile.nickname} 프로필`}
-            />
+            <div aria-hidden="true">
+              <UserIcon
+                iconUrl={profile.icon_url}
+                level={profile.level}
+                size={20}
+                alt=""
+              />
+            </div>
             <span className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0]">
               {profile.nickname}
             </span>
