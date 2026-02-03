@@ -78,7 +78,7 @@ export default function NewsImageClient({
         src={finalImageUrl}
         alt={alt}
         fill
-        unoptimized
+        unoptimized={!useFallback}
         className={useFallback
           ? "object-contain p-4 dark:invert transition-all"
           : "object-cover transition-all"
