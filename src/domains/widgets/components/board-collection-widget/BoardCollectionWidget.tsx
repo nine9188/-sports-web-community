@@ -68,26 +68,29 @@ function DesktopPostList({ posts }: { posts: BoardCollectionData['recentPosts'] 
     return <EmptyPostList />;
   }
 
+  const leftPosts = posts.slice(0, POSTS_PER_PAGE);
+  const rightPosts = posts.slice(POSTS_PER_PAGE, POSTS_PER_PAGE * 2);
+
   return (
     <div className="grid grid-cols-2">
       {/* 왼쪽 열: 1~10번 */}
       <div className="flex flex-col border-r border-black/5 dark:border-white/10">
-        {posts.slice(0, POSTS_PER_PAGE).map((post, index) => (
+        {leftPosts.map((post, index) => (
           <BoardPostItem
             key={post.id}
             post={post}
-            isLast={index === POSTS_PER_PAGE - 1}
+            isLast={index === leftPosts.length - 1}
           />
         ))}
       </div>
 
       {/* 오른쪽 열: 11~20번 */}
       <div className="flex flex-col">
-        {posts.slice(POSTS_PER_PAGE, POSTS_PER_PAGE * 2).map((post, index) => (
+        {rightPosts.map((post, index) => (
           <BoardPostItem
             key={post.id}
             post={post}
-            isLast={index === POSTS_PER_PAGE - 1}
+            isLast={index === rightPosts.length - 1}
           />
         ))}
       </div>
@@ -103,13 +106,15 @@ function MobilePostList({ posts }: { posts: BoardCollectionData['recentPosts'] }
     return <EmptyPostList />;
   }
 
+  const displayPosts = posts.slice(0, POSTS_PER_PAGE);
+
   return (
     <div className="flex flex-col">
-      {posts.slice(0, POSTS_PER_PAGE).map((post, index) => (
+      {displayPosts.map((post, index) => (
         <BoardPostItem
           key={post.id}
           post={post}
-          isLast={index === POSTS_PER_PAGE - 1 || index === posts.length - 1}
+          isLast={index === displayPosts.length - 1}
         />
       ))}
     </div>
