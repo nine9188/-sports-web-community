@@ -60,13 +60,15 @@ export default function AuthorLink({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const [isMounted, setIsMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const portalDropdownRef = useRef<HTMLDivElement>(null);
 
-  // 클라이언트 마운트 체크
+  // 클라이언트 마운트 체크 및 모바일 감지
   useEffect(() => {
     setIsMounted(true);
+    setIsMobile(window.innerWidth < 768);
   }, []);
 
   // 외부 클릭 시 드롭다운 닫기
@@ -170,14 +172,16 @@ export default function AuthorLink({
     </>
   );
 
-  if (publicId) {
+  // 모바일에서는 클릭 비활성화 - 단순 텍스트로 표시
+  // PC에서만 프로필 드롭다운 활성화
+  if (publicId && !isMobile) {
     return (
       <div className="relative" ref={dropdownRef}>
         <button
           ref={buttonRef}
           type="button"
           onClick={handleToggle}
-          className={`flex items-center flex-shrink-0 hover:underline cursor-pointer min-h-[32px] py-1 ${className}`}
+          className={`flex items-center flex-shrink-0 hover:underline cursor-pointer ${className}`}
         >
           {content}
         </button>
