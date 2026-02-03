@@ -366,8 +366,17 @@ const LEAGUE_BOARD_MAPPING: Record<number, string> = {
   78: 'bundesliga',   // Bundesliga
   135: 'serie-a',     // Serie A
   292: 'k-league-1',  // K League 1
+  293: 'k-league-2',  // K League 2
   98: 'j1-league',    // J1 League
   // 기타 리그들...
+}
+
+// 국내 축구 리그 ID (한국)
+const DOMESTIC_LEAGUE_IDS = [292, 293] // K리그 1, K리그 2
+
+// 리그가 국내 축구인지 확인
+function isDomesticLeague(leagueId: number): boolean {
+  return DOMESTIC_LEAGUE_IDS.includes(leagueId)
 }
 
 // 봇 계정 ID (예측 분석 전용) - 관리자 계정 사용
@@ -663,8 +672,12 @@ async function generateLeaguePredictionPost(
     }
     
     // 예측 데이터를 meta 필드에 저장할 메타데이터 생성
+    // 국내/해외 구분 추가
+    const analysisRegion = isDomesticLeague(league.id) ? 'domestic' : 'foreign'
+
     const metaData = {
       prediction_type: 'league_analysis',
+      analysis_region: analysisRegion, // 'domestic' | 'foreign'
       league_id: league.id,
       league_name: league.name,
       target_date: targetDate,

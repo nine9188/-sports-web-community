@@ -1,5 +1,5 @@
 import { getAllNewsPosts } from './actions';
-import { MainCard, SideCard, ListCard } from './NewsCardServer';
+import { MainCard, SideCard } from './NewsCardServer';
 import { NewsWidgetProps, NewsItem } from './types';
 
 /** 기본 뉴스 게시판 */
@@ -56,9 +56,9 @@ export default async function NewsWidget({ boardSlug, initialData }: NewsWidgetS
           <MainCard item={news[0]} />
         </div>
 
-        {/* 세로 카드 3개 (2~4번째) - 오른쪽 */}
+        {/* 세로 카드 3개 (2~4번째) - 오른쪽, gap-2 (8px * 2 = 16px) */}
         {news.length > 1 && (
-          <div className="md:w-1/2 flex flex-col gap-4">
+          <div className="md:w-1/2 flex flex-col gap-2">
             {news.slice(1, 4).map((item) => (
               <SideCard key={item.id} item={item} />
             ))}
@@ -66,21 +66,12 @@ export default async function NewsWidget({ boardSlug, initialData }: NewsWidgetS
         )}
       </div>
 
-      {/* 추가 뉴스 2열 리스트 (5~14번째) */}
+      {/* 추가 뉴스 2열 그리드 (5~14번째) - SideCard와 동일 */}
       {news.length > 4 && (
-        <div className="flex flex-col md:flex-row md:flex-wrap">
-          {news.slice(4, 14).map((item, index) => {
-            const isLeftColumn = index % 2 === 0;
-            const isLastRow = index >= 8; // 마지막 2개 아이템
-            return (
-              <ListCard
-                key={item.id}
-                item={item}
-                isLeftColumn={isLeftColumn}
-                isLastRow={isLastRow}
-              />
-            );
-          })}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          {news.slice(4, 14).map((item) => (
+            <SideCard key={item.id} item={item} />
+          ))}
         </div>
       )}
     </div>

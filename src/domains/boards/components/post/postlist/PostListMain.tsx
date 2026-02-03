@@ -69,11 +69,11 @@ export default function PostList({
 
   return (
     <div
-      className={`bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 p-0 m-0 ${className}`}
+      className={`bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 overflow-hidden p-0 m-0 ${className}`}
     >
       {/* Header */}
       {headerContent && (
-        <div className="h-12 px-4 flex items-center bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10 rounded-t-lg">
+        <div className="h-12 px-4 flex items-center bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10 md:rounded-t-lg">
           {headerContent}
         </div>
       )}

@@ -4,7 +4,7 @@ import { getSupabaseServer } from '@/shared/lib/supabase/server';
 
 const POSTS_PER_SECTION = 5;
 
-// 고정된 게시판 slug
+// 분석 게시판 slug (링크용)
 const FOREIGN_ANALYSIS_SLUG = 'foreign-analysis';
 const DOMESTIC_ANALYSIS_SLUG = 'domestic-analysis';
 
@@ -27,42 +27,27 @@ interface SectionData {
 
 /**
  * 데이터분석 위젯 데이터를 가져오는 함수
+ * - 해외축구 분석: meta.analysis_region = 'foreign' 분석글
+ * - 국내축구 분석: meta.analysis_region = 'domestic' 분석글
  */
 export async function fetchBoardCollectionData(): Promise<{ foreign: SectionData; domestic: SectionData } | null> {
   try {
     const supabase = await getSupabaseServer();
 
-    // 두 게시판 정보 + 게시글 가져오기
-    const { data: boards, error: boardsError } = await supabase
-      .from('boards')
-      .select('id, name, slug')
-      .in('slug', [FOREIGN_ANALYSIS_SLUG, DOMESTIC_ANALYSIS_SLUG]);
-
-    if (boardsError || !boards || boards.length === 0) {
-      return null;
-    }
-
-    const foreignBoard = boards.find(b => b.slug === FOREIGN_ANALYSIS_SLUG);
-    const domesticBoard = boards.find(b => b.slug === DOMESTIC_ANALYSIS_SLUG);
-
-    if (!foreignBoard || !domesticBoard) {
-      return null;
-    }
-
-    // 각 게시판의 최신 게시글 가져오기
+    // 해외/국내 분석글 직접 조회 (analysis_region 필터 사용)
     const [foreignPostsResult, domesticPostsResult] = await Promise.all([
       supabase
         .from('posts')
         .select('id, title, post_number')
-        .eq('board_id', foreignBoard.id)
-        .eq('is_published', true)
+        .eq('meta->>prediction_type', 'league_analysis')
+        .eq('meta->>analysis_region', 'foreign')
         .order('created_at', { ascending: false })
         .limit(POSTS_PER_SECTION),
       supabase
         .from('posts')
         .select('id, title, post_number')
-        .eq('board_id', domesticBoard.id)
-        .eq('is_published', true)
+        .eq('meta->>prediction_type', 'league_analysis')
+        .eq('meta->>analysis_region', 'domestic')
         .order('created_at', { ascending: false })
         .limit(POSTS_PER_SECTION),
     ]);
@@ -73,24 +58,26 @@ export async function fetchBoardCollectionData(): Promise<{ foreign: SectionData
       ...(domesticPostsResult.data || []).map(p => p.id),
     ];
 
-    const { data: commentCounts } = await supabase
-      .from('comments')
-      .select('post_id')
-      .in('post_id', allPostIds);
+    let commentCountMap: Record<string, number> = {};
+    if (allPostIds.length > 0) {
+      const { data: commentCounts } = await supabase
+        .from('comments')
+        .select('post_id')
+        .in('post_id', allPostIds);
 
-    const commentCountMap: Record<string, number> = {};
-    (commentCounts || []).forEach(c => {
-      commentCountMap[c.post_id] = (commentCountMap[c.post_id] || 0) + 1;
-    });
+      (commentCounts || []).forEach(c => {
+        commentCountMap[c.post_id] = (commentCountMap[c.post_id] || 0) + 1;
+      });
+    }
 
     // 포맷팅
-    const formatPosts = (posts: { id: string; title: string; post_number: number }[] | null, board: { name: string; slug: string }): BoardPost[] => {
+    const formatPosts = (posts: { id: string; title: string; post_number: number }[] | null, boardSlug: string, boardName: string): BoardPost[] => {
       return (posts || []).map(p => ({
         id: p.id,
         title: p.title,
         post_number: p.post_number,
-        board_slug: board.slug,
-        board_name: board.name,
+        board_slug: boardSlug,
+        board_name: boardName,
         comment_count: commentCountMap[p.id] || 0,
         team_logo: null,
         league_logo: null,
@@ -99,14 +86,14 @@ export async function fetchBoardCollectionData(): Promise<{ foreign: SectionData
 
     return {
       foreign: {
-        boardName: foreignBoard.name,
-        boardSlug: foreignBoard.slug,
-        posts: formatPosts(foreignPostsResult.data, foreignBoard),
+        boardName: '해외축구 분석',
+        boardSlug: FOREIGN_ANALYSIS_SLUG,
+        posts: formatPosts(foreignPostsResult.data, FOREIGN_ANALYSIS_SLUG, '해외축구 분석'),
       },
       domestic: {
-        boardName: domesticBoard.name,
-        boardSlug: domesticBoard.slug,
-        posts: formatPosts(domesticPostsResult.data, domesticBoard),
+        boardName: '국내축구 분석',
+        boardSlug: DOMESTIC_ANALYSIS_SLUG,
+        posts: formatPosts(domesticPostsResult.data, DOMESTIC_ANALYSIS_SLUG, '국내축구 분석'),
       },
     };
   } catch (error) {
