@@ -390,6 +390,7 @@ export default function HoverMenu({
                 onClick={toggleMobileDropdown}
                 data-dropdown-toggle
                 className="h-auto w-auto px-2 py-1 text-gray-700 dark:text-gray-300 flex-shrink-0"
+                aria-label={mobileDropdownOpen ? '하위 게시판 접기' : '하위 게시판 펼치기'}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -399,6 +400,7 @@ export default function HoverMenu({
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"

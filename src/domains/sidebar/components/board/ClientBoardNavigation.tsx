@@ -126,11 +126,12 @@ const BoardCategoryItem = ({
             variant="ghost"
             size="icon"
             className="mr-1.5 flex-shrink-0 text-gray-400 dark:text-gray-500 h-auto w-auto p-0"
+            aria-label={isExpanded ? `${board.name} 접기` : `${board.name} 펼치기`}
           >
             {isExpanded ? (
-              <ChevronDown className="h-4 w-4" />
+              <ChevronDown className="h-4 w-4" aria-hidden="true" />
             ) : (
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
             )}
           </Button>
           <span className="flex-1 truncate font-medium">{board.name}</span>

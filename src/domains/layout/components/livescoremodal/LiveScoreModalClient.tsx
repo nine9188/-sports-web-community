@@ -69,8 +69,9 @@ export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModal
             size="icon"
             onClick={onClose}
             className="rounded-md h-9 w-9"
+            aria-label="경기일정 닫기"
           >
-            <X className="h-4 w-4 text-gray-900 dark:text-[#F0F0F0]" />
+            <X className="h-4 w-4 text-gray-900 dark:text-[#F0F0F0]" aria-hidden="true" />
           </Button>
         </div>
 
