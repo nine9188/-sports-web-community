@@ -177,7 +177,7 @@ export default function AuthorLink({
           ref={buttonRef}
           type="button"
           onClick={handleToggle}
-          className={`flex items-center flex-shrink-0 hover:underline cursor-pointer ${className}`}
+          className={`flex items-center flex-shrink-0 hover:underline cursor-pointer min-h-[32px] py-1 ${className}`}
         >
           {content}
         </button>
