@@ -61,7 +61,7 @@ export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModal
             <Circle className="h-4 w-4 text-green-600 fill-green-600" />
             <div>
               <h2 className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0]">라이브스코어</h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400">최근 3일간 주요 경기</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">최근 3일간 주요 경기</p>
             </div>
           </div>
           <Button
@@ -119,7 +119,7 @@ export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModal
           >
             전체 라이브스코어 보기
           </Link>
-          <div className="flex items-center justify-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+          <div className="flex items-center justify-center gap-2 text-xs text-gray-600 dark:text-gray-400">
             <Clock className="h-3 w-3" />
             <span>최신 경기 정보</span>
           </div>

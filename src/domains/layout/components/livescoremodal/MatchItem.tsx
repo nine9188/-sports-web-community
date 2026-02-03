@@ -29,7 +29,7 @@ const getMatchStatusStyle = (statusCode: string) => {
     case 'TBD':
       return 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-700 dark:text-gray-300 border border-black/7 dark:border-white/10';
     default:
-      return 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-500 dark:text-gray-400 border border-black/7 dark:border-white/10';
+      return 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-600 dark:text-gray-400 border border-black/7 dark:border-white/10';
   }
 };
 
@@ -95,7 +95,7 @@ const MatchItem = React.memo(function MatchItem({ match, onClose }: MatchItemPro
     >
       {/* 리그 정보 */}
       {match.league && (
-        <div className="flex items-center gap-2 mb-3 text-xs text-gray-500 dark:text-gray-400">
+        <div className="flex items-center gap-2 mb-3 text-xs text-gray-600 dark:text-gray-400">
           {match.league.id ? (
             <UnifiedSportsImage
               imageId={match.league.id}
@@ -119,7 +119,7 @@ const MatchItem = React.memo(function MatchItem({ match, onClose }: MatchItemPro
             </span>
           )}
           {match.displayDate && (
-            <span className="ml-auto text-gray-500 dark:text-gray-400">{match.displayDate}</span>
+            <span className="ml-auto text-gray-600 dark:text-gray-400">{match.displayDate}</span>
           )}
         </div>
       )}

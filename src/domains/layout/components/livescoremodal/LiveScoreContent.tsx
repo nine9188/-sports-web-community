@@ -105,7 +105,7 @@ export default function LiveScoreContent({ selectedDate, onClose, initialData }:
   // 데이터 로드 실패
   if (!initialData?.success) {
     return (
-      <div className="flex flex-col items-center justify-center h-32 text-gray-500">
+      <div className="flex flex-col items-center justify-center h-32 text-gray-600 dark:text-gray-400">
         <Trophy className="h-8 w-8 mb-2" />
         <p className="text-sm">경기 정보를 불러올 수 없습니다</p>
       </div>
@@ -115,7 +115,7 @@ export default function LiveScoreContent({ selectedDate, onClose, initialData }:
   // 경기 없음
   if (matches.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-32 text-gray-500">
+      <div className="flex flex-col items-center justify-center h-32 text-gray-600 dark:text-gray-400">
         <Trophy className="h-8 w-8 mb-2" />
         <p className="text-sm">예정된 경기가 없습니다</p>
       </div>
