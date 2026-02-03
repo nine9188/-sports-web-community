@@ -99,35 +99,35 @@ export function DesktopPostList({
         <div className="flex border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
           {showBoard && (
             <div
-              className="py-2 px-3 text-center text-sm font-medium text-gray-500 dark:text-gray-400"
+              className="py-2 px-3 text-center text-sm font-medium text-gray-600 dark:text-gray-400"
               style={{ width: '120px' }}
             >
               게시판
             </div>
           )}
-          <div className="py-2 px-4 text-center text-sm font-medium text-gray-500 dark:text-gray-400 flex-1">
+          <div className="py-2 px-4 text-center text-sm font-medium text-gray-600 dark:text-gray-400 flex-1">
             제목
           </div>
           <div
-            className="py-2 px-3 text-center text-sm font-medium text-gray-500 dark:text-gray-400"
+            className="py-2 px-3 text-center text-sm font-medium text-gray-600 dark:text-gray-400"
             style={{ width: '120px' }}
           >
             글쓴이
           </div>
           <div
-            className="py-2 px-1 text-center text-sm font-medium text-gray-500 dark:text-gray-400"
+            className="py-2 px-1 text-center text-sm font-medium text-gray-600 dark:text-gray-400"
             style={{ width: '80px' }}
           >
             날짜
           </div>
           <div
-            className="py-2 px-1 text-center text-sm font-medium text-gray-500 dark:text-gray-400"
+            className="py-2 px-1 text-center text-sm font-medium text-gray-600 dark:text-gray-400"
             style={{ width: '60px' }}
           >
             조회
           </div>
           <div
-            className="py-2 px-1 text-center text-sm font-medium text-gray-500 dark:text-gray-400"
+            className="py-2 px-1 text-center text-sm font-medium text-gray-600 dark:text-gray-400"
             style={{ width: '60px' }}
           >
             추천
@@ -164,23 +164,23 @@ export function DesktopPostList({
         <thead>
           <tr className="border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
             {showBoard && (
-              <th className="py-2 px-3 text-center text-sm font-medium text-gray-500 dark:text-gray-400">
+              <th className="py-2 px-3 text-center text-sm font-medium text-gray-600 dark:text-gray-400">
                 게시판
               </th>
             )}
-            <th className="py-2 px-4 text-center text-sm font-medium text-gray-500 dark:text-gray-400">
+            <th className="py-2 px-4 text-center text-sm font-medium text-gray-600 dark:text-gray-400">
               제목
             </th>
-            <th className="py-2 px-3 text-center text-sm font-medium text-gray-500 dark:text-gray-400">
+            <th className="py-2 px-3 text-center text-sm font-medium text-gray-600 dark:text-gray-400">
               글쓴이
             </th>
-            <th className="py-2 px-1 text-center text-sm font-medium text-gray-500 dark:text-gray-400">
+            <th className="py-2 px-1 text-center text-sm font-medium text-gray-600 dark:text-gray-400">
               날짜
             </th>
-            <th className="py-2 px-1 text-center text-sm font-medium text-gray-500 dark:text-gray-400">
+            <th className="py-2 px-1 text-center text-sm font-medium text-gray-600 dark:text-gray-400">
               조회
             </th>
-            <th className="py-2 px-1 text-center text-sm font-medium text-gray-500 dark:text-gray-400">
+            <th className="py-2 px-1 text-center text-sm font-medium text-gray-600 dark:text-gray-400">
               추천
             </th>
           </tr>

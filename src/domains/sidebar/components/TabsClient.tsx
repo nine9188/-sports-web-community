@@ -76,7 +76,7 @@ export function TopicTabsClient({ postsData }: TopicTabsClientProps) {
     <Container className="mb-4 bg-white dark:bg-[#1D1D1D]">
       <ContainerHeader className="justify-between">
         <ContainerTitle>인기글</ContainerTitle>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
+        <span className="text-xs text-gray-600 dark:text-gray-400">
           {postsData.windowDays ? `최근 ${postsData.windowDays}일 기준` : '최근 24시간 기준'}
         </span>
       </ContainerHeader>
