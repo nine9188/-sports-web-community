@@ -1,8 +1,9 @@
-import BoardTabToggleClient from './BoardTabToggleClient';
+import BoardTabButtonsClient from './BoardTabButtonsClient';
 import BoardPostItem from './BoardPostItem';
 import { getBoardSettings, getBoardsWithPosts, getPostsMetadata } from './actions';
 import { formatBoardPosts } from './utils';
 import { BoardCollectionData } from './types';
+import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 
 const POSTS_PER_PAGE = 10;
 
@@ -103,7 +104,7 @@ function MobilePostList({ posts }: { posts: BoardCollectionData['recentPosts'] }
   }
 
   return (
-    <>
+    <div className="flex flex-col">
       {posts.slice(0, POSTS_PER_PAGE).map((post, index) => (
         <BoardPostItem
           key={post.id}
@@ -111,21 +112,19 @@ function MobilePostList({ posts }: { posts: BoardCollectionData['recentPosts'] }
           isLast={index === POSTS_PER_PAGE - 1 || index === posts.length - 1}
         />
       ))}
-    </>
+    </div>
   );
 }
 
 /**
  * 게시판 모음 위젯 (서버 컴포넌트)
  *
- * 구조:
- * - 서버: 모든 게시판의 게시글 목록 HTML 렌더링 (LCP 최적화)
- * - 클라이언트: 탭 전환 + 페이지네이션만 담당
+ * LCP 최적화 구조:
+ * - 모든 탭 콘텐츠가 서버에서 렌더링됨 (클라이언트 경계 밖)
+ * - 첫 번째 탭은 CSS로 즉시 표시 (하이드레이션 불필요)
+ * - 클라이언트는 탭 버튼 + data-attribute 토글만 담당
  *
- * 렌더링 흐름:
- * 1. 서버에서 각 게시판별 게시글 목록 HTML 생성
- * 2. BoardTabToggleClient가 탭 전환 기능 제공
- * 3. 클라이언트는 서버 HTML을 그대로 show/hide만 처리
+ * 결과: LCP가 JS 번들/하이드레이션과 무관하게 빠르게 확정됨
  */
 export default async function BoardCollectionWidget({ initialData }: BoardCollectionWidgetProps = {}) {
   // initialData가 제공되면 바로 사용, 없으면 자체 fetch
@@ -142,13 +141,55 @@ export default async function BoardCollectionWidget({ initialData }: BoardCollec
     return null;
   }
 
-  // 서버에서 모든 탭 콘텐츠 사전 렌더링
-  const tabs = boardsData.map((data) => ({
+  // 탭 정보 (클라이언트에 전달)
+  const tabsInfo = boardsData.map((data) => ({
     id: data.board.id,
     name: data.board.name,
-    desktopContent: <DesktopPostList posts={data.recentPosts} />,
-    mobileContent: <MobilePostList posts={data.recentPosts} />,
   }));
 
-  return <BoardTabToggleClient tabs={tabs} defaultTabIndex={0} />;
+  return (
+    <>
+      {/* 데스크톱 버전 */}
+      <Container className="hidden md:block bg-white dark:bg-[#1D1D1D]" data-board-collection="desktop">
+        <ContainerHeader className="justify-between">
+          <ContainerTitle>게시판</ContainerTitle>
+        </ContainerHeader>
+
+        {/* 탭 버튼 (클라이언트에서 렌더링 + onClick 전환) */}
+        <BoardTabButtonsClient tabs={tabsInfo} variant="desktop" />
+
+        {/* 모든 탭 콘텐츠 - 서버에서 렌더링, CSS로 show/hide */}
+        {boardsData.map((data, index) => (
+          <div
+            key={data.board.id}
+            data-tab-content={index}
+            className={index === 0 ? 'block' : 'hidden'}
+          >
+            <DesktopPostList posts={data.recentPosts} />
+          </div>
+        ))}
+      </Container>
+
+      {/* 모바일 버전 */}
+      <Container className="md:hidden bg-white dark:bg-[#1D1D1D]" data-board-collection="mobile">
+        <ContainerHeader className="justify-between">
+          <ContainerTitle>게시판</ContainerTitle>
+        </ContainerHeader>
+
+        {/* 탭 버튼 (클라이언트에서 렌더링 + onClick 전환) */}
+        <BoardTabButtonsClient tabs={tabsInfo} variant="mobile" />
+
+        {/* 모든 탭 콘텐츠 - 서버에서 렌더링, CSS로 show/hide */}
+        {boardsData.map((data, index) => (
+          <div
+            key={data.board.id}
+            data-tab-content={index}
+            className={index === 0 ? 'block' : 'hidden'}
+          >
+            <MobilePostList posts={data.recentPosts} />
+          </div>
+        ))}
+      </Container>
+    </>
+  );
 }
