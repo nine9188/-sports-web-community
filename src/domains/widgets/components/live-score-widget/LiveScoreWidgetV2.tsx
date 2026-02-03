@@ -137,7 +137,7 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
                   <Button
                     variant="ghost"
                     onClick={toggleAll}
-                    className="h-auto px-1 py-0.5 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1"
+                    className="h-auto px-1 py-0.5 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1"
                     title={allExpanded ? '모두 접기' : '모두 펼치기'}
                   >
                     {allExpanded ? (
@@ -154,7 +154,7 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
                   </Button>
                   <Link
                     href="/livescore/football"
-                    className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                    className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                   >
                     전체 경기
                   </Link>
@@ -191,9 +191,9 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
                   {league.matches.length}
                 </span>
                 {isExpanded ? (
-                  <ChevronUp className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                  <ChevronUp className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                 ) : (
-                  <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                  <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                 )}
               </div>
             </Button>
@@ -226,7 +226,7 @@ export default function LiveScoreWidgetV2({ leagues }: LiveScoreWidgetV2Props) {
                                 {statusInfo.label}
                               </span>
                               {statusInfo.subLabel && (
-                                <span className="text-[9px] font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                                <span className="text-[9px] font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">
                                   {statusInfo.subLabel}
                                 </span>
                               )}
