@@ -8,8 +8,8 @@ import Link from 'next/link';
  */
 export default function NotFound() {
   return (
-    <div className="min-h-screen w-full bg-[#f8f9fa] dark:bg-[#000000] flex items-center justify-center py-8">
-      <div className="w-full max-w-3xl px-6 space-y-4">
+    <div className="min-h-screen w-full flex justify-center pt-8 pb-8">
+      <div className="w-full max-w-3xl px-4 md:px-6 space-y-4">
         {/* 404 카드 */}
         <div className="bg-white dark:bg-[#1D1D1D] border border-black/5 dark:border-white/5 rounded-xl overflow-hidden">
           <div className="p-6 border-b border-black/5 dark:border-white/5">
