@@ -5,7 +5,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { formatDate } from '@/shared/utils/dateUtils';
 import { siteConfig } from '@/shared/config';
-import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 import { NewsItem } from './types';
 
 // ==================== 타입 정의 ====================
@@ -138,11 +137,7 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
   }
 
   return (
-    <Container className="bg-white dark:bg-[#1D1D1D]">
-      <ContainerHeader>
-        <ContainerTitle>뉴스</ContainerTitle>
-      </ContainerHeader>
-      <div className="p-4">
+    <div>
       {/* 메인 레이아웃: 큰 배너(왼쪽) + 세로 카드 3개(오른쪽) */}
       <div className="flex flex-col md:flex-row mb-4 gap-4">
         {/* 큰 배너 (첫 번째) - 왼쪽 */}
@@ -264,7 +259,6 @@ export default function NewsWidgetClient({ initialNews }: NewsWidgetClientProps)
           })}
         </div>
       )}
-      </div>
-    </Container>
+    </div>
   );
 }
