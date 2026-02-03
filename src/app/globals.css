@@ -3,25 +3,18 @@
 @tailwind utilities;
 
 @layer base {
-  * {
-    @apply box-border;
-  }
+  /* Tailwind preflight가 이미 box-sizing: border-box 적용하므로 제거 */
 
-  html, body {
-    @apply w-full h-full overflow-x-hidden;
+  html {
     -webkit-text-size-adjust: 100%;
     -ms-text-size-adjust: 100%;
     text-size-adjust: 100%;
-    position: relative;
-    min-height: 100vh;
-    min-height: 100dvh;
   }
 
   body {
-    @apply bg-[#F8F9FA] text-gray-900;
-    background-attachment: fixed;
-    background-size: 100% 100%;
-    background-repeat: no-repeat;
+    @apply w-full bg-[#F8F9FA] text-gray-900 overflow-x-hidden;
+    min-height: 100vh;
+    min-height: 100dvh;
   }
 
   .dark body {
@@ -64,21 +57,22 @@
     -webkit-text-fill-color: #F0F0F0 !important;
   }
 
-  /* Radix UI 드롭다운 스타일 */
+  /* Radix UI 드롭다운 스타일 - 스코프 제한 */
   [data-radix-popper-content-wrapper] {
     background: transparent !important;
   }
 
-  [role="menuitem"] {
-    @apply cursor-pointer !important;
+  [data-radix-popper-content-wrapper] [role="menuitem"] {
+    cursor: pointer;
   }
 
-  [role="menuitem"]:hover {
-    @apply bg-[#F5F5F5] dark:bg-[#262626] !important;
+  [data-radix-popper-content-wrapper] [role="menuitem"]:hover {
+    @apply bg-[#F5F5F5] dark:bg-[#262626];
   }
 }
 
 @layer utilities {
+  /* 스크롤바 숨김 (통일) */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -87,15 +81,6 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-}
-
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
 }
 
 /* 애니메이션 */
@@ -117,14 +102,14 @@
   animation: fade-in 0.4s ease-out forwards;
 }
 
-/* 모바일 포스트 리스트 오버플로우 제한 */
+/* 모바일 포스트 리스트 오버플로우 제한 - 명시적 클래스 사용 */
 @media (max-width: 640px) {
-  [class*="block sm:hidden"] {
+  .mobile-post-list {
     max-width: 100vw !important;
     overflow: hidden !important;
   }
 
-  [class*="block sm:hidden"] a {
+  .mobile-post-list a {
     max-width: 100% !important;
     overflow: hidden !important;
   }

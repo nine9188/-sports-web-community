@@ -24,7 +24,7 @@ export function MobilePostListServer({
   variant = 'text',
 }: MobilePostListServerProps) {
   return (
-    <div className="block sm:hidden w-full max-w-full overflow-hidden">
+    <div className="mobile-post-list block sm:hidden w-full max-w-full overflow-hidden">
       {posts.map((post, index) => (
         <MobilePostItem
           key={post.id}

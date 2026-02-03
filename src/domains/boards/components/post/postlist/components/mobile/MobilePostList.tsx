@@ -80,7 +80,7 @@ export function MobilePostList({
   // 가상화 렌더링
   if (useVirtualization) {
     return (
-      <div className="block sm:hidden w-full overflow-hidden" style={{ maxWidth: '100vw' }}>
+      <div className="mobile-post-list block sm:hidden w-full overflow-hidden" style={{ maxWidth: '100vw' }}>
         <List
           height={listHeight}
           itemCount={deferredPosts.length}
@@ -98,7 +98,7 @@ export function MobilePostList({
 
   // 일반 렌더링
   return (
-    <div className="block sm:hidden w-full max-w-full overflow-hidden">
+    <div className="mobile-post-list block sm:hidden w-full max-w-full overflow-hidden">
       {deferredPosts.map((post, index) => (
         <MobilePostItem
           key={post.id}
