@@ -30,7 +30,6 @@ type HeaderClientProps = {
   isAdmin?: boolean;
   renderMode?: 'full' | 'logo-and-mobile' | 'navigation';
   totalPostCount?: number;
-  initialMatchCount?: { success: boolean; count: number };
 };
 
 // 검색 모달 컴포넌트
@@ -133,8 +132,7 @@ export default function HeaderClient({
   initialUserData,
   boards,
   isAdmin = false,
-  totalPostCount,
-  initialMatchCount
+  totalPostCount
 }: HeaderClientProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLiveScoreOpen, setIsLiveScoreOpen] = useState(false);
@@ -185,19 +183,17 @@ export default function HeaderClient({
     setIsLiveScoreOpen(!isLiveScoreOpen);
   }, [isLiveScoreOpen]);
 
-  // 오늘 경기 수 조회 (서버에서 미리 가져온 데이터 사용)
-  const { data: matchCountData } = useQuery({
+  // 오늘 경기 수 조회
+  const { data: matchCountData, isLoading: isMatchCountLoading } = useQuery({
     queryKey: ['todayMatchCount'],
     queryFn: () => fetchTodayMatchCount(),
-    initialData: initialMatchCount, // 서버에서 전달받은 데이터로 초기화
     staleTime: 1000 * 60 * 5, // 5분 캐시
     gcTime: 1000 * 60 * 10,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
   });
 
   const hasTodayMatches = matchCountData?.success && matchCountData.count > 0;
-  const isLoadingMatches = !matchCountData;
+  const isLoadingMatches = isMatchCountLoading;
 
   // 모바일 검색: 검색 페이지로 이동하여 모달 노출
   const goToSearchPage = useCallback(() => {

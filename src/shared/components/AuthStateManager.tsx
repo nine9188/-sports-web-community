@@ -28,7 +28,6 @@ const AuthStateManager = React.memo(function AuthStateManager({
   headerBoards,
   headerIsAdmin,
   headerTotalPostCount,
-  initialMatchCount,
   fullUserData,
   isOpen,
   onClose,
@@ -45,7 +44,6 @@ const AuthStateManager = React.memo(function AuthStateManager({
   headerBoards?: Board[],
   headerIsAdmin?: boolean,
   headerTotalPostCount?: number,
-  initialMatchCount?: { success: boolean; count: number },
   fullUserData?: FullUserDataWithSession | null,
   isOpen: boolean,
   onClose: () => void,
@@ -74,7 +72,6 @@ const AuthStateManager = React.memo(function AuthStateManager({
         boards={headerBoards || []}
         isAdmin={headerIsAdmin}
         totalPostCount={headerTotalPostCount}
-        initialMatchCount={initialMatchCount}
       />
       <div className="flex flex-1 w-full md:max-w-[1400px] md:mx-auto bg-transparent">
         <Sidebar

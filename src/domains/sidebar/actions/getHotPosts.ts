@@ -1,12 +1,13 @@
 'use server'
 
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
-import { cache } from 'react';
+import { unstable_cache } from 'next/cache';
 import { TopicPost } from '../types';
 import { HOTDEAL_BOARD_SLUGS } from '@/domains/boards/types/hotdeal';
 
 /**
  * 슬라이딩 윈도우 방식 HOT 인기글 조회
+ * unstable_cache로 요청 간 캐시 적용 (120초)
  *
  * 🔄 슬라이딩 윈도우: 고정 7일 (초보 커뮤니티 특성)
  *
@@ -19,22 +20,49 @@ import { HOTDEAL_BOARD_SLUGS } from '@/domains/boards/types/hotdeal';
  * - src/domains/sidebar/SIDEBAR_POPULAR_POSTS.md
  * - src/domains/sidebar/HOT_SCORE_GUIDE.md
  */
-export const getHotPosts = cache(async (
+export async function getHotPosts(
   options?: {
     limit?: number;
-    minScore?: number; // 최소 인기 점수
+    minScore?: number;
   }
 ): Promise<{
   posts: TopicPost[];
-  windowDays: number; // 실제 적용된 윈도우 크기
+  windowDays: number;
   stats: {
     totalPosts: number;
     avgScore: number;
   };
-}> => {
+}> {
+  const limit = options?.limit || 20;
+  const minScore = options?.minScore;
+
+  // limit과 minScore를 캐시 키에 포함
+  const getCached = unstable_cache(
+    async () => fetchHotPosts(limit, minScore),
+    ['sidebar', 'hot-posts', String(limit), String(minScore ?? 0)],
+    { revalidate: 120 } // 2분
+  );
+
+  return getCached();
+}
+
+/**
+ * 실제 DB 조회 로직 (캐시 래퍼에서 분리)
+ */
+async function fetchHotPosts(
+  limit: number,
+  minScore?: number
+): Promise<{
+  posts: TopicPost[];
+  windowDays: number;
+  stats: {
+    totalPosts: number;
+    avgScore: number;
+  };
+}> {
+  console.log(`[CACHE MISS] fetchHotPosts(limit=${limit}) - DB 쿼리 실행`);
   try {
     const supabase = await getSupabaseServer();
-    const limit = options?.limit || 20;
 
     // Step 1: 슬라이딩 윈도우 크기 설정 (초보 커뮤니티 특성 반영)
     const windowDays = 7;
@@ -214,7 +242,6 @@ export const getHotPosts = cache(async (
 
     // 최소 점수 필터링 (옵션)
     let filtered = scoredPosts;
-    const minScore = options?.minScore;
     if (minScore !== undefined && minScore > 0) {
       filtered = scoredPosts.filter(p => p.hot_score >= minScore);
     }
@@ -242,7 +269,10 @@ export const getHotPosts = cache(async (
       }
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error); if (!errorMessage.includes('DYNAMIC_SERVER_USAGE') && !errorMessage.includes('cookies')) { console.error('인기글 조회 오류:', error); }
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (!errorMessage.includes('DYNAMIC_SERVER_USAGE') && !errorMessage.includes('cookies')) {
+      console.error('인기글 조회 오류:', error);
+    }
     return { posts: [], windowDays: 1, stats: { totalPosts: 0, avgScore: 0 } };
   }
-});
+}

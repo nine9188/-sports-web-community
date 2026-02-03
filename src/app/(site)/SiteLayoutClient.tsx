@@ -8,7 +8,7 @@ import { FullUserDataWithSession, HeaderUserData } from '@/shared/types/user';
 import { scrollToTop } from '@/shared/utils/scroll';
 
 interface SiteLayoutClientProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   boardNavigation: React.ReactNode;
   rightSidebar: React.ReactNode;
   authSection: React.ReactNode;
@@ -17,7 +17,6 @@ interface SiteLayoutClientProps {
   headerBoards?: Board[];
   headerIsAdmin?: boolean;
   headerTotalPostCount?: number;
-  initialMatchCount?: { success: boolean; count: number };
 }
 
 export default function SiteLayoutClient({
@@ -30,7 +29,6 @@ export default function SiteLayoutClient({
   headerBoards,
   headerIsAdmin,
   headerTotalPostCount,
-  initialMatchCount
 }: SiteLayoutClientProps) {
   // HeaderUserData 형태로 변환 (AuthStateManager에 전달)
   const headerUserData: HeaderUserData | null = fullUserData ? {
@@ -128,7 +126,6 @@ export default function SiteLayoutClient({
       headerBoards={headerBoards}
       headerIsAdmin={headerIsAdmin}
       headerTotalPostCount={headerTotalPostCount}
-      initialMatchCount={initialMatchCount}
       fullUserData={fullUserData}
       isOpen={deferredIsOpen}
       onClose={closeSidebar}

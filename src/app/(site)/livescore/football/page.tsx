@@ -1,3 +1,6 @@
+// 동적 렌더링 강제 (빌드 시 정적 생성 방지)
+export const dynamic = 'force-dynamic';
+
 import { fetchMatchesByDateCached, MatchData } from '@/domains/livescore/actions/footballApi';
 import LiveScoreView from '@/domains/livescore/components/football/MainView/LiveScoreView';
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';

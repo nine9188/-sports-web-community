@@ -1,6 +1,7 @@
 'use server';
 
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { unstable_cache } from 'next/cache';
 import type { HotdealPostsData, HotdealSidebarPost } from '../types/hotdeal';
 
 interface RawPostData {
@@ -25,6 +26,8 @@ interface RawPostData {
 
 /**
  * 핫딜 베스트 게시글 가져오기
+ * unstable_cache로 요청 간 캐시 적용 (300초)
+ *
  * @param limit 각 탭별 개수 (기본 10개)
  * @param windowDays 기준 기간 (기본 3일)
  */
@@ -32,6 +35,24 @@ export async function getHotdealBestPosts(
   limit = 10,
   windowDays = 3
 ): Promise<HotdealPostsData> {
+  // limit과 windowDays를 캐시 키에 포함
+  const getCached = unstable_cache(
+    async () => fetchHotdealBestPosts(limit, windowDays),
+    ['sidebar', 'hotdeal-best', String(limit), String(windowDays)],
+    { revalidate: 300 } // 5분
+  );
+
+  return getCached();
+}
+
+/**
+ * 실제 DB 조회 로직 (캐시 래퍼에서 분리)
+ */
+async function fetchHotdealBestPosts(
+  limit: number,
+  windowDays: number
+): Promise<HotdealPostsData> {
+  console.log(`[CACHE MISS] fetchHotdealBestPosts(limit=${limit}, windowDays=${windowDays}) - DB 쿼리 실행`);
   try {
     const supabase = await getSupabaseServer();
     if (!supabase) {
@@ -199,7 +220,10 @@ export async function getHotdealBestPosts(
       windowDays,
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error); if (!errorMessage.includes('DYNAMIC_SERVER_USAGE') && !errorMessage.includes('cookies')) { console.error('[getHotdealBestPosts] 오류:', error); }
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (!errorMessage.includes('DYNAMIC_SERVER_USAGE') && !errorMessage.includes('cookies')) {
+      console.error('[getHotdealBestPosts] 오류:', error);
+    }
     return createEmptyHotdealData(windowDays);
   }
 }

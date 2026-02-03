@@ -1,14 +1,14 @@
 'use server'
 
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
-import { cache } from 'react';
+import { unstable_cache } from 'next/cache';
 import { TopicPost } from '../types';
 import { getHotPosts } from './getHotPosts';
 import { HOTDEAL_BOARD_SLUGS } from '@/domains/boards/types/hotdeal';
 
 /**
  * 인기글 목록을 유형별로 조회하는 서버 액션
- * React.cache로 래핑하여 중복 요청 방지
+ * unstable_cache로 요청 간 캐시 적용 (120초)
  *
  * 🔄 슬라이딩 윈도우 적용:
  * - 고정 7일 윈도우 (초보 커뮤니티 특성)
@@ -16,14 +16,28 @@ import { HOTDEAL_BOARD_SLUGS } from '@/domains/boards/types/hotdeal';
  *
  * 📖 상세 문서: src/domains/sidebar/SIDEBAR_POPULAR_POSTS.md
  */
-export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comments' | 'hot'): Promise<TopicPost[]> => {
-  // 'hot' 타입일 경우 슬라이딩 윈도우 기반 인기글 반환
+export async function getCachedTopicPosts(type: 'views' | 'likes' | 'comments' | 'hot'): Promise<TopicPost[]> {
+  // 'hot' 타입일 경우 getHotPosts 사용 (자체 캐시 있음)
   if (type === 'hot') {
     const { posts } = await getHotPosts({ limit: 20 });
     return posts;
   }
 
-  // 조회수/댓글/추천 탭도 슬라이딩 윈도우 적용
+  // type별로 캐시 키가 다르게 설정됨
+  const getCached = unstable_cache(
+    async () => fetchTopicPosts(type),
+    ['sidebar', 'topic-posts', type],
+    { revalidate: 120 } // 2분
+  );
+
+  return getCached();
+}
+
+/**
+ * 실제 DB 조회 로직 (캐시 래퍼에서 분리)
+ */
+async function fetchTopicPosts(type: 'views' | 'likes' | 'comments'): Promise<TopicPost[]> {
+  console.log(`[CACHE MISS] fetchTopicPosts(${type}) - DB 쿼리 실행`);
   try {
     const supabase = await getSupabaseServer();
 
@@ -58,13 +72,13 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
     } else if (type === 'likes') {
       query = query.order('likes', { ascending: false });
     }
-    
+
     const { data: postsData, error } = await query;
-    
+
     if (error) {
       throw error;
     }
-    
+
     const validPosts = (postsData as unknown) as Array<{
       id: string;
       title?: string;
@@ -77,24 +91,24 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
       is_hidden?: boolean;
       is_deleted?: boolean;
     }>;
-    
+
     // 빈 배열인 경우 빠르게 반환
     if (validPosts.length === 0) {
       return [];
     }
-    
+
     // 2. 게시판 정보 가져오기
     const boardIds = [...new Set(validPosts.map(post => post.board_id).filter(Boolean))] as string[];
-    
+
     const { data: boardsData, error: boardsError } = await supabase
       .from('boards')
       .select('id, name, slug, team_id, league_id')
       .in('id', boardIds);
-      
+
     if (boardsError) {
       throw boardsError;
     }
-    
+
     const validBoards = (boardsData || []) as {
       id: string;
       name?: string;
@@ -102,15 +116,15 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
       team_id?: number | null;
       league_id?: number | null;
     }[];
-    
+
     // 3. 게시판 매핑 구성
-    const boardMap: Record<string, { 
-      name: string, 
-      slug: string, 
-      team_id: number | null, 
-      league_id: number | null 
+    const boardMap: Record<string, {
+      name: string,
+      slug: string,
+      team_id: number | null,
+      league_id: number | null
     }> = {};
-    
+
     validBoards.forEach((board) => {
       if (board && board.id) {
         boardMap[board.id] = {
@@ -140,36 +154,36 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
       .filter((b) => b.team_id)
       .map((b) => b.team_id)
       .filter(Boolean) as number[];
-      
+
     const leagueIds = validBoards
       .filter((b) => b.league_id)
       .map((b) => b.league_id)
       .filter(Boolean) as number[];
-      
+
     // 모든 필요한 정보를 병렬로 가져오기
     const [teamsResult, leaguesResult] = await Promise.all([
       // 팀 로고 가져오기
       teamIds.length > 0
         ? supabase.from('teams').select('id, logo').in('id', teamIds)
         : Promise.resolve({ data: [] }),
-        
+
       // 리그 로고 가져오기
       leagueIds.length > 0
         ? supabase.from('leagues').select('id, logo').in('id', leagueIds)
         : Promise.resolve({ data: [] })
     ]);
-    
+
     // 5. 로고 맵핑 구성
     const teamLogoMap: Record<number, string> = {};
-    (teamsResult.data || []).forEach((team: { id: number; logo: string | null }) => { 
+    (teamsResult.data || []).forEach((team: { id: number; logo: string | null }) => {
       if (team.id) teamLogoMap[team.id] = team.logo || '';
     });
-    
+
     const leagueLogoMap: Record<number, string> = {};
-    (leaguesResult.data || []).forEach((league: { id: number; logo: string | null }) => { 
+    (leaguesResult.data || []).forEach((league: { id: number; logo: string | null }) => {
       if (league.id) leagueLogoMap[league.id] = league.logo || '';
     });
-    
+
     // 6. 댓글 수 구하기 - 최적화된 단일 쿼리
     const commentCounts: Record<string, number> = {};
     const postIds = filteredValidPosts.map(post => post.id);
@@ -205,17 +219,17 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
 
     for (const post of filteredValidPosts) {
       if (!post || !post.id) continue;
-      
+
       const boardInfo = post.board_id && boardMap[post.board_id]
         ? boardMap[post.board_id]
         : { name: '알 수 없음', slug: post.board_id || '', team_id: null, league_id: null };
-        
+
       const teamId = boardInfo.team_id;
       const leagueId = boardInfo.league_id;
-      
+
       const teamLogo = teamId !== null ? teamLogoMap[teamId] || null : null;
       const leagueLogo = leagueId !== null ? leagueLogoMap[leagueId] || null : null;
-      
+
       processedPosts.push({
         id: post.id,
         title: post.title || '',
@@ -234,10 +248,10 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
         content: typeof post.content === 'string' ? post.content : (post.content ? JSON.stringify(post.content) : undefined)
       });
     }
-    
+
     // 8. 결과 정렬 및 상위 20개만 반환
     let result: TopicPost[];
-    
+
     if (type === 'views') {
       result = [...processedPosts].sort((a, b) => b.views - a.views).slice(0, 20);
     } else if (type === 'likes') {
@@ -247,10 +261,10 @@ export const getCachedTopicPosts = cache(async (type: 'views' | 'likes' | 'comme
         .sort((a, b) => b.comment_count - a.comment_count)
         .slice(0, 20);
     }
-    
+
     return result;
   } catch {
     // 오류 발생 시 빈 배열 반환
     return [];
   }
-}); 
+}

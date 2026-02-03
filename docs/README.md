@@ -10,7 +10,8 @@
 docs/
 ├── README.md (이 파일)
 ├── QUICK_START.md               # 빠른 시작 가이드
-├── chatbot/                     # 챗봇 시스템 ✨ NEW
+├── 404-layout-separation/       # 404 레이아웃 분리 🔄 진행 중
+├── chatbot/                     # 챗봇 시스템
 ├── hot-system/                  # HOT 게시글 시스템
 ├── notifications/               # 알림 시스템
 ├── reward-system/               # 보상 시스템
@@ -57,6 +58,7 @@ SSR을 이용한 최적화 대화형 챗봇 시스템입니다.
 | 문서 | 설명 | 상태 |
 |------|------|------|
 | [route-group-restructure.md](./route-group-restructure.md) | Route Group 구조 개편 (외부 API 호출 제거) | ✅ 완료 |
+| [404-layout-separation/](./404-layout-separation/README.md) | 404 레이아웃 분리 (Parallel Routes @chrome) | 🔄 진행 중 |
 
 **주요 내용**:
 - ✅ Root Layout에서 외부 API 호출 완전 제거

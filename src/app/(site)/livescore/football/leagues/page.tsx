@@ -1,3 +1,6 @@
+// 동적 렌더링 강제 (빌드 시 정적 생성 방지)
+export const dynamic = 'force-dynamic';
+
 import { MAJOR_LEAGUE_IDS, LEAGUE_NAMES_MAP } from '@/domains/livescore/constants/league-mappings';
 import { LeagueCard } from '@/domains/livescore/components/football/leagues';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
