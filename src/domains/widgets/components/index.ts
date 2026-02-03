@@ -1,5 +1,5 @@
 // 위젯 컴포넌트 exports
-export { NewsWidget, NewsWidgetClient } from './news-widget';
+export { NewsWidget, NewsImageClient } from './news-widget';
 export { default as AllPostsWidget } from './AllPostsWidget';
 export { LiveScoreWidgetV2 } from './live-score-widget';
 export { BoardCollectionWidget } from './board-collection-widget';

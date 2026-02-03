@@ -4,6 +4,7 @@
 1. [LiveScoreWidgetV2](#livescorewidgetv2)
 2. [TopicTabs (인기글)](#topictabs-인기글)
 3. [HotdealTabs (핫딜 베스트)](#hotdealtabs-핫딜-베스트)
+4. [NewsWidget (뉴스)](#newswidget-뉴스)
 
 ---
 
@@ -265,7 +266,88 @@ sidebar/components/
 
 ---
 
+# NewsWidget (뉴스)
+
+## 변경 전
+```
+NewsWidget.tsx (서버)
+    ↓ 데이터 전달
+NewsWidgetClient.tsx (클라이언트)
+└─ 전체 UI + 이미지 로딩 상태 렌더링 ❌
+```
+
+## 변경 후
+```
+NewsWidget.tsx (서버)
+├─ MainCard (서버 HTML)
+├─ SideCard (서버 HTML)
+└─ ListCard (서버 HTML)
+    └─ NewsImageClient (클라이언트 - 이미지 로딩만)
+```
+
+## 파일 구조
+```
+news-widget/
+├── index.ts                  # 진입점
+├── types.ts                  # 타입 정의
+├── NewsWidget.tsx            # 서버 컴포넌트 (메인)
+├── NewsCardServer.tsx        # 서버 (카드 컴포넌트들)
+│   ├── MainCard              # 메인 배너
+│   ├── SideCard              # 사이드 카드
+│   └── ListCard              # 리스트 카드
+├── NewsImageClient.tsx       # 클라이언트 (이미지 로딩만)
+└── NewsWidgetClient.tsx.backup # 기존 클라이언트 (백업)
+```
+
+## 핵심 설계
+
+### 이미지 로딩 상태만 클라이언트
+```tsx
+// NewsImageClient.tsx
+'use client';
+
+function NewsImageClient({ imageUrl, alt, sizes }) {
+  const [state, setState] = useState<'idle' | 'loading' | 'loaded' | 'error'>('idle');
+
+  return (
+    <>
+      {state === 'loading' && <LoadingSpinner />}
+      <Image
+        src={useFallback ? FALLBACK : imageUrl}
+        onLoad={() => setState('loaded')}
+        onError={() => setState('error')}
+      />
+    </>
+  );
+}
+```
+
+### 카드 HTML은 서버에서
+```tsx
+// NewsCardServer.tsx
+function MainCard({ item }) {
+  return (
+    <Link href={item.url}>
+      {/* 서버에서 렌더링되는 HTML */}
+      <h3>{item.title}</h3>
+      <NewsImageClient imageUrl={item.imageUrl} />
+    </Link>
+  );
+}
+```
+
+## 성능 영향
+
+| 메트릭 | 전 | 후 | 개선 |
+|--------|----|----|------|
+| LCP | JS 실행 후 | 즉시 | ⬇️ |
+| 초기 HTML | 빈 껍데기 | 뉴스 목록 | ✅ |
+| JS 번들 | 전체 렌더링 | 이미지 로딩만 | ⬇️ |
+
+---
+
 ## 날짜
 
 - 2024-02-03: LiveScoreWidgetV2 서버 렌더링
 - 2024-02-03: TopicTabs, HotdealTabs 서버 렌더링
+- 2024-02-03: NewsWidget 서버 렌더링
