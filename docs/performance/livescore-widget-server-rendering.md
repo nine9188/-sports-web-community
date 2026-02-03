@@ -5,6 +5,7 @@
 2. [TopicTabs (인기글)](#topictabs-인기글)
 3. [HotdealTabs (핫딜 베스트)](#hotdealtabs-핫딜-베스트)
 4. [NewsWidget (뉴스)](#newswidget-뉴스)
+5. [BoardCollectionWidget (게시판 모음)](#boardcollectionwidget-게시판-모음)
 
 ---
 
@@ -346,8 +347,75 @@ function MainCard({ item }) {
 
 ---
 
+---
+
+# BoardCollectionWidget (게시판 모음)
+
+## 변경 전
+```
+BoardCollectionWidget.tsx (서버)
+    ↓ 데이터 전달
+BoardCollectionWidgetClient.tsx (클라이언트)
+└─ 탭 전환 + 게시글 목록 전체 렌더링 ❌
+```
+
+## 변경 후
+```
+BoardCollectionWidget.tsx (서버)
+├─ DesktopPostList (서버 HTML - 2열)
+├─ MobilePostList (서버 HTML - 1열)
+└─ BoardTabToggleClient (클라이언트 - 탭 전환만)
+    ├─ tab1.desktopContent / mobileContent (서버 HTML)
+    ├─ tab2.desktopContent / mobileContent (서버 HTML)
+    └─ ...
+```
+
+## 파일 구조
+```
+board-collection-widget/
+├── index.ts                       # 진입점
+├── types.ts                       # 타입 정의
+├── BoardCollectionWidget.tsx      # 서버 컴포넌트 (메인)
+├── BoardPostItem.tsx              # 서버 (개별 게시글)
+├── BoardTabToggleClient.tsx       # 클라이언트 (탭 전환만)
+└── BoardCollectionWidgetClient.tsx.backup # 기존 클라이언트 (백업)
+```
+
+## 핵심 설계
+
+### 모든 탭 콘텐츠 사전 렌더링
+```tsx
+// 서버에서 모든 게시판 콘텐츠 렌더링
+const tabs = boardsData.map((data) => ({
+  id: data.board.id,
+  name: data.board.name,
+  desktopContent: <DesktopPostList posts={data.recentPosts} />,
+  mobileContent: <MobilePostList posts={data.recentPosts} />,
+}));
+
+return <BoardTabToggleClient tabs={tabs} />;
+```
+
+### 클라이언트는 show/hide만
+```tsx
+// 클라이언트에서 선택된 탭만 표시
+{currentTab.desktopContent}  // 데스크톱
+{currentTab.mobileContent}   // 모바일
+```
+
+## 성능 영향
+
+| 메트릭 | 전 | 후 | 개선 |
+|--------|----|----|------|
+| LCP | JS 실행 후 | 즉시 | ⬇️ |
+| 초기 HTML | 빈 껍데기 | 게시글 목록 | ✅ |
+| JS 번들 | 전체 렌더링 | 탭 전환만 | ⬇️ |
+
+---
+
 ## 날짜
 
 - 2024-02-03: LiveScoreWidgetV2 서버 렌더링
 - 2024-02-03: TopicTabs, HotdealTabs 서버 렌더링
 - 2024-02-03: NewsWidget 서버 렌더링
+- 2024-02-03: BoardCollectionWidget 서버 렌더링
