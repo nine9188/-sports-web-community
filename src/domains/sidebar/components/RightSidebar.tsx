@@ -1,8 +1,8 @@
 import { getCachedTopicPosts } from '../actions/topicPosts';
 import { getHotPosts } from '../actions/getHotPosts';
 import { getHotdealBestPosts } from '../actions/getHotdealBestPosts';
-import { TopicTabsClient } from './TabsClient';
-import { HotdealTabsClient } from './HotdealTabsClient';
+import TopicTabsServer from './TopicTabsServer';
+import HotdealTabsServer from './HotdealTabsServer';
 import SidebarRelatedPosts from './SidebarRelatedPosts';
 
 export default async function RightSidebar() {
@@ -28,9 +28,9 @@ export default async function RightSidebar() {
     return (
       <aside className="hidden xl:block w-[300px] shrink-0">
         <div className="h-full pt-4">
-          <TopicTabsClient postsData={postsData} />
+          <TopicTabsServer postsData={postsData} />
           <SidebarRelatedPosts />
-          <HotdealTabsClient postsData={hotdealData} />
+          <HotdealTabsServer postsData={hotdealData} />
         </div>
       </aside>
     );
@@ -55,9 +55,9 @@ export default async function RightSidebar() {
     return (
       <aside className="hidden xl:block w-[300px] shrink-0">
         <div className="h-full pt-4">
-          <TopicTabsClient postsData={emptyData} />
+          <TopicTabsServer postsData={emptyData} />
           <SidebarRelatedPosts />
-          <HotdealTabsClient postsData={emptyHotdealData} />
+          <HotdealTabsServer postsData={emptyHotdealData} />
         </div>
       </aside>
     );

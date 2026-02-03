@@ -1,4 +1,13 @@
-# LiveScoreWidgetV2 서버 렌더링 최적화
+# 위젯 서버 렌더링 최적화
+
+## 목차
+1. [LiveScoreWidgetV2](#livescorewidgetv2)
+2. [TopicTabs (인기글)](#topictabs-인기글)
+3. [HotdealTabs (핫딜 베스트)](#hotdealtabs-핫딜-베스트)
+
+---
+
+# LiveScoreWidgetV2
 
 ## 개요
 
@@ -166,6 +175,97 @@ export default async function Page() {
 - `src/app/(site)/page.tsx` - 메인 페이지에서 사용
 - `src/domains/widgets/components/live-score-widget/` - 위젯 폴더
 
+---
+
+# TopicTabs (인기글)
+
+## 변경 전
+```
+TopicTabsClient.tsx (클라이언트)
+└─ 4개 탭 + 게시글 목록 전체 렌더링 ❌
+```
+
+## 변경 후
+```
+TopicTabsServer.tsx (서버)
+├─ 헤더 (서버 렌더링)
+└─ TopicTabToggleClient (클라이언트 - 탭 전환만)
+    ├─ hotContent (서버 HTML)
+    ├─ viewsContent (서버 HTML)
+    ├─ likesContent (서버 HTML)
+    └─ commentsContent (서버 HTML)
+```
+
+## 파일 구조
+```
+sidebar/components/
+├── TopicTabsServer.tsx       # 서버 컴포넌트 (메인)
+├── TopicTabToggleClient.tsx  # 클라이언트 (탭 전환만)
+├── TopicPostItem.tsx         # 서버 (개별 게시글)
+└── TabsClient.tsx.backup     # 기존 클라이언트 (백업)
+```
+
+---
+
+# HotdealTabs (핫딜 베스트)
+
+## 변경 전
+```
+HotdealTabsClient.tsx (클라이언트)
+└─ pathname 체크 + 4개 탭 + 게시글 목록 전체 렌더링 ❌
+```
+
+## 변경 후
+```
+HotdealTabsServer.tsx (서버)
+└─ HotdealTabToggleClient (클라이언트 - pathname 체크 + 탭 전환만)
+    ├─ hotContent (서버 HTML)
+    ├─ discountContent (서버 HTML)
+    ├─ likesContent (서버 HTML)
+    └─ commentsContent (서버 HTML)
+```
+
+## 파일 구조
+```
+sidebar/components/
+├── HotdealTabsServer.tsx       # 서버 컴포넌트 (메인)
+├── HotdealTabToggleClient.tsx  # 클라이언트 (pathname + 탭 전환)
+├── HotdealPostItem.tsx         # 서버 (개별 핫딜)
+└── HotdealTabsClient.tsx.backup # 기존 클라이언트 (백업)
+```
+
+## 특이사항
+- `usePathname()` 체크가 필요하여 완전한 서버 컴포넌트 불가
+- 하지만 게시글 목록 HTML은 서버에서 렌더링됨
+
+---
+
+## 공통 설계 원칙
+
+### 1. 탭별 콘텐츠 사전 렌더링
+```tsx
+// 서버에서 4개 탭 모두 렌더링
+<TabToggleClient
+  hotContent={<PostList posts={data.hot} />}
+  viewsContent={<PostList posts={data.views} />}
+  ...
+/>
+```
+
+### 2. 클라이언트는 show/hide만
+```tsx
+// 클라이언트에서 탭 전환 시 서버 HTML 그대로 표시
+{activeTab === 'hot' && hotContent}
+```
+
+### 3. 서버에서 결정하는 기본값
+```tsx
+<TabToggleClient defaultTab="hot" />
+```
+
+---
+
 ## 날짜
 
-- 2024-02-03: 서버 렌더링 리팩토링 완료
+- 2024-02-03: LiveScoreWidgetV2 서버 렌더링
+- 2024-02-03: TopicTabs, HotdealTabs 서버 렌더링
