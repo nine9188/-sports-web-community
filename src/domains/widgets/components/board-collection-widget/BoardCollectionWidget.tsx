@@ -152,12 +152,12 @@ function PostList({ posts }: { posts: BoardPost[] }) {
 }
 
 /**
- * 섹션 헤더 컴포넌트
+ * 섹션 헤더 컴포넌트 (탭 스타일)
  */
 function SectionHeader({ title }: { title: string }) {
   return (
-    <div className="px-4 py-2 border-b border-black/5 dark:border-white/10">
-      <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">{title}</h3>
+    <div className="bg-[#F5F5F5] dark:bg-[#262626] px-4 py-2 border-b border-black/5 dark:border-white/10">
+      <h3 className="text-xs font-medium text-gray-700 dark:text-gray-300">{title}</h3>
     </div>
   );
 }
