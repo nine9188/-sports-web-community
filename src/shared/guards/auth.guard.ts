@@ -256,7 +256,6 @@ async function logUnauthorizedRequest(
     // 프로덕션: 에러 로그
     if (process.env.NODE_ENV === 'production') {
       console.error('UNAUTHORIZED_ACCESS:', JSON.stringify(logData))
-      // TODO: 로깅 서비스 연동 (Sentry, DataDog 등)
     }
 
   } catch (error) {

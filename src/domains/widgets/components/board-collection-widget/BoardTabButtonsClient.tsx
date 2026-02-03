@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/shared/components/ui';
 
 interface TabInfo {
   id: string;
@@ -31,7 +29,6 @@ export default function BoardTabButtonsClient({
   variant,
 }: BoardTabButtonsClientProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const totalTabs = tabs.length;
 
   // 탭 전환: data-attribute 기반으로 콘텐츠 show/hide
   const switchTab = useCallback((newIndex: number) => {
@@ -48,54 +45,18 @@ export default function BoardTabButtonsClient({
     });
   }, [variant]);
 
-  const handleNext = useCallback(() => {
-    switchTab((selectedIndex + 1) % totalTabs);
-  }, [selectedIndex, totalTabs, switchTab]);
-
-  const handlePrev = useCallback(() => {
-    switchTab((selectedIndex - 1 + totalTabs) % totalTabs);
-  }, [selectedIndex, totalTabs, switchTab]);
-
   return (
-    <div className="flex flex-col">
-      {/* 페이지네이션 (우상단) */}
-      <div className="flex items-center justify-end gap-2 px-4 py-2">
-        <span className={`${variant === 'mobile' ? 'text-xs' : 'text-sm'} text-gray-600 dark:text-gray-400`}>
-          {selectedIndex + 1} / {totalTabs}
-        </span>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handlePrev}
-          className="w-6 h-6 text-gray-700 dark:text-gray-300"
-          aria-label="이전 게시판"
+    <div className="flex border-b border-black/5 dark:border-white/10">
+      {tabs.map((tab, idx) => (
+        <button
+          key={tab.id}
+          type="button"
+          onClick={() => switchTab(idx)}
+          className={idx === selectedIndex ? TAB_ACTIVE_CLASS : TAB_INACTIVE_CLASS}
         >
-          <ChevronLeft className="w-4 h-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleNext}
-          className="w-6 h-6 text-gray-700 dark:text-gray-300"
-          aria-label="다음 게시판"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </Button>
-      </div>
-
-      {/* 탭 버튼 */}
-      <div className="flex border-b border-black/5 dark:border-white/10">
-        {tabs.map((tab, idx) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => switchTab(idx)}
-            className={idx === selectedIndex ? TAB_ACTIVE_CLASS : TAB_INACTIVE_CLASS}
-          >
-            {tab.name}
-          </button>
-        ))}
-      </div>
+          {tab.name}
+        </button>
+      ))}
     </div>
   );
 }

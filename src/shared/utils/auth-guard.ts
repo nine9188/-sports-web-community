@@ -98,7 +98,6 @@ async function logUnauthorizedRequest(type: string, details: Record<string, stri
 
     // 프로덕션에서는 로깅 서비스로 전송
     if (process.env.NODE_ENV === 'production') {
-      // TODO: 실제 로깅 서비스 연동 (예: Sentry, DataDog 등)
       console.error('UNAUTHORIZED_ACCESS:', JSON.stringify(logData))
     }
 

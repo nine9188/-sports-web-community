@@ -10,8 +10,7 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    // 에러 로깅 서비스에 보고 (예: Sentry)
-    // console.error('Application error:', error);
+    console.error('Application error:', error);
   }, [error]);
 
   return (
