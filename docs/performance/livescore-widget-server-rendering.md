@@ -6,6 +6,7 @@
 3. [HotdealTabs (핫딜 베스트)](#hotdealtabs-핫딜-베스트)
 4. [NewsWidget (뉴스)](#newswidget-뉴스)
 5. [BoardCollectionWidget (게시판 모음)](#boardcollectionwidget-게시판-모음)
+6. [PostList (게시글 목록)](#postlist-게시글-목록)
 
 ---
 
@@ -413,9 +414,86 @@ return <BoardTabToggleClient tabs={tabs} />;
 
 ---
 
+# PostList (게시글 목록)
+
+## 변경 전
+```
+PostListMain.tsx (서버)
+├─ MobilePostList ('use client' - useDeferredValue)
+│   └─ MobilePostItem ('use client')
+└─ DesktopPostList ('use client' - useDeferredValue)
+    └─ DesktopPostItem ('use client')
+```
+
+**문제점:**
+- 모든 게시글 목록이 useDeferredValue로 인해 클라이언트 렌더링
+- 30개 미만일 때도 불필요하게 클라이언트 번들 포함
+
+## 변경 후
+```
+PostListMain.tsx (서버)
+├─ 30개 미만:
+│   ├─ MobilePostListServer (서버 HTML)
+│   └─ DesktopPostListServer (서버 HTML)
+└─ 30개 이상:
+    ├─ MobilePostList (클라이언트 - 가상화)
+    └─ DesktopPostList (클라이언트 - 가상화)
+```
+
+## 파일 구조
+```
+postlist/
+├── PostListMain.tsx                    # 서버 컴포넌트 (메인)
+├── components/
+│   ├── mobile/
+│   │   ├── MobilePostListServer.tsx    # 서버 (30개 미만)
+│   │   ├── MobilePostList.tsx          # 클라이언트 (가상화)
+│   │   └── MobilePostItem.tsx          # 클라이언트 (아이템)
+│   └── desktop/
+│       ├── DesktopPostListServer.tsx   # 서버 (30개 미만)
+│       ├── DesktopPostList.tsx         # 클라이언트 (가상화)
+│       └── DesktopPostItem.tsx         # 클라이언트 (아이템)
+```
+
+## 핵심 설계
+
+### 게시글 수에 따른 렌더링 분기
+```tsx
+const useVirtualization = posts.length > VIRTUALIZATION_THRESHOLD; // 30
+
+{useVirtualization ? (
+  // 30개 이상: 클라이언트 가상화 (react-window)
+  <>
+    <MobilePostList posts={posts} />
+    <DesktopPostList posts={posts} />
+  </>
+) : (
+  // 30개 미만: 서버 렌더링 (LCP 최적화)
+  <>
+    <MobilePostListServer posts={posts} />
+    <DesktopPostListServer posts={posts} />
+  </>
+)}
+```
+
+## 성능 영향
+
+| 조건 | 전 | 후 |
+|------|----|----|
+| 30개 미만 | useDeferredValue 클라이언트 | 서버 렌더링 ✅ |
+| 30개 이상 | 가상화 (기존 유지) | 가상화 (기존 유지) |
+
+## 특이사항
+- AuthorLink가 클라이언트 컴포넌트 (드롭다운, 신고 기능)
+- PostItem은 AuthorLink를 사용하므로 여전히 하이드레이션 필요
+- 하지만 리스트 구조는 서버에서 렌더링되어 LCP 개선
+
+---
+
 ## 날짜
 
 - 2024-02-03: LiveScoreWidgetV2 서버 렌더링
 - 2024-02-03: TopicTabs, HotdealTabs 서버 렌더링
 - 2024-02-03: NewsWidget 서버 렌더링
 - 2024-02-03: BoardCollectionWidget 서버 렌더링
+- 2024-02-03: PostList 서버 렌더링 (30개 미만)
