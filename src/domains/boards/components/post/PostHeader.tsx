@@ -1,7 +1,3 @@
-'use client';
-
-import React from 'react';
-import UserIcon from '@/shared/components/UserIcon';
 import { AuthorLink } from '@/domains/user/components';
 import { formatDate } from '@/shared/utils/dateUtils';
 
