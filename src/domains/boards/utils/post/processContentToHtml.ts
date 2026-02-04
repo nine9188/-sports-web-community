@@ -4,10 +4,10 @@
  * - TipTap JSON, RSS 객체, 문자열 콘텐츠를 HTML로 변환
  * - 서버에서 실행되어 초기 HTML에 콘텐츠 포함
  * - 클라이언트 깜빡임 방지
- * - isomorphic-dompurify로 XSS 방지 (서버/클라이언트 모두 동작)
+ * - sanitize-html로 XSS 방지 (순수 JS, 서버 호환)
  */
 
-import DOMPurify from 'isomorphic-dompurify';
+import sanitizeHtml from 'sanitize-html';
 import {
   renderTipTapDoc,
   renderRssHeader,
@@ -17,37 +17,12 @@ import {
 import type { TipTapDoc, RssPost } from '@/domains/boards/components/post/post-content/types';
 
 /**
- * 허용할 CSS 속성 whitelist
- * - 레이아웃/스타일링에 필요한 안전한 속성만 허용
- * - javascript:, expression() 등 위험 패턴 원천 차단
+ * sanitize-html 설정
+ * - 안전한 태그/속성만 허용
+ * - 위험한 이벤트 핸들러 및 프로토콜 차단
  */
-const ALLOWED_CSS_PROPERTIES = new Set([
-  // 레이아웃
-  'width', 'height', 'max-width', 'max-height', 'min-width', 'min-height',
-  'margin', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
-  'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
-  'display', 'position', 'top', 'right', 'bottom', 'left',
-  'flex', 'flex-direction', 'flex-wrap', 'justify-content', 'align-items', 'gap',
-  // 텍스트
-  'color', 'font-size', 'font-weight', 'font-style', 'font-family',
-  'text-align', 'text-decoration', 'line-height', 'letter-spacing',
-  'white-space', 'word-break', 'overflow-wrap',
-  // 배경/테두리 (URL 제외)
-  'background-color', 'border', 'border-radius', 'border-color', 'border-width', 'border-style',
-  'box-shadow', 'opacity',
-  // 기타
-  'overflow', 'overflow-x', 'overflow-y', 'z-index', 'cursor', 'visibility',
-  'object-fit', 'object-position', 'aspect-ratio',
-]);
-
-/**
- * 서버용 DOMPurify 설정
- * - 위험한 이벤트 핸들러 금지
- * - SVG 위험 요소 차단 (foreignObject, animate 등)
- * - CSS는 whitelist 방식으로 검증
- */
-const DOMPURIFY_CONFIG: DOMPurify.Config = {
-  ALLOWED_TAGS: [
+const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
+  allowedTags: [
     // 기본 텍스트 태그
     'p', 'br', 'span', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
     'strong', 'b', 'em', 'i', 'u', 's', 'strike', 'del', 'ins',
@@ -58,122 +33,78 @@ const DOMPURIFY_CONFIG: DOMPurify.Config = {
     'a', 'img', 'video', 'source', 'iframe',
     // 테이블
     'table', 'thead', 'tbody', 'tr', 'th', 'td',
-    // 폼 요소 (읽기 전용 목적)
-    'label',
-    // SVG 기본 요소 (아이콘용 - 위험 요소는 FORBID_TAGS에서 차단)
+    // SVG 기본 요소 (아이콘용)
     'svg', 'path', 'circle', 'rect', 'line', 'polyline', 'polygon', 'g',
   ],
-  ALLOWED_ATTR: [
-    // 일반 속성
-    'class', 'id', 'style', 'title', 'alt', 'name',
-    // 링크 속성
-    'href', 'target', 'rel',
-    // 이미지/미디어 속성
-    'src', 'width', 'height', 'loading', 'decoding',
-    // 비디오 속성
-    'controls', 'autoplay', 'muted', 'loop', 'playsinline', 'poster',
-    // iframe 속성
-    'frameborder', 'allowfullscreen', 'allow',
-    // 데이터 속성 (매치카드, 소셜 임베드, 차트용)
-    'data-type', 'data-match', 'data-match-id', 'data-platform', 'data-url',
-    'data-light-src', 'data-dark-src', 'data-processed', 'data-chart', 'data-hydrated',
-    // SVG 속성
-    'xmlns', 'viewBox', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'd',
-    // 테이블 속성
-    'colspan', 'rowspan',
+  allowedAttributes: {
+    '*': ['class', 'id', 'style', 'title'],
+    'a': ['href', 'target', 'rel'],
+    'img': ['src', 'alt', 'width', 'height', 'loading', 'decoding', 'data-type', 'data-light-src', 'data-dark-src'],
+    'video': ['src', 'controls', 'autoplay', 'muted', 'loop', 'playsinline', 'poster', 'width', 'height'],
+    'source': ['src', 'type'],
+    'iframe': ['src', 'width', 'height', 'frameborder', 'allowfullscreen', 'allow'],
+    'div': ['data-type', 'data-match', 'data-match-id', 'data-platform', 'data-url', 'data-chart', 'data-hydrated', 'data-processed'],
+    'svg': ['xmlns', 'viewBox', 'width', 'height', 'fill', 'stroke', 'stroke-width'],
+    'path': ['d', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin'],
+    'circle': ['cx', 'cy', 'r', 'fill', 'stroke'],
+    'rect': ['x', 'y', 'width', 'height', 'fill', 'stroke', 'rx', 'ry'],
+    'th': ['colspan', 'rowspan'],
+    'td': ['colspan', 'rowspan'],
+  },
+  // 허용할 URL 스키마 (javascript: 차단)
+  allowedSchemes: ['http', 'https', 'mailto', 'tel'],
+  allowedSchemesByTag: {
+    img: ['http', 'https', 'data'],
+    iframe: ['https'],
+  },
+  // iframe 허용 도메인
+  allowedIframeHostnames: [
+    'www.youtube.com',
+    'youtube.com',
+    'www.youtube-nocookie.com',
+    'player.vimeo.com',
+    'www.facebook.com',
+    'platform.twitter.com',
+    'www.instagram.com',
   ],
-  // iframe 허용 (YouTube, Twitter 임베드용)
-  ADD_TAGS: ['iframe'],
-  ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder'],
-  // 위험한 태그 금지 (SVG 위험 요소 포함)
-  FORBID_TAGS: [
-    'script', 'object', 'embed', 'form', 'input', 'button', 'select', 'textarea',
-    // SVG 위험 요소 - XSS 우회 가능
-    'foreignObject', 'animate', 'animateMotion', 'animateTransform', 'set', 'use',
-    'feImage', 'filter', 'switch', 'math', 'maction',
-  ],
-  // 모든 이벤트 핸들러 금지
-  FORBID_ATTR: [
-    'onclick', 'ondblclick', 'onkeydown', 'onkeyup', 'onkeypress', 'onsubmit',
-    'onload', 'onerror', 'onmouseenter', 'onmouseleave', 'onmouseover', 'onmouseout',
-    'onfocus', 'onblur', 'onchange', 'oninput', 'onanimationend', 'onanimationstart',
-  ],
+  // CSS 속성 whitelist
+  allowedStyles: {
+    '*': {
+      'color': [/.*/],
+      'background-color': [/.*/],
+      'font-size': [/.*/],
+      'font-weight': [/.*/],
+      'text-align': [/.*/],
+      'margin': [/.*/],
+      'margin-top': [/.*/],
+      'margin-bottom': [/.*/],
+      'margin-left': [/.*/],
+      'margin-right': [/.*/],
+      'padding': [/.*/],
+      'padding-top': [/.*/],
+      'padding-bottom': [/.*/],
+      'padding-left': [/.*/],
+      'padding-right': [/.*/],
+      'width': [/.*/],
+      'height': [/.*/],
+      'max-width': [/.*/],
+      'max-height': [/.*/],
+      'display': [/.*/],
+      'position': [/.*/],
+      'border': [/.*/],
+      'border-radius': [/.*/],
+      'overflow': [/.*/],
+      'aspect-ratio': [/.*/],
+    },
+  },
+  // 위험한 태그 완전 제거
+  disallowedTagsMode: 'discard',
 };
-
-/**
- * CSS style 속성을 whitelist 방식으로 정화
- * - 허용된 CSS 속성만 남기고 나머지 제거
- * - URL 포함 속성(background, background-image 등)은 제거
- */
-function sanitizeStyleAttribute(styleValue: string): string {
-  if (!styleValue) return '';
-
-  const sanitizedParts: string[] = [];
-
-  // CSS 속성 파싱 (간단한 방식)
-  const declarations = styleValue.split(';');
-
-  for (const decl of declarations) {
-    const trimmed = decl.trim();
-    if (!trimmed) continue;
-
-    const colonIndex = trimmed.indexOf(':');
-    if (colonIndex === -1) continue;
-
-    const property = trimmed.substring(0, colonIndex).trim().toLowerCase();
-    const value = trimmed.substring(colonIndex + 1).trim();
-
-    // 허용된 속성인지 확인
-    if (!ALLOWED_CSS_PROPERTIES.has(property)) continue;
-
-    // 값에 위험 패턴이 있는지 확인
-    const lowerValue = value.toLowerCase();
-    if (
-      lowerValue.includes('javascript:') ||
-      lowerValue.includes('expression(') ||
-      lowerValue.includes('url(') ||
-      lowerValue.includes('behavior:') ||
-      lowerValue.includes('-moz-binding')
-    ) {
-      continue;
-    }
-
-    sanitizedParts.push(`${property}: ${value}`);
-  }
-
-  return sanitizedParts.join('; ');
-}
-
-/**
- * HTML 문자열 정화 (XSS 방지)
- * - CSS는 whitelist 방식으로 검증
- * - 위험한 SVG 요소/속성 제거
- */
-function sanitizeHTML(html: string): string {
-  // DOMPurify 훅으로 style 속성 whitelist 적용
-  DOMPurify.addHook('uponSanitizeAttribute', (node, data) => {
-    if (data.attrName === 'style' && data.attrValue) {
-      data.attrValue = sanitizeStyleAttribute(data.attrValue);
-    }
-
-    // SVG xlink:href 차단 (use 태그 등에서 외부 리소스 로드 방지)
-    if (data.attrName === 'xlink:href' || (node.tagName && node.tagName.toLowerCase() === 'use' && data.attrName === 'href')) {
-      data.attrValue = '';
-    }
-  });
-
-  const result = DOMPurify.sanitize(html, DOMPURIFY_CONFIG);
-
-  // 훅 제거 (다른 호출에 영향 방지)
-  DOMPurify.removeHook('uponSanitizeAttribute');
-
-  return result;
-}
 
 type ContentInput = string | TipTapDoc | RssPost | Record<string, unknown> | null | undefined;
 
 /**
- * 객체 콘텐츠를 HTML로 변환 (내부용 - sanitize 전)
+ * 객체 콘텐츠를 HTML로 변환 (내부용)
  */
 function processObjectContentUnsafe(content: TipTapDoc | RssPost | Record<string, unknown>): string {
   try {
@@ -223,8 +154,8 @@ function escapeHtml(text: string): string {
 /**
  * 콘텐츠를 HTML로 변환 (서버 사이드)
  *
- * - 모든 출력은 DOMPurify로 정화되어 XSS 공격 방지
- * - script, onclick, onerror 등 위험 요소 자동 제거
+ * - 모든 출력은 sanitize-html로 정화되어 XSS 공격 방지
+ * - script, onclick, javascript: 등 위험 요소 자동 제거
  *
  * @param content - 게시글 콘텐츠 (문자열, TipTap JSON, RSS 객체 등)
  * @returns 정화된 HTML 문자열
@@ -255,6 +186,6 @@ export function processContentToHtml(content: ContentInput): string {
     rawHtml = processObjectContentUnsafe(content as TipTapDoc | RssPost | Record<string, unknown>);
   }
 
-  // 모든 출력을 DOMPurify로 정화 (XSS 방지)
-  return sanitizeHTML(rawHtml);
+  // sanitize-html로 정화 (XSS 방지)
+  return sanitizeHtml(rawHtml, SANITIZE_OPTIONS);
 }
