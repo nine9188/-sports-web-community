@@ -293,7 +293,9 @@ export default async function PostDetailPage({
     };
 
     // BreadcrumbList 구조화 데이터 생성
-    // item이 없는 breadcrumb는 제외하고 position 재할당
+    // Google 가이드: 마지막 항목에서는 item이 선택사항, 나머지는 필수
+    const baseSiteUrl = (seoSettings?.site_url && seoSettings.site_url.trim()) || siteConfig.url;
+
     const validBreadcrumbs = result.breadcrumbs
       .map((breadcrumb) => {
         const breadcrumbPath =
@@ -303,29 +305,32 @@ export default async function PostDetailPage({
 
         return breadcrumbPath ? {
           name: breadcrumb.name,
-          item: `${siteUrl}${breadcrumbPath}`
+          item: `${baseSiteUrl}${breadcrumbPath}`
         } : null;
       })
       .filter((item): item is { name: string; item: string } => item !== null);
 
     const breadcrumbListItems = [
+      // 홈 (item 필수)
       {
         '@type': 'ListItem',
         position: 1,
         name: '홈',
-        item: siteUrl
+        item: baseSiteUrl
       },
+      // 중간 게시판들 (item 필수)
       ...validBreadcrumbs.map((breadcrumb, index) => ({
         '@type': 'ListItem',
         position: index + 2,
         name: breadcrumb.name,
         item: breadcrumb.item
       })),
+      // 마지막: 현재 페이지 (item 선택사항 - Google 권장: 생략)
       {
         '@type': 'ListItem',
         position: validBreadcrumbs.length + 2,
-        name: result.post.title,
-        item: postUrl
+        name: result.post.title
+        // item 생략 - 현재 페이지이므로 Google 가이드라인에 따라 불필요
       }
     ];
 
