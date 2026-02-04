@@ -15,12 +15,15 @@ interface CommentSectionProps {
   postNumber?: string;
   postOwnerId?: string;
   currentUserId?: string | null;
+  /** 서버에서 미리 가져온 댓글 데이터 (SSR 하이드레이션용) */
+  initialComments?: CommentType[];
 }
 
 export default function CommentSection({
   postId,
   postOwnerId,
-  currentUserId: propCurrentUserId = null
+  currentUserId: propCurrentUserId = null,
+  initialComments
 }: CommentSectionProps) {
   const router = useRouter();
   const [content, setContent] = useState('');
@@ -32,7 +35,7 @@ export default function CommentSection({
 
   const isLoggedIn = currentUserId !== null;
 
-  // React Query 기반 댓글 훅
+  // React Query 기반 댓글 훅 (서버 데이터로 초기화)
   const {
     comments,
     treeComments,
@@ -45,7 +48,7 @@ export default function CommentSection({
     likeComment,
     dislikeComment,
     isLiking
-  } = useComments({ postId });
+  } = useComments({ postId, initialComments });
 
   // Supabase 클라이언트 (SSR 안전)
   const supabase = useMemo(() => {

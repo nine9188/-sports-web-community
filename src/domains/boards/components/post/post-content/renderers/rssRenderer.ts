@@ -16,8 +16,8 @@ export function renderRssHeader(rssPost: RssPost): string {
         <img
           src="${imageUrl}"
           alt="기사 이미지"
-          class="w-full h-auto"
-          onerror="this.onerror=null;this.style.display='none';"
+          class="w-full h-auto post-image"
+          data-type="post-image"
         />
       </div>` : ''}
       <div class="flex justify-between items-center mb-4">

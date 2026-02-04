@@ -83,6 +83,8 @@ interface PostDetailLayoutProps {
     slug: string;
   };
   breadcrumbs: Breadcrumb[];
+  /** 서버에서 미리 처리된 HTML (깜빡임 방지) */
+  processedHtml: string;
   comments: CommentType[];
   isLoggedIn: boolean;
   isAuthor: boolean;
@@ -123,6 +125,7 @@ export default function PostDetailLayout({
   post,
   board,
   breadcrumbs,
+  processedHtml,
   comments,
   isLoggedIn,
   isAuthor,
@@ -325,7 +328,7 @@ export default function PostDetailLayout({
         )}
 
         {/* 게시글 본문 컴포넌트 */}
-        <PostContent content={post.content || ""} meta={post.meta || null} />
+        <PostContent processedHtml={processedHtml} meta={post.meta || null} />
 
         {/* 3. 추천/비추천 버튼 및 게시글 액션 */}
         <div className="px-4 sm:px-6 py-4 border-t border-black/5 dark:border-white/10">
@@ -398,12 +401,13 @@ export default function PostDetailLayout({
         />
       </div>
 
-      {/* 6. 댓글 섹션 - 즉시 로딩 */}
+      {/* 6. 댓글 섹션 - 서버 데이터로 즉시 렌더링 */}
       <div className="mb-4">
         <MemoizedCommentSection
           postId={post.id}
           postOwnerId={post.user_id}
           currentUserId={currentUserId}
+          initialComments={comments}
         />
       </div>
 

@@ -1,14 +1,7 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import {
-  renderTipTapDoc,
-  renderRssHeader,
-  renderRssContent,
-  isRssPost,
-  processSocialEmbed
-} from './post-content/renderers';
-import { sanitizeHTML } from './post-content/config';
+import React, { useEffect, useRef } from 'react';
+import { processSocialEmbed } from './post-content/renderers';
 import {
   populateEmptyMatchCards,
   updateMatchCardImages,
@@ -16,159 +9,118 @@ import {
   cleanupMatchCardHover,
   registerMatchCardHoverHandler
 } from './post-content/utils';
-import type { TipTapDoc, RssPost, PostContentProps } from './post-content/types';
 
 // 전역 호버 핸들러 등록
 registerMatchCardHoverHandler();
 
-export default function PostContent({ content, meta }: PostContentProps) {
+interface PostContentProps {
+  /** 서버에서 미리 처리된 HTML */
+  processedHtml: string;
+  meta?: Record<string, unknown> | null;
+}
+
+/**
+ * 게시글 본문 컴포넌트
+ *
+ * - 서버에서 처리된 HTML을 바로 렌더링 (깜빡임 없음)
+ * - 클라이언트에서 DOM 후처리만 수행 (소셜 임베드, 차트 등)
+ */
+export default function PostContent({ processedHtml, meta }: PostContentProps) {
   const contentRef = useRef<HTMLDivElement>(null);
-  const [isMounted, setIsMounted] = useState(false);
-  const [processedContent, setProcessedContent] = useState<string>('');
 
-  // 객체 콘텐츠를 HTML로 변환하는 함수
-  const processObjectContent = useCallback((content: TipTapDoc | RssPost | Record<string, unknown>) => {
-    if (typeof content === 'object') {
-      try {
-        let htmlContent = '<div class="rss-content">';
-
-        // RSS 게시글이면 헤더 추가
-        if (isRssPost(content)) {
-          htmlContent += renderRssHeader(content);
-        }
-
-        // TipTap 형식인 경우
-        if ('type' in content && content.type === 'doc' && 'content' in content) {
-          htmlContent += renderTipTapDoc(content as TipTapDoc);
-        } else if (isRssPost(content)) {
-          // RSS 콘텐츠 본문
-          htmlContent += renderRssContent(content);
-        } else {
-          // 다른 형태의 JSON
-          htmlContent += `
-            <div class="bg-[#F5F5F5] dark:bg-[#262626] p-4 rounded-md overflow-auto text-sm font-mono">
-              <pre class="text-gray-900 dark:text-[#F0F0F0]">${JSON.stringify(content, null, 2)}</pre>
-            </div>
-          `;
-        }
-
-        htmlContent += '</div>';
-        return htmlContent;
-      } catch {
-        return `<div class="text-red-500">오류: 게시글 내용을 표시할 수 없습니다.</div>`;
-      }
-    }
-    return '';
-  }, []);
-
-  // content를 HTML로 변환
-  const processContent = useCallback(() => {
-    if (!content) return '';
-
-    if (typeof content === 'string') {
-      // JSON 형태인지 확인
-      if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
-        try {
-          const parsedContent = JSON.parse(content);
-          return processObjectContent(parsedContent);
-        } catch {
-          return content;
-        }
-      }
-      return content;
-    }
-
-    return processObjectContent(content);
-  }, [content, processObjectContent]);
-
-  // 소셜 임베드와 차트 처리
-  const processEmbeds = useCallback(() => {
-    if (!contentRef.current || !isMounted) return;
-    const rootElement = contentRef.current;
-
-    // 소셜 임베드 처리
-    const socialEmbedElements = rootElement.querySelectorAll('div[data-type="social-embed"]');
-    socialEmbedElements.forEach((element) => {
-      processSocialEmbed(element);
-    });
-
-    // 예측 차트 하이드레이션
-    const predictionChartElements = rootElement.querySelectorAll('div[data-type="prediction-chart"]');
-    predictionChartElements.forEach((element) => {
-      // 이미 하이드레이션 됐으면 스킵
-      if (element.getAttribute('data-hydrated') === 'true') return;
-
-      const chartDataStr = element.getAttribute('data-chart');
-      if (!chartDataStr) return;
-
-      try {
-        const chartData = JSON.parse(decodeURIComponent(chartDataStr));
-
-        // 새 컨테이너 생성
-        const chartContainer = document.createElement('div');
-        chartContainer.className = 'prediction-chart-hydrated my-4';
-
-        Promise.all([
-          import('react-dom/client'),
-          import('@/domains/prediction/components/PredictionChart')
-        ]).then(([{ createRoot }, { default: PredictionChart }]) => {
-          const root = createRoot(chartContainer);
-          root.render(
-            React.createElement(PredictionChart, {
-              data: chartData,
-              showRadar: true,
-              showComparison: true,
-              showPrediction: true
-            })
-          );
-
-          // 기존 요소 교체
-          element.innerHTML = '';
-          element.appendChild(chartContainer);
-          element.setAttribute('data-hydrated', 'true');
-        }).catch((err) => {
-          console.error('예측 차트 로드 실패:', err);
-        });
-      } catch (err) {
-        console.error('예측 차트 데이터 파싱 실패:', err);
-      }
-    });
-  }, [isMounted, meta]);
-
-  // 마운트 및 콘텐츠 처리
+  // DOM 후처리: 소셜 임베드, 매치카드, 예측 차트, 이미지 에러 핸들링
   useEffect(() => {
-    setIsMounted(true);
-    const rawContent = processContent();
-    const sanitizedContent = sanitizeHTML(rawContent);
-    setProcessedContent(sanitizedContent);
-    return () => setIsMounted(false);
-  }, [processContent]);
-
-  // 임베드 및 매치카드 처리
-  useEffect(() => {
-    if (!isMounted || !contentRef.current) return;
+    if (!contentRef.current) return;
 
     const currentRef = contentRef.current;
     let observer: MutationObserver | undefined;
+    let rafId: number;
 
-    const timeoutId = setTimeout(() => {
-      // HTML로 저장된 빈 매치카드를 먼저 채우기
+    // requestAnimationFrame 2번으로 레이아웃 안정 후 실행
+    const runAfterPaint = (callback: () => void) => {
+      rafId = requestAnimationFrame(() => {
+        rafId = requestAnimationFrame(callback);
+      });
+    };
+
+    runAfterPaint(() => {
+      // 1. 이미지 에러 핸들링 (onerror 대체)
+      const images = currentRef.querySelectorAll('img[data-type="post-image"]');
+      images.forEach((img) => {
+        const imgEl = img as HTMLImageElement;
+        imgEl.onerror = () => {
+          imgEl.style.display = 'none';
+          imgEl.onerror = null;
+        };
+      });
+
+      // 2. 소셜 임베드 처리 (Twitter, Instagram 등)
+      const socialEmbedElements = currentRef.querySelectorAll('div[data-type="social-embed"]');
+      socialEmbedElements.forEach((element) => {
+        processSocialEmbed(element);
+      });
+
+      // 3. 예측 차트 하이드레이션
+      const predictionChartElements = currentRef.querySelectorAll('div[data-type="prediction-chart"]');
+      predictionChartElements.forEach((element) => {
+        if (element.getAttribute('data-hydrated') === 'true') return;
+
+        const chartDataStr = element.getAttribute('data-chart');
+        if (!chartDataStr) return;
+
+        // data-chart 크기 제한 (50KB)
+        if (chartDataStr.length > 50000) {
+          console.warn('차트 데이터가 너무 큽니다 (50KB 초과)');
+          return;
+        }
+
+        try {
+          const chartData = JSON.parse(decodeURIComponent(chartDataStr));
+
+          const chartContainer = document.createElement('div');
+          chartContainer.className = 'prediction-chart-hydrated my-4';
+
+          Promise.all([
+            import('react-dom/client'),
+            import('@/domains/prediction/components/PredictionChart')
+          ]).then(([{ createRoot }, { default: PredictionChart }]) => {
+            const root = createRoot(chartContainer);
+            root.render(
+              React.createElement(PredictionChart, {
+                data: chartData,
+                showRadar: true,
+                showComparison: true,
+                showPrediction: true
+              })
+            );
+
+            element.innerHTML = '';
+            element.appendChild(chartContainer);
+            element.setAttribute('data-hydrated', 'true');
+          }).catch((err) => {
+            console.error('예측 차트 로드 실패:', err);
+          });
+        } catch (err) {
+          console.error('예측 차트 데이터 파싱 실패:', err);
+        }
+      });
+
+      // 4. 매치카드 처리
       populateEmptyMatchCards(currentRef);
-      processEmbeds();
       updateMatchCardImages(currentRef);
       observer = setupMatchCardHover(currentRef);
-    }, 200);
+    });
 
     return () => {
-      clearTimeout(timeoutId);
+      cancelAnimationFrame(rafId);
       if (observer) observer.disconnect();
       if (currentRef) cleanupMatchCardHover(currentRef);
     };
-  }, [isMounted, processEmbeds]);
+  }, [processedHtml]);
 
   // 다크모드 변경 감지
   useEffect(() => {
-    if (!isMounted || !contentRef.current) return;
+    if (!contentRef.current) return;
 
     const currentRef = contentRef.current;
     const observer = new MutationObserver((mutations) => {
@@ -185,7 +137,7 @@ export default function PostContent({ content, meta }: PostContentProps) {
     });
 
     return () => observer.disconnect();
-  }, [isMounted]);
+  }, []);
 
   return (
     <>
@@ -277,7 +229,7 @@ export default function PostContent({ content, meta }: PostContentProps) {
       <div
         ref={contentRef}
         className="prose prose-sm sm:prose-sm lg:prose-base max-w-none prose-headings:font-bold prose-img:rounded-lg prose-img:mx-auto dark:prose-invert p-4 sm:p-6"
-        dangerouslySetInnerHTML={{ __html: isMounted ? processedContent : '' }}
+        dangerouslySetInnerHTML={{ __html: processedHtml }}
       />
     </>
   );

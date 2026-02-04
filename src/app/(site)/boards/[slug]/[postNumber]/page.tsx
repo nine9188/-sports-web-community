@@ -161,6 +161,7 @@ export default async function PostDetailPage({
       created_at?: string;
       user_id?: string;
       post_id?: string;
+      parent_id?: string | null;
       likes?: number;
       dislikes?: number;
       userAction?: 'like' | 'dislike' | null;
@@ -177,12 +178,12 @@ export default async function PostDetailPage({
       created_at: comment.created_at || '',
       user_id: comment.user_id || '',
       post_id: comment.post_id || '',
+      parent_id: comment.parent_id || null,
       likes: comment.likes || 0,
       dislikes: comment.dislikes || 0,
       userAction: comment.userAction || null,
       profiles: {
         nickname: comment.profiles?.nickname || null,
-        id: comment.user_id || '',
         public_id: comment.profiles?.public_id || null,
         icon_id: comment.profiles?.icon_id || null,
         level: comment.profiles?.level || null,
@@ -362,6 +363,7 @@ export default async function PostDetailPage({
         post={postWithIcon as Parameters<typeof PostDetailLayout>[0]['post']}
         board={result.board as Parameters<typeof PostDetailLayout>[0]['board']}
         breadcrumbs={result.breadcrumbs || []}
+        processedHtml={result.processedHtml || ''}
         comments={processedComments}
         isLoggedIn={result.isLoggedIn || false}
         isAuthor={result.isAuthor || false}

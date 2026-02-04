@@ -55,9 +55,8 @@ export function renderTipTapNode(node: TipTapNode): string {
           src="${node.attrs.src}"
           alt="${node.attrs.alt || '기사 이미지'}"
           title="${node.attrs.title || ''}"
-          class="max-w-full h-auto mx-auto rounded-lg shadow-md"
-          style="max-height: 500px; object-fit: contain;"
-          onerror="this.onerror=null;this.style.display='none';"
+          class="max-w-full h-auto mx-auto rounded-lg shadow-md post-image"
+          data-type="post-image"
         />
       </div>
     `;

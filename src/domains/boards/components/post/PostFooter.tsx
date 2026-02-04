@@ -162,7 +162,7 @@ export default function PostFooter({
   }
 
   return (
-    <div className={`bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 ${withMargin ? 'mb-4' : ''}`}>
+    <div className={`bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 ${withMargin ? 'mb-4' : ''}`}>
       <div className="h-12 px-4 flex flex-row items-center justify-around">
         {buttonSlots.map((button) => (
           <div key={button.key} className="flex-1 text-center">

@@ -23,6 +23,8 @@ export const commentKeys = {
 interface UseCommentsProps {
   postId: string;
   enabled?: boolean;
+  /** 서버에서 미리 가져온 댓글 데이터 (SSR 하이드레이션용) */
+  initialComments?: CommentType[];
 }
 
 interface UseCommentsReturn {
@@ -59,8 +61,12 @@ interface UseCommentsReturn {
 
 /**
  * 댓글 관련 상태 및 액션을 관리하는 커스텀 훅 (React Query 기반)
+ *
+ * @param postId - 게시글 ID
+ * @param enabled - 쿼리 활성화 여부
+ * @param initialComments - 서버에서 미리 가져온 댓글 (SSR 하이드레이션)
  */
-export function useComments({ postId, enabled = true }: UseCommentsProps): UseCommentsReturn {
+export function useComments({ postId, enabled = true, initialComments }: UseCommentsProps): UseCommentsReturn {
   const queryClient = useQueryClient();
 
   // Supabase 클라이언트 (클라이언트 사이드에서만 사용)
@@ -88,6 +94,10 @@ export function useComments({ postId, enabled = true }: UseCommentsProps): UseCo
     enabled: enabled && !!postId,
     staleTime: 1000 * 60, // 1분
     gcTime: 1000 * 60 * 5, // 5분
+    // 서버에서 미리 가져온 데이터로 초기화 (SSR 하이드레이션)
+    initialData: initialComments,
+    // initialData가 있으면 현재 시간으로 설정하여 stale 방지
+    initialDataUpdatedAt: initialComments ? Date.now() : undefined,
   });
 
   // 댓글 데이터와 트리 구조

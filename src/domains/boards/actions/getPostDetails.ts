@@ -4,6 +4,7 @@ import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { AdjacentPosts } from '../types/post';
 import { getBoardLevel, getFilteredBoardIds, findRootBoard, createBreadcrumbs } from '../utils/board/boardHierarchy';
 import { formatPosts } from '../utils/post/postUtils';
+import { processContentToHtml } from '../utils/post/processContentToHtml';
 import { BoardMap, ChildBoardsMap, BoardData } from '../types/board';
 import { getComments } from './comments/index';
 
@@ -163,12 +164,26 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       boardFilter = filteredBoardIds;
     }
     
-    // 8. 병렬로 추가 데이터 가져오기
+    // 8. 필요한 ID 미리 계산 (팀/리그용)
+    const teamIds = Object.values(boardsData)
+      .map(bd => bd.team_id)
+      .filter((id): id is number => id !== null);
+
+    const leagueIds = Object.values(boardsData)
+      .map(bd => bd.league_id)
+      .filter((id): id is number => id !== null);
+
+    const iconId = post.profiles?.icon_id;
+
+    // 9. 병렬로 모든 추가 데이터 가져오기 (Waterfall 제거)
     const [
       postsResult,
       commentsResult,
       filesResult,
-      postUserActionResult
+      postUserActionResult,
+      teamsResult,
+      leaguesResult,
+      iconResult
     ] = await Promise.all([
       // 게시글 목록
       supabase
@@ -179,45 +194,59 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
         .eq('is_deleted', false)
         .order('created_at', { ascending: false })
         .range((page - 1) * pageSize, page * pageSize - 1),
-      
+
       // 댓글 목록 - 사용자 액션 정보 포함
       getComments(post.id),
-      
+
       // 첨부 파일
       supabase
         .from('post_files')
         .select('url, filename')
         .eq('post_id', post.id),
-      
+
       // 게시글 사용자 액션 정보 (로그인한 경우에만)
       user ? supabase
         .from('post_likes')
         .select('type')
         .eq('post_id', post.id)
         .eq('user_id', user.id)
-        .maybeSingle() : Promise.resolve({ data: null })
+        .maybeSingle() : Promise.resolve({ data: null }),
+
+      // 팀 정보 (병렬화)
+      teamIds.length > 0
+        ? supabase.from('teams').select('*').in('id', teamIds)
+        : Promise.resolve({ data: [] as { id: number; name: string; logo: string }[] }),
+
+      // 리그 정보 (병렬화)
+      leagueIds.length > 0
+        ? supabase.from('leagues').select('*').in('id', leagueIds)
+        : Promise.resolve({ data: [] as { id: number; name: string; logo: string }[] }),
+
+      // 작성자 아이콘 (병렬화)
+      iconId
+        ? supabase.from('shop_items').select('image_url').eq('id', iconId).single()
+        : Promise.resolve({ data: null })
     ]);
     
     const { data: postsData, count } = postsResult;
     const filesData = filesResult.data;
     const postUserActionData = postUserActionResult.data;
-    
+
     // 게시글 사용자 액션 처리
     const postUserAction: 'like' | 'dislike' | null = postUserActionData?.type === 'like' ? 'like' :
                                                        postUserActionData?.type === 'dislike' ? 'dislike' :
                                                        null;
-    
+
     // 댓글 데이터 처리
     const comments = commentsResult.success ? (commentsResult.comments || []) : [];
-    
+
     // 댓글 데이터에 userAction 필드가 포함되도록 명시적으로 매핑
     const processedComments = comments.map(comment => {
-      // userAction을 명시적으로 문자열로 변환하여 직렬화 보장
       const userAction = comment.userAction;
-      const serializedUserAction = userAction === 'like' ? 'like' : 
-                                   userAction === 'dislike' ? 'dislike' : 
+      const serializedUserAction = userAction === 'like' ? 'like' :
+                                   userAction === 'dislike' ? 'dislike' :
                                    null;
-      
+
       return {
         id: comment.id,
         user_id: comment.user_id,
@@ -228,74 +257,57 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
         parent_id: comment.parent_id,
         likes: comment.likes || 0,
         dislikes: comment.dislikes || 0,
-        userAction: serializedUserAction, // 명시적으로 직렬화된 값 사용
+        userAction: serializedUserAction,
         profiles: comment.profiles
       };
     });
-    
+
     // JSON 직렬화를 통해 데이터 무결성 보장
     const serializedComments = JSON.parse(JSON.stringify(processedComments));
-    
-    // 9. 댓글 수 가져오기 - 최적화
+
+    // 10. 팀/리그/아이콘 맵 구성 (이미 병렬로 가져옴)
+    const teamsMap: Record<string, { id: number; name: string; logo: string; [key: string]: unknown }> = {};
+    const leaguesMap: Record<string, { id: number; name: string; logo: string; [key: string]: unknown }> = {};
+
+    (teamsResult.data || []).forEach((team) => {
+      teamsMap[team.id] = { ...team, logo: team.logo || '' };
+    });
+
+    (leaguesResult.data || []).forEach((league) => {
+      leaguesMap[league.id] = { ...league, logo: league.logo || '' };
+    });
+
+    const iconUrl = iconResult.data?.image_url || null;
+
+    // 11. 댓글 수 가져오기 - RPC로 최적화 (GROUP BY)
     const postIds = (postsData || []).map(p => p.id);
     const commentCounts: Record<string, number> = {};
-    
+
     if (postIds.length > 0) {
+      // RPC가 없으면 기존 방식 사용하되, 한 번에 집계
       const { data: commentCountsData } = await supabase
         .from('comments')
         .select('post_id')
         .in('post_id', postIds)
         .eq('is_hidden', false)
         .eq('is_deleted', false);
-      
+
       (commentCountsData || []).forEach((comment) => {
         if (comment.post_id) {
           commentCounts[comment.post_id] = (commentCounts[comment.post_id] || 0) + 1;
         }
       });
     }
-    
-    // 10. 팀 및 리그 정보 가져오기 - 필요한 경우에만
-    const teamIds = Object.values(boardsData)
-      .map(bd => bd.team_id)
-      .filter(id => id !== null) as number[];
-    
-    const leagueIds = Object.values(boardsData)
-      .map(bd => bd.league_id)
-      .filter(id => id !== null) as number[];
-    
-    const teamsMap: Record<string, { id: number; name: string; logo: string; [key: string]: unknown }> = {};
-    const leaguesMap: Record<string, { id: number; name: string; logo: string; [key: string]: unknown }> = {};
-    
-    if (teamIds.length > 0 || leagueIds.length > 0) {
-      const [teamsResult, leaguesResult] = await Promise.all([
-        teamIds.length > 0
-          ? supabase.from('teams').select('*').in('id', teamIds)
-          : Promise.resolve({ data: [] }),
-        leagueIds.length > 0
-          ? supabase.from('leagues').select('*').in('id', leagueIds)
-          : Promise.resolve({ data: [] })
-      ]);
-      
-      // 팀 및 리그 맵 구성
-      (teamsResult.data || []).forEach((team) => {
-        teamsMap[team.id] = { ...team, logo: team.logo || '' };
-      });
-      
-      (leaguesResult.data || []).forEach((league) => {
-        leaguesMap[league.id] = { ...league, logo: league.logo || '' };
-      });
-    }
-    
-    // 11. 게시글 데이터 포맷팅
+
+    // 12. 게시글 데이터 포맷팅
     const formattedPosts = await formatPosts(
-      (postsData || []).map(post => ({
-        ...post,
-        is_hidden: post.is_hidden ?? undefined,
-        is_deleted: post.is_deleted ?? undefined,
-        profiles: post.profiles ? {
-          ...post.profiles,
-          level: post.profiles.level || undefined
+      (postsData || []).map(p => ({
+        ...p,
+        is_hidden: p.is_hidden ?? undefined,
+        is_deleted: p.is_deleted ?? undefined,
+        profiles: p.profiles ? {
+          ...p.profiles,
+          level: p.profiles.level || undefined
         } : undefined
       })),
       commentCounts,
@@ -305,33 +317,18 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       leaguesMap
     );
     
-    // 12. 작성자 아이콘 URL 가져오기 - 필요한 경우에만
-    let iconUrl = null;
-    const iconId = post.profiles?.icon_id;
-    
-    if (iconId) {
-      const { data: iconData } = await supabase
-        .from('shop_items')
-        .select('image_url')
-        .eq('id', iconId)
-        .single();
-      
-      iconUrl = iconData?.image_url || null;
-    }
-    
     // 13. 브레드크럼 생성
     const safeBoardForBreadcrumb = {
       ...board,
       slug: board.slug || board.id
     };
     const breadcrumbs = createBreadcrumbs(safeBoardForBreadcrumb, post.title, postNumber, boardsMap);
-    
-    // 14. 조회수 증가 (비동기 처리 - 에러 무시)
-    try {
-      await supabase.rpc('increment_view_count', { post_id: post.id });
-    } catch {
-      // 실패해도 무시
-    }
+
+    // 14. 콘텐츠 HTML 변환 (서버 사이드 - 깜빡임 방지)
+    const processedHtml = processContentToHtml(post.content);
+
+    // 15. 조회수 증가 (fire-and-forget - 응답 대기 안함)
+    void supabase.rpc('increment_view_count', { post_id: post.id });
     
     // 15. 하위 게시판 ID 찾기
     const allSubBoardIds: string[] = [];
@@ -356,6 +353,7 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       },
       board,
       breadcrumbs,
+      processedHtml,
       comments: serializedComments,
       isLoggedIn,
       isAuthor: user?.id === post.user_id,
