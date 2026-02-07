@@ -11,6 +11,7 @@ import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
 import { siteConfig } from '@/shared/config';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import '@/styles/post-content.css';
 
 // 동적 렌더링 강제 설정 추가
 export const dynamic = 'force-dynamic';

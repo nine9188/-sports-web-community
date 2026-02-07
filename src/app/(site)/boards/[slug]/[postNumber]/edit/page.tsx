@@ -7,6 +7,7 @@ import { getPostEditData } from '@/domains/boards/actions';
 import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import Spinner from '@/shared/components/Spinner';
+import '@/styles/post-content.css';
 
 // Dynamic import로 Tiptap 에디터 번들을 lazy load
 const PostEditForm = dynamicImport(
