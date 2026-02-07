@@ -9,22 +9,41 @@ import type { DealInfo } from '../../types/hotdeal';
 
 /**
  * 게시글 수정 서버 액션
+ * 보안: userId는 서버에서 세션을 통해 직접 확인 (클라이언트 전달값 사용 안함)
  */
 export async function updatePost(
   postId: string,
   title: string,
   content: string,
-  userId: string,
   dealInfo?: DealInfo | null
 ): Promise<PostActionResponse> {
-  if (!postId || !title || !content || !userId) {
+  if (!postId || !title || !content) {
     return {
       success: false,
       error: '필수 입력값이 누락되었습니다.'
     };
   }
-  
+
   try {
+    const supabase = await getSupabaseAction();
+
+    if (!supabase) {
+      return {
+        success: false,
+        error: 'Supabase 클라이언트 초기화 오류'
+      };
+    }
+
+    // 서버에서 직접 세션 확인 (보안: 클라이언트 전달값 신뢰하지 않음)
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return {
+        success: false,
+        error: '로그인이 필요합니다.'
+      };
+    }
+    const userId = user.id;
+
     // 계정 정지 상태 확인
     const suspensionCheck = await checkSuspensionGuard(userId);
     if (suspensionCheck.isSuspended) {
@@ -33,16 +52,7 @@ export async function updatePost(
         error: suspensionCheck.message || '계정이 정지되어 게시글을 수정할 수 없습니다.'
       };
     }
-    
-    const supabase = await getSupabaseAction();
-    
-    if (!supabase) {
-      return {
-        success: false,
-        error: 'Supabase 클라이언트 초기화 오류'
-      };
-    }
-    
+
     // 게시글이 존재하는지 확인 & 작성자 일치 확인
     const { data: existingPost, error: existingPostError } = await supabase
       .from('posts')
@@ -119,38 +129,41 @@ export async function updatePost(
     
     const boardSlug = (postData.boards as { slug: string } | null)?.slug;
 
-    // 카드 링크 갱신 (기존 삭제 → 새로 삽입)
-    try {
-      const parsedContent = typeof content === 'string' && content.startsWith('{')
-        ? JSON.parse(content)
-        : content;
-      const cardLinks = extractCardLinks(parsedContent);
+    // 후처리 작업 (병렬 실행 - 응답 차단하지 않음)
+    Promise.all([
+      // 카드 링크 갱신
+      (async () => {
+        try {
+          const parsedContent = typeof content === 'string' && content.startsWith('{')
+            ? JSON.parse(content)
+            : content;
+          const cardLinks = extractCardLinks(parsedContent);
+          const supabaseAny = supabase as unknown as { from: (table: string) => { delete: () => { eq: (col: string, val: string) => Promise<unknown> }; insert: (data: unknown) => Promise<unknown> } };
+          await supabaseAny.from('post_card_links').delete().eq('post_id', postId);
+          if (cardLinks.length > 0) {
+            await supabaseAny.from('post_card_links').insert(cardLinks.map(link => ({ ...link, post_id: postId })));
+          }
+        } catch (cardErr) {
+          console.error('카드 링크 갱신 실패:', cardErr);
+        }
+      })(),
+      // 로그 기록
+      logUserAction(
+        'POST_UPDATE',
+        `게시글 수정: ${title}`,
+        userId,
+        {
+          postId,
+          postNumber: postData.post_number,
+          boardId: postData.board_id,
+          boardSlug,
+          title
+        }
+      )
+    ]).catch(err => {
+      console.error('게시글 수정 후처리 실패 (무시됨):', err);
+    });
 
-      await supabase.from('post_card_links').delete().eq('post_id', postId);
-
-      if (cardLinks.length > 0) {
-        await supabase
-          .from('post_card_links')
-          .insert(cardLinks.map(link => ({ ...link, post_id: postId })));
-      }
-    } catch (cardErr) {
-      console.error('카드 링크 갱신 실패:', cardErr);
-    }
-
-    // 게시글 수정 성공 로그 기록
-    await logUserAction(
-      'POST_UPDATE',
-      `게시글 수정: ${title}`,
-      userId,
-      {
-        postId,
-        postNumber: postData.post_number,
-        boardId: postData.board_id,
-        boardSlug,
-        title
-      }
-    );
-    
     return {
       success: true,
       postId,

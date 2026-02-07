@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { Match } from '@/domains/livescore/types/match';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
+
+// 4590 표준: placeholder 상수
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 
 // 경기 상태 한글 매핑
 const STATUS_MAP: Record<string, { label: string; isLive: boolean }> = {
@@ -38,16 +40,19 @@ interface MatchCardProps {
 }
 
 export default function MatchCard({ match, isLast = false }: MatchCardProps) {
+  // 4590 표준: 데이터 내 URL 직접 사용 (서버에서 이미 Storage URL 설정됨)
   const homeTeam = {
     id: match.teams?.home?.id || 0,
     name: match.teams?.home?.name || '',
-    score: match.teams?.home?.score ?? 0
+    score: match.teams?.home?.score ?? 0,
+    logo: match.teams?.home?.img || TEAM_PLACEHOLDER
   };
 
   const awayTeam = {
     id: match.teams?.away?.id || 0,
     name: match.teams?.away?.name || '',
-    score: match.teams?.away?.score ?? 0
+    score: match.teams?.away?.score ?? 0,
+    logo: match.teams?.away?.img || TEAM_PLACEHOLDER
   };
 
   const statusCode = match.status?.code || '';
@@ -111,9 +116,8 @@ export default function MatchCard({ match, isLast = false }: MatchCardProps) {
         </span>
         {homeTeam.id > 0 && (
           <div className="w-6 h-6 flex-shrink-0 relative">
-            <UnifiedSportsImage
-              imageId={homeTeam.id}
-              imageType={ImageType.Teams}
+            <UnifiedSportsImageClient
+              src={homeTeam.logo}
               alt={homeTeam.name}
               width={24}
               height={24}
@@ -134,9 +138,8 @@ export default function MatchCard({ match, isLast = false }: MatchCardProps) {
       <div className="flex items-center gap-2 flex-1 min-w-0">
         {awayTeam.id > 0 && (
           <div className="w-6 h-6 flex-shrink-0 relative">
-            <UnifiedSportsImage
-              imageId={awayTeam.id}
-              imageType={ImageType.Teams}
+            <UnifiedSportsImageClient
+              src={awayTeam.logo}
               alt={awayTeam.name}
               width={24}
               height={24}

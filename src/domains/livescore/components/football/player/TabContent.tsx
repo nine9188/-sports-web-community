@@ -16,14 +16,38 @@ import PlayerRankings from './tabs/PlayerRankings';
 // 탭 컴포넌트들 (메모이제이션)
 // ============================================
 
-const StatsTab = memo(function StatsTab({ statistics }: { statistics: PlayerStatistic[] }) {
-  return <PlayerStats statistics={statistics} />;
+const StatsTab = memo(function StatsTab({
+  statistics,
+  teamLogoUrls = {},
+  leagueLogoUrls = {},
+  leagueLogoDarkUrls = {}
+}: {
+  statistics: PlayerStatistic[];
+  teamLogoUrls?: Record<number, string>;
+  leagueLogoUrls?: Record<number, string>;
+  leagueLogoDarkUrls?: Record<number, string>;
+}) {
+  return (
+    <PlayerStats
+      statistics={statistics}
+      teamLogoUrls={teamLogoUrls}
+      leagueLogoUrls={leagueLogoUrls}
+      leagueLogoDarkUrls={leagueLogoDarkUrls}
+    />
+  );
 });
 
 const FixturesTab = memo(function FixturesTab({
   fixturesData
 }: {
-  fixturesData: { data: FixtureData[]; status?: string; message?: string; }
+  fixturesData: {
+    data: FixtureData[];
+    status?: string;
+    message?: string;
+    teamLogoUrls?: Record<number, string>;
+    leagueLogoUrls?: Record<number, string>;
+    leagueLogoDarkUrls?: Record<number, string>;
+  }
 }) {
   const safeFixturesData = useMemo(() => ({
     data: fixturesData?.data || [],
@@ -31,31 +55,71 @@ const FixturesTab = memo(function FixturesTab({
     message: fixturesData?.message || '경기 기록이 없습니다.'
   }), [fixturesData]);
 
-  return <PlayerFixtures fixturesData={safeFixturesData} />;
+  return (
+    <PlayerFixtures
+      fixturesData={safeFixturesData}
+      teamLogoUrls={fixturesData?.teamLogoUrls || {}}
+      leagueLogoUrls={fixturesData?.leagueLogoUrls || {}}
+      leagueLogoDarkUrls={fixturesData?.leagueLogoDarkUrls || {}}
+    />
+  );
 });
 
 const TrophiesTab = memo(function TrophiesTab({
-  playerId, trophiesData
+  playerId,
+  trophiesData,
+  leagueLogoUrls = {},
+  leagueLogoDarkUrls = {}
 }: {
-  playerId: number, trophiesData: TrophyData[]
+  playerId: number;
+  trophiesData: TrophyData[];
+  leagueLogoUrls?: Record<number, string>;
+  leagueLogoDarkUrls?: Record<number, string>;
 }) {
-  return <PlayerTrophies playerId={playerId} trophiesData={trophiesData} />;
+  return (
+    <PlayerTrophies
+      playerId={playerId}
+      trophiesData={trophiesData}
+      leagueLogoUrls={leagueLogoUrls}
+      leagueLogoDarkUrls={leagueLogoDarkUrls}
+    />
+  );
 });
 
 const TransfersTab = memo(function TransfersTab({
-  playerId, transfersData
+  playerId,
+  transfersData,
+  teamLogoUrls = {}
 }: {
-  playerId: number, transfersData: TransferData[]
+  playerId: number;
+  transfersData: TransferData[];
+  teamLogoUrls?: Record<number, string>;
 }) {
-  return <PlayerTransfers playerId={playerId} transfersData={transfersData} />;
+  return (
+    <PlayerTransfers
+      playerId={playerId}
+      transfersData={transfersData}
+      teamLogoUrls={teamLogoUrls}
+    />
+  );
 });
 
 const InjuriesTab = memo(function InjuriesTab({
-  playerId, injuriesData
+  playerId,
+  injuriesData,
+  teamLogoUrls = {}
 }: {
-  playerId: number, injuriesData: InjuryData[]
+  playerId: number;
+  injuriesData: InjuryData[];
+  teamLogoUrls?: Record<number, string>;
 }) {
-  return <PlayerInjuries playerId={playerId} injuriesData={injuriesData} />;
+  return (
+    <PlayerInjuries
+      playerId={playerId}
+      injuriesData={injuriesData}
+      teamLogoUrls={teamLogoUrls}
+    />
+  );
 });
 
 const RankingsTab = memo(function RankingsTab({
@@ -63,7 +127,15 @@ const RankingsTab = memo(function RankingsTab({
 }: {
   playerId: number, rankingsData: RankingsData, playerKoreanNames?: Record<number, string | null>
 }) {
-  return <PlayerRankings playerId={playerId} rankingsData={rankingsData} playerKoreanNames={playerKoreanNames} />;
+  return (
+    <PlayerRankings
+      playerId={playerId}
+      rankingsData={rankingsData}
+      playerKoreanNames={playerKoreanNames}
+      playerPhotoUrls={rankingsData.playerPhotoUrls}
+      teamLogoUrls={rankingsData.teamLogoUrls}
+    />
+  );
 });
 
 // 오류 표시 컴포넌트
@@ -104,6 +176,10 @@ export default function TabContent({
     trophiesData,
     injuriesData,
     rankingsData,
+    trophiesLeagueLogoUrls,
+    trophiesLeagueLogoDarkUrls,
+    transfersTeamLogoUrls,
+    injuriesTeamLogoUrls,
     isLoading,
     error,
   } = usePlayerTabData({
@@ -142,7 +218,12 @@ export default function TabContent({
         const statistics = statsData?.statistics || [];
         return (
           <Suspense fallback={<LoadingState message="통계 데이터를 불러오는 중..." />}>
-            <StatsTab statistics={statistics} />
+            <StatsTab
+              statistics={statistics}
+              teamLogoUrls={statsData?.teamLogoUrls || {}}
+              leagueLogoUrls={statsData?.leagueLogoUrls || {}}
+              leagueLogoDarkUrls={statsData?.leagueLogoDarkUrls || {}}
+            />
           </Suspense>
         );
       }
@@ -160,7 +241,12 @@ export default function TabContent({
         const trophies = trophiesData || [];
         return (
           <Suspense fallback={<LoadingState message="트로피 정보를 불러오는 중..." />}>
-            <TrophiesTab playerId={playerIdNum} trophiesData={trophies} />
+            <TrophiesTab
+              playerId={playerIdNum}
+              trophiesData={trophies}
+              leagueLogoUrls={trophiesLeagueLogoUrls}
+              leagueLogoDarkUrls={trophiesLeagueLogoDarkUrls}
+            />
           </Suspense>
         );
       }
@@ -169,7 +255,11 @@ export default function TabContent({
         const transfers = transfersData || [];
         return (
           <Suspense fallback={<LoadingState message="이적 기록을 불러오는 중..." />}>
-            <TransfersTab playerId={playerIdNum} transfersData={transfers} />
+            <TransfersTab
+              playerId={playerIdNum}
+              transfersData={transfers}
+              teamLogoUrls={transfersTeamLogoUrls}
+            />
           </Suspense>
         );
       }
@@ -178,7 +268,11 @@ export default function TabContent({
         const injuries = injuriesData || [];
         return (
           <Suspense fallback={<LoadingState message="부상 기록을 불러오는 중..." />}>
-            <InjuriesTab playerId={playerIdNum} injuriesData={injuries} />
+            <InjuriesTab
+              playerId={playerIdNum}
+              injuriesData={injuries}
+              teamLogoUrls={injuriesTeamLogoUrls}
+            />
           </Suspense>
         );
       }

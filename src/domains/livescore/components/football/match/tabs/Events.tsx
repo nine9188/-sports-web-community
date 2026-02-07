@@ -2,9 +2,10 @@
 
 import { memo, useState, useEffect } from 'react';
 import Link from 'next/link';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { MatchEvent } from '@/domains/livescore/types/match';
+
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 import { getTeamById, TeamMapping } from '@/domains/livescore/constants/teams';
 import { mapEventToKoreanText } from '@/domains/livescore/constants/event-mappings';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
@@ -59,10 +60,11 @@ interface EventsProps {
   matchId?: string;
   events?: MatchEvent[];
   playerKoreanNames?: PlayerKoreanNames;
+  teamLogoUrls?: Record<number, string>;
 }
 
 // 메모이제이션을 적용하여 불필요한 리렌더링 방지
-function Events({ events: propsEvents, playerKoreanNames = {} }: EventsProps) {
+function Events({ events: propsEvents, playerKoreanNames = {}, teamLogoUrls = {} }: EventsProps) {
   const [events, setEvents] = useState<MatchEvent[]>(propsEvents || []);
   const [loading, setLoading] = useState(false);
   const [error] = useState<string | null>(null);
@@ -181,6 +183,9 @@ function Events({ events: propsEvents, playerKoreanNames = {} }: EventsProps) {
   }, [events, teamCache]);
 
 
+  // 4590 표준: 팀 로고 URL 헬퍼
+  const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
+
   // 팀 로고 컴포넌트 수정
   const TeamLogo = ({ name, teamId }: { name: string; teamId?: number }) => {
     // 캐시된 팀 정보 확인
@@ -190,9 +195,8 @@ function Events({ events: propsEvents, playerKoreanNames = {} }: EventsProps) {
     return (
       <div className="w-5 h-5 md:w-6 md:h-6 relative flex-shrink-0 overflow-hidden">
         {teamId ? (
-          <UnifiedSportsImage
-            imageId={teamId}
-            imageType={ImageType.Teams}
+          <UnifiedSportsImageClient
+            src={getTeamLogo(teamId)}
             alt={teamName}
             width={24}
             height={24}

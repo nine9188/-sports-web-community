@@ -3,14 +3,17 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Team } from '@/domains/livescore/types/match';
 import { StandingsData } from '@/domains/livescore/types/match';
 import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
 import { PlayerKoreanNames } from '../MatchPageClient';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
+
+// 4590 표준: placeholder URLs
+const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 
 interface PowerProps {
   matchId: string;
@@ -44,11 +47,18 @@ interface PowerProps {
     };
     // 선택적: 순위 데이터(컨텍스트에서 로드됨)
     standings?: StandingsData | null;
+    // 4590 표준: 선수 사진 Storage URL (playerId -> URL)
+    playerPhotoUrls?: Record<number, string>;
+    // 4590 표준: 팀 로고 Storage URL (teamId -> URL)
+    teamLogoUrls?: Record<number, string>;
   };
 }
 
 export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
-  // 팀 메타 추출 (로고/이름)
+  // 4590 표준: teamLogoUrls에서 URL 조회 헬퍼
+  const getTeamLogo = (teamId: number) => data.teamLogoUrls?.[teamId] || TEAM_PLACEHOLDER;
+
+  // 팀 메타 추출 (이름만)
   const findTeamMeta = (id: number) => {
     const item = data.h2h.items.find((m) => (m.teams.home?.id === id) || (m.teams.away?.id === id))
     const originalName = item ? (item.teams.home?.id === id ? item.teams.home?.name : item.teams.away?.name) : undefined
@@ -57,14 +67,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
     const koreanName = getTeamDisplayName(id, { language: 'ko' })
     const displayName = koreanName.startsWith('팀 ') ? (originalName || `#${id}`) : koreanName
 
-    if (item) {
-      const t = item.teams.home?.id === id ? item.teams.home : item.teams.away
-      return {
-        name: displayName,
-        logo: t?.logo || `https://media.api-sports.io/football/teams/${id}.png`
-      }
-    }
-    return { name: displayName, logo: `https://media.api-sports.io/football/teams/${id}.png` }
+    return { name: displayName }
   }
 
   const teamAMeta = findTeamMeta(data.teamA)
@@ -93,13 +96,13 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
           <div className="text-right px-1">
             <Link href={`/livescore/football/team/${data.teamA}`} className="group flex items-center justify-end gap-2 mb-1">
               <div className="font-semibold truncate text-right text-gray-900 dark:text-[#F0F0F0] group-hover:underline transition-colors">{teamAMeta.name}</div>
-              <UnifiedSportsImage
-                imageId={data.teamA}
-                imageType={ImageType.Teams}
+              <UnifiedSportsImageClient
+                src={getTeamLogo(data.teamA)}
                 alt={teamAMeta.name}
                 width={32}
                 height={32}
-                className="w-8 h-8 object-contain group-hover:brightness-75 transition-all"
+                fit="contain"
+                className="w-8 h-8 group-hover:brightness-75 transition-all"
               />
             </Link>
             {data.standings?.standings?.league?.standings ? (
@@ -119,13 +122,13 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
           </div>
           <div className="text-left px-1">
             <Link href={`/livescore/football/team/${data.teamB}`} className="group flex items-center justify-start gap-2 mb-1">
-              <UnifiedSportsImage
-                imageId={data.teamB}
-                imageType={ImageType.Teams}
+              <UnifiedSportsImageClient
+                src={getTeamLogo(data.teamB)}
                 alt={teamBMeta.name}
                 width={32}
                 height={32}
-                className="w-8 h-8 object-contain group-hover:brightness-75 transition-all"
+                fit="contain"
+                className="w-8 h-8 group-hover:brightness-75 transition-all"
               />
               <div className="font-semibold truncate text-gray-900 dark:text-[#F0F0F0] group-hover:underline transition-colors">{teamBMeta.name}</div>
             </Link>
@@ -208,13 +211,13 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
         <ContainerHeader>
           <div className="flex items-center gap-2">
             <ContainerTitle>최근 경기 - {teamAMeta.name}</ContainerTitle>
-            <UnifiedSportsImage
-              imageId={data.teamA}
-              imageType={ImageType.Teams}
+            <UnifiedSportsImageClient
+              src={getTeamLogo(data.teamA)}
               alt={teamAMeta.name}
               width={20}
               height={20}
-              className="w-5 h-5 object-contain"
+              fit="contain"
+              className="w-5 h-5"
             />
           </div>
         </ContainerHeader>
@@ -268,13 +271,13 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
         <ContainerHeader>
           <div className="flex items-center gap-2">
             <ContainerTitle>최근 경기 - {teamBMeta.name}</ContainerTitle>
-            <UnifiedSportsImage
-              imageId={data.teamB}
-              imageType={ImageType.Teams}
+            <UnifiedSportsImageClient
+              src={getTeamLogo(data.teamB)}
               alt={teamBMeta.name}
               width={20}
               height={20}
-              className="w-5 h-5 object-contain"
+              fit="contain"
+              className="w-5 h-5"
             />
           </div>
         </ContainerHeader>
@@ -449,13 +452,13 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
               >
                 <div className="flex items-center justify-end px-1 gap-2">
                   <span className="text-sm">{teamAMeta.name}</span>
-                  <UnifiedSportsImage
-                    imageId={data.teamA}
-                    imageType={ImageType.Teams}
+                  <UnifiedSportsImageClient
+                    src={getTeamLogo(data.teamA)}
                     alt={teamAMeta.name}
                     width={16}
                     height={16}
-                    className="w-4 h-4 object-contain"
+                    fit="contain"
+                    className="w-4 h-4"
                   />
                   <span className="font-semibold">{aScore}</span>
                 </div>
@@ -465,13 +468,13 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                 </div>
                 <div className="flex items-center justify-start px-1 gap-2">
                   <span className="font-semibold">{bScore}</span>
-                  <UnifiedSportsImage
-                    imageId={data.teamB}
-                    imageType={ImageType.Teams}
+                  <UnifiedSportsImageClient
+                    src={getTeamLogo(data.teamB)}
                     alt={teamBMeta.name}
                     width={16}
                     height={16}
-                    className="w-4 h-4 object-contain"
+                    fit="contain"
+                    className="w-4 h-4"
                   />
                   <span className="text-sm">{teamBMeta.name}</span>
                 </div>
@@ -558,13 +561,13 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
         <ContainerHeader>
           <div className="flex items-center gap-2">
             <ContainerTitle>{teamAMeta.name} 득점·도움 순위</ContainerTitle>
-            <UnifiedSportsImage
-              imageId={data.teamA}
-              imageType={ImageType.Teams}
+            <UnifiedSportsImageClient
+              src={getTeamLogo(data.teamA)}
               alt={teamAMeta.name}
               width={20}
               height={20}
-              className="w-5 h-5 object-contain"
+              fit="contain"
+              className="w-5 h-5"
             />
           </div>
         </ContainerHeader>
@@ -588,7 +591,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
-                      <Image src={`https://media.api-sports.io/football/players/${playerA.playerId}.png`} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
+                      <Image src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                     </div>
                     <span className="text-sm leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerADisplayName}</span>
                   </div>
@@ -617,7 +620,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
-                      <Image src={`https://media.api-sports.io/football/players/${playerA.playerId}.png`} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
+                      <Image src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                     </div>
                     <span className="text-sm leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerADisplayName}</span>
                   </div>
@@ -633,13 +636,13 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
       <Container className="bg-white dark:bg-[#1D1D1D] md:hidden">
         <ContainerHeader>
           <div className="flex items-center gap-2">
-            <UnifiedSportsImage
-              imageId={data.teamB}
-              imageType={ImageType.Teams}
+            <UnifiedSportsImageClient
+              src={getTeamLogo(data.teamB)}
               alt={teamBMeta.name}
               width={20}
               height={20}
-              className="w-5 h-5 object-contain"
+              fit="contain"
+              className="w-5 h-5"
             />
             <ContainerTitle>팀 탑 플레이어 - {teamBMeta.name}</ContainerTitle>
           </div>
@@ -664,7 +667,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
-                      <Image src={`https://media.api-sports.io/football/players/${playerB.playerId}.png`} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
+                      <Image src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                     </div>
                     <span className="text-sm leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerBDisplayName}</span>
                   </div>
@@ -693,7 +696,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
-                      <Image src={`https://media.api-sports.io/football/players/${playerB.playerId}.png`} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
+                      <Image src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                     </div>
                     <span className="text-sm leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerBDisplayName}</span>
                   </div>
@@ -716,13 +719,13 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
             <div>
               <Link href={`/livescore/football/team/${data.teamA}`} className="flex items-center justify-end gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors mb-3">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{teamAMeta.name}</span>
-                <UnifiedSportsImage
-                  imageId={data.teamA}
-                  imageType={ImageType.Teams}
+                <UnifiedSportsImageClient
+                  src={getTeamLogo(data.teamA)}
                   alt={teamAMeta.name}
                   width={16}
                   height={16}
-                  className="w-4 h-4 object-contain"
+                  fit="contain"
+                  className="w-4 h-4"
                 />
               </Link>
 
@@ -745,7 +748,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                     >
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
-                          <Image src={`https://media.api-sports.io/football/players/${playerA.playerId}.png`} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
+                          <Image src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                         </div>
                         <span className="text-sm leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerADisplayName}</span>
                       </div>
@@ -774,7 +777,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                     >
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
-                          <Image src={`https://media.api-sports.io/football/players/${playerA.playerId}.png`} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
+                          <Image src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                         </div>
                         <span className="text-sm leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerADisplayName}</span>
                       </div>
@@ -791,13 +794,13 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
             {/* Team B 섹션 */}
             <div>
               <Link href={`/livescore/football/team/${data.teamB}`} className="flex items-center justify-start gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors mb-3">
-                <UnifiedSportsImage
-                  imageId={data.teamB}
-                  imageType={ImageType.Teams}
+                <UnifiedSportsImageClient
+                  src={getTeamLogo(data.teamB)}
                   alt={teamBMeta.name}
                   width={16}
                   height={16}
-                  className="w-4 h-4 object-contain"
+                  fit="contain"
+                  className="w-4 h-4"
                 />
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{teamBMeta.name}</span>
               </Link>
@@ -823,7 +826,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                       <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
                         <span className="text-sm leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerBDisplayName}</span>
                         <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
-                          <Image src={`https://media.api-sports.io/football/players/${playerB.playerId}.png`} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
+                          <Image src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                         </div>
                       </div>
                     </Link>
@@ -852,7 +855,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                       <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
                         <span className="text-sm leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerBDisplayName}</span>
                         <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
-                          <Image src={`https://media.api-sports.io/football/players/${playerB.playerId}.png`} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
+                          <Image src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                         </div>
                       </div>
                     </Link>

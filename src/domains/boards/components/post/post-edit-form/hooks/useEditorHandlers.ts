@@ -5,6 +5,9 @@ import { Editor } from '@tiptap/react';
 import { toast } from 'react-toastify';
 import { MatchData } from '@/domains/livescore/actions/footballApi';
 import { generateMatchCardHTML } from '@/shared/utils/matchCardRenderer';
+import { createPlayerCardData } from '@/domains/boards/actions/createPlayerCardData';
+import { createTeamCardData } from '@/domains/boards/actions/createTeamCardData';
+import { createMatchCardData } from '@/domains/boards/actions/createMatchCardData';
 import type { TeamMapping } from '@/domains/livescore/constants/teams';
 import type { Player } from '@/domains/livescore/actions/teams/squad';
 
@@ -45,79 +48,42 @@ interface UseEditorHandlersReturn {
   handleAddMatch: (matchId: string, matchData: MatchData) => Promise<void>;
   handleAddLink: (url: string, text?: string) => void;
   handleAddSocialEmbed: (platform: string, url: string) => void;
-  handleAddTeam: (team: TeamMapping, league: LeagueInfo) => void;
+  handleAddTeam: (team: TeamMapping, league: LeagueInfo) => Promise<void>;
   handleAddPlayer: (player: Player, team: TeamMapping, koreanName?: string) => void;
 }
+
+// 모달 타입 정의
+type ModalType = 'image' | 'youtube' | 'video' | 'match' | 'link' | 'social' | 'entity';
 
 export function useEditorHandlers({
   editor,
   extensionsLoaded
 }: UseEditorHandlersProps): UseEditorHandlersReturn {
-  // 모달 상태
-  const [showImageModal, setShowImageModal] = useState(false);
-  const [showYoutubeModal, setShowYoutubeModal] = useState(false);
-  const [showVideoModal, setShowVideoModal] = useState(false);
-  const [showMatchModal, setShowMatchModal] = useState(false);
-  const [showLinkModal, setShowLinkModal] = useState(false);
-  const [showSocialModal, setShowSocialModal] = useState(false);
-  const [showEntityModal, setShowEntityModal] = useState(false);
+  // 단일 상태로 모든 모달 관리 (stale closure 문제 해결)
+  const [activeModal, setActiveModal] = useState<ModalType | null>(null);
 
-  // 모든 모달 닫기
-  const closeAllModals = useCallback(() => {
-    setShowImageModal(false);
-    setShowYoutubeModal(false);
-    setShowVideoModal(false);
-    setShowMatchModal(false);
-    setShowLinkModal(false);
-    setShowSocialModal(false);
-    setShowEntityModal(false);
+  // 파생 상태: 개별 모달 열림 여부
+  const showImageModal = activeModal === 'image';
+  const showYoutubeModal = activeModal === 'youtube';
+  const showVideoModal = activeModal === 'video';
+  const showMatchModal = activeModal === 'match';
+  const showLinkModal = activeModal === 'link';
+  const showSocialModal = activeModal === 'social';
+  const showEntityModal = activeModal === 'entity';
+
+  // 개별 모달 setter (기존 API 호환성 유지)
+  const setShowImageModal = useCallback((show: boolean) => setActiveModal(show ? 'image' : null), []);
+  const setShowYoutubeModal = useCallback((show: boolean) => setActiveModal(show ? 'youtube' : null), []);
+  const setShowVideoModal = useCallback((show: boolean) => setActiveModal(show ? 'video' : null), []);
+  const setShowMatchModal = useCallback((show: boolean) => setActiveModal(show ? 'match' : null), []);
+  const setShowLinkModal = useCallback((show: boolean) => setActiveModal(show ? 'link' : null), []);
+  const setShowSocialModal = useCallback((show: boolean) => setActiveModal(show ? 'social' : null), []);
+  const setShowEntityModal = useCallback((show: boolean) => setActiveModal(show ? 'entity' : null), []);
+
+  // 모달 토글 핸들러 (의존성 없음 - stale closure 해결)
+  const handleToggleDropdown = useCallback((dropdown: ModalType) => {
+    setActiveModal(prev => prev === dropdown ? null : dropdown);
   }, []);
-
-  // 모달 토글 핸들러
-  const handleToggleDropdown = useCallback((dropdown: 'match' | 'link' | 'video' | 'image' | 'youtube' | 'social' | 'entity') => {
-    const currentState: Record<typeof dropdown, boolean> = {
-      image: showImageModal,
-      youtube: showYoutubeModal,
-      video: showVideoModal,
-      match: showMatchModal,
-      link: showLinkModal,
-      social: showSocialModal,
-      entity: showEntityModal
-    };
-
-    // 이미 열려있는 모달이면 닫기
-    if (currentState[dropdown]) {
-      closeAllModals();
-      return;
-    }
-
-    // 모든 모달 닫고 선택된 것만 열기
-    closeAllModals();
-
-    switch (dropdown) {
-      case 'image':
-        setShowImageModal(true);
-        break;
-      case 'youtube':
-        setShowYoutubeModal(true);
-        break;
-      case 'video':
-        setShowVideoModal(true);
-        break;
-      case 'match':
-        setShowMatchModal(true);
-        break;
-      case 'link':
-        setShowLinkModal(true);
-        break;
-      case 'social':
-        setShowSocialModal(true);
-        break;
-      case 'entity':
-        setShowEntityModal(true);
-        break;
-    }
-  }, [showImageModal, showYoutubeModal, showVideoModal, showMatchModal, showLinkModal, showSocialModal, showEntityModal, closeAllModals]);
 
   // URL 이미지 추가 (파일 업로드는 ImageUploadForm에서 직접 처리)
   const handleAddImage = useCallback((url: string, caption?: string) => {
@@ -245,7 +211,7 @@ export function useEditorHandlers({
     setShowVideoModal(false);
   }, [editor, extensionsLoaded]);
 
-  // 경기 카드 추가
+  // 경기 카드 추가 (4590 표준: 서버에서 Storage URL 확정)
   const handleAddMatch = useCallback(async (matchId: string, matchData: MatchData) => {
     if (!editor) {
       toast.error('에디터가 준비되지 않았습니다.');
@@ -253,7 +219,15 @@ export function useEditorHandlers({
     }
 
     try {
-      const matchCardHTML = generateMatchCardHTML(matchData);
+      // 4590 표준: 서버에서 Storage URL 확정
+      const result = await createMatchCardData(matchData);
+
+      if (!result.success || !result.data) {
+        toast.error(result.error || '경기 카드 데이터 생성에 실패했습니다.');
+        return;
+      }
+
+      const matchCardHTML = generateMatchCardHTML(result.data);
       editor.commands.insertContent(matchCardHTML);
       setShowMatchModal(false);
       toast.success('경기 결과가 추가되었습니다.');
@@ -309,29 +283,28 @@ export function useEditorHandlers({
     }
   }, [editor, extensionsLoaded]);
 
-  // 팀 카드 추가
-  const handleAddTeam = useCallback((team: TeamMapping, league: LeagueInfo) => {
+  // 팀 카드 추가 (4590 표준: 서버에서 Storage URL 확정)
+  const handleAddTeam = useCallback(async (team: TeamMapping, league: LeagueInfo) => {
     if (!editor || !extensionsLoaded) {
       toast.error('에디터가 준비되지 않았습니다.');
       return;
     }
 
     try {
+      // 4590 표준: 서버에서 Storage URL 확정
+      const result = await createTeamCardData(
+        { id: team.id, name_en: team.name_en, name_ko: team.name_ko, logo: team.logo },
+        league
+      );
+
+      if (!result.success || !result.data) {
+        toast.error(result.error || '팀 카드 데이터 생성에 실패했습니다.');
+        return;
+      }
+
       const commands = editor.commands as Record<string, (...args: unknown[]) => boolean>;
       if ('setTeamCard' in commands) {
-        const teamData = {
-          id: team.id,
-          name: team.name_en,
-          koreanName: team.name_ko,
-          logo: team.logo || `https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/${team.id}.png`,
-          league: {
-            id: league.id,
-            name: league.name,
-            koreanName: league.koreanName,
-            logo: `https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/leagues/${league.id}.png`
-          }
-        };
-        const success = commands.setTeamCard(team.id, teamData);
+        const success = commands.setTeamCard(team.id, result.data);
         if (success) {
           toast.success('팀 카드가 추가되었습니다.');
           setShowEntityModal(false);
@@ -347,8 +320,8 @@ export function useEditorHandlers({
     }
   }, [editor, extensionsLoaded]);
 
-  // 선수 카드 추가
-  const handleAddPlayer = useCallback((player: Player, team: TeamMapping, koreanName?: string) => {
+  // 선수 카드 추가 (4590 표준: 서버에서 Storage URL 확정)
+  const handleAddPlayer = useCallback(async (player: Player, team: TeamMapping, koreanName?: string) => {
     if (!editor || !extensionsLoaded) {
       toast.error('에디터가 준비되지 않았습니다.');
       return;
@@ -357,21 +330,30 @@ export function useEditorHandlers({
     try {
       const commands = editor.commands as Record<string, (...args: unknown[]) => boolean>;
       if ('setPlayerCard' in commands) {
-        const playerData = {
-          id: player.id,
-          name: player.name,
-          koreanName: koreanName || player.name,
-          photo: player.photo || `https://media.api-sports.io/football/players/${player.id}.png`,
-          position: player.position,
-          number: player.number,
-          team: {
+        // 서버에서 Storage URL이 포함된 데이터 생성
+        const result = await createPlayerCardData(
+          {
+            id: player.id,
+            name: player.name,
+            photo: player.photo,
+            position: player.position,
+            number: player.number,
+          },
+          {
             id: team.id,
-            name: team.name_en,
-            koreanName: team.name_ko,
-            logo: team.logo || `https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/${team.id}.png`
-          }
-        };
-        const success = commands.setPlayerCard(player.id, playerData);
+            name_en: team.name_en,
+            name_ko: team.name_ko,
+            logo: team.logo,
+          },
+          koreanName
+        );
+
+        if (!result.success || !result.data) {
+          toast.error(result.error || '선수 카드 데이터 생성에 실패했습니다.');
+          return;
+        }
+
+        const success = commands.setPlayerCard(player.id, result.data);
         if (success) {
           toast.success('선수 카드가 추가되었습니다.');
           setShowEntityModal(false);

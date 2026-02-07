@@ -11,6 +11,8 @@ import { TeamStats } from './statsData';
 import { getMatchCache, setMatchCache } from './matchCache';
 // PlayerStats import 제거: 평점은 fetchPlayerRatings(), 풀 데이터는 fetchCachedPlayerStats() 사용
 import { cache } from 'react';
+// 4590 표준: 이미지 URL 함수
+import { getTeamLogoUrls, getLeagueLogoUrl } from '@/domains/livescore/actions/images';
 
 // 매치 상세 데이터 응답 타입
 export interface MatchFullDataResponse {
@@ -31,6 +33,11 @@ export interface MatchFullDataResponse {
   homeTeam?: { id: number; name: string; logo: string };
   awayTeam?: { id: number; name: string; logo: string };
   matchData?: Record<string, unknown>;
+  // 4590 표준: 서버에서 미리 조회한 팀 로고 Storage URL 맵
+  teamLogoUrls?: Record<number, string>;
+  // 4590 표준: 서버에서 미리 조회한 리그 로고 Storage URL
+  leagueLogoUrl?: string;
+  leagueLogoDarkUrl?: string;  // 다크모드 리그 로고
 }
 
 // 매치 전체 데이터 가져오기 (옵션에 따라 필요한 부분만)
@@ -113,6 +120,23 @@ export async function fetchMatchFullData(
               }
             }
           };
+
+          // 4590 표준: standings 팀 로고 URL 추가 조회
+          const standingsTeamIds = new Set<number>();
+          for (const group of transformedStandings) {
+            for (const standing of group) {
+              if (standing.team?.id) {
+                standingsTeamIds.add(standing.team.id);
+              }
+            }
+          }
+          if (standingsTeamIds.size > 0) {
+            const standingsLogoUrls = await getTeamLogoUrls(Array.from(standingsTeamIds));
+            cachedResponse.teamLogoUrls = {
+              ...cachedResponse.teamLogoUrls,
+              ...standingsLogoUrls
+            };
+          }
         }
       }
 
@@ -306,10 +330,44 @@ export async function fetchMatchFullData(
           })
       );
     }
-    
-    // 모든 데이터 가져오기 병렬 처리
+
+    // 4590 표준: 리그 로고 URL 조회 (라이트 + 다크모드) - 병렬 처리에 포함
+    if (response.match?.league?.id) {
+      const leagueId = response.match.league.id;
+      promises.push(
+        Promise.all([
+          getLeagueLogoUrl(leagueId),
+          getLeagueLogoUrl(leagueId, true),  // 다크모드
+        ]).then(([lightUrl, darkUrl]) => {
+          response.leagueLogoUrl = lightUrl;
+          response.leagueLogoDarkUrl = darkUrl;
+        })
+      );
+    }
+
+    // 모든 데이터 가져오기 병렬 처리 (standings 포함)
     if (promises.length > 0) {
       await Promise.all(promises);
+    }
+
+    // 4590 표준: 팀 로고 URL 조회 (standings 완료 후 모든 팀 ID 수집)
+    const teamIds = new Set<number>();
+    // 홈/어웨이 팀
+    if (response.homeTeam?.id) teamIds.add(response.homeTeam.id);
+    if (response.awayTeam?.id) teamIds.add(response.awayTeam.id);
+    // standings의 모든 팀
+    if (response.standings?.standings?.league?.standings) {
+      for (const group of response.standings.standings.league.standings) {
+        for (const standing of group) {
+          if (standing.team?.id) {
+            teamIds.add(standing.team.id);
+          }
+        }
+      }
+    }
+    // 팀 로고 URL 일괄 조회
+    if (teamIds.size > 0) {
+      response.teamLogoUrls = await getTeamLogoUrls(Array.from(teamIds));
     }
 
     // FT인 경우 L2 캐시에 저장 (standings 제외 — 실시간 데이터)

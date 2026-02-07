@@ -1,18 +1,22 @@
 'use client';
 
 import Image from 'next/image';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import Link from 'next/link';
 import { LeagueDetails } from '@/domains/livescore/actions/footballApi';
 import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
 import { ContainerHeader, ContainerContent } from '@/shared/components/ui';
 
+// 4590 표준: placeholder 상수
+const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
+
 interface LeagueHeaderProps {
   league: LeagueDetails;
+  // 4590 표준: 이미지 Storage URL
+  leagueLogoUrl?: string;
 }
 
-export default function LeagueHeader({ league }: LeagueHeaderProps) {
+export default function LeagueHeader({ league, leagueLogoUrl }: LeagueHeaderProps) {
   // 한국어 리그명 매핑
   const leagueInfo = getLeagueById(league.id);
   const displayName = leagueInfo?.nameKo || league.name;
@@ -35,18 +39,15 @@ export default function LeagueHeader({ league }: LeagueHeaderProps) {
       <ContainerContent>
         <div className="flex items-center space-x-2">
           {/* 리그 로고 */}
-          {league.logo && (
-            <div className="relative w-8 h-8 flex-shrink-0">
-              <UnifiedSportsImage
-                imageId={league.id}
-                imageType={ImageType.Leagues}
-                alt={`${displayName} 로고`}
-                width={32}
-                height={32}
-                className="object-contain w-8 h-8"
-              />
-            </div>
-          )}
+          <div className="relative w-8 h-8 flex-shrink-0">
+            <UnifiedSportsImageClient
+              src={leagueLogoUrl || LEAGUE_PLACEHOLDER}
+              alt={`${displayName} 로고`}
+              width={32}
+              height={32}
+              className="object-contain w-8 h-8"
+            />
+          </div>
 
           {/* 리그 정보 */}
           <div className="flex-1">

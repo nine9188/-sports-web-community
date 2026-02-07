@@ -52,6 +52,7 @@ export default function ClientUserProfile({ profileData, showActions = true }: C
             <UserIcon
               iconUrl={displayIconUrl}
               level={profileData.level}
+              exp={profileData.exp}
               size={20}
               alt=""
               className="object-cover"

@@ -5,9 +5,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Button, Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
+
+// 4590 표준: placeholder 상수
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 import {
   savePrediction,
   getUserPrediction,
@@ -30,7 +32,7 @@ interface PredictionButtonProps {
   isActive: boolean;
   isLoading: boolean;
   canPredict: boolean;
-  teamId?: number;
+  teamLogoUrl?: string;
   teamName?: string;
   percentage?: number;
   onClick: () => void;
@@ -41,7 +43,7 @@ const PredictionButton: React.FC<PredictionButtonProps> = ({
   isActive,
   isLoading,
   canPredict,
-  teamId,
+  teamLogoUrl,
   teamName,
   percentage,
   onClick
@@ -62,10 +64,9 @@ const PredictionButton: React.FC<PredictionButtonProps> = ({
           <div className="w-8 h-8 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg flex items-center justify-center">
             <span className="text-gray-700 dark:text-gray-300 font-bold text-lg">D</span>
           </div>
-        ) : teamId ? (
-          <UnifiedSportsImage
-            imageId={teamId}
-            imageType={ImageType.Teams}
+        ) : teamLogoUrl ? (
+          <UnifiedSportsImageClient
+            src={teamLogoUrl}
             alt={teamName || 'Team'}
             width={32}
             height={32}
@@ -145,17 +146,23 @@ interface MatchDataType {
 export default function MatchPredictionClient({
   matchData,
   initialPrediction,
-  initialStats
+  initialStats,
+  teamLogoUrls = {}
 }: {
   matchData: MatchDataType;
   initialPrediction?: MatchPrediction | null;
   initialStats?: PredictionStats | null;
+  // 4590 표준: 이미지 Storage URL
+  teamLogoUrls?: Record<number, string>;
 }) {
   const pathname = usePathname();
   const matchId = pathname?.split('/').pop() || '';
   const queryClient = useQueryClient();
 
   const [isLoading, setIsLoading] = useState(false);
+
+  // 4590 표준: URL 헬퍼 함수
+  const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
 
   const homeTeam = matchData.teams?.home;
   const awayTeam = matchData.teams?.away;
@@ -346,7 +353,7 @@ export default function MatchPredictionClient({
             isActive={prediction === 'home'}
             isLoading={isLoading}
             canPredict={canPredict}
-            teamId={homeTeam?.id}
+            teamLogoUrl={getTeamLogo(homeTeam?.id || 0)}
             teamName={homeTeam?.name}
             percentage={stats?.home_percentage}
             onClick={() => handlePrediction('home')}
@@ -385,7 +392,7 @@ export default function MatchPredictionClient({
             isActive={prediction === 'away'}
             isLoading={isLoading}
             canPredict={canPredict}
-            teamId={awayTeam?.id}
+            teamLogoUrl={getTeamLogo(awayTeam?.id || 0)}
             teamName={awayTeam?.name}
             percentage={stats?.away_percentage}
             onClick={() => handlePrediction('away')}
@@ -451,9 +458,8 @@ export default function MatchPredictionClient({
               <div className="flex items-center text-xs">
                 <div className="w-8 h-4 relative mr-2">
                   {homeTeam?.id && (
-                    <UnifiedSportsImage
-                      imageId={homeTeam.id}
-                      imageType={ImageType.Teams}
+                    <UnifiedSportsImageClient
+                      src={getTeamLogo(homeTeam.id)}
                       alt={homeTeam?.name || 'Home'}
                       width={32}
                       height={16}
@@ -492,9 +498,8 @@ export default function MatchPredictionClient({
               <div className="flex items-center text-xs">
                 <div className="w-8 h-4 relative mr-2">
                   {awayTeam?.id && (
-                    <UnifiedSportsImage
-                      imageId={awayTeam.id}
-                      imageType={ImageType.Teams}
+                    <UnifiedSportsImageClient
+                      src={getTeamLogo(awayTeam.id)}
                       alt={awayTeam?.name || 'Away'}
                       width={32}
                       height={16}

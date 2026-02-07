@@ -134,9 +134,27 @@ export default async function PlayerPage({
       });
     }
 
-    // 데이터 로드 실패 시 404
+    // 데이터 로드 실패 시 에러 페이지 표시 (404 대신)
     if (!initialData.success) {
-      return notFound();
+      console.error(`[PlayerPage] 데이터 로드 실패 - playerId: ${playerId}, message: ${initialData.message}`);
+      return (
+        <div className="min-h-[400px] flex flex-col items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+              선수 정보를 불러올 수 없습니다
+            </h2>
+            <p className="text-gray-500 dark:text-gray-400 mb-4">
+              {initialData.message || '잠시 후 다시 시도해주세요.'}
+            </p>
+            <a
+              href="/livescore/football"
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              라이브스코어로 돌아가기
+            </a>
+          </div>
+        </div>
+      );
     }
 
     // 선수 한글명 조회 (DB)

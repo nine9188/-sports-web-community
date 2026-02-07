@@ -39,6 +39,7 @@ export interface Post {
     public_id?: string | null;
     icon_id: number | null;
     level?: number;
+    exp?: number;
   } | null;
   board?: {
     name: string;
@@ -55,6 +56,7 @@ export interface Post {
   author_nickname?: string;
   author_icon_url?: string | null;
   author_level?: number;
+  author_exp?: number;
   comment_count?: number;
   team_id?: string | number | null;
   league_id?: string | number | null;

@@ -27,12 +27,33 @@ interface UsePlayerQueryOptions {
 interface PlayerStatsData {
   seasons: number[];
   statistics: PlayerStatistic[];
+  // 4590 표준: 이미지 Storage URL
+  teamLogoUrls?: Record<number, string>;
+  leagueLogoUrls?: Record<number, string>;
+  leagueLogoDarkUrls?: Record<number, string>;
 }
 
 interface PlayerFixturesData {
   data: FixtureData[];
   status?: string;
   message?: string;
+  // 4590 표준: 이미지 Storage URL
+  teamLogoUrls?: Record<number, string>;
+  leagueLogoUrls?: Record<number, string>;
+  leagueLogoDarkUrls?: Record<number, string>;
+}
+
+// 4590 표준: transfers 데이터 + 이미지 URL
+interface PlayerTransfersData {
+  data: TransferData[];
+  teamLogoUrls: Record<number, string>;
+}
+
+// 4590 표준: trophies 데이터 + 이미지 URL
+interface PlayerTrophiesData {
+  data: TrophyData[];
+  leagueLogoUrls: Record<number, string>;
+  leagueLogoDarkUrls: Record<number, string>;
 }
 
 // ============================================
@@ -63,6 +84,7 @@ export function usePlayerInfo(
 
 /**
  * 선수 통계 조회 (시즌 목록 포함)
+ * 4590 표준: 이미지 URL 포함
  */
 export function usePlayerStats(
   playerId: string | null,
@@ -80,6 +102,9 @@ export function usePlayerStats(
       return {
         seasons: response.seasons || [],
         statistics: response.statistics || [],
+        teamLogoUrls: response.statisticsTeamLogoUrls || {},
+        leagueLogoUrls: response.statisticsLeagueLogoUrls || {},
+        leagueLogoDarkUrls: response.statisticsLeagueLogoDarkUrls || {},
       };
     },
     enabled: !!playerId && (options.enabled !== false),
@@ -113,11 +138,12 @@ export function usePlayerFixtures(
 
 /**
  * 선수 이적 기록 조회
+ * 4590 표준: 이미지 URL 포함
  */
 export function usePlayerTransfers(
   playerId: string | null,
   options: UsePlayerQueryOptions = {}
-): UseQueryResult<TransferData[] | null> {
+): UseQueryResult<PlayerTransfersData | null> {
   return useQuery({
     queryKey: playerKeys.transfers(playerId || ''),
     queryFn: async () => {
@@ -127,7 +153,11 @@ export function usePlayerTransfers(
         fetchStats: false,
         fetchTransfers: true,
       });
-      return response.success ? response.transfers || [] : null;
+      if (!response.success) return null;
+      return {
+        data: response.transfers || [],
+        teamLogoUrls: response.transfersTeamLogoUrls || {},
+      };
     },
     enabled: !!playerId && (options.enabled !== false),
     ...CACHE_STRATEGIES.STATIC_DATA,
@@ -136,11 +166,12 @@ export function usePlayerTransfers(
 
 /**
  * 선수 트로피 조회
+ * 4590 표준: 이미지 URL 포함
  */
 export function usePlayerTrophies(
   playerId: string | null,
   options: UsePlayerQueryOptions = {}
-): UseQueryResult<TrophyData[] | null> {
+): UseQueryResult<PlayerTrophiesData | null> {
   return useQuery({
     queryKey: playerKeys.trophies(playerId || ''),
     queryFn: async () => {
@@ -150,7 +181,12 @@ export function usePlayerTrophies(
         fetchStats: false,
         fetchTrophies: true,
       });
-      return response.success ? response.trophies || [] : null;
+      if (!response.success) return null;
+      return {
+        data: response.trophies || [],
+        leagueLogoUrls: response.trophiesLeagueLogoUrls || {},
+        leagueLogoDarkUrls: response.trophiesLeagueLogoDarkUrls || {},
+      };
     },
     enabled: !!playerId && (options.enabled !== false),
     ...CACHE_STRATEGIES.STATIC_DATA,
@@ -232,6 +268,12 @@ interface UsePlayerTabDataReturn {
   injuriesData: InjuryData[] | null;
   rankingsData: RankingsData | null;
 
+  // 4590 표준: 이미지 URL 맵
+  trophiesLeagueLogoUrls: Record<number, string>;
+  trophiesLeagueLogoDarkUrls: Record<number, string>;
+  transfersTeamLogoUrls: Record<number, string>;
+  injuriesTeamLogoUrls: Record<number, string>;
+
   // 유틸리티
   isLoading: boolean;
   error: Error | null;
@@ -287,7 +329,7 @@ export function usePlayerTabData({
   // 탭별 쿼리 설정
   const tabQueries = useQueries({
     queries: [
-      // Stats
+      // Stats (4590 표준: 이미지 URL 포함)
       {
         queryKey: playerKeys.stats(playerId || ''),
         queryFn: async (): Promise<PlayerStatsData | null> => {
@@ -300,11 +342,20 @@ export function usePlayerTabData({
           return {
             seasons: response.seasons || [],
             statistics: response.statistics || [],
+            teamLogoUrls: response.statisticsTeamLogoUrls || {},
+            leagueLogoUrls: response.statisticsLeagueLogoUrls || {},
+            leagueLogoDarkUrls: response.statisticsLeagueLogoDarkUrls || {},
           };
         },
         enabled: !!playerId && currentTab === 'stats',
         initialData: initialData?.statistics
-          ? { seasons: initialData.seasons || [], statistics: initialData.statistics }
+          ? {
+              seasons: initialData.seasons || [],
+              statistics: initialData.statistics,
+              teamLogoUrls: initialData.statisticsTeamLogoUrls || {},
+              leagueLogoUrls: initialData.statisticsLeagueLogoUrls || {},
+              leagueLogoDarkUrls: initialData.statisticsLeagueLogoDarkUrls || {},
+            }
           : undefined,
         initialDataUpdatedAt: initialData?.statistics ? initialDataUpdatedAt : undefined,
         ...CACHE_STRATEGIES.OCCASIONALLY_UPDATED,
@@ -327,54 +378,75 @@ export function usePlayerTabData({
         initialDataUpdatedAt: initialData?.fixtures ? initialDataUpdatedAt : undefined,
         ...CACHE_STRATEGIES.OCCASIONALLY_UPDATED,
       },
-      // Transfers
+      // Transfers (4590 표준: 이미지 URL 포함)
       {
         queryKey: playerKeys.transfers(playerId || ''),
-        queryFn: async (): Promise<TransferData[] | null> => {
+        queryFn: async (): Promise<PlayerTransfersData | null> => {
           if (!playerId) return null;
           const response = await fetchPlayerFullData(playerId, {
             fetchSeasons: false,
             fetchStats: false,
             fetchTransfers: true,
           });
-          return response.success ? response.transfers || [] : null;
+          if (!response.success) return null;
+          return {
+            data: response.transfers || [],
+            teamLogoUrls: response.transfersTeamLogoUrls || {},
+          };
         },
         enabled: !!playerId && currentTab === 'transfers',
-        initialData: initialData?.transfers,
+        initialData: initialData?.transfers
+          ? { data: initialData.transfers, teamLogoUrls: initialData.transfersTeamLogoUrls || {} }
+          : undefined,
         initialDataUpdatedAt: initialData?.transfers ? initialDataUpdatedAt : undefined,
         ...CACHE_STRATEGIES.STATIC_DATA,
       },
-      // Trophies
+      // Trophies (4590 표준: 이미지 URL 포함)
       {
         queryKey: playerKeys.trophies(playerId || ''),
-        queryFn: async (): Promise<TrophyData[] | null> => {
+        queryFn: async (): Promise<PlayerTrophiesData | null> => {
           if (!playerId) return null;
           const response = await fetchPlayerFullData(playerId, {
             fetchSeasons: false,
             fetchStats: false,
             fetchTrophies: true,
           });
-          return response.success ? response.trophies || [] : null;
+          if (!response.success) return null;
+          return {
+            data: response.trophies || [],
+            leagueLogoUrls: response.trophiesLeagueLogoUrls || {},
+            leagueLogoDarkUrls: response.trophiesLeagueLogoDarkUrls || {},
+          };
         },
         enabled: !!playerId && currentTab === 'trophies',
-        initialData: initialData?.trophies,
+        initialData: initialData?.trophies
+          ? {
+              data: initialData.trophies,
+              leagueLogoUrls: initialData.trophiesLeagueLogoUrls || {},
+              leagueLogoDarkUrls: initialData.trophiesLeagueLogoDarkUrls || {},
+            }
+          : undefined,
         initialDataUpdatedAt: initialData?.trophies ? initialDataUpdatedAt : undefined,
         ...CACHE_STRATEGIES.STATIC_DATA,
       },
-      // Injuries
+      // Injuries (4590 표준: URL 맵 포함)
       {
         queryKey: playerKeys.injuries(playerId || ''),
-        queryFn: async (): Promise<InjuryData[] | null> => {
+        queryFn: async (): Promise<{ data: InjuryData[]; teamLogoUrls: Record<number, string> } | null> => {
           if (!playerId) return null;
           const response = await fetchPlayerFullData(playerId, {
             fetchSeasons: false,
             fetchStats: false,
             fetchInjuries: true,
           });
-          return response.success ? response.injuries || [] : null;
+          return response.success
+            ? { data: response.injuries || [], teamLogoUrls: response.injuriesTeamLogoUrls || {} }
+            : null;
         },
         enabled: !!playerId && currentTab === 'injuries',
-        initialData: initialData?.injuries,
+        initialData: initialData?.injuries
+          ? { data: initialData.injuries, teamLogoUrls: initialData.injuriesTeamLogoUrls || {} }
+          : undefined,
         initialDataUpdatedAt: initialData?.injuries ? initialDataUpdatedAt : undefined,
         ...CACHE_STRATEGIES.STABLE_DATA,
       },
@@ -411,6 +483,11 @@ export function usePlayerTabData({
   const currentTabIndex = tabIndexMap[currentTab];
   const currentTabQuery = tabQueries[currentTabIndex];
 
+  // 4590 표준: 데이터에서 URL 맵 분리
+  const transfersQueryData = tabQueries[2]?.data as PlayerTransfersData | null;
+  const trophiesQueryData = tabQueries[3]?.data as PlayerTrophiesData | null;
+  const injuriesQueryData = tabQueries[4]?.data as { data: InjuryData[]; teamLogoUrls: Record<number, string> } | null;
+
   return {
     // 선수 기본 정보
     playerData: playerInfoQuery.data ?? null,
@@ -425,10 +502,16 @@ export function usePlayerTabData({
     // 개별 탭 데이터
     statsData: (tabQueries[0]?.data as PlayerStatsData) ?? null,
     fixturesData: (tabQueries[1]?.data as PlayerFixturesData) ?? null,
-    transfersData: (tabQueries[2]?.data as TransferData[]) ?? null,
-    trophiesData: (tabQueries[3]?.data as TrophyData[]) ?? null,
-    injuriesData: (tabQueries[4]?.data as InjuryData[]) ?? null,
+    transfersData: transfersQueryData?.data ?? null,
+    trophiesData: trophiesQueryData?.data ?? null,
+    injuriesData: injuriesQueryData?.data ?? null,
     rankingsData: (tabQueries[5]?.data as RankingsData) ?? null,
+
+    // 4590 표준: 이미지 URL 맵
+    trophiesLeagueLogoUrls: trophiesQueryData?.leagueLogoUrls ?? {},
+    trophiesLeagueLogoDarkUrls: trophiesQueryData?.leagueLogoDarkUrls ?? {},
+    transfersTeamLogoUrls: transfersQueryData?.teamLogoUrls ?? {},
+    injuriesTeamLogoUrls: injuriesQueryData?.teamLogoUrls ?? {},
 
     // 유틸리티
     isLoading: playerInfoQuery.isLoading || (currentTabQuery?.isLoading ?? false),
@@ -476,6 +559,9 @@ export function usePlayerAllTabs(
           return {
             seasons: response.seasons || [],
             statistics: response.statistics || [],
+            teamLogoUrls: response.statisticsTeamLogoUrls || {},
+            leagueLogoUrls: response.statisticsLeagueLogoUrls || {},
+            leagueLogoDarkUrls: response.statisticsLeagueLogoDarkUrls || {},
           };
         },
         enabled: !!playerId && (options.enabled !== false),
@@ -505,7 +591,11 @@ export function usePlayerAllTabs(
             fetchStats: false,
             fetchTransfers: true,
           });
-          return response.success ? response.transfers || [] : null;
+          if (!response.success) return null;
+          return {
+            data: response.transfers || [],
+            teamLogoUrls: response.transfersTeamLogoUrls || {},
+          };
         },
         enabled: !!playerId && (options.enabled !== false),
         ...CACHE_STRATEGIES.STATIC_DATA,
@@ -519,7 +609,12 @@ export function usePlayerAllTabs(
             fetchStats: false,
             fetchTrophies: true,
           });
-          return response.success ? response.trophies || [] : null;
+          if (!response.success) return null;
+          return {
+            data: response.trophies || [],
+            leagueLogoUrls: response.trophiesLeagueLogoUrls || {},
+            leagueLogoDarkUrls: response.trophiesLeagueLogoDarkUrls || {},
+          };
         },
         enabled: !!playerId && (options.enabled !== false),
         ...CACHE_STRATEGIES.STATIC_DATA,

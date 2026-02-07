@@ -17,8 +17,9 @@ export async function generateMetadata() {
   });
 }
 
-// 기본 이미지 URL - 로고가 없을 때 사용
-const DEFAULT_TEAM_LOGO = 'https://cdn.sportmonks.com/images/soccer/team_placeholder.png';
+// 4590 표준: placeholder URL
+const PLACEHOLDER_TEAM = '/images/placeholder-team.svg';
+const PLACEHOLDER_LEAGUE = '/images/placeholder-league.svg';
 
 // KST 기준의 현재 날짜(yyyy-MM-dd) 문자열 생성
 const getKstDateString = (): string => {
@@ -96,14 +97,15 @@ export default async function FootballLiveScorePage({
             id: match.league.id,
             name: leagueName, // 매핑된 리그 이름 사용
             country: match.league.country,
-            logo: match.league.logo || '',
+            logo: match.league.logo || PLACEHOLDER_LEAGUE,
+            logoDark: match.league.logoDark || '',  // 다크모드 리그 로고
             flag: match.league.flag || ''
           },
           teams: {
             home: {
               id: match.teams.home.id,
               name: homeTeamName, // 매핑된 팀 이름 사용
-              img: match.teams.home.logo || DEFAULT_TEAM_LOGO,
+              img: match.teams.home.logo || PLACEHOLDER_TEAM,
               score: match.goals.home,
               form: '',
               formation: undefined
@@ -111,7 +113,7 @@ export default async function FootballLiveScorePage({
             away: {
               id: match.teams.away.id,
               name: awayTeamName, // 매핑된 팀 이름 사용
-              img: match.teams.away.logo || DEFAULT_TEAM_LOGO,
+              img: match.teams.away.logo || PLACEHOLDER_TEAM,
               score: match.goals.away,
               form: '',
               formation: undefined

@@ -63,7 +63,7 @@ export default function HotdealPostItem({ post, tabType, isLast }: HotdealPostIt
   return (
     <li className={!isLast ? 'border-b border-black/5 dark:border-white/10' : ''}>
       <Link
-        href={`/boards/${post.board_slug}/${post.post_number}?from=hotdeal-best`}
+        href={`/boards/${post.board_slug}/${post.post_number}`}
         className="block px-3 py-2.5 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors overflow-hidden"
       >
         {/* 제목 */}

@@ -5,7 +5,7 @@
 
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ThumbsUp } from 'lucide-react';
@@ -25,7 +25,15 @@ export const MobilePostItem = React.memo(function MobilePostItem({
   variant = 'text',
 }: PostItemProps) {
   const isCurrentPost = post.id === currentPostId;
-  const href = `/boards/${post.board_slug}/${post.post_number}?from=${currentBoardId}`;
+  // SEO: 쿼리 파라미터 제거 - Google 중복 색인 방지
+  const href = `/boards/${post.board_slug}/${post.post_number}`;
+
+  // from 정보를 sessionStorage에 저장 (클릭 시)
+  const handleClick = useCallback(() => {
+    if (currentBoardId && typeof window !== 'undefined') {
+      sessionStorage.setItem('postListSource', currentBoardId);
+    }
+  }, [currentBoardId]);
 
   const formattedDate = useMemo(() => {
     return post.formattedDate || '-';
@@ -61,7 +69,7 @@ export const MobilePostItem = React.memo(function MobilePostItem({
         }`}
       >
         {/* 썸네일 이미지 */}
-        <Link href={href} prefetch={false} className="flex-shrink-0">
+        <Link href={href} prefetch={false} className="flex-shrink-0" onClick={handleClick}>
           <div className="relative w-20 h-14 rounded-lg overflow-hidden bg-[#F5F5F5] dark:bg-[#262626]">
             {thumbnailUrl ? (
               <Image
@@ -87,7 +95,7 @@ export const MobilePostItem = React.memo(function MobilePostItem({
         {/* 게시글 정보 */}
         <div className="flex-1 min-w-0 overflow-hidden">
           {/* 제목 + 아이콘 + 댓글 수 */}
-          <Link href={href} prefetch={false} className="block overflow-hidden">
+          <Link href={href} prefetch={false} className="block overflow-hidden" onClick={handleClick}>
             <div className="flex items-center gap-1 mb-0.5">
               <h3 className={`${titleClassName} truncate`}>
                 {titleText}
@@ -135,6 +143,7 @@ export const MobilePostItem = React.memo(function MobilePostItem({
                 oddsUserId={post.author_id}
                 iconUrl={post.author_icon_url}
                 level={post.author_level || 1}
+                exp={post.author_exp}
                 iconSize={16}
               />
             </div>
@@ -164,7 +173,7 @@ export const MobilePostItem = React.memo(function MobilePostItem({
         isEnded ? 'opacity-60' : ''
       }`}
     >
-      <Link href={href} prefetch={false} className="block w-full overflow-hidden">
+      <Link href={href} prefetch={false} className="block w-full overflow-hidden" onClick={handleClick}>
         <div className="flex items-center gap-1 mb-1.5">
           <span className={`${titleClassName} truncate`}>
             {titleText}
@@ -189,6 +198,7 @@ export const MobilePostItem = React.memo(function MobilePostItem({
           oddsUserId={post.author_id}
           iconUrl={post.author_icon_url}
           level={post.author_level || 1}
+          exp={post.author_exp}
           iconSize={16}
         />
         <span className="text-gray-300 dark:text-gray-600">|</span>

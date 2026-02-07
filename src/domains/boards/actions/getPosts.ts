@@ -48,7 +48,7 @@ interface RawPostData {
   is_hidden?: boolean;
   is_deleted?: boolean;
   is_notice?: boolean;
-  profiles?: { id?: string; nickname?: string; level?: number; icon_id?: number | null; public_id?: string | null };
+  profiles?: { id?: string; nickname?: string; level?: number; exp?: number; icon_id?: number | null; public_id?: string | null };
   content?: Json;
   deal_info?: DealInfo | null;
 }
@@ -66,6 +66,7 @@ export interface Post {
   author_nickname: string;
   author_id: string;
   author_level?: number;
+  author_exp?: number;
   author_icon_id?: number | null;
   author_icon_url?: string | null;
   author_public_id?: string | null;
@@ -77,6 +78,7 @@ export interface Post {
   league_id?: string | number | null;
   team_logo?: string | null;
   league_logo?: string | null;
+  league_logo_dark?: string | null;
   is_hidden?: boolean;
   is_deleted?: boolean;
   is_notice?: boolean;
@@ -183,7 +185,7 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
       .select(`
         id, title, created_at, updated_at, board_id, views, likes,
         post_number, user_id, is_hidden, is_deleted, is_notice,
-        profiles (id, nickname, level, icon_id, public_id),
+        profiles (id, nickname, level, exp, icon_id, public_id),
         content, deal_info
       `)
       .order('created_at', { ascending: false });
@@ -288,14 +290,15 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
     const teamIds = Object.values(boardsData).map(b => b.team_id).filter(Boolean) as number[];
     const leagueIds = Object.values(boardsData).map(b => b.league_id).filter(Boolean) as number[];
 
-    const [teamLogoMap, leagueLogoMap] = await Promise.all([
+    const [teamLogoMap, leagueLogoMap, leagueLogoDarkMap] = await Promise.all([
       fetchTeamLogos(supabase, teamIds),
-      fetchLeagueLogos(supabase, leagueIds)
+      fetchLeagueLogos(supabase, leagueIds),
+      fetchLeagueLogos(supabase, leagueIds, true) // 다크모드 리그 로고
     ]);
 
     // 최종 데이터 포맷팅
     const formattedPosts = typedPostsData.map(post =>
-      formatPostData(post, boardsData, teamLogoMap, leagueLogoMap, profileMap, iconMap, commentCountMap)
+      formatPostData(post, boardsData, teamLogoMap, leagueLogoMap, profileMap, iconMap, commentCountMap, leagueLogoDarkMap)
     );
 
     return {

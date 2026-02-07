@@ -64,6 +64,9 @@ export default async function HotdealBoardPage({ slug, searchParams }: HotdealBo
         pagination={result.pagination}
         popularPosts={result.popularPosts}
         notices={result.notices}
+        teamLogoUrl={result.teamLogoUrl}
+        leagueLogoUrl={result.leagueLogoUrl}
+        leagueLogoUrlDark={result.leagueLogoUrlDark}
       />
     );
   } catch (error) {

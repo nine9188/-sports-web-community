@@ -1,8 +1,7 @@
 "use client";
 
-import React, { memo, useState, useEffect } from "react";
+import React, { memo, useEffect } from "react";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { CommentType } from "../../types/post/comment";
 import { AdjacentPosts } from "../../types/post";
 import { Breadcrumb } from "../../types/board/data";
@@ -18,14 +17,7 @@ import CommentSection from "../post/CommentSection";
 import PostList from "../post/PostList";
 import { HotdealInfoBox } from "../hotdeal";
 import type { DealInfo } from "../../types/hotdeal";
-
-// 호버 메뉴만 지연 로딩 (덜 중요한 컴포넌트)
-const HoverMenu = dynamic(() => import("../common/HoverMenu"), {
-  ssr: false,
-  loading: () => (
-    <div className="h-10 bg-[#F5F5F5] dark:bg-[#262626] rounded animate-pulse mb-4"></div>
-  ),
-});
+import HoverMenu from "../common/HoverMenu";
 
 // 메모이제이션 적용
 const MemoizedBoardBreadcrumbs = memo(BoardBreadcrumbs);
@@ -42,6 +34,7 @@ interface PostAuthor {
   id: string;
   public_id?: string | null;
   level?: number;
+  exp?: number;
   icon_id: number | null;
   icon_url: string | null;
 }
@@ -66,6 +59,7 @@ interface PostDetailLayoutProps {
       nickname: string | null;
       public_id?: string | null;
       level?: number;
+      exp?: number;
       icon_id: number | null;
       icon_url: string | null;
     };
@@ -104,6 +98,12 @@ interface PostDetailLayoutProps {
     comment_count: number;
     content?: string;
     author_icon_url?: string;
+    // 4590 표준: 팀/리그 로고
+    team_id?: string | number | null;
+    league_id?: string | number | null;
+    team_logo?: string | null;
+    league_logo?: string | null;
+    league_logo_dark?: string | null;
   }>;
   topLevelBoards: Array<{
     id: string;
@@ -142,20 +142,14 @@ export default function PostDetailLayout({
   slug,
   postNumber,
 }: PostDetailLayoutProps) {
-  // 지연 로딩을 위한 마운트 상태
-  const [hasMounted, setHasMounted] = useState(false);
-
+  // 스크롤 처리 - 해시가 있으면 해당 댓글로 스크롤
   useEffect(() => {
-    // 호버 메뉴 지연 로딩
-    setHasMounted(true);
-
-    // 스크롤 처리 - 해시가 있으면 해당 댓글로 스크롤
     if (typeof window !== "undefined" && window.location.hash) {
       const hashId = window.location.hash.substring(1);
       setTimeout(() => {
         const element = document.getElementById(hashId);
         if (element) element.scrollIntoView({ behavior: "smooth" });
-      }, 100); // 댓글이 즉시 로드되므로 시간 단축
+      }, 100);
     }
   }, []);
 
@@ -165,6 +159,7 @@ export default function PostDetailLayout({
     id: post.user_id,
     public_id: post.profiles?.public_id || null,
     level: post.profiles?.level,
+    exp: post.profiles?.exp,
     icon_id: post.profiles?.icon_id || null,
     icon_url: post.profiles?.icon_url || null,
   };
@@ -192,10 +187,17 @@ export default function PostDetailLayout({
   );
 
   // 아이콘 URL을 formattedPosts에 추가 - 각 게시글 작성자의 고유한 아이콘 유지
+  // 4590 표준: team/league 로고 필드도 함께 전달
   const postsWithIcons = formattedPosts.map((post) => ({
     ...post,
     // 이미 author_icon_url이 있으면 그대로 사용, 없으면 기본 아이콘도 사용하지 않음
     author_icon_url: post.author_icon_url || undefined,
+    // 4590 표준: 팀/리그 로고 (다크모드 포함)
+    team_id: post.team_id,
+    league_id: post.league_id,
+    team_logo: post.team_logo,
+    league_logo: post.league_logo,
+    league_logo_dark: post.league_logo_dark,
   }));
 
   // 게시글 상태 확인
@@ -411,18 +413,16 @@ export default function PostDetailLayout({
         />
       </div>
 
-      {/* 7. 호버 메뉴 - 지연 로딩 */}
-      {hasMounted && (
-        <div className="mb-4">
-          <HoverMenu
-            topBoards={topLevelBoards}
-            childBoardsMap={hoverMenuChildBoardsMap}
-            currentBoardId={board.id}
-            rootBoardId={rootBoardId}
-            rootBoardSlug={rootBoardSlug}
-          />
-        </div>
-      )}
+      {/* 7. 호버 메뉴 */}
+      <div className="mb-4">
+        <HoverMenu
+          topBoards={topLevelBoards}
+          childBoardsMap={hoverMenuChildBoardsMap}
+          currentBoardId={board.id}
+          rootBoardId={rootBoardId}
+          rootBoardSlug={rootBoardSlug}
+        />
+      </div>
 
       {/* 8. 같은 게시판의 다른 글 목록 - 즉시 로딩 */}
       <div className="mb-4">

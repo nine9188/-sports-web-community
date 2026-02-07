@@ -23,6 +23,7 @@ export interface LayoutPost {
   author_icon_id?: number | null;
   author_icon_url?: string | null;
   author_level?: number;
+  author_exp?: number;
   comment_count: number;
   content?: string;
   team_id?: number | null;
@@ -31,6 +32,7 @@ export interface LayoutPost {
   league_id?: number | null;
   league_name?: string | null;
   league_logo?: string | null;
+  league_logo_dark?: string | null;  // 다크모드 리그 로고
   deal_info?: DealInfo | null;
 }
 
@@ -57,6 +59,7 @@ export interface ApiPost {
   author_icon_id?: number | null;
   author_icon_url?: string | null;
   author_level?: number;
+  author_exp?: number;
   comment_count?: number;
   content?: string;
   team_id?: string | number | null;
@@ -65,6 +68,7 @@ export interface ApiPost {
   league_id?: string | number | null;
   league_name?: string | null;
   league_logo?: string | null;
+  league_logo_dark?: string | null;  // 다크모드 리그 로고
   deal_info?: DealInfo | null;
 }
 
@@ -84,6 +88,7 @@ export interface PopularPost {
   author_id?: string;
   author_public_id?: string | null;
   author_level?: number;
+  author_exp?: number;
   author_icon_id?: number | null;
   author_icon_url?: string | null;
   created_at: string;

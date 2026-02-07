@@ -6,6 +6,7 @@ import { LeagueCard } from '@/domains/livescore/components/football/leagues';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import { getLeagueLogoUrls } from '@/domains/livescore/actions/images';
 
 export async function generateMetadata() {
   return buildMetadata({
@@ -69,6 +70,13 @@ const LEAGUE_CATEGORIES = {
 };
 
 export default async function LeaguesPage() {
+  // 4590 표준: 서버에서 모든 리그 로고 URL 배치 조회
+  const allLeagueIds = Object.values(LEAGUE_CATEGORIES).flat();
+  const [leagueLogos, leagueLogosDark] = await Promise.all([
+    getLeagueLogoUrls(allLeagueIds),
+    getLeagueLogoUrls(allLeagueIds, true),  // 다크모드
+  ]);
+
   return (
     <div className="min-h-screen w-full">
       <TrackPageVisit id="datacenter" slug="livescore/football/leagues" name="데이터센터" />
@@ -94,6 +102,8 @@ export default async function LeaguesPage() {
                       key={leagueId}
                       leagueId={leagueId}
                       name={LEAGUE_NAMES_MAP[leagueId]}
+                      leagueLogoUrl={leagueLogos[leagueId] || undefined}
+                      leagueLogoDarkUrl={leagueLogosDark[leagueId] || undefined}
                     />
                   ))}
                 </div>

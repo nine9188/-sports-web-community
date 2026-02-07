@@ -81,11 +81,11 @@ export async function getNotices(boardId?: string): Promise<Post[]> {
       return [];
     }
 
-    // 타입 안전성을 위한 변환
-    const typedNoticesData = noticesData as Array<{
+    // 타입 안전성을 위한 변환 (is_notice 등 컬럼이 Supabase 타입에 미포함)
+    const typedNoticesData = (noticesData as unknown) as Array<{
       id: string;
       title?: string;
-      content?: any;
+      content?: unknown;
       user_id?: string;
       created_at?: string;
       updated_at?: string;
@@ -258,7 +258,7 @@ export async function getNotices(boardId?: string): Promise<Post[]> {
         board: board ? {
           name: board.name || '알 수 없는 게시판'
         } : null
-      } as any; // Post 타입에 없는 필드들이 있으므로 any로 타입 단언
+      } as unknown as Post; // Post 타입에 없는 필드들이 있으므로 타입 단언
     });
 
     return formattedNotices;
@@ -326,8 +326,8 @@ export async function getGlobalNotices(): Promise<Post[]> {
       return [];
     }
 
-    // 동일한 포맷팅 로직 적용
-    return data as Post[];
+    // 동일한 포맷팅 로직 적용 (is_notice 등 컬럼이 Supabase 타입에 미포함)
+    return (data as unknown) as Post[];
   } catch (error) {
     console.error('전체 공지 조회 중 오류:', error);
     return [];
@@ -434,7 +434,8 @@ export async function getBoardNotices(boardId: string): Promise<Post[]> {
       return [];
     }
 
-    return data as Post[];
+    // is_notice 등 컬럼이 Supabase 타입에 미포함
+    return (data as unknown) as Post[];
   } catch (error) {
     console.error('게시판 공지 조회 중 오류:', error);
     return [];

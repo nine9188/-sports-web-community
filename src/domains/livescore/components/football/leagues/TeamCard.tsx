@@ -1,16 +1,20 @@
 'use client';
 
 import Link from 'next/link';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { LeagueTeam } from '@/domains/livescore/actions/footballApi';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 
+// 4590 표준: placeholder 상수
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
+
 interface TeamCardProps {
   team: LeagueTeam;
+  // 4590 표준: 이미지 Storage URL
+  teamLogoUrl?: string;
 }
 
-export default function TeamCard({ team }: TeamCardProps) {
+export default function TeamCard({ team, teamLogoUrl }: TeamCardProps) {
   // 한국어 팀명 매핑
   const teamInfo = getTeamById(team.id);
   const displayName = teamInfo?.name_ko || team.name;
@@ -29,12 +33,12 @@ export default function TeamCard({ team }: TeamCardProps) {
           우승
         </div>
       )}
-      <UnifiedSportsImage
-        imageId={team.id}
-        imageType={ImageType.Teams}
+      <UnifiedSportsImageClient
+        src={teamLogoUrl || TEAM_PLACEHOLDER}
         alt={`${displayName} 로고`}
-        size="md"
-        className="w-7 h-7 lg:w-10 lg:h-10"
+        width={40}
+        height={40}
+        className="w-7 h-7 lg:w-10 lg:h-10 object-contain"
       />
       <h3 className="mt-1 lg:mt-2 text-[9px] lg:text-xs font-medium text-gray-900 dark:text-[#F0F0F0] text-center leading-tight line-clamp-2">
         {displayName}

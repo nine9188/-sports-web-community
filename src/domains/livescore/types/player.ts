@@ -216,6 +216,9 @@ export interface RankingsData {
   leastPlayTime?: PlayerRanking[];
   topRedCards?: PlayerRanking[];
   topYellowCards?: PlayerRanking[];
+  // 4590 표준: 이미지 Storage URL
+  playerPhotoUrls?: Record<number, string>;
+  teamLogoUrls?: Record<number, string>;
 }
 
 // 선수 데이터 통합 타입

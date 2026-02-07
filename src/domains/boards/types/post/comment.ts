@@ -19,6 +19,7 @@ export interface CommentType {
     icon_id: number | null;
     icon_url?: string | null;
     level?: number | null;
+    exp?: number | null;
   } | null;
   children?: CommentType[];
 } 

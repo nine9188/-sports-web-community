@@ -228,6 +228,7 @@ export default function HeaderClient({
               <UserIcon
                 iconUrl={userData?.iconInfo?.iconUrl || iconUrl}
                 level={userLevel}
+                exp={userData?.exp}
                 size={20}
                 alt=""
                 className="rounded-full object-cover"

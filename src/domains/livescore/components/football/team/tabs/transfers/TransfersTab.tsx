@@ -2,8 +2,11 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
+
+// 4590 표준: placeholder URLs
+const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 import { Container } from '@/shared/components/ui/container';
 import { Button } from '@/shared/components/ui';
 import { Pagination } from '@/shared/components/ui/pagination';
@@ -22,6 +25,9 @@ const TRANSFER_TABS = [
 interface TransfersTabProps {
   transfers: TeamTransfersData | undefined;
   playerKoreanNames?: PlayerKoreanNames;
+  // 4590 표준: Storage URL 맵
+  playerPhotoUrls?: Record<number, string>;
+  teamLogoUrls?: Record<number, string>;
 }
 
 /** YYYY-MM-DD → YYYY.MM.DD */
@@ -55,7 +61,10 @@ function teamName(id: number, fallback: string): string {
   return display.startsWith('팀 ') ? fallback : display;
 }
 
-export default function TransfersTab({ transfers, playerKoreanNames = {} }: TransfersTabProps) {
+export default function TransfersTab({ transfers, playerKoreanNames = {}, playerPhotoUrls = {}, teamLogoUrls = {} }: TransfersTabProps) {
+  // 4590 표준: URL 조회 헬퍼
+  const getPlayerPhoto = (id: number) => playerPhotoUrls[id] || PLAYER_PLACEHOLDER;
+  const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -122,9 +131,8 @@ export default function TransfersTab({ transfers, playerKoreanNames = {} }: Tran
               <div key={`${transfer.player.id}-${index}`} className="px-3 py-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors">
                 <div className="flex gap-2">
                   <div className="w-8 h-8 bg-[#F5F5F5] dark:bg-[#333333] rounded-full overflow-hidden flex-shrink-0">
-                    <UnifiedSportsImage
-                      imageId={transfer.player.id}
-                      imageType={ImageType.Players}
+                    <UnifiedSportsImageClient
+                      src={getPlayerPhoto(transfer.player.id)}
                       alt={transfer.player.name}
                       width={32}
                       height={32}
@@ -188,9 +196,8 @@ export default function TransfersTab({ transfers, playerKoreanNames = {} }: Tran
                     <td className="px-6 py-2">
                       <div className="flex items-center gap-2">
                         <div className="w-10 h-10 bg-[#F5F5F5] dark:bg-[#333333] rounded-full overflow-hidden flex-shrink-0">
-                          <UnifiedSportsImage
-                            imageId={transfer.player.id}
-                            imageType={ImageType.Players}
+                          <UnifiedSportsImageClient
+                            src={getPlayerPhoto(transfer.player.id)}
                             alt={transfer.player.name}
                             width={40}
                             height={40}
@@ -205,13 +212,13 @@ export default function TransfersTab({ transfers, playerKoreanNames = {} }: Tran
                     <td className="px-6 py-2">
                       <div className="flex items-center gap-2">
                         <div className="w-5 h-5 flex-shrink-0">
-                          <UnifiedSportsImage
-                            imageId={otherTeam.id}
-                            imageType={ImageType.Teams}
+                          <UnifiedSportsImageClient
+                            src={getTeamLogo(otherTeam.id)}
                             alt={otherTeam.name}
                             width={20}
                             height={20}
-                            className="object-contain w-full h-full"
+                            fit="contain"
+                            className="w-full h-full"
                           />
                         </div>
                         <span className="text-xs text-gray-900 dark:text-[#F0F0F0] truncate">

@@ -82,7 +82,7 @@ async function validateNoticeAction(
     return createError('POST_NOT_FOUND', ERROR_MESSAGES.POST_NOT_FOUND);
   }
 
-  return { success: true, supabase, post: post as PostData };
+  return { success: true, supabase, post: (post as unknown) as PostData };
 }
 
 /**
@@ -120,6 +120,7 @@ export async function setPostAsNotice(
 
     const { supabase, post } = validation;
 
+    // is_notice 등 컬럼이 Supabase 타입에 미포함
     const { error: updateError } = await supabase
       .from('posts')
       .update({
@@ -128,7 +129,7 @@ export async function setPostAsNotice(
         notice_type: noticeType,
         notice_boards: noticeType === 'board' ? boardIds : null,
         notice_order: noticeOrder
-      })
+      } as Record<string, unknown>)
       .eq('id', postId);
 
     if (updateError) {
@@ -164,7 +165,7 @@ export async function removeNotice(postId: string): Promise<SetNoticeResult> {
         notice_type: null,
         notice_boards: null,
         notice_order: 0
-      })
+      } as Record<string, unknown>)
       .eq('id', postId);
 
     if (updateError) {
@@ -196,7 +197,7 @@ export async function updateNoticeOrder(postId: string, newOrder: number): Promi
 
     const { error: updateError } = await supabase
       .from('posts')
-      .update({ notice_order: newOrder })
+      .update({ notice_order: newOrder } as Record<string, unknown>)
       .eq('id', postId);
 
     if (updateError) {
@@ -239,7 +240,7 @@ export async function updateNoticeType(
       .update({
         notice_type: newType,
         notice_boards: newType === 'board' ? boardIds : null
-      })
+      } as Record<string, unknown>)
       .eq('id', postId);
 
     if (updateError) {
@@ -313,7 +314,7 @@ export async function updateNoticeBoards(postId: string, boardIds: string[]): Pr
 
     const { error: updateError } = await supabase
       .from('posts')
-      .update({ notice_boards: boardIds })
+      .update({ notice_boards: boardIds } as Record<string, unknown>)
       .eq('id', postId);
 
     if (updateError) {

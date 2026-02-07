@@ -53,9 +53,9 @@ interface EditorToolbarProps {
 
 // 로딩 스피너 컴포넌트
 const FormLoadingSpinner = () => (
-  <div className="absolute top-full left-0 mt-1 bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-md shadow-lg p-4 z-50">
-    <div className="flex items-center space-x-2">
-      <Spinner size="xs" />
+  <div className="absolute top-full left-0 mt-1 bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-md shadow-lg p-6 z-50 min-w-[200px]">
+    <div className="flex items-center justify-center space-x-3">
+      <Spinner size="md" />
       <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">로딩 중...</span>
     </div>
   </div>

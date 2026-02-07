@@ -70,7 +70,7 @@ export async function createComment({
         content,
         parent_id: parentId || null
       })
-      .select('*, profiles(nickname, icon_id, level)')
+      .select('*, profiles(nickname, icon_id, level, exp, public_id)')
       .single();
       
     if (error) {

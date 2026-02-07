@@ -1,15 +1,27 @@
 'use client'
 
+/**
+ * 4590 표준 적용:
+ * - 리그/팀/선수 이미지: UnifiedSportsImageClient 사용
+ * - URL은 props로 전달받거나 placeholder 사용
+ */
+
 import { useState, useEffect, useRef } from 'react'
 import { useClickOutside } from '@/shared/hooks/useClickOutside'
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage'
-import { ImageType } from '@/shared/types/image'
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient'
 import { type TeamMapping } from '@/domains/livescore/constants/teams'
 import { type Player } from '@/domains/livescore/actions/teams/squad'
 import { ChevronLeft, Users, User } from 'lucide-react'
 import { Button, TabList, type TabItem } from '@/shared/components/ui'
 import Spinner from '@/shared/components/Spinner';
 import { useLeagueTeams, useTeamPlayers } from '@/domains/boards/hooks/useEntityQueries';
+import { DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
+
+// 4590 표준: placeholder 및 Storage URL
+const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
+const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
+const SUPABASE_URL = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co';
 
 // 주요 리그
 const LEAGUES = [
@@ -52,21 +64,46 @@ export function EntityPickerForm({
   const [selectedLeagueId, setSelectedLeagueId] = useState<number | null>(null)
   const [selectedTeam, setSelectedTeam] = useState<TeamMapping | null>(null)
 
-  // React Query로 데이터 관리 (의존 쿼리)
+  // 4590 표준: 다크모드 감지
+  const [isDark, setIsDark] = useState(false)
+  useEffect(() => {
+    const checkDark = () => setIsDark(document.documentElement.classList.contains('dark'))
+    checkDark()
+    const observer = new MutationObserver(checkDark)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  // React Query로 데이터 관리 (의존 쿼리, 4590 표준: Storage URL 포함)
   const {
     data: teams = [],
     isLoading: isLoadingTeams,
-    error: teamsError
+    error: teamsError,
+    teamLogoUrls,
   } = useLeagueTeams(selectedLeagueId);
 
   const {
     data: playerData = { players: [], koreanNames: {} },
     isLoading: isLoadingPlayers,
     error: playersError,
-    refetch: refetchPlayers
+    refetch: refetchPlayers,
+    playerPhotoUrls,
+    teamLogoUrl: selectedTeamLogoUrl,
   } = useTeamPlayers(activeTab === 'player' ? selectedTeam?.id ?? null : null);
 
   const { players, koreanNames } = playerData;
+
+  // 4590 표준: URL 헬퍼 함수 (리그는 다크모드 지원, 직접 Storage URL 생성)
+  const getLeagueLogo = (id: number) => {
+    if (!id) return LEAGUE_PLACEHOLDER
+    const hasDarkMode = DARK_MODE_LEAGUE_IDS.includes(id)
+    if (isDark && hasDarkMode) {
+      return `${SUPABASE_URL}/storage/v1/object/public/leagues/${id}-1.png`
+    }
+    return `${SUPABASE_URL}/storage/v1/object/public/leagues/${id}.png`
+  }
+  const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
+  const getPlayerPhoto = (id: number) => playerPhotoUrls[id] || PLAYER_PLACEHOLDER;
 
   // 에러 메시지 변환
   const teamError = teamsError ? '팀 목록을 불러올 수 없습니다' : null;
@@ -162,6 +199,8 @@ export function EntityPickerForm({
         ref={dropdownRef}
         className="z-50 bg-white dark:bg-[#1D1D1D] rounded-lg shadow-lg border border-black/7 dark:border-white/10 overflow-hidden fixed sm:absolute left-1/2 top-1/2 sm:-left-32 sm:top-full -translate-x-1/2 -translate-y-1/2 sm:translate-x-0 sm:translate-y-0 w-[95vw] max-w-md sm:w-[400px]"
         style={{ marginTop: '0.5rem' }}
+        onClick={(e) => e.stopPropagation()}
+        onSubmit={(e) => e.preventDefault()}
       >
         {/* 헤더 */}
         <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center justify-between border-b border-black/10 dark:border-white/15">
@@ -220,13 +259,12 @@ export function EntityPickerForm({
                   onClick={() => handleLeagueSelect(league.id)}
                   className="flex flex-col items-center p-2 rounded-lg bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors outline-none focus:outline-none"
                 >
-                  <UnifiedSportsImage
-                    imageId={league.id}
-                    imageType={ImageType.Leagues}
+                  <UnifiedSportsImageClient
+                    src={getLeagueLogo(league.id)}
                     alt={league.name}
-                    size="md"
-                    variant="square"
-                    fit="contain"
+                    width={32}
+                    height={32}
+                    className="w-8 h-8 object-contain"
                   />
                   <span className="mt-1.5 text-[11px] font-medium text-gray-900 dark:text-[#F0F0F0] text-center leading-tight">
                     {league.name}
@@ -261,13 +299,12 @@ export function EntityPickerForm({
                       onClick={() => handleTeamSelect(team)}
                       className="flex flex-col items-center p-2 rounded-lg bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors outline-none focus:outline-none"
                     >
-                      <UnifiedSportsImage
-                        imageId={team.id}
-                        imageType={ImageType.Teams}
+                      <UnifiedSportsImageClient
+                        src={getTeamLogo(team.id)}
                         alt={team.name_ko}
-                        size="md"
-                        variant="square"
-                        fit="contain"
+                        width={32}
+                        height={32}
+                        className="w-8 h-8 object-contain"
                       />
                       <span className="mt-1.5 text-[11px] font-medium text-gray-900 dark:text-[#F0F0F0] text-center line-clamp-1 leading-tight">
                         {team.name_ko}
@@ -317,26 +354,24 @@ export function EntityPickerForm({
                         {/* 선수 이미지 */}
                         <div className="relative">
                           <div className="w-8 h-8 rounded-full border border-black/7 dark:border-white/10 overflow-hidden">
-                            <UnifiedSportsImage
-                              imageId={player.id}
-                              imageType={ImageType.Players}
+                            <UnifiedSportsImageClient
+                              src={getPlayerPhoto(player.id)}
                               alt={displayName}
-                              size="md"
+                              width={32}
+                              height={32}
+                              className="w-full h-full object-cover"
                               variant="circle"
-                              className="w-full h-full"
                             />
                           </div>
                           {/* 팀 로고 뱃지 */}
                           {selectedTeam && (
                             <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-white dark:bg-[#1D1D1D] shadow flex items-center justify-center">
-                              <UnifiedSportsImage
-                                imageId={selectedTeam.id}
-                                imageType={ImageType.Teams}
+                              <UnifiedSportsImageClient
+                                src={selectedTeamLogoUrl || TEAM_PLACEHOLDER}
                                 alt={selectedTeam.name_ko}
                                 width={10}
                                 height={10}
-                                variant="square"
-                                fit="contain"
+                                className="w-full h-full object-contain"
                               />
                             </div>
                           )}

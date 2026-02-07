@@ -7,6 +7,7 @@ export interface FormattedPost {
   author_id?: string;
   author_public_id?: string | null;
   author_level?: number;
+  author_exp?: number;
   author_icon_id?: number | null;
   author_icon_url?: string | null;
   created_at: string;
@@ -28,5 +29,6 @@ export interface FormattedPost {
     id: number;
     name: string;
     logo: string;
+    logo_dark?: string;  // 다크모드 로고
   } | null;
 } 

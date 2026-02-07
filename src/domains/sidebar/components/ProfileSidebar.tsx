@@ -35,9 +35,9 @@ export default function ProfileSidebar({
       username: userData.username || null,
       email: userData.email || null,
       nickname: userData.nickname || null,
-      level: userData.level || null,
-      exp: userData.exp || null,
-      points: userData.points || null,
+      level: userData.level || 1,
+      exp: userData.exp || 0,
+      points: userData.points || 0,
       // IconContext에서 최신 아이콘 URL 사용 (실시간 업데이트 반영)
       icon_url: iconUrl || userData.icon_url || null,
       is_admin: userData.is_admin || false,

@@ -4,9 +4,11 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Match } from '@/domains/livescore/types/match';
 import MatchCard from '../MatchCard';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Button, Container } from '@/shared/components/ui';
+
+// 4590 표준: placeholder URL
+const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
 
 interface LeagueMatchListProps {
   matches: Match[];
@@ -17,10 +19,32 @@ interface LeagueGroup {
   name: string;
   matches: Match[];
   leagueId: number;
-  logo: string | null;
+  logo: string;  // 4590 표준: 서버에서 이미 Storage URL 설정됨
+  logoDark: string;  // 다크모드 리그 로고
 }
 
-export default function LeagueMatchList({ matches, allExpanded = true }: LeagueMatchListProps) {
+export default function LeagueMatchList({
+  matches,
+  allExpanded = true
+}: LeagueMatchListProps) {
+  // 다크모드 감지
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains('dark'));
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          setIsDark(document.documentElement.classList.contains('dark'));
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, { attributes: true });
+    return () => observer.disconnect();
+  }, []);
+
   // 리그별로 경기 그룹화 - useMemo로 메모이제이션
   const leagueGroups = useMemo(() => {
     const groups: LeagueGroup[] = [];
@@ -34,7 +58,8 @@ export default function LeagueMatchList({ matches, allExpanded = true }: LeagueM
           name: match.league.name,
           matches: [match],
           leagueId: match.league.id,
-          logo: (match.league.logo && match.league.logo.trim() !== '') ? match.league.logo : null
+          logo: match.league.logo || LEAGUE_PLACEHOLDER,
+          logoDark: match.league.logoDark || ''
         });
       }
     });
@@ -96,16 +121,15 @@ export default function LeagueMatchList({ matches, allExpanded = true }: LeagueM
               className="w-full h-12 px-4 flex items-center justify-between rounded-none"
             >
               <div className="flex items-center gap-3">
-                {group.logo && group.leagueId ? (
-                  <UnifiedSportsImage
-                    imageId={group.leagueId}
-                    imageType={ImageType.Leagues}
+                {group.logo && (
+                  <UnifiedSportsImageClient
+                    src={isDark && group.logoDark ? group.logoDark : group.logo}
                     alt={group.name}
                     width={20}
                     height={20}
                     className="w-5 h-5 object-contain"
                   />
-                ) : null}
+                )}
                 <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
                   {group.name}
                 </span>

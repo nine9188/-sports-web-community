@@ -2,6 +2,7 @@
 
 import { cache } from 'react';
 import { getMatchCache, setMatchCache } from './matchCache';
+import { getPlayerPhotoUrls, PLACEHOLDER_URLS } from '../images';
 import type {
   PlayerStatsData,
   AllPlayerStatsResponse,
@@ -58,7 +59,7 @@ async function fetchAllPlayerStatsInternal(
         const responseArray = cachedData?.response;
 
         if (Array.isArray(responseArray) && responseArray.length > 0) {
-          return extractAllDataFromResponse(responseArray);
+          return await extractAllDataFromResponse(responseArray);
         }
       }
     }
@@ -112,7 +113,7 @@ async function fetchAllPlayerStatsInternal(
     // ============================================
     // 종료된 경기: DB 캐시 저장
     // ============================================
-    const result = extractAllDataFromResponse(data.response);
+    const result = await extractAllDataFromResponse(data.response);
 
     if (isFinished) {
       // 새 형식(AllPlayerStatsResponse)으로 저장
@@ -133,12 +134,20 @@ async function fetchAllPlayerStatsInternal(
 
 /**
  * API 응답에서 전체 데이터 추출 (선수 목록, 평점, 주장)
+ * - 4590 표준: 선수 사진은 Storage URL 사용
  */
-function extractAllDataFromResponse(responseData: unknown[]): AllPlayerStatsResponse {
-  const allPlayersData: PlayerStatsData[] = [];
+async function extractAllDataFromResponse(responseData: unknown[]): Promise<AllPlayerStatsResponse> {
+  const rawPlayersData: Array<{
+    playerId: number;
+    name: string;
+    stats: any;
+    team: any;
+    statistics: any[];
+  }> = [];
   const ratings: Record<number, number> = {};
   const captainIds: number[] = [];
 
+  // 1차: 데이터 수집 (동기)
   for (const teamStats of responseData) {
     const team = teamStats as { team?: { id: number; name: string; logo: string }; players?: unknown[] };
     if (!team?.players?.length) continue;
@@ -158,29 +167,12 @@ function extractAllDataFromResponse(responseData: unknown[]): AllPlayerStatsResp
       const playerId = p.player.id;
       const stats = p.statistics?.[0];
 
-      // 전체 선수 데이터 수집
-      allPlayersData.push({
-        player: {
-          id: playerId,
-          name: p.player.name,
-          photo: p.player.photo || `https://media.api-sports.io/football/players/${playerId}.png`,
-          number: stats?.games?.number,
-          pos: stats?.games?.position,
-        },
-        statistics: (p.statistics || []).map((stat) => ({
-          team: stat?.team || team.team || { id: 0, name: '', logo: '' },
-          games: stat?.games || {},
-          offsides: (stat?.offsides as number) || 0,
-          shots: (stat?.shots as { total?: number; on?: number }) || {},
-          goals: (stat?.goals as { total?: number; conceded?: number; assists?: number; saves?: number }) || {},
-          passes: (stat?.passes as { total?: number; key?: number; accuracy?: string }) || {},
-          tackles: (stat?.tackles as { total?: number; blocks?: number; interceptions?: number }) || {},
-          duels: (stat?.duels as { total?: number; won?: number }) || {},
-          dribbles: (stat?.dribbles as { attempts?: number; success?: number; past?: number }) || {},
-          fouls: (stat?.fouls as { drawn?: number; committed?: number }) || {},
-          cards: (stat?.cards as { yellow?: number; red?: number }) || {},
-          penalty: (stat?.penalty as { won?: number; committed?: number; scored?: number; missed?: number; saved?: number }) || {},
-        })),
+      rawPlayersData.push({
+        playerId,
+        name: p.player.name,
+        stats,
+        team: team.team,
+        statistics: p.statistics || [],
       });
 
       // 평점 추출
@@ -198,6 +190,35 @@ function extractAllDataFromResponse(responseData: unknown[]): AllPlayerStatsResp
       }
     }
   }
+
+  // 2차: 배치로 Storage URL 조회 (4590 표준)
+  const playerIds = rawPlayersData.map(p => p.playerId);
+  const playerPhotos = await getPlayerPhotoUrls(playerIds);
+
+  // 3차: 최종 데이터 생성
+  const allPlayersData: PlayerStatsData[] = rawPlayersData.map(({ playerId, name, stats, team, statistics }) => ({
+    player: {
+      id: playerId,
+      name,
+      photo: playerPhotos[playerId] || PLACEHOLDER_URLS.player_photo,
+      number: stats?.games?.number,
+      pos: stats?.games?.position,
+    },
+    statistics: statistics.map((stat: any) => ({
+      team: stat?.team || team || { id: 0, name: '', logo: '' },
+      games: stat?.games || {},
+      offsides: (stat?.offsides as number) || 0,
+      shots: (stat?.shots as { total?: number; on?: number }) || {},
+      goals: (stat?.goals as { total?: number; conceded?: number; assists?: number; saves?: number }) || {},
+      passes: (stat?.passes as { total?: number; key?: number; accuracy?: string }) || {},
+      tackles: (stat?.tackles as { total?: number; blocks?: number; interceptions?: number }) || {},
+      duels: (stat?.duels as { total?: number; won?: number }) || {},
+      dribbles: (stat?.dribbles as { attempts?: number; success?: number; past?: number }) || {},
+      fouls: (stat?.fouls as { drawn?: number; committed?: number }) || {},
+      cards: (stat?.cards as { yellow?: number; red?: number }) || {},
+      penalty: (stat?.penalty as { won?: number; committed?: number; scored?: number; missed?: number; saved?: number }) || {},
+    })),
+  }));
 
   return {
     success: true,

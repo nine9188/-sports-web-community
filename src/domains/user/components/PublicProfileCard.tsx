@@ -24,6 +24,7 @@ export default function PublicProfileCard({ profile }: PublicProfileCardProps) {
               <UserIcon
                 iconUrl={profile.icon_url}
                 level={profile.level}
+                exp={profile.exp}
                 size={24}
                 alt=""
               />
@@ -67,6 +68,7 @@ export default function PublicProfileCard({ profile }: PublicProfileCardProps) {
               <UserIcon
                 iconUrl={profile.icon_url}
                 level={profile.level}
+                exp={profile.exp}
                 size={20}
                 alt=""
               />

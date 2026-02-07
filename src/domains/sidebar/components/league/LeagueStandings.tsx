@@ -1,14 +1,23 @@
 'use client';
 
+/**
+ * 4590 표준 적용:
+ * - 리그/팀 이미지: UnifiedSportsImageClient 사용
+ * - URL은 props로 전달받거나 placeholder 사용
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Container, ContainerHeader, ContainerTitle, TabList, type TabItem } from '@/shared/components/ui';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { StandingsData, League } from '../../types';
 import { useLeagueStandings } from '../../hooks/useLeagueQueries';
 import { MAJOR_LEAGUE_IDS } from '@/domains/livescore/constants/league-mappings';
 import { getTeamById } from '@/domains/livescore/constants/teams';
+
+// 4590 표준: placeholder 상수
+const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 
 // API ID와 화면 표시용 리그 정보 매핑
 const LEAGUES: League[] = [
@@ -34,30 +43,42 @@ const getKoreanTeamName = (teamId: number, name: string) => {
 interface LeagueStandingsProps {
   initialLeague?: string;
   initialStandings?: StandingsData | null;
+  // 4590 표준: 이미지 Storage URL
+  leagueLogoUrls?: Record<number, string>;
+  leagueLogoUrlsDark?: Record<number, string>;  // 다크모드용 리그 로고
+  teamLogoUrls?: Record<number, string>;
 }
 
 /**
  * LeagueStandings - React Query 기반 리그 순위 컴포넌트
  *
- * 개선사항:
- * - Map 기반 수동 캐싱 제거 → React Query 자동 캐싱 (10분)
- * - loadingRef 중복 요청 방지 제거 → React Query 자동 중복 제거
- * - useState/useEffect 상태 관리 간소화
+ * 서버에서 초기 데이터를 받아 즉시 표시 (스켈레톤 없음)
+ * 탭 변경 시 이전 데이터 유지하면서 새 데이터 fetch
  */
 export default function LeagueStandings({
   initialLeague = 'premier',
   initialStandings = null,
+  leagueLogoUrls = {},
+  leagueLogoUrlsDark = {},
+  teamLogoUrls: initialTeamLogoUrls = {},
 }: LeagueStandingsProps) {
   // UI 상태 관리
   const [activeLeague, setActiveLeague] = useState(initialLeague);
   const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
 
-  // React Query로 리그 순위 데이터 관리
-  const { standings, isLoading, error } = useLeagueStandings(activeLeague, {
+  // React Query로 리그 순위 데이터 관리 (teamLogoUrls 포함)
+  const { standings, teamLogoUrls: queryTeamLogoUrls, isFetching, error } = useLeagueStandings(activeLeague, {
     initialData: activeLeague === initialLeague ? initialStandings : undefined,
     enabled: !isMobile, // 모바일에서는 비활성화
   });
+
+  // 4590 표준: URL 헬퍼 함수
+  // 쿼리 결과 우선, 없으면 초기 props 사용
+  const effectiveTeamLogoUrls = Object.keys(queryTeamLogoUrls).length > 0 ? queryTeamLogoUrls : initialTeamLogoUrls;
+  const getLeagueLogo = (id: number) => leagueLogoUrls[id] || LEAGUE_PLACEHOLDER;
+  const getLeagueLogoDark = (id: number) => leagueLogoUrlsDark[id] || leagueLogoUrls[id] || LEAGUE_PLACEHOLDER;
+  const getTeamLogo = (id: number) => effectiveTeamLogoUrls[id] || TEAM_PLACEHOLDER;
 
   // 모바일 환경 체크
   useEffect(() => {
@@ -77,8 +98,11 @@ export default function LeagueStandings({
     router.push(`/livescore/football/team/${teamId}?tab=overview`);
   };
 
+  // 현재 선택된 리그 정보
+  const currentLeague = LEAGUES.find(l => l.id === activeLeague);
+
   return (
-    <Container className="hidden md:block bg-white dark:bg-[#1D1D1D]">
+    <Container className="hidden md:block bg-white dark:bg-[#1D1D1D] border-0">
       <ContainerHeader>
         <ContainerTitle>축구 팀순위</ContainerTitle>
       </ContainerHeader>
@@ -92,32 +116,30 @@ export default function LeagueStandings({
         className="mb-0"
       />
 
-      {/* 선택된 리그 정보 - 탭과 연결 */}
-      {standings && (
-        <div className="flex items-center gap-2 px-3 py-2 bg-[#FAFAFA] dark:bg-[#232323]">
-          <UnifiedSportsImage
-            imageId={LEAGUES.find(l => l.id === activeLeague)?.apiId || 39}
-            imageType={ImageType.Leagues}
-            alt={LEAGUES.find(l => l.id === activeLeague)?.fullName || ''}
-            width={20}
-            height={20}
-            className="object-contain"
-          />
-          <span className="text-xs text-gray-600 dark:text-gray-400">
-            {LEAGUES.find(l => l.id === activeLeague)?.fullName}
+      {/* 선택된 리그 정보 - 항상 표시 */}
+      <div className="flex items-center gap-2 px-3 py-2 bg-[#FAFAFA] dark:bg-[#232323]">
+        <UnifiedSportsImageClient
+          src={getLeagueLogo(currentLeague?.apiId || 39)}
+          srcDark={getLeagueLogoDark(currentLeague?.apiId || 39)}
+          alt={currentLeague?.fullName || ''}
+          width={20}
+          height={20}
+          className="object-contain"
+        />
+        <span className="text-xs text-gray-600 dark:text-gray-400">
+          {currentLeague?.fullName}
+        </span>
+        {/* 데이터 로딩 중 미세한 표시 */}
+        {isFetching && (
+          <span className="ml-auto text-[10px] text-gray-400 dark:text-gray-500">
+            갱신중...
           </span>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* 순위표 */}
-      <div className="min-h-[200px]">
-        {isLoading ? (
-          <div className="p-3 space-y-2">
-            {[...Array(10)].map((_, i) => (
-              <div key={i} className="h-5 w-full bg-[#F5F5F5] dark:bg-[#262626] animate-pulse rounded-lg"></div>
-            ))}
-          </div>
-        ) : error ? (
+      <div className={`min-h-[200px] bg-white dark:bg-[#1D1D1D] ${isFetching ? 'opacity-70' : ''} transition-opacity`}>
+        {error ? (
           <div className="p-4 text-center text-red-500 dark:text-red-400 text-sm">
             {error}
           </div>
@@ -162,9 +184,8 @@ export default function LeagueStandings({
                     <td className="text-left py-1.5 px-1">
                       <div className="flex items-center gap-1">
                         <div className="w-5 h-5 relative flex-shrink-0">
-                          <UnifiedSportsImage
-                            imageId={team.team.team_id}
-                            imageType={ImageType.Teams}
+                          <UnifiedSportsImageClient
+                            src={getTeamLogo(team.team.team_id)}
                             alt={team.team.name}
                             width={20}
                             height={20}

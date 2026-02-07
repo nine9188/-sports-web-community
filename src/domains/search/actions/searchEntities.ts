@@ -2,6 +2,7 @@
 
 import { searchTeams } from './searchTeams'
 import { searchPlayers } from './searchPlayers'
+import { getPlayerPhotoUrls, PLACEHOLDER_URLS } from '@/domains/livescore/actions/images'
 import type { TeamCardData } from '@/shared/types/teamCard'
 import type { PlayerCardData } from '@/shared/types/playerCard'
 
@@ -76,27 +77,32 @@ export async function searchEntities(
       )
     }
 
-    // 선수 검색
+    // 선수 검색 (4590 표준: Storage URL 사용)
     if (types.includes('player')) {
       promises.push(
-        searchPlayers({ query, limit: halfLimit }).then(({ players }) => {
+        searchPlayers({ query, limit: halfLimit }).then(async ({ players }) => {
+          // 배치로 Storage URL 조회
+          const playerIds = players.map(p => p.player_id).filter(Boolean)
+          const playerPhotos = await getPlayerPhotoUrls(playerIds)
+
           players.forEach(player => {
             const positionText = player.position ? player.position : ''
             const teamText = player.team_name_ko || player.team_name
             const subtitle = positionText ? `${teamText} | ${positionText}` : teamText
+            const photoUrl = playerPhotos[player.player_id] || PLACEHOLDER_URLS.player_photo
 
             results.push({
               type: 'player',
               id: player.player_id,
               name: player.name,
               koreanName: player.korean_name || player.display_name,
-              imageUrl: player.photo_url || `https://media.api-sports.io/football/players/${player.player_id}.png`,
+              imageUrl: photoUrl,
               subtitle,
               cardData: {
                 id: player.player_id,
                 name: player.name,
                 koreanName: player.korean_name || player.display_name,
-                photo: player.photo_url || `https://media.api-sports.io/football/players/${player.player_id}.png`,
+                photo: photoUrl,
                 team: {
                   id: player.team_id,
                   name: player.team_name,
@@ -145,8 +151,15 @@ export async function searchEntities(
 
 /**
  * 인기 엔티티 목록 (검색 전 표시용)
+ * - 4590 표준: Storage URL 사용
  */
 export async function getPopularEntities(limit: number = 8): Promise<EntitySearchResult[]> {
+  // 인기 선수 ID 목록
+  const popularPlayerIds = [306, 1485] // 손흥민, 김민재
+
+  // 배치로 Storage URL 조회
+  const playerPhotos = await getPlayerPhotoUrls(popularPlayerIds)
+
   // 인기 팀/선수 하드코딩 (빠른 응답용)
   const popularEntities: EntitySearchResult[] = [
     {
@@ -154,13 +167,13 @@ export async function getPopularEntities(limit: number = 8): Promise<EntitySearc
       id: 306,
       name: 'Son Heung-Min',
       koreanName: '손흥민',
-      imageUrl: 'https://media.api-sports.io/football/players/306.png',
+      imageUrl: playerPhotos[306] || PLACEHOLDER_URLS.player_photo,
       subtitle: '토트넘 | FW',
       cardData: {
         id: 306,
         name: 'Son Heung-Min',
         koreanName: '손흥민',
-        photo: 'https://media.api-sports.io/football/players/306.png',
+        photo: playerPhotos[306] || PLACEHOLDER_URLS.player_photo,
         team: { id: 47, name: 'Tottenham', koreanName: '토트넘', logo: 'https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/47.png' },
         position: 'Attacker',
         number: 7
@@ -171,13 +184,13 @@ export async function getPopularEntities(limit: number = 8): Promise<EntitySearc
       id: 1485,
       name: 'Kim Min-Jae',
       koreanName: '김민재',
-      imageUrl: 'https://media.api-sports.io/football/players/1485.png',
+      imageUrl: playerPhotos[1485] || PLACEHOLDER_URLS.player_photo,
       subtitle: '바이에른 뮌헨 | DF',
       cardData: {
         id: 1485,
         name: 'Kim Min-Jae',
         koreanName: '김민재',
-        photo: 'https://media.api-sports.io/football/players/1485.png',
+        photo: playerPhotos[1485] || PLACEHOLDER_URLS.player_photo,
         team: { id: 157, name: 'Bayern Munich', koreanName: '바이에른 뮌헨', logo: 'https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/157.png' },
         position: 'Defender',
         number: 3

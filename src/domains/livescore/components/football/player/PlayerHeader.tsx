@@ -1,14 +1,17 @@
 'use client';
 
 import React, { memo } from 'react';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Container, ContainerContent } from '@/shared/components/ui';
 import { ErrorState, PlayerProfileLoadingState } from '@/domains/livescore/components/common/CommonComponents';
 import { usePlayerInfo } from '@/domains/livescore/hooks';
 import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
 import type { PlayerStatistic, PlayerData } from '@/domains/livescore/types/player';
+
+// 4590 표준: Placeholder 상수
+const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 
 // 포지션 한글 매핑
 const POSITION_MAP: Record<string, string> = {
@@ -27,13 +30,18 @@ interface PlayerHeaderProps {
   playerId: string;
   initialData?: PlayerData;
   playerKoreanName?: string | null;
+  // 4590 표준: 서버에서 전달받은 Storage URL
+  playerPhotoUrl?: string;
+  teamLogoUrl?: string;
 }
 
 // 메모이제이션으로 불필요한 리렌더링 방지
 const PlayerHeader = memo(function PlayerHeader({
   playerId,
   initialData,
-  playerKoreanName
+  playerKoreanName,
+  playerPhotoUrl = PLAYER_PLACEHOLDER,
+  teamLogoUrl = TEAM_PLACEHOLDER
 }: PlayerHeaderProps) {
   // React Query 훅으로 선수 데이터 가져오기
   const { data: playerData, isLoading, error } = usePlayerInfo(playerId);
@@ -85,9 +93,8 @@ const PlayerHeader = memo(function PlayerHeader({
         <div className="flex items-center gap-4">
           {/* 이미지 컨테이너 */}
           <div className="relative w-16 h-16 md:w-20 md:h-20 flex-shrink-0">
-            <UnifiedSportsImage
-              imageId={displayData.info.id}
-              imageType={ImageType.Players}
+            <UnifiedSportsImageClient
+              src={playerPhotoUrl}
               alt={displayData.info.name}
               size="xxl"
               variant="circle"
@@ -95,9 +102,8 @@ const PlayerHeader = memo(function PlayerHeader({
             />
             {mainTeamStats?.team && (
               <div className="absolute -bottom-1 -right-1 w-6 h-6 md:w-8 md:h-8 rounded-full shadow-lg flex items-center justify-center" style={{ backgroundColor: '#ffffff' }}>
-                <UnifiedSportsImage
-                  imageId={mainTeamStats.team.id}
-                  imageType={ImageType.Teams}
+                <UnifiedSportsImageClient
+                  src={teamLogoUrl}
                   alt={mainTeamStats.team.name || '팀 로고'}
                   size="sm"
                   variant="square"

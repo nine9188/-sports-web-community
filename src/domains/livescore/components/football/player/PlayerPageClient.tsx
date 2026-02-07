@@ -141,6 +141,8 @@ export default function PlayerPageClient({
         playerId={playerId}
         initialData={initialData.playerData}
         playerKoreanName={playerKoreanName}
+        playerPhotoUrl={initialData.playerPhotoUrl}
+        teamLogoUrl={initialData.teamLogoUrl}
       />
 
       {/* 탭 네비게이션 - onTabChange 콜백 전달 */}

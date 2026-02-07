@@ -3,10 +3,12 @@
 import { memo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
 import { STANDINGS_LEGENDS, LEAGUE_IDS } from '@/domains/livescore/components/football/match/tabs/constants/standings';
+
+// 4590 표준: placeholder 상수
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 
 interface StandingTeam {
   rank?: number;
@@ -40,6 +42,8 @@ interface LeagueStandingsTableProps {
     };
   } | null;
   leagueId: number;
+  // 4590 표준: 이미지 Storage URL
+  teamLogoUrls?: Record<number, string>;
 }
 
 // 테이블 스타일 정의
@@ -48,24 +52,17 @@ const tableStyles = {
   cell: "px-1 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center",
 };
 
-// 팀 로고 컴포넌트
-const TeamLogo = memo(({ teamName, teamId }: { teamName: string; teamId?: number }) => {
+// 4590 표준: 팀 로고 컴포넌트
+const TeamLogo = memo(({ teamName, logoUrl }: { teamName: string; logoUrl: string }) => {
   return (
     <div className="w-6 h-6 flex-shrink-0 relative transform-gpu">
-      {teamId ? (
-        <UnifiedSportsImage
-          imageId={teamId}
-          imageType={ImageType.Teams}
-          alt={teamName || '팀'}
-          width={24}
-          height={24}
-          className="object-contain w-6 h-6"
-        />
-      ) : (
-        <div className="w-6 h-6 bg-gray-200 flex items-center justify-center text-gray-400 text-xs rounded">
-          ?
-        </div>
-      )}
+      <UnifiedSportsImageClient
+        src={logoUrl}
+        alt={teamName || '팀'}
+        width={24}
+        height={24}
+        className="object-contain w-6 h-6"
+      />
     </div>
   );
 });
@@ -135,8 +132,11 @@ const getLegendForLeague = (leagueId: number) => {
   }
 };
 
-const LeagueStandingsTable = memo(({ standings, leagueId }: LeagueStandingsTableProps) => {
+const LeagueStandingsTable = memo(({ standings, leagueId, teamLogoUrls = {} }: LeagueStandingsTableProps) => {
   const router = useRouter();
+
+  // 4590 표준: URL 헬퍼 함수
+  const getTeamLogo = useCallback((id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER, [teamLogoUrls]);
 
   const handleRowClick = useCallback((teamId: number) => {
     router.push(`/livescore/football/team/${teamId}`);
@@ -205,14 +205,15 @@ const LeagueStandingsTable = memo(({ standings, leagueId }: LeagueStandingsTable
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-black/5 dark:divide-white/10">
-                  {standingsGroup.map((standing) => {
+                <tbody>
+                  {standingsGroup.map((standing, index) => {
                     const statusColor = getStatusColor(standing.description || '');
+                    const isLast = index === standingsGroup.length - 1;
 
                     return (
                       <tr
                         key={standing.team?.id || standing.rank}
-                        className="cursor-pointer transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333]"
+                        className={`cursor-pointer transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333] ${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''}`}
                         onClick={() => standing.team?.id && handleRowClick(standing.team.id)}
                       >
                         {/* 모바일용 순위 */}
@@ -232,7 +233,7 @@ const LeagueStandingsTable = memo(({ standings, leagueId }: LeagueStandingsTable
                           <div className="flex items-center gap-1 md:gap-2">
                             <TeamLogo
                               teamName={standing.team?.name || ''}
-                              teamId={standing.team?.id}
+                              logoUrl={getTeamLogo(standing.team?.id || 0)}
                             />
                             <div className="flex items-center max-w-[calc(100%-30px)]">
                               <span className="block truncate text-ellipsis overflow-hidden max-w-full pr-1">

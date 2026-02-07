@@ -32,7 +32,7 @@ export async function getUserPosts(
     // 먼저 public_id로 프로필 조회
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('id, nickname, public_id, level, icon_id')
+      .select('id, nickname, public_id, level, exp, icon_id')
       .eq('public_id', publicId)
       .single();
 
@@ -123,6 +123,7 @@ export async function getUserPosts(
       author_id: profile.id,
       author_public_id: profile.public_id,
       author_level: profile.level || 1,
+      author_exp: profile.exp || 0,
       author_icon_id: profile.icon_id,
       author_icon_url: authorIconUrl,
       // 댓글 수

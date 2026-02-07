@@ -2,6 +2,7 @@
 
 import { cache } from 'react';
 import { RankingsData, PlayerRanking } from '@/domains/livescore/types/player';
+import { getPlayerPhotoUrls, getTeamLogoUrls } from '@/domains/livescore/actions/images';
 
 /**
  * API 응답의 랭킹 항목 타입
@@ -160,6 +161,30 @@ export async function fetchPlayerRankings(
         .slice(0, 20);
       result.leastPlayTime = timeSorted;
     }
+
+    // 4590 표준: 모든 선수/팀 ID 수집하여 이미지 URL 배치 조회
+    const allPlayerIds = new Set<number>();
+    const allTeamIds = new Set<number>();
+
+    const allRankings = [
+      ...(result.topScorers || []),
+      ...(result.topAssists || []),
+      ...(result.topYellowCards || []),
+      ...(result.topRedCards || [])
+    ];
+
+    for (const ranking of allRankings) {
+      if (ranking.player?.id) allPlayerIds.add(ranking.player.id);
+      if (ranking.statistics?.[0]?.team?.id) allTeamIds.add(ranking.statistics[0].team.id);
+    }
+
+    const [playerPhotoUrls, teamLogoUrls] = await Promise.all([
+      allPlayerIds.size > 0 ? getPlayerPhotoUrls([...allPlayerIds]) : {},
+      allTeamIds.size > 0 ? getTeamLogoUrls([...allTeamIds]) : {}
+    ]);
+
+    result.playerPhotoUrls = playerPhotoUrls;
+    result.teamLogoUrls = teamLogoUrls;
 
     return result;
   } catch {

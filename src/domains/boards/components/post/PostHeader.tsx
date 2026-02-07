@@ -8,6 +8,7 @@ interface PostHeaderProps {
     id?: string;
     public_id?: string;
     level?: number;
+    exp?: number;
     icon_id?: number | null;
     icon_url?: string | null;
   };
@@ -49,7 +50,9 @@ export default function PostHeader({
           oddsUserId={author.id}
           iconUrl={author.icon_url}
           level={author.level}
+          exp={author.exp}
           iconSize={20}
+          priority={true}
         />
 
         <div className="flex items-center space-x-4 flex-shrink-0 ml-auto">
@@ -71,7 +74,9 @@ export default function PostHeader({
             oddsUserId={author.id}
             iconUrl={author.icon_url}
             level={author.level}
+            exp={author.exp}
             iconSize={20}
+            priority={true}
           />
 
           <span className="flex-shrink-0">{formatDate(createdAt)}</span>

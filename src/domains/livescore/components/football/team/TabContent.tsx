@@ -55,7 +55,7 @@ export default function TabContent({ teamId, tab, initialData, onTabChange, play
   const numericTeamId = parseInt(teamId, 10);
 
   // 데이터 추출
-  const { teamData, matches, squad, playerStats, standings, transfers } = initialData;
+  const { teamData, matches, squad, playerStats, standings, transfers, playerPhotoUrls, teamLogoUrls, coachPhotoUrls, leagueLogoUrls, leagueLogoDarkUrls } = initialData;
 
   // API 매치 데이터를 UI 매치 데이터로 변환
   const convertMatchesForOverview = useCallback((matchesArray: ApiMatch[] | undefined | null): UIMatch[] | undefined => {
@@ -104,6 +104,10 @@ export default function TabContent({ teamId, tab, initialData, onTabChange, play
             isLoading={false}
             error={null}
             playerKoreanNames={playerKoreanNames}
+            playerPhotoUrls={playerPhotoUrls}
+            teamLogoUrls={teamLogoUrls}
+            leagueLogoUrls={leagueLogoUrls}
+            leagueLogoDarkUrls={leagueLogoDarkUrls}
           />
           <div className="xl:hidden">
             <SidebarRelatedPosts />
@@ -120,6 +124,8 @@ export default function TabContent({ teamId, tab, initialData, onTabChange, play
             isLoading={false}
             error={null}
             playerKoreanNames={playerKoreanNames}
+            playerPhotoUrls={playerPhotoUrls}
+            coachPhotoUrls={coachPhotoUrls}
           />
         </Suspense>
       );
@@ -136,6 +142,9 @@ export default function TabContent({ teamId, tab, initialData, onTabChange, play
             initialStandings={standings.data}
             isLoading={false}
             error={null}
+            teamLogoUrls={teamLogoUrls}
+            leagueLogoUrls={leagueLogoUrls}
+            leagueLogoDarkUrls={leagueLogoDarkUrls}
           />
         </Suspense>
       );
@@ -151,6 +160,8 @@ export default function TabContent({ teamId, tab, initialData, onTabChange, play
             teamStats={convertTeamStatsForStatsComponent(teamData.stats)}
             isLoading={false}
             error={null}
+            leagueLogoUrls={leagueLogoUrls}
+            leagueLogoDarkUrls={leagueLogoDarkUrls}
           />
         </Suspense>
       );
@@ -165,6 +176,9 @@ export default function TabContent({ teamId, tab, initialData, onTabChange, play
           <FixturesTab
             matches={convertMatchesForOverview(matches.data)}
             teamId={numericTeamId}
+            teamLogoUrls={teamLogoUrls}
+            leagueLogoUrls={leagueLogoUrls}
+            leagueLogoDarkUrls={leagueLogoDarkUrls}
           />
         </Suspense>
       );
@@ -175,6 +189,8 @@ export default function TabContent({ teamId, tab, initialData, onTabChange, play
           <TransfersTab
             transfers={transfers?.data}
             playerKoreanNames={playerKoreanNames}
+            playerPhotoUrls={playerPhotoUrls}
+            teamLogoUrls={teamLogoUrls}
           />
         </Suspense>
       );

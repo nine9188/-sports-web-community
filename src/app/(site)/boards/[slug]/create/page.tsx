@@ -98,7 +98,6 @@ export default async function CreatePostPage({
       <div className="container mx-auto">
         <PostEditForm
           boardId={result.board.id}
-          _boardSlug={result.board.slug || result.board.id}
           initialTitle=""
           initialContent=""
           boardName={result.board.name}

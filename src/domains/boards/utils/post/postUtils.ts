@@ -32,6 +32,7 @@ export function convertApiPostsToLayoutPosts(apiPosts: ApiPost[]): LayoutPost[] 
     author_icon_id: post.author_icon_id,
     author_icon_url: post.author_icon_url,
     author_level: post.author_level || 1,
+    author_exp: post.author_exp,
     comment_count: post.comment_count || 0,
     content: post.content,
     team_id: typeof post.team_id === 'string' ? parseInt(post.team_id, 10) : post.team_id as number | null,
@@ -40,6 +41,7 @@ export function convertApiPostsToLayoutPosts(apiPosts: ApiPost[]): LayoutPost[] 
     league_id: typeof post.league_id === 'string' ? parseInt(post.league_id, 10) : post.league_id as number | null,
     league_name: post.league_name,
     league_logo: post.league_logo,
+    league_logo_dark: post.league_logo_dark,  // 다크모드 리그 로고
     deal_info: post.deal_info || null
   }));
 }
@@ -145,6 +147,7 @@ interface LeagueInfo {
   id: number;
   name: string;
   logo: string;
+  logo_dark?: string;  // 다크모드 로고
   [key: string]: unknown;
 }
 
@@ -207,6 +210,7 @@ export async function formatPosts(
       author_id: post.profiles?.id || post.user_id || '',
       author_public_id: post.profiles?.public_id || null,
       author_level: post.profiles?.level || 1,
+      author_exp: post.profiles?.exp || 0,
       author_icon_id: post.profiles?.icon_id || null,
       author_icon_url: authorIconUrl,
       created_at: post.created_at || '',
@@ -227,7 +231,8 @@ export async function formatPosts(
       league: league ? {
         id: league.id,
         name: league.name,
-        logo: league.logo
+        logo: league.logo,
+        logo_dark: league.logo_dark || ''  // 다크모드 로고
       } : null
     };
   });

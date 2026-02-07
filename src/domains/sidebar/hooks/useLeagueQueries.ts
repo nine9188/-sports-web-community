@@ -40,6 +40,8 @@ export function useLeagueStandings(
 
   return {
     standings: query.data ?? null,
+    // 4590 표준: 팀 로고 URL (서버 액션에서 조회됨)
+    teamLogoUrls: query.data?.teamLogoUrls ?? {},
     isLoading: query.isLoading,
     isFetching: query.isFetching,
     error: query.error ? '데이터를 불러오는데 실패했습니다.' : null,

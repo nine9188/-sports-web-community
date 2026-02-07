@@ -3,6 +3,7 @@
 import { cache } from 'react';
 import { StandingsData } from '../types';
 import { MAJOR_LEAGUE_IDS } from '@/domains/livescore/constants/league-mappings';
+import { getTeamLogoUrls } from '@/domains/livescore/actions/images';
 
 // 리그 ID 매핑
 const LEAGUE_IDS: Record<string, number> = {
@@ -18,8 +19,6 @@ const LEAGUE_IDS: Record<string, number> = {
  * React cache로 래핑하여 중복 요청 방지
  */
 export const fetchStandingsData = cache(async (leagueId: string = 'premier'): Promise<StandingsData | null> => {
-  console.log('🔴 [API] LeagueStandings - fetchStandingsData 호출됨:', leagueId);
-
   try {
     // 리그 ID 확인
     const apiLeagueId = LEAGUE_IDS[leagueId];
@@ -38,9 +37,7 @@ export const fetchStandingsData = cache(async (leagueId: string = 'premier'): Pr
       return null;
     }
 
-    console.log('🔴 [API] Sports API 호출 중... (standings, league:', apiLeagueId, ')');
-
-    // API 호출 - next.js 캐시 사용 (10분으로 줄임)
+    // API 호출 - next.js 캐시 사용 (10분)
     const response = await fetch(
       `https://v3.football.api-sports.io/standings?league=${apiLeagueId}&season=${season}`,
       {
@@ -69,6 +66,12 @@ export const fetchStandingsData = cache(async (leagueId: string = 'premier'): Pr
     // 리그 정보 및 스탠딩 데이터 추출
     const leagueInfo = data.response[0].league;
     const standings = leagueInfo.standings?.[0] || [];
+
+    // 팀 ID 추출
+    const teamIds = standings.map((team: { team: { id: number } }) => team.team.id);
+
+    // 4590 표준: 팀 로고 URL 배치 조회
+    const teamLogoUrls = await getTeamLogoUrls(teamIds);
 
     // 데이터 변환 - StandingsData 타입에 맞게 조정
     return {
@@ -113,7 +116,9 @@ export const fetchStandingsData = cache(async (leagueId: string = 'premier'): Pr
             lose: team.all.lose
           }
         }))
-      ]
+      ],
+      // 4590 표준: 팀 로고 URL
+      teamLogoUrls,
     };
   } catch {
     return null;

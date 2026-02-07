@@ -1,50 +1,44 @@
 'use client';
 
-import Image from 'next/image';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent, Pagination } from '@/shared/components/ui';
 import { useRouter } from 'next/navigation';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { FixtureData } from '@/domains/livescore/types/player';
 import { EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
 
+// 4590 표준: placeholder URL
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
+const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
+
 // Props 타입 정의
 interface PlayerFixturesProps {
-  fixturesData?: { 
+  fixturesData?: {
     data: FixtureData[];
     status?: string;
     message?: string;
   };
+  // 4590 표준: 이미지 Storage URL
+  teamLogoUrls?: Record<number, string>;
+  leagueLogoUrls?: Record<number, string>;
+  leagueLogoDarkUrls?: Record<number, string>;
 }
 
-// 팀 로고 컴포넌트
-const TeamLogo = ({ name, teamId }: { name: string; teamId?: number }) => {
+// 팀 로고 컴포넌트 (4590 표준: URL props로 전달받음)
+const TeamLogo = ({ name, logoUrl }: { name: string; logoUrl: string }) => {
   return (
     <div className="relative w-6 h-6 shrink-0 overflow-hidden rounded-full">
-      {teamId && teamId > 0 ? (
-        <UnifiedSportsImage 
-          imageId={teamId}
-          imageType={ImageType.Teams}
-          alt={name}
-          width={24}
-          height={24}
-          className="object-contain w-full h-full"
-        />
-      ) : (
-        <Image 
-          src="/placeholder-team.png" 
-          alt={name}
-          width={24}
-          height={24}
-          className="object-contain w-full h-full"
-          unoptimized
-        />
-      )}
+      <UnifiedSportsImageClient
+        src={logoUrl}
+        alt={name}
+        width={24}
+        height={24}
+        className="object-contain w-full h-full"
+      />
     </div>
   );
 };
@@ -63,10 +57,45 @@ const getMatchResultStyle = (result: '승' | '무' | '패') => {
   }
 };
 
-export default function PlayerFixtures({ 
-  fixturesData: initialFixturesData = { data: [], status: 'error', message: '데이터가 없습니다' }
+export default function PlayerFixtures({
+  fixturesData: initialFixturesData = { data: [], status: 'error', message: '데이터가 없습니다' },
+  teamLogoUrls = {},
+  leagueLogoUrls = {},
+  leagueLogoDarkUrls = {}
 }: PlayerFixturesProps) {
   const router = useRouter();
+
+  // 4590 표준: 다크모드 감지
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    // 초기 다크모드 상태 확인
+    const checkDarkMode = () => {
+      setIsDark(document.documentElement.classList.contains('dark'));
+    };
+    checkDarkMode();
+
+    // MutationObserver로 다크모드 변경 감지
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          checkDarkMode();
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, { attributes: true });
+    return () => observer.disconnect();
+  }, []);
+
+  // 4590 표준: 헬퍼 함수
+  const getTeamLogo = (teamId: number) => teamLogoUrls[teamId] || TEAM_PLACEHOLDER;
+  const getLeagueLogo = (leagueId: number) => {
+    if (isDark && leagueLogoDarkUrls[leagueId]) {
+      return leagueLogoDarkUrls[leagueId];
+    }
+    return leagueLogoUrls[leagueId] || LEAGUE_PLACEHOLDER;
+  };
   
   // 페이지네이션 상태
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -214,9 +243,8 @@ export default function PlayerFixtures({
           <ContainerHeader>
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 flex items-center justify-center">
-                <UnifiedSportsImage
-                  imageId={leagueGroup.league.id}
-                  imageType={ImageType.Leagues}
+                <UnifiedSportsImageClient
+                  src={getLeagueLogo(leagueGroup.league.id)}
                   alt={leagueGroup.league.name}
                   width={24}
                   height={24}
@@ -271,7 +299,7 @@ export default function PlayerFixtures({
                           </span>
                           <TeamLogo
                             name={fixture.teams.home.name}
-                            teamId={fixture.teams.home.id}
+                            logoUrl={getTeamLogo(fixture.teams.home.id)}
                           />
                         </div>
                       </td>
@@ -282,7 +310,7 @@ export default function PlayerFixtures({
                         <div className="flex items-center space-x-1">
                           <TeamLogo
                             name={fixture.teams.away.name}
-                            teamId={fixture.teams.away.id}
+                            logoUrl={getTeamLogo(fixture.teams.away.id)}
                           />
                           <span className={`max-w-[100px] truncate text-xs text-gray-900 dark:text-[#F0F0F0] ${playerTeamId === fixture.teams.away.id ? 'font-bold' : ''}`}>
                             {getTeamById(fixture.teams.away.id)?.name_ko || fixture.teams.away.name}
@@ -353,20 +381,20 @@ export default function PlayerFixtures({
                         </span>
                         <TeamLogo
                           name={fixture.teams.home.name}
-                          teamId={fixture.teams.home.id}
+                          logoUrl={getTeamLogo(fixture.teams.home.id)}
                         />
                       </div>
-                      
+
                       {/* 스코어 */}
                       <div className="flex-shrink-0 px-2 font-medium text-center text-gray-900 dark:text-[#F0F0F0]">
                         {fixture.goals.home} - {fixture.goals.away}
                       </div>
-                      
+
                       {/* 원정팀 */}
                       <div className="flex-1 flex items-center space-x-1 overflow-hidden">
                         <TeamLogo
                           name={fixture.teams.away.name}
-                          teamId={fixture.teams.away.id}
+                          logoUrl={getTeamLogo(fixture.teams.away.id)}
                         />
                         <span className={`text-xs truncate text-gray-900 dark:text-[#F0F0F0] ${playerTeamId === fixture.teams.away.id ? 'font-bold' : ''}`}>
                           {getTeamById(fixture.teams.away.id)?.name_ko || fixture.teams.away.name}

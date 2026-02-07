@@ -2,9 +2,12 @@
 
 import Link from 'next/link';
 import { useMemo } from 'react';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { PlayerStatsData } from '@/domains/livescore/types/lineup';
+
+// 4590 표준: Placeholder 상수
+const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 import {
   Container,
   ContainerHeader,
@@ -39,6 +42,8 @@ interface PlayerStatsModalProps {
   onNextPlayer?: () => void;
   hasPrev?: boolean;
   hasNext?: boolean;
+  // 4590 표준: 서버에서 전달받은 Storage URL
+  teamLogoUrl?: string;
 }
 
 export default function PlayerStatsModal({
@@ -51,6 +56,7 @@ export default function PlayerStatsModal({
   onNextPlayer,
   hasPrev = false,
   hasNext = false,
+  teamLogoUrl = TEAM_PLACEHOLDER,
 }: PlayerStatsModalProps) {
   // 전달받은 데이터에서 현재 선수 찾기 (API 호출 없음)
   const playerStats = useMemo(() => {
@@ -106,9 +112,8 @@ export default function PlayerStatsModal({
             <div className="relative w-20 h-20">
               <div className="relative w-20 h-20">
                 <div className="absolute inset-0 rounded-full border-2 border-white dark:border-[#1D1D1D] shadow-lg"></div>
-                <UnifiedSportsImage
-                  imageId={playerId}
-                  imageType={ImageType.Players}
+                <UnifiedSportsImageClient
+                  src={playerInfo.photo || PLAYER_PLACEHOLDER}
                   alt={playerInfo.name}
                   size="xxl"
                   variant="circle"
@@ -120,9 +125,8 @@ export default function PlayerStatsModal({
                   className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full shadow flex items-center justify-center"
                   style={{ backgroundColor: '#ffffff' }}
                 >
-                  <UnifiedSportsImage
-                    imageId={playerInfo.team.id}
-                    imageType={ImageType.Teams}
+                  <UnifiedSportsImageClient
+                    src={teamLogoUrl}
                     alt={playerInfo.team?.name || '팀 로고'}
                     size="sm"
                     variant="square"

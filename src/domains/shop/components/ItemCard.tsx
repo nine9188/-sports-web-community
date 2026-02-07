@@ -1,29 +1,45 @@
 'use client'
 
+/**
+ * 4590 표준 적용:
+ * - 팀 이미지: UnifiedSportsImageClient 사용
+ * - teamLogoUrl prop으로 Storage URL 전달받음
+ */
+
 import { useTransition } from 'react'
 import Image from 'next/image'
 import { ShopItem } from '../types'
 import { getTeamDisplayName, searchTeamsByName } from '@teams'
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage'
-import { ImageType } from '@/shared/types/image'
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient'
 import { Button } from '@/shared/components/ui'
+
+// 4590 표준: placeholder 상수
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 
 interface ItemCardProps {
   item: ShopItem
   isOwned: boolean
   onPurchase: () => void
+  // 4590 표준: 팀 로고 Storage URL
+  teamLogoUrl?: string
 }
 
-export default function ItemCard({ item, isOwned, onPurchase }: ItemCardProps) {
+export default function ItemCard({ item, isOwned, onPurchase, teamLogoUrl }: ItemCardProps) {
   const [isPending, startTransition] = useTransition()
-  
-  // API-Sports 팀 ID 추출 (URL에서 팀 ID 파싱)
+
+  // 4590 표준: teamLogoUrl이 있으면 사용, 없으면 item.image_url 또는 placeholder 사용
+  const displayImageUrl = teamLogoUrl || item.image_url || TEAM_PLACEHOLDER;
+
+  // 팀 ID 추출 (이름 매핑용)
   const getTeamId = (imageUrl: string): string => {
     const match = imageUrl.match(/\/teams\/(\d+)\.png/)
     return match ? match[1] : '0'
   }
 
   const teamIdNum = Number(getTeamId(item.image_url))
+
+  // Storage URL이거나 팀 이미지인지 확인
+  const isTeamImage = teamIdNum > 0 || displayImageUrl.includes('supabase') || displayImageUrl.includes('placeholder-team');
 
   // DB 이름에서 접두사/영문명 추출
   const parseNameWithPrefix = (dbName: string): { prefix?: string; english?: string; hasPlusSeparator: boolean } => {
@@ -86,10 +102,9 @@ export default function ItemCard({ item, isOwned, onPurchase }: ItemCardProps) {
       {/* 이미지 영역: 20x20 고정 */}
       <div className="p-3 flex justify-center bg-[#F5F5F5] dark:bg-[#262626]">
         <div className="h-5 w-5 flex items-center justify-center">
-          {teamIdNum > 0 ? (
-            <UnifiedSportsImage
-              imageId={getTeamId(item.image_url)}
-              imageType={ImageType.Teams}
+          {isTeamImage ? (
+            <UnifiedSportsImageClient
+              src={displayImageUrl}
               alt={displayName}
               width={20}
               height={20}
@@ -97,7 +112,7 @@ export default function ItemCard({ item, isOwned, onPurchase }: ItemCardProps) {
             />
           ) : (
             <Image
-              src={item.image_url}
+              src={displayImageUrl}
               alt={displayName}
               width={20}
               height={20}

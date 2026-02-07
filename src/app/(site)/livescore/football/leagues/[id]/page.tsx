@@ -4,6 +4,7 @@ import { fetchLeagueStandings } from '@/domains/livescore/actions/match/standing
 import { LeagueHeader } from '@/domains/livescore/components/football/leagues';
 import { LeagueStandingsTable } from '@/domains/livescore/components/football/leagues';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import { getTeamLogoUrls } from '@/domains/livescore/actions/images';
 
 interface LeaguePageProps {
   params: Promise<{ id: string }>;
@@ -43,6 +44,22 @@ export default async function LeaguePage({ params }: LeaguePageProps) {
     notFound();
   }
 
+  // 4590 표준: 순위 데이터에서 팀 ID 추출 후 이미지 URL 조회
+  let teamLogoUrls: Record<number, string> = {};
+  if (standingsResponse.success && standingsResponse.data?.league?.standings) {
+    const teamIds = new Set<number>();
+    standingsResponse.data.league.standings.forEach((group: Array<{ team?: { id?: number } }>) => {
+      group.forEach(standing => {
+        if (standing.team?.id) {
+          teamIds.add(standing.team.id);
+        }
+      });
+    });
+    if (teamIds.size > 0) {
+      teamLogoUrls = await getTeamLogoUrls([...teamIds]);
+    }
+  }
+
   return (
     <div className="min-h-screen space-y-4">
       <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
@@ -52,6 +69,7 @@ export default async function LeaguePage({ params }: LeaguePageProps) {
       <LeagueStandingsTable
         standings={standingsResponse.success && standingsResponse.data ? standingsResponse.data : null}
         leagueId={leagueId}
+        teamLogoUrls={teamLogoUrls}
       />
     </div>
   );

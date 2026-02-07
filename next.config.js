@@ -19,6 +19,9 @@ const nextConfig = {
       {
         pathname: '/icons/**',
       },
+      {
+        pathname: '/images/**',
+      },
     ],
     remotePatterns: [
       // API-Sports (선수/감독 이미지)

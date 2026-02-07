@@ -69,7 +69,7 @@ export async function updateComment(commentId: string, content: string): Promise
         updated_at: new Date().toISOString()
       })
       .eq('id', commentId)
-      .select('*, profiles(nickname, icon_id, level)')
+      .select('*, profiles(nickname, icon_id, level, exp, public_id)')
       .single();
     
     if (updateError) {

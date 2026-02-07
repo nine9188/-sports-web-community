@@ -1,7 +1,9 @@
 import type { PlayerCardData } from '@/shared/types/playerCard';
 import { getImageUrls } from '@/shared/utils/matchCard';
 
-const SUPABASE_URL = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co';
+// 4590 표준: placeholder URLs
+const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 
 /**
  * 선수 카드 데이터 정규화
@@ -13,12 +15,14 @@ function normalizePlayerCardData(data: Record<string, unknown>): PlayerCardData 
     id: (data.id as number) || 0,
     name: (data.name as string) || '',
     koreanName: data.koreanName as string | undefined,
-    photo: (data.photo as string) || `https://media.api-sports.io/football/players/${data.id}.png`,
+    // 4590 표준: 서버에서 전달받은 URL만 사용, 없으면 placeholder
+    photo: (data.photo as string) || PLAYER_PLACEHOLDER,
     team: {
       id: (team?.id as number) || 0,
       name: (team?.name as string) || '',
       koreanName: team?.koreanName as string | undefined,
-      logo: (team?.logo as string) || `${SUPABASE_URL}/storage/v1/object/public/teams/${team?.id}.png`,
+      // 4590 표준: 서버에서 전달받은 URL만 사용, 없으면 placeholder
+      logo: (team?.logo as string) || TEAM_PLACEHOLDER,
     },
     position: data.position as string | null | undefined,
     number: data.number as number | null | undefined,
@@ -67,7 +71,7 @@ export function renderPlayerCard(data: { playerId: string | number; playerData: 
             <img
               src="${playerData.photo}"
               alt="${displayName}"
-              onerror="this.onerror=null;this.src='https://media.api-sports.io/football/players/${playerId}.png';"
+              onerror="this.onerror=null;this.src='/images/placeholder-player.svg';"
             />
           </div>
           <span class="player-name">${displayName}</span>

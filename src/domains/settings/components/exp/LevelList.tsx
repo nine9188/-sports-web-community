@@ -149,6 +149,7 @@ function LevelItem({ level, isCurrentLevel }: LevelItemProps) {
           size={20}
           alt={`레벨 ${level} 아이콘`}
           className="object-contain"
+          showLevelTooltip={false}
         />
       </div>
       <div className="font-medium text-xs text-gray-900 dark:text-[#F0F0F0]">Lv.{level}</div>

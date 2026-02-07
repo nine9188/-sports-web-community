@@ -101,6 +101,7 @@ function groupMatchesByLeague(
       name: leagueInfo?.nameKo || firstMatch.league?.name || '리그',
       icon: '⚽',
       logo: firstMatch.league?.logo,
+      logoDark: firstMatch.league?.logoDark,  // 다크모드 리그 로고
       leagueIdNumber: leagueId,
       matches,
     };
@@ -150,9 +151,21 @@ export default async function LiveScoreWidgetV2Server({ initialData }: LiveScore
   // initialData가 제공되면 바로 사용, 없으면 자체 fetch
   const leagues = initialData ?? await fetchLiveScoreData();
 
-  // 경기가 없을 때 - 렌더링하지 않음
+  // 경기가 없을 때 - 빈 상태 UI 표시
   if (leagues.length === 0) {
-    return null;
+    return (
+      <Container className="bg-white dark:bg-[#1D1D1D]">
+        <WidgetHeader />
+        <div className="py-4 px-4 text-center">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+            오늘·내일 빅매치가 없습니다
+          </p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">
+            프리미어리그 · 라리가 · 분데스리가 · 세리에A · 리그앙 · 챔피언스리그 · 유로파리그 · K리그1
+          </p>
+        </div>
+      </Container>
+    );
   }
 
   return (

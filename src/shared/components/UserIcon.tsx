@@ -1,38 +1,28 @@
 'use client';
 
+/**
+ * 4590 표준 적용:
+ * - iconUrl은 이미 Storage URL로 변환되어 전달된다고 가정
+ * - API-Sports URL 감지/변환 로직 제거 (서버에서 처리)
+ */
+
 import React, { useState, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { getFallbackIconUrl } from '@/shared/utils/user-icons';
 import { getLevelIconUrl } from '@/shared/utils/level-icons';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
-
-// API-Sports URL 유틸리티 함수들
-function isApiSportsUrl(url: string): boolean {
-  return Boolean(url && url.includes('media.api-sports.io'));
-}
-
-function getImageTypeFromUrl(url: string): ImageType | null {
-  if (url.includes('/players/')) return ImageType.Players;
-  if (url.includes('/teams/')) return ImageType.Teams;
-  if (url.includes('/leagues/')) return ImageType.Leagues;
-  if (url.includes('/coachs/')) return ImageType.Coachs;
-  return null;
-}
-
-function getImageIdFromUrl(url: string): string | null {
-  if (!url) return null;
-  const match = url.match(/\/(players|teams|leagues|coachs|venues)\/(\d+)\.(png|gif)$/);
-  return match ? match[2] : null;
-}
 
 interface UserIconProps {
   iconUrl?: string | null;
   level?: number;
+  exp?: number;
   size?: number;
   alt?: string;
   className?: string;
   priority?: boolean;
+  /** 커서 hover 시 표시할 툴팁 텍스트 (미지정 시 레벨/경험치 자동 생성) */
+  title?: string;
+  /** 자동 툴팁 표시 여부 (title 미지정 시 레벨/경험치로 자동 생성) */
+  showLevelTooltip?: boolean;
 }
 
 /**
@@ -44,10 +34,13 @@ interface UserIconProps {
 const UserIcon = React.memo(function UserIcon({
   iconUrl,
   level = 1,
+  exp,
   size = 20,
   alt,
   className = '',
-  priority = false
+  priority = false,
+  title,
+  showLevelTooltip = true
 }: UserIconProps) {
   const [error, setError] = useState(false);
 
@@ -72,45 +65,34 @@ const UserIcon = React.memo(function UserIcon({
   // sizes 속성 메모이제이션
   const imageSizes = useMemo(() => `${size}px`, [size]);
 
-  const tryRenderApiSports = () => {
-    if (!src || !isApiSportsUrl(src)) return null;
-    const type = getImageTypeFromUrl(src);
-    const id = getImageIdFromUrl(src);
-    if (!type || !id) return null;
-    return (
-      <UnifiedSportsImage
-        imageId={id}
-        imageType={type as ImageType}
+  // 툴팁 텍스트 생성
+  const tooltipText = useMemo(() => {
+    if (title) return title;
+    if (!showLevelTooltip) return undefined;
+    // exp가 null 또는 undefined가 아닐 때만 표시
+    const expText = exp != null ? ` / ${exp.toLocaleString()} EXP` : '';
+    return `Lv.${level}${expText}`;
+  }, [title, showLevelTooltip, level, exp]);
+
+  return (
+    <div
+      className={`relative rounded-full overflow-hidden ${className}`}
+      style={containerStyle}
+      title={tooltipText}
+    >
+      <Image
+        src={src}
         alt={alt || '유저 아이콘'}
         width={size}
         height={size}
-        loading={priority ? 'eager' : 'lazy'}
-        priority={priority}
+        sizes={imageSizes}
         className="w-full h-full object-contain"
+        onError={handleError}
+        priority={priority}
+        loading={priority ? undefined : "lazy"}
       />
-    );
-  };
-
-  return (
-    <div 
-      className={`relative rounded-full overflow-hidden ${className}`}
-      style={containerStyle}
-    >
-      {tryRenderApiSports() || (
-        <Image
-          src={src}
-          alt={alt || '유저 아이콘'}
-          width={size}
-          height={size}
-          sizes={imageSizes}
-          className="w-full h-full object-contain"
-          onError={handleError}
-          priority={priority}
-          loading={priority ? undefined : "lazy"}
-        />
-      )}
     </div>
   );
 });
 
-export default UserIcon; 
+export default UserIcon;

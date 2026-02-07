@@ -103,7 +103,7 @@ export async function getUserCommentedPosts(
         id, title, content, created_at, views, likes, post_number, is_hidden, is_deleted,
         board_id, user_id,
         boards!inner(id, name, slug, team_id, league_id),
-        profiles!inner(id, nickname, public_id, level, icon_id)
+        profiles!inner(id, nickname, public_id, level, exp, icon_id)
       `)
       .in('id', paginatedPostIds)
       .eq('is_deleted', false);
@@ -189,6 +189,7 @@ export async function getUserCommentedPosts(
         author_id: post.profiles?.id,
         author_public_id: post.profiles?.public_id,
         author_level: post.profiles?.level || 1,
+        author_exp: post.profiles?.exp || 0,
         author_icon_id: post.profiles?.icon_id,
         author_icon_url: authorIconUrl,
         // 댓글 수

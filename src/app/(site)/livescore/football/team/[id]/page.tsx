@@ -81,9 +81,14 @@ export default async function TeamPage({ params, searchParams }: TeamPageProps) 
       });
     }
 
-    // transfers에서 선수 ID 추출
+    // transfers에서 선수 ID 추출 (in/out 구조)
     if (initialData.transfers?.data) {
-      initialData.transfers.data.forEach((transfer: { player?: { id?: number } }) => {
+      // 영입 선수
+      initialData.transfers.data.in?.forEach((transfer: { player?: { id?: number } }) => {
+        if (transfer.player?.id) playerIds.add(transfer.player.id);
+      });
+      // 방출 선수
+      initialData.transfers.data.out?.forEach((transfer: { player?: { id?: number } }) => {
         if (transfer.player?.id) playerIds.add(transfer.player.id);
       });
     }

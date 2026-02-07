@@ -16,6 +16,7 @@ export interface Match {
     country_flag?: string;
     country?: string;
     logo?: string;
+    logoDark?: string;  // 다크모드 리그 로고
     flag?: string;
   };
   teams: {

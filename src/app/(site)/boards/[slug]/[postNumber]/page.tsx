@@ -170,6 +170,7 @@ export default async function PostDetailPage({
         public_id?: string;
         icon_id?: number;
         level?: number;
+        exp?: number;
         icon_url?: string;
       };
     }) => ({
@@ -187,6 +188,7 @@ export default async function PostDetailPage({
         public_id: comment.profiles?.public_id || null,
         icon_id: comment.profiles?.icon_id || null,
         level: comment.profiles?.level || null,
+        exp: comment.profiles?.exp || null,
         icon_url: comment.profiles?.icon_url || null
       },
       children: []
@@ -208,17 +210,19 @@ export default async function PostDetailPage({
       author_id: post.author_id || '',
       author_public_id: post.author_public_id || null,
       author_level: post.author_level || 1,
+      author_exp: post.author_exp,
       author_icon_id: post.author_icon_id,
       author_icon_url: post.author_icon_url || undefined,  // null을 undefined로 변환
       comment_count: post.commentCount,
       content: post.content,
-      // 팀/리그 정보
+      // 팀/리그 정보 (4590 표준: Storage URL)
       team_id: post.team?.id || null,
       team_name: post.team?.name || null,
       team_logo: post.team?.logo || null,
       league_id: post.league?.id || null,
       league_name: post.league?.name || null,
-      league_logo: post.league?.logo || null
+      league_logo: post.league?.logo || null,
+      league_logo_dark: post.league?.logo_dark || null
     }));
     
     // post 데이터에 iconUrl과 icon_id 직접 설정
@@ -229,6 +233,7 @@ export default async function PostDetailPage({
             public_id?: string | null;
             icon_id?: number | null;
             level?: number | null;
+            exp?: number | null;
             icon_url?: string | null;
           })
         : undefined;

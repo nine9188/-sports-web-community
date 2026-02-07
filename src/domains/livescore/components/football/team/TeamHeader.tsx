@@ -1,10 +1,13 @@
 'use client';
 
 import { EmptyState } from '@/domains/livescore/components/common/CommonComponents';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Container } from '@/shared/components/ui';
 import { TeamResponse } from '@/domains/livescore/actions/teams/team';
+
+// 4590 표준: placeholder 상수
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
+const VENUE_PLACEHOLDER = '/images/placeholder-venue.svg';
 
 // 팀 정보를 위한 기본 인터페이스
 interface TeamData {
@@ -31,6 +34,9 @@ interface VenueData {
 // 팀 헤더 컴포넌트 props
 interface TeamHeaderProps {
   initialData?: TeamResponse;
+  // 4590 표준: 이미지 Storage URL
+  teamLogoUrl?: string;
+  venueImageUrl?: string;
 }
 
 /**
@@ -39,7 +45,11 @@ interface TeamHeaderProps {
  * 서버에서 미리 로드된 데이터를 props로 받아 렌더링합니다.
  * Context 의존성 제거로 더 단순하고 예측 가능한 동작.
  */
-export default function TeamHeader({ initialData }: TeamHeaderProps) {
+export default function TeamHeader({
+  initialData,
+  teamLogoUrl,
+  venueImageUrl
+}: TeamHeaderProps) {
   // 팀 데이터가 없는 경우 처리
   if (!initialData?.team) {
     return <EmptyState title="팀 정보가 없습니다" message="현재 이 팀에 대한 정보를 제공할 수 없습니다." />;
@@ -49,6 +59,10 @@ export default function TeamHeader({ initialData }: TeamHeaderProps) {
   const teamInfo: TeamData = initialData.team.team as TeamData;
   const venue: VenueData | null = initialData.team.venue as VenueData | null;
 
+  // 4590 표준: URL fallback
+  const effectiveTeamLogoUrl = teamLogoUrl || TEAM_PLACEHOLDER;
+  const effectiveVenueImageUrl = venueImageUrl || VENUE_PLACEHOLDER;
+
 
 
   return (
@@ -57,14 +71,12 @@ export default function TeamHeader({ initialData }: TeamHeaderProps) {
         {/* 팀 로고 및 기본 정보 */}
         <div className="flex items-center p-2 md:p-4 md:w-96 flex-shrink-0">
           <div className="relative w-16 h-16 md:w-20 md:h-20 flex-shrink-0 mr-3 md:mr-4">
-            <UnifiedSportsImage
-              imageId={teamInfo.id}
-              imageType={ImageType.Teams}
+            <UnifiedSportsImageClient
+              src={effectiveTeamLogoUrl}
               alt={`${teamInfo.name} 로고`}
-              size="xl"
-              variant="square"
-              fit="contain"
-              className="w-16 h-16 md:w-20 md:h-20"
+              width={80}
+              height={80}
+              className="w-16 h-16 md:w-20 md:h-20 object-contain"
             />
           </div>
           <div className="flex flex-col justify-center">
@@ -90,32 +102,13 @@ export default function TeamHeader({ initialData }: TeamHeaderProps) {
           <div className="border-t md:border-t-0 md:border-l border-black/5 dark:border-white/10 p-2 md:p-4 flex-1">
             <div className="flex gap-3">
               <div className="relative w-24 h-16 md:w-36 md:h-24 rounded overflow-hidden flex-shrink-0">
-                {venue.image && (
-                  (() => {
-                    // venue.image URL에서 venue ID 추출 시도
-                    let venueId = venue.id;
-                    if (!venueId && venue.image.includes('api-sports.io')) {
-                      const match = venue.image.match(/venues\/(\d+)/);
-                      if (match) {
-                        venueId = parseInt(match[1]);
-                      }
-                    }
-                    
-
-                    
-                    return (
-                      <UnifiedSportsImage
-                        imageId={venueId || teamInfo.id}
-                        imageType={ImageType.Venues}
-                        alt={`${venue.name} 경기장`}
-                        size="xl"
-                        variant="square"
-                        fit="cover"
-                        className="w-24 h-16 md:w-36 md:h-24"
-                      />
-                    );
-                  })()
-                )}
+                <UnifiedSportsImageClient
+                  src={effectiveVenueImageUrl}
+                  alt={`${venue.name} 경기장`}
+                  width={144}
+                  height={96}
+                  className="w-24 h-16 md:w-36 md:h-24 object-cover"
+                />
               </div>
               <div className="flex-1">
                 <h3 className="font-medium text-base text-gray-900 dark:text-[#F0F0F0]">{venue.name}</h3>

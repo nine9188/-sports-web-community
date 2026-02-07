@@ -1,8 +1,14 @@
 'use client'
 
+/**
+ * 4590 표준 적용:
+ * - 아이템 이미지: UnifiedSportsImageClient 또는 Image 사용
+ * - API-Sports URL 감지 로직 제거 (서버에서 처리)
+ * - itemImageUrl prop으로 Storage URL 전달받음
+ */
+
 import Image from 'next/image'
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage'
-import { ImageType } from '@/shared/types/image'
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient'
 import { ShopItem } from '../types'
 import {
   Button,
@@ -15,24 +21,8 @@ import {
   DialogFooter,
 } from '@/shared/components/ui'
 
-// API-Sports URL 유틸리티 함수들
-function isApiSportsUrl(url: string): boolean {
-  return Boolean(url && url.includes('media.api-sports.io'));
-}
-
-function getImageTypeFromUrl(url: string): ImageType | null {
-  if (url.includes('/players/')) return ImageType.Players;
-  if (url.includes('/teams/')) return ImageType.Teams;
-  if (url.includes('/leagues/')) return ImageType.Leagues;
-  if (url.includes('/coachs/')) return ImageType.Coachs;
-  return null;
-}
-
-function getImageIdFromUrl(url: string): string | null {
-  if (!url) return null;
-  const match = url.match(/\/(players|teams|leagues|coachs|venues)\/(\d+)\.(png|gif)$/);
-  return match ? match[2] : null;
-}
+// 4590 표준: placeholder 상수
+const ITEM_PLACEHOLDER = '/images/placeholder-team.svg';
 
 interface PurchaseModalProps {
   item: ShopItem
@@ -42,6 +32,8 @@ interface PurchaseModalProps {
   isLoggedIn?: boolean
   onCancel: () => void
   onConfirm: () => void
+  // 4590 표준: 아이템 이미지 Storage URL
+  itemImageUrl?: string
 }
 
 export default function PurchaseModal({
@@ -51,8 +43,13 @@ export default function PurchaseModal({
   userPoints,
   isLoggedIn = true,
   onCancel,
-  onConfirm
+  onConfirm,
+  itemImageUrl,
 }: PurchaseModalProps) {
+  // 4590 표준: itemImageUrl이 있으면 사용, 없으면 item.image_url 사용
+  const displayImageUrl = itemImageUrl || item.image_url || ITEM_PLACEHOLDER;
+  // Storage URL이거나 로컬 경로면 팀 이미지로 간주
+  const isStorageOrTeamImage = displayImageUrl.includes('supabase') || displayImageUrl.includes('/teams/');
   const remainingPoints = Math.max(userPoints - item.price, 0)
   const lackingPoints = Math.max(item.price - userPoints, 0)
   return (
@@ -67,10 +64,9 @@ export default function PurchaseModal({
 
           <div className="flex items-center gap-3 mb-4">
             <div className="w-5 h-5 relative flex-shrink-0">
-              {isApiSportsUrl(item.image_url) ? (
-                <UnifiedSportsImage
-                  imageId={getImageIdFromUrl(item.image_url) as string}
-                  imageType={getImageTypeFromUrl(item.image_url) as ImageType}
+              {isStorageOrTeamImage ? (
+                <UnifiedSportsImageClient
+                  src={displayImageUrl}
                   alt={item.name}
                   width={20}
                   height={20}
@@ -79,7 +75,7 @@ export default function PurchaseModal({
                 />
               ) : (
                 <Image
-                  src={item.image_url}
+                  src={displayImageUrl}
                   alt={item.name}
                   width={20}
                   height={20}
@@ -87,7 +83,7 @@ export default function PurchaseModal({
                 />
               )}
             </div>
-            
+
             <div>
               <p className="font-medium text-sm text-gray-900 dark:text-[#F0F0F0]">{item.name}</p>
               <p className="text-xs tabular-nums text-gray-700 dark:text-gray-300">{item.price} 포인트</p>

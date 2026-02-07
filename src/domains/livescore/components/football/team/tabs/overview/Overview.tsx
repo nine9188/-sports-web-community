@@ -92,6 +92,11 @@ interface OverviewProps {
   isLoading?: boolean;
   error?: string | null;
   playerKoreanNames?: PlayerKoreanNames;
+  // 4590 표준: 이미지 Storage URL
+  playerPhotoUrls?: Record<number, string>;
+  teamLogoUrls?: Record<number, string>;
+  leagueLogoUrls?: Record<number, string>;
+  leagueLogoDarkUrls?: Record<number, string>;  // 다크모드 리그 로고
 }
 
 export default function Overview({
@@ -106,7 +111,11 @@ export default function Overview({
   teamId,
   isLoading,
   error,
-  playerKoreanNames = {}
+  playerKoreanNames = {},
+  playerPhotoUrls = {},
+  teamLogoUrls = {},
+  leagueLogoUrls = {},
+  leagueLogoDarkUrls = {}
 }: OverviewProps) {
   // 탭 변경 핸들러 (메모이제이션으로 불필요한 렌더링 방지)
   const handleTabChange = React.useCallback((tab: string, subTab?: string) => {
@@ -143,6 +152,8 @@ export default function Overview({
         <StatsCards
           stats={stats}
           onTabChange={handleTabChange}
+          leagueLogoUrl={stats.league?.id ? leagueLogoUrls[stats.league.id] : undefined}
+          leagueLogoDarkUrl={stats.league?.id ? leagueLogoDarkUrls[stats.league.id] : undefined}
         />
       )}
 
@@ -151,6 +162,9 @@ export default function Overview({
         matches={matches}
         teamId={teamId}
         onTabChange={handleTabChange}
+        teamLogoUrls={teamLogoUrls}
+        leagueLogoUrls={leagueLogoUrls}
+        leagueLogoDarkUrls={leagueLogoDarkUrls}
       />
 
       {/* 3. 리그 순위 */}
@@ -159,6 +173,9 @@ export default function Overview({
         teamId={teamId}
         safeLeague={safeLeague}
         onTabChange={handleTabChange}
+        teamLogoUrls={teamLogoUrls}
+        leagueLogoUrls={leagueLogoUrls}
+        leagueLogoDarkUrls={leagueLogoDarkUrls}
       />
 
       {/* 4. 시즌 하이라이트 (최다 득점/어시스트) */}
@@ -168,12 +185,19 @@ export default function Overview({
           squad={squad}
           onTabChange={handleTabChange}
           playerKoreanNames={playerKoreanNames}
+          playerPhotoUrls={playerPhotoUrls}
         />
       )}
 
       {/* 5. 최근 이적 */}
       {transfers && (
-        <RecentTransfers transfers={transfers} onTabChange={handleTabChange} playerKoreanNames={playerKoreanNames} />
+        <RecentTransfers
+          transfers={transfers}
+          onTabChange={handleTabChange}
+          playerKoreanNames={playerKoreanNames}
+          playerPhotoUrls={playerPhotoUrls}
+          teamLogoUrls={teamLogoUrls}
+        />
       )}
     </div>
   );

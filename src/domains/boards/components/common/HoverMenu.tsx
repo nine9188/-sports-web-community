@@ -14,8 +14,6 @@ export default function HoverMenu({
 }: HoverMenuProps) {
   const [hoveredBoard, setHoveredBoard] = useState<string | null>(null);
   const [mobileDropdownOpen, setMobileDropdownOpen] = useState(false);
-  const [visibleBoards, setVisibleBoards] = useState<TopBoard[]>([]);
-  const [hiddenBoards, setHiddenBoards] = useState<TopBoard[]>([]);
   const menuRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
@@ -25,93 +23,52 @@ export default function HoverMenu({
   const [isMobile, setIsMobile] = useState(false);
 
   // 상위 게시판 정렬 - 불필요한 재계산 방지를 위한 메모이제이션
-  const sortedTopBoards = useMemo(() => 
+  const sortedTopBoards = useMemo(() =>
     [...topBoards].sort((a, b) =>
       a.display_order !== b.display_order
         ? a.display_order - b.display_order
         : a.name.localeCompare(b.name)
     ), [topBoards]);
 
-  // topBoards가 변경될 때 초기 상태 설정
-  useEffect(() => {
-    if (sortedTopBoards.length > 0) {
-      const mobile = window.innerWidth < 768;
-      
-      if (mobile) {
-        const maxVisibleBoards = 3;
-        
-        if (sortedTopBoards.length <= maxVisibleBoards) {
-          setVisibleBoards(sortedTopBoards);
-          setHiddenBoards([]);
-        } else {
-          setVisibleBoards(sortedTopBoards.slice(0, maxVisibleBoards));
-          setHiddenBoards(sortedTopBoards.slice(maxVisibleBoards));
-        }
-      } else {
-        setVisibleBoards(sortedTopBoards);
-        setHiddenBoards([]);
-      }
-    }
-  }, [sortedTopBoards]);
+  // 보이는/숨겨진 게시판 계산 - isMobile에 따라 재계산
+  const { visibleBoards, hiddenBoards } = useMemo(() => {
+    const maxVisibleBoards = 3;
 
-  // 모바일 환경 체크 및 보이는/숨겨진 게시판 계산
+    if (isMobile && sortedTopBoards.length > maxVisibleBoards) {
+      return {
+        visibleBoards: sortedTopBoards.slice(0, maxVisibleBoards),
+        hiddenBoards: sortedTopBoards.slice(maxVisibleBoards)
+      };
+    }
+
+    return { visibleBoards: sortedTopBoards, hiddenBoards: [] as TopBoard[] };
+  }, [sortedTopBoards, isMobile]);
+
+  // 모바일 환경 체크 및 리사이즈 핸들러
   useEffect(() => {
-    let isResizing = false;
     let rafId: number | null = null;
-    
-    const checkMobileAndCalculateVisibleBoards = () => {
+
+    const checkMobile = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
-      
-      if (mobile) {
-        // 모바일에서는 최대 3개까지만 표시
-        const maxVisibleBoards = 3;
-        
-        if (sortedTopBoards.length <= maxVisibleBoards) {
-          setVisibleBoards(sortedTopBoards);
-          setHiddenBoards([]);
-        } else {
-          const visible = sortedTopBoards.slice(0, maxVisibleBoards);
-          const hidden = sortedTopBoards.slice(maxVisibleBoards);
-          setVisibleBoards(visible);
-          setHiddenBoards(hidden);
-        }
-      } else {
-        // 데스크톱에서는 모든 게시판 표시
-        setVisibleBoards(sortedTopBoards);
-        setHiddenBoards([]);
-      }
     };
-    
+
     // 최초 체크
-    checkMobileAndCalculateVisibleBoards();
-    
-    // requestAnimationFrame을 사용한 최적화된 리사이즈 핸들러
-    const optimizedResize = () => {
-      if (!isResizing) {
-        isResizing = true;
-        
-        if (rafId) {
-          cancelAnimationFrame(rafId);
-        }
-        
-        rafId = requestAnimationFrame(() => {
-          checkMobileAndCalculateVisibleBoards();
-          isResizing = false;
-          rafId = null;
-        });
-      }
+    checkMobile();
+
+    // 디바운스된 리사이즈 핸들러
+    const handleResize = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(checkMobile);
     };
-    
-    window.addEventListener('resize', optimizedResize, { passive: true });
-    
+
+    window.addEventListener('resize', handleResize, { passive: true });
+
     return () => {
-      if (rafId) {
-        cancelAnimationFrame(rafId);
-      }
-      window.removeEventListener('resize', optimizedResize);
+      if (rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', handleResize);
     };
-  }, [sortedTopBoards]);
+  }, []);
 
   // 마우스가 메뉴 영역을 벗어날 때 지연 시간 후 닫기
   const handleMenuClose = useCallback(() => {

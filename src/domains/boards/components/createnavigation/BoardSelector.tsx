@@ -7,7 +7,7 @@ interface Board {
   id: string;
   name: string;
   parent_id: string | null;
-  display_order: number;
+  display_order: number | null;
   slug: string;
   children?: Board[];
 }
@@ -33,22 +33,14 @@ const BoardSelector = React.memo(({
   const [selectedTop, setSelectedTop] = useState<Board | null>(null);
   const [selectedMid, setSelectedMid] = useState<Board | null>(null);
   const [selectedBottom, setSelectedBottom] = useState<Board | null>(null);
-  
-  const [isLoading, setIsLoading] = useState(true);
-  
+
+  // isLoading을 직접 계산 (useEffect 대기 없이 즉시 반영)
+  const isLoading = !boards || boards.length === 0;
+
   // 참조값
   const topDropdownRef = useRef<HTMLDivElement>(null);
   const midDropdownRef = useRef<HTMLDivElement>(null);
   const bottomDropdownRef = useRef<HTMLDivElement>(null);
-  
-  // 입력 데이터 유효성 검사
-  useEffect(() => {
-    if (!boards || boards.length === 0) {
-      setIsLoading(true);
-    } else {
-      setIsLoading(false);
-    }
-  }, [boards]);
   
   // 3단계 계층 구조 데이터 처리
   const { topLevelBoards, midLevelBoards, bottomLevelBoards } = useMemo(() => {
@@ -74,11 +66,13 @@ const BoardSelector = React.memo(({
       boardsByParent.get(parentId)!.push(board);
     }
 
-    // 정렬 함수
+    // 정렬 함수 (display_order가 null이면 0으로 처리)
     const sortBoards = (boardList: Board[]) => {
       return boardList.sort((a, b) => {
-        if (a.display_order !== b.display_order) {
-          return a.display_order - b.display_order;
+        const orderA = a.display_order ?? 0;
+        const orderB = b.display_order ?? 0;
+        if (orderA !== orderB) {
+          return orderA - orderB;
         }
         return a.name.localeCompare(b.name);
       });
@@ -346,9 +340,8 @@ const BoardSelector = React.memo(({
     return bottomLevelBoards[selectedMid.id] && bottomLevelBoards[selectedMid.id].length > 0;
   }, [selectedMid, bottomLevelBoards]);
   
-  // 선택된 게시판 이름 계산
-  // 최상위만 카테고리 역할, 중간/하위는 모두 선택 가능
-  const getSelectedBoardName = useCallback(() => {
+  // 선택된 게시판 이름 (파생 상태)
+  const selectedBoardName = useMemo(() => {
     // 하위 게시판이 선택되었으면 해당 게시판
     if (selectedBottom) return selectedBottom.name;
 
@@ -364,11 +357,6 @@ const BoardSelector = React.memo(({
 
     return null;
   }, [selectedTop, selectedMid, selectedBottom, midLevelBoards]);
-
-  // 선택이 완료되었는지 확인
-  const isSelectionComplete = useCallback(() => {
-    return getSelectedBoardName() !== null;
-  }, [getSelectedBoardName]);
 
   return (
     <div className="w-full space-y-3">
@@ -463,10 +451,10 @@ const BoardSelector = React.memo(({
       </div>
 
       {/* 선택된 게시판 표시 */}
-      {isSelectionComplete() ? (
+      {selectedBoardName ? (
         <div className="px-3 py-2 bg-[#F5F5F5] dark:bg-[#262626] rounded-md border border-black/7 dark:border-white/10">
           <span className="text-sm text-gray-700 dark:text-gray-300">
-            선택된 게시판: <span className="font-medium">{getSelectedBoardName()}</span>
+            선택된 게시판: <span className="font-medium">{selectedBoardName}</span>
           </span>
         </div>
       ) : selectedTop ? (

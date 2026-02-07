@@ -3,23 +3,26 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useTheme } from 'next-themes';
 import type { MatchCardProps } from '@/shared/types/matchCard';
 import { getStatusInfo, DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
 import { getTeamById } from '@teams';
 import { LEAGUE_NAMES_MAP } from '@/domains/livescore/constants/league-mappings';
 
+// 4590 표준: placeholder 및 Storage URL
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
+const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
 const SUPABASE_URL = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co';
 
 const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = false }) => {
-  const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  // 클라이언트에서만 테마 확인 (hydration 에러 방지)
+  // 4590 표준: 다크모드 감지
+  const [isDark, setIsDark] = useState(false);
   useEffect(() => {
-    setMounted(true);
+    const checkDark = () => setIsDark(document.documentElement.classList.contains('dark'));
+    checkDark();
+    const observer = new MutationObserver(checkDark);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
   }, []);
-
   if (!matchData || !matchData.teams) {
     return (
       <div className="p-4 border border-red-300 bg-red-50 text-red-500 rounded">
@@ -29,7 +32,6 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
   }
 
   const actualMatchId = matchData.id?.toString() || String(matchId);
-  const isDark = mounted && resolvedTheme === 'dark';
 
   const { teams, goals, league, status } = matchData;
   const homeTeam = teams.home;
@@ -53,51 +55,53 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
   const statusInfo = getStatusInfo(status);
   const statusText = statusInfo.text;
 
-  // 이미지 URL (다크모드 지원)
-  const hasDarkLeagueLogo = league.id && DARK_MODE_LEAGUE_IDS.includes(Number(league.id));
-  const leagueLogo = league.id
-    ? `${SUPABASE_URL}/storage/v1/object/public/leagues/${league.id}${isDark && hasDarkLeagueLogo ? '-1' : ''}.png`
-    : null;
-  const homeTeamLogo = homeTeam.id ? `${SUPABASE_URL}/storage/v1/object/public/teams/${homeTeam.id}.png` : null;
-  const awayTeamLogo = awayTeam.id ? `${SUPABASE_URL}/storage/v1/object/public/teams/${awayTeam.id}.png` : null;
+  // 4590 표준: Storage URL 사용 (다크모드 지원)
+  const getLeagueLogo = () => {
+    if (!leagueId) return LEAGUE_PLACEHOLDER;
+    const hasDarkMode = DARK_MODE_LEAGUE_IDS.includes(leagueId);
+    if (isDark && hasDarkMode) {
+      return `${SUPABASE_URL}/storage/v1/object/public/leagues/${leagueId}-1.png`;
+    }
+    return `${SUPABASE_URL}/storage/v1/object/public/leagues/${leagueId}.png`;
+  };
+
+  const getTeamLogo = (teamId: number | undefined) => {
+    if (!teamId) return TEAM_PLACEHOLDER;
+    return `${SUPABASE_URL}/storage/v1/object/public/teams/${teamId}.png`;
+  };
+
+  const leagueLogo = getLeagueLogo();
+  const homeTeamLogo = getTeamLogo(homeTeamId);
+  const awayTeamLogo = getTeamLogo(awayTeamId);
 
   const CardContent = () => (
     <>
       <div className="league-header">
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          {leagueLogo && (
-            <div className="league-logo-box">
-              <Image
-                src={leagueLogo}
-                alt={leagueName}
-                width={20}
-                height={20}
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            </div>
-          )}
+          <div className="league-logo-box">
+            <Image
+              src={leagueLogo}
+              alt={leagueName}
+              width={20}
+              height={20}
+              style={{ width: '20px', height: '20px', objectFit: 'contain' }}
+            />
+          </div>
           <span className="league-name">{leagueName}</span>
         </div>
       </div>
 
       <div className="match-main">
         <div className="team-info">
-          {homeTeamLogo && (
-            <div className="team-logo-box">
-              <Image
-                src={homeTeamLogo}
-                alt={homeTeamName}
-                width={24}
-                height={24}
-                onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = '/placeholder.png';
-                }}
-              />
-            </div>
-          )}
+          <div className="team-logo-box">
+            <Image
+              src={homeTeamLogo}
+              alt={homeTeamName}
+              width={24}
+              height={24}
+              style={{ width: '24px', height: '24px', objectFit: 'contain' }}
+            />
+          </div>
           <span className={`team-name ${homeTeam.winner ? 'winner' : ''}`}>
             {homeTeamName}
           </span>
@@ -113,20 +117,15 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
         </div>
 
         <div className="team-info">
-          {awayTeamLogo && (
-            <div className="team-logo-box">
-              <Image
-                src={awayTeamLogo}
-                alt={awayTeamName}
-                width={24}
-                height={24}
-                onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = '/placeholder.png';
-                }}
-              />
-            </div>
-          )}
+          <div className="team-logo-box">
+            <Image
+              src={awayTeamLogo}
+              alt={awayTeamName}
+              width={24}
+              height={24}
+              style={{ width: '24px', height: '24px', objectFit: 'contain' }}
+            />
+          </div>
           <span className={`team-name ${awayTeam.winner ? 'winner' : ''}`}>
             {awayTeamName}
           </span>

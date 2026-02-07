@@ -134,7 +134,7 @@ interface TabContentProps {
  */
 export default function TabContent({ matchId, currentTab, initialData, initialPowerData, allPlayerStats, relatedPosts, playerKoreanNames = {} }: TabContentProps) {
   // initialData에서 데이터 추출
-  const { events, lineups, stats, standings, homeTeam, awayTeam, matchData } = initialData;
+  const { events, lineups, stats, standings, homeTeam, awayTeam, matchData, teamLogoUrls, leagueLogoUrl, leagueLogoDarkUrl } = initialData;
 
   if (!matchId) {
     return <EmptyState title="경기 정보 없음" message="경기 정보가 없습니다." />;
@@ -144,7 +144,7 @@ export default function TabContent({ matchId, currentTab, initialData, initialPo
   switch (currentTab) {
     case 'events':
       return events && events.length > 0
-        ? <Events events={events} playerKoreanNames={playerKoreanNames} />
+        ? <Events events={events} playerKoreanNames={playerKoreanNames} teamLogoUrls={teamLogoUrls} />
         : <EmptyState title="이벤트 없음" message="이 경기의 이벤트 데이터를 찾을 수 없습니다." />;
 
     case 'lineups':
@@ -193,6 +193,7 @@ export default function TabContent({ matchId, currentTab, initialData, initialPo
           matchId={matchId}
           allPlayerStats={allPlayerStats}
           playerKoreanNames={playerKoreanNames}
+          teamLogoUrls={teamLogoUrls}
         />
       );
 
@@ -200,12 +201,16 @@ export default function TabContent({ matchId, currentTab, initialData, initialPo
       // AllPlayerStatsResponse를 Stats 컴포넌트 형식으로 변환
       const matchPlayerStats = convertToMatchPlayerStats(allPlayerStats, homeTeam?.id, awayTeam?.id);
       return stats && stats.length > 0
-        ? <Stats matchData={{ stats, homeTeam: homeTeam || undefined, awayTeam: awayTeam || undefined }} initialMatchPlayerStats={matchPlayerStats} playerKoreanNames={playerKoreanNames} />
+        ? <Stats matchData={{ stats, homeTeam: homeTeam || undefined, awayTeam: awayTeam || undefined }} initialMatchPlayerStats={matchPlayerStats} playerKoreanNames={playerKoreanNames} teamLogoUrls={teamLogoUrls} />
         : <EmptyState title="통계 없음" message="이 경기의 통계 데이터를 찾을 수 없습니다." />;
 
     case 'standings':
+      // 리그 로고 URL을 Record 형식으로 변환 (standings에서 리그 ID로 조회)
+      const leagueId = standings?.standings?.league?.id;
+      const leagueLogoUrls = leagueId && leagueLogoUrl ? { [leagueId]: leagueLogoUrl } : {};
+      const leagueLogoDarkUrls = leagueId && leagueLogoDarkUrl ? { [leagueId]: leagueLogoDarkUrl } : {};
       return standings
-        ? <Standings matchData={{ standings, homeTeam: homeTeam || undefined, awayTeam: awayTeam || undefined }} matchId={matchId} />
+        ? <Standings matchData={{ standings, homeTeam: homeTeam || undefined, awayTeam: awayTeam || undefined }} matchId={matchId} teamLogoUrls={teamLogoUrls} leagueLogoUrls={leagueLogoUrls} leagueLogoDarkUrls={leagueLogoDarkUrls} />
         : <EmptyState title="순위 없음" message="이 리그의 순위 정보를 찾을 수 없습니다." />;
 
     case 'power':

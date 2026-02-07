@@ -4,17 +4,23 @@ import Link from 'next/link';
 import { LeagueTeam } from '@/domains/livescore/actions/footballApi';
 import { MLS_TEAMS, MLSConference } from '@/domains/livescore/constants/teams/mls';
 import { ContainerContent } from '@/shared/components/ui';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { getTeamById } from '@/domains/livescore/constants/teams';
+
+// 4590 표준: placeholder 상수
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 
 interface LeagueTeamsListProps {
   teams: LeagueTeam[];
   isLoading?: boolean;
   leagueId?: number | string;
+  // 4590 표준: 이미지 Storage URL
+  teamLogoUrls?: Record<number, string>;
 }
 
-export default function LeagueTeamsList({ teams, isLoading = false, leagueId }: LeagueTeamsListProps) {
+export default function LeagueTeamsList({ teams, isLoading = false, leagueId, teamLogoUrls = {} }: LeagueTeamsListProps) {
+  // 4590 표준: URL 헬퍼 함수
+  const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
   if (isLoading) {
     return (
       <ContainerContent className="p-0">
@@ -80,11 +86,11 @@ export default function LeagueTeamsList({ teams, isLoading = false, leagueId }: 
           team.isWinner ? 'bg-yellow-50 dark:bg-yellow-900/20' : ''
         }`}
       >
-        <UnifiedSportsImage
-          imageId={team.id}
-          imageType={ImageType.Teams}
+        <UnifiedSportsImageClient
+          src={getTeamLogo(team.id)}
           alt={displayName}
-          size="sm"
+          width={24}
+          height={24}
           className="w-6 h-6"
         />
         <span className="text-sm text-gray-900 dark:text-[#F0F0F0] flex-1">

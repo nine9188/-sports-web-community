@@ -5,20 +5,28 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { EmptyState } from '@/domains/livescore/components/common';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { InjuryData } from '@/domains/livescore/types/player';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 
+// 4590 표준: placeholder URL
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
+
 interface PlayerInjuriesProps {
   playerId: number;
   injuriesData?: InjuryData[];
+  // 4590 표준: 이미지 Storage URL
+  teamLogoUrls?: Record<number, string>;
 }
 
 export default function PlayerInjuries({
-  injuriesData = []
+  injuriesData = [],
+  teamLogoUrls = {}
 }: PlayerInjuriesProps) {
+  // 4590 표준: 헬퍼 함수
+  const getTeamLogo = (teamId: number) => teamLogoUrls[teamId] || TEAM_PLACEHOLDER;
+
   if (!injuriesData || injuriesData.length === 0) {
     return <EmptyState title="부상 기록이 없습니다" message="이 선수의 부상 기록 정보를 찾을 수 없습니다." />;
   }
@@ -49,9 +57,8 @@ export default function PlayerInjuries({
                   className="flex items-center gap-2 mb-2 transition-opacity hover:opacity-70 outline-none focus:outline-none"
                 >
                   <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center">
-                    <UnifiedSportsImage
-                      imageId={injury.team.id}
-                      imageType={ImageType.Teams}
+                    <UnifiedSportsImageClient
+                      src={getTeamLogo(injury.team.id)}
                       alt={injury.team.name}
                       width={40}
                       height={40}

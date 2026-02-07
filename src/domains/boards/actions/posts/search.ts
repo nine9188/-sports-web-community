@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use server';
 
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
@@ -6,6 +7,24 @@ import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
 import type { Post, PostsResponse } from '../getPosts';
 
 export type SearchType = 'title_content' | 'title' | 'content' | 'comment' | 'nickname';
+
+// RPC 결과 타입 (Supabase 타입에 미포함)
+interface SearchPostResult {
+  id: string;
+  title: string;
+  content: unknown;
+  created_at: string;
+  views: number;
+  likes: number;
+  post_number: number;
+  board_id: string;
+  user_id: string;
+}
+
+// Supabase 클라이언트 타입 단언용
+type SupabaseRpc = {
+  rpc: (fn: string, params: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>;
+};
 
 interface SearchBoardPostsParams {
   boardIds: string[];
@@ -58,9 +77,9 @@ export async function searchBoardPosts({
       return searchByNickname({ supabase, boardIds, searchTerm, page, limit, offset });
     }
 
-    // RPC 함수를 사용하여 JSONB content 검색 지원
+    // RPC 함수를 사용하여 JSONB content 검색 지원 (타입 정의에 미포함된 RPC)
     // 총 개수 조회
-    const { data: countData, error: countError } = await supabase
+    const { data: countData, error: countError } = await (supabase as unknown as SupabaseRpc)
       .rpc('count_search_posts', {
         p_board_ids: boardIds,
         p_search_term: searchTerm,
@@ -72,13 +91,13 @@ export async function searchBoardPosts({
       return emptyResponse;
     }
 
-    const totalCount = countData || 0;
+    const totalCount = (countData as number) || 0;
     if (totalCount === 0) {
       return emptyResponse;
     }
 
     // RPC로 게시글 검색
-    const { data: searchResults, error: searchError } = await supabase
+    const { data: searchResults, error: searchError } = await (supabase as unknown as SupabaseRpc)
       .rpc('search_posts_by_content', {
         p_board_ids: boardIds,
         p_search_term: searchTerm,
@@ -92,12 +111,13 @@ export async function searchBoardPosts({
       return emptyResponse;
     }
 
-    if (!searchResults || searchResults.length === 0) {
+    const typedSearchResults = searchResults as SearchPostResult[] | null;
+    if (!typedSearchResults || typedSearchResults.length === 0) {
       return emptyResponse;
     }
 
     // 검색 결과의 post_id 목록
-    const postIds = searchResults.map((p: any) => p.id);
+    const postIds = typedSearchResults.map((p) => p.id);
 
     // 프로필과 게시판 정보 조회
     const { data: posts, error } = await supabase

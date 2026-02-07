@@ -10,6 +10,7 @@ import { fetchPlayerTransfers } from './transfers';
 import { fetchPlayerInjuries } from './injuries';
 import { fetchPlayerRankings } from './rankings';
 import { getPlayerCache, setPlayerCache } from './playerCache';
+import { getPlayerPhotoUrl, getTeamLogoUrl, getTeamLogoUrls, getLeagueLogoUrls } from '@/domains/livescore/actions/images';
 
 // 서버 데이터 캐싱을 위한 맵 (ID-탭 기반으로 캐싱)
 const serverDataCache = new Map<string, PlayerFullDataResponse>();
@@ -62,13 +63,30 @@ async function fetchWithRetry<T>(
 export const fetchCachedPlayerData = cache(async (id: string): Promise<PlayerData> => {
   try {
     // 캐시된 데이터 확인 (서버 컴포넌트에서는 React의 cache 함수가 처리)
-    
+
     // 재시도 로직을 적용한 API 호출
     const playerData = await fetchWithRetry(() => fetchPlayerData(id));
-    
+
     return playerData;
   } catch (error) {
-    throw error;
+    console.error(`[fetchCachedPlayerData] 선수 데이터 로드 실패 - id: ${id}`, error);
+    // 에러 시 기본 데이터 반환 (404 방지)
+    return {
+      info: {
+        id: parseInt(id) || 0,
+        name: `선수 ${id}`,
+        firstname: '',
+        lastname: '',
+        age: 0,
+        birth: { date: '', place: '', country: '' },
+        nationality: '',
+        height: '',
+        weight: '',
+        injured: false,
+        photo: ''
+      },
+      statistics: []
+    };
   }
 });
 
@@ -82,16 +100,34 @@ export interface PlayerFullDataResponse {
   seasons?: number[];
   allSeasons?: number[]; // 전체 사용 가능한 시즌 목록(내부 처리용)
   statistics?: PlayerStatistic[];
+  // 4590 표준: statistics 이미지 URL
+  statisticsTeamLogoUrls?: Record<number, string>;
+  statisticsLeagueLogoUrls?: Record<number, string>;
+  statisticsLeagueLogoDarkUrls?: Record<number, string>;
   fixtures?: {
     data: FixtureData[];
     status?: string;
     message?: string;
+    // 4590 표준: 이미지 Storage URL
+    teamLogoUrls?: Record<number, string>;
+    leagueLogoUrls?: Record<number, string>;
+    leagueLogoDarkUrls?: Record<number, string>;
   };
   trophies?: TrophyData[];
+  // 4590 표준: trophies 이미지 URL
+  trophiesLeagueLogoUrls?: Record<number, string>;
+  trophiesLeagueLogoDarkUrls?: Record<number, string>;
   transfers?: TransferData[];
+  // 4590 표준: transfers 이미지 URL
+  transfersTeamLogoUrls?: Record<number, string>;
   injuries?: InjuryData[];
+  // 4590 표준: injuries 이미지 URL
+  injuriesTeamLogoUrls?: Record<number, string>;
   rankings?: RankingsData;
   cachedAt?: number; // 캐시 타임스탬프 추가
+  // 4590 표준: 이미지 Storage URL
+  playerPhotoUrl?: string;
+  teamLogoUrl?: string;
 }
 
 /**
@@ -288,20 +324,30 @@ export const fetchPlayerFullData = async (
           fetcher: () => Promise<T>,
           season?: number
         ): Promise<T> {
-          // L2 캐시 조회
-          const cached = await getPlayerCache(playerIdNum, dataType, season);
-          if (cached.data !== null && cached.fresh) {
-            return cached.data as T;
+          try {
+            // L2 캐시 조회
+            const cached = await getPlayerCache(playerIdNum, dataType, season);
+            if (cached.data !== null && cached.fresh) {
+              return cached.data as T;
+            }
+
+            // stale 데이터가 있으면 백그라운드 갱신 (stale-while-revalidate)
+            // 여기서는 단순히 API 호출
+            const freshData = await fetcher();
+
+            // L2 캐시에 저장 (비동기, 실패해도 무시)
+            setPlayerCache(playerIdNum, dataType, freshData, season).catch(() => {});
+
+            return freshData;
+          } catch (error) {
+            // 캐시 조회 또는 API 호출 실패 시 stale 데이터라도 반환
+            const staleCache = await getPlayerCache(playerIdNum, dataType, season);
+            if (staleCache.data !== null) {
+              console.log(`[withCache] ${dataType} stale 캐시 사용 - playerId: ${playerIdNum}`);
+              return staleCache.data as T;
+            }
+            throw error;
           }
-
-          // stale 데이터가 있으면 백그라운드 갱신 (stale-while-revalidate)
-          // 여기서는 단순히 API 호출
-          const freshData = await fetcher();
-
-          // L2 캐시에 저장 (비동기, 실패해도 무시)
-          setPlayerCache(playerIdNum, dataType, freshData, season).catch(() => {});
-
-          return freshData;
         }
 
         // 기본 선수 데이터는 항상 가져옴
@@ -402,9 +448,10 @@ export const fetchPlayerFullData = async (
           Object.entries(apiPromises).map(async ([key, promise]) => {
             try {
               const data = await promise;
-              return { key, data };
+              return { key, data, error: null };
             } catch (error) {
-              return { key, error };
+              console.error(`[fetchPlayerFullData] ${key} 로드 실패:`, error);
+              return { key, data: null, error };
             }
           })
         );
@@ -451,12 +498,122 @@ export const fetchPlayerFullData = async (
         
         // 필수 데이터인 playerData가 없으면 실패로 처리
         if (!response.playerData) {
+          console.error(`[fetchPlayerFullData] playerData 없음 - playerId: ${playerId}`);
           return {
             success: false,
             message: '선수 기본 정보를 가져오는데 실패했습니다.'
           };
         }
-        
+
+        // playerData가 기본값(빈 데이터)인 경우도 성공으로 처리 (404 방지)
+        // player.ts에서 API 실패 시 기본값 반환하므로
+
+        // 4590 표준: 선수 사진 및 팀 로고 URL 조회
+        const playerNumId = response.playerData.info?.id;
+        const teamId = response.playerData.statistics?.[0]?.team?.id;
+
+        const [playerPhotoUrl, teamLogoUrl] = await Promise.all([
+          playerNumId ? getPlayerPhotoUrl(playerNumId) : Promise.resolve('/images/placeholder-player.svg'),
+          teamId ? getTeamLogoUrl(teamId) : Promise.resolve('/images/placeholder-team.svg')
+        ]);
+
+        response.playerPhotoUrl = playerPhotoUrl;
+        response.teamLogoUrl = teamLogoUrl;
+
+        // 4590 표준: fixtures 이미지 URL 맵 생성 (다크모드 포함)
+        if (response.fixtures?.data && response.fixtures.data.length > 0) {
+          const fixturesTeamIds = new Set<number>();
+          const fixturesLeagueIds = new Set<number>();
+
+          response.fixtures.data.forEach(fixture => {
+            if (fixture.teams?.home?.id) fixturesTeamIds.add(fixture.teams.home.id);
+            if (fixture.teams?.away?.id) fixturesTeamIds.add(fixture.teams.away.id);
+            if (fixture.league?.id) fixturesLeagueIds.add(fixture.league.id);
+          });
+
+          const [fixturesTeamLogos, fixturesLeagueLogos, fixturesLeagueLogosDark] = await Promise.all([
+            fixturesTeamIds.size > 0 ? getTeamLogoUrls([...fixturesTeamIds]) : Promise.resolve({}),
+            fixturesLeagueIds.size > 0 ? getLeagueLogoUrls([...fixturesLeagueIds]) : Promise.resolve({}),
+            fixturesLeagueIds.size > 0 ? getLeagueLogoUrls([...fixturesLeagueIds], true) : Promise.resolve({})
+          ]);
+
+          response.fixtures.teamLogoUrls = fixturesTeamLogos;
+          response.fixtures.leagueLogoUrls = fixturesLeagueLogos;
+          response.fixtures.leagueLogoDarkUrls = fixturesLeagueLogosDark;
+        }
+
+        // 4590 표준: injuries 이미지 URL 맵 생성
+        if (response.injuries && response.injuries.length > 0) {
+          const injuriesTeamIds = new Set<number>();
+
+          response.injuries.forEach(injury => {
+            if (injury.team?.id) injuriesTeamIds.add(injury.team.id);
+          });
+
+          if (injuriesTeamIds.size > 0) {
+            response.injuriesTeamLogoUrls = await getTeamLogoUrls([...injuriesTeamIds]);
+          }
+        }
+
+        // 4590 표준: transfers 이미지 URL 맵 생성
+        if (response.transfers && response.transfers.length > 0) {
+          const transfersTeamIds = new Set<number>();
+
+          response.transfers.forEach(transfer => {
+            if (transfer.teams?.from?.id) transfersTeamIds.add(transfer.teams.from.id);
+            if (transfer.teams?.to?.id) transfersTeamIds.add(transfer.teams.to.id);
+          });
+
+          if (transfersTeamIds.size > 0) {
+            response.transfersTeamLogoUrls = await getTeamLogoUrls([...transfersTeamIds]);
+          }
+        }
+
+        // 4590 표준: trophies 이미지 URL 맵 생성 (다크모드 포함)
+        if (response.trophies && response.trophies.length > 0) {
+          const trophiesLeagueIds = new Set<number>();
+
+          response.trophies.forEach(trophy => {
+            // leagueLogo URL에서 ID 추출 (예: .../leagues/39.png -> 39)
+            if (trophy.leagueLogo) {
+              const match = trophy.leagueLogo.match(/\/(\d+)\.(png|svg)$/);
+              if (match) {
+                trophiesLeagueIds.add(parseInt(match[1], 10));
+              }
+            }
+          });
+
+          if (trophiesLeagueIds.size > 0) {
+            const [trophiesLeagueLogos, trophiesLeagueLogosDark] = await Promise.all([
+              getLeagueLogoUrls([...trophiesLeagueIds]),
+              getLeagueLogoUrls([...trophiesLeagueIds], true)
+            ]);
+            response.trophiesLeagueLogoUrls = trophiesLeagueLogos;
+            response.trophiesLeagueLogoDarkUrls = trophiesLeagueLogosDark;
+          }
+        }
+
+        // 4590 표준: statistics 이미지 URL 맵 생성
+        if (response.statistics && response.statistics.length > 0) {
+          const statsTeamIds = new Set<number>();
+          const statsLeagueIds = new Set<number>();
+
+          response.statistics.forEach(stat => {
+            if (stat.team?.id) statsTeamIds.add(stat.team.id);
+            if (stat.league?.id) statsLeagueIds.add(stat.league.id);
+          });
+
+          const [statsTeamLogos, statsLeagueLogos, statsLeagueLogoDark] = await Promise.all([
+            statsTeamIds.size > 0 ? getTeamLogoUrls([...statsTeamIds]) : Promise.resolve({}),
+            statsLeagueIds.size > 0 ? getLeagueLogoUrls([...statsLeagueIds]) : Promise.resolve({}),
+            statsLeagueIds.size > 0 ? getLeagueLogoUrls([...statsLeagueIds], true) : Promise.resolve({})
+          ]);
+
+          response.statisticsTeamLogoUrls = statsTeamLogos;
+          response.statisticsLeagueLogoUrls = statsLeagueLogos;
+          response.statisticsLeagueLogoDarkUrls = statsLeagueLogoDark;
+        }
+
         // 결과를 캐시에 저장
         serverDataCache.set(cacheKey, response);
         cacheTTL.set(cacheKey, Date.now());

@@ -226,15 +226,16 @@ HOT 게시글은 조회수, 좋아요, 댓글을 기반으로 인기 게시글�
 
 | 문서 | 설명 |
 |------|------|
+| [image-4590-standard.md](./guides/image-4590-standard.md) | **이미지 처리 룰셋 (4590 표준)** |
+| [image-4590-implementation.md](./guides/image-4590-implementation.md) | **이미지 4590 구현 계획서** ✨ NEW |
 | [testing-hot-notifications.md](./guides/testing-hot-notifications.md) | HOT 알림 테스트 스크립트 사용법 |
 | [LOGIN_DEBUG_GUIDE.md](./guides/LOGIN_DEBUG_GUIDE.md) | 로그인 디버깅 가이드 |
 | [MLS_PLAYER_MAPPING_SUMMARY.md](./guides/MLS_PLAYER_MAPPING_SUMMARY.md) | MLS 선수 매핑 요약 |
-| [API_SPORTS_IMAGE_CACHE.md](./guides/API_SPORTS_IMAGE_CACHE.md) | API Sports 이미지 캐시 가이드 |
 | [KAKAO_SETUP.md](./guides/KAKAO_SETUP.md) | 카카오 로그인 설정 가이드 |
 | [README-BANNER.md](./guides/README-BANNER.md) | 배너 시스템 가이드 |
 | [README-icons-refactoring.md](./guides/README-icons-refactoring.md) | 아이콘 리팩토링 가이드 |
 | [README-user-icon.md](./guides/README-user-icon.md) | 사용자 아이콘 가이드 |
-| [profile-icon-system.md](./guides/profile-icon-system.md) | 프로필 아이콘 시스템 전체 구조 ✨ NEW |
+| [profile-icon-system.md](./guides/profile-icon-system.md) | 프로필 아이콘 시스템 전체 구조 |
 
 ---
 
@@ -267,5 +268,5 @@ HOT 게시글은 조회수, 좋아요, 댓글을 기반으로 인기 게시글�
 ---
 
 **문서 작성일**: 2025-12-03
-**최종 업데이트**: 2026-01-30
-**버전**: 1.7.0
+**최종 업데이트**: 2026-02-06
+**버전**: 1.9.0

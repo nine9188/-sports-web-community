@@ -4,6 +4,7 @@ import { formatDate } from '@/shared/utils/dateUtils';
 import type { Json } from '@/shared/types/supabase';
 import type { Post, PostsResponse } from '../getPosts';
 import type { DealInfo } from '../../types/hotdeal';
+import { getTeamLogoUrls, getLeagueLogoUrls } from '@/domains/livescore/actions/images';
 
 /**
  * 안전한 fallback 게시물 데이터 생성
@@ -75,56 +76,52 @@ export async function fetchBoardsInfo(
 }
 
 /**
- * 팀 로고 조회
+ * 팀 로고 조회 (4590 표준: Storage URL)
  */
 export async function fetchTeamLogos(
   supabase: SupabaseClient,
   teamIds: number[]
 ): Promise<Record<string, string>> {
+  void supabase; // 4590 표준: Supabase 직접 조회 대신 images 모듈 사용
   if (teamIds.length === 0) return {};
 
   try {
-    const { data: teamsData } = await supabase
-      .from('teams')
-      .select('id, logo')
-      .in('id', teamIds);
+    // 4590 표준: getTeamLogoUrls로 Storage URL 조회
+    const urlMap = await getTeamLogoUrls(teamIds);
 
-    if (!teamsData) return {};
-
-    return teamsData.reduce((acc, team) => {
-      if (team.id && team.logo) {
-        acc[team.id] = team.logo;
-      }
-      return acc;
-    }, {} as Record<string, string>);
+    // number 키를 string 키로 변환 (기존 호환성 유지)
+    const result: Record<string, string> = {};
+    for (const [id, url] of Object.entries(urlMap)) {
+      result[id] = url;
+    }
+    return result;
   } catch {
     return {};
   }
 }
 
 /**
- * 리그 로고 조회
+ * 리그 로고 조회 (4590 표준: Storage URL)
+ * @param isDark - 다크모드 로고 조회 여부
  */
 export async function fetchLeagueLogos(
   supabase: SupabaseClient,
-  leagueIds: number[]
+  leagueIds: number[],
+  isDark: boolean = false
 ): Promise<Record<string, string>> {
+  void supabase; // 4590 표준: Supabase 직접 조회 대신 images 모듈 사용
   if (leagueIds.length === 0) return {};
 
   try {
-    const { data: leaguesData } = await supabase
-      .from('leagues')
-      .select('id, logo')
-      .in('id', leagueIds);
+    // 4590 표준: getLeagueLogoUrls로 Storage URL 조회
+    const urlMap = await getLeagueLogoUrls(leagueIds, isDark);
 
-    if (!leaguesData) return {};
-
-    return leaguesData.reduce((acc, league) => {
-      if (league.id && league.logo) {
-        acc[league.id] = league.logo;
-      }
-      return acc;
-    }, {} as Record<string, string>);
+    // number 키를 string 키로 변환 (기존 호환성 유지)
+    const result: Record<string, string> = {};
+    for (const [id, url] of Object.entries(urlMap)) {
+      result[id] = url;
+    }
+    return result;
   } catch {
     return {};
   }
@@ -137,10 +134,10 @@ export async function fetchUserProfiles(
   supabase: SupabaseClient,
   userIds: string[]
 ): Promise<{
-  profileMap: Record<string, { level: number; icon_id: number | null }>;
+  profileMap: Record<string, { level: number; exp: number; icon_id: number | null }>;
   iconMap: Record<number, string>;
 }> {
-  const profileMap: Record<string, { level: number; icon_id: number | null }> = {};
+  const profileMap: Record<string, { level: number; exp: number; icon_id: number | null }> = {};
   const iconMap: Record<number, string> = {};
 
   if (userIds.length === 0) return { profileMap, iconMap };
@@ -149,7 +146,7 @@ export async function fetchUserProfiles(
     // 프로필 정보 조회
     const { data: profilesData } = await supabase
       .from('profiles')
-      .select('id, level, icon_id')
+      .select('id, level, exp, icon_id')
       .in('id', userIds);
 
     if (profilesData) {
@@ -157,6 +154,7 @@ export async function fetchUserProfiles(
         if (profile.id) {
           profileMap[profile.id] = {
             level: profile.level || 1,
+            exp: profile.exp || 0,
             icon_id: profile.icon_id
           };
         }
@@ -238,16 +236,17 @@ export function formatPostData(
     is_hidden?: boolean;
     is_deleted?: boolean;
     is_notice?: boolean;
-    profiles?: { id?: string; nickname?: string; level?: number; icon_id?: number | null; public_id?: string | null } | null;
+    profiles?: { id?: string; nickname?: string; level?: number; exp?: number; icon_id?: number | null; public_id?: string | null } | null;
     content?: Json;
     deal_info?: DealInfo | null;
   },
   boardsData: Record<string, { name: string; team_id?: number | null; league_id?: number | null; slug: string }>,
   teamLogoMap: Record<string, string>,
   leagueLogoMap: Record<string, string>,
-  userProfileMap: Record<string, { level: number; icon_id: number | null }>,
+  userProfileMap: Record<string, { level: number; exp: number; icon_id: number | null }>,
   userIconMap: Record<number, string>,
-  commentCountMap: Record<string, number>
+  commentCountMap: Record<string, number>,
+  leagueLogoDarkMap: Record<string, string> = {}
 ): Post {
   const boardInfo = post.board_id ? boardsData[post.board_id] : null;
   const safeBoardInfo = boardInfo || {
@@ -259,6 +258,7 @@ export function formatPostData(
 
   const teamLogo = safeBoardInfo.team_id ? teamLogoMap[safeBoardInfo.team_id] : null;
   const leagueLogo = safeBoardInfo.league_id ? leagueLogoMap[safeBoardInfo.league_id] : null;
+  const leagueLogoDark = safeBoardInfo.league_id ? leagueLogoDarkMap[safeBoardInfo.league_id] : null;
 
   const profile = post.profiles;
   const userLevel = profile?.level || 1;
@@ -288,6 +288,11 @@ export function formatPostData(
     displayTitle = '[숨김 처리된 게시글]';
   }
 
+  // exp 값 가져오기
+  const userExp = userId && userProfileMap[userId]
+    ? userProfileMap[userId].exp
+    : (profile?.exp || 0);
+
   return {
     id: post.id,
     title: displayTitle,
@@ -300,6 +305,7 @@ export function formatPostData(
     author_nickname: profile?.nickname || '익명',
     author_id: profile?.id || '',
     author_level: userLevel,
+    author_exp: userExp,
     author_icon_id: profile?.icon_id,
     author_icon_url: iconUrl,
     author_public_id: profile?.public_id || null,
@@ -311,6 +317,7 @@ export function formatPostData(
     league_id: safeBoardInfo.league_id,
     team_logo: teamLogo,
     league_logo: leagueLogo,
+    league_logo_dark: leagueLogoDark,
     is_hidden: post.is_hidden || false,
     is_deleted: post.is_deleted || false,
     is_notice: post.is_notice || false,

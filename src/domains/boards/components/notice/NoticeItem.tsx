@@ -7,9 +7,12 @@ import { Calendar as CalendarIcon, Eye as EyeIcon } from 'lucide-react';
 import type { NoticeType } from '@/domains/boards/types/post';
 import { NoticeBadge } from './NoticeBadge';
 import AuthorLink from '@/domains/user/components/AuthorLink';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { siteConfig } from '@/shared/config';
+
+// 4590 표준: placeholder 상수
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
+const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
 
 /**
  * NoticeList/NoticeItem에서 사용하는 게시글 타입
@@ -32,11 +35,14 @@ export interface NoticeListPost {
   author_id?: string;
   author_icon_url?: string | null;
   author_level?: number;
+  author_exp?: number;
   author_nickname?: string;
   author_public_id?: string | null;
   profiles?: { nickname: string | null; public_id?: string | null; id?: string } | null;
   views?: number | null;
   likes?: number | null;
+  // 4590 표준: 이미지 Storage URL
+  boardLogoUrl?: string;
 }
 
 interface NoticeItemProps {
@@ -70,18 +76,16 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
     const boardLinkUrl = `/boards/${boardSlug}`;
 
     if (teamId || leagueId) {
+      const logoUrl = notice.boardLogoUrl || (teamId ? TEAM_PLACEHOLDER : LEAGUE_PLACEHOLDER);
       return (
         <Link href={boardLinkUrl} className="flex items-center hover:underline">
           <div className="relative w-5 h-5 mr-1">
-            <UnifiedSportsImage
-              imageId={teamId || leagueId || 0}
-              imageType={teamId ? ImageType.Teams : ImageType.Leagues}
+            <UnifiedSportsImageClient
+              src={logoUrl}
               alt={notice.board?.name || notice.board_name || ''}
               width={20}
               height={20}
               className="object-contain w-5 h-5"
-              loading="lazy"
-              priority={false}
             />
           </div>
           <span className="text-xs text-gray-700 dark:text-gray-300 truncate"
@@ -112,7 +116,7 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
         </Link>
       );
     }
-  }, [showBoardName, notice.notice_type, notice.is_must_read, notice.team_id, notice.league_id, notice.board?.name, notice.board_name, boardSlug]);
+  }, [showBoardName, notice.notice_type, notice.is_must_read, notice.team_id, notice.league_id, notice.board?.name, notice.board_name, notice.boardLogoUrl, boardSlug]);
 
   // 모바일 뷰
   if (isMobile) {
@@ -149,6 +153,7 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
                     oddsUserId={notice.author_id || notice.profiles?.id}
                     iconUrl={notice.author_icon_url}
                     level={notice.author_level || 1}
+                    exp={notice.author_exp}
                     iconSize={20}
                   />
                   <span className="mx-1 flex-shrink-0">|</span>
@@ -205,6 +210,7 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
           oddsUserId={notice.author_id || notice.profiles?.id}
           iconUrl={notice.author_icon_url}
           level={notice.author_level || 1}
+          exp={notice.author_exp}
           iconSize={20}
           className="justify-start"
         />

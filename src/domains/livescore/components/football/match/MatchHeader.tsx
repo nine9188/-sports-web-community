@@ -1,11 +1,13 @@
 'use client';
 
-import React, { memo, useMemo } from 'react';
+import React, { memo, useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 
 import { formatDateToKorean } from '@/shared/utils/dateUtils';
+
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
+const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
 import { ErrorState } from '@/domains/livescore/components/common/CommonComponents';
 import { MatchEvent } from '@/domains/livescore/types/match';
 import { getLeagueName } from '@/domains/livescore/constants/league-mappings';
@@ -70,6 +72,10 @@ interface MatchDataType {
 interface MatchHeaderProps {
   initialData: MatchFullDataResponse;
   playerKoreanNames?: PlayerKoreanNames;
+  // 4590 표준: 서버에서 전달받은 이미지 URL
+  teamLogoUrls?: Record<number, string>;
+  leagueLogoUrl?: string;
+  leagueLogoDarkUrl?: string;  // 다크모드 리그 로고
 }
 
 /**
@@ -78,10 +84,38 @@ interface MatchHeaderProps {
  * 서버에서 미리 로드된 데이터(initialData)를 받아 헤더를 렌더링합니다.
  * Context 의존성 제거로 더 단순하고 예측 가능한 동작.
  */
-const MatchHeader = memo(({ initialData, playerKoreanNames = {} }: MatchHeaderProps) => {
+const MatchHeader = memo(({ initialData, playerKoreanNames = {}, teamLogoUrls = {}, leagueLogoUrl, leagueLogoDarkUrl }: MatchHeaderProps) => {
   // initialData에서 데이터 추출
   const matchData = initialData.matchData;
   const eventsData = initialData.events;
+
+  // 다크모드 감지
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    // 초기 다크모드 상태 확인
+    setIsDark(document.documentElement.classList.contains('dark'));
+
+    // 다크모드 변경 감지
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          setIsDark(document.documentElement.classList.contains('dark'));
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, { attributes: true });
+    return () => observer.disconnect();
+  }, []);
+
+  // 4590 표준: URL 헬퍼 함수
+  const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
+  // 다크모드에 따른 리그 로고 URL 선택
+  const getLeagueLogo = () => {
+    const effectiveUrl = isDark && leagueLogoDarkUrl ? leagueLogoDarkUrl : leagueLogoUrl;
+    return effectiveUrl || LEAGUE_PLACEHOLDER;
+  };
 
   // 타입 캐스팅을 가장 먼저 처리
   const typedMatchData = matchData as MatchDataType;
@@ -213,9 +247,8 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {} }: MatchHeaderPr
           <div className="flex items-center gap-1.5 md:gap-2 md:w-1/3 md:border-r md:border-r-black/5 md:dark:border-r-white/10 md:pr-4">
             <div className="relative w-4 h-4 md:w-6 md:h-6 flex items-center justify-center flex-shrink-0">
               {league?.id && (
-                <UnifiedSportsImage
-                  imageId={league.id}
-                  imageType={ImageType.Leagues}
+                <UnifiedSportsImageClient
+                  src={getLeagueLogo()}
                   alt={league?.name || ''}
                   width={24}
                   height={24}
@@ -259,9 +292,8 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {} }: MatchHeaderPr
               {homeTeam?.id ? (
                 <Link href={`/livescore/football/team/${homeTeam.id}`} className="group">
                   <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-1 md:mb-2 flex items-center justify-center">
-                    <UnifiedSportsImage
-                      imageId={homeTeam.id}
-                      imageType={ImageType.Teams}
+                    <UnifiedSportsImageClient
+                      src={getTeamLogo(homeTeam.id)}
                       alt={homeTeam.name || ''}
                       width={48}
                       height={48}
@@ -278,9 +310,8 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {} }: MatchHeaderPr
                 <>
                   <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-1 md:mb-2 flex items-center justify-center">
                     {homeTeam?.id && (
-                      <UnifiedSportsImage
-                        imageId={homeTeam.id}
-                        imageType={ImageType.Teams}
+                      <UnifiedSportsImageClient
+                        src={getTeamLogo(homeTeam.id)}
                         alt={homeTeam.name || ''}
                         width={48}
                         height={48}
@@ -312,9 +343,8 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {} }: MatchHeaderPr
               {awayTeam?.id ? (
                 <Link href={`/livescore/football/team/${awayTeam.id}`} className="group">
                   <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-1 md:mb-2 flex items-center justify-center">
-                    <UnifiedSportsImage
-                      imageId={awayTeam.id}
-                      imageType={ImageType.Teams}
+                    <UnifiedSportsImageClient
+                      src={getTeamLogo(awayTeam.id)}
                       alt={awayTeam.name || ''}
                       width={48}
                       height={48}
@@ -331,9 +361,8 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {} }: MatchHeaderPr
                 <>
                   <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-1 md:mb-2 flex items-center justify-center">
                     {awayTeam?.id && (
-                      <UnifiedSportsImage
-                        imageId={awayTeam.id}
-                        imageType={ImageType.Teams}
+                      <UnifiedSportsImageClient
+                        src={getTeamLogo(awayTeam.id)}
                         alt={awayTeam.name || ''}
                         width={48}
                         height={48}
@@ -360,9 +389,8 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {} }: MatchHeaderPr
                 <div className="md:hidden py-1 font-semibold mb-2 text-sm flex items-center text-gray-900 dark:text-[#F0F0F0]">
                   <div className="relative w-4 h-4 mr-2 flex items-center justify-center">
                     {homeTeam?.id && (
-                      <UnifiedSportsImage
-                        imageId={homeTeam.id}
-                        imageType={ImageType.Teams}
+                      <UnifiedSportsImageClient
+                        src={getTeamLogo(homeTeam.id)}
                         alt={homeTeam.name || ''}
                         width={16}
                         height={16}
@@ -409,9 +437,8 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {} }: MatchHeaderPr
                 <div className="md:hidden py-1 font-semibold mb-2 text-sm flex items-center text-gray-900 dark:text-[#F0F0F0]">
                   <div className="relative w-4 h-4 mr-2 flex items-center justify-center">
                     {awayTeam?.id && (
-                      <UnifiedSportsImage
-                        imageId={awayTeam.id}
-                        imageType={ImageType.Teams}
+                      <UnifiedSportsImageClient
+                        src={getTeamLogo(awayTeam.id)}
                         alt={awayTeam.name || ''}
                         width={16}
                         height={16}

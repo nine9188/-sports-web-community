@@ -4,8 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Eye } from 'lucide-react';
 import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { siteConfig } from '@/shared/config';
 import { renderContentTypeIcons } from '@/domains/boards/components/post/postlist/components/shared/PostRenderers';
 import type { RelatedPost } from '@/domains/livescore/actions/match/relatedPosts';
@@ -34,11 +33,10 @@ export default function RelatedPosts({
                 className="block px-3 py-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0] overflow-hidden"
               >
                 <div className="flex items-center text-xs gap-1">
-                  {post.board_team_id || post.board_league_id ? (
+                  {post.boardLogoUrl ? (
                     <div className="relative w-5 h-5 flex-shrink-0">
-                      <UnifiedSportsImage
-                        imageId={post.board_team_id || post.board_league_id || 0}
-                        imageType={post.board_team_id ? ImageType.Teams : ImageType.Leagues}
+                      <UnifiedSportsImageClient
+                        src={post.boardLogoUrl}
                         alt={post.board_name}
                         width={20}
                         height={20}

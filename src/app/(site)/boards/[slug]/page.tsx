@@ -142,6 +142,9 @@ export default async function BoardDetailPage({
         popularPosts={searchQuery ? undefined : result.popularPosts}
         notices={searchQuery ? undefined : result.notices}
         searchQuery={searchQuery}
+        teamLogoUrl={result.teamLogoUrl}
+        leagueLogoUrl={result.leagueLogoUrl}
+        leagueLogoUrlDark={result.leagueLogoUrlDark}
       />
     );
   } catch (error) {

@@ -2,6 +2,7 @@
 
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { PostMetadata, BoardInfoDetail } from '../types';
+import { getTeamLogoUrls, getLeagueLogoUrls } from '@/domains/livescore/actions/images';
 
 /**
  * 게시글의 메타데이터를 조회합니다.
@@ -71,29 +72,29 @@ export async function getPostsMetadata(
       if (board.league_id) leagueIds.push(board.league_id);
     });
 
-    // 2단계: 팀/리그 로고 병렬 조회 (필요한 경우만)
+    // 2단계: 팀/리그 로고 병렬 조회 (4590 표준: Storage URL)
     const uniqueTeamIds = [...new Set(teamIds)];
     const uniqueLeagueIds = [...new Set(leagueIds)];
 
-    const [teamResult, leagueResult] = await Promise.all([
+    const [teamUrlMap, leagueUrlMap] = await Promise.all([
       uniqueTeamIds.length > 0
-        ? supabase.from('teams').select('id, logo').in('id', uniqueTeamIds)
-        : Promise.resolve({ data: [] }),
+        ? getTeamLogoUrls(uniqueTeamIds)
+        : Promise.resolve({}),
       uniqueLeagueIds.length > 0
-        ? supabase.from('leagues').select('id, logo').in('id', uniqueLeagueIds)
-        : Promise.resolve({ data: [] })
+        ? getLeagueLogoUrls(uniqueLeagueIds)
+        : Promise.resolve({})
     ]);
 
-    // 로고 매핑
+    // 로고 매핑 (Record -> Map 변환)
     const teamLogos = new Map<number, string>();
     const leagueLogos = new Map<number, string>();
 
-    teamResult.data?.forEach(team => {
-      if (team.logo) teamLogos.set(team.id, team.logo);
+    Object.entries(teamUrlMap).forEach(([id, url]) => {
+      teamLogos.set(Number(id), url);
     });
 
-    leagueResult.data?.forEach(league => {
-      if (league.logo) leagueLogos.set(league.id, league.logo);
+    Object.entries(leagueUrlMap).forEach(([id, url]) => {
+      leagueLogos.set(Number(id), url);
     });
 
     return {

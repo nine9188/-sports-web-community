@@ -1,17 +1,24 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { format } from 'date-fns';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { ko } from 'date-fns/locale';
 import { CalendarIcon, Search } from 'lucide-react';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import Calendar from '@/shared/components/Calendar';
 import type { MatchData } from '@/domains/livescore/actions/footballApi';
 import Spinner from '@/shared/components/Spinner';
 import { Button } from '@/shared/components/ui';
 import { useMatchesByDate } from '@/domains/boards/hooks/useMatchFormQueries';
+import { DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
+import { getTeamById } from '@/domains/livescore/constants/teams';
+import { LEAGUE_NAMES_MAP } from '@/domains/livescore/constants/league-mappings';
+
+// 4590 표준: placeholder 및 Storage URL
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
+const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
+const SUPABASE_URL = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co';
 
 // 경기 데이터를 위한 인터페이스
 interface League {
@@ -73,12 +80,38 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
   const dropdownRef = useRef<HTMLDivElement>(null);
   const calendarButtonRef = useRef<HTMLButtonElement>(null);
 
-  // React Query로 경기 데이터 관리
+  // 4590 표준: 다크모드 감지
+  const [isDark, setIsDark] = useState(false);
+  useEffect(() => {
+    const checkDark = () => setIsDark(document.documentElement.classList.contains('dark'));
+    checkDark();
+    const observer = new MutationObserver(checkDark);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
+  // React Query로 경기 데이터 관리 (4590 표준: Storage URL 포함)
   const formattedDate = format(selectedDate, 'yyyy-MM-dd');
   const {
     data: matches = [],
     isLoading: loading,
+    teamLogoUrls,
   } = useMatchesByDate(formattedDate, { enabled: isOpen });
+
+  // 4590 표준: URL 헬퍼 함수 (리그는 다크모드 지원, 직접 Storage URL 생성)
+  const getTeamLogo = (id: number | string) => {
+    const numId = typeof id === 'string' ? parseInt(id, 10) : id;
+    return teamLogoUrls[numId] || TEAM_PLACEHOLDER;
+  };
+  const getLeagueLogo = (id: number | string) => {
+    const numId = typeof id === 'string' ? parseInt(id, 10) : id;
+    if (!numId) return LEAGUE_PLACEHOLDER;
+    const hasDarkMode = DARK_MODE_LEAGUE_IDS.includes(numId);
+    if (isDark && hasDarkMode) {
+      return `${SUPABASE_URL}/storage/v1/object/public/leagues/${numId}-1.png`;
+    }
+    return `${SUPABASE_URL}/storage/v1/object/public/leagues/${numId}.png`;
+  };
 
   // 외부 클릭 감지 - 캘린더가 열려있을 때는 무시
   useClickOutside(dropdownRef, onCancel, isOpen && !calendar);
@@ -127,8 +160,10 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
       />
       <div
         ref={dropdownRef}
-        className="z-50 bg-white dark:bg-[#1D1D1D] rounded-lg shadow-lg border border-black/7 dark:border-white/10 overflow-hidden fixed sm:absolute left-1/2 top-1/2 sm:-left-32 sm:top-full -translate-x-1/2 -translate-y-1/2 sm:translate-x-0 sm:translate-y-0 w-[95vw] max-w-lg sm:w-[400px]"
+        className="z-50 bg-white dark:bg-[#1D1D1D] rounded-lg shadow-lg border border-black/7 dark:border-white/10 overflow-hidden fixed sm:absolute left-1/2 top-1/2 sm:-left-64 sm:top-full -translate-x-1/2 -translate-y-1/2 sm:translate-x-0 sm:translate-y-0 w-[95vw] max-w-xl sm:w-[520px]"
         style={{ marginTop: '0.5rem' }}
+        onClick={(e) => e.stopPropagation()}
+        onSubmit={(e) => e.preventDefault()}
       >
         <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center">
           <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">경기 결과 선택</h3>
@@ -152,7 +187,7 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
                     }
                     setCalendar(!calendar);
                   }}
-                  className="w-full flex items-center px-3 py-1.5 text-xs justify-start"
+                  className="w-full h-9 flex items-center px-3 text-xs justify-start"
                 >
                   <CalendarIcon className="mr-2 h-3 w-3 text-gray-500 dark:text-gray-400" />
                   <span>{format(selectedDate, 'PPP (eee)', { locale: ko })}</span>
@@ -161,15 +196,15 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
               
               {/* 검색 입력 필드 */}
               <div className="relative flex-1">
-                <div className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400">
-                  <Search size={12} />
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                  <Search size={14} />
                 </div>
                 <input
                   type="text"
                   placeholder="리그 또는 팀 검색..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-7 pr-2 py-1.5 border border-black/7 dark:border-white/10 rounded-md text-xs bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors"
+                  className="w-full h-9 pl-8 pr-3 border border-black/7 dark:border-white/10 rounded-md text-xs bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors"
                 />
               </div>
             </div>
@@ -193,23 +228,24 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
                   {/* 리그 헤더 */}
                   <div className="flex items-center px-2 py-1.5 bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 rounded-md">
                     <div className="w-5 h-5 relative mr-2 flex-shrink-0">
-                      <UnifiedSportsImage
-                        imageId={group.league.id}
-                        imageType={ImageType.Leagues}
+                      <UnifiedSportsImageClient
+                        src={getLeagueLogo(group.league.id)}
                         alt={group.league.name}
                         width={20}
                         height={20}
                         className="object-contain"
                       />
                     </div>
-                    <h3 className="font-medium text-xs text-gray-900 dark:text-[#F0F0F0]">{group.league.name}</h3>
+                    <h3 className="font-medium text-xs text-gray-900 dark:text-[#F0F0F0]">
+                      {LEAGUE_NAMES_MAP[typeof group.league.id === 'number' ? group.league.id : Number(group.league.id)] || group.league.name}
+                    </h3>
                   </div>
                   
                   <div className="space-y-1.5">
                     {group.matches.map((match: Match) => (
-                      <Button
+                      <button
+                        type="button"
                         key={match.id || match.fixture?.id}
-                        variant="ghost"
                         onClick={() => {
                           const matchId = (match.id || match.fixture?.id)?.toString() || '';
                           // MatchData 타입에 맞게 변환
@@ -254,50 +290,64 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
                           onMatchAdd(matchId, matchData);
                           onCancel();
                         }}
-                        className="w-full text-left bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-md p-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] h-auto"
+                        className="w-full block bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-md p-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors"
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center flex-1 min-w-0">
-                            <div className="w-6 h-6 flex items-center justify-center mr-2 flex-shrink-0">
-                              <UnifiedSportsImage
-                                imageId={match.teams.home.id}
-                                imageType={ImageType.Teams}
-                                alt={match.teams.home.name}
-                                width={24}
-                                height={24}
-                                className="w-6 h-6 object-contain"
-                              />
-                            </div>
-                            <span className="text-xs truncate">{match.teams.home.name}</span>
-                          </div>
+                        {(() => {
+                          // 팀 한국어 이름 가져오기
+                          const homeTeamId = typeof match.teams.home.id === 'number' ? match.teams.home.id : Number(match.teams.home.id);
+                          const awayTeamId = typeof match.teams.away.id === 'number' ? match.teams.away.id : Number(match.teams.away.id);
+                          const homeTeamData = getTeamById(homeTeamId);
+                          const awayTeamData = getTeamById(awayTeamId);
+                          const homeTeamName = homeTeamData?.name_ko || match.teams.home.name;
+                          const awayTeamName = awayTeamData?.name_ko || match.teams.away.name;
 
-                          <div className="mx-3 px-2 py-0.5 bg-[#EAEAEA] dark:bg-[#333333] rounded text-xs font-semibold flex-shrink-0 text-gray-900 dark:text-[#F0F0F0]">
-                            {match.goals.home ?? '-'} - {match.goals.away ?? '-'}
-                          </div>
+                          return (
+                            <div className="flex items-center">
+                              {/* 홈팀 영역 */}
+                              <div className="flex-1 flex items-center min-w-0">
+                                <div className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0">
+                                  <UnifiedSportsImageClient
+                                    src={getTeamLogo(match.teams.home.id)}
+                                    alt={homeTeamName}
+                                    width={24}
+                                    height={24}
+                                    className="w-5 h-5 sm:w-6 sm:h-6 object-contain"
+                                  />
+                                </div>
+                                <span className="text-[11px] sm:text-xs truncate ml-1.5">{homeTeamName}</span>
+                              </div>
 
-                          <div className="flex items-center flex-1 justify-end min-w-0">
-                            <span className="text-xs truncate">{match.teams.away.name}</span>
-                            <div className="w-6 h-6 flex items-center justify-center ml-2 flex-shrink-0">
-                              <UnifiedSportsImage
-                                imageId={match.teams.away.id}
-                                imageType={ImageType.Teams}
-                                alt={match.teams.away.name}
-                                width={24}
-                                height={24}
-                                className="w-6 h-6 object-contain"
-                              />
+                              {/* 스코어 + 상태 (가운데) */}
+                              <div className="flex flex-col items-center flex-shrink-0 mx-2">
+                                <div className="px-2 sm:px-3 py-0.5 bg-[#EAEAEA] dark:bg-[#333333] rounded text-[11px] sm:text-xs font-semibold text-gray-900 dark:text-[#F0F0F0]">
+                                  {match.goals.home ?? '-'} - {match.goals.away ?? '-'}
+                                </div>
+                                <div className="text-[9px] sm:text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 whitespace-nowrap">
+                                  {match.status.code === 'FT' ? '경기 종료' :
+                                   match.status.code === 'NS' ? '경기 예정' :
+                                   match.status.code === 'LIVE' || match.status.code === '1H' || match.status.code === '2H' ? (
+                                    <span className="text-green-600 dark:text-green-400 font-medium">진행 중{match.status.elapsed && ` (${match.status.elapsed}')`}</span>
+                                   ) : match.status.name || ''}
+                                </div>
+                              </div>
+
+                              {/* 원정팀 영역 */}
+                              <div className="flex-1 flex items-center justify-end min-w-0">
+                                <span className="text-[11px] sm:text-xs truncate mr-1 text-right">{awayTeamName}</span>
+                                <div className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0">
+                                  <UnifiedSportsImageClient
+                                    src={getTeamLogo(match.teams.away.id)}
+                                    alt={awayTeamName}
+                                    width={24}
+                                    height={24}
+                                    className="w-5 h-5 sm:w-6 sm:h-6 object-contain"
+                                  />
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        </div>
-                        
-                        <div className="text-[10px] text-gray-500 mt-1.5">
-                          {match.status.code === 'FT' ? '경기 종료' :
-                           match.status.code === 'NS' ? '경기 예정' :
-                           match.status.code === 'LIVE' || match.status.code === '1H' || match.status.code === '2H' ? (
-                            <span className="text-green-600 font-medium">진행 중 {match.status.elapsed && `(${match.status.elapsed}')`}</span>
-                           ) : match.status.name || ''}
-                        </div>
-                      </Button>
+                          );
+                        })()}
+                      </button>
                     ))}
                   </div>
                 </div>

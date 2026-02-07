@@ -98,6 +98,10 @@ interface BoardDetailLayoutProps {
   viewType?: "text" | "image-table" | "list";
   // 검색어 (검색 모드일 때)
   searchQuery?: string;
+  // 4590 표준: 이미지 Storage URL
+  teamLogoUrl?: string;
+  leagueLogoUrl?: string;
+  leagueLogoUrlDark?: string;
 }
 
 // 메모이제이션된 컴포넌트들
@@ -128,6 +132,10 @@ export default function BoardDetailLayout({
   listVariant = "text",
   viewType: propViewType,
   searchQuery,
+  // 4590 표준: 이미지 Storage URL
+  teamLogoUrl,
+  leagueLogoUrl,
+  leagueLogoUrlDark,
 }: BoardDetailLayoutProps) {
   const viewType = propViewType || boardData.view_type;
 
@@ -168,6 +176,7 @@ export default function BoardDetailLayout({
             boardSlug={slug}
             isLoggedIn={isLoggedIn}
             className=""
+            teamLogoUrl={teamLogoUrl}
           />
           {/* 공지사항 - TeamInfo 바로 아래 붙임 */}
           {notices && notices.length > 0 && (
@@ -184,6 +193,8 @@ export default function BoardDetailLayout({
             boardSlug={slug}
             isLoggedIn={isLoggedIn}
             className=""
+            leagueLogoUrl={leagueLogoUrl}
+            leagueLogoUrlDark={leagueLogoUrlDark}
           />
           {/* 공지사항 - LeagueInfo 바로 아래 붙임 */}
           {notices && notices.length > 0 && (

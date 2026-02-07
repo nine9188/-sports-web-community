@@ -26,6 +26,7 @@ export interface League {
   name: string;
   icon?: string;
   logo?: string;
+  logoDark?: string;  // 다크모드 리그 로고
   leagueIdNumber?: number;
   dateLabel?: 'today' | 'tomorrow'; // 오늘/내일 구분
   matches: Match[];

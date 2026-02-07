@@ -1,17 +1,24 @@
 'use client';
 
-import { useMemo, memo } from 'react';
+import { useMemo, memo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { PlayerStatistic } from '@/domains/livescore/types/player';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Container, ContainerHeader, ContainerContent } from '@/shared/components/ui';
 import { EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 
+// 4590 표준: placeholder 상수
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
+const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
+
 interface PlayerStatsProps {
   statistics: PlayerStatistic[];
+  // 4590 표준: 이미지 Storage URL
+  teamLogoUrls?: Record<number, string>;
+  leagueLogoUrls?: Record<number, string>;
+  leagueLogoDarkUrls?: Record<number, string>;
 }
 
 // 포지션 한글 매핑
@@ -23,48 +30,34 @@ const POSITION_MAPPINGS: Record<string, string> = {
   'Forward': '공격수'
 };
 
-// 리그 로고 컴포넌트
-const LeagueLogo = memo(({ name, leagueId }: { name: string; leagueId?: number }) => {
+// 4590 표준: 리그 로고 컴포넌트
+const LeagueLogo = memo(({ name, logoUrl }: { name: string; logoUrl: string }) => {
   return (
     <div className="w-6 h-6 relative flex-shrink-0">
-      {leagueId && leagueId > 0 ? (
-        <UnifiedSportsImage
-          imageId={leagueId}
-          imageType={ImageType.Leagues}
-          alt={name || '리그'}
-          width={24}
-          height={24}
-          className="w-5 h-5 md:w-6 md:h-6 object-contain"
-        />
-      ) : (
-        <div className="w-5 h-5 md:w-6 md:h-6 bg-[#EAEAEA] dark:bg-[#333333] flex items-center justify-center text-gray-400 dark:text-gray-500 text-xs rounded">
-          리그
-        </div>
-      )}
+      <UnifiedSportsImageClient
+        src={logoUrl}
+        alt={name || '리그'}
+        width={24}
+        height={24}
+        className="w-5 h-5 md:w-6 md:h-6 object-contain"
+      />
     </div>
   );
 });
 
 LeagueLogo.displayName = 'LeagueLogo';
 
-// 팀 로고 컴포넌트
-const TeamLogo = memo(({ name, teamId }: { name: string; teamId?: number }) => {
+// 4590 표준: 팀 로고 컴포넌트
+const TeamLogo = memo(({ name, logoUrl }: { name: string; logoUrl: string }) => {
   return (
     <div className="w-6 h-6 relative flex-shrink-0">
-      {teamId && teamId > 0 ? (
-        <UnifiedSportsImage
-          imageId={teamId}
-          imageType={ImageType.Teams}
-          alt={name || '팀'}
-          width={24}
-          height={24}
-          className="w-5 h-5 md:w-6 md:h-6 object-contain"
-        />
-      ) : (
-        <div className="w-5 h-5 md:w-6 md:h-6 bg-[#EAEAEA] dark:bg-[#333333] flex items-center justify-center text-gray-400 dark:text-gray-500 text-xs rounded">
-          팀
-        </div>
-      )}
+      <UnifiedSportsImageClient
+        src={logoUrl}
+        alt={name || '팀'}
+        width={24}
+        height={24}
+        className="w-5 h-5 md:w-6 md:h-6 object-contain"
+      />
     </div>
   );
 });
@@ -87,7 +80,43 @@ function getLeaguePriority(leagueId: number): number {
   return 5;
 }
 
-export default function PlayerStats({ statistics: initialStatistics }: PlayerStatsProps) {
+export default function PlayerStats({
+  statistics: initialStatistics,
+  teamLogoUrls = {},
+  leagueLogoUrls = {},
+  leagueLogoDarkUrls = {}
+}: PlayerStatsProps) {
+  // 4590 표준: 다크모드 감지
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    // 초기 다크모드 상태 확인
+    const checkDarkMode = () => {
+      setIsDark(document.documentElement.classList.contains('dark'));
+    };
+    checkDarkMode();
+
+    // MutationObserver로 다크모드 변경 감지
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          checkDarkMode();
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, { attributes: true });
+    return () => observer.disconnect();
+  }, []);
+
+  // 4590 표준: URL 헬퍼 함수
+  const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
+  const getLeagueLogo = (id: number) => {
+    if (isDark && leagueLogoDarkUrls[id]) {
+      return leagueLogoDarkUrls[id];
+    }
+    return leagueLogoUrls[id] || LEAGUE_PLACEHOLDER;
+  };
   const sortedStats = useMemo(() => {
     if (!initialStatistics || initialStatistics.length === 0) return [];
 
@@ -127,7 +156,7 @@ export default function PlayerStats({ statistics: initialStatistics }: PlayerSta
                 <Container className="bg-white dark:bg-[#1D1D1D]">
                   <ContainerHeader>
                     <div className="flex items-center gap-2 flex-1">
-                      <LeagueLogo name={stat.league.name} leagueId={stat.league.id} />
+                      <LeagueLogo name={stat.league.name} logoUrl={getLeagueLogo(stat.league.id)} />
                       <div className="flex items-center">
                         <h3 className="font-semibold text-sm text-gray-900 dark:text-[#F0F0F0]">
                           {getLeagueKoreanName(stat.league.name) || stat.league.name}
@@ -138,7 +167,7 @@ export default function PlayerStats({ statistics: initialStatistics }: PlayerSta
                         href={`/livescore/football/team/${stat.team.id}`}
                         className="flex items-center ml-auto gap-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors px-2 py-1 rounded outline-none focus:outline-none"
                       >
-                        <TeamLogo name={stat.team.name} teamId={stat.team.id} />
+                        <TeamLogo name={stat.team.name} logoUrl={getTeamLogo(stat.team.id)} />
                         <span className="font-medium text-sm text-gray-900 dark:text-[#F0F0F0]">
                           {getTeamById(stat.team.id)?.name_ko || stat.team.name}
                         </span>
@@ -341,7 +370,7 @@ export default function PlayerStats({ statistics: initialStatistics }: PlayerSta
                 <Container className="bg-white dark:bg-[#1D1D1D]">
                   <ContainerHeader>
                     <div className="flex items-center gap-2 flex-1">
-                      <LeagueLogo name={stat.league.name} leagueId={stat.league.id} />
+                      <LeagueLogo name={stat.league.name} logoUrl={getLeagueLogo(stat.league.id)} />
                       <div className="flex items-center">
                         <h3 className="font-semibold text-sm text-gray-900 dark:text-[#F0F0F0]">
                           {getLeagueKoreanName(stat.league.name) || stat.league.name}
@@ -352,7 +381,7 @@ export default function PlayerStats({ statistics: initialStatistics }: PlayerSta
                         href={`/livescore/football/team/${stat.team.id}`}
                         className="flex items-center ml-auto gap-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors px-2 py-1 rounded outline-none focus:outline-none"
                       >
-                        <TeamLogo name={stat.team.name} teamId={stat.team.id} />
+                        <TeamLogo name={stat.team.name} logoUrl={getTeamLogo(stat.team.id)} />
                         <span className="font-medium text-sm text-gray-900 dark:text-[#F0F0F0]">
                           {getTeamById(stat.team.id)?.name_ko || stat.team.name}
                         </span>

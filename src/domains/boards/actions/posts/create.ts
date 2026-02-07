@@ -9,9 +9,25 @@ import { getSupabaseAction } from '@/shared/lib/supabase/server';
 import { extractCardLinks } from '@/domains/boards/utils/post/extractCardLinks';
 import type { PostActionResponse } from './utils';
 
+// 생성된 게시글 타입
+interface CreatedPost {
+  id: string;
+  post_number: number;
+  title: string;
+  content: unknown;
+  board_id: string | null;
+  user_id: string | null;
+  board?: {
+    id: string;
+    name: string;
+    slug: string;
+  } | null;
+  [key: string]: unknown;
+}
+
 type CreatePostResult = {
   success: true;
-  post: Record<string, unknown>;
+  post: CreatedPost;
 } | {
   success: false;
   error: string;
@@ -83,6 +99,7 @@ async function createPostInternal(params: {
     // 게시글 생성
     const { data, error } = await supabase
       .from('posts')
+      // @ts-expect-error - insertData는 동적으로 구성되어 타입 추론이 어려움
       .insert(insertData)
       .select('*, board:boards(id, name, slug)')
       .single();
@@ -97,51 +114,55 @@ async function createPostInternal(params: {
     }
 
     // 카드 링크 저장 (실패해도 게시글 생성은 성공)
+    // post_card_links 테이블은 Supabase 타입 생성 후 추가되어 타입 미포함
     try {
       const cardLinks = extractCardLinks(data.content);
       if (cardLinks.length > 0) {
-        await supabase
-          .from('post_card_links')
-          .insert(cardLinks.map(link => ({ ...link, post_id: data.id })));
+        const cardLinksData = cardLinks.map(link => ({ ...link, post_id: data.id }));
+        // 타입 정의에 없는 테이블 접근을 위한 우회
+        const supabaseAny = supabase as unknown as { from: (table: string) => { insert: (data: unknown) => Promise<unknown> } };
+        await supabaseAny.from('post_card_links').insert(cardLinksData);
       }
     } catch (cardErr) {
       console.error('카드 링크 저장 실패:', cardErr);
     }
 
-    // 로그 및 보상 처리 (실패해도 게시글 생성은 성공)
-    try {
-      await logUserAction('POST_CREATE', `게시글 생성: ${title} (게시판: ${boardData.name})`, userId, {
+    // 캐시 갱신 (즉시 실행 - 사용자 경험에 중요)
+    const boardSlug = boardData.slug || boardId;
+    revalidatePath(`/boards/${boardSlug}`);
+    revalidatePath('/boards');
+
+    // 로그 및 보상 처리 (병렬 실행 - 응답 차단하지 않음)
+    // 실패해도 게시글 생성은 이미 성공했으므로 무시
+    Promise.all([
+      // 로그 기록
+      logUserAction('POST_CREATE', `게시글 생성: ${title} (게시판: ${boardData.name})`, userId, {
         postId: data.id,
         postNumber: data.post_number,
         boardId,
         boardName: boardData.name,
         boardSlug: boardData.slug,
         title
-      });
-
-      const activityTypes = await getActivityTypeValues();
-      await rewardUserActivity(userId, activityTypes.POST_CREATION, data.id);
-
-      // 첫 게시글 마일스톤 체크 (추천 시스템)
-      const { count: postCount } = await supabase
+      }),
+      // 보상 처리
+      getActivityTypeValues().then(activityTypes =>
+        rewardUserActivity(userId, activityTypes.POST_CREATION, data.id)
+      ),
+      // 첫 게시글 마일스톤 체크
+      supabase
         .from('posts')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .then(({ count: postCount }) => {
+          if (postCount === 1) {
+            return checkReferralMilestone(userId, 'first_post');
+          }
+        })
+    ]).catch(err => {
+      console.error('게시글 생성 후처리 실패 (무시됨):', err);
+    });
 
-      if (postCount === 1) {
-        // 첫 게시글이면 마일스톤 체크
-        await checkReferralMilestone(userId, 'first_post');
-      }
-    } catch (logErr) {
-      console.error('게시글 생성 로그/보상 처리 실패:', logErr);
-    }
-
-    // 캐시 갱신
-    const boardSlug = boardData.slug || boardId;
-    revalidatePath(`/boards/${boardSlug}`);
-    revalidatePath('/boards');
-
-    return { success: true, post: data };
+    return { success: true, post: data as CreatedPost };
   } catch (error) {
     console.error('[createPost] 예외 발생:', error);
     await logError('POST_CREATE_ERROR', error instanceof Error ? error : new Error(String(error)), userId, { boardId, title });
@@ -189,7 +210,7 @@ export async function createPost(formData: FormData): Promise<CreatePostResult> 
 
     // 폼 데이터 추출
     const title = formData.get('title') as string;
-    let content = formData.get('content') as string;
+    const content = formData.get('content') as string;
     const boardId = formData.get('boardId') as string;
 
     if (!title || !content || !boardId) {

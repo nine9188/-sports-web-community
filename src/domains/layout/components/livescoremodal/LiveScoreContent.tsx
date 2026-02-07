@@ -125,7 +125,15 @@ export default function LiveScoreContent({ selectedDate, onClose, initialData }:
   return (
     <div className="p-4 space-y-3">
       {matches.map(match => (
-        <MatchItem key={`match-${match.id}`} match={match} onClose={onClose} />
+        <MatchItem
+          key={`match-${match.id}`}
+          match={match}
+          onClose={onClose}
+          leagueLogoUrl={match.league?.logo || undefined}
+          leagueLogoDarkUrl={match.league?.logoDark || undefined}
+          homeTeamLogoUrl={match.teams?.home?.logo || undefined}
+          awayTeamLogoUrl={match.teams?.away?.logo || undefined}
+        />
       ))}
     </div>
   );

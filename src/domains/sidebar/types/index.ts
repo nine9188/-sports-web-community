@@ -67,6 +67,8 @@ export interface StandingsData {
       lose: number;
     };
   }[]>;
+  // 4590 표준: 이미지 Storage URL
+  teamLogoUrls?: Record<number, string>;
 }
 
 // 사이드바 컴포넌트 공통 props
@@ -94,6 +96,7 @@ export interface TopicPost {
   league_id: number | null;
   team_logo: string | null;
   league_logo: string | null;
+  league_logo_dark: string | null;
   content?: string;
 }
 

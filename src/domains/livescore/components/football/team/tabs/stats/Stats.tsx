@@ -13,9 +13,12 @@ interface StatsProps {
   teamStats: TeamStatsData | undefined;
   isLoading: boolean;
   error: string | null;
+  // 4590 표준: 이미지 Storage URL
+  leagueLogoUrls?: Record<number, string>;
+  leagueLogoDarkUrls?: Record<number, string>;  // 다크모드 리그 로고
 }
 
-export default function Stats({ teamStats, isLoading, error }: StatsProps) {
+export default function Stats({ teamStats, isLoading, error, leagueLogoUrls = {}, leagueLogoDarkUrls = {} }: StatsProps) {
   // 데이터 존재 여부
   const hasStats = teamStats && Object.keys(teamStats).length > 0;
 
@@ -34,7 +37,11 @@ export default function Stats({ teamStats, isLoading, error }: StatsProps) {
   return (
     <div className="space-y-4">
       {/* 기본 통계 카드 섹션 */}
-      <BasicStatsCards stats={teamStats} />
+      <BasicStatsCards
+        stats={teamStats}
+        leagueLogoUrl={teamStats.league?.id ? leagueLogoUrls[teamStats.league.id] : undefined}
+        leagueLogoDarkUrl={teamStats.league?.id ? leagueLogoDarkUrls[teamStats.league.id] : undefined}
+      />
       
       {/* 홈/원정 상세 통계 섹션 */}
       <HomeAwayStats stats={teamStats} />

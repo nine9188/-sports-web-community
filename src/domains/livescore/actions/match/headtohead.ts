@@ -4,6 +4,7 @@ import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi'
 import { fetchTeamPlayerStats } from '@/domains/livescore/actions/teams/player-stats'
 import { fetchTeamSquad } from '@/domains/livescore/actions/teams/squad'
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName'
+import { getPlayerPhotoUrls, getTeamLogoUrls } from '@/domains/livescore/actions/images'
 import { cache } from 'react'
 
 type TeamId = number
@@ -128,6 +129,10 @@ export interface HeadToHeadTestData {
 		teamA: TeamTopPlayersSummary
 		teamB: TeamTopPlayersSummary
 	}
+	// 4590 표준: 선수 사진 Storage URL (playerId -> URL)
+	playerPhotoUrls?: Record<number, string>
+	// 4590 표준: 팀 로고 Storage URL (teamId -> URL)
+	teamLogoUrls?: Record<number, string>
 }
 
 function buildResultSummary(items: FixtureSummaryItem[], teamA: TeamId, teamB: TeamId) {
@@ -333,12 +338,35 @@ export async function getHeadToHeadTestData(teamA: TeamId, teamB: TeamId, last: 
 		fetchTeamTopPlayers(teamB)
 	])
 
+	// 4590 표준: 모든 선수 ID 수집하여 Storage URL 배치 조회
+	const allPlayerIds = new Set<number>()
+	for (const p of topA.topScorers) allPlayerIds.add(p.playerId)
+	for (const p of topA.topAssist) allPlayerIds.add(p.playerId)
+	for (const p of topB.topScorers) allPlayerIds.add(p.playerId)
+	for (const p of topB.topAssist) allPlayerIds.add(p.playerId)
+
+	// 4590 표준: 모든 팀 ID 수집 (메인 팀 + 최근 경기 상대팀)
+	const allTeamIds = new Set<number>([teamA, teamB])
+	for (const item of recentA.items) {
+		if (item.opponent.id) allTeamIds.add(item.opponent.id)
+	}
+	for (const item of recentB.items) {
+		if (item.opponent.id) allTeamIds.add(item.opponent.id)
+	}
+
+	const [playerPhotoUrls, teamLogoUrls] = await Promise.all([
+		getPlayerPhotoUrls([...allPlayerIds]),
+		getTeamLogoUrls([...allTeamIds])
+	])
+
 	return {
 		teamA,
 		teamB,
 		h2h,
 		recent: { teamA: recentA, teamB: recentB },
-		topPlayers: { teamA: topA, teamB: topB }
+		topPlayers: { teamA: topA, teamB: topB },
+		playerPhotoUrls,
+		teamLogoUrls
 	}
 }
 

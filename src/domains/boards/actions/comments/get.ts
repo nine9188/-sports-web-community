@@ -21,6 +21,7 @@ export async function getComments(postId: string): Promise<CommentsListResponse>
           nickname,
           icon_id,
           level,
+          exp,
           public_id
         )
       `)

@@ -80,6 +80,7 @@ export function convertNoticesToLayoutPosts(notices: Post[]): LayoutPost[] {
       author_icon_id: (notice as any).profiles?.icon_id ?? null,
       author_icon_url: notice.author_icon_url ?? null,
       author_level: notice.author_level || (notice as any).profiles?.level || 1,
+      author_exp: notice.author_exp || (notice as any).profiles?.exp || 0,
       comment_count: notice.comment_count ?? 0,
       content,
       team_id: teamId,

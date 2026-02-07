@@ -77,6 +77,7 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
             <UserIcon
               iconUrl={userData?.iconInfo?.iconUrl || iconUrl}
               level={userLevel}
+              exp={userData?.exp}
               size={20}
               alt={userData?.iconInfo?.iconName || iconName || '프로필 이미지'}
               className="object-cover"
@@ -96,6 +97,7 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
                   <UserIcon
                     iconUrl={userData?.iconInfo?.iconUrl || iconUrl}
                     level={userLevel}
+                    exp={userData?.exp}
                     size={20}
                     alt={userData?.iconInfo?.iconName || iconName || '프로필 이미지'}
                     className="object-cover"

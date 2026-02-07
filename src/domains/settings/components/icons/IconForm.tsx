@@ -115,6 +115,7 @@ export default function IconForm({
                 iconUrl={displayIconUrl}
                 level={userLevel}
                 alt="현재 아이콘"
+                showLevelTooltip={false}
               />
             </div>
 
@@ -155,6 +156,7 @@ export default function IconForm({
                   size={20}
                   alt={`레벨 ${userLevel} 기본 아이콘`}
                   className="object-contain"
+                  showLevelTooltip={false}
                 />
               </div>
 
@@ -188,6 +190,7 @@ export default function IconForm({
                     size={20}
                     alt={icon.name}
                     className="object-contain"
+                    showLevelTooltip={false}
                   />
                 </div>
 

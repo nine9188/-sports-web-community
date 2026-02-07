@@ -2,6 +2,7 @@
 
 import { cache } from 'react';
 import { getTeamById } from '@/domains/livescore/constants/teams';
+import { getPlayerPhotoUrls, getCoachPhotoUrls } from '../images';
 
 interface Player {
   id: number;
@@ -107,7 +108,23 @@ export async function fetchMatchLineups(matchId: string): Promise<LineupsRespons
     const homeCaptainId = findCaptainId(homeTeamData);
     const awayCaptainId = findCaptainId(awayTeamData);
 
-    // 팀 라인업 변환
+    // 1. 모든 선수/감독 ID 수집
+    const allPlayers = [
+      ...homeTeamData.startXI,
+      ...homeTeamData.substitutes,
+      ...awayTeamData.startXI,
+      ...awayTeamData.substitutes,
+    ];
+    const playerIds = allPlayers.map((item: any) => item.player.id).filter(Boolean);
+    const coachIds = [homeTeamData.coach?.id, awayTeamData.coach?.id].filter(Boolean);
+
+    // 2. 배치로 Storage URL 조회 (4590 표준)
+    const [playerPhotos, coachPhotos] = await Promise.all([
+      getPlayerPhotoUrls(playerIds),
+      getCoachPhotoUrls(coachIds),
+    ]);
+
+    // 3. 팀 라인업 변환 (Storage URL 사용)
     const enhanceTeamLineup = (teamData: any, captainId: number | null): TeamLineup => {
       const teamMapping = getTeamById(teamData.team.id);
 
@@ -120,7 +137,7 @@ export async function fetchMatchLineups(matchId: string): Promise<LineupsRespons
           grid: item.player.grid || null,
           // truthy 체크로 변경 (true, 1, "true" 등 모두 처리)
           captain: Boolean(item.player.captain) || item.player.id === captainId,
-          photo: `https://media.api-sports.io/football/players/${item.player.id}.png`
+          photo: playerPhotos[item.player.id] || '/images/placeholder-player.svg'
         }
       });
 
@@ -150,7 +167,7 @@ export async function fetchMatchLineups(matchId: string): Promise<LineupsRespons
         coach: {
           id: teamData.coach.id,
           name: teamData.coach.name,
-          photo: `https://media.api-sports.io/football/coachs/${teamData.coach.id}.png`
+          photo: coachPhotos[teamData.coach.id] || '/images/placeholder-coach.svg'
         }
       };
     };

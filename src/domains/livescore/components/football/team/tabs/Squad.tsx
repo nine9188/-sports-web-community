@@ -3,11 +3,14 @@
 import { useRouter } from 'next/navigation';
 import React, { useMemo } from 'react';
 import { PlayerStats } from '@/domains/livescore/actions/teams/player-stats';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui/container';
 import { PlayerKoreanNames } from '../TeamPageClient';
+
+// 4590 표준: Placeholder 상수
+const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
+const COACH_PLACEHOLDER = '/images/placeholder-coach.svg';
 
 // 상수 정의 - 감독을 최상단으로 노출, 그 다음 골키퍼, 공격수, 미드필더, 수비수 순
 const POSITION_ORDER = ['Coach', 'Goalkeeper', 'Attacker', 'Midfielder', 'Defender'];
@@ -50,10 +53,25 @@ interface SquadProps {
   isLoading?: boolean;
   error?: string | null;
   playerKoreanNames?: PlayerKoreanNames;
+  // 4590 표준: 서버에서 전달받은 Storage URL 맵
+  playerPhotoUrls?: Record<number, string>;
+  coachPhotoUrls?: Record<number, string>;
 }
 
-export default function Squad({ initialSquad, initialStats, isLoading: externalLoading, error: externalError, playerKoreanNames = {} }: SquadProps) {
+export default function Squad({
+  initialSquad,
+  initialStats,
+  isLoading: externalLoading,
+  error: externalError,
+  playerKoreanNames = {},
+  playerPhotoUrls = {},
+  coachPhotoUrls = {}
+}: SquadProps) {
   const router = useRouter();
+
+  // 4590 표준: 헬퍼 함수
+  const getPlayerPhoto = (id: number) => playerPhotoUrls[id] || PLAYER_PLACEHOLDER;
+  const getCoachPhoto = (id: number) => coachPhotoUrls[id] || COACH_PLACEHOLDER;
 
   // 데이터 병합 처리를 useMemo를 사용하여 최적화
   const squad = useMemo(() => {
@@ -180,13 +198,13 @@ export default function Squad({ initialSquad, initialStats, isLoading: externalL
                         >
                           <td className="px-2 sm:px-4 md:px-6 py-2 whitespace-nowrap">
                             <div className="w-8 h-8 md:w-10 md:h-10 bg-[#F5F5F5] dark:bg-[#333333] rounded-full overflow-hidden flex-shrink-0">
-                              <UnifiedSportsImage
-                                imageId={member.id}
-                                imageType={position === 'Coach' ? ImageType.Coachs : ImageType.Players}
+                              <UnifiedSportsImageClient
+                                src={position === 'Coach' ? getCoachPhoto(member.id) : getPlayerPhoto(member.id)}
                                 alt={member.name}
                                 width={40}
                                 height={40}
-                                className="!w-full !h-full !rounded-none"
+                                variant="circle"
+                                className="!w-full !h-full"
                               />
                             </div>
                           </td>

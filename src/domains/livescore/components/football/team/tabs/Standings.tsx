@@ -1,13 +1,16 @@
 'use client';
 
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Standing } from '@/domains/livescore/actions/teams/standings';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui/container';
+
+// 4590 표준: placeholder 상수
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
+const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
 
 // Standing을 import한 타입 사용
 type StandingItem = Standing["league"]["standings"][0][0];
@@ -17,24 +20,23 @@ interface StandingsProps {
   initialStandings?: Standing[];
   isLoading?: boolean;
   error?: string | null;
+  // 4590 표준: 이미지 Storage URL
+  teamLogoUrls?: Record<number, string>;
+  leagueLogoUrls?: Record<number, string>;
+  leagueLogoDarkUrls?: Record<number, string>;  // 다크모드 리그 로고
 }
 
-// 팀 로고 컴포넌트 - 메모이제이션
-const TeamLogo = memo(({ teamName, teamId }: { teamName: string; teamId?: number }) => {
+// 4590 표준: 팀 로고 컴포넌트 - 메모이제이션
+const TeamLogo = memo(({ teamName, logoUrl }: { teamName: string; logoUrl: string }) => {
   return (
     <div className="w-6 h-6 flex-shrink-0 relative transform-gpu">
-      {teamId && teamId > 0 ? (
-      <UnifiedSportsImage
-        imageId={teamId}
-        imageType={ImageType.Teams}
+      <UnifiedSportsImageClient
+        src={logoUrl}
         alt={teamName}
         width={24}
         height={24}
         className="object-contain w-6 h-6"
       />
-      ) : (
-        <div className="w-6 h-6 bg-gray-200 rounded" />
-      )}
     </div>
   );
 });
@@ -49,8 +51,39 @@ const tableStyles = {
   mediumCol: "w-10", // 너비 감소
 };
 
-function Standings({ teamId, initialStandings, isLoading: externalLoading, error: externalError }: StandingsProps) {
+function Standings({
+  teamId,
+  initialStandings,
+  isLoading: externalLoading,
+  error: externalError,
+  teamLogoUrls = {},
+  leagueLogoUrls = {},
+  leagueLogoDarkUrls = {}
+}: StandingsProps) {
   const router = useRouter();
+
+  // 다크모드 감지
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains('dark'));
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          setIsDark(document.documentElement.classList.contains('dark'));
+        }
+      });
+    });
+    observer.observe(document.documentElement, { attributes: true });
+    return () => observer.disconnect();
+  }, []);
+
+  // 4590 표준: URL 헬퍼 함수
+  const getTeamLogo = useCallback((id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER, [teamLogoUrls]);
+  const getLeagueLogo = useCallback((id: number) => {
+    if (isDark && leagueLogoDarkUrls[id]) return leagueLogoDarkUrls[id];
+    return leagueLogoUrls[id] || LEAGUE_PLACEHOLDER;
+  }, [isDark, leagueLogoUrls, leagueLogoDarkUrls]);
   
   // 폼 결과에 따른 스타일 설정 함수
   const getFormStyle = useCallback((result: string) => {
@@ -181,9 +214,8 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
               <div className="flex items-center gap-3">
                 {leagueInfo.id && (
                   <div className="w-6 h-6 relative flex-shrink-0">
-                    <UnifiedSportsImage
-                      imageId={leagueInfo.id}
-                      imageType={ImageType.Leagues}
+                    <UnifiedSportsImageClient
+                      src={getLeagueLogo(leagueInfo.id)}
                       alt={leagueInfo.name || '리그'}
                       width={24}
                       height={24}
@@ -239,19 +271,21 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
                   </tr>
                 </thead>
                 
-                <tbody className="divide-y divide-black/5 dark:divide-white/10">
-                  {standingsData.map((standingGroup: StandingItem[], groupIndex: number) => 
-                    standingGroup.map((standing: StandingItem) => {
+                <tbody>
+                  {standingsData.map((standingGroup: StandingItem[], groupIndex: number) => {
+                    const flatStandings = standingGroup;
+                    return flatStandings.map((standing: StandingItem, standingIndex: number) => {
                       // 현재 팀 여부 확인
                       const isCurrentTeam = standing.team?.id === teamId;
-                      
+                      const isLast = standingIndex === flatStandings.length - 1;
+
                       // 팀 행 스타일 설정
-                      const rowClass = isCurrentTeam 
-                        ? 'bg-[#EAEAEA] dark:bg-[#333333] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors' 
-                        : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors';
-                      
+                      const rowClass = isCurrentTeam
+                        ? `bg-[#EAEAEA] dark:bg-[#333333] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors ${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''}`
+                        : `hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors ${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''}`;
+
                       return (
-                        <tr 
+                        <tr
                           key={`league-${leagueIndex}-group-${groupIndex}-team-${standing.team?.id}-rank-${standing.rank}`}
                           className={rowClass}
                           onClick={() => handleRowClick(standing.team?.id)}
@@ -271,9 +305,9 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
                           {/* 팀 정보 - 고정 너비 사용 */}
                           <td className="px-2 py-2 md:px-3 whitespace-nowrap text-sm text-gray-900 dark:text-[#F0F0F0]">
                             <div className="flex items-center gap-1 md:gap-2">
-                              <TeamLogo 
+                              <TeamLogo
                                 teamName={standing.team.name}
-                                teamId={standing.team.id}
+                                logoUrl={getTeamLogo(standing.team.id)}
                               />
                               <div className="flex items-center max-w-[calc(100%-30px)]">
                                 <span className="block truncate text-ellipsis overflow-hidden max-w-full pr-1">
@@ -328,8 +362,8 @@ function Standings({ teamId, initialStandings, isLoading: externalLoading, error
                           </td>
                         </tr>
                       );
-                    })
-                  ).flat()}
+                    });
+                  }).flat()}
                 </tbody>
               </table>
             </div>

@@ -1,15 +1,18 @@
 'use client';
 
-import { useState, useEffect, memo, useCallback } from 'react';
+import { memo, useCallback, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Standing, StandingsData, Team } from '@/domains/livescore/types/match';
 import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
 import { getLeagueName } from '@/domains/livescore/constants/league-mappings';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import { STANDINGS_LEGENDS, LEAGUE_IDS } from './constants/standings';
 import Spinner from '@/shared/components/Spinner';
+
+// 4590 표준: placeholder 상수
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
+const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
 
 // Props 타입 정의
 interface StandingsProps {
@@ -19,26 +22,23 @@ interface StandingsProps {
     homeTeam?: Team;
     awayTeam?: Team;
   };
+  // 4590 표준: 이미지 Storage URL
+  teamLogoUrls?: Record<number, string>;
+  leagueLogoUrls?: Record<number, string>;
+  leagueLogoDarkUrls?: Record<number, string>;  // 다크모드 리그 로고
 }
 
-// 팀 로고 컴포넌트 - 메모이제이션
-const TeamLogo = memo(({ teamName, teamId }: { teamName: string; teamId?: number }) => {
+// 4590 표준: 팀 로고 컴포넌트 - 메모이제이션
+const TeamLogo = memo(({ teamName, logoUrl }: { teamName: string; logoUrl: string }) => {
   return (
     <div className="w-6 h-6 flex-shrink-0 relative transform-gpu">
-      {teamId ? (
-        <UnifiedSportsImage
-          imageId={teamId}
-          imageType={ImageType.Teams}
-          alt={teamName || '팀'}
-          width={24}
-          height={24}
-          className="object-contain w-6 h-6"
-        />
-      ) : (
-        <div className="w-6 h-6 bg-[#EAEAEA] dark:bg-[#333333] flex items-center justify-center text-gray-400 dark:text-gray-500 text-xs rounded">
-          로고 없음
-        </div>
-      )}
+      <UnifiedSportsImageClient
+        src={logoUrl}
+        alt={teamName || '팀'}
+        width={24}
+        height={24}
+        className="object-contain w-6 h-6"
+      />
     </div>
   );
 });
@@ -56,8 +56,38 @@ const tableStyles = {
   formBadgeLoss: "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400"
 };
 
-const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
+const Standings = memo(({ matchData: propsMatchData, teamLogoUrls = {}, leagueLogoUrls = {}, leagueLogoDarkUrls = {} }: StandingsProps) => {
   const router = useRouter();
+
+  // 다크모드 감지
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    // 초기 다크모드 상태 확인
+    setIsDark(document.documentElement.classList.contains('dark'));
+
+    // 다크모드 변경 감지
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          setIsDark(document.documentElement.classList.contains('dark'));
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, { attributes: true });
+    return () => observer.disconnect();
+  }, []);
+
+  // 4590 표준: URL 헬퍼 함수
+  const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
+  const getLeagueLogo = (id: number) => {
+    // 다크모드일 때 다크 로고 우선 사용
+    if (isDark && leagueLogoDarkUrls[id]) {
+      return leagueLogoDarkUrls[id];
+    }
+    return leagueLogoUrls[id] || LEAGUE_PLACEHOLDER;
+  };
 
   // props에서 데이터 직접 추출 (서버에서 프리로드된 데이터)
   const standings = propsMatchData?.standings || null;
@@ -266,14 +296,13 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
             {groupIndex === 0 ? (
               <div className="flex items-center gap-3 w-full">
                 <div className="w-6 h-6 relative flex-shrink-0">
-                  <UnifiedSportsImage
-                    imageId={leagueData.id}
-                    imageType={ImageType.Leagues}
+                  <UnifiedSportsImageClient
+                    src={getLeagueLogo(leagueData.id)}
                     alt={leagueData.name}
                     width={24}
                     height={24}
                     className="object-contain w-6 h-6"
-                />
+                  />
                 </div>
                 <ContainerTitle>
                   {(() => {
@@ -330,14 +359,15 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-black/5 dark:divide-white/10">
-                  {standingsGroup.map((standing: Standing) => {
+                <tbody>
+                  {standingsGroup.map((standing: Standing, standingIndex: number) => {
                     // 홈팀 또는 원정팀인지 확인하여 하이라이트 처리
                     const isHomeTeam = String(standing.team.id) === String(homeTeamId);
                     const isAwayTeam = String(standing.team.id) === String(awayTeamId);
+                    const isLast = standingIndex === standingsGroup.length - 1;
 
                     // 팀 행 스타일 설정
-                    let rowClass = 'cursor-pointer transition-colors';
+                    let rowClass = `cursor-pointer transition-colors ${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''}`;
                     if (isHomeTeam) {
                       rowClass += ' bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-800/50';
                     } else if (isAwayTeam) {
@@ -345,12 +375,12 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
                     } else {
                       rowClass += ' hover:bg-[#EAEAEA] dark:hover:bg-[#333333]';
                     }
-                  
+
                   // 강등권, 유로파, 챔스 등 구분
                   const statusColor = getStatusColor(standing.description || '');
-                  
+
                   return (
-                    <tr 
+                    <tr
                       key={standing.team.id}
                       className={rowClass}
                       onClick={() => handleRowClick(standing.team.id)}
@@ -372,7 +402,7 @@ const Standings = memo(({ matchData: propsMatchData }: StandingsProps) => {
                         <div className="flex items-center gap-1 md:gap-2">
                           <TeamLogo
                             teamName={standing.team.name || ''}
-                            teamId={standing.team.id}
+                            logoUrl={getTeamLogo(standing.team.id)}
                           />
                           <div className="flex items-center max-w-[calc(100%-30px)]">
                             <span className="block truncate text-ellipsis overflow-hidden max-w-full pr-1">

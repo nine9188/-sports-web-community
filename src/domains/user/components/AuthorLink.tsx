@@ -34,9 +34,12 @@ interface AuthorLinkProps {
   publicId?: string | null;
   iconUrl?: string | null;
   level?: number;
+  exp?: number;
   iconSize?: number;
   className?: string;
   showIcon?: boolean;
+  /** 이미지 우선 로딩 (LCP 요소에 사용) */
+  priority?: boolean;
 }
 
 /**
@@ -49,9 +52,11 @@ export default function AuthorLink({
   publicId,
   iconUrl,
   level = 1,
+  exp,
   iconSize = 16,
   className = '',
   showIcon = true,
+  priority = false,
 }: AuthorLinkProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
@@ -157,8 +162,10 @@ export default function AuthorLink({
           <UserIcon
             iconUrl={iconUrl}
             level={level}
+            exp={exp}
             size={iconSize}
             alt=""
+            priority={priority}
           />
         </div>
       )}

@@ -131,7 +131,11 @@ export default function TeamPageClient({
           </div>
         </div>
       }>
-        <TeamHeader initialData={initialData.teamData} />
+        <TeamHeader
+          initialData={initialData.teamData}
+          teamLogoUrl={initialData.teamLogoUrls?.[parseInt(teamId, 10)]}
+          venueImageUrl={initialData.venueImageUrl}
+        />
       </Suspense>
 
       {/* 탭 네비게이션 - onTabChange 콜백 전달 */}

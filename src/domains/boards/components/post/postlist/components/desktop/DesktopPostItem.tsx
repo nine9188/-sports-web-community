@@ -7,7 +7,7 @@
 
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ThumbsUp } from 'lucide-react';
@@ -31,7 +31,15 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
   variant = 'text',
 }: PostItemProps) {
   const isCurrentPost = post.id === currentPostId;
-  const href = `/boards/${post.board_slug}/${post.post_number}?from=${currentBoardId}`;
+  // SEO: 쿼리 파라미터 제거 - Google 중복 색인 방지
+  const href = `/boards/${post.board_slug}/${post.post_number}`;
+
+  // from 정보를 sessionStorage에 저장 (클릭 시)
+  const handleClick = useCallback(() => {
+    if (currentBoardId && typeof window !== 'undefined') {
+      sessionStorage.setItem('postListSource', currentBoardId);
+    }
+  }, [currentBoardId]);
 
   // 안전한 날짜 포맷팅
   const formattedDate = useMemo(() => {
@@ -77,7 +85,7 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
         </div>
 
         {/* 썸네일 이미지 */}
-        <Link href={href} prefetch={false} className="flex-shrink-0">
+        <Link href={href} prefetch={false} className="flex-shrink-0" onClick={handleClick}>
           <div className="relative w-24 h-16 rounded-lg overflow-hidden bg-[#F5F5F5] dark:bg-[#262626]">
             {thumbnailUrl ? (
               <Image
@@ -103,7 +111,7 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
         {/* 게시글 정보 */}
         <div className="flex-1 min-w-0 overflow-hidden">
           {/* 제목 + 아이콘 + 댓글 수 */}
-          <Link href={href} prefetch={false} className="block overflow-hidden">
+          <Link href={href} prefetch={false} className="block overflow-hidden" onClick={handleClick}>
             <div className="flex items-center gap-1 mb-1">
               <h3 className={`${titleClassName} truncate`}>
                 {titleText}
@@ -150,6 +158,7 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
               oddsUserId={post.author_id}
               iconUrl={post.author_icon_url}
               level={post.author_level || 1}
+              exp={post.author_exp}
               iconSize={16}
             />
 
@@ -188,7 +197,7 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
 
       {/* 제목 컬럼 */}
       <td className="py-2 px-4 align-middle">
-        <Link href={href} prefetch={false}>
+        <Link href={href} prefetch={false} onClick={handleClick}>
           <div className="flex items-center gap-1 min-w-0">
             <span className={`${titleClassName} truncate`}>
               {titleText}

@@ -116,6 +116,7 @@ import { fetchCachedTeamSquad as getTeamSquad, Player, Coach } from './squad';
 import { fetchCachedTeamPlayerStats as getTeamPlayerStats, PlayerStats } from './player-stats';
 import { fetchCachedTeamStandings as getTeamStandings, Standing } from './standings';
 import { fetchCachedTeamTransfers as getTeamTransfers, TeamTransfersData } from './transfers';
+import { getPlayerPhotoUrls, getTeamLogoUrls, getCoachPhotoUrls, getLeagueLogoUrls, getVenueImageUrl } from '@/domains/livescore/actions/images';
 
 // 통합 응답 타입 정의
 export interface TeamFullDataResponse {
@@ -127,6 +128,13 @@ export interface TeamFullDataResponse {
   playerStats?: { success: boolean; data?: Record<number, PlayerStats>; message: string };
   standings?: { success: boolean; data?: Standing[]; message: string };
   transfers?: { success: boolean; data?: TeamTransfersData; message: string };
+  // 4590 표준: 이미지 Storage URL
+  playerPhotoUrls?: Record<number, string>;
+  teamLogoUrls?: Record<number, string>;
+  coachPhotoUrls?: Record<number, string>;
+  leagueLogoUrls?: Record<number, string>;
+  leagueLogoDarkUrls?: Record<number, string>;  // 다크모드 리그 로고
+  venueImageUrl?: string;  // 경기장 이미지 URL
   [key: string]: unknown; // 인덱스 시그니처
 }
 
@@ -364,6 +372,83 @@ export const fetchTeamFullData = cache(
       dataTypes.forEach((type, index) => {
         response[type] = results[index];
       });
+
+      // 4590 표준: 모든 선수/팀/감독 ID 수집하여 이미지 URL 배치 조회
+      const allPlayerIds = new Set<number>();
+      const allTeamIds = new Set<number>([numericTeamId]); // 현재 팀 포함
+      const allCoachIds = new Set<number>();
+
+      // squad에서 선수/감독 ID 수집
+      const squadData = response.squad as { success: boolean; data?: (Player | Coach)[] } | undefined;
+      if (squadData?.data) {
+        for (const member of squadData.data) {
+          if (member.position === 'Coach') {
+            allCoachIds.add(member.id);
+          } else {
+            allPlayerIds.add(member.id);
+          }
+        }
+      }
+
+      // playerStats에서 선수 ID 수집
+      const playerStatsData = response.playerStats as { success: boolean; data?: Record<number, PlayerStats> } | undefined;
+      if (playerStatsData?.data) {
+        for (const id of Object.keys(playerStatsData.data)) {
+          allPlayerIds.add(Number(id));
+        }
+      }
+
+      // transfers에서 선수 ID, 팀 ID 수집
+      const transfersData = response.transfers as { success: boolean; data?: TeamTransfersData } | undefined;
+      if (transfersData?.data) {
+        for (const transfer of transfersData.data.in || []) {
+          allPlayerIds.add(transfer.player.id);
+          if (transfer.fromTeam?.id) allTeamIds.add(transfer.fromTeam.id);
+        }
+        for (const transfer of transfersData.data.out || []) {
+          allPlayerIds.add(transfer.player.id);
+          if (transfer.toTeam?.id) allTeamIds.add(transfer.toTeam.id);
+        }
+      }
+
+      // matches에서 팀 ID, 리그 ID 수집
+      const allLeagueIds = new Set<number>();
+      const matchesData = response.matches as { success: boolean; data?: Match[] } | undefined;
+      if (matchesData?.data) {
+        for (const match of matchesData.data) {
+          allTeamIds.add(match.teams.home.id);
+          allTeamIds.add(match.teams.away.id);
+          if ((match.league as { id?: number }).id) {
+            allLeagueIds.add((match.league as { id: number }).id);
+          }
+        }
+      }
+
+      // stats에서 리그 ID 수집
+      if (teamData.stats?.league?.id) {
+        allLeagueIds.add(teamData.stats.league.id);
+      }
+
+      // 이미지 URL 배치 조회 (다크모드 리그 로고 포함)
+      const [playerPhotoUrls, teamLogoUrls, coachPhotoUrls, leagueLogoUrls, leagueLogoDarkUrls] = await Promise.all([
+        allPlayerIds.size > 0 ? getPlayerPhotoUrls([...allPlayerIds]) : {},
+        allTeamIds.size > 0 ? getTeamLogoUrls([...allTeamIds]) : {},
+        allCoachIds.size > 0 ? getCoachPhotoUrls([...allCoachIds]) : {},
+        allLeagueIds.size > 0 ? getLeagueLogoUrls([...allLeagueIds]) : {},
+        allLeagueIds.size > 0 ? getLeagueLogoUrls([...allLeagueIds], true) : {}  // 다크모드
+      ]);
+
+      response.playerPhotoUrls = playerPhotoUrls;
+      response.teamLogoUrls = teamLogoUrls;
+      response.coachPhotoUrls = coachPhotoUrls;
+      response.leagueLogoUrls = leagueLogoUrls;
+      response.leagueLogoDarkUrls = leagueLogoDarkUrls;
+
+      // 4590 표준: 경기장 이미지 URL 조회
+      const venueId = teamData.team?.venue?.id;
+      if (venueId) {
+        response.venueImageUrl = await getVenueImageUrl(venueId);
+      }
 
       return response;
     } catch (error) {

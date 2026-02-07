@@ -37,9 +37,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* LCP 최적화: 로고 이미지 미리 로드 */}
         <link
           rel="preload"
-          href="/logo/4590football-logo.png"
+          href="/logo/4590football-logo.svg"
           as="image"
-          type="image/png"
+          type="image/svg+xml"
           fetchPriority="high"
         />
       </head>

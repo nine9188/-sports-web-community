@@ -1,9 +1,12 @@
 'use client';
 
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import { useState, useEffect } from 'react';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
 import { Button, Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
+
+// 4590 표준: placeholder URL
+const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
 
 // Overview에서 전달받는 stats 타입
 interface OverviewStats {
@@ -36,9 +39,31 @@ interface OverviewStats {
 interface StatsCardsProps {
   stats: OverviewStats;
   onTabChange: (tab: string) => void;
+  // 4590 표준: 이미지 Storage URL
+  leagueLogoUrl?: string;
+  leagueLogoDarkUrl?: string;  // 다크모드 리그 로고
 }
 
-export default function StatsCards({ stats, onTabChange }: StatsCardsProps) {
+export default function StatsCards({ stats, onTabChange, leagueLogoUrl, leagueLogoDarkUrl }: StatsCardsProps) {
+  // 다크모드 감지
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains('dark'));
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          setIsDark(document.documentElement.classList.contains('dark'));
+        }
+      });
+    });
+    observer.observe(document.documentElement, { attributes: true });
+    return () => observer.disconnect();
+  }, []);
+
+  // 4590 표준: 다크모드 시 다크 로고 우선 사용
+  const finalLeagueLogo = (isDark && leagueLogoDarkUrl) ? leagueLogoDarkUrl : (leagueLogoUrl || LEAGUE_PLACEHOLDER);
+
   // 안전한 데이터 접근
   const safeLeague = stats.league || {
     id: 0,
@@ -85,9 +110,8 @@ export default function StatsCards({ stats, onTabChange }: StatsCardsProps) {
         {/* 리그 정보 */}
         <div className="flex-1 flex items-center justify-center gap-2 relative">
           <div className="w-6 h-6 flex-shrink-0">
-            <UnifiedSportsImage
-              imageId={safeLeague.id || 0}
-              imageType={ImageType.Leagues}
+            <UnifiedSportsImageClient
+              src={finalLeagueLogo}
               alt={safeLeague.name || ''}
               width={24}
               height={24}

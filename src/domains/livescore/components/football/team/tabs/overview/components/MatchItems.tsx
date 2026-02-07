@@ -1,13 +1,15 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
 import { Container, ContainerHeader, ContainerTitle, Button } from '@/shared/components/ui';
+
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
+const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
 
 // 매치 타입 정의
 export interface Match {
@@ -48,12 +50,39 @@ interface MatchItemsProps {
   matches: Match[] | undefined;
   teamId: number;
   onTabChange?: (tab: string, subTab?: string) => void;
+  // 4590 표준: 서버에서 전달받은 이미지 URL
+  teamLogoUrls?: Record<number, string>;
+  leagueLogoUrls?: Record<number, string>;
+  leagueLogoDarkUrls?: Record<number, string>;  // 다크모드 리그 로고
 }
 
 const DISPLAY_LIMIT = 5;
 
-export default function MatchItems({ matches, teamId, onTabChange }: MatchItemsProps) {
+export default function MatchItems({ matches, teamId, onTabChange, teamLogoUrls = {}, leagueLogoUrls = {}, leagueLogoDarkUrls = {} }: MatchItemsProps) {
   const router = useRouter();
+
+  // 다크모드 감지
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains('dark'));
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          setIsDark(document.documentElement.classList.contains('dark'));
+        }
+      });
+    });
+    observer.observe(document.documentElement, { attributes: true });
+    return () => observer.disconnect();
+  }, []);
+
+  // 4590 표준: URL 헬퍼 함수
+  const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
+  const getLeagueLogo = (id: number) => {
+    if (isDark && leagueLogoDarkUrls[id]) return leagueLogoDarkUrls[id];
+    return leagueLogoUrls[id] || LEAGUE_PLACEHOLDER;
+  };
 
   // 매치 페이지로 이동하는 함수
   const handleMatchClick = (fixtureId: number) => {
@@ -140,9 +169,8 @@ export default function MatchItems({ matches, teamId, onTabChange }: MatchItemsP
                     <td className="p-0 md:px-2">
                       <div className="flex justify-start items-center gap-1 md:gap-2">
                         <div className="w-5 h-5 relative flex-shrink-0">
-                          <UnifiedSportsImage
-                            imageId={match.league.id}
-                            imageType={ImageType.Leagues}
+                          <UnifiedSportsImageClient
+                            src={getLeagueLogo(match.league.id)}
                             alt={match.league.name}
                             width={20}
                             height={20}
@@ -160,9 +188,8 @@ export default function MatchItems({ matches, teamId, onTabChange }: MatchItemsP
                           <span className={`truncate max-w-[100px] md:max-w-[180px] text-right mr-1 text-xs md:text-sm text-gray-900 dark:text-[#F0F0F0] ${match.teams.home.id === teamId ? 'font-bold' : ''}`}>
                             {match.teams.home.name}
                           </span>
-                          <UnifiedSportsImage
-                            imageId={match.teams.home.id}
-                            imageType={ImageType.Teams}
+                          <UnifiedSportsImageClient
+                            src={getTeamLogo(match.teams.home.id)}
                             alt={match.teams.home.name}
                             width={20}
                             height={20}
@@ -175,9 +202,8 @@ export default function MatchItems({ matches, teamId, onTabChange }: MatchItemsP
                         </div>
 
                         <div className="flex-1 flex items-center justify-start gap-0 min-w-0">
-                          <UnifiedSportsImage
-                            imageId={match.teams.away.id}
-                            imageType={ImageType.Teams}
+                          <UnifiedSportsImageClient
+                            src={getTeamLogo(match.teams.away.id)}
                             alt={match.teams.away.name}
                             width={20}
                             height={20}
@@ -277,9 +303,8 @@ export default function MatchItems({ matches, teamId, onTabChange }: MatchItemsP
                     <td className="p-0 md:px-2">
                       <div className="flex justify-start items-center gap-1 md:gap-2">
                         <div className="w-5 h-5 relative flex-shrink-0">
-                          <UnifiedSportsImage
-                            imageId={match.league.id}
-                            imageType={ImageType.Leagues}
+                          <UnifiedSportsImageClient
+                            src={getLeagueLogo(match.league.id)}
                             alt={match.league.name}
                             width={20}
                             height={20}
@@ -297,9 +322,8 @@ export default function MatchItems({ matches, teamId, onTabChange }: MatchItemsP
                           <span className={`truncate max-w-[100px] md:max-w-[180px] text-right mr-1 text-xs md:text-sm text-gray-900 dark:text-[#F0F0F0] ${match.teams.home.id === teamId ? 'font-bold' : ''}`}>
                             {match.teams.home.name}
                           </span>
-                          <UnifiedSportsImage
-                            imageId={match.teams.home.id}
-                            imageType={ImageType.Teams}
+                          <UnifiedSportsImageClient
+                            src={getTeamLogo(match.teams.home.id)}
                             alt={match.teams.home.name}
                             width={20}
                             height={20}
@@ -312,9 +336,8 @@ export default function MatchItems({ matches, teamId, onTabChange }: MatchItemsP
                         </div>
 
                         <div className="flex-1 flex items-center justify-start gap-0 min-w-0">
-                          <UnifiedSportsImage
-                            imageId={match.teams.away.id}
-                            imageType={ImageType.Teams}
+                          <UnifiedSportsImageClient
+                            src={getTeamLogo(match.teams.away.id)}
                             alt={match.teams.away.name}
                             width={20}
                             height={20}

@@ -26,6 +26,7 @@ export interface Post {
   author_id?: string;
   author_public_id?: string | null;
   author_level?: number;
+  author_exp?: number;
   author_icon_id?: number | null;
   author_icon_url?: string | null;
   comment_count: number;
@@ -34,6 +35,7 @@ export interface Post {
   league_id?: string | number | null;
   team_logo?: string | null;
   league_logo?: string | null;
+  league_logo_dark?: string | null;
   formattedDate?: string;
   is_hidden?: boolean;
   is_deleted?: boolean;

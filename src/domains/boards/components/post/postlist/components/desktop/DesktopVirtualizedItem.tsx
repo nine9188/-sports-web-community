@@ -4,7 +4,7 @@
 
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Calendar as CalendarIcon, Eye as EyeIcon } from 'lucide-react';
@@ -50,10 +50,18 @@ export const DesktopVirtualizedItem = React.memo(function DesktopVirtualizedItem
     return getProxiedImageUrl(originalUrl);
   }, [variant, post]);
 
+  // from 정보를 sessionStorage에 저장 (클릭 시)
+  const handleClick = useCallback(() => {
+    if (currentBoardId && typeof window !== 'undefined') {
+      sessionStorage.setItem('postListSource', currentBoardId);
+    }
+  }, [currentBoardId]);
+
   if (!post) return null;
 
   const isCurrentPost = post.id === currentPostId;
-  const href = `/boards/${post.board_slug}/${post.post_number}?from=${currentBoardId}`;
+  // SEO: 쿼리 파라미터 제거 - Google 중복 색인 방지
+  const href = `/boards/${post.board_slug}/${post.post_number}`;
 
   // 제목 텍스트 및 스타일 계산
   const titleText = getPostTitleText(post);
@@ -77,7 +85,7 @@ export const DesktopVirtualizedItem = React.memo(function DesktopVirtualizedItem
 
       {/* 제목 컬럼 */}
       <div className="py-2 px-4 flex-1 min-w-0">
-        <Link href={href} prefetch={false}>
+        <Link href={href} prefetch={false} onClick={handleClick}>
           <div className="flex items-center gap-1 min-w-0">
             <span className={`${titleClassName} truncate`}>
               {titleText}

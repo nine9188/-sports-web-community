@@ -1,13 +1,17 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { StandingDisplay } from '@/domains/livescore/types/standings';
 import { findTeamStanding, getDisplayStandings, getLeagueInfo, getLeagueForStandings } from '../utils/standingUtils';
 import FormDisplay from './FormDisplay';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
 import { Container, ContainerHeader, ContainerTitle, Button } from '@/shared/components/ui';
+
+// 4590 표준: placeholder URL
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
+const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
 
 interface StandingsPreviewProps {
   standings: StandingDisplay[] | undefined;
@@ -17,10 +21,45 @@ interface StandingsPreviewProps {
     logo: string;
   };
   onTabChange: (tab: string) => void;
+  // 4590 표준: 이미지 Storage URL
+  teamLogoUrls?: Record<number, string>;
+  leagueLogoUrls?: Record<number, string>;
+  leagueLogoDarkUrls?: Record<number, string>;  // 다크모드 리그 로고
 }
 
-export default function StandingsPreview({ standings, teamId, safeLeague, onTabChange }: StandingsPreviewProps) {
+export default function StandingsPreview({
+  standings,
+  teamId,
+  safeLeague,
+  onTabChange,
+  teamLogoUrls = {},
+  leagueLogoUrls = {},
+  leagueLogoDarkUrls = {}
+}: StandingsPreviewProps) {
   const router = useRouter();
+
+  // 다크모드 감지
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains('dark'));
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          setIsDark(document.documentElement.classList.contains('dark'));
+        }
+      });
+    });
+    observer.observe(document.documentElement, { attributes: true });
+    return () => observer.disconnect();
+  }, []);
+
+  // 4590 표준: 헬퍼 함수
+  const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
+  const getLeagueLogo = (id: number) => {
+    if (isDark && leagueLogoDarkUrls[id]) return leagueLogoDarkUrls[id];
+    return leagueLogoUrls[id] || LEAGUE_PLACEHOLDER;
+  };
   
   // 현재 팀의 순위 정보 찾기
   const currentTeamStanding = findTeamStanding(standings, teamId);
@@ -52,9 +91,8 @@ export default function StandingsPreview({ standings, teamId, safeLeague, onTabC
     <Container className="bg-white dark:bg-[#1D1D1D]">
       <ContainerHeader>
         <div className="w-6 h-6 relative flex-shrink-0 mr-2">
-          <UnifiedSportsImage
-            imageId={displayLeagueInfo?.id || leagueInfo.id}
-            imageType={ImageType.Leagues}
+          <UnifiedSportsImageClient
+            src={getLeagueLogo(displayLeagueInfo?.id || leagueInfo.id)}
             alt={displayLeagueInfo?.name || leagueInfo.name || safeLeague.name || '리그'}
             width={24}
             height={24}
@@ -108,9 +146,8 @@ export default function StandingsPreview({ standings, teamId, safeLeague, onTabC
                   <td className={tableCellStyle}>
                     <div className="flex items-center gap-2">
                       <div className="w-5 h-5 relative flex-shrink-0">
-                        <UnifiedSportsImage
-                          imageId={standing.team.id}
-                          imageType={ImageType.Teams}
+                        <UnifiedSportsImageClient
+                          src={getTeamLogo(standing.team.id)}
                           alt={standing.team.name}
                           width={20}
                           height={20}

@@ -1,20 +1,58 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { EmptyState } from '@/domains/livescore/components/common';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { TrophyData } from '@/domains/livescore/types/player';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
+
+// 4590 표준: placeholder 상수
+const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
 
 interface PlayerTrophiesProps {
   playerId: number;
   trophiesData?: TrophyData[];
+  // 4590 표준: 이미지 Storage URL
+  leagueLogoUrls?: Record<number, string>;
+  leagueLogoDarkUrls?: Record<number, string>;
 }
 
-export default function PlayerTrophies({ 
-  trophiesData = [] 
+export default function PlayerTrophies({
+  trophiesData = [],
+  leagueLogoUrls = {},
+  leagueLogoDarkUrls = {}
 }: PlayerTrophiesProps) {
+  // 4590 표준: 다크모드 감지
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    // 초기 다크모드 상태 확인
+    const checkDarkMode = () => {
+      setIsDark(document.documentElement.classList.contains('dark'));
+    };
+    checkDarkMode();
+
+    // MutationObserver로 다크모드 변경 감지
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          checkDarkMode();
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, { attributes: true });
+    return () => observer.disconnect();
+  }, []);
+
+  // 4590 표준: URL 헬퍼 함수
+  const getLeagueLogo = (id: number) => {
+    if (isDark && leagueLogoDarkUrls[id]) {
+      return leagueLogoDarkUrls[id];
+    }
+    return leagueLogoUrls[id] || LEAGUE_PLACEHOLDER;
+  };
   // 트로피 종류별 분류 및 집계
   const trophySummary = trophiesData.reduce((acc, trophy) => {
     if (trophy.place === '우승') {
@@ -108,9 +146,8 @@ export default function PlayerTrophies({
                         ? parseInt(trophy.leagueLogo.split('/').pop()?.split('.')[0] || '0')
                         : 0;
                       return leagueId > 0 ? (
-                        <UnifiedSportsImage
-                          imageId={leagueId}
-                          imageType={ImageType.Leagues}
+                        <UnifiedSportsImageClient
+                          src={getLeagueLogo(leagueId)}
                           alt={trophy.league}
                           width={20}
                           height={20}

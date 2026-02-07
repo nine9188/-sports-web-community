@@ -2,6 +2,7 @@
 
 import { cache } from 'react';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { getTeamLogoUrls, getLeagueLogoUrls } from '@/domains/livescore/actions/images';
 
 export interface RelatedPost {
   id: string;
@@ -16,6 +17,8 @@ export interface RelatedPost {
   board_team_id: number | null;
   board_league_id: number | null;
   card_type: 'match' | 'team' | 'player' | 'board';
+  // 4590 표준: 서버에서 미리 조회한 보드 로고 URL
+  boardLogoUrl?: string;
 }
 
 /**
@@ -205,10 +208,29 @@ export const getRelatedPosts = cache(async (
     if (postMap.size === 0) return [];
 
     // 최신순 정렬
-    return Array.from(postMap.values())
+    const sortedPosts = Array.from(postMap.values())
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(0, limit)
       .map(({ priority: _, ...rest }) => rest);
+
+    // 4590 표준: 보드 로고 URL 배치 조회
+    const teamIdsForLogo = [...new Set(sortedPosts.filter(p => p.board_team_id).map(p => p.board_team_id!))];
+    const leagueIdsForLogo = [...new Set(sortedPosts.filter(p => p.board_league_id && !p.board_team_id).map(p => p.board_league_id!))];
+
+    const [teamLogoMap, leagueLogoMap] = await Promise.all([
+      teamIdsForLogo.length > 0 ? getTeamLogoUrls(teamIdsForLogo) : Promise.resolve({}),
+      leagueIdsForLogo.length > 0 ? getLeagueLogoUrls(leagueIdsForLogo) : Promise.resolve({}),
+    ]);
+
+    // boardLogoUrl 채우기
+    return sortedPosts.map(post => ({
+      ...post,
+      boardLogoUrl: post.board_team_id
+        ? teamLogoMap[post.board_team_id]
+        : post.board_league_id
+          ? leagueLogoMap[post.board_league_id]
+          : undefined,
+    }));
   } catch (error) {
     console.error('관련 게시글 조회 실패:', error);
     return [];

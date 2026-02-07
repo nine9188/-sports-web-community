@@ -120,6 +120,9 @@ export default function MatchPageClient({
           <MatchHeader
             initialData={initialData}
             playerKoreanNames={playerKoreanNames}
+            teamLogoUrls={initialData.teamLogoUrls}
+            leagueLogoUrl={initialData.leagueLogoUrl}
+            leagueLogoDarkUrl={initialData.leagueLogoDarkUrl}
           />
         </Suspense>
 

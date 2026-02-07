@@ -167,23 +167,23 @@ export default function Comment({
               </svg>
             </div>
           )}
-          
-          <div className="w-5 h-5 relative rounded-full overflow-hidden flex-shrink-0" aria-hidden="true">
-            <UserIcon
-              iconUrl={comment.profiles?.icon_url || null}
-              level={comment.profiles?.level || 1}
-              size={20}
-              alt=""
-              className="object-cover"
-              priority
-            />
-          </div>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center space-x-2 min-w-0">
                 {comment.profiles?.public_id ? (
-                  <div className="relative" ref={authorDropdownRef}>
+                  <div className="relative flex items-center" ref={authorDropdownRef}>
+                    <div className="w-5 h-5 relative rounded-full overflow-hidden flex-shrink-0 mr-1" aria-hidden="true">
+                      <UserIcon
+                        iconUrl={comment.profiles?.icon_url || null}
+                        level={comment.profiles?.level || 1}
+                        exp={comment.profiles?.exp}
+                        size={20}
+                        alt=""
+                        className="object-cover"
+                        priority
+                      />
+                    </div>
                     <button
                       type="button"
                       onClick={handleAuthorToggle}
@@ -205,9 +205,22 @@ export default function Comment({
                     )}
                   </div>
                 ) : (
-                  <span className="font-medium text-sm truncate text-gray-900 dark:text-[#F0F0F0]">
-                    {comment.profiles?.nickname || '알 수 없음'}
-                  </span>
+                  <div className="flex items-center">
+                    <div className="w-5 h-5 relative rounded-full overflow-hidden flex-shrink-0 mr-1" aria-hidden="true">
+                      <UserIcon
+                        iconUrl={comment.profiles?.icon_url || null}
+                        level={comment.profiles?.level || 1}
+                        exp={comment.profiles?.exp}
+                        size={20}
+                        alt=""
+                        className="object-cover"
+                        priority
+                      />
+                    </div>
+                    <span className="font-medium text-sm truncate text-gray-900 dark:text-[#F0F0F0]">
+                      {comment.profiles?.nickname || '알 수 없음'}
+                    </span>
+                  </div>
                 )}
                 {isPostOwner && isCommentOwner && (
                   <span className="text-xs bg-[#F5F5F5] dark:bg-[#333333] text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full">작성자</span>

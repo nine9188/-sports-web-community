@@ -12,6 +12,11 @@ Disallow: /boards/*/create
 Disallow: /boards/*/edit
 Disallow: /test
 
+# 쿼리 파라미터가 있는 URL 차단 (중복 색인 방지)
+Disallow: /*?from=*
+Disallow: /*?page=*
+Disallow: /*?sort=*
+
 # .well-known 경로 차단 (Chrome DevTools 관련)
 Disallow: /.well-known/
 

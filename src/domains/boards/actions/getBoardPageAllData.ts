@@ -6,6 +6,7 @@ import { getBoardPopularPosts, type PopularPost } from './getPopularPosts';
 import { getNoticesForBoard } from './posts';
 import { getHoverMenuData, type HoverMenuBoard } from './getHoverMenuData';
 import { processNoticesForLayout } from '../utils/notice/noticeUtils';
+import { getTeamLogoUrl, getLeagueLogoUrl } from '@/domains/livescore/actions/images';
 import type { LayoutPost } from '../types/post/layout';
 import type { Post } from '../types/post';
 
@@ -74,6 +75,11 @@ export interface BoardPageAllData {
 
   // 검색용 게시판 ID 배열
   filteredBoardIds: string[];
+
+  // 4590 표준: 이미지 Storage URL
+  teamLogoUrl?: string;
+  leagueLogoUrl?: string;
+  leagueLogoUrlDark?: string;
 }
 
 export interface BoardPageError {
@@ -161,7 +167,22 @@ export async function getBoardPageAllData(
     return undefined;
   })();
 
-  // 5. 통합 데이터 반환
+  // 5. 4590 표준: 팀/리그 로고 URL 조회
+  let teamLogoUrl: string | undefined;
+  let leagueLogoUrl: string | undefined;
+  let leagueLogoUrlDark: string | undefined;
+
+  if (boardData.team_id) {
+    teamLogoUrl = await getTeamLogoUrl(boardData.team_id);
+  }
+  if (boardData.league_id) {
+    [leagueLogoUrl, leagueLogoUrlDark] = await Promise.all([
+      getLeagueLogoUrl(boardData.league_id, false),
+      getLeagueLogoUrl(boardData.league_id, true),
+    ]);
+  }
+
+  // 6. 통합 데이터 반환
   return {
     boardData: {
       id: boardData.id,
@@ -190,6 +211,10 @@ export async function getBoardPageAllData(
     notices,
     topBoards: hoverMenuData.topBoards,
     hoverChildBoardsMap: hoverMenuData.childBoardsMap,
-    filteredBoardIds: boardResult.filteredBoardIds || [boardData.id]
+    filteredBoardIds: boardResult.filteredBoardIds || [boardData.id],
+    // 4590 표준: 이미지 Storage URL
+    teamLogoUrl,
+    leagueLogoUrl,
+    leagueLogoUrlDark,
   };
 }

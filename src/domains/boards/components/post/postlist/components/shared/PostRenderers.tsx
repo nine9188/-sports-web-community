@@ -6,7 +6,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -23,12 +23,15 @@ import {
   Linkedin as LinkedinIcon,
   Music2 as TiktokIcon,
 } from 'lucide-react';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { AuthorLink } from '@/domains/user/components';
 import { Post } from '../../types';
 import { checkContentType } from '../../utils';
 import { siteConfig } from '@/shared/config';
+
+// 4590 표준: placeholder 상수
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
+const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
 
 /**
  * 콘텐츠 타입 아이콘 렌더링
@@ -155,6 +158,7 @@ export function renderAuthor(
       oddsUserId={post.author_id}
       iconUrl={post.author_icon_url}
       level={post.author_level || 1}
+      exp={post.author_exp}
       iconSize={size}
       className={containerClass}
     />
@@ -162,30 +166,97 @@ export function renderAuthor(
 }
 
 /**
+ * 리그 로고 이미지 컴포넌트 (다크모드 지원)
+ *
+ * MutationObserver로 다크모드 감지하여 적절한 로고 표시
+ */
+function LeagueLogoImage({
+  leagueLogo,
+  leagueLogoDark,
+  alt,
+}: {
+  leagueLogo: string;
+  leagueLogoDark?: string | null;
+  alt: string;
+}): React.ReactNode {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    // 초기 다크모드 상태 확인
+    setIsDark(document.documentElement.classList.contains('dark'));
+
+    // 다크모드 변경 감지
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          setIsDark(document.documentElement.classList.contains('dark'));
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, { attributes: true });
+    return () => observer.disconnect();
+  }, []);
+
+  const effectiveLogoUrl = isDark && leagueLogoDark ? leagueLogoDark : leagueLogo;
+
+  return (
+    <UnifiedSportsImageClient
+      src={effectiveLogoUrl}
+      alt={alt}
+      width={20}
+      height={20}
+      className="object-contain w-5 h-5"
+    />
+  );
+}
+
+/**
  * 게시판 로고 + 이름 렌더링
  *
- * - 팀/리그 게시판: API Sports 이미지 사용
+ * - 팀/리그 게시판: Storage URL 사용 (4590 표준)
+ * - 리그 게시판: 다크모드 지원 (league_logo_dark)
  * - 일반 게시판: 사이트 기본 로고 사용
  *
- * @param post - 게시글 데이터
+ * @param post - 게시글 데이터 (team_logo, league_logo, league_logo_dark 포함)
  * @returns 게시판 로고 JSX
  */
 export function renderBoardLogo(post: Post): React.ReactNode {
   const boardLink = `/boards/${post.board_slug}`;
 
-  if (post.team_id || post.league_id) {
+  if (post.team_id) {
+    // 팀 게시판: 팀 로고 사용
+    const logoUrl = post.team_logo || TEAM_PLACEHOLDER;
     return (
       <Link href={boardLink} className="flex items-center hover:underline">
         <div className="relative w-5 h-5 mr-1">
-          <UnifiedSportsImage
-            imageId={post.team_id || post.league_id || 0}
-            imageType={post.team_id ? ImageType.Teams : ImageType.Leagues}
+          <UnifiedSportsImageClient
+            src={logoUrl}
             alt={post.board_name}
             width={20}
             height={20}
             className="object-contain w-5 h-5"
-            loading="lazy"
-            priority={false}
+          />
+        </div>
+        <span
+          className="text-xs text-gray-700 dark:text-gray-300 truncate"
+          title={post.board_name}
+          style={{ maxWidth: '85px' }}
+        >
+          {post.board_name}
+        </span>
+      </Link>
+    );
+  } else if (post.league_id) {
+    // 리그 게시판: 다크모드 지원
+    const leagueLogo = post.league_logo || LEAGUE_PLACEHOLDER;
+    return (
+      <Link href={boardLink} className="flex items-center hover:underline">
+        <div className="relative w-5 h-5 mr-1">
+          <LeagueLogoImage
+            leagueLogo={leagueLogo}
+            leagueLogoDark={post.league_logo_dark}
+            alt={post.board_name}
           />
         </div>
         <span
@@ -198,6 +269,7 @@ export function renderBoardLogo(post: Post): React.ReactNode {
       </Link>
     );
   } else {
+    // 일반 게시판: 사이트 로고
     return (
       <Link href={boardLink} className="flex items-center hover:underline">
         <div className="relative w-5 h-5 mr-1">

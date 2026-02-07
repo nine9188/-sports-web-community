@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { PenLine } from 'lucide-react';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
+
+// 4590 표준: placeholder 상수
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 
 interface TeamData {
   team: {
@@ -26,9 +28,11 @@ interface BoardTeamInfoProps {
   boardSlug?: string;
   isLoggedIn?: boolean;
   className?: string;
+  // 4590 표준: 이미지 Storage URL
+  teamLogoUrl?: string;
 }
 
-export default function BoardTeamInfo({ teamData, boardId, boardSlug, isLoggedIn = false, className = '' }: BoardTeamInfoProps) {
+export default function BoardTeamInfo({ teamData, boardId, boardSlug, isLoggedIn = false, className = '', teamLogoUrl }: BoardTeamInfoProps) {
   // 데이터 유효성 검사
   if (!teamData || !teamData.team || !teamData.venue) {
     return (
@@ -55,9 +59,8 @@ export default function BoardTeamInfo({ teamData, boardId, boardSlug, isLoggedIn
       <div className="flex items-center gap-2 min-w-0">
         {/* 팀 로고 */}
         <div className="relative w-6 h-6 flex-shrink-0">
-          <UnifiedSportsImage
-            imageId={team.id}
-            imageType={ImageType.Teams}
+          <UnifiedSportsImageClient
+            src={teamLogoUrl || TEAM_PLACEHOLDER}
             alt={`${team.name} logo`}
             width={24}
             height={24}

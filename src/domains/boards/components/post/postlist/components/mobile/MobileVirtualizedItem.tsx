@@ -5,7 +5,7 @@
 
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Calendar as CalendarIcon } from 'lucide-react';
@@ -35,10 +35,18 @@ export const MobileVirtualizedItem = React.memo(function MobileVirtualizedItem({
   const { posts, currentPostId, currentBoardId, variant } = data;
   const post = posts[index];
 
+  // from 정보를 sessionStorage에 저장 (클릭 시)
+  const handleClick = useCallback(() => {
+    if (currentBoardId && typeof window !== 'undefined') {
+      sessionStorage.setItem('postListSource', currentBoardId);
+    }
+  }, [currentBoardId]);
+
   if (!post) return null;
 
   const isCurrentPost = post.id === currentPostId;
-  const href = `/boards/${post.board_slug}/${post.post_number}?from=${currentBoardId}`;
+  // SEO: 쿼리 파라미터 제거 - Google 중복 색인 방지
+  const href = `/boards/${post.board_slug}/${post.post_number}`;
 
   const formattedDate = useMemo(() => {
     return post.formattedDate || '-';
@@ -60,7 +68,7 @@ export const MobileVirtualizedItem = React.memo(function MobileVirtualizedItem({
         isCurrentPost ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
       }`}
     >
-      <Link href={href} prefetch={false} className="block w-full overflow-hidden">
+      <Link href={href} prefetch={false} className="block w-full overflow-hidden" onClick={handleClick}>
         <div className="flex items-center gap-1 mb-1.5">
           <span className={`${titleClassName} truncate`}>
             {titleText}

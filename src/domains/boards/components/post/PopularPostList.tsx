@@ -30,6 +30,7 @@ interface Post {
   author_icon_id?: number | null;
   author_icon_url?: string | null;
   author_level?: number;
+  author_exp?: number;
   comment_count: number;
   content?: string;
   team_logo?: string | null;
@@ -162,6 +163,7 @@ export default function PopularPostList({
                     oddsUserId={post.author_id}
                     iconUrl={post.author_icon_url}
                     level={post.author_level || 1}
+                    exp={post.author_exp}
                     iconSize={16}
                   />
                 </div>

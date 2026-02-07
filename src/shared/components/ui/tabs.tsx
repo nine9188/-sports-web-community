@@ -68,6 +68,7 @@ const TabButton = React.forwardRef<
   return (
     <button
       ref={ref}
+      type="button"
       className={cn(
         "font-medium transition-colors whitespace-nowrap",
         variant === 'underline' ? underlineClasses : variant === 'fill' ? fillClasses : defaultClasses,
@@ -194,6 +195,7 @@ function TabList({
           return (
             <button
               key={tab.id}
+              type="button"
               onClick={() => handleTabChange(tab.id)}
               className={buttonClasses}
               aria-current={isActive ? 'page' : undefined}

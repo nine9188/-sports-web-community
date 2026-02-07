@@ -1,25 +1,37 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import { Medal } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Container, ContainerContent, TabList } from '@/shared/components/ui';
 import { EmptyState } from '@/domains/livescore/components/common';
 import { RankingsData, PlayerRanking } from '@/domains/livescore/types/player';
 import { getTeamById } from '@/domains/livescore/constants/teams';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
+
+// 4590 표준: placeholder URLs
+const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 
 interface PlayerRankingsProps {
   playerId?: number;
   rankingsData?: RankingsData;
   playerKoreanNames?: Record<number, string | null>;
+  // 4590 표준: Storage URL 맵
+  playerPhotoUrls?: Record<number, string>;
+  teamLogoUrls?: Record<number, string>;
 }
 
 export default function PlayerRankings({
   playerId,
   rankingsData = {},
-  playerKoreanNames = {}
+  playerKoreanNames = {},
+  playerPhotoUrls = {},
+  teamLogoUrls = {},
 }: PlayerRankingsProps) {
+  // 4590 표준: URL 조회 헬퍼
+  const getPlayerPhoto = (id: number) => playerPhotoUrls[id] || PLAYER_PLACEHOLDER;
+  const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
   const router = useRouter();
   const [rankingType, setRankingType] = useState('topScorers');
 
@@ -100,17 +112,13 @@ export default function PlayerRankings({
                   className={`absolute top-2 left-2 h-6 w-6 drop-shadow-md ${getMedalColor(index)}`}
                 />
                 <div className="w-16 h-16 relative mb-2">
-                  <Image
-                    src={player.player.photo || '/placeholder-player.png'}
+                  <UnifiedSportsImageClient
+                    src={getPlayerPhoto(player.player.id)}
                     alt={player.player.name}
-                    fill
-                    sizes="64px"
-                    className="rounded-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = '/placeholder-player.png';
-                    }}
-                    unoptimized
+                    width={64}
+                    height={64}
+                    variant="circle"
+                    className="w-full h-full"
                   />
                 </div>
                 <div className="text-center">
@@ -118,20 +126,13 @@ export default function PlayerRankings({
                     {playerKoreanNames[player.player.id] || player.player.name}
                   </div>
                   <div className="flex items-center justify-center gap-1 mt-1">
-                    <div className="relative w-4 h-4">
-                      <Image
-                        src={player.statistics[0].team.logo || '/placeholder-team.png'}
-                        alt={player.statistics[0].team.name}
-                        fill
-                        sizes="16px"
-                        className="object-contain"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = '/placeholder-team.png';
-                        }}
-                        unoptimized
-                      />
-                    </div>
+                    <UnifiedSportsImageClient
+                      src={getTeamLogo(player.statistics[0].team.id)}
+                      alt={player.statistics[0].team.name}
+                      width={16}
+                      height={16}
+                      fit="contain"
+                    />
                     <span className="text-xs text-gray-500 dark:text-gray-400">
                       {getTeamById(player.statistics[0].team.id)?.name_ko || player.statistics[0].team.name}
                     </span>
@@ -177,18 +178,14 @@ export default function PlayerRankings({
                     </td>
                     <td className="px-1 py-2">
                       <div className="flex items-center min-w-0 gap-1.5">
-                        <div className="flex-shrink-0 h-7 w-7 relative">
-                          <Image
-                            src={player.player.photo || '/placeholder-player.png'}
+                        <div className="flex-shrink-0 w-6 h-6">
+                          <UnifiedSportsImageClient
+                            src={getPlayerPhoto(player.player.id)}
                             alt={player.player.name}
-                            fill
-                            sizes="28px"
-                            className="rounded-full object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = '/placeholder-player.png';
-                            }}
-                            unoptimized
+                            width={24}
+                            height={24}
+                            variant="circle"
+                            className="w-full h-full"
                           />
                         </div>
                         <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
@@ -198,18 +195,14 @@ export default function PlayerRankings({
                     </td>
                     <td className="px-1 py-2">
                       <div className="flex items-center min-w-0 gap-1">
-                        <div className="relative w-5 h-5 flex-shrink-0">
-                          <Image
-                            src={player.statistics[0].team.logo || '/placeholder-team.png'}
+                        <div className="flex-shrink-0 w-5 h-5">
+                          <UnifiedSportsImageClient
+                            src={getTeamLogo(player.statistics[0].team.id)}
                             alt={player.statistics[0].team.name}
-                            fill
-                            sizes="20px"
-                            className="object-contain"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = '/placeholder-team.png';
-                            }}
-                            unoptimized
+                            width={20}
+                            height={20}
+                            fit="contain"
+                            className="w-full h-full"
                           />
                         </div>
                         <span className="text-xs sm:text-sm text-gray-900 dark:text-[#F0F0F0] truncate">

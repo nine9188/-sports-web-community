@@ -1,6 +1,7 @@
 'use server';
 
 import { getMajorLeagueIds } from '../constants/league-mappings';
+import { getTeamLogoUrls, getLeagueLogoUrls } from './images';
 
 // 매치 데이터 인터페이스
 export interface MatchData {
@@ -20,6 +21,7 @@ export interface MatchData {
     name: string;
     country: string;
     logo: string;
+    logoDark?: string;  // 다크모드 리그 로고
     flag: string;
   };
   teams: {
@@ -247,19 +249,14 @@ export const fetchFromFootballApi = async (endpoint: string, params: Record<stri
 
 // 특정 날짜의 경기 정보 가져오기
 export async function fetchMatchesByDate(date: string): Promise<MatchData[]> {
-  console.log('🔴 [API] fetchMatchesByDate 호출됨:', date);
-
   try {
     // 캐시 확인
     const cacheKey = `matches-${date}`;
     const cached = matchesCache.get(cacheKey);
 
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      console.log('✅ [캐시] 캐시된 데이터 사용:', date);
       return cached.data;
     }
-
-    console.log('🔴 [API] Sports API 호출 중... (fixtures, date:', date, ')');
 
     // 타임존은 fetchFromFootballApi에서 자동으로 추가되므로 여기서는 제거
     const data = await fetchFromFootballApi('fixtures', { date });
@@ -267,50 +264,74 @@ export async function fetchMatchesByDate(date: string): Promise<MatchData[]> {
     if (data.response) {
       // 주요 리그로 필터링 - 매핑된 모든 리그 ID 사용
       const majorLeagueIds = getMajorLeagueIds();
-      
-      const filteredMatches = data.response
-        .filter((match: ApiMatch) => majorLeagueIds.includes(match.league?.id ?? 0))
-        .map((match: ApiMatch): MatchData => {
-          // MatchData 형식으로 변환
-          return {
-            id: match.fixture?.id || 0,
-            status: {
-              code: match.fixture?.status?.short || '',
-              name: match.fixture?.status?.long || '',
-              elapsed: match.fixture?.status?.elapsed || null
+
+      const filteredApiMatches = data.response.filter(
+        (match: ApiMatch) => majorLeagueIds.includes(match.league?.id ?? 0)
+      );
+
+      // 4590 표준: 팀/리그 ID 수집 후 배치로 Storage URL 조회
+      const teamIds = new Set<number>();
+      const leagueIds = new Set<number>();
+
+      filteredApiMatches.forEach((match: ApiMatch) => {
+        if (match.teams?.home?.id) teamIds.add(match.teams.home.id);
+        if (match.teams?.away?.id) teamIds.add(match.teams.away.id);
+        if (match.league?.id) leagueIds.add(match.league.id);
+      });
+
+      // 배치로 Storage URL 조회 (일반 + 다크모드 리그 로고)
+      const [teamLogoUrls, leagueLogoUrls, leagueLogoDarkUrls] = await Promise.all([
+        teamIds.size > 0 ? getTeamLogoUrls([...teamIds]) : Promise.resolve({}),
+        leagueIds.size > 0 ? getLeagueLogoUrls([...leagueIds]) : Promise.resolve({}),
+        leagueIds.size > 0 ? getLeagueLogoUrls([...leagueIds], true) : Promise.resolve({})  // 다크모드
+      ]);
+
+      const filteredMatches = filteredApiMatches.map((match: ApiMatch): MatchData => {
+        const homeId = match.teams?.home?.id || 0;
+        const awayId = match.teams?.away?.id || 0;
+        const leagueId = match.league?.id || 0;
+
+        // MatchData 형식으로 변환 (4590 표준: Storage URL 사용)
+        return {
+          id: match.fixture?.id || 0,
+          status: {
+            code: match.fixture?.status?.short || '',
+            name: match.fixture?.status?.long || '',
+            elapsed: match.fixture?.status?.elapsed || null
+          },
+          time: {
+            timestamp: match.fixture?.timestamp || 0,
+            date: match.fixture?.date || '',
+            timezone: match.fixture?.timezone || 'UTC'
+          },
+          league: {
+            id: leagueId,
+            name: match.league?.name || '',
+            country: match.league?.country || '',
+            logo: leagueLogoUrls[leagueId] || '',  // 4590 표준: Storage URL
+            logoDark: leagueLogoDarkUrls[leagueId] || '',  // 다크모드 리그 로고
+            flag: match.league?.flag || ''
+          },
+          teams: {
+            home: {
+              id: homeId,
+              name: match.teams?.home?.name || '',
+              logo: teamLogoUrls[homeId] || '',  // 4590 표준: Storage URL
+              winner: match.teams?.home?.winner !== undefined ? match.teams.home.winner : null
             },
-            time: {
-              timestamp: match.fixture?.timestamp || 0,
-              date: match.fixture?.date || '',
-              timezone: match.fixture?.timezone || 'UTC'
-            },
-            league: {
-              id: match.league?.id || 0,
-              name: match.league?.name || '',
-              country: match.league?.country || '',
-              logo: match.league?.logo || '',
-              flag: match.league?.flag || ''
-            },
-            teams: {
-              home: {
-                id: match.teams?.home?.id || 0,
-                name: match.teams?.home?.name || '',
-                logo: match.teams?.home?.logo || '',
-                winner: match.teams?.home?.winner !== undefined ? match.teams.home.winner : null
-              },
-              away: {
-                id: match.teams?.away?.id || 0,
-                name: match.teams?.away?.name || '',
-                logo: match.teams?.away?.logo || '',
-                winner: match.teams?.away?.winner !== undefined ? match.teams.away.winner : null
-              }
-            },
-            goals: {
-              home: match.goals?.home ?? 0,
-              away: match.goals?.away ?? 0
+            away: {
+              id: awayId,
+              name: match.teams?.away?.name || '',
+              logo: teamLogoUrls[awayId] || '',  // 4590 표준: Storage URL
+              winner: match.teams?.away?.winner !== undefined ? match.teams.away.winner : null
             }
-          };
-        });
+          },
+          goals: {
+            home: match.goals?.home ?? 0,
+            away: match.goals?.away ?? 0
+          }
+        };
+      });
 
       // JSON 직렬화로 안전한 객체 보장
       const safeData = JSON.parse(JSON.stringify(filteredMatches));
@@ -653,11 +674,14 @@ export async function fetchLeagueDetails(leagueId: string): Promise<LeagueDetail
       return null;
     }
 
+    // 4590 표준: Storage URL 조회
+    const leagueLogoUrls = await getLeagueLogoUrls([league.id]);
+
     const result = {
       id: league.id,
       name: league.name || '',
       country: league.country || '',
-      logo: league.logo || '',
+      logo: leagueLogoUrls[league.id] || '',  // 4590 표준: Storage URL
       flag: league.flag || '',
       season: currentSeason?.year || new Date().getFullYear(),
       type: league.type || ''
@@ -771,6 +795,13 @@ export async function fetchLeagueTeams(leagueId: string): Promise<LeagueTeam[]> 
     // 우승팀 정보
     const winnerId = await winnerPromise;
 
+    // 4590 표준: 팀 ID 수집 후 배치로 Storage URL 조회
+    const teamIds = teamsData.response
+      .map((item: { team?: { id?: number } }) => item.team?.id)
+      .filter((id: number | undefined): id is number => id !== undefined);
+
+    const teamLogoUrls = teamIds.length > 0 ? await getTeamLogoUrls(teamIds) : {};
+
     const teams: LeagueTeam[] = teamsData.response
       .map((item: { team?: { id?: number; name?: string; logo?: string; founded?: number }; venue?: { id?: number; name?: string; city?: string; capacity?: number } }) => {
         const team = item.team;
@@ -785,7 +816,7 @@ export async function fetchLeagueTeams(leagueId: string): Promise<LeagueTeam[]> 
         return {
           id: team.id,
           name: team.name || '',
-          logo: team.logo || '',
+          logo: teamLogoUrls[team.id] || '',  // 4590 표준: Storage URL
           founded: team.founded || 0,
           venue: {
             id: venue?.id || 0,

@@ -7,6 +7,7 @@ import { formatPosts } from '../utils/post/postUtils';
 import { processContentToHtml } from '../utils/post/processContentToHtml';
 import { BoardMap, ChildBoardsMap, BoardData } from '../types/board';
 import { getComments } from './comments/index';
+import { getTeamLogoUrls, getLeagueLogoUrls } from '@/domains/livescore/actions/images';
 
 /**
  * 게시글 상세 페이지에 필요한 모든 데이터를 가져옵니다.
@@ -49,7 +50,7 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       // 게시글 상세 정보
       supabase
         .from('posts')
-        .select('*, profiles(id, nickname, icon_id, level, public_id), board:board_id(name)')
+        .select('*, profiles(id, nickname, icon_id, level, exp, public_id), board:board_id(name)')
         .eq('board_id', board.id)
         .eq('post_number', postNum)
         .single(),
@@ -188,7 +189,7 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       // 게시글 목록
       supabase
         .from('posts')
-        .select('*, profiles(id, nickname, icon_id, level, public_id)', { count: 'exact' })
+        .select('*, profiles(id, nickname, icon_id, level, exp, public_id)', { count: 'exact' })
         .in('board_id', boardFilter)
         .eq('is_hidden', false)
         .eq('is_deleted', false)
@@ -212,15 +213,15 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
         .eq('user_id', user.id)
         .maybeSingle() : Promise.resolve({ data: null }),
 
-      // 팀 정보 (병렬화)
+      // 팀 정보 (병렬화) - 4590 표준: logo 제외, 별도 조회
       teamIds.length > 0
-        ? supabase.from('teams').select('*').in('id', teamIds)
-        : Promise.resolve({ data: [] as { id: number; name: string; logo: string }[] }),
+        ? supabase.from('teams').select('id, name').in('id', teamIds)
+        : Promise.resolve({ data: [] as { id: number; name: string }[] }),
 
-      // 리그 정보 (병렬화)
+      // 리그 정보 (병렬화) - 4590 표준: logo 제외, 별도 조회
       leagueIds.length > 0
-        ? supabase.from('leagues').select('*').in('id', leagueIds)
-        : Promise.resolve({ data: [] as { id: number; name: string; logo: string }[] }),
+        ? supabase.from('leagues').select('id, name').in('id', leagueIds)
+        : Promise.resolve({ data: [] as { id: number; name: string }[] }),
 
       // 작성자 아이콘 (병렬화)
       iconId
@@ -231,6 +232,13 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
     const { data: postsData, count } = postsResult;
     const filesData = filesResult.data;
     const postUserActionData = postUserActionResult.data;
+
+    // 4590 표준: Storage URL로 팀/리그 로고 조회 (다크모드 포함)
+    const [teamLogoUrlMap, leagueLogoUrlMap, leagueLogoDarkUrlMap] = await Promise.all([
+      teamIds.length > 0 ? getTeamLogoUrls(teamIds) : Promise.resolve({}),
+      leagueIds.length > 0 ? getLeagueLogoUrls(leagueIds) : Promise.resolve({}),
+      leagueIds.length > 0 ? getLeagueLogoUrls(leagueIds, true) : Promise.resolve({})  // 다크모드
+    ]);
 
     // 게시글 사용자 액션 처리
     const postUserAction: 'like' | 'dislike' | null = postUserActionData?.type === 'like' ? 'like' :
@@ -265,16 +273,23 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
     // JSON 직렬화를 통해 데이터 무결성 보장
     const serializedComments = JSON.parse(JSON.stringify(processedComments));
 
-    // 10. 팀/리그/아이콘 맵 구성 (이미 병렬로 가져옴)
+    // 10. 팀/리그/아이콘 맵 구성 (4590 표준: Storage URL 사용)
     const teamsMap: Record<string, { id: number; name: string; logo: string; [key: string]: unknown }> = {};
-    const leaguesMap: Record<string, { id: number; name: string; logo: string; [key: string]: unknown }> = {};
+    const leaguesMap: Record<string, { id: number; name: string; logo: string; logo_dark: string; [key: string]: unknown }> = {};
 
     (teamsResult.data || []).forEach((team) => {
-      teamsMap[team.id] = { ...team, logo: team.logo || '' };
+      teamsMap[team.id] = {
+        ...team,
+        logo: teamLogoUrlMap[team.id] || ''  // 4590 표준: Storage URL
+      };
     });
 
     (leaguesResult.data || []).forEach((league) => {
-      leaguesMap[league.id] = { ...league, logo: league.logo || '' };
+      leaguesMap[league.id] = {
+        ...league,
+        logo: leagueLogoUrlMap[league.id] || '',  // 4590 표준: Storage URL
+        logo_dark: leagueLogoDarkUrlMap[league.id] || ''  // 다크모드 로고
+      };
     });
 
     const iconUrl = iconResult.data?.image_url || null;

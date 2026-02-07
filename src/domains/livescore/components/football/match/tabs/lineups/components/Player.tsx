@@ -5,8 +5,8 @@ import { motion } from 'framer-motion';
 import styles from '../styles/formation.module.css';
 import { PlayerKoreanNames } from '../../../MatchPageClient';
 
-// API-Sports 이미지 URL 직접 생성
-const API_SPORTS_BASE_URL = 'https://media.api-sports.io/football';
+// 4590 표준: API-Sports URL 직접 생성 제거됨
+// 이제 lineupData.ts에서 Storage URL을 내려받음
 
 
 // 미디어 쿼리 커스텀 훅
@@ -70,11 +70,12 @@ interface PlayerProps {
 interface SVGPlayerImageProps {
   playerId: number;
   teamId: number;
+  photoUrl: string;  // 4590 표준: Storage URL을 상위에서 전달받음
   onImageLoad: () => void;
   onImageError: () => void;
 }
 
-const SVGPlayerImage = memo(function SVGPlayerImage({ playerId, teamId, onImageLoad, onImageError }: SVGPlayerImageProps) {
+const SVGPlayerImage = memo(function SVGPlayerImage({ playerId, teamId, photoUrl, onImageLoad, onImageError }: SVGPlayerImageProps) {
   const [hasError, setHasError] = useState(false);
 
   // playerId가 변경되면 에러 상태 리셋
@@ -82,8 +83,8 @@ const SVGPlayerImage = memo(function SVGPlayerImage({ playerId, teamId, onImageL
     setHasError(false);
   }, [playerId]);
 
-  // API-Sports URL 직접 생성
-  const imageUrl = playerId ? `${API_SPORTS_BASE_URL}/players/${playerId}.png` : null;
+  // 4590 표준: 상위에서 전달받은 Storage URL 사용
+  const imageUrl = photoUrl || null;
 
   // 에러 시 null 반환
   if (!imageUrl || hasError) {
@@ -289,11 +290,12 @@ const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, away
           </defs>
           
           
-          {/* 선수 이미지 - API-Sports에서 직접 로딩 */}
-          {playerId && (
+          {/* 선수 이미지 - 4590 표준: Storage URL 사용 */}
+          {playerId && player.photo && (
             <SVGPlayerImage
               playerId={playerId}
               teamId={teamId}
+              photoUrl={player.photo}
               onImageLoad={() => {}}
               onImageError={() => {}}
             />

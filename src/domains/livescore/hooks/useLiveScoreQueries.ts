@@ -8,8 +8,9 @@ import { getLeagueById } from '../constants/league-mappings';
 import { countLiveMatches } from '../constants/match-status';
 import { Match } from '../types/match';
 
-// 기본 이미지 URL
-const DEFAULT_TEAM_LOGO = 'https://cdn.sportmonks.com/images/soccer/team_placeholder.png';
+// 4590 표준: placeholder URL
+const PLACEHOLDER_TEAM = '/images/placeholder-team.svg';
+const PLACEHOLDER_LEAGUE = '/images/placeholder-league.svg';
 
 // Query Keys
 export const liveScoreKeys = {
@@ -44,14 +45,15 @@ function processMatches(matchesData: MatchData[]): Match[] {
         id: match.league.id,
         name: leagueName,
         country: match.league.country,
-        logo: match.league.logo || '',
+        logo: match.league.logo || PLACEHOLDER_LEAGUE,
+        logoDark: match.league.logoDark || '',  // 다크모드 리그 로고
         flag: match.league.flag || ''
       },
       teams: {
         home: {
           id: match.teams.home.id,
           name: homeTeamName,
-          img: match.teams.home.logo || DEFAULT_TEAM_LOGO,
+          img: match.teams.home.logo || PLACEHOLDER_TEAM,
           score: match.goals.home,
           form: '',
           formation: ''
@@ -59,7 +61,7 @@ function processMatches(matchesData: MatchData[]): Match[] {
         away: {
           id: match.teams.away.id,
           name: awayTeamName,
-          img: match.teams.away.logo || DEFAULT_TEAM_LOGO,
+          img: match.teams.away.logo || PLACEHOLDER_TEAM,
           score: match.goals.away,
           form: '',
           formation: ''

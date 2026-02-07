@@ -1,46 +1,49 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useTheme } from 'next-themes';
+import Image from 'next/image';
 import type { PlayerCardProps } from '@/shared/types/playerCard';
 
+// 4590 표준: placeholder 및 Storage URL
+const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 const SUPABASE_URL = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co';
 
 export function PlayerCard({ playerId, playerData, isEditable = false }: PlayerCardProps) {
-  const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   const { name, koreanName, team, photo } = playerData;
   const displayName = koreanName || name;
   const teamDisplayName = team?.koreanName || team?.name || '';
   const numericPlayerId = typeof playerId === 'string' ? parseInt(playerId, 10) : playerId;
-  const isDark = mounted && resolvedTheme === 'dark';
+  const teamId = typeof team?.id === 'string' ? parseInt(team.id, 10) : team?.id;
 
-  // 이미지 URL (팀 다크모드는 DARK_MODE_TEAM_IDS 추가 시 지원 예정)
-  const teamLogo = team?.id ? `${SUPABASE_URL}/storage/v1/object/public/teams/${team.id}.png` : null;
-  const playerPhoto = photo || `https://media.api-sports.io/football/players/${numericPlayerId}.png`;
+  // 4590 표준: Storage URL 사용
+  const getTeamLogo = () => {
+    if (!teamId) return TEAM_PLACEHOLDER;
+    return `${SUPABASE_URL}/storage/v1/object/public/teams/${teamId}.png`;
+  };
+
+  const getPlayerPhoto = () => {
+    if (!numericPlayerId) return PLAYER_PLACEHOLDER;
+    return `${SUPABASE_URL}/storage/v1/object/public/players/${numericPlayerId}.png`;
+  };
+
+  const teamLogo = team?.id ? getTeamLogo() : TEAM_PLACEHOLDER;
+  const playerPhoto = photo ? getPlayerPhoto() : PLAYER_PLACEHOLDER;
 
   const CardContent = () => (
     <>
       {/* 헤더: 팀 로고 + 팀명 */}
       <div className="league-header">
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          {teamLogo && (
-            <div className="league-logo-box">
-              <img
-                src={teamLogo}
-                alt={teamDisplayName}
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            </div>
-          )}
+          <div className="league-logo-box">
+            <Image
+              src={teamLogo}
+              alt={teamDisplayName}
+              width={24}
+              height={24}
+              style={{ width: '24px', height: '24px', objectFit: 'contain' }}
+            />
+          </div>
           <span className="league-name">{teamDisplayName}</span>
         </div>
       </div>
@@ -48,13 +51,12 @@ export function PlayerCard({ playerId, playerData, isEditable = false }: PlayerC
       {/* 메인: 선수 사진 + 이름 */}
       <div className="player-main">
         <div className="player-photo">
-          <img
+          <Image
             src={playerPhoto}
             alt={displayName}
-            onError={(e) => {
-              e.currentTarget.onerror = null;
-              e.currentTarget.src = `https://media.api-sports.io/football/players/${numericPlayerId}.png`;
-            }}
+            width={64}
+            height={64}
+            style={{ width: '64px', height: '64px', objectFit: 'cover' }}
           />
         </div>
         <span className="player-name">{displayName}</span>

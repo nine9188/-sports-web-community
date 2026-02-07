@@ -78,8 +78,11 @@ export function Pagination({
   }, [currentPage, totalPages, maxButtons]);
 
   // URL 빌드 (mode="url"일 때)
+  // SEO: from 파라미터는 색인에서 제외해야 하므로 URL에서 제거
   const buildHref = (targetPage: number) => {
     const params = new URLSearchParams(searchParams?.toString());
+    // SEO를 위해 from 파라미터 제거
+    params.delete("from");
     if (targetPage <= 1) {
       params.delete("page");
     } else {

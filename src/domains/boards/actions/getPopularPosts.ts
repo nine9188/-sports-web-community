@@ -16,6 +16,7 @@ export interface PopularPost {
   author_nickname: string;
   author_id?: string;
   author_level?: number;
+  author_exp?: number;
   author_icon_id?: number | null;
   author_icon_url?: string | null;
   author_public_id?: string | null;
@@ -64,7 +65,7 @@ export async function getBoardPopularPosts(boardId: string) {
       content,
       deal_info,
       boards!inner(slug, name, team_id, league_id),
-      profiles!inner(id, nickname, level, icon_id, public_id)
+      profiles!inner(id, nickname, level, exp, icon_id, public_id)
     `)
     .in('board_id', allBoardIds)
     .eq('is_deleted', false)
@@ -86,7 +87,7 @@ export async function getBoardPopularPosts(boardId: string) {
       content,
       deal_info,
       boards!inner(slug, name, team_id, league_id),
-      profiles!inner(id, nickname, level, icon_id, public_id)
+      profiles!inner(id, nickname, level, exp, icon_id, public_id)
     `)
     .in('board_id', allBoardIds)
     .eq('is_deleted', false)
@@ -173,6 +174,7 @@ export async function getBoardPopularPosts(boardId: string) {
         author_nickname: post.profiles.nickname,
         author_id: post.profiles.id,
         author_level: post.profiles.level,
+        author_exp: post.profiles.exp || 0,
         author_icon_id: iconId,
         author_icon_url: iconUrl,
         author_public_id: post.profiles.public_id || null,

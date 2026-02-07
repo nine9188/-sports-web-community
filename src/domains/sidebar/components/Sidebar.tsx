@@ -3,29 +3,7 @@
 import { X } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
-import { Suspense } from 'react';
 import { SidebarProps } from '../types';
-
-// 로딩 중 표시할 스켈레톤 UI
-function LeagueStandingsSkeleton() {
-  return (
-    <div className="border rounded-md overflow-hidden hidden md:block animate-pulse">
-      <div className="bg-[#262626] text-white py-2 px-3 text-sm font-medium">
-        축구 팀순위
-      </div>
-      <div className="flex border-b">
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="flex-1 h-7 bg-[#F5F5F5] dark:bg-[#262626]"></div>
-        ))}
-      </div>
-      <div className="p-3 space-y-2">
-        {[...Array(10)].map((_, i) => (
-          <div key={i} className="h-5 w-full bg-[#F5F5F5] dark:bg-[#262626] rounded"></div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 export default function Sidebar({
   isOpen,
@@ -75,9 +53,7 @@ export default function Sidebar({
 
           {/* 축구 리그 순위 위젯 - 서버 컴포넌트 사용 */}
           <div className="mb-4">
-            <Suspense fallback={<LeagueStandingsSkeleton />}>
-              {leagueStandingsComponent}
-            </Suspense>
+            {leagueStandingsComponent}
           </div>
         </div>
       </div>
@@ -117,9 +93,7 @@ export default function Sidebar({
 
           {/* 축구 리그 순위 위젯 - 서버 컴포넌트 사용 */}
           <div className="mb-4">
-            <Suspense fallback={<LeagueStandingsSkeleton />}>
-              {leagueStandingsComponent}
-            </Suspense>
+            {leagueStandingsComponent}
           </div>
         </div>
       </div>

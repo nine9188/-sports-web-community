@@ -1,16 +1,31 @@
 'use client';
 
-import React from 'react';
+/**
+ * 4590 표준 적용:
+ * - 리그/팀 이미지: UnifiedSportsImageClient 사용
+ * - URL은 props로 전달받거나 placeholder 사용
+ * - 다크모드 리그 로고 지원
+ */
+
+import React, { useState, useEffect } from 'react';
 import { Trophy, Users } from 'lucide-react';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { MatchData } from '@/domains/livescore/actions/footballApi';
 import { getLeagueKoreanName, getLeagueName } from '@/domains/livescore/constants/league-mappings';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 
+// 4590 표준: placeholder 상수
+const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
+
 interface MatchItemProps {
   match: MatchData;
   onClose: () => void;
+  // 4590 표준: 이미지 Storage URL
+  leagueLogoUrl?: string;
+  leagueLogoDarkUrl?: string;  // 다크모드 리그 로고
+  homeTeamLogoUrl?: string;
+  awayTeamLogoUrl?: string;
 }
 
 // 경기 상태에 따른 스타일 반환
@@ -68,9 +83,39 @@ const getStatusText = (statusCode: string, statusDescription: string, elapsed?: 
   }
 };
 
-const MatchItem = React.memo(function MatchItem({ match, onClose }: MatchItemProps) {
+const MatchItem = React.memo(function MatchItem({
+  match,
+  onClose,
+  leagueLogoUrl,
+  leagueLogoDarkUrl,
+  homeTeamLogoUrl,
+  awayTeamLogoUrl,
+}: MatchItemProps) {
   const isLive = ['LIVE', '1H', '2H', 'HT'].includes(match.status?.code || '');
   const isFinished = ['FT', 'AET', 'PEN'].includes(match.status?.code || '');
+
+  // 다크모드 감지
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    // 초기 다크모드 상태 확인
+    setIsDark(document.documentElement.classList.contains('dark'));
+
+    // 다크모드 변경 감지
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          setIsDark(document.documentElement.classList.contains('dark'));
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, { attributes: true });
+    return () => observer.disconnect();
+  }, []);
+
+  // 다크모드에 따른 리그 로고 URL 선택
+  const effectiveLeagueLogoUrl = isDark && leagueLogoDarkUrl ? leagueLogoDarkUrl : leagueLogoUrl;
 
   // 한국어 매핑 - 리그 ID 우선 사용
   const leagueNameKo = match.league?.id
@@ -97,9 +142,8 @@ const MatchItem = React.memo(function MatchItem({ match, onClose }: MatchItemPro
       {match.league && (
         <div className="flex items-center gap-2 mb-3 text-xs text-gray-600 dark:text-gray-400">
           {match.league.id ? (
-            <UnifiedSportsImage
-              imageId={match.league.id}
-              imageType={ImageType.Leagues}
+            <UnifiedSportsImageClient
+              src={effectiveLeagueLogoUrl || LEAGUE_PLACEHOLDER}
               alt={match.league.name || '리그'}
               width={16}
               height={16}
@@ -128,11 +172,10 @@ const MatchItem = React.memo(function MatchItem({ match, onClose }: MatchItemPro
       <div className="flex items-center justify-between">
         {/* 홈팀 */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          {match.teams?.home?.logo ? (
+          {match.teams?.home?.id ? (
             <div className="w-6 h-6 flex-shrink-0 flex items-center justify-center">
-              <UnifiedSportsImage
-                imageId={match.teams.home.id}
-                imageType={ImageType.Teams}
+              <UnifiedSportsImageClient
+                src={homeTeamLogoUrl || TEAM_PLACEHOLDER}
                 alt={match.teams?.home?.name || '홈팀'}
                 width={24}
                 height={24}
@@ -181,11 +224,10 @@ const MatchItem = React.memo(function MatchItem({ match, onClose }: MatchItemPro
           <span className="text-sm font-medium truncate text-gray-900 dark:text-[#F0F0F0]">
             {awayTeamName}
           </span>
-          {match.teams?.away?.logo ? (
+          {match.teams?.away?.id ? (
             <div className="w-6 h-6 flex-shrink-0 flex items-center justify-center">
-              <UnifiedSportsImage
-                imageId={match.teams.away.id}
-                imageType={ImageType.Teams}
+              <UnifiedSportsImageClient
+                src={awayTeamLogoUrl || TEAM_PLACEHOLDER}
                 alt={match.teams?.away?.name || '원정팀'}
                 width={24}
                 height={24}

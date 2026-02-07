@@ -3,8 +3,7 @@
 import { memo, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { MatchPlayerStatsResponse } from '@/domains/livescore/actions/match/matchPlayerStats';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 import { PlayerKoreanNames } from '../MatchPageClient';
@@ -13,6 +12,9 @@ import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/
 import { TeamStats, Team } from '@/domains/livescore/types/match';
 import Spinner from '@/shared/components/Spinner';
 import { useState } from 'react';
+
+// 4590 표준: Placeholder 상수
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 
 interface StatsProps {
   matchData: {
@@ -23,20 +25,23 @@ interface StatsProps {
   // 서버에서 프리로드된 선수 통계 데이터
   initialMatchPlayerStats?: MatchPlayerStatsResponse;
   playerKoreanNames?: PlayerKoreanNames;
+  // 4590 표준: 서버에서 전달받은 Storage URL 맵
+  teamLogoUrls?: Record<number, string>;
 }
 
 // 팀 로고 컴포넌트 - 메모이제이션
-const TeamLogo = memo(({ name, teamId }: { name: string; teamId?: number }) => {
+// 4590 표준: src로 pre-resolved Storage URL을 받음
+const TeamLogo = memo(({ name, src }: { name: string; src?: string }) => {
   return (
     <div className="w-8 h-8 relative flex-shrink-0 overflow-hidden">
-      {teamId && teamId > 0 ? (
-        <UnifiedSportsImage
-          imageId={teamId}
-          imageType={ImageType.Teams}
+      {src ? (
+        <UnifiedSportsImageClient
+          src={src}
           alt={name || '팀'}
-          width={32}
-          height={32}
-          className="w-full h-full object-contain"
+          size="sm"
+          variant="square"
+          fit="contain"
+          className="w-full h-full"
         />
       ) : (
         <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 text-xs">
@@ -180,11 +185,14 @@ const SortIcon = ({ field, currentField, direction }: { field: string; currentFi
   );
 };
 
-const Stats = memo(({ matchData: propsMatchData, initialMatchPlayerStats, playerKoreanNames = {} }: StatsProps) => {
+const Stats = memo(({ matchData: propsMatchData, initialMatchPlayerStats, playerKoreanNames = {}, teamLogoUrls = {} }: StatsProps) => {
   // props에서 데이터 직접 추출 (서버에서 프리로드된 데이터)
   const stats = propsMatchData?.stats || [];
   const homeTeam = propsMatchData?.homeTeam;
   const awayTeam = propsMatchData?.awayTeam;
+
+  // 4590 표준: 헬퍼 함수
+  const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
 
   // 로딩 상태는 더 이상 필요 없음 (서버에서 미리 로드)
   const loading = false;
@@ -393,12 +401,12 @@ const Stats = memo(({ matchData: propsMatchData, initialMatchPlayerStats, player
                 {homeTeam && awayTeam && (
                   <div className="flex items-center gap-4 text-xs">
                     <div className="flex items-center gap-2">
-                      <TeamLogo name={homeTeam.name} teamId={homeTeam.id} />
+                      <TeamLogo name={homeTeam.name} src={getTeamLogo(homeTeam.id)} />
                       <div className="w-3 h-3 bg-blue-500 rounded-sm"></div>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 bg-green-500 rounded-sm"></div>
-                      <TeamLogo name={awayTeam.name} teamId={awayTeam.id} />
+                      <TeamLogo name={awayTeam.name} src={getTeamLogo(awayTeam.id)} />
                     </div>
                   </div>
                 )}
@@ -469,9 +477,8 @@ const Stats = memo(({ matchData: propsMatchData, initialMatchPlayerStats, player
                   href={`/livescore/football/team/${playerStatsData.data.homeTeam.id}`}
                   className="flex items-center gap-2 group hover:opacity-80 transition-opacity"
                 >
-                  <UnifiedSportsImage
-                    imageId={playerStatsData.data.homeTeam.id}
-                    imageType={ImageType.Teams}
+                  <UnifiedSportsImageClient
+                    src={getTeamLogo(playerStatsData.data.homeTeam.id)}
                     alt={playerStatsData.data.homeTeam.name}
                     size="sm"
                     variant="square"
@@ -659,9 +666,8 @@ const Stats = memo(({ matchData: propsMatchData, initialMatchPlayerStats, player
                   href={`/livescore/football/team/${playerStatsData.data.awayTeam.id}`}
                   className="flex items-center gap-2 group hover:opacity-80 transition-opacity"
                 >
-                  <UnifiedSportsImage
-                    imageId={playerStatsData.data.awayTeam.id}
-                    imageType={ImageType.Teams}
+                  <UnifiedSportsImageClient
+                    src={getTeamLogo(playerStatsData.data.awayTeam.id)}
                     alt={playerStatsData.data.awayTeam.name}
                     size="sm"
                     variant="square"

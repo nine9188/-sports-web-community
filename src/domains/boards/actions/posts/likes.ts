@@ -9,12 +9,6 @@ import { createPostLikeNotification } from '@/domains/notifications/actions';
 
 type LikeType = 'like' | 'dislike';
 
-interface PostLikeData {
-  likes: number;
-  dislikes: number;
-  user_id: string;
-}
-
 /**
  * 좋아요/싫어요 토글 공통 로직
  */
