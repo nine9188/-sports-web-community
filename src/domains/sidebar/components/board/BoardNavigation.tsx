@@ -1,16 +1,19 @@
-import { getBoardsForNavigation } from '@/domains/layout/actions';
 import ClientBoardNavigation from './ClientBoardNavigation';
+import { Board } from '@/domains/layout/types/board';
 
-// 서버 컴포넌트 (기본 내보내기) - Suspense 제거하고 바로 렌더링
-export default async function BoardNavigation() {
-  try {
-    // 서버 측에서 데이터 가져오기 (캐싱 적용) - 헤더와 동일한 액션 사용
-    const { boardData, totalPostCount } = await getBoardsForNavigation({ includeTotalPostCount: true });
+interface BoardNavigationProps {
+  boardData: Board[];
+  totalPostCount?: number;
+  isAdmin?: boolean;
+}
 
-    return <ClientBoardNavigation initialData={{ rootBoards: boardData, totalPostCount }} />;
-  } catch (error) {
-    console.error('게시판 데이터 가져오기 오류:', error);
-    // 에러 발생 시 에러 메시지 표시
+// 서버 컴포넌트 - layout.tsx에서 데이터를 props로 전달받음
+export default function BoardNavigation({
+  boardData,
+  totalPostCount,
+  isAdmin
+}: BoardNavigationProps) {
+  if (!boardData || boardData.length === 0) {
     return (
       <div className="rounded-md py-2">
         <p className="text-xs text-red-500">게시판 데이터를 불러오는데 실패했습니다.</p>
@@ -18,4 +21,11 @@ export default async function BoardNavigation() {
       </div>
     );
   }
+
+  return (
+    <ClientBoardNavigation
+      initialData={{ rootBoards: boardData, totalPostCount }}
+      showAdminLink={isAdmin}
+    />
+  );
 } 

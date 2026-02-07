@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import BoardNavigation from '@/domains/sidebar/components/board/BoardNavigation';
 import AuthSection from '@/domains/sidebar/components/auth/AuthSection';
-import LeagueStandings from '@/domains/sidebar/components/league/LeagueStandings';
+import ServerLeagueStandings from '@/domains/sidebar/components/league/ServerLeagueStandings';
 import { RightSidebar } from '@/domains/sidebar/components';
 import { getBoardsForNavigation } from '@/domains/layout/actions';
 import { getFullUserData } from '@/shared/actions/user';
@@ -26,10 +26,16 @@ export default async function SiteLayout({
     getBoardsForNavigation({ includeTotalPostCount: true }),
   ]);
 
-  // 컴포넌트 생성
-  const boardNav = <BoardNavigation />;
+  // 컴포넌트 생성 - layout에서 가져온 데이터를 전달 (중복 호출 방지)
+  const boardNav = (
+    <BoardNavigation
+      boardData={headerBoardsData.boardData}
+      totalPostCount={headerBoardsData.totalPostCount}
+      isAdmin={headerBoardsData.isAdmin}
+    />
+  );
   const authSection = <AuthSection userData={fullUserData} />;
-  const leagueStandingsComponent = <LeagueStandings initialLeague="premier" />;
+  const leagueStandingsComponent = <ServerLeagueStandings initialLeague="premier" />;
 
   // 서버에서 렌더링되는 로고 (LCP 최적화)
   const serverLogo = (

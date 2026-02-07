@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
@@ -21,46 +20,36 @@ import { detectStoreFromUrl, isHotdealBoard, formatPrice } from '../../utils/hot
 const STORE_OPTIONS = POPULAR_STORES.map(storeName => ({ value: storeName, label: storeName }));
 const SHIPPING_SELECT_OPTIONS = SHIPPING_OPTIONS.map(option => ({ value: option, label: option }));
 
-// MatchCard 확장 로딩 함수
-const loadMatchCardExtension = async () => {
-  const { MatchCardExtension } = await import('@/shared/components/editor/tiptap/MatchCardExtension');
-  return MatchCardExtension;
-};
-
-// 특정 컴포넌트에서 사용하는 Board 인터페이스 (서로 다른 Board 타입 문제를 해결하기 위함)
-interface BoardSelectorItem {
-  id: string;
-  name: string;
-  parent_id: string | null;
-  display_order: number;
-  slug: string;
-  children?: BoardSelectorItem[];
-}
+// 모듈 레벨에서 확장 preload 시작 (컴포넌트 마운트 전에 로딩 시작)
+// 이렇게 하면 PostEditForm이 dynamic import될 때 확장들도 병렬로 로딩됨
+const extensionsPreloadPromise = Promise.all([
+  import('@/shared/components/editor/tiptap/YoutubeExtension').then(mod => mod.YoutubeExtension),
+  import('@/shared/components/editor/tiptap/VideoExtension').then(mod => mod.Video),
+  import('@/shared/components/editor/tiptap/MatchCardExtension').then(mod => mod.MatchCardExtension),
+  import('@/shared/components/editor/tiptap/extensions/social-embeds'),
+  import('@/shared/components/editor/tiptap/TeamCardExtension').then(mod => mod.TeamCardExtension),
+  import('@/shared/components/editor/tiptap/PlayerCardExtension').then(mod => mod.PlayerCardExtension)
+]).catch(error => {
+  console.error('확장 preload 실패:', error);
+  return null;
+});
 
 interface PostEditFormProps {
-  // 수정 모드일 때 필요한 props
   postId?: string;
-  // 모든 경우에 필요한 props
   boardId?: string;
-  // 미사용 변수이지만 호환성을 위해 타입 정의에는 유지
-  _boardSlug?: string;
-  _postNumber?: string;
   initialTitle?: string;
   initialContent?: string;
   boardName: string;
-  // 카테고리 관련 props
   categoryId?: string;
-  setCategoryId?: ((id: string) => void) | null | undefined; // 옵션으로 변경
+  setCategoryId?: ((id: string) => void) | null;
   allBoardsFlat?: Board[];
   isCreateMode?: boolean;
-  // 핫딜 정보 (수정 모드)
   initialDealInfo?: DealInfo | null;
 }
 
 export default function PostEditForm({
   postId,
   boardId,
-  // 미사용 변수 제거
   initialTitle = '',
   initialContent = '',
   boardName,
@@ -74,6 +63,10 @@ export default function PostEditForm({
   const [content, setContent] = useState(initialContent);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 최신 상태를 ref로 관리 (useCallback 의존성 최소화)
+  const formStateRef = useRef({ title, content, categoryId: externalCategoryId || '' });
+  const hotdealStateRef = useRef({ dealUrl: '', store: '', productName: '', price: '', originalPrice: '', shipping: '' });
 
   // initialContent를 파싱하여 editor 초기화용 객체로 변환
   const parsedInitialContent = useMemo(() => {
@@ -98,15 +91,17 @@ export default function PostEditForm({
   const [originalPrice, setOriginalPrice] = useState(initialDealInfo?.original_price ? String(initialDealInfo.original_price) : '');
   const [shipping, setShipping] = useState(initialDealInfo?.shipping || '');
 
-  // Supabase 클라이언트 - 한 번만 생성하여 재사용 (성능 최적화, SSR 안전)
-  const supabase = useMemo(() => {
-    if (typeof window === 'undefined') return null;
-    return getSupabaseBrowser();
-  }, []);
-  
-  // 확장 로딩 상태 관리 - any 타입으로 타입 충돌 해결
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [loadedExtensions, setLoadedExtensions] = useState<any[]>([
+  // ref 동기화 (타이핑할 때 useCallback이 재생성되지 않도록)
+  useEffect(() => {
+    formStateRef.current = { title, content, categoryId };
+  }, [title, content, categoryId]);
+
+  useEffect(() => {
+    hotdealStateRef.current = { dealUrl, store, productName, price, originalPrice, shipping };
+  }, [dealUrl, store, productName, price, originalPrice, shipping]);
+
+  // 기본 확장 (변경되지 않음)
+  const baseExtensions = useMemo(() => [
     StarterKit,
     Image.configure({
       inline: false,
@@ -119,53 +114,61 @@ export default function PostEditForm({
         rel: 'noopener noreferrer',
       }
     }),
-  ]);
+  ], []);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [additionalExtensions, setAdditionalExtensions] = useState<any[]>([]);
   const [extensionsLoaded, setExtensionsLoaded] = useState(false);
 
-  // 초기 로딩 시 추가 확장 로드
+  // 전체 확장 목록 (기본 + 추가)
+  const loadedExtensions = useMemo(() => [
+    ...baseExtensions,
+    ...additionalExtensions
+  ], [baseExtensions, additionalExtensions]);
+
+  // 초기 로딩 시 추가 확장 로드 (모듈 레벨에서 이미 preload 시작됨)
   useEffect(() => {
+    // 이미 로드되었으면 중복 실행 방지
+    if (extensionsLoaded) return;
+
     const loadAdditionalExtensions = async () => {
       try {
-        // 동적 확장 로드
+        // 모듈 레벨에서 시작된 preload Promise 사용 (워터폴 방지)
+        const result = await extensionsPreloadPromise;
+
+        if (!result) {
+          setExtensionsLoaded(true);
+          return;
+        }
+
         const [
           YoutubeExtension,
           VideoExtension,
           MatchCardExt,
-          SocialEmbedExt,
-          AutoSocialEmbedExt,
+          SocialEmbedsModule,
           TeamCardExt,
           PlayerCardExt
-        ] = await Promise.all([
-          import('@/shared/components/editor/tiptap/YoutubeExtension').then(mod => mod.YoutubeExtension),
-          import('@/shared/components/editor/tiptap/VideoExtension').then(mod => mod.Video),
-          loadMatchCardExtension(),
-          import('@/shared/components/editor/tiptap/extensions/social-embeds').then(mod => mod.SocialEmbedExtension),
-          import('@/shared/components/editor/tiptap/extensions/social-embeds').then(mod => mod.AutoSocialEmbedExtension),
-          import('@/shared/components/editor/tiptap/TeamCardExtension').then(mod => mod.TeamCardExtension),
-          import('@/shared/components/editor/tiptap/PlayerCardExtension').then(mod => mod.PlayerCardExtension)
-        ]);
+        ] = result;
 
-        // 기본 확장에 추가 확장 병합
-        setLoadedExtensions(prev => [
-          ...prev,
+        // 추가 확장 설정 (중복 방지를 위해 prev 사용 안 함)
+        setAdditionalExtensions([
           YoutubeExtension,
           VideoExtension,
           MatchCardExt,
-          SocialEmbedExt,
-          AutoSocialEmbedExt.configure({ enabled: true }), // 자동 임베드 활성화
+          SocialEmbedsModule.SocialEmbedExtension,
+          SocialEmbedsModule.AutoSocialEmbedExtension.configure({ enabled: true }),
           TeamCardExt,
           PlayerCardExt
         ]);
         setExtensionsLoaded(true);
       } catch (error) {
         console.error('추가 확장 로딩 실패:', error);
-        // 기본 확장만으로도 에디터는 작동하도록 설정
         setExtensionsLoaded(true);
       }
     };
 
     loadAdditionalExtensions();
-  }, []);
+  }, [extensionsLoaded]);
 
   // 핫딜 URL 입력 시 쇼핑몰 자동 감지
   useEffect(() => {
@@ -204,9 +207,6 @@ export default function PostEditForm({
     }
   }, [isHotdeal, productName, store, price, shipping]);
 
-  // boardDropdownRef는 유지하되 사용하지 않는 showBoardDropdown 상태는 제거
-  const boardDropdownRef = useRef<HTMLDivElement>(null);
-  
   const router = useRouter();
   
   // 에디터 초기화 - 기본 확장으로 먼저 생성 후 추가 확장 로드 시 재생성
@@ -217,9 +217,9 @@ export default function PostEditForm({
       const jsonContent = JSON.stringify(editor.getJSON());
       setContent(jsonContent);
     },
-    editorProps: { 
+    editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose focus:outline-none max-w-none w-full',
+        class: 'prose prose-sm sm:prose dark:prose-invert focus:outline-none max-w-none w-full min-h-[460px] p-4 text-gray-900 dark:text-[#F0F0F0]',
       },
     },
     immediatelyRender: false
@@ -248,248 +248,189 @@ export default function PostEditForm({
     extensionsLoaded
   });
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (boardDropdownRef.current && !boardDropdownRef.current.contains(event.target as Node)) {
-        // 명시적으로 다른 상태를 업데이트
-      }
-    }
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [boardDropdownRef]);
   
   // 카테고리 변경 핸들러
-  const handleCategoryChange = (id: string) => {
+  const handleCategoryChange = useCallback((id: string) => {
     setCategoryIdInternal(id);
-    // 외부에서 전달한 setCategoryId가 함수인 경우에만 호출
     if (setCategoryId && typeof setCategoryId === 'function') {
       setCategoryId(id);
     }
-  };
-  
-  // 타입 변환 함수를 업데이트하여 children 속성 처리 오류 해결
-  const convertToBoardSelectorItems = (boards: Board[]): BoardSelectorItem[] => {
-    return boards.map(board => ({
-      id: board.id,
-      name: board.name,
-      parent_id: board.parent_id,
-      display_order: board.display_order !== null ? board.display_order : 0, // null인 경우 기본값 0 설정
-      slug: board.slug,
-      // children 속성이 없어서 타입 오류가 발생하므로 제거
-    }));
-  };
-  
-  // 변환된 게시판 목록
-  const boardSelectorItems = useMemo(() => 
-    convertToBoardSelectorItems(allBoardsFlat), 
-    [allBoardsFlat]
-  );
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  }, [setCategoryId]);
 
-    // 중복 제출 방지
-    if (isSubmitting) {
-      return;
-    }
+  // 핫딜 정보 생성 헬퍼 (refs 사용으로 의존성 최소화)
+  const buildDealInfo = useCallback((forUpdate = false): DealInfo => {
+    const { store, productName, price, originalPrice, shipping, dealUrl } = hotdealStateRef.current;
+    return {
+      store,
+      product_name: productName.trim(),
+      price: parseFloat(price),
+      original_price: originalPrice ? parseFloat(originalPrice) : undefined,
+      shipping,
+      deal_url: dealUrl.trim(),
+      is_ended: forUpdate ? (initialDealInfo?.is_ended || false) : false,
+      ...(forUpdate && initialDealInfo?.ended_reason && { ended_reason: initialDealInfo.ended_reason }),
+      ...(forUpdate && initialDealInfo?.ended_at && { ended_at: initialDealInfo.ended_at }),
+    };
+  }, [initialDealInfo]);
 
-    // 입력값 검증 (핫딜 게시판은 제목이 자동 생성되므로 검증 스킵)
+  // 폼 유효성 검사 (refs 사용으로 의존성 최소화)
+  const validateForm = useCallback((): boolean => {
+    const { title, content, categoryId } = formStateRef.current;
+    const { dealUrl, store, productName, price, shipping } = hotdealStateRef.current;
+
+    // 제목 검증 (핫딜 게시판은 제목 자동 생성)
     if (!title.trim() && !(isCreateMode && isHotdeal)) {
       toast.error('제목을 입력해주세요.');
-      return;
+      return false;
     }
 
     if (!content || content === '<p></p>') {
       toast.error('내용을 입력해주세요.');
-      return;
+      return false;
     }
 
-    if (isCreateMode && !categoryId) {
-      toast.error('게시판을 선택해주세요.');
-      return;
-    }
+    // 생성 모드 전용 검증
+    if (isCreateMode) {
+      if (!categoryId) {
+        toast.error('게시판을 선택해주세요.');
+        return false;
+      }
 
-    // 게시판 선택 유효성 검사: 최상위 게시판이 하위 게시판을 가지고 있는 경우 하위 선택 필수
-    if (isCreateMode && categoryId) {
-      const selectedBoard = allBoardsFlat.find(b => b.id === categoryId);
-      if (selectedBoard && selectedBoard.parent_id === null) {
-        // 최상위 게시판인 경우, 하위 게시판이 있는지 확인
+      // 최상위 게시판에 하위가 있으면 하위 선택 필수
+      const board = allBoardsFlat.find(b => b.id === categoryId);
+      if (board && board.parent_id === null) {
         const hasChildren = allBoardsFlat.some(b => b.parent_id === categoryId);
         if (hasChildren) {
           toast.error('하위 게시판을 선택해주세요.');
-          return;
+          return false;
         }
       }
     }
 
-    // 핫딜 게시글 유효성 검사 (생성/수정 모두)
+    // 핫딜 게시글 검증
     if (isHotdeal) {
       if (!dealUrl.trim()) {
         toast.error('상품 링크를 입력해주세요.');
-        return;
+        return false;
       }
       if (!store) {
         toast.error('쇼핑몰을 선택해주세요.');
-        return;
+        return false;
       }
       if (!productName.trim()) {
         toast.error('상품명을 입력해주세요.');
-        return;
+        return false;
       }
       if (!price || parseFloat(price) < 0) {
         toast.error('올바른 가격을 입력해주세요.');
-        return;
+        return false;
       }
       if (!shipping) {
         toast.error('배송비를 선택해주세요.');
-        return;
+        return false;
       }
     }
+
+    return true;
+  }, [isCreateMode, isHotdeal, allBoardsFlat]);
+
+  // 에러 응답 처리 헬퍼
+  const handleErrorResponse = useCallback((errorMsg: string, defaultMessage: string) => {
+    // 로그인 필요 에러인 경우 로그인 페이지로 이동
+    if (errorMsg.includes('로그인') || errorMsg.includes('인증')) {
+      toast.error('로그인이 필요합니다.');
+      router.push('/signin');
+      return;
+    }
+    setError(errorMsg || defaultMessage);
+    toast.error(errorMsg || defaultMessage);
+    setIsSubmitting(false);
+  }, [router]);
+
+  // 게시글 생성 처리 (refs 사용으로 의존성 최소화)
+  const handleCreatePost = useCallback(async () => {
+    const { title, content, categoryId } = formStateRef.current;
+
+    const formData = new FormData();
+    formData.append('title', title.trim());
+    formData.append('content', content);
+    formData.append('boardId', categoryId);
+
+    if (isHotdeal) {
+      formData.append('deal_info', JSON.stringify(buildDealInfo(false)));
+    }
+
+    const result = await createPost(formData);
+
+    if (!result.success) {
+      handleErrorResponse(result.error || '', '게시글 작성에 실패했습니다.');
+      return;
+    }
+
+    if (!result.post) {
+      throw new Error('게시글 데이터를 받아오지 못했습니다.');
+    }
+
+    const { post } = result;
+    const boardSlug = post.board?.slug || allBoardsFlat.find(b => b.id === categoryId)?.slug || categoryId;
+
+    toast.success('게시글이 작성되었습니다.');
+    setTimeout(() => {
+      router.push(`/boards/${boardSlug}/${post.post_number}`);
+    }, 500);
+  }, [isHotdeal, buildDealInfo, handleErrorResponse, allBoardsFlat, router]);
+
+  // 게시글 수정 처리 (refs 사용으로 의존성 최소화)
+  const handleUpdatePost = useCallback(async () => {
+    if (!postId) {
+      throw new Error('게시글 ID가 제공되지 않았습니다.');
+    }
+
+    const { title, content } = formStateRef.current;
+    const dealInfoToUpdate = isHotdeal ? buildDealInfo(true) : null;
+
+    const result = await updatePost(postId, title.trim(), content, dealInfoToUpdate);
+
+    if (!result.success) {
+      handleErrorResponse(result.error || '', '게시글 수정에 실패했습니다.');
+      return;
+    }
+
+    if (!result.boardSlug || !result.postNumber) {
+      throw new Error('게시글 정보를 받아오지 못했습니다.');
+    }
+
+    toast.success('게시글이 수정되었습니다.');
+    setTimeout(() => {
+      router.push(`/boards/${result.boardSlug}/${result.postNumber}`);
+    }, 500);
+  }, [postId, isHotdeal, buildDealInfo, handleErrorResponse, router]);
+
+  // 폼 제출 핸들러
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (isSubmitting) return;
+    if (!validateForm()) return;
 
     setIsSubmitting(true);
     setError(null);
 
     try {
-      // TipTap JSON 형식으로 저장 (매치카드 등 구조화된 데이터 보존)
-      // content는 이미 onUpdate에서 JSON string으로 저장되어 있음
-      const jsonContent = content;
-
-      // 게시글 생성 모드
       if (isCreateMode) {
-        // FormData 생성
-        const formData = new FormData();
-        formData.append('title', title.trim());
-        formData.append('content', jsonContent);
-        formData.append('boardId', categoryId);
-
-        // 핫딜 정보 추가
-        if (isHotdeal) {
-          const dealInfo = {
-            store,
-            product_name: productName.trim(),
-            price: parseFloat(price),
-            original_price: originalPrice ? parseFloat(originalPrice) : undefined,
-            shipping,
-            deal_url: dealUrl.trim(),
-            is_ended: false,
-          };
-          formData.append('deal_info', JSON.stringify(dealInfo));
-        }
-
-        // 서버 액션 실행 (모든 비즈니스 로직 서버에서 처리)
-        const result = await createPost(formData);
-
-        // 실패 케이스
-        if (!result.success) {
-          const errorMsg = result.error || '게시글 작성에 실패했습니다.';
-
-          // 로그인 필요 에러인 경우 로그인 페이지로 이동
-          if (errorMsg.includes('로그인') || errorMsg.includes('인증')) {
-            toast.error('로그인이 필요합니다.');
-            router.push('/signin');
-            return;
-          }
-
-          setError(errorMsg);
-          toast.error(errorMsg);
-          setIsSubmitting(false);
-          return;
-        }
-
-        // 성공 케이스
-        if (!result.post) {
-          throw new Error('게시글 데이터를 받아오지 못했습니다.');
-        }
-
-        const { post } = result;
-
-        // boardSlug 찾기
-        const boardSlug = post.board?.slug || allBoardsFlat.find(b => b.id === categoryId)?.slug || categoryId;
-
-        // 성공 메시지 표시
-        toast.success('게시글이 작성되었습니다.');
-
-        // 페이지 이동 (Toast가 보이도록 약간의 딜레이)
-        setTimeout(() => {
-          router.push(`/boards/${boardSlug}/${post.post_number}`);
-        }, 500);
-
-        return;
-      } 
-
-
-      // 게시글 수정 모드
-      if (!postId) {
-        throw new Error('게시글 ID가 제공되지 않았습니다.');
+        await handleCreatePost();
+      } else {
+        await handleUpdatePost();
       }
-
-      // 사용자 인증 확인
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-
-      if (userError || !userData.user) {
-        toast.error('로그인이 필요합니다.');
-        router.push('/signin');
-        return;
-      }
-
-      // 핫딜 정보 준비 (핫딜 게시글인 경우)
-      let dealInfoToUpdate: DealInfo | null = null;
-      if (isHotdeal) {
-        dealInfoToUpdate = {
-          store,
-          product_name: productName.trim(),
-          price: parseFloat(price),
-          original_price: originalPrice ? parseFloat(originalPrice) : undefined,
-          shipping,
-          deal_url: dealUrl.trim(),
-          is_ended: initialDealInfo?.is_ended || false,
-          ended_reason: initialDealInfo?.ended_reason,
-          ended_at: initialDealInfo?.ended_at,
-        };
-      }
-
-      // 서버 액션 실행 (TipTap JSON 형식으로 저장)
-      const result = await updatePost(
-        postId,
-        title.trim(),
-        jsonContent,
-        userData.user.id,
-        dealInfoToUpdate
-      );
-
-      // 실패 케이스
-      if (!result.success) {
-        const errorMsg = result.error || '게시글 수정에 실패했습니다.';
-        setError(errorMsg);
-        toast.error(errorMsg);
-        setIsSubmitting(false);
-        return;
-      }
-
-      // 성공 케이스
-      if (!result.boardSlug || !result.postNumber) {
-        throw new Error('게시글 정보를 받아오지 못했습니다.');
-      }
-
-      toast.success('게시글이 수정되었습니다.');
-
-      // 페이지 이동 (Toast가 보이도록 약간의 딜레이)
-      setTimeout(() => {
-        router.push(`/boards/${result.boardSlug}/${result.postNumber}`);
-      }, 500);
-
-    } catch (error) {
-      const errorMsg = error instanceof Error
-        ? error.message
+    } catch (err) {
+      const errorMsg = err instanceof Error
+        ? err.message
         : `게시글 ${isCreateMode ? '작성' : '수정'} 중 오류가 발생했습니다.`;
       setError(errorMsg);
       toast.error(errorMsg);
       setIsSubmitting(false);
     }
-  };
+  }, [isSubmitting, validateForm, isCreateMode, handleCreatePost, handleUpdatePost]);
 
   return (
     <Container className="mt-0">
@@ -516,7 +457,7 @@ export default function PostEditForm({
                 게시판 선택 <span className="text-red-500 dark:text-red-400">*</span>
               </label>
               <BoardSelector
-                boards={boardSelectorItems}
+                boards={allBoardsFlat}
                 selectedId={categoryId}
                 onSelect={handleCategoryChange}
                 currentBoardId={boardId}

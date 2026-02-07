@@ -1,54 +1,52 @@
-import { Suspense } from 'react';
 import { fetchStandingsData } from '../../actions/football';
 import LeagueStandings from './LeagueStandings';
+import { getLeagueLogoUrls } from '@/domains/livescore/actions/images';
+import { MAJOR_LEAGUE_IDS } from '@/domains/livescore/constants/league-mappings';
 
-// 로딩 중 표시할 스켈레톤 UI
-function LeagueStandingsSkeleton() {
-  return (
-    <div className="border rounded-lg overflow-hidden animate-pulse">
-      <div className="bg-[#262626] text-white py-2 px-3 text-sm font-medium">
-        축구 팀순위
-      </div>
-      <div className="flex border-b border-black/5 dark:border-white/10">
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="flex-1 h-7 bg-[#EAEAEA] dark:bg-[#333333]"></div>
-        ))}
-      </div>
-      <div className="p-3 space-y-2">
-        {[...Array(10)].map((_, i) => (
-          <div key={i} className="h-5 w-full bg-[#EAEAEA] dark:bg-[#333333] rounded-lg"></div>
-        ))}
-      </div>
-    </div>
-  );
-}
+// 5대 리그 API IDs
+const LEAGUE_API_IDS = [
+  MAJOR_LEAGUE_IDS.PREMIER_LEAGUE,  // 39
+  MAJOR_LEAGUE_IDS.LA_LIGA,         // 140
+  MAJOR_LEAGUE_IDS.BUNDESLIGA,      // 78
+  MAJOR_LEAGUE_IDS.SERIE_A,         // 135
+  MAJOR_LEAGUE_IDS.LIGUE_1,         // 61
+];
 
 interface ServerLeagueStandingsProps {
   initialLeague?: string;
 }
 
 // 서버 컴포넌트 - async 사용 가능
-export default async function ServerLeagueStandings({ 
-  initialLeague = 'premier' 
+export default async function ServerLeagueStandings({
+  initialLeague = 'premier'
 }: ServerLeagueStandingsProps) {
   try {
     // 서버 컴포넌트에서 직접 서버 액션 호출
-    const initialStandings = await fetchStandingsData(initialLeague);
-    
+    // fetchStandingsData가 이미 teamLogoUrls를 포함하여 반환
+    const [initialStandings, leagueLogoUrls, leagueLogoUrlsDark] = await Promise.all([
+      fetchStandingsData(initialLeague),
+      getLeagueLogoUrls(LEAGUE_API_IDS, false),  // 라이트모드
+      getLeagueLogoUrls(LEAGUE_API_IDS, true),   // 다크모드
+    ]);
+
+    // fetchStandingsData에서 반환한 teamLogoUrls 사용 (중복 호출 제거)
+    const teamLogoUrls = initialStandings?.teamLogoUrls || {};
+
     return (
-      <Suspense fallback={<LeagueStandingsSkeleton />}>
-        <LeagueStandings 
-          initialLeague={initialLeague} 
-          initialStandings={initialStandings} 
-        />
-      </Suspense>
+      <LeagueStandings
+        initialLeague={initialLeague}
+        initialStandings={initialStandings}
+        leagueLogoUrls={leagueLogoUrls}
+        leagueLogoUrlsDark={leagueLogoUrlsDark}
+        teamLogoUrls={teamLogoUrls}
+      />
     );
   } catch {
     // 에러 발생 시 클라이언트 컴포넌트를 빈 데이터로 렌더링
     return (
-      <LeagueStandings 
-        initialLeague={initialLeague} 
-        initialStandings={null} 
+      <LeagueStandings
+        initialLeague={initialLeague}
+        initialStandings={null}
       />
     );
   }
