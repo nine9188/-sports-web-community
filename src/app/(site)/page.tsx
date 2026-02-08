@@ -1,7 +1,9 @@
 import React from 'react';
+import Script from 'next/script';
 import { AllPostsWidget, NewsWidget, BoardCollectionWidget, BoardQuickLinksWidget } from '@/domains/widgets/components';
 import LiveScoreWidgetV2 from '@/domains/widgets/components/live-score-widget/index';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import { siteConfig } from '@/shared/config';
 
 // 병렬 fetch를 위한 데이터 함수들 import
 import { fetchLiveScoreData } from '@/domains/widgets/components/live-score-widget/LiveScoreWidgetV2Server';
@@ -31,8 +33,29 @@ export default async function HomePage() {
     fetchNewsData(),
   ]);
 
+  const websiteSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: siteConfig.name,
+    url: siteConfig.url,
+    description: siteConfig.description,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${siteConfig.url}/search?q={search_term_string}`,
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  };
+
   return (
     <main className="bg-transparent space-y-4 overflow-visible">
+      <Script
+        id="website-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+      />
       {/* 게시판 바로가기 아이콘 - 라이브스코어 상단 */}
       <div className="bg-transparent overflow-visible">
         <BoardQuickLinksWidget />
