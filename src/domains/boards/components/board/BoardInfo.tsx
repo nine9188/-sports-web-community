@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { PenLine } from 'lucide-react';
+import { Container } from '@/shared/components/ui';
 
 interface BoardInfoProps {
   boardName: string;
@@ -13,7 +14,7 @@ interface BoardInfoProps {
 
 export default function BoardInfo({ boardName, boardId, boardSlug, isLoggedIn = false, className = '' }: BoardInfoProps) {
   return (
-    <div className={`bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 rounded-lg overflow-hidden ${className}`}>
+    <Container className={`bg-white dark:bg-[#1D1D1D] ${className}`}>
       {/* 통합 레이아웃: 게시판 이름 + 글쓰기 아이콘 */}
       <div className="h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626]">
         <h2 className="text-sm font-semibold truncate text-gray-900 dark:text-[#F0F0F0]">{boardName}</h2>
@@ -28,7 +29,7 @@ export default function BoardInfo({ boardName, boardId, boardSlug, isLoggedIn = 
           </Link>
         )}
       </div>
-    </div>
+    </Container>
   );
 }
 

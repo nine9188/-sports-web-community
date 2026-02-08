@@ -57,14 +57,16 @@ import SupportCommentsSection from './SupportCommentsSection';
 import RelatedPosts from './RelatedPosts';
 
 // 매치 정보 섹션 컴포넌트 - export 추가
-export function MatchInfoSection({ 
-  initialData, 
+export function MatchInfoSection({
+  initialData,
   showOnlyMatchInfo = false,
-  sidebarData
-}: { 
+  sidebarData,
+  teamLogoUrls
+}: {
   initialData?: MatchDataType | null;
   showOnlyMatchInfo?: boolean;
   sidebarData?: SidebarData | null;
+  teamLogoUrls?: Record<number, string>;
 }) {
   const pathname = usePathname();
   const [matchData, setMatchData] = useState<MatchDataType | null>(initialData || null);
@@ -242,10 +244,11 @@ export function MatchInfoSection({
       {!showOnlyMatchInfo && (
         <>
           {/* 승무패 예측 섹션 - 클라이언트 컴포넌트 */}
-          <MatchPredictionClient 
-            matchData={matchData} 
+          <MatchPredictionClient
+            matchData={matchData}
             initialPrediction={sidebarData?.userPrediction}
             initialStats={sidebarData?.predictionStats}
+            teamLogoUrls={teamLogoUrls}
           />
           
           {/* 응원 댓글 섹션 - 클라이언트 컴포넌트 */}

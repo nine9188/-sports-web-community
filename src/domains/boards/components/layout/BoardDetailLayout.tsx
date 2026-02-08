@@ -11,7 +11,7 @@ import BoardPopularPosts from "../board/BoardPopularPosts";
 import ClientHoverMenu from "../common/ClientHoverMenu";
 import PostList from "../post/PostList";
 import PopularPostList from "../post/PopularPostList";
-import { Pagination } from "@/shared/components/ui";
+import { Container, Pagination } from "@/shared/components/ui";
 import { NoticeList, type NoticeListPost } from "../notice";
 import { StoreFilterMenu } from "../hotdeal";
 import BoardSearchBar from "../board/BoardSearchBar";
@@ -169,7 +169,7 @@ export default function BoardDetailLayout({
       )}
 
       {teamData && (
-        <div className="mb-4 bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 rounded-lg overflow-hidden">
+        <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
           <BoardTeamInfo
             teamData={teamData}
             boardId={boardData.id}
@@ -182,11 +182,11 @@ export default function BoardDetailLayout({
           {notices && notices.length > 0 && (
             <MemoizedNoticeList notices={notices} standalone={false} />
           )}
-        </div>
+        </Container>
       )}
 
       {leagueData && (
-        <div className="mb-4 bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 rounded-lg overflow-hidden">
+        <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
           <LeagueInfo
             leagueData={leagueData}
             boardId={boardData.id}
@@ -200,12 +200,12 @@ export default function BoardDetailLayout({
           {notices && notices.length > 0 && (
             <MemoizedNoticeList notices={notices} standalone={false} />
           )}
-        </div>
+        </Container>
       )}
 
       {/* 팀/리그 정보가 없는 게시판: 게시판 이름 + 공지사항 통합 */}
       {!teamData && !leagueData && (
-        <div className="mb-4 bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 rounded-lg overflow-hidden">
+        <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
           {/* 게시판 헤더 */}
           <div className="h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626]">
             <h2 className="text-sm font-semibold truncate text-gray-900 dark:text-[#F0F0F0]">
@@ -227,7 +227,7 @@ export default function BoardDetailLayout({
           {notices && notices.length > 0 && (
             <MemoizedNoticeList notices={notices} standalone={false} />
           )}
-        </div>
+        </Container>
       )}
 
       {/* 호버 메뉴 - 클라이언트 컴포넌트로 전환 */}

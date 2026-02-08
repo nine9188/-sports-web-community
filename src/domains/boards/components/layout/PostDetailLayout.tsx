@@ -214,7 +214,7 @@ export default function PostDetailLayout({
         </div>
 
         {/* 삭제된 게시글 메시지 */}
-        <div className="bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-900/50 p-8 text-center">
+        <div className="bg-red-50 dark:bg-red-950/20 md:rounded-lg border border-red-200 dark:border-red-900/50 p-8 text-center overflow-hidden">
           <div className="flex items-center justify-center mb-4">
             <svg
               className="w-12 h-12 text-red-400 dark:text-red-500"
@@ -259,7 +259,7 @@ export default function PostDetailLayout({
         </div>
 
         {/* 숨김 처리된 게시글 메시지 */}
-        <div className="bg-[#F5F5F5] dark:bg-[#262626] rounded-lg border border-black/7 dark:border-0 p-8 text-center">
+        <div className="bg-[#F5F5F5] dark:bg-[#262626] md:rounded-lg border border-black/7 dark:border-0 p-8 text-center overflow-hidden">
           <div className="flex items-center justify-center mb-4">
             <svg
               className="w-12 h-12 text-gray-500 dark:text-gray-400"

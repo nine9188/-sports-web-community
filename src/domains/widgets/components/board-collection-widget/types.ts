@@ -10,11 +10,11 @@ export interface BoardPost {
   board_slug: string;
   board_name: string;
   post_number: number;
-  created_at: string;
+  created_at?: string;
   content?: string;
-  author_nickname: string;
-  views: number;
-  likes: number;
+  author_nickname?: string;
+  views?: number;
+  likes?: number;
   comment_count: number;
   category?: string | null;
   team_logo?: string | null;

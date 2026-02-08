@@ -20,13 +20,14 @@ interface MultiDayMatchesResponse {
   error?: string;
 }
 
-// 경기 시작 시간 추출 (HH:mm 형식)
+// 경기 시작 시간 추출 (HH:mm 형식, KST 고정)
 function getKickoffTime(dateString?: string): string | undefined {
   if (!dateString) return undefined;
   try {
     const date = new Date(dateString);
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const kst = new Date(date.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+    const hours = kst.getHours().toString().padStart(2, '0');
+    const minutes = kst.getMinutes().toString().padStart(2, '0');
     return `${hours}:${minutes}`;
   } catch {
     return undefined;

@@ -1,23 +1,13 @@
 import BoardPostItem from './BoardPostItem';
 import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import type { BoardPost } from './types';
 
 const POSTS_PER_SECTION = 5;
 
 // 분석 게시판 slug (링크용)
 const FOREIGN_ANALYSIS_SLUG = 'foreign-analysis';
 const DOMESTIC_ANALYSIS_SLUG = 'domestic-analysis';
-
-interface BoardPost {
-  id: string;
-  title: string;
-  post_number: number;
-  board_slug: string;
-  board_name: string;
-  comment_count: number;
-  team_logo?: string | null;
-  league_logo?: string | null;
-}
 
 interface SectionData {
   boardName: string;
@@ -58,7 +48,7 @@ export async function fetchBoardCollectionData(): Promise<{ foreign: SectionData
       ...(domesticPostsResult.data || []).map(p => p.id),
     ];
 
-    let commentCountMap: Record<string, number> = {};
+    const commentCountMap: Record<string, number> = {};
     if (allPostIds.length > 0) {
       const { data: commentCounts } = await supabase
         .from('comments')
@@ -66,7 +56,9 @@ export async function fetchBoardCollectionData(): Promise<{ foreign: SectionData
         .in('post_id', allPostIds);
 
       (commentCounts || []).forEach(c => {
-        commentCountMap[c.post_id] = (commentCountMap[c.post_id] || 0) + 1;
+        if (c.post_id) {
+          commentCountMap[c.post_id] = (commentCountMap[c.post_id] || 0) + 1;
+        }
       });
     }
 

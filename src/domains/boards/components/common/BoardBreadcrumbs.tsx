@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
+import { Container } from '@/shared/components/ui';
 
 interface Breadcrumb {
   id: string;
@@ -18,7 +19,7 @@ export default function BoardBreadcrumbs({ breadcrumbs }: BoardBreadcrumbsProps)
   }
 
   return (
-    <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 rounded-lg mb-4">
+    <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
       <div className="px-4 py-2.5 overflow-x-auto">
         <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap min-w-max">
           {breadcrumbs.map((bc, index) => (
@@ -41,6 +42,6 @@ export default function BoardBreadcrumbs({ breadcrumbs }: BoardBreadcrumbsProps)
           ))}
         </div>
       </div>
-    </div>
+    </Container>
   );
 } 

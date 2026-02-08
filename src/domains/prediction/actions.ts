@@ -5,6 +5,8 @@ import { revalidatePath } from 'next/cache'
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi'
 import { getMajorLeagueIds, LEAGUE_NAMES_MAP } from '@/domains/livescore/constants/league-mappings'
 import { getTeamById } from '@teams'
+import { getTeamLogoUrls } from '@/domains/livescore/actions/images'
+import { getLeagueLogoUrl } from '@/domains/livescore/actions/images'
 
 // Predictions API 타입
 interface MinuteStats {
@@ -544,12 +546,31 @@ async function generateLeaguePredictionPost(
       }
     }
     
+    // 4590 표준: 팀/리그 로고를 Supabase Storage URL로 변환
+    const allTeamIds = Array.from(new Set(matches.flatMap(m => [m.teams.home.id, m.teams.away.id])))
+    const teamLogoMap = await getTeamLogoUrls(allTeamIds)
+    const leagueLogoUrl = await getLeagueLogoUrl(league.id)
+
+    // 매치 데이터의 로고 URL을 Storage URL로 교체
+    for (const match of matches) {
+      match.teams.home.logo = teamLogoMap[match.teams.home.id] || '/images/placeholder-team.svg'
+      match.teams.away.logo = teamLogoMap[match.teams.away.id] || '/images/placeholder-team.svg'
+      match.league.logo = leagueLogoUrl
+    }
+
+    // predictionDataList 내의 팀 로고도 Storage URL로 교체
+    for (const predictionData of predictionDataList) {
+      if (!predictionData) continue
+      predictionData.teams.home.logo = teamLogoMap[predictionData.teams.home.id] || '/images/placeholder-team.svg'
+      predictionData.teams.away.logo = teamLogoMap[predictionData.teams.away.id] || '/images/placeholder-team.svg'
+    }
+
     // 게시글 제목 및 내용 생성
     const formattedDate = new Date(targetDate).toLocaleDateString('ko-KR', {
       month: 'long',
       day: 'numeric'
     })
-    
+
     const leagueNameKo = getLeagueNameKo(league.id, league.name)
     const title = `${formattedDate} ${leagueNameKo} 경기 예측 분석`
 

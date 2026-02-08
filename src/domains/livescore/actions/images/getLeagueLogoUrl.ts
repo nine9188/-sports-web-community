@@ -4,7 +4,7 @@ import { ensureAssetCached, ensureAssetsCached } from './ensureAssetCached';
 import { PLACEHOLDER_URLS, SUPABASE_STORAGE_URL } from './constants';
 
 // 다크모드 전용 로고가 있는 리그 ID 목록 (Storage에 실제 파일이 있는 리그만)
-const DARK_MODE_LEAGUE_IDS = [2, 3, 13, 39, 66, 88, 98, 119, 179, 292, 848];
+const DARK_MODE_LEAGUE_IDS = [2, 3, 13, 39, 61, 66, 88, 98, 119, 179, 292, 848];
 
 /**
  * 리그 로고 Storage URL 조회 (단일)

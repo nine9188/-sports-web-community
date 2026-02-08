@@ -52,7 +52,7 @@ function CommentCount({ count }: { count: number }) {
 
   return (
     <span
-      className="text-xs text-orange-600 dark:text-orange-400 font-medium flex-shrink-0"
+      className="text-xs text-orange-600 dark:text-orange-400 font-medium ml-1"
       title={`댓글 ${count}개`}
     >
       [{count}]
@@ -74,8 +74,10 @@ export default function BoardPostItem({ post, isLast }: BoardPostItemProps) {
       <div className="flex-shrink-0">
         <BoardLogo post={post} />
       </div>
-      <span className="flex-1 min-w-0 line-clamp-1">{post.title}</span>
-      <CommentCount count={post.comment_count} />
+      <span className="flex-1 min-w-0 truncate">
+        {post.title}
+        {post.comment_count > 0 && <CommentCount count={post.comment_count} />}
+      </span>
     </Link>
   );
 }

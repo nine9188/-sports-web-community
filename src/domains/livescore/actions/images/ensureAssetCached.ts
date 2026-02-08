@@ -13,6 +13,7 @@ import {
   ERROR_COOLDOWN,
   PENDING_WAIT_TIME,
   MAX_RETRIES,
+  CUSTOM_ASSETS,
 } from './constants';
 
 interface AssetCacheRow {
@@ -321,6 +322,11 @@ export async function checkAndRefreshIfStale(
   type: AssetType,
   entityId: number
 ): Promise<void> {
+  // 커스텀 에셋은 재다운로드 스킵
+  if (CUSTOM_ASSETS.has(`${type}:${entityId}`)) {
+    return;
+  }
+
   try {
     const supabase = getSupabaseAdmin();
 

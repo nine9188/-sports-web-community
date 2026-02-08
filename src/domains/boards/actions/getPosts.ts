@@ -124,7 +124,7 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
     // 특수 게시판 확인 (공지, 분석)
     let isNoticeBoard = false;
     let noticeBoardId: string | null = null;
-    let analysisRegion: 'foreign' | 'domestic' | null = null;
+    let analysisRegion: 'foreign' | 'domestic' | 'all' | null = null;
     const checkBoardId = boardId || currentBoardId;
 
     if (checkBoardId) {
@@ -137,6 +137,8 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
       if (boardData?.slug === 'notice') {
         isNoticeBoard = true;
         noticeBoardId = boardData.id;
+      } else if (boardData?.slug === 'data-analysis') {
+        analysisRegion = 'all';
       } else if (boardData?.slug === 'foreign-analysis') {
         analysisRegion = 'foreign';
       } else if (boardData?.slug === 'domestic-analysis') {
@@ -193,8 +195,12 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
     // 필터 적용
     if (isNoticeBoard && noticeBoardId) {
       postsQuery = postsQuery.or(`board_id.eq.${noticeBoardId},is_notice.eq.true`);
+    } else if (analysisRegion === 'all') {
+      // 데이터분석 게시판: 해외+국내 전체 분석글 조회
+      postsQuery = postsQuery
+        .eq('meta->>prediction_type', 'league_analysis');
     } else if (analysisRegion) {
-      // 분석 게시판: analysis_region 필터로 해외/국내 분석글 직접 조회
+      // 해외/국내 분석 게시판: analysis_region 필터로 해외/국내 분석글 직접 조회
       postsQuery = postsQuery
         .eq('meta->>prediction_type', 'league_analysis')
         .eq('meta->>analysis_region', analysisRegion);
@@ -227,8 +233,12 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
 
     if (isNoticeBoard && noticeBoardId) {
       countQuery = countQuery.or(`board_id.eq.${noticeBoardId},is_notice.eq.true`);
+    } else if (analysisRegion === 'all') {
+      // 데이터분석 게시판: 해외+국내 전체 분석글 카운트
+      countQuery = countQuery
+        .eq('meta->>prediction_type', 'league_analysis');
     } else if (analysisRegion) {
-      // 분석 게시판: analysis_region 필터로 해외/국내 분석글 카운트
+      // 해외/국내 분석 게시판: analysis_region 필터로 해외/국내 분석글 카운트
       countQuery = countQuery
         .eq('meta->>prediction_type', 'league_analysis')
         .eq('meta->>analysis_region', analysisRegion);

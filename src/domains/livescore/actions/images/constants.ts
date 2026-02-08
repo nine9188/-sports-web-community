@@ -67,3 +67,9 @@ export const MAX_RETRIES = 2;
 
 // pending 대기 시간 (밀리초)
 export const PENDING_WAIT_TIME = 500;
+
+// 커스텀 에셋 보호 목록 (TTL 재다운로드 스킵)
+// Storage에 직접 업로드한 이미지가 API-Sports 이미지로 덮어씌워지는 것을 방지
+export const CUSTOM_ASSETS: Set<string> = new Set([
+  'league_logo:61',  // 리그1 (커스텀 로고)
+]);

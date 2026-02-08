@@ -132,6 +132,7 @@ export default function MatchPageClient({
             showOnlyMatchInfo={true}
             initialData={initialData.matchData}
             sidebarData={sidebarData}
+            teamLogoUrls={initialData.teamLogoUrls}
           />
         </div>
 
@@ -158,6 +159,7 @@ export default function MatchPageClient({
         <MatchInfoSection
           initialData={initialData.matchData}
           sidebarData={sidebarData}
+          teamLogoUrls={initialData.teamLogoUrls}
         />
       </aside>
     </div>
