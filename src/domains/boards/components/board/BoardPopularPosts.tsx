@@ -134,7 +134,7 @@ export default function BoardPopularPosts({
   return (
     <div className={className}>
       {/* 모바일 UI - 탭 전환 */}
-      <div className="md:hidden border border-black/7 dark:border-0 rounded-lg overflow-hidden bg-white dark:bg-[#1D1D1D]">
+      <div className="md:hidden border border-black/7 dark:border-0 md:rounded-lg overflow-hidden bg-white dark:bg-[#1D1D1D]">
         <div className="flex items-center justify-between px-4 py-3 border-b border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
           <div className="flex items-center">
             <TrendingUp className="w-4 h-4 text-gray-900 dark:text-[#F0F0F0] mr-2" />
@@ -167,7 +167,7 @@ export default function BoardPopularPosts({
       </div>
 
       {/* PC UI */}
-      <div className="hidden md:block border border-black/7 dark:border-0 rounded-lg overflow-hidden bg-white dark:bg-[#1D1D1D]">
+      <div className="hidden md:block border border-black/7 dark:border-0 md:rounded-lg overflow-hidden bg-white dark:bg-[#1D1D1D]">
         <div className="grid grid-cols-2">
           {/* 오늘 BEST */}
           <div className="border-r border-black/5 dark:border-white/10">

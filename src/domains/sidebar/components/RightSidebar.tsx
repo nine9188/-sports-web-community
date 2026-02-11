@@ -1,8 +1,10 @@
+import { Suspense } from 'react';
 import { getAllTopicPosts } from '../actions/getAllTopicPosts';
 import { getHotdealBestPosts } from '../actions/getHotdealBestPosts';
 import TopicTabsServer from './TopicTabsServer';
 import HotdealTabsServer from './HotdealTabsServer';
 import SidebarRelatedPosts from './SidebarRelatedPosts';
+import ServerLeagueStandings from './league/ServerLeagueStandings';
 
 export default async function RightSidebar() {
   try {
@@ -26,6 +28,9 @@ export default async function RightSidebar() {
       <aside className="hidden xl:block w-[300px] shrink-0">
         <div className="h-full pt-4">
           <TopicTabsServer postsData={postsData} />
+          <Suspense fallback={<div className="min-h-[200px]" />}>
+            <ServerLeagueStandings initialLeague="premier" />
+          </Suspense>
           <SidebarRelatedPosts />
           <HotdealTabsServer postsData={hotdealData} />
         </div>
@@ -54,6 +59,9 @@ export default async function RightSidebar() {
       <aside className="hidden xl:block w-[300px] shrink-0">
         <div className="h-full pt-4">
           <TopicTabsServer postsData={emptyData} />
+          <Suspense fallback={<div className="min-h-[200px]" />}>
+            <ServerLeagueStandings initialLeague="premier" />
+          </Suspense>
           <SidebarRelatedPosts />
           <HotdealTabsServer postsData={emptyHotdealData} />
         </div>

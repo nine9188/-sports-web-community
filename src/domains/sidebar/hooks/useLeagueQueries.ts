@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { StandingsData } from '../types';
 import { fetchStandingsData } from '../actions/football';
 
@@ -35,6 +35,7 @@ export function useLeagueStandings(
     enabled,
     staleTime: 1000 * 60 * 10, // 10분
     gcTime: 1000 * 60 * 30, // 30분
+    placeholderData: keepPreviousData, // 탭 전환 시 이전 데이터 유지
     retry: 1,
   });
 

@@ -1,6 +1,5 @@
 import Link from 'next/link';
-import UnifiedSportsImage from '@/shared/components/UnifiedSportsImage';
-import { ImageType } from '@/shared/types/image';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import type { Match } from './types';
 
 // 경기 상태 한글 매핑
@@ -74,6 +73,8 @@ function getStatusInfo(
 interface MatchCardServerProps {
   match: Match;
   isLast: boolean;
+  /** 첫 번째 리그 이미지에 eager/priority 적용 (LCP 최적화) */
+  priorityImages?: boolean;
 }
 
 /**
@@ -82,7 +83,7 @@ interface MatchCardServerProps {
  * - 개별 경기 정보를 서버에서 렌더링
  * - LCP 최적화: 초기 HTML에 경기 정보 포함
  */
-export default function MatchCardServer({ match, isLast }: MatchCardServerProps) {
+export default function MatchCardServer({ match, isLast, priorityImages = false }: MatchCardServerProps) {
   const statusInfo = getStatusInfo(match.status, match.elapsed, match.kickoffTime, match.dateLabel);
 
   return (
@@ -121,12 +122,13 @@ export default function MatchCardServer({ match, isLast }: MatchCardServerProps)
         </span>
         {match.homeTeam.logo && (
           <div className="w-6 h-6 flex-shrink-0 relative">
-            <UnifiedSportsImage
-              imageId={match.homeTeam.id}
-              imageType={ImageType.Teams}
+            <UnifiedSportsImageClient
+              src={match.homeTeam.logo}
               alt={match.homeTeam.name}
               width={24}
               height={24}
+              loading={priorityImages ? 'eager' : 'lazy'}
+              priority={priorityImages}
               className="w-6 h-6 object-contain"
             />
           </div>
@@ -144,12 +146,13 @@ export default function MatchCardServer({ match, isLast }: MatchCardServerProps)
       <div className="flex items-center gap-2 flex-1 min-w-0">
         {match.awayTeam.logo && (
           <div className="w-6 h-6 flex-shrink-0 relative">
-            <UnifiedSportsImage
-              imageId={match.awayTeam.id}
-              imageType={ImageType.Teams}
+            <UnifiedSportsImageClient
+              src={match.awayTeam.logo}
               alt={match.awayTeam.name}
               width={24}
               height={24}
+              loading={priorityImages ? 'eager' : 'lazy'}
+              priority={priorityImages}
               className="w-6 h-6 object-contain"
             />
           </div>

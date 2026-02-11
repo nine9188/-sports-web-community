@@ -181,7 +181,7 @@ export default function StandingsPreview({
       <Button
         variant="secondary"
         onClick={() => onTabChange('standings')}
-        className="w-full rounded-none rounded-b-lg border-t border-black/5 dark:border-white/10"
+        className="w-full rounded-none md:rounded-b-lg border-t border-black/5 dark:border-white/10"
       >
         <div className="flex items-center justify-center gap-1">
           <span className="text-sm font-medium">전체 순위 보기</span>

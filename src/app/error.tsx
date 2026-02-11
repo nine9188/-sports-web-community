@@ -15,7 +15,7 @@ export default function Error({
 
   return (
     <div className="container mx-auto min-h-[60vh] flex items-center justify-center">
-      <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 p-8 text-center max-w-md">
+      <div className="bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 p-8 text-center max-w-md">
         <div className="text-5xl mb-4">⚠️</div>
         <h1 className="text-xl font-semibold mb-3 text-gray-900 dark:text-[#F0F0F0]">
           문제가 발생했습니다

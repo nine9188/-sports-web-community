@@ -3,7 +3,6 @@
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { cache } from 'react';
 import { Board } from './types/board';
-import { getAuthenticatedUser, getUserAdminStatus } from '@/shared/actions/auth';
 
 interface GetBoardsOptions {
   includeTotalPostCount?: boolean;
@@ -11,29 +10,18 @@ interface GetBoardsOptions {
 
 interface GetBoardsResult {
   boardData: Board[];
-  isAdmin: boolean;
   totalPostCount?: number;
 }
 
 /**
  * 헤더/사이드바 네비게이션용 게시판 데이터를 서버에서 미리 로드
  * 캐싱을 적용하여 성능 최적화
+ *
+ * NOTE: isAdmin은 getFullUserData()에서 이미 조회하므로 여기서는 제거 (중복 DB 쿼리 방지)
  */
 export const getBoardsForNavigation = cache(async (options?: GetBoardsOptions): Promise<GetBoardsResult> => {
   try {
     const supabase = await getSupabaseServer();
-
-    // 현재 사용자의 관리자 권한 확인 (캐시된 함수 사용)
-    let isAdmin = false;
-    try {
-      const { data: { user } } = await getAuthenticatedUser();
-      if (user) {
-        const { isAdmin: adminStatus } = await getUserAdminStatus(user.id);
-        isAdmin = adminStatus;
-      }
-    } catch {
-      // 관리자 권한 확인 실패해도 계속 진행
-    }
 
     // 게시판 데이터와 전체 글 개수를 병렬로 가져오기
     const boardsPromise = supabase
@@ -57,9 +45,9 @@ export const getBoardsForNavigation = cache(async (options?: GetBoardsOptions): 
       if (!errorMessage.includes('DYNAMIC_SERVER_USAGE') && !errorMessage.includes('cookies')) {
         console.error('게시판 데이터 조회 오류:', error);
       }
-      return { boardData: [], isAdmin };
+      return { boardData: [] };
     }
-    
+
     // 계층 구조로 변환
     const boardMap = new Map<string, Board>();
     const rootBoards: Board[] = [];
@@ -99,7 +87,7 @@ export const getBoardsForNavigation = cache(async (options?: GetBoardsOptions): 
     
     sortBoards(rootBoards);
     
-    return { boardData: rootBoards, isAdmin, totalPostCount };
+    return { boardData: rootBoards, totalPostCount };
 
   } catch (error) {
     // 빌드 단계 로그 오염 방지
@@ -107,6 +95,6 @@ export const getBoardsForNavigation = cache(async (options?: GetBoardsOptions): 
     if (!errorMessage.includes('DYNAMIC_SERVER_USAGE') && !errorMessage.includes('cookies')) {
       console.error('게시판 데이터 로드 오류:', error);
     }
-    return { boardData: [], isAdmin: false };
+    return { boardData: [] };
   }
 }); 

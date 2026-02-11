@@ -3,6 +3,7 @@
 import { getSupabaseServer } from '@/shared/lib/supabase/server'
 import { getLeagueName } from '@/domains/livescore/constants/league-mappings'
 import { getTeamById, searchTeamsByName } from '@/domains/livescore/constants/teams'
+import { getTeamLogoUrls } from '@/domains/livescore/actions/images'
 import type { TeamSearchResult } from '../types'
 import { ALLOWED_LEAGUE_IDS } from '../constants/leagues'
 
@@ -116,14 +117,20 @@ export async function searchTeams(options: TeamSearchOptions): Promise<{
       throw new Error('팀 검색 중 오류가 발생했습니다')
     }
 
+    // 4590 표준: 팀 로고 Storage URL 배치 조회
+    const teamIds = (teams || []).map((t: { team_id: number }) => t.team_id).filter(Boolean)
+    const teamLogoStorageUrls = teamIds.length > 0 ? await getTeamLogoUrls(teamIds) : {}
+
     return {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       teams: (teams || []).map((team: any) => {
         // 한국어 매핑 정보 추가
         const mappedTeam = getTeamById(team.team_id)
-        
+
         return {
           ...team,
+          // 4590 표준: Storage URL로 대체
+          logo_url: teamLogoStorageUrls[team.team_id] || null,
           league_name_ko: getLeagueName(team.league_id),
           // 한국어 팀명이 있으면 display_name을 한국어로 대체
           display_name: mappedTeam?.name_ko || team.display_name,

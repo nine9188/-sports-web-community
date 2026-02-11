@@ -18,7 +18,7 @@ export default function SearchHeader({
   const heading = trimmedQuery ? `"${trimmedQuery}" 에 대한 검색결과` : title
 
   return (
-    <div className={`bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 mb-4 ${className}`}>
+    <div className={`bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 mb-4 ${className}`}>
       {/* 헤더 섹션 */}
       <div className="px-4 py-4 sm:px-6">
         <div>

@@ -9,7 +9,6 @@ export default function Sidebar({
   isOpen,
   onClose,
   children,
-  leagueStandingsComponent,
   authSection,
 }: SidebarProps) {
   return (
@@ -51,10 +50,6 @@ export default function Sidebar({
             </ContainerContent>
           </Container>
 
-          {/* 축구 리그 순위 위젯 - 서버 컴포넌트 사용 */}
-          <div className="mb-4">
-            {leagueStandingsComponent}
-          </div>
         </div>
       </div>
 
@@ -91,10 +86,6 @@ export default function Sidebar({
             </ContainerContent>
           </Container>
 
-          {/* 축구 리그 순위 위젯 - 서버 컴포넌트 사용 */}
-          <div className="mb-4">
-            {leagueStandingsComponent}
-          </div>
         </div>
       </div>
     </div>

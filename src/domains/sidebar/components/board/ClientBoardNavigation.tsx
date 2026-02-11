@@ -3,8 +3,10 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import { ChevronDown, ChevronRight, Flame, Timer, ArrowLeftRight, Database, ShoppingBag, FileText, Settings } from 'lucide-react';
 import { Button } from '@/shared/components/ui';
+import { getFullUserData } from '@/shared/actions/user';
 import { BoardNavigationData, HierarchicalBoard } from '../../types';
 import { Board } from '@/domains/layout/types/board';
 
@@ -189,6 +191,14 @@ export default function ClientBoardNavigation({
   showAdminLink?: boolean;
 }) {
   const pathname = usePathname() || '';
+
+  // 클라이언트에서 isAdmin 확인 (layout에서 제거됨, React Query 캐시 공유)
+  const { data: userData } = useQuery({
+    queryKey: ['fullUserData'],
+    queryFn: () => getFullUserData(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const isAdmin = showAdminLink || userData?.is_admin || false;
   // 스포츠, 커뮤니티 그룹 기본 열림 상태
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['nav-sports', 'nav-community']));
 
@@ -261,7 +271,7 @@ export default function ClientBoardNavigation({
           </Link>
         );
       })}
-      {showAdminLink && (
+      {isAdmin && (
         <Link
           href="/admin"
           onClick={onNavigate}

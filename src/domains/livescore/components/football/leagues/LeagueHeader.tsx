@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import Link from 'next/link';
@@ -14,9 +15,27 @@ interface LeagueHeaderProps {
   league: LeagueDetails;
   // 4590 표준: 이미지 Storage URL
   leagueLogoUrl?: string;
+  leagueLogoUrlDark?: string;
 }
 
-export default function LeagueHeader({ league, leagueLogoUrl }: LeagueHeaderProps) {
+export default function LeagueHeader({ league, leagueLogoUrl, leagueLogoUrlDark }: LeagueHeaderProps) {
+  // 다크모드 감지
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains('dark'));
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          setIsDark(document.documentElement.classList.contains('dark'));
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, { attributes: true });
+    return () => observer.disconnect();
+  }, []);
   // 한국어 리그명 매핑
   const leagueInfo = getLeagueById(league.id);
   const displayName = leagueInfo?.nameKo || league.name;
@@ -41,7 +60,7 @@ export default function LeagueHeader({ league, leagueLogoUrl }: LeagueHeaderProp
           {/* 리그 로고 */}
           <div className="relative w-8 h-8 flex-shrink-0">
             <UnifiedSportsImageClient
-              src={leagueLogoUrl || LEAGUE_PLACEHOLDER}
+              src={(isDark && leagueLogoUrlDark) ? leagueLogoUrlDark : (leagueLogoUrl || LEAGUE_PLACEHOLDER)}
               alt={`${displayName} 로고`}
               width={32}
               height={32}

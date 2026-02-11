@@ -199,7 +199,7 @@ export default function StatsCards({ stats, onTabChange, leagueLogoUrl, leagueLo
       <Button
         variant="secondary"
         onClick={() => onTabChange('stats')}
-        className="w-full rounded-none rounded-b-lg border-t border-black/5 dark:border-white/10"
+        className="w-full rounded-none md:rounded-b-lg border-t border-black/5 dark:border-white/10"
       >
         <div className="flex items-center justify-center gap-1">
           <span className="text-sm font-medium">자세한 통계 보기</span>

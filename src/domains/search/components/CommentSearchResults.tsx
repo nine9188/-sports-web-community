@@ -60,7 +60,7 @@ export default function CommentSearchResults({
 
   return (
     <>
-      <div className="overflow-hidden rounded-lg">
+      <div className="overflow-hidden">
       {/* 헤더 */}
       <div className="px-4 py-3 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10">
         <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">

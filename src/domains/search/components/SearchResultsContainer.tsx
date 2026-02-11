@@ -183,7 +183,7 @@ export default function SearchResultsContainer({
 
       {/* 검색 결과가 없을 때 */}
       {query && !hasResults && (
-        <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0">
+        <div className="bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0">
           <div className="text-center py-16">
             <div className="mb-4">
               <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -202,7 +202,7 @@ export default function SearchResultsContainer({
       
       {/* 검색어가 없을 때 */}
       {!query && (
-        <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0">
+        <div className="bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0">
           <div className="text-center py-16">
             <div className="mb-4">
               <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -221,7 +221,7 @@ export default function SearchResultsContainer({
       
       {/* 각 검색 결과 섹션들 (별도 테이블로 분리) */}
       {resultSections.map((section) => (
-        <div key={section.key} className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
+        <div key={section.key} className="bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 overflow-hidden">
           {section.component}
         </div>
       ))}

@@ -76,7 +76,6 @@ export interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
   children?: ReactNode;
-  leagueStandingsComponent?: ReactNode;
   authSection?: ReactNode;
 }
 

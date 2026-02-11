@@ -22,7 +22,6 @@ const AuthStateManager = React.memo(function AuthStateManager({
   children,
   authSection,
   boardNavigation,
-  leagueStandingsComponent,
   rightSidebar,
   headerUserData,
   headerBoards,
@@ -38,7 +37,6 @@ const AuthStateManager = React.memo(function AuthStateManager({
   children: React.ReactNode,
   authSection: React.ReactNode,
   boardNavigation: React.ReactNode,
-  leagueStandingsComponent: React.ReactNode,
   rightSidebar: React.ReactNode,
   headerUserData?: HeaderUserData | null,
   headerBoards?: Board[],
@@ -77,7 +75,6 @@ const AuthStateManager = React.memo(function AuthStateManager({
         <Sidebar
           isOpen={isOpen}
           onClose={onClose}
-          leagueStandingsComponent={leagueStandingsComponent}
           authSection={authSection}
         >
           {boardNavigation}

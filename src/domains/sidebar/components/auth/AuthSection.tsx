@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { Button } from '@/shared/components/ui';
 import ClientUserProfile from './ClientUserProfile';

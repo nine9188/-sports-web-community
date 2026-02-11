@@ -147,7 +147,7 @@ export default function LiveScoreView({
           <div className="space-y-4">
             {/* 스켈레톤 - 여러 리그와 매치 */}
             {[1, 2, 3].map((section) => (
-              <div key={section} className="bg-white dark:bg-[#1D1D1D] rounded-lg overflow-hidden border border-black/7 dark:border-0">
+              <div key={section} className="bg-white dark:bg-[#1D1D1D] md:rounded-lg overflow-hidden border border-black/7 dark:border-0">
                 {/* 리그 헤더 스켈레톤 */}
                 <div className="h-12 px-4 flex items-center gap-3 bg-[#F5F5F5] dark:bg-[#262626]">
                   <div className="w-5 h-5 bg-[#F5F5F5] dark:bg-[#262626] rounded animate-pulse"></div>

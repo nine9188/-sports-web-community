@@ -124,7 +124,7 @@ export default function TeamPageClient({
     <>
       {/* TeamHeader - 초기 데이터 전달 */}
       <Suspense fallback={
-        <div className="mb-4 bg-white dark:bg-[#1D1D1D] rounded-lg border dark:border-gray-700 p-4">
+        <div className="mb-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 p-4">
           <div className="flex justify-center items-center py-8">
             <Spinner size="xl" className="mx-auto" />
             <span className="ml-3 text-gray-600 dark:text-gray-400">팀 정보를 불러오는 중...</span>

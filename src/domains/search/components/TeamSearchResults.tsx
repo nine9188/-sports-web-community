@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { useState, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
@@ -8,6 +7,8 @@ import type { TeamSearchResult } from '../types'
 import { trackSearchResultClick } from '../actions/searchLogs'
 // 통합된 함수 사용 (search/actions/teamMatches.ts 대신)
 import { getTeamMatchesRecent, type Match } from '@/domains/livescore/actions/teams/matches'
+import { getTeamLogoUrls } from '@/domains/livescore/actions/images'
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient'
 import TeamMatchDropdownButton, { TeamMatchExpandedRow } from './TeamMatchDropdown'
 import Spinner from '@/shared/components/Spinner';
 import { Button } from '@/shared/components/ui';
@@ -19,6 +20,7 @@ const CACHE_DURATION = 5 * 60 * 1000 // 5분
 interface TeamMatchCache {
   [teamId: number]: {
     data: Match[]
+    logoUrls: Record<number, string>
     timestamp: number
     loading: boolean
   }
@@ -112,6 +114,7 @@ export default function TeamSearchResults({
       ...prev,
       [team.team_id]: {
         data: [],
+        logoUrls: {},
         timestamp: Date.now(),
         loading: true
       }
@@ -121,11 +124,20 @@ export default function TeamSearchResults({
       const result = await getTeamMatchesRecent(team.team_id, 5) // 최근 5경기만
 
       if (result.success && result.data) {
+        // 4590 표준: 매치 팀 로고 Storage URL 배치 조회
+        const matchTeamIds = new Set<number>()
+        result.data.forEach(match => {
+          if (match.teams.home.id) matchTeamIds.add(match.teams.home.id)
+          if (match.teams.away.id) matchTeamIds.add(match.teams.away.id)
+        })
+        const logoUrls = matchTeamIds.size > 0 ? await getTeamLogoUrls([...matchTeamIds]) : {}
+
         // 캐시에 데이터 저장
         setTeamMatchCache(prev => ({
           ...prev,
           [team.team_id]: {
             data: result.data,
+            logoUrls,
             timestamp: Date.now(),
             loading: false
           }
@@ -136,6 +148,7 @@ export default function TeamSearchResults({
           ...prev,
           [team.team_id]: {
             data: [],
+            logoUrls: {},
             timestamp: Date.now(),
             loading: false
           }
@@ -148,6 +161,7 @@ export default function TeamSearchResults({
         ...prev,
         [team.team_id]: {
           data: [],
+          logoUrls: {},
           timestamp: Date.now(),
           loading: false
         }
@@ -160,6 +174,12 @@ export default function TeamSearchResults({
     if (!expandedTeamId) return []
     return getCachedMatches(expandedTeamId) || []
   }, [expandedTeamId, getCachedMatches])
+
+  // 4590 표준: 현재 확장된 팀의 매치 로고 URL
+  const currentTeamLogoUrls = useMemo(() => {
+    if (!expandedTeamId) return {}
+    return teamMatchCache[expandedTeamId]?.logoUrls || {}
+  }, [expandedTeamId, teamMatchCache])
 
   // 현재 확장된 팀의 로딩 상태
   const currentTeamLoading = useMemo(() => {
@@ -188,7 +208,7 @@ export default function TeamSearchResults({
   return (
     <div className="space-y-4">
       {/* 팀 테이블: 외부 카드 래퍼가 테두리/그림자를 가지므로 내부는 overflow만 처리 */}
-      <div className="overflow-hidden rounded-lg">
+      <div className="overflow-hidden">
         {/* 헤더 */}
         <div className="px-4 py-3 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10">
           <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
@@ -219,13 +239,14 @@ export default function TeamSearchResults({
             </thead>
             <tbody className="divide-y divide-black/5 dark:divide-white/10">
               {teams.map((team) => (
-                <TeamRowWithMatches 
-                  key={team.team_id} 
-                  team={team} 
+                <TeamRowWithMatches
+                  key={team.team_id}
+                  team={team}
                   onToggle={handleTeamToggle}
                   isExpanded={expandedTeamId === team.team_id}
                   matches={currentTeamMatches}
                   matchesLoading={currentTeamLoading}
+                  matchTeamLogoUrls={currentTeamLogoUrls}
                 />
               ))}
             </tbody>
@@ -301,18 +322,20 @@ export default function TeamSearchResults({
 }
 
 // 매치 정보를 포함한 팀 행 컴포넌트
-function TeamRowWithMatches({ 
-  team, 
+function TeamRowWithMatches({
+  team,
   onToggle,
   isExpanded,
   matches,
-  matchesLoading
-}: { 
+  matchesLoading,
+  matchTeamLogoUrls
+}: {
   team: TeamSearchResult
   onToggle: (team: TeamSearchResult) => void
   isExpanded: boolean
   matches: TeamMatch[]
   matchesLoading: boolean
+  matchTeamLogoUrls: Record<number, string>
 }) {
   const router = useRouter()
 
@@ -348,21 +371,13 @@ function TeamRowWithMatches({
         {/* 팀 정보 */}
         <td className="px-2 sm:px-4 py-4">
           <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
-            {team.logo_url ? (
-              <Image
-                src={team.logo_url}
-                alt={`${team.display_name} 로고`}
-                width={28}
-                height={28}
-                className="w-6 h-6 sm:w-7 sm:h-7 object-contain flex-shrink-0"
-              />
-            ) : (
-              <div className="w-6 h-6 sm:w-7 sm:h-7 bg-[#F5F5F5] dark:bg-[#262626] rounded flex items-center justify-center flex-shrink-0">
-                <span className="text-gray-500 dark:text-gray-400 text-xs font-bold">
-                  {team.code || team.name.charAt(0)}
-                </span>
-              </div>
-            )}
+            <UnifiedSportsImageClient
+              src={team.logo_url || '/images/placeholder-team.svg'}
+              alt={`${team.display_name} 로고`}
+              width={28}
+              height={28}
+              className="w-6 h-6 sm:w-7 sm:h-7 object-contain flex-shrink-0"
+            />
             <div className="min-w-0 flex-1 overflow-hidden">
               <div className="font-medium text-gray-900 dark:text-[#F0F0F0] flex items-center text-xs sm:text-sm min-w-0">
                 {/* 팀 이름 - 클릭 시 팀 페이지로 이동 */}
@@ -456,6 +471,7 @@ function TeamRowWithMatches({
         isExpanded={isExpanded}
         matches={matches}
         loading={matchesLoading}
+        matchTeamLogoUrls={matchTeamLogoUrls}
       />
     </>
   )

@@ -4,7 +4,7 @@ import { fetchLeagueStandings } from '@/domains/livescore/actions/match/standing
 import { LeagueHeader } from '@/domains/livescore/components/football/leagues';
 import { LeagueStandingsTable } from '@/domains/livescore/components/football/leagues';
 import { buildMetadata } from '@/shared/utils/metadataNew';
-import { getTeamLogoUrls } from '@/domains/livescore/actions/images';
+import { getTeamLogoUrls, getLeagueLogoUrl } from '@/domains/livescore/actions/images';
 
 interface LeaguePageProps {
   params: Promise<{ id: string }>;
@@ -44,7 +44,12 @@ export default async function LeaguePage({ params }: LeaguePageProps) {
     notFound();
   }
 
-  // 4590 표준: 순위 데이터에서 팀 ID 추출 후 이미지 URL 조회
+  // 4590 표준: 리그 로고 + 다크모드 로고 + 순위 데이터 팀 로고 조회
+  const [leagueLogoUrl, leagueLogoUrlDark] = await Promise.all([
+    getLeagueLogoUrl(leagueId),
+    getLeagueLogoUrl(leagueId, true),
+  ]);
+
   let teamLogoUrls: Record<number, string> = {};
   if (standingsResponse.success && standingsResponse.data?.league?.standings) {
     const teamIds = new Set<number>();
@@ -62,8 +67,12 @@ export default async function LeaguePage({ params }: LeaguePageProps) {
 
   return (
     <div className="min-h-screen space-y-4">
-      <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 overflow-hidden">
-        <LeagueHeader league={league} />
+      <div className="bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 overflow-hidden">
+        <LeagueHeader
+          league={league}
+          leagueLogoUrl={leagueLogoUrl}
+          leagueLogoUrlDark={leagueLogoUrlDark}
+        />
       </div>
 
       <LeagueStandingsTable

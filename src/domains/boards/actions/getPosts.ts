@@ -266,17 +266,19 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
       }
     }
 
-    const { count } = await countQuery;
-    const totalItems = count || 0;
+    // 카운트 + 데이터 조회를 병렬 실행 (독립적인 쿼리)
+    const [countResult, postsResult] = await Promise.all([
+      countQuery,
+      postsQuery.range(offset, offset + limit - 1).limit(limit)
+    ]);
 
-    // 데이터 조회
-    const { data: postsData, error: postsError } = await postsQuery
-      .range(offset, offset + limit - 1)
-      .limit(limit);
+    const totalItems = countResult.count || 0;
 
-    if (postsError) {
-      throw new Error(`게시물 데이터 불러오기 오류: ${postsError.message}`);
+    if (postsResult.error) {
+      throw new Error(`게시물 데이터 불러오기 오류: ${postsResult.error.message}`);
     }
+
+    const postsData = postsResult.data;
 
     if (!postsData?.length) {
       return createEmptyResponse(page, limit);

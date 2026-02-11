@@ -2,20 +2,19 @@
 
 import React, { useState, useMemo, useRef, useEffect, useCallback, startTransition, useDeferredValue } from 'react';
 import { usePathname } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import AuthStateManager from '@/shared/components/AuthStateManager';
+import AuthSection from '@/domains/sidebar/components/auth/AuthSection';
+import { getFullUserData } from '@/shared/actions/user';
 import { Board } from '@/domains/layout/types/board';
-import { FullUserDataWithSession, HeaderUserData } from '@/shared/types/user';
+import { HeaderUserData } from '@/shared/types/user';
 import { scrollToTop } from '@/shared/utils/scroll';
 
 interface SiteLayoutClientProps {
   children?: React.ReactNode;
   boardNavigation: React.ReactNode;
   rightSidebar: React.ReactNode;
-  authSection: React.ReactNode;
-  leagueStandingsComponent: React.ReactNode;
-  fullUserData?: FullUserDataWithSession | null;
   headerBoards?: Board[];
-  headerIsAdmin?: boolean;
   headerTotalPostCount?: number;
 }
 
@@ -23,13 +22,18 @@ export default function SiteLayoutClient({
   children,
   boardNavigation,
   rightSidebar,
-  authSection,
-  leagueStandingsComponent,
-  fullUserData,
   headerBoards,
-  headerIsAdmin,
   headerTotalPostCount,
 }: SiteLayoutClientProps) {
+  // 유저 데이터를 클라이언트에서 fetch (layout 블로킹 제거)
+  const { data: fullUserData } = useQuery({
+    queryKey: ['fullUserData'],
+    queryFn: () => getFullUserData(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const isAdmin = fullUserData?.is_admin ?? false;
+
   // HeaderUserData 형태로 변환 (AuthStateManager에 전달)
   const headerUserData: HeaderUserData | null = fullUserData ? {
     id: fullUserData.id,
@@ -44,6 +48,9 @@ export default function SiteLayoutClient({
     } : null,
     isAdmin: fullUserData.is_admin
   } : null;
+
+  // AuthSection을 클라이언트에서 렌더링 (유저 데이터 로드 후 업데이트)
+  const authSection = <AuthSection userData={fullUserData ?? null} />;
 
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -120,13 +127,12 @@ export default function SiteLayoutClient({
     <AuthStateManager
       authSection={authSection}
       boardNavigation={boardNavigation}
-      leagueStandingsComponent={leagueStandingsComponent}
       rightSidebar={rightSidebar}
       headerUserData={headerUserData}
       headerBoards={headerBoards}
-      headerIsAdmin={headerIsAdmin}
+      headerIsAdmin={isAdmin}
       headerTotalPostCount={headerTotalPostCount}
-      fullUserData={fullUserData}
+      fullUserData={fullUserData ?? null}
       isOpen={deferredIsOpen}
       onClose={closeSidebar}
       isProfileOpen={deferredIsProfileOpen}

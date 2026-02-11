@@ -1,14 +1,17 @@
 'use client'
 
-import Image from 'next/image'
 import { useState, useCallback } from 'react'
 import type { TeamSearchResult } from '../types'
 // 통합된 함수 사용 (search/actions/teamMatches.ts 대신)
 import { getTeamMatchesRecent, type Match } from '@/domains/livescore/actions/teams/matches'
 import { getLeagueName } from '@/domains/livescore/constants/league-mappings'
 import { getTeamById } from '@/domains/livescore/constants/teams'
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient'
 import Spinner from '@/shared/components/Spinner';
 import { Button } from '@/shared/components/ui';
+
+// 4590 표준: placeholder 상수
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 
 // 캐시 유효성 검사 (5분)
 const CACHE_DURATION = 5 * 60 * 1000 // 5분
@@ -33,6 +36,7 @@ interface TeamMatchExpandedRowProps {
   isExpanded: boolean
   matches: Match[]
   loading: boolean
+  matchTeamLogoUrls?: Record<number, string>
 }
 
 // 드롭다운 토글 버튼 컴포넌트
@@ -155,7 +159,8 @@ export function TeamMatchExpandedRow({
   team,
   isExpanded,
   matches,
-  loading
+  loading,
+  matchTeamLogoUrls = {}
 }: TeamMatchExpandedRowProps) {
   if (!isExpanded) return null
 
@@ -173,7 +178,7 @@ export function TeamMatchExpandedRow({
           ) : matches.length > 0 ? (
             <div className="space-y-2 w-full">
               {matches.slice(0, 5).map((match) => (
-                <MatchItem key={match.fixture.id} match={match} teamId={team.team_id} />
+                <MatchItem key={match.fixture.id} match={match} teamId={team.team_id} teamLogoUrls={matchTeamLogoUrls} />
               ))}
             </div>
           ) : (
@@ -193,7 +198,7 @@ export function TeamMatchExpandedRow({
           ) : matches.length > 0 ? (
             <div className="space-y-2 w-full">
               {matches.slice(0, 5).map((match) => (
-                <MatchItem key={match.fixture.id} match={match} teamId={team.team_id} />
+                <MatchItem key={match.fixture.id} match={match} teamId={team.team_id} teamLogoUrls={matchTeamLogoUrls} />
               ))}
             </div>
           ) : (
@@ -209,7 +214,7 @@ export function TeamMatchExpandedRow({
 export default TeamMatchDropdownButton
 
 // 개별 매치 아이템 컴포넌트
-function MatchItem({ match, teamId }: { match: Match; teamId: number }) {
+function MatchItem({ match, teamId, teamLogoUrls = {} }: { match: Match; teamId: number; teamLogoUrls?: Record<number, string> }) {
   const isHome = match.teams.home.id === teamId
   const opponent = isHome ? match.teams.away : match.teams.home
   const teamScore = isHome ? match.goals.home : match.goals.away
@@ -217,6 +222,8 @@ function MatchItem({ match, teamId }: { match: Match; teamId: number }) {
   const localizedLeagueName = getLeagueName(match.league.id) || match.league.name
   const mappedOpponent = getTeamById(opponent.id)
   const opponentDisplayName = mappedOpponent?.name_ko || opponent.name
+  // 4590 표준: Storage URL 사용
+  const opponentLogoUrl = teamLogoUrls[opponent.id] || TEAM_PLACEHOLDER
   
   // 경기 상태에 따른 표시
   const getMatchStatus = () => {
@@ -251,9 +258,9 @@ function MatchItem({ match, teamId }: { match: Match; teamId: number }) {
       <div className="sm:hidden p-2.5">
         <div className="flex items-start justify-between mb-1.5">
           <div className="flex items-center space-x-2 min-w-0 flex-1">
-            <Image
-              src={opponent.logo}
-              alt={`${opponent.name} 로고`}
+            <UnifiedSportsImageClient
+              src={opponentLogoUrl}
+              alt={`${opponentDisplayName} 로고`}
               width={18}
               height={18}
               className="w-4.5 h-4.5 object-contain flex-shrink-0"
@@ -287,9 +294,9 @@ function MatchItem({ match, teamId }: { match: Match; teamId: number }) {
       {/* 데스크탑 레이아웃 */}
       <div className="hidden sm:flex items-center justify-between p-3 text-sm">
         <div className="flex items-center space-x-3 min-w-0 flex-1">
-          <Image
-            src={opponent.logo}
-            alt={`${opponent.name} 로고`}
+          <UnifiedSportsImageClient
+            src={opponentLogoUrl}
+            alt={`${opponentDisplayName} 로고`}
             width={20}
             height={20}
             className="w-5 h-5 object-contain flex-shrink-0"

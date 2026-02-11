@@ -11,8 +11,8 @@ export default function NotFound() {
     <div className="min-h-screen w-full flex justify-center pt-8 pb-8">
       <div className="w-full max-w-3xl px-4 md:px-6 space-y-4">
         {/* 404 카드 */}
-        <div className="bg-white dark:bg-[#1D1D1D] border border-black/5 dark:border-white/5 rounded-xl overflow-hidden">
-          <div className="p-6 border-b border-black/5 dark:border-white/5">
+        <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 md:rounded-lg overflow-hidden">
+          <div className="p-6 border-b border-black/5 dark:border-white/10">
             <h1 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0]">
               페이지를 찾을 수 없습니다
             </h1>
@@ -51,8 +51,8 @@ export default function NotFound() {
         </div>
 
         {/* 추가 링크 카드 */}
-        <div className="bg-white dark:bg-[#1D1D1D] border border-black/5 dark:border-white/5 rounded-xl overflow-hidden">
-          <div className="p-6 border-b border-black/5 dark:border-white/5">
+        <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 md:rounded-lg overflow-hidden">
+          <div className="p-6 border-b border-black/5 dark:border-white/10">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0]">
               이런 페이지는 어떠세요?
             </h2>
@@ -62,7 +62,7 @@ export default function NotFound() {
               {/* HOT 게시글 */}
               <Link
                 href="/boards/all?sort=hot"
-                className="p-4 rounded-lg border border-black/5 dark:border-white/5 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] transition-colors"
+                className="p-4 rounded-lg border border-black/5 dark:border-white/10 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] transition-colors"
               >
                 <div className="flex items-start gap-3">
                   <div className="w-12 h-12 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
@@ -84,7 +84,7 @@ export default function NotFound() {
               {/* 전체 게시판 */}
               <Link
                 href="/boards/all"
-                className="p-4 rounded-lg border border-black/5 dark:border-white/5 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] transition-colors"
+                className="p-4 rounded-lg border border-black/5 dark:border-white/10 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] transition-colors"
               >
                 <div className="flex items-start gap-3">
                   <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
@@ -106,7 +106,7 @@ export default function NotFound() {
               {/* 라이브스코어 */}
               <Link
                 href="/livescore/football"
-                className="p-4 rounded-lg border border-black/5 dark:border-white/5 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] transition-colors"
+                className="p-4 rounded-lg border border-black/5 dark:border-white/10 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] transition-colors"
               >
                 <div className="flex items-start gap-3">
                   <div className="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">

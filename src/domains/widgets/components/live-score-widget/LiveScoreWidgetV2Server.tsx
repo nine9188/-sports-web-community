@@ -194,6 +194,7 @@ export default async function LiveScoreWidgetV2Server({ initialData }: LiveScore
                   key={match.id}
                   match={match}
                   isLast={idx === league.matches.length - 1}
+                  priorityImages={isFirst}
                 />
               ))}
             </LeagueToggleClient>
