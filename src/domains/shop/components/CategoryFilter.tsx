@@ -5,7 +5,9 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import ReactDOM from 'react-dom'
 import { ShopItem } from '../types'
 import ItemGrid from '@/domains/shop/components/ItemGrid'
-import { Button } from '@/shared/components/ui'
+import { Button, Pagination } from '@/shared/components/ui'
+
+const PAGE_SIZE = 30
 
 interface CategoryFilterProps {
   items: ShopItem[]
@@ -64,6 +66,8 @@ export default function CategoryFilter({
       return a.name.localeCompare(b.name)
     }), [categories])
   
+  const [currentPage, setCurrentPage] = useState(1)
+
   const filteredItems = useMemo(() => {
     if (activeCategory === 'all') return items
     const activeId = Number(activeCategory)
@@ -75,6 +79,17 @@ export default function CategoryFilter({
     }
     return items.filter(item => item.category_id != null && allowedIds.has(item.category_id as number))
   }, [items, activeCategory, sortedCategories])
+
+  // 카테고리 변경 시 페이지 리셋
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [activeCategory])
+
+  const totalPages = Math.ceil(filteredItems.length / PAGE_SIZE)
+  const paginatedItems = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE
+    return filteredItems.slice(start, start + PAGE_SIZE)
+  }, [filteredItems, currentPage])
 
   // URL 변화에 따라 내부 상태 동기화 (뒤로가기 등)
   useEffect(() => {
@@ -594,14 +609,25 @@ export default function CategoryFilter({
         document.body
       )}
 
-      <ItemGrid
-        items={filteredItems}
-        userItems={userItems}
-        userPoints={userPoints}
-        userId={userId}
-        viewMode={'compact'}
-        isLoading={false}
-      />
+      <div className="space-y-4">
+        <ItemGrid
+          items={paginatedItems}
+          userItems={userItems}
+          userPoints={userPoints}
+          userId={userId}
+          viewMode={'compact'}
+          isLoading={false}
+        />
+        {totalPages > 1 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            mode="button"
+            withMargin={false}
+          />
+        )}
+      </div>
     </div>
   )
 } 
