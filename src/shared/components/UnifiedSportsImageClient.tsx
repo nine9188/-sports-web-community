@@ -39,7 +39,7 @@ export default function UnifiedSportsImageClient({
   variant = 'square',
   showFallback = true,
   fallbackContent,
-  loading = 'lazy',
+  loading = 'eager',
   priority = false,
   fit = 'contain',
   className = '',

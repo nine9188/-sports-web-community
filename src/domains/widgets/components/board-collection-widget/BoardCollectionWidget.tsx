@@ -24,18 +24,18 @@ export async function fetchBoardCollectionData(): Promise<{ foreign: SectionData
   try {
     const supabase = await getSupabaseServer();
 
-    // 해외/국내 분석글 직접 조회 (analysis_region 필터 사용)
+    // 해외/국내 분석글 직접 조회 (analysis_region 필터 + 실제 board slug 조인)
     const [foreignPostsResult, domesticPostsResult] = await Promise.all([
       supabase
         .from('posts')
-        .select('id, title, post_number')
+        .select('id, title, post_number, boards(slug, name)')
         .eq('meta->>prediction_type', 'league_analysis')
         .eq('meta->>analysis_region', 'foreign')
         .order('created_at', { ascending: false })
         .limit(POSTS_PER_SECTION),
       supabase
         .from('posts')
-        .select('id, title, post_number')
+        .select('id, title, post_number, boards(slug, name)')
         .eq('meta->>prediction_type', 'league_analysis')
         .eq('meta->>analysis_region', 'domestic')
         .order('created_at', { ascending: false })
@@ -62,14 +62,14 @@ export async function fetchBoardCollectionData(): Promise<{ foreign: SectionData
       });
     }
 
-    // 포맷팅
-    const formatPosts = (posts: { id: string; title: string; post_number: number }[] | null, boardSlug: string, boardName: string): BoardPost[] => {
+    // 포맷팅 (실제 board slug 사용, fallback으로 기본 slug)
+    const formatPosts = (posts: { id: string; title: string; post_number: number; boards: { slug: string; name: string } | null }[] | null, fallbackSlug: string, fallbackName: string): BoardPost[] => {
       return (posts || []).map(p => ({
         id: p.id,
         title: p.title,
         post_number: p.post_number,
-        board_slug: boardSlug,
-        board_name: boardName,
+        board_slug: p.boards?.slug || fallbackSlug,
+        board_name: p.boards?.name || fallbackName,
         comment_count: commentCountMap[p.id] || 0,
         team_logo: null,
         league_logo: null,

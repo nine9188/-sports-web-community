@@ -127,7 +127,6 @@ export default function MatchCardServer({ match, isLast, priorityImages = false 
               alt={match.homeTeam.name}
               width={24}
               height={24}
-              loading={priorityImages ? 'eager' : 'lazy'}
               priority={priorityImages}
               className="w-6 h-6 object-contain"
             />
@@ -151,7 +150,6 @@ export default function MatchCardServer({ match, isLast, priorityImages = false 
               alt={match.awayTeam.name}
               width={24}
               height={24}
-              loading={priorityImages ? 'eager' : 'lazy'}
               priority={priorityImages}
               className="w-6 h-6 object-contain"
             />

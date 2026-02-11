@@ -44,7 +44,7 @@ export default async function UnifiedSportsImage({
   variant = 'square',
   showFallback = true,
   fallbackContent,
-  loading = 'lazy',
+  loading = 'eager',
   priority = false,
   fit,
   className = '',
