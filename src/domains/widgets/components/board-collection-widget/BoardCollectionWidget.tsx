@@ -63,7 +63,7 @@ export async function fetchBoardCollectionData(): Promise<{ foreign: SectionData
     }
 
     // 포맷팅 (실제 board slug 사용, fallback으로 기본 slug)
-    const formatPosts = (posts: { id: string; title: string; post_number: number; boards: { slug: string; name: string } | null }[] | null, fallbackSlug: string, fallbackName: string): BoardPost[] => {
+    const formatPosts = (posts: { id: string; title: string; post_number: number; boards: { slug: string | null; name: string } | null }[] | null, fallbackSlug: string, fallbackName: string): BoardPost[] => {
       return (posts || []).map(p => ({
         id: p.id,
         title: p.title,
