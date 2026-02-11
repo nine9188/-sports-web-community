@@ -476,17 +476,14 @@ export default function CategoryFilter({
               ref={menuRef}
               onMouseEnter={() => handleMenuEnter(hoveredCategory)}
               onMouseLeave={() => handleMenuClose()}
-              className="absolute bg-white dark:bg-[#1D1D1D] shadow-lg border border-black/7 dark:border-white/10 z-40 top-[100%] -mt-1 overflow-hidden"
+              className="absolute bg-white dark:bg-[#1D1D1D] shadow-lg border border-black/7 dark:border-white/10 z-40 top-[100%] overflow-hidden rounded-lg"
               style={{
                 left: `${menuPosition.left}px`,
                 marginTop: '-7px',
-                borderRadius: '0.5rem',
-                minWidth: `${Math.min((hoveredCategoryData.subcategories ?? []).length, 5) * 100}px`,
-                maxWidth: '700px'
               }}
             >
-              {/* 하위 카테고리 그리드 */}
-              <div className={`grid grid-cols-${Math.min((hoveredCategoryData.subcategories ?? []).length, 5)}`}>
+              {/* 하위 카테고리 - flex wrap */}
+              <div className="flex flex-wrap max-w-[500px]">
                 {(hoveredCategoryData.subcategories ?? [])
                   .sort((a, b) => {
                     if (a.display_order !== undefined && b.display_order !== undefined) {
@@ -506,7 +503,7 @@ export default function CategoryFilter({
                         setHoveredCategory(null)
                       }}
                       variant="ghost"
-                      className={`px-3 py-2.5 h-auto text-[10px] sm:text-xs text-center text-gray-900 dark:text-[#F0F0F0] whitespace-nowrap overflow-hidden text-ellipsis border-b border-r border-black/5 dark:border-white/10 rounded-none ${
+                      className={`px-3 py-2 h-auto text-xs whitespace-nowrap rounded-none ${
                         activeCategory === sub.id.toString()
                           ? 'bg-[#EAEAEA] dark:bg-[#333333]'
                           : 'bg-white dark:bg-[#1D1D1D]'
