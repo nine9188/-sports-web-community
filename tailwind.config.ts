@@ -73,6 +73,9 @@ const config: Config = {
   },
   plugins: [
     typography,
+    function({ addVariant }: { addVariant: (name: string, definition: string) => void }) {
+      addVariant('hover', '@media (hover: hover) { &:hover }')
+    },
   ],
 };
 
