@@ -69,7 +69,7 @@ export default function ItemGrid({
                   {/* LCP 고려: Next Image 사용 */}
                   <picture>
                     <source srcSet={item.image_url} />
-                    <img src={item.image_url} alt={item.name} width={20} height={20} className="w-5 h-5 object-contain" loading="lazy" />
+                    <img src={item.image_url} alt={item.name} width={20} height={20} className="w-5 h-5 object-contain" loading="eager" />
                   </picture>
                 </div>
               </td>
