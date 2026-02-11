@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useMemo, useRef, useEffect, useCallback, useTransition } from 'react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react'
+import { usePathname, useSearchParams } from 'next/navigation'
 import ReactDOM from 'react-dom'
 import { ShopItem } from '../types'
 import ItemGrid from '@/domains/shop/components/ItemGrid'
@@ -38,7 +38,6 @@ export default function CategoryFilter({
 }: CategoryFilterProps) {
   const searchParams = useSearchParams()
   const pathname = usePathname()
-  const router = useRouter()
   const [activeCategory, setActiveCategory] = useState<string>(initialActiveCategory ?? (searchParams.get('cat') ?? 'all'))
   const [hoveredCategory, setHoveredCategory] = useState<number | null>(null)
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -53,7 +52,6 @@ export default function CategoryFilter({
   const menuItemsRef = useRef<Record<number, HTMLElement | null>>({})
   const bottomSheetRef = useRef<HTMLDivElement>(null)
   const [menuPosition, setMenuPosition] = useState<{ left: number }>({ left: 0 })
-  const [isNavigating, startTransition] = useTransition()
 
   // 카테고리 정렬 - display_order 우선, 그 다음 이름순
   const sortedCategories = useMemo(() => 
@@ -89,7 +87,6 @@ export default function CategoryFilter({
 
   const updateUrlCategory = useCallback((next: string) => {
     const params = new URLSearchParams(searchParams.toString())
-    // 페이지 초기화
     params.delete('page')
     if (next === 'all') {
       params.delete('cat')
@@ -98,8 +95,9 @@ export default function CategoryFilter({
     }
     const query = params.toString()
     const href = query ? `${pathname}?${query}` : pathname
-    startTransition(() => router.push(href))
-  }, [searchParams, pathname, router])
+    // 서버 재요청 없이 URL만 업데이트 (클라이언트 필터링)
+    window.history.replaceState(null, '', href)
+  }, [searchParams, pathname])
 
   // 초기 설정
   useEffect(() => {
@@ -602,7 +600,7 @@ export default function CategoryFilter({
         userPoints={userPoints}
         userId={userId}
         viewMode={'compact'}
-        isLoading={isNavigating}
+        isLoading={false}
       />
     </div>
   )

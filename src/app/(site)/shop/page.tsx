@@ -6,7 +6,6 @@ import {
   getShopCategories,
 } from "@/domains/shop/actions/actions";
 import CategoryFilter from "@/domains/shop/components/CategoryFilter";
-import { Pagination } from "@/shared/components/ui";
 import TrackPageVisit from "@/domains/layout/components/TrackPageVisit";
 import { buildMetadata } from "@/shared/utils/metadataNew";
 
@@ -75,42 +74,16 @@ export default async function ShopPage({ searchParams }: Props) {
     error,
   } = await supabase.auth.getUser();
 
-  // 페이지네이션 파라미터 추출 (App Router 규칙에 맞춰 비동기 처리)
+  // searchParams에서 초기 카테고리만 추출 (클라이언트 필터링용)
   const sp = await (searchParams ??
     Promise.resolve({} as Record<string, string | string[] | undefined>));
-  const pageParam = Array.isArray(sp["page"]) ? sp["page"][0] : sp["page"];
   const catParam = Array.isArray(sp["cat"]) ? sp["cat"][0] : sp["cat"];
-  const page = Math.max(1, Number(pageParam ?? "1") || 1);
-  const pageSize = 24;
 
-  // 선택 카테고리 범위 계산 (탭별 페이지네이션을 위해)
-  let categoryIdsForFetch = initialCategoryIds;
-  if (catParam && catParam !== "all") {
-    const catId = Number(catParam);
-    if (!Number.isNaN(catId)) {
-      // 루트 매칭?
-      const root = filterCategories.find((c) => c.id === catId);
-      if (root) {
-        const ids = new Set<number>([root.id]);
-        (root.subcategories || []).forEach((s) => ids.add(s.id));
-        categoryIdsForFetch = Array.from(ids);
-      } else {
-        // 서브카테고리 매칭?
-        const parent = filterCategories.find((p) =>
-          (p.subcategories || []).some((s) => s.id === catId),
-        );
-        if (parent) {
-          categoryIdsForFetch = [catId];
-        }
-      }
-    }
-  }
-
-  // 아이템 로드 (페이지네이션)
-  const { items, total } =
-    categoryIdsForFetch.length > 0
-      ? await getCategoryItemsPaginated(categoryIdsForFetch, page, pageSize)
-      : { items: [], total: 0 };
+  // 전체 아이템을 한 번에 로드 (탭 전환 시 서버 재요청 방지)
+  const { items } =
+    initialCategoryIds.length > 0
+      ? await getCategoryItemsPaginated(initialCategoryIds, 1, 500)
+      : { items: [] };
 
   // 사용자 포인트/보유 아이템
   const userPoints = user && !error ? await getUserPoints(user.id) : 0;
@@ -175,15 +148,6 @@ export default async function ShopPage({ searchParams }: Props) {
           ) : null
         }
       />
-
-      {total > pageSize && (
-        <Pagination
-          currentPage={page}
-          totalPages={Math.ceil(total / pageSize)}
-          mode="url"
-          withMargin={true}
-        />
-      )}
 
       {/* 루트 카테고리가 없을 경우 */}
       {(!rootCategoriesRaw || rootCategoriesRaw.length === 0) && (
