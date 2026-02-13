@@ -98,6 +98,7 @@ const PlayerHeader = memo(function PlayerHeader({
               alt={displayData.info.name}
               size="xxl"
               variant="circle"
+              loading="eager"
               className="w-full h-full"
             />
             {mainTeamStats?.team && (
@@ -108,6 +109,7 @@ const PlayerHeader = memo(function PlayerHeader({
                   size="sm"
                   variant="square"
                   fit="contain"
+                  loading="eager"
                   className="w-4 h-4 md:w-5 md:h-5"
                 />
               </div>

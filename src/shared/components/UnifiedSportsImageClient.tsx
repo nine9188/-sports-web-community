@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 
 type SizeVariant = 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
 type ShapeVariant = 'square' | 'circle';
+
+const MAX_RETRY = 1; // 에러 시 최대 재시도 횟수
 
 interface UnifiedSportsImageClientProps {
   src: string;  // 서버에서 확정된 URL만 받음 (라이트모드 기본)
@@ -30,6 +32,8 @@ interface UnifiedSportsImageClientProps {
  * - 이 컴포넌트는 URL을 절대 조합하지 않음
  * - 서버에서 확정된 src만 받아서 렌더링
  * - 로딩/에러/placeholder 처리만 담당
+ * - 기본 loading="lazy" (above-the-fold만 eager/priority 사용)
+ * - 에러 시 1회 재시도 후 최종 실패 시 placeholder 표시
  */
 export default function UnifiedSportsImageClient({
   src,
@@ -39,7 +43,7 @@ export default function UnifiedSportsImageClient({
   variant = 'square',
   showFallback = true,
   fallbackContent,
-  loading = 'eager',
+  loading = 'lazy',
   priority = false,
   fit = 'contain',
   className = '',
@@ -48,6 +52,7 @@ export default function UnifiedSportsImageClient({
   height,
 }: UnifiedSportsImageClientProps) {
   const [hasError, setHasError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const [isDark, setIsDark] = useState(false);
 
   // 다크모드 감지
@@ -69,13 +74,28 @@ export default function UnifiedSportsImageClient({
     return () => observer.disconnect();
   }, []);
 
-  // src가 변경되면 에러 상태 리셋
+  // src가 변경되면 에러/재시도 상태 리셋
   useEffect(() => {
     setHasError(false);
+    setRetryCount(0);
   }, [src, srcDark]);
+
+  // 에러 핸들러: 재시도 1회 후 최종 실패
+  const handleError = useCallback(() => {
+    if (retryCount < MAX_RETRY) {
+      setRetryCount(prev => prev + 1);
+    } else {
+      setHasError(true);
+    }
+  }, [retryCount]);
 
   // 다크모드일 때 srcDark가 있으면 사용, 없으면 src 사용
   const effectiveSrc = isDark && srcDark ? srcDark : src;
+
+  // 재시도 시 캐시 무효화를 위한 URL (retryCount가 변경되면 새 요청)
+  const srcWithRetry = retryCount > 0
+    ? `${effectiveSrc}${effectiveSrc.includes('?') ? '&' : '?'}_r=${retryCount}`
+    : effectiveSrc;
 
   // 크기 맵핑
   const sizeClasses: Record<SizeVariant, string> = {
@@ -137,13 +157,13 @@ export default function UnifiedSportsImageClient({
   return (
     <div className={containerClasses} style={containerStyle}>
       <Image
-        src={effectiveSrc}
+        src={srcWithRetry}
         alt={alt}
         width={finalWidth}
         height={finalHeight}
         priority={priority}
         loading={priority ? undefined : loading}
-        onError={() => setHasError(true)}
+        onError={handleError}
         className={`w-full h-full ${fit === 'contain' ? 'object-contain' : 'object-cover'} ${shapeClasses[variant]}`}
         sizes={`${finalWidth}px`}
       />

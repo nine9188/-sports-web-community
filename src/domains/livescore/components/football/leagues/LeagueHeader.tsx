@@ -64,6 +64,7 @@ export default function LeagueHeader({ league, leagueLogoUrl, leagueLogoUrlDark 
               alt={`${displayName} 로고`}
               width={32}
               height={32}
+              loading="eager"
               className="object-contain w-8 h-8"
             />
           </div>

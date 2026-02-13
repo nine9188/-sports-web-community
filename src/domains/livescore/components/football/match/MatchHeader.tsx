@@ -252,6 +252,7 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {}, teamLogoUrls = 
                   alt={league?.name || ''}
                   width={24}
                   height={24}
+                  loading="eager"
                   className="object-contain w-full h-full"
                 />
               )}
@@ -297,6 +298,7 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {}, teamLogoUrls = 
                       alt={homeTeam.name || ''}
                       width={48}
                       height={48}
+                      loading="eager"
                       className="object-contain w-full h-full group-hover:brightness-75 transition-all"
                     />
                   </div>
@@ -315,6 +317,7 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {}, teamLogoUrls = 
                         alt={homeTeam.name || ''}
                         width={48}
                         height={48}
+                        loading="eager"
                         className="object-contain w-full h-full"
                       />
                     )}
@@ -348,6 +351,7 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {}, teamLogoUrls = 
                       alt={awayTeam.name || ''}
                       width={48}
                       height={48}
+                      loading="eager"
                       className="object-contain w-full h-full group-hover:brightness-75 transition-all"
                     />
                   </div>
@@ -366,6 +370,7 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {}, teamLogoUrls = 
                         alt={awayTeam.name || ''}
                         width={48}
                         height={48}
+                        loading="eager"
                         className="object-contain w-full h-full"
                       />
                     )}

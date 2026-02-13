@@ -76,6 +76,7 @@ export default function TeamHeader({
               alt={`${teamInfo.name} 로고`}
               width={80}
               height={80}
+              loading="eager"
               className="object-contain"
             />
           </div>
@@ -107,6 +108,7 @@ export default function TeamHeader({
                   alt={`${venue.name} 경기장`}
                   width={144}
                   height={96}
+                  loading="eager"
                   className="w-24 h-16 md:w-36 md:h-24 object-cover"
                 />
               </div>

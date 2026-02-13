@@ -142,16 +142,15 @@ const MatchItem = React.memo(function MatchItem({
       {match.league && (
         <div className="flex items-center gap-2 mb-3 text-xs text-gray-600 dark:text-gray-400">
           {match.league.id ? (
-            <UnifiedSportsImageClient
-              src={effectiveLeagueLogoUrl || LEAGUE_PLACEHOLDER}
-              alt={match.league.name || '리그'}
-              width={16}
-              height={16}
-              className="object-contain rounded"
-              loading="eager"
-              priority
-              fetchPriority="high"
-            />
+            <div className="w-4 h-4 flex-shrink-0 rounded bg-black/5 dark:bg-white/10 overflow-hidden">
+              <UnifiedSportsImageClient
+                src={effectiveLeagueLogoUrl || LEAGUE_PLACEHOLDER}
+                alt={match.league.name || '리그'}
+                width={16}
+                height={16}
+                className="object-contain rounded w-full h-full"
+              />
+            </div>
           ) : (
             <Trophy className="w-4 h-4 text-gray-400" />
           )}
@@ -173,13 +172,13 @@ const MatchItem = React.memo(function MatchItem({
         {/* 홈팀 */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {match.teams?.home?.id ? (
-            <div className="w-6 h-6 flex-shrink-0 flex items-center justify-center">
+            <div className="w-6 h-6 flex-shrink-0 rounded bg-black/5 dark:bg-white/10 overflow-hidden flex items-center justify-center">
               <UnifiedSportsImageClient
                 src={homeTeamLogoUrl || TEAM_PLACEHOLDER}
                 alt={match.teams?.home?.name || '홈팀'}
                 width={24}
                 height={24}
-                className="object-contain max-w-full max-h-full"
+                className="object-contain w-full h-full"
               />
             </div>
           ) : (
@@ -225,13 +224,13 @@ const MatchItem = React.memo(function MatchItem({
             {awayTeamName}
           </span>
           {match.teams?.away?.id ? (
-            <div className="w-6 h-6 flex-shrink-0 flex items-center justify-center">
+            <div className="w-6 h-6 flex-shrink-0 rounded bg-black/5 dark:bg-white/10 overflow-hidden flex items-center justify-center">
               <UnifiedSportsImageClient
                 src={awayTeamLogoUrl || TEAM_PLACEHOLDER}
                 alt={match.teams?.away?.name || '원정팀'}
                 width={24}
                 height={24}
-                className="object-contain max-w-full max-h-full"
+                className="object-contain w-full h-full"
               />
             </div>
           ) : (
