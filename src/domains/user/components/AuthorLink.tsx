@@ -40,6 +40,8 @@ interface AuthorLinkProps {
   showIcon?: boolean;
   /** 이미지 우선 로딩 (LCP 요소에 사용) */
   priority?: boolean;
+  /** 모바일에서도 프로필 드롭다운 활성화 (기본: false) */
+  enableMobile?: boolean;
 }
 
 /**
@@ -57,6 +59,7 @@ export default function AuthorLink({
   className = '',
   showIcon = true,
   priority = false,
+  enableMobile = false,
 }: AuthorLinkProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
@@ -109,8 +112,8 @@ export default function AuthorLink({
     if (publicId && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       setDropdownPosition({
-        top: rect.bottom + window.scrollY + 4,
-        left: rect.left + window.scrollX
+        top: rect.bottom + 4,
+        left: rect.left
       });
       setIsOpen(prev => !prev);
     }
@@ -181,7 +184,7 @@ export default function AuthorLink({
 
   // 모바일에서는 클릭 비활성화 - 단순 텍스트로 표시
   // PC에서만 프로필 드롭다운 활성화
-  if (publicId && !isMobile) {
+  if (publicId && (!isMobile || enableMobile)) {
     return (
       <div className="relative" ref={dropdownRef}>
         <button

@@ -5,6 +5,10 @@ import { checkSuspensionStatus } from '@/shared/utils/suspension-guard';
 import SuspensionNotice from '@/shared/components/SuspensionNotice';
 import { Container, ContainerContent } from '@/shared/components/ui';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import { getNicknameTicketCount } from '@/domains/shop/actions/consumables';
+import { getAttendanceData } from '@/shared/actions/attendance-actions';
+import { getReferralStats } from '@/shared/actions/referral-actions';
+import { getPhoneVerificationStatus } from '@/domains/settings/actions/phone';
 
 export async function generateMetadata() {
   return buildMetadata({
@@ -21,13 +25,24 @@ export const revalidate = 0;
 export default async function ProfileSettingsPage() {
   // 사용자 인증 확인 (자동으로 리다이렉트됨)
   const user = await checkUserAuth('/auth/signin');
-  
-  // 사용자 프로필 정보 가져오기
-  const userProfile = await getUserProfile(user.id);
-  
-  // 계정 정지 상태 확인
-  const { isSuspended, suspensionInfo } = await checkSuspensionStatus(user.id);
-  
+
+  // 모든 데이터 병렬 조회
+  const [
+    userProfile,
+    { isSuspended, suspensionInfo },
+    ticketCount,
+    attendanceData,
+    referralStats,
+    phoneStatus,
+  ] = await Promise.all([
+    getUserProfile(user.id),
+    checkSuspensionStatus(user.id),
+    getNicknameTicketCount(user.id),
+    getAttendanceData(user.id),
+    getReferralStats(user.id),
+    getPhoneVerificationStatus(),
+  ]);
+
   // 프로필 정보가 없거나 오류가 발생한 경우 기본값 사용
   const profileData = userProfile || {
     id: user.id,
@@ -35,7 +50,7 @@ export default async function ProfileSettingsPage() {
     email: user.email,
     full_name: '',
   };
-  
+
   return (
     <div className="space-y-4">
       {/* 계정 정지 상태 표시 */}
@@ -56,6 +71,14 @@ export default async function ProfileSettingsPage() {
               created_at: user?.created_at,
               last_sign_in_at: user?.last_sign_in_at,
             }}
+            initialTicketCount={ticketCount}
+            initialAttendanceData={attendanceData}
+            initialReferralStats={referralStats}
+            initialPhoneStatus={
+              phoneStatus.success
+                ? { verified: !!phoneStatus.verified, phoneNumber: phoneStatus.phoneNumber }
+                : undefined
+            }
           />
         </ContainerContent>
       </Container>

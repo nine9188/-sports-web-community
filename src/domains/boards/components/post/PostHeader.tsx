@@ -77,6 +77,7 @@ export default function PostHeader({
             exp={author.exp}
             iconSize={20}
             priority={true}
+            enableMobile
           />
 
           <span className="flex-shrink-0">{formatDate(createdAt)}</span>

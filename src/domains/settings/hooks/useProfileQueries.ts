@@ -14,8 +14,8 @@ export const profileKeys = {
  * - 프로필 설정 페이지에서 사용
  * - 캐싱을 통해 불필요한 요청 방지
  */
-export function useNicknameTicketCount(userId: string | null, options: { enabled?: boolean } = {}) {
-  const { enabled = true } = options;
+export function useNicknameTicketCount(userId: string | null, options: { enabled?: boolean; initialData?: number } = {}) {
+  const { enabled = true, initialData } = options;
 
   return useQuery({
     queryKey: profileKeys.nicknameTicket(userId ?? ''),
@@ -24,6 +24,7 @@ export function useNicknameTicketCount(userId: string | null, options: { enabled
       return getNicknameTicketCount(userId);
     },
     enabled: enabled && !!userId,
+    initialData,
     staleTime: 1000 * 60 * 5, // 5분
     gcTime: 1000 * 60 * 15, // 15분
   });

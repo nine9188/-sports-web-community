@@ -152,6 +152,59 @@ export async function getCurrentUserIcon(userId: string): Promise<ActionResponse
 }
 
 /**
+ * 아이콘 설정 페이지용 통합 데이터 조회
+ * 기존 getUserIcons + getCurrentUserIcon을 하나로 합쳐 쿼리 수를 줄임
+ *
+ * 기존: profiles(level) + user_items/shop_items + profiles(icon_id) + shop_items = 4쿼리
+ * 통합: profiles(level, icon_id) + user_items/shop_items = 1쿼리 (page에서 profile 조회 통합)
+ */
+export async function getIconSettingsData(userId: string, iconId: number | null): Promise<ActionResponse<{ userIcons: IconItem[]; currentIcon: IconItem | null }>> {
+  try {
+    if (!userId) {
+      return { success: false, error: '사용자 ID가 필요합니다.', data: { userIcons: [], currentIcon: null } };
+    }
+
+    const supabase = await getSupabaseServer();
+
+    // 보유 아이콘 목록 조회 (1회 쿼리)
+    const { data, error } = await supabase
+      .from('user_items')
+      .select(`
+        item_id,
+        shop_items!inner(id, name, image_url, is_consumable)
+      `)
+      .eq('user_id', userId)
+      .eq('shop_items.is_consumable', false);
+
+    if (error) {
+      console.error('아이콘 목록 조회 오류:', error);
+      return { success: false, error: error.message, data: { userIcons: [], currentIcon: null } };
+    }
+
+    const userItems = data as unknown as UserItem[];
+    const userIcons: IconItem[] = userItems
+      .filter(item => item?.shop_items?.id && item?.shop_items?.name && item?.shop_items?.image_url)
+      .map(item => ({
+        id: item.shop_items.id,
+        name: item.shop_items.name,
+        image_url: item.shop_items.image_url
+      }));
+
+    // 현재 아이콘은 보유 목록에서 찾기 (추가 쿼리 불필요)
+    const currentIcon = iconId ? userIcons.find(icon => icon.id === iconId) || null : null;
+
+    return { success: true, data: { userIcons, currentIcon } };
+  } catch (error) {
+    console.error('아이콘 설정 데이터 조회 오류:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '아이콘 데이터를 불러오는데 실패했습니다.',
+      data: { userIcons: [], currentIcon: null }
+    };
+  }
+}
+
+/**
  * 사용자 아이콘 변경
  * @param userId 사용자 ID
  * @param iconId 아이콘 ID (null인 경우 기본 아이콘 사용)

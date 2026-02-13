@@ -1,15 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import Link from 'next/link';
-import { User } from 'lucide-react';
-import UserIcon from '@/shared/components/UserIcon';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/shared/components/ui';
 import { likeComment, dislikeComment } from '@/domains/boards/actions/comments/index';
 import { CommentType } from '@/domains/boards/types/post/comment';
 import ReportButton from '@/domains/reports/components/ReportButton';
+import AuthorLink from '@/domains/user/components/AuthorLink';
 import { formatDate } from '@/shared/utils/dateUtils';
-import { useClickOutside } from '@/shared/hooks/useClickOutside';
 
 interface CommentProps {
   comment: CommentType & {
@@ -45,23 +42,10 @@ export default function Comment({
   const [userAction, setUserAction] = useState<'like' | 'dislike' | null>(comment.userAction || null);
   const [isLiking, setIsLiking] = useState(false);
   const [isDisliking, setIsDisliking] = useState(false);
-  const [isAuthorDropdownOpen, setIsAuthorDropdownOpen] = useState(false);
-  const authorDropdownRef = useRef<HTMLDivElement>(null);
 
   const isCommentOwner = currentUserId === comment.user_id;
   const isHidden = comment.is_hidden === true;
   const isDeleted = comment.is_deleted === true;
-
-  // 외부 클릭 시 작성자 드롭다운 닫기
-  useClickOutside(authorDropdownRef, () => setIsAuthorDropdownOpen(false), isAuthorDropdownOpen);
-
-  const handleAuthorToggle = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (comment.profiles?.public_id) {
-      setIsAuthorDropdownOpen(prev => !prev);
-    }
-  }, [comment.profiles?.public_id]);
 
   useEffect(() => {
     setLikes(comment.likes || 0);
@@ -171,57 +155,18 @@ export default function Comment({
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center space-x-2 min-w-0">
-                {comment.profiles?.public_id ? (
-                  <div className="relative flex items-center" ref={authorDropdownRef}>
-                    <div className="w-5 h-5 relative rounded-full overflow-hidden flex-shrink-0 mr-1" aria-hidden="true">
-                      <UserIcon
-                        iconUrl={comment.profiles?.icon_url || null}
-                        level={comment.profiles?.level || 1}
-                        exp={comment.profiles?.exp}
-                        size={20}
-                        alt=""
-                        className="object-cover"
-                        priority
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleAuthorToggle}
-                      className="font-medium text-sm truncate text-gray-900 dark:text-[#F0F0F0] hover:underline cursor-pointer"
-                    >
-                      {comment.profiles?.nickname || '알 수 없음'}
-                    </button>
-                    {isAuthorDropdownOpen && (
-                      <div className="absolute left-0 top-full mt-1 z-50 min-w-[120px] bg-white dark:bg-[#2D2D2D] border border-black/7 dark:border-white/10 rounded-lg shadow-lg py-1">
-                        <Link
-                          href={`/user/${comment.profiles.public_id}`}
-                          onClick={() => setIsAuthorDropdownOpen(false)}
-                          className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] flex items-center gap-2"
-                        >
-                          <User className="w-4 h-4" />
-                          프로필 보기
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex items-center">
-                    <div className="w-5 h-5 relative rounded-full overflow-hidden flex-shrink-0 mr-1" aria-hidden="true">
-                      <UserIcon
-                        iconUrl={comment.profiles?.icon_url || null}
-                        level={comment.profiles?.level || 1}
-                        exp={comment.profiles?.exp}
-                        size={20}
-                        alt=""
-                        className="object-cover"
-                        priority
-                      />
-                    </div>
-                    <span className="font-medium text-sm truncate text-gray-900 dark:text-[#F0F0F0]">
-                      {comment.profiles?.nickname || '알 수 없음'}
-                    </span>
-                  </div>
-                )}
+                <AuthorLink
+                  nickname={comment.profiles?.nickname || '알 수 없음'}
+                  oddsUserId={comment.user_id}
+                  publicId={comment.profiles?.public_id}
+                  iconUrl={comment.profiles?.icon_url || null}
+                  level={comment.profiles?.level || 1}
+                  exp={comment.profiles?.exp}
+                  iconSize={20}
+                  showIcon={true}
+                  priority
+                  enableMobile
+                />
                 {isPostOwner && isCommentOwner && (
                   <span className="text-xs bg-[#F5F5F5] dark:bg-[#333333] text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full">작성자</span>
                 )}

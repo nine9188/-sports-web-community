@@ -8,18 +8,20 @@ import { Button } from '@/shared/components/ui';
 
 interface ReferralSectionProps {
   userId: string;
+  initialStats?: ReferralStats | null;
 }
 
-export default function ReferralSection({ userId }: ReferralSectionProps) {
-  const [stats, setStats] = useState<ReferralStats | null>(null);
-  const [loading, setLoading] = useState(true);
+export default function ReferralSection({ userId, initialStats }: ReferralSectionProps) {
+  const [stats, setStats] = useState<ReferralStats | null>(initialStats ?? null);
+  const [loading, setLoading] = useState(!initialStats);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    if (initialStats !== undefined) return;
     getReferralStats(userId)
       .then(setStats)
       .finally(() => setLoading(false));
-  }, [userId]);
+  }, [userId, initialStats]);
 
   const handleCopyCode = async () => {
     if (stats?.referralCode) {

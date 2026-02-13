@@ -5,8 +5,14 @@ import { X } from 'lucide-react';
 import { sendPhoneVerificationCode, verifyPhoneCode, getPhoneVerificationStatus } from '../../actions/phone';
 import { Button } from '@/shared/components/ui';
 
+interface PhoneVerificationStatus {
+  verified: boolean;
+  phoneNumber?: string;
+}
+
 interface PhoneVerificationFormProps {
   userId: string;
+  initialStatus?: PhoneVerificationStatus;
 }
 
 // 전화번호 마스킹 (010-****-1601)
@@ -16,19 +22,24 @@ function maskPhoneNumber(phone: string): string {
   return `${normalized.slice(0, 3)}-****-${normalized.slice(-4)}`;
 }
 
-export default function PhoneVerificationForm({ userId }: PhoneVerificationFormProps) {
+export default function PhoneVerificationForm({ userId, initialStatus }: PhoneVerificationFormProps) {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [code, setCode] = useState('');
-  const [step, setStep] = useState<'input' | 'verify' | 'completed'>('input');
+  const [step, setStep] = useState<'input' | 'verify' | 'completed'>(
+    initialStatus?.verified ? 'completed' : 'input'
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
   const [countdown, setCountdown] = useState(0);
   const [expiryTime, setExpiryTime] = useState(0);
-  const [verifiedPhone, setVerifiedPhone] = useState<string | null>(null);
+  const [verifiedPhone, setVerifiedPhone] = useState<string | null>(
+    initialStatus?.verified ? (initialStatus.phoneNumber || null) : null
+  );
   const [reward, setReward] = useState<{ points: number; exp: number } | null>(null);
 
-  // 초기 상태 로드
+  // 초기 상태 로드 (initialStatus가 없을 때만)
   useEffect(() => {
+    if (initialStatus) return;
     const loadStatus = async () => {
       const result = await getPhoneVerificationStatus();
       if (result.success && result.verified) {
@@ -37,7 +48,7 @@ export default function PhoneVerificationForm({ userId }: PhoneVerificationFormP
       }
     };
     loadStatus();
-  }, []);
+  }, [initialStatus]);
 
   // 재발송 쿨다운 타이머
   useEffect(() => {

@@ -36,12 +36,13 @@ function dateToKSTString(date: Date): string {
 interface AttendanceCalendarProps {
   userId: string;
   variant?: 'full' | 'mini';
+  initialData?: AttendanceData | null;
 }
 
-export default function AttendanceCalendar({ userId, variant = 'full' }: AttendanceCalendarProps) {
-  const [attendanceData, setAttendanceData] = useState<AttendanceData | null>(null);
+export default function AttendanceCalendar({ userId, variant = 'full', initialData }: AttendanceCalendarProps) {
+  const [attendanceData, setAttendanceData] = useState<AttendanceData | null>(initialData ?? null);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!initialData);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth() + 1;
@@ -64,8 +65,23 @@ export default function AttendanceCalendar({ userId, variant = 'full' }: Attenda
     return { startDate, endDate };
   }, []);
 
+  // initialData가 현재 월에 대한 것인지 추적
+  const [initialMonth] = useState(() => {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() + 1 };
+  });
+
   // 출석 데이터 로드
   useEffect(() => {
+    // initialData가 있고 현재 월이 초기 월과 같으면 fetch 스킵
+    if (initialData && variant === 'full' && year === initialMonth.year && month === initialMonth.month) {
+      return;
+    }
+    // mini 버전에서 initialData가 있으면 스킵
+    if (initialData && variant === 'mini') {
+      return;
+    }
+
     const fetchData = async () => {
       setIsLoading(true);
       try {
@@ -86,7 +102,7 @@ export default function AttendanceCalendar({ userId, variant = 'full' }: Attenda
     };
 
     fetchData();
-  }, [userId, year, month, variant, weekRange.startDate, weekRange.endDate]);
+  }, [userId, year, month, variant, weekRange.startDate, weekRange.endDate, initialData, initialMonth.year, initialMonth.month]);
 
   // 출석한 날짜 Set (날짜 형식 정규화)
   const attendedDates = useMemo(() => {

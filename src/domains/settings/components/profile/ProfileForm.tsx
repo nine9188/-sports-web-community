@@ -9,6 +9,8 @@ import NicknameChangeModal from './NicknameChangeModal';
 import ReferralSection from './ReferralSection';
 import PhoneVerificationForm from '../phone/PhoneVerificationForm';
 import { useNicknameTicketCount, useNicknameTicketCache } from '../../hooks/useProfileQueries';
+import type { AttendanceData } from '@/shared/actions/attendance-actions';
+import type { ReferralStats } from '@/shared/actions/referral-actions';
 
 interface ProfileFormProps {
   initialData: {
@@ -19,14 +21,26 @@ interface ProfileFormProps {
     created_at?: string;
     last_sign_in_at?: string;
   };
+  initialTicketCount?: number;
+  initialAttendanceData?: AttendanceData | null;
+  initialReferralStats?: ReferralStats | null;
+  initialPhoneStatus?: { verified: boolean; phoneNumber?: string };
 }
 
-export default function ProfileForm({ initialData }: ProfileFormProps) {
+export default function ProfileForm({
+  initialData,
+  initialTicketCount,
+  initialAttendanceData,
+  initialReferralStats,
+  initialPhoneStatus,
+}: ProfileFormProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [nickname, setNickname] = useState(initialData.nickname || '');
 
   // React Query로 티켓 개수 관리
-  const { data: ticketCount = 0 } = useNicknameTicketCount(initialData.id);
+  const { data: ticketCount = 0 } = useNicknameTicketCount(initialData.id, {
+    initialData: initialTicketCount,
+  });
   const { decrementTicketCount } = useNicknameTicketCache();
 
   const handleNicknameChange = (newNickname: string) => {
@@ -116,7 +130,7 @@ export default function ProfileForm({ initialData }: ProfileFormProps) {
       {/* 전화번호 인증 */}
       <div className="space-y-1 border-t border-black/5 dark:border-white/10 pt-4">
         <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-3">전화번호 인증</h3>
-        <PhoneVerificationForm userId={initialData.id} />
+        <PhoneVerificationForm userId={initialData.id} initialStatus={initialPhoneStatus} />
       </div>
 
       {/* 계정 정보 */}
@@ -137,10 +151,10 @@ export default function ProfileForm({ initialData }: ProfileFormProps) {
       </div>
 
       {/* 출석 현황 캘린더 */}
-      <AttendanceCalendar userId={initialData.id} variant="full" />
+      <AttendanceCalendar userId={initialData.id} variant="full" initialData={initialAttendanceData} />
 
       {/* 친구 추천 */}
-      <ReferralSection userId={initialData.id} />
+      <ReferralSection userId={initialData.id} initialStats={initialReferralStats} />
 
       {/* 닉네임 변경 모달 */}
       <NicknameChangeModal
