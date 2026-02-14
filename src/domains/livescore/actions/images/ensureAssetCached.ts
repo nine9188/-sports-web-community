@@ -28,14 +28,11 @@ interface AssetCacheRow {
 
 /**
  * Storage 공개 URL 생성
- * v 파라미터: Vercel /_next/image CDN 캐시 무효화용
  */
-const CACHE_VERSION = 2;
-
 function getStoragePublicUrl(type: AssetType, entityId: number): string {
   const bucket = BUCKET_MAP[type];
   const ext = EXTENSION_MAP[type];
-  return `${SUPABASE_STORAGE_URL}/${bucket}/${entityId}.${ext}?v=${CACHE_VERSION}`;
+  return `${SUPABASE_STORAGE_URL}/${bucket}/${entityId}.${ext}`;
 }
 
 /**

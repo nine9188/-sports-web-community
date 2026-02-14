@@ -18,6 +18,7 @@ interface UnifiedSportsImageClientProps {
   fallbackContent?: React.ReactNode;
   loading?: 'lazy' | 'eager';
   priority?: boolean;
+  unoptimized?: boolean;
   fit?: 'cover' | 'contain';
   className?: string;
   showBorder?: boolean;
@@ -32,7 +33,7 @@ interface UnifiedSportsImageClientProps {
  * - 이 컴포넌트는 URL을 절대 조합하지 않음
  * - 서버에서 확정된 src만 받아서 렌더링
  * - 로딩/에러/placeholder 처리만 담당
- * - 기본 loading="lazy" (above-the-fold만 eager/priority 사용)
+ * - 기본 unoptimized=true (Supabase CDN 직접 로드, /_next/image 우회)
  * - 에러 시 1회 재시도 후 최종 실패 시 placeholder 표시
  */
 export default function UnifiedSportsImageClient({
@@ -43,8 +44,9 @@ export default function UnifiedSportsImageClient({
   variant = 'square',
   showFallback = true,
   fallbackContent,
-  loading = 'lazy',
+  loading = 'eager',
   priority = false,
+  unoptimized = true,
   fit = 'contain',
   className = '',
   showBorder = false,
@@ -163,6 +165,7 @@ export default function UnifiedSportsImageClient({
         height={finalHeight}
         priority={priority}
         loading={priority ? undefined : loading}
+        unoptimized={unoptimized}
         onError={handleError}
         className={`w-full h-full ${fit === 'contain' ? 'object-contain' : 'object-cover'} ${shapeClasses[variant]}`}
         sizes={`${finalWidth}px`}
