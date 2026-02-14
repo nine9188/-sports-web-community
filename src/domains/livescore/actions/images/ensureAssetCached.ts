@@ -1,8 +1,10 @@
 'use server';
 
+import sharp from 'sharp';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import {
   AssetType,
+  ImageSize,
   BUCKET_MAP,
   API_SPORTS_BASE_URL,
   API_PATH_MAP,
@@ -12,8 +14,9 @@ import {
   TTL_MAP,
   ERROR_COOLDOWN,
   PENDING_WAIT_TIME,
-  MAX_RETRIES,
   CUSTOM_ASSETS,
+  SIZE_CONFIG,
+  VENUE_SIZE_CONFIG,
 } from './constants';
 
 interface AssetCacheRow {
@@ -26,13 +29,16 @@ interface AssetCacheRow {
   error_message?: string;
 }
 
+const ALL_SIZES: ImageSize[] = ['sm', 'md', 'lg'];
+
 /**
  * Storage 공개 URL 생성
+ * 새 구조: {bucket}/{size}/{entityId}.webp
  */
-function getStoragePublicUrl(type: AssetType, entityId: number): string {
+function getStoragePublicUrl(type: AssetType, entityId: number, size: ImageSize = 'md'): string {
   const bucket = BUCKET_MAP[type];
   const ext = EXTENSION_MAP[type];
-  return `${SUPABASE_STORAGE_URL}/${bucket}/${entityId}.${ext}`;
+  return `${SUPABASE_STORAGE_URL}/${bucket}/${size}/${entityId}.${ext}`;
 }
 
 /**
@@ -45,10 +51,11 @@ function getApiSportsUrl(type: AssetType, entityId: number): string {
 
 /**
  * Storage 경로 생성
+ * 새 구조: {size}/{entityId}.webp
  */
-function getStoragePath(type: AssetType, entityId: number): string {
+function getStoragePath(type: AssetType, entityId: number, size: ImageSize): string {
   const ext = EXTENSION_MAP[type];
-  return `${entityId}.${ext}`;
+  return `${size}/${entityId}.${ext}`;
 }
 
 /**
@@ -61,7 +68,8 @@ function getStoragePath(type: AssetType, entityId: number): string {
  */
 export async function ensureAssetCached(
   type: AssetType,
-  entityId: number
+  entityId: number,
+  size: ImageSize = 'md'
 ): Promise<string> {
   if (!entityId || entityId <= 0) {
     return PLACEHOLDER_URLS[type];
@@ -82,8 +90,7 @@ export async function ensureAssetCached(
 
     // 2. ready 상태면 URL 반환
     if (cacheRow?.status === 'ready') {
-      // TTL 체크 (백그라운드 갱신은 별도 처리)
-      return getStoragePublicUrl(type, entityId);
+      return getStoragePublicUrl(type, entityId, size);
     }
 
     // 3. pending 상태면 잠시 대기 후 재확인
@@ -98,7 +105,7 @@ export async function ensureAssetCached(
         .maybeSingle();
 
       if (recheckCache?.status === 'ready') {
-        return getStoragePublicUrl(type, entityId);
+        return getStoragePublicUrl(type, entityId, size);
       }
 
       // 여전히 pending이거나 실패면 placeholder
@@ -115,7 +122,7 @@ export async function ensureAssetCached(
     }
 
     // 5. 캐싱 시도
-    return await cacheAsset(type, entityId);
+    return await cacheAsset(type, entityId, size);
 
   } catch (error) {
     console.error(`[ensureAssetCached] Error for ${type}/${entityId}:`, error);
@@ -124,16 +131,15 @@ export async function ensureAssetCached(
 }
 
 /**
- * 에셋 캐싱 실행
+ * 에셋 캐싱 실행 (멀티사이즈 WebP 변환)
  *
  * 1. pending 락 선점
  * 2. API-Sports에서 다운로드
- * 3. Storage 업로드
+ * 3. sharp로 3사이즈 WebP 변환 및 업로드
  * 4. DB 업데이트
  */
-async function cacheAsset(type: AssetType, entityId: number): Promise<string> {
+async function cacheAsset(type: AssetType, entityId: number, size: ImageSize = 'md'): Promise<string> {
   const supabase = getSupabaseAdmin();
-  const storagePath = getStoragePath(type, entityId);
   const sourceUrl = getApiSportsUrl(type, entityId);
 
   console.log(`[4590] 캐싱 시작: ${type}/${entityId}`);
@@ -146,7 +152,7 @@ async function cacheAsset(type: AssetType, entityId: number): Promise<string> {
         {
           type,
           entity_id: entityId,
-          storage_path: storagePath,
+          storage_path: getStoragePath(type, entityId, 'md'),
           source_url: sourceUrl,
           status: 'pending',
           checked_at: new Date().toISOString(),
@@ -176,17 +182,29 @@ async function cacheAsset(type: AssetType, entityId: number): Promise<string> {
     const bucket = BUCKET_MAP[type];
     console.log(`[4590] 다운로드 완료: ${(imageBuffer.byteLength / 1024).toFixed(1)}KB`);
 
-    // 3. Storage에 업로드
-    console.log(`[4590] 업로드 중: ${bucket}/${storagePath}`);
-    const { error: uploadError } = await supabase.storage
-      .from(bucket)
-      .upload(storagePath, imageBuffer, {
-        contentType: 'image/png',
-        upsert: true,
-      });
+    // 3. sharp로 3사이즈 WebP 변환 및 업로드
+    const sizeConfig = type === 'venue_photo' ? VENUE_SIZE_CONFIG : SIZE_CONFIG;
 
-    if (uploadError) {
-      throw new Error(`Upload failed: ${uploadError.message}`);
+    for (const s of ALL_SIZES) {
+      const maxDim = sizeConfig[s];
+      const webpBuffer = await sharp(Buffer.from(imageBuffer))
+        .resize(maxDim, maxDim, { fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: 80 })
+        .toBuffer();
+
+      const storagePath = getStoragePath(type, entityId, s);
+      console.log(`[4590] 업로드 중: ${bucket}/${storagePath} (${(webpBuffer.byteLength / 1024).toFixed(1)}KB)`);
+
+      const { error: uploadError } = await supabase.storage
+        .from(bucket)
+        .upload(storagePath, webpBuffer, {
+          contentType: 'image/webp',
+          upsert: true,
+        });
+
+      if (uploadError) {
+        throw new Error(`Upload failed for ${s}: ${uploadError.message}`);
+      }
     }
 
     // 4. 성공 - DB 업데이트
@@ -201,8 +219,8 @@ async function cacheAsset(type: AssetType, entityId: number): Promise<string> {
       .eq('type', type)
       .eq('entity_id', entityId);
 
-    console.log(`[4590] ✅ 캐싱 완료: ${type}/${entityId}`);
-    return getStoragePublicUrl(type, entityId);
+    console.log(`[4590] ✅ 캐싱 완료: ${type}/${entityId} (3사이즈 WebP)`);
+    return getStoragePublicUrl(type, entityId, size);
 
   } catch (error) {
     // 실패 - error 상태로 업데이트
@@ -233,7 +251,8 @@ async function cacheAsset(type: AssetType, entityId: number): Promise<string> {
  */
 export async function ensureAssetsCached(
   type: AssetType,
-  entityIds: number[]
+  entityIds: number[],
+  size: ImageSize = 'md'
 ): Promise<Record<number, string>> {
   const uniqueIds = [...new Set(entityIds.filter(id => id && id > 0))];
 
@@ -264,7 +283,7 @@ export async function ensureAssetsCached(
       const cache = cacheMap.get(id);
 
       if (cache?.status === 'ready') {
-        result[id] = getStoragePublicUrl(type, id);
+        result[id] = getStoragePublicUrl(type, id, size);
       } else if (cache?.status === 'error') {
         // 에러 쿨다운 체크
         const elapsed = Date.now() - new Date(cache.checked_at).getTime();
@@ -286,7 +305,7 @@ export async function ensureAssetsCached(
         const batch = needsCaching.slice(i, i + BATCH_SIZE);
 
         const batchResults = await Promise.allSettled(
-          batch.map(id => ensureAssetCached(type, id))
+          batch.map(id => ensureAssetCached(type, id, size))
         );
 
         batchResults.forEach((res, idx) => {

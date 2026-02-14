@@ -14,6 +14,23 @@ export const API_SPORTS_BASE_URL = 'https://media.api-sports.io/football';
 // 에셋 타입
 export type AssetType = 'player_photo' | 'coach_photo' | 'team_logo' | 'league_logo' | 'venue_photo';
 
+// 이미지 사이즈 타입
+export type ImageSize = 'sm' | 'md' | 'lg';
+
+// 사이즈별 리사이즈 설정 (px)
+export const SIZE_CONFIG: Record<ImageSize, number> = {
+  sm: 64,   // 리스트 아이템 (24-32px 표시, 2x DPR 커버)
+  md: 128,  // 매치카드, 순위표 (48px 표시, 3x DPR 커버)
+  lg: 256,  // 헤더, 히어로 (80-112px 표시, 3x DPR 커버)
+};
+
+// 경기장은 더 큰 사이즈 필요
+export const VENUE_SIZE_CONFIG: Record<ImageSize, number> = {
+  sm: 128,
+  md: 256,
+  lg: 512,
+};
+
 // 버킷 매핑
 export const BUCKET_MAP: Record<AssetType, string> = {
   player_photo: 'players',
@@ -34,11 +51,11 @@ export const API_PATH_MAP: Record<AssetType, string> = {
 
 // 파일 확장자 매핑
 export const EXTENSION_MAP: Record<AssetType, string> = {
-  player_photo: 'png',
-  coach_photo: 'png',
-  team_logo: 'png',
-  league_logo: 'png',
-  venue_photo: 'png',
+  player_photo: 'webp',
+  coach_photo: 'webp',
+  team_logo: 'webp',
+  league_logo: 'webp',
+  venue_photo: 'webp',
 };
 
 // TTL (밀리초)

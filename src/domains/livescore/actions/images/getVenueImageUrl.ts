@@ -1,7 +1,7 @@
 'use server';
 
 import { ensureAssetCached, ensureAssetsCached } from './ensureAssetCached';
-import { PLACEHOLDER_URLS } from './constants';
+import { PLACEHOLDER_URLS, type ImageSize } from './constants';
 
 /**
  * 경기장(venue) 이미지 Storage URL 조회 (단일)
@@ -9,40 +9,35 @@ import { PLACEHOLDER_URLS } from './constants';
  * 4590 표준: 모든 이미지는 Supabase Storage에서 제공
  *
  * @param venueId - 경기장 ID
+ * @param size - 이미지 사이즈 ('sm' | 'md' | 'lg')
  * @returns Storage 공개 URL 또는 placeholder
  *
  * @example
- * const venueUrl = await getVenueImageUrl(556); // 올드 트래포드
- * // => "https://xxx.supabase.co/storage/v1/object/public/venues/556.png"
+ * const venueUrl = await getVenueImageUrl(556); // 올드 트래포드 (기본 md)
+ * const lgVenueUrl = await getVenueImageUrl(556, 'lg'); // 헤더용 lg
  */
-export async function getVenueImageUrl(venueId: number): Promise<string> {
+export async function getVenueImageUrl(venueId: number, size: ImageSize = 'md'): Promise<string> {
   if (!venueId || venueId <= 0) {
     return PLACEHOLDER_URLS.venue_photo;
   }
 
-  return ensureAssetCached('venue_photo', venueId);
+  return ensureAssetCached('venue_photo', venueId, size);
 }
 
 /**
  * 경기장 이미지 Storage URL 배치 조회
  *
- * 성능 최적화:
- * - 한 번의 DB 조회로 모든 캐시 확인
- * - 없는 것들만 병렬로 캐싱 시도
- *
  * @param venueIds - 경기장 ID 배열
+ * @param size - 이미지 사이즈 ('sm' | 'md' | 'lg')
  * @returns { [venueId]: storageUrl } 맵
- *
- * @example
- * const venues = await getVenueImageUrls([556, 494, 504]);
- * // => { 556: "https://...", 494: "https://...", 504: "https://..." }
  */
 export async function getVenueImageUrls(
-  venueIds: number[]
+  venueIds: number[],
+  size: ImageSize = 'md'
 ): Promise<Record<number, string>> {
   if (!venueIds || venueIds.length === 0) {
     return {};
   }
 
-  return ensureAssetsCached('venue_photo', venueIds);
+  return ensureAssetsCached('venue_photo', venueIds, size);
 }

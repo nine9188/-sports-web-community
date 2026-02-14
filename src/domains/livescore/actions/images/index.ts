@@ -52,9 +52,10 @@ export { getVenueImageUrl, getVenueImageUrls } from './getVenueImageUrl';
 // 공통 유틸 (내부용)
 export { ensureAssetCached, ensureAssetsCached } from './ensureAssetCached';
 
-// 상수
+// 상수 및 타입
 export {
   PLACEHOLDER_URLS,
   SUPABASE_STORAGE_URL,
   type AssetType,
+  type ImageSize,
 } from './constants';
