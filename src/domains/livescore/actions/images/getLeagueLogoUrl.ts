@@ -30,7 +30,7 @@ export async function getLeagueLogoUrl(leagueId: number, isDark: boolean = false
   // 다크모드이고 다크모드 로고가 있는 리그인 경우
   if (isDark && DARK_MODE_LEAGUE_IDS.includes(leagueId)) {
     // 다크모드 로고는 캐싱 시스템 없이 직접 URL 반환 (이미 Storage에 있음)
-    return `${SUPABASE_STORAGE_URL}/leagues/${leagueId}-1.png`;
+    return `${SUPABASE_STORAGE_URL}/leagues/${leagueId}-1.png?v=2`;
   }
 
   return ensureAssetCached('league_logo', leagueId);
@@ -77,7 +77,7 @@ export async function getLeagueLogoUrls(
 
     // 다크모드 로고가 있는 리그는 직접 URL 생성
     for (const id of darkModeLeagues) {
-      result[id] = `${SUPABASE_STORAGE_URL}/leagues/${id}-1.png`;
+      result[id] = `${SUPABASE_STORAGE_URL}/leagues/${id}-1.png?v=2`;
     }
 
     // 나머지는 일반 캐싱 시스템 사용
