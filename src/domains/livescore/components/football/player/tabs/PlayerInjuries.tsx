@@ -56,12 +56,12 @@ export default function PlayerInjuries({
                   href={`/livescore/football/team/${injury.team.id}`}
                   className="flex items-center gap-2 mb-2 transition-opacity hover:opacity-70 outline-none focus:outline-none"
                 >
-                  <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center">
+                  <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center">
                     <UnifiedSportsImageClient
                       src={getTeamLogo(injury.team.id)}
                       alt={injury.team.name}
-                      width={40}
-                      height={40}
+                      width={20}
+                      height={20}
                       className="w-full h-full object-contain"
                     />
                   </div>

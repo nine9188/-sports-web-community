@@ -67,15 +67,15 @@ export default function TeamHeader({
 
   return (
     <Container className="mb-4 bg-white dark:bg-[#1D1D1D]">
-      <div className="flex flex-col md:flex-row items-start">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center">
         {/* 팀 로고 및 기본 정보 */}
-        <div className="flex items-center p-2 md:p-4 md:w-96 flex-shrink-0">
-          <div className="flex-shrink-0 mr-3 md:mr-4">
+        <div className="flex items-center p-3 md:p-4 md:w-80 flex-shrink-0">
+          <div className="flex-shrink-0 mr-3">
             <UnifiedSportsImageClient
               src={effectiveTeamLogoUrl}
               alt={`${teamInfo.name} 로고`}
-              width={80}
-              height={80}
+              width={48}
+              height={48}
               loading="eager"
               className="object-contain"
             />

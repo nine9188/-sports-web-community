@@ -145,6 +145,7 @@ export const MobilePostItem = React.memo(function MobilePostItem({
                 level={post.author_level || 1}
                 exp={post.author_exp}
                 iconSize={16}
+                showIcon={false}
               />
             </div>
             {/* 추천 + 조회 + 시간 */}
@@ -200,6 +201,7 @@ export const MobilePostItem = React.memo(function MobilePostItem({
           level={post.author_level || 1}
           exp={post.author_exp}
           iconSize={16}
+          showIcon={false}
         />
         <span className="text-gray-300 dark:text-gray-600">|</span>
         <span>{formattedDate}</span>

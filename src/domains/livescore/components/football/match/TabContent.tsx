@@ -221,7 +221,7 @@ export default function TabContent({ matchId, currentTab, initialData, initialPo
     case 'support':
       return (
         <div className="space-y-4">
-          <MatchPredictionClient matchData={matchData || {}} />
+          <MatchPredictionClient matchData={matchData || {}} teamLogoUrls={teamLogoUrls} />
           <SupportCommentsSection matchData={matchData || {}} />
           <RelatedPosts posts={relatedPosts ?? []} />
         </div>

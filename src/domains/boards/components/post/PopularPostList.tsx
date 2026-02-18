@@ -165,6 +165,7 @@ export default function PopularPostList({
                     level={post.author_level || 1}
                     exp={post.author_exp}
                     iconSize={16}
+                    hideIconOnMobile
                   />
                 </div>
 

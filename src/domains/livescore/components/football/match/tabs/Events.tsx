@@ -186,28 +186,26 @@ function Events({ events: propsEvents, playerKoreanNames = {}, teamLogoUrls = {}
   // 4590 표준: 팀 로고 URL 헬퍼
   const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
 
-  // 팀 로고 컴포넌트 수정
+  // 팀 로고 컴포넌트 — UnifiedSportsImageClient 직접 사용 (이중 래핑 제거)
   const TeamLogo = ({ name, teamId }: { name: string; teamId?: number }) => {
-    // 캐시된 팀 정보 확인
     const cachedTeam = teamId ? teamCache[teamId] : undefined;
     const teamName = cachedTeam?.name_ko || name || '팀';
 
+    if (!teamId) {
+      return (
+        <div className="w-5 h-5 rounded bg-[#EAEAEA] dark:bg-[#333333] flex items-center justify-center flex-shrink-0">
+          <span className="text-gray-400 dark:text-gray-500 text-[8px]">N/A</span>
+        </div>
+      );
+    }
+
     return (
-      <div className="w-5 h-5 md:w-6 md:h-6 relative flex-shrink-0 overflow-hidden">
-        {teamId ? (
-          <UnifiedSportsImageClient
-            src={getTeamLogo(teamId)}
-            alt={teamName}
-            width={24}
-            height={24}
-            className="w-full h-full object-contain group-hover:brightness-75 transition-all"
-          />
-        ) : (
-          <div className="w-full h-full bg-[#EAEAEA] dark:bg-[#333333] flex items-center justify-center text-gray-400 dark:text-gray-500 text-xs">
-            로고 없음
-          </div>
-        )}
-      </div>
+      <UnifiedSportsImageClient
+        src={getTeamLogo(teamId)}
+        alt={teamName}
+        width={20}
+        height={20}
+      />
     );
   };
 
@@ -251,40 +249,37 @@ function Events({ events: propsEvents, playerKoreanNames = {}, teamLogoUrls = {}
             return (
               <div
                 key={`${event.time?.elapsed || 0}-${index}`}
-                className="flex items-start gap-2 py-2 border-b border-black/5 dark:border-white/10 last:border-b-0"
+                className="py-2 border-b border-black/5 dark:border-white/10 last:border-b-0"
                 title={koreanText}
               >
-                {/* 시간 */}
-                <div className="w-10 flex items-center justify-end text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">
-                  <span>
+                {/* 1줄: 분 + 이벤트아이콘 + 팀로고 + 팀명 */}
+                <div className="flex items-center gap-1.5">
+                  <span className="w-8 text-right text-sm text-gray-500 dark:text-gray-400 flex-shrink-0 tabular-nums">
                     {event.time?.elapsed || 0}
                     {event.time?.extra && event.time.extra > 0 && `+${event.time.extra}`}
                   </span>
-                </div>
-
-                {/* 이벤트 아이콘 */}
-                <div className="w-8 flex items-center justify-center flex-shrink-0">
-                  {getEventIcon(event.type, event.detail)}
-                </div>
-
-                <div className="flex-1">
-                  <Link href={`/livescore/football/team/${event.team.id}`} className="flex items-center gap-2 group">
+                  <div className="flex-shrink-0">
+                    {getEventIcon(event.type, event.detail)}
+                  </div>
+                  <Link href={`/livescore/football/team/${event.team?.id}`} className="flex items-center gap-1.5 group min-w-0">
                     <TeamLogo
                       name={event.team?.name || ''}
                       teamId={event.team?.id}
                     />
-                    <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:underline">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:underline truncate">
                       {event.team?.id && teamCache[event.team.id]?.name_ko ?
                         teamCache[event.team.id].name_ko :
                         event.team?.name || 'Unknown Team'
                       }
                     </span>
                   </Link>
-                  <div className="mt-1.5 ml-8">
-                    <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">
-                      {renderEventTextWithPlayerLinks(event)} {/* 헬퍼 함수 호출 */}
-                    </span>
-                  </div>
+                </div>
+
+                {/* 2줄: 이벤트 텍스트 — 최소 들여쓰기로 풀 너비 활용 */}
+                <div className="mt-1 pl-2">
+                  <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">
+                    {renderEventTextWithPlayerLinks(event)}
+                  </span>
                 </div>
               </div>
             );

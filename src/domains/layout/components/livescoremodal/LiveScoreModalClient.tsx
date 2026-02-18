@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { fetchMultiDayMatches } from '@/domains/livescore/actions/footballApi';
 import LiveScoreContent from './LiveScoreContent';
-import LoadingSkeleton from './LoadingSkeleton';
+
 
 interface LiveScoreModalProps {
   isOpen: boolean;
@@ -23,7 +23,6 @@ export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModal
   const { data: liveScoreData, isLoading } = useQuery({
     queryKey: ['multiDayMatches'],
     queryFn: () => fetchMultiDayMatches(),
-    enabled: isOpen, // 모달 열릴 때만 활성화
     staleTime: 1000 * 60 * 5, // 5분 캐시
     gcTime: 1000 * 60 * 10,
     refetchOnWindowFocus: false,
@@ -99,15 +98,11 @@ export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModal
 
         {/* 경기 목록 */}
         <div className="flex-1 overflow-y-auto">
-          {isLoading ? (
-            <LoadingSkeleton />
-          ) : (
-            <LiveScoreContent
-              selectedDate={selectedDate}
-              onClose={onClose}
-              initialData={liveScoreData}
-            />
-          )}
+          <LiveScoreContent
+            selectedDate={selectedDate}
+            onClose={onClose}
+            initialData={liveScoreData}
+          />
         </div>
 
         {/* 푸터 */}

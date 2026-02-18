@@ -141,7 +141,7 @@ function TabList({
 
   // variant별 컨테이너 스타일
   const containerClasses = {
-    default: 'bg-[#F5F5F5] dark:bg-[#262626] rounded-lg border border-black/7 dark:border-0 overflow-hidden flex overflow-x-auto no-scrollbar',
+    default: 'bg-[#F5F5F5] dark:bg-[#262626] md:rounded-lg border border-black/7 dark:border-0 overflow-hidden flex overflow-x-auto no-scrollbar',
     minimal: 'flex border-b border-black/7 dark:border-white/10 overflow-x-auto no-scrollbar',
     contained: 'flex border-b border-black/5 dark:border-white/10 overflow-x-auto no-scrollbar'
   };

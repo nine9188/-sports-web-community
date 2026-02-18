@@ -455,10 +455,10 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                   <UnifiedSportsImageClient
                     src={getTeamLogo(data.teamA)}
                     alt={teamAMeta.name}
-                    width={16}
-                    height={16}
+                    width={20}
+                    height={20}
                     fit="contain"
-                    className="w-4 h-4"
+                    className="w-5 h-5"
                   />
                   <span className="font-semibold">{aScore}</span>
                 </div>
@@ -471,10 +471,10 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                   <UnifiedSportsImageClient
                     src={getTeamLogo(data.teamB)}
                     alt={teamBMeta.name}
-                    width={16}
-                    height={16}
+                    width={20}
+                    height={20}
                     fit="contain"
-                    className="w-4 h-4"
+                    className="w-5 h-5"
                   />
                   <span className="text-sm">{teamBMeta.name}</span>
                 </div>
@@ -722,10 +722,10 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                 <UnifiedSportsImageClient
                   src={getTeamLogo(data.teamA)}
                   alt={teamAMeta.name}
-                  width={16}
-                  height={16}
+                  width={20}
+                  height={20}
                   fit="contain"
-                  className="w-4 h-4"
+                  className="w-5 h-5"
                 />
               </Link>
 
@@ -797,10 +797,10 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                 <UnifiedSportsImageClient
                   src={getTeamLogo(data.teamB)}
                   alt={teamBMeta.name}
-                  width={16}
-                  height={16}
+                  width={20}
+                  height={20}
                   fit="contain"
-                  className="w-4 h-4"
+                  className="w-5 h-5"
                 />
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{teamBMeta.name}</span>
               </Link>

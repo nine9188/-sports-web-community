@@ -31,12 +31,12 @@ interface PlayerFixturesProps {
 // 팀 로고 컴포넌트 (4590 표준: URL props로 전달받음)
 const TeamLogo = ({ name, logoUrl }: { name: string; logoUrl: string }) => {
   return (
-    <div className="relative w-6 h-6 shrink-0 overflow-hidden rounded-full">
+    <div className="relative w-5 h-5 shrink-0 overflow-hidden rounded-full">
       <UnifiedSportsImageClient
         src={logoUrl}
         alt={name}
-        width={24}
-        height={24}
+        width={20}
+        height={20}
         className="object-contain w-full h-full"
       />
     </div>
@@ -242,12 +242,12 @@ export default function PlayerFixtures({
           {/* 리그 헤더 */}
           <ContainerHeader>
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 flex items-center justify-center">
+              <div className="w-5 h-5 flex items-center justify-center">
                 <UnifiedSportsImageClient
                   src={getLeagueLogo(leagueGroup.league.id)}
                   alt={leagueGroup.league.name}
-                  width={24}
-                  height={24}
+                  width={20}
+                  height={20}
                   className="object-contain"
                 />
               </div>
@@ -356,19 +356,19 @@ export default function PlayerFixtures({
 
             {/* 모바일 버전 - md 미만 화면에서만 표시 */}
             <div className="block md:hidden">
-              {leagueGroup.fixtures.map((fixture: FixtureData) => {
+              {leagueGroup.fixtures.map((fixture: FixtureData, idx: number) => {
             const playerTeamId = fixture.teams.playerTeamId;
             const matchResult = getMatchResult(fixture);
             const resultStyle = getMatchResultStyle(matchResult);
-            
+
                 return (
-                  <div 
+                  <div
                     key={fixture.fixture.id}
-                    className="border-b border-black/5 dark:border-white/10 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors"
+                    className={`hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors${idx > 0 ? ' border-t-4 border-[#E0E0E0] dark:border-[#111111]' : ''}`}
                     onClick={() => router.push(`/livescore/football/match/${fixture.fixture.id}`)}
                   >
                     {/* 첫 번째 줄: 날짜, 홈팀, 스코어, 원정팀, 결과 */}
-                    <div className="flex items-center py-2 px-2 border-b border-black/5 dark:border-white/10">
+                    <div className="flex items-center py-2 px-2">
                       {/* 날짜 */}
                       <div className="flex-shrink-0 w-[55px] text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                         {format(new Date(fixture.fixture.date), 'yy/MM/dd', { locale: ko })}

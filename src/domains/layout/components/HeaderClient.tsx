@@ -332,19 +332,13 @@ export default function HeaderClient({
                   }`}>
                     {isLoadingMatches ? (
                       // 로딩 상태 - 회색 펄스
-                      <>
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gray-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-gray-500"></span>
-                      </>
+                      <span className="animate-pulse inline-flex rounded-full h-2 w-2 bg-gray-400"></span>
                     ) : hasTodayMatches ? (
                       // 경기 있음 - 초록 펄스
-                      <>
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                      </>
+                      <span className="animate-pulse inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                     ) : (
                       // 경기 없음 - 빨강 점
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                      <span className="inline-flex rounded-full h-2 w-2 bg-red-500"></span>
                     )}
                   </span>
                   <span className="text-xs text-gray-700 dark:text-gray-300 font-medium whitespace-nowrap">경기일정</span>

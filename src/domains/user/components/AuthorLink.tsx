@@ -38,6 +38,8 @@ interface AuthorLinkProps {
   iconSize?: number;
   className?: string;
   showIcon?: boolean;
+  /** 모바일에서 아이콘 숨기기 (md 이상에서만 표시) */
+  hideIconOnMobile?: boolean;
   /** 이미지 우선 로딩 (LCP 요소에 사용) */
   priority?: boolean;
   /** 모바일에서도 프로필 드롭다운 활성화 (기본: false) */
@@ -58,6 +60,7 @@ export default function AuthorLink({
   iconSize = 16,
   className = '',
   showIcon = true,
+  hideIconOnMobile = false,
   priority = false,
   enableMobile = false,
 }: AuthorLinkProps) {
@@ -161,7 +164,7 @@ export default function AuthorLink({
   const content = (
     <>
       {showIcon && (
-        <div className="mr-0.5 flex-shrink-0" aria-hidden="true">
+        <div className={`mr-0.5 flex-shrink-0${hideIconOnMobile ? ' hidden md:block' : ''}`} aria-hidden="true">
           <UserIcon
             iconUrl={iconUrl}
             level={level}

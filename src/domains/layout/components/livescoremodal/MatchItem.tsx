@@ -142,24 +142,19 @@ const MatchItem = React.memo(function MatchItem({
       {match.league && (
         <div className="flex items-center gap-2 mb-3 text-xs text-gray-600 dark:text-gray-400">
           {match.league.id ? (
-            <div className="w-4 h-4 flex-shrink-0 rounded bg-black/5 dark:bg-white/10 overflow-hidden">
-              <UnifiedSportsImageClient
-                src={effectiveLeagueLogoUrl || LEAGUE_PLACEHOLDER}
-                alt={match.league.name || '리그'}
-                width={16}
-                height={16}
-                className="object-contain rounded w-full h-full"
-              />
-            </div>
+            <UnifiedSportsImageClient
+              src={effectiveLeagueLogoUrl || LEAGUE_PLACEHOLDER}
+              alt={match.league.name || '리그'}
+              width={20}
+              height={20}
+              className="object-contain"
+            />
           ) : (
             <Trophy className="w-4 h-4 text-gray-400" />
           )}
           <span className="truncate">{leagueNameKo || match.league.name || '알 수 없는 리그'}</span>
           {isLive && (
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-            </span>
+            <span className="animate-pulse inline-flex rounded-full h-2 w-2 bg-green-500"></span>
           )}
           {match.displayDate && (
             <span className="ml-auto text-gray-600 dark:text-gray-400">{match.displayDate}</span>
@@ -172,15 +167,13 @@ const MatchItem = React.memo(function MatchItem({
         {/* 홈팀 */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {match.teams?.home?.id ? (
-            <div className="w-6 h-6 flex-shrink-0 rounded bg-black/5 dark:bg-white/10 overflow-hidden flex items-center justify-center">
-              <UnifiedSportsImageClient
-                src={homeTeamLogoUrl || TEAM_PLACEHOLDER}
-                alt={match.teams?.home?.name || '홈팀'}
-                width={24}
-                height={24}
-                className="object-contain w-full h-full"
-              />
-            </div>
+            <UnifiedSportsImageClient
+              src={homeTeamLogoUrl || TEAM_PLACEHOLDER}
+              alt={match.teams?.home?.name || '홈팀'}
+              width={20}
+              height={20}
+              className="object-contain"
+            />
           ) : (
             <div className="flex items-center justify-center bg-[#F5F5F5] dark:bg-[#262626] rounded w-6 h-6 flex-shrink-0">
               <Users className="w-3 h-3 text-gray-400" />
@@ -224,15 +217,13 @@ const MatchItem = React.memo(function MatchItem({
             {awayTeamName}
           </span>
           {match.teams?.away?.id ? (
-            <div className="w-6 h-6 flex-shrink-0 rounded bg-black/5 dark:bg-white/10 overflow-hidden flex items-center justify-center">
-              <UnifiedSportsImageClient
-                src={awayTeamLogoUrl || TEAM_PLACEHOLDER}
-                alt={match.teams?.away?.name || '원정팀'}
-                width={24}
-                height={24}
-                className="object-contain w-full h-full"
-              />
-            </div>
+            <UnifiedSportsImageClient
+              src={awayTeamLogoUrl || TEAM_PLACEHOLDER}
+              alt={match.teams?.away?.name || '원정팀'}
+              width={20}
+              height={20}
+              className="object-contain"
+            />
           ) : (
             <div className="flex items-center justify-center bg-[#F5F5F5] dark:bg-[#262626] rounded w-6 h-6 flex-shrink-0">
               <Users className="w-3 h-3 text-gray-400" />
