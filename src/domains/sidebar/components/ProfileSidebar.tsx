@@ -70,9 +70,9 @@ export default function ProfileSidebar({
       
       {/* 프로필 사이드바 (우측에서 열림) */}
       <div
-        className={`fixed top-0 right-0 h-full w-full max-w-sm
+        className={`fixed top-0 right-0 h-full w-full max-w-md
           bg-white dark:bg-[#1D1D1D] transform transition-transform duration-300 ease-in-out z-[1000]
-          ${isOpen ? 'translate-x-0' : 'translate-x-full'} lg:hidden`}
+          ${isOpen ? 'translate-x-0' : 'translate-x-full'} md:hidden`}
       >
         {/* 헤더 */}
         <div className="flex items-center justify-between h-14 border-b border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] px-4">
