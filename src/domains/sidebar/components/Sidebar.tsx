@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import { SidebarProps } from '../types';
+import AdSense from '@/shared/components/AdSense';
 
 export default function Sidebar({
   isOpen,
@@ -39,6 +40,15 @@ export default function Sidebar({
               {authSection}
             </ContainerContent>
           </Container>
+
+          {/* 사이드바 광고 */}
+          <div className="mb-4">
+            <AdSense
+              adSlot="9130672830"
+              adFormat="rectangle"
+              style={{ display: 'block', width: '300px', height: '250px' }}
+            />
+          </div>
 
           {/* 게시판 이동 섹션 */}
           <Container className="mb-4">

@@ -344,7 +344,7 @@ export default function NotificationsPage() {
 
       {/* 페이지네이션 - 컨테이너 밖 */}
       {!isLoading && totalPages > 1 && (
-        <div className="pb-4 mt-4">
+        <div className="mt-4">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
