@@ -18,6 +18,7 @@ import {
 } from '../../constants';
 import { MobilePostItem } from './MobilePostItem';
 import { MobileVirtualizedItem } from './MobileVirtualizedItem';
+import { PostListInFeedAd, POST_LIST_AD_INDEX } from '../shared/PostListInFeedAd';
 
 /**
  * 모바일 게시글 리스트 컨테이너
@@ -100,15 +101,17 @@ export function MobilePostList({
   return (
     <div className="mobile-post-list block sm:hidden w-full max-w-full overflow-hidden">
       {deferredPosts.map((post, index) => (
-        <MobilePostItem
-          key={post.id}
-          post={post}
-          isLast={index === deferredPosts.length - 1}
-          currentPostId={currentPostId}
-          currentBoardId={currentBoardId}
-          showBoard={false} // 모바일에서는 게시판 컬럼 미표시
-          variant={variant}
-        />
+        <React.Fragment key={post.id}>
+          <MobilePostItem
+            post={post}
+            isLast={index === deferredPosts.length - 1}
+            currentPostId={currentPostId}
+            currentBoardId={currentBoardId}
+            showBoard={false}
+            variant={variant}
+          />
+          {index === POST_LIST_AD_INDEX - 1 && <PostListInFeedAd />}
+        </React.Fragment>
       ))}
     </div>
   );

@@ -11,6 +11,7 @@ declare global {
 interface AdSenseProps {
   adSlot: string;
   adFormat?: string;
+  adLayoutKey?: string;
   style?: React.CSSProperties;
   className?: string;
 }
@@ -18,6 +19,7 @@ interface AdSenseProps {
 export default function AdSense({
   adSlot,
   adFormat = 'auto',
+  adLayoutKey,
   style = { display: 'block', width: '300px', height: '250px' },
   className,
 }: AdSenseProps) {
@@ -41,8 +43,8 @@ export default function AdSense({
       <div
         className={className}
         style={{
-          width: style.width || '300px',
-          height: style.height || '250px',
+          width: style.width || '100%',
+          height: style.height || '80px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -53,7 +55,7 @@ export default function AdSense({
           fontSize: '14px',
         }}
       >
-        광고 영역 ({String(style.width || '300px')} x {String(style.height || '250px')})
+        광고 영역
       </div>
     );
   }
@@ -66,6 +68,7 @@ export default function AdSense({
       data-ad-client={clientId}
       data-ad-slot={adSlot}
       data-ad-format={adFormat}
+      {...(adLayoutKey && { 'data-ad-layout-key': adLayoutKey })}
       data-full-width-responsive="true"
     />
   );

@@ -20,6 +20,7 @@ import {
 } from '../../constants';
 import { DesktopPostItem } from './DesktopPostItem';
 import { DesktopVirtualizedItem } from './DesktopVirtualizedItem';
+import { PostListInFeedAdRow, PostListInFeedAd, POST_LIST_AD_INDEX } from '../shared/PostListInFeedAd';
 
 /**
  * 데스크톱 게시글 리스트 컨테이너
@@ -75,15 +76,17 @@ export function DesktopPostList({
       <div className="hidden sm:block">
         <div>
           {deferredPosts.map((post, index) => (
-            <DesktopPostItem
-              key={post.id}
-              post={post}
-              isLast={index === deferredPosts.length - 1}
-              currentPostId={currentPostId}
-              currentBoardId={currentBoardId}
-              showBoard={showBoard}
-              variant={variant}
-            />
+            <React.Fragment key={post.id}>
+              <DesktopPostItem
+                post={post}
+                isLast={index === deferredPosts.length - 1}
+                currentPostId={currentPostId}
+                currentBoardId={currentBoardId}
+                showBoard={showBoard}
+                variant={variant}
+              />
+              {index === POST_LIST_AD_INDEX - 1 && <PostListInFeedAd />}
+            </React.Fragment>
           ))}
         </div>
       </div>
@@ -187,15 +190,19 @@ export function DesktopPostList({
         </thead>
         <tbody>
           {deferredPosts.map((post, index) => (
-            <DesktopPostItem
-              key={post.id}
-              post={post}
-              isLast={index === deferredPosts.length - 1}
-              currentPostId={currentPostId}
-              currentBoardId={currentBoardId}
-              showBoard={showBoard}
-              variant={variant}
-            />
+            <React.Fragment key={post.id}>
+              <DesktopPostItem
+                post={post}
+                isLast={index === deferredPosts.length - 1}
+                currentPostId={currentPostId}
+                currentBoardId={currentBoardId}
+                showBoard={showBoard}
+                variant={variant}
+              />
+              {index === POST_LIST_AD_INDEX - 1 && (
+                <PostListInFeedAdRow colSpan={showBoard ? 6 : 5} />
+              )}
+            </React.Fragment>
           ))}
         </tbody>
       </table>

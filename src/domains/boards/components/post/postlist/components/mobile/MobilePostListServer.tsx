@@ -6,8 +6,10 @@
  * - LCP 최적화: 초기 HTML에 콘텐츠 포함
  */
 
+import React from 'react';
 import { PostListProps } from '../../types';
 import { MobilePostItem } from './MobilePostItem';
+import { PostListInFeedAd, POST_LIST_AD_INDEX } from '../shared/PostListInFeedAd';
 
 type MobilePostListServerProps = Omit<
   PostListProps,
@@ -26,15 +28,17 @@ export function MobilePostListServer({
   return (
     <div className="mobile-post-list block sm:hidden w-full max-w-full overflow-hidden">
       {posts.map((post, index) => (
-        <MobilePostItem
-          key={post.id}
-          post={post}
-          isLast={index === posts.length - 1}
-          currentPostId={currentPostId}
-          currentBoardId={currentBoardId}
-          showBoard={false}
-          variant={variant}
-        />
+        <React.Fragment key={post.id}>
+          <MobilePostItem
+            post={post}
+            isLast={index === posts.length - 1}
+            currentPostId={currentPostId}
+            currentBoardId={currentBoardId}
+            showBoard={false}
+            variant={variant}
+          />
+          {index === POST_LIST_AD_INDEX - 1 && <PostListInFeedAd />}
+        </React.Fragment>
       ))}
     </div>
   );
