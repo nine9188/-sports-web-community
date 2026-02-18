@@ -69,7 +69,7 @@ export default function AdSense({
       data-ad-slot={adSlot}
       data-ad-format={adFormat}
       {...(adLayoutKey && { 'data-ad-layout-key': adLayoutKey })}
-      data-full-width-responsive="true"
+      {...(!adLayoutKey && { 'data-full-width-responsive': 'true' })}
     />
   );
 }
