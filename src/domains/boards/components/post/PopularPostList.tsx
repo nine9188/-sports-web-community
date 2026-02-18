@@ -81,11 +81,13 @@ export default function PopularPostList({
         return (
           <React.Fragment key={post.id}>
           {index === 2 && (
-            <div className="border-b border-black/5 dark:border-white/10">
+            <div className="border-b border-black/5 dark:border-white/10 overflow-hidden"
+              style={{ maxHeight: '120px' }}
+            >
               <AdSense
                 adSlot="1026610665"
                 adFormat="fluid"
-                adLayoutKey="-h5-e+21-4q+5o"
+                adLayoutKey="-hz-g+20-3u+4a"
                 style={{ display: 'block' }}
               />
             </div>
