@@ -91,7 +91,7 @@ export default function PopularPostList({
                 <AdSense
                   adSlot="1026610665"
                   adFormat="fluid"
-                  adLayoutKey="-hz-g+20-3u+4a"
+                  adLayoutKey="-hz-h+2i-2z+g"
                   style={{ display: 'block' }}
                 />
               </div>
