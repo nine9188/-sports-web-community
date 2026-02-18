@@ -94,7 +94,7 @@ export default function NewsImageClient({
       />
 
       {/* 호버 오버레이 */}
-      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-all pointer-events-none" />
+      <div className="absolute inset-0 bg-black/0 md:group-hover:bg-black/25 transition-all pointer-events-none" />
     </>
   );
 }

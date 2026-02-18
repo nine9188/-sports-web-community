@@ -91,7 +91,7 @@ export default function MatchCardServer({ match, isLast, priorityImages = false 
       href={`/livescore/football/match/${match.id}`}
       prefetch={false}
       className={`
-        flex items-center h-12 px-4 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors
+        flex items-center h-12 px-4 md:hover:bg-[#EAEAEA] md:dark:hover:bg-[#333333] transition-colors
         ${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''}
       `}
     >

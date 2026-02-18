@@ -36,7 +36,7 @@ export default function LeagueToggleClient({
       <Button
         variant="ghost"
         onClick={() => setExpanded(!expanded)}
-        className="w-full h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-none"
+        className="w-full h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] md:hover:bg-[#EAEAEA] md:dark:hover:bg-[#333333] rounded-none"
       >
         {/* 서버에서 렌더링된 헤더 */}
         {header}

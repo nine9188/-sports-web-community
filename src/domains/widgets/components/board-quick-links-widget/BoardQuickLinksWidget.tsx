@@ -66,8 +66,7 @@ export default function BoardQuickLinksWidget({ items = DEFAULT_ITEMS, className
             className={classNames(
               'inline-flex items-center justify-center shrink-0',
               'w-12 h-12 bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-0 shadow-sm',
-              'group-hover:bg-[#EAEAEA] group-hover:dark:bg-[#333333]',
-              'group-hover:scale-110 transition-all',
+              'transition-all',
               'md:hidden' // PC에서 숨김
             )}
             style={{ borderRadius: '0.5rem' }}
