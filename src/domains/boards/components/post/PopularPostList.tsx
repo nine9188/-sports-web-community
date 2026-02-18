@@ -12,6 +12,7 @@ import { formatPrice, getDiscountRate } from '../../utils/hotdeal';
 import type { DealInfo } from '../../types/hotdeal';
 import { Container } from '@/shared/components/ui';
 import { siteConfig } from '@/shared/config';
+import AdSense from '@/shared/components/AdSense';
 
 interface Post {
   id: string;
@@ -78,8 +79,18 @@ export default function PopularPostList({
         const discountRate = dealInfo ? getDiscountRate(dealInfo.price, dealInfo.original_price) : null;
 
         return (
+          <React.Fragment key={post.id}>
+          {index === 2 && (
+            <div className="border-b border-black/5 dark:border-white/10">
+              <AdSense
+                adSlot="1026610665"
+                adFormat="fluid"
+                adLayoutKey="-h5-e+21-4q+5o"
+                style={{ display: 'block' }}
+              />
+            </div>
+          )}
           <div
-            key={post.id}
             className={`flex items-center gap-2 sm:gap-4 px-2 sm:px-4 py-2 bg-white dark:bg-[#1D1D1D] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors overflow-hidden ${
               !isLast ? 'border-b border-black/5 dark:border-white/10' : ''
             }`}
@@ -191,6 +202,7 @@ export default function PopularPostList({
               </div>
             </div>
           </div>
+          </React.Fragment>
         );
       })}
     </Container>
