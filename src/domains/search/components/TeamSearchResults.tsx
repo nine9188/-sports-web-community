@@ -384,42 +384,35 @@ function TeamRowWithMatches({
                 <Button
                   variant="ghost"
                   onClick={handleTeamPageClick}
-                  className="truncate hover:underline transition-colors text-left min-w-0 flex-1 p-0 h-auto font-medium"
+                  className="truncate hover:underline transition-colors text-left min-w-0 p-0 h-auto font-medium"
                 >
                   {team.display_name}
                 </Button>
-                
-                {/* 드롭다운 토글 버튼 */}
-                <TeamMatchDropdownButton
-                  team={team}
-                  isExpanded={isExpanded}
-                  onToggle={onToggle}
-                />
-              </div>
-              
-              {/* 모바일에서 추가 정보 표시 */}
-              <div className="sm:hidden mt-1">
-                {/* 리그 | 국가 | 홈구장 가로 배치 */}
-                <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center space-x-1 overflow-hidden">
-                  <span className="text-gray-700 dark:text-gray-300 flex-shrink-0 truncate max-w-20">{team.league_name_ko}</span>
-                  <span className="text-gray-400 flex-shrink-0">|</span>
-                  <span className="flex-shrink-0 truncate max-w-16">{team.country_ko ?? team.country}</span>
-                  {team.venue_name && (
-                    <>
-                      <span className="text-gray-400 flex-shrink-0">|</span>
-                      <span className="truncate min-w-0 max-w-24">
-                        {team.venue_name}
-                      </span>
-                    </>
-                  )}
-                </div>
-                
                 {/* 영어명 (다른 경우만) */}
                 {team.name_en && team.name_en !== team.display_name && (
-                  <div className="text-xs text-gray-400 truncate italic mt-0.5">
+                  <span className="sm:hidden text-xs text-gray-400 ml-1.5 truncate flex-shrink-0 max-w-[120px]">
                     {team.name_en}
-                  </div>
+                  </span>
                 )}
+
+                {/* 드롭다운 토글 버튼 */}
+                <div className="ml-auto flex-shrink-0">
+                  <TeamMatchDropdownButton
+                    team={team}
+                    isExpanded={isExpanded}
+                    onToggle={onToggle}
+                  />
+                </div>
+              </div>
+
+              {/* 모바일에서 추가 정보 표시 */}
+              <div className="sm:hidden mt-1">
+                {/* 리그 | 국가 */}
+                <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center space-x-1 overflow-hidden">
+                  <span className="text-gray-700 dark:text-gray-300 flex-shrink-0 truncate max-w-24">{team.league_name_ko}</span>
+                  <span className="text-gray-400 flex-shrink-0">|</span>
+                  <span className="flex-shrink-0 truncate max-w-20">{team.country_ko ?? team.country}</span>
+                </div>
               </div>
             </div>
           </div>
