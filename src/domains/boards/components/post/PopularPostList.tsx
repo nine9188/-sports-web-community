@@ -81,15 +81,20 @@ export default function PopularPostList({
         return (
           <React.Fragment key={post.id}>
           {index === 2 && (
-            <div className="border-b border-black/5 dark:border-white/10 overflow-hidden"
-              style={{ maxHeight: '120px' }}
-            >
-              <AdSense
-                adSlot="1026610665"
-                adFormat="fluid"
-                adLayoutKey="-hz-g+20-3u+4a"
-                style={{ display: 'block' }}
-              />
+            <div className="flex items-center gap-2 sm:gap-4 px-2 sm:px-4 py-2 border-b border-black/5 dark:border-white/10 bg-white dark:bg-[#1D1D1D]">
+              {/* AD 라벨 - 좋아요 영역과 동일한 위치 */}
+              <div className="hidden sm:flex flex-col items-center gap-1 min-w-[40px]">
+                <span className="text-xs font-bold text-gray-400 dark:text-gray-500">AD</span>
+              </div>
+              {/* 광고 콘텐츠 */}
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <AdSense
+                  adSlot="1026610665"
+                  adFormat="fluid"
+                  adLayoutKey="-hz-g+20-3u+4a"
+                  style={{ display: 'block' }}
+                />
+              </div>
             </div>
           )}
           <div
