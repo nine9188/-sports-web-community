@@ -141,14 +141,16 @@ export default function ProfileSidebar({
                   <span className="text-sm font-medium text-red-600 dark:text-red-400">로그아웃</span>
                 </Button>
 
-                {/* 카카오 광고 */}
-                <div className="flex justify-center pt-2">
-                  <KakaoAd
-                    adUnit="DAN-xQCe8VgP6G8I1XtL"
-                    adWidth={320}
-                    adHeight={50}
-                  />
-                </div>
+                {/* 카카오 광고 - 모달 열릴 때만 렌더링 */}
+                {isOpen && (
+                  <div className="flex justify-center pt-2">
+                    <KakaoAd
+                      adUnit="DAN-xQCe8VgP6G8I1XtL"
+                      adWidth={320}
+                      adHeight={50}
+                    />
+                  </div>
+                )}
               </div>
             </>
           ) : (
@@ -180,14 +182,16 @@ export default function ProfileSidebar({
                     회원가입
                   </Link>
 
-                  {/* 카카오 광고 */}
-                  <div className="flex justify-center pt-2">
-                    <KakaoAd
-                      adUnit="DAN-xQCe8VgP6G8I1XtL"
-                      adWidth={320}
-                      adHeight={50}
-                    />
-                  </div>
+                  {/* 카카오 광고 - 모달 열릴 때만 렌더링 */}
+                  {isOpen && (
+                    <div className="flex justify-center pt-2">
+                      <KakaoAd
+                        adUnit="DAN-xQCe8VgP6G8I1XtL"
+                        adWidth={320}
+                        adHeight={50}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

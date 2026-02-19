@@ -103,14 +103,17 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
           </div>
         </div>
 
-        {/* 카카오 광고 */}
-        <div className="flex justify-center py-2 border-b border-black/5 dark:border-white/10">
-          <KakaoAd
-            adUnit="DAN-xQCe8VgP6G8I1XtL"
-            adWidth={320}
-            adHeight={50}
-          />
-        </div>
+        {/* 카카오 광고 - 모달 열릴 때만 렌더링 (같은 adUnit 충돌 방지) */}
+        {isOpen && (
+          <div className="flex justify-center py-2 border-b border-black/5 dark:border-white/10">
+            <KakaoAd
+              adUnit="DAN-xQCe8VgP6G8I1XtL"
+              adWidth={320}
+              adHeight={50}
+            />
+          </div>
+        )}
+
 
         {/* 스크롤 가능한 콘텐츠 영역 */}
         <div className="flex-1 overflow-y-auto">

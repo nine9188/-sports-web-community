@@ -10,6 +10,8 @@ declare global {
 
 // 배너보드 슬롯
 const BANNER_SLOT = '8132343983';
+// 모바일 배너 슬롯 (320x50 고정)
+const MOBILE_BANNER_SLOT = '1917321828';
 
 interface AdSenseProps {
   adSlot: string;
@@ -77,12 +79,12 @@ export default function AdSense({
           >
             광고 영역 (728x90)
           </div>
-          {/* 모바일: 반응형 */}
+          {/* 모바일: 320x50 고정 */}
           <div
             className={`md:hidden ${className || ''}`}
             style={{
-              width: '100%',
-              height: '80px',
+              width: '320px',
+              height: '50px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -91,9 +93,10 @@ export default function AdSense({
               borderRadius: '8px',
               color: '#999',
               fontSize: '14px',
+              margin: '0 auto',
             }}
           >
-            광고 영역 (반응형)
+            광고 영역 (320x50)
           </div>
         </>
       );
@@ -121,7 +124,7 @@ export default function AdSense({
     );
   }
 
-  // 배너: 데스크탑 728x90 고정 + 모바일 반응형
+  // 배너: 데스크탑 728x90 고정 + 모바일 320x50 고정
   if (isBanner) {
     return (
       <>
@@ -135,16 +138,14 @@ export default function AdSense({
             data-ad-slot={adSlot}
           />
         </div>
-        {/* 모바일: 반응형 */}
-        <div className="md:hidden">
+        {/* 모바일: 320x50 고정 */}
+        <div className="md:hidden" style={{ textAlign: 'center' }}>
           <ins
             ref={mobileAdRef}
             className={`adsbygoogle ${className || ''}`}
-            style={{ display: 'block' }}
+            style={{ display: 'inline-block', width: '320px', height: '50px' }}
             data-ad-client={clientId}
-            data-ad-slot={adSlot}
-            data-ad-format="auto"
-            data-full-width-responsive="true"
+            data-ad-slot={MOBILE_BANNER_SLOT}
           />
         </div>
       </>
