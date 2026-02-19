@@ -331,12 +331,12 @@ export default async function PostDetailPage({
         name: breadcrumb.name,
         item: breadcrumb.item
       })),
-      // 마지막: 현재 페이지 (item 선택사항 - Google 권장: 생략)
+      // 마지막: 현재 페이지
       {
         '@type': 'ListItem',
         position: validBreadcrumbs.length + 2,
-        name: result.post.title
-        // item 생략 - 현재 페이지이므로 Google 가이드라인에 따라 불필요
+        name: result.post.title,
+        item: postUrl
       }
     ];
 

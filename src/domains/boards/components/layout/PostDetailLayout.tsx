@@ -347,6 +347,15 @@ export default function PostDetailLayout({
           </div>
         </div>
 
+        {/* PC 전용 배너 광고 - 컨테이너 안에 배치하여 이격 방지 */}
+        <div className="hidden md:block px-4 sm:px-6 py-4 border-t border-black/5 dark:border-white/10">
+          <AdSense
+            adSlot="8132343983"
+            adFormat="auto"
+            style={{ display: 'block' }}
+          />
+        </div>
+
         {/* 첨부파일 섹션 (있는 경우) */}
         {post.files && post.files.length > 0 && (
           <div className="px-4 sm:px-6 py-4 border-t border-black/5 dark:border-white/10">
@@ -404,8 +413,8 @@ export default function PostDetailLayout({
         />
       </div>
 
-      {/* 배너 광고 */}
-      <div className="mb-4">
+      {/* 모바일 전용 배너 광고 */}
+      <div className="mb-4 md:hidden">
         <AdSense
           adSlot="8132343983"
           adFormat="auto"

@@ -25,7 +25,7 @@ export async function GET() {
     const seoSettings = await getSeoSettings();
     const baseUrl = seoSettings?.site_url || siteConfig.url;
     const siteName = seoSettings?.site_name || siteConfig.name;
-    const siteDescription = seoSettings?.site_description || siteConfig.description;
+    const siteDescription = seoSettings?.default_description || siteConfig.description;
 
     // 최근 게시글 100개 가져오기 (삭제되지 않은 게시글만)
     const { data: posts, error } = await supabase
@@ -57,7 +57,10 @@ export async function GET() {
         const pubDate = new Date(post.created_at || new Date()).toUTCString();
 
         // content에서 HTML 제거 및 요약 생성 (최대 300자)
-        const plainContent = stripHtml(post.content || '');
+        const contentStr = typeof post.content === 'string'
+          ? post.content
+          : JSON.stringify(post.content || '');
+        const plainContent = stripHtml(contentStr);
         const description = plainContent.length > 300
           ? plainContent.substring(0, 300) + '...'
           : plainContent;
