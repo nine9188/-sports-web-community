@@ -347,11 +347,11 @@ export default function PostDetailLayout({
           </div>
         </div>
 
-        {/* PC 전용 배너 광고 - 컨테이너 안에 배치하여 이격 방지 */}
-        <div className="hidden md:block px-4 sm:px-6 py-4 border-t border-black/5 dark:border-white/10">
+        {/* PC 전용 멀티플렉스 광고 - 컨테이너 안에 배치하여 이격 방지 */}
+        <div className="hidden md:block border-t border-black/5 dark:border-white/10">
           <AdSense
-            adSlot="8132343983"
-            adFormat="auto"
+            adSlot="3350257761"
+            adFormat="autorelaxed"
             style={{ display: 'block' }}
           />
         </div>

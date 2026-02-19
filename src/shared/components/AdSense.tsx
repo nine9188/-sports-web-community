@@ -8,6 +8,9 @@ declare global {
   }
 }
 
+// 배너보드 슬롯 (728x90 고정)
+const BANNER_SLOT = '8132343983';
+
 interface AdSenseProps {
   adSlot: string;
   adFormat?: string;
@@ -38,13 +41,20 @@ export default function AdSense({
 
   const clientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
 
+  // 배너보드 슬롯은 728x90 고정 (adFormat, full-width-responsive 없음)
+  const isBanner = adSlot === BANNER_SLOT;
+  const finalStyle = isBanner
+    ? { display: 'inline-block' as const, width: '728px', height: '90px' }
+    : style;
+
   if (process.env.NODE_ENV === 'development') {
     return (
       <div
         className={className}
         style={{
-          width: style.width || '100%',
-          height: style.height || '80px',
+          width: finalStyle.width || '100%',
+          height: finalStyle.height || '80px',
+          maxWidth: '100%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -55,7 +65,7 @@ export default function AdSense({
           fontSize: '14px',
         }}
       >
-        광고 영역
+        광고 영역 {isBanner ? '(728x90)' : ''}
       </div>
     );
   }
@@ -64,12 +74,12 @@ export default function AdSense({
     <ins
       ref={adRef}
       className={`adsbygoogle ${className || ''}`}
-      style={style}
+      style={finalStyle}
       data-ad-client={clientId}
       data-ad-slot={adSlot}
-      data-ad-format={adFormat}
+      {...(!isBanner && { 'data-ad-format': adFormat })}
       {...(adLayoutKey && { 'data-ad-layout-key': adLayoutKey })}
-      {...(!adLayoutKey && { 'data-full-width-responsive': 'true' })}
+      {...(!adLayoutKey && !isBanner && { 'data-full-width-responsive': 'true' })}
     />
   );
 }
