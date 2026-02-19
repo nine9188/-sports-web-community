@@ -153,7 +153,7 @@ export default function AdSense({
   // 모바일 전용 배너: 300x50 고정
   if (isMobileBanner) {
     return (
-      <div style={{ textAlign: 'center' }}>
+      <div style={{ width: '300px', height: '50px', overflow: 'hidden', margin: '0 auto' }}>
         <ins
           ref={adRef}
           className={`adsbygoogle ${className || ''}`}
@@ -170,7 +170,7 @@ export default function AdSense({
     if (isDesktop) {
       // PC: 728x90 고정
       return (
-        <div style={{ textAlign: 'center' }}>
+        <div style={{ width: '728px', height: '90px', overflow: 'hidden', margin: '0 auto' }}>
           <ins
             ref={adRef}
             className={`adsbygoogle ${className || ''}`}
@@ -183,7 +183,7 @@ export default function AdSense({
     } else {
       // 모바일: 300x50 고정 (별도 슬롯)
       return (
-        <div style={{ textAlign: 'center' }}>
+        <div style={{ width: '300px', height: '50px', overflow: 'hidden', margin: '0 auto' }}>
           <ins
             ref={adRef}
             className={`adsbygoogle ${className || ''}`}
