@@ -4,7 +4,7 @@ import { X } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import { SidebarProps } from '../types';
-import AdSense from '@/shared/components/AdSense';
+import KakaoAd from '@/shared/components/KakaoAd';
 
 export default function Sidebar({
   isOpen,
@@ -41,12 +41,12 @@ export default function Sidebar({
             </ContainerContent>
           </Container>
 
-          {/* 사이드바 광고 */}
+          {/* 사이드바 광고 - 카카오 */}
           <div className="mb-4">
-            <AdSense
-              adSlot="9130672830"
-              adFormat="rectangle"
-              style={{ display: 'block', width: '300px', height: '250px' }}
+            <KakaoAd
+              adUnit="DAN-ZD3sGdw5Tg2wQXp6"
+              adWidth={300}
+              adHeight={250}
             />
           </div>
 

@@ -19,6 +19,7 @@ import { HotdealInfoBox } from "../hotdeal";
 import type { DealInfo } from "../../types/hotdeal";
 import HoverMenu from "../common/HoverMenu";
 import AdSense from "@/shared/components/AdSense";
+import KakaoAd from "@/shared/components/KakaoAd";
 
 // 메모이제이션 적용
 const MemoizedBoardBreadcrumbs = memo(BoardBreadcrumbs);
@@ -347,12 +348,22 @@ export default function PostDetailLayout({
           </div>
         </div>
 
-        {/* PC 전용 멀티플렉스 광고 - 컨테이너 안에 배치하여 이격 방지 */}
+        {/* PC 전용 인피드 광고 - 컨테이너 안에 배치하여 이격 방지 */}
         <div className="hidden md:block border-t border-black/5 dark:border-white/10">
           <AdSense
-            adSlot="3350257761"
-            adFormat="autorelaxed"
+            adSlot="2093016410"
+            adFormat="fluid"
+            adLayoutKey="-ed+5p-2-bb+pw"
             style={{ display: 'block' }}
+          />
+        </div>
+
+        {/* PC 전용 카카오 배너 광고 */}
+        <div className="hidden md:flex justify-center border-t border-black/5 dark:border-white/10 py-4">
+          <KakaoAd
+            adUnit="DAN-1pcdg9VkUBDfzAby"
+            adWidth={728}
+            adHeight={90}
           />
         </div>
 

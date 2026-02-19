@@ -63,6 +63,7 @@ export default function AdSense({
           borderRadius: '8px',
           color: '#999',
           fontSize: '14px',
+          ...(isBanner && { margin: '0 auto' }),
         }}
       >
         광고 영역 {isBanner ? '(728x90)' : ''}
@@ -70,7 +71,7 @@ export default function AdSense({
     );
   }
 
-  return (
+  const insElement = (
     <ins
       ref={adRef}
       className={`adsbygoogle ${className || ''}`}
@@ -82,4 +83,11 @@ export default function AdSense({
       {...(!adLayoutKey && !isBanner && { 'data-full-width-responsive': 'true' })}
     />
   );
+
+  // 배너는 가운데 정렬 래퍼
+  if (isBanner) {
+    return <div style={{ textAlign: 'center' }}>{insElement}</div>;
+  }
+
+  return insElement;
 }

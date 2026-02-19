@@ -24,10 +24,10 @@ export function PostListInFeedAdRow({ colSpan }: { colSpan: number }) {
   );
 }
 
-/** 카드/모바일(div) 용 인피드 광고 */
+/** 카드(div) 용 인피드 광고 - 데스크탑 전용 */
 export function PostListInFeedAd() {
   return (
-    <div className="border-b border-black/5 dark:border-white/10">
+    <div className="hidden sm:block border-b border-black/5 dark:border-white/10">
       <AdSense
         adSlot={AD_SLOT}
         adFormat="fluid"
