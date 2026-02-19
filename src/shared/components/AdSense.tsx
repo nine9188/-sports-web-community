@@ -8,7 +8,7 @@ declare global {
   }
 }
 
-// 배너보드 슬롯 (728x90 고정)
+// 배너보드 슬롯
 const BANNER_SLOT = '8132343983';
 
 interface AdSenseProps {
@@ -27,33 +27,84 @@ export default function AdSense({
   className,
 }: AdSenseProps) {
   const adRef = useRef<HTMLModElement>(null);
+  const mobileAdRef = useRef<HTMLModElement>(null);
 
   useEffect(() => {
+    // 메인 광고 push
     const insElement = adRef.current;
-    if (!insElement || insElement.dataset.adsbygoogleStatus) return;
+    if (insElement && !insElement.dataset.adsbygoogleStatus) {
+      try {
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      } catch (err) {
+        // 이미 광고가 로드된 경우 무시
+      }
+    }
 
-    try {
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-    } catch (err) {
-      // 이미 광고가 로드된 경우 무시
+    // 배너 모바일 광고 push
+    const mobileInsElement = mobileAdRef.current;
+    if (mobileInsElement && !mobileInsElement.dataset.adsbygoogleStatus) {
+      try {
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      } catch (err) {
+        // 이미 광고가 로드된 경우 무시
+      }
     }
   }, []);
 
   const clientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
-
-  // 배너보드 슬롯은 728x90 고정 (adFormat, full-width-responsive 없음)
   const isBanner = adSlot === BANNER_SLOT;
-  const finalStyle = isBanner
-    ? { display: 'inline-block' as const, width: '728px', height: '90px' }
-    : style;
 
   if (process.env.NODE_ENV === 'development') {
+    if (isBanner) {
+      return (
+        <>
+          {/* 데스크탑: 728x90 */}
+          <div
+            className={`hidden md:flex ${className || ''}`}
+            style={{
+              width: '728px',
+              height: '90px',
+              maxWidth: '100%',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#f0f0f0',
+              border: '2px dashed #ccc',
+              borderRadius: '8px',
+              color: '#999',
+              fontSize: '14px',
+              margin: '0 auto',
+            }}
+          >
+            광고 영역 (728x90)
+          </div>
+          {/* 모바일: 반응형 */}
+          <div
+            className={`md:hidden ${className || ''}`}
+            style={{
+              width: '100%',
+              height: '80px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#f0f0f0',
+              border: '2px dashed #ccc',
+              borderRadius: '8px',
+              color: '#999',
+              fontSize: '14px',
+            }}
+          >
+            광고 영역 (반응형)
+          </div>
+        </>
+      );
+    }
+
     return (
       <div
         className={className}
         style={{
-          width: finalStyle.width || '100%',
-          height: finalStyle.height || '80px',
+          width: style.width || '100%',
+          height: style.height || '80px',
           maxWidth: '100%',
           display: 'flex',
           alignItems: 'center',
@@ -63,31 +114,54 @@ export default function AdSense({
           borderRadius: '8px',
           color: '#999',
           fontSize: '14px',
-          ...(isBanner && { margin: '0 auto' }),
         }}
       >
-        광고 영역 {isBanner ? '(728x90)' : ''}
+        광고 영역
       </div>
     );
   }
 
-  const insElement = (
+  // 배너: 데스크탑 728x90 고정 + 모바일 반응형
+  if (isBanner) {
+    return (
+      <>
+        {/* 데스크탑: 728x90 고정 */}
+        <div className="hidden md:block" style={{ textAlign: 'center' }}>
+          <ins
+            ref={adRef}
+            className={`adsbygoogle ${className || ''}`}
+            style={{ display: 'inline-block', width: '728px', height: '90px' }}
+            data-ad-client={clientId}
+            data-ad-slot={adSlot}
+          />
+        </div>
+        {/* 모바일: 반응형 */}
+        <div className="md:hidden">
+          <ins
+            ref={mobileAdRef}
+            className={`adsbygoogle ${className || ''}`}
+            style={{ display: 'block' }}
+            data-ad-client={clientId}
+            data-ad-slot={adSlot}
+            data-ad-format="auto"
+            data-full-width-responsive="true"
+          />
+        </div>
+      </>
+    );
+  }
+
+  // 일반 광고
+  return (
     <ins
       ref={adRef}
       className={`adsbygoogle ${className || ''}`}
-      style={finalStyle}
+      style={style}
       data-ad-client={clientId}
       data-ad-slot={adSlot}
       {...(!isBanner && { 'data-ad-format': adFormat })}
       {...(adLayoutKey && { 'data-ad-layout-key': adLayoutKey })}
-      {...(!adLayoutKey && !isBanner && { 'data-full-width-responsive': 'true' })}
+      {...(!adLayoutKey && { 'data-full-width-responsive': 'true' })}
     />
   );
-
-  // 배너는 가운데 정렬 래퍼
-  if (isBanner) {
-    return <div style={{ textAlign: 'center' }}>{insElement}</div>;
-  }
-
-  return insElement;
 }
