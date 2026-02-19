@@ -415,12 +415,11 @@ export default function PostDetailLayout({
         />
       </div>
 
-      {/* 모바일 전용 배너 광고 */}
-      <div className="mb-4 md:hidden">
+      {/* 모바일 전용 배너 광고 (320x50 고정) */}
+      <div className="mb-4 md:hidden flex justify-center">
         <AdSense
-          adSlot="8132343983"
-          adFormat="auto"
-          style={{ display: 'block' }}
+          adSlot="1917321828"
+          style={{ display: 'inline-block', width: '320px', height: '50px' }}
         />
       </div>
 
