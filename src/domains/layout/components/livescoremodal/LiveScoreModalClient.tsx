@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { fetchMultiDayMatches } from '@/domains/livescore/actions/footballApi';
 import LiveScoreContent from './LiveScoreContent';
+import KakaoAd from '@/shared/components/KakaoAd';
 
 
 interface LiveScoreModalProps {
@@ -94,6 +95,15 @@ export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModal
               {label}
             </Button>
           ))}
+        </div>
+
+        {/* 카카오 광고 */}
+        <div className="flex justify-center py-2 border-b border-black/7 dark:border-white/10">
+          <KakaoAd
+            adUnit="DAN-xQCe8VgP6G8I1XtL"
+            adWidth={320}
+            adHeight={50}
+          />
         </div>
 
         {/* 경기 목록 */}

@@ -358,15 +358,6 @@ export default function PostDetailLayout({
           />
         </div>
 
-        {/* PC 전용 카카오 배너 광고 */}
-        <div className="hidden md:flex justify-center border-t border-black/5 dark:border-white/10 py-4">
-          <KakaoAd
-            adUnit="DAN-1pcdg9VkUBDfzAby"
-            adWidth={728}
-            adHeight={90}
-          />
-        </div>
-
         {/* 첨부파일 섹션 (있는 경우) */}
         {post.files && post.files.length > 0 && (
           <div className="px-4 sm:px-6 py-4 border-t border-black/5 dark:border-white/10">
@@ -430,6 +421,15 @@ export default function PostDetailLayout({
           adSlot="8132343983"
           adFormat="auto"
           style={{ display: 'block' }}
+        />
+      </div>
+
+      {/* PC 전용 카카오 배너 광고 - 컨테이너 밖에 독립 배치 */}
+      <div className="hidden md:flex justify-center mb-4">
+        <KakaoAd
+          adUnit="DAN-1pcdg9VkUBDfzAby"
+          adWidth={728}
+          adHeight={90}
         />
       </div>
 

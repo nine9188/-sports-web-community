@@ -16,19 +16,19 @@ export default function KakaoAd({
   className,
 }: KakaoAdProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const scriptLoaded = useRef(false);
 
   useEffect(() => {
-    if (!containerRef.current || scriptLoaded.current) return;
-    scriptLoaded.current = true;
+    const container = containerRef.current;
+    if (!container) return;
 
-    // 카카오 광고 스크립트 로드 (페이지에 없으면 추가)
-    if (!document.querySelector('script[src*="t1.daumcdn.net/kas/static/ba.min.js"]')) {
-      const script = document.createElement('script');
-      script.src = '//t1.daumcdn.net/kas/static/ba.min.js';
-      script.async = true;
-      document.body.appendChild(script);
-    }
+    // 이미 스크립트가 추가되었으면 스킵
+    if (container.querySelector('script')) return;
+
+    // 각 광고 인스턴스마다 개별 스크립트 삽입 (ba.min.js가 새 ins를 감지하도록)
+    const script = document.createElement('script');
+    script.src = '//t1.daumcdn.net/kas/static/ba.min.js';
+    script.async = true;
+    container.appendChild(script);
   }, []);
 
   if (process.env.NODE_ENV === 'development') {
@@ -38,6 +38,7 @@ export default function KakaoAd({
         style={{
           width: `${adWidth}px`,
           height: `${adHeight}px`,
+          maxWidth: '100%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -46,6 +47,7 @@ export default function KakaoAd({
           borderRadius: '8px',
           color: '#3C1E1E',
           fontSize: '14px',
+          margin: '0 auto',
         }}
       >
         카카오 광고 ({adWidth}x{adHeight})
