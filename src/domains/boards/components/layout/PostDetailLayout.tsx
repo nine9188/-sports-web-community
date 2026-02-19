@@ -18,6 +18,7 @@ import PostList from "../post/PostList";
 import { HotdealInfoBox } from "../hotdeal";
 import type { DealInfo } from "../../types/hotdeal";
 import HoverMenu from "../common/HoverMenu";
+import AdSense from "@/shared/components/AdSense";
 
 // 메모이제이션 적용
 const MemoizedBoardBreadcrumbs = memo(BoardBreadcrumbs);
@@ -400,6 +401,15 @@ export default function PostDetailLayout({
           prevPost={adjacentPosts.prevPost}
           nextPost={adjacentPosts.nextPost}
           boardSlug={slug}
+        />
+      </div>
+
+      {/* 배너 광고 */}
+      <div className="mb-4">
+        <AdSense
+          adSlot="8132343983"
+          adFormat="auto"
+          style={{ display: 'block' }}
         />
       </div>
 

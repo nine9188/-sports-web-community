@@ -1,4 +1,5 @@
 import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
+import AdSense from '@/shared/components/AdSense';
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { fetchTransfersFullData } from '@/domains/livescore/actions/transfers';
@@ -77,6 +78,15 @@ export default async function TransfersPage({ searchParams }: TransfersPageProps
           </p>
         </div>
       </Container>
+
+      {/* 배너 광고 */}
+      <div className="mt-4">
+        <AdSense
+          adSlot="8132343983"
+          adFormat="auto"
+          style={{ display: 'block' }}
+        />
+      </div>
 
       {/* 메인 콘텐츠 */}
       <div className="mt-4">

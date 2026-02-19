@@ -40,9 +40,10 @@ export default function Footer() {
     <footer className="bg-white dark:bg-[#1D1D1D] border-t border-black/7 dark:border-white/10">
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-          {/* 저작권 */}
+          {/* 저작권 및 광고 문의 */}
           <div className="text-sm text-gray-500 dark:text-gray-400">
-            © 2025 4590. All rights reserved.
+            <p>© 2025 4590. All rights reserved.</p>
+            <p className="mt-1">광고 문의: 김태수 (<a href="mailto:support@4590football.com" className="hover:underline">support@4590football.com</a>)</p>
           </div>
 
           {/* 링크 */}

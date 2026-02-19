@@ -8,6 +8,7 @@ import PlayerTabNavigation from './TabNavigation';
 import TabContent from './TabContent';
 import { LoadingState } from '@/domains/livescore/components/common/CommonComponents';
 import { PlayerFullDataResponse } from '@/domains/livescore/actions/player/data';
+import AdSense from '@/shared/components/AdSense';
 import type { PlayerTabType } from '@/domains/livescore/hooks';
 import { playerKeys } from '@/shared/constants/queryKeys';
 import { scrollToTop } from '@/shared/utils/scroll';
@@ -144,6 +145,15 @@ export default function PlayerPageClient({
         playerPhotoUrl={initialData.playerPhotoUrl}
         teamLogoUrl={initialData.teamLogoUrl}
       />
+
+      {/* 배너 광고 */}
+      <div className="mb-4">
+        <AdSense
+          adSlot="8132343983"
+          adFormat="auto"
+          style={{ display: 'block' }}
+        />
+      </div>
 
       {/* 탭 네비게이션 - onTabChange 콜백 전달 */}
       <PlayerTabNavigation

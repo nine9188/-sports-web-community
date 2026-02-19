@@ -102,7 +102,7 @@ export default function LeagueStandings({
   const currentLeague = LEAGUES.find(l => l.id === activeLeague);
 
   return (
-    <Container className="bg-white dark:bg-[#1D1D1D] border-0">
+    <Container className="bg-white dark:bg-[#1D1D1D]">
       <ContainerHeader>
         <ContainerTitle>축구 팀순위</ContainerTitle>
       </ContainerHeader>

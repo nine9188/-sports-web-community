@@ -7,6 +7,7 @@ import type { PostSearchResult, CommentSearchResult, TeamSearchResult } from '@/
 import { TabList, type TabItem } from '@/shared/components/ui'
 import Spinner from '@/shared/components/Spinner'
 import SearchPagination from './SearchPagination';
+import AdSense from '@/shared/components/AdSense';
 
 interface SearchResultsContainerProps {
   query: string
@@ -178,6 +179,15 @@ export default function SearchResultsContainer({
           onTabChange={handleTabClick}
           isChangingTab={isChangingTab}
           showCount={true}
+        />
+      )}
+
+      {/* 배너 광고 */}
+      {query && (
+        <AdSense
+          adSlot="8132343983"
+          adFormat="auto"
+          style={{ display: 'block' }}
         />
       )}
 

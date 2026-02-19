@@ -6,6 +6,7 @@ import { Match } from '@/domains/livescore/types/match';
 import MatchCard from '../MatchCard';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Button, Container } from '@/shared/components/ui';
+import AdSense from '@/shared/components/AdSense';
 
 // 4590 표준: placeholder URL
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
@@ -106,12 +107,19 @@ export default function LeagueMatchList({
 
   return (
     <div className="space-y-4">
-      {leagueGroups.map((group: LeagueGroup) => {
+      {leagueGroups.map((group: LeagueGroup, groupIndex: number) => {
         const isExpanded = expandedLeagues.has(group.leagueId);
 
         return (
+          <React.Fragment key={group.leagueId}>
+          {groupIndex === 0 && (
+            <AdSense
+              adSlot="8132343983"
+              adFormat="auto"
+              style={{ display: 'block' }}
+            />
+          )}
           <Container
-            key={group.leagueId}
             className="bg-white dark:bg-[#1D1D1D]"
           >
             {/* 리그 헤더 */}
@@ -160,6 +168,7 @@ export default function LeagueMatchList({
               </div>
             )}
           </Container>
+          </React.Fragment>
         );
       })}
     </div>
