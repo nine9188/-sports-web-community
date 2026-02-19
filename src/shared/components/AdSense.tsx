@@ -55,8 +55,32 @@ export default function AdSense({
 
   const clientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
   const isBanner = adSlot === BANNER_SLOT;
+  const isMobileBanner = adSlot === MOBILE_BANNER_SLOT;
 
   if (process.env.NODE_ENV === 'development') {
+    if (isMobileBanner) {
+      return (
+        <div
+          className={className}
+          style={{
+            width: '320px',
+            height: '50px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#f0f0f0',
+            border: '2px dashed #ccc',
+            borderRadius: '8px',
+            color: '#999',
+            fontSize: '14px',
+            margin: '0 auto',
+          }}
+        >
+          모바일 광고 (320x50)
+        </div>
+      );
+    }
+
     if (isBanner) {
       return (
         <>
@@ -124,7 +148,20 @@ export default function AdSense({
     );
   }
 
-  // 배너: 데스크탑 728x90 고정 + 모바일 320x50 고정
+  // 모바일 배너: 320x50 고정 (반응형 속성 없음)
+  if (isMobileBanner) {
+    return (
+      <ins
+        ref={adRef}
+        className={`adsbygoogle ${className || ''}`}
+        style={{ display: 'inline-block', width: '320px', height: '50px' }}
+        data-ad-client={clientId}
+        data-ad-slot={MOBILE_BANNER_SLOT}
+      />
+    );
+  }
+
+  // PC 배너: 데스크탑 728x90 고정 + 모바일 320x50 고정
   if (isBanner) {
     return (
       <>
