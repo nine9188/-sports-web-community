@@ -19,7 +19,7 @@ export default function AdBanner() {
       </div>
       {/* 모바일 배너 */}
       <div className="md:hidden flex justify-center">
-        <AdSense adSlot={ADSENSE.MOBILE_BANNER} width={300} height={50} />
+        <AdSense adSlot={ADSENSE.MOBILE_BANNER} width={320} height={100} />
       </div>
     </>
   );

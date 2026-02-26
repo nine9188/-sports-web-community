@@ -2,6 +2,8 @@ import React, { Suspense } from 'react';
 import Script from 'next/script';
 import { AllPostsWidget, NewsWidget, BoardCollectionWidget, BoardQuickLinksWidget } from '@/domains/widgets/components';
 import AdBanner from '@/shared/components/AdBanner';
+import KakaoAd from '@/shared/components/KakaoAd';
+import { KAKAO } from '@/shared/constants/ad-constants';
 import LiveScoreWidgetV2 from '@/domains/widgets/components/live-score-widget/index';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
@@ -67,6 +69,14 @@ export default async function HomePage() {
       <Suspense>
         <AllPostsWidget />
       </Suspense>
+
+      {/* 카카오 배너 광고 */}
+      <div className="hidden md:flex justify-center">
+        <KakaoAd adUnit={KAKAO.POST_PC_BANNER} adWidth={728} adHeight={90} />
+      </div>
+      <div className="md:hidden flex justify-center">
+        <KakaoAd adUnit={KAKAO.MOBILE_MODAL} adWidth={320} adHeight={100} />
+      </div>
 
       {/* 뉴스 위젯 - Suspense 스트리밍 (below fold) */}
       <Suspense>

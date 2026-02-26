@@ -10,14 +10,14 @@ export const ADSENSE = {
 
   // 페이지 배너 (메인, 이적시장, 라이브스코어 등)
   PC_BANNER: '8132343983',        // 728x90
-  MOBILE_BANNER: '5245092664',    // 300x50
+  MOBILE_BANNER: '5245092664',    // 320x100
 
   // 오른쪽 사이드바
   RIGHT_SIDEBAR: '7382476894',    // 300x250
 
   // 게시글 상세
   POST_PC_INFEED: '2093016410',   // fluid
-  POST_MOBILE_BANNER: '1917321828', // 300x50
+  POST_MOBILE_BANNER: '1917321828', // 320x100
 } as const;
 
 // Kakao AdFit
@@ -29,5 +29,5 @@ export const KAKAO = {
   POST_PC_BANNER: 'DAN-1pcdg9VkUBDfzAby',  // 728x90
 
   // 모바일 모달 (햄버거, 라이브스코어, 프로필)
-  MOBILE_MODAL: 'DAN-xQCe8VgP6G8I1XtL',    // 320x50
+  MOBILE_MODAL: 'DAN-QHHDOL6PisGQW7b6',    // 320x100
 } as const;

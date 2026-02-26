@@ -419,7 +419,7 @@ export default function PostDetailLayout({
 
       {/* 모바일 전용 배너 광고 (300x50) */}
       <div className="mb-4 md:hidden flex justify-center">
-        <AdSense adSlot={ADSENSE.POST_MOBILE_BANNER} width={300} height={50} />
+        <AdSense adSlot={ADSENSE.POST_MOBILE_BANNER} width={320} height={100} />
       </div>
 
       {/* PC 전용 카카오 배너 광고 */}

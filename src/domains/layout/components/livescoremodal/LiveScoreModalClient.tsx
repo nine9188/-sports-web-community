@@ -101,7 +101,7 @@ export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModal
         {/* 카카오 광고 - 모달 열릴 때만 렌더링 (같은 adUnit 충돌 방지) */}
         {isOpen && (
           <div className="flex justify-center py-2 border-b border-black/7 dark:border-white/10">
-            <KakaoAd adUnit={KAKAO.MOBILE_MODAL} adWidth={320} adHeight={50} />
+            <KakaoAd adUnit={KAKAO.MOBILE_MODAL} adWidth={320} adHeight={100} />
           </div>
         )}
 
