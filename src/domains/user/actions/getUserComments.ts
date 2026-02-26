@@ -5,6 +5,7 @@ import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
 import { formatDate } from '@/shared/utils/dateUtils';
 import { PaginationParams, ActionResponse } from '../types';
 import { Post } from '@/domains/boards/components/post/postlist/types';
+import { getTeamLogoUrls, getLeagueLogoUrls } from '@/domains/livescore/actions/images';
 
 /**
  * public_id로 유저가 댓글 단 게시글 목록을 조회합니다.
@@ -161,6 +162,16 @@ export async function getUserCommentedPosts(
       .map(id => postsMap.get(id))
       .filter(Boolean);
 
+    // 팀/리그 로고 URL 조회 (4590 표준)
+    const teamIds = [...new Set(orderedPosts.map((p: any) => p.boards?.team_id).filter(Boolean))] as number[];
+    const leagueIds = [...new Set(orderedPosts.map((p: any) => p.boards?.league_id).filter(Boolean))] as number[];
+
+    const [teamLogoMap, leagueLogoMap, leagueLogoDarkMap] = await Promise.all([
+      teamIds.length > 0 ? getTeamLogoUrls(teamIds) : Promise.resolve({} as Record<number, string>),
+      leagueIds.length > 0 ? getLeagueLogoUrls(leagueIds) : Promise.resolve({} as Record<number, string>),
+      leagueIds.length > 0 ? getLeagueLogoUrls(leagueIds, true) : Promise.resolve({} as Record<number, string>),
+    ]);
+
     // PostList Post 포맷으로 변환
     const formattedData: Post[] = orderedPosts.map((post: any) => {
       let authorIconUrl = null;
@@ -197,6 +208,9 @@ export async function getUserCommentedPosts(
         // 팀/리그 정보
         team_id: post.boards?.team_id || null,
         league_id: post.boards?.league_id || null,
+        team_logo: post.boards?.team_id ? (teamLogoMap[post.boards.team_id] || null) : null,
+        league_logo: post.boards?.league_id ? (leagueLogoMap[post.boards.league_id] || null) : null,
+        league_logo_dark: post.boards?.league_id ? (leagueLogoDarkMap[post.boards.league_id] || null) : null,
       };
     });
 

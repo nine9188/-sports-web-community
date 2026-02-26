@@ -40,6 +40,29 @@ export default function AdSense({
   }, []);
 
   if (process.env.NODE_ENV === 'development') {
+    // fluid 포맷은 전체 너비, 자동 높이로 표시
+    if (format === 'fluid') {
+      return (
+        <div
+          className={className}
+          style={{
+            width: '100%',
+            padding: '16px 0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#f0f0f0',
+            border: '2px dashed #ccc',
+            borderRadius: '8px',
+            color: '#999',
+            fontSize: '14px',
+          }}
+        >
+          광고 (fluid)
+        </div>
+      );
+    }
+
     return (
       <div
         className={className}

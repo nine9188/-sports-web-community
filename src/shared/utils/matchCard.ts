@@ -27,8 +27,9 @@ export const DARK_MODE_LEAGUE_IDS: readonly number[] = [
   119, // Superliga
   98, // J1 League
   292, // K League 1
-  66, // Not sure - verify this
-  13, // Ligue 1
+  66, // Primeira Liga
+  13, // Coupe de France
+  61, // Ligue 1
 ] as const;
 
 /**
