@@ -141,49 +141,52 @@ export default function TransfersPageContent({
           </ContainerHeader>
 
           {/* 데스크탑 테이블 */}
-          <div className="hidden md:block overflow-x-auto bg-white dark:bg-[#1D1D1D]">
-            <table className="w-full">
+          <div className="hidden md:block bg-white dark:bg-[#1D1D1D]">
+            <table className="w-full table-fixed">
+              <colgroup>
+                <col className="w-[28%]" />
+                <col className="w-[38%]" />
+                <col className="w-[16%]" />
+                <col className="w-[18%]" />
+              </colgroup>
               <thead className="bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">선수</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">이적 경로</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">이적료/타입</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">날짜</th>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">선수</th>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">이적 경로</th>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">이적료/타입</th>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">날짜</th>
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-[#1D1D1D] divide-y divide-black/5 dark:divide-white/10">
                 {transfers.map((transfer, index) => (
                   <tr key={`${transfer.player.id}-${index}`} className="hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors">
                     {/* 선수 정보 - 4590 표준: 서버에서 전달받은 Storage URL 사용 */}
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-3">
-                        <div className="flex-shrink-0 w-10 h-10 relative">
+                    <td className="px-3 py-3">
+                      <div className="flex items-center space-x-2">
+                        <div className="flex-shrink-0 w-9 h-9 relative">
                           <Image
                             src={playerPhotoUrls[transfer.player.id] || PLAYER_PLACEHOLDER}
                             alt={`${transfer.player.name} 사진`}
-                            width={40}
-                            height={40}
-                            className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 bg-gray-50"
+                            width={36}
+                            height={36}
+                            className="w-9 h-9 rounded-full object-cover border-2 border-gray-200 bg-gray-50"
                           />
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <Link
                             href={`/livescore/football/player/${transfer.player.id}`}
-                            className={`${(playerKoreanNames[transfer.player.id] || transfer.player.name).length > 15 ? 'text-xs' : 'text-sm'} font-medium text-gray-900 dark:text-[#F0F0F0] hover:underline transition-colors`}
+                            className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] hover:underline transition-colors truncate block"
                           >
                             {playerKoreanNames[transfer.player.id] || transfer.player.name}
                           </Link>
-                          <div className="text-sm text-gray-700 dark:text-gray-300">
-                            {transfer.player.nationality}
-                          </div>
                         </div>
                       </div>
                     </td>
 
                     {/* 이적 경로 */}
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-2">
-                        <div className="flex items-center space-x-2 min-w-0 flex-1">
+                    <td className="px-3 py-3">
+                      <div className="flex items-center space-x-1.5">
+                        <div className="flex items-center space-x-1 min-w-0 flex-1">
                           <TeamLogo
                             teamName={transfer.transfers[0]?.teams?.out?.name || 'Unknown'}
                             logoUrl={teamLogoUrls[transfer.transfers[0]?.teams?.out?.id || 0]}
@@ -202,12 +205,12 @@ export default function TransfersPageContent({
                         </div>
 
                         <div className="flex-shrink-0">
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                           </svg>
                         </div>
 
-                        <div className="flex items-center space-x-2 min-w-0 flex-1">
+                        <div className="flex items-center space-x-1 min-w-0 flex-1">
                           <TeamLogo
                             teamName={transfer.transfers[0]?.teams?.in?.name || 'Unknown'}
                             logoUrl={teamLogoUrls[transfer.transfers[0]?.teams?.in?.id || 0]}
@@ -228,7 +231,7 @@ export default function TransfersPageContent({
                     </td>
 
                     {/* 이적료/타입 */}
-                    <td className="px-4 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3">
                       {transfer.transfers[0]?.type && (
                         <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0]">
                           {formatTransferType(transfer.transfers[0].type)}
@@ -237,7 +240,7 @@ export default function TransfersPageContent({
                     </td>
 
                     {/* 날짜 */}
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                    <td className="px-3 py-3 text-sm text-gray-700 dark:text-gray-300">
                       {transfer.transfers[0]?.date || 'N/A'}
                     </td>
                   </tr>

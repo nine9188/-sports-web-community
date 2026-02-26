@@ -83,7 +83,7 @@ export default function LeagueStandings({
   // 모바일 환경 체크
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+      setIsMobile(window.innerWidth < 728);
     };
 
     checkMobile();

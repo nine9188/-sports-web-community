@@ -118,7 +118,7 @@ export default function CategoryFilter({
   // 초기 설정
   useEffect(() => {
     if (sortedCategories.length > 0) {
-      const mobile = window.innerWidth < 768
+      const mobile = window.innerWidth < 728
       
       if (mobile) {
         const maxVisibleCategories = 3
@@ -143,7 +143,7 @@ export default function CategoryFilter({
     let rafId: number | null = null
     
     const checkMobileAndCalculateVisibleCategories = () => {
-      const mobile = window.innerWidth < 768
+      const mobile = window.innerWidth < 728
       setIsMobile(mobile)
       
       if (mobile) {

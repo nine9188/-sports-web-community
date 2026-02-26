@@ -79,7 +79,7 @@ export default function AuthorLink({
   // 클라이언트 마운트 체크 및 모바일 감지
   useEffect(() => {
     setIsMounted(true);
-    setIsMobile(window.innerWidth < 768);
+    setIsMobile(window.innerWidth < 728);
   }, []);
 
   // 외부 클릭 시 드롭다운 닫기

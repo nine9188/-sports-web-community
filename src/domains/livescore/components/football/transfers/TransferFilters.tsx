@@ -74,7 +74,7 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
   // 모바일에서는 접힌 상태로 시작, 데스크탑에서는 펼친 상태로 시작
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const isMobile = window.innerWidth < 768;
+      const isMobile = window.innerWidth < 728;
       setIsOpen(!isMobile);
     }
   }, []);

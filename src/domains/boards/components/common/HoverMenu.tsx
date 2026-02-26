@@ -49,7 +49,7 @@ export default function HoverMenu({
     let rafId: number | null = null;
 
     const checkMobile = () => {
-      const mobile = window.innerWidth < 768;
+      const mobile = window.innerWidth < 728;
       setIsMobile(mobile);
     };
 
