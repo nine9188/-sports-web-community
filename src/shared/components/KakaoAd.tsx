@@ -9,22 +9,6 @@ interface KakaoAdProps {
   className?: string;
 }
 
-// 글로벌 스크립트 로드 상태
-let scriptLoaded = false;
-
-function loadKakaoScript() {
-  if (scriptLoaded) return;
-  if (document.querySelector('script[src*="kas/static/ba.min.js"]')) {
-    scriptLoaded = true;
-    return;
-  }
-  const script = document.createElement('script');
-  script.src = '//t1.daumcdn.net/kas/static/ba.min.js';
-  script.async = true;
-  document.head.appendChild(script);
-  scriptLoaded = true;
-}
-
 export default function KakaoAd({
   adUnit,
   adWidth,
@@ -34,8 +18,23 @@ export default function KakaoAd({
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    loadKakaoScript();
-  }, []);
+    const container = containerRef.current;
+    if (!container) return;
+
+    // 기존 스크립트 태그 제거 후 새로 추가하여 SDK가 ins를 처리하도록 함
+    const oldScript = container.querySelector('script');
+    if (oldScript) oldScript.remove();
+
+    const script = document.createElement('script');
+    script.src = '//t1.daumcdn.net/kas/static/ba.min.js';
+    script.async = true;
+    container.appendChild(script);
+
+    return () => {
+      const s = container.querySelector('script');
+      if (s) s.remove();
+    };
+  }, [adUnit, adWidth, adHeight]);
 
   if (process.env.NODE_ENV === 'development') {
     return (
