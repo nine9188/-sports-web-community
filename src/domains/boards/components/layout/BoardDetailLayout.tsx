@@ -18,6 +18,8 @@ import BoardSearchBar from "../board/BoardSearchBar";
 import { isHotdealBoard } from "../../utils/hotdeal";
 import { Breadcrumb } from "../../types/board/data";
 import { Board } from "../../types/board";
+import KakaoAd from "@/shared/components/KakaoAd";
+import { KAKAO } from "@/shared/constants/ad-constants";
 import type { LayoutPost, PopularPost } from "@/domains/boards/types/post";
 
 // LayoutPost를 Post로 alias (기존 코드 호환)
@@ -150,11 +152,27 @@ export default function BoardDetailLayout({
     }
   }, [boardData.id, boardData.slug, boardData.name]);
 
+  const hasBreadcrumbs = breadcrumbs.length > 0;
+
+  const kakaoAdBanner = (
+    <>
+      <div className="hidden md:flex justify-center mb-4">
+        <KakaoAd adUnit={KAKAO.POST_PC_BANNER} adWidth={728} adHeight={90} />
+      </div>
+      <div className="md:hidden flex justify-center mb-4">
+        <KakaoAd adUnit={KAKAO.MOBILE_BANNER} adWidth={320} adHeight={100} />
+      </div>
+    </>
+  );
+
   return (
     <div className="container mx-auto" data-current-page={currentPage}>
       <div>
         <MemoizedBoardBreadcrumbs breadcrumbs={breadcrumbs} />
       </div>
+
+      {/* 일반 게시판: 브레드크럼 아래 광고 */}
+      {hasBreadcrumbs && kakaoAdBanner}
 
       {/* 커스텀 필터 컴포넌트 (예: 인기글 기간 필터) */}
       {filterComponent && <div className="mb-4">{filterComponent}</div>}
@@ -229,6 +247,9 @@ export default function BoardDetailLayout({
           )}
         </Container>
       )}
+
+      {/* 인기글/전체글: 헤더 아래 광고 */}
+      {!hasBreadcrumbs && kakaoAdBanner}
 
       {/* 호버 메뉴 - 클라이언트 컴포넌트로 전환 */}
       {topBoards && hoverChildBoardsMap && (
