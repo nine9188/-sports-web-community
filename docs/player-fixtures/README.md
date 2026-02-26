@@ -42,17 +42,16 @@ src/domains/livescore/actions/player/fixtures.ts
               └──────────┘ └──────────┘ └──────────┘
 ```
 
-### 다중 캐시 레이어
+### 캐시 아키텍처 (2026-02-26 업데이트)
 
 ```
-요청 → data.ts 캐시 (10분) → fixtures.ts 캐시 (6시간) → API 호출
-       ↑                      ↑
-       상위 레이어             하위 레이어
-       (전체 선수 데이터)       (경기 기록 전용)
+요청 → React cache() (요청 내 중복 제거) → fetchWithRateLimit (직접 fetch + rate limit) → API
 ```
 
-- **data.ts 캐시**: 전체 선수 데이터를 10분간 캐싱 (`serverDataCache`)
-- **fixtures.ts 캐시**: 경기 기록만 6시간 캐싱 (Complete/Partial/Stale 분리)
+- **React `cache()`**: 같은 서버 렌더링 내 중복 호출 방지
+- **`fetchWithRateLimit`**: 세마포어 + 지수 백오프로 rate limit 대응
+- ~~data.ts 캐시 (10분 `serverDataCache`)~~ → 제거됨
+- ~~fixtures.ts Complete/Partial/Stale 캐시~~ → 제거됨
 
 ### API 호출 순서
 
@@ -65,51 +64,24 @@ src/domains/livescore/actions/player/fixtures.ts
 3. **경기별 선수 통계** (`/fixtures/players?fixture={fixtureId}`)
    - 각 경기에서 선수의 개별 통계 (N+1 호출)
 
-## 캐시 전략
+## 캐시 전략 (2026-02-26 업데이트)
 
-### Complete/Partial/Stale 분리 캐시
+> **2026-02-26 캐시 정리**: 복잡한 Complete/Partial/Stale 3단계 캐시가 제거되었습니다.
+> 현재는 캐시 없이 매 요청마다 API를 호출하되, rate limit 대응 로직으로 안정성을 확보합니다.
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    캐시 조회 순서                         │
-├─────────────────────────────────────────────────────────┤
-│  1. Complete 캐시 (6시간 TTL)                            │
-│     └─ 모든 경기 데이터 성공적으로 로드된 완전한 데이터      │
-│                                                         │
-│  2. Partial 캐시 (30분 TTL)                              │
-│     └─ 일부 경기 데이터 로드 실패한 부분 데이터             │
-│                                                         │
-│  3. Stale 캐시 (24시간 TTL)                              │
-│     └─ 만료된 캐시지만 API 실패 시 폴백으로 사용           │
-└─────────────────────────────────────────────────────────┘
-```
+### 현재 방식
 
-### 캐시 키 구조
+- **캐시 레이어 없음**: 인메모리 캐시(`completeCache`, `partialCache`, `staleCache`) 모두 제거
+- **Rate Limit 대응**: `fetchWithRateLimit` + `Semaphore`로 동시성 제어 및 재시도
+- **청크 처리**: N+1 호출을 `chunkSize`개씩 묶어서 `chunkDelay`간격으로 처리
 
-```typescript
-// 형식: fixtures_p{playerId}_s{season}_t{teamId}
-// 예시: fixtures_p280_s2024_t40
-function createCacheKey(playerId: number, season: number, teamId?: number): string {
-  return `fixtures_p${playerId}_s${season}${teamId ? `_t${teamId}` : ''}`;
-}
-```
+### 제거된 항목
 
-### Stale-While-Revalidate 패턴
-
-```
-요청 → Complete 캐시 있음? → Yes → 즉시 반환
-              │
-              No
-              ▼
-        Stale 캐시 있음? → Yes → API 호출 시도
-              │                      │
-              │                      ├─ 성공 → 새 데이터 반환
-              │                      │
-              │                      └─ 실패 → Stale 데이터 반환
-              No
-              ▼
-         API 호출 (실패 시 에러)
-```
+- ~~`completeCache` Map (6시간 TTL)~~
+- ~~`partialCache` Map (30분 TTL)~~
+- ~~`staleCache` Map (24시간 TTL)~~
+- ~~`createCacheKey()` 함수~~
+- ~~Stale-While-Revalidate 패턴~~
 
 ## Rate Limit 대응
 
@@ -233,11 +205,8 @@ const API_CONFIG = {
   maxConcurrency: 3,      // 최대 동시 요청 수
 };
 
-const CACHE_TTL = {
-  complete: 6 * 60 * 60 * 1000,  // 6시간
-  partial: 30 * 60 * 1000,       // 30분
-  stale: 24 * 60 * 60 * 1000,    // 24시간
-};
+// CACHE_TTL — 2026-02-26 제거됨
+// 현재 인메모리 캐시 없음, rate limit 대응만 유지
 ```
 
 ## 사용 예시
@@ -278,13 +247,12 @@ if (result.status === 'success') {
 
 ### 새로고침마다 데이터가 달라지는 문제
 
-**원인**: N+1 API 호출 중 일부가 랜덤하게 실패하고, 실패한 데이터도 캐시됨
+**원인**: N+1 API 호출 중 일부가 랜덤하게 실패
 
 **해결**:
-1. Complete/Partial 캐시 분리
-2. Partial은 30분만 캐시 (짧은 TTL)
-3. Rate Limit 대응 (재시도, 429 처리)
-4. 동시성 제한 (세마포어)
+1. Rate Limit 대응 (재시도, 429 처리)
+2. 동시성 제한 (세마포어)
+3. 청크 딜레이로 API 부하 분산
 
 ### Rate Limit (429) 자주 발생
 
@@ -302,8 +270,8 @@ if (result.status === 'success') {
 **현재 한계**: API-Football은 `/fixtures/players` 엔드포인트에서 단일 fixture ID만 지원
 
 **개선 방향**:
-- 캐시 히트율 높이기 (TTL 조정)
 - 필요한 경기만 로드 (limit 활용)
+- 청크 사이즈/딜레이 튜닝
 
 ## 검증 결과
 
@@ -320,6 +288,7 @@ if (result.status === 'success') {
 
 | 날짜 | 버전 | 변경 내용 |
 |------|------|-----------|
+| 2026-02-26 | 3.0.0 | 캐시 정리 - Complete/Partial/Stale 인메모리 캐시 제거, Rate Limit 대응만 유지 |
 | 2026-01-09 | 2.0.1 | 다중 캐시 레이어 문서화, 검증 완료 |
 | 2026-01-09 | 2.0.0 | 전면 개편 - Rate Limit 대응, 캐시 분리, 동시성 제한 |
 | - | 1.0.0 | 초기 버전 |

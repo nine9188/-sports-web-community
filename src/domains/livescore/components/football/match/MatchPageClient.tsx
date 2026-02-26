@@ -6,7 +6,7 @@ import MatchHeader from './MatchHeader';
 import TabNavigation from './TabNavigation';
 import TabContent from './TabContent';
 import { MatchHeaderSkeleton } from '@/domains/livescore/components/common/HeadersUI';
-import AdSense from '@/shared/components/AdSense';
+import AdBanner from '@/shared/components/AdBanner';
 import { MatchFullDataResponse } from '@/domains/livescore/actions/match/matchData';
 import { HeadToHeadTestData } from '@/domains/livescore/actions/match/headtohead';
 import { AllPlayerStatsResponse } from '@/domains/livescore/types/lineup';
@@ -139,11 +139,7 @@ export default function MatchPageClient({
 
         {/* 배너 광고 */}
         <div className="mb-4">
-          <AdSense
-            adSlot="8132343983"
-            adFormat="auto"
-            style={{ display: 'block' }}
-          />
+          <AdBanner />
         </div>
 
         {/* 탭 네비게이션 - onTabChange 콜백 전달 */}

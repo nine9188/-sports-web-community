@@ -98,27 +98,6 @@ export async function generateMetadata({
   });
 }
 
-// 캐시 항목 인터페이스
-interface CacheEntry {
-  data: MatchFullDataResponse;
-  timestamp: number;
-}
-
-// 글로벌 데이터 캐시 (서버 재시작될 때까지 유지)
-const dataCache = new Map<string, CacheEntry>();
-
-// 캐시 유효 시간 (5분)
-const CACHE_TTL = 5 * 60 * 1000;
-
-// 캐시 유효성 체크 함수
-const isCacheValid = (cacheEntry: CacheEntry | undefined): boolean => {
-  if (!cacheEntry) return false;
-  return Date.now() - cacheEntry.timestamp < CACHE_TTL;
-};
-
-// NOTE: Team/Player 페이지와 동일하게 export 설정 없음
-// 탭 전환 시 불필요한 서버 호출 방지
-// in-memory 캐시(dataCache)로 데이터 신선도 관리
 
 /**
  * ============================================
@@ -156,32 +135,13 @@ export default async function MatchPage({
       ? (tab as MatchTabType)
       : DEFAULT_TAB;
 
-    // 캐시 키 생성 (모든 탭 데이터 로드하므로 탭 파라미터 불필요)
-    const cacheKey = `match-${matchId}-all`;
-
-    // 캐시된 데이터 확인
-    let matchData;
-    const cacheEntry = dataCache.get(cacheKey);
-
-    if (cacheEntry && isCacheValid(cacheEntry)) {
-      matchData = cacheEntry.data;
-    } else {
-      // 모든 탭 데이터를 서버에서 프리로드
-      const options = {
-        fetchEvents: true,     // events, lineups, 헤더에서 사용
-        fetchLineups: true,    // lineups 탭
-        fetchStats: true,      // stats 탭
-        fetchStandings: true,  // standings, power 탭
-      };
-
-      matchData = await fetchCachedMatchFullData(matchId, options);
-
-      // 결과를 캐시에 저장
-      dataCache.set(cacheKey, {
-        data: matchData,
-        timestamp: Date.now()
-      });
-    }
+    // 모든 탭 데이터를 서버에서 프리로드
+    const matchData = await fetchCachedMatchFullData(matchId, {
+      fetchEvents: true,
+      fetchLineups: true,
+      fetchStats: true,
+      fetchStandings: true,
+    });
 
     // 기본 데이터 로드 실패 시 404 페이지
     if (!matchData.success) {

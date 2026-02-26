@@ -9,7 +9,6 @@
 import React from 'react';
 import { PostListProps } from '../../types';
 import { DesktopPostItem } from './DesktopPostItem';
-import { PostListInFeedAdRow, PostListInFeedAd, POST_LIST_AD_INDEX } from '../shared/PostListInFeedAd';
 
 type DesktopPostListServerProps = Omit<
   PostListProps,
@@ -41,7 +40,6 @@ export function DesktopPostListServer({
                 showBoard={showBoard}
                 variant={variant}
               />
-              {index === POST_LIST_AD_INDEX - 1 && <PostListInFeedAd />}
             </React.Fragment>
           ))}
         </div>
@@ -96,9 +94,6 @@ export function DesktopPostListServer({
                 showBoard={showBoard}
                 variant={variant}
               />
-              {index === POST_LIST_AD_INDEX - 1 && (
-                <PostListInFeedAdRow colSpan={showBoard ? 6 : 5} />
-              )}
             </React.Fragment>
           ))}
         </tbody>

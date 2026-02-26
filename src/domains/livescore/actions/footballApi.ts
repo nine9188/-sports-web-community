@@ -140,10 +140,6 @@ interface ApiPlayer {
 const API_BASE_URL = 'https://v3.football.api-sports.io';
 const API_KEY = process.env.FOOTBALL_API_KEY || '';
 
-// 메모리 캐시 (in-memory, 서버 재시작 시 초기화)
-// Next.js fetch 캐시와 이중화하여 최대한 API 호출 방지
-const matchesCache = new Map<string, { data: MatchData[]; timestamp: number }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5분 (Next.js fetch 캐시 60초 + 여유)
 
 // MultiDayMatches 결과 타입 정의
 export interface MultiDayMatchesResult {
@@ -250,15 +246,6 @@ export const fetchFromFootballApi = async (endpoint: string, params: Record<stri
 // 특정 날짜의 경기 정보 가져오기
 export async function fetchMatchesByDate(date: string): Promise<MatchData[]> {
   try {
-    // 캐시 확인
-    const cacheKey = `matches-${date}`;
-    const cached = matchesCache.get(cacheKey);
-
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      return cached.data;
-    }
-
-    // 타임존은 fetchFromFootballApi에서 자동으로 추가되므로 여기서는 제거
     const data = await fetchFromFootballApi('fixtures', { date });
     
     if (data.response) {
@@ -333,13 +320,7 @@ export async function fetchMatchesByDate(date: string): Promise<MatchData[]> {
         };
       });
 
-      // JSON 직렬화로 안전한 객체 보장
-      const safeData = JSON.parse(JSON.stringify(filteredMatches));
-
-      // 캐시에 저장
-      matchesCache.set(cacheKey, { data: safeData, timestamp: Date.now() });
-
-      return safeData;
+      return JSON.parse(JSON.stringify(filteredMatches));
     }
 
     return [];
@@ -646,21 +627,7 @@ type StandingRow = {
 // 리그 상세 정보 가져오기
 export async function fetchLeagueDetails(leagueId: string): Promise<LeagueDetails | null> {
   try {
-    // timezone 제거하고 호출
-    const url = `${API_BASE_URL}/leagues?id=${leagueId}&current=true`;
-    const response = await fetch(url, {
-      headers: {
-        'x-rapidapi-host': 'v3.football.api-sports.io',
-        'x-rapidapi-key': API_KEY,
-      },
-      cache: 'no-store'
-    });
-
-    if (!response.ok) {
-      throw new Error(`API 응답 오류: ${response.status}`);
-    }
-
-    const apiData = await response.json();
+    const apiData = await fetchFromFootballApi('leagues', { id: leagueId, current: 'true' });
 
     if (!apiData?.response?.[0]) {
       return null;
@@ -738,29 +705,11 @@ export async function fetchLeagueTeams(leagueId: string): Promise<LeagueTeam[]> 
     const seasonCompleted = await isSeasonCompleted(leagueId, season);
     
     // 팀 목록, 순위 정보, 우승팀 정보를 병렬로 가져오기
-    const [teamsResponse, standingsResponse, winnerPromise] = await Promise.all([
-      fetch(`${API_BASE_URL}/teams?league=${leagueId}&season=${season}`, {
-        headers: {
-          'x-rapidapi-host': 'v3.football.api-sports.io',
-          'x-rapidapi-key': API_KEY,
-        },
-        cache: 'no-store'
-      }),
-      fetch(`${API_BASE_URL}/standings?league=${leagueId}&season=${season}`, {
-        headers: {
-          'x-rapidapi-host': 'v3.football.api-sports.io',
-          'x-rapidapi-key': API_KEY,
-        },
-        cache: 'no-store'
-      }),
+    const [teamsData, standingsData, winnerPromise] = await Promise.all([
+      fetchFromFootballApi('teams', { league: leagueId, season }),
+      fetchFromFootballApi('standings', { league: leagueId, season }).catch(() => null),
       fetchCupWinner(leagueId, season)
     ]);
-
-    if (!teamsResponse.ok) {
-      throw new Error(`팀 목록 API 응답 오류: ${teamsResponse.status}`);
-    }
-
-    const teamsData = await teamsResponse.json();
 
     if (!teamsData?.response) {
       return [];
@@ -768,9 +717,8 @@ export async function fetchLeagueTeams(leagueId: string): Promise<LeagueTeam[]> 
 
     // 순위 정보 처리 (MLS와 같이 컨퍼런스별 다중 그룹 지원)
     const standingsMap = new Map<number, number>();
-    if (standingsResponse.ok) {
+    if (standingsData) {
       try {
-        const standingsData = await standingsResponse.json();
         if (standingsData.response && Array.isArray(standingsData.response)) {
           const leagueStandings = standingsData.response[0]?.league?.standings;
           // 구조가 [ [groupA...], [groupB...] ] 형태일 수 있음
@@ -869,20 +817,7 @@ export interface TrophyInfo {
 // 컵대회 우승팀 정보 가져오기
 export async function fetchTeamTrophies(teamId: string): Promise<TrophyInfo[]> {
   try {
-    const url = `${API_BASE_URL}/trophies?team=${teamId}`;
-    const response = await fetch(url, {
-      headers: {
-        'x-rapidapi-host': 'v3.football.api-sports.io',
-        'x-rapidapi-key': API_KEY,
-      },
-      cache: 'no-store'
-    });
-
-    if (!response.ok) {
-      throw new Error(`API 응답 오류: ${response.status}`);
-    }
-
-    const apiData = await response.json();
+    const apiData = await fetchFromFootballApi('trophies', { team: teamId });
 
     if (!apiData?.response) {
       return [];
@@ -907,21 +842,7 @@ export async function fetchTeamTrophies(teamId: string): Promise<TrophyInfo[]> {
 // 특정 리그의 우승팀 확인
 export async function fetchLeagueWinner(leagueId: string, season: string = '2024'): Promise<number | null> {
   try {
-    // 해당 리그의 최종 순위에서 1위 팀 찾기
-    const url = `${API_BASE_URL}/standings?league=${leagueId}&season=${season}`;
-    const response = await fetch(url, {
-      headers: {
-        'x-rapidapi-host': 'v3.football.api-sports.io',
-        'x-rapidapi-key': API_KEY,
-      },
-      cache: 'no-store'
-    });
-
-    if (!response.ok) {
-      throw new Error(`API 응답 오류: ${response.status}`);
-    }
-
-    const apiData = await response.json();
+    const apiData = await fetchFromFootballApi('standings', { league: leagueId, season });
 
     if (apiData.response && Array.isArray(apiData.response)) {
       const standings = apiData.response[0]?.league?.standings?.[0];
@@ -943,21 +864,7 @@ export async function fetchLeagueWinner(leagueId: string, season: string = '2024
 // 컵대회 결승전 정보 가져오기
 export async function fetchCupFinal(leagueId: string, season: string = '2024'): Promise<number | null> {
   try {
-    // 해당 리그의 결승전 경기 찾기 (round가 "Final"인 경기)
-    const url = `${API_BASE_URL}/fixtures?league=${leagueId}&season=${season}&round=Final`;
-    const response = await fetch(url, {
-      headers: {
-        'x-rapidapi-host': 'v3.football.api-sports.io',
-        'x-rapidapi-key': API_KEY,
-      },
-      cache: 'no-store'
-    });
-
-    if (!response.ok) {
-      throw new Error(`API 응답 오류: ${response.status}`);
-    }
-
-    const apiData = await response.json();
+    const apiData = await fetchFromFootballApi('fixtures', { league: leagueId, season, round: 'Final' });
 
     if (apiData.response && Array.isArray(apiData.response) && apiData.response.length > 0) {
       const finalMatch = apiData.response[0];
@@ -994,17 +901,9 @@ export async function fetchCupWinner(leagueId: string, season: string = '2024'):
 
   for (const round of possibleFinalRounds) {
     try {
-      const url = `${API_BASE_URL}/fixtures?league=${leagueId}&season=${season}&round=${round}`;
-      const response = await fetch(url, {
-        headers: {
-          'x-rapidapi-host': 'v3.football.api-sports.io',
-          'x-rapidapi-key': API_KEY,
-        },
-        cache: 'no-store'
-      });
+      const apiData = await fetchFromFootballApi('fixtures', { league: leagueId, season, round });
 
-      if (response.ok) {
-        const apiData = await response.json();
+      if (apiData) {
 
         if (apiData.response && Array.isArray(apiData.response) && apiData.response.length > 0) {
           const finalMatch = apiData.response[0];

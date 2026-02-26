@@ -18,7 +18,6 @@ import {
 } from '../../constants';
 import { MobilePostItem } from './MobilePostItem';
 import { MobileVirtualizedItem } from './MobileVirtualizedItem';
-import { PostListInFeedAd, POST_LIST_AD_INDEX } from '../shared/PostListInFeedAd';
 
 /**
  * 모바일 게시글 리스트 컨테이너
@@ -110,7 +109,6 @@ export function MobilePostList({
             showBoard={false}
             variant={variant}
           />
-          {index === POST_LIST_AD_INDEX - 1 && <PostListInFeedAd />}
         </React.Fragment>
       ))}
     </div>

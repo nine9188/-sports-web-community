@@ -5,7 +5,7 @@ import { LeagueHeader } from '@/domains/livescore/components/football/leagues';
 import { LeagueStandingsTable } from '@/domains/livescore/components/football/leagues';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { getTeamLogoUrls, getLeagueLogoUrl } from '@/domains/livescore/actions/images';
-import AdSense from '@/shared/components/AdSense';
+import AdBanner from '@/shared/components/AdBanner';
 
 interface LeaguePageProps {
   params: Promise<{ id: string }>;
@@ -76,11 +76,7 @@ export default async function LeaguePage({ params }: LeaguePageProps) {
         />
       </div>
 
-      <AdSense
-        adSlot="8132343983"
-        adFormat="auto"
-        style={{ display: 'block' }}
-      />
+      <AdBanner />
 
       <LeagueStandingsTable
         standings={standingsResponse.success && standingsResponse.data ? standingsResponse.data : null}

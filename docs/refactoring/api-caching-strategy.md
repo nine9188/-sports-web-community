@@ -39,12 +39,16 @@ livescore/actions/
 
 ### 2.2 현재 캐싱 상태
 
-| 구분 | 현재 | 문제점 |
+> **2026-02-26 업데이트**: 아래는 2026-01-19 작성 시점의 상태입니다.
+> 현재는 `fetchFromFootballApi`가 endpoint별 `next: { revalidate }` TTL을 적용하는 단일 캐시 레이어로 통합되었습니다.
+> 자세한 내용은 [섹션 12.2](#122-2026-02-26-캐시-정리)를 참조하세요.
+
+| 구분 | ~~2026-01 상태~~ | 2026-02 현재 |
 |------|------|--------|
-| `footballApi.ts` | 메모리 캐시 1분 TTL | 서버 재시작/인스턴스별 캐시 분리 |
-| `fetchFromFootballApi()` | `cache: 'no-store'` | 캐싱 완전 비활성화 |
-| 팀/선수 API | `cache: 'no-store'` | 정적 데이터도 매번 fetch |
-| React `cache()` | 일부 적용 | 같은 요청 내에서만 유효 |
+| `footballApi.ts` | ~~메모리 캐시 1분 TTL~~ | endpoint별 `next: { revalidate }` |
+| `fetchFromFootballApi()` | ~~`cache: 'no-store'`~~ | `next: { revalidate: getRevalidateTime(endpoint) }` |
+| 팀/선수 API | ~~`cache: 'no-store'`~~ | `fetchFromFootballApi` 사용 (TTL 자동 적용) |
+| React `cache()` | 일부 적용 | 유지 (요청 내 중복 제거) |
 
 ### 2.3 핵심 문제: 팬아웃 중복 호출
 
@@ -978,8 +982,50 @@ api-sports.io:
 
 ---
 
+## 12.2 2026-02-26 캐시 정리
+
+### 배경
+
+Phase 1~5에서 구현한 `fetchFootball()` + `apiCache.ts` 아키텍처와 별도로, 코드 전반에 걸쳐 남아있던 **레거시 캐시 레이어들을 정리**하는 작업을 진행했습니다.
+
+### 제거된 항목
+
+| 항목 | 위치 | 설명 |
+|------|------|------|
+| `serverDataCache` Map | `player/data.ts` | 10분 TTL 인메모리 캐시 |
+| `cacheTTL` Map | `player/data.ts` | endpoint별 TTL 설정 |
+| `ongoingRequests` Map | `player/data.ts` | 중복 요청 방지 |
+| `fetchWithRetry` 함수 | `player/data.ts` | 재시도 래퍼 |
+| `withCache` 래퍼 | `player/data.ts`, `teams/team.ts` | Supabase L2 캐시 |
+| `cachedSeasons` / `cachedSeasonsTimestamp` | `player/data.ts` | 시즌 목록 인메모리 캐시 |
+| `matchesCache` Map | `footballApi.ts` | 경기 데이터 인메모리 캐시 |
+| `powerCache` Map | `match/headtohead.ts` | H2H 파워 랭킹 캐시 |
+| `completeCache` / `partialCache` | `player/fixtures.ts` | Complete/Partial/Stale 3단계 캐시 |
+| `dataCache` Map | `player/[id]/page.tsx`, `match/[id]/page.tsx` | 페이지 레벨 캐시 |
+| `fetchCache` / `revalidate` 오버라이드 | `teams/layout.tsx` 등 | route segment 레벨 캐시 설정 |
+
+### 현재 아키텍처 (단일 캐시 레이어)
+
+```
+요청 → React cache() (요청 내 중복 제거) → fetchFromFootballApi (next.revalidate) → API
+```
+
+- **모든 API 호출**: `fetchFromFootballApi` 통해 통일
+- **캐시**: `next: { revalidate: getRevalidateTime(endpoint) }`만 사용 (Vercel Data Cache)
+- **중복 제거**: `React.cache()` 래핑
+
+### 의도적으로 유지한 항목
+
+| 항목 | 위치 | 이유 |
+|------|------|------|
+| `matchCache` | `match/playerStats.ts` | 종료된 경기 데이터는 불변이므로 캐시 유지 합리적 |
+| `transfersCache` | `transfers/index.ts` | 리그 전체 이적 데이터 수집이 비용이 커서 Supabase 캐시 유지 |
+| `fetchWithRateLimit` | `player/fixtures.ts` | 캐시가 아닌 rate limit 대응용 (세마포어 + 재시도) |
+
+---
+
 *작성일: 2026-01-19*
-*마지막 업데이트: 2026-01-19*
+*마지막 업데이트: 2026-02-26*
 *태스크: #11 외부 API 캐싱 강화*
-*상태: ✅ 구현 완료*
+*상태: ✅ 구현 완료 + 캐시 정리 완료*
 *예상 효과: API 호출 70% 절감, ~$40/월 비용 절감*

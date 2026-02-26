@@ -81,29 +81,6 @@ export interface FixturesResponse {
 }
 
 // ============================================
-// 캐시 구조 (Complete/Partial 분리)
-// ============================================
-
-interface CacheEntry {
-  timestamp: number;
-  data: FixtureData[];
-  totalFixtures: number;
-  failedFixtureIds: number[];
-}
-
-// Complete 캐시 (실패 없는 완전한 데이터)
-const completeCache = new Map<string, CacheEntry>();
-// Partial 캐시 (일부 실패 포함)
-const partialCache = new Map<string, CacheEntry>();
-
-// 캐시 TTL
-const CACHE_TTL = {
-  complete: 6 * 60 * 60 * 1000,  // 6시간
-  partial: 30 * 60 * 1000,       // 30분 (부분 데이터는 짧게)
-  stale: 24 * 60 * 60 * 1000,    // 24시간 (stale 데이터 최대 유지)
-};
-
-// ============================================
 // API 설정
 // ============================================
 
@@ -269,59 +246,6 @@ async function fetchWithRateLimit(
 }
 
 // ============================================
-// 캐시 유틸리티
-// ============================================
-
-/**
- * 캐시 키 생성 (모든 요청 파라미터 반영)
- */
-function createCacheKey(playerId: number, season: number, teamId?: number): string {
-  return `fixtures_p${playerId}_s${season}${teamId ? `_t${teamId}` : ''}`;
-}
-
-/**
- * 캐시에서 데이터 조회 (Complete > Partial > Stale 순서)
- */
-function getFromCache(cacheKey: string): { entry: CacheEntry | null; type: 'complete' | 'partial' | 'stale' | null } {
-  const now = Date.now();
-
-  // 1. Complete 캐시 확인
-  const complete = completeCache.get(cacheKey);
-  if (complete && (now - complete.timestamp) < CACHE_TTL.complete) {
-    return { entry: complete, type: 'complete' };
-  }
-
-  // 2. Partial 캐시 확인 (complete가 없거나 만료된 경우)
-  const partial = partialCache.get(cacheKey);
-  if (partial && (now - partial.timestamp) < CACHE_TTL.partial) {
-    return { entry: partial, type: 'partial' };
-  }
-
-  // 3. Stale 데이터 확인 (모두 만료됐지만 24시간 이내면 stale로 반환)
-  if (complete && (now - complete.timestamp) < CACHE_TTL.stale) {
-    return { entry: complete, type: 'stale' };
-  }
-  if (partial && (now - partial.timestamp) < CACHE_TTL.stale) {
-    return { entry: partial, type: 'stale' };
-  }
-
-  return { entry: null, type: null };
-}
-
-/**
- * 캐시에 저장
- */
-function saveToCache(cacheKey: string, entry: CacheEntry, isComplete: boolean): void {
-  if (isComplete) {
-    completeCache.set(cacheKey, entry);
-    // Complete 데이터가 들어오면 Partial 삭제
-    partialCache.delete(cacheKey);
-  } else {
-    partialCache.set(cacheKey, entry);
-  }
-}
-
-// ============================================
 // 메인 함수
 // ============================================
 
@@ -349,33 +273,6 @@ export async function fetchPlayerFixtures(
   const month = now.getMonth();
   const currentSeason = month >= 6 ? year : year - 1;
 
-  // 초기 캐시 키 (teamId 없이)
-  const initialCacheKey = createCacheKey(playerId, currentSeason);
-
-  // 캐시 확인 (Complete > Partial > Stale)
-  const cached = getFromCache(initialCacheKey);
-
-  // Complete 캐시가 있으면 즉시 반환
-  if (cached.type === 'complete' && cached.entry) {
-    const limitedData = limit > 0 ? cached.entry.data.slice(0, limit) : cached.entry.data;
-    return {
-      data: limitedData,
-      status: 'success',
-      message: '캐시된 경기 기록을 불러왔습니다',
-      cached: true,
-      seasonUsed: currentSeason,
-      completeness: {
-        total: cached.entry.totalFixtures,
-        success: cached.entry.data.length,
-        failed: 0
-      }
-    };
-  }
-
-  // Stale 데이터가 있으면 먼저 반환하고 백그라운드에서 갱신 시도
-  // (여기서는 동기적으로 처리하되, stale 표시)
-  const staleEntry = cached.type === 'stale' ? cached.entry : null;
-
   try {
     // API 요청 시작
     const fetchOptions: RequestInit = {
@@ -389,18 +286,6 @@ export async function fetchPlayerFixtures(
     );
 
     if (!playerResult.ok || !playerResult.data) {
-      // 실패 시 stale 데이터 반환
-      if (staleEntry) {
-        const limitedData = limit > 0 ? staleEntry.data.slice(0, limit) : staleEntry.data;
-        return {
-          data: limitedData,
-          status: 'stale',
-          message: '최신 데이터를 가져오지 못해 이전 데이터를 표시합니다',
-          cached: true,
-          stale: true,
-          seasonUsed: currentSeason
-        };
-      }
       return { data: [], status: 'error', message: `선수 정보 조회 실패: ${playerResult.error}` };
     }
 
@@ -421,39 +306,14 @@ export async function fetchPlayerFixtures(
     }
 
     if (!teamId) {
-      if (staleEntry) {
-        const limitedData = limit > 0 ? staleEntry.data.slice(0, limit) : staleEntry.data;
-        return {
-          data: limitedData,
-          status: 'stale',
-          message: '선수의 팀 정보를 찾을 수 없어 이전 데이터를 표시합니다',
-          cached: true,
-          stale: true,
-          seasonUsed: currentSeason
-        };
-      }
       return { data: [], status: 'error', message: '선수의 팀 정보를 찾을 수 없습니다' };
     }
-
-    // 최종 캐시 키 (teamId 포함)
-    const finalCacheKey = createCacheKey(playerId, currentSeason, teamId);
 
     // 2. 팀 경기 목록 조회
     const fixturesUrl = `${API_CONFIG.baseUrl}/fixtures?team=${teamId}&season=${currentSeason}&from=${currentSeason}-07-01&to=${Number(currentSeason) + 1}-06-30`;
     const fixturesResult = await fetchWithRateLimit(fixturesUrl, fetchOptions);
 
     if (!fixturesResult.ok || !fixturesResult.data) {
-      if (staleEntry) {
-        const limitedData = limit > 0 ? staleEntry.data.slice(0, limit) : staleEntry.data;
-        return {
-          data: limitedData,
-          status: 'stale',
-          message: '경기 목록을 가져오지 못해 이전 데이터를 표시합니다',
-          cached: true,
-          stale: true,
-          seasonUsed: currentSeason
-        };
-      }
       return { data: [], status: 'error', message: `경기 목록 조회 실패: ${fixturesResult.error}` };
     }
 
@@ -461,14 +321,6 @@ export async function fetchPlayerFixtures(
     const allFixtures = fixturesData.response || [];
 
     if (allFixtures.length === 0) {
-      // 빈 결과도 완전한 데이터로 캐시
-      saveToCache(finalCacheKey, {
-        timestamp: Date.now(),
-        data: [],
-        totalFixtures: 0,
-        failedFixtureIds: []
-      }, true);
-
       return {
         data: [],
         status: 'success',
@@ -603,16 +455,6 @@ export async function fetchPlayerFixtures(
 
     const isComplete = failedFixtureIds.length === 0;
 
-    // 캐시에 저장
-    const cacheEntry: CacheEntry = {
-      timestamp: Date.now(),
-      data: validFixtures as unknown as FixtureData[],
-      totalFixtures,
-      failedFixtureIds
-    };
-
-    saveToCache(finalCacheKey, cacheEntry, isComplete);
-
     // 결과 반환
     const limitedFixtures = limit > 0 ? validFixtures.slice(0, limit) : validFixtures;
 
@@ -634,19 +476,6 @@ export async function fetchPlayerFixtures(
 
   } catch (error) {
     console.error('[fetchPlayerFixtures] Fatal error:', error);
-
-    // 치명적 에러 시 stale 데이터 반환
-    if (staleEntry) {
-      const limitedData = limit > 0 ? staleEntry.data.slice(0, limit) : staleEntry.data;
-      return {
-        data: limitedData,
-        status: 'stale',
-        message: '오류가 발생하여 이전 데이터를 표시합니다',
-        cached: true,
-        stale: true,
-        seasonUsed: currentSeason
-      };
-    }
 
     return {
       data: [],

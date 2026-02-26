@@ -2,6 +2,7 @@
 
 import { cache } from 'react';
 import { TransferData } from '@/domains/livescore/types/player';
+import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
 // API 응답 타입 정의
 interface ApiTransferResponse {
@@ -40,23 +41,7 @@ export async function fetchPlayerTransfers(playerId: number): Promise<TransferDa
     }
 
     // API 호출
-    const response = await fetch(
-      `https://v3.football.api-sports.io/transfers?player=${playerId}`,
-      {
-        headers: {
-          'x-rapidapi-host': 'v3.football.api-sports.io',
-          'x-rapidapi-key': process.env.FOOTBALL_API_KEY || '',
-        },
-        cache: 'no-store'
-      }
-    );
-
-    if (!response.ok) {
-      console.error(`[transfers] API 응답 오류: ${response.status}`, await response.text());
-      throw new Error(`API 응답 오류: ${response.status}`);
-    }
-
-    const data = await response.json();
+    const data = await fetchFromFootballApi('transfers', { player: playerId });
 
     // 데이터 존재 확인
     if (!data.response || !Array.isArray(data.response) || data.response.length === 0) {

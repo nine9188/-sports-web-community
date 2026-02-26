@@ -217,57 +217,45 @@
 
 ---
 
-## 캐시 전략 요약
+## 캐시 전략 (2026-02-26 업데이트)
 
-### 영구 캐시 (지난 시즌 = 절대 안변함)
-- 시즌별 통계 (지난 시즌)
-- 경기별 통계 (지난 시즌)
-- 트로피 (지난 시즌 이전)
-- 이적 기록 (과거 이적)
+### 현재 아키텍처: 단일 캐시 레이어
 
-### 주기적 갱신 (현재 시즌)
-- 시즌별 통계 → 4시간마다
-- 경기별 통계 → 4시간마다
-- 선수 기본 정보 → 24시간마다
-- 부상 기록 → 4시간마다
-
-### 저빈도 갱신
-- 트로피 → 24시간마다
-- 이적 → 24시간마다
-- 시즌 목록 → 24시간마다 (기존 로직 유지)
-
----
-
-## 구현 완료 (2026-01-28)
-
-### Supabase 테이블
+2026-02-26 캐시 정리 작업으로 복잡한 다층 캐시가 제거되고 **단일 캐시 레이어**로 단순화되었습니다.
 
 ```
-player_cache (
-  id          bigint PK (auto),
-  player_id   integer NOT NULL,
-  data_type   text NOT NULL,     -- 'info','stats','fixtures','trophies','transfers','injuries','seasons'
-  season      integer NOT NULL DEFAULT 0,  -- 0=시즌 무관, 2025=특정 시즌
-  data        jsonb NOT NULL,
-  updated_at  timestamptz DEFAULT now(),
-  UNIQUE(player_id, data_type, season)
-)
+요청 → React cache() (요청 내 중복 제거) → fetchFromFootballApi (next.revalidate) → API
 ```
 
-### 캐시 흐름
+### 캐시 레이어 설명
 
-```
-요청 → L1(인메모리 Map, 10분) → L2(Supabase) → API → L1+L2 저장
-```
+| 레이어 | 역할 | 범위 |
+|--------|------|------|
+| **React `cache()`** | 같은 서버 렌더링 내 중복 호출 방지 | 단일 요청 |
+| **`next: { revalidate }`** | endpoint별 TTL 기반 캐시 (Vercel Data Cache) | 요청 간 공유 |
 
-- **L1 hit**: 0ms (인메모리 즉시 반환)
-- **L2 hit**: ~50ms (Supabase 조회)
-- **L2 miss → API**: 2~30초 (API 호출 후 L1+L2에 저장)
-- **지난 시즌**: L2에서 영구 반환 (갱신 안 함)
-- **현재 시즌**: TTL 초과 시 API 재호출
+### endpoint별 revalidate 시간
+
+| 데이터 | endpoint | revalidate |
+|--------|----------|------------|
+| 선수 정보 | `players/*` | 1시간 |
+| 이적 정보 | `transfers` | 24시간 |
+| 트로피 | `trophies` | 24시간 |
+| 부상 정보 | `injuries` | 1시간 |
+| 경기 정보 | `fixtures` | 1분 |
+| 라인업 | `fixtures/lineups` | 5분 |
+| 순위표 | `standings` | 30분 |
+
+### 제거된 항목 (2026-02-26)
+
+- ~~L1 인메모리 Map 캐시 (`serverDataCache`, 10분 TTL)~~
+- ~~L2 Supabase DB 캐시 (`player_cache` 테이블, `withCache` 래퍼)~~
+- ~~`cacheTTL` Map, `ongoingRequests` Map~~
+- ~~`fetchWithRetry` 함수~~
+- ~~`cachedSeasons` / `cachedSeasonsTimestamp` 인메모리 캐시~~
 
 ### 관련 파일
 
-- `src/domains/livescore/actions/player/playerCache.ts` — Supabase 읽기/쓰기 헬퍼
-- `src/domains/livescore/actions/player/data.ts` — withCache 래퍼로 L2 연동
-- `src/app/test/player-cache/raw/route.ts` — 테스트 엔드포인트
+- `src/domains/livescore/actions/footballApi.ts` — 통합 API 클라이언트 (`fetchFromFootballApi`)
+- `src/domains/livescore/actions/player/data.ts` — 선수 통합 데이터 함수 (`fetchPlayerFullData`)
+- `src/domains/livescore/actions/player/*.ts` — 개별 데이터 함수 (모두 `fetchFromFootballApi` 사용)

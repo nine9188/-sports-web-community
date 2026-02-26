@@ -6,7 +6,7 @@ import ReactDOM from 'react-dom'
 import { ShopItem } from '../types'
 import ItemGrid from '@/domains/shop/components/ItemGrid'
 import { Button, Pagination } from '@/shared/components/ui'
-import AdSense from '@/shared/components/AdSense'
+import AdBanner from '@/shared/components/AdBanner'
 
 const PAGE_SIZE = 30
 
@@ -625,11 +625,7 @@ export default function CategoryFilter({
             withMargin={false}
           />
         )}
-        <AdSense
-          adSlot="8132343983"
-          adFormat="auto"
-          style={{ display: 'block' }}
-        />
+        <AdBanner />
       </div>
     </div>
   )

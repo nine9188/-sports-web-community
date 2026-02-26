@@ -2,6 +2,7 @@
 
 import { cache } from 'react';
 import { TrophyData } from '@/domains/livescore/types/player';
+import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
 // API 응답 타입 정의
 interface TrophyResponseItem {
@@ -23,22 +24,7 @@ export async function fetchPlayerTrophies(playerId: number): Promise<TrophyData[
     }
 
     // API 호출
-    const response = await fetch(
-      `https://v3.football.api-sports.io/trophies?player=${playerId}`,
-      {
-        headers: {
-          'x-rapidapi-host': 'v3.football.api-sports.io',
-          'x-rapidapi-key': process.env.FOOTBALL_API_KEY || '',
-        },
-        cache: 'no-store'
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`API 응답 오류: ${response.status}`);
-    }
-
-    const data = await response.json();
+    const data = await fetchFromFootballApi('trophies', { player: playerId });
 
     // 데이터 존재 확인
     if (!data.response || !Array.isArray(data.response)) {
@@ -63,24 +49,11 @@ export async function fetchPlayerTrophies(playerId: number): Promise<TrophyData[
     // 리그 로고 정보 가져오기
     const leagueLogoPromises = uniqueLeagues.map(async (leagueName: string) => {
       try {
-        const logoResponse = await fetch(
-          `https://v3.football.api-sports.io/leagues?name=${encodeURIComponent(leagueName)}`,
-          {
-            headers: {
-              'x-rapidapi-host': 'v3.football.api-sports.io',
-              'x-rapidapi-key': process.env.FOOTBALL_API_KEY || '',
-            },
-            cache: 'force-cache'
-          }
-        );
-        
-        if (logoResponse.ok) {
-          const logoData = await logoResponse.json();
-          if (logoData.response && logoData.response.length > 0) {
-            leagueLogosMap.set(leagueName, logoData.response[0].league.logo);
-          } else {
-            leagueLogosMap.set(leagueName, null);
-          }
+        const logoData = await fetchFromFootballApi('leagues', { name: leagueName });
+        if (logoData.response && logoData.response.length > 0) {
+          leagueLogosMap.set(leagueName, logoData.response[0].league.logo);
+        } else {
+          leagueLogosMap.set(leagueName, null);
         }
       } catch (error) {
         console.error(`리그 로고 가져오기 오류 (${leagueName}):`, error);

@@ -11,6 +11,7 @@ import { useLogout } from '@/shared/hooks/useLogout';
 import { FullUserDataWithSession } from '@/shared/types/user';
 import { Button } from '@/shared/components/ui';
 import KakaoAd from '@/shared/components/KakaoAd';
+import { KAKAO } from '@/shared/constants/ad-constants';
 
 interface ProfileSidebarProps {
   isOpen: boolean;
@@ -144,11 +145,7 @@ export default function ProfileSidebar({
                 {/* 카카오 광고 - 모달 열릴 때만 렌더링 */}
                 {isOpen && (
                   <div className="flex justify-center pt-2">
-                    <KakaoAd
-                      adUnit="DAN-xQCe8VgP6G8I1XtL"
-                      adWidth={320}
-                      adHeight={50}
-                    />
+                    <KakaoAd adUnit={KAKAO.MOBILE_MODAL} adWidth={320} adHeight={50} />
                   </div>
                 )}
               </div>
@@ -185,11 +182,7 @@ export default function ProfileSidebar({
                   {/* 카카오 광고 - 모달 열릴 때만 렌더링 */}
                   {isOpen && (
                     <div className="flex justify-center pt-2">
-                      <KakaoAd
-                        adUnit="DAN-xQCe8VgP6G8I1XtL"
-                        adWidth={320}
-                        adHeight={50}
-                      />
+                      <KakaoAd adUnit={KAKAO.MOBILE_MODAL} adWidth={320} adHeight={50} />
                     </div>
                   )}
                 </div>

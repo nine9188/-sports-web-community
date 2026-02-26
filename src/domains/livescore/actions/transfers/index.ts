@@ -5,6 +5,7 @@ import {
   sortTransfersByDate,
 } from '../../utils/transferUtils';
 import { getTransfersCache, setTransfersCache, getTeamTransfersCache, setTeamTransfersCache } from './transfersCache';
+import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
 // 이적 데이터 타입 정의
 export interface TransferMarketData {
@@ -167,19 +168,7 @@ export const fetchTeamTransfers = cache(async (
     }
 
     // 2. API 호출
-    const response = await fetch(`https://v3.football.api-sports.io/transfers?team=${teamId}`, {
-      headers: {
-        'x-rapidapi-host': 'v3.football.api-sports.io',
-        'x-rapidapi-key': process.env.FOOTBALL_API_KEY || '',
-      },
-      next: { revalidate: 3600 }
-    });
-
-    if (!response.ok) {
-      throw new Error(`API 응답 오류: ${response.status}`);
-    }
-
-    const data = await response.json();
+    const data = await fetchFromFootballApi('transfers', { team: teamId });
 
     if (!data.response || !Array.isArray(data.response) || data.response.length === 0) {
       return {
@@ -277,20 +266,7 @@ async function fetchLeagueTransfersFromAPI(
 ): Promise<TransferMarketData[]> {
   try {
     // 리그 팀 목록 가져오기
-    const teamsResponse = await fetch(
-      `https://v3.football.api-sports.io/teams?league=${leagueId}&season=${season}`,
-      {
-        headers: {
-          'x-rapidapi-host': 'v3.football.api-sports.io',
-          'x-rapidapi-key': process.env.FOOTBALL_API_KEY || '',
-        },
-        next: { revalidate: 7200 }
-      }
-    );
-
-    if (!teamsResponse.ok) return [];
-
-    const teamsData = await teamsResponse.json();
+    const teamsData = await fetchFromFootballApi('teams', { league: leagueId, season });
     if (!teamsData.response || teamsData.response.length === 0) return [];
 
     // 상위 12개 팀의 이적 정보 수집

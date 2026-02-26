@@ -62,29 +62,10 @@ export async function generateMetadata({
   });
 }
 
-// 캐시 항목 인터페이스
-interface CacheEntry {
-  data: PlayerFullDataResponse;
-  timestamp: number;
-}
-
-// 글로벌 데이터 캐시 (서버 재시작될 때까지 유지)
-const dataCache = new Map<string, CacheEntry>();
-
-// 캐시 유효 시간 (5분)
-const CACHE_TTL = 5 * 60 * 1000;
-
-// 캐시 유효성 체크 함수
-const isCacheValid = (cacheEntry: CacheEntry | undefined): boolean => {
-  if (!cacheEntry) return false;
-  return Date.now() - cacheEntry.timestamp < CACHE_TTL;
-};
-
 // 유효한 탭 목록
 const VALID_TABS: PlayerTabType[] = ['stats', 'fixtures', 'trophies', 'transfers', 'injuries', 'rankings'];
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 300; // 5분마다 재검증
 
 export default async function PlayerPage({
   params,
@@ -103,36 +84,16 @@ export default async function PlayerPage({
       ? (tab as PlayerTabType)
       : 'stats';
 
-    // 캐시 키 생성 (초기 탭 기준)
-    const cacheKey = `${playerId}-${initialTab}`;
-
-    // 캐시된 데이터 확인
-    let initialData: PlayerFullDataResponse;
-    const cacheEntry = dataCache.get(cacheKey);
-
-    if (cacheEntry && isCacheValid(cacheEntry)) {
-      // 유효한 캐시 데이터가 있으면 사용
-      initialData = cacheEntry.data;
-    } else {
-      // 모든 탭 데이터를 서버에서 미리 로드 (빠른 탭 전환을 위해)
-      const loadOptions = {
-        fetchSeasons: true,
-        fetchStats: true,
-        fetchFixtures: true,        // API 최적화 완료 - 미리 로드
-        fetchTrophies: true,
-        fetchTransfers: true,
-        fetchInjuries: true,
-        fetchRankings: true
-      };
-
-      initialData = await fetchPlayerFullData(playerId, loadOptions);
-
-      // 캐시에 저장
-      dataCache.set(cacheKey, {
-        data: initialData,
-        timestamp: Date.now()
-      });
-    }
+    // 모든 탭 데이터를 서버에서 미리 로드
+    const initialData = await fetchPlayerFullData(playerId, {
+      fetchSeasons: true,
+      fetchStats: true,
+      fetchFixtures: true,
+      fetchTrophies: true,
+      fetchTransfers: true,
+      fetchInjuries: true,
+      fetchRankings: true
+    });
 
     // 데이터 로드 실패 시 에러 페이지 표시 (404 대신)
     if (!initialData.success) {

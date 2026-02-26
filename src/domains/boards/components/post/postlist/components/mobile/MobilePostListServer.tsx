@@ -9,7 +9,6 @@
 import React from 'react';
 import { PostListProps } from '../../types';
 import { MobilePostItem } from './MobilePostItem';
-import { PostListInFeedAd, POST_LIST_AD_INDEX } from '../shared/PostListInFeedAd';
 
 type MobilePostListServerProps = Omit<
   PostListProps,
@@ -37,7 +36,6 @@ export function MobilePostListServer({
             showBoard={false}
             variant={variant}
           />
-          {index === POST_LIST_AD_INDEX - 1 && <PostListInFeedAd />}
         </React.Fragment>
       ))}
     </div>

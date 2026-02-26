@@ -3,6 +3,7 @@
 import { cache } from 'react';
 import { MatchEvent } from '../../types/match';
 import { getTeamById } from '../../constants/teams';
+import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
 // 이벤트 데이터 응답 타입 정의
 export interface EventDataResponse {
@@ -47,23 +48,7 @@ export async function fetchMatchEvents(matchId: string): Promise<EventDataRespon
     }
 
     // API 요청
-    const response = await fetch(
-      `https://v3.football.api-sports.io/fixtures/events?fixture=${matchId}`,
-      {
-        headers: {
-          'x-rapidapi-host': 'v3.football.api-sports.io',
-          'x-rapidapi-key': process.env.FOOTBALL_API_KEY || '',
-        },
-        // 실시간 데이터를 위해 캐싱 방지
-        cache: 'no-store'
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`API 응답 오류: ${response.status}`);
-    }
-
-    const data = await response.json();
+    const data = await fetchFromFootballApi('fixtures/events', { fixture: matchId });
     let events = Array.isArray(data.response) ? data.response : [];
     
     // 팀 데이터 매핑 추가

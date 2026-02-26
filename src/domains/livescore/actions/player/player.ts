@@ -2,6 +2,7 @@
 
 import { cache } from 'react';
 import { PlayerData } from '@/domains/livescore/types/player';
+import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
 // API 응답을 위한 인터페이스 정의
 interface ApiPlayerResponse {
@@ -111,23 +112,7 @@ export async function fetchPlayerData(id: string): Promise<PlayerData> {
     for (const season of seasonsToTry) {
       try {
         // API 호출
-        const response = await fetch(
-          `https://v3.football.api-sports.io/players?id=${id}&season=${season}`,
-          {
-            headers: {
-              'x-rapidapi-host': 'v3.football.api-sports.io',
-              'x-rapidapi-key': process.env.FOOTBALL_API_KEY || '',
-            },
-            cache: 'no-store'
-          }
-        );
-
-        if (!response.ok) {
-          console.warn(`API 응답 오류 (시즌 ${season}): ${response.status}`);
-          continue;
-        }
-
-        const playerData = await response.json();
+        const playerData = await fetchFromFootballApi('players', { id, season });
 
         // 데이터 존재 확인
         if (playerData?.response?.[0]) {

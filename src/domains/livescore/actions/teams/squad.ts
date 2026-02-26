@@ -1,6 +1,7 @@
 'use server';
 
 import { cache } from 'react';
+import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
 // 선수 정보 인터페이스
 export interface Player {
@@ -48,33 +49,8 @@ export async function fetchTeamSquad(teamId: string): Promise<SquadResponse> {
       throw new Error('팀 ID는 필수입니다');
     }
 
-    // API 키 확인 (여러 환경 변수 시도)
-    const apiKey = process.env.FOOTBALL_API_KEY || process.env.NEXT_PUBLIC_RAPIDAPI_KEY || '';
-    
-    if (!apiKey) {
-      return { 
-        success: false,
-        message: 'API 키가 설정되지 않았습니다'
-      };
-    }
-
     // 팀 스쿼드 정보 가져오기
-    const squadResponse = await fetch(
-      `https://v3.football.api-sports.io/players/squads?team=${teamId}`,
-      {
-        headers: {
-          'x-rapidapi-host': 'v3.football.api-sports.io',
-          'x-rapidapi-key': apiKey,
-        },
-        cache: 'no-store'
-      }
-    );
-
-    if (!squadResponse.ok) {
-      throw new Error(`API 응답 오류: ${squadResponse.status}`);
-    }
-
-    const squadData = await squadResponse.json();
+    const squadData = await fetchFromFootballApi('players/squads', { team: teamId });
     
     if (!squadData?.response?.[0]?.players) {
       return { 
@@ -94,21 +70,10 @@ export async function fetchTeamSquad(teamId: string): Promise<SquadResponse> {
     }));
     
     // 코치 정보 가져오기
-    const coachResponse = await fetch(
-      `https://v3.football.api-sports.io/coachs?team=${teamId}`,
-      {
-        headers: {
-          'x-rapidapi-host': 'v3.football.api-sports.io',
-          'x-rapidapi-key': apiKey,
-        },
-        cache: 'no-store'
-      }
-    );
-    
     let coach: Coach | null = null;
-    
-    if (coachResponse.ok) {
-      const coachData = await coachResponse.json();
+
+    try {
+      const coachData = await fetchFromFootballApi('coachs', { team: teamId });
       const coaches = Array.isArray(coachData?.response) ? coachData.response : [];
       const numericTeamId = Number(teamId);
 
@@ -152,6 +117,8 @@ export async function fetchTeamSquad(teamId: string): Promise<SquadResponse> {
           };
         }
       }
+    } catch {
+      // coach fetch failure is not critical
     }
     
     // 코치 정보와 선수 정보 합치기

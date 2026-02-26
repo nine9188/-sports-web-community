@@ -2,6 +2,7 @@
 
 import { cache } from 'react';
 import { getTeamById } from '@/domains/livescore/constants/teams';
+import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
 // 통계 항목 타입 정의
 export interface StatisticItem {
@@ -40,23 +41,8 @@ export async function fetchMatchStats(matchId: string): Promise<StatsResponse> {
       throw new Error('경기 ID가 필요합니다');
     }
 
-    // API 요청 - API-Sports 직접 호출
-    const response = await fetch(
-      `https://v3.football.api-sports.io/fixtures/statistics?fixture=${matchId}`,
-      {
-        headers: {
-          'x-rapidapi-host': 'v3.football.api-sports.io',
-          'x-rapidapi-key': process.env.FOOTBALL_API_KEY || '',
-        },
-        cache: 'no-store'
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`API 응답 오류: ${response.status}`);
-    }
-
-    const data = await response.json();
+    // API 요청 - fetchFromFootballApi 사용
+    const data = await fetchFromFootballApi('fixtures/statistics', { fixture: matchId });
     
     if (!data?.response || data.response.length === 0) {
       return { 

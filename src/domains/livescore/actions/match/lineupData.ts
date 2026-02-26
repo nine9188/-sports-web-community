@@ -3,6 +3,7 @@
 import { cache } from 'react';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 import { getPlayerPhotoUrls, getCoachPhotoUrls } from '../images';
+import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
 interface Player {
   id: number;
@@ -65,26 +66,7 @@ export async function fetchMatchLineups(matchId: string): Promise<LineupsRespons
       };
     }
 
-    const response = await fetch(
-      `https://v3.football.api-sports.io/fixtures/lineups?fixture=${matchId}`,
-      {
-        headers: {
-          'x-rapidapi-host': 'v3.football.api-sports.io',
-          'x-rapidapi-key': process.env.FOOTBALL_API_KEY || '',
-        },
-        cache: 'no-store'
-      }
-    );
-
-    if (!response.ok) {
-      return {
-        success: false,
-        response: null,
-        message: `API 응답 오류: ${response.status}`
-      };
-    }
-
-    const data = await response.json();
+    const data = await fetchFromFootballApi('fixtures/lineups', { fixture: matchId });
 
     if (!data?.response || data.response.length < 2) {
       return {

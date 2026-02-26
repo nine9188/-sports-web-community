@@ -5,6 +5,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import { SidebarProps } from '../types';
 import KakaoAd from '@/shared/components/KakaoAd';
+import { KAKAO } from '@/shared/constants/ad-constants';
 
 export default function Sidebar({
   isOpen,
@@ -43,11 +44,7 @@ export default function Sidebar({
 
           {/* 사이드바 광고 - 카카오 */}
           <div className="mb-4">
-            <KakaoAd
-              adUnit="DAN-ZD3sGdw5Tg2wQXp6"
-              adWidth={300}
-              adHeight={250}
-            />
+            <KakaoAd adUnit={KAKAO.LEFT_SIDEBAR} adWidth={300} adHeight={250} />
           </div>
 
           {/* 게시판 이동 섹션 */}

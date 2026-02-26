@@ -71,7 +71,7 @@ const AuthStateManager = React.memo(function AuthStateManager({
         isAdmin={headerIsAdmin}
         totalPostCount={headerTotalPostCount}
       />
-      <div className="flex flex-1 w-full md:max-w-[1400px] md:mx-auto bg-transparent">
+      <div className="flex flex-1 w-full md:max-w-[1360px] md:mx-auto bg-transparent">
         <Sidebar
           isOpen={isOpen}
           onClose={onClose}

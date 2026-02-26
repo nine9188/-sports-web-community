@@ -2,6 +2,7 @@
 
 import { cache } from 'react';
 import { getTeamById } from '@/domains/livescore/constants/teams';
+import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
 // API 응답에 나타나는 리그 정보 인터페이스
 interface LeagueInfo {
@@ -93,18 +94,7 @@ export async function fetchTeamStandings(teamId: string): Promise<StandingsRespo
     const season = currentDate.getMonth() < 6 ? currentDate.getFullYear() - 1 : currentDate.getFullYear();
 
     // 팀의 리그 정보를 가져옵니다
-    const leaguesResponse = await fetch(
-      `https://v3.football.api-sports.io/leagues?team=${teamId}&season=${season}`,
-      {
-        headers: {
-          'x-rapidapi-host': 'v3.football.api-sports.io',
-          'x-rapidapi-key': process.env.FOOTBALL_API_KEY || '',
-        },
-        cache: 'no-store'
-      }
-    );
-
-    const leaguesData = await leaguesResponse.json();
+    const leaguesData = await fetchFromFootballApi('leagues', { team: teamId, season });
 
     // 모든 관련 리그 찾기
     const relevantLeagues = leaguesData.response?.filter((league: ApiLeagueResponse) => {
@@ -125,23 +115,9 @@ export async function fetchTeamStandings(teamId: string): Promise<StandingsRespo
 
     // 각 리그의 순위 정보를 가져옵니다
     const standingsPromises = relevantLeagues.map(async (league: ApiLeagueResponse) => {
-      const standingsResponse = await fetch(
-        `https://v3.football.api-sports.io/standings?league=${league.league.id}&season=${season}`,
-        {
-          headers: {
-            'x-rapidapi-host': 'v3.football.api-sports.io',
-            'x-rapidapi-key': process.env.FOOTBALL_API_KEY || '',
-          },
-          cache: 'no-store'
-        }
-      );
+      try {
+        const standingsData = await fetchFromFootballApi('standings', { league: league.league.id, season });
 
-      if (!standingsResponse.ok) {
-        return null;
-      }
-
-      const standingsData = await standingsResponse.json();
-      
       // 유효한 순위 데이터가 있는 경우만 반환
       if (standingsData.response?.[0]?.league?.standings) {
         // 팀 이름을 한국어로 변환
@@ -159,6 +135,9 @@ export async function fetchTeamStandings(teamId: string): Promise<StandingsRespo
         return standingsData.response[0];
       }
       return null;
+      } catch {
+        return null;
+      }
     });
 
     const allStandings = (await Promise.all(standingsPromises))

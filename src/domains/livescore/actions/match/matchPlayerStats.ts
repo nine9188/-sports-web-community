@@ -1,6 +1,7 @@
 'use server';
 
 import { cache } from 'react';
+import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
 /**
  * 경기의 모든 선수 통계를 한 번에 가져오는 통합 액션
@@ -80,35 +81,8 @@ async function fetchMatchPlayerStatsInternal(matchId: string): Promise<MatchPlay
       };
     }
 
-    if (!process.env.FOOTBALL_API_KEY) {
-      return {
-        success: false,
-        data: null,
-        message: 'API 키가 설정되지 않았습니다'
-      };
-    }
-
     // 경기 선수 통계 API 호출
-    const response = await fetch(
-      `https://v3.football.api-sports.io/fixtures/players?fixture=${matchId}`,
-      {
-        headers: {
-          'x-rapidapi-host': 'v3.football.api-sports.io',
-          'x-rapidapi-key': process.env.FOOTBALL_API_KEY,
-        },
-        next: { revalidate: 120 }
-      }
-    );
-
-    if (!response.ok) {
-      return {
-        success: false,
-        data: null,
-        message: `API 응답 오류: ${response.status}`
-      };
-    }
-
-    const data = await response.json();
+    const data = await fetchFromFootballApi('fixtures/players', { fixture: matchId });
 
     // 응답 검증
     if (!data?.response?.length) {

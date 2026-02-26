@@ -2,6 +2,7 @@
 
 import { cache } from 'react';
 import { getLeagueById } from '../../constants/league-mappings';
+import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
 // 순위 데이터 응답 타입 정의
 export interface StandingsDataResponse {
@@ -69,23 +70,7 @@ export async function fetchLeagueStandings(leagueId: number, season?: number): P
     }
 
     // API 요청
-    const response = await fetch(
-      `https://v3.football.api-sports.io/standings?league=${leagueId}&season=${targetSeason}`,
-      {
-        headers: {
-          'x-rapidapi-host': 'v3.football.api-sports.io',
-          'x-rapidapi-key': process.env.FOOTBALL_API_KEY || '',
-        },
-        // 실시간 데이터를 위해 캐싱 방지
-        cache: 'no-store'
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`API 응답 오류: ${response.status}`);
-    }
-
-    const data = await response.json();
+    const data = await fetchFromFootballApi('standings', { league: leagueId, season: targetSeason });
     
     if (!data.response || data.response.length === 0) {
       return {

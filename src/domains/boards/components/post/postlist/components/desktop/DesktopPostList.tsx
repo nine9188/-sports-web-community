@@ -20,7 +20,6 @@ import {
 } from '../../constants';
 import { DesktopPostItem } from './DesktopPostItem';
 import { DesktopVirtualizedItem } from './DesktopVirtualizedItem';
-import { PostListInFeedAdRow, PostListInFeedAd, POST_LIST_AD_INDEX } from '../shared/PostListInFeedAd';
 
 /**
  * 데스크톱 게시글 리스트 컨테이너
@@ -85,7 +84,6 @@ export function DesktopPostList({
                 showBoard={showBoard}
                 variant={variant}
               />
-              {index === POST_LIST_AD_INDEX - 1 && <PostListInFeedAd />}
             </React.Fragment>
           ))}
         </div>
@@ -199,9 +197,6 @@ export function DesktopPostList({
                 showBoard={showBoard}
                 variant={variant}
               />
-              {index === POST_LIST_AD_INDEX - 1 && (
-                <PostListInFeedAdRow colSpan={showBoard ? 6 : 5} />
-              )}
             </React.Fragment>
           ))}
         </tbody>

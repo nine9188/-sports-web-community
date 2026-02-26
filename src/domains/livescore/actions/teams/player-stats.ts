@@ -1,6 +1,7 @@
 'use server';
 
 import { cache } from 'react';
+import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
 // 선수 통계 인터페이스
 export interface PlayerStats {
@@ -52,16 +53,6 @@ export async function fetchTeamPlayerStats(teamId: string, league?: string): Pro
       throw new Error('팀 ID는 필수입니다');
     }
 
-    // API 키 확인 (여러 환경 변수 시도)
-    const apiKey = process.env.FOOTBALL_API_KEY || process.env.NEXT_PUBLIC_RAPIDAPI_KEY || '';
-    
-    if (!apiKey) {
-      return { 
-        success: false,
-        message: 'API 키가 설정되지 않았습니다'
-      };
-    }
-
     // 현재 시즌 계산
     const currentYear = new Date().getFullYear();
     const currentSeason = new Date().getMonth() > 6 ? currentYear : currentYear - 1;
@@ -71,24 +62,12 @@ export async function fetchTeamPlayerStats(teamId: string, league?: string): Pro
     let leagueId = league;
     
     if (!leagueId) {
-      // 팀이 속한 리그 정보를 가져옵니다
-      const leaguesResponse = await fetch(
-        `https://v3.football.api-sports.io/leagues?team=${teamId}&season=${currentSeason}`,
-        {
-          headers: {
-            'x-rapidapi-host': 'v3.football.api-sports.io',
-            'x-rapidapi-key': apiKey,
-          },
-          cache: 'no-store'
-        }
-      );
-      
-      if (leaguesResponse.ok) {
-        const leaguesData = await leaguesResponse.json();
-        
+      try {
+        const leaguesData = await fetchFromFootballApi('leagues', { team: teamId, season: currentSeason });
+
         // 우선순위: 국내 리그 > 컵 대회 > 국제 대회
         const leagues = leaguesData.response || [];
-        
+
         interface LeagueResponse {
           league: {
             id: number;
@@ -96,14 +75,14 @@ export async function fetchTeamPlayerStats(teamId: string, league?: string): Pro
             type: string;
           };
         }
-        
+
         const mainLeague = leagues.find(
-          (league: LeagueResponse) => league.league.type === 'League' && 
-            !league.league.name.includes('Champions') && 
+          (league: LeagueResponse) => league.league.type === 'League' &&
+            !league.league.name.includes('Champions') &&
             !league.league.name.includes('Europa') &&
             !league.league.name.includes('Conference')
         );
-        
+
         if (mainLeague) {
           leagueId = String(mainLeague.league.id);
         } else if (leagues.length > 0) {
@@ -113,8 +92,7 @@ export async function fetchTeamPlayerStats(teamId: string, league?: string): Pro
           // 기본값으로 프리미어리그 설정
           leagueId = '39';
         }
-      } else {
-        // API 응답이 실패하면 기본값으로 프리미어리그 설정
+      } catch {
         leagueId = '39';
       }
     }
@@ -123,11 +101,11 @@ export async function fetchTeamPlayerStats(teamId: string, league?: string): Pro
     const playerStats: Record<number, PlayerStats> = {};
     
     // 현재 시즌 데이터 가져오기
-    await fetchSeasonStats(teamId, String(currentSeason), leagueId, playerStats, apiKey);
-    
+    await fetchSeasonStats(teamId, String(currentSeason), leagueId, playerStats);
+
     // 현재 시즌 데이터가 부족하면 이전 시즌 데이터도 가져오기
     if (Object.keys(playerStats).length < 5) {
-      await fetchSeasonStats(teamId, String(previousSeason), leagueId, playerStats, apiKey);
+      await fetchSeasonStats(teamId, String(previousSeason), leagueId, playerStats);
     }
     
     if (Object.keys(playerStats).length === 0) {
@@ -154,11 +132,10 @@ export async function fetchTeamPlayerStats(teamId: string, league?: string): Pro
 
 // 특정 시즌의 선수 통계 데이터를 가져오는 함수
 async function fetchSeasonStats(
-  teamId: string, 
-  season: string, 
+  teamId: string,
+  season: string,
   league: string,
-  playerStats: Record<number, PlayerStats>,
-  apiKey: string
+  playerStats: Record<number, PlayerStats>
 ): Promise<void> {
   // 여러 페이지의 데이터를 저장할 배열
   const allPlayerData: ApiPlayerData[] = [];
@@ -167,37 +144,18 @@ async function fetchSeasonStats(
 
   // API가 페이지네이션되어 있으므로 모든 페이지 데이터 가져오기
   while (hasMorePages && page <= 5) { // 최대 5페이지까지만 (무한루프 방지)
-    // 선수 통계 정보 가져오기
-    const url = `https://v3.football.api-sports.io/players?team=${teamId}&season=${season}&league=${league}&page=${page}`;
-    
     try {
-      const statsResponse = await fetch(
-        url,
-        {
-          headers: {
-            'x-rapidapi-host': 'v3.football.api-sports.io',
-            'x-rapidapi-key': apiKey,
-          },
-          cache: 'no-store'
-        }
-      );
+      const statsData = await fetchFromFootballApi('players', { team: teamId, season, league, page });
 
-      if (!statsResponse.ok) {
-        await statsResponse.text();
-        break; // 에러가 나면 중단하고 지금까지 수집한 데이터만 사용
-      }
-
-      const statsData = await statsResponse.json();
-      
       // 응답 검증
       if (!statsData || !statsData.response) {
         break;
       }
-      
+
       // 현재 페이지 데이터 추가
       if (statsData?.response?.length > 0) {
         allPlayerData.push(...statsData.response);
-        
+
         // paging 정보 확인
         const totalPages = statsData.paging?.total || 1;
         if (page >= totalPages) {

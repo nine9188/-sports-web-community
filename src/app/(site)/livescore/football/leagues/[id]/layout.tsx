@@ -1,7 +1,4 @@
-// 동적 렌더링 강제 설정 추가
 export const dynamic = 'force-dynamic';
-export const fetchCache = 'default-no-store';
-export const revalidate = 0;
 
 interface LeagueLayoutProps {
   children: React.ReactNode;

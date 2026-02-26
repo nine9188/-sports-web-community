@@ -261,7 +261,7 @@ export default function HeaderClient({
 
       {/* 데스크탑 메인 헤더 - 스크롤 시 사라짐 */}
       <header className="hidden md:block bg-white dark:bg-[#1D1D1D] border-b border-black/7 dark:border-white/10">
-        <div className="w-full max-w-[1400px] mx-auto relative z-[999]">
+        <div className="w-full max-w-[1360px] mx-auto relative z-[999]">
           <div className="flex h-20 items-center px-4">
             <div className="flex items-center space-x-2">
               <Link href="/" className="flex items-center space-x-2">
@@ -306,7 +306,7 @@ export default function HeaderClient({
       <div className="sticky top-0 z-50 bg-white dark:bg-[#1D1D1D]">
         {/* 모바일 헤더 - sticky 영역 안에 포함 */}
         <div className="md:hidden border-b border-black/7 dark:border-white/10">
-          <div className="w-full max-w-[1400px] mx-auto relative z-[999]">
+          <div className="w-full max-w-[1360px] mx-auto relative z-[999]">
             <div className="flex h-16 items-center px-4">
               <div className="flex items-center space-x-2">
                 <Link href="/" className="flex items-center space-x-2">
@@ -378,7 +378,7 @@ export default function HeaderClient({
         </div>
 
         {/* 데스크탑 네비게이션 */}
-        <div className="w-full max-w-[1400px] mx-auto">
+        <div className="w-full max-w-[1360px] mx-auto">
           <nav className="hidden md:flex items-center h-12 px-4 overflow-x-auto relative">
             <BoardNavigationClient boards={boards} isAdmin={isAdmin} />
           </nav>

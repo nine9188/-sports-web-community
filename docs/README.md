@@ -11,6 +11,7 @@ docs/
 ├── README.md (이 파일)
 ├── QUICK_START.md               # 빠른 시작 가이드
 ├── 404-layout-separation/       # 404 레이아웃 분리 🔄 진행 중
+├── ads/                         # 광고 시스템 (AdSense, Kakao)
 ├── chatbot/                     # 챗봇 시스템
 ├── hot-system/                  # HOT 게시글 시스템
 ├── notifications/               # 알림 시스템
@@ -26,7 +27,24 @@ docs/
 
 ---
 
-## 💬 챗봇 시스템 ✨ NEW
+## 📢 광고 시스템
+
+Google AdSense + Kakao AdFit 광고 통합 관리 시스템입니다.
+
+| 문서 | 설명 | 상태 |
+|------|------|------|
+| [README.md](./ads/README.md) | 광고 시스템 전체 문서 (컴포넌트, 유닛 목록, 배치도, 사용법) | ✅ 완료 |
+
+**주요 컴포넌트**:
+- `AdSense` - 애드센스 기본 광고 (고정 크기 / fluid)
+- `AdBanner` - 페이지 배너 (PC 728x90 + 모바일 300x50 CSS 분기)
+- `KakaoAd` - 카카오 애드핏 광고
+
+**광고 ID 관리**: `shared/constants/ad-constants.ts`에서 모든 슬롯/유닛 ID 통합 관리
+
+---
+
+## 💬 챗봇 시스템
 
 SSR을 이용한 최적화 대화형 챗봇 시스템입니다.
 

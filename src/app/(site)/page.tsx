@@ -1,7 +1,7 @@
 import React, { Suspense } from 'react';
 import Script from 'next/script';
 import { AllPostsWidget, NewsWidget, BoardCollectionWidget, BoardQuickLinksWidget } from '@/domains/widgets/components';
-import AdSense from '@/shared/components/AdSense';
+import AdBanner from '@/shared/components/AdBanner';
 import LiveScoreWidgetV2 from '@/domains/widgets/components/live-score-widget/index';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
@@ -56,11 +56,7 @@ export default async function HomePage() {
         <BoardQuickLinksWidget />
       </div>
       {/* 배너 광고 */}
-      <AdSense
-        adSlot="8132343983"
-        adFormat="auto"
-        style={{ display: 'block' }}
-      />
+      <AdBanner />
       {/* LiveScore 위젯 V2 - 새로운 디자인 */}
       <LiveScoreWidgetV2 initialData={liveScoreData} />
 

@@ -2,6 +2,7 @@
 
 import { cache } from 'react';
 import { InjuryData } from '@/domains/livescore/types/player';
+import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
 // API 응답 데이터 인터페이스
 interface ApiInjuryResponse {
@@ -78,30 +79,15 @@ export async function fetchPlayerInjuries(playerId: number): Promise<InjuryData[
       `${currentYear-2}`
     ];
 
-    // 모든 시즌의 부상 데이터를 가져오기 위한 Promise 배열
-    const injuryPromises = seasons.map(season => {
-      const apiUrl = `https://v3.football.api-sports.io/injuries?player=${playerId}&season=${season}`;
-      
-      return fetch(
-        apiUrl,
-        {
-          headers: {
-            'x-rapidapi-host': 'v3.football.api-sports.io',
-            'x-rapidapi-key': process.env.FOOTBALL_API_KEY || '',
-          },
-          cache: 'no-store'
-        }
-      );
-    });
-
-    // 모든 요청을 병렬로 처리
-    const responses = await Promise.all(injuryPromises);
-    
-    // 모든 응답 데이터 병렬 처리로 수집
+    // 모든 시즌의 부상 데이터를 병렬로 가져오기
     const responsesData = await Promise.all(
-      responses.map(response => 
-        response.ok ? response.json() : { response: [] }
-      )
+      seasons.map(async (season) => {
+        try {
+          return await fetchFromFootballApi('injuries', { player: playerId, season });
+        } catch {
+          return { response: [] };
+        }
+      })
     );
     
     // 모든 부상 데이터 합치기

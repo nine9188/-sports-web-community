@@ -8,6 +8,7 @@ import { ThemeToggle } from '@/shared/components/ThemeToggle';
 import { Button } from '@/shared/components/ui';
 import ClientBoardNavigation from '@/domains/sidebar/components/board/ClientBoardNavigation';
 import KakaoAd from '@/shared/components/KakaoAd';
+import { KAKAO } from '@/shared/constants/ad-constants';
 
 interface MobileHamburgerModalProps {
   boards: Board[];
@@ -106,11 +107,7 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
         {/* 카카오 광고 - 모달 열릴 때만 렌더링 (같은 adUnit 충돌 방지) */}
         {isOpen && (
           <div className="flex justify-center py-2 border-b border-black/5 dark:border-white/10">
-            <KakaoAd
-              adUnit="DAN-xQCe8VgP6G8I1XtL"
-              adWidth={320}
-              adHeight={50}
-            />
+            <KakaoAd adUnit={KAKAO.MOBILE_MODAL} adWidth={320} adHeight={50} />
           </div>
         )}
 

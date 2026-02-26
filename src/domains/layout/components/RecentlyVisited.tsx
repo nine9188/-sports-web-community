@@ -33,7 +33,7 @@ const RecentlyVisited = React.memo(function RecentlyVisited() {
   // 항상 동일한 컨테이너 구조를 렌더링 — SSR과 클라이언트가 같은 DOM을 생성
   return (
     <div className="bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
-      <div className="w-full max-w-[1400px] mx-auto px-4">
+      <div className="w-full max-w-[1360px] mx-auto px-4">
         {isExpanded ? (
           // 펼쳐진 상태 - 여러 줄
           <div className="py-3">

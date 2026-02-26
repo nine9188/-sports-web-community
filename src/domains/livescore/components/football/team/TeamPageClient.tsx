@@ -8,7 +8,7 @@ import TabContent from './TabContent';
 import Spinner from '@/shared/components/Spinner';
 import { TeamFullDataResponse } from '@/domains/livescore/actions/teams/team';
 import { scrollToTop } from '@/shared/utils/scroll';
-import AdSense from '@/shared/components/AdSense';
+import AdBanner from '@/shared/components/AdBanner';
 
 /**
  * ============================================
@@ -141,11 +141,7 @@ export default function TeamPageClient({
 
       {/* 배너 광고 */}
       <div className="mb-4">
-        <AdSense
-          adSlot="8132343983"
-          adFormat="auto"
-          style={{ display: 'block' }}
-        />
+        <AdBanner />
       </div>
 
       {/* 탭 네비게이션 - onTabChange 콜백 전달 */}

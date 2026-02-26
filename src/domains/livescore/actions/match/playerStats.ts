@@ -3,6 +3,7 @@
 import { cache } from 'react';
 import { getMatchCache, setMatchCache } from './matchCache';
 import { getPlayerPhotoUrls, PLACEHOLDER_URLS } from '../images';
+import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 import type {
   PlayerStatsData,
   AllPlayerStatsResponse,
@@ -67,38 +68,7 @@ async function fetchAllPlayerStatsInternal(
     // ============================================
     // API 호출
     // ============================================
-    if (!process.env.FOOTBALL_API_KEY) {
-      return {
-        success: false,
-        allPlayersData: [],
-        ratings: {},
-        captainIds: [],
-        message: 'API 키가 설정되지 않았습니다',
-      };
-    }
-
-    const response = await fetch(
-      `https://v3.football.api-sports.io/fixtures/players?fixture=${matchId}`,
-      {
-        headers: {
-          'x-rapidapi-host': 'v3.football.api-sports.io',
-          'x-rapidapi-key': process.env.FOOTBALL_API_KEY,
-        },
-        next: { revalidate: 120 },
-      }
-    );
-
-    if (!response.ok) {
-      return {
-        success: false,
-        allPlayersData: [],
-        ratings: {},
-        captainIds: [],
-        message: `API 응답 오류: ${response.status}`,
-      };
-    }
-
-    const data = await response.json();
+    const data = await fetchFromFootballApi('fixtures/players', { fixture: matchId });
 
     if (!data?.response?.length) {
       return {

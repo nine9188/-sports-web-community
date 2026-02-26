@@ -1,6 +1,7 @@
 'use server';
 
 import { cache } from 'react';
+import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
 // 이적 정보 인터페이스
 export interface TransferTeam {
@@ -87,30 +88,9 @@ export async function fetchTeamTransfers(teamId: string): Promise<TransfersRespo
       throw new Error('팀 ID는 필수입니다');
     }
 
-    const apiKey = process.env.FOOTBALL_API_KEY || process.env.NEXT_PUBLIC_RAPIDAPI_KEY || '';
-
-    if (!apiKey) {
-      return { success: false, message: 'API 키가 설정되지 않았습니다' };
-    }
-
     const numericTeamId = parseInt(teamId, 10);
 
-    const response = await fetch(
-      `https://v3.football.api-sports.io/transfers?team=${teamId}`,
-      {
-        headers: {
-          'x-rapidapi-host': 'v3.football.api-sports.io',
-          'x-rapidapi-key': apiKey,
-        },
-        cache: 'no-store',
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`API 응답 오류: ${response.status}`);
-    }
-
-    const json = await response.json();
+    const json = await fetchFromFootballApi('transfers', { team: teamId });
     const records: ApiTransferRecord[] = json?.response || [];
 
     // 최근 18개월 이내 이적만 포함

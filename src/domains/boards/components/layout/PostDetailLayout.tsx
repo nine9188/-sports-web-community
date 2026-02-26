@@ -20,6 +20,7 @@ import type { DealInfo } from "../../types/hotdeal";
 import HoverMenu from "../common/HoverMenu";
 import AdSense from "@/shared/components/AdSense";
 import KakaoAd from "@/shared/components/KakaoAd";
+import { ADSENSE, KAKAO } from "@/shared/constants/ad-constants";
 
 // 메모이제이션 적용
 const MemoizedBoardBreadcrumbs = memo(BoardBreadcrumbs);
@@ -348,13 +349,14 @@ export default function PostDetailLayout({
           </div>
         </div>
 
-        {/* PC 전용 인피드 광고 - 컨테이너 안에 배치하여 이격 방지 */}
+        {/* PC 전용 인피드 광고 */}
         <div className="hidden md:block border-t border-black/5 dark:border-white/10">
           <AdSense
-            adSlot="2093016410"
-            adFormat="fluid"
-            adLayoutKey="-ed+5p-2-bb+pw"
-            style={{ display: 'block' }}
+            adSlot={ADSENSE.POST_PC_INFEED}
+            width={0}
+            height={0}
+            format="fluid"
+            layoutKey="-ed+5p-2-bb+pw"
           />
         </div>
 
@@ -415,20 +417,14 @@ export default function PostDetailLayout({
         />
       </div>
 
-      {/* 모바일 전용 배너 광고 (300x50 고정) */}
+      {/* 모바일 전용 배너 광고 (300x50) */}
       <div className="mb-4 md:hidden flex justify-center">
-        <AdSense
-          adSlot="1917321828"
-        />
+        <AdSense adSlot={ADSENSE.POST_MOBILE_BANNER} width={300} height={50} />
       </div>
 
-      {/* PC 전용 카카오 배너 광고 - 컨테이너 밖에 독립 배치 */}
+      {/* PC 전용 카카오 배너 광고 */}
       <div className="hidden md:flex justify-center mb-4">
-        <KakaoAd
-          adUnit="DAN-1pcdg9VkUBDfzAby"
-          adWidth={728}
-          adHeight={90}
-        />
+        <KakaoAd adUnit={KAKAO.POST_PC_BANNER} adWidth={728} adHeight={90} />
       </div>
 
       {/* 6. 댓글 섹션 - 서버 데이터로 즉시 렌더링 */}

@@ -6,7 +6,7 @@ import { Match } from '@/domains/livescore/types/match';
 import MatchCard from '../MatchCard';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Button, Container } from '@/shared/components/ui';
-import AdSense from '@/shared/components/AdSense';
+import AdBanner from '@/shared/components/AdBanner';
 
 // 4590 표준: placeholder URL
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
@@ -112,13 +112,7 @@ export default function LeagueMatchList({
 
         return (
           <React.Fragment key={group.leagueId}>
-          {groupIndex === 0 && (
-            <AdSense
-              adSlot="8132343983"
-              adFormat="auto"
-              style={{ display: 'block' }}
-            />
-          )}
+          {groupIndex === 0 && <AdBanner />}
           <Container
             className="bg-white dark:bg-[#1D1D1D]"
           >

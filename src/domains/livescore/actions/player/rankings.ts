@@ -3,6 +3,7 @@
 import { cache } from 'react';
 import { RankingsData, PlayerRanking } from '@/domains/livescore/types/player';
 import { getPlayerPhotoUrls, getTeamLogoUrls } from '@/domains/livescore/actions/images';
+import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
 /**
  * API 응답의 랭킹 항목 타입
@@ -64,25 +65,9 @@ export async function fetchPlayerRankings(
     ];
 
     // 모든 순위 데이터 병렬로 가져오기
-    const rankingsPromises = rankingTypes.map(({ type }) => 
-      fetch(
-        `https://v3.football.api-sports.io/players/${type}?league=${leagueId}&season=${currentSeason}`,
-        {
-          headers: {
-            'x-rapidapi-host': 'v3.football.api-sports.io',
-            'x-rapidapi-key': process.env.FOOTBALL_API_KEY || '',
-          },
-          cache: 'no-store'
-        }
-      ).then(response => {
-        if (!response.ok) {
-          throw new Error(`${type} 데이터 API 응답 오류: ${response.status}`);
-        }
-        return response.json();
-      })
-      .catch(() => {
-        return { response: [] };
-      })
+    const rankingsPromises = rankingTypes.map(({ type }) =>
+      fetchFromFootballApi(`players/${type}`, { league: leagueId, season: currentSeason })
+        .catch(() => ({ response: [] }))
     );
 
     // 모든 API 응답 대기
