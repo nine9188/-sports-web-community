@@ -188,17 +188,9 @@ export function EntityPickerForm({
   if (!isOpen) return null
 
   return (
-    <>
-      {/* 모바일 오버레이 */}
-      <div
-        className="fixed inset-0 bg-black/20 z-40 sm:hidden"
-        onClick={handleClose}
-        aria-hidden="true"
-      />
       <div
         ref={dropdownRef}
-        className="z-50 bg-white dark:bg-[#1D1D1D] rounded-lg shadow-lg border border-black/7 dark:border-white/10 overflow-hidden fixed sm:absolute left-1/2 top-1/2 sm:-left-32 sm:top-full -translate-x-1/2 -translate-y-1/2 sm:translate-x-0 sm:translate-y-0 w-[95vw] max-w-md sm:w-[400px]"
-        style={{ marginTop: '0.5rem' }}
+        className="bg-white dark:bg-[#1D1D1D] border-x border-black/7 dark:border-white/10 overflow-hidden w-full"
         onClick={(e) => e.stopPropagation()}
         onSubmit={(e) => e.preventDefault()}
       >
@@ -406,6 +398,5 @@ export function EntityPickerForm({
           </div>
         </div>
       </div>
-    </>
   )
 }

@@ -84,6 +84,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
               alt={leagueName}
               width={20}
               height={20}
+              unoptimized
               style={{ width: '20px', height: '20px', objectFit: 'contain' }}
             />
           </div>
@@ -99,6 +100,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
               alt={homeTeamName}
               width={24}
               height={24}
+              unoptimized
               style={{ width: '24px', height: '24px', objectFit: 'contain' }}
             />
           </div>
@@ -123,6 +125,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
               alt={awayTeamName}
               width={24}
               height={24}
+              unoptimized
               style={{ width: '24px', height: '24px', objectFit: 'contain' }}
             />
           </div>

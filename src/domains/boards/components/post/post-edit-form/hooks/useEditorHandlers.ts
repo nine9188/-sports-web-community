@@ -97,7 +97,13 @@ export function useEditorHandlers({
     }
 
     try {
-      const result = editor.chain().focus().setImage({ src: url, alt: caption || "" }).run();
+      const result = editor.chain().focus()
+        .insertContent([
+          { type: 'image', attrs: { src: url, alt: caption || "" } },
+          { type: 'paragraph' },
+        ])
+        .focus()
+        .run();
 
       if (!result) {
         console.error('이미지 삽입 명령 실패: setImage 반환값 false');
@@ -126,11 +132,10 @@ export function useEditorHandlers({
       let result = false;
 
       if (extensionsLoaded && 'setYoutubeVideo' in editor.commands) {
-        const commands = editor.commands as Record<string, (...args: unknown[]) => boolean>;
-        result = commands.setYoutubeVideo({
-          src: url,
-          caption: caption
-        });
+        result = editor.chain().focus().insertContent([
+          { type: 'youtube', attrs: { src: url, caption } },
+          { type: 'paragraph' },
+        ]).focus().run();
       }
 
       if (!result) {
@@ -152,7 +157,7 @@ export function useEditorHandlers({
           </div>
         `;
 
-        editor.commands.insertContent(youtubeHTML);
+        editor.commands.insertContent(youtubeHTML + '<p></p>');
       }
 
       toast.success('YouTube 영상이 추가되었습니다.');
@@ -177,14 +182,10 @@ export function useEditorHandlers({
       let result = false;
 
       if (extensionsLoaded && 'setVideo' in editor.commands) {
-        const commands = editor.commands as Record<string, (...args: unknown[]) => boolean>;
-        result = commands.setVideo({
-          src: videoUrl,
-          caption: caption,
-          controls: true,
-          width: '100%',
-          height: 'auto'
-        });
+        result = editor.chain().focus().insertContent([
+          { type: 'video', attrs: { src: videoUrl, caption, controls: true, width: '100%', height: 'auto' } },
+          { type: 'paragraph' },
+        ]).focus().run();
       }
 
       if (!result) {
@@ -199,7 +200,7 @@ export function useEditorHandlers({
           </div>
         `;
 
-        editor.commands.insertContent(videoHTML);
+        editor.commands.insertContent(videoHTML + '<p></p>');
       }
 
       toast.success('동영상이 추가되었습니다.');
@@ -228,7 +229,7 @@ export function useEditorHandlers({
       }
 
       const matchCardHTML = generateMatchCardHTML(result.data);
-      editor.commands.insertContent(matchCardHTML);
+      editor.commands.insertContent(matchCardHTML + '<p></p>');
       setShowMatchModal(false);
       toast.success('경기 결과가 추가되었습니다.');
     } catch (error) {
@@ -249,7 +250,7 @@ export function useEditorHandlers({
         editor.chain().focus().setLink({ href: url }).run();
       } else {
         const linkText = text || url;
-        editor.chain().focus().insertContent(`<a href="${url}" target="_blank" rel="noopener noreferrer">${linkText}</a>`).run();
+        editor.chain().focus().insertContent(`<a href="${url}" target="_blank" rel="noopener noreferrer">${linkText}</a><p></p>`).run();
       }
     } catch (error) {
       console.error('링크 추가 중 오류:', error);
@@ -265,9 +266,11 @@ export function useEditorHandlers({
     }
 
     try {
-      const commands = editor.commands as Record<string, (...args: unknown[]) => boolean>;
-      if ('setSocialEmbed' in commands) {
-        const success = commands.setSocialEmbed({ platform, url });
+      if ('setSocialEmbed' in editor.commands) {
+        const success = editor.chain().focus().insertContent([
+          { type: 'socialEmbed', attrs: { platform, url } },
+          { type: 'paragraph' },
+        ]).focus().run();
         if (success) {
           toast.success('소셜 미디어 임베드가 추가되었습니다.');
           setShowSocialModal(false);
@@ -302,9 +305,11 @@ export function useEditorHandlers({
         return;
       }
 
-      const commands = editor.commands as Record<string, (...args: unknown[]) => boolean>;
-      if ('setTeamCard' in commands) {
-        const success = commands.setTeamCard(team.id, result.data);
+      if ('setTeamCard' in editor.commands) {
+        const success = editor.chain().focus().insertContent([
+          { type: 'teamCard', attrs: { teamId: team.id, teamData: result.data } },
+          { type: 'paragraph' },
+        ]).focus().run();
         if (success) {
           toast.success('팀 카드가 추가되었습니다.');
           setShowEntityModal(false);
@@ -328,8 +333,7 @@ export function useEditorHandlers({
     }
 
     try {
-      const commands = editor.commands as Record<string, (...args: unknown[]) => boolean>;
-      if ('setPlayerCard' in commands) {
+      if ('setPlayerCard' in editor.commands) {
         // 서버에서 Storage URL이 포함된 데이터 생성
         const result = await createPlayerCardData(
           {
@@ -353,7 +357,10 @@ export function useEditorHandlers({
           return;
         }
 
-        const success = commands.setPlayerCard(player.id, result.data);
+        const success = editor.chain().focus().insertContent([
+          { type: 'playerCard', attrs: { playerId: player.id, playerData: result.data } },
+          { type: 'paragraph' },
+        ]).focus().run();
         if (success) {
           toast.success('선수 카드가 추가되었습니다.');
           setShowEntityModal(false);

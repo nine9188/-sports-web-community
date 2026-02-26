@@ -94,17 +94,9 @@ export default function SocialEmbedForm({ onCancel, onSocialEmbedAdd, isOpen }: 
   if (!isOpen) return null;
 
   return (
-    <>
-      {/* 모바일 오버레이 */}
-      <div
-        className="fixed inset-0 bg-black/20 z-40 sm:hidden"
-        onClick={handleCancel}
-        aria-hidden="true"
-      />
       <div
         ref={dropdownRef}
-        className="z-50 bg-white dark:bg-[#1D1D1D] rounded-lg shadow-lg border border-black/7 dark:border-white/10 overflow-hidden fixed sm:absolute left-1/2 top-1/2 sm:left-1/2 sm:top-full -translate-x-1/2 -translate-y-1/2 sm:-translate-x-1/2 sm:translate-y-0 w-[90vw] max-w-md sm:w-[400px]"
-        style={{ marginTop: '0.5rem' }}
+        className="bg-white dark:bg-[#1D1D1D] border-x border-black/7 dark:border-white/10 overflow-hidden w-full"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center">
@@ -176,6 +168,5 @@ export default function SocialEmbedForm({ onCancel, onSocialEmbedAdd, isOpen }: 
           </div>
         </div>
       </div>
-    </>
   );
 }

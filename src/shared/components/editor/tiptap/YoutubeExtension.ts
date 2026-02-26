@@ -156,7 +156,7 @@ export const YoutubeExtension = Node.create<YoutubeOptions>({
         if (!options.src) {
           return false;
         }
-        
+
         return commands.insertContent({
           type: this.name,
           attrs: options,
@@ -168,7 +168,7 @@ export const YoutubeExtension = Node.create<YoutubeOptions>({
         if (!youtubeId) {
           return false;
         }
-        
+
         return commands.insertContent({
           type: this.name,
           attrs: {

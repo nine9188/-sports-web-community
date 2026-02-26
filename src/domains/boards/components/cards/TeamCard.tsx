@@ -57,6 +57,7 @@ export function TeamCard({ teamId, teamData, isEditable = false }: TeamCardProps
               alt={leagueDisplayName}
               width={24}
               height={24}
+              unoptimized
               style={{ width: '24px', height: '24px', objectFit: 'contain' }}
             />
           </div>
@@ -72,6 +73,7 @@ export function TeamCard({ teamId, teamData, isEditable = false }: TeamCardProps
             alt={displayName}
             width={64}
             height={64}
+            unoptimized
             style={{ width: '64px', height: '64px', objectFit: 'contain' }}
           />
         </div>
