@@ -178,8 +178,9 @@ export const fetchFromFootballApi = async (endpoint: string, params: Record<stri
   const queryParams = new URLSearchParams();
 
   // timezone 파라미터는 일부 엔드포인트에서만 지원됨
+  // 주의: fixtures/events, fixtures/lineups, fixtures/statistics 등은 timezone 미지원
   const timezoneSupportedEndpoints = ['fixtures', 'fixtures/headtohead', 'odds'];
-  const shouldAddTimezone = timezoneSupportedEndpoints.some(ep => endpoint.includes(ep));
+  const shouldAddTimezone = timezoneSupportedEndpoints.some(ep => endpoint === ep);
 
   const finalParams = shouldAddTimezone
     ? { timezone: 'Asia/Seoul', ...params }
