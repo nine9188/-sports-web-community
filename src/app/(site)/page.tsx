@@ -75,7 +75,7 @@ export default async function HomePage() {
         <KakaoAd adUnit={KAKAO.POST_PC_BANNER} adWidth={728} adHeight={90} />
       </div>
       <div className="md:hidden flex justify-center">
-        <KakaoAd adUnit={KAKAO.MOBILE_MODAL} adWidth={320} adHeight={100} />
+        <KakaoAd adUnit={KAKAO.MOBILE_BANNER} adWidth={320} adHeight={100} />
       </div>
 
       {/* 뉴스 위젯 - Suspense 스트리밍 (below fold) */}

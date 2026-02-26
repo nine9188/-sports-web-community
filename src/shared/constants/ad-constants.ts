@@ -28,6 +28,6 @@ export const KAKAO = {
   // 게시글 PC 배너
   POST_PC_BANNER: 'DAN-1pcdg9VkUBDfzAby',  // 728x90
 
-  // 모바일 모달 (햄버거, 라이브스코어, 프로필)
-  MOBILE_MODAL: 'DAN-QHHDOL6PisGQW7b6',    // 320x100
+  // 모바일 (햄버거, 라이브스코어, 프로필, 메인 등)
+  MOBILE_BANNER: 'DAN-QHHDOL6PisGQW7b6',   // 320x100
 } as const;
