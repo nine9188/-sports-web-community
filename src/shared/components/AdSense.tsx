@@ -30,13 +30,31 @@ export default function AdSense({
 
   useEffect(() => {
     const el = adRef.current;
-    if (el && !el.dataset.adsbygoogleStatus) {
+    if (!el || el.dataset.adsbygoogleStatus) return;
+
+    const tryPush = () => {
       try {
         (window.adsbygoogle = window.adsbygoogle || []).push({});
       } catch {
         // 이미 로드된 경우 무시
       }
+    };
+
+    // adsbygoogle 스크립트가 이미 로드되었으면 즉시 push
+    if (window.adsbygoogle && window.adsbygoogle.length !== undefined) {
+      tryPush();
+      return;
     }
+
+    // 아직 로드 안 됐으면 대기 (lazyOnload 스크립트와 호환)
+    const interval = setInterval(() => {
+      if (typeof window.adsbygoogle !== 'undefined') {
+        tryPush();
+        clearInterval(interval);
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
   }, []);
 
   if (process.env.NODE_ENV === 'development') {

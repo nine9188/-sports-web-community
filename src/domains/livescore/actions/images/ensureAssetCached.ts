@@ -200,6 +200,7 @@ async function cacheAsset(type: AssetType, entityId: number, size: ImageSize = '
         .upload(storagePath, webpBuffer, {
           contentType: 'image/webp',
           upsert: true,
+          cacheControl: '31536000', // 1년 캐시 (팀/리그 로고는 거의 변하지 않음)
         });
 
       if (uploadError) {

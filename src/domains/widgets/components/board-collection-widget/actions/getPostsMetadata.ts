@@ -78,10 +78,10 @@ export async function getPostsMetadata(
 
     const [teamUrlMap, leagueUrlMap] = await Promise.all([
       uniqueTeamIds.length > 0
-        ? getTeamLogoUrls(uniqueTeamIds)
+        ? getTeamLogoUrls(uniqueTeamIds, 'sm')
         : Promise.resolve({}),
       uniqueLeagueIds.length > 0
-        ? getLeagueLogoUrls(uniqueLeagueIds)
+        ? getLeagueLogoUrls(uniqueLeagueIds, false, 'sm')
         : Promise.resolve({})
     ]);
 

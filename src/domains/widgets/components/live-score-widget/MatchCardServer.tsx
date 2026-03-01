@@ -84,8 +84,6 @@ function getStatusInfo(
 interface MatchCardServerProps {
   match: WidgetMatch;
   isLast: boolean;
-  /** 첫 번째 리그 이미지에 eager/priority 적용 (LCP 최적화) */
-  priorityImages?: boolean;
 }
 
 /**
@@ -94,7 +92,7 @@ interface MatchCardServerProps {
  * - 개별 경기 정보를 서버에서 렌더링
  * - LCP 최적화: 초기 HTML에 경기 정보 포함
  */
-export default function MatchCardServer({ match, isLast, priorityImages = false }: MatchCardServerProps) {
+export default function MatchCardServer({ match, isLast }: MatchCardServerProps) {
   const statusInfo = getStatusInfo(match.status, match.elapsed, match.kickoffTime, match.dateLabel);
 
   return (
@@ -138,7 +136,7 @@ export default function MatchCardServer({ match, isLast, priorityImages = false 
               alt={match.homeTeam.name}
               width={24}
               height={24}
-              priority={priorityImages}
+              loading="lazy"
               className="w-6 h-6 object-contain"
             />
           </div>
@@ -161,7 +159,7 @@ export default function MatchCardServer({ match, isLast, priorityImages = false 
               alt={match.awayTeam.name}
               width={24}
               height={24}
-              priority={priorityImages}
+              loading="lazy"
               className="w-6 h-6 object-contain"
             />
           </div>

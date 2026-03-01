@@ -16,8 +16,7 @@ import { PostListSkeleton } from './components/shared/PostListSkeleton';
 import { PostListEmpty } from './components/shared/PostListEmpty';
 import { MobilePostListServer } from './components/mobile/MobilePostListServer';
 import { DesktopPostListServer } from './components/desktop/DesktopPostListServer';
-import { MobilePostList } from './components/mobile/MobilePostList';
-import { DesktopPostList } from './components/desktop/DesktopPostList';
+import { VirtualizedPostList } from './VirtualizedPostList';
 import { VIRTUALIZATION_THRESHOLD } from './constants';
 
 /**
@@ -88,24 +87,15 @@ export default function PostList({
         ) : posts.length === 0 ? (
           <PostListEmpty message={emptyMessage} />
         ) : useVirtualization ? (
-          // 30개 이상: 클라이언트 가상화 (기존 방식)
-          <>
-            <MobilePostList
-              posts={posts}
-              currentPostId={currentPostId}
-              currentBoardId={currentBoardId}
-              variant={variant}
-              maxHeight={maxHeight}
-            />
-            <DesktopPostList
-              posts={posts}
-              currentPostId={currentPostId}
-              currentBoardId={currentBoardId}
-              showBoard={showBoard}
-              variant={variant}
-              maxHeight={maxHeight}
-            />
-          </>
+          // 30개 이상: 클라이언트 가상화 (react-window는 dynamic import로 지연 로드)
+          <VirtualizedPostList
+            posts={posts}
+            currentPostId={currentPostId}
+            currentBoardId={currentBoardId}
+            showBoard={showBoard}
+            variant={variant}
+            maxHeight={maxHeight}
+          />
         ) : (
           // 30개 미만: 서버 렌더링 (LCP 최적화)
           <>

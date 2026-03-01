@@ -341,7 +341,8 @@ function applyImageUrls(
 
 /** 여러 날짜의 raw 매치 데이터에 배치로 이미지 URL 적용 (Supabase 쿼리 3회) */
 async function resolveMatchImages(
-  matchesByDay: { key: string; matches: MatchData[] }[]
+  matchesByDay: { key: string; matches: MatchData[] }[],
+  imageSize: 'sm' | 'md' | 'lg' = 'sm'
 ): Promise<Map<string, MatchData[]>> {
   // 1. 모든 팀/리그 ID 수집
   const teamIds = new Set<number>();
@@ -355,11 +356,11 @@ async function resolveMatchImages(
     }
   }
 
-  // 2. 배치 Supabase 쿼리 (3회만)
+  // 2. 배치 Supabase 쿼리 (3회만) — sm: 64px (24px 표시 × 2x DPR 커버)
   const [teamLogoUrls, leagueLogoUrls, leagueLogoDarkUrls] = await Promise.all([
-    teamIds.size > 0 ? getTeamLogoUrls([...teamIds]) : Promise.resolve({}),
-    leagueIds.size > 0 ? getLeagueLogoUrls([...leagueIds]) : Promise.resolve({}),
-    leagueIds.size > 0 ? getLeagueLogoUrls([...leagueIds], true) : Promise.resolve({})
+    teamIds.size > 0 ? getTeamLogoUrls([...teamIds], imageSize) : Promise.resolve({}),
+    leagueIds.size > 0 ? getLeagueLogoUrls([...leagueIds], false, imageSize) : Promise.resolve({}),
+    leagueIds.size > 0 ? getLeagueLogoUrls([...leagueIds], true, imageSize) : Promise.resolve({})
   ]);
 
   // 3. 각 매치에 이미지 URL 적용
