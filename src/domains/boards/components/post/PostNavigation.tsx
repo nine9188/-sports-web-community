@@ -23,7 +23,7 @@ export default function PostNavigation({ boardSlug, prevPost, nextPost }: PostNa
           asChild
           className="text-xs sm:text-sm gap-1"
         >
-          <Link href={`/boards/${boardSlug}/${prevPost.post_number}`}>
+          <Link href={`/boards/${boardSlug}/${prevPost.post_number}`} prefetch={false}>
             <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
             <span>이전글</span>
           </Link>
@@ -50,7 +50,7 @@ export default function PostNavigation({ boardSlug, prevPost, nextPost }: PostNa
           asChild
           className="text-xs sm:text-sm gap-1"
         >
-          <Link href={`/boards/${boardSlug}`}>
+          <Link href={`/boards/${boardSlug}`} prefetch={false}>
             <ListOrdered className="h-3 w-3 sm:h-4 sm:w-4" />
             <span>목록</span>
           </Link>
@@ -67,7 +67,7 @@ export default function PostNavigation({ boardSlug, prevPost, nextPost }: PostNa
           asChild
           className="text-xs sm:text-sm gap-1"
         >
-          <Link href={`/boards/${boardSlug}/${nextPost.post_number}`}>
+          <Link href={`/boards/${boardSlug}/${nextPost.post_number}`} prefetch={false}>
             <span>다음글</span>
             <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
           </Link>

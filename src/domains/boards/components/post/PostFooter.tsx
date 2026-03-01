@@ -81,7 +81,7 @@ export default function PostFooter({
           asChild
           className="text-xs sm:text-sm gap-1"
         >
-          <Link href={`/boards/${boardSlug}/create`}>
+          <Link href={`/boards/${boardSlug}/create`} prefetch={false}>
             <PenLine className="h-3 w-3 sm:h-4 sm:w-4" />
             <span>글쓰기</span>
           </Link>
@@ -97,7 +97,7 @@ export default function PostFooter({
           asChild
           className="text-xs sm:text-sm gap-1"
         >
-          <Link href={`/boards/${boardSlug}/${postNumber}/edit`}>
+          <Link href={`/boards/${boardSlug}/${postNumber}/edit`} prefetch={false}>
             <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
             <span>수정</span>
           </Link>
@@ -130,7 +130,7 @@ export default function PostFooter({
           asChild
           className="text-xs sm:text-sm gap-1"
         >
-          <Link href={`/boards/${boardSlug}/create`}>
+          <Link href={`/boards/${boardSlug}/create`} prefetch={false}>
             <PenLine className="h-3 w-3 sm:h-4 sm:w-4" />
             <span>글쓰기</span>
           </Link>

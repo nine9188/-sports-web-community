@@ -78,7 +78,7 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
     if (teamId || leagueId) {
       const logoUrl = notice.boardLogoUrl || (teamId ? TEAM_PLACEHOLDER : LEAGUE_PLACEHOLDER);
       return (
-        <Link href={boardLinkUrl} className="flex items-center hover:underline">
+        <Link href={boardLinkUrl} prefetch={false} className="flex items-center hover:underline">
           <div className="relative w-5 h-5 mr-1">
             <UnifiedSportsImageClient
               src={logoUrl}
@@ -97,7 +97,7 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
       );
     } else {
       return (
-        <Link href={boardLinkUrl} className="flex items-center hover:underline">
+        <Link href={boardLinkUrl} prefetch={false} className="flex items-center hover:underline">
           <div className="relative w-5 h-5 mr-1">
             <Image
               src={siteConfig.logo}

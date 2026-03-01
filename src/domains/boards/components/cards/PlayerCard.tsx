@@ -79,7 +79,7 @@ export function PlayerCard({ playerId, playerData, isEditable = false }: PlayerC
 
   return (
     <div className="player-card">
-      <Link href={`/livescore/football/player/${numericPlayerId}`}>
+      <Link href={`/livescore/football/player/${numericPlayerId}`} prefetch={false}>
         <CardContent />
       </Link>
     </div>

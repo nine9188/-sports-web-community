@@ -97,7 +97,7 @@ export function TeamCard({ teamId, teamData, isEditable = false }: TeamCardProps
 
   return (
     <div className="team-card">
-      <Link href={`/livescore/football/team/${numericTeamId}`}>
+      <Link href={`/livescore/football/team/${numericTeamId}`} prefetch={false}>
         <CardContent />
       </Link>
     </div>

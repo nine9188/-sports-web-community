@@ -59,6 +59,7 @@ export default function MobileBottomSheet({
         <div className="max-h-96 overflow-y-auto">
           <Link
             href={`/boards/${boardSlug || hoveredBoard}`}
+            prefetch={false}
             className="w-full text-left px-4 py-2.5 text-xs sm:text-sm bg-white dark:bg-[#1D1D1D] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] block transition-colors border-b border-black/5 dark:border-white/10"
             onClick={onClose}
           >
@@ -67,6 +68,7 @@ export default function MobileBottomSheet({
           {sortedChildBoards.map((childBoard: ChildBoard, index: number) => (
             <Link
               href={`/boards/${childBoard.slug || childBoard.id}`}
+              prefetch={false}
               key={childBoard.id}
               className={`w-full text-left px-4 py-2.5 text-xs sm:text-sm text-gray-900 dark:text-[#F0F0F0] block transition-colors ${
                 index < sortedChildBoards.length - 1 ? 'border-b border-black/5 dark:border-white/10' : ''

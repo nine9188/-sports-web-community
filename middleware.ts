@@ -30,6 +30,9 @@ const BOT_USER_AGENTS = [
   'curl',
   'wget',
   'Scrapy',
+  'Chrome-Lighthouse',
+  'JEECRAWL',
+  'Yeti',
 ]
 
 // robots.txt에서 Disallow: / 로 차단한 봇 → 403 반환

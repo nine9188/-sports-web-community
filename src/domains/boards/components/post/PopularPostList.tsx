@@ -93,7 +93,7 @@ export default function PopularPostList({
             </div>
 
             {/* 썸네일 이미지 - 반응형 크기 */}
-            <Link href={postUrl} className="flex-shrink-0">
+            <Link href={postUrl} prefetch={false} className="flex-shrink-0">
               <div className="relative w-20 h-14 sm:w-24 sm:h-16 rounded-lg overflow-hidden bg-[#F5F5F5] dark:bg-[#262626]">
                 {thumbnailUrl ? (
                   <Image
@@ -118,7 +118,7 @@ export default function PopularPostList({
             {/* 게시글 정보 */}
             <div className="flex-1 min-w-0 overflow-hidden">
               {/* 제목 + 아이콘 + 댓글 수 */}
-              <Link href={postUrl} className="block overflow-hidden">
+              <Link href={postUrl} prefetch={false} className="block overflow-hidden">
                 <div className="flex items-center gap-1 mb-2">
                   <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
                     {post.title}
@@ -153,7 +153,7 @@ export default function PopularPostList({
               <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs text-gray-500 dark:text-gray-400">
                 {/* 줄 2 (모바일) / 그룹 1 (데스크톱): 카테고리 + 작성자 */}
                 <div className="flex items-center gap-2">
-                  <Link href={`/boards/${post.board_slug}`} className="hover:underline text-gray-700 dark:text-gray-300">
+                  <Link href={`/boards/${post.board_slug}`} prefetch={false} className="hover:underline text-gray-700 dark:text-gray-300">
                     {post.board_name}
                   </Link>
 
