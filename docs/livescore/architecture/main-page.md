@@ -2,7 +2,7 @@
 
 > `docs/livescore/architecture.md` 표준 대비 실제 코드 검증 결과.
 
-**검토일**: 2026-02-27
+**검토일**: 2026-03-01 (P4-1/P4-2/P4-4 반영)
 
 ---
 
@@ -52,7 +52,7 @@ page.tsx (서버)
   │   │
   │   ├──→ transformToWidgetLeagues(multiDayData)
   │   │     └─ BIG_MATCH_LEAGUES 필터 → convertToMatch → groupMatchesByLeague
-  │   │     └─ League[] (위젯 전용 타입) → <LiveScoreWidgetV2 initialData={...}>
+  │   │     └─ WidgetLeague[] (위젯 전용 타입) → <LiveScoreWidgetV2 initialData={...}>
   │   │
   │   └──→ <LiveScoreCacheSeeder data={multiDayData} />
   │         └─ setQueryData(liveScoreKeys.multiDay(), multiDayData)
@@ -65,7 +65,7 @@ page.tsx (서버)
 
 | 소비자 | 위치 | 데이터 전달 방식 | 사용하는 데이터 |
 |--------|------|-----------------|----------------|
-| **LiveScoreWidgetV2** | page.tsx 자식 | `initialData` props (변환된 `League[]`) | 빅매치 리그만 필터링된 경기 목록 |
+| **LiveScoreWidgetV2** | page.tsx 자식 | `initialData` props (변환된 `WidgetLeague[]`) | 빅매치 리그만 필터링된 경기 목록 |
 | **HeaderClient** | layout.tsx 자식 | CacheSeeder → `useTodayMatchCount()` | 오늘 경기 수 (초록점 배지) |
 | **LiveScoreModalClient** | layout.tsx 자식 | CacheSeeder → `useMultiDayMatches()` | 어제/오늘/내일 전체 경기 |
 
@@ -172,31 +172,25 @@ resolveMatchImages()
 
 아키텍처 준수 여부와는 무관한 **프로젝트 레벨 개선 사항**.
 
-### P4-1. convertToMatch vs transformMatches 로직 중복
+### ~~P4-1. convertToMatch vs transformMatches 로직 중복~~ — ✅ 해결
 
-| 파일 | 함수 | 타겟 타입 |
-|------|------|----------|
-| `LiveScoreWidgetV2Server.tsx:27` | `convertToMatch()` (private) | 위젯 `Match` (id: string, 가벼움) |
-| `livescore/utils/transformMatch.ts` | `transformMatches()` | 라이브스코어 `Match` (id: number, 상세) |
+`resolveMatchNames()` 공통 유틸리티 추출 완료 (`livescore/utils/resolveMatchNames.ts`).
+`transformMatches()`와 `convertToMatch()` 모두 이 유틸을 사용하여 한국어 이름 매핑 단일 소스 유지.
 
-- 둘 다 `getTeamById()` → `name_ko` 매핑 로직 공유
-- 한글 매핑 변경 시 2곳 동시 수정 필요
-- 현재는 타겟 타입이 다르므로 **의도적 분리** — 통합 시 공통 매핑 유틸 추출 필요
+### ~~P4-2. Match 타입 이름 충돌~~ — ✅ 해결
 
-### P4-2. Match 타입 이름 충돌
+위젯 타입을 네임스페이스 분리 완료:
 
-| 파일 | id 타입 | 구조 |
-|------|--------|------|
-| `widgets/live-score-widget/types.ts` | `string` | `homeTeam.name` |
-| `livescore/types/match.ts` | `number` | `teams.home.name` |
+| Before | After |
+|--------|-------|
+| `Match` | `WidgetMatch` |
+| `Team` | `WidgetTeam` |
+| `League` | `WidgetLeague` |
 
-- import 시 혼동 가능. 위젯 타입을 `WidgetMatch` 등으로 분리 권장.
+### ~~P4-4. 메인→라이브스코어 이동 시 오늘 데이터 이중 fetch~~ — ✅ P2에서 해결
 
-### P4-4. 메인→라이브스코어 이동 시 오늘 데이터 이중 fetch
-
-- 메인에서 `fetchMultiDayMatches()` → `/livescore/football`에서 `fetchMatchesByDateCached(today)` 다시 호출
-- L1 캐시 히트로 **API 쿼터 누수 없음**
-- 서버 렌더링 fetch + JSON 파싱 비용만 발생 — 현재 허용 가능
+라이브스코어 HydrationBoundary 전환으로 클라이언트 React Query 캐시 공유 가능.
+L1 캐시 히트 + 클라이언트 캐시 히트로 중복 fetch 방지.
 
 ---
 

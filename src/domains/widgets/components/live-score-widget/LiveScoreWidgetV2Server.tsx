@@ -1,4 +1,3 @@
-import React from 'react';
 import { MatchData as FootballMatchData, MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
 import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
 import { resolveMatchNames } from '@/domains/livescore/utils/resolveMatchNames';

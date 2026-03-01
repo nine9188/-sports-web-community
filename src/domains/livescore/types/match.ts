@@ -25,7 +25,7 @@ export interface Match {
       name: string;
       img: string;
       score: number | null;
-      form: string;
+      form?: string;
       formation?: string;
     };
     away: {
@@ -33,7 +33,7 @@ export interface Match {
       name: string;
       img: string;
       score: number | null;
-      form: string;
+      form?: string;
       formation?: string;
     };
   };

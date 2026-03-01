@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
+import { useDarkMode } from '@/shared/hooks/useDarkMode';
 import type { WidgetLeague } from './types';
 
 // 4590 표준: placeholder 상수
@@ -18,25 +18,7 @@ interface LeagueHeaderProps {
  * - 4590 표준: 서버에서 전달받은 Storage URL 사용
  */
 export default function LeagueHeader({ league }: LeagueHeaderProps) {
-  // 다크모드 감지
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    // 초기 다크모드 상태 확인
-    setIsDark(document.documentElement.classList.contains('dark'));
-
-    // 다크모드 변경 감지
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.attributeName === 'class') {
-          setIsDark(document.documentElement.classList.contains('dark'));
-        }
-      });
-    });
-
-    observer.observe(document.documentElement, { attributes: true });
-    return () => observer.disconnect();
-  }, []);
+  const isDark = useDarkMode();
 
   // 다크모드에 따른 리그 로고 URL 선택
   const effectiveLogoUrl = isDark && league.logoDark ? league.logoDark : league.logo;
@@ -45,7 +27,7 @@ export default function LeagueHeader({ league }: LeagueHeaderProps) {
     <div className="flex items-center gap-3">
       {effectiveLogoUrl ? (
         <UnifiedSportsImageClient
-          src={effectiveLogoUrl || LEAGUE_PLACEHOLDER}
+          src={effectiveLogoUrl}
           alt={league.name}
           width={20}
           height={20}

@@ -66,6 +66,24 @@ const nextConfig = {
   },
   // Next.js 16: eslint 설정은 더 이상 next.config.js에서 지원되지 않음
   // 대신 next lint 명령어 옵션을 사용하거나 package.json scripts에서 설정
+  async headers() {
+    return [
+      {
+        // 정적 이미지/아이콘 (placeholder SVG 등)
+        source: '/:path*\\.(svg|png|jpg|jpeg|webp|ico)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+      {
+        // 폰트 파일
+        source: '/:path*\\.(woff|woff2|ttf|otf)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+    ];
+  },
   turbopack: {
     // Turbopack 설정 (Next.js 16 기본값)
     resolveAlias: {

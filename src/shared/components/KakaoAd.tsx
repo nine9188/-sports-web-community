@@ -21,16 +21,28 @@ export default function KakaoAd({
     const container = containerRef.current;
     if (!container) return;
 
-    // 기존 스크립트 태그 제거 후 새로 추가하여 SDK가 ins를 처리하도록 함
-    const oldScript = container.querySelector('script');
-    if (oldScript) oldScript.remove();
+    // IntersectionObserver로 뷰포트 진입 시에만 스크립트 로드
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          // 기존 스크립트 태그 제거 후 새로 추가하여 SDK가 ins를 처리하도록 함
+          const oldScript = container.querySelector('script');
+          if (oldScript) oldScript.remove();
 
-    const script = document.createElement('script');
-    script.src = '//t1.daumcdn.net/kas/static/ba.min.js';
-    script.async = true;
-    container.appendChild(script);
+          const script = document.createElement('script');
+          script.src = '//t1.daumcdn.net/kas/static/ba.min.js';
+          script.async = true;
+          container.appendChild(script);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '200px' } // 200px 전에 미리 로드
+    );
+
+    observer.observe(container);
 
     return () => {
+      observer.disconnect();
       const s = container.querySelector('script');
       if (s) s.remove();
     };

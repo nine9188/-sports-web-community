@@ -12,10 +12,11 @@ import { useIcon } from '@/shared/context/IconContext';
 import UserIcon from '@/shared/components/UserIcon';
 import { Board } from '../types/board';
 import { siteConfig } from '@/shared/config';
-import ReactDOM from 'react-dom';
-import LiveScoreModal from './livescoremodal';
-import UserProfileClient from './UserProfileClient';
-import MobileHamburgerModal from './MobileHamburgerModal';
+import dynamic from 'next/dynamic';
+
+const LiveScoreModal = dynamic(() => import('./livescoremodal'), { ssr: false });
+const UserProfileClient = dynamic(() => import('./UserProfileClient'), { ssr: false });
+const MobileHamburgerModal = dynamic(() => import('./MobileHamburgerModal'), { ssr: false });
 import RecentlyVisited from './RecentlyVisited';
 import { useTodayMatchCount } from '@/domains/livescore/hooks/useLiveScoreData';
 import { NotificationBell } from '@/domains/notifications/components';
@@ -84,7 +85,7 @@ const SearchModal = React.memo(function SearchModal({
 
   if (!isOpen || !isMounted) return null;
 
-  return ReactDOM.createPortal(
+  return (
     <div className="fixed inset-0 z-50 md:hidden pointer-events-none">
       {/* 모바일: 상단 검색 패널만 고정 */}
       <div className="fixed top-0 left-0 right-0 bg-white dark:bg-[#1D1D1D] border-b border-black/5 dark:border-white/10 p-3 pointer-events-auto">
@@ -121,8 +122,7 @@ const SearchModal = React.memo(function SearchModal({
           </Button>
         </form>
       </div>
-    </div>,
-    document.body
+    </div>
   );
 });
 

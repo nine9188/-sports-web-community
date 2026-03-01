@@ -35,16 +35,12 @@ export function transformMatches(matchesData: MatchData[]): Match[] {
           name: names.homeName || match.teams.home.name,
           img: match.teams.home.logo || PLACEHOLDER_TEAM,
           score: match.goals.home,
-          form: '',
-          formation: '',
         },
         away: {
           id: match.teams.away.id,
           name: names.awayName || match.teams.away.name,
           img: match.teams.away.logo || PLACEHOLDER_TEAM,
           score: match.goals.away,
-          form: '',
-          formation: '',
         },
       },
     };

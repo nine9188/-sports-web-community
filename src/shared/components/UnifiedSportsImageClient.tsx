@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
+import { useDarkMode } from '@/shared/hooks/useDarkMode';
 
 type SizeVariant = 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
 type ShapeVariant = 'square' | 'circle';
@@ -44,7 +45,7 @@ export default function UnifiedSportsImageClient({
   variant = 'square',
   showFallback = true,
   fallbackContent,
-  loading = 'eager',
+  loading = 'lazy',
   priority = false,
   unoptimized = true,
   fit = 'contain',
@@ -55,26 +56,7 @@ export default function UnifiedSportsImageClient({
 }: UnifiedSportsImageClientProps) {
   const [hasError, setHasError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
-  const [isDark, setIsDark] = useState(false);
-
-  // 다크모드 감지
-  useEffect(() => {
-    // 초기 상태 설정
-    setIsDark(document.documentElement.classList.contains('dark'));
-
-    // MutationObserver로 다크모드 변경 감지
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.attributeName === 'class') {
-          setIsDark(document.documentElement.classList.contains('dark'));
-        }
-      });
-    });
-
-    observer.observe(document.documentElement, { attributes: true });
-
-    return () => observer.disconnect();
-  }, []);
+  const isDark = useDarkMode();
 
   // src가 변경되면 에러/재시도 상태 리셋
   useEffect(() => {

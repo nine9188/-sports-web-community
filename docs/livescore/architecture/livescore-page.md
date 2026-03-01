@@ -2,7 +2,7 @@
 
 > `docs/livescore/architecture.md` 표준 대비 실제 코드 검증 결과.
 
-**검토일**: 2026-02-27
+**검토일**: 2026-03-01 (P2/P3/P4 반영)
 
 ---
 
@@ -13,7 +13,7 @@
 | §2 API 호출 래퍼 | ✅ | `fetchFromFootballApi()` 경유 |
 | §3 캐시 계층 (L1/L3/L4) | ✅ | 서버 cache() + 클라이언트 React Query |
 | §4 Query Key 관리 | ✅ | `shared/constants/queryKeys.ts`에서 import |
-| §5 Hydration 패턴 | ✅ | initialData props (§5.1 표준) |
+| §5 Hydration 패턴 | ✅ | HydrationBoundary + prefetchQuery (§5.1) |
 | §7 폴링 정책 | ✅ | LIVE 30초 / 오늘 60초 / 나머지 없음 |
 | §8 이미지 파이프라인 | ✅ | 4590 표준 완전 준수 |
 | §12 force-dynamic | ⚠️→✅ | 중복 선언 **제거됨** |
@@ -61,23 +61,22 @@
 
 ```
 page.tsx (서버, searchParams → 자동 dynamic)
+  ├─ getQueryClient()
   ├─ Promise.all([
-  │    fetchMatchesByDateCached(yesterday),
-  │    fetchMatchesByDateCached(today),         ← cache() 래핑
-  │    fetchMatchesByDateCached(tomorrow),
+  │    prefetchQuery({ queryKey: matches(yesterday), queryFn: transformMatches(fetch...) }),
+  │    prefetchQuery({ queryKey: matches(today),     queryFn: transformMatches(fetch...) }),
+  │    prefetchQuery({ queryKey: matches(tomorrow),  queryFn: transformMatches(fetch...) }),
   │  ])
-  ├─ transformMatches() × 3 → Match[]
-  └─ <LiveScoreView
-       initialYesterday / initialToday / initialTomorrow    (3개 데이터)
-       initialDate / yesterdayDate / tomorrowDate            (3개 날짜)
-     />
+  └─ <HydrationBoundary state={dehydrate(queryClient)}>
+       <LiveScoreView initialDate={dateParam} />    ← 1-prop만 전달
+     </HydrationBoundary>
 
 LiveScoreView (클라이언트)
-  └─ useLiveScore(selectedDate, { initial* })
-       ├─ getInitialDataForDate(date) → 날짜별 initialData 매핑
-       ├─ useMatches(date, { initialData, showLiveOnly })
+  └─ useLiveScore(selectedDate, { showLiveOnly })
+       ├─ useMatches(date, { showLiveOnly })
        │    ├─ queryKey: liveScoreKeys.matches(date)
        │    ├─ queryFn: fetchMatchesByDate → transformMatches
+       │    ├─ HydrationBoundary 캐시 히트 → 로딩 없음
        │    └─ 폴링: LIVE 30초 / 오늘 60초 / 나머지 없음
        └─ useTodayLiveCount(!isToday)
             └─ 다른 날짜 볼 때만 오늘 라이브 카운트 별도 조회
@@ -130,12 +129,13 @@ fetchMatchesByDate(date)     ← Server Action 직접 호출
 
 ---
 
-### §5 Hydration 패턴 — ✅ 정상 (initialData props)
+### §5 Hydration 패턴 — ✅ 정상 (HydrationBoundary)
 
-**§5.1 표준 패턴 적용**:
-- 서버에서 3일치 데이터 fetch → `transformMatches()` 변환
-- `initialData` props로 클라이언트에 전달
-- `useLiveScore` → `getInitialDataForDate()` → 날짜별 매핑 → `useMatches({ initialData })`
+**§5.1 HydrationBoundary 패턴 적용**:
+- 서버에서 `getQueryClient()` + `prefetchQuery` 3회 (어제/오늘/내일)
+- `dehydrate(queryClient)` → `HydrationBoundary`로 클라이언트 캐시에 주입
+- `LiveScoreView`는 `initialDate` 1-prop만 수신
+- `useLiveScore` → `useMatches` → `useQuery` 캐시 히트 → 로딩 없음
 
 ---
 
@@ -147,9 +147,9 @@ fetchMatchesByDate(date)     ← Server Action 직접 호출
 | 오늘 날짜 (KST) | 60초 | 60초 | ✅ |
 | 과거/미래 날짜 | `false` | 없음 | ✅ |
 | 탭 비활성 | `refetchIntervalInBackground: false` | 중지 | ✅ |
-| 마운트 시 | `refetchOnMount: false` | — | ✅ |
-| 포커스 시 | `refetchOnWindowFocus: false` | — | ✅ |
-| 재연결 시 | `refetchOnReconnect: false` | — | ✅ |
+
+> HydrationBoundary 전환 후 `refetchOnMount/WindowFocus/Reconnect: false`는 제거됨.
+> staleTime(5분) 내에서는 자동으로 refetch하지 않으므로 명시 불필요.
 
 `useTodayLiveCount`:
 - 60초 폴링 (오늘 기준 라이브 카운트)
@@ -181,20 +181,10 @@ fetchMatchesByDate(date)     ← Server Action 직접 호출
 
 ## 알려진 기술부채 (§13 참고)
 
-### P4-3. useLiveScore 6-prop code smell
+### ~~P4-3. useLiveScore 6-prop code smell~~ — ✅ P2에서 해결
 
-```typescript
-<LiveScoreView
-  initialYesterday={...}  initialToday={...}  initialTomorrow={...}
-  initialDate={...}       yesterdayDate={...}  tomorrowDate={...}
-/>
-```
-
-데이터(3)와 날짜(3)가 분리되어 매칭 실수 가능. 목표:
-```typescript
-type PreloadedDay = { matches: Match[]; date: string };
-<LiveScoreView yesterday={...} today={...} tomorrow={...} />
-```
+HydrationBoundary 전환으로 `LiveScoreView`가 `initialDate` 1-prop만 받음.
+서버 데이터는 React Query 캐시를 통해 자동 주입.
 
 ### STATUS_MAP 중복
 
@@ -224,7 +214,8 @@ type PreloadedDay = { matches: Match[]; date: string };
 | `src/app/(site)/livescore/football/page.tsx` | 라이브스코어 서버 컴포넌트 |
 | `src/domains/livescore/components/football/MainView/LiveScoreView.tsx` | 메인 뷰 클라이언트 컴포넌트 |
 | `src/domains/livescore/hooks/useLiveScoreQueries.ts` | `useMatches`, `useLiveScore`, `useTodayLiveCount` |
-| `src/domains/livescore/utils/transformMatch.ts` | `transformMatches()` 변환 |
+| `src/domains/livescore/utils/transformMatch.ts` | `transformMatches()` 변환 (`resolveMatchNames` 사용) |
+| `src/domains/livescore/utils/resolveMatchNames.ts` | 한국어 팀명/리그명 해석 유틸 |
 | `src/domains/livescore/types/match.ts` | `Match` 타입 정의 |
 | `src/domains/livescore/components/football/MainView/NavigationBar/index.tsx` | 날짜 네비게이션 + LIVE 필터 |
 | `src/domains/livescore/components/football/MainView/LeagueMatchList/index.tsx` | 리그별 경기 그룹 렌더링 |

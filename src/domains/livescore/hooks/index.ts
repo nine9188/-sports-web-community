@@ -14,7 +14,6 @@ export { liveScoreKeys } from '@/shared/constants/queryKeys';
 // LiveScore 관련 React Query 훅
 export {
   useMatches,
-  useTodayLiveCount,
   useLiveScore,
 } from './useLiveScoreQueries';
 

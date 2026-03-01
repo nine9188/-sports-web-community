@@ -3,7 +3,7 @@
 > API-Sports 데이터를 사용하는 **모든 페이지/컴포넌트의 기준 문서**.
 > 새 페이지 추가, 기존 페이지 수정 시 반드시 이 문서를 따른다.
 
-**작성일**: 2026-02-27
+**작성일**: 2026-02-27 | **최종 업데이트**: 2026-03-01 (P2/P3/P4 기술부채 해결 반영)
 
 ---
 
@@ -25,14 +25,15 @@
                 ▼
 ┌─────────────────────────────────────────────────────────┐
 │  Hydration Layer                                        │
-│  - initialData prop → Client Component                  │
+│  - HydrationBoundary + prefetchQuery (라이브스코어)      │
+│  - initialData prop → Client Component (경기/팀/선수)   │
 │  - CacheSeeder → layout 자식용 (예외: 메인페이지만)     │
 └───────────────┬─────────────────────────────────────────┘
                 │
                 ▼
 ┌─────────────────────────────────────────────────────────┐
 │  React Query (L4 캐시)                                  │
-│  - useQuery() → initialData 히트, 로딩 없음             │
+│  - useQuery() → HydrationBoundary/initialData 히트      │
 │  - 폴링: LIVE 30초 / 오늘 60초 / 나머지 없음           │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -105,27 +106,30 @@ fetchFromFootballApi(endpoint: string, params: Record<string, string | number>)
 | 항목 | 값 |
 |------|-----|
 | 대상 | 종료(FT) 경기만 |
-| TTL | 기본 영구. 정정 가능 타입은 soft TTL 적용 (아래 표 참고) |
+| TTL | `power` 영구, 나머지 6시간 soft TTL (아래 표 참고) |
 | data_type | `full`, `events`, `lineups`, `stats`, `power`, `playerRatings`, `matchPlayerStats` |
 | 함수 | `getMatchCache()`, `getMatchCacheBulk()`, `setMatchCache()`, `setMatchCacheBulk()` |
 
 - 종료 경기는 API 재호출 불필요 → API 쿼터 절약
 - match detail page에서 FT 판단 후 L2 우선 조회
 
-**FT 후 정정 가능성 대응 (soft TTL)**:
+**FT 후 정정 가능성 대응 (soft TTL)** — ✅ 구현 완료:
 
 API-Sports는 경기 종료 후에도 통계/평점/이벤트를 보강·정정하는 경우가 있다.
-"영구 오염 캐시" 리스크를 방지하기 위해, 정정 가능성이 있는 타입은 FT 직후 일정 시간 동안
-soft TTL을 두어 재검증하고, 이후 영구 전환한다.
+"영구 오염 캐시" 리스크를 방지하기 위해 6시간 soft TTL을 적용한다.
+캐시 만료 시 API에서 재조회하여 갱신한다.
 
-| data_type | FT 후 0~6시간 | FT 후 6시간~ | 이유 |
-|-----------|--------------|-------------|------|
-| `full`, `lineups` | 영구 | 영구 | 확정 데이터, 변경 없음 |
-| `events` | 30분 TTL (재검증) | 영구 | 오심 정정, 득점자 변경 가능 |
-| `stats`, `playerRatings`, `matchPlayerStats` | 30분 TTL (재검증) | 영구 | 통계 보강이 몇 시간 후 반영됨 |
-| `power` | 영구 | 영구 | H2H 과거 기록, 변경 없음 |
+| data_type | soft TTL | 이유 |
+|-----------|----------|------|
+| `full` | 6시간 | FT 직후 데이터 보강 가능 |
+| `events` | 6시간 | 오심 정정, 득점자 변경 가능 |
+| `lineups` | 6시간 | FT 직후 데이터 보강 가능 |
+| `stats` | 6시간 | 통계 보강이 몇 시간 후 반영됨 |
+| `playerRatings` | 6시간 | 평점 보강이 몇 시간 후 반영됨 |
+| `matchPlayerStats` | 6시간 | 선수 통계 보강이 몇 시간 후 반영됨 |
+| `power` | 영구 (TTL 없음) | H2H 계산 결과, 불변 |
 
-> 현재 코드는 모든 타입을 영구 저장. soft TTL은 향후 구현 대상.
+`isExpired(updatedAt, dataType)` 함수가 `updated_at` 컬럼으로 만료 여부를 판단.
 
 ### L3: React cache() (렌더 사이클)
 
@@ -212,43 +216,56 @@ import { playerKeys } from '@/shared/constants/queryKeys';
 | 훅 파일 | 로컬 키 정의 | shared 사용 | 상태 |
 |---------|-------------|------------|------|
 | `usePlayerQueries.ts` | 없음 | `import { playerKeys }` | ✅ 정상 |
-| `useLiveScoreQueries.ts` | `liveScoreKeys` (로컬) | 미사용 | ✅ 이번 작업에서 수정 |
-| `useMatchQueries.ts` | ~~`matchKeys` (로컬)~~ | `import { matchKeys }` | ✅ 완료 |
-| `useTeamQueries.ts` | `teamKeys` (로컬) | 미사용 | ⬜ 다음 작업 |
+| `useLiveScoreQueries.ts` | 없음 | `import { liveScoreKeys }` | ✅ 완료 |
+| ~~`useMatchQueries.ts`~~ | — | — | ✅ 삭제됨 |
+| ~~`useTeamQueries.ts`~~ | — | — | ✅ 삭제됨 |
 
-> **키 통합은 HydrationBoundary와 분리하여 먼저 진행한다.**
-> 키 통합은 "정확성"(캐시 히트 보장) 문제이고,
-> HydrationBoundary는 "품질/편의"(staleTime 정확도, props 제거) 문제이다.
-> 우선순위: ① 키 통합 (match/team) → ② HydrationBoundary 마이그레이션
+> Query Key 통합 완료. 모든 훅이 `shared/constants/queryKeys.ts`에서 import.
 
 ---
 
 ## 5. Hydration 패턴
 
-### 5.1 표준 패턴: initialData prop
+### 5.1 HydrationBoundary (TanStack Query v5 권장)
 
-현재 모든 페이지에서 사용 중인 패턴:
+서버에서 `prefetchQuery`로 캐시를 채운 뒤 `dehydrate` → `HydrationBoundary`로 클라이언트에 주입.
+props drilling 없이 `useQuery`가 캐시 히트하여 즉시 데이터 사용.
+
+```typescript
+// Server Component (page.tsx)
+const queryClient = getQueryClient();
+await queryClient.prefetchQuery({ queryKey, queryFn });
+
+return (
+  <HydrationBoundary state={dehydrate(queryClient)}>
+    <ClientComponent />  {/* props로 데이터 전달 안 함 */}
+  </HydrationBoundary>
+);
+```
+
+**적용 페이지**:
+
+| 페이지 | 서버에서 prefetch | 클라이언트에서 사용 |
+|--------|------------------|-------------------|
+| `/livescore/football` | 3일치 `prefetchQuery` | `LiveScoreView` → `useLiveScore()` |
+
+### 5.2 initialData prop (레거시, 일부 페이지 유지)
 
 ```
 Server Component (page.tsx)
   → Promise.all([fetchA(), fetchB(), ...])
   → <ClientComponent initialData={data} />
-
-Client Component
-  → useQuery({ queryKey, queryFn, initialData })
-  → 첫 렌더에서 데이터 즉시 사용 (로딩 없음)
 ```
 
 **적용 페이지**:
 
 | 페이지 | 서버에서 fetch | 클라이언트에서 수신 |
 |--------|---------------|-------------------|
-| `/livescore/football` | 3일치 `fetchMatchesByDateCached()` | `LiveScoreView` → `useLiveScore()` |
 | `/livescore/football/match/[id]` | `fetchCachedMatchFullData()` + power + playerStats | `MatchPageClient` → `useMatchTabData()` |
 | `/livescore/football/team/[id]` | `fetchTeamFullData()` | `TeamPageClient` → `useTeamTabData()` |
 | `/livescore/football/player/[id]` | `fetchPlayerFullData()` | `PlayerPageClient` → `usePlayerTabData()` |
 
-### 5.2 예외 패턴: CacheSeeder (메인페이지 한정)
+### 5.3 예외 패턴: CacheSeeder (메인페이지 한정)
 
 **파일**: `src/shared/components/LiveScoreCacheSeeder.tsx`
 
@@ -277,46 +294,22 @@ Next.js App Router에서 layout은 page를 **감싸는** 구조다.
 - layout.tsx에서 직접 fetch하면 page.tsx 위젯과 **동일 데이터를 이중 fetch** (3일치 매치)
 - 따라서 page.tsx에서 한 번 fetch → CacheSeeder로 React Query 캐시에 주입 → layout 자식이 캐시에서 읽는 것이 유일하게 효율적인 방법
 
-**이 패턴은 메인페이지 한 곳에서만 사용**. 나머지 페이지는 layout 자식이 경기 데이터를 필요로 하지 않으므로 모두 initialData 또는 HydrationBoundary를 사용한다.
+**이 패턴은 메인페이지 한 곳에서만 사용**. 나머지 페이지는 layout 자식이 경기 데이터를 필요로 하지 않으므로 HydrationBoundary 또는 initialData를 사용한다.
 
-### 5.3 향후 목표: HydrationBoundary
+### 5.4 HydrationBoundary 마이그레이션 상태
 
-TanStack Query v5 공식 권장 패턴:
-
-```typescript
-// Server Component
-import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
-import getQueryClient from '@/shared/api/getQueryClient';
-
-export default async function Page() {
-  const queryClient = getQueryClient();
-  await queryClient.prefetchQuery({ queryKey, queryFn });
-
-  return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <ClientComponent />  {/* props로 데이터 전달 안 함 */}
-    </HydrationBoundary>
-  );
-}
-```
-
-**initialData 대비 장점**:
+**initialData 대비 HydrationBoundary 장점**:
 - `dataUpdatedAt`이 서버 fetch 시점으로 보존 → staleTime 계산 정확
 - props drilling 불필요 → 컴포넌트 인터페이스 단순화
 - 여러 쿼리를 한번에 hydrate 가능
 
-**마이그레이션 상태 & 우선순위**:
-
-경기 상세와 팀 상세가 `setQueryData()` 패턴을 사용하여 `dataUpdatedAt`이
-마운트 시점이 되어 staleTime 계산이 부정확하다. 탭이 많아 benefit이 가장 크므로 우선 전환.
-
-| 우선순위 | 페이지 | 현재 패턴 | 목표 패턴 | 상태 |
-|---------|--------|-----------|-----------|------|
-| — | 메인 위젯 | CacheSeeder | CacheSeeder (예외 유지) | ✅ 유지 |
-| 1 | 경기 상세 | setQueryData | HydrationBoundary | ⬜ 미적용 |
-| 2 | 팀 상세 | setQueryData | HydrationBoundary | ⬜ 미적용 |
-| 3 | 선수 상세 | initialDataUpdatedAt | HydrationBoundary | ⬜ 미적용 |
-| 4 | 라이브스코어 | initialData props | HydrationBoundary | ⬜ 미적용 |
+| 페이지 | 현재 패턴 | 상태 |
+|--------|-----------|------|
+| 메인 위젯 | CacheSeeder (예외 유지) | ✅ 유지 |
+| 라이브스코어 | HydrationBoundary + prefetchQuery | ✅ 전환 완료 |
+| 경기 상세 | props 직접 전달 (React Query 미사용) | ✅ 유지 |
+| 팀 상세 | props 직접 전달 (React Query 미사용) | ✅ 유지 |
+| 선수 상세 | initialData + initialDataUpdatedAt | ✅ 유지 |
 
 ---
 
@@ -363,12 +356,12 @@ export default getQueryClient;
 | 과거/미래 날짜 | 없음 | 데이터 변경 없음 |
 
 **공통 설정**:
-- `refetchOnMount: false` — initialData 있으면 재요청 안 함
-- `refetchOnWindowFocus: false` — 포커스 시 재요청 안 함
-- `refetchOnReconnect: false` — 재연결 시 재요청 안 함
 - `refetchIntervalInBackground: false` — 탭 비활성 시 폴링 중지
+- `staleTime: 5분` — HydrationBoundary 캐시 히트 후 5분간 fresh 유지
+- 나머지 refetch 옵션은 RootLayoutProvider 기본값 사용
 
-> 봇 안전: 서버 프리로드만 사용, 클라이언트 자동 프리페치 제거됨.
+> HydrationBoundary 패턴으로 전환 후, `refetchOnMount/WindowFocus/Reconnect: false`는
+> 더 이상 명시할 필요 없음. staleTime 내에서는 자동으로 refetch하지 않음.
 
 ---
 
@@ -464,7 +457,7 @@ API-Sports 원본 (media.api-sports.io)
 ```
 page.tsx
   ├─ fetchMultiDayMatches() → 3일치 raw data
-  ├─ transformToWidgetLeagues() → League[] (빅매치 리그만)
+  ├─ transformToWidgetLeagues() → WidgetLeague[] (빅매치 리그만)
   ├─ <LiveScoreCacheSeeder data={multiDayData} />  ← layout 자식용
   └─ <LiveScoreWidgetV2 initialData={leagues} />
         ├─ WidgetHeader (서버)
@@ -479,21 +472,22 @@ layout.tsx 자식:
 ### 9.2 라이브스코어 (`/livescore/football`)
 
 ```
-page.tsx (force-dynamic)
+page.tsx (searchParams → 자동 dynamic)
+  ├─ getQueryClient()
   ├─ Promise.all([
-  │    fetchMatchesByDateCached(yesterday),
-  │    fetchMatchesByDateCached(today),
-  │    fetchMatchesByDateCached(tomorrow),
+  │    prefetchQuery({ queryKey: matches(yesterday), queryFn: ... }),
+  │    prefetchQuery({ queryKey: matches(today),     queryFn: ... }),
+  │    prefetchQuery({ queryKey: matches(tomorrow),  queryFn: ... }),
   │  ])
-  ├─ transformMatches() × 3 → Match[]
-  └─ <LiveScoreView
-       initialYesterday / initialToday / initialTomorrow
-       yesterdayDate / initialDate / tomorrowDate />
+  └─ <HydrationBoundary state={dehydrate(queryClient)}>
+       <LiveScoreView initialDate={dateParam} />    ← 1-prop만 전달
+     </HydrationBoundary>
 
 LiveScoreView (클라이언트)
-  └─ useLiveScore(selectedDate, { initial* })
-       └─ useMatches(date, { initialData })
-            ├─ 날짜별 initialData 매핑 (useEffect 없이 동기적)
+  └─ useLiveScore(selectedDate, { showLiveOnly })
+       └─ useMatches(date)
+            ├─ queryKey: liveScoreKeys.matches(date)
+            ├─ HydrationBoundary 캐시 히트 → 로딩 없음
             └─ 폴링: LIVE 30초, 오늘 60초, 나머지 없음
 ```
 
@@ -737,6 +731,15 @@ src/domains/livescore/actions/
 └── footballTeamsSync.ts        ← Admin 동기화 (no-store)
 ```
 
+### 유틸리티
+
+```
+src/domains/livescore/utils/
+├── transformMatch.ts           ← transformMatches() — API 데이터 → Match[]
+├── resolveMatchNames.ts        ← resolveMatchNames() — 한국어 팀명/리그명 해석 (공통 유틸)
+└── matchDataApi.ts             ← 매치 상세 데이터 API (fetchFromFootballApi 전환 완료)
+```
+
 ### React Query 훅
 
 ```
@@ -822,74 +825,53 @@ API 쿼터 누수는 없지만, **페이지 HTML이 매 요청마다 재생성**
 | ~~match 훅 캐시 상수~~ | ✅ `useMatchQueries.ts` 삭제로 해결 | — | ~~`useMatchQueries.ts`~~ (삭제) |
 | ~~team 훅 캐시 상수~~ | ✅ `useTeamQueries.ts` 삭제로 해결 | — | ~~`useTeamQueries.ts`~~ (삭제) |
 
-### P2: Hydration 품질 (HydrationBoundary)
+### P2: Hydration 품질 (HydrationBoundary) — ✅ 해결
 
-| 항목 | 현재 | 목표 | 우선순위 |
-|------|------|------|---------|
-| ~~경기 상세~~ | ✅ React Query 미사용 (props 직접 전달), 죽은 훅 삭제 완료 | — | — |
-| ~~팀 상세~~ | ✅ React Query 미사용 (props 직접 전달), 죽은 훅 삭제 완료 | — | — |
-| ~~선수 상세~~ | ✅ `initialData` + `initialDataUpdatedAt` 정상 작동, 죽은 훅 7개 삭제 완료 | — | — |
-| 라이브스코어 | `initialData props` | HydrationBoundary | 4순위 |
-
-### P3: 캐시 안전성
-
-| 항목 | 현재 | 목표 |
+| 항목 | 현재 | 상태 |
 |------|------|------|
-| L2 match_cache FT 영구 저장 | 모든 타입 영구 | events/stats/playerRatings에 FT 후 6시간 soft TTL |
-| ~~`force-dynamic` 중복 선언~~ | ✅ 라이브스코어/팀 상세/선수 상세 모두 제거 완료 | — |
+| ~~경기 상세~~ | ✅ React Query 미사용 (props 직접 전달), 죽은 훅 삭제 완료 | ✅ |
+| ~~팀 상세~~ | ✅ React Query 미사용 (props 직접 전달), 죽은 훅 삭제 완료 | ✅ |
+| ~~선수 상세~~ | ✅ `initialData` + `initialDataUpdatedAt` 정상 작동, 죽은 훅 7개 삭제 완료 | ✅ |
+| ~~라이브스코어~~ | ✅ HydrationBoundary + prefetchQuery 전환 완료. 6-prop → 1-prop 단순화. | ✅ |
 
-### P4: 코드 품질 (중복/타입/구조)
+### P3: 캐시 안전성 — ✅ 해결
 
-#### 4-1. transformMatches vs convertToMatch 로직 중복
-
-| 파일 | 함수 | 역할 |
+| 항목 | 현재 | 상태 |
 |------|------|------|
-| `domains/livescore/utils/transformMatch.ts` | `transformMatches()` | API 데이터 → `Match[]` (라이브스코어 페이지용) |
-| `domains/widgets/components/live-score-widget/LiveScoreWidgetV2Server.tsx` | `convertToMatch()` (내부 함수) | API 데이터 → `Match` (위젯용) |
+| ~~L2 match_cache soft TTL~~ | ✅ 6시간 soft TTL 구현 완료 (`power` 제외 전 타입) | ✅ |
+| ~~`force-dynamic` 중복 선언~~ | ✅ 라이브스코어/팀 상세/선수 상세 모두 제거 완료 | ✅ |
 
-두 함수 모두 `getTeamById()`, `getLeagueById()`를 호출하여 한국어 이름을 매핑한다.
-로직이 거의 동일하지만 `convertToMatch`는 비공개 함수라 재사용 불가.
-한국어 매핑 로직이 변경되면 **2곳을 동시에 수정**해야 한다.
+### P4: 코드 품질 (중복/타입/구조) — ✅ 해결
 
-> **목표**: 공통 변환 유틸리티를 추출하여 단일 소스로 통합.
+#### ~~4-1. transformMatches vs convertToMatch 로직 중복~~ — ✅ 해결
 
-#### 4-2. Match 타입 이름 충돌
+`resolveMatchNames()` 공통 유틸리티를 추출하여 단일 소스로 통합.
 
-| 파일 | 타입명 | id 타입 | 구조 |
-|------|--------|--------|------|
-| `domains/livescore/types/match.ts` | `Match` | `number` | `teams.home.name`, `teams.home.img` |
-| `domains/widgets/components/live-score-widget/types.ts` | `Match` | `string` | `homeTeam.name`, `awayTeam.name` |
+| 파일 | 변경 |
+|------|------|
+| `livescore/utils/resolveMatchNames.ts` | **새 파일** — `getTeamById()` + `getLeagueById()` 한국어 매핑 통합 |
+| `livescore/utils/transformMatch.ts` | `resolveMatchNames()` 사용으로 리팩토링 |
+| `widgets/.../LiveScoreWidgetV2Server.tsx` | `resolveMatchNames()` 사용으로 리팩토링 |
 
-동일한 `Match`라는 이름으로 **서로 다른 타입**이 존재한다.
-import 시 혼동 발생 가능, id 타입도 `number` vs `string`으로 불일치.
+#### ~~4-2. Match 타입 이름 충돌~~ — ✅ 해결
 
-> **목표**: 위젯 타입을 `WidgetMatch` / `WidgetLeague` 등으로 네임스페이스 분리.
+위젯 타입을 네임스페이스 분리 완료:
 
-#### 4-3. useLiveScore 6-prop 코드 스멜
+| Before | After |
+|--------|-------|
+| `Match` | `WidgetMatch` |
+| `Team` | `WidgetTeam` |
+| `League` | `WidgetLeague` |
 
-`LiveScoreView`에 전달되는 props:
-```
-initialYesterday, initialToday, initialTomorrow  (3개 데이터)
-yesterdayDate, initialDate, tomorrowDate          (3개 날짜 문자열)
-```
+#### ~~4-3. useLiveScore 6-prop 코드 스멜~~ — ✅ P2에서 자동 해결
 
-데이터와 날짜가 분리되어 있어 매칭 실수 가능성이 있다.
+HydrationBoundary 전환으로 `LiveScoreView`가 `initialDate` 1-prop만 받음.
+서버 데이터는 React Query 캐시를 통해 자동 주입.
 
-> **목표**: `{ matches: Match[], date: string }` 래퍼 객체로 통합하여 3-prop으로 축소.
-> ```typescript
-> type PreloadedDay = { matches: Match[]; date: string };
-> // <LiveScoreView yesterday={...} today={...} tomorrow={...} />
-> ```
+#### ~~4-4. 메인→라이브스코어 네비게이션 시 오늘 데이터 이중 fetch~~ — ✅ P2에서 자동 해결
 
-#### 4-4. 메인→라이브스코어 네비게이션 시 오늘 데이터 이중 fetch
-
-메인페이지에서 `fetchMultiDayMatches()`로 3일치를 fetch한 뒤,
-사용자가 `/livescore/football`로 이동하면 `fetchMatchesByDateCached(today)`로 오늘 데이터를 다시 fetch한다.
-
-- L1(Data Cache)이 있으므로 **API-Sports 쿼터 누수는 없음** (캐시 히트)
-- 하지만 서버 렌더링에서 fetch + JSON 파싱 비용은 발생
-
-> 현재 수준에서는 허용 가능. HydrationBoundary 마이그레이션 시 클라이언트 캐시 공유로 해결 가능.
+HydrationBoundary로 서버 데이터가 React Query L4 캐시에 주입되므로,
+메인→라이브스코어 이동 시 클라이언트 캐시 히트로 중복 fetch 방지.
 
 ### P5: 레거시 정리 — ✅ 완료
 
