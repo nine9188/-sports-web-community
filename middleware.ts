@@ -2,7 +2,83 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { Database } from '@/shared/types/supabase'
 
+// Supabase 세션 조회를 스킵할 봇 목록
+const BOT_USER_AGENTS = [
+  'Amazonbot',
+  'Googlebot',
+  'Bingbot',
+  'YandexBot',
+  'Baiduspider',
+  'DuckDuckBot',
+  'Slurp',
+  'SemrushBot',
+  'AhrefsBot',
+  'MJ12bot',
+  'DotBot',
+  'PetalBot',
+  'GPTBot',
+  'ChatGPT-User',
+  'CCBot',
+  'anthropic-ai',
+  'Claude-Web',
+  'facebookexternalhit',
+  'Twitterbot',
+  'LinkedInBot',
+  'bytespider',
+  'python-requests',
+  'Go-http-client',
+  'curl',
+  'wget',
+  'Scrapy',
+]
+
+// robots.txt에서 Disallow: / 로 차단한 봇 → 403 반환
+const BLOCKED_BOTS = [
+  'Amazonbot',
+  'GPTBot',
+  'ChatGPT-User',
+  'CCBot',
+  'anthropic-ai',
+  'Claude-Web',
+  'SemrushBot',
+  'AhrefsBot',
+  'MJ12bot',
+  'DotBot',
+  'PetalBot',
+  'bytespider',
+  'python-requests',
+  'Go-http-client',
+  'Scrapy',
+]
+
+function detectBot(ua: string | null): { isBot: boolean; isBlocked: boolean } {
+  if (!ua) return { isBot: true, isBlocked: true } // UA 없으면 차단
+  const lowerUA = ua.toLowerCase()
+  const isBot = BOT_USER_AGENTS.some(bot => lowerUA.includes(bot.toLowerCase()))
+  const isBlocked = BLOCKED_BOTS.some(bot => lowerUA.includes(bot.toLowerCase()))
+  return { isBot, isBlocked }
+}
+
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+  const userAgent = request.headers.get('user-agent')
+  const { isBot, isBlocked } = detectBot(userAgent)
+
+  // 차단 대상 봇 → 즉시 403 반환 (Supabase 호출 없음)
+  if (isBlocked) {
+    return new NextResponse('Forbidden', { status: 403 })
+  }
+
+  // /test/* 경로는 프로덕션에서 차단 (API-Sports 쿼타 보호)
+  if (pathname.startsWith('/test') && process.env.NODE_ENV === 'production') {
+    return new NextResponse('Not Found', { status: 404 })
+  }
+
+  // SEO 봇 (Googlebot 등) → 페이지는 보여주되 Supabase 세션 조회 스킵
+  if (isBot) {
+    return NextResponse.next()
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -60,8 +136,6 @@ export async function middleware(request: NextRequest) {
       }
     }
   )
-
-  const { pathname } = request.nextUrl
 
   try {
     // 세션 조회 (토큰 갱신 없이 현재 세션만 확인)

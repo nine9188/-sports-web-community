@@ -21,6 +21,10 @@ Disallow: /*?sort=*
 # .well-known 경로 차단 (Chrome DevTools 관련)
 Disallow: /.well-known/
 
+# Amazon 봇 차단
+User-agent: Amazonbot
+Disallow: /
+
 # AI 봇 제한
 User-agent: GPTBot
 Disallow: /
