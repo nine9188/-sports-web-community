@@ -43,7 +43,6 @@ export default function Footer() {
           {/* 저작권 및 광고 문의 */}
           <div className="text-sm text-gray-500 dark:text-gray-400">
             <p>© 2025 4590. All rights reserved.</p>
-            <p className="mt-1">광고 문의: 김태수 (<a href="mailto:support@4590football.com" className="hover:underline">support@4590football.com</a>)</p>
           </div>
 
           {/* 링크 */}

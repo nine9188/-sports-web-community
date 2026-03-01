@@ -30,7 +30,6 @@ const BOT_USER_AGENTS = [
   'curl',
   'wget',
   'Scrapy',
-  'Chrome-Lighthouse',
   'JEECRAWL',
   'Yeti',
 ]
