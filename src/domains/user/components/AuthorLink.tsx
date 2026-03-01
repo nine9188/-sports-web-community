@@ -73,7 +73,7 @@ export default function AuthorLink({
   const [isMounted, setIsMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
+  const buttonRef = useRef<HTMLAnchorElement>(null);
   const portalDropdownRef = useRef<HTMLDivElement>(null);
 
   // 클라이언트 마운트 체크 및 모바일 감지
@@ -190,14 +190,14 @@ export default function AuthorLink({
   if (publicId && (!isMobile || enableMobile)) {
     return (
       <div className="relative" ref={dropdownRef}>
-        <button
+        <Link
           ref={buttonRef}
-          type="button"
+          href={`/user/${publicId}`}
           onClick={handleToggle}
           className={`flex items-center flex-shrink-0 hover:underline active:underline cursor-pointer ${className}`}
         >
           {content}
-        </button>
+        </Link>
 
         {isOpen && isMounted && createPortal(
           <div

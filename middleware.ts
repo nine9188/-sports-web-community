@@ -77,9 +77,26 @@ export async function middleware(request: NextRequest) {
     return new NextResponse('Not Found', { status: 404 })
   }
 
-  // SEO 봇 (Googlebot 등) → 페이지는 보여주되 Supabase 세션 조회 스킵
+  // SEO 봇 → API-Sports 호출하는 경로는 차단, 나머지는 봇 플래그 헤더와 함께 통과
   if (isBot) {
-    return NextResponse.next()
+    // API-Sports를 호출하는 경로는 봇 차단 (쿼타 보호)
+    const apiSportsPaths = [
+      '/livescore',   // 라이브스코어 전체 (match, team, player, leagues)
+      '/transfers',   // 이적시장 (fetchTransfersFullData)
+    ]
+    const isApiSportsPath = apiSportsPaths.some(p => pathname.startsWith(p))
+      || pathname === '/'  // 홈페이지 (fetchMultiDayMatches)
+
+    if (isApiSportsPath) {
+      return new NextResponse('Not Found', { status: 404 })
+    }
+
+    // 게시판 등 나머지는 통과하되, x-is-bot 헤더 설정 (레이아웃에서 사이드바 API-Sports 호출 스킵용)
+    const botResponse = NextResponse.next({
+      request: { headers: new Headers(request.headers) }
+    })
+    botResponse.headers.set('x-is-bot', '1')
+    return botResponse
   }
 
   let response = NextResponse.next({

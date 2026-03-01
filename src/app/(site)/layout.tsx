@@ -31,6 +31,8 @@ export default async function SiteLayout({
   const headersList = await headers();
   const userAgent = headersList.get('user-agent') || '';
   const isMobilePhone = /iPhone|Android.*Mobile|Windows Phone/i.test(userAgent);
+  // 봇이면 RightSidebar 스킵 (API-Sports 쿼타 보호 - 미들웨어에서 설정)
+  const isBot = headersList.get('x-is-bot') === '1';
 
   // 서버 컴포넌트에서 게시판 데이터만 fetch (유저 데이터는 클라이언트에서 로드)
   const headerBoardsData = await getBoardsForNavigation({ includeTotalPostCount: true });
@@ -70,7 +72,7 @@ export default async function SiteLayout({
       <SiteLayoutClient
         boardNavigation={boardNav}
         rightSidebar={
-          isMobilePhone ? (
+          isMobilePhone || isBot ? (
             <RightSidebarSkeleton />
           ) : (
             <Suspense fallback={<RightSidebarSkeleton />}>
