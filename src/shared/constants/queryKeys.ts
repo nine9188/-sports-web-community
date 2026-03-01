@@ -74,6 +74,7 @@ export const liveScoreKeys = {
   all: ['liveScore'] as const,
   matches: (date: string) => [...liveScoreKeys.all, 'matches', date] as const,
   liveCount: () => [...liveScoreKeys.all, 'liveCount'] as const,
+  multiDay: () => [...liveScoreKeys.all, 'multiDay'] as const,
 };
 
 // ============================================

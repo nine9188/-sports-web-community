@@ -1,5 +1,5 @@
-// 동적 렌더링 강제 (빌드 시 정적 생성 방지)
-export const dynamic = 'force-dynamic';
+// ISR: 1시간마다 재생성 (리그 목록/로고는 거의 변하지 않음)
+export const revalidate = 3600;
 
 import { MAJOR_LEAGUE_IDS, LEAGUE_NAMES_MAP } from '@/domains/livescore/constants/league-mappings';
 import { LeagueCard } from '@/domains/livescore/components/football/leagues';

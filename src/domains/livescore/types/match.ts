@@ -93,55 +93,6 @@ export interface Team {
   update?: string;
 }
 
-// 팀 라인업 타입
-export interface TeamLineup {
-  team: {
-    id: number;
-    name: string;
-    logo: string;
-    colors: {
-      player: {
-        primary: string;
-        number: string;
-        border: string;
-      };
-      goalkeeper: {
-        primary: string;
-        number: string;
-        border: string;
-      };
-    };
-  };
-  formation: string;
-  startXI: Array<{
-    player: {
-      id: number;
-      name: string;
-      number: number;
-      pos: string;
-      grid: string;
-      captain?: boolean;
-      photo?: string;
-    };
-  }>;
-  substitutes: Array<{
-    player: {
-      id: number;
-      name: string;
-      number: number;
-      pos: string;
-      grid: string;
-      captain?: boolean;
-      photo?: string;
-    };
-  }>;
-  coach: {
-    id: number;
-    name: string;
-    photo: string;
-  };
-}
-
 // 팀 통계 타입
 export interface TeamStats {
   team: {
@@ -247,52 +198,3 @@ export interface TeamStatistics {
   statistics: TeamStat[];
 }
 
-// 매치 데이터 타입 정의
-export interface MatchDataType {
-  fixture?: {
-    date?: string;
-    status?: {
-      short?: string;
-      long?: string;
-      elapsed?: number | null;
-    };
-    timestamp?: number;
-  };
-  league?: {
-    name?: string;
-    name_ko?: string;
-    logo?: string;
-    id?: number;
-  };
-  teams?: {
-    home?: {
-      id?: number;
-      name?: string;
-      name_ko?: string;
-      logo?: string;
-      formation?: string;
-    };
-    away?: {
-      id?: number;
-      name?: string;
-      name_ko?: string;
-      logo?: string;
-      formation?: string;
-    };
-  };
-  goals?: {
-    home?: number | null;
-    away?: number | null;
-  };
-  score?: {
-    halftime?: {
-      home?: number | null;
-      away?: number | null;
-    };
-    fulltime?: {
-      home?: number | null;
-      away?: number | null;
-    };
-  };
-  [key: string]: unknown;
-} 

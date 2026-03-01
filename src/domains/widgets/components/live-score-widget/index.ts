@@ -4,4 +4,4 @@ export { LiveScoreWidgetV2Server as LiveScoreWidgetV2 };
 export default LiveScoreWidgetV2Server;
 
 // 타입 re-export
-export type { Team, Match, League, LiveScoreWidgetV2Props } from './types';
+export type { WidgetTeam, WidgetMatch, WidgetLeague, LiveScoreWidgetV2Props } from './types';

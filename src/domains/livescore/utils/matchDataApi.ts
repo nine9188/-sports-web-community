@@ -3,6 +3,7 @@
 import { cache } from 'react';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
+import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
 // 선수 타입 정의
 interface Player {
@@ -130,27 +131,8 @@ export async function fetchMatchData(matchId: string): Promise<MatchResponse> {
       throw new Error('Match ID is required');
     }
 
-    // API 요청 - API-Sports 직접 호출
-    const response = await fetch(
-      `https://v3.football.api-sports.io/fixtures?id=${matchId}`,
-      {
-        headers: {
-          'x-rapidapi-host': 'v3.football.api-sports.io',
-          'x-rapidapi-key': process.env.FOOTBALL_API_KEY || '',
-        },
-        cache: 'no-store'
-      }
-    );
-
-    if (!response.ok) {
-      console.error(`API-Sports 응답 오류 (${response.status}):`, matchId);
-      return {
-        success: false,
-        error: `외부 API 서버 오류 (${response.status}). 잠시 후 다시 시도해주세요.`
-      };
-    }
-
-    const data = await response.json();
+    // 표준 API 래퍼 사용 (L1 Data Cache: revalidate 60초)
+    const data = await fetchFromFootballApi('fixtures', { id: matchId });
     
     if (!data?.response?.[0]) {
       return { 

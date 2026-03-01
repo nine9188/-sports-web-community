@@ -12,10 +12,29 @@ import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
  * - match_status: 경기 상태 (FT만 저장)
  * - updated_at: 마지막 갱신 시각
  *
- * 종료된 경기(FT)만 캐시합니다. 데이터가 불변이므로 TTL 없이 영구 캐시.
+ * 종료된 경기(FT)만 캐시합니다.
+ * 경기 직후 데이터(events, stats 등)가 불완전할 수 있으므로
+ * data_type별 soft TTL을 적용하여 재검증 기회를 제공합니다.
  */
 
 type MatchDataType = 'full' | 'events' | 'lineups' | 'stats' | 'power' | 'playerRatings' | 'matchPlayerStats';
+
+// data_type별 soft TTL (밀리초). 없으면 영구 캐시.
+const SOFT_TTL_MS: Partial<Record<MatchDataType, number>> = {
+  full:             6 * 60 * 60 * 1000,  // 6시간
+  events:           6 * 60 * 60 * 1000,
+  lineups:          6 * 60 * 60 * 1000,
+  stats:            6 * 60 * 60 * 1000,
+  playerRatings:    6 * 60 * 60 * 1000,
+  matchPlayerStats: 6 * 60 * 60 * 1000,
+  // power: TTL 없음 (계산 결과, 불변)
+};
+
+function isExpired(updatedAt: string, dataType: MatchDataType): boolean {
+  const ttl = SOFT_TTL_MS[dataType];
+  if (!ttl) return false; // TTL 없으면 만료 안 됨
+  return Date.now() - new Date(updatedAt).getTime() > ttl;
+}
 
 /**
  * 캐시에서 데이터 읽기
@@ -30,7 +49,7 @@ export async function getMatchCache(
 
     const { data: row, error } = await supabase
       .from('match_cache')
-      .select('data')
+      .select('data, updated_at')
       .eq('match_id', matchId)
       .eq('data_type', dataType)
       .maybeSingle();
@@ -39,6 +58,7 @@ export async function getMatchCache(
       return null;
     }
 
+    if (isExpired(row.updated_at, dataType)) return null;
     return row.data;
   } catch {
     return null;
@@ -57,7 +77,7 @@ export async function getMatchCacheBulk(
 
     const { data: rows, error } = await supabase
       .from('match_cache')
-      .select('data_type, data')
+      .select('data_type, data, updated_at')
       .eq('match_id', matchId)
       .in('data_type', dataTypes);
 
@@ -67,7 +87,9 @@ export async function getMatchCacheBulk(
 
     const result: Record<string, unknown> = {};
     for (const row of rows) {
-      result[row.data_type] = row.data;
+      if (!isExpired(row.updated_at, row.data_type as MatchDataType)) {
+        result[row.data_type] = row.data;
+      }
     }
     return result;
   } catch {

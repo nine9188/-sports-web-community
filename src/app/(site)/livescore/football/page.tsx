@@ -1,12 +1,10 @@
-// 동적 렌더링 강제 (빌드 시 정적 생성 방지)
-export const dynamic = 'force-dynamic';
-
-import { fetchMatchesByDateCached, MatchData } from '@/domains/livescore/actions/footballApi';
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import getQueryClient from '@/shared/api/getQueryClient';
+import { liveScoreKeys } from '@/shared/constants/queryKeys';
+import { fetchMatchesByDateCached } from '@/domains/livescore/actions/footballApi';
+import { transformMatches } from '@/domains/livescore/utils/transformMatch';
 import LiveScoreView from '@/domains/livescore/components/football/MainView/LiveScoreView';
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
-import { getTeamById } from '@/domains/livescore/constants/teams/index';
-import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
-import { Match } from '@/domains/livescore/types/match';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 
 export async function generateMetadata() {
@@ -16,10 +14,6 @@ export async function generateMetadata() {
     path: '/livescore/football',
   });
 }
-
-// 4590 표준: placeholder URL
-const PLACEHOLDER_TEAM = '/images/placeholder-team.svg';
-const PLACEHOLDER_LEAGUE = '/images/placeholder-league.svg';
 
 // KST 기준의 현재 날짜(yyyy-MM-dd) 문자열 생성
 const getKstDateString = (): string => {
@@ -43,123 +37,40 @@ const getAdjacentDates = (dateStr: string) => {
   return { yesterdayStr, tomorrowStr };
 };
 
-// 서버 컴포넌트로 변경 - Server Action을 직접 호출
-// searchParams 타입을 Promise로 감싸도록 수정
+// 서버 컴포넌트 - HydrationBoundary + prefetchQuery 패턴
 export default async function FootballLiveScorePage({
-  searchParams: searchParamsPromise // Promise를 명시적으로 받음
+  searchParams: searchParamsPromise
 }: {
-  searchParams?: Promise<{ date?: string }> // 타입 정의 수정
+  searchParams?: Promise<{ date?: string }>
 }) {
-  // Promise를 await으로 해소
   const searchParams = await searchParamsPromise;
-
-  // 요청된 날짜 파라미터를 사용하거나 현재 날짜를 기본값으로 사용
-  // KST 기준으로 기본 날짜를 생성
   const dateParam = searchParams?.date ?? getKstDateString();
+  const { yesterdayStr, tomorrowStr } = getAdjacentDates(dateParam);
 
-  try {
-    // ⭐ Option 3 적용: 서버에서 3일치 데이터 미리 로드 (봇 프리페치 방지)
-    const { yesterdayStr, tomorrowStr } = getAdjacentDates(dateParam);
+  const queryClient = getQueryClient();
 
-    const [yesterdayData, todayData, tomorrowData] = await Promise.all([
-      fetchMatchesByDateCached(yesterdayStr),
-      fetchMatchesByDateCached(dateParam),
-      fetchMatchesByDateCached(tomorrowStr),
-    ]);
+  // 3일치 prefetch (병렬) — prefetchQuery는 에러를 throw하지 않음
+  await Promise.all([
+    queryClient.prefetchQuery({
+      queryKey: liveScoreKeys.matches(yesterdayStr),
+      queryFn: async () => transformMatches(await fetchMatchesByDateCached(yesterdayStr)),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: liveScoreKeys.matches(dateParam),
+      queryFn: async () => transformMatches(await fetchMatchesByDateCached(dateParam)),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: liveScoreKeys.matches(tomorrowStr),
+      queryFn: async () => transformMatches(await fetchMatchesByDateCached(tomorrowStr)),
+    }),
+  ]);
 
-    const matchesData = todayData;
-    
-    // MatchData 타입을 클라이언트 컴포넌트의 Match 타입으로 변환
-    const processMatchData = (matchData: MatchData[]): Match[] => {
-      return matchData.map((match: MatchData) => {
-        // 한국어 팀명과 리그명 매핑
-        const leagueInfo = match.league?.id ? getLeagueById(match.league.id) : null;
-        const homeTeamInfo = match.teams?.home?.id ? getTeamById(match.teams.home.id) : null;
-        const awayTeamInfo = match.teams?.away?.id ? getTeamById(match.teams.away.id) : null;
-
-        // 매핑된 정보 사용 (있는 경우)
-        const homeTeamName = homeTeamInfo?.name_ko || match.teams.home.name;
-        const awayTeamName = awayTeamInfo?.name_ko || match.teams.away.name;
-        const leagueName = leagueInfo?.nameKo || match.league.name;
-
-        return {
-          id: match.id,
-          status: {
-            code: match.status.code,
-            name: match.status.name,
-            elapsed: match.status.elapsed
-          },
-          time: {
-            date: match.time.date,
-            time: match.time.timestamp
-          },
-          league: {
-            id: match.league.id,
-            name: leagueName, // 매핑된 리그 이름 사용
-            country: match.league.country,
-            logo: match.league.logo || PLACEHOLDER_LEAGUE,
-            logoDark: match.league.logoDark || '',  // 다크모드 리그 로고
-            flag: match.league.flag || ''
-          },
-          teams: {
-            home: {
-              id: match.teams.home.id,
-              name: homeTeamName, // 매핑된 팀 이름 사용
-              img: match.teams.home.logo || PLACEHOLDER_TEAM,
-              score: match.goals.home,
-              form: '',
-              formation: undefined
-            },
-            away: {
-              id: match.teams.away.id,
-              name: awayTeamName, // 매핑된 팀 이름 사용
-              img: match.teams.away.logo || PLACEHOLDER_TEAM,
-              score: match.goals.away,
-              form: '',
-              formation: undefined
-            }
-          }
-        };
-      });
-    };
-
-    // 3일치 데이터 모두 처리
-    const processedYesterday = processMatchData(yesterdayData);
-    const processedToday = processMatchData(todayData);
-    const processedTomorrow = processMatchData(tomorrowData);
-
-    // 클라이언트 컴포넌트에 3일치 초기 데이터 전달
-    return (
-      <>
-        <TrackPageVisit id="livescore" slug="livescore/football" name="라이브스코어" />
-        <LiveScoreView
-          initialYesterday={processedYesterday}
-          initialToday={processedToday}
-          initialTomorrow={processedTomorrow}
-          initialDate={dateParam}
-          yesterdayDate={yesterdayStr}
-          tomorrowDate={tomorrowStr}
-        />
-      </>
-    );
-  } catch (error) {
-    // 오류 발생 시 빈 데이터로 렌더링
-    console.error('축구 경기 데이터 가져오기 실패:', error);
-    const dateParam = searchParams?.date ?? getKstDateString();
-    const { yesterdayStr, tomorrowStr } = getAdjacentDates(dateParam);
-
-    return (
-      <>
-        <TrackPageVisit id="livescore" slug="livescore/football" name="라이브스코어" />
-        <LiveScoreView
-          initialYesterday={[]}
-          initialToday={[]}
-          initialTomorrow={[]}
-          initialDate={dateParam}
-          yesterdayDate={yesterdayStr}
-          tomorrowDate={tomorrowStr}
-        />
-      </>
-    );
-  }
+  return (
+    <>
+      <TrackPageVisit id="livescore" slug="livescore/football" name="라이브스코어" />
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <LiveScoreView initialDate={dateParam} />
+      </HydrationBoundary>
+    </>
+  );
 }

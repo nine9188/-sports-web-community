@@ -1,5 +1,6 @@
 'use server';
 
+import { cache } from 'react';
 import { getMajorLeagueIds } from '../constants/league-mappings';
 import { getTeamLogoUrls, getLeagueLogoUrls } from './images';
 
@@ -140,6 +141,13 @@ interface ApiPlayer {
 const API_BASE_URL = 'https://v3.football.api-sports.io';
 const API_KEY = process.env.FOOTBALL_API_KEY || '';
 
+// ── 유틸리티 ──
+
+/** KST 기준 날짜 문자열 (yyyy-MM-dd) */
+function toKstDateString(baseUtc: Date): string {
+  const kst = new Date(baseUtc.getTime() + 9 * 60 * 60 * 1000);
+  return kst.toISOString().split('T')[0];
+}
 
 // MultiDayMatches 결과 타입 정의
 export interface MultiDayMatchesResult {
@@ -172,6 +180,8 @@ export interface TodayMatchesResult {
   };
   error?: string;
 }
+
+// ── API 호출 ──
 
 export const fetchFromFootballApi = async (endpoint: string, params: Record<string, string | number> = {}) => {
   // URL 파라미터 구성
@@ -235,152 +245,200 @@ export const fetchFromFootballApi = async (endpoint: string, params: Record<stri
       throw new Error(`API 응답 오류: ${response.status}`);
     }
 
-    const rawData = await response.json();
-    
-    // JSON-safe 객체로 강제 변환하여 Stream 직렬화 문제 해결
-    return JSON.parse(JSON.stringify(rawData));
+    return await response.json();
   } catch (error) {
     throw error;
   }
 };
 
-// 특정 날짜의 경기 정보 가져오기
-export async function fetchMatchesByDate(date: string): Promise<MatchData[]> {
+// ── Raw 데이터 (이미지 해결 없음) ──
+
+/** API 호출 + 리그 필터링만, 이미지 URL은 빈 문자열 */
+async function fetchMatchesByDateRaw(date: string): Promise<MatchData[]> {
   try {
     const data = await fetchFromFootballApi('fixtures', { date });
-    
-    if (data.response) {
-      // 주요 리그로 필터링 - 매핑된 모든 리그 ID 사용
-      const majorLeagueIds = getMajorLeagueIds();
 
-      const filteredApiMatches = data.response.filter(
-        (match: ApiMatch) => majorLeagueIds.includes(match.league?.id ?? 0)
-      );
+    if (!data.response) return [];
 
-      // 4590 표준: 팀/리그 ID 수집 후 배치로 Storage URL 조회
-      const teamIds = new Set<number>();
-      const leagueIds = new Set<number>();
+    const majorLeagueIds = getMajorLeagueIds();
+    const filteredApiMatches = data.response.filter(
+      (match: ApiMatch) => majorLeagueIds.includes(match.league?.id ?? 0)
+    );
 
-      filteredApiMatches.forEach((match: ApiMatch) => {
-        if (match.teams?.home?.id) teamIds.add(match.teams.home.id);
-        if (match.teams?.away?.id) teamIds.add(match.teams.away.id);
-        if (match.league?.id) leagueIds.add(match.league.id);
-      });
-
-      // 배치로 Storage URL 조회 (일반 + 다크모드 리그 로고)
-      const [teamLogoUrls, leagueLogoUrls, leagueLogoDarkUrls] = await Promise.all([
-        teamIds.size > 0 ? getTeamLogoUrls([...teamIds]) : Promise.resolve({}),
-        leagueIds.size > 0 ? getLeagueLogoUrls([...leagueIds]) : Promise.resolve({}),
-        leagueIds.size > 0 ? getLeagueLogoUrls([...leagueIds], true) : Promise.resolve({})  // 다크모드
-      ]);
-
-      const filteredMatches = filteredApiMatches.map((match: ApiMatch): MatchData => {
-        const homeId = match.teams?.home?.id || 0;
-        const awayId = match.teams?.away?.id || 0;
-        const leagueId = match.league?.id || 0;
-
-        // MatchData 형식으로 변환 (4590 표준: Storage URL 사용)
-        return {
-          id: match.fixture?.id || 0,
-          status: {
-            code: match.fixture?.status?.short || '',
-            name: match.fixture?.status?.long || '',
-            elapsed: match.fixture?.status?.elapsed || null
-          },
-          time: {
-            timestamp: match.fixture?.timestamp || 0,
-            date: match.fixture?.date || '',
-            timezone: match.fixture?.timezone || 'UTC'
-          },
-          league: {
-            id: leagueId,
-            name: match.league?.name || '',
-            country: match.league?.country || '',
-            logo: leagueLogoUrls[leagueId] || '',  // 4590 표준: Storage URL
-            logoDark: leagueLogoDarkUrls[leagueId] || '',  // 다크모드 리그 로고
-            flag: match.league?.flag || ''
-          },
-          teams: {
-            home: {
-              id: homeId,
-              name: match.teams?.home?.name || '',
-              logo: teamLogoUrls[homeId] || '',  // 4590 표준: Storage URL
-              winner: match.teams?.home?.winner !== undefined ? match.teams.home.winner : null
-            },
-            away: {
-              id: awayId,
-              name: match.teams?.away?.name || '',
-              logo: teamLogoUrls[awayId] || '',  // 4590 표준: Storage URL
-              winner: match.teams?.away?.winner !== undefined ? match.teams.away.winner : null
-            }
-          },
-          goals: {
-            home: match.goals?.home ?? 0,
-            away: match.goals?.away ?? 0
-          }
-        };
-      });
-
-      return JSON.parse(JSON.stringify(filteredMatches));
-    }
-
-    return [];
-  } catch {
+    return filteredApiMatches.map((match: ApiMatch): MatchData => ({
+      id: match.fixture?.id || 0,
+      status: {
+        code: match.fixture?.status?.short || '',
+        name: match.fixture?.status?.long || '',
+        elapsed: match.fixture?.status?.elapsed || null
+      },
+      time: {
+        timestamp: match.fixture?.timestamp || 0,
+        date: match.fixture?.date || '',
+        timezone: match.fixture?.timezone || 'UTC'
+      },
+      league: {
+        id: match.league?.id || 0,
+        name: match.league?.name || '',
+        country: match.league?.country || '',
+        logo: '',
+        logoDark: '',
+        flag: match.league?.flag || ''
+      },
+      teams: {
+        home: {
+          id: match.teams?.home?.id || 0,
+          name: match.teams?.home?.name || '',
+          logo: '',
+          winner: match.teams?.home?.winner !== undefined ? match.teams.home.winner : null
+        },
+        away: {
+          id: match.teams?.away?.id || 0,
+          name: match.teams?.away?.name || '',
+          logo: '',
+          winner: match.teams?.away?.winner !== undefined ? match.teams.away.winner : null
+        }
+      },
+      goals: {
+        home: match.goals?.home ?? 0,
+        away: match.goals?.away ?? 0
+      }
+    }));
+  } catch (error) {
+    console.error(`[fetchMatchesByDateRaw] ${date} 조회 실패:`, error);
     return [];
   }
 }
 
-import { cache } from 'react';
+// ── 이미지 해결 ──
+
+/** 단일 매치에 이미지 URL 적용 */
+function applyImageUrls(
+  match: MatchData,
+  teamLogos: Record<number, string>,
+  leagueLogos: Record<number, string>,
+  leagueLogosDark: Record<number, string>
+): MatchData {
+  return {
+    ...match,
+    league: {
+      ...match.league,
+      logo: leagueLogos[match.league.id] || '',
+      logoDark: leagueLogosDark[match.league.id] || '',
+    },
+    teams: {
+      home: {
+        ...match.teams.home,
+        logo: teamLogos[match.teams.home.id] || '',
+      },
+      away: {
+        ...match.teams.away,
+        logo: teamLogos[match.teams.away.id] || '',
+      },
+    },
+  };
+}
+
+/** 여러 날짜의 raw 매치 데이터에 배치로 이미지 URL 적용 (Supabase 쿼리 3회) */
+async function resolveMatchImages(
+  matchesByDay: { key: string; matches: MatchData[] }[]
+): Promise<Map<string, MatchData[]>> {
+  // 1. 모든 팀/리그 ID 수집
+  const teamIds = new Set<number>();
+  const leagueIds = new Set<number>();
+
+  for (const { matches } of matchesByDay) {
+    for (const match of matches) {
+      if (match.teams.home.id) teamIds.add(match.teams.home.id);
+      if (match.teams.away.id) teamIds.add(match.teams.away.id);
+      if (match.league.id) leagueIds.add(match.league.id);
+    }
+  }
+
+  // 2. 배치 Supabase 쿼리 (3회만)
+  const [teamLogoUrls, leagueLogoUrls, leagueLogoDarkUrls] = await Promise.all([
+    teamIds.size > 0 ? getTeamLogoUrls([...teamIds]) : Promise.resolve({}),
+    leagueIds.size > 0 ? getLeagueLogoUrls([...leagueIds]) : Promise.resolve({}),
+    leagueIds.size > 0 ? getLeagueLogoUrls([...leagueIds], true) : Promise.resolve({})
+  ]);
+
+  // 3. 각 매치에 이미지 URL 적용
+  const result = new Map<string, MatchData[]>();
+  for (const { key, matches } of matchesByDay) {
+    result.set(key, matches.map(match =>
+      applyImageUrls(match, teamLogoUrls, leagueLogoUrls, leagueLogoDarkUrls)
+    ));
+  }
+
+  return result;
+}
+
+// ── 공개 함수 (하위 호환) ──
+
+// 특정 날짜의 경기 정보 가져오기
+export async function fetchMatchesByDate(date: string): Promise<MatchData[]> {
+  try {
+    const rawMatches = await fetchMatchesByDateRaw(date);
+    if (rawMatches.length === 0) return [];
+
+    const resolved = await resolveMatchImages([{ key: date, matches: rawMatches }]);
+    return JSON.parse(JSON.stringify(resolved.get(date) || []));
+  } catch (error) {
+    console.error(`[fetchMatchesByDate] ${date} 조회 실패:`, error);
+    return [];
+  }
+}
 
 // 특정 날짜의 경기 정보 가져오기 (캐시 적용 버전) - 같은 렌더 사이클 내 중복 호출 방지
 export const fetchMatchesByDateCached = cache(async (date: string): Promise<MatchData[]> => {
   return fetchMatchesByDate(date);
 });
 
+// ── 메인페이지 최적화 함수 ──
+
 // 어제, 오늘, 내일 경기 데이터를 한 번에 가져오기 - cache 적용
 // 참고: API-Football의 from/to 파라미터는 league/season 필수 → date 파라미터 3회 병렬 호출 사용
 export const fetchMultiDayMatches = cache(async (): Promise<MultiDayMatchesResult> => {
-  // KST 기준 날짜 문자열 생성 유틸 (yyyy-MM-dd)
-  const toKstDateString = (baseUtc: Date) => {
-    const kst = new Date(baseUtc.getTime() + 9 * 60 * 60 * 1000);
-    return kst.toISOString().split('T')[0];
-  };
-
-  // 서버 시간(UTC) 기준으로 KST 날짜 문자열 산출
   const nowUtc = new Date();
   const yesterdayFormatted = toKstDateString(new Date(nowUtc.getTime() - 24 * 60 * 60 * 1000));
   const todayFormatted = toKstDateString(nowUtc);
   const tomorrowFormatted = toKstDateString(new Date(nowUtc.getTime() + 24 * 60 * 60 * 1000));
 
   try {
-    // 병렬로 3일치 데이터 가져오기 - 캐시된 버전 사용
-    const [yesterdayMatches, todayMatches, tomorrowMatches] = await Promise.all([
-      fetchMatchesByDateCached(yesterdayFormatted),
-      fetchMatchesByDateCached(todayFormatted),
-      fetchMatchesByDateCached(tomorrowFormatted)
+    // 병렬로 3일치 raw 데이터 가져오기 (이미지 해결 없음)
+    const [yesterdayRaw, todayRaw, tomorrowRaw] = await Promise.all([
+      fetchMatchesByDateRaw(yesterdayFormatted),
+      fetchMatchesByDateRaw(todayFormatted),
+      fetchMatchesByDateRaw(tomorrowFormatted)
     ]);
+
+    // 배치 이미지 해결 (3회 Supabase 쿼리 — 기존 9회에서 감소)
+    const resolved = await resolveMatchImages([
+      { key: 'yesterday', matches: yesterdayRaw },
+      { key: 'today', matches: todayRaw },
+      { key: 'tomorrow', matches: tomorrowRaw }
+    ]);
+
+    const yesterdayMatches = resolved.get('yesterday') || [];
+    const todayMatches = resolved.get('today') || [];
+    const tomorrowMatches = resolved.get('tomorrow') || [];
 
     const totalMatches = yesterdayMatches.length + todayMatches.length + tomorrowMatches.length;
 
-    const result: MultiDayMatchesResult = {
+    return {
       success: true,
       dates: {
         yesterday: yesterdayFormatted,
         today: todayFormatted,
         tomorrow: tomorrowFormatted
       },
-      meta: {
-        totalMatches: totalMatches
-      },
+      meta: { totalMatches },
       data: {
         yesterday: { matches: yesterdayMatches },
         today: { matches: todayMatches },
         tomorrow: { matches: tomorrowMatches }
       }
     };
-
-    // JSON 직렬화로 안전한 객체 보장
-    return JSON.parse(JSON.stringify(result));
   } catch {
     return {
       success: false,
@@ -389,74 +447,7 @@ export const fetchMultiDayMatches = cache(async (): Promise<MultiDayMatchesResul
   }
 });
 
-// 오늘 경기만 가져오기 (모달 최적화용) - cache 적용
-export const fetchTodayMatchesOnly = cache(async (): Promise<TodayMatchesResult> => {
-  // KST 기준 오늘 날짜 문자열 생성
-  const toKstDateString = (baseUtc: Date) => {
-    const kst = new Date(baseUtc.getTime() + 9 * 60 * 60 * 1000);
-    return kst.toISOString().split('T')[0];
-  };
-
-  const nowUtc = new Date();
-  const todayFormatted = toKstDateString(nowUtc);
-
-  try {
-    // 캐시된 버전 사용 - page.tsx와 같은 데이터 공유
-    const todayMatches = await fetchMatchesByDateCached(todayFormatted);
-
-    const result: TodayMatchesResult = {
-      success: true,
-      date: todayFormatted,
-      meta: {
-        totalMatches: todayMatches.length
-      },
-      data: {
-        today: { matches: todayMatches }
-      }
-    };
-
-    return JSON.parse(JSON.stringify(result));
-  } catch {
-    return {
-      success: false,
-      error: '데이터를 가져오는데 실패했습니다.'
-    };
-  }
-});
-
-/**
- * 오늘 경기 수만 반환 (헤더 인디케이터용 경량 함수)
- * React cache로 중복 호출 방지
- */
-export const fetchTodayMatchCount = cache(async (): Promise<{
-  success: boolean;
-  count: number;
-}> => {
-  try {
-    // KST 기준 오늘 날짜
-    const toKstDateString = (baseUtc: Date) => {
-      const kst = new Date(baseUtc.getTime() + 9 * 60 * 60 * 1000);
-      return kst.toISOString().split('T')[0];
-    };
-
-    const nowUtc = new Date();
-    const todayFormatted = toKstDateString(nowUtc);
-
-    // 이미 캐시된 fetchMatchesByDateCached 사용
-    const todayMatches = await fetchMatchesByDateCached(todayFormatted);
-
-    return {
-      success: true,
-      count: todayMatches.length
-    };
-  } catch (error) {
-    console.error('오늘 경기 수 조회 실패:', error);
-    return {
-      success: false,
-      count: 0
-    };
-  }
-});
+// ── 기타 유지 함수 ──
 
 // 특정 날짜의 경기 가져오기 (어제/내일 lazy load용)
 export async function fetchMatchesByDateLabel(dateLabel: 'yesterday' | 'today' | 'tomorrow'): Promise<{
@@ -465,11 +456,6 @@ export async function fetchMatchesByDateLabel(dateLabel: 'yesterday' | 'today' |
   matches?: MatchData[];
   error?: string;
 }> {
-  const toKstDateString = (baseUtc: Date) => {
-    const kst = new Date(baseUtc.getTime() + 9 * 60 * 60 * 1000);
-    return kst.toISOString().split('T')[0];
-  };
-
   const nowUtc = new Date();
   let targetDate: string;
 
@@ -491,7 +477,7 @@ export async function fetchMatchesByDateLabel(dateLabel: 'yesterday' | 'today' |
     return {
       success: true,
       date: targetDate,
-      matches: JSON.parse(JSON.stringify(matches))
+      matches
     };
   } catch {
     return {
@@ -501,61 +487,11 @@ export async function fetchMatchesByDateLabel(dateLabel: 'yesterday' | 'today' |
   }
 }
 
-// 위젯용 빅매치 필터링 함수
-export const fetchBigMatches = cache(async (): Promise<MultiDayMatchesResult> => {
-  const result = await fetchMultiDayMatches();
-
-  if (!result.success || !result.data) {
-    return result;
-  }
-
-  // 빅매치 리그 ID - 유럽 Top 5 리그 + 유럽 컵대회 + FA컵 + K리그1
-  const bigMatchLeagues = [
-    39,  // 프리미어 리그
-    140, // 라리가
-    78,  // 분데스리가
-    135, // 세리에 A
-    61,  // 리그앙
-    2,   // 챔피언스 리그
-    3,   // 유로파 리그
-    848, // 컨퍼런스 리그
-    531, // UEFA 슈퍼컵
-    45,  // FA컵
-    292, // K리그1
-  ];
-
-  const filterMatches = (matches: MatchData[]) => {
-    return matches.filter(match =>
-      bigMatchLeagues.includes(match.league?.id || 0)
-    );
-  };
-
-  const filteredData = {
-    yesterday: { matches: filterMatches(result.data.yesterday.matches) },
-    today: { matches: filterMatches(result.data.today.matches) },
-    tomorrow: { matches: filterMatches(result.data.tomorrow.matches) }
-  };
-
-  const totalMatches =
-    filteredData.yesterday.matches.length +
-    filteredData.today.matches.length +
-    filteredData.tomorrow.matches.length;
-
-  return {
-    success: true,
-    dates: result.dates,
-    meta: {
-      totalMatches
-    },
-    data: filteredData
-  };
-});
-
 // 특정 경기 상세 정보 가져오기
 export async function fetchMatchDetails(matchId: string) {
   try {
     const data = await fetchFromFootballApi('fixtures', { id: matchId });
-    
+
     if (data.response?.[0]) {
       const matchData = data.response[0];
 
@@ -573,22 +509,16 @@ export async function fetchMatchDetails(matchId: string) {
           });
         });
       }
-      
+
       // JSON 직렬화로 안전한 객체 보장
       return JSON.parse(JSON.stringify(matchData));
     }
-    
+
     return null;
   } catch {
     throw new Error('경기 정보를 가져오는데 실패했습니다.');
   }
 }
-
-// 캐싱을 적용한 다중 경기 데이터 가져오기
-export const fetchCachedMultiDayMatches = fetchMultiDayMatches;
-
-// 캐싱을 적용한 경기 상세 정보 가져오기
-export const fetchCachedMatchDetails = fetchMatchDetails;
 
 // ===== 리그 관련 함수들 =====
 
@@ -669,7 +599,7 @@ async function isSeasonCompleted(leagueId: string, season: string = '2024'): Pro
     const now = new Date();
     const currentYear = now.getFullYear();
     const seasonYear = parseInt(season);
-    
+
     // K리그의 경우 특별 처리
     const kLeagueIds = ['292', '293', '294']; // K리그 1, K리그 2, K리그 3
     if (kLeagueIds.includes(leagueId)) {
@@ -682,12 +612,12 @@ async function isSeasonCompleted(leagueId: string, season: string = '2024'): Pro
         return true;
       }
     }
-    
+
     // 일반적인 경우: 시즌 연도가 현재 연도보다 이전이면 완료된 것으로 간주
     if (seasonYear < currentYear) {
       return true;
     }
-    
+
     // 현재 연도 시즌은 진행 중으로 간주
     return false;
   } catch {
@@ -701,10 +631,10 @@ export async function fetchLeagueTeams(leagueId: string): Promise<LeagueTeam[]> 
   try {
     // 모든 리그 2025 시즌으로 통일 (데이터 일관성 유지)
     const season = '2025';
-    
+
     // 시즌 완료 여부 확인
     const seasonCompleted = await isSeasonCompleted(leagueId, season);
-    
+
     // 팀 목록, 순위 정보, 우승팀 정보를 병렬로 가져오기
     const [teamsData, standingsData, winnerPromise] = await Promise.all([
       fetchFromFootballApi('teams', { league: leagueId, season }),
@@ -784,7 +714,7 @@ export async function fetchLeagueTeams(leagueId: string): Promise<LeagueTeam[]> 
       // 우승팀이 있으면 맨 앞으로
       if (a.isWinner && !b.isWinner) return -1;
       if (!a.isWinner && b.isWinner) return 1;
-      
+
       // 둘 다 우승팀이 아니면 기존 정렬 로직
       if (a.position && b.position) {
         return a.position - b.position;
@@ -869,12 +799,12 @@ export async function fetchCupFinal(leagueId: string, season: string = '2024'): 
 
     if (apiData.response && Array.isArray(apiData.response) && apiData.response.length > 0) {
       const finalMatch = apiData.response[0];
-      
+
       // 경기가 끝났고 승자가 있는 경우
       if (finalMatch.fixture?.status?.short === 'FT') {
         const homeTeam = finalMatch.teams?.home;
         const awayTeam = finalMatch.teams?.away;
-        
+
         if (homeTeam?.winner === true) {
           return homeTeam.id;
         } else if (awayTeam?.winner === true) {
@@ -894,7 +824,7 @@ export async function fetchCupFinal(leagueId: string, season: string = '2024'): 
 export async function fetchCupWinner(leagueId: string, season: string = '2024'): Promise<number | null> {
   const possibleFinalRounds = [
     'Final',
-    'Finals', 
+    'Finals',
     'Championship Final',
     'Grand Final',
     'Cup Final'
@@ -908,11 +838,11 @@ export async function fetchCupWinner(leagueId: string, season: string = '2024'):
 
         if (apiData.response && Array.isArray(apiData.response) && apiData.response.length > 0) {
           const finalMatch = apiData.response[0];
-          
+
           if (finalMatch.fixture?.status?.short === 'FT') {
             const homeTeam = finalMatch.teams?.home;
             const awayTeam = finalMatch.teams?.away;
-            
+
             if (homeTeam?.winner === true) {
               return homeTeam.id;
             } else if (awayTeam?.winner === true) {
@@ -927,4 +857,4 @@ export async function fetchCupWinner(leagueId: string, season: string = '2024'):
   }
 
   return null;
-} 
+}

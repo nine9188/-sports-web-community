@@ -4,9 +4,38 @@
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { formatDate } from '@/shared/utils/dateUtils';
 import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
+import { fetchTeamLogos, fetchLeagueLogos } from './fetchPostsHelpers';
 import type { Post, PostsResponse } from '../getPosts';
 
 export type SearchType = 'title_content' | 'title' | 'content' | 'comment' | 'nickname';
+
+/**
+ * 게시글 배열에서 team_id/league_id를 수집하여 로고 URL을 일괄 조회
+ * 4590 표준: Storage URL 사용
+ */
+async function fetchLogosForPosts(
+  supabase: any,
+  posts: any[]
+): Promise<{
+  teamLogoMap: Record<string, string>;
+  leagueLogoMap: Record<string, string>;
+  leagueLogoDarkMap: Record<string, string>;
+}> {
+  const teamIds = [...new Set(
+    posts.map((p: any) => p.boards?.team_id).filter(Boolean)
+  )] as number[];
+  const leagueIds = [...new Set(
+    posts.map((p: any) => p.boards?.league_id).filter(Boolean)
+  )] as number[];
+
+  const [teamLogoMap, leagueLogoMap, leagueLogoDarkMap] = await Promise.all([
+    fetchTeamLogos(supabase, teamIds),
+    fetchLeagueLogos(supabase, leagueIds),
+    fetchLeagueLogos(supabase, leagueIds, true),
+  ]);
+
+  return { teamLogoMap, leagueLogoMap, leagueLogoDarkMap };
+}
 
 // RPC 결과 타입 (Supabase 타입에 미포함)
 interface SearchPostResult {
@@ -180,26 +209,34 @@ export async function searchBoardPosts({
       }
     }
 
-    // 아이콘 조회
+    // 아이콘 조회 + 로고 조회 (병렬)
     const iconIds = posts
       .map((p: any) => p.profiles?.icon_id)
       .filter(Boolean) as number[];
 
     const iconMap: Record<number, string> = {};
-    if (iconIds.length > 0) {
-      const { data: iconsData } = await supabase
-        .from('shop_items')
-        .select('id, image_url')
-        .in('id', iconIds);
 
-      if (iconsData) {
-        iconsData.forEach((icon: any) => {
-          if (icon.id && icon.image_url) {
-            iconMap[icon.id] = icon.image_url;
+    const [, logos] = await Promise.all([
+      (async () => {
+        if (iconIds.length > 0) {
+          const { data: iconsData } = await supabase
+            .from('shop_items')
+            .select('id, image_url')
+            .in('id', iconIds);
+
+          if (iconsData) {
+            iconsData.forEach((icon: any) => {
+              if (icon.id && icon.image_url) {
+                iconMap[icon.id] = icon.image_url;
+              }
+            });
           }
-        });
-      }
-    }
+        }
+      })(),
+      fetchLogosForPosts(supabase, posts),
+    ]);
+
+    const { teamLogoMap, leagueLogoMap, leagueLogoDarkMap } = logos;
 
     // 포맷팅
     const formattedPosts: Post[] = posts.map((post: any) => {
@@ -235,8 +272,9 @@ export async function searchBoardPosts({
         content: typeof post.content === 'string' ? post.content : JSON.stringify(post.content || ''),
         team_id: board?.team_id || null,
         league_id: board?.league_id || null,
-        team_logo: null,
-        league_logo: null,
+        team_logo: board?.team_id ? teamLogoMap[board.team_id] || null : null,
+        league_logo: board?.league_id ? leagueLogoMap[board.league_id] || null : null,
+        league_logo_dark: board?.league_id ? leagueLogoDarkMap[board.league_id] || null : null,
         is_hidden: post.is_hidden || false,
         is_deleted: post.is_deleted || false,
         is_notice: post.is_notice || false,
@@ -377,26 +415,34 @@ async function searchByComment({
       }
     }
 
-    // 5. 아이콘 조회
+    // 5. 아이콘 조회 + 로고 조회 (병렬)
     const iconIds = posts
       .map((p: any) => p.profiles?.icon_id)
       .filter(Boolean) as number[];
 
     const iconMap: Record<number, string> = {};
-    if (iconIds.length > 0) {
-      const { data: iconsData } = await supabase
-        .from('shop_items')
-        .select('id, image_url')
-        .in('id', iconIds);
 
-      if (iconsData) {
-        iconsData.forEach((icon: any) => {
-          if (icon.id && icon.image_url) {
-            iconMap[icon.id] = icon.image_url;
+    const [, logos] = await Promise.all([
+      (async () => {
+        if (iconIds.length > 0) {
+          const { data: iconsData } = await supabase
+            .from('shop_items')
+            .select('id, image_url')
+            .in('id', iconIds);
+
+          if (iconsData) {
+            iconsData.forEach((icon: any) => {
+              if (icon.id && icon.image_url) {
+                iconMap[icon.id] = icon.image_url;
+              }
+            });
           }
-        });
-      }
-    }
+        }
+      })(),
+      fetchLogosForPosts(supabase, posts),
+    ]);
+
+    const { teamLogoMap, leagueLogoMap, leagueLogoDarkMap } = logos;
 
     // 6. 포맷팅
     const formattedPosts: Post[] = posts.map((post: any) => {
@@ -432,8 +478,9 @@ async function searchByComment({
         content: typeof post.content === 'string' ? post.content : JSON.stringify(post.content || ''),
         team_id: board?.team_id || null,
         league_id: board?.league_id || null,
-        team_logo: null,
-        league_logo: null,
+        team_logo: board?.team_id ? teamLogoMap[board.team_id] || null : null,
+        league_logo: board?.league_id ? leagueLogoMap[board.league_id] || null : null,
+        league_logo_dark: board?.league_id ? leagueLogoDarkMap[board.league_id] || null : null,
         is_hidden: post.is_hidden || false,
         is_deleted: post.is_deleted || false,
         is_notice: post.is_notice || false,
@@ -572,26 +619,34 @@ async function searchByNickname({
       }
     }
 
-    // 5. 아이콘 조회
+    // 5. 아이콘 조회 + 로고 조회 (병렬)
     const iconIds = posts
       .map((p: any) => p.profiles?.icon_id)
       .filter(Boolean) as number[];
 
     const iconMap: Record<number, string> = {};
-    if (iconIds.length > 0) {
-      const { data: iconsData } = await supabase
-        .from('shop_items')
-        .select('id, image_url')
-        .in('id', iconIds);
 
-      if (iconsData) {
-        iconsData.forEach((icon: any) => {
-          if (icon.id && icon.image_url) {
-            iconMap[icon.id] = icon.image_url;
+    const [, logos] = await Promise.all([
+      (async () => {
+        if (iconIds.length > 0) {
+          const { data: iconsData } = await supabase
+            .from('shop_items')
+            .select('id, image_url')
+            .in('id', iconIds);
+
+          if (iconsData) {
+            iconsData.forEach((icon: any) => {
+              if (icon.id && icon.image_url) {
+                iconMap[icon.id] = icon.image_url;
+              }
+            });
           }
-        });
-      }
-    }
+        }
+      })(),
+      fetchLogosForPosts(supabase, posts),
+    ]);
+
+    const { teamLogoMap, leagueLogoMap, leagueLogoDarkMap } = logos;
 
     // 6. 포맷팅
     const formattedPosts: Post[] = posts.map((post: any) => {
@@ -627,8 +682,9 @@ async function searchByNickname({
         content: typeof post.content === 'string' ? post.content : JSON.stringify(post.content || ''),
         team_id: board?.team_id || null,
         league_id: board?.league_id || null,
-        team_logo: null,
-        league_logo: null,
+        team_logo: board?.team_id ? teamLogoMap[board.team_id] || null : null,
+        league_logo: board?.league_id ? leagueLogoMap[board.league_id] || null : null,
+        league_logo_dark: board?.league_id ? leagueLogoDarkMap[board.league_id] || null : null,
         is_hidden: post.is_hidden || false,
         is_deleted: post.is_deleted || false,
         is_notice: post.is_notice || false,

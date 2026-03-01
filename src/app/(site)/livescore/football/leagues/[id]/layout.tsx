@@ -1,5 +1,3 @@
-export const dynamic = 'force-dynamic';
-
 interface LeagueLayoutProps {
   children: React.ReactNode;
   params: Promise<{ id: string }>;

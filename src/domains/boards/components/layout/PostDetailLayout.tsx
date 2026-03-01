@@ -18,6 +18,7 @@ import PostList from "../post/PostList";
 import { HotdealInfoBox } from "../hotdeal";
 import type { DealInfo } from "../../types/hotdeal";
 import HoverMenu from "../common/HoverMenu";
+import BoardSearchBar from "../board/BoardSearchBar";
 import AdSense from "@/shared/components/AdSense";
 import KakaoAd from "@/shared/components/KakaoAd";
 import { ADSENSE, KAKAO } from "@/shared/constants/ad-constants";
@@ -469,7 +470,22 @@ export default function PostDetailLayout({
         withMargin={totalPages > 1}
       />
 
-      {/* 10. 페이지네이션 */}
+      {/* 10. 검색바 + 글쓰기 */}
+      <div className="mt-4 px-4 sm:px-0 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="w-full sm:w-1/2">
+          <BoardSearchBar slug={slug} />
+        </div>
+        {isLoggedIn && (
+          <Link
+            href={`/boards/${slug}/create`}
+            className="flex items-center justify-center gap-1 px-3 py-2 border border-black/7 dark:border-0 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded text-sm transition-colors whitespace-nowrap min-h-[36px]"
+          >
+            <span>글쓰기</span>
+          </Link>
+        )}
+      </div>
+
+      {/* 11. 페이지네이션 */}
       {totalPages > 1 && (
         <div className="px-4 sm:px-6 mt-4">
           <MemoizedPagination

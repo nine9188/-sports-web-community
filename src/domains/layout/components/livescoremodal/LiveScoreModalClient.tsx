@@ -4,8 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Clock, Circle } from 'lucide-react';
 import { Button } from '@/shared/components/ui';
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
-import { fetchMultiDayMatches } from '@/domains/livescore/actions/footballApi';
+import { useMultiDayMatches } from '@/domains/livescore/hooks/useLiveScoreData';
 import LiveScoreContent from './LiveScoreContent';
 import KakaoAd from '@/shared/components/KakaoAd';
 import { KAKAO } from '@/shared/constants/ad-constants';
@@ -21,14 +20,8 @@ export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModal
   const [isMounted, setIsMounted] = useState(false);
   const [selectedDate, setSelectedDate] = useState<'yesterday' | 'today' | 'tomorrow'>('today');
 
-  // 모달이 열릴 때만 데이터 fetch (lazy loading)
-  const { data: liveScoreData, isLoading } = useQuery({
-    queryKey: ['multiDayMatches'],
-    queryFn: () => fetchMultiDayMatches(),
-    staleTime: 1000 * 60 * 5, // 5분 캐시
-    gcTime: 1000 * 60 * 10,
-    refetchOnWindowFocus: false,
-  });
+  // CacheSeeder로 주입된 캐시에서 데이터 사용 (추가 API 호출 없음)
+  const { data: liveScoreData, isLoading } = useMultiDayMatches();
 
   useEffect(() => {
     setIsMounted(true);

@@ -9,8 +9,10 @@ import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
 
 // 병렬 fetch를 위한 데이터 함수들 import (above-fold 위젯만)
-import { fetchLiveScoreData } from '@/domains/widgets/components/live-score-widget/LiveScoreWidgetV2Server';
+import { fetchMultiDayMatches } from '@/domains/livescore/actions/footballApi';
+import { transformToWidgetLeagues } from '@/domains/widgets/components/live-score-widget/LiveScoreWidgetV2Server';
 import { fetchBoardCollectionData } from '@/domains/widgets/components/board-collection-widget/BoardCollectionWidget';
+import LiveScoreCacheSeeder from '@/shared/components/LiveScoreCacheSeeder';
 
 export async function generateMetadata() {
   return buildMetadata({
@@ -25,10 +27,14 @@ export async function generateMetadata() {
 export default async function HomePage() {
   // above-fold 위젯만 병렬 fetch (LiveScore + BoardCollection)
   // below-fold 위젯(AllPosts, News)은 Suspense로 자체 fetch → 스트리밍
-  const [liveScoreData, boardCollectionData] = await Promise.all([
-    fetchLiveScoreData(),
+  // fetchMultiDayMatches 1회로 위젯/헤더/모달 3곳이 공유 (기존 최대 7회 → 3회)
+  const [multiDayData, boardCollectionData] = await Promise.all([
+    fetchMultiDayMatches(),
     fetchBoardCollectionData(),
   ]);
+
+  // raw 데이터 → 위젯용 League[] 변환 (빅매치 리그 필터링)
+  const liveScoreData = transformToWidgetLeagues(multiDayData);
 
   const websiteSchema = {
     '@context': 'https://schema.org',
@@ -48,6 +54,8 @@ export default async function HomePage() {
 
   return (
     <main className="bg-transparent space-y-4 overflow-visible">
+      {/* 서버 데이터를 React Query 캐시에 주입 (헤더/모달이 API 호출 없이 사용) */}
+      <LiveScoreCacheSeeder data={multiDayData} />
       <Script
         id="website-schema"
         type="application/ld+json"

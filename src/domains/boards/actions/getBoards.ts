@@ -6,6 +6,7 @@ import { BoardMap, ChildBoardsMap } from '../types/board';
 import { getBoardLevel, getFilteredBoardIds, findRootBoard, generateBoardBreadcrumbs } from '../utils/board/boardHierarchy';
 import { BoardsResponse, Board, HierarchicalBoard } from '@/domains/boards/types';
 import { getCachedAllBoards, getCachedBoardBySlugOrId, getCachedBoardMaps } from './getCachedBoards';
+import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
 
 /**
  * 모든 게시판 목록을 가져옵니다.
@@ -123,9 +124,10 @@ export async function getBoardPageData(slug: string, currentPage: number, fromPa
         .single();
 
       if (leagueResult) {
+        const leagueInfo = getLeagueById(leagueResult.id);
         leagueData = {
           id: leagueResult.id,
-          name: leagueResult.name,
+          name: leagueInfo?.nameKo || leagueResult.name,
           country: leagueResult.country || '',
           logo: leagueResult.logo || 'https://via.placeholder.com/80'
         };

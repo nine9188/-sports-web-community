@@ -17,10 +17,9 @@ import LiveScoreModal from './livescoremodal';
 import UserProfileClient from './UserProfileClient';
 import MobileHamburgerModal from './MobileHamburgerModal';
 import RecentlyVisited from './RecentlyVisited';
-import { fetchTodayMatchCount } from '@/domains/livescore/actions/footballApi';
+import { useTodayMatchCount } from '@/domains/livescore/hooks/useLiveScoreData';
 import { NotificationBell } from '@/domains/notifications/components';
 import { Button } from '@/shared/components/ui';
-import { useQuery } from '@tanstack/react-query';
 
 type HeaderClientProps = {
   onProfileClick: () => void;
@@ -184,17 +183,9 @@ export default function HeaderClient({
     setIsLiveScoreOpen(!isLiveScoreOpen);
   }, [isLiveScoreOpen]);
 
-  // 오늘 경기 수 조회
-  const { data: matchCountData, isLoading: isMatchCountLoading } = useQuery({
-    queryKey: ['todayMatchCount'],
-    queryFn: () => fetchTodayMatchCount(),
-    staleTime: 1000 * 60 * 5, // 5분 캐시
-    gcTime: 1000 * 60 * 10,
-    refetchOnWindowFocus: false,
-  });
-
-  const hasTodayMatches = matchCountData?.success && matchCountData.count > 0;
-  const isLoadingMatches = isMatchCountLoading;
+  // 오늘 경기 수 조회 (CacheSeeder로 주입된 캐시에서 파생 → 추가 API 호출 없음)
+  const { hasTodayMatches } = useTodayMatchCount();
+  const isLoadingMatches = false;
 
   // 모바일 검색: 검색 페이지로 이동하여 모달 노출
   const goToSearchPage = useCallback(() => {

@@ -4,6 +4,7 @@ import { cache } from 'react';
 import { StandingsData } from '../types';
 import { MAJOR_LEAGUE_IDS } from '@/domains/livescore/constants/league-mappings';
 import { getTeamLogoUrls } from '@/domains/livescore/actions/images';
+import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
 // 리그 ID 매핑
 const LEAGUE_IDS: Record<string, number> = {
@@ -32,34 +33,14 @@ export const fetchStandingsData = cache(async (leagueId: string = 'premier'): Pr
     const month = now.getMonth() + 1;
     const season = month >= 8 ? year : year - 1;
 
-    // API 키 확인
-    if (!process.env.FOOTBALL_API_KEY) {
-      return null;
-    }
+    // 표준 API 래퍼 사용 (standings: 30분 revalidate)
+    const data = await fetchFromFootballApi('standings', {
+      league: apiLeagueId,
+      season: season
+    });
 
-    // API 호출 - next.js 캐시 사용 (10분)
-    const response = await fetch(
-      `https://v3.football.api-sports.io/standings?league=${apiLeagueId}&season=${season}`,
-      {
-        method: 'GET',
-        headers: {
-          'x-rapidapi-host': 'v3.football.api-sports.io',
-          'x-rapidapi-key': process.env.FOOTBALL_API_KEY || '',
-        },
-        next: { revalidate: 600 } // 10분 캐싱으로 변경
-      }
-    );
-
-    // 응답 확인
-    if (!response.ok) {
-      throw new Error(`API 호출 실패: ${response.status} ${response.statusText}`);
-    }
-
-    // JSON 데이터 파싱
-    const data = await response.json();
-    
     // 데이터 형식 확인
-    if (!data.response || !data.response[0] || !data.response[0].league) {
+    if (!data?.response || !data.response[0] || !data.response[0].league) {
       return null;
     }
 

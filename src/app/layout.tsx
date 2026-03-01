@@ -1,6 +1,7 @@
 import './globals.css';
 import { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import Script from 'next/script';
 import { Analytics } from '@vercel/analytics/react';
 import RootLayoutProvider from './RootLayoutProvider';
 import { siteConfig } from '@/shared/config';
@@ -49,28 +50,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="image/svg+xml"
           fetchPriority="high"
         />
-        {/* Google tag (gtag.js) */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-MESEGFZZPF" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config', 'G-MESEGFZZPF');`,
-          }}
-        />
-        {/* Google AdSense */}
-        <script
-          async
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID}`}
-          crossOrigin="anonymous"
-        />
       </head>
       <body className="w-full h-full overflow-x-hidden">
         <RootLayoutProvider>
           {children}
         </RootLayoutProvider>
         <Analytics />
+        {/* Google tag (gtag.js) - next/script로 hydration mismatch 방지 */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-MESEGFZZPF"
+          strategy="afterInteractive"
+        />
+        <Script id="gtag-init" strategy="afterInteractive">
+          {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-MESEGFZZPF');`}
+        </Script>
+        {/* Google AdSense */}
+        <Script
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID}`}
+          strategy="afterInteractive"
+          crossOrigin="anonymous"
+        />
       </body>
     </html>
   );

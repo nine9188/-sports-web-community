@@ -28,24 +28,6 @@ export default function LeagueMatchList({
   matches,
   allExpanded = true
 }: LeagueMatchListProps) {
-  // 다크모드 감지
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    setIsDark(document.documentElement.classList.contains('dark'));
-
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.attributeName === 'class') {
-          setIsDark(document.documentElement.classList.contains('dark'));
-        }
-      });
-    });
-
-    observer.observe(document.documentElement, { attributes: true });
-    return () => observer.disconnect();
-  }, []);
-
   // 리그별로 경기 그룹화 - useMemo로 메모이제이션
   const leagueGroups = useMemo(() => {
     const groups: LeagueGroup[] = [];
@@ -125,7 +107,8 @@ export default function LeagueMatchList({
               <div className="flex items-center gap-3">
                 {group.logo && (
                   <UnifiedSportsImageClient
-                    src={isDark && group.logoDark ? group.logoDark : group.logo}
+                    src={group.logo}
+                    srcDark={group.logoDark || undefined}
                     alt={group.name}
                     width={20}
                     height={20}

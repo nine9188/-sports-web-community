@@ -65,8 +65,6 @@ export async function generateMetadata({
 // 유효한 탭 목록
 const VALID_TABS: PlayerTabType[] = ['stats', 'fixtures', 'trophies', 'transfers', 'injuries', 'rankings'];
 
-export const dynamic = 'force-dynamic';
-
 export default async function PlayerPage({
   params,
   searchParams

@@ -1,38 +1,38 @@
 // 팀 데이터 타입
-export interface Team {
+export interface WidgetTeam {
   id: number;
   name: string;
   logo?: string;
 }
 
 // 경기 데이터 타입
-export interface Match {
+export interface WidgetMatch {
   id: string;
-  homeTeam: Team;
-  awayTeam: Team;
+  homeTeam: WidgetTeam;
+  awayTeam: WidgetTeam;
   score: {
     home: number;
     away: number;
   };
   status: string; // 'FT', 'LIVE', 'NS', 'HT' etc
   elapsed?: number; // 경과 시간 (분)
-  dateLabel?: 'today' | 'tomorrow'; // 오늘/내일 구분
+  dateLabel?: 'yesterday' | 'today' | 'tomorrow'; // 어제/오늘/내일 구분
   kickoffTime?: string; // 경기 시작 시간 (HH:mm)
 }
 
 // 리그 데이터 타입
-export interface League {
+export interface WidgetLeague {
   id: string;
   name: string;
   icon?: string;
   logo?: string;
   logoDark?: string;  // 다크모드 리그 로고
   leagueIdNumber?: number;
-  dateLabel?: 'today' | 'tomorrow'; // 오늘/내일 구분
-  matches: Match[];
+  dateLabel?: 'yesterday' | 'today' | 'tomorrow'; // 어제/오늘/내일 구분
+  matches: WidgetMatch[];
 }
 
 // 위젯 Props
 export interface LiveScoreWidgetV2Props {
-  leagues: League[];
+  leagues: WidgetLeague[];
 }

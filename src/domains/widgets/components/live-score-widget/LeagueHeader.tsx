@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
-import type { League } from './types';
+import type { WidgetLeague } from './types';
 
 // 4590 표준: placeholder 상수
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
 
 interface LeagueHeaderProps {
-  league: League;
+  league: WidgetLeague;
 }
 
 /**

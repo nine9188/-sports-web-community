@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
-import type { Match } from './types';
+import type { WidgetMatch } from './types';
 
 // 경기 상태 한글 매핑
 const STATUS_MAP: Record<string, { label: string; isLive: boolean }> = {
@@ -33,7 +33,7 @@ function getStatusInfo(
   status: string,
   elapsed?: number,
   kickoffTime?: string,
-  dateLabel?: 'today' | 'tomorrow'
+  dateLabel?: 'yesterday' | 'today' | 'tomorrow'
 ): { label: string; isLive: boolean; subLabel?: string } {
   // 진행 중인 경기에서 경과 시간이 있으면 시간 표시
   const liveStatuses = ['LIVE', '1H', '2H', 'ET', 'P', 'IN_PLAY'];
@@ -45,6 +45,13 @@ function getStatusInfo(
     const statusInfo = STATUS_MAP[status];
     // 예정 경기인 경우
     if (status === 'NS') {
+      if (dateLabel === 'yesterday') {
+        return {
+          label: kickoffTime || '예정',
+          isLive: false,
+          subLabel: '어제'
+        };
+      }
       // 내일 경기
       if (dateLabel === 'tomorrow') {
         return {
@@ -61,6 +68,10 @@ function getStatusInfo(
         };
       }
     }
+    // 어제 경기 - 종료 상태에 "어제" subLabel 추가
+    if (dateLabel === 'yesterday' && !statusInfo.isLive) {
+      return { ...statusInfo, subLabel: '어제' };
+    }
     return statusInfo;
   }
   // 숫자로만 이루어진 경우 시간 표시 (예: "45", "90+3")
@@ -71,7 +82,7 @@ function getStatusInfo(
 }
 
 interface MatchCardServerProps {
-  match: Match;
+  match: WidgetMatch;
   isLast: boolean;
   /** 첫 번째 리그 이미지에 eager/priority 적용 (LCP 최적화) */
   priorityImages?: boolean;

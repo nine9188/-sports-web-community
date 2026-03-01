@@ -1,5 +1,3 @@
-export const dynamic = 'force-dynamic';
-
 interface TeamLayoutProps {
   children: React.ReactNode;
   params: Promise<{ id: string }>;

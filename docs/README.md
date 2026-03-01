@@ -144,21 +144,29 @@ SSR을 이용한 최적화 대화형 챗봇 시스템입니다.
 
 실시간 축구 경기 정보를 제공하는 라이브스코어 시스템입니다.
 
+| 문서 | 설명 |
+|------|------|
+| ⭐ [architecture.md](./livescore/architecture.md) | **표준 아키텍처 (필독)** — API 래퍼, 캐시 4계층, Query Key, Hydration, 이미지 4590, 페이지별 데이터 흐름 |
+
+**페이지별 검토**:
+
 | 문서 | 설명 | 상태 |
-|------|------|------|
-| [mainview-refactoring.md](./livescore/mainview-refactoring.md) | MainView 컴포넌트 리팩토링 가이드 | 🔄 진행 중 |
+|------|------|:----:|
+| [main-page.md](./livescore/architecture/main-page.md) | 메인페이지 (`/`) 아키텍처 검증 | ✅ 통과 |
+| [livescore-page.md](./livescore/architecture/livescore-page.md) | 라이브스코어 (`/livescore/football`) 아키텍처 검증 | ✅ 통과 |
+| [match-detail-page.md](./livescore/architecture/match-detail-page.md) | 경기 상세 (`/match/[id]`) 아키텍처 검증 | ✅ 통과 |
+| [team-detail-page.md](./livescore/architecture/team-detail-page.md) | 팀 상세 (`/team/[id]`) 아키텍처 검증 | ✅ 통과 |
+| [player-detail-page.md](./livescore/architecture/player-detail-page.md) | 선수 상세 (`/player/[id]`) 아키텍처 검증 | ✅ 통과 |
+| [leagues-page.md](./livescore/architecture/leagues-page.md) | 데이터센터/리그 (`/leagues`, `/leagues/[id]`) 아키텍처 검증 | ✅ 통과 |
+| [transfers-page.md](./livescore/architecture/transfers-page.md) | 이적시장 (`/transfers`) 아키텍처 검증 | ✅ 통과 |
+| [additional-domains.md](./livescore/architecture/additional-domains.md) | 추가 도메인 (예측, 사이드바, 에디터, Admin) 아키텍처 검증 | ✅ 통과 |
 
-**주요 이슈**:
-- ⚠️ 라이브 상태 체크 로직 중복 (3곳)
-- ⚠️ LIVE 버튼 클릭 시 중복 API 호출
-- ⚠️ 과도한 useEffect 사용 (7개)
-- ⚠️ 30초 폴링 비효율성
+**참고 문서**:
 
-**리팩토링 계획**:
-1. 상수/유틸리티 추출
-2. useEffect 정리 및 Custom Hook 분리
-3. 폴링 최적화
-4. 월간 데이터 fetch 병렬화
+| 문서 | 설명 |
+|------|------|
+| [api-call-analysis.md](./livescore/api-call-analysis.md) | API 호출 분석 |
+| [mainview-refactoring.md](./livescore/mainview-refactoring.md) | MainView 리팩토링 기록 |
 
 ---
 
@@ -286,5 +294,5 @@ HOT 게시글은 조회수, 좋아요, 댓글을 기반으로 인기 게시글�
 ---
 
 **문서 작성일**: 2025-12-03
-**최종 업데이트**: 2026-02-06
-**버전**: 1.9.0
+**최종 업데이트**: 2026-02-27
+**버전**: 1.10.0

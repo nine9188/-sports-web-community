@@ -32,7 +32,6 @@ export default function NavigationBar({
 
   const handleLiveClick = () => {
     onLiveClick();
-    onDateChange(new Date());
   };
 
   const handlePrevDay = () => {
