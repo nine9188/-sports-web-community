@@ -204,6 +204,7 @@ export default function PrivacyPage() {
               <p className="text-gray-900 dark:text-[#F0F0F0]"><strong>개인정보 보호책임자</strong></p>
               <ul className="list-none mt-2 space-y-1 text-gray-700 dark:text-gray-300">
                 <li>담당: 4590 Football 운영팀</li>
+                <li>이메일: <a href="mailto:support@4590football.com" className="text-blue-600 dark:text-blue-400 hover:underline">support@4590football.com</a></li>
                 <li>문의: 서비스 내 &quot;문의하기&quot; 이용</li>
               </ul>
             </div>

@@ -3,6 +3,7 @@ import { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import Script from 'next/script';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import RootLayoutProvider from './RootLayoutProvider';
 import { siteConfig } from '@/shared/config';
 
@@ -56,6 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </RootLayoutProvider>
         <Analytics />
+        <SpeedInsights />
         {/* Google tag (gtag.js) - next/script로 hydration mismatch 방지 */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-MESEGFZZPF"
