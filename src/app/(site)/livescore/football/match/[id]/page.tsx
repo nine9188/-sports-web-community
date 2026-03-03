@@ -153,7 +153,9 @@ export default async function MatchPage({
     const homeTeamId = matchData.homeTeam?.id;
     const awayTeamId = matchData.awayTeam?.id;
     const numericMatchId = parseInt(matchId, 10);
-    const isFinished = matchData.match?.status?.code === 'FT';
+    const statusCode = matchData.match?.status?.code ?? '';
+    const finishedCodes = ['FT', 'AET', 'PEN'];
+    const isFinished = finishedCodes.includes(statusCode);
 
     // FT 경기: L2 캐시에서 power, matchPlayerStats 조회
     // (playerRatings는 matchPlayerStats에 통합됨)
@@ -194,7 +196,7 @@ export default async function MatchPage({
         apiPromises.push(
           getCachedPowerData(homeTeamId, awayTeamId, 5).then(r => {
             powerDataResult = r;
-            setMatchCache(numericMatchId, 'power', r).catch(() => {});
+            setMatchCache(numericMatchId, 'power', r, statusCode).catch(() => {});
           })
         );
       }
@@ -204,7 +206,7 @@ export default async function MatchPage({
         apiPromises.push(
           fetchAllPlayerStats(matchId, matchData.match?.status?.code).then(r => {
             allPlayerStatsResult = r;
-            setMatchCache(numericMatchId, 'matchPlayerStats', r).catch(() => {});
+            setMatchCache(numericMatchId, 'matchPlayerStats', r, statusCode).catch(() => {});
           })
         );
       }
@@ -236,7 +238,7 @@ export default async function MatchPage({
     const [playerKoreanNames, highlightData] = await Promise.all([
       getPlayersKoreanNames(playerIds),
       isFinished && homeTeamId && awayTeamId && leagueId
-        ? getMatchHighlight(numericMatchId, homeTeamId, awayTeamId, leagueId).catch(() => null)
+        ? getMatchHighlight(numericMatchId, homeTeamId, awayTeamId, leagueId, matchData.match?.fixture?.date).catch(() => null)
         : Promise.resolve(null),
     ]);
 

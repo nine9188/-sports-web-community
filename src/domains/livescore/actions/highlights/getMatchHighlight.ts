@@ -19,7 +19,8 @@ export async function getMatchHighlight(
   fixtureId: number,
   homeTeamId: number,
   awayTeamId: number,
-  leagueId: number
+  leagueId: number,
+  matchDate?: string
 ): Promise<MatchHighlight | null> {
   // 지원하지 않는 리그는 스킵
   if (
@@ -46,7 +47,8 @@ export async function getMatchHighlight(
     fixtureId,
     homeTeamId,
     awayTeamId,
-    leagueId
+    leagueId,
+    matchDate
   );
 
   if (!result) return null;

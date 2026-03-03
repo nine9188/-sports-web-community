@@ -21,13 +21,13 @@ type MatchDataType = 'full' | 'events' | 'lineups' | 'stats' | 'power' | 'player
 
 // data_type별 soft TTL (밀리초). 없으면 영구 캐시.
 const SOFT_TTL_MS: Partial<Record<MatchDataType, number>> = {
-  full:             6 * 60 * 60 * 1000,  // 6시간
-  events:           6 * 60 * 60 * 1000,
-  lineups:          6 * 60 * 60 * 1000,
-  stats:            6 * 60 * 60 * 1000,
-  playerRatings:    6 * 60 * 60 * 1000,
-  matchPlayerStats: 6 * 60 * 60 * 1000,
-  // power: TTL 없음 (계산 결과, 불변)
+  power: 6 * 60 * 60 * 1000, // 6시간 (최근 경기, 맞대결, 득점순위 등 변동)
+  // events: 영구 (종료 경기 이벤트 불변)
+  // lineups: 영구 (종료 경기 라인업 불변)
+  // stats: 영구 (종료 경기 통계 불변)
+  // playerRatings: 영구 (종료 경기 평점 불변)
+  // matchPlayerStats: 영구 (종료 경기 선수 통계 불변)
+  // full: 영구 (종료 경기 기본 데이터 불변)
 };
 
 function isExpired(updatedAt: string, dataType: MatchDataType): boolean {
@@ -103,7 +103,8 @@ export async function getMatchCacheBulk(
 export async function setMatchCache(
   matchId: number,
   dataType: MatchDataType,
-  data: unknown
+  data: unknown,
+  matchStatus: string = 'FT'
 ): Promise<void> {
   try {
     const supabase = getSupabaseAdmin();
@@ -115,7 +116,7 @@ export async function setMatchCache(
           match_id: matchId,
           data_type: dataType,
           data: data as Record<string, unknown>,
-          match_status: 'FT',
+          match_status: matchStatus,
           updated_at: new Date().toISOString(),
         },
         { onConflict: 'match_id,data_type' }
@@ -130,7 +131,8 @@ export async function setMatchCache(
  */
 export async function setMatchCacheBulk(
   matchId: number,
-  entries: { dataType: MatchDataType; data: unknown }[]
+  entries: { dataType: MatchDataType; data: unknown }[],
+  matchStatus: string = 'FT'
 ): Promise<void> {
   try {
     const supabase = getSupabaseAdmin();
@@ -139,7 +141,7 @@ export async function setMatchCacheBulk(
       match_id: matchId,
       data_type: e.dataType,
       data: e.data as Record<string, unknown>,
-      match_status: 'FT',
+      match_status: matchStatus,
       updated_at: new Date().toISOString(),
     }));
 

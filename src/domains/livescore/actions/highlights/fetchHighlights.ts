@@ -82,7 +82,9 @@ function getSearchName(teamId: number): string {
 async function searchYouTube(
   channelId: string,
   query: string,
-  maxResults = 5
+  maxResults = 5,
+  publishedAfter?: string,
+  publishedBefore?: string
 ): Promise<YouTubeSearchItem[] | null> {
   if (!YOUTUBE_API_KEY) {
     console.error('[Highlights] YOUTUBE_API_KEY not set');
@@ -99,6 +101,10 @@ async function searchYouTube(
       maxResults: String(maxResults),
       key: YOUTUBE_API_KEY,
     });
+
+    // 날짜 필터 (챔스 등 동일 팀 매치업 구분용)
+    if (publishedAfter) params.set('publishedAfter', publishedAfter);
+    if (publishedBefore) params.set('publishedBefore', publishedBefore);
 
     const res = await fetch(`${YOUTUBE_API_BASE}/search?${params}`, {
       next: { revalidate: 3600 },
@@ -154,6 +160,17 @@ function findHighlightInResults(
     awayTeam.name_en,
   ];
 
+  // 제목에서 팀명의 위치(index) 반환
+  function findNameIndex(title: string, titleLower: string, names: string[]): number {
+    for (const n of names) {
+      const idx = title.indexOf(n);
+      if (idx !== -1) return idx;
+      const idxLower = titleLower.indexOf(n.toLowerCase());
+      if (idxLower !== -1) return idxLower;
+    }
+    return -1;
+  }
+
   for (const item of items) {
     const title = item.snippet.title;
     const titleLower = title.toLowerCase();
@@ -162,14 +179,11 @@ function findHighlightInResults(
     if (!title.includes('하이라이트') && !titleLower.includes('highlight'))
       continue;
 
-    const homeMatch = homeNames.some(
-      (n) => title.includes(n) || titleLower.includes(n.toLowerCase())
-    );
-    const awayMatch = awayNames.some(
-      (n) => title.includes(n) || titleLower.includes(n.toLowerCase())
-    );
+    const homeIdx = findNameIndex(title, titleLower, homeNames);
+    const awayIdx = findNameIndex(title, titleLower, awayNames);
 
-    if (homeMatch && awayMatch) return item;
+    // 양팀 모두 존재 + 홈팀이 어웨이팀보다 앞에 나와야 함
+    if (homeIdx !== -1 && awayIdx !== -1 && homeIdx < awayIdx) return item;
   }
 
   return null;
@@ -178,11 +192,33 @@ function findHighlightInResults(
 /**
  * 특정 경기의 하이라이트를 YouTube에서 검색
  */
+/**
+ * 경기 날짜 기준 검색 범위 계산
+ * 경기 당일 ~ +3일 (하이라이트 업로드 시차 고려)
+ */
+function getDateRange(matchDate?: string): { after?: string; before?: string } {
+  if (!matchDate) return {};
+
+  const date = new Date(matchDate);
+  if (isNaN(date.getTime())) return {};
+
+  // 경기 시작 6시간 전부터 (시차 고려)
+  const after = new Date(date.getTime() - 6 * 60 * 60 * 1000);
+  // 경기 후 3일까지
+  const before = new Date(date.getTime() + 3 * 24 * 60 * 60 * 1000);
+
+  return {
+    after: after.toISOString(),
+    before: before.toISOString(),
+  };
+}
+
 export async function findHighlightForMatch(
   fixtureId: number,
   homeTeamId: number,
   awayTeamId: number,
-  leagueId: number
+  leagueId: number,
+  matchDate?: string
 ): Promise<HighlightMatchResult | null> {
   const homeName = getSearchName(homeTeamId);
   const awayName = getSearchName(awayTeamId);
@@ -190,13 +226,14 @@ export async function findHighlightForMatch(
   if (!homeName || !awayName) return null;
 
   const query = `${homeName} ${awayName} 하이라이트`;
+  const { after, before } = getDateRange(matchDate);
 
   // 1순위: 한국 채널 (쿠팡플레이 / SPOTV)
   const koreanChannelKey = LEAGUE_TO_KOREAN_CHANNEL[leagueId];
 
   if (koreanChannelKey) {
     const channel = KOREAN_CHANNELS[koreanChannelKey];
-    const items = await searchYouTube(channel.channelId, query);
+    const items = await searchYouTube(channel.channelId, query, 5, after, before);
 
     if (items) {
       const match = findHighlightInResults(items, homeTeamId, awayTeamId);
@@ -221,7 +258,7 @@ export async function findHighlightForMatch(
     const awayTeam = getTeamById(awayTeamId);
     const engQuery = `${homeTeam?.name_en || ''} ${awayTeam?.name_en || ''} highlights`;
 
-    const items = await searchYouTube(homeTeamChannelId, engQuery);
+    const items = await searchYouTube(homeTeamChannelId, engQuery, 5, after, before);
 
     if (items) {
       const match = findHighlightInResults(items, homeTeamId, awayTeamId);

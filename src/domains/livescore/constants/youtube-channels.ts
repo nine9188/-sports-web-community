@@ -148,6 +148,7 @@ export const OFFICIAL_TEAM_CHANNELS: Record<number, string> = {
   511: 'UCQUI7PTAVYa1fceC494WQIg', // Empoli
   517: 'UCJJps-5awi4eioa38QEcp-g', // Venezia
   1579: 'UCgFNZmFK4tLKPpXpvJGS9dQ', // Monza
+  801: 'UCZz446y-Vl63CJH9Fb3k-yA', // pisa
 
   // ── 리그1 ──
   85: 'UCt9a_qP9CqHCNwilf-iULag', // PSG

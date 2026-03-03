@@ -377,7 +377,8 @@ export async function fetchMatchFullData(
       response.events && response.events.length > 0 &&
       response.stats && response.stats.length > 0;
 
-    if (response.match?.status?.code === 'FT' && hasCompleteData) {
+    const finishedCodes = ['FT', 'AET', 'PEN'];
+    if (finishedCodes.includes(response.match?.status?.code ?? '') && hasCompleteData) {
       const cacheData = { ...response };
       delete cacheData.standings;
       setMatchCache(numericMatchId, 'full', cacheData).catch(() => {});
