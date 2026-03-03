@@ -83,7 +83,16 @@
       "Bash(if [ -f \".next/build-manifest.json\" ])",
       "Bash(then echo \"Build completed successfully\")",
       "Bash(else echo \"Build not completed or failed\")",
-      "Bash(fi)"
+      "Bash(fi)",
+      "WebFetch(domain:youtube.fandom.com)",
+      "WebFetch(domain:www.youtube.com)",
+      "WebFetch(domain:socialblade.com)",
+      "WebFetch(domain:us.youtubers.me)",
+      "WebFetch(domain:442oons.fandom.com)",
+      "WebFetch(domain:vidiq.com)",
+      "WebFetch(domain:ytlarge.com)",
+      "Bash(KEY=\"AIzaSyB_d929jntVIhcwBfg2i6wdDXsIgJZq_3Y\")",
+      "Bash(__NEW_LINE_40d8a090aa459929__ echo \"=== La Liga ===\")"
     ]
   },
   "enableAllProjectMcpServers": true,

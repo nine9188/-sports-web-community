@@ -11,6 +11,7 @@ import { buildMetadata } from '@/shared/utils/metadataNew';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
+import { getMatchHighlight } from '@/domains/livescore/actions/highlights/getMatchHighlight';
 
 // matchData에서 모든 선수 ID 추출
 function extractPlayerIds(matchData: MatchFullDataResponse): number[] {
@@ -228,9 +229,16 @@ export default async function MatchPage({
       ? (powerDataResult as { data?: unknown }).data
       : undefined;
 
-    // 선수 한글명 일괄 조회 (DB)
+    // 선수 한글명 일괄 조회 (DB) + 하이라이트 병렬 조회
     const playerIds = extractPlayerIds(matchData);
-    const playerKoreanNames = await getPlayersKoreanNames(playerIds);
+    const leagueId = matchData.match?.league?.id;
+
+    const [playerKoreanNames, highlightData] = await Promise.all([
+      getPlayersKoreanNames(playerIds),
+      isFinished && homeTeamId && awayTeamId && leagueId
+        ? getMatchHighlight(numericMatchId, homeTeamId, awayTeamId, leagueId).catch(() => null)
+        : Promise.resolve(null),
+    ]);
 
     return (
       <div className="container">
@@ -242,6 +250,7 @@ export default async function MatchPage({
           initialPowerData={powerData}
           allPlayerStats={allPlayerStatsResult}
           sidebarData={sidebarData}
+          highlightData={highlightData}
         />
       </div>
     );

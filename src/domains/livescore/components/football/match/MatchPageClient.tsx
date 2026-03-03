@@ -13,6 +13,8 @@ import { AllPlayerStatsResponse } from '@/domains/livescore/types/lineup';
 import { MatchInfoSection } from './sidebar/MatchSidebar';
 import { type SidebarData } from '@/domains/livescore/actions/match/sidebarData';
 import { scrollToTop } from '@/shared/utils/scroll';
+import type { MatchHighlight } from '@/domains/livescore/types/highlight';
+import HighlightBanner from './HighlightBanner';
 
 /**
  * ============================================
@@ -55,6 +57,7 @@ interface MatchPageClientProps {
   allPlayerStats?: AllPlayerStatsResponse | null;
   sidebarData?: SidebarData | null;
   playerKoreanNames?: PlayerKoreanNames;
+  highlightData?: MatchHighlight | null;
 }
 
 export default function MatchPageClient({
@@ -65,6 +68,7 @@ export default function MatchPageClient({
   allPlayerStats,
   sidebarData,
   playerKoreanNames = {},
+  highlightData,
 }: MatchPageClientProps) {
   // 클라이언트에서 탭 상태 관리
   const [currentTab, setCurrentTab] = useState<MatchTabType>(initialTab);
@@ -127,6 +131,13 @@ export default function MatchPageClient({
           />
         </Suspense>
 
+        {/* 하이라이트 배너 - 모바일에서만 표시 (데스크탑은 사이드바) */}
+        {highlightData && (
+          <div className="xl:hidden">
+            <HighlightBanner highlight={highlightData} />
+          </div>
+        )}
+
         {/* 모바일용 경기 상세정보 - 헤더와 탭 사이에 배치 */}
         <div className="xl:hidden mb-4">
           <MatchInfoSection
@@ -162,6 +173,8 @@ export default function MatchPageClient({
 
       {/* 사이드바 - 데스크탑에서만 표시 */}
       <aside className="hidden xl:block w-[300px] shrink-0">
+        {/* 하이라이트 - 데스크탑 사이드바 상단 */}
+        {highlightData && <HighlightBanner highlight={highlightData} />}
         <MatchInfoSection
           initialData={initialData.matchData}
           sidebarData={sidebarData}

@@ -167,6 +167,7 @@ SSR을 이용한 최적화 대화형 챗봇 시스템입니다.
 |------|------|
 | [api-call-analysis.md](./livescore/api-call-analysis.md) | API 호출 분석 |
 | [mainview-refactoring.md](./livescore/mainview-refactoring.md) | MainView 리팩토링 기록 |
+| [match-highlights.md](./livescore/match-highlights.md) | **매치 하이라이트 시스템** (YouTube API 연동) |
 
 ---
 
