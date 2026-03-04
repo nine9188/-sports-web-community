@@ -178,9 +178,10 @@ export default async function LiveScoreWidgetV2Server({ initialData }: LiveScore
               defaultExpanded={isFirst}
               matchCount={league.matches.length}
               header={<LeagueHeader league={league} />}
+              matches={isFirst ? undefined : league.matches}
             >
-              {/* 경기 목록 - 서버에서 렌더링 */}
-              {league.matches.map((match, idx) => (
+              {/* 첫 번째 리그만 서버에서 매치카드 렌더링, 나머지는 펼칠 때 클라이언트에서 렌더 */}
+              {isFirst && league.matches.map((match, idx) => (
                 <MatchCardServer
                   key={match.id}
                   match={match}

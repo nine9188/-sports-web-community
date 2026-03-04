@@ -9,12 +9,11 @@ import { PLACEHOLDER_URLS, type ImageSize } from './constants';
  * 4590 표준: 모든 이미지는 Supabase Storage에서 제공
  *
  * @param teamId - 팀 ID
- * @param size - 이미지 사이즈 ('sm' | 'md' | 'lg')
+ * @param size - 이미지 사이즈 ('sm' | 'md')
  * @returns Storage 공개 URL 또는 placeholder
  *
  * @example
  * const logoUrl = await getTeamLogoUrl(33); // 맨유 (기본 md)
- * const lgLogoUrl = await getTeamLogoUrl(33, 'lg'); // 헤더용 lg
  */
 export async function getTeamLogoUrl(teamId: number, size: ImageSize = 'md'): Promise<string> {
   if (!teamId || teamId <= 0) {
@@ -28,7 +27,7 @@ export async function getTeamLogoUrl(teamId: number, size: ImageSize = 'md'): Pr
  * 팀 로고 Storage URL 배치 조회
  *
  * @param teamIds - 팀 ID 배열
- * @param size - 이미지 사이즈 ('sm' | 'md' | 'lg')
+ * @param size - 이미지 사이즈 ('sm' | 'md')
  * @returns { [teamId]: storageUrl } 맵
  */
 export async function getTeamLogoUrls(

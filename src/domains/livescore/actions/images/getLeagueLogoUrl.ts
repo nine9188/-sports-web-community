@@ -13,13 +13,12 @@ const DARK_MODE_LEAGUE_IDS = [2, 3, 13, 39, 61, 66, 88, 98, 119, 179, 292, 848];
  *
  * @param leagueId - 리그 ID
  * @param isDark - 다크모드 여부
- * @param size - 이미지 사이즈 ('sm' | 'md' | 'lg')
+ * @param size - 이미지 사이즈 ('sm' | 'md')
  * @returns Storage 공개 URL 또는 placeholder
  *
  * @example
  * const logoUrl = await getLeagueLogoUrl(39); // 프리미어리그 (md)
  * const darkLogoUrl = await getLeagueLogoUrl(39, true); // 다크모드 (md)
- * const lgLogoUrl = await getLeagueLogoUrl(39, false, 'lg'); // 헤더용 lg
  */
 export async function getLeagueLogoUrl(leagueId: number, isDark: boolean = false, size: ImageSize = 'md'): Promise<string> {
   if (!leagueId || leagueId <= 0) {
@@ -40,7 +39,7 @@ export async function getLeagueLogoUrl(leagueId: number, isDark: boolean = false
  *
  * @param leagueIds - 리그 ID 배열
  * @param isDark - 다크모드 여부
- * @param size - 이미지 사이즈 ('sm' | 'md' | 'lg')
+ * @param size - 이미지 사이즈 ('sm' | 'md')
  * @returns { [leagueId]: storageUrl } 맵
  */
 export async function getLeagueLogoUrls(

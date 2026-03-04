@@ -29,7 +29,7 @@ interface AssetCacheRow {
   error_message?: string;
 }
 
-const ALL_SIZES: ImageSize[] = ['sm', 'md', 'lg'];
+const ALL_SIZES: ImageSize[] = ['sm', 'md'];
 
 /**
  * Storage 공개 URL 생성
@@ -135,7 +135,7 @@ export async function ensureAssetCached(
  *
  * 1. pending 락 선점
  * 2. API-Sports에서 다운로드
- * 3. sharp로 3사이즈 WebP 변환 및 업로드
+ * 3. sharp로 2사이즈 WebP 변환 및 업로드
  * 4. DB 업데이트
  */
 async function cacheAsset(type: AssetType, entityId: number, size: ImageSize = 'md'): Promise<string> {
@@ -182,7 +182,7 @@ async function cacheAsset(type: AssetType, entityId: number, size: ImageSize = '
     const bucket = BUCKET_MAP[type];
     console.log(`[4590] 다운로드 완료: ${(imageBuffer.byteLength / 1024).toFixed(1)}KB`);
 
-    // 3. sharp로 3사이즈 WebP 변환 및 업로드
+    // 3. sharp로 2사이즈 WebP 변환 및 업로드
     const sizeConfig = type === 'venue_photo' ? VENUE_SIZE_CONFIG : SIZE_CONFIG;
 
     for (const s of ALL_SIZES) {
@@ -220,7 +220,7 @@ async function cacheAsset(type: AssetType, entityId: number, size: ImageSize = '
       .eq('type', type)
       .eq('entity_id', entityId);
 
-    console.log(`[4590] ✅ 캐싱 완료: ${type}/${entityId} (3사이즈 WebP)`);
+    console.log(`[4590] ✅ 캐싱 완료: ${type}/${entityId} (2사이즈 WebP)`);
     return getStoragePublicUrl(type, entityId, size);
 
   } catch (error) {

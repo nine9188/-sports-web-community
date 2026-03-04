@@ -7,12 +7,11 @@ import { PLACEHOLDER_URLS, type ImageSize } from './constants';
  * 선수 사진 Storage URL 조회 (단일)
  *
  * @param playerId - 선수 ID
- * @param size - 이미지 사이즈 ('sm' | 'md' | 'lg')
+ * @param size - 이미지 사이즈 ('sm' | 'md')
  * @returns Storage 공개 URL 또는 placeholder
  *
  * @example
  * const photoUrl = await getPlayerPhotoUrl(306); // 손흥민 (기본 md)
- * const lgPhotoUrl = await getPlayerPhotoUrl(306, 'lg'); // 헤더용 lg
  */
 export async function getPlayerPhotoUrl(playerId: number, size: ImageSize = 'md'): Promise<string> {
   if (!playerId || playerId <= 0) {
@@ -26,7 +25,7 @@ export async function getPlayerPhotoUrl(playerId: number, size: ImageSize = 'md'
  * 선수 사진 Storage URL 배치 조회
  *
  * @param playerIds - 선수 ID 배열
- * @param size - 이미지 사이즈 ('sm' | 'md' | 'lg')
+ * @param size - 이미지 사이즈 ('sm' | 'md')
  * @returns { [playerId]: storageUrl } 맵
  */
 export async function getPlayerPhotoUrls(

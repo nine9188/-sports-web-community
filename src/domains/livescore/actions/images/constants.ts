@@ -15,20 +15,18 @@ export const API_SPORTS_BASE_URL = 'https://media.api-sports.io/football';
 export type AssetType = 'player_photo' | 'coach_photo' | 'team_logo' | 'league_logo' | 'venue_photo';
 
 // 이미지 사이즈 타입
-export type ImageSize = 'sm' | 'md' | 'lg';
+export type ImageSize = 'sm' | 'md';
 
 // 사이즈별 리사이즈 설정 (px)
 export const SIZE_CONFIG: Record<ImageSize, number> = {
   sm: 64,   // 리스트 아이템 (24-32px 표시, 2x DPR 커버)
   md: 128,  // 매치카드, 순위표 (48px 표시, 3x DPR 커버)
-  lg: 256,  // 헤더, 히어로 (80-112px 표시, 3x DPR 커버)
 };
 
 // 경기장은 더 큰 사이즈 필요
 export const VENUE_SIZE_CONFIG: Record<ImageSize, number> = {
   sm: 128,
   md: 256,
-  lg: 512,
 };
 
 // 버킷 매핑
