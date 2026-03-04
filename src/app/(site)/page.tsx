@@ -8,10 +8,9 @@ import LiveScoreWidgetV2 from '@/domains/widgets/components/live-score-widget/in
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
 
-// 병렬 fetch를 위한 데이터 함수들 import (above-fold 위젯만)
+// above-fold 위젯 데이터 함수 import (LiveScore만 blocking)
 import { fetchMultiDayMatches } from '@/domains/livescore/actions/footballApi';
 import { transformToWidgetLeagues } from '@/domains/widgets/components/live-score-widget/LiveScoreWidgetV2Server';
-import { fetchBoardCollectionData } from '@/domains/widgets/components/board-collection-widget/BoardCollectionWidget';
 import LiveScoreCacheSeeder from '@/shared/components/LiveScoreCacheSeeder';
 
 export async function generateMetadata() {
@@ -23,15 +22,11 @@ export async function generateMetadata() {
   });
 }
 
-// 메인 페이지 컴포넌트 - above-fold만 await, below-fold는 Suspense 스트리밍
+// 메인 페이지 컴포넌트 - LiveScore만 blocking, 나머지는 Suspense 스트리밍
 export default async function HomePage() {
-  // above-fold 위젯만 병렬 fetch (LiveScore + BoardCollection)
-  // below-fold 위젯(AllPosts, News)은 Suspense로 자체 fetch → 스트리밍
-  // fetchMultiDayMatches 1회로 위젯/헤더/모달 3곳이 공유 (기존 최대 7회 → 3회)
-  const [multiDayData, boardCollectionData] = await Promise.all([
-    fetchMultiDayMatches(),
-    fetchBoardCollectionData(),
-  ]);
+  // LiveScore만 above-fold blocking (LCP 후보)
+  // BoardCollection은 Suspense로 스트리밍 → LCP 경로에서 제외
+  const multiDayData = await fetchMultiDayMatches();
 
   // raw 데이터 → 위젯용 League[] 변환 (빅매치 리그 필터링)
   const liveScoreData = transformToWidgetLeagues(multiDayData);
@@ -70,8 +65,10 @@ export default async function HomePage() {
       {/* LiveScore 위젯 V2 - 새로운 디자인 */}
       <LiveScoreWidgetV2 initialData={liveScoreData} />
 
-      {/* 게시판 모음 위젯 */}
-      <BoardCollectionWidget initialData={boardCollectionData} />
+      {/* 게시판 모음 위젯 - Suspense 스트리밍 (LCP 경로에서 제외) */}
+      <Suspense>
+        <BoardCollectionWidget />
+      </Suspense>
 
       {/* 게시글 리스트 위젯 - Suspense 스트리밍 (below fold) */}
       <Suspense>

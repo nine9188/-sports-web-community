@@ -1,6 +1,7 @@
 'use server';
 
 import { cache } from 'react';
+import { unstable_cache } from 'next/cache';
 import { getMajorLeagueIds } from '../constants/league-mappings';
 import { getTeamLogoUrls, getLeagueLogoUrls } from './images';
 
@@ -212,7 +213,7 @@ export const fetchFromFootballApi = async (endpoint: string, params: Record<stri
   // ⭐ endpoint별 최적 revalidate 시간 (데이터 특성에 맞춤)
   const getRevalidateTime = (ep: string): number => {
     // 실시간성이 중요한 데이터: 짧게
-    if (ep.includes('fixtures')) return 60;           // 경기 정보: 1분
+    if (ep.includes('fixtures')) return 120;          // 경기 정보: 2분 (LCP 안정화)
     if (ep.includes('events')) return 30;             // 경기 이벤트: 30초
     if (ep.includes('lineups')) return 300;           // 라인업: 5분 (경기 시작 전 확정)
 
@@ -356,11 +357,25 @@ async function resolveMatchImages(
     }
   }
 
-  // 2. 배치 Supabase 쿼리 (3회만) — sm: 64px (24px 표시 × 2x DPR 커버)
+  // 2. 배치 이미지 URL 조회 (unstable_cache로 1시간 캐싱 — 매 요청 Supabase 쿼리 제거)
+  const sortedTeamIds = [...teamIds].sort((a, b) => a - b);
+  const sortedLeagueIds = [...leagueIds].sort((a, b) => a - b);
+
+  const cachedTeamLogos = unstable_cache(
+    async (ids: number[]) => getTeamLogoUrls(ids, imageSize),
+    ['team-logo-urls', imageSize],
+    { revalidate: 3600 }
+  );
+  const cachedLeagueLogos = unstable_cache(
+    async (ids: number[], isDark: boolean) => getLeagueLogoUrls(ids, isDark, imageSize),
+    ['league-logo-urls', imageSize],
+    { revalidate: 3600 }
+  );
+
   const [teamLogoUrls, leagueLogoUrls, leagueLogoDarkUrls] = await Promise.all([
-    teamIds.size > 0 ? getTeamLogoUrls([...teamIds], imageSize) : Promise.resolve({}),
-    leagueIds.size > 0 ? getLeagueLogoUrls([...leagueIds], false, imageSize) : Promise.resolve({}),
-    leagueIds.size > 0 ? getLeagueLogoUrls([...leagueIds], true, imageSize) : Promise.resolve({})
+    sortedTeamIds.length > 0 ? cachedTeamLogos(sortedTeamIds) : Promise.resolve({}),
+    sortedLeagueIds.length > 0 ? cachedLeagueLogos(sortedLeagueIds, false) : Promise.resolve({}),
+    sortedLeagueIds.length > 0 ? cachedLeagueLogos(sortedLeagueIds, true) : Promise.resolve({})
   ]);
 
   // 3. 각 매치에 이미지 URL 적용
