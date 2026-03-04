@@ -20,13 +20,12 @@ export default function AdBanner() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    // LCP 측정 완료 후 광고 로드
+    // 짧은 지연 후 광고 로드 (LCP는 인라인 SVG로 해결됨)
     if ('requestIdleCallback' in window) {
-      const id = requestIdleCallback(() => setReady(true), { timeout: 2000 });
+      const id = requestIdleCallback(() => setReady(true), { timeout: 500 });
       return () => cancelIdleCallback(id);
     }
-    // fallback: 1초 후 로드
-    const timer = setTimeout(() => setReady(true), 1000);
+    const timer = setTimeout(() => setReady(true), 300);
     return () => clearTimeout(timer);
   }, []);
 
