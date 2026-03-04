@@ -131,10 +131,10 @@ export default function MatchPageClient({
           />
         </Suspense>
 
-        {/* 하이라이트 배너 - 모바일에서만 표시 (데스크탑은 사이드바) */}
+        {/* 하이라이트 배너 - 모바일에서만 표시 (인라인 재생) */}
         {highlightData && (
           <div className="xl:hidden">
-            <HighlightBanner highlight={highlightData} />
+            <HighlightBanner highlight={highlightData} mode="inline" />
           </div>
         )}
 
@@ -173,8 +173,8 @@ export default function MatchPageClient({
 
       {/* 사이드바 - 데스크탑에서만 표시 */}
       <aside className="hidden xl:block w-[300px] shrink-0">
-        {/* 하이라이트 - 데스크탑 사이드바 상단 */}
-        {highlightData && <HighlightBanner highlight={highlightData} />}
+        {/* 하이라이트 - 데스크탑 사이드바 상단 (모달 재생) */}
+        {highlightData && <HighlightBanner highlight={highlightData} mode="modal" />}
         <MatchInfoSection
           initialData={initialData.matchData}
           sidebarData={sidebarData}

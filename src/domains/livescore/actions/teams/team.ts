@@ -364,6 +364,21 @@ export const fetchTeamFullData = cache(
         }
       }
 
+      // standings에서 팀 ID 수집
+      const standingsData = response.standings as { success: boolean; data?: Array<{ league?: { standings?: Array<Array<{ team?: { id?: number } }>> } }> } | undefined;
+      if (standingsData?.data) {
+        for (const standing of standingsData.data) {
+          const groups = standing.league?.standings || [];
+          for (const group of groups) {
+            if (Array.isArray(group)) {
+              for (const item of group) {
+                if (item.team?.id) allTeamIds.add(item.team.id);
+              }
+            }
+          }
+        }
+      }
+
       // stats에서 리그 ID 수집
       if (teamData.stats?.league?.id) {
         allLeagueIds.add(teamData.stats.league.id);

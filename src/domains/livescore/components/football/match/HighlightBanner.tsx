@@ -6,9 +6,12 @@ import type { MatchHighlight } from '@/domains/livescore/types/highlight';
 
 interface HighlightBannerProps {
   highlight: MatchHighlight | null;
+  /** inline: 그 자리에서 재생 (모바일), modal: 모달로 재생 (데스크탑 사이드바) */
+  mode?: 'inline' | 'modal';
 }
 
-export default function HighlightBanner({ highlight }: HighlightBannerProps) {
+export default function HighlightBanner({ highlight, mode = 'modal' }: HighlightBannerProps) {
+  const [isPlaying, setIsPlaying] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // ESC로 모달 닫기 + 스크롤 잠금
@@ -34,9 +37,16 @@ export default function HighlightBanner({ highlight }: HighlightBannerProps) {
     highlight.thumbnail_url ||
     `https://i.ytimg.com/vi/${highlight.video_id}/hqdefault.jpg`;
 
+  const handlePlay = () => {
+    if (mode === 'inline') {
+      setIsPlaying(true);
+    } else {
+      setIsModalOpen(true);
+    }
+  };
+
   return (
     <>
-      {/* 컴팩트 카드 - Container 표준 UI */}
       <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
         <ContainerHeader>
           <div className="flex items-center gap-2">
@@ -51,30 +61,40 @@ export default function HighlightBanner({ highlight }: HighlightBannerProps) {
           </div>
         </ContainerHeader>
 
-        {/* 썸네일 + 재생 버튼 */}
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="relative w-full cursor-pointer group block"
-        >
-          <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-            <img
-              src={thumbnailUrl}
-              alt={highlight.video_title || '하이라이트'}
-              className="absolute inset-0 w-full h-full object-cover"
+        {/* 영상 영역 */}
+        <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+          {mode === 'inline' && isPlaying ? (
+            <iframe
+              className="absolute inset-0 w-full h-full"
+              src={`https://www.youtube.com/embed/${highlight.video_id}?autoplay=1&rel=0`}
+              title={highlight.video_title || '하이라이트'}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
             />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
-              <div className="w-12 h-12 rounded-full bg-red-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                <svg
-                  className="w-5 h-5 text-white ml-0.5"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path d="M8 5v14l11-7z" />
-                </svg>
+          ) : (
+            <button
+              onClick={handlePlay}
+              className="absolute inset-0 w-full h-full cursor-pointer group"
+            >
+              <img
+                src={thumbnailUrl}
+                alt={highlight.video_title || '하이라이트'}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                <div className="w-12 h-12 rounded-full bg-red-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                  <svg
+                    className="w-5 h-5 text-white ml-0.5"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
               </div>
-            </div>
-          </div>
-        </button>
+            </button>
+          )}
+        </div>
 
         {/* 제목 + 채널명 */}
         {highlight.video_title && (
@@ -91,7 +111,7 @@ export default function HighlightBanner({ highlight }: HighlightBannerProps) {
         )}
       </Container>
 
-      {/* 모달 - 클릭 시 큰 화면으로 재생 */}
+      {/* 모달 - 데스크탑 전용 */}
       {isModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
@@ -101,7 +121,6 @@ export default function HighlightBanner({ highlight }: HighlightBannerProps) {
             className="relative w-full max-w-4xl mx-4"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* 닫기 버튼 */}
             <button
               onClick={() => setIsModalOpen(false)}
               className="absolute -top-10 right-0 text-white hover:text-gray-300 transition-colors cursor-pointer"
@@ -121,7 +140,6 @@ export default function HighlightBanner({ highlight }: HighlightBannerProps) {
               </svg>
             </button>
 
-            {/* 영상 플레이어 */}
             <div
               className="relative w-full rounded-lg overflow-hidden"
               style={{ paddingBottom: '56.25%' }}
@@ -135,7 +153,6 @@ export default function HighlightBanner({ highlight }: HighlightBannerProps) {
               />
             </div>
 
-            {/* 영상 정보 */}
             {highlight.video_title && (
               <div className="mt-3">
                 <p className="text-white text-sm">{highlight.video_title}</p>

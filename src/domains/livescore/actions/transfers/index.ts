@@ -4,7 +4,6 @@ import { cache } from 'react';
 import {
   sortTransfersByDate,
 } from '../../utils/transferUtils';
-import { getTransfersCache, setTransfersCache, getTeamTransfersCache, setTeamTransfersCache } from './transfersCache';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
 // 이적 데이터 타입 정의
@@ -153,7 +152,8 @@ function validateTransfers(transfers: TransferMarketData[]): TransferMarketData[
 }
 
 /**
- * 팀별 이적 정보 가져오기 (캐시 적용)
+ * 팀별 이적 정보 가져오기
+ * fetchFromFootballApi('transfers')가 24시간 fetch cache 적용됨
  */
 export const fetchTeamTransfers = cache(async (
   teamId: number
@@ -161,13 +161,6 @@ export const fetchTeamTransfers = cache(async (
   try {
     if (!teamId) return null;
 
-    // 1. 캐시 확인
-    const cached = await getTeamTransfersCache(teamId);
-    if (cached.data !== null && cached.fresh) {
-      return cached.data as TeamTransfersData;
-    }
-
-    // 2. API 호출
     const data = await fetchFromFootballApi('transfers', { team: teamId });
 
     if (!data.response || !Array.isArray(data.response) || data.response.length === 0) {
@@ -177,13 +170,7 @@ export const fetchTeamTransfers = cache(async (
       };
     }
 
-    // 3. 데이터 처리
-    const result = processTeamTransferData(data, teamId);
-
-    // 4. 캐시 저장
-    setTeamTransfersCache(teamId, result).catch(() => {});
-
-    return result;
+    return processTeamTransferData(data, teamId);
   } catch (error) {
     console.error('팀 이적 정보 가져오기 오류:', error);
     return null;
@@ -315,7 +302,7 @@ export interface TransfersFullDataResponse {
 
 /**
  * 이적시장 페이지용 통합 데이터 fetch 함수
- * - Supabase 캐시 사용 (24시간 TTL)
+ * fetchFromFootballApi의 24시간 fetch cache에 의존
  * - 서버 사이드 페이지네이션
  */
 export const fetchTransfersFullData = cache(async (
@@ -342,18 +329,7 @@ export const fetchTransfersFullData = cache(async (
         }
       }
     } else {
-      // 리그별 이적 정보 (캐시 적용)
-      const cached = await getTransfersCache(leagueId, currentSeason);
-
-      if (cached.data !== null && cached.fresh) {
-        allTransfers = cached.data as TransferMarketData[];
-      } else {
-        // 캐시 없으면 API 호출
-        allTransfers = await fetchLeagueTransfersFromAPI(leagueId, currentSeason);
-
-        // 캐시 저장
-        setTransfersCache(leagueId, allTransfers, currentSeason).catch(() => {});
-      }
+      allTransfers = await fetchLeagueTransfersFromAPI(leagueId, currentSeason);
     }
 
     // 검증 및 정렬
