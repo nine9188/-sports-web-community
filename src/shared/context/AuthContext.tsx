@@ -139,7 +139,14 @@ export function AuthProvider({
       }
     }
 
-    getInitialSession();
+    // idle 이후에 세션 로드 (TBT 최적화: 초기 렌더 차단 방지)
+    let cancelIdle: (() => void) | null = null;
+    if ('requestIdleCallback' in window) {
+      const idleId = requestIdleCallback(() => getInitialSession(), { timeout: 2000 });
+      cancelIdle = () => cancelIdleCallback(idleId);
+    } else {
+      getInitialSession();
+    }
 
     // 인증 상태 변경 감지 (Supabase가 자동으로 세션 갱신 처리)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -170,6 +177,7 @@ export function AuthProvider({
 
     return () => {
       mounted = false;
+      if (cancelIdle) cancelIdle();
       subscription.unsubscribe();
     };
   }, [supabase]);

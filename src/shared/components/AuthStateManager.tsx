@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
-import { useAuth } from '@/shared/context/AuthContext';
 import HeaderClient from '@/domains/layout/components/HeaderClient';
 import Footer from '@/shared/components/Footer';
 import { HeaderUserData, FullUserDataWithSession } from '@/shared/types/user';
@@ -32,7 +31,8 @@ const AuthStateManager = React.memo(function AuthStateManager({
   onClose,
   isProfileOpen,
   onProfileClose,
-  onProfileClick
+  onProfileClick,
+  isMobilePhone
 }: {
   children: React.ReactNode,
   authSection: React.ReactNode,
@@ -47,19 +47,13 @@ const AuthStateManager = React.memo(function AuthStateManager({
   onClose: () => void,
   isProfileOpen: boolean,
   onProfileClose: () => void,
-  onProfileClick: () => void
+  onProfileClick: () => void,
+  isMobilePhone?: boolean
 }) {
-  const { user } = useAuth();
   const pathname = usePathname();
-  
+
   // 매치 페이지인지 확인 (사이드바 숨김용)
   const isMatchPage = pathname?.includes('/livescore/football/match/');
-  
-  // 인증 상태 변경 감지 및 리다이렉트 처리 - 불필요한 refresh 제거
-  useEffect(() => {
-    // router.refresh() 호출을 제거하여 무한 루프 방지
-    // 인증 상태 변경은 AuthContext에서 이미 처리되고 있음
-  }, [user]);
   
   return (
     <div className="flex flex-col min-h-screen w-full">
@@ -72,13 +66,15 @@ const AuthStateManager = React.memo(function AuthStateManager({
         totalPostCount={headerTotalPostCount}
       />
       <div className="flex flex-1 w-full md:max-w-[1360px] md:mx-auto bg-transparent">
-        <Sidebar
-          isOpen={isOpen}
-          onClose={onClose}
-          authSection={authSection}
-        >
-          {boardNavigation}
-        </Sidebar>
+        {!isMobilePhone && (
+          <Sidebar
+            isOpen={isOpen}
+            onClose={onClose}
+            authSection={authSection}
+          >
+            {boardNavigation}
+          </Sidebar>
+        )}
         <ProfileSidebar
           isOpen={isProfileOpen}
           onClose={onProfileClose}

@@ -16,6 +16,7 @@ interface SiteLayoutClientProps {
   rightSidebar: React.ReactNode;
   headerBoards?: Board[];
   headerTotalPostCount?: number;
+  isMobilePhone?: boolean;
 }
 
 export default function SiteLayoutClient({
@@ -24,12 +25,25 @@ export default function SiteLayoutClient({
   rightSidebar,
   headerBoards,
   headerTotalPostCount,
+  isMobilePhone,
 }: SiteLayoutClientProps) {
-  // 유저 데이터를 클라이언트에서 fetch (layout 블로킹 제거)
+  // idle 이후에만 유저 데이터 fetch (TBT 최적화: 초기 렌더 차단 방지)
+  const [isIdle, setIsIdle] = useState(false);
+
+  useEffect(() => {
+    if ('requestIdleCallback' in window) {
+      const id = requestIdleCallback(() => setIsIdle(true), { timeout: 3000 });
+      return () => cancelIdleCallback(id);
+    }
+    const timer = setTimeout(() => setIsIdle(true), 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const { data: fullUserData } = useQuery({
     queryKey: ['fullUserData'],
     queryFn: () => getFullUserData(),
     staleTime: 5 * 60 * 1000,
+    enabled: isIdle,
   });
 
   const isAdmin = fullUserData?.is_admin ?? false;
@@ -138,6 +152,7 @@ export default function SiteLayoutClient({
       isProfileOpen={deferredIsProfileOpen}
       onProfileClose={closeProfileSidebar}
       onProfileClick={toggleProfileSidebar}
+      isMobilePhone={isMobilePhone}
     >
       {children}
     </AuthStateManager>

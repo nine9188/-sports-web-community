@@ -82,6 +82,7 @@ export default async function SiteLayout({
         }
         headerBoards={headerBoardsData.boardData}
         headerTotalPostCount={headerBoardsData.totalPostCount}
+        isMobilePhone={isMobilePhone}
       >
         {children}
       </SiteLayoutClient>
