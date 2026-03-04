@@ -157,51 +157,38 @@ export default async function MatchPage({
     const finishedCodes = ['FT', 'AET', 'PEN'];
     const isFinished = finishedCodes.includes(statusCode);
 
-    // FT 경기: L2 캐시에서 power, matchPlayerStats 조회
-    // (playerRatings는 matchPlayerStats에 통합됨)
+    // 종료 경기: matchPlayerStats만 DB 캐시, power는 fetch cache에 의존
     let powerDataResult: { success: boolean; data?: unknown } = { success: false };
     let allPlayerStatsResult: AllPlayerStatsResponse | null = null;
     let sidebarDataResult: { success: boolean; data?: unknown } = { success: false };
 
     if (isFinished) {
-      // 캐시 벌크 조회 (1회 쿼리)
+      // matchPlayerStats DB 캐시 조회 + 사이드바 병렬
       const [cachedExtra, sidebarResult] = await Promise.all([
-        getMatchCacheBulk(numericMatchId, ['power', 'matchPlayerStats']),
+        getMatchCacheBulk(numericMatchId, ['matchPlayerStats']),
         getCachedSidebarData(matchId),
       ]);
       sidebarDataResult = sidebarResult;
 
-      const hasPower = !!cachedExtra['power'];
       const hasPlayerStats = !!cachedExtra['matchPlayerStats'];
 
-      if (hasPower) {
-        powerDataResult = cachedExtra['power'] as { success: boolean; data?: unknown };
-      }
       if (hasPlayerStats) {
         const cached = cachedExtra['matchPlayerStats'] as Record<string, unknown>;
-
-        // 캐시 형식 확인 - 새 형식(AllPlayerStatsResponse) 또는 구 형식(response array)
         if ('allPlayersData' in cached && Array.isArray(cached.allPlayersData)) {
           allPlayerStatsResult = cached as AllPlayerStatsResponse;
-        } else {
-          // 구 형식이거나 잘못된 형식이면 다시 fetch
-          allPlayerStatsResult = null;
         }
       }
 
-      // 캐시에 없는 것만 API에서 가져옴
+      // power(fetch cache) + 캐시 미스 항목 병렬 조회
       const apiPromises: Promise<void>[] = [];
 
-      if (!hasPower && homeTeamId && awayTeamId) {
+      if (homeTeamId && awayTeamId) {
         apiPromises.push(
           getCachedPowerData(homeTeamId, awayTeamId, 5).then(r => {
             powerDataResult = r;
-            setMatchCache(numericMatchId, 'power', r, statusCode).catch(() => {});
           })
         );
       }
-      // 통합된 fetchAllPlayerStats 사용 (API 1회 호출로 모든 데이터 획득)
-      // 캐시가 없거나 구 형식인 경우 API 호출
       if (!allPlayerStatsResult) {
         apiPromises.push(
           fetchAllPlayerStats(matchId, matchData.match?.status?.code).then(r => {
@@ -213,7 +200,7 @@ export default async function MatchPage({
 
       if (apiPromises.length > 0) await Promise.all(apiPromises);
     } else {
-      // 비종료 경기: 통합 API 병렬 호출 (기존 2개 → 1개로 통합)
+      // 비종료 경기: 병렬 호출
       const [sResult, pResult, playerStatsResult] = await Promise.all([
         getCachedSidebarData(matchId),
         (homeTeamId && awayTeamId)

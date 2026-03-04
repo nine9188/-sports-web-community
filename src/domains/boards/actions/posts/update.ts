@@ -103,7 +103,7 @@ export async function updatePost(
 
     const { error: updateError } = await supabase
       .from('posts')
-      .update(updateData)
+      .update(updateData as Record<string, unknown>)
       .eq('id', postId);
     
     if (updateError) {
