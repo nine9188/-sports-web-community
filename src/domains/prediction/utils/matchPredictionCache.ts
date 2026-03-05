@@ -112,7 +112,6 @@ export async function savePredictionToCache(
         .eq('id', existing.id)
 
       if (error) throw error
-      console.log(`[예측 캐시 업데이트] fixture_id: ${fixtureId}`)
     } else {
       // 새 예측 생성 (타입 체크 우회)
       const { error } = await (supabaseService as any)
@@ -120,7 +119,6 @@ export async function savePredictionToCache(
         .insert(predictionData)
 
       if (error) throw error
-      console.log(`[예측 캐시 생성] fixture_id: ${fixtureId}`)
     }
 
     return { success: true }

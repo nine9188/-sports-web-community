@@ -50,8 +50,6 @@ export async function getMatchesByDate(date: string): Promise<MatchesWithImages>
     // fetchMatchesByDate 내부에서 이미 팀/리그 Storage URL을 조회하므로 여기서 중복 조회하지 않음
     const matches = await fetchMatchesByDate(date);
 
-    console.log(`[MatchForm] ${date} 경기 ${matches.length}건 조회됨`);
-
     if (matches.length === 0) {
       return {
         matches: [],

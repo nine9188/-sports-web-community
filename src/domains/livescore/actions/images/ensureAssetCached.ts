@@ -142,8 +142,6 @@ async function cacheAsset(type: AssetType, entityId: number, size: ImageSize = '
   const supabase = getSupabaseAdmin();
   const sourceUrl = getApiSportsUrl(type, entityId);
 
-  console.log(`[4590] 캐싱 시작: ${type}/${entityId}`);
-
   try {
     // 1. pending 락 선점 (upsert)
     const { error: lockError } = await supabase
@@ -162,12 +160,10 @@ async function cacheAsset(type: AssetType, entityId: number, size: ImageSize = '
       );
 
     if (lockError) {
-      console.log(`[4590] 락 실패 (다른 요청 처리 중): ${type}/${entityId}`);
       return PLACEHOLDER_URLS[type];
     }
 
     // 2. API-Sports에서 이미지 다운로드
-    console.log(`[4590] 다운로드 중: ${sourceUrl}`);
     const response = await fetch(sourceUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0',
@@ -180,7 +176,6 @@ async function cacheAsset(type: AssetType, entityId: number, size: ImageSize = '
 
     const imageBuffer = await response.arrayBuffer();
     const bucket = BUCKET_MAP[type];
-    console.log(`[4590] 다운로드 완료: ${(imageBuffer.byteLength / 1024).toFixed(1)}KB`);
 
     // 3. sharp로 2사이즈 WebP 변환 및 업로드
     const sizeConfig = type === 'venue_photo' ? VENUE_SIZE_CONFIG : SIZE_CONFIG;
@@ -193,7 +188,6 @@ async function cacheAsset(type: AssetType, entityId: number, size: ImageSize = '
         .toBuffer();
 
       const storagePath = getStoragePath(type, entityId, s);
-      console.log(`[4590] 업로드 중: ${bucket}/${storagePath} (${(webpBuffer.byteLength / 1024).toFixed(1)}KB)`);
 
       const { error: uploadError } = await supabase.storage
         .from(bucket)
@@ -220,7 +214,6 @@ async function cacheAsset(type: AssetType, entityId: number, size: ImageSize = '
       .eq('type', type)
       .eq('entity_id', entityId);
 
-    console.log(`[4590] ✅ 캐싱 완료: ${type}/${entityId} (2사이즈 WebP)`);
     return getStoragePublicUrl(type, entityId, size);
 
   } catch (error) {

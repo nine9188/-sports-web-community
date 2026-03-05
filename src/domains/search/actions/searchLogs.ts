@@ -15,20 +15,23 @@ export async function createSearchLog(params: {
     
     // 현재 사용자 정보 가져오기
     const { data: { user } } = await supabase.auth.getUser()
-    
+
+    // 비로그인 사용자는 검색 로그 저장 스킵 (RLS 정책: authenticated만 INSERT 가능)
+    if (!user) return true
+
     // 요청 헤더에서 정보 추출
     const headersList = await headers()
     const userAgent = headersList.get('user-agent') || null
     const forwardedFor = headersList.get('x-forwarded-for')
     const realIp = headersList.get('x-real-ip')
     const remoteAddr = headersList.get('remote-addr')
-    
+
     // IP 주소 우선순위: x-forwarded-for > x-real-ip > remote-addr
     const ipAddress = forwardedFor?.split(',')[0]?.trim() || realIp || remoteAddr || null
-    
-    // 세션 ID 생성 (간단한 방식 - 실제로는 더 정교한 세션 관리 필요)
-    const sessionId = user?.id ? `user_${user.id}_${Date.now()}` : `anon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    
+
+    // 세션 ID 생성
+    const sessionId = `user_${user.id}_${Date.now()}`
+
     // 타입 우회를 위해 any 사용
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase as any)
@@ -38,7 +41,7 @@ export async function createSearchLog(params: {
         search_type: params.search_type,
         results_count: params.results_count,
         search_duration_ms: params.search_duration_ms || null,
-        user_id: user?.id || null,
+        user_id: user.id,
         session_id: sessionId,
         ip_address: ipAddress,
         user_agent: userAgent

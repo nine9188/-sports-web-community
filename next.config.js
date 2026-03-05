@@ -67,7 +67,21 @@ const nextConfig = {
   // Next.js 16: eslint 설정은 더 이상 next.config.js에서 지원되지 않음
   // 대신 next lint 명령어 옵션을 사용하거나 package.json scripts에서 설정
   async headers() {
+    const securityHeaders = [
+      { key: 'X-Frame-Options', value: 'DENY' },
+      { key: 'X-Content-Type-Options', value: 'nosniff' },
+      { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+      { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+      { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+      { key: 'X-DNS-Prefetch-Control', value: 'on' },
+    ];
+
     return [
+      {
+        // 모든 페이지에 보안 헤더 적용
+        source: '/(.*)',
+        headers: securityHeaders,
+      },
       {
         // 정적 이미지/아이콘 (placeholder SVG 등)
         source: '/:path*\\.(svg|png|jpg|jpeg|webp|ico)',

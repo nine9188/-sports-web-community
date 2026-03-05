@@ -69,7 +69,6 @@ export async function fetchMatchFullData(
 
       // 불완전한 캐시는 무시하고 API에서 새로 가져옴
       if (!isCacheComplete) {
-        console.log(`[MatchData] 불완전한 캐시 무시: ${matchId}`);
       } else {
 
       // standings는 실시간이므로 캐시에서 제외됨 → 필요하면 새로 가져옴

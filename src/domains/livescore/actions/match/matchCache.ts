@@ -117,7 +117,6 @@ export async function setMatchCache(
 ): Promise<void> {
   try {
     if (!validateCacheData(dataType, data)) {
-      console.log(`[MatchCache] 검증 실패, 캐시 스킵: match=${matchId} type=${dataType}`);
       return;
     }
 

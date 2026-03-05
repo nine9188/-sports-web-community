@@ -200,10 +200,6 @@ export async function syncAllFootballTeamsFromApi(): Promise<{
   let successfulLeagues = 0
 
   try {
-    console.log(`🚀 ${allLeagueIds.length}개 리그의 팀 데이터 동기화 시작...`)
-    console.log(`   📌 컵 대회 ${CUP_LEAGUE_IDS.length}개 먼저 동기화`)
-    console.log(`   📌 리그 ${LEAGUE_IDS.length}개 나중에 동기화 (우선순위)`)
-
     // 기존 데이터 삭제
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: deleteError } = await (supabase as any)
@@ -218,8 +214,6 @@ export async function syncAllFootballTeamsFromApi(): Promise<{
     // 각 리그별로 데이터 가져오기 및 저장 (테스트 페이지와 동일한 로직)
     for (const leagueId of allLeagueIds) {
       try {
-        console.log(`📡 리그 ${leagueId} 데이터 가져오는 중...`)
-        
         const rawData = await fetchRawLeagueData(leagueId)
         
         if (rawData.error) {
@@ -247,9 +241,6 @@ export async function syncAllFootballTeamsFromApi(): Promise<{
         totalTeams += rawData.teams.length
         successfulLeagues++
         
-        const leagueName = getLeagueName(leagueId)
-        console.log(`✅ 리그 ${leagueId} (${leagueName}): ${rawData.teams.length}개 팀 저장 완료`)
-        
         // API 요청 제한을 위한 딜레이
         await new Promise(resolve => setTimeout(resolve, 100))
         
@@ -273,9 +264,7 @@ export async function syncAllFootballTeamsFromApi(): Promise<{
     // }
 
     const summary = `총 ${allLeagueIds.length}개 리그 중 ${successfulLeagues}개 성공, ${totalTeams}개 팀 저장 완료`
-    
-    console.log(`🎉 동기화 완료: ${summary}`)
-    
+
     return {
       success: successfulLeagues > 0,
       totalLeagues: allLeagueIds.length,

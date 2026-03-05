@@ -420,22 +420,17 @@ async function getBoardIdBySlug(slug: string): Promise<string | null> {
 // 특정 날짜의 다음날 경기 가져오기 (메이저 리그만)
 export async function getUpcomingMatches(date: string): Promise<UpcomingMatch[]> {
   try {
-    console.log(`🔍 다음날 경기 조회 시작: ${date}`)
-    
     const response = await fetchFromFootballApi('fixtures', {
       date: date,
       status: 'NS' // Not Started
     })
     
     if (!response?.response) {
-      console.log('❌ API 응답 없음')
       return []
     }
     
     // 메이저 리그 ID 목록 가져오기
     const majorLeagueIds = getMajorLeagueIds()
-    console.log(`🎯 필터링 대상 리그: ${majorLeagueIds.length}개`)
-    
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const allMatches: UpcomingMatch[] = response.response.map((fixture: any) => ({
       id: fixture.fixture.id,
@@ -465,7 +460,6 @@ export async function getUpcomingMatches(date: string): Promise<UpcomingMatch[]>
       majorLeagueIds.includes(match.league.id)
     )
     
-    console.log(`✅ 전체 ${allMatches.length}개 경기 중 메이저 리그 ${filteredMatches.length}개 경기 필터링 완료`)
     return filteredMatches
     
   } catch (error) {
@@ -499,8 +493,6 @@ async function generateLeaguePredictionPost(
   try {
     const { league, matches } = leagueGroup
     
-    console.log(`🔮 ${league.name} 예측 분석 시작 (${matches.length}경기)`)
-    
     // 게시판 찾기 (리그 게시판 우선, 없으면 해외축구 게시판 fallback)
     let targetBoardId: string | null = null
 
@@ -510,14 +502,12 @@ async function generateLeaguePredictionPost(
       const boardId = await getBoardIdBySlug(boardSlug)
       if (boardId) {
         targetBoardId = boardId
-        console.log(`🎯 ${league.name} (ID: ${league.id}) → 리그 게시판: ${boardSlug}`)
       }
     }
 
     // 2. 리그 게시판이 없으면 해외축구 게시판 사용 (fallback)
     if (!targetBoardId) {
       targetBoardId = OVERSEAS_FOOTBALL_BOARD_ID
-      console.log(`🌍 ${league.name} (ID: ${league.id}) → 해외축구 게시판 (fallback)`)
     }
     
     // 각 경기에 대한 예측 분석 생성 (Predictions API 사용)
@@ -528,7 +518,6 @@ async function generateLeaguePredictionPost(
       const matchHomeNameKo = getTeamNameKo(match.teams.home.id, match.teams.home.name)
       const matchAwayNameKo = getTeamNameKo(match.teams.away.id, match.teams.away.name)
       try {
-        console.log(`🎯 경기 예측: ${matchHomeNameKo} vs ${matchAwayNameKo}`)
         const predictionData = await fetchPredictions(match.id)
 
         if (predictionData) {
@@ -717,7 +706,6 @@ async function generateLeaguePredictionPost(
     )
 
     if (result.success) {
-      console.log(`✅ ${league.name} 예측 분석 게시글 작성 완료`)
       return {
         league_id: league.id,
         league_name: league.name,
@@ -769,8 +757,6 @@ async function savePredictionLog(
     
     if (error) {
       console.error('❌ 예측 로그 저장 실패:', error)
-    } else {
-      console.log('📝 예측 자동화 로그 저장 완료')
     }
   } catch (error) {
     console.error('❌ 예측 로그 저장 중 오류:', error)
@@ -783,15 +769,11 @@ export async function generateAllPredictions(
   triggerType: 'manual' | 'github_actions' | 'cron' = 'manual'
 ): Promise<PredictionResult[]> {
   const startTime = Date.now()
-  console.log(`🔮 모든 리그 예측 분석 시작 (날짜: ${targetDate}, 트리거: ${triggerType})`)
-  
   try {
     // 다음날 경기 가져오기
     const matches = await getUpcomingMatches(targetDate)
     
     if (matches.length === 0) {
-      console.log('📅 해당 날짜에 예정된 경기가 없습니다')
-      
       await savePredictionLog(
         triggerType,
         'success',
@@ -806,8 +788,6 @@ export async function generateAllPredictions(
     
     // 리그별로 그룹화
     const leagueGroups = groupMatchesByLeague(matches)
-    console.log(`📊 ${leagueGroups.length}개 리그, 총 ${matches.length}경기 발견`)
-    
     // 각 리그별로 예측 분석 생성
     const results: PredictionResult[] = []
     let totalPostsCreated = 0
@@ -884,8 +864,6 @@ export async function togglePredictionAutomation(enabled: boolean, time: string)
   try {
     // 실제로는 GitHub Actions workflow 파일을 수정하거나
     // 데이터베이스에 설정을 저장해야 합니다
-    console.log(`🔧 예측 자동화 ${enabled ? '활성화' : '비활성화'}: ${time}`)
-    
     // 임시 구현 - 실제로는 더 복잡한 로직 필요
     return {
       success: true,
@@ -903,8 +881,6 @@ export async function togglePredictionAutomation(enabled: boolean, time: string)
 // 예측 생성 테스트
 export async function testPredictionGeneration(targetDate: string) {
   try {
-    console.log(`🧪 예측 생성 테스트 시작: ${targetDate}`)
-    
     const results = await generateAllPredictions(targetDate, 'manual')
     
     const successCount = results.filter(r => r.status === 'success').length
@@ -935,8 +911,6 @@ export async function generateSingleLeaguePrediction(
   const startTime = Date.now()
 
   try {
-    console.log(`🎯 단일 리그 예측 분석 시작 (리그 ID: ${leagueId}, 날짜: ${targetDate}, 선택된 경기: ${matchIds?.length || '전체'})`)
-
     // 해당 날짜의 경기 조회
     const allMatches = await getUpcomingMatches(targetDate)
 
@@ -1017,9 +991,6 @@ async function createPredictionPost(
   const supabase = createSupabaseClient()
 
   try {
-    console.log(`📝 게시글 생성: ${title}`)
-    console.log(`📋 대상 게시판: ${boardId}`)
-
     const { data: post, error: postError } = await supabase
       .from('posts')
       .insert({
@@ -1039,8 +1010,6 @@ async function createPredictionPost(
       console.error('❌ 게시글 생성 실패:', postError)
       return { success: false, error: postError?.message || '게시글 생성 실패' }
     }
-
-    console.log(`✅ 게시글 생성 완료: ${post.id}`)
 
     return {
       success: true,

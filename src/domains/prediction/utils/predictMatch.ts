@@ -35,15 +35,12 @@ function getCurrentSeason(leagueId: number, matchDate: string): number {
 // 팀의 주요 소속 리그 ID를 가져오는 함수
 async function getTeamMainLeague(teamId: number, season: number): Promise<number | null> {
   try {
-    console.log(`[팀 소속 리그 조회] 팀 ID: ${teamId}, 시즌: ${season}`)
-    
     const res = await fetchFromFootballApi('leagues', {
       team: teamId,
       season: season
     })
     
     if (!res?.response || res.response.length === 0) {
-      console.log(`[팀 소속 리그] 팀 ID: ${teamId} - 리그 정보 없음`)
       return null
     }
     
@@ -57,18 +54,15 @@ async function getTeamMainLeague(teamId: number, season: number): Promise<number
     )
     
     if (domesticLeague) {
-      console.log(`[팀 소속 리그 발견] 팀 ID: ${teamId} - 주요 리그: ${domesticLeague.league.id} (${domesticLeague.league.name})`)
       return domesticLeague.league.id
     }
     
     // 2순위: 일반 국내 리그
     const generalLeague = leagues.find((l: any) => l.league.type === 'League')
     if (generalLeague) {
-      console.log(`[팀 소속 리그 발견] 팀 ID: ${teamId} - 일반 리그: ${generalLeague.league.id} (${generalLeague.league.name})`)
       return generalLeague.league.id
     }
     
-    console.log(`[팀 소속 리그] 팀 ID: ${teamId} - 적절한 리그 없음`)
     return null
     
   } catch (error) {
@@ -80,8 +74,6 @@ async function getTeamMainLeague(teamId: number, season: number): Promise<number
 // 팀 통계를 가져오는 함수 (API-Football 올바른 엔드포인트 사용)
 async function getTeamStats(teamId: number, leagueId: number, season: number) {
   try {
-    console.log(`[팀 통계 요청] 팀 ID: ${teamId}, 리그: ${leagueId}, 시즌: ${season}`)
-    
     // 특수 대회 리스트 (클럽 월드컵, 인터콘티넨털컵 등)
     const specialTournaments = [15, 531, 848] // FIFA Club World Cup, UEFA Super Cup, Conference League 등
     
@@ -89,30 +81,22 @@ async function getTeamStats(teamId: number, leagueId: number, season: number) {
     const seasonsToTry = [2024, season, season - 1].filter((s, i, arr) => arr.indexOf(s) === i)
     
     for (const trySeeason of seasonsToTry) {
-      console.log(`[팀 통계 시도] 팀 ID: ${teamId}, 시즌: ${trySeeason}`)
-      
   const res = await fetchFromFootballApi('teams/statistics', {
     team: teamId,
     league: leagueId,
         season: trySeeason
       })
       
-      console.log(`[팀 통계 API 응답] 팀 ID: ${teamId}, 시즌: ${trySeeason}`, JSON.stringify(res, null, 2))
-      
       // 데이터가 있고 실제 경기 수가 0이 아닌 경우
       if (res?.response && res.response.fixtures?.played?.total > 0) {
-        console.log(`[팀 통계 성공] 팀 ID: ${teamId}, 시즌: ${trySeeason}`)
         return res.response
       }
     }
     
     // 특수 대회에서 데이터가 없는 경우, 팀의 주요 소속 리그에서 시도
     if (specialTournaments.includes(leagueId)) {
-      console.log(`[특수 대회 폴백] 팀 ID: ${teamId} - 주요 소속 리그에서 통계 조회 시도`)
-      
       const mainLeagueId = await getTeamMainLeague(teamId, season)
       if (mainLeagueId && mainLeagueId !== leagueId) {
-        console.log(`[주요 리그 통계 시도] 팀 ID: ${teamId}, 주요 리그: ${mainLeagueId}`)
         
         for (const trySeeason of seasonsToTry) {
           const res = await fetchFromFootballApi('teams/statistics', {
@@ -122,14 +106,12 @@ async function getTeamStats(teamId: number, leagueId: number, season: number) {
           })
           
           if (res?.response && res.response.fixtures?.played?.total > 0) {
-            console.log(`[주요 리그 통계 성공] 팀 ID: ${teamId}, 리그: ${mainLeagueId}, 시즌: ${trySeeason}`)
             return res.response
           }
         }
       }
     }
     
-    console.log(`[팀 통계 실패] 팀 ID: ${teamId} - 모든 시도 완료`)
     return null
     
   } catch (error) {
@@ -141,8 +123,6 @@ async function getTeamStats(teamId: number, leagueId: number, season: number) {
 // 팀의 부상자 정보를 가져오는 함수 (현재 활성화된 부상만)
 async function getTeamInjuries(teamId: number, leagueId: number, season: number) {
   try {
-    console.log(`[부상 정보 요청] 팀 ID: ${teamId}, 리그: ${leagueId}, 시즌: ${season}`)
-    
     const specialTournaments = [15, 531, 848]
     const seasonsToTry = [season, 2024, season - 1].filter((s, i, arr) => arr.indexOf(s) === i)
     
@@ -197,7 +177,6 @@ async function getTeamInjuries(teamId: number, leagueId: number, season: number)
         })
         
         if (activeInjuries.length > 0) {
-          console.log(`[부상 정보 성공] 팀 ID: ${teamId}, 시즌: ${trySeeason}, 활성 부상자 수: ${activeInjuries.length} (전체: ${res.response.length})`)
           return activeInjuries
         }
       }
@@ -249,7 +228,6 @@ async function getTeamInjuries(teamId: number, leagueId: number, season: number)
             })
             
             if (activeInjuries.length > 0) {
-              console.log(`[주요 리그 부상 정보 성공] 팀 ID: ${teamId}, 리그: ${mainLeagueId}, 활성 부상자 수: ${activeInjuries.length}`)
               return activeInjuries
             }
           }
@@ -257,7 +235,6 @@ async function getTeamInjuries(teamId: number, leagueId: number, season: number)
       }
     }
     
-    console.log(`[부상 정보] 팀 ID: ${teamId} - 현재 활성 부상자 없음`)
     return []
   } catch (error) {
     console.error(`부상 정보 가져오기 실패 (팀 ID: ${teamId}):`, error)
@@ -268,8 +245,6 @@ async function getTeamInjuries(teamId: number, leagueId: number, season: number)
 // 팀의 최근 경기 폼을 가져오는 함수
 async function getTeamForm(teamId: number, leagueId: number, season: number, last: number = 5) {
   try {
-    console.log(`[팀 폼 요청] 팀 ID: ${teamId}, 리그: ${leagueId}, 시즌: ${season}`)
-    
     const specialTournaments = [15, 531, 848]
     const seasonsToTry = [season, 2024, season - 1].filter((s, i, arr) => arr.indexOf(s) === i)
     
@@ -283,7 +258,6 @@ async function getTeamForm(teamId: number, leagueId: number, season: number, las
       })
       
       if (res?.response && res.response.length > 0) {
-        console.log(`[팀 폼 성공] 팀 ID: ${teamId}, 시즌: ${trySeeason}, 경기 수: ${res.response.length}`)
         return res.response
       }
     }
@@ -301,14 +275,12 @@ async function getTeamForm(teamId: number, leagueId: number, season: number, las
           })
           
           if (res?.response && res.response.length > 0) {
-            console.log(`[주요 리그 폼 성공] 팀 ID: ${teamId}, 리그: ${mainLeagueId}, 경기 수: ${res.response.length}`)
             return res.response
           }
         }
       }
     }
     
-    console.log(`[팀 폼 실패] 팀 ID: ${teamId} - 데이터 없음`)
     return []
   } catch (error) {
     console.error(`팀 폼 가져오기 실패 (팀 ID: ${teamId}):`, error)
@@ -404,7 +376,6 @@ export async function predictMatch(fixtureId: number, forceRefresh: boolean = fa
     if (!forceRefresh) {
       const cached = await getCachedPrediction(fixtureId)
       if (cached) {
-        console.log(`[캐시된 예측 사용] fixture_id: ${fixtureId}`)
         // 조회수 증가
         await incrementViewCount(fixtureId)
         
@@ -433,7 +404,6 @@ export async function predictMatch(fixtureId: number, forceRefresh: boolean = fa
               )
             }
           } catch (error) {
-            console.warn('캐시된 차트 데이터 생성 실패:', error)
           }
         }
         
@@ -449,15 +419,11 @@ export async function predictMatch(fixtureId: number, forceRefresh: boolean = fa
     const match = fixtureRes?.response?.[0]
     if (!match) throw new Error('경기 정보 없음')
 
-    console.log('[경기 정보]', JSON.stringify(match, null, 2))
-
     const home = match.teams.home
     const away = match.teams.away
     const matchDate = match.fixture.date.split('T')[0] // YYYY-MM-DD
     const leagueId = match.league.id
     const season = getCurrentSeason(leagueId, matchDate)
-
-    console.log(`[경기 기본 정보] ${home.name} vs ${away.name}, 날짜: ${matchDate}, 리그: ${leagueId} (${match.league.name}), 시즌: ${season}`)
 
     // 병렬로 데이터 가져오기
     const [homeStats, awayStats, homeForm, awayForm, homeInjuries, awayInjuries, h2h, odds] = await Promise.all([
@@ -470,9 +436,6 @@ export async function predictMatch(fixtureId: number, forceRefresh: boolean = fa
       fetchFromFootballApi('fixtures/headtohead', { h2h: `${home.id}-${away.id}` }),
       fetchFromFootballApi('odds', { fixture: fixtureId })
     ])
-
-    console.log('[홈팀 통계 구조]', homeStats ? Object.keys(homeStats) : 'null')
-    console.log('[어웨이팀 통계 구조]', awayStats ? Object.keys(awayStats) : 'null')
 
     // 실제 사용된 리그 정보 추적
     const homeStatsLeague = homeStats?.league?.name || '정보 없음'
@@ -679,8 +642,6 @@ ${odds?.response?.[0]?.bookmakers?.[0]?.bets
 - 배당률 정보를 활용한 투자 권유는 하지 마세요
 - 순수하게 축구 경기 결과 예측과 관전 재미에만 집중해주세요
 `
-
-    console.log('[GPT 프롬프트]', prompt)
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4.1-nano-2025-04-14',

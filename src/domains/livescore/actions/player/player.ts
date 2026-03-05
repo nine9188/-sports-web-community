@@ -116,17 +116,14 @@ export async function fetchPlayerData(id: string): Promise<PlayerData> {
 
         // 데이터 존재 확인
         if (playerData?.response?.[0]) {
-          console.log(`선수 데이터 발견: ID ${id}, 시즌 ${season}`);
           return formatPlayerData(playerData.response[0], season);
         }
       } catch (seasonError) {
-        console.warn(`시즌 ${season}에서 선수 ${id} 데이터 가져오기 실패:`, seasonError);
         continue;
       }
     }
 
     // 모든 시즌에서 실패한 경우 - 기본 데이터 반환
-    console.warn(`선수 ID ${id}의 데이터를 찾을 수 없어 기본 데이터 반환`);
     return {
       info: {
         id: parseInt(id),
