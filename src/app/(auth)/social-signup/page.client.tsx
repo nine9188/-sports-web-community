@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/shared/context/AuthContext'
 import { getSupabaseBrowser } from '@/shared/lib/supabase'
 import { validateReferralCode } from '@/shared/actions/referral-actions'
+import { createWelcomeNotification } from '@/domains/notifications/actions/create'
 import { toast } from 'react-toastify'
-import { AlertCircle, Check, ChevronLeft, Calendar as CalendarIcon, Gift } from 'lucide-react'
+import { AlertCircle, Check, ChevronLeft, Calendar as CalendarIcon, Gift, X, PartyPopper, Phone } from 'lucide-react'
 import Spinner from '@/shared/components/Spinner'
 import { Button } from '@/shared/components/ui'
 import Calendar from '@/shared/components/Calendar'
@@ -23,6 +24,7 @@ export default function SocialSignupPage() {
   // 단계 상태
   const [showNicknameStep, setShowNicknameStep] = useState(false)
   const [showReferralStep, setShowReferralStep] = useState(false)
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false)
 
   // 입력값
   const [nickname, setNickname] = useState('')
@@ -316,11 +318,15 @@ export default function SocialSignupPage() {
         return
       }
 
-      sessionStorage.setItem('login-success', 'true')
+      // 환영 알림 발송
+      try {
+        await createWelcomeNotification({ userId: user.id })
+      } catch (e) {
+        console.error('환영 알림 발송 실패:', e)
+      }
 
-      setTimeout(() => {
-        window.location.href = '/'
-      }, 500)
+      // 축하 팝업 표시
+      setShowWelcomeModal(true)
     } catch (error) {
       console.error('회원가입 오류:', error)
       toast.error('회원가입 중 오류가 발생했습니다.')
@@ -338,6 +344,58 @@ export default function SocialSignupPage() {
   }
 
   return (
+    <>
+    {/* 축하 팝업 */}
+    {showWelcomeModal && (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
+        <div className="bg-white dark:bg-[#2D2D2D] rounded-2xl shadow-2xl max-w-sm w-full mx-4 p-8 text-center relative">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+            <PartyPopper className="w-8 h-8 text-green-600 dark:text-green-400" />
+          </div>
+
+          <h3 className="text-xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">
+            회원가입을 축하합니다!
+          </h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+            <span className="font-medium text-gray-900 dark:text-gray-200">{nickname}</span>님, 4590 Football에 오신 것을 환영합니다.
+          </p>
+
+          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg mb-6">
+            <div className="flex items-center gap-2 mb-2">
+              <Phone className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <p className="text-sm font-medium text-blue-800 dark:text-blue-200">휴대폰 인증을 진행해주세요</p>
+            </div>
+            <p className="text-xs text-blue-700 dark:text-blue-300">
+              설정에서 휴대폰 번호를 인증하면<br />
+              더 많은 기능을 이용할 수 있습니다.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => {
+                window.location.href = '/settings/profile'
+              }}
+              className="w-full py-3 h-auto"
+            >
+              휴대폰 인증하러 가기
+            </Button>
+            <button
+              type="button"
+              onClick={() => {
+                window.location.href = '/'
+              }}
+              className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 py-2 transition-colors"
+            >
+              나중에 할게요
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
     <div className="flex flex-col justify-center items-center min-h-[calc(100vh-120px)]">
       <div className="flex w-full max-w-md lg:max-w-full">
         <BrandingPanel />
@@ -618,5 +676,6 @@ export default function SocialSignupPage() {
         </div>
       </div>
     </div>
+    </>
   )
 }
