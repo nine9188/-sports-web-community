@@ -6,9 +6,9 @@ import Link from 'next/link';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/shared/context/AuthContext';
 import { EyeIcon, EyeOffIcon, AlertCircle, Check } from 'lucide-react';
-import { signIn, resendConfirmationByUsername } from '@/domains/auth/actions';
-import KakaoLoginButton from '@/domains/auth/components/KakaoLoginButton';
+import { signIn, resendConfirmationByUsername, signInWithKakao } from '@/domains/auth/actions';
 import { Button } from '@/shared/components/ui';
+import BrandingPanel from '../components/BrandingPanel';
 
 // SearchParams를 사용하는 로그인 컴포넌트
 function LoginContent() {
@@ -102,6 +102,28 @@ function LoginContent() {
     setShowPassword(!showPassword);
   };
 
+  // 카카오 로그인
+  const handleKakaoLogin = async () => {
+    if (loading) return;
+    try {
+      setLoading(true);
+      const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`;
+      const result = await signInWithKakao(redirectTo);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      if (result.url) {
+        window.location.href = result.url;
+      }
+    } catch (error) {
+      console.error('카카오 로그인 오류:', error);
+      toast.error('카카오 로그인 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 이메일 인증 재발송
   const handleResendEmail = async () => {
     try {
@@ -190,9 +212,9 @@ function LoginContent() {
   };
 
   return (
-    <div className="max-w-md w-full md:bg-white md:dark:bg-[#2D2D2D] md:rounded-lg md:shadow-lg md:border md:border-black/10 md:dark:border-white/10 md:p-8">
-      {/* 헤더 */}
-      <div className="text-center mb-6">
+    <div className="w-full lg:w-1/2 max-w-md lg:max-w-none md:bg-white md:dark:bg-[#2D2D2D] md:rounded-lg lg:rounded-l-none md:shadow-lg md:border md:border-black/10 md:dark:border-white/10 lg:border-l-0 md:p-8 lg:p-14 flex flex-col justify-center">
+      {/* 헤더 - 모바일에서만 표시 (데스크톱은 브랜딩 패널에 포함) */}
+      <div className="text-center mb-6 lg:hidden">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">4590 Football 로그인</h2>
         <p className="text-gray-600 dark:text-gray-400 mb-8">
           모든 축구팬을 위한<br />
@@ -200,12 +222,10 @@ function LoginContent() {
         </p>
       </div>
 
-      {/* 콘텐츠 영역 - 최소 높이 설정 */}
-      <div className="min-h-[400px]">
-      
+      <div>
       <form onSubmit={handleLogin} className="space-y-6">
         <div>
-          <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">아이디</label>
+          <label className="block text-gray-700 dark:text-gray-300 mb-1.5 text-sm font-medium">아이디</label>
           <div className="relative">
             <input
               id="username"
@@ -216,7 +236,7 @@ function LoginContent() {
                 validateUsername(e.target.value);
               }}
               onBlur={() => validateUsername(username)}
-              className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
+              className={`w-full px-4 py-3 border rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-[15px] transition-colors ${
                 usernameError ? 'border-red-500 dark:border-red-400' :
                 usernameValid ? 'border-green-500 dark:border-green-400' :
                 'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
@@ -239,7 +259,7 @@ function LoginContent() {
         </div>
 
         <div>
-          <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">비밀번호</label>
+          <label className="block text-gray-700 dark:text-gray-300 mb-1.5 text-sm font-medium">비밀번호</label>
           <div className="relative">
             <input
               id="password"
@@ -250,7 +270,7 @@ function LoginContent() {
                 validatePassword(e.target.value);
               }}
               onBlur={() => validatePassword(password)}
-              className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
+              className={`w-full px-4 py-3 border rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-[15px] transition-colors ${
                 passwordError ? 'border-red-500 dark:border-red-400' :
                 passwordValid ? 'border-green-500 dark:border-green-400' :
                 'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
@@ -353,12 +373,59 @@ function LoginContent() {
         </div>
       </div>
 
-      {/* 카카오 로그인 */}
-      <div className="mb-6">
-        <KakaoLoginButton 
+      {/* 소셜 로그인 아이콘 */}
+      <div className="flex justify-center items-center gap-4 mb-6">
+        {/* 카카오 */}
+        <button
+          type="button"
+          onClick={handleKakaoLogin}
           disabled={loading}
-          onLoading={setLoading}
-        />
+          className="w-12 h-12 rounded-full bg-[#FEE500] hover:bg-[#FFEB00] flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          title="카카오 로그인"
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#3C1E1E">
+            <path d="M12 3C6.486 3 2 6.262 2 10.5c0 2.665 1.678 5.012 4.233 6.414l-1.017 3.742c-.08.295.195.578.49.506l4.146-1.024C10.557 20.464 11.269 20.5 12 20.5c5.514 0 10-3.262 10-7.5S17.514 3 12 3z"/>
+          </svg>
+        </button>
+
+        {/* 구글 */}
+        <button
+          type="button"
+          disabled
+          className="w-12 h-12 rounded-full bg-white dark:bg-[#2D2D2D] border border-gray-200 dark:border-white/15 flex items-center justify-center transition-colors opacity-50 cursor-not-allowed"
+          title="구글 로그인 (준비 중)"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+        </button>
+
+        {/* 디스코드 */}
+        <button
+          type="button"
+          disabled
+          className="w-12 h-12 rounded-full bg-[#5865F2] flex items-center justify-center transition-colors opacity-50 cursor-not-allowed"
+          title="디스코드 로그인 (준비 중)"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+            <path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+          </svg>
+        </button>
+
+        {/* 애플 */}
+        <button
+          type="button"
+          disabled
+          className="w-12 h-12 rounded-full bg-black dark:bg-white flex items-center justify-center transition-colors opacity-50 cursor-not-allowed"
+          title="Apple 로그인 (준비 중)"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="white" className="dark:fill-black">
+            <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+          </svg>
+        </button>
       </div>
       
         <div className="mt-8 text-center">
@@ -377,22 +444,26 @@ function LoginContent() {
 export default function SignInPage() {
   return (
     <div className="flex flex-col justify-center items-center min-h-[calc(100vh-120px)]">
-      <Suspense fallback={
-        <div className="max-w-md w-full">
-          <div className="animate-pulse">
-            <div className="h-8 bg-[#EAEAEA] dark:bg-[#333333] rounded w-48 mb-2"></div>
-            <div className="h-4 bg-[#EAEAEA] dark:bg-[#333333] rounded w-full mb-2"></div>
-            <div className="h-4 bg-[#EAEAEA] dark:bg-[#333333] rounded w-3/4 mb-8"></div>
-            <div className="space-y-4">
-              <div className="h-12 bg-[#EAEAEA] dark:bg-[#333333] rounded"></div>
-              <div className="h-12 bg-[#EAEAEA] dark:bg-[#333333] rounded"></div>
-              <div className="h-12 bg-[#EAEAEA] dark:bg-[#333333] rounded"></div>
+      {/* 브랜딩 + 폼 카드 */}
+      <div className="flex w-full max-w-md lg:max-w-full">
+        <BrandingPanel />
+        <Suspense fallback={
+          <div className="w-full lg:w-1/2 max-w-md lg:max-w-none md:bg-white md:dark:bg-[#2D2D2D] md:rounded-lg lg:rounded-l-none md:shadow-lg md:border md:border-black/10 md:dark:border-white/10 lg:border-l-0 md:p-8">
+            <div className="animate-pulse">
+              <div className="h-8 bg-[#EAEAEA] dark:bg-[#333333] rounded w-48 mb-2"></div>
+              <div className="h-4 bg-[#EAEAEA] dark:bg-[#333333] rounded w-full mb-2"></div>
+              <div className="h-4 bg-[#EAEAEA] dark:bg-[#333333] rounded w-3/4 mb-8"></div>
+              <div className="space-y-4">
+                <div className="h-12 bg-[#EAEAEA] dark:bg-[#333333] rounded"></div>
+                <div className="h-12 bg-[#EAEAEA] dark:bg-[#333333] rounded"></div>
+                <div className="h-12 bg-[#EAEAEA] dark:bg-[#333333] rounded"></div>
+              </div>
             </div>
           </div>
-        </div>
-      }>
-        <LoginContent />
-      </Suspense>
+        }>
+          <LoginContent />
+        </Suspense>
+      </div>
       <div className="mt-8 flex space-x-4 text-sm text-gray-500 dark:text-gray-400">
         <Link href="/terms" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">이용약관</Link>
         <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">개인정보처리방침</Link>

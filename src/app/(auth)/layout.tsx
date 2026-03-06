@@ -24,29 +24,30 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-white dark:bg-[#1F1F1F]">
-      <div className="px-4 py-6 sm:p-6">
-        <div className="mb-6 sm:mb-8">
-          <Link href="/" className="inline-block">
-            <div className="flex items-center gap-2">
-              <Image
-                src={siteConfig.logo}
-                alt="로고"
-                width={124}
-                height={60}
-                priority
-                className="h-14 w-auto dark:invert"
-              />
-              <span className="ml-1 px-2 py-1 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-xs font-semibold rounded border border-black/7 dark:border-transparent">Member</span>
-            </div>
-          </Link>
-        </div>
-        <div className="flex flex-col justify-center items-center min-h-[calc(100vh-140px)] sm:min-h-[calc(100vh-120px)]">
-          <div className="w-full max-w-md px-2 sm:px-0">
-            {children}
+    <div className="h-screen bg-white dark:bg-[#1F1F1F] flex flex-col overflow-hidden">
+      {/* 로고 헤더 - 고정 높이 */}
+      <div className="px-4 py-4 sm:px-6 sm:py-5 flex-shrink-0">
+        <Link href="/" className="inline-block">
+          <div className="flex items-center gap-2">
+            <Image
+              src={siteConfig.logo}
+              alt="로고"
+              width={124}
+              height={60}
+              priority
+              className="h-14 w-auto dark:invert"
+            />
+            <span className="ml-1 px-2 py-1 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-xs font-semibold rounded border border-black/7 dark:border-transparent">Member</span>
           </div>
+        </Link>
+      </div>
+
+      {/* 콘텐츠 - 남은 공간 채움 */}
+      <div className="flex-1 flex flex-col justify-center items-center px-4 sm:px-6 pb-6">
+        <div className="w-full max-w-md lg:max-w-[1000px]">
+          {children}
         </div>
       </div>
     </div>
   );
-} 
+}
