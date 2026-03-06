@@ -45,8 +45,10 @@ export {
   signInWithKakao,
   signInWithGoogle,
   signInWithDiscord,
-  signInWithApple
 } from './social'
+
+// 네이버 로그인 (naver.ts) - 커스텀 OAuth
+export { signInWithNaver } from './naver'
 
 // 계정 복구 (recovery.ts)
 export {

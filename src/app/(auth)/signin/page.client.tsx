@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/shared/context/AuthContext';
 import { EyeIcon, EyeOffIcon, AlertCircle, Check } from 'lucide-react';
-import { signIn, resendConfirmationByUsername, signInWithKakao, signInWithGoogle, signInWithDiscord, signInWithApple } from '@/domains/auth/actions';
+import { signIn, resendConfirmationByUsername, signInWithKakao, signInWithGoogle, signInWithDiscord, signInWithNaver } from '@/domains/auth/actions';
 import { Button } from '@/shared/components/ui';
 import BrandingPanel from '../components/BrandingPanel';
 
@@ -103,10 +103,10 @@ function LoginContent() {
   };
 
   // 소셜 로그인 공통 핸들러
-  const handleSocialLogin = async (provider: 'kakao' | 'google' | 'discord' | 'apple') => {
+  const handleSocialLogin = async (provider: 'kakao' | 'google' | 'discord') => {
     if (loading) return;
-    const providerMap = { kakao: signInWithKakao, google: signInWithGoogle, discord: signInWithDiscord, apple: signInWithApple };
-    const nameMap = { kakao: '카카오', google: '구글', discord: '디스코드', apple: 'Apple' };
+    const providerMap = { kakao: signInWithKakao, google: signInWithGoogle, discord: signInWithDiscord };
+    const nameMap = { kakao: '카카오', google: '구글', discord: '디스코드' };
     try {
       setLoading(true);
       const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`;
@@ -121,6 +121,27 @@ function LoginContent() {
     } catch (error) {
       console.error(`${nameMap[provider]} 로그인 오류:`, error);
       toast.error(`${nameMap[provider]} 로그인 중 오류가 발생했습니다.`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 네이버 로그인 핸들러
+  const handleNaverLogin = async () => {
+    if (loading) return;
+    try {
+      setLoading(true);
+      const result = await signInWithNaver();
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      if (result.url) {
+        window.location.href = result.url;
+      }
+    } catch (error) {
+      console.error('네이버 로그인 오류:', error);
+      toast.error('네이버 로그인 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }
@@ -406,6 +427,19 @@ function LoginContent() {
           </svg>
         </button>
 
+        {/* 네이버 */}
+        <button
+          type="button"
+          onClick={handleNaverLogin}
+          disabled={loading}
+          className="w-12 h-12 rounded-full bg-[#03C75A] hover:bg-[#02b351] flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          title="네이버 로그인"
+        >
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="white">
+            <path d="M13.5 10.6L6.3 0H0v20h6.5V9.4L13.7 20H20V0h-6.5z"/>
+          </svg>
+        </button>
+
         {/* 디스코드 */}
         <button
           type="button"
@@ -419,18 +453,6 @@ function LoginContent() {
           </svg>
         </button>
 
-        {/* 애플 */}
-        <button
-          type="button"
-          onClick={() => handleSocialLogin('apple')}
-          disabled={loading}
-          className="w-12 h-12 rounded-full bg-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-100 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Apple 로그인"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="white" className="dark:fill-black">
-            <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
-          </svg>
-        </button>
       </div>
       
         <div className="mt-8 text-center">
