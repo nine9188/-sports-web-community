@@ -141,8 +141,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${origin}/signin?message=로그인+세션+생성에+실패했습니다`)
     }
 
-    // 5. Supabase SSR 클라이언트를 통해 세션 쿠키 설정
-    const response = NextResponse.redirect(`${origin}/auth/naver/complete`)
+    // 5. 프로필 확인 (admin으로 직접 조회)
+    const userId = session.user?.id
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('nickname')
+      .eq('id', userId)
+      .single()
+
+    const needsSignup = !profile || !profile.nickname || profile.nickname.trim() === ''
+    const redirectUrl = needsSignup ? `${origin}/social-signup` : `${origin}/`
+
+    // 6. Supabase SSR 클라이언트를 통해 세션 쿠키 설정
+    const response = NextResponse.redirect(redirectUrl)
 
     const supabaseClient = createServerClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
