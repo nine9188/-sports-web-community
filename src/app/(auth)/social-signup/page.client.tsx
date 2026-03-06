@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/shared/context/AuthContext'
 import { getSupabaseBrowser } from '@/shared/lib/supabase'
+import { validateReferralCode } from '@/shared/actions/referral-actions'
 import { toast } from 'react-toastify'
-import { AlertCircle, Check, ChevronLeft, Calendar as CalendarIcon } from 'lucide-react'
+import { AlertCircle, Check, ChevronLeft, Calendar as CalendarIcon, Gift } from 'lucide-react'
 import Spinner from '@/shared/components/Spinner'
 import { Button } from '@/shared/components/ui'
 import Calendar from '@/shared/components/Calendar'
@@ -19,11 +20,13 @@ export default function SocialSignupPage() {
 
   // 단계 상태
   const [showNicknameStep, setShowNicknameStep] = useState(false)
+  const [showReferralStep, setShowReferralStep] = useState(false)
 
   // 입력값
   const [nickname, setNickname] = useState('')
   const [birthDate, setBirthDate] = useState('')
   const [showCalendar, setShowCalendar] = useState(false)
+  const [referralCode, setReferralCode] = useState('')
 
   // 유효성 검사
   const [nicknameError, setNicknameError] = useState('')
@@ -31,6 +34,13 @@ export default function SocialSignupPage() {
   const [isCheckingNickname, setIsCheckingNickname] = useState(false)
   const [birthError, setBirthError] = useState('')
   const [birthValid, setBirthValid] = useState(false)
+
+  // 추천 코드
+  const [isCheckingReferral, setIsCheckingReferral] = useState(false)
+  const [referralChecked, setReferralChecked] = useState(false)
+  const [referralValid, setReferralValid] = useState(false)
+  const [referralMessage, setReferralMessage] = useState('')
+  const [referrerNickname, setReferrerNickname] = useState('')
 
   // 프로바이더 이름
   const providerName = user?.app_metadata?.provider === 'naver' ? '네이버'
@@ -207,23 +217,54 @@ export default function SocialSignupPage() {
     return () => clearTimeout(timer)
   }, [nickname])
 
-  // 생년월일 → 닉네임 단계로 진행
+  // 추천 코드 확인
+  const checkReferralCode = async () => {
+    if (!referralCode.trim()) return
+
+    setIsCheckingReferral(true)
+    try {
+      const result = await validateReferralCode(referralCode.trim())
+      setReferralChecked(true)
+      setReferralValid(result.valid)
+      setReferrerNickname(result.nickname || '')
+      setReferralMessage(
+        result.valid
+          ? `올바른 추천코드입니다. (${result.nickname})`
+          : result.error || '유효하지 않은 추천 코드입니다.'
+      )
+    } catch {
+      setReferralMessage('추천 코드 확인 중 오류가 발생했습니다.')
+      setReferralValid(false)
+    } finally {
+      setIsCheckingReferral(false)
+    }
+  }
+
+  // 단계 진행
   const handleBirthNext = () => {
     if (validateBirthDate(birthDate)) {
       setShowNicknameStep(true)
     }
   }
 
+  const handleNicknameNext = () => {
+    if (nicknameValid && !nicknameError) {
+      setShowReferralStep(true)
+    }
+  }
+
   // 이전 단계
   const handleBack = () => {
-    if (showNicknameStep) {
+    if (showReferralStep) {
+      setShowReferralStep(false)
+    } else if (showNicknameStep) {
       setShowNicknameStep(false)
     }
   }
 
   // 현재 단계 계산
-  const currentStep = !showNicknameStep ? 1 : 2
-  const totalSteps = 2
+  const currentStep = !showNicknameStep ? 1 : !showReferralStep ? 2 : 3
+  const totalSteps = 3
 
   // 회원가입 완료
   const handleSignup = async (e: React.FormEvent) => {
@@ -276,6 +317,7 @@ export default function SocialSignupPage() {
           nickname: nickname.trim(),
           full_name: user.user_metadata?.name || user.user_metadata?.full_name || null,
           birth_date: birthDate ? birthDate.replace(/\./g, '-') : null,
+          ...(referralValid && referralCode.trim() ? { referral_code: referralCode.trim() } : {}),
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'id'
@@ -317,9 +359,17 @@ export default function SocialSignupPage() {
           {/* 모바일 헤더 */}
           <div className="text-center mb-6 lg:hidden">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">{providerName} 회원가입</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">
+            <p className="text-gray-600 dark:text-gray-400">
               추가 정보를 입력하고<br />
               회원가입을 완료하세요.
+            </p>
+          </div>
+
+          {/* 데스크톱 헤더 */}
+          <div className="hidden lg:block mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">{providerName} 회원가입</h2>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
+              {providerName} 로그인이 완료되었습니다. 추가 정보를 입력해주세요.
             </p>
           </div>
 
@@ -450,7 +500,7 @@ export default function SocialSignupPage() {
               )}
 
               {/* 2단계: 닉네임 */}
-              {showNicknameStep && (
+              {showNicknameStep && !showReferralStep && (
                 <div>
                   <label className="block text-gray-700 dark:text-gray-300 mb-1.5 text-sm font-medium">
                     닉네임 <span className="text-red-500">*</span>
@@ -501,10 +551,76 @@ export default function SocialSignupPage() {
                   </p>
 
                   <Button
+                    type="button"
+                    variant="primary"
+                    onClick={handleNicknameNext}
+                    disabled={!nicknameValid || !!nicknameError || isCheckingNickname}
+                    className="w-full py-3 h-auto mt-6"
+                  >
+                    다음
+                  </Button>
+                </div>
+              )}
+
+              {/* 3단계: 추천 코드 + 제출 */}
+              {showReferralStep && (
+                <div className="space-y-4">
+                  <div className="p-4 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg border border-black/7 dark:border-white/10">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Gift className="h-4 w-4 text-green-600 dark:text-green-400" />
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        추천 코드 <span className="text-gray-500 dark:text-gray-400 font-normal">(선택)</span>
+                      </label>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                      친구의 추천 코드가 있다면 입력하세요. 가입 시 300P + 50XP를 받을 수 있습니다!
+                    </p>
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        value={referralCode}
+                        onChange={(e) => {
+                          setReferralCode(e.target.value.toLowerCase())
+                          setReferralChecked(false)
+                          setReferralValid(false)
+                          setReferralMessage('')
+                          setReferrerNickname('')
+                        }}
+                        className={`flex-1 p-3 border rounded-md focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
+                          referralChecked && !referralValid && referralCode.trim() ? 'border-red-500 dark:border-red-400' :
+                          referralChecked && referralValid ? 'border-green-500 dark:border-green-400' :
+                          'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
+                        }`}
+                        placeholder="예: a1b2c3d4"
+                        maxLength={8}
+                      />
+                      <Button
+                        type="button"
+                        variant="primary"
+                        onClick={checkReferralCode}
+                        disabled={isCheckingReferral || !referralCode.trim()}
+                      >
+                        {isCheckingReferral ? '확인 중...' : '확인'}
+                      </Button>
+                    </div>
+                    {referralMessage && (
+                      <p className={`text-sm mt-2 flex items-center ${
+                        referralValid ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {referralValid ?
+                          <Check className="h-4 w-4 mr-1" /> :
+                          <AlertCircle className="h-4 w-4 mr-1" />
+                        }
+                        {referralMessage}
+                      </p>
+                    )}
+                  </div>
+
+                  <Button
                     type="submit"
                     variant="primary"
-                    disabled={loading || !nicknameValid || !!nicknameError || isCheckingNickname}
-                    className="w-full py-3 h-auto mt-6"
+                    disabled={loading}
+                    className="w-full py-3 h-auto"
                   >
                     {loading ? '처리 중...' : '회원가입 완료'}
                   </Button>
