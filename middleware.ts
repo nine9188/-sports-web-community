@@ -163,7 +163,9 @@ export async function middleware(request: NextRequest) {
 
     // 경로 분류
     const protectedPaths = ['/settings'] // 로그인 필요 경로
-    const authPaths = ['/signin', '/signup', '/auth'] // 인증 페이지
+    const authPaths = ['/signin', '/signup'] // 인증 페이지 (로그인 사용자 접근 방지)
+    // 콜백/소셜 회원가입은 로그인 사용자도 접근 가능해야 함
+    const authExceptionPaths = ['/auth/callback', '/auth/naver', '/social-signup']
 
     // 1. 보호된 경로 접근 제어 (비로그인 사용자 차단)
     if (protectedPaths.some(path => pathname.startsWith(path)) && !user) {
@@ -173,7 +175,20 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(redirectUrl)
     }
 
-    // 2. 로그인 사용자의 인증 페이지 접근 방지
+    // 2. 닉네임 미설정 사용자 강제 소셜 회원가입 리다이렉트
+    if (user && !authExceptionPaths.some(path => pathname.startsWith(path)) && !pathname.startsWith('/auth')) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('nickname')
+        .eq('id', user.id)
+        .single()
+
+      if (!profile || !profile.nickname || profile.nickname.trim() === '') {
+        return NextResponse.redirect(new URL('/social-signup', request.url))
+      }
+    }
+
+    // 3. 로그인 사용자의 인증 페이지 접근 방지 (소셜 회원가입 제외)
     if (authPaths.some(path => pathname.startsWith(path)) && user) {
       const redirectUrl = request.nextUrl.searchParams.get('redirect') || '/'
       return NextResponse.redirect(new URL(redirectUrl, request.url))
