@@ -42,7 +42,10 @@ export {
 
 // 소셜 로그인 (social.ts)
 export {
-  signInWithKakao
+  signInWithKakao,
+  signInWithGoogle,
+  signInWithDiscord,
+  signInWithApple
 } from './social'
 
 // 계정 복구 (recovery.ts)
