@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/shared/context/AuthContext'
 import { getSupabaseBrowser } from '@/shared/lib/supabase'
 import { toast } from 'react-toastify'
-import { AlertCircle, Check, ChevronLeft } from 'lucide-react'
+import { AlertCircle, Check, ChevronLeft, Calendar as CalendarIcon } from 'lucide-react'
 import Spinner from '@/shared/components/Spinner'
 import { Button } from '@/shared/components/ui'
 import Calendar from '@/shared/components/Calendar'
@@ -23,6 +23,7 @@ export default function SocialSignupPage() {
   // 입력값
   const [nickname, setNickname] = useState('')
   const [birthDate, setBirthDate] = useState('')
+  const [showCalendar, setShowCalendar] = useState(false)
 
   // 유효성 검사
   const [nicknameError, setNicknameError] = useState('')
@@ -91,16 +92,48 @@ export default function SocialSignupPage() {
     checkAuthAndProfile()
   }, [user, isLoading, router])
 
+  // 생년월일 포맷 (YYYY.MM.DD)
+  const formatBirthDate = (value: string) => {
+    const numbers = value.replace(/[^\d]/g, '')
+    if (numbers.length <= 4) return numbers
+    if (numbers.length <= 6) return `${numbers.slice(0, 4)}.${numbers.slice(4)}`
+    return `${numbers.slice(0, 4)}.${numbers.slice(4, 6)}.${numbers.slice(6, 8)}`
+  }
+
   // 생년월일 검증
-  const validateBirth = (value: string) => {
-    if (!value) {
-      setBirthError('생년월일을 선택해주세요.')
+  const validateBirthDate = (value: string) => {
+    if (!value || value.length < 10) {
+      setBirthError('생년월일을 입력해주세요. (YYYY.MM.DD)')
       setBirthValid(false)
       return false
     }
-    const date = new Date(value)
-    const now = new Date()
-    const age = now.getFullYear() - date.getFullYear()
+
+    const parts = value.split('.')
+    if (parts.length !== 3) {
+      setBirthError('올바른 형식으로 입력해주세요. (YYYY.MM.DD)')
+      setBirthValid(false)
+      return false
+    }
+
+    const [yearStr, monthStr, dayStr] = parts
+    const yearNum = parseInt(yearStr)
+    const monthNum = parseInt(monthStr)
+    const dayNum = parseInt(dayStr)
+
+    if (monthNum < 1 || monthNum > 12 || dayNum < 1 || dayNum > 31) {
+      setBirthError('올바른 날짜를 입력해주세요.')
+      setBirthValid(false)
+      return false
+    }
+
+    const birthDateObj = new Date(yearNum, monthNum - 1, dayNum)
+    const today = new Date()
+    let age = today.getFullYear() - birthDateObj.getFullYear()
+    const monthDiff = today.getMonth() - birthDateObj.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDateObj.getDate())) {
+      age--
+    }
+
     if (age < 14) {
       setBirthError('만 14세 이상만 가입할 수 있습니다.')
       setBirthValid(false)
@@ -111,6 +144,7 @@ export default function SocialSignupPage() {
       setBirthValid(false)
       return false
     }
+
     setBirthError('')
     setBirthValid(true)
     return true
@@ -163,7 +197,6 @@ export default function SocialSignupPage() {
           setNicknameValid(true)
         }
       } catch {
-        // not found = 사용 가능
         setNicknameError('')
         setNicknameValid(true)
       } finally {
@@ -176,7 +209,7 @@ export default function SocialSignupPage() {
 
   // 생년월일 → 닉네임 단계로 진행
   const handleBirthNext = () => {
-    if (validateBirth(birthDate)) {
+    if (validateBirthDate(birthDate)) {
       setShowNicknameStep(true)
     }
   }
@@ -211,7 +244,6 @@ export default function SocialSignupPage() {
     try {
       const supabase = getSupabaseBrowser()
 
-      // 고유한 username 자동 생성
       const provider = user.app_metadata?.provider || 'social'
       const baseUsername = `${provider}_${user.id.slice(0, 8)}`
       let username = baseUsername
@@ -243,7 +275,7 @@ export default function SocialSignupPage() {
           username,
           nickname: nickname.trim(),
           full_name: user.user_metadata?.name || user.user_metadata?.full_name || null,
-          birth_date: birthDate || null,
+          birth_date: birthDate ? birthDate.replace(/\./g, '-') : null,
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'id'
@@ -334,13 +366,64 @@ export default function SocialSignupPage() {
                   <label className="block text-gray-700 dark:text-gray-300 mb-1.5 text-sm font-medium">
                     생년월일 <span className="text-red-500">*</span>
                   </label>
-                  <Calendar
-                    value={birthDate}
-                    onChange={(date: string) => {
-                      setBirthDate(date)
-                      validateBirth(date)
-                    }}
-                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                    *만 14세 이상만 가입 가능합니다
+                  </p>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={birthDate}
+                      onChange={(e) => {
+                        const formatted = formatBirthDate(e.target.value)
+                        setBirthDate(formatted)
+                        if (formatted.length === 10) {
+                          validateBirthDate(formatted)
+                        } else {
+                          setBirthError('')
+                          setBirthValid(false)
+                        }
+                      }}
+                      onBlur={() => {
+                        if (birthDate) validateBirthDate(birthDate)
+                      }}
+                      className={`w-full px-4 py-3 pr-10 border rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-[15px] transition-colors ${
+                        birthError ? 'border-red-500 dark:border-red-400' :
+                        birthValid ? 'border-green-500 dark:border-green-400' :
+                        'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
+                      }`}
+                      placeholder="YYYY.MM.DD"
+                      maxLength={10}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setShowCalendar(true)}
+                      className="absolute right-1 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 h-8 w-8"
+                    >
+                      <CalendarIcon className="h-5 w-5" />
+                    </Button>
+
+                    {showCalendar && (
+                      <div className="absolute top-full left-0 mt-2 z-50">
+                        <Calendar
+                          selectedDate={birthDate ? new Date(birthDate.replace(/\./g, '-')) : new Date()}
+                          onDateSelect={(date: Date) => {
+                            const year = date.getFullYear()
+                            const month = String(date.getMonth() + 1).padStart(2, '0')
+                            const day = String(date.getDate()).padStart(2, '0')
+                            const formatted = `${year}.${month}.${day}`
+                            setBirthDate(formatted)
+                            validateBirthDate(formatted)
+                            setShowCalendar(false)
+                          }}
+                          onClose={() => setShowCalendar(false)}
+                          maxDate={new Date()}
+                          minDate={new Date(1900, 0, 1)}
+                        />
+                      </div>
+                    )}
+                  </div>
                   {birthError && (
                     <p className="mt-1 text-sm text-red-600 flex items-center">
                       <AlertCircle className="h-4 w-4 mr-1" />
