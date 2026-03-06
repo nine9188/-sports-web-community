@@ -35,7 +35,7 @@ export default async function MyPostsPage({
     const { data: { user }, error: userError } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      redirect('/auth/sign-in');
+      redirect('/signin?redirect=/settings/my-posts');
     }
 
     const userId = user.id;

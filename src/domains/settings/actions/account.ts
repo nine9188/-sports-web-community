@@ -1,8 +1,7 @@
 'use server';
 
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { getSupabaseServer, getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
-import { cookies } from 'next/headers';
 
 // 응답 타입 정의
 interface DeleteAccountResponse {
@@ -66,32 +65,22 @@ export async function deleteAccount(
       };
     }
     
-    // 2. 인증 사용자 삭제 (관리자 권한 필요할 수 있음)
-    const { error: authDeleteError } = await supabase.auth.admin.deleteUser(
+    // 2. 인증 사용자 삭제 (Admin API 사용)
+    const supabaseAdmin = getSupabaseAdmin();
+    const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(
       user.id
     );
-    
+
     if (authDeleteError) {
       console.error('인증 사용자 삭제 오류:', authDeleteError);
-      
-      // admin API 사용 권한이 없는 경우, 일반 API로 시도
-      const { error: userDeleteError } = await supabase.auth.admin.deleteUser(
-        user.id
-      );
-      
-      if (userDeleteError) {
-        console.error('일반 사용자 삭제 오류:', userDeleteError);
-        return {
-          success: false,
-          message: '계정 삭제 중 오류가 발생했습니다. 관리자에게 문의해주세요.'
-        };
-      }
+      return {
+        success: false,
+        message: '계정 삭제 중 오류가 발생했습니다. 관리자에게 문의해주세요.'
+      };
     }
-    
-    // 세션 쿠키 삭제
-    const cookieStore = cookies();
-    cookieStore.delete('sb-access-token');
-    cookieStore.delete('sb-refresh-token');
+
+    // 세션 로그아웃
+    await supabase.auth.signOut();
     
     // 캐시 갱신
     revalidatePath('/');

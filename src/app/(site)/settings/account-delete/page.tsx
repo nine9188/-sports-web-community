@@ -25,7 +25,7 @@ export default async function AccountDeletePage() {
 
   // 로그인하지 않은 사용자는 로그인 페이지로 리다이렉트
   if (!user || error) {
-    redirect('/auth/sign-in?callbackUrl=/settings/account-delete');
+    redirect('/signin?redirect=/settings/account-delete');
   }
 
   // 사용자 프로필 정보 조회

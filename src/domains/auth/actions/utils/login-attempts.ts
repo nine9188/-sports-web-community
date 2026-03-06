@@ -2,6 +2,7 @@
 
 import { getSupabaseServer } from '@/shared/lib/supabase/server'
 import { logSecurityEvent } from '@/shared/actions/log-actions'
+import { headers } from 'next/headers'
 
 /**
  * 로그인 차단 정보
@@ -97,13 +98,16 @@ async function checkLoginBlock(username: string): Promise<LoginBlockInfo> {
 export async function recordAttempt(username: string, reason: 'invalid_username' | 'invalid_password'): Promise<void> {
   try {
     const supabase = await getSupabaseServer()
+    const headersList = await headers()
+    const ipAddress = headersList.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+    const userAgent = headersList.get('user-agent') || 'unknown'
 
     await supabase
       .from('login_attempts')
       .insert({
         email: username, // email 필드에 username을 저장
-        ip_address: 'unknown', // TODO: 실제 IP 주소 추가
-        user_agent: 'unknown', // TODO: 실제 User-Agent 추가
+        ip_address: ipAddress,
+        user_agent: userAgent,
         created_at: new Date().toISOString()
       })
   } catch (error) {

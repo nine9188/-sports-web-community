@@ -88,7 +88,11 @@ export async function signUp(
         false,
         { email, reason: error.message }
       )
-      return { success: false, error: error.message }
+      // Supabase 에러 메시지를 사용자에게 직접 노출하지 않음
+      const userMessage = error.message?.includes('already registered')
+        ? '이미 등록된 이메일입니다.'
+        : '회원가입 처리 중 오류가 발생했습니다.'
+      return { success: false, error: userMessage }
     }
 
     if (!data.user) {

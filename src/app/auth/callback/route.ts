@@ -8,7 +8,9 @@ import { getSupabaseRouteHandler } from '@/shared/lib/supabase/server'
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/'
+  const rawNext = searchParams.get('next') ?? '/'
+  // Open Redirect 방지: 상대 경로만 허용
+  const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/'
 
   // 프로덕션 환경 origin 사용
   const origin = process.env.NEXT_PUBLIC_SITE_URL

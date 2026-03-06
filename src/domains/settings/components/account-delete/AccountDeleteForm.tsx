@@ -59,7 +59,7 @@ export default function AccountDeleteForm({ email, nickname }: AccountDeleteForm
 
       if (response.success) {
         // 탈퇴 성공 시 로그인 페이지로 리다이렉트
-        router.push('/auth/sign-in?message=계정이 성공적으로 삭제되었습니다.');
+        router.push('/signin?message=계정이 성공적으로 삭제되었습니다.');
       } else {
         setErrorMessage(response.message);
         setIsConfirmOpen(false);

@@ -9,7 +9,9 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const token_hash = searchParams.get('token_hash')
   const type = searchParams.get('type')
-  const redirect_to = searchParams.get('redirect_to') ?? '/'
+  const rawRedirectTo = searchParams.get('redirect_to') ?? '/'
+  // Open Redirect 방지: 상대 경로만 허용
+  const redirect_to = rawRedirectTo.startsWith('/') && !rawRedirectTo.startsWith('//') ? rawRedirectTo : '/'
 
   const origin = process.env.NEXT_PUBLIC_SITE_URL
 

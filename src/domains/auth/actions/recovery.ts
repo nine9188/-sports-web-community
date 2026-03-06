@@ -157,7 +157,7 @@ export async function findUsernameWithCode(
 
     return {
       success: true,
-      username: user.username || '',
+      username: maskedUsername,
       maskedUsername
     }
 
@@ -219,7 +219,6 @@ export async function findUsername(
 
     return {
       success: true,
-      username,
       maskedUsername
     }
 
