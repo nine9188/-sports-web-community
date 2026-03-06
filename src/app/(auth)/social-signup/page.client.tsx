@@ -14,7 +14,9 @@ import BrandingPanel from '../components/BrandingPanel'
 
 export default function SocialSignupPage() {
   const router = useRouter()
-  const { user, isLoading } = useAuth()
+  const { user: authUser, isLoading } = useAuth()
+  const [directUser, setDirectUser] = useState<any>(null)
+  const user = authUser || directUser
   const [loading, setLoading] = useState(false)
   const [isInitializing, setIsInitializing] = useState(true)
 
@@ -53,54 +55,39 @@ export default function SocialSignupPage() {
     const checkAuthAndProfile = async () => {
       if (isLoading) return
 
-      if (!user) {
-        try {
-          const supabase = getSupabaseBrowser()
-          const { data: { user: currentUser }, error } = await supabase.auth.getUser()
+      const supabase = getSupabaseBrowser()
 
-          if (!error && currentUser) {
-            setTimeout(() => checkAuthAndProfile(), 1000)
-            return
-          }
-
-          if (error || !currentUser) {
-            setTimeout(() => {
-              if (!user) {
-                toast.error('로그인이 필요합니다.')
-                router.replace('/signin')
-              }
-            }, 5000)
-            return
-          }
-        } catch {
-          setTimeout(() => {
-            toast.error('로그인이 필요합니다.')
-            router.replace('/signin')
-          }, 3000)
+      // AuthContext에 user가 없으면 직접 확인
+      let currentUser = authUser
+      if (!currentUser) {
+        const { data: { user: fetchedUser }, error } = await supabase.auth.getUser()
+        if (error || !fetchedUser) {
+          toast.error('로그인이 필요합니다.')
+          router.replace('/signin')
           return
         }
+        currentUser = fetchedUser
+        setDirectUser(fetchedUser)
       }
 
-      if (user) {
-        const supabase = getSupabaseBrowser()
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single()
+      // 프로필 확인
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', currentUser.id)
+        .single()
 
-        if (profile && profile.nickname && profile.nickname.trim() !== '') {
-          sessionStorage.setItem('login-success', 'true')
-          router.replace('/')
-          return
-        }
+      if (profile && profile.nickname && profile.nickname.trim() !== '') {
+        sessionStorage.setItem('login-success', 'true')
+        router.replace('/')
+        return
       }
 
       setIsInitializing(false)
     }
 
     checkAuthAndProfile()
-  }, [user, isLoading, router])
+  }, [authUser, isLoading, router])
 
   // 생년월일 포맷 (YYYY.MM.DD)
   const formatBirthDate = (value: string) => {
