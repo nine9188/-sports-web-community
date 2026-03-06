@@ -360,14 +360,13 @@ export default function SocialSignupPage() {
             <span className="font-medium text-gray-900 dark:text-gray-200">{nickname}</span>님, 4590 Football에 오신 것을 환영합니다.
           </p>
 
-          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg mb-6">
-            <div className="flex items-center gap-2 mb-2">
+          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg mb-6 text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
               <Phone className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               <p className="text-sm font-medium text-blue-800 dark:text-blue-200">휴대폰 인증을 진행해주세요</p>
             </div>
             <p className="text-xs text-blue-700 dark:text-blue-300">
-              설정에서 휴대폰 번호를 인증하면<br />
-              더 많은 기능을 이용할 수 있습니다.
+              휴대폰 인증 시 <span className="font-semibold">500P + 100XP</span>를 드립니다!
             </p>
           </div>
 
