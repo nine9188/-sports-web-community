@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
 /**
  * 네이버 OAuth 콜백 처리
  * 1. 인증 코드로 액세스 토큰 교환
  * 2. 네이버 사용자 정보 조회
  * 3. Supabase에 사용자 생성/로그인
- * 4. 매직링크로 세션 생성 → 기존 /auth/callback으로 리다이렉트
+ * 4. 서버에서 직접 세션 쿠키 설정
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -56,24 +58,22 @@ export async function GET(request: NextRequest) {
 
     // 3. Supabase admin으로 사용자 처리
     const supabaseAdmin = getSupabaseAdmin()
-
     const naverId = naverUser.id
     const email = naverUser.email || `naver_${naverId}@naver-oauth.local`
 
-    // 네이버 ID로 기존 사용자 찾기 (profiles 테이블의 provider 정보 활용)
-    const { data: existingProfile } = await supabaseAdmin
-      .from('profiles')
-      .select('id')
-      .eq('provider', 'naver')
-      .eq('provider_id', naverId)
-      .single()
+    // 네이버 ID로 기존 사용자 찾기 (auth.users의 app_metadata)
+    const { data: { users: allUsers } } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 })
+    const existingUser = allUsers?.find(
+      (u: any) => u.app_metadata?.provider === 'naver' && u.app_metadata?.naver_id === naverId
+    )
 
     let userId: string
+    let userEmail: string
 
-    if (existingProfile) {
-      userId = existingProfile.id
+    if (existingUser) {
+      userId = existingUser.id
+      userEmail = existingUser.email!
 
-      // 사용자 메타데이터 업데이트
       await supabaseAdmin.auth.admin.updateUserById(userId, {
         user_metadata: {
           full_name: naverUser.name || naverUser.nickname,
@@ -82,54 +82,38 @@ export async function GET(request: NextRequest) {
         },
       })
     } else {
-      // 이메일로 기존 사용자 찾기 (네이버 provider로 등록된 경우)
-      const { data: { users } } = await supabaseAdmin.auth.admin.listUsers({
-        page: 1,
-        perPage: 1,
+      // 신규 사용자 생성
+      const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        email_confirm: true,
+        app_metadata: {
+          provider: 'naver',
+          naver_id: naverId,
+        },
+        user_metadata: {
+          full_name: naverUser.name || naverUser.nickname,
+          avatar_url: naverUser.profile_image,
+          naver_id: naverId,
+        },
       })
 
-      // email로 직접 검색
-      const { data: userByEmail } = await supabaseAdmin
-        .from('profiles')
-        .select('id')
-        .eq('email', email)
-        .single()
-
-      if (userByEmail) {
-        userId = userByEmail.id
-      } else {
-        // 신규 사용자 생성
-        const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-          email,
-          email_confirm: true,
-          app_metadata: {
-            provider: 'naver',
-            naver_id: naverId,
-          },
-          user_metadata: {
-            full_name: naverUser.name || naverUser.nickname,
-            avatar_url: naverUser.profile_image,
-            naver_id: naverId,
-          },
-        })
-
-        if (createError || !newUser.user) {
-          console.error('네이버 사용자 생성 실패:', createError)
-          return NextResponse.redirect(`${origin}/signin?message=회원가입+처리+중+오류가+발생했습니다`)
-        }
-
-        userId = newUser.user.id
+      if (createError || !newUser.user) {
+        console.error('네이버 사용자 생성 실패:', createError)
+        return NextResponse.redirect(`${origin}/signin?message=회원가입+처리+중+오류가+발생했습니다`)
       }
+
+      userId = newUser.user.id
+      userEmail = email
     }
 
-    // 4. 매직링크 생성 → Supabase verify → /auth/callback으로 리다이렉트
+    // 4. 매직링크 생성 후 서버에서 직접 verify하여 세션 획득
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'magiclink',
-      email,
+      email: userEmail,
     })
 
     if (linkError || !linkData) {
-      console.error('세션 생성 실패:', linkError)
+      console.error('매직링크 생성 실패:', linkError)
       return NextResponse.redirect(`${origin}/signin?message=로그인+처리+중+오류가+발생했습니다`)
     }
 
@@ -139,11 +123,71 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${origin}/signin?message=로그인+처리+중+오류가+발생했습니다`)
     }
 
-    // Supabase verify → /auth/callback (기존 OAuth 콜백이 코드 교환 처리)
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const verifyUrl = `${supabaseUrl}/auth/v1/verify?token=${tokenHash}&type=magiclink&redirect_to=${origin}/auth/callback`
+    // 서버에서 직접 Supabase verify API 호출하여 세션 획득
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-    return NextResponse.redirect(verifyUrl)
+    const verifyRes = await fetch(`${supabaseUrl}/auth/v1/verify`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseAnonKey,
+      },
+      body: JSON.stringify({
+        token_hash: tokenHash,
+        type: 'magiclink',
+      }),
+    })
+
+    const session = await verifyRes.json()
+
+    if (!session.access_token || !session.refresh_token) {
+      console.error('세션 획득 실패:', session)
+      return NextResponse.redirect(`${origin}/signin?message=로그인+세션+생성에+실패했습니다`)
+    }
+
+    // 5. 쿠키에 세션 설정
+    const cookieStore = await cookies()
+    const response = NextResponse.redirect(`${origin}/auth/naver/complete`)
+
+    // Supabase SSR 쿠키 설정
+    const cookieName = `sb-${new URL(supabaseUrl).hostname.split('.')[0]}-auth-token`
+
+    // base64로 인코딩된 세션 데이터를 chunked 쿠키로 설정
+    const sessionStr = JSON.stringify({
+      access_token: session.access_token,
+      refresh_token: session.refresh_token,
+      expires_at: session.expires_at,
+      expires_in: session.expires_in,
+      token_type: session.token_type,
+      user: session.user,
+    })
+
+    // Supabase SSR은 base64로 인코딩 후 청크로 나눔
+    const encoded = Buffer.from(sessionStr).toString('base64')
+    const chunkSize = 3180 // Supabase SSR 기본 청크 크기
+    const chunks = []
+    for (let i = 0; i < encoded.length; i += chunkSize) {
+      chunks.push(encoded.slice(i, i + chunkSize))
+    }
+
+    const cookieOptions = {
+      path: '/',
+      httpOnly: false,
+      secure: true,
+      sameSite: 'lax' as const,
+      maxAge: 60 * 60 * 24 * 365, // 1년
+    }
+
+    if (chunks.length === 1) {
+      response.cookies.set(`${cookieName}`, `base64-${encoded}`, cookieOptions)
+    } else {
+      chunks.forEach((chunk, i) => {
+        response.cookies.set(`${cookieName}.${i}`, `base64-${chunk}`, cookieOptions)
+      })
+    }
+
+    return response
   } catch (error) {
     console.error('네이버 콜백 처리 오류:', error)
     return NextResponse.redirect(`${origin}/signin?message=네이버+로그인+처리+중+오류가+발생했습니다`)
