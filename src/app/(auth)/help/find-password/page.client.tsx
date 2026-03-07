@@ -64,17 +64,8 @@ function FindPasswordContent() {
 
   return (
     <div className="w-full lg:w-1/2 max-w-md lg:max-w-none md:bg-white md:dark:bg-[#2D2D2D] md:rounded-lg lg:rounded-l-none md:shadow-lg md:border md:border-black/10 md:dark:border-white/10 lg:border-l-0 md:p-8 lg:p-14 flex flex-col justify-center">
-      {/* 헤더 - 모바일에서만 표시 */}
-      <div className="text-center mb-6 lg:hidden">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">비밀번호 찾기</h2>
-        <p className="text-gray-600 dark:text-gray-400">
-          아이디를 입력하시면 등록된 이메일로<br />재설정 링크를 보내드립니다.
-        </p>
-      </div>
-
       <div>
-        {/* 헤더 - 데스크톱 */}
-        <div className="hidden lg:block mb-6">
+        <div className="mb-6">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">비밀번호 찾기</h2>
           <p className="text-gray-600 dark:text-gray-400">
             아이디를 입력하시면 등록된 이메일로 재설정 링크를 보내드립니다.
@@ -149,8 +140,8 @@ function FindPasswordContent() {
 
 export default function FindPasswordPage() {
   return (
-    <div className="flex flex-col justify-center items-center min-h-[calc(100vh-120px)]">
-      <div className="flex w-full max-w-md lg:max-w-full">
+    <div className="flex flex-col items-center lg:justify-center min-h-[calc(100vh-120px)]">
+      <div className="flex flex-col lg:flex-row w-full max-w-md lg:max-w-full">
         <BrandingPanel variant="find-password" />
         <FindPasswordContent />
       </div>

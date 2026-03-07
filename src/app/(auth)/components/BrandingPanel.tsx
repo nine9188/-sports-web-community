@@ -2,6 +2,7 @@ type BrandingVariant = 'signin' | 'signup' | 'social-signup' | 'find-id' | 'find
 
 interface BrandingContent {
   title: React.ReactNode;
+  mobileTitle?: React.ReactNode;
   description: React.ReactNode;
   features: { icon: keyof typeof FEATURE_ICONS; label: string }[];
 }
@@ -59,7 +60,7 @@ const SIGNUP_STEPS: Record<number, BrandingContent> = {
   1: {
     title: <>함께해주셔서 감사합니다!</>,
     description: (
-      <p className="text-white/80 text-sm mb-8 leading-relaxed">
+      <p className="text-white/80 text-sm mb-5 leading-relaxed">
         약관을 읽고 동의해주세요.<br />
         봇 검증도 함께 완료해주세요.
       </p>
@@ -73,7 +74,7 @@ const SIGNUP_STEPS: Record<number, BrandingContent> = {
   2: {
     title: <>이메일과 이름을 알려주세요</>,
     description: (
-      <p className="text-white/80 text-sm mb-8 leading-relaxed">
+      <p className="text-white/80 text-sm mb-5 leading-relaxed">
         가입에 사용할 이메일 주소와<br />
         실명을 입력해주세요.
       </p>
@@ -87,7 +88,7 @@ const SIGNUP_STEPS: Record<number, BrandingContent> = {
   3: {
     title: <>생년월일을 입력해주세요</>,
     description: (
-      <p className="text-white/80 text-sm mb-8 leading-relaxed">
+      <p className="text-white/80 text-sm mb-5 leading-relaxed">
         생년월일 정보는 계정 보호와<br />
         맞춤 서비스 제공에 사용됩니다.
       </p>
@@ -101,7 +102,7 @@ const SIGNUP_STEPS: Record<number, BrandingContent> = {
   4: {
     title: <>아이디를 만들어주세요</>,
     description: (
-      <p className="text-white/80 text-sm mb-8 leading-relaxed">
+      <p className="text-white/80 text-sm mb-5 leading-relaxed">
         로그인에 사용할 아이디를 설정해주세요.<br />
         한번 설정하면 변경할 수 없습니다.
       </p>
@@ -115,7 +116,7 @@ const SIGNUP_STEPS: Record<number, BrandingContent> = {
   5: {
     title: <>닉네임을 정해주세요</>,
     description: (
-      <p className="text-white/80 text-sm mb-8 leading-relaxed">
+      <p className="text-white/80 text-sm mb-5 leading-relaxed">
         커뮤니티에서 사용할 닉네임을 정해주세요.<br />
         다른 회원들에게 보이는 이름입니다.
       </p>
@@ -129,7 +130,7 @@ const SIGNUP_STEPS: Record<number, BrandingContent> = {
   6: {
     title: <>비밀번호를 설정해주세요</>,
     description: (
-      <p className="text-white/80 text-sm mb-8 leading-relaxed">
+      <p className="text-white/80 text-sm mb-5 leading-relaxed">
         안전한 비밀번호를 설정해주세요.<br />
         최소 10자 이상, 특수문자를 포함해야 합니다.
       </p>
@@ -143,7 +144,7 @@ const SIGNUP_STEPS: Record<number, BrandingContent> = {
   7: {
     title: <>거의 다 됐어요!</>,
     description: (
-      <p className="text-white/80 text-sm mb-8 leading-relaxed">
+      <p className="text-white/80 text-sm mb-5 leading-relaxed">
         추천 코드가 있다면 입력해주세요.<br />
         없어도 가입이 가능합니다.
       </p>
@@ -159,6 +160,7 @@ const SIGNUP_STEPS: Record<number, BrandingContent> = {
 const VARIANT_CONTENT: Record<BrandingVariant, BrandingContent> = {
   signin: {
     title: <>새로운 여정의 시작,<br /><span className="text-[34px]">4590 Football</span></>,
+    mobileTitle: <>4590 Football 로그인</>,
     description: (
       <>
         <p className="text-white text-sm mb-4 leading-relaxed">
@@ -280,67 +282,109 @@ const VARIANT_CONTENT: Record<BrandingVariant, BrandingContent> = {
   },
 };
 
-/** 인증 페이지 브랜딩 패널 (데스크톱 전용) */
+/** 인증 페이지 브랜딩 패널 (데스크톱: 사이드 패널 / 모바일: 상단 배너) */
 export default function BrandingPanel({ variant = 'signin', step }: { variant?: BrandingVariant; step?: number }) {
   // signup + step이 있으면 단계별 콘텐츠 사용
   const content = variant === 'signup' && step && SIGNUP_STEPS[step]
     ? SIGNUP_STEPS[step]
     : VARIANT_CONTENT[variant];
 
-  return (
-    <div className="hidden lg:flex lg:w-1/2 min-h-[680px] relative overflow-hidden flex-col rounded-l-lg flex-shrink-0">
-      {/* 배경 이미지 */}
-      <img
-        src="/images/connor-coyne-OgqWLzWRSaI-unsplash.jpg"
-        alt=""
-        className="absolute inset-0 w-full h-full object-cover"
-      />
-      {/* 어두운 오버레이 */}
-      <div className="absolute inset-0 bg-black/55" />
+  const mobileTitle = content.mobileTitle || content.title;
 
-      {/* 상단 로고 */}
-      <div className="relative z-10 p-5">
+  return (
+    <>
+      {/* 모바일 상단 배너 */}
+      <div className="lg:hidden w-full relative overflow-hidden rounded-lg md:rounded-t-lg md:rounded-b-none mb-6 md:mb-0">
         <img
-          src="/logo/4590football-logo-white.png"
-          alt="4590 Football"
-          className="h-8 w-auto"
+          src="/images/connor-coyne-OgqWLzWRSaI-unsplash.jpg"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
         />
+        <div className="absolute inset-0 bg-black/60" />
+        <div className={`relative z-10 px-6 text-center ${variant === 'signup' ? 'py-4' : 'py-8'}`}>
+          <h2 className="text-xl font-bold text-white leading-tight mb-1">
+            {mobileTitle}
+          </h2>
+          <p className="text-white/70 text-sm">
+            {variant === 'signin' && '모든 축구팬을 위한 커뮤니티'}
+            {variant === 'signup' && step === 1 && '약관을 읽고 동의해주세요'}
+            {variant === 'signup' && step === 2 && '이메일과 이름을 입력해주세요'}
+            {variant === 'signup' && step === 3 && '생년월일을 입력해주세요'}
+            {variant === 'signup' && step === 4 && '로그인에 사용할 아이디를 설정해주세요'}
+            {variant === 'signup' && step === 5 && '커뮤니티에서 사용할 닉네임을 정해주세요'}
+            {variant === 'signup' && step === 6 && '안전한 비밀번호를 설정해주세요'}
+            {variant === 'signup' && step === 7 && '추천 코드가 있다면 입력해주세요'}
+            {variant === 'social-signup' && '아이디와 닉네임만 설정하면 완료'}
+            {variant === 'find-id' && '이름과 이메일로 아이디를 찾을 수 있습니다'}
+            {variant === 'find-password' && '등록된 이메일로 재설정 링크를 보내드립니다'}
+            {variant === 'reset-password' && '새로운 비밀번호를 입력해주세요'}
+            {variant === 'account-found' && '계정 정보를 확인하세요'}
+          </p>
+          {/* 회원가입 프로그레스 (모바일) */}
+          {variant === 'signup' && step && (
+            <div className="mt-2.5 max-w-[200px] mx-auto">
+              <div className="w-full bg-white/20 rounded-full h-1">
+                <div
+                  className="bg-white rounded-full h-1 transition-all duration-500"
+                  style={{ width: `${(step / 7) * 100}%` }}
+                />
+              </div>
+              <span className="text-white/50 text-xs mt-0.5 inline-block">{step} / 7</span>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* 텍스트 콘텐츠 */}
-      <div className="relative z-10 flex-1 flex flex-col justify-center px-8 pb-8">
-        <h2 className="text-3xl font-bold text-white leading-tight mb-3">
-          {content.title}
-        </h2>
-        {content.description}
+      {/* 데스크톱 사이드 패널 */}
+      <div className="hidden lg:flex lg:w-1/2 min-h-[680px] relative overflow-hidden flex-col rounded-l-lg flex-shrink-0">
+        <img
+          src="/images/connor-coyne-OgqWLzWRSaI-unsplash.jpg"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-black/55" />
 
-        <div className="space-y-4">
-          {content.features.map((feature, i) => (
-            <div key={i} className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-white/15 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
-                {FEATURE_ICONS[feature.icon]}
-              </div>
-              <p className="text-white text-sm">{feature.label}</p>
-            </div>
-          ))}
+        <div className="relative z-10 p-5">
+          <img
+            src="/logo/4590football-logo-white.png"
+            alt="4590 Football"
+            className="h-8 w-auto"
+          />
         </div>
 
-        {/* 회원가입 단계 프로그레스 */}
-        {variant === 'signup' && step && (
-          <div className="mt-8">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-white/60 text-xs">가입 진행률</span>
-              <span className="text-white/60 text-xs">{step} / 7</span>
-            </div>
-            <div className="w-full bg-white/15 rounded-full h-1.5">
-              <div
-                className="bg-white rounded-full h-1.5 transition-all duration-500"
-                style={{ width: `${(step / 7) * 100}%` }}
-              />
-            </div>
+        <div className="relative z-10 flex-1 flex flex-col justify-center px-8 pb-8">
+          <h2 className="text-3xl font-bold text-white leading-tight mb-3">
+            {content.title}
+          </h2>
+          {content.description}
+
+          <div className="space-y-4">
+            {content.features.map((feature, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-white/15 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+                  {FEATURE_ICONS[feature.icon]}
+                </div>
+                <p className="text-white text-sm">{feature.label}</p>
+              </div>
+            ))}
           </div>
-        )}
+
+          {variant === 'signup' && step && (
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-white/60 text-xs">가입 진행률</span>
+                <span className="text-white/60 text-xs">{step} / 7</span>
+              </div>
+              <div className="w-full bg-white/15 rounded-full h-1.5">
+                <div
+                  className="bg-white rounded-full h-1.5 transition-all duration-500"
+                  style={{ width: `${(step / 7) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

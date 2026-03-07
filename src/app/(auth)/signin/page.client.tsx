@@ -236,15 +236,6 @@ function LoginContent() {
 
   return (
     <div className="w-full lg:w-1/2 max-w-md lg:max-w-none md:bg-white md:dark:bg-[#2D2D2D] md:rounded-lg lg:rounded-l-none md:shadow-lg md:border md:border-black/10 md:dark:border-white/10 lg:border-l-0 md:p-8 lg:p-14 flex flex-col justify-center">
-      {/* 헤더 - 모바일에서만 표시 (데스크톱은 브랜딩 패널에 포함) */}
-      <div className="text-center mb-6 lg:hidden">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">4590 Football 로그인</h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-8">
-          모든 축구팬을 위한<br />
-          4590 Football 커뮤니티에 오신 것을 환영합니다.
-        </p>
-      </div>
-
       <div>
       <form onSubmit={handleLogin} className="space-y-6">
         <div>
@@ -470,9 +461,9 @@ function LoginContent() {
 
 export default function SignInPage() {
   return (
-    <div className="flex flex-col justify-center items-center min-h-[calc(100vh-120px)]">
+    <div className="flex flex-col items-center lg:justify-center min-h-[calc(100vh-120px)]">
       {/* 브랜딩 + 폼 카드 */}
-      <div className="flex w-full max-w-md lg:max-w-full">
+      <div className="flex flex-col lg:flex-row w-full max-w-md lg:max-w-full">
         <BrandingPanel />
         <Suspense fallback={
           <div className="w-full lg:w-1/2 max-w-md lg:max-w-none md:bg-white md:dark:bg-[#2D2D2D] md:rounded-lg lg:rounded-l-none md:shadow-lg md:border md:border-black/10 md:dark:border-white/10 lg:border-l-0 md:p-8">

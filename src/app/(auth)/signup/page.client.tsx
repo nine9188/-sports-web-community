@@ -730,7 +730,7 @@ export default function SignupPage() {
   // 이미 로그인된 경우 폼 대신 메시지 표시
   if (user) {
     return (
-      <div className="flex flex-col justify-center items-center min-h-[calc(100vh-120px)]">
+      <div className="flex flex-col items-center lg:justify-center min-h-[calc(100vh-120px)]">
         <div className="w-full max-w-md">
           <div className="text-center">
             <h2 className="text-2xl font-bold">이미 로그인되어 있습니다</h2>
@@ -742,19 +742,10 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex flex-col justify-center items-center min-h-[calc(100vh-120px)]">
-      <div className="flex w-full max-w-md lg:max-w-full">
+    <div className="flex flex-col items-center lg:justify-center min-h-[calc(100vh-120px)]">
+      <div className="flex flex-col lg:flex-row w-full max-w-md lg:max-w-full">
         <BrandingPanel variant="signup" step={currentStep} />
         <div className="w-full lg:w-1/2 max-w-md lg:max-w-none md:bg-white md:dark:bg-[#2D2D2D] md:rounded-lg lg:rounded-l-none md:shadow-lg md:border md:border-black/10 md:dark:border-white/10 lg:border-l-0 md:p-8 lg:p-14 flex flex-col justify-center overflow-y-auto">
-        {/* 헤더 - 모바일에서만 */}
-        <div className="text-center mb-6 lg:hidden">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">4590 Football 회원가입</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-8">
-            모든 축구팬을 위한<br />
-            4590 Football 커뮤니티에 오신 것을 환영합니다.
-          </p>
-        </div>
-
         <div>
         {/* 단계 표시 + 돌아가기 */}
         <div className="flex items-center justify-between mb-5">
@@ -1027,23 +1018,46 @@ export default function SignupPage() {
 
                   {/* 캘린더 팝업 */}
                   {showCalendar && (
-                    <div className="absolute top-full left-0 mt-2 z-50">
-                      <Calendar
-                        selectedDate={birthDate ? new Date(birthDate.replace(/\./g, '-')) : new Date()}
-                        onDateSelect={(date) => {
-                          const year = date.getFullYear();
-                          const month = String(date.getMonth() + 1).padStart(2, '0');
-                          const day = String(date.getDate()).padStart(2, '0');
-                          const formatted = `${year}.${month}.${day}`;
-                          setBirthDate(formatted);
-                          validateBirthDate(formatted);
-                          setShowCalendar(false);
-                        }}
-                        onClose={() => setShowCalendar(false)}
-                        maxDate={new Date()}
-                        minDate={new Date(1900, 0, 1)}
-                      />
-                    </div>
+                    <>
+                      {/* 모바일: fixed 중앙 오버레이 */}
+                      <div className="lg:hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowCalendar(false)}>
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <Calendar
+                            selectedDate={birthDate ? new Date(birthDate.replace(/\./g, '-')) : new Date()}
+                            onDateSelect={(date) => {
+                              const year = date.getFullYear();
+                              const month = String(date.getMonth() + 1).padStart(2, '0');
+                              const day = String(date.getDate()).padStart(2, '0');
+                              const formatted = `${year}.${month}.${day}`;
+                              setBirthDate(formatted);
+                              validateBirthDate(formatted);
+                              setShowCalendar(false);
+                            }}
+                            onClose={() => setShowCalendar(false)}
+                            maxDate={new Date()}
+                            minDate={new Date(1900, 0, 1)}
+                          />
+                        </div>
+                      </div>
+                      {/* 데스크톱: 기존 absolute 드롭다운 */}
+                      <div className="hidden lg:block absolute top-full left-0 mt-2 z-50">
+                        <Calendar
+                          selectedDate={birthDate ? new Date(birthDate.replace(/\./g, '-')) : new Date()}
+                          onDateSelect={(date) => {
+                            const year = date.getFullYear();
+                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                            const day = String(date.getDate()).padStart(2, '0');
+                            const formatted = `${year}.${month}.${day}`;
+                            setBirthDate(formatted);
+                            validateBirthDate(formatted);
+                            setShowCalendar(false);
+                          }}
+                          onClose={() => setShowCalendar(false)}
+                          maxDate={new Date()}
+                          minDate={new Date(1900, 0, 1)}
+                        />
+                      </div>
+                    </>
                   )}
                 </div>
                 {birthError && (

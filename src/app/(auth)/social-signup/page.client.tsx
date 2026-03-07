@@ -395,22 +395,12 @@ export default function SocialSignupPage() {
       </div>
     )}
 
-    <div className="flex flex-col justify-center items-center min-h-[calc(100vh-120px)]">
-      <div className="flex w-full max-w-md lg:max-w-full">
+    <div className="flex flex-col items-center lg:justify-center min-h-[calc(100vh-120px)]">
+      <div className="flex flex-col lg:flex-row w-full max-w-md lg:max-w-full">
         <BrandingPanel variant="social-signup" />
 
         <div className="w-full lg:w-1/2 max-w-md lg:max-w-none md:bg-white md:dark:bg-[#2D2D2D] md:rounded-lg lg:rounded-l-none md:shadow-lg md:border md:border-black/10 md:dark:border-white/10 lg:border-l-0 md:p-8 lg:p-14 flex flex-col justify-center">
-          {/* 모바일 헤더 */}
-          <div className="text-center mb-6 lg:hidden">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">{providerName} 회원가입</h2>
-            <p className="text-gray-600 dark:text-gray-400">
-              추가 정보를 입력하고<br />
-              회원가입을 완료하세요.
-            </p>
-          </div>
-
-          {/* 데스크톱 헤더 */}
-          <div className="hidden lg:block mb-6">
+          <div className="mb-6">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">{providerName} 회원가입</h2>
             <p className="text-gray-600 dark:text-gray-400 text-sm">
               {providerName} 로그인이 완료되었습니다. 추가 정보를 입력해주세요.
