@@ -7,6 +7,7 @@ import { getNoticesForBoard } from './posts';
 import { getHoverMenuData, type HoverMenuBoard } from './getHoverMenuData';
 import { processNoticesForLayout } from '../utils/notice/noticeUtils';
 import { getTeamLogoUrl, getLeagueLogoUrl } from '@/domains/livescore/actions/images';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import type { LayoutPost } from '../types/post/layout';
 import type { Post } from '../types/post';
 
@@ -52,6 +53,7 @@ export interface BoardPageAllData {
     logo: string;
   } | null;
   isLoggedIn: boolean;
+  isAdmin: boolean;
   rootBoardId: string;
   rootBoardSlug: string;
   viewType?: 'text' | 'image-table' | 'list';
@@ -202,6 +204,16 @@ export async function getBoardPageAllData(
     teamData: boardResult.teamData || null,
     leagueData: boardResult.leagueData || null,
     isLoggedIn: boardResult.isLoggedIn || false,
+    isAdmin: await (async () => {
+      if (!boardResult.isLoggedIn) return false;
+      try {
+        const supabase = await getSupabaseServer();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return false;
+        const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single();
+        return profile?.is_admin || false;
+      } catch { return false; }
+    })(),
     rootBoardId: boardResult.rootBoardId || '',
     rootBoardSlug: boardResult.rootBoardSlug || '',
     viewType,

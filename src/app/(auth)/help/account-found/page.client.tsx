@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { User, Mail, Clock } from 'lucide-react';
 import { Button } from '@/shared/components/ui';
+import BrandingPanel from '../../components/BrandingPanel';
 
 // 계정 정보 인터페이스 정의
 interface AccountInfo {
@@ -24,7 +25,7 @@ function AccountFoundContent() {
   useEffect(() => {
     // URL 파라미터가 올바른지 확인
     if (type !== 'id' && type !== 'password') {
-      router.push('/help/account-recovery');
+      router.push('/help/find-id');
       return;
     }
 
@@ -43,7 +44,7 @@ function AccountFoundContent() {
         });
       } else {
         // 파라미터가 없으면 계정 복구 페이지로 리디렉션
-        router.push('/help/account-recovery');
+        router.push('/help/find-id');
       }
     }
   }, [type, router, searchParams]);
@@ -80,24 +81,35 @@ function AccountFoundContent() {
   };
 
   return (
-    <div className="max-w-md w-full">
-      {/* 고정 헤더 */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-left mb-2 text-gray-900 dark:text-[#F0F0F0]">
+    <div className="w-full lg:w-1/2 max-w-md lg:max-w-none md:bg-white md:dark:bg-[#2D2D2D] md:rounded-lg lg:rounded-l-none md:shadow-lg md:border md:border-black/10 md:dark:border-white/10 lg:border-l-0 md:p-8 lg:p-14 flex flex-col justify-center">
+      {/* 헤더 - 모바일에서만 표시 */}
+      <div className="text-center mb-6 lg:hidden">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">
           {type === 'id' ? '아이디 찾기 완료' : '재설정 링크 발송 완료'}
         </h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-8 text-left">
+        <p className="text-gray-600 dark:text-gray-400">
           {type === 'id'
             ? '회원님의 계정 정보를 찾았습니다.'
-            : '등록된 이메일로 비밀번호 재설정 링크를 발송했습니다.'
+            : '등록된 이메일로 재설정 링크를 발송했습니다.'
           }
         </p>
       </div>
 
-      {/* 콘텐츠 영역 - 최소 높이 설정 */}
-      <div className="min-h-[400px]">
-        {type === 'id' && accountInfo && (
+      <div>
+        {/* 헤더 - 데스크톱 */}
+        <div className="hidden lg:block mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">
+            {type === 'id' ? '아이디 찾기 완료' : '재설정 링크 발송 완료'}
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400">
+            {type === 'id'
+              ? '회원님의 계정 정보를 찾았습니다.'
+              : '등록된 이메일로 비밀번호 재설정 링크를 발송했습니다.'
+            }
+          </p>
+        </div>
 
+        {type === 'id' && accountInfo && (
           <div className="space-y-6">
             <div className="p-6 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg border border-black/7 dark:border-white/10">
               <div className="flex items-center mb-4">
@@ -128,7 +140,7 @@ function AccountFoundContent() {
                 </Link>
               </Button>
               <Button asChild variant="outline" className="w-full py-3 h-auto">
-                <Link href="/help/account-recovery?tab=password">
+                <Link href="/help/find-password">
                   비밀번호 찾기
                 </Link>
               </Button>
@@ -137,7 +149,6 @@ function AccountFoundContent() {
         )}
 
         {type === 'password' && (
-
           <div className="space-y-6">
             <div className="p-6 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg border border-black/7 dark:border-white/10">
               <div className="flex items-center mb-3">
@@ -157,7 +168,7 @@ function AccountFoundContent() {
                 </Link>
               </Button>
               <Button asChild variant="outline" className="w-full py-3 h-auto">
-                <Link href="/help/account-recovery">
+                <Link href="/help/find-id">
                   계정 찾기
                 </Link>
               </Button>
@@ -168,7 +179,7 @@ function AccountFoundContent() {
         <div className="mt-8 text-center">
           <p className="text-gray-600 dark:text-gray-400">
             처음 방문이신가요?{' '}
-            <Link href="/signup" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline font-medium">
+            <Link href="/signup" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline font-medium transition-colors">
               회원가입
             </Link>
           </p>
@@ -181,21 +192,30 @@ function AccountFoundContent() {
 // 메인 페이지에서는 Suspense로 감싸기
 export default function AccountFoundPage() {
   return (
-    <Suspense fallback={
-      <div className="max-w-md w-full">
-        <div className="animate-pulse">
-          <div className="h-8 bg-[#F5F5F5] dark:bg-[#262626] rounded w-48 mb-2"></div>
-          <div className="h-4 bg-[#F5F5F5] dark:bg-[#262626] rounded w-full mb-2"></div>
-          <div className="h-4 bg-[#F5F5F5] dark:bg-[#262626] rounded w-3/4 mb-8"></div>
-          <div className="space-y-4">
-            <div className="h-20 bg-[#F5F5F5] dark:bg-[#262626] rounded"></div>
-            <div className="h-12 bg-[#F5F5F5] dark:bg-[#262626] rounded"></div>
-            <div className="h-12 bg-[#F5F5F5] dark:bg-[#262626] rounded"></div>
+    <div className="flex flex-col justify-center items-center min-h-[calc(100vh-120px)]">
+      <div className="flex w-full max-w-md lg:max-w-full">
+        <BrandingPanel variant="account-found" />
+        <Suspense fallback={
+          <div className="w-full lg:w-1/2 max-w-md lg:max-w-none md:bg-white md:dark:bg-[#2D2D2D] md:rounded-lg lg:rounded-l-none md:shadow-lg md:border md:border-black/10 md:dark:border-white/10 lg:border-l-0 md:p-8">
+            <div className="animate-pulse">
+              <div className="h-8 bg-[#EAEAEA] dark:bg-[#333333] rounded w-48 mb-2"></div>
+              <div className="h-4 bg-[#EAEAEA] dark:bg-[#333333] rounded w-full mb-2"></div>
+              <div className="h-4 bg-[#EAEAEA] dark:bg-[#333333] rounded w-3/4 mb-8"></div>
+              <div className="space-y-4">
+                <div className="h-20 bg-[#EAEAEA] dark:bg-[#333333] rounded"></div>
+                <div className="h-12 bg-[#EAEAEA] dark:bg-[#333333] rounded"></div>
+                <div className="h-12 bg-[#EAEAEA] dark:bg-[#333333] rounded"></div>
+              </div>
+            </div>
           </div>
-        </div>
+        }>
+          <AccountFoundContent />
+        </Suspense>
       </div>
-    }>
-      <AccountFoundContent />
-    </Suspense>
+      <div className="mt-8 flex space-x-4 text-sm text-gray-500 dark:text-gray-400">
+        <Link href="/terms" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">이용약관</Link>
+        <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">개인정보처리방침</Link>
+      </div>
+    </div>
   );
 }

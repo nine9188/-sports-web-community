@@ -72,6 +72,19 @@ async function createPostInternal(params: {
       return { success: false, error: '게시판 정보를 찾을 수 없습니다.' };
     }
 
+    // 공지사항 게시판은 관리자만 작성 가능
+    if (boardData.slug === 'notice') {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', userId)
+        .single();
+
+      if (!profile?.is_admin) {
+        return { success: false, error: '공지사항은 관리자만 작성할 수 있습니다.' };
+      }
+    }
+
     // 게시글 데이터 준비
     const insertData: Record<string, unknown> = {
       title: title.trim(),

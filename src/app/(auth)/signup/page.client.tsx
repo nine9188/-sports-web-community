@@ -744,7 +744,7 @@ export default function SignupPage() {
   return (
     <div className="flex flex-col justify-center items-center min-h-[calc(100vh-120px)]">
       <div className="flex w-full max-w-md lg:max-w-full">
-        <BrandingPanel />
+        <BrandingPanel variant="signup" step={currentStep} />
         <div className="w-full lg:w-1/2 max-w-md lg:max-w-none md:bg-white md:dark:bg-[#2D2D2D] md:rounded-lg lg:rounded-l-none md:shadow-lg md:border md:border-black/10 md:dark:border-white/10 lg:border-l-0 md:p-8 lg:p-14 flex flex-col justify-center overflow-y-auto">
         {/* 헤더 - 모바일에서만 */}
         <div className="text-center mb-6 lg:hidden">
@@ -880,7 +880,7 @@ export default function SignupPage() {
                       setEmailMessage('');
                     }}
                     onBlur={() => validateEmail(email)}
-                    className={`flex-1 px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
+                    className={`flex-1 px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-base transition-colors ${
                       emailError ? 'border-red-500 dark:border-red-400' :
                       emailChecked && !emailAvailable ? 'border-red-500 dark:border-red-400' :
                       emailChecked && emailAvailable ? 'border-green-500 dark:border-green-400' :
@@ -939,7 +939,7 @@ export default function SignupPage() {
                     onBlur={() => {
                       if (fullName) validateFullName(fullName);
                     }}
-                    className={`w-full p-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
+                    className={`w-full p-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-base transition-colors ${
                       fullNameError ? 'border-red-500 dark:border-red-400' :
                       fullNameValid ? 'border-green-500 dark:border-green-400' :
                       'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
@@ -1006,7 +1006,7 @@ export default function SignupPage() {
                     onBlur={() => {
                       if (birthDate) validateBirthDate(birthDate);
                     }}
-                    className={`w-full p-3 pr-10 border rounded-md focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
+                    className={`w-full p-3 pr-10 border rounded-md focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-base transition-colors ${
                       birthError ? 'border-red-500 dark:border-red-400' :
                       birthValid ? 'border-green-500 dark:border-green-400' :
                       'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
@@ -1099,7 +1099,7 @@ export default function SignupPage() {
                         setUsernameMessage('');
                       }
                     }}
-                    className={`flex-1 p-3 border rounded-md focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
+                    className={`flex-1 p-3 border rounded-md focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-base transition-colors ${
                       usernameChecked && !usernameAvailable ? 'border-red-500 dark:border-red-400' :
                       usernameChecked && usernameAvailable ? 'border-green-500 dark:border-green-400' :
                       'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
@@ -1168,7 +1168,7 @@ export default function SignupPage() {
                         setNicknameMessage('');
                       }
                     }}
-                    className={`flex-1 p-3 border rounded-md focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
+                    className={`flex-1 p-3 border rounded-md focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-base transition-colors ${
                       nicknameChecked && !nicknameAvailable ? 'border-red-500 dark:border-red-400' :
                       nicknameChecked && nicknameAvailable ? 'border-green-500 dark:border-green-400' :
                       'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
@@ -1227,7 +1227,7 @@ export default function SignupPage() {
                       if (confirmPassword) validateConfirmPassword(confirmPassword);
                     }}
                     onBlur={() => validatePassword(password)}
-                    className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
+                    className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-base transition-colors ${
                       passwordError ? 'border-red-500 dark:border-red-400' :
                       passwordValid ? 'border-green-500 dark:border-green-400' :
                       'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
@@ -1299,7 +1299,7 @@ export default function SignupPage() {
                       validateConfirmPassword(e.target.value);
                     }}
                     onBlur={() => validateConfirmPassword(confirmPassword)}
-                    className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
+                    className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-base transition-colors ${
                       confirmPasswordError ? 'border-red-500 dark:border-red-400' :
                       confirmPasswordValid ? 'border-green-500 dark:border-green-400' :
                       'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
@@ -1356,7 +1356,7 @@ export default function SignupPage() {
                       setReferralMessage('');
                       setReferrerNickname('');
                     }}
-                    className={`flex-1 p-3 border rounded-md focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
+                    className={`flex-1 p-3 border rounded-md focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-base transition-colors ${
                       referralChecked && !referralValid && referralCode.trim() ? 'border-red-500 dark:border-red-400' :
                       referralChecked && referralValid ? 'border-green-500 dark:border-green-400' :
                       'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'

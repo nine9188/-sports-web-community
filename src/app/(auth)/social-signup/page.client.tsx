@@ -397,7 +397,7 @@ export default function SocialSignupPage() {
 
     <div className="flex flex-col justify-center items-center min-h-[calc(100vh-120px)]">
       <div className="flex w-full max-w-md lg:max-w-full">
-        <BrandingPanel />
+        <BrandingPanel variant="social-signup" />
 
         <div className="w-full lg:w-1/2 max-w-md lg:max-w-none md:bg-white md:dark:bg-[#2D2D2D] md:rounded-lg lg:rounded-l-none md:shadow-lg md:border md:border-black/10 md:dark:border-white/10 lg:border-l-0 md:p-8 lg:p-14 flex flex-col justify-center">
           {/* 모바일 헤더 */}
@@ -480,7 +480,7 @@ export default function SocialSignupPage() {
                       onBlur={() => {
                         if (birthDate) validateBirthDate(birthDate)
                       }}
-                      className={`w-full px-4 py-3 pr-10 border rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-[15px] transition-colors ${
+                      className={`w-full px-4 py-3 pr-10 border rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-base transition-colors ${
                         birthError ? 'border-red-500 dark:border-red-400' :
                         birthValid ? 'border-green-500 dark:border-green-400' :
                         'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
@@ -557,7 +557,7 @@ export default function SocialSignupPage() {
                         setNickname(e.target.value)
                         validateNickname(e.target.value)
                       }}
-                      className={`w-full px-4 py-3 border rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-[15px] transition-colors ${
+                      className={`w-full px-4 py-3 border rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-base transition-colors ${
                         nicknameError ? 'border-red-500 dark:border-red-400' :
                         nicknameValid ? 'border-green-500 dark:border-green-400' :
                         'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'

@@ -130,6 +130,7 @@ export default async function BoardDetailPage({
           type: 'league'
         } : null}
         isLoggedIn={result.isLoggedIn}
+        isAdmin={result.isAdmin}
         currentPage={currentPage}
         slug={slug}
         rootBoardId={result.rootBoardId}

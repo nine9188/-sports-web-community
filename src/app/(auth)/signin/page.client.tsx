@@ -259,7 +259,7 @@ function LoginContent() {
                 validateUsername(e.target.value);
               }}
               onBlur={() => validateUsername(username)}
-              className={`w-full px-4 py-3 border rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-[15px] transition-colors ${
+              className={`w-full px-4 py-3 border rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-base transition-colors ${
                 usernameError ? 'border-red-500 dark:border-red-400' :
                 usernameValid ? 'border-green-500 dark:border-green-400' :
                 'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
@@ -293,7 +293,7 @@ function LoginContent() {
                 validatePassword(e.target.value);
               }}
               onBlur={() => validatePassword(password)}
-              className={`w-full px-4 py-3 border rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-[15px] transition-colors ${
+              className={`w-full px-4 py-3 border rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-base transition-colors ${
                 passwordError ? 'border-red-500 dark:border-red-400' :
                 passwordValid ? 'border-green-500 dark:border-green-400' :
                 'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
@@ -374,11 +374,11 @@ function LoginContent() {
 
         {/* 아이디/비밀번호 찾기 */}
         <div className="mt-4 text-center text-gray-600 dark:text-gray-400">
-          <Link href="/help/account-recovery?tab=id" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline text-sm transition-colors">
+          <Link href="/help/find-id" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline text-sm transition-colors">
             아이디 찾기
           </Link>
           <span className="mx-2">ㅣ</span>
-          <Link href="/help/account-recovery?tab=password" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline text-sm transition-colors">
+          <Link href="/help/find-password" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline text-sm transition-colors">
             비밀번호 찾기
           </Link>
         </div>

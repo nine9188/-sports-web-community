@@ -7,6 +7,7 @@ import { validateResetToken, resetPasswordWithToken } from '@/domains/auth/actio
 import Link from 'next/link';
 import { EyeIcon, EyeOffIcon, AlertCircle, Check } from 'lucide-react';
 import { Button } from '@/shared/components/ui';
+import BrandingPanel from '../../components/BrandingPanel';
 
 // SearchParams를 사용하는 컴포넌트 분리
 function ResetPasswordContent() {
@@ -137,52 +138,58 @@ function ResetPasswordContent() {
     }
   };
 
+  const inputBaseClass = "w-full px-4 py-3 border rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-base transition-colors";
+
   // 토큰이 유효하지 않은 경우 에러 표시
   if (tokenValid === false) {
     return (
-      <div className="max-w-md w-full">
-        {/* 고정 헤더 */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-left mb-2 text-gray-900 dark:text-[#F0F0F0]">
-            링크가 만료되었습니다
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-8 text-left">
-            비밀번호 재설정 링크가 만료되었거나 유효하지 않습니다.
+      <div className="w-full lg:w-1/2 max-w-md lg:max-w-none md:bg-white md:dark:bg-[#2D2D2D] md:rounded-lg lg:rounded-l-none md:shadow-lg md:border md:border-black/10 md:dark:border-white/10 lg:border-l-0 md:p-8 lg:p-14 flex flex-col justify-center">
+        {/* 헤더 - 모바일에서만 표시 */}
+        <div className="text-center mb-6 lg:hidden">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">링크가 만료되었습니다</h2>
+          <p className="text-gray-600 dark:text-gray-400">
+            비밀번호 재설정 링크가 만료되었거나<br />유효하지 않습니다.
           </p>
         </div>
 
-        {/* 콘텐츠 영역 - 최소 높이 설정 */}
-        <div className="min-h-[400px]">
-
-        <div className="space-y-6">
-          <div className="p-6 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800/50">
-            <div className="flex items-center mb-3">
-              <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mr-2" />
-              <span className="text-sm font-medium text-red-800 dark:text-red-300">링크 만료</span>
-            </div>
-            <p className="text-sm text-red-700 dark:text-red-300">
-              재설정 링크는 30분간만 유효합니다.<br/>
-              새로운 재설정 링크를 요청해주세요.
+        <div>
+          {/* 헤더 - 데스크톱 */}
+          <div className="hidden lg:block mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">링크가 만료되었습니다</h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              비밀번호 재설정 링크가 만료되었거나 유효하지 않습니다.
             </p>
           </div>
 
-          <div className="space-y-3">
-            <Link href="/help/account-recovery?tab=password" className="block">
-              <Button variant="primary" className="w-full py-3 h-auto">
-                새 재설정 링크 요청
-              </Button>
-            </Link>
-            <Link href="/signin" className="block">
-              <Button variant="outline" className="w-full py-3 h-auto">
-                로그인하기
-              </Button>
-            </Link>
-          </div>
+          <div className="space-y-6">
+            <div className="p-6 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800/50">
+              <div className="flex items-center mb-3">
+                <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mr-2" />
+                <span className="text-sm font-medium text-red-800 dark:text-red-300">링크 만료</span>
+              </div>
+              <p className="text-sm text-red-700 dark:text-red-300">
+                재설정 링크는 30분간만 유효합니다.<br/>
+                새로운 재설정 링크를 요청해주세요.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <Link href="/help/find-password" className="block">
+                <Button variant="primary" className="w-full py-3 h-auto">
+                  새 재설정 링크 요청
+                </Button>
+              </Link>
+              <Link href="/signin" className="block">
+                <Button variant="outline" className="w-full py-3 h-auto">
+                  로그인하기
+                </Button>
+              </Link>
+            </div>
 
             <div className="mt-8 text-center">
               <p className="text-gray-600 dark:text-gray-400">
                 처음 방문이신가요?{' '}
-                <Link href="/signup" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline font-medium">
+                <Link href="/signup" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline font-medium transition-colors">
                   회원가입
                 </Link>
               </p>
@@ -196,15 +203,15 @@ function ResetPasswordContent() {
   // 토큰 검증 중인 경우 로딩 표시
   if (tokenValid === null) {
     return (
-      <div className="max-w-md w-full">
+      <div className="w-full lg:w-1/2 max-w-md lg:max-w-none md:bg-white md:dark:bg-[#2D2D2D] md:rounded-lg lg:rounded-l-none md:shadow-lg md:border md:border-black/10 md:dark:border-white/10 lg:border-l-0 md:p-8">
         <div className="animate-pulse">
-          <div className="h-8 bg-[#F5F5F5] dark:bg-[#262626] rounded w-48 mb-2"></div>
-          <div className="h-4 bg-[#F5F5F5] dark:bg-[#262626] rounded w-full mb-2"></div>
-          <div className="h-4 bg-[#F5F5F5] dark:bg-[#262626] rounded w-3/4 mb-8"></div>
+          <div className="h-8 bg-[#EAEAEA] dark:bg-[#333333] rounded w-48 mb-2"></div>
+          <div className="h-4 bg-[#EAEAEA] dark:bg-[#333333] rounded w-full mb-2"></div>
+          <div className="h-4 bg-[#EAEAEA] dark:bg-[#333333] rounded w-3/4 mb-8"></div>
           <div className="space-y-4">
-            <div className="h-12 bg-[#F5F5F5] dark:bg-[#262626] rounded"></div>
-            <div className="h-12 bg-[#F5F5F5] dark:bg-[#262626] rounded"></div>
-            <div className="h-12 bg-[#F5F5F5] dark:bg-[#262626] rounded"></div>
+            <div className="h-12 bg-[#EAEAEA] dark:bg-[#333333] rounded"></div>
+            <div className="h-12 bg-[#EAEAEA] dark:bg-[#333333] rounded"></div>
+            <div className="h-12 bg-[#EAEAEA] dark:bg-[#333333] rounded"></div>
           </div>
         </div>
       </div>
@@ -212,137 +219,140 @@ function ResetPasswordContent() {
   }
 
   return (
-    <div className="max-w-md w-full">
-      {/* 고정 헤더 */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-left mb-2 text-gray-900 dark:text-[#F0F0F0]">
-          새 비밀번호 설정
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-8 text-left">
+    <div className="w-full lg:w-1/2 max-w-md lg:max-w-none md:bg-white md:dark:bg-[#2D2D2D] md:rounded-lg lg:rounded-l-none md:shadow-lg md:border md:border-black/10 md:dark:border-white/10 lg:border-l-0 md:p-8 lg:p-14 flex flex-col justify-center">
+      {/* 헤더 - 모바일에서만 표시 */}
+      <div className="text-center mb-6 lg:hidden">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">새 비밀번호 설정</h2>
+        <p className="text-gray-600 dark:text-gray-400">
           새로운 비밀번호를 입력해주세요.
         </p>
       </div>
 
-      {/* 콘텐츠 영역 - 최소 높이 설정 */}
-      <div className="min-h-[400px]">
-
-      <form onSubmit={handleResetPassword} className="space-y-6">
-        <div>
-          <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">
-            새 비밀번호
-          </label>
-          <div className="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                validatePassword(e.target.value);
-                // 비밀번호가 변경되면 확인 비밀번호도 다시 검증
-                if (confirmPassword) {
-                  validateConfirmPassword(confirmPassword);
-                }
-              }}
-              onBlur={() => validatePassword(password)}
-              className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
-                passwordError ? 'border-red-500 dark:border-red-400' :
-                passwordValid ? 'border-green-500 dark:border-green-400' :
-                'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
-              }`}
-              placeholder="새 비밀번호 (최소 6자)"
-              required
-            />
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
-              {passwordValid && !passwordError && (
-                <Check className="h-5 w-5 text-green-500" />
-              )}
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setShowPassword(!showPassword)}
-                tabIndex={-1}
-              >
-                {showPassword ? (
-                  <EyeOffIcon className="h-5 w-5" />
-                ) : (
-                  <EyeIcon className="h-5 w-5" />
-                )}
-              </Button>
-            </div>
-          </div>
-          {passwordError && (
-            <p className="mt-1 text-sm text-red-600 flex items-center">
-              <AlertCircle className="h-4 w-4 mr-1" />
-              {passwordError}
-            </p>
-          )}
+      <div>
+        {/* 헤더 - 데스크톱 */}
+        <div className="hidden lg:block mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">새 비밀번호 설정</h2>
+          <p className="text-gray-600 dark:text-gray-400">
+            새로운 비밀번호를 입력해주세요.
+          </p>
         </div>
 
-        <div>
-          <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">
-            새 비밀번호 확인
-          </label>
-          <div className="relative">
-            <input
-              type={showConfirmPassword ? "text" : "password"}
-              value={confirmPassword}
-              onChange={(e) => {
-                setConfirmPassword(e.target.value);
-                validateConfirmPassword(e.target.value);
-              }}
-              onBlur={() => validateConfirmPassword(confirmPassword)}
-              className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] transition-colors ${
-                confirmPasswordError ? 'border-red-500 dark:border-red-400' :
-                confirmPasswordValid ? 'border-green-500 dark:border-green-400' :
-                'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
-              }`}
-              placeholder="새 비밀번호 확인"
-              required
-            />
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
-              {confirmPasswordValid && !confirmPasswordError && (
-                <Check className="h-5 w-5 text-green-500" />
-              )}
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                tabIndex={-1}
-              >
-                {showConfirmPassword ? (
-                  <EyeOffIcon className="h-5 w-5" />
-                ) : (
-                  <EyeIcon className="h-5 w-5" />
+        <form onSubmit={handleResetPassword} className="space-y-6">
+          <div>
+            <label className="block text-gray-700 dark:text-gray-300 mb-1.5 text-sm font-medium">
+              새 비밀번호
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  validatePassword(e.target.value);
+                  if (confirmPassword) {
+                    validateConfirmPassword(confirmPassword);
+                  }
+                }}
+                onBlur={() => validatePassword(password)}
+                className={`${inputBaseClass} ${
+                  passwordError ? 'border-red-500 dark:border-red-400' :
+                  passwordValid ? 'border-green-500 dark:border-green-400' :
+                  'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
+                }`}
+                placeholder="새 비밀번호 (최소 6자)"
+                required
+              />
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+                {passwordValid && !passwordError && (
+                  <Check className="h-5 w-5 text-green-500" />
                 )}
-              </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setShowPassword(!showPassword)}
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOffIcon className="h-5 w-5" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5" />
+                  )}
+                </Button>
+              </div>
             </div>
+            {passwordError && (
+              <p className="mt-1 text-sm text-red-600 flex items-center">
+                <AlertCircle className="h-4 w-4 mr-1" />
+                {passwordError}
+              </p>
+            )}
           </div>
-          {confirmPasswordError && (
-            <p className="mt-1 text-sm text-red-600 flex items-center">
-              <AlertCircle className="h-4 w-4 mr-1" />
-              {confirmPasswordError}
-            </p>
-          )}
-        </div>
 
-        <Button
-          type="submit"
-          variant="primary"
-          className="w-full py-3 h-auto"
-          disabled={loading || !passwordValid || !confirmPasswordValid}
-        >
-          {loading ? '처리 중...' : '비밀번호 변경'}
-        </Button>
-      </form>
+          <div>
+            <label className="block text-gray-700 dark:text-gray-300 mb-1.5 text-sm font-medium">
+              새 비밀번호 확인
+            </label>
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  validateConfirmPassword(e.target.value);
+                }}
+                onBlur={() => validateConfirmPassword(confirmPassword)}
+                className={`${inputBaseClass} ${
+                  confirmPasswordError ? 'border-red-500 dark:border-red-400' :
+                  confirmPasswordValid ? 'border-green-500 dark:border-green-400' :
+                  'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
+                }`}
+                placeholder="새 비밀번호 확인"
+                required
+              />
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+                {confirmPasswordValid && !confirmPasswordError && (
+                  <Check className="h-5 w-5 text-green-500" />
+                )}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  tabIndex={-1}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOffIcon className="h-5 w-5" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5" />
+                  )}
+                </Button>
+              </div>
+            </div>
+            {confirmPasswordError && (
+              <p className="mt-1 text-sm text-red-600 flex items-center">
+                <AlertCircle className="h-4 w-4 mr-1" />
+                {confirmPasswordError}
+              </p>
+            )}
+          </div>
+
+          <Button
+            type="submit"
+            variant="primary"
+            className="w-full py-3 h-auto"
+            disabled={loading || !passwordValid || !confirmPasswordValid}
+          >
+            {loading ? '처리 중...' : '비밀번호 변경'}
+          </Button>
+        </form>
 
         <div className="mt-8 text-center">
           <p className="text-gray-600 dark:text-gray-400">
             비밀번호가 기억나셨나요?{' '}
-            <Link href="/signin" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline font-medium">
+            <Link href="/signin" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline font-medium transition-colors">
               로그인
             </Link>
           </p>
@@ -355,21 +365,30 @@ function ResetPasswordContent() {
 // 메인 페이지 컴포넌트
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={
-      <div className="max-w-md w-full">
-        <div className="animate-pulse">
-          <div className="h-8 bg-[#F5F5F5] dark:bg-[#262626] rounded w-48 mb-2"></div>
-          <div className="h-4 bg-[#F5F5F5] dark:bg-[#262626] rounded w-full mb-2"></div>
-          <div className="h-4 bg-[#F5F5F5] dark:bg-[#262626] rounded w-3/4 mb-8"></div>
-          <div className="space-y-4">
-            <div className="h-12 bg-[#F5F5F5] dark:bg-[#262626] rounded"></div>
-            <div className="h-12 bg-[#F5F5F5] dark:bg-[#262626] rounded"></div>
-            <div className="h-12 bg-[#F5F5F5] dark:bg-[#262626] rounded"></div>
+    <div className="flex flex-col justify-center items-center min-h-[calc(100vh-120px)]">
+      <div className="flex w-full max-w-md lg:max-w-full">
+        <BrandingPanel variant="reset-password" />
+        <Suspense fallback={
+          <div className="w-full lg:w-1/2 max-w-md lg:max-w-none md:bg-white md:dark:bg-[#2D2D2D] md:rounded-lg lg:rounded-l-none md:shadow-lg md:border md:border-black/10 md:dark:border-white/10 lg:border-l-0 md:p-8">
+            <div className="animate-pulse">
+              <div className="h-8 bg-[#EAEAEA] dark:bg-[#333333] rounded w-48 mb-2"></div>
+              <div className="h-4 bg-[#EAEAEA] dark:bg-[#333333] rounded w-full mb-2"></div>
+              <div className="h-4 bg-[#EAEAEA] dark:bg-[#333333] rounded w-3/4 mb-8"></div>
+              <div className="space-y-4">
+                <div className="h-12 bg-[#EAEAEA] dark:bg-[#333333] rounded"></div>
+                <div className="h-12 bg-[#EAEAEA] dark:bg-[#333333] rounded"></div>
+                <div className="h-12 bg-[#EAEAEA] dark:bg-[#333333] rounded"></div>
+              </div>
+            </div>
           </div>
-        </div>
+        }>
+          <ResetPasswordContent />
+        </Suspense>
       </div>
-    }>
-      <ResetPasswordContent />
-    </Suspense>
+      <div className="mt-8 flex space-x-4 text-sm text-gray-500 dark:text-gray-400">
+        <Link href="/terms" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">이용약관</Link>
+        <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">개인정보처리방침</Link>
+      </div>
+    </div>
   );
 }

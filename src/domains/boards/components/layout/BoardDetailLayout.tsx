@@ -70,6 +70,7 @@ interface BoardDetailLayoutProps {
   teamData: TeamData | null;
   leagueData: LeagueData | null;
   isLoggedIn: boolean;
+  isAdmin?: boolean;
   currentPage: number;
   slug: string;
   rootBoardId: string;
@@ -120,6 +121,7 @@ export default function BoardDetailLayout({
   teamData,
   leagueData,
   isLoggedIn,
+  isAdmin = false,
   currentPage,
   slug,
   rootBoardId,
@@ -229,7 +231,7 @@ export default function BoardDetailLayout({
             <h2 className="text-sm font-semibold truncate text-gray-900 dark:text-[#F0F0F0]">
               {boardData.name}
             </h2>
-            {isLoggedIn && (
+            {isLoggedIn && (slug !== 'notice' || isAdmin) && (
               <Link
                 href={`/boards/${slug}/create`}
                 aria-label="글쓰기"
@@ -299,7 +301,7 @@ export default function BoardDetailLayout({
         <div className="w-full sm:w-1/2">
           <BoardSearchBar slug={slug} />
         </div>
-        {isLoggedIn && (
+        {isLoggedIn && (slug !== 'notice' || isAdmin) && (
           <Link
             href={`/boards/${slug}/create`}
             className="flex items-center justify-center gap-1 px-3 py-2 border border-black/7 dark:border-0 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded text-sm transition-colors whitespace-nowrap min-h-[36px]"

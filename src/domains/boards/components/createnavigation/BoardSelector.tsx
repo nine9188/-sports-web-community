@@ -251,7 +251,7 @@ const BoardSelector = React.memo(({
               {board.id === currentBoardId ? " (현재 게시판)" : ""}
             </span>
             {hasChildren && (
-              <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">▶</span>
+              <ChevronDown className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500 ml-2 -rotate-90" />
             )}
           </span>
         </div>
@@ -290,7 +290,7 @@ const BoardSelector = React.memo(({
               {board.id === currentBoardId ? " (현재 게시판)" : ""}
             </span>
             {hasChildren && (
-              <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">▶</span>
+              <ChevronDown className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500 ml-2 -rotate-90" />
             )}
           </span>
         </div>

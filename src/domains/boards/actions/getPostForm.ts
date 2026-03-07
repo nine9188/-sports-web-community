@@ -137,7 +137,18 @@ export async function getCreatePostData(slug: string) {
     }
 
     // 계층 구조를 flat 배열로 변환 (BoardSelector가 flat 배열 기대)
-    const allBoards = flattenBoards(navigationData.boardData);
+    let allBoards = flattenBoards(navigationData.boardData);
+
+    // 관리자가 아니면 공지사항 게시판 제외
+    const { data: { user } } = await supabase.auth.getUser();
+    let isAdmin = false;
+    if (user) {
+      const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single();
+      isAdmin = profile?.is_admin || false;
+    }
+    if (!isAdmin) {
+      allBoards = allBoards.filter(b => b.slug !== 'notice');
+    }
 
     // 성공적으로 데이터를 가져온 경우
     return {
