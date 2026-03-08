@@ -76,30 +76,9 @@ export async function middleware(request: NextRequest) {
     return new NextResponse('Not Found', { status: 404 })
   }
 
-  // SEO 봇 → API-Sports 실시간 호출 경로만 차단, 정적/캐시 데이터 경로는 허용
+  // SEO 봇 → 404 차단 없이 통과, x-is-bot 헤더만 설정
+  // 각 페이지/컴포넌트에서 x-is-bot 헤더를 확인하여 API-Sports 호출 스킵
   if (isBot) {
-    // SEO 허용 경로 (팀, 선수, 리그, 매치 페이지)
-    const seoAllowedPaths = [
-      '/livescore/football/team/',
-      '/livescore/football/player/',
-      '/livescore/football/leagues/',
-      '/livescore/football/match/',
-    ]
-    const isSeoAllowed = seoAllowedPaths.some(p => pathname.startsWith(p))
-
-    // API-Sports 실시간 호출 경로만 봇 차단 (쿼타 보호)
-    const apiSportsPaths = [
-      '/livescore',   // 라이브스코어 메인 (실시간 경기)
-      '/transfers',   // 이적시장 (fetchTransfersFullData)
-    ]
-    const isApiSportsPath = apiSportsPaths.some(p => pathname.startsWith(p))
-      || pathname === '/'  // 홈페이지 (fetchMultiDayMatches)
-
-    if (isApiSportsPath && !isSeoAllowed) {
-      return new NextResponse('Not Found', { status: 404 })
-    }
-
-    // 게시판 등 나머지는 통과하되, x-is-bot 헤더 설정 (레이아웃에서 사이드바 API-Sports 호출 스킵용)
     const botResponse = NextResponse.next({
       request: { headers: new Headers(request.headers) }
     })
