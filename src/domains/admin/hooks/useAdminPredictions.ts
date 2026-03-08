@@ -47,8 +47,8 @@ export function useUpcomingMatches(date: string) {
     queryKey: [...adminKeys.predictions(), 'matches', date],
     queryFn: async () => {
       const result = await getUpcomingMatches(date);
-      if (!result.success) {
-        throw new Error(result.error || '경기 목록 조회에 실패했습니다.');
+      if (result.error) {
+        throw new Error(result.error);
       }
       return result.matches || [];
     },

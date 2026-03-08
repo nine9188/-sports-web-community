@@ -120,8 +120,11 @@ export default function PredictionAdminPage() {
       setIsLoading(true);
       const targetDate = dateStr || formatDateToString(selectedDate);
 
-      const matches = await getUpcomingMatches(targetDate);
-      setUpcomingMatches(matches);
+      const result = await getUpcomingMatches(targetDate);
+      if (result.error) {
+        toast.error(result.error);
+      }
+      setUpcomingMatches(result.matches);
       setSelectedMatches(new Set()); // 새로고침 시 선택 초기화
     } catch (error) {
       console.error('경기 목록 가져오기 오류:', error);

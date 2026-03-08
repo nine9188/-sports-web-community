@@ -8,7 +8,12 @@ import { getMajorLeagueIds, LEAGUE_NAMES_MAP } from '@/domains/livescore/constan
 import { getTeamById } from '@teams'
 import { getTeamLogoUrls } from '@/domains/livescore/actions/images'
 import { getLeagueLogoUrl } from '@/domains/livescore/actions/images'
-import { predictMatch } from './utils/predictMatch'
+// predictMatch는 OpenAI SDK를 사용하므로 동적 import로 처리
+// (모듈 레벨 import 시 OPENAI_API_KEY 누락 등으로 전체 모듈 로드 실패 방지)
+async function loadPredictMatch() {
+  const { predictMatch } = await import('./utils/predictMatch')
+  return predictMatch
+}
 
 // Predictions API 타입
 interface MinuteStats {
@@ -439,17 +444,35 @@ async function getBoardIdBySlug(slug: string): Promise<string | null> {
 }
 
 // 특정 날짜의 다음날 경기 가져오기 (메이저 리그만)
-export async function getUpcomingMatches(date: string): Promise<UpcomingMatch[]> {
+export async function getUpcomingMatches(date: string): Promise<{
+  matches: UpcomingMatch[]
+  error?: string
+}> {
   try {
+    // API 키 존재 여부 확인
+    if (!process.env.FOOTBALL_API_KEY) {
+      console.error('FOOTBALL_API_KEY 환경변수가 설정되지 않았습니다.')
+      return { matches: [], error: 'FOOTBALL_API_KEY 환경변수가 설정되지 않았습니다.' }
+    }
+
     const response = await fetchFromFootballApi('fixtures', {
       date: date,
       status: 'NS' // Not Started
     })
-    
-    if (!response?.response) {
-      return []
+
+    // API 에러 응답 확인
+    if (response?.errors && Object.keys(response.errors).length > 0) {
+      const errorMsg = typeof response.errors === 'object'
+        ? JSON.stringify(response.errors)
+        : String(response.errors)
+      console.error('Football API 에러 응답:', errorMsg)
+      return { matches: [], error: `Football API 에러: ${errorMsg}` }
     }
-    
+
+    if (!response?.response) {
+      return { matches: [], error: 'API 응답에 response 필드가 없습니다.' }
+    }
+
     // 메이저 리그 ID 목록 가져오기
     const majorLeagueIds = getMajorLeagueIds()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -475,17 +498,18 @@ export async function getUpcomingMatches(date: string): Promise<UpcomingMatch[]>
       },
       status: fixture.fixture.status.short
     }))
-    
+
     // 메이저 리그만 필터링
-    const filteredMatches = allMatches.filter(match => 
+    const filteredMatches = allMatches.filter(match =>
       majorLeagueIds.includes(match.league.id)
     )
-    
-    return filteredMatches
-    
+
+    return { matches: filteredMatches }
+
   } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : '알 수 없는 오류'
     console.error('다음날 경기 조회 실패:', error)
-    return []
+    return { matches: [], error: `경기 조회 실패: ${errorMsg}` }
   }
 }
 
@@ -537,6 +561,7 @@ async function generateMatchPredictionPost(
   let chartData: any = null
 
   try {
+    const predictMatch = await loadPredictMatch()
     const result = await predictMatch(match.id, true, predictionData) // predictionData 전달
     if (typeof result === 'object' && 'textAnalysis' in result) {
       aiAnalysis = result.textAnalysis
@@ -824,8 +849,8 @@ export async function generateAllPredictions(
   const startTime = Date.now()
   try {
     // 다음날 경기 가져오기
-    const matches = await getUpcomingMatches(targetDate)
-    
+    const { matches } = await getUpcomingMatches(targetDate)
+
     if (matches.length === 0) {
       await savePredictionLog(
         triggerType,
@@ -965,7 +990,7 @@ export async function generateSingleLeaguePrediction(
 
   try {
     // 해당 날짜의 경기 조회
-    const allMatches = await getUpcomingMatches(targetDate)
+    const { matches: allMatches } = await getUpcomingMatches(targetDate)
 
     // 특정 리그의 경기만 필터링
     let leagueMatches = allMatches.filter(match => match.league.id === leagueId)
