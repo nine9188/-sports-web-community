@@ -76,17 +76,26 @@ export async function middleware(request: NextRequest) {
     return new NextResponse('Not Found', { status: 404 })
   }
 
-  // SEO 봇 → API-Sports 호출하는 경로는 차단, 나머지는 봇 플래그 헤더와 함께 통과
+  // SEO 봇 → API-Sports 실시간 호출 경로만 차단, 정적/캐시 데이터 경로는 허용
   if (isBot) {
-    // API-Sports를 호출하는 경로는 봇 차단 (쿼타 보호)
+    // SEO 허용 경로 (팀, 선수, 리그, 매치 페이지)
+    const seoAllowedPaths = [
+      '/livescore/football/team/',
+      '/livescore/football/player/',
+      '/livescore/football/leagues/',
+      '/livescore/football/match/',
+    ]
+    const isSeoAllowed = seoAllowedPaths.some(p => pathname.startsWith(p))
+
+    // API-Sports 실시간 호출 경로만 봇 차단 (쿼타 보호)
     const apiSportsPaths = [
-      '/livescore',   // 라이브스코어 전체 (match, team, player, leagues)
+      '/livescore',   // 라이브스코어 메인 (실시간 경기)
       '/transfers',   // 이적시장 (fetchTransfersFullData)
     ]
     const isApiSportsPath = apiSportsPaths.some(p => pathname.startsWith(p))
       || pathname === '/'  // 홈페이지 (fetchMultiDayMatches)
 
-    if (isApiSportsPath) {
+    if (isApiSportsPath && !isSeoAllowed) {
       return new NextResponse('Not Found', { status: 404 })
     }
 

@@ -639,52 +639,56 @@ async function generateMatchPredictionPost(
   }
 
   // Tiptap 게시글 내용 구성
+  // 순서: 예측 차트 → AI 분석글 → 매치 카드 → 면책 문구
+  const matchCardNode = {
+    type: 'matchCard',
+    attrs: {
+      matchId: match.id.toString(),
+      matchData: {
+        id: match.id.toString(),
+        teams: {
+          home: {
+            id: match.teams.home.id,
+            name: match.teams.home.name,
+            logo: match.teams.home.logo,
+            winner: null
+          },
+          away: {
+            id: match.teams.away.id,
+            name: match.teams.away.name,
+            logo: match.teams.away.logo,
+            winner: null
+          }
+        },
+        goals: {
+          home: null,
+          away: null
+        },
+        league: {
+          id: league.id.toString(),
+          name: league.name,
+          logo: leagueLogoUrl
+        },
+        status: {
+          code: 'NS',
+          name: '경기 예정'
+        }
+      }
+    }
+  }
+
   const tiptapContent = {
     type: 'doc',
     content: [
-      // 매치 카드
-      {
-        type: 'matchCard',
-        attrs: {
-          matchId: match.id.toString(),
-          matchData: {
-            id: match.id.toString(),
-            teams: {
-              home: {
-                id: match.teams.home.id,
-                name: match.teams.home.name,
-                logo: match.teams.home.logo,
-                winner: null
-              },
-              away: {
-                id: match.teams.away.id,
-                name: match.teams.away.name,
-                logo: match.teams.away.logo,
-                winner: null
-              }
-            },
-            goals: {
-              home: null,
-              away: null
-            },
-            league: {
-              id: league.id.toString(),
-              name: league.name,
-              logo: leagueLogoUrl
-            },
-            status: {
-              code: 'NS',
-              name: '경기 예정'
-            }
-          }
-        }
-      },
-      { type: 'paragraph', content: [{ type: 'text', text: '' }] },
       // 예측 차트 (데이터가 있을 때만)
       ...chartNode,
       { type: 'paragraph', content: [{ type: 'text', text: '' }] },
       // AI 분석글 본문
       ...aiParagraphs,
+      { type: 'paragraph', content: [{ type: 'text', text: '' }] },
+      // 매치 카드 (분석글 아래)
+      matchCardNode,
+      { type: 'paragraph', content: [{ type: 'text', text: '' }] },
       { type: 'horizontalRule' },
       {
         type: 'paragraph',

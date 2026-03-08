@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
+Allow: /livescore/
 Disallow: /signin
 Disallow: /signup
 Disallow: /social-signup
@@ -12,7 +13,6 @@ Disallow: /boards/*/create
 Disallow: /boards/*/edit
 Disallow: /test
 Disallow: /ui
-Disallow: /livescore/
 Disallow: /transfers
 
 # 쿼리 파라미터가 있는 URL 차단 (중복 색인 방지)
