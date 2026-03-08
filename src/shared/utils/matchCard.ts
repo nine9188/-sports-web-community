@@ -54,12 +54,12 @@ export function getImageUrls(
   // 1. ID가 있으면 Supabase Storage URL 생성
   if (id) {
     const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-    const lightUrl = `${SUPABASE_URL}/storage/v1/object/public/${type}/${numericId}.png`;
+    const lightUrl = `${SUPABASE_URL}/storage/v1/object/public/${type}/md/${numericId}.webp`;
 
     // 리그이고 다크모드 이미지가 있는 경우만 -1 추가
     const hasDarkImage = type === 'leagues' && DARK_MODE_LEAGUE_IDS.includes(numericId);
     const darkUrl = hasDarkImage
-      ? `${SUPABASE_URL}/storage/v1/object/public/${type}/${numericId}-1.png`
+      ? `${SUPABASE_URL}/storage/v1/object/public/${type}/md/${numericId}-1.webp`
       : lightUrl;
 
     return { light: lightUrl, dark: darkUrl };
@@ -69,18 +69,18 @@ export function getImageUrls(
   if (logoUrl) {
     // Supabase Storage URL인 경우
     if (logoUrl.includes('supabase.co')) {
-      const lightUrl = logoUrl.replace(/-1\.png$/, '.png');
-      const leagueIdMatch = lightUrl.match(/\/leagues\/(\d+)\.png$/);
+      const lightUrl = logoUrl.replace(/-1\.webp$/, '.webp').replace(/-1\.png$/, '.png');
+      const leagueIdMatch = lightUrl.match(/\/leagues\/(?:md\/)?(\d+)\.(?:webp|png)$/);
       const leagueId = leagueIdMatch ? parseInt(leagueIdMatch[1], 10) : null;
       const hasDarkImage = type === 'leagues' && leagueId && DARK_MODE_LEAGUE_IDS.includes(leagueId);
-      const darkUrl = hasDarkImage ? lightUrl.replace(/\.png$/, '-1.png') : lightUrl;
+      const darkUrl = hasDarkImage ? lightUrl.replace(/\.webp$/, '-1.webp').replace(/\.png$/, '-1.png') : lightUrl;
 
       return { light: lightUrl, dark: darkUrl };
     }
 
     // API Sports URL인 경우 - Supabase Storage로 변환
     if (logoUrl.includes('media.api-sports.io')) {
-      const idMatch = logoUrl.match(/\/(teams|leagues)\/(\d+)\.png$/);
+      const idMatch = logoUrl.match(/\/(teams|leagues)\/(\d+)\.(?:webp|png)$/);
       if (idMatch) {
         const imageId = parseInt(idMatch[2], 10);
         return getImageUrls(logoUrl, imageId, type);
@@ -92,7 +92,7 @@ export function getImageUrls(
   }
 
   // 3. 둘 다 없으면 플레이스홀더
-  return { light: '/placeholder.png', dark: '/placeholder.png' };
+  return { light: '/images/placeholder-team.svg', dark: '/images/placeholder-team.svg' };
 }
 
 /**
@@ -325,7 +325,7 @@ export function generateMatchCardHtml(
                 data-light-src="${leagueImages.light}"
                 data-dark-src="${leagueImages.dark}"
                 alt="${leagueName}"
-                onerror="this.onerror=null;this.src='/placeholder.png';"
+                onerror="this.onerror=null;this.src='/images/placeholder-team.svg';"
               />
             </div>
             <span class="league-name">${leagueName}</span>
@@ -340,7 +340,7 @@ export function generateMatchCardHtml(
                 data-light-src="${homeTeamImages.light}"
                 data-dark-src="${homeTeamImages.dark}"
                 alt="${homeTeam.name}"
-                onerror="this.onerror=null;this.src='/placeholder.png';"
+                onerror="this.onerror=null;this.src='/images/placeholder-team.svg';"
               />
             </div>
             <span class="team-name${homeTeam.winner ? ' winner' : ''}">${homeTeamName}</span>
@@ -362,7 +362,7 @@ export function generateMatchCardHtml(
                 data-light-src="${awayTeamImages.light}"
                 data-dark-src="${awayTeamImages.dark}"
                 alt="${awayTeam.name}"
-                onerror="this.onerror=null;this.src='/placeholder.png';"
+                onerror="this.onerror=null;this.src='/images/placeholder-team.svg';"
               />
             </div>
             <span class="team-name${awayTeam.winner ? ' winner' : ''}">${awayTeamName}</span>
@@ -426,7 +426,7 @@ function generateInlineStyleHtml(
               data-dark-src="${leagueImages.dark}"
               alt="${leagueName}"
               style="width: 24px; height: 24px; object-fit: contain; margin-right: 8px;"
-              onerror="this.onerror=null;this.src='/placeholder.png';"
+              onerror="this.onerror=null;this.src='/images/placeholder-team.svg';"
             />
             <span style="font-size: 14px; font-weight: 500; color: #4b5563;">${leagueName}</span>
           </div>
@@ -440,7 +440,7 @@ function generateInlineStyleHtml(
               data-dark-src="${homeTeamImages.dark}"
               alt="${homeTeam.name}"
               style="width: 48px; height: 48px; object-fit: contain; margin-bottom: 8px;"
-              onerror="this.onerror=null;this.src='/placeholder.png';"
+              onerror="this.onerror=null;this.src='/images/placeholder-team.svg';"
             />
             <span style="font-size: 14px; font-weight: 500; text-align: center; color: ${homeTeam.winner ? '#2563eb' : '#000'};">
               ${homeTeamName}
@@ -463,7 +463,7 @@ function generateInlineStyleHtml(
               data-dark-src="${awayTeamImages.dark}"
               alt="${awayTeam.name}"
               style="width: 48px; height: 48px; object-fit: contain; margin-bottom: 8px;"
-              onerror="this.onerror=null;this.src='/placeholder.png';"
+              onerror="this.onerror=null;this.src='/images/placeholder-team.svg';"
             />
             <span style="font-size: 14px; font-weight: 500; text-align: center; color: ${awayTeam.winner ? '#2563eb' : '#000'};">
               ${awayTeamName}

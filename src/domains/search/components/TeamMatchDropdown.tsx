@@ -186,7 +186,7 @@ export function TeamMatchExpandedRow({
           )}
         </div>
       </td>
-      <td colSpan={5} className="hidden sm:table-cell px-4 py-4 bg-[#F5F5F5] dark:bg-[#262626] border-t border-black/5 dark:border-white/10">
+      <td colSpan={4} className="hidden sm:table-cell px-4 py-4 bg-[#F5F5F5] dark:bg-[#262626] border-t border-black/5 dark:border-white/10">
         <div className="space-y-3 w-full">
           <h4 className="font-medium text-gray-900 dark:text-[#F0F0F0] text-sm">최근 경기</h4>
 

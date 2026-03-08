@@ -66,8 +66,8 @@ export interface BoardPageAllData {
     currentPage: number;
   };
   popularPosts: {
-    todayPosts: PopularPost[];
     weekPosts: PopularPost[];
+    monthPosts: PopularPost[];
   };
   notices: Post[];
 

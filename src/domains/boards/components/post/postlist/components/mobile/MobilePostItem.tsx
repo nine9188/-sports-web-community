@@ -144,7 +144,7 @@ export const MobilePostItem = React.memo(function MobilePostItem({
                 iconUrl={post.author_icon_url}
                 level={post.author_level || 1}
                 exp={post.author_exp}
-                iconSize={16}
+                iconSize={20}
                 showIcon={false}
               />
             </div>
@@ -200,7 +200,7 @@ export const MobilePostItem = React.memo(function MobilePostItem({
           iconUrl={post.author_icon_url}
           level={post.author_level || 1}
           exp={post.author_exp}
-          iconSize={16}
+          iconSize={20}
           showIcon={false}
         />
         <span className="text-gray-300 dark:text-gray-600">|</span>

@@ -109,7 +109,7 @@ export async function searchPlayers(options: PlayerSearchOptions): Promise<{
         // korean_name은 이미 DB에서 가져옴
         display_name: player.korean_name || player.display_name,
         team_name_ko: teamMapping?.name_ko,
-        team_logo_url: player.team_logo_url || `https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/${player.team_id}.png`
+        team_logo_url: player.team_logo_url || `https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/md/${player.team_id}.webp`
       }
     })
 
@@ -200,7 +200,7 @@ export async function getPopularPlayers(limit: number = 12): Promise<PlayerSearc
         // korean_name은 이미 DB에서 가져옴
         display_name: player.korean_name || player.display_name,
         team_name_ko: teamMapping?.name_ko,
-        team_logo_url: `https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/${player.team_id}.png`
+        team_logo_url: `https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/md/${player.team_id}.webp`
       }
     })
 

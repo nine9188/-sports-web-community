@@ -54,12 +54,12 @@ export function createEmptyResponse(page: number, limit: number): PostsResponse 
 export async function fetchBoardsInfo(
   supabase: SupabaseClient,
   boardIds: string[]
-): Promise<Record<string, { name: string; team_id?: number | null; league_id?: number | null; slug: string }>> {
+): Promise<Record<string, { name: string; team_id?: number | null; league_id?: number | null; slug: string; logo?: string | null }>> {
   if (boardIds.length === 0) return {};
 
   const { data: boards, error } = await supabase
     .from('boards')
-    .select('id, name, team_id, league_id, slug')
+    .select('id, name, team_id, league_id, slug, logo')
     .in('id', boardIds);
 
   if (error || !boards) return {};
@@ -69,10 +69,11 @@ export async function fetchBoardsInfo(
       name: board.name,
       team_id: board.team_id,
       league_id: board.league_id,
-      slug: board.slug || board.id
+      slug: board.slug || board.id,
+      logo: board.logo || null
     };
     return acc;
-  }, {} as Record<string, { name: string; team_id?: number | null; league_id?: number | null; slug: string }>);
+  }, {} as Record<string, { name: string; team_id?: number | null; league_id?: number | null; slug: string; logo?: string | null }>);
 }
 
 /**
@@ -240,7 +241,7 @@ export function formatPostData(
     content?: Json;
     deal_info?: DealInfo | null;
   },
-  boardsData: Record<string, { name: string; team_id?: number | null; league_id?: number | null; slug: string }>,
+  boardsData: Record<string, { name: string; team_id?: number | null; league_id?: number | null; slug: string; logo?: string | null }>,
   teamLogoMap: Record<string, string>,
   leagueLogoMap: Record<string, string>,
   userProfileMap: Record<string, { level: number; exp: number; icon_id: number | null }>,
@@ -253,11 +254,12 @@ export function formatPostData(
     name: '알 수 없는 게시판',
     slug: post.board_id || 'unknown',
     team_id: null,
-    league_id: null
+    league_id: null,
+    logo: null
   };
 
   const teamLogo = safeBoardInfo.team_id ? teamLogoMap[safeBoardInfo.team_id] : null;
-  const leagueLogo = safeBoardInfo.league_id ? leagueLogoMap[safeBoardInfo.league_id] : null;
+  const leagueLogo = safeBoardInfo.league_id ? leagueLogoMap[safeBoardInfo.league_id] : (safeBoardInfo.logo || null);
   const leagueLogoDark = safeBoardInfo.league_id ? leagueLogoDarkMap[safeBoardInfo.league_id] : null;
 
   const profile = post.profiles;

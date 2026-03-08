@@ -59,5 +59,42 @@ export const getHoverMenuData = cache(async (rootBoardId: string): Promise<Hover
     }
   });
 
+  // 리그 게시판 ↔ 분석 게시판 연동
+  // 분석 게시판(해외축구 분석 하위)을 각 리그 게시판의 하위에도 표시
+  const ANALYSIS_SLUG_TO_LEAGUE_SLUG: Record<string, string> = {
+    'foreign-analysis-premier': 'premier',
+    'foreign-analysis-laliga': 'laliga',
+    'foreign-analysis-ligue1': 'LIGUE1',
+    'foreign-analysis-bundesliga': 'bundesliga',
+    'foreign-analysis-serie-a': 'serie-a',
+  };
+
+  // slug → board id 매핑 생성
+  const slugToId: Record<string, string> = {};
+  boardsData.forEach(board => {
+    if (board.slug) slugToId[board.slug] = board.id;
+  });
+
+  // 각 분석 게시판을 해당 리그 게시판의 children에 추가
+  for (const [analysisSlug, leagueSlug] of Object.entries(ANALYSIS_SLUG_TO_LEAGUE_SLUG)) {
+    const leagueBoardId = slugToId[leagueSlug];
+    const analysisBoard = boardsData.find(b => b.slug === analysisSlug);
+    if (leagueBoardId && analysisBoard) {
+      if (!childBoardsMap[leagueBoardId]) {
+        childBoardsMap[leagueBoardId] = [];
+      }
+      // 중복 방지
+      const alreadyExists = childBoardsMap[leagueBoardId].some(b => b.id === analysisBoard.id);
+      if (!alreadyExists) {
+        childBoardsMap[leagueBoardId].push({
+          id: analysisBoard.id,
+          name: analysisBoard.name,
+          display_order: analysisBoard.display_order || 0,
+          slug: analysisBoard.slug || undefined
+        });
+      }
+    }
+  }
+
   return { topBoards, childBoardsMap };
 });

@@ -223,17 +223,14 @@ export default function TeamSearchResults({
                 <th className="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-full sm:w-auto">
                   팀 정보
                 </th>
-                <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28 md:w-36">
                   리그
                 </th>
-                <th className="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                   국가
                 </th>
-                <th className="hidden lg:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="hidden lg:table-cell px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   홈구장
-                </th>
-                <th className="hidden sm:table-cell px-2 sm:px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16 sm:w-20">
-                  코드
                 </th>
               </tr>
             </thead>
@@ -261,7 +258,7 @@ export default function TeamSearchResults({
                     <span className="font-medium">{Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)}</span>개 표시
                   </p>
                 </td>
-                <td colSpan={5} className="hidden sm:table-cell px-6 py-3 border-t border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
+                <td colSpan={4} className="hidden sm:table-cell px-6 py-3 border-t border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
                   <p className="text-sm text-gray-700 dark:text-gray-300">
                     총 <span className="font-medium">{pagination.totalItems}</span>개 중{' '}
                     <span className="font-medium">{(pagination.currentPage - 1) * pagination.itemsPerPage + 1}</span>-
@@ -283,7 +280,7 @@ export default function TeamSearchResults({
                       더 많은 팀 보기 ({totalCount}개) →
                     </Link>
                   </td>
-                  <td colSpan={5} className="hidden sm:table-cell px-6 py-3 border-t border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
+                  <td colSpan={4} className="hidden sm:table-cell px-6 py-3 border-t border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
                     <Link
                       href={`/search?q=${encodeURIComponent(query)}&type=teams`}
                       className="text-sm text-gray-900 dark:text-[#F0F0F0] hover:underline font-medium transition-colors"
@@ -378,61 +375,50 @@ function TeamRowWithMatches({
               height={28}
               className="w-6 h-6 sm:w-7 sm:h-7 object-contain flex-shrink-0"
             />
-            <div className="min-w-0 flex-1 overflow-hidden">
-              <div className="font-medium text-gray-900 dark:text-[#F0F0F0] flex items-center text-xs sm:text-sm min-w-0">
-                {/* 팀 이름 - 클릭 시 팀 페이지로 이동 */}
+            <div className="min-w-0 flex-1">
+              <div className="font-medium text-gray-900 dark:text-[#F0F0F0] text-xs sm:text-sm">
                 <Button
                   variant="ghost"
                   onClick={handleTeamPageClick}
-                  className="truncate hover:underline transition-colors text-left min-w-0 p-0 h-auto font-medium"
+                  className="truncate hover:underline transition-colors text-left p-0 h-auto font-medium min-w-0"
                 >
                   {team.display_name}
                 </Button>
-                {/* 영어명 (다른 경우만) */}
-                {team.name_en && team.name_en !== team.display_name && (
-                  <span className="sm:hidden text-xs text-gray-400 ml-1.5 truncate flex-shrink-0 max-w-[120px]">
-                    {team.name_en}
-                  </span>
-                )}
-
-                {/* 드롭다운 토글 버튼 */}
-                <div className="ml-auto flex-shrink-0">
-                  <TeamMatchDropdownButton
-                    team={team}
-                    isExpanded={isExpanded}
-                    onToggle={onToggle}
-                  />
-                </div>
               </div>
 
               {/* 모바일에서 추가 정보 표시 */}
-              <div className="sm:hidden mt-1">
-                {/* 리그 | 국가 */}
-                <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center space-x-1 overflow-hidden">
-                  <span className="text-gray-700 dark:text-gray-300 flex-shrink-0 truncate max-w-24">{team.league_name_ko}</span>
-                  <span className="text-gray-400 flex-shrink-0">|</span>
-                  <span className="flex-shrink-0 truncate max-w-20">{team.country_ko ?? team.country}</span>
-                </div>
+              <div className="sm:hidden mt-0.5">
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  {team.league_name_ko} · {team.country_ko ?? team.country}
+                </span>
               </div>
+            </div>
+            {/* 드롭다운 토글 버튼 */}
+            <div className="flex-shrink-0">
+              <TeamMatchDropdownButton
+                team={team}
+                isExpanded={isExpanded}
+                onToggle={onToggle}
+              />
             </div>
           </div>
         </td>
 
         {/* 리그 */}
-        <td className="hidden sm:table-cell px-4 py-4 text-sm text-gray-900 dark:text-[#F0F0F0]">
-          <div className="truncate max-w-32" title={team.league_name_ko}>
+        <td className="hidden sm:table-cell px-4 py-4 text-sm text-gray-900 dark:text-[#F0F0F0] w-28 md:w-36">
+          <div className="truncate" title={team.league_name_ko}>
             {team.league_name_ko}
           </div>
         </td>
 
         {/* 국가 */}
-        <td className="hidden md:table-cell px-4 py-4 text-sm text-gray-900 dark:text-[#F0F0F0]">
+        <td className="hidden md:table-cell px-4 py-4 text-sm text-gray-900 dark:text-[#F0F0F0] w-24 whitespace-nowrap">
           {team.country_ko ?? team.country}
         </td>
 
         {/* 홈구장 */}
-        <td className="hidden lg:table-cell px-4 py-4 text-sm text-gray-900 dark:text-[#F0F0F0]">
-          <div className="max-w-40">
+        <td className="hidden lg:table-cell px-4 py-4 text-sm text-gray-900 dark:text-[#F0F0F0] text-right">
+          <div>
             {team.venue_name && (
               <div className="font-medium truncate" title={team.venue_name}>
                 {team.venue_name}
@@ -444,17 +430,6 @@ function TeamRowWithMatches({
               </div>
             )}
           </div>
-        </td>
-
-        {/* 코드 */}
-        <td className="hidden sm:table-cell px-2 sm:px-4 py-4 text-center w-16 sm:w-20">
-          {team.code ? (
-            <span className="font-mono text-xs bg-[#F5F5F5] dark:bg-[#262626] px-1 sm:px-2 py-0.5 sm:py-1 rounded text-gray-700 dark:text-gray-300">
-              {team.code}
-            </span>
-          ) : (
-            <span className="text-gray-400 text-xs">-</span>
-          )}
         </td>
       </tr>
       

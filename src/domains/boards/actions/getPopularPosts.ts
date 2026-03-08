@@ -39,9 +39,6 @@ export async function getBoardPopularPosts(boardId: string) {
   const supabase = await getSupabaseServer();
   const now = new Date();
 
-  // 오늘 00:00:00
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
   // 이번주 월요일 00:00:00
   const weekStart = new Date(now);
   const dayOfWeek = now.getDay();
@@ -49,32 +46,13 @@ export async function getBoardPopularPosts(boardId: string) {
   weekStart.setDate(now.getDate() - diff);
   weekStart.setHours(0, 0, 0, 0);
 
+  // 이번달 1일 00:00:00
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
   // 현재 게시판과 모든 하위 게시판 ID 가져오기 (캐시된 데이터 활용)
   const allBoardIds = await getCachedChildBoardIds(boardId);
 
-  // 오늘 BEST (좋아요 기준) - 현재 게시판 + 모든 하위 게시판
-  const { data: todayPosts, error: todayError } = await supabase
-    .from('posts')
-    .select(`
-      id,
-      title,
-      post_number,
-      likes,
-      views,
-      created_at,
-      content,
-      deal_info,
-      boards!inner(slug, name, team_id, league_id),
-      profiles!inner(id, nickname, level, exp, icon_id, public_id)
-    `)
-    .in('board_id', allBoardIds)
-    .eq('is_deleted', false)
-    .eq('is_hidden', false)
-    .gte('created_at', todayStart.toISOString())
-    .order('likes', { ascending: false })
-    .limit(4);
-
-  // 이번주 BEST - 현재 게시판 + 모든 하위 게시판
+  // 이번주 BEST (좋아요 기준) - 현재 게시판 + 모든 하위 게시판
   const { data: weekPosts, error: weekError } = await supabase
     .from('posts')
     .select(`
@@ -96,16 +74,38 @@ export async function getBoardPopularPosts(boardId: string) {
     .order('likes', { ascending: false })
     .limit(4);
 
-  if (todayError || weekError) {
-    console.error('Popular posts fetch error:', todayError || weekError);
+  // 이번달 BEST - 현재 게시판 + 모든 하위 게시판
+  const { data: monthPosts, error: monthError } = await supabase
+    .from('posts')
+    .select(`
+      id,
+      title,
+      post_number,
+      likes,
+      views,
+      created_at,
+      content,
+      deal_info,
+      boards!inner(slug, name, team_id, league_id),
+      profiles!inner(id, nickname, level, exp, icon_id, public_id)
+    `)
+    .in('board_id', allBoardIds)
+    .eq('is_deleted', false)
+    .eq('is_hidden', false)
+    .gte('created_at', monthStart.toISOString())
+    .order('likes', { ascending: false })
+    .limit(4);
+
+  if (weekError || monthError) {
+    console.error('Popular posts fetch error:', weekError || monthError);
     return {
-      todayPosts: [],
-      weekPosts: []
+      weekPosts: [],
+      monthPosts: []
     };
   }
 
   // 댓글 수 계산
-  const allPosts = [...(todayPosts || []), ...(weekPosts || [])];
+  const allPosts = [...(weekPosts || []), ...(monthPosts || [])];
   const postIds = allPosts.map(post => post.id);
 
   const commentCounts: Record<string, number> = {};
@@ -189,7 +189,7 @@ export async function getBoardPopularPosts(boardId: string) {
   };
 
   return {
-    todayPosts: formatPosts(todayPosts || []),
-    weekPosts: formatPosts(weekPosts || [])
+    weekPosts: formatPosts(weekPosts || []),
+    monthPosts: formatPosts(monthPosts || [])
   };
 }

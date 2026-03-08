@@ -108,9 +108,9 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
     if (!numId) return LEAGUE_PLACEHOLDER;
     const hasDarkMode = DARK_MODE_LEAGUE_IDS.includes(numId);
     if (isDark && hasDarkMode) {
-      return `${SUPABASE_URL}/storage/v1/object/public/leagues/${numId}-1.png`;
+      return `${SUPABASE_URL}/storage/v1/object/public/leagues/md/${numId}-1.webp`;
     }
-    return `${SUPABASE_URL}/storage/v1/object/public/leagues/${numId}.png`;
+    return `${SUPABASE_URL}/storage/v1/object/public/leagues/md/${numId}.webp`;
   };
 
   // 외부 클릭 감지 - 캘린더가 열려있을 때는 무시

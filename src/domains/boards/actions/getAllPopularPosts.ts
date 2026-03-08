@@ -41,7 +41,7 @@ export interface PopularPostsResponse {
   };
 }
 
-type TimePeriod = 'today' | 'week' | 'month' | 'all';
+type TimePeriod = 'week' | 'month' | 'all';
 
 interface GetAllPopularPostsParams {
   period?: TimePeriod;
@@ -69,10 +69,6 @@ export async function getAllPopularPosts({
     let startDate: Date;
 
     switch (period) {
-      case 'today':
-        // 오늘 00:00:00
-        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        break;
       case 'week':
         // 이번주 월요일 00:00:00
         startDate = new Date(now);

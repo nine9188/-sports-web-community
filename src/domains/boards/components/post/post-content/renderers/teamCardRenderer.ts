@@ -11,7 +11,7 @@ function normalizeTeamCardData(data: Record<string, unknown>): TeamCardData {
     id: (data.id as number) || 0,
     name: (data.name as string) || '',
     koreanName: data.koreanName as string | undefined,
-    logo: (data.logo as string) || `${SUPABASE_URL}/storage/v1/object/public/teams/${data.id}.png`,
+    logo: (data.logo as string) || `${SUPABASE_URL}/storage/v1/object/public/teams/md/${data.id}.webp`,
     league: {
       id: ((data.league as Record<string, unknown>)?.id as number) || 0,
       name: ((data.league as Record<string, unknown>)?.name as string) || '',
@@ -51,7 +51,7 @@ export function renderTeamCard(data: { teamId: string | number; teamData: Record
                   data-light-src="${leagueImages.light}"
                   data-dark-src="${leagueImages.dark}"
                   alt="${leagueDisplayName}"
-                  onerror="this.onerror=null;this.src='/placeholder.png';"
+                  onerror="this.onerror=null;this.src='/placeholder.webp';"
                 />
               </div>
             ` : ''}
@@ -67,7 +67,7 @@ export function renderTeamCard(data: { teamId: string | number; teamData: Record
               data-light-src="${teamImages.light}"
               data-dark-src="${teamImages.dark}"
               alt="${displayName}"
-              onerror="this.onerror=null;this.src='${SUPABASE_URL}/storage/v1/object/public/teams/${teamId}.png';"
+              onerror="this.onerror=null;this.src='${SUPABASE_URL}/storage/v1/object/public/teams/md/${teamId}.webp';"
             />
           </div>
           <span class="team-name">${displayName}</span>

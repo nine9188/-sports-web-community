@@ -84,36 +84,35 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
           </Button>
         </div>
 
-        {/* 테마 토글 - 고정 */}
-        <div className="p-4 border-b border-black/7 dark:border-white/10 flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">테마 설정</span>
-          <ThemeToggle />
-        </div>
-
-        {/* 검색 - 고정 */}
-        <div className="p-4 border-b border-black/5 dark:border-white/10">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400" />
-            <input
-              type="text"
-              placeholder="게시판 검색..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-black/7 dark:border-white/10 rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] transition-colors duration-200 text-sm bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] placeholder-gray-500 dark:placeholder-gray-400"
-            />
-          </div>
-        </div>
-
-        {/* 카카오 광고 - 모달 열릴 때만 렌더링 (같은 adUnit 충돌 방지) */}
-        {isOpen && (
-          <div className="flex justify-center py-2 border-b border-black/5 dark:border-white/10">
-            <KakaoAd adUnit={KAKAO.MOBILE_BANNER} adWidth={320} adHeight={100} />
-          </div>
-        )}
-
-
         {/* 스크롤 가능한 콘텐츠 영역 */}
         <div className="flex-1 overflow-y-auto">
+          {/* 테마 토글 */}
+          <div className="p-4 border-b border-black/7 dark:border-white/10 flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">테마 설정</span>
+            <ThemeToggle />
+          </div>
+
+          {/* 검색 */}
+          <div className="p-4 border-b border-black/5 dark:border-white/10">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400" />
+              <input
+                type="text"
+                placeholder="게시판 검색..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-black/7 dark:border-white/10 rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] transition-colors duration-200 text-sm bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] placeholder-gray-500 dark:placeholder-gray-400"
+              />
+            </div>
+          </div>
+
+          {/* 카카오 광고 - 모달 열릴 때만 렌더링 (같은 adUnit 충돌 방지) */}
+          {isOpen && (
+            <div className="flex justify-center py-2 border-b border-black/5 dark:border-white/10">
+              <KakaoAd adUnit={KAKAO.MOBILE_BANNER} adWidth={320} adHeight={100} />
+            </div>
+          )}
+
           {trimmedSearchTerm ? (
             <div className="pb-4">
               {filteredBoards.length > 0 ? (

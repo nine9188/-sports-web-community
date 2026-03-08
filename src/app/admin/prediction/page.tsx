@@ -257,7 +257,7 @@ export default function PredictionAdminPage() {
         }
 
         loadAutomationLogs();
-        toast.success(`${selectedGroups.length}개 리그, ${totalMatchesProcessed}경기 예측 생성 완료`);
+        toast.success(`${totalMatchesProcessed}경기 예측 게시글 생성 완료`);
         setSelectedMatches(new Set()); // 선택 초기화
       } catch (error) {
         console.error('선택 경기 예측 분석 생성 오류:', error);

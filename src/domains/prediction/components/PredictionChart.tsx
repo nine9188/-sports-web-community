@@ -159,12 +159,13 @@ function FormBadge({ result }: { result: string }) {
   );
 }
 
-// 폼 문자열을 배지로 렌더링
+// 폼 문자열을 배지로 렌더링 (왼쪽=최신, 오른쪽=과거)
 function FormDisplay({ form }: { form: string }) {
   if (!form) return null;
+  const reversed = form.split('').reverse();
   return (
     <div className="flex flex-wrap gap-0.5">
-      {form.split('').map((char, idx) => (
+      {reversed.map((char, idx) => (
         <FormBadge key={idx} result={char} />
       ))}
     </div>

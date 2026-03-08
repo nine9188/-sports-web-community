@@ -1,7 +1,7 @@
 'use server'
 
 import { getSupabaseServer } from '@/shared/lib/supabase/server'
-import type { PostSearchResult } from '../types'
+import type { PostSearchResult, CardPreview } from '../types'
 import { logUserAction } from '@/shared/actions/log-actions'
 
 interface SearchPostsParams {
@@ -117,7 +117,8 @@ export async function searchPosts({
       ...post,
       author_name: post.profiles?.nickname || '익명',
       board_name: post.boards?.name || '게시판',
-      snippet: extractContentSnippet(post.content, query)
+      snippet: extractContentSnippet(post.content, query),
+      cards: extractCardPreviews(post.content)
     }))
 
     return { posts, totalCount }
@@ -134,14 +135,21 @@ export async function searchPosts({
 function extractContentSnippet(content: unknown, query: string, maxLength = 150): string {
   try {
     let textContent = ''
-    
+
     if (typeof content === 'string') {
-      textContent = content
+      // JSON 문자열인 경우 파싱 시도
+      if (content.startsWith('{') || content.startsWith('[')) {
+        try {
+          const parsed = JSON.parse(content)
+          textContent = extractTextFromTiptap(parsed)
+        } catch {
+          textContent = content
+        }
+      } else {
+        textContent = content
+      }
     } else if (content && typeof content === 'object') {
-      textContent = JSON.stringify(content)
-        .replace(/[{}"\[\]]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim()
+      textContent = extractTextFromTiptap(content)
     }
 
     if (!textContent) {
@@ -152,7 +160,6 @@ function extractContentSnippet(content: unknown, query: string, maxLength = 150)
     textContent = textContent
       .replace(/<[^>]*>/g, '')
       .replace(/&[^;]+;/g, ' ')
-      .replace(/[<>{}"\[\]]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim()
 
@@ -181,4 +188,92 @@ function extractContentSnippet(content: unknown, query: string, maxLength = 150)
     console.error('스니펫 추출 오류:', error)
     return ''
   }
-} 
+}
+
+/**
+ * TipTap JSON에서 텍스트만 재귀 추출
+ */
+function extractTextFromTiptap(node: unknown): string {
+  if (!node || typeof node !== 'object') return ''
+  const n = node as Record<string, unknown>
+
+  // text 노드
+  if (n.type === 'text' && typeof n.text === 'string') {
+    return n.text
+  }
+
+  // 카드 노드 (matchCard, teamCard, playerCard 등)는 스킵
+  if (typeof n.type === 'string' && (n.type.includes('Card') || n.type === 'image')) {
+    return ''
+  }
+
+  // content 배열 재귀 탐색
+  if (Array.isArray(n.content)) {
+    return n.content
+      .map((child: unknown) => extractTextFromTiptap(child))
+      .filter(Boolean)
+      .join(' ')
+  }
+
+  return ''
+}
+
+/**
+ * TipTap JSON에서 카드 프리뷰 데이터 추출 (최대 2개)
+ */
+function extractCardPreviews(content: unknown): CardPreview[] {
+  const cards: CardPreview[] = []
+
+  function walk(node: unknown) {
+    if (!node || typeof node !== 'object') return
+    const n = node as Record<string, unknown>
+    const attrs = n.attrs as Record<string, unknown> | undefined
+
+    if (n.type === 'matchCard' && attrs) {
+      const matchData = attrs.matchData as Record<string, unknown> | undefined
+      const teams = matchData?.teams as Record<string, Record<string, unknown>> | undefined
+      const goals = matchData?.goals as Record<string, unknown> | undefined
+      const league = matchData?.league as Record<string, unknown> | undefined
+      if (teams) {
+        cards.push({
+          type: 'match',
+          homeTeam: (teams.home?.name as string) || '',
+          awayTeam: (teams.away?.name as string) || '',
+          homeScore: goals?.home as number | string ?? '-',
+          awayScore: goals?.away as number | string ?? '-',
+          leagueName: (league?.name as string) || '',
+        })
+      }
+    } else if (n.type === 'teamCard' && attrs) {
+      const teamData = attrs.teamData as Record<string, unknown> | undefined
+      if (teamData) {
+        cards.push({
+          type: 'team',
+          teamName: (teamData.koreanName as string) || (teamData.name as string) || '',
+          teamLogo: (teamData.logo as string) || '',
+        })
+      }
+    } else if (n.type === 'playerCard' && attrs) {
+      const playerData = attrs.playerData as Record<string, unknown> | undefined
+      if (playerData) {
+        cards.push({
+          type: 'player',
+          playerName: (playerData.koreanName as string) || (playerData.name as string) || '',
+          playerPhoto: (playerData.photo as string) || '',
+        })
+      }
+    }
+
+    if (Array.isArray(n.content)) {
+      for (const child of n.content) walk(child)
+    }
+  }
+
+  if (content && typeof content === 'object') {
+    walk(content)
+  } else if (typeof content === 'string' && content.startsWith('{')) {
+    try { walk(JSON.parse(content)) } catch { /* ignore */ }
+  }
+
+  return cards
+}

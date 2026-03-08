@@ -55,13 +55,13 @@ export async function searchEntities(
               id: team.team_id,
               name: team.name,
               koreanName: team.name_ko || team.display_name,
-              imageUrl: team.logo_url || `https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/${team.team_id}.png`,
+              imageUrl: team.logo_url || `https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/md/${team.team_id}.webp`,
               subtitle: team.league_name_ko || team.league_name,
               cardData: {
                 id: team.team_id,
                 name: team.name,
                 koreanName: team.name_ko || team.display_name,
-                logo: team.logo_url || `https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/${team.team_id}.png`,
+                logo: team.logo_url || `https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/md/${team.team_id}.webp`,
                 league: {
                   id: team.league_id,
                   name: team.league_name,
@@ -107,7 +107,7 @@ export async function searchEntities(
                   id: player.team_id,
                   name: player.team_name,
                   koreanName: player.team_name_ko,
-                  logo: player.team_logo_url || `https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/${player.team_id}.png`
+                  logo: player.team_logo_url || `https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/md/${player.team_id}.webp`
                 },
                 position: player.position,
                 number: player.number,
@@ -174,7 +174,7 @@ export async function getPopularEntities(limit: number = 8): Promise<EntitySearc
         name: 'Son Heung-Min',
         koreanName: '손흥민',
         photo: playerPhotos[306] || PLACEHOLDER_URLS.player_photo,
-        team: { id: 47, name: 'Tottenham', koreanName: '토트넘', logo: 'https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/47.png' },
+        team: { id: 47, name: 'Tottenham', koreanName: '토트넘', logo: 'https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/md/47.webp' },
         position: 'Attacker',
         number: 7
       } as PlayerCardData
@@ -191,7 +191,7 @@ export async function getPopularEntities(limit: number = 8): Promise<EntitySearc
         name: 'Kim Min-Jae',
         koreanName: '김민재',
         photo: playerPhotos[1485] || PLACEHOLDER_URLS.player_photo,
-        team: { id: 157, name: 'Bayern Munich', koreanName: '바이에른 뮌헨', logo: 'https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/157.png' },
+        team: { id: 157, name: 'Bayern Munich', koreanName: '바이에른 뮌헨', logo: 'https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/md/157.webp' },
         position: 'Defender',
         number: 3
       } as PlayerCardData
@@ -201,13 +201,13 @@ export async function getPopularEntities(limit: number = 8): Promise<EntitySearc
       id: 47,
       name: 'Tottenham',
       koreanName: '토트넘',
-      imageUrl: 'https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/47.png',
+      imageUrl: 'https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/md/47.webp',
       subtitle: '프리미어리그',
       cardData: {
         id: 47,
         name: 'Tottenham',
         koreanName: '토트넘',
-        logo: 'https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/47.png',
+        logo: 'https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/md/47.webp',
         league: { id: 39, name: 'Premier League', koreanName: '프리미어리그' },
         country: 'England'
       } as TeamCardData
@@ -217,13 +217,13 @@ export async function getPopularEntities(limit: number = 8): Promise<EntitySearc
       id: 541,
       name: 'Real Madrid',
       koreanName: '레알 마드리드',
-      imageUrl: 'https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/541.png',
+      imageUrl: 'https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/md/541.webp',
       subtitle: '라리가',
       cardData: {
         id: 541,
         name: 'Real Madrid',
         koreanName: '레알 마드리드',
-        logo: 'https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/541.png',
+        logo: 'https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/md/541.webp',
         league: { id: 140, name: 'La Liga', koreanName: '라리가' },
         country: 'Spain'
       } as TeamCardData

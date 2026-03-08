@@ -370,7 +370,8 @@ function generateChartData(
   }
 }
 
-export async function predictMatch(fixtureId: number, forceRefresh: boolean = false) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function predictMatch(fixtureId: number, forceRefresh: boolean = false, predictionApiData?: any) {
   try {
     // 캐시된 예측 먼저 확인 (강제 새로고침이 아닌 경우)
     if (!forceRefresh) {
@@ -414,327 +415,323 @@ export async function predictMatch(fixtureId: number, forceRefresh: boolean = fa
       }
     }
 
-    // 경기 정보 가져오기
-    const fixtureRes = await fetchFromFootballApi('fixtures', { id: fixtureId })
-    const match = fixtureRes?.response?.[0]
-    if (!match) throw new Error('경기 정보 없음')
+    // predictionApiData가 있으면 /predictions 엔드포인트 데이터 사용 (차트와 동일한 데이터)
+    // 없으면 기존 방식으로 개별 API 호출
+    let home: any, away: any, matchDate: string, leagueId: number, season: number
+    let homeStats: any, awayStats: any, homeForm: any, awayForm: any
+    let homeInjuries: any, awayInjuries: any, h2h: any, odds: any
+    let prompt: string
 
-    const home = match.teams.home
-    const away = match.teams.away
-    const matchDate = match.fixture.date.split('T')[0] // YYYY-MM-DD
-    const leagueId = match.league.id
-    const season = getCurrentSeason(leagueId, matchDate)
+    if (predictionApiData) {
+      // /predictions 엔드포인트 데이터 사용 (차트와 동일)
+      const pd = predictionApiData
+      home = pd.teams.home
+      away = pd.teams.away
+      homeStats = pd.teams.home.league || null
+      awayStats = pd.teams.away.league || null
+      homeInjuries = []
+      awayInjuries = []
 
-    // 병렬로 데이터 가져오기
-    const [homeStats, awayStats, homeForm, awayForm, homeInjuries, awayInjuries, h2h, odds] = await Promise.all([
-      getTeamStats(home.id, leagueId, season),
-      getTeamStats(away.id, leagueId, season),
-      getTeamForm(home.id, leagueId, season),
-      getTeamForm(away.id, leagueId, season),
-      getTeamInjuries(home.id, leagueId, season),
-      getTeamInjuries(away.id, leagueId, season),
-      fetchFromFootballApi('fixtures/headtohead', { h2h: `${home.id}-${away.id}` }),
-      fetchFromFootballApi('odds', { fixture: fixtureId })
-    ])
+      // 경기 날짜는 별도로 가져와야 함
+      const fixtureRes = await fetchFromFootballApi('fixtures', { id: fixtureId })
+      const match = fixtureRes?.response?.[0]
+      matchDate = match?.fixture?.date?.split('T')[0] || new Date().toISOString().split('T')[0]
+      leagueId = match?.league?.id || 0
+      season = getCurrentSeason(leagueId, matchDate)
 
-    // 실제 사용된 리그 정보 추적
-    const homeStatsLeague = homeStats?.league?.name || '정보 없음'
-    const awayStatsLeague = awayStats?.league?.name || '정보 없음'
+      const hf = homeStats?.fixtures
+      const af = awayStats?.fixtures
+      const hg = homeStats?.goals
+      const ag = awayStats?.goals
 
-    const prompt = `
-당신은 데이터 기반 축구 분석 전문가입니다. 아래의 구체적인 통계 수치를 바탕으로 정확한 승부 예측을 해주세요.
+      // H2H 데이터 + 전적 미리 계산
+      const h2hMatches = pd.h2h?.slice(0, 5) || []
+      let h2hHomeWins = 0, h2hAwayWins = 0, h2hDraws = 0
+      h2hMatches.forEach((m: any) => {
+        if (m.teams.home.winner === true) {
+          // 홈팀이 이긴 경우 - 우리 홈팀인지 확인
+          if (m.teams.home.id === home.id) h2hHomeWins++
+          else h2hAwayWins++
+        } else if (m.teams.away.winner === true) {
+          if (m.teams.away.id === home.id) h2hHomeWins++
+          else h2hAwayWins++
+        } else {
+          h2hDraws++
+        }
+      })
+      const h2hList = h2hMatches.map((m: any) =>
+        `${m.teams.home.name} ${m.goals.home ?? '-'} - ${m.goals.away ?? '-'} ${m.teams.away.name}`
+      ).join('\n') || '맞대결 데이터 없음'
 
-🏟️ 경기 정보
-- 경기: ${home.name} vs ${away.name}
+      prompt = `
+아래 제공된 통계 데이터만을 근거로 경기 분석글을 작성하세요.
+
+[경기 정보]
+- 홈팀: ${home.name}
+- 어웨이팀: ${away.name}
+- 날짜: ${matchDate}
+- 승률 예측: 홈 ${pd.predictions.percent.home} / 무승부 ${pd.predictions.percent.draw} / 원정 ${pd.predictions.percent.away}
+
+[홈팀 최근 5경기]
+- 폼: ${home.last_5?.form || '?'}% | 공격: ${home.last_5?.att || '?'}% | 수비: ${home.last_5?.def || '?'}%
+- 득점: ${home.last_5?.goals?.for?.total || '?'}골 (평균 ${home.last_5?.goals?.for?.average || '?'}) | 실점: ${home.last_5?.goals?.against?.total || '?'}골 (평균 ${home.last_5?.goals?.against?.average || '?'})
+
+[홈팀 시즌 성적]
+- 전체: ${hf?.played?.total ?? '?'}경기 ${hf?.wins?.total ?? '?'}승 ${hf?.draws?.total ?? '?'}무 ${hf?.loses?.total ?? '?'}패
+- 홈: ${hf?.played?.home ?? '?'}경기 ${hf?.wins?.home ?? '?'}승 ${hf?.draws?.home ?? '?'}무 ${hf?.loses?.home ?? '?'}패
+- 득점: 홈${hg?.for?.total?.home ?? '?'} 원정${hg?.for?.total?.away ?? '?'} 합계${hg?.for?.total?.total ?? '?'} (평균 ${hg?.for?.average?.total ?? '?'})
+- 실점: 홈${hg?.against?.total?.home ?? '?'} 원정${hg?.against?.total?.away ?? '?'} 합계${hg?.against?.total?.total ?? '?'} (평균 ${hg?.against?.average?.total ?? '?'})
+
+[어웨이팀 최근 5경기]
+- 폼: ${away.last_5?.form || '?'}% | 공격: ${away.last_5?.att || '?'}% | 수비: ${away.last_5?.def || '?'}%
+- 득점: ${away.last_5?.goals?.for?.total || '?'}골 (평균 ${away.last_5?.goals?.for?.average || '?'}) | 실점: ${away.last_5?.goals?.against?.total || '?'}골 (평균 ${away.last_5?.goals?.against?.average || '?'})
+
+[어웨이팀 시즌 성적]
+- 전체: ${af?.played?.total ?? '?'}경기 ${af?.wins?.total ?? '?'}승 ${af?.draws?.total ?? '?'}무 ${af?.loses?.total ?? '?'}패
+- 원정: ${af?.played?.away ?? '?'}경기 ${af?.wins?.away ?? '?'}승 ${af?.draws?.away ?? '?'}무 ${af?.loses?.away ?? '?'}패
+- 득점: 홈${ag?.for?.total?.home ?? '?'} 원정${ag?.for?.total?.away ?? '?'} 합계${ag?.for?.total?.total ?? '?'} (평균 ${ag?.for?.average?.total ?? '?'})
+- 실점: 홈${ag?.against?.total?.home ?? '?'} 원정${ag?.against?.total?.away ?? '?'} 합계${ag?.against?.total?.total ?? '?'} (평균 ${ag?.against?.average?.total ?? '?'})
+
+[팀 비교 지표]
+- 경기력: 홈 ${pd.comparison.form.home} vs 원정 ${pd.comparison.form.away}
+- 공격력: 홈 ${pd.comparison.att.home} vs 원정 ${pd.comparison.att.away}
+- 수비력: 홈 ${pd.comparison.def.home} vs 원정 ${pd.comparison.def.away}
+- 상대전적: 홈 ${pd.comparison.h2h.home} vs 원정 ${pd.comparison.h2h.away}
+- 종합: 홈 ${pd.comparison.total.home} vs 원정 ${pd.comparison.total.away}
+
+[최근 맞대결 (${h2hMatches.length}경기)]
+- ${home.name} 기준 전적: ${h2hHomeWins}승 ${h2hDraws}무 ${h2hAwayWins}패
+${h2hList}
+`
+      // predictionApiData 사용 시 h2h, odds 변수 설정
+      h2h = { response: pd.h2h }
+      odds = null
+      homeForm = []
+      awayForm = []
+
+    } else {
+      // 기존 방식: 개별 API 호출
+      const fixtureRes = await fetchFromFootballApi('fixtures', { id: fixtureId })
+      const match = fixtureRes?.response?.[0]
+      if (!match) throw new Error('경기 정보 없음')
+
+      home = match.teams.home
+      away = match.teams.away
+      matchDate = match.fixture.date.split('T')[0]
+      leagueId = match.league.id
+      season = getCurrentSeason(leagueId, matchDate)
+
+      const results = await Promise.all([
+        getTeamStats(home.id, leagueId, season),
+        getTeamStats(away.id, leagueId, season),
+        getTeamForm(home.id, leagueId, season),
+        getTeamForm(away.id, leagueId, season),
+        getTeamInjuries(home.id, leagueId, season),
+        getTeamInjuries(away.id, leagueId, season),
+        fetchFromFootballApi('fixtures/headtohead', { h2h: `${home.id}-${away.id}` }),
+        fetchFromFootballApi('odds', { fixture: fixtureId })
+      ])
+      homeStats = results[0]
+      awayStats = results[1]
+      homeForm = results[2]
+      awayForm = results[3]
+      homeInjuries = results[4]
+      awayInjuries = results[5]
+      h2h = results[6]
+      odds = results[7]
+
+      const homeFormStr = homeForm?.slice(0, 5).map((fixture: any) => {
+        const hg = fixture.goals?.home ?? 0
+        const ag = fixture.goals?.away ?? 0
+        const isHome = fixture.teams?.home?.id === home.id
+        if (isHome) return hg > ag ? 'W' : hg < ag ? 'L' : 'D'
+        else return ag > hg ? 'W' : ag < hg ? 'L' : 'D'
+      }).join('') || 'N/A'
+
+      const awayFormStr = awayForm?.slice(0, 5).map((fixture: any) => {
+        const hg = fixture.goals?.home ?? 0
+        const ag = fixture.goals?.away ?? 0
+        const isHome = fixture.teams?.home?.id === away.id
+        if (isHome) return hg > ag ? 'W' : hg < ag ? 'L' : 'D'
+        else return ag > hg ? 'W' : ag < hg ? 'L' : 'D'
+      }).join('') || 'N/A'
+
+      const summarizeInjuries = (injuries: any[], teamName: string) => {
+        if (!injuries || injuries.length === 0) return `${teamName}: 부상자 없음`
+        const groups: Record<string, string[]> = { 골키퍼: [], 수비수: [], 미드필더: [], 공격수: [], 기타: [] }
+        injuries.forEach((inj: any) => {
+          const pos = inj.player?.position || ''
+          const name = inj.player?.name || '알 수 없음'
+          const reason = inj.player?.reason || ''
+          const entry = reason ? `${name}(${reason})` : name
+          if (pos.includes('Goalkeeper')) groups['골키퍼'].push(entry)
+          else if (pos.includes('Defend') || pos.includes('Defence')) groups['수비수'].push(entry)
+          else if (pos.includes('Midfield')) groups['미드필더'].push(entry)
+          else if (pos.includes('Attack') || pos.includes('Forward')) groups['공격수'].push(entry)
+          else groups['기타'].push(entry)
+        })
+        const parts = Object.entries(groups).filter(([, v]) => v.length > 0).map(([k, v]) => `${k}: ${v.join(', ')}`)
+        return `${teamName} (${injuries.length}명 결장): ${parts.join(' / ')}`
+      }
+
+      prompt = `
+아래 제공된 통계 데이터만을 근거로 경기 분석글을 작성하세요.
+
+[경기 정보]
+- 홈팀: ${home.name}
+- 어웨이팀: ${away.name}
 - 날짜: ${matchDate}
 - 대회: ${match.league.name}
-- 통계 출처: ${homeStatsLeague !== '정보 없음' ? `홈팀 통계 출처: ${homeStatsLeague}` : '홈팀 통계 없음'} / ${awayStatsLeague !== '정보 없음' ? `어웨이팀 통계 출처: ${awayStatsLeague}` : '어웨이팀 통계 없음'}
 
-📊 핵심 통계 비교 (2024시즌 기준)
+[홈팀 시즌 성적]
+- 홈경기: ${homeStats?.fixtures?.played?.home ?? '?'}경기 ${homeStats?.fixtures?.wins?.home ?? '?'}승 ${homeStats?.fixtures?.draws?.home ?? '?'}무 ${homeStats?.fixtures?.loses?.home ?? '?'}패
+- 홈 득실: ${homeStats?.goals?.for?.total?.home ?? '?'}득점 ${homeStats?.goals?.against?.total?.home ?? '?'}실점
+- 전체: ${homeStats?.fixtures?.played?.total ?? '?'}경기 ${homeStats?.fixtures?.wins?.total ?? '?'}승 ${homeStats?.fixtures?.draws?.total ?? '?'}무 ${homeStats?.fixtures?.loses?.total ?? '?'}패
+- 최근 5경기 폼: ${homeFormStr}
 
-홈팀 ${home.name} (홈경기 기준):
-✅ 홈경기 성적: ${homeStats?.fixtures?.played?.home ?? 'N/A'}경기 ${homeStats?.fixtures?.wins?.home ?? 'N/A'}승 ${homeStats?.fixtures?.draws?.home ?? 'N/A'}무 ${homeStats?.fixtures?.loses?.home ?? 'N/A'}패
-✅ 홈경기 승률: ${homeStats?.fixtures?.wins?.home !== 'N/A' && homeStats?.fixtures?.played?.home !== 'N/A' ? ((homeStats?.fixtures?.wins?.home as number) / (homeStats?.fixtures?.played?.home as number) * 100).toFixed(1) : 'N/A'}%
-✅ 홈경기 득실: ${homeStats?.goals?.for?.total?.home ?? 'N/A'}득점 ${homeStats?.goals?.against?.total?.home ?? 'N/A'}실점 (득실차: ${typeof homeStats?.goals?.for?.total?.home === 'number' && typeof homeStats?.goals?.against?.total?.home === 'number' ? (homeStats?.goals?.for?.total?.home as number) - (homeStats?.goals?.against?.total?.home as number) : 'N/A'})
-✅ 전체 시즌 승률: ${homeStats?.fixtures?.wins?.total !== 'N/A' && homeStats?.fixtures?.played?.total !== 'N/A' ? ((homeStats?.fixtures?.wins?.total as number) / (homeStats?.fixtures?.played?.total as number) * 100).toFixed(1) : 'N/A'}% (${homeStats?.fixtures?.played?.total ?? 'N/A'}경기 중 ${homeStats?.fixtures?.wins?.total ?? 'N/A'}승)
-✅ 최근 5경기 폼: ${homeForm?.slice(0, 5).map((fixture: any) => {
-  const homeGoals = fixture.goals?.home ?? 0
-  const awayGoals = fixture.goals?.away ?? 0
-  const homeTeamId = fixture.teams?.home?.id
-  const isHome = homeTeamId === home.id
-  
-  if (isHome) {
-    if (homeGoals > awayGoals) return 'W'
-    if (homeGoals < awayGoals) return 'L'
-    return 'D'
-  } else {
-    if (awayGoals > homeGoals) return 'W'
-    if (awayGoals < homeGoals) return 'L'
-    return 'D'
-  }
-}).join('') || 'N/A'}
+[어웨이팀 시즌 성적]
+- 원정경기: ${awayStats?.fixtures?.played?.away ?? '?'}경기 ${awayStats?.fixtures?.wins?.away ?? '?'}승 ${awayStats?.fixtures?.draws?.away ?? '?'}무 ${awayStats?.fixtures?.loses?.away ?? '?'}패
+- 원정 득실: ${awayStats?.goals?.for?.total?.away ?? '?'}득점 ${awayStats?.goals?.against?.total?.away ?? '?'}실점
+- 전체: ${awayStats?.fixtures?.played?.total ?? '?'}경기 ${awayStats?.fixtures?.wins?.total ?? '?'}승 ${awayStats?.fixtures?.draws?.total ?? '?'}무 ${awayStats?.fixtures?.loses?.total ?? '?'}패
+- 최근 5경기 폼: ${awayFormStr}
 
-어웨이팀 ${away.name} (원정경기 기준):
-⚠️ 원정경기 성적: ${awayStats?.fixtures?.played?.away ?? 'N/A'}경기 ${awayStats?.fixtures?.wins?.away ?? 'N/A'}승 ${awayStats?.fixtures?.draws?.away ?? 'N/A'}무 ${awayStats?.fixtures?.loses?.away ?? 'N/A'}패  
-⚠️ 원정경기 승률: ${awayStats?.fixtures?.wins?.away !== 'N/A' && awayStats?.fixtures?.played?.away !== 'N/A' ? ((awayStats?.fixtures?.wins?.away as number) / (awayStats?.fixtures?.played?.away as number) * 100).toFixed(1) : 'N/A'}%
-⚠️ 원정경기 득실: ${awayStats?.goals?.for?.total?.away ?? 'N/A'}득점 ${awayStats?.goals?.against?.total?.away ?? 'N/A'}실점 (득실차: ${typeof awayStats?.goals?.for?.total?.away === 'number' && typeof awayStats?.goals?.against?.total?.away === 'number' ? (awayStats?.goals?.for?.total?.away as number) - (awayStats?.goals?.against?.total?.away as number) : 'N/A'})
-⚠️ 전체 시즌 승률: ${awayStats?.fixtures?.wins?.total !== 'N/A' && awayStats?.fixtures?.played?.total !== 'N/A' ? ((awayStats?.fixtures?.wins?.total as number) / (awayStats?.fixtures?.played?.total as number) * 100).toFixed(1) : 'N/A'}% (${awayStats?.fixtures?.played?.total ?? 'N/A'}경기 중 ${awayStats?.fixtures?.wins?.total ?? 'N/A'}승)
-⚠️ 최근 5경기 폼: ${awayForm?.slice(0, 5).map((fixture: any) => {
-  const homeGoals = fixture.goals?.home ?? 0
-  const awayGoals = fixture.goals?.away ?? 0
-  const homeTeamId = fixture.teams?.home?.id
-  const isHome = homeTeamId === away.id
-  
-  if (isHome) {
-    if (homeGoals > awayGoals) return 'W'
-    if (homeGoals < awayGoals) return 'L'
-    return 'D'
-  } else {
-    if (awayGoals > homeGoals) return 'W'
-    if (awayGoals < homeGoals) return 'L'
-    return 'D'
-  }
-}).join('') || 'N/A'}
+[최근 맞대결 (최대 5경기)]
+${h2h?.response?.slice(0, 5)?.map((h: any) => `${h.teams.home.name} ${h.goals.home ?? '-'} - ${h.goals.away ?? '-'} ${h.teams.away.name}`).join('\n') || '맞대결 데이터 없음'}
 
-🏆 맞대결 전적 (최근 5경기):
-${h2h?.response?.slice(0, 5)?.map((h: any) => `• ${h.teams.home.name} ${h.goals.home ?? '-'} - ${h.goals.away ?? '-'} ${h.teams.away.name}`)
-?.join('\n') || '최근 맞대결 데이터 없음'}
+[부상자 현황]
+${summarizeInjuries(homeInjuries, home.name)}
+${summarizeInjuries(awayInjuries, away.name)}
 
-🚑 부상자 현황:
-${(() => {
-  // 홈팀 부상자 포지션별 분류
-  const homeInjurySummary = homeInjuries?.reduce((acc: any, injury: any) => {
-    const position = injury.player?.position || '알 수 없음'
-    const playerName = injury.player?.name || '알 수 없음'
-    const reason = injury.player?.reason || '정보 없음'
-    
-    if (position.includes('Defender') || position.includes('Defence')) {
-      acc.defenders.push(`${playerName}(${reason})`)
-    } else if (position.includes('Midfielder') || position.includes('Midfield')) {
-      acc.midfielders.push(`${playerName}(${reason})`)
-    } else if (position.includes('Attacker') || position.includes('Forward')) {
-      acc.attackers.push(`${playerName}(${reason})`)
-    } else if (position.includes('Goalkeeper')) {
-      acc.goalkeepers.push(`${playerName}(${reason})`)
-    } else {
-      acc.others.push(`${playerName}(${reason})`)
-    }
-    return acc
-  }, { defenders: [], midfielders: [], attackers: [], goalkeepers: [], others: [] }) || { defenders: [], midfielders: [], attackers: [], goalkeepers: [], others: [] }
-
-  // 어웨이팀 부상자 포지션별 분류
-  const awayInjurySummary = awayInjuries?.reduce((acc: any, injury: any) => {
-    const position = injury.player?.position || '알 수 없음'
-    const playerName = injury.player?.name || '알 수 없음'
-    const reason = injury.player?.reason || '정보 없음'
-    
-    if (position.includes('Defender') || position.includes('Defence')) {
-      acc.defenders.push(`${playerName}(${reason})`)
-    } else if (position.includes('Midfielder') || position.includes('Midfield')) {
-      acc.midfielders.push(`${playerName}(${reason})`)
-    } else if (position.includes('Attacker') || position.includes('Forward')) {
-      acc.attackers.push(`${playerName}(${reason})`)
-    } else if (position.includes('Goalkeeper')) {
-      acc.goalkeepers.push(`${playerName}(${reason})`)
-    } else {
-      acc.others.push(`${playerName}(${reason})`)
-    }
-    return acc
-  }, { defenders: [], midfielders: [], attackers: [], goalkeepers: [], others: [] }) || { defenders: [], midfielders: [], attackers: [], goalkeepers: [], others: [] }
-
-  let result = `홈팀 ${home.name}: `
-  if (homeInjuries?.length > 0) {
-    const positionCounts = []
-    if (homeInjurySummary.goalkeepers.length > 0) positionCounts.push(`골키퍼 ${homeInjurySummary.goalkeepers.length}명`)
-    if (homeInjurySummary.defenders.length > 0) positionCounts.push(`수비수 ${homeInjurySummary.defenders.length}명`)
-    if (homeInjurySummary.midfielders.length > 0) positionCounts.push(`미드필더 ${homeInjurySummary.midfielders.length}명`)
-    if (homeInjurySummary.attackers.length > 0) positionCounts.push(`공격수 ${homeInjurySummary.attackers.length}명`)
-    if (homeInjurySummary.others.length > 0) positionCounts.push(`기타 ${homeInjurySummary.others.length}명`)
-    
-    result += positionCounts.length > 0 ? `${positionCounts.join(', ')} 결장 예상` : '부상자 없음'
-  } else {
-    result += '부상자 없음'
-  }
-
-  result += `\n어웨이팀 ${away.name}: `
-  if (awayInjuries?.length > 0) {
-    const positionCounts = []
-    if (awayInjurySummary.goalkeepers.length > 0) positionCounts.push(`골키퍼 ${awayInjurySummary.goalkeepers.length}명`)
-    if (awayInjurySummary.defenders.length > 0) positionCounts.push(`수비수 ${awayInjurySummary.defenders.length}명`)
-    if (awayInjurySummary.midfielders.length > 0) positionCounts.push(`미드필더 ${awayInjurySummary.midfielders.length}명`)
-    if (awayInjurySummary.attackers.length > 0) positionCounts.push(`공격수 ${awayInjurySummary.attackers.length}명`)
-    if (awayInjurySummary.others.length > 0) positionCounts.push(`기타 ${awayInjurySummary.others.length}명`)
-    
-    result += positionCounts.length > 0 ? `${positionCounts.join(', ')} 결장 예상` : '부상자 없음'
-  } else {
-    result += '부상자 없음'
-  }
-
-  return result
-})()}
-
-💰 배당률 분석:
-${odds?.response?.[0]?.bookmakers?.[0]?.bets
-?.find((b: any) => b.name === 'Match Winner')?.values
-?.map((v: any) => `- ${v.value}: 배당률 ${v.odd}`)
-?.join('\n') || '배당률 정보 없음'}
-
-🎯 이번 경기를 어떻게 보십니까?
-
-위 데이터를 바탕으로 다음과 같은 스타일의 자연스러운 축구 칼럼을 작성해주세요:
-
-**결과 예측:**
-- ${home.name} 승리: ??%
-- 무승부: ??%  
-- ${away.name} 승리: ??%
-- 예상 스코어: ?-?
-
-**경기 전망:**
-홈팀 ${home.name}은 홈에서 ${homeStats?.fixtures?.wins?.home !== 'N/A' && homeStats?.fixtures?.played?.home !== 'N/A' ? ((homeStats?.fixtures?.wins?.home as number) / (homeStats?.fixtures?.played?.home as number) * 100).toFixed(1) : 'N/A'}%의 승률을 기록하고 있다. 반면 원정팀 ${away.name}은 어웨이에서 ${awayStats?.fixtures?.wins?.away !== 'N/A' && awayStats?.fixtures?.played?.away !== 'N/A' ? ((awayStats?.fixtures?.wins?.away as number) / (awayStats?.fixtures?.played?.away as number) * 100).toFixed(1) : 'N/A'}%의 승률을 보여주고 있어 홈 어드밴티지가 중요한 변수가 될 것으로 보인다.
-
-최근 폼을 살펴보면, ${home.name}은 ${homeForm?.slice(0, 5).map((fixture: any) => {
-  const homeGoals = fixture.goals?.home ?? 0
-  const awayGoals = fixture.goals?.away ?? 0
-  const homeTeamId = fixture.teams?.home?.id
-  const isHome = homeTeamId === home.id
-  
-  if (isHome) {
-    if (homeGoals > awayGoals) return 'W'
-    if (homeGoals < awayGoals) return 'L'
-    return 'D'
-  } else {
-    if (awayGoals > homeGoals) return 'W'
-    if (awayGoals < homeGoals) return 'L'
-    return 'D'
-  }
-}).join('') || 'N/A'}의 흐름을 타고 있고, ${away.name}은 ${awayForm?.slice(0, 5).map((fixture: any) => {
-  const homeGoals = fixture.goals?.home ?? 0
-  const awayGoals = fixture.goals?.away ?? 0
-  const homeTeamId = fixture.teams?.home?.id
-  const isHome = homeTeamId === away.id
-  
-  if (isHome) {
-    if (homeGoals > awayGoals) return 'W'
-    if (homeGoals < awayGoals) return 'L'
-    return 'D'
-  } else {
-    if (awayGoals > homeGoals) return 'W'
-    if (awayGoals < homeGoals) return 'L'
-    return 'D'
-  }
-}).join('') || 'N/A'}의 컨디션을 보이고 있다.
-
-부상자 상황을 보면 [부상자 영향 분석을 자연스럽게 서술], 이는 경기 결과에 상당한 영향을 미칠 것으로 예상된다.
-
-**관전 포인트:**
-[이번 경기에서 주목해야 할 선수, 전술, 상황 등을 자연스럽게 서술]
-
-이런 식으로 딱딱한 분석보다는 축구 전문가가 쓴 칼럼처럼 자연스럽고 흥미롭게 작성해주세요. 통계는 정확히 활용하되, 표현은 부드럽고 스토리텔링이 있게 해주세요. 축구 팬들이 "누가 이길까?" 하는 순수한 궁금증을 해결해주는 분석으로 작성해주세요.
-
-**중요한 문단 띄어쓰기 지침:**
-1. **결과 예측:** 섹션 앞에는 반드시 빈 줄을 넣어주세요
-2. 예상 스코어 뒤에는 반드시 빈 줄을 넣어주세요  
-3. "이번 경기", "팬 여러분", "축구는", "관심" 등으로 시작하는 새로운 문단 앞에는 빈 줄을 넣어주세요
-4. 각 주요 섹션(경기 전망, 관전 포인트 등) 사이에는 적절한 빈 줄을 넣어 가독성을 높여주세요
-
-**절대 금지사항:**
-- 배팅, 베팅, 도박, 투자 등의 표현은 절대 사용하지 마세요
-- 배당률 정보를 활용한 투자 권유는 하지 마세요
-- 순수하게 축구 경기 결과 예측과 관전 재미에만 집중해주세요
+[배당률]
+${odds?.response?.[0]?.bookmakers?.[0]?.bets?.find((b: any) => b.name === 'Match Winner')?.values?.map((v: any) => `${v.value}: ${v.odd}`).join(' / ') || '배당률 정보 없음'}
 `
+    }
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4.1-nano-2025-04-14',
       messages: [
-        { role: 'system', content: '당신은 20년 경력의 축구 전문 기자입니다. 데이터를 바탕으로 하되 딱딱하지 않고 흥미로운 칼럼을 작성합니다. 통계 수치는 정확히 활용하되, 마치 경험 많은 축구 해설가가 이야기하듯 자연스럽고 재미있게 표현해주세요. 한국어로 작성하며, AI 티가 나지 않게 인간적인 어조를 사용해주세요. 특히 문단 띄어쓰기를 잘 해서 읽기 쉽게 작성해주세요. 중요: 배팅이나 도박 관련 내용은 절대 포함하지 마세요. 순수하게 축구 팬들의 "누가 이길까?" 하는 궁금증을 해결하는 분석에만 집중해주세요.' },
+        { role: 'system', content: `당신은 축구 데이터 분석가입니다. 아래 규칙을 반드시 지키세요:
+
+1. 제공된 데이터에 있는 수치만 사용하세요. 데이터에 없는 숫자, 확률, 스코어를 절대 만들어내지 마세요.
+2. 팀 이름은 반드시 한국에서 통용되는 한글 이름으로 쓰세요 (예: Arsenal→아스널, Liverpool→리버풀, Manchester City→맨체스터 시티, Chelsea→첼시, Tottenham→토트넘, Manchester United→맨체스터 유나이티드, Barcelona→바르셀로나, Real Madrid→레알 마드리드, Bayern Munich→바이에른 뮌헨, PSG→파리 생제르맹, Juventus→유벤투스, Inter→인테르, AC Milan→AC밀란, Napoli→나폴리, Borussia Dortmund→도르트문트, Union Berlin→우니온 베를린, Werder Bremen→베르더 브레멘, Bayer Leverkusen→레버쿠젠, RB Leipzig→라이프치히 등). 영어 팀명을 그대로 쓰지 마세요.
+3. 리그 이름도 한글로 쓰세요 (Premier League→프리미어리그, La Liga→라리가, Bundesliga→분데스리가, Serie A→세리에A, Ligue 1→리그앙).
+4. 선수 이름은 한국에서 통용되는 표기가 있으면 한글로, 없으면 영어 그대로 쓰세요.
+5. 다음 표현을 절대 사용하지 마세요: "~할 것으로 보입니다", "~예상됩니다", "~될 것입니다", "~노력할 것입니다", "~만회하려 할 것입니다". 미래 예측이나 추측은 금지입니다. 오직 과거 데이터 팩트만 서술하세요.
+6. 데이터에 없는 수치를 절대 생성하지 마세요. 맞대결 전적을 계산할 때 제공된 스코어를 하나하나 직접 세어서 정확히 계산하세요.
+7. 배팅, 베팅, 도박, 투자 관련 표현은 절대 금지입니다.
+8. 반드시 존댓말(~습니다, ~됩니다, ~있습니다)을 사용하세요. 반말(~있다, ~보인다, ~했다) 절대 금지.
+9. 시즌 폼 원본 문자열(WLLWDLWLDD...)을 그대로 쓰지 마세요. "최근 5경기 중 2승 1무 2패" 같은 요약으로 쓰세요.
+10. 한 문장이 너무 길지 않게, 2~3문장마다 줄바꿈하세요.
+11. 글 구조를 반드시 아래처럼 소제목과 문단으로 나누세요. 소제목은 반드시 별도 줄에 쓰고 내용과 분리하세요:
+
+**경기 개요**
+양 팀 소개와 승률 예측 데이터 요약. 2~3문장.
+
+**홈팀 분석**
+시즌 성적, 홈 경기 득실점, 최근 폼 분석. 2~3문장.
+
+**어웨이팀 분석**
+시즌 성적, 원정 경기 득실점, 최근 폼 분석. 2~3문장.
+
+**맞대결 & 관전 포인트**
+상대전적 요약, 핵심 관전 포인트. 2~3문장.
+
+12. 분량은 500~700자 정도로 작성하세요.` },
         { role: 'user', content: prompt }
       ],
-      temperature: 0.7
+      temperature: 0.4
     })
 
     const aiAnalysis = completion.choices[0].message.content || '분석 결과를 가져올 수 없습니다.'
 
-    // AI 분석에서 확률 추출 (간단한 패턴 매칭)
-    const homeWinMatch = aiAnalysis.match(/홈.*?승리.*?(\d+)%/) || aiAnalysis.match(/(\d+)%.*?승리/)
-    const drawMatch = aiAnalysis.match(/무승부.*?(\d+)%/)
-    const awayWinMatch = aiAnalysis.match(/어웨이.*?승리.*?(\d+)%/) || aiAnalysis.match(/원정.*?승리.*?(\d+)%/)
-    const scoreMatch = aiAnalysis.match(/(\d+-\d+)/)
+    // 확률 계산: predictionApiData가 있으면 그 데이터 사용, 없으면 배당률 역산
+    let homeWinPct = 40, drawPct = 30, awayWinPct = 30
+    if (predictionApiData?.predictions?.percent) {
+      homeWinPct = parseInt(predictionApiData.predictions.percent.home) || 40
+      drawPct = parseInt(predictionApiData.predictions.percent.draw) || 30
+      awayWinPct = parseInt(predictionApiData.predictions.percent.away) || 30
+    } else if (odds) {
+      const oddsValues = odds?.response?.[0]?.bookmakers?.[0]?.bets?.find((b: any) => b.name === 'Match Winner')?.values
+      if (oddsValues) {
+        const homeOdd = parseFloat(oddsValues.find((v: any) => v.value === 'Home')?.odd || '0')
+        const drawOdd = parseFloat(oddsValues.find((v: any) => v.value === 'Draw')?.odd || '0')
+        const awayOdd = parseFloat(oddsValues.find((v: any) => v.value === 'Away')?.odd || '0')
+        if (homeOdd > 0 && drawOdd > 0 && awayOdd > 0) {
+          const totalProb = (1/homeOdd) + (1/drawOdd) + (1/awayOdd)
+          homeWinPct = Math.round((1/homeOdd) / totalProb * 100)
+          drawPct = Math.round((1/drawOdd) / totalProb * 100)
+          awayWinPct = 100 - homeWinPct - drawPct
+        }
+      }
+    }
 
     const predictionSummary: PredictionSummary = {
-      home_win_percentage: homeWinMatch ? parseInt(homeWinMatch[1]) : 45,
-      draw_percentage: drawMatch ? parseInt(drawMatch[1]) : 25,
-      away_win_percentage: awayWinMatch ? parseInt(awayWinMatch[1]) : 30,
-      predicted_score: scoreMatch ? scoreMatch[1] : '1-1',
-      confidence_level: (homeStats && awayStats) ? 'high' : 'medium'
+      home_win_percentage: homeWinPct,
+      draw_percentage: drawPct,
+      away_win_percentage: awayWinPct,
+      predicted_score: '0-0',
+      confidence_level: (homeStats || predictionApiData) ? 'high' : 'medium'
     }
 
     const matchContext: MatchContext = {
-      h2h_summary: h2h?.response?.slice(0, 3)?.map((h: any) => 
+      h2h_summary: h2h?.response?.slice(0, 3)?.map((h: any) =>
         `${h.teams.home.name} ${h.goals.home ?? '-'} - ${h.goals.away ?? '-'} ${h.teams.away.name}`
       ).join(', ') || '맞대결 기록 없음',
       injury_impact: `홈팀 ${homeInjuries?.length || 0}명, 어웨이팀 ${awayInjuries?.length || 0}명 부상`,
-      form_analysis: `홈팀 최근 폼: ${homeForm?.slice(0, 5).map(() => 'W/L/D').join('') || 'N/A'}, 어웨이팀: ${awayForm?.slice(0, 5).map(() => 'W/L/D').join('') || 'N/A'}`,
+      form_analysis: predictionApiData
+        ? `홈팀 폼: ${predictionApiData.teams.home.last_5?.form || 'N/A'}%, 어웨이팀 폼: ${predictionApiData.teams.away.last_5?.form || 'N/A'}%`
+        : `홈팀 최근 폼: ${homeForm?.slice(0, 5).map(() => 'W/L/D').join('') || 'N/A'}, 어웨이팀: ${awayForm?.slice(0, 5).map(() => 'W/L/D').join('') || 'N/A'}`,
       betting_odds: odds?.response?.[0]?.bookmakers?.[0]?.bets?.find((b: any) => b.name === 'Match Winner')?.values || null
     }
 
     const dataSources: DataSources = {
-      home_stats_league: homeStatsLeague,
-      away_stats_league: awayStatsLeague,
+      home_stats_league: predictionApiData ? 'predictions-api' : (homeStats?.league?.name || '정보 없음'),
+      away_stats_league: predictionApiData ? 'predictions-api' : (awayStats?.league?.name || '정보 없음'),
       stats_season: season,
-      api_calls_made: ['fixtures', 'teams/statistics', 'fixtures/form', 'injuries', 'fixtures/headtohead', 'odds']
+      api_calls_made: predictionApiData ? ['predictions', 'fixtures'] : ['fixtures', 'teams/statistics', 'fixtures/form', 'injuries', 'fixtures/headtohead', 'odds']
     }
 
-    // AI 분석 결과 후처리 (문단 띄어쓰기 개선 및 배팅 관련 내용 제거)
+    // AI 분석 결과 후처리
     const processedAnalysis = aiAnalysis
-      // 배팅 관련 내용 완전 제거
-      .replace(/\*\*베팅\s*관점:\s?\*\*[\s\S]*?(?=\*\*|$)/gi, '')
       .replace(/배팅[^.]*\./g, '')
       .replace(/도박[^.]*\./g, '')
       .replace(/베팅[^.]*\./g, '')
-      .replace(/배당[^.]*\./g, '')
-      .replace(/투자[^.]*\./g, '')
-      // **결과 예측:** 앞에 줄바꿈 추가
-      .replace(/(\*\*결과 예측:\s?\*\*)/g, '\n\n$1')
-      // **관전 포인트:** 앞에 줄바꿈 추가
-      .replace(/(\*\*관전\s*포인트:\s?\*\*)/g, '\n\n$1')
-      // **경기 전망:** 앞에 줄바꿈 추가 
-      .replace(/(\*\*경기\s*전망:\s?\*\*)/g, '\n\n$1')
-      // 예상 스코어 뒤에 줄바꿈 추가
-      .replace(/(예상 스코어:\s*[^\n]+)/g, '$1\n\n')
-      // 문장 끝 마침표 뒤에 자연스러운 문단 나누기
-      .replace(/([.!?])\s*(이번\s*경기|팬\s*여러분|축구는|관심|결론적으로|하지만|그러나|특히)/g, '$1\n\n$2')
-      // 과도한 줄바꿈 정리
       .replace(/\n{3,}/g, '\n\n')
       .trim()
 
     // 예측 결과를 데이터베이스에 저장
-    await savePredictionToCache(
-      fixtureId,
-      match,
-      processedAnalysis,
-      homeStats,
-      awayStats,
-      matchContext,
-      dataSources,
-      predictionSummary,
-      8, // API 호출 수
-      0.02 // 예상 비용 (GPT-4.1-nano)
-    )
+    const fixtureForCache = predictionApiData
+      ? { teams: { home, away }, league: { id: leagueId, name: '' }, fixture: { date: matchDate } }
+      : (await fetchFromFootballApi('fixtures', { id: fixtureId }))?.response?.[0]
+
+    if (fixtureForCache) {
+      await savePredictionToCache(
+        fixtureId,
+        fixtureForCache,
+        processedAnalysis,
+        homeStats,
+        awayStats,
+        matchContext,
+        dataSources,
+        predictionSummary,
+        predictionApiData ? 2 : 8,
+        0.02
+      )
+    }
 
     // 차트 데이터 생성
     const chartData = generateChartData(
-      home, 
-      away, 
-      homeStats, 
-      awayStats, 
-      homeForm, 
-      awayForm, 
-      homeInjuries, 
+      home,
+      away,
+      predictionApiData ? homeStats : homeStats,
+      predictionApiData ? awayStats : awayStats,
+      homeForm,
+      awayForm,
+      homeInjuries,
       awayInjuries,
       odds
     )
 
-    // 데이터 섹션 없이 AI 분석 결과만 반환
     return {
       textAnalysis: processedAnalysis,
       chartData: chartData

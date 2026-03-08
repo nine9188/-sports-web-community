@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import type { PostSearchResult } from '../types'
+import Image from 'next/image'
+import type { PostSearchResult, CardPreview } from '../types'
 import { trackSearchResultClick } from '../actions/searchLogs'
 import { formatDate } from '@/shared/utils/dateUtils'
 import Spinner from '@/shared/components/Spinner';
@@ -89,6 +90,15 @@ export default function PostSearchResults({
                 </div>
               )}
 
+              {/* 카드 프리뷰 */}
+              {post.cards && post.cards.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {post.cards.map((card, i) => (
+                    <CardPreviewBadge key={i} card={card} />
+                  ))}
+                </div>
+              )}
+
               {/* 메타 정보 */}
               <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                 <div className="flex items-center space-x-3">
@@ -158,7 +168,42 @@ function highlightQuery(text: string, searchQuery: string) {
   )
 }
 
-// 날짜 포맷팅
+// 카드 미니 프리뷰
+function CardPreviewBadge({ card }: { card: CardPreview }) {
+  if (card.type === 'match') {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#F5F5F5] dark:bg-[#262626] border border-black/5 dark:border-white/10 rounded-md text-xs text-gray-700 dark:text-gray-300">
+        <span className="font-medium">{card.homeTeam}</span>
+        <span className="text-gray-500 dark:text-gray-400">{card.homeScore} - {card.awayScore}</span>
+        <span className="font-medium">{card.awayTeam}</span>
+        {card.leagueName && (
+          <span className="text-gray-400 dark:text-gray-500 ml-0.5">· {card.leagueName}</span>
+        )}
+      </span>
+    )
+  }
 
+  if (card.type === 'team') {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#F5F5F5] dark:bg-[#262626] border border-black/5 dark:border-white/10 rounded-md text-xs text-gray-700 dark:text-gray-300">
+        {card.teamLogo && (
+          <Image src={card.teamLogo} alt="" width={16} height={16} unoptimized className="w-4 h-4 object-contain" />
+        )}
+        <span className="font-medium">{card.teamName}</span>
+      </span>
+    )
+  }
 
- 
+  if (card.type === 'player') {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#F5F5F5] dark:bg-[#262626] border border-black/5 dark:border-white/10 rounded-md text-xs text-gray-700 dark:text-gray-300">
+        {card.playerPhoto && (
+          <Image src={card.playerPhoto} alt="" width={16} height={16} unoptimized className="w-4 h-4 rounded-full object-cover" />
+        )}
+        <span className="font-medium">{card.playerName}</span>
+      </span>
+    )
+  }
+
+  return null
+}

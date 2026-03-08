@@ -116,10 +116,10 @@ export const getMajorLeagueIds = (): number[] => {
 // 리그 이름 - ID 매핑 (확장)
 export const LEAGUE_NAMES_MAP: Record<number, string> = {
   // 유럽 주요 리그
-  [MAJOR_LEAGUE_IDS.PREMIER_LEAGUE]: '프리미어 리그',
+  [MAJOR_LEAGUE_IDS.PREMIER_LEAGUE]: '프리미어리그',
   [MAJOR_LEAGUE_IDS.LA_LIGA]: '라리가',
   [MAJOR_LEAGUE_IDS.BUNDESLIGA]: '분데스리가',
-  [MAJOR_LEAGUE_IDS.SERIE_A]: '세리에 A',
+  [MAJOR_LEAGUE_IDS.SERIE_A]: '세리에A',
   [MAJOR_LEAGUE_IDS.LIGUE_1]: '리그앙',
   
   // 유럽 2군 리그
@@ -187,11 +187,11 @@ export const getLeagueById = (leagueId: number): { id: number; nameKo: string } 
 
 // 영어 리그 이름 -> 한글 매핑 (역매핑)
 const ENGLISH_TO_KOREAN_LEAGUE_MAP: Record<string, string> = {
-  'Premier League': '프리미어 리그',
+  'Premier League': '프리미어리그',
   'La Liga': '라리가',
   'LaLiga': '라리가',
   'Bundesliga': '분데스리가',
-  'Serie A': '세리에 A',  // 이탈리아 세리에 A
+  'Serie A': '세리에A',  // 이탈리아 세리에A
   'Ligue 1': '리그앙',
   'Championship': '챔피언십',
   'Scottish Premiership': '스코틀랜드 프리미어십',
@@ -219,7 +219,7 @@ const ENGLISH_TO_KOREAN_LEAGUE_MAP: Record<string, string> = {
   'FIFA Intercontinental Cup': 'FIFA 인터컨티넨털컵',
   'Community Shield': '커뮤니티 실드',
   'FA Community Shield': '커뮤니티 실드',
-  'Premier League 2': '프리미어 리그 2',
+  'Premier League 2': '프리미어리그 2',
   'FA Cup': 'FA컵',
   'EFL Cup': 'EFL컵',
   'League Cup': 'EFL컵',

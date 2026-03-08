@@ -19,12 +19,12 @@ export function PlayerCard({ playerId, playerData, isEditable = false }: PlayerC
   // 4590 표준: Storage URL 사용
   const getTeamLogo = () => {
     if (!teamId) return TEAM_PLACEHOLDER;
-    return `${SUPABASE_URL}/storage/v1/object/public/teams/${teamId}.png`;
+    return `${SUPABASE_URL}/storage/v1/object/public/teams/md/${teamId}.webp`;
   };
 
   const getPlayerPhoto = () => {
     if (!numericPlayerId) return PLAYER_PLACEHOLDER;
-    return `${SUPABASE_URL}/storage/v1/object/public/players/${numericPlayerId}.png`;
+    return `${SUPABASE_URL}/storage/v1/object/public/players/md/${numericPlayerId}.webp`;
   };
 
   const teamLogo = team?.id ? getTeamLogo() : TEAM_PLACEHOLDER;

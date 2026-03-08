@@ -58,8 +58,9 @@ export default function AccountDeleteForm({ email, nickname }: AccountDeleteForm
       const response = await deleteAccount(password);
 
       if (response.success) {
-        // 탈퇴 성공 시 로그인 페이지로 리다이렉트
-        router.push('/signin?message=계정이 성공적으로 삭제되었습니다.');
+        // 탈퇴 성공 시 풀 리로드로 로그인 페이지 이동 (쿠키/세션 완전 초기화)
+        window.location.href = '/signin?message=계정이 성공적으로 삭제되었습니다.';
+        return;
       } else {
         setErrorMessage(response.message);
         setIsConfirmOpen(false);
@@ -84,7 +85,7 @@ export default function AccountDeleteForm({ email, nickname }: AccountDeleteForm
       </div>
 
       {/* 비밀번호 확인 폼 */}
-      <form onSubmit={handleOpenConfirm}>
+      <form onSubmit={handleOpenConfirm} className="mt-6">
         <div className="space-y-1">
           <label htmlFor="password" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
             비밀번호 확인

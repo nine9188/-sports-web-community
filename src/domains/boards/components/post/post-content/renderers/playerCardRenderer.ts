@@ -57,7 +57,7 @@ export function renderPlayerCard(data: { playerId: string | number; playerData: 
                   data-light-src="${teamImages.light}"
                   data-dark-src="${teamImages.dark}"
                   alt="${teamDisplayName}"
-                  onerror="this.onerror=null;this.src='/placeholder.png';"
+                  onerror="this.onerror=null;this.src='/images/placeholder-team.svg';"
                 />
               </div>
             ` : ''}

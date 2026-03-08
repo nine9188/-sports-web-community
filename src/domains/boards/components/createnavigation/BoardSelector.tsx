@@ -238,11 +238,7 @@ const BoardSelector = React.memo(({
             !isLast ? 'border-b border-black/5 dark:border-white/10' : ''
           } ${
             board.id === selectedTop?.id ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
-          } ${
-            hasChildren
-              ? 'text-gray-500 dark:text-gray-400'
-              : 'text-gray-900 dark:text-[#F0F0F0]'
-          }`}
+          } text-gray-900 dark:text-[#F0F0F0]`}
           onClick={() => handleTopSelect(board)}
         >
           <span className="flex items-center justify-between">

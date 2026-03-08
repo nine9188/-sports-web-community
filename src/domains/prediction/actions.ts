@@ -2,11 +2,13 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
+import { getSupabaseServer } from '@/shared/lib/supabase/server'
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi'
 import { getMajorLeagueIds, LEAGUE_NAMES_MAP } from '@/domains/livescore/constants/league-mappings'
 import { getTeamById } from '@teams'
 import { getTeamLogoUrls } from '@/domains/livescore/actions/images'
 import { getLeagueLogoUrl } from '@/domains/livescore/actions/images'
+import { predictMatch } from './utils/predictMatch'
 
 // Predictions API 타입
 interface MinuteStats {
@@ -360,7 +362,7 @@ interface PredictionResult {
   boardCount?: number;
 }
 
-// 리그별 게시판 매핑
+// 리그별 게시판 매핑 (일반 게시판)
 const LEAGUE_BOARD_MAPPING: Record<number, string> = {
   39: 'premier',      // Premier League
   140: 'laliga',      // La Liga
@@ -370,7 +372,15 @@ const LEAGUE_BOARD_MAPPING: Record<number, string> = {
   292: 'k-league-1',  // K League 1
   293: 'k-league-2',  // K League 2
   98: 'j1-league',    // J1 League
-  // 기타 리그들...
+}
+
+// 리그별 분석 게시판 매핑 (예측 분석 전용)
+const LEAGUE_ANALYSIS_BOARD_MAPPING: Record<number, string> = {
+  39: 'foreign-analysis-premier',
+  140: 'foreign-analysis-laliga',
+  61: 'foreign-analysis-ligue1',
+  78: 'foreign-analysis-bundesliga',
+  135: 'foreign-analysis-serie-a',
 }
 
 // 국내 축구 리그 ID (한국)
@@ -381,8 +391,19 @@ function isDomesticLeague(leagueId: number): boolean {
   return DOMESTIC_LEAGUE_IDS.includes(leagueId)
 }
 
-// 봇 계정 ID (예측 분석 전용) - 관리자 계정 사용
-const PREDICTION_BOT_USER_ID = 'dfd784d6-14c1-440f-b879-bb95f15853ab'
+// 봇 계정 ID fallback (GitHub Actions/cron 등 비로그인 환경용)
+const PREDICTION_BOT_USER_ID_FALLBACK = 'd4b925d8-cb05-4a89-8d05-f1ad168acd72'
+
+// 현재 로그인한 관리자 ID 가져오기 (없으면 fallback)
+async function getCurrentUserId(): Promise<string> {
+  try {
+    const supabase = await getSupabaseServer()
+    const { data: { user } } = await supabase.auth.getUser()
+    return user?.id || PREDICTION_BOT_USER_ID_FALLBACK
+  } catch {
+    return PREDICTION_BOT_USER_ID_FALLBACK
+  }
+}
 
 // 해외축구 게시판 ID (fallback용)
 const OVERSEAS_FOOTBALL_BOARD_ID = 'b08d3648-a5cc-4ab6-b1f0-c4609c89ac26'
@@ -485,239 +506,267 @@ function groupMatchesByLeague(matches: UpcomingMatch[]): LeagueGroup[] {
   return Object.values(grouped)
 }
 
-// 리그별 예측 분석 게시글 생성
+// 단일 경기 예측 분석 게시글 생성
+async function generateMatchPredictionPost(
+  match: UpcomingMatch,
+  league: LeagueGroup['league'],
+  targetDate: string,
+  userId: string,
+  teamLogoMap: Record<number, string>,
+  leagueLogoUrl: string
+): Promise<{ success: boolean; postId?: string; error?: string }> {
+  const homeNameKo = getTeamNameKo(match.teams.home.id, match.teams.home.name)
+  const awayNameKo = getTeamNameKo(match.teams.away.id, match.teams.away.name)
+  const leagueNameKo = getLeagueNameKo(league.id, league.name)
+
+  // 1. Predictions API 데이터 먼저 가져오기 (차트 + AI 텍스트 동일 데이터 소스)
+  let predictionData: PredictionApiData | null = null
+  try {
+    predictionData = await fetchPredictions(match.id)
+    if (predictionData) {
+      predictionData.teams.home.logo = teamLogoMap[predictionData.teams.home.id] || '/images/placeholder-team.svg'
+      predictionData.teams.away.logo = teamLogoMap[predictionData.teams.away.id] || '/images/placeholder-team.svg'
+    }
+  } catch {
+    // predictionChart용 데이터 실패 시 무시
+  }
+
+  // 2. AI 분석글 생성 (predictionData를 전달하여 차트와 동일한 데이터로 분석)
+  let aiAnalysis = ''
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let chartData: any = null
+
+  try {
+    const result = await predictMatch(match.id, true, predictionData) // predictionData 전달
+    if (typeof result === 'object' && 'textAnalysis' in result) {
+      aiAnalysis = result.textAnalysis
+      chartData = result.chartData
+    } else if (typeof result === 'string') {
+      aiAnalysis = result
+    }
+  } catch (error) {
+    console.error(`AI 분석 생성 실패 (${match.id}):`, error)
+    aiAnalysis = `${homeNameKo} vs ${awayNameKo} 경기의 예측 분석을 생성할 수 없습니다.`
+  }
+
+  // 매치 데이터의 로고 URL을 Storage URL로 교체
+  match.teams.home.logo = teamLogoMap[match.teams.home.id] || '/images/placeholder-team.svg'
+  match.teams.away.logo = teamLogoMap[match.teams.away.id] || '/images/placeholder-team.svg'
+  match.league.logo = leagueLogoUrl
+
+  // 게시판 찾기: 분석 전용 게시판 우선, 없으면 리그 게시판, 최후에 해외축구 게시판
+  let targetBoardId: string | null = null
+
+  // 1. 분석 전용 게시판 확인
+  const analysisSlug = LEAGUE_ANALYSIS_BOARD_MAPPING[league.id]
+  if (analysisSlug) {
+    const boardId = await getBoardIdBySlug(analysisSlug)
+    if (boardId) targetBoardId = boardId
+  }
+
+  // 2. 리그 게시판 확인
+  if (!targetBoardId) {
+    const boardSlug = await getBoardSlugByLeagueId(league.id)
+    if (boardSlug) {
+      const boardId = await getBoardIdBySlug(boardSlug)
+      if (boardId) targetBoardId = boardId
+    }
+  }
+
+  // 3. fallback
+  if (!targetBoardId) {
+    targetBoardId = OVERSEAS_FOOTBALL_BOARD_ID
+  }
+
+  // 게시글 제목: "3월 9일 팀A vs 팀B 경기 예측 분석"
+  const formattedDate = new Date(targetDate).toLocaleDateString('ko-KR', {
+    month: 'long',
+    day: 'numeric'
+  })
+  const title = `${formattedDate} ${homeNameKo} vs ${awayNameKo} 경기 예측 분석`
+
+  // 예측 차트 노드 (데이터가 있을 때만)
+  const chartNode = predictionData ? [{
+    type: 'predictionChart',
+    attrs: {
+      fixtureId: match.id.toString(),
+      chartData: {
+        predictions: predictionData.predictions,
+        comparison: predictionData.comparison,
+        teams: predictionData.teams,
+        h2h: predictionData.h2h
+      }
+    }
+  }] : []
+
+  // AI 분석글을 Tiptap 문단으로 변환
+  const aiParagraphs: any[] = []
+
+  // 줄 단위로 처리 (빈 줄과 단일 줄바꿈 모두 처리)
+  const lines = aiAnalysis.split('\n').map(l => l.trim()).filter(l => l.length > 0)
+
+  for (const line of lines) {
+    // **제목** 형식 (줄 전체가 **로 감싸진 경우)
+    if (/^\*\*[^*]+\*\*$/.test(line)) {
+      aiParagraphs.push({
+        type: 'heading',
+        attrs: { level: 3 },
+        content: [{ type: 'text', text: line.replace(/\*\*/g, '') }]
+      })
+      continue
+    }
+
+    // **제목** 내용 형식 (소제목 뒤에 내용이 바로 붙은 경우)
+    const headingWithContent = line.match(/^\*\*([^*]+)\*\*\s*(.+)/)
+    if (headingWithContent) {
+      aiParagraphs.push({
+        type: 'heading',
+        attrs: { level: 3 },
+        content: [{ type: 'text', text: headingWithContent[1] }]
+      })
+      aiParagraphs.push({
+        type: 'paragraph',
+        content: [{ type: 'text', text: headingWithContent[2] }]
+      })
+      continue
+    }
+
+    // 일반 문단
+    aiParagraphs.push({
+      type: 'paragraph',
+      content: [{ type: 'text', text: line }]
+    })
+  }
+
+  // Tiptap 게시글 내용 구성
+  const tiptapContent = {
+    type: 'doc',
+    content: [
+      // 매치 카드
+      {
+        type: 'matchCard',
+        attrs: {
+          matchId: match.id.toString(),
+          matchData: {
+            id: match.id.toString(),
+            teams: {
+              home: {
+                id: match.teams.home.id,
+                name: match.teams.home.name,
+                logo: match.teams.home.logo,
+                winner: null
+              },
+              away: {
+                id: match.teams.away.id,
+                name: match.teams.away.name,
+                logo: match.teams.away.logo,
+                winner: null
+              }
+            },
+            goals: {
+              home: null,
+              away: null
+            },
+            league: {
+              id: league.id.toString(),
+              name: league.name,
+              logo: leagueLogoUrl
+            },
+            status: {
+              code: 'NS',
+              name: '경기 예정'
+            }
+          }
+        }
+      },
+      { type: 'paragraph', content: [{ type: 'text', text: '' }] },
+      // 예측 차트 (데이터가 있을 때만)
+      ...chartNode,
+      { type: 'paragraph', content: [{ type: 'text', text: '' }] },
+      // AI 분석글 본문
+      ...aiParagraphs,
+      { type: 'horizontalRule' },
+      {
+        type: 'paragraph',
+        content: [
+          { type: 'text', text: '※ 이 분석은 AI가 API-Football 통계 데이터를 바탕으로 생성한 예측입니다. 실제 경기 결과와 다를 수 있으며, 참고용으로만 활용해주세요.', marks: [{ type: 'italic' }] }
+        ]
+      }
+    ]
+  }
+
+  // 메타데이터
+  const analysisRegion = isDomesticLeague(league.id) ? 'domestic' : 'foreign'
+  const metaData = {
+    prediction_type: 'league_analysis',
+    analysis_region: analysisRegion,
+    league_id: league.id,
+    league_name: league.name,
+    target_date: targetDate,
+    fixture_id: match.id,
+    matches_count: 1,
+    prediction_data: predictionData ? [predictionData] : []
+  }
+
+  return createPredictionPost(
+    title,
+    JSON.stringify(tiptapContent),
+    targetBoardId,
+    userId,
+    ['AI분석', leagueNameKo, '경기예측', `${homeNameKo} vs ${awayNameKo}`],
+    metaData
+  )
+}
+
+// 리그별 예측 분석 게시글 생성 (경기별 개별 게시글)
 async function generateLeaguePredictionPost(
   leagueGroup: LeagueGroup,
   targetDate: string
 ): Promise<PredictionResult> {
   try {
     const { league, matches } = leagueGroup
-    
-    // 게시판 찾기 (리그 게시판 우선, 없으면 해외축구 게시판 fallback)
-    let targetBoardId: string | null = null
 
-    // 1. 리그 전용 게시판 확인
-    const boardSlug = await getBoardSlugByLeagueId(league.id)
-    if (boardSlug) {
-      const boardId = await getBoardIdBySlug(boardSlug)
-      if (boardId) {
-        targetBoardId = boardId
-      }
-    }
-
-    // 2. 리그 게시판이 없으면 해외축구 게시판 사용 (fallback)
-    if (!targetBoardId) {
-      targetBoardId = OVERSEAS_FOOTBALL_BOARD_ID
-    }
-    
-    // 각 경기에 대한 예측 분석 생성 (Predictions API 사용)
-    const predictionContents: string[] = []
-    const predictionDataList: (PredictionApiData | null)[] = []
-
-    for (const match of matches) {
-      const matchHomeNameKo = getTeamNameKo(match.teams.home.id, match.teams.home.name)
-      const matchAwayNameKo = getTeamNameKo(match.teams.away.id, match.teams.away.name)
-      try {
-        const predictionData = await fetchPredictions(match.id)
-
-        if (predictionData) {
-          const formattedContent = formatPredictionContent(predictionData)
-          predictionContents.push(`${matchHomeNameKo} vs ${matchAwayNameKo}\n\n${formattedContent}`)
-          predictionDataList.push(predictionData)
-        } else {
-          predictionContents.push(`${matchHomeNameKo} vs ${matchAwayNameKo}\n\n예측 데이터를 불러올 수 없습니다.`)
-          predictionDataList.push(null)
-        }
-      } catch (error) {
-        console.error(`경기 예측 실패 (${match.id}):`, error)
-        predictionContents.push(`${matchHomeNameKo} vs ${matchAwayNameKo}\n\n예측 분석을 생성할 수 없습니다. 데이터 부족 또는 시스템 오류로 인해 이 경기의 분석을 생성하지 못했습니다.`)
-        predictionDataList.push(null)
-      }
-    }
-    
     // 4590 표준: 팀/리그 로고를 Supabase Storage URL로 변환
     const allTeamIds = Array.from(new Set(matches.flatMap(m => [m.teams.home.id, m.teams.away.id])))
     const teamLogoMap = await getTeamLogoUrls(allTeamIds)
     const leagueLogoUrl = await getLeagueLogoUrl(league.id)
 
-    // 매치 데이터의 로고 URL을 Storage URL로 교체
+    // 현재 로그인한 관리자 ID 사용 (없으면 fallback)
+    const userId = await getCurrentUserId()
+
+    // 각 경기별로 개별 게시글 생성
+    let successCount = 0
+    let errorCount = 0
+
     for (const match of matches) {
-      match.teams.home.logo = teamLogoMap[match.teams.home.id] || '/images/placeholder-team.svg'
-      match.teams.away.logo = teamLogoMap[match.teams.away.id] || '/images/placeholder-team.svg'
-      match.league.logo = leagueLogoUrl
+      const result = await generateMatchPredictionPost(
+        match, league, targetDate, userId, teamLogoMap, leagueLogoUrl
+      )
+
+      if (result.success) {
+        successCount++
+      } else {
+        errorCount++
+        console.error(`경기 게시글 생성 실패 (${match.id}):`, result.error)
+      }
+
+      // API 레이트 리밋 방지
+      await new Promise(resolve => setTimeout(resolve, 500))
     }
 
-    // predictionDataList 내의 팀 로고도 Storage URL로 교체
-    for (const predictionData of predictionDataList) {
-      if (!predictionData) continue
-      predictionData.teams.home.logo = teamLogoMap[predictionData.teams.home.id] || '/images/placeholder-team.svg'
-      predictionData.teams.away.logo = teamLogoMap[predictionData.teams.away.id] || '/images/placeholder-team.svg'
+    if (successCount === 0 && errorCount > 0) {
+      throw new Error(`${errorCount}경기 게시글 생성 모두 실패`)
     }
 
-    // 게시글 제목 및 내용 생성
-    const formattedDate = new Date(targetDate).toLocaleDateString('ko-KR', {
-      month: 'long',
-      day: 'numeric'
-    })
-
-    const leagueNameKo = getLeagueNameKo(league.id, league.name)
-    const title = `${formattedDate} ${leagueNameKo} 경기 예측 분석`
-
-    // 자연스러운 게시글 내용 구성 (Tiptap 형식)
-    const introText = `${leagueNameKo}에서 ${matches.length}경기가 예정되어 있습니다. 각 경기의 전망을 살펴보겠습니다.`
-    
-    const tiptapContent = {
-      type: 'doc',
-      content: [
-        {
-          type: 'paragraph',
-          content: [
-            { type: 'text', text: introText }
-          ]
-        },
-        {
-          type: 'paragraph',
-          content: [
-            { type: 'text', text: '' }
-          ]
-        },
-        ...predictionContents.flatMap((predictionContent, index) => {
-          // 각 예측을 자연스럽게 파싱
-          const lines = predictionContent.trim().split('\n').filter(line => line.trim())
-          const matchTitle = lines[0] || '경기 정보' // 첫 번째 라인이 경기 제목
-
-          // 해당 경기 정보 및 예측 데이터 가져오기
-          const match = matches[index]
-          const predictionData = predictionDataList[index]
-
-          // 예측 차트 노드 (데이터가 있을 때만)
-          const chartNode = predictionData ? [{
-            type: 'predictionChart',
-            attrs: {
-              fixtureId: match.id.toString(),
-              chartData: {
-                predictions: predictionData.predictions,
-                comparison: predictionData.comparison,
-                teams: predictionData.teams,
-                h2h: predictionData.h2h
-              }
-            }
-          }] : []
-
-          return [
-            {
-              type: 'heading',
-              attrs: { level: 2 },
-              content: [
-                { type: 'text', text: matchTitle, marks: [{ type: 'bold' }] }
-              ]
-            },
-            // 예측 차트 (레이더 + 비교 바)
-            ...chartNode,
-            {
-              type: 'paragraph',
-              content: [
-                { type: 'text', text: '' }
-              ]
-            },
-            // 각 경기 예측 바로 아래에 해당 매치 카드 추가
-            {
-              type: 'matchCard',
-              attrs: {
-                matchId: match.id.toString(),
-                matchData: {
-                  id: match.id.toString(),
-                  teams: {
-                    home: {
-                      id: match.teams.home.id,
-                      name: match.teams.home.name,
-                      logo: match.teams.home.logo,
-                      winner: null
-                    },
-                    away: {
-                      id: match.teams.away.id,
-                      name: match.teams.away.name,
-                      logo: match.teams.away.logo,
-                      winner: null
-                    }
-                  },
-                  goals: {
-                    home: null,
-                    away: null
-                  },
-                  league: {
-                    id: league.id.toString(),
-                    name: league.name,
-                    logo: league.logo
-                  },
-                  status: {
-                    code: 'NS', // 경기 예정
-                    name: '경기 예정'
-                  }
-                }
-              }
-            },
-            {
-              type: 'paragraph',
-              content: [
-                { type: 'text', text: '' }
-              ]
-            },
-            // 마지막 경기가 아니면 구분선 추가
-            ...(index < predictionContents.length - 1 ? [{
-              type: 'horizontalRule'
-            }] : [])
-          ]
-        }),
-        {
-          type: 'horizontalRule'
-        },
-        {
-          type: 'paragraph',
-          content: [
-            { type: 'text', text: '※ 이 분석은 API-Football 통계 데이터를 바탕으로 생성한 예측입니다. 실제 경기 결과와 다를 수 있으며, 참고용으로만 활용해주세요.', marks: [{ type: 'italic' }] }
-          ]
-        }
-      ]
-    }
-    
-    // 예측 데이터를 meta 필드에 저장할 메타데이터 생성
-    // 국내/해외 구분 추가
-    const analysisRegion = isDomesticLeague(league.id) ? 'domestic' : 'foreign'
-
-    const metaData = {
-      prediction_type: 'league_analysis',
-      analysis_region: analysisRegion, // 'domestic' | 'foreign'
+    return {
       league_id: league.id,
       league_name: league.name,
-      target_date: targetDate,
+      status: errorCount > 0 ? 'error' : 'success',
+      message: `${successCount}경기 게시글 생성 완료${errorCount > 0 ? `, ${errorCount}경기 실패` : ''}`,
       matches_count: matches.length,
-      prediction_data: predictionDataList.filter(data => data !== null) // null 값 제거
+      boardCount: successCount
     }
 
-    // 게시글 작성 (단일 게시판에 등록, 상위 게시판에는 자동 노출됨)
-    const result = await createPredictionPost(
-      title,
-      JSON.stringify(tiptapContent),
-      targetBoardId,
-      PREDICTION_BOT_USER_ID,
-      ['AI분석', leagueNameKo, '경기예측'],
-      metaData
-    )
-
-    if (result.success) {
-      return {
-        league_id: league.id,
-        league_name: league.name,
-        status: 'success',
-        post_id: result.postId,
-        message: `${matches.length}경기 예측 분석 완료`,
-        matches_count: matches.length
-      }
-    } else {
-      throw new Error(result.error || '게시글 작성 실패')
-    }
-    
   } catch (error) {
     console.error(`${leagueGroup.league.name} 예측 분석 실패:`, error)
     return {
@@ -797,7 +846,7 @@ export async function generateAllPredictions(
       results.push(result)
       
       if (result.status === 'success') {
-        totalPostsCreated++
+        totalPostsCreated += result.boardCount || 1
       }
       
       // 각 리그 처리 후 잠시 대기 (API 레이트 리밋 방지)

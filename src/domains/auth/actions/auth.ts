@@ -48,7 +48,7 @@ export async function signIn(
     // 3. 아이디로 이메일 및 인증 상태 조회
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('id, email, email_confirmed')
+      .select('id, email, email_confirmed, is_deleted')
       .eq('username', username)
       .single()
 
@@ -64,6 +64,11 @@ export async function signIn(
       )
 
       return { success: false, error: '아이디 또는 비밀번호가 올바르지 않습니다.' }
+    }
+
+    // 3-1. 탈퇴한 계정 차단
+    if (profile.is_deleted) {
+      return { success: false, error: '탈퇴한 계정입니다.' }
     }
 
     // 4. 로그인 시도

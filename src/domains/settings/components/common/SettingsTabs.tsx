@@ -7,12 +7,12 @@ import { TabList, type TabItem } from '@/shared/components/ui';
 // 탭 목록 정의
 const tabs: TabItem[] = [
   { id: '/settings/profile', label: '기본 정보' },
-  { id: '/settings/password', label: '비밀번호 변경' },
   { id: '/settings/icons', label: '프로필 아이콘' },
   { id: '/settings/points', label: '포인트 내역' },
   { id: '/settings/exp', label: '경험치 내역' },
   { id: '/settings/my-posts', label: '내가 쓴 글' },
   { id: '/settings/my-comments', label: '내가 쓴 댓글' },
+  { id: '/settings/password', label: '비밀번호 변경' },
   { id: '/settings/account-delete', label: '회원 탈퇴' },
 ];
 

@@ -23,6 +23,24 @@ export interface PostSearchResult {
   author_name?: string
   board_name?: string
   snippet?: string
+  // 카드 프리뷰 데이터
+  cards?: CardPreview[]
+}
+
+export interface CardPreview {
+  type: 'match' | 'team' | 'player'
+  // 매치카드
+  homeTeam?: string
+  awayTeam?: string
+  homeScore?: number | string
+  awayScore?: number | string
+  leagueName?: string
+  // 팀카드
+  teamName?: string
+  teamLogo?: string
+  // 선수카드
+  playerName?: string
+  playerPhoto?: string
 }
 
 // 댓글 검색 결과 (서버 액션용)

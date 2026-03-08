@@ -32,6 +32,8 @@ export const getBoardsForNavigation = cache(async (options?: GetBoardsOptions): 
 
     const postsCountPromise = options?.includeTotalPostCount
       ? supabase.from('posts').select('*', { count: 'exact', head: true })
+          .eq('is_deleted', false)
+          .eq('is_hidden', false)
       : Promise.resolve({ count: undefined });
 
     const [boardsResult, postsCountResult] = await Promise.all([boardsPromise, postsCountPromise]);

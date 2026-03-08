@@ -98,9 +98,9 @@ export function EntityPickerForm({
     if (!id) return LEAGUE_PLACEHOLDER
     const hasDarkMode = DARK_MODE_LEAGUE_IDS.includes(id)
     if (isDark && hasDarkMode) {
-      return `${SUPABASE_URL}/storage/v1/object/public/leagues/${id}-1.png`
+      return `${SUPABASE_URL}/storage/v1/object/public/leagues/md/${id}-1.webp`
     }
-    return `${SUPABASE_URL}/storage/v1/object/public/leagues/${id}.png`
+    return `${SUPABASE_URL}/storage/v1/object/public/leagues/md/${id}.webp`
   }
   const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
   const getPlayerPhoto = (id: number) => playerPhotoUrls[id] || PLAYER_PLACEHOLDER;

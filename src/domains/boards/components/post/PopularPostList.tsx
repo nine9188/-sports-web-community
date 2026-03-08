@@ -156,7 +156,7 @@ export default function PopularPostList({
                   <Link href={`/boards/${post.board_slug}`} prefetch={false} className="hover:underline text-gray-700 dark:text-gray-300">
                     {post.board_name}
                   </Link>
-
+                  <span className="text-gray-300 dark:text-gray-600">|</span>
                   <AuthorLink
                     nickname={post.author_nickname}
                     publicId={post.author_public_id}
@@ -164,7 +164,7 @@ export default function PopularPostList({
                     iconUrl={post.author_icon_url}
                     level={post.author_level || 1}
                     exp={post.author_exp}
-                    iconSize={16}
+                    iconSize={20}
                     hideIconOnMobile
                   />
                 </div>

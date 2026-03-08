@@ -31,8 +31,8 @@ export default async function PopularPostsPage({
     const currentPage = isNaN(parseInt(page, 10)) || parseInt(page, 10) < 1 ? 1 : parseInt(page, 10);
 
     // 기간 유효성 검증
-    const validPeriods = ['today', 'week', 'month', 'all'];
-    const validPeriod = validPeriods.includes(period) ? period as 'today' | 'week' | 'month' | 'all' : 'week';
+    const validPeriods = ['week', 'month', 'all'];
+    const validPeriod = validPeriods.includes(period) ? period as 'week' | 'month' | 'all' : 'week';
 
     // 인기 게시글 가져오기
     const postsData = await getAllPopularPosts({
@@ -95,7 +95,6 @@ export default async function PopularPostsPage({
 
     // 기간별 설명
     const periodNames = {
-      today: '오늘',
       week: '이번 주',
       month: '이번 달',
       all: '전체'

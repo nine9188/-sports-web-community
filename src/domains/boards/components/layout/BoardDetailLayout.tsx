@@ -88,8 +88,8 @@ interface BoardDetailLayoutProps {
   };
   // 인기 게시글 데이터
   popularPosts?: {
-    todayPosts: PopularPost[];
     weekPosts: PopularPost[];
+    monthPosts: PopularPost[];
   };
   // 공지사항 데이터
   notices?: NoticeListPost[];
@@ -182,8 +182,8 @@ export default function BoardDetailLayout({
       {/* 인기 게시글 위젯 - 헤더 공지보다 먼저 표시 (항상 4칸 표시) */}
       {popularPosts && (
         <MemoizedBoardPopularPosts
-          todayPosts={popularPosts.todayPosts}
           weekPosts={popularPosts.weekPosts}
+          monthPosts={popularPosts.monthPosts}
           className="mb-4"
         />
       )}

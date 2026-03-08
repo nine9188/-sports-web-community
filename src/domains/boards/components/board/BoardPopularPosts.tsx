@@ -33,22 +33,22 @@ interface PopularPost {
 }
 
 interface BoardPopularPostsProps {
-  todayPosts: PopularPost[];
   weekPosts: PopularPost[];
+  monthPosts: PopularPost[];
   className?: string;
   isLoading?: boolean;
 }
 
 export default function BoardPopularPosts({
-  todayPosts,
   weekPosts,
+  monthPosts,
   className = '',
   isLoading = false,
 }: BoardPopularPostsProps) {
-  const [activeTab, setActiveTab] = useState<'today' | 'week'>('today');
+  const [activeTab, setActiveTab] = useState<'week' | 'month'>('week');
 
-  const currentPosts = activeTab === 'today' ? todayPosts : weekPosts;
-  const tabLabel = activeTab === 'today' ? '오늘 BEST' : '이번주 BEST';
+  const currentPosts = activeTab === 'week' ? weekPosts : monthPosts;
+  const tabLabel = activeTab === 'week' ? '이번주 BEST' : '이번달 BEST';
 
   // 스켈레톤 행 렌더링
   const renderSkeletonRows = () => {
@@ -142,16 +142,16 @@ export default function BoardPopularPosts({
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <span className="text-xs text-gray-600 dark:text-gray-400">
-              {activeTab === 'today' ? '1' : '2'} / 2
+              {activeTab === 'week' ? '1' : '2'} / 2
             </span>
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setActiveTab(activeTab === 'today' ? 'week' : 'today')}
+              onClick={() => setActiveTab(activeTab === 'week' ? 'month' : 'week')}
               className="w-6 h-6 text-gray-700 dark:text-gray-300"
-              aria-label={activeTab === 'today' ? '이번주 BEST' : '오늘 BEST'}
+              aria-label={activeTab === 'week' ? '이번달 BEST' : '이번주 BEST'}
             >
-              {activeTab === 'today' ? (
+              {activeTab === 'week' ? (
                 <ChevronRight className="w-4 h-4" />
               ) : (
                 <ChevronLeft className="w-4 h-4" />
@@ -169,21 +169,8 @@ export default function BoardPopularPosts({
       {/* PC UI */}
       <div className="hidden md:block border border-black/7 dark:border-0 md:rounded-lg overflow-hidden bg-white dark:bg-[#1D1D1D]">
         <div className="grid grid-cols-2">
-          {/* 오늘 BEST */}
-          <div className="border-r border-black/5 dark:border-white/10">
-            <div className="h-12 bg-[#F5F5F5] dark:bg-[#262626] px-4 flex items-center border-b border-black/5 dark:border-white/10">
-              <TrendingUp className="w-4 h-4 text-gray-900 dark:text-[#F0F0F0] mr-2" />
-              <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">오늘 BEST</h3>
-            </div>
-            <table className="w-full border-collapse">
-              <tbody>
-                {isLoading ? renderSkeletonRows() : renderTableRows(todayPosts)}
-              </tbody>
-            </table>
-          </div>
-
           {/* 이번주 BEST */}
-          <div>
+          <div className="border-r border-black/5 dark:border-white/10">
             <div className="h-12 bg-[#F5F5F5] dark:bg-[#262626] px-4 flex items-center border-b border-black/5 dark:border-white/10">
               <TrendingUp className="w-4 h-4 text-gray-900 dark:text-[#F0F0F0] mr-2" />
               <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">이번주 BEST</h3>
@@ -191,6 +178,19 @@ export default function BoardPopularPosts({
             <table className="w-full border-collapse">
               <tbody>
                 {isLoading ? renderSkeletonRows() : renderTableRows(weekPosts)}
+              </tbody>
+            </table>
+          </div>
+
+          {/* 이번달 BEST */}
+          <div>
+            <div className="h-12 bg-[#F5F5F5] dark:bg-[#262626] px-4 flex items-center border-b border-black/5 dark:border-white/10">
+              <TrendingUp className="w-4 h-4 text-gray-900 dark:text-[#F0F0F0] mr-2" />
+              <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">이번달 BEST</h3>
+            </div>
+            <table className="w-full border-collapse">
+              <tbody>
+                {isLoading ? renderSkeletonRows() : renderTableRows(monthPosts)}
               </tbody>
             </table>
           </div>

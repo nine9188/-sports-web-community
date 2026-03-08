@@ -93,14 +93,14 @@ function updateLeagueImage(img: HTMLImageElement, isDark: boolean): void {
   // Fallback: data 속성이 없으면 현재 src에서 생성
   if (!lightSrc || !darkSrc) {
     const currentSrc = img.src;
-    const leagueIdMatch = currentSrc.match(/\/leagues\/(\d+)\.png$/);
+    const leagueIdMatch = currentSrc.match(/\/leagues\/(?:md\/)?(\d+)\.webp$/);
 
     if (leagueIdMatch) {
       const leagueId = parseInt(leagueIdMatch[1]);
-      lightSrc = `${SUPABASE_URL}/storage/v1/object/public/leagues/${leagueId}.png`;
+      lightSrc = `${SUPABASE_URL}/storage/v1/object/public/leagues/md/${leagueId}.webp`;
 
       if (DARK_MODE_LEAGUE_IDS.includes(leagueId)) {
-        darkSrc = `${SUPABASE_URL}/storage/v1/object/public/leagues/${leagueId}-1.png`;
+        darkSrc = `${SUPABASE_URL}/storage/v1/object/public/leagues/md/${leagueId}-1.webp`;
       } else {
         darkSrc = lightSrc;
       }
@@ -122,11 +122,11 @@ function updateTeamImage(img: HTMLImageElement, isDark: boolean): void {
   // Fallback: data 속성이 없으면 현재 src에서 생성
   if (!lightSrc || !darkSrc) {
     const currentSrc = img.src;
-    const teamIdMatch = currentSrc.match(/\/teams\/(\d+)\.png$/);
+    const teamIdMatch = currentSrc.match(/\/teams\/(?:md\/)?(\d+)\.webp$/);
 
     if (teamIdMatch) {
       const teamId = parseInt(teamIdMatch[1]);
-      lightSrc = `${SUPABASE_URL}/storage/v1/object/public/teams/${teamId}.png`;
+      lightSrc = `${SUPABASE_URL}/storage/v1/object/public/teams/md/${teamId}.webp`;
       darkSrc = lightSrc; // 팀 로고는 다크모드 이미지 없음
 
       img.setAttribute('data-light-src', lightSrc);

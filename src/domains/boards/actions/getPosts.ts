@@ -190,7 +190,9 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
         profiles (id, nickname, level, exp, icon_id, public_id),
         content, deal_info
       `)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .eq('is_deleted', false)
+      .eq('is_hidden', false);
 
     // 필터 적용
     if (isNoticeBoard && noticeBoardId) {
@@ -229,7 +231,9 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
     }
 
     // 카운트 쿼리
-    let countQuery = supabase.from('posts').select('id', { count: 'exact', head: true });
+    let countQuery = supabase.from('posts').select('id', { count: 'exact', head: true })
+      .eq('is_deleted', false)
+      .eq('is_hidden', false);
 
     if (isNoticeBoard && noticeBoardId) {
       countQuery = countQuery.or(`board_id.eq.${noticeBoardId},is_notice.eq.true`);

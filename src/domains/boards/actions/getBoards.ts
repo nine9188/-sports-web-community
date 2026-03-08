@@ -89,6 +89,33 @@ export async function getBoardPageData(slug: string, currentPage: number, fromPa
       filteredBoardIds = getFilteredBoardIds(boardData.id, boardLevel, boardsMap, childBoardsMap);
     }
     
+    // 리그 게시판 ↔ 분석 게시판 연동: 리그 게시판 조회 시 분석 게시판 글도 포함
+    const LEAGUE_SLUG_TO_ANALYSIS_SLUG: Record<string, string> = {
+      'premier': 'foreign-analysis-premier',
+      'laliga': 'foreign-analysis-laliga',
+      'LIGUE1': 'foreign-analysis-ligue1',
+      'bundesliga': 'foreign-analysis-bundesliga',
+      'serie-a': 'foreign-analysis-serie-a',
+    };
+
+    if (boardData.slug && LEAGUE_SLUG_TO_ANALYSIS_SLUG[boardData.slug]) {
+      const analysisSlug = LEAGUE_SLUG_TO_ANALYSIS_SLUG[boardData.slug];
+      const analysisBoard = Object.values(boardsMap).find(b => b.slug === analysisSlug);
+      if (analysisBoard) {
+        filteredBoardIds.push(analysisBoard.id);
+      }
+    }
+
+    // 해외축구(top) 조회 시 분석 게시판 글도 포함
+    if (boardData.slug === 'soccer' || boardData.id === 'b08d3648-a5cc-4ab6-b1f0-c4609c89ac26') {
+      for (const analysisSlug of Object.values(LEAGUE_SLUG_TO_ANALYSIS_SLUG)) {
+        const analysisBoard = Object.values(boardsMap).find(b => b.slug === analysisSlug);
+        if (analysisBoard && !filteredBoardIds.includes(analysisBoard.id)) {
+          filteredBoardIds.push(analysisBoard.id);
+        }
+      }
+    }
+
     // 최상위 게시판의 ID 및 slug 확인
     const rootBoardId = findRootBoard(boardData.id, boardsMap);
     const rootBoardSlug = boardsMap[rootBoardId]?.slug || rootBoardId;

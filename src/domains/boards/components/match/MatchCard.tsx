@@ -60,14 +60,14 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
     if (!leagueId) return LEAGUE_PLACEHOLDER;
     const hasDarkMode = DARK_MODE_LEAGUE_IDS.includes(leagueId);
     if (isDark && hasDarkMode) {
-      return `${SUPABASE_URL}/storage/v1/object/public/leagues/${leagueId}-1.png`;
+      return `${SUPABASE_URL}/storage/v1/object/public/leagues/md/${leagueId}-1.webp`;
     }
-    return `${SUPABASE_URL}/storage/v1/object/public/leagues/${leagueId}.png`;
+    return `${SUPABASE_URL}/storage/v1/object/public/leagues/md/${leagueId}.webp`;
   };
 
   const getTeamLogo = (teamId: number | undefined) => {
     if (!teamId) return TEAM_PLACEHOLDER;
-    return `${SUPABASE_URL}/storage/v1/object/public/teams/${teamId}.png`;
+    return `${SUPABASE_URL}/storage/v1/object/public/teams/md/${teamId}.webp`;
   };
 
   const leagueLogo = getLeagueLogo();
@@ -98,10 +98,10 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
             <Image
               src={homeTeamLogo}
               alt={homeTeamName}
-              width={24}
-              height={24}
+              width={48}
+              height={48}
               unoptimized
-              style={{ width: '24px', height: '24px', objectFit: 'contain' }}
+              style={{ width: '48px', height: '48px', objectFit: 'contain' }}
             />
           </div>
           <span className={`team-name ${homeTeam.winner ? 'winner' : ''}`}>
@@ -123,10 +123,10 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
             <Image
               src={awayTeamLogo}
               alt={awayTeamName}
-              width={24}
-              height={24}
+              width={48}
+              height={48}
               unoptimized
-              style={{ width: '24px', height: '24px', objectFit: 'contain' }}
+              style={{ width: '48px', height: '48px', objectFit: 'contain' }}
             />
           </div>
           <span className={`team-name ${awayTeam.winner ? 'winner' : ''}`}>

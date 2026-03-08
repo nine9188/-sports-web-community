@@ -33,14 +33,14 @@ export function TeamCard({ teamId, teamData, isEditable = false }: TeamCardProps
     if (!leagueId) return LEAGUE_PLACEHOLDER;
     const hasDarkMode = DARK_MODE_LEAGUE_IDS.includes(leagueId);
     if (isDark && hasDarkMode) {
-      return `${SUPABASE_URL}/storage/v1/object/public/leagues/${leagueId}-1.png`;
+      return `${SUPABASE_URL}/storage/v1/object/public/leagues/md/${leagueId}-1.webp`;
     }
-    return `${SUPABASE_URL}/storage/v1/object/public/leagues/${leagueId}.png`;
+    return `${SUPABASE_URL}/storage/v1/object/public/leagues/md/${leagueId}.webp`;
   };
 
   const getTeamLogo = () => {
     if (!numericTeamId) return TEAM_PLACEHOLDER;
-    return `${SUPABASE_URL}/storage/v1/object/public/teams/${numericTeamId}.png`;
+    return `${SUPABASE_URL}/storage/v1/object/public/teams/md/${numericTeamId}.webp`;
   };
 
   const leagueLogo = getLeagueLogo();

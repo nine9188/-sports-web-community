@@ -159,7 +159,7 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
               iconUrl={post.author_icon_url}
               level={post.author_level || 1}
               exp={post.author_exp}
-              iconSize={16}
+              iconSize={20}
             />
 
             <span className="text-gray-300 dark:text-gray-600">|</span>
