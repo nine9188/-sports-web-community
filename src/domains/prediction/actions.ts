@@ -8,6 +8,7 @@ import { getMajorLeagueIds, LEAGUE_NAMES_MAP } from '@/domains/livescore/constan
 import { getTeamById } from '@teams'
 import { getTeamLogoUrls } from '@/domains/livescore/actions/images'
 import { getLeagueLogoUrl } from '@/domains/livescore/actions/images'
+import { extractCardLinks } from '@/domains/boards/utils/post/extractCardLinks'
 // predictMatch는 OpenAI SDK를 사용하므로 동적 import로 처리
 // (모듈 레벨 import 시 OPENAI_API_KEY 누락 등으로 전체 모듈 로드 실패 방지)
 async function loadPredictMatch() {
@@ -1087,6 +1088,18 @@ async function createPredictionPost(
     if (postError || !post) {
       console.error('❌ 게시글 생성 실패:', postError)
       return { success: false, error: postError?.message || '게시글 생성 실패' }
+    }
+
+    // 카드 링크 저장 (matchCard 등을 post_card_links에 저장하여 관련글 인식)
+    try {
+      const parsedContent = typeof content === 'string' ? JSON.parse(content) : content
+      const cardLinks = extractCardLinks(parsedContent)
+      if (cardLinks.length > 0) {
+        const cardLinksData = cardLinks.map(link => ({ ...link, post_id: post.id }))
+        await supabase.from('post_card_links').insert(cardLinksData)
+      }
+    } catch (cardErr) {
+      console.error('예측 게시글 카드 링크 저장 실패:', cardErr)
     }
 
     return {
