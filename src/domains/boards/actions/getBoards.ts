@@ -108,11 +108,17 @@ export async function getBoardPageData(slug: string, currentPage: number, fromPa
 
     // 해외축구(top) 조회 시 분석 게시판 글도 포함
     if (boardData.slug === 'soccer' || boardData.id === 'b08d3648-a5cc-4ab6-b1f0-c4609c89ac26') {
+      // 리그별 분석 게시판
       for (const analysisSlug of Object.values(LEAGUE_SLUG_TO_ANALYSIS_SLUG)) {
         const analysisBoard = Object.values(boardsMap).find(b => b.slug === analysisSlug);
         if (analysisBoard && !filteredBoardIds.includes(analysisBoard.id)) {
           filteredBoardIds.push(analysisBoard.id);
         }
+      }
+      // 해외축구 분석 게시판 (매핑 없는 리그 분석글 포함)
+      const foreignAnalysisBoard = Object.values(boardsMap).find(b => b.slug === 'foreign-analysis');
+      if (foreignAnalysisBoard && !filteredBoardIds.includes(foreignAnalysisBoard.id)) {
+        filteredBoardIds.push(foreignAnalysisBoard.id);
       }
     }
 

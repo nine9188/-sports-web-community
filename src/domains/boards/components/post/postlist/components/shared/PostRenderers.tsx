@@ -223,6 +223,7 @@ function LeagueLogoImage({
  */
 export function renderBoardLogo(post: Post): React.ReactNode {
   const boardLink = `/boards/${post.board_slug}`;
+  const displayBoardName = post.board_name?.replace(/ 분석$/, '') || '';
 
   if (post.team_id) {
     // 팀 게시판: 팀 로고 사용
@@ -232,7 +233,7 @@ export function renderBoardLogo(post: Post): React.ReactNode {
         <div className="relative w-5 h-5 mr-1">
           <UnifiedSportsImageClient
             src={logoUrl}
-            alt={post.board_name}
+            alt={displayBoardName}
             width={20}
             height={20}
             className="object-contain w-5 h-5"
@@ -240,10 +241,10 @@ export function renderBoardLogo(post: Post): React.ReactNode {
         </div>
         <span
           className="text-xs text-gray-700 dark:text-gray-300 truncate"
-          title={post.board_name}
+          title={displayBoardName}
           style={{ maxWidth: '85px' }}
         >
-          {post.board_name}
+          {displayBoardName}
         </span>
       </Link>
     );
@@ -256,15 +257,15 @@ export function renderBoardLogo(post: Post): React.ReactNode {
           <LeagueLogoImage
             leagueLogo={leagueLogo}
             leagueLogoDark={post.league_logo_dark}
-            alt={post.board_name}
+            alt={displayBoardName}
           />
         </div>
         <span
           className="text-xs text-gray-700 dark:text-gray-300 truncate"
-          title={post.board_name}
+          title={displayBoardName}
           style={{ maxWidth: '85px' }}
         >
-          {post.board_name}
+          {displayBoardName}
         </span>
       </Link>
     );
@@ -275,7 +276,7 @@ export function renderBoardLogo(post: Post): React.ReactNode {
         <div className="relative w-5 h-5 mr-1">
           <Image
             src={siteConfig.logo}
-            alt={post.board_name}
+            alt={displayBoardName}
             width={20}
             height={20}
             className="object-contain w-5 h-5 dark:invert"
@@ -284,10 +285,10 @@ export function renderBoardLogo(post: Post): React.ReactNode {
         </div>
         <span
           className="text-xs text-gray-700 dark:text-gray-300 truncate"
-          title={post.board_name}
+          title={displayBoardName}
           style={{ maxWidth: '85px' }}
         >
-          {post.board_name}
+          {displayBoardName}
         </span>
       </Link>
     );

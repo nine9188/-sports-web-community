@@ -410,8 +410,8 @@ async function getCurrentUserId(): Promise<string> {
   }
 }
 
-// 해외축구 게시판 ID (fallback용)
-const OVERSEAS_FOOTBALL_BOARD_ID = 'b08d3648-a5cc-4ab6-b1f0-c4609c89ac26'
+// 해외축구 분석 게시판 ID (fallback용 - 매핑 없는 리그의 분석글 저장)
+const OVERSEAS_FOOTBALL_ANALYSIS_BOARD_ID = '66aaa603-38cc-44bd-ba4c-47c3884eb7ac'
 
 // 리그 ID로 게시판 슬러그 찾기
 async function getBoardSlugByLeagueId(leagueId: number): Promise<string | null> {
@@ -600,7 +600,7 @@ async function generateMatchPredictionPost(
 
   // 3. fallback
   if (!targetBoardId) {
-    targetBoardId = OVERSEAS_FOOTBALL_BOARD_ID
+    targetBoardId = OVERSEAS_FOOTBALL_ANALYSIS_BOARD_ID
   }
 
   // 게시글 제목: "3월 9일 팀A vs 팀B 경기 예측 분석"
