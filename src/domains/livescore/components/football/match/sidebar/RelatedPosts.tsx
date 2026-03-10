@@ -30,9 +30,9 @@ export default function RelatedPosts({
             <li key={post.id} className={index < posts.length - 1 ? "border-b border-black/5 dark:border-white/10" : ""}>
               <Link
                 href={`/boards/${post.board_slug}/${post.post_number}`}
-                className="block px-3 py-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0] overflow-hidden"
+                className="block px-3 py-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0] overflow-hidden"
               >
-                <div className="flex items-center text-xs gap-1">
+                <div className="flex items-center text-sm sm:text-xs gap-1.5">
                   {post.boardLogoUrl ? (
                     <div className="relative w-5 h-5 flex-shrink-0">
                       <UnifiedSportsImageClient
