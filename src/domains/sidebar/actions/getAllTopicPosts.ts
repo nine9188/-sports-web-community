@@ -1,7 +1,6 @@
 'use server';
 
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
-import { unstable_cache } from 'next/cache';
 import { TopicPost } from '../types';
 import { HOTDEAL_BOARD_SLUGS } from '@/domains/boards/types/hotdeal';
 import { getTeamLogoUrls, getLeagueLogoUrls } from '@/domains/livescore/actions/images';
@@ -22,17 +21,9 @@ interface AllTopicPostsData {
  * 모든 인기글 탭 데이터를 한 번에 조회
  * 기존: views, likes, comments, hot 각각 별도 쿼리 (4회)
  * 최적화: 한 번의 쿼리로 가져와서 서버에서 정렬별로 분리
- *
- * unstable_cache로 요청 간 캐시 적용 (120초)
  */
 export async function getAllTopicPosts(limit = 20): Promise<AllTopicPostsData> {
-  const getCached = unstable_cache(
-    async () => fetchAllTopicPosts(limit),
-    ['sidebar', 'all-topic-posts', String(limit)],
-    { revalidate: 120 } // 2분
-  );
-
-  return getCached();
+  return fetchAllTopicPosts(limit);
 }
 
 /**
@@ -70,8 +61,7 @@ async function fetchAllTopicPosts(limit: number): Promise<AllTopicPostsData> {
       `)
       .gte('created_at', windowStart)
       .eq('is_deleted', false)
-      .eq('is_hidden', false)
-      .limit(100);
+      .eq('is_hidden', false);
 
     if (error || !postsData || postsData.length === 0) {
       return emptyResult;

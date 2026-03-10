@@ -1,7 +1,6 @@
 'use server';
 
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
-import { unstable_cache } from 'next/cache';
 import type { HotdealPostsData, HotdealSidebarPost } from '../types/hotdeal';
 
 interface RawPostData {
@@ -35,14 +34,7 @@ export async function getHotdealBestPosts(
   limit = 10,
   windowDays = 3
 ): Promise<HotdealPostsData> {
-  // limit과 windowDays를 캐시 키에 포함
-  const getCached = unstable_cache(
-    async () => fetchHotdealBestPosts(limit, windowDays),
-    ['sidebar', 'hotdeal-best', String(limit), String(windowDays)],
-    { revalidate: 300 } // 5분
-  );
-
-  return getCached();
+  return fetchHotdealBestPosts(limit, windowDays);
 }
 
 /**
