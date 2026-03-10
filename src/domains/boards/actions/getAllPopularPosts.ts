@@ -50,10 +50,31 @@ interface GetAllPopularPostsParams {
 }
 
 /**
- * 전체 게시판의 인기 게시글 조회
- * @param period - 기간 필터 (today, week, month, all)
- * @param page - 페이지 번호
- * @param limit - 페이지당 게시글 수
+ * HOT 점수 계산 (사이드바와 동일한 공식)
+ * rawScore = (조회수 × 1) + (좋아요 × 10) + (댓글 × 20)
+ * hotScore = rawScore × 시간감쇠 (기간 내 선형 감소)
+ */
+function calculateHotScore(
+  views: number,
+  likes: number,
+  comments: number,
+  createdAt: string,
+  now: number,
+  maxHours: number
+): number {
+  const postTime = new Date(createdAt).getTime();
+  const hoursSince = (now - postTime) / (1000 * 60 * 60);
+  const timeDecay = Math.max(0, 1 - (hoursSince / maxHours));
+
+  const rawScore = (views * 1) + (likes * 10) + (comments * 20);
+  return rawScore * timeDecay;
+}
+
+/**
+ * 전체 게시판의 인기 게시글 조회 (HOT 점수 기반)
+ *
+ * HOT 점수 = (조회×1 + 좋아요×10 + 댓글×20) × 시간감쇠
+ * 사이드바 인기글과 동일한 공식 사용
  */
 export async function getAllPopularPosts({
   period = 'week',
@@ -63,34 +84,36 @@ export async function getAllPopularPosts({
   try {
     const supabase = await getSupabaseServer();
     const now = new Date();
-    const offset = (page - 1) * limit;
 
     // 기간별 시작 날짜 계산
     let startDate: Date;
+    let windowDays: number;
 
     switch (period) {
       case 'week':
-        // 이번주 월요일 00:00:00
         startDate = new Date(now);
         const dayOfWeek = now.getDay();
         const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
         startDate.setDate(now.getDate() - diff);
         startDate.setHours(0, 0, 0, 0);
+        windowDays = 7;
         break;
       case 'month':
-        // 이번달 1일 00:00:00
         startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        windowDays = 31;
         break;
       case 'all':
       default:
-        // 1년 전
         startDate = new Date(now);
         startDate.setFullYear(now.getFullYear() - 1);
+        windowDays = 365;
         break;
     }
 
-    // 인기 게시글 쿼리 (좋아요 + 조회수 + 댓글 수 기반)
-    let postsQuery = supabase
+    const maxHours = windowDays * 24;
+
+    // 기간 내 모든 게시글 가져오기 (HOT 점수는 서버에서 계산해야 하므로)
+    const { data: postsData, error: postsError } = await supabase
       .from('posts')
       .select(`
         id,
@@ -103,21 +126,13 @@ export async function getAllPopularPosts({
         content,
         user_id,
         boards!inner(id, slug, name, team_id, league_id),
-        profiles!inner(id, nickname, level, exp, icon_id, public_id)
-      `, { count: 'exact' })
+        profiles!left(id, nickname, level, exp, icon_id, public_id)
+      `)
       .eq('is_deleted', false)
       .eq('is_hidden', false)
       .gte('created_at', startDate.toISOString())
-      .order('likes', { ascending: false });
-
-    // 총 개수 가져오기
-    const { count } = await postsQuery;
-    const totalItems = count || 0;
-
-    // 실제 데이터 가져오기
-    const { data: postsData, error: postsError } = await postsQuery
-      .range(offset, offset + limit - 1)
-      .limit(limit);
+      .order('created_at', { ascending: false })
+      .limit(500);
 
     if (postsError) {
       console.error('인기 게시글 조회 오류:', postsError);
@@ -158,14 +173,35 @@ export async function getAllPopularPosts({
       }
     }
 
-    // 팀/리그 로고 가져오기
-    const teamIds = postsData
-      .map(post => post.boards?.team_id)
-      .filter(Boolean) as number[];
+    // HOT 점수 계산 후 정렬
+    const nowMs = now.getTime();
+    const scoredPosts = postsData.map(post => ({
+      post,
+      hotScore: calculateHotScore(
+        post.views || 0,
+        post.likes || 0,
+        commentCounts[post.id] || 0,
+        post.created_at,
+        nowMs,
+        maxHours
+      )
+    }));
 
-    const leagueIds = postsData
-      .map(post => post.boards?.league_id)
-      .filter(Boolean) as number[];
+    scoredPosts.sort((a, b) => b.hotScore - a.hotScore);
+
+    // 페이지네이션 적용
+    const totalItems = scoredPosts.length;
+    const offset = (page - 1) * limit;
+    const pagedPosts = scoredPosts.slice(offset, offset + limit);
+
+    // 팀/리그 로고 가져오기
+    const teamIds = [...new Set(
+      pagedPosts.map(({ post }) => post.boards?.team_id).filter(Boolean)
+    )] as number[];
+
+    const leagueIds = [...new Set(
+      pagedPosts.map(({ post }) => post.boards?.league_id).filter(Boolean)
+    )] as number[];
 
     const teamLogoMap: Record<string, string> = {};
     const leagueLogoMap: Record<string, string> = {};
@@ -202,9 +238,9 @@ export async function getAllPopularPosts({
 
     // 사용자 아이콘 정보 가져오기
     const userIconMap: Record<number, string> = {};
-    const iconIds = postsData
-      .map(post => post.profiles?.icon_id)
-      .filter(Boolean) as number[];
+    const iconIds = [...new Set(
+      pagedPosts.map(({ post }) => post.profiles?.icon_id).filter(Boolean)
+    )] as number[];
 
     if (iconIds.length > 0) {
       const { data: iconsData } = await supabase
@@ -222,7 +258,7 @@ export async function getAllPopularPosts({
     }
 
     // 데이터 포맷팅
-    const formattedPosts: PopularPost[] = postsData.map(post => {
+    const formattedPosts: PopularPost[] = pagedPosts.map(({ post }) => {
       const iconId = post.profiles?.icon_id;
       const iconUrl = iconId && userIconMap[iconId]
         ? userIconMap[iconId]

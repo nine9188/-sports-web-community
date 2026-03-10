@@ -11,17 +11,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'edge'; // Edge Runtime 사용 (더 빠름)
 
-// 허용된 이미지 도메인 화이트리스트
-const ALLOWED_DOMAINS = [
-  'media.api-sports.io',
-  'vnjjfhsuzoxcljqqwwvx.supabase.co',
-  'i.ytimg.com',
-  'cdn.footballist.co.kr',
-  'image.fmkorea.com',
-  'static01.nyt.com',
-  'img.mydaily.co.kr',
-];
-
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const imageUrl = searchParams.get('url');
@@ -40,14 +29,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { error: 'Only HTTPS URLs are allowed' },
         { status: 400 }
-      );
-    }
-
-    // 도메인 화이트리스트 검증
-    if (!ALLOWED_DOMAINS.includes(url.hostname)) {
-      return NextResponse.json(
-        { error: 'Domain not allowed' },
-        { status: 403 }
       );
     }
 
