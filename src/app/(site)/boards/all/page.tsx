@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { fetchPosts } from '@/domains/boards/actions';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import BoardDetailLayout from '@/domains/boards/components/layout/BoardDetailLayout';
-import { convertApiPostsToLayoutPosts } from '@/domains/boards/utils/post/postUtils';
 import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 
@@ -37,8 +36,8 @@ export default async function AllPostsPage({
       // boardIds를 지정하지 않으면 모든 게시판에서 가져옴
     });
 
-    // API 데이터를 레이아웃 호환 형식으로 변환
-    const layoutPosts = convertApiPostsToLayoutPosts(postsData.data || []);
+    // fetchPosts 결과를 직접 사용 (content 포함)
+    const layoutPosts = postsData.data || [];
 
     // HoverMenu용 데이터 가져오기
     const supabase = await getSupabaseServer();

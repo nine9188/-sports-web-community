@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { getAllPopularPosts } from '@/domains/boards/actions/getAllPopularPosts';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import PopularPageClient from './PopularPageClient';
-import { convertApiPostsToLayoutPosts } from '@/domains/boards/utils/post/postUtils';
 import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 
@@ -41,8 +40,8 @@ export default async function PopularPostsPage({
       limit: 20
     });
 
-    // API 데이터를 레이아웃 호환 형식으로 변환
-    const layoutPosts = convertApiPostsToLayoutPosts(postsData.data || []);
+    // getAllPopularPosts 결과를 직접 사용 (content 포함)
+    const layoutPosts = postsData.data || [];
 
     // HoverMenu용 데이터 가져오기
     const supabase = await getSupabaseServer();

@@ -19,6 +19,7 @@ const ALLOWED_DOMAINS = [
   'cdn.footballist.co.kr',
   'image.fmkorea.com',
   'static01.nyt.com',
+  'img.mydaily.co.kr',
 ];
 
 export async function GET(request: NextRequest) {

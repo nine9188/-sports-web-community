@@ -58,6 +58,12 @@ const nextConfig = {
         hostname: 'static01.nyt.com',
         pathname: '/**',
       },
+      // RSS 뉴스 이미지
+      {
+        protocol: 'https',
+        hostname: 'img.mydaily.co.kr',
+        pathname: '/**',
+      },
       // 외부 URL 이미지는 /api/proxy-image를 통해 프록시 처리
     ],
   },
