@@ -126,7 +126,7 @@ export default function MatchCardServer({ match, isLast }: MatchCardServerProps)
 
       {/* 홈팀 정보 */}
       <div className="flex items-center justify-end gap-2 flex-1 min-w-0">
-        <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate text-right">
+        <span className="text-xs sm:text-sm text-gray-900 dark:text-[#F0F0F0] truncate text-right">
           {match.homeTeam.name}
         </span>
         {match.homeTeam.logo && (
@@ -164,7 +164,7 @@ export default function MatchCardServer({ match, isLast }: MatchCardServerProps)
             />
           </div>
         )}
-        <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
+        <span className="text-xs sm:text-sm text-gray-900 dark:text-[#F0F0F0] truncate">
           {match.awayTeam.name}
         </span>
       </div>

@@ -537,32 +537,32 @@ export default function PredictionChart({
       {/* AI 예측 */}
       {showPrediction && (
         <div className="p-4 border-b border-black/5 dark:border-white/10">
-          <div className="flex items-center justify-center gap-8 mb-3">
+          <div className="flex items-center justify-center gap-4 md:gap-8 mb-3">
             {/* 홈팀 */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 md:gap-3">
               {teams.home.logo && (
-                <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
+                <div className="w-9 h-9 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center">
                   <img src={teams.home.logo} alt={homeNameKo} className="max-w-full max-h-full object-contain" />
                 </div>
               )}
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{predictions.percent.home}</div>
+                <div className="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400">{predictions.percent.home}</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400 truncate max-w-[90px]">{homeNameKo}</div>
               </div>
             </div>
             {/* 무승부 */}
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-400 dark:text-gray-500">{predictions.percent.draw}</div>
+              <div className="text-xl md:text-2xl font-bold text-gray-400 dark:text-gray-500">{predictions.percent.draw}</div>
               <div className="text-xs text-gray-500 dark:text-gray-400">무승부</div>
             </div>
             {/* 원정팀 */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 md:gap-3">
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600 dark:text-green-400">{predictions.percent.away}</div>
+                <div className="text-xl md:text-2xl font-bold text-green-600 dark:text-green-400">{predictions.percent.away}</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400 truncate max-w-[90px]">{awayNameKo}</div>
               </div>
               {teams.away.logo && (
-                <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
+                <div className="w-9 h-9 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center">
                   <img src={teams.away.logo} alt={awayNameKo} className="max-w-full max-h-full object-contain" />
                 </div>
               )}
