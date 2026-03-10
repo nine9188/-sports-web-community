@@ -6,7 +6,7 @@ interface PostHeaderProps {
   author: {
     nickname: string | null;
     id?: string;
-    public_id?: string;
+    public_id?: string | null;
     level?: number;
     exp?: number;
     icon_id?: number | null;
