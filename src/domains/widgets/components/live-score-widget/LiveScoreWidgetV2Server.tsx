@@ -106,6 +106,21 @@ const BIG_MATCH_LEAGUES = [
   292, // K리그1
 ];
 
+// 리그 표시 우선순위 (낮을수록 먼저 표시)
+const LEAGUE_PRIORITY: Record<number, number> = {
+  39: 1,   // 프리미어리그
+  2: 2,    // 챔피언스리그
+  3: 3,    // 유로파리그
+  140: 4,  // 라리가
+  78: 4,   // 분데스리가
+  135: 4,  // 세리에A
+  61: 4,   // 리그앙
+  45: 5,   // FA컵
+  848: 6,  // 컨퍼런스리그
+  531: 7,  // UEFA 슈퍼컵
+  292: 8,  // K리그1
+};
+
 /**
  * MultiDayMatchesResult → 위젯용 League[] 변환
  * bigMatch 리그만 필터링 + 어제/오늘/내일 경기를 리그별로 그룹화
@@ -120,7 +135,16 @@ export function transformToWidgetLeagues(result: MultiDayMatchesResult): WidgetL
   const todayMatches = filterMatches(result.data.today?.matches || []);
   const tomorrowMatches = filterMatches(result.data.tomorrow?.matches || []);
 
-  return groupMatchesByLeague(yesterdayMatches, todayMatches, tomorrowMatches);
+  const leagues = groupMatchesByLeague(yesterdayMatches, todayMatches, tomorrowMatches);
+
+  // 우선순위 정렬
+  leagues.sort((a, b) => {
+    const pa = LEAGUE_PRIORITY[Number(a.id)] ?? 99;
+    const pb = LEAGUE_PRIORITY[Number(b.id)] ?? 99;
+    return pa - pb;
+  });
+
+  return leagues;
 }
 
 interface LiveScoreWidgetV2ServerProps {
