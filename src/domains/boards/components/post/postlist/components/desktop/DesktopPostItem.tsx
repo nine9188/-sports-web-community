@@ -190,13 +190,13 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
     >
       {/* 게시판 컬럼 */}
       {showBoard && (
-        <td className="py-2 px-3 align-middle">
+        <td className="py-2 pl-3 pr-1 align-middle">
           {renderBoardLogo(post)}
         </td>
       )}
 
       {/* 제목 컬럼 */}
-      <td className="py-2 px-4 align-middle">
+      <td className="py-2 px-1 align-middle">
         <Link href={href} prefetch={false} onClick={handleClick}>
           <div className="flex items-center gap-1 min-w-0">
             <span className={`${titleClassName} truncate`}>
@@ -220,7 +220,7 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
       </td>
 
       {/* 글쓴이 컬럼 */}
-      <td className="py-2 px-3 text-left text-xs text-gray-500 dark:text-gray-400 align-middle">
+      <td className="py-2 px-1 text-left text-xs text-gray-500 dark:text-gray-400 align-middle">
         {renderAuthor(post, 20, 'justify-start')}
       </td>
 

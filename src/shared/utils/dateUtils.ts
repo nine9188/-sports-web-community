@@ -168,25 +168,30 @@ export function formatDateOpgg(dateInput: Date | string | null | undefined): str
     const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
     if (isNaN(date.getTime())) return '';
 
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    const diffHour = Math.floor(diffMs / 3600000);
+    const diffDay = Math.floor(diffMs / 86400000);
+    const diffWeek = Math.floor(diffDay / 7);
+    const diffMonth = Math.floor(diffDay / 30);
+
+    // 상대 시간 표시
+    if (diffMin < 1) return '방금';
+    if (diffHour < 1) return `${diffMin}분 전`;
+    if (diffDay < 1) return `${diffHour}시간 전`;
+    if (diffDay < 7) return `${diffDay}일 전`;
+    if (diffDay < 30) return `${diffWeek}주 전`;
+    if (diffMonth < 12) return `${diffMonth}달 전`;
+
+    // 1년 이상: YY.MM.DD
     const kstFormatter = createKSTFormatter({
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
     });
-
-    const now = new Date();
-    const [yNow, mNow, dNow] = extractYMD(kstFormatter, now);
-    const [yTar, mTar, dTar] = extractYMD(kstFormatter, date);
-
-    // 오늘이면 HH:mm, 아니면 YYYY.MM.DD
-    if (yNow === yTar && mNow === mTar && dNow === dTar) {
-      const [, , , hh, mm] = extractYMDHM(kstFormatter, date);
-      return `${hh}:${mm}`;
-    }
-    return `${yTar}.${mTar}.${dTar}`;
+    const [yy, mm, dd] = extractYMD(kstFormatter, date);
+    return `${yy.slice(2)}.${mm}.${dd}`;
   } catch (error) {
     console.error('날짜 포맷 오류:', error);
     return '';

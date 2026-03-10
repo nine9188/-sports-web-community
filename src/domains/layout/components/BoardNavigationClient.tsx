@@ -47,7 +47,7 @@ const createNavBoards = (boards: Board[]): Board[] => {
         ...(soccerBoard ? [{ ...soccerBoard, name: '해외축구', parent_id: 'nav-sports', display_order: 0 }] : []),
         ...(kleagueBoard ? [{ ...kleagueBoard, name: '국내축구', parent_id: 'nav-sports', display_order: 1 }] : []),
         ...(newsBoard ? [{ ...newsBoard, name: '축구소식', parent_id: 'nav-sports', display_order: 2 }] : []),
-        ...(dataAnalysisBoard ? [{ ...dataAnalysisBoard, name: '데이터분석', parent_id: 'nav-sports', display_order: 3 }] : [])
+        ...(dataAnalysisBoard ? [{ ...dataAnalysisBoard, name: '데이터분석', parent_id: 'nav-sports', display_order: 3, children: [] }] : [])
       ]
     },
     {
