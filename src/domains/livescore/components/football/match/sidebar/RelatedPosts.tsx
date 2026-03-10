@@ -25,7 +25,7 @@ export default function RelatedPosts({
             <li key={post.id} className={index < posts.length - 1 ? "border-b border-black/5 dark:border-white/10" : ""}>
               <Link
                 href={`/boards/${post.board_slug}/${post.post_number}`}
-                className="block px-1.5 py-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]"
+                className="block px-3 py-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]"
               >
                 <span className="text-sm truncate block">{post.title}</span>
               </Link>
