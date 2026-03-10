@@ -165,14 +165,13 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {}, teamLogoUrls = 
     const { homeGoals, awayGoals, score, fixture } = matchInfo;
     const currentScore = `${homeGoals ?? 0} - ${awayGoals ?? 0}`;
     
-    let scoreDisplay = currentScore;
-    // 승부차기 정보가 있는 경우
+    const scoreDisplay = currentScore;
+    // 승부차기/연장전 부가 정보 (별도 줄로 표시)
+    let extraScoreLabel: string | null = null;
     if (score?.penalty && score.penalty.home !== null && score.penalty.away !== null) {
-      scoreDisplay = `${currentScore} (승부차기 ${score.penalty.home}-${score.penalty.away})`;
-    }
-    // 연장전 정보가 있는 경우
-    else if (score?.extratime && score.extratime.home !== null && score.extratime.away !== null) {
-      scoreDisplay = `${currentScore} (연장 ${score.extratime.home}-${score.extratime.away})`;
+      extraScoreLabel = `승부차기 ${score.penalty.home} - ${score.penalty.away}`;
+    } else if (score?.extratime && score.extratime.home !== null && score.extratime.away !== null) {
+      extraScoreLabel = `연장 ${score.extratime.home} - ${score.extratime.away}`;
     }
 
     // 경기 상태 텍스트
@@ -204,6 +203,7 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {}, teamLogoUrls = 
 
     return {
       scoreDisplay,
+      extraScoreLabel,
       statusText
     };
   }, [matchInfo]);
@@ -333,10 +333,15 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {}, teamLogoUrls = 
 
             {/* 스코어 */}
             <div className="w-1/3 text-center">
-              <div className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-1">
+              <div className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-[#F0F0F0]">
                 {displayInfo.scoreDisplay}
               </div>
-              <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400">
+              {displayInfo.extraScoreLabel && (
+                <div className="text-sm md:text-base font-semibold text-gray-600 dark:text-gray-300">
+                  ({displayInfo.extraScoreLabel})
+                </div>
+              )}
+              <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">
                 {displayInfo.statusText}
               </div>
             </div>

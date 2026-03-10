@@ -343,7 +343,7 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
     const processedHtml = processContentToHtml(post.content);
 
     // 15. 조회수 증가 (fire-and-forget - 응답 대기 안함)
-    void supabase.rpc('increment_view_count', { post_id: post.id });
+    supabase.rpc('increment_view_count', { post_id: post.id }).then(() => {});
     
     // 15. 하위 게시판 ID 찾기
     const allSubBoardIds: string[] = [];

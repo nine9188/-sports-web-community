@@ -608,7 +608,7 @@ async function generateMatchPredictionPost(
     month: 'long',
     day: 'numeric'
   })
-  const title = `${formattedDate} ${homeNameKo} vs ${awayNameKo} 경기 예측 분석`
+  const title = `${formattedDate} ${leagueNameKo} ${homeNameKo} vs ${awayNameKo} 경기 예측 분석`
 
   // 예측 차트 노드 (데이터가 있을 때만)
   const chartNode = predictionData ? [{
