@@ -9,6 +9,7 @@ type ReactionType = 'like' | 'dislike';
 
 /**
  * 댓글 좋아요/싫어요 토글 공통 로직
+ * 원자적 증감 연산으로 Race Condition 방지
  */
 async function toggleCommentReaction(
   commentId: string,
@@ -24,19 +25,6 @@ async function toggleCommentReaction(
       return { success: false, error: '로그인이 필요합니다.' };
     }
 
-    // 현재 댓글 정보 가져오기
-    const { data: currentComment, error: commentFetchError } = await supabase
-      .from('comments')
-      .select('likes, dislikes')
-      .eq('id', commentId)
-      .single();
-
-    if (commentFetchError) {
-      return { success: false, error: `댓글 조회 오류: ${commentFetchError.message}` };
-    }
-
-    let likes = currentComment.likes || 0;
-    let dislikes = currentComment.dislikes || 0;
     let newUserAction: ReactionType | null = null;
 
     // 현재 리액션 확인
@@ -49,7 +37,7 @@ async function toggleCommentReaction(
       .maybeSingle();
 
     if (checkError) {
-      return { success: false, error: `${reactionType === 'like' ? '좋아요' : '싫어요'} 조회 오류: ${checkError.message}` };
+      return { success: false, error: `리액션 조회 오류: ${checkError.message}` };
     }
 
     if (existingRecord) {
@@ -60,14 +48,16 @@ async function toggleCommentReaction(
         .eq('id', existingRecord.id);
 
       if (deleteError) {
-        return { success: false, error: `${reactionType === 'like' ? '좋아요' : '싫어요'} 삭제 오류: ${deleteError.message}` };
+        return { success: false, error: `리액션 삭제 오류: ${deleteError.message}` };
       }
 
-      if (reactionType === 'like') {
-        likes -= 1;
-      } else {
-        dislikes -= 1;
-      }
+      // 원자적 감소
+      const column = reactionType === 'like' ? 'likes' : 'dislikes';
+      await supabase.rpc('decrement_comment_count', {
+        row_id: commentId,
+        column_name: column,
+      });
+
       newUserAction = null;
     } else {
       // 반대 리액션 확인 및 제거
@@ -86,11 +76,12 @@ async function toggleCommentReaction(
           .eq('id', oppositeRecord.id);
 
         if (!deleteError) {
-          if (oppositeType === 'like') {
-            likes -= 1;
-          } else {
-            dislikes -= 1;
-          }
+          // 반대 리액션 원자적 감소
+          const oppositeColumn = oppositeType === 'like' ? 'likes' : 'dislikes';
+          await supabase.rpc('decrement_comment_count', {
+            row_id: commentId,
+            column_name: oppositeColumn,
+          });
         }
       }
 
@@ -100,26 +91,28 @@ async function toggleCommentReaction(
         .insert({ comment_id: commentId, user_id: user.id, type: reactionType });
 
       if (insertError) {
-        return { success: false, error: `${reactionType === 'like' ? '좋아요' : '싫어요'} 추가 오류: ${insertError.message}` };
+        return { success: false, error: `리액션 추가 오류: ${insertError.message}` };
       }
 
-      if (reactionType === 'like') {
-        likes += 1;
-      } else {
-        dislikes += 1;
-      }
+      // 원자적 증가
+      const column = reactionType === 'like' ? 'likes' : 'dislikes';
+      await supabase.rpc('increment_comment_count', {
+        row_id: commentId,
+        column_name: column,
+      });
+
       newUserAction = reactionType;
     }
 
-    // 댓글 정보 업데이트
-    const { error: updateError } = await supabase
+    // 최종 카운트 조회 (원자적 연산 후 정확한 값)
+    const { data: updatedComment } = await supabase
       .from('comments')
-      .update({ likes, dislikes })
-      .eq('id', commentId);
+      .select('likes, dislikes')
+      .eq('id', commentId)
+      .single();
 
-    if (updateError) {
-      return { success: false, error: `댓글 업데이트 오류: ${updateError.message}` };
-    }
+    const likes = updatedComment?.likes || 0;
+    const dislikes = updatedComment?.dislikes || 0;
 
     // 좋아요가 새로 추가된 경우 알림 및 보상 처리
     if (reactionType === 'like' && newUserAction === 'like') {
@@ -131,7 +124,7 @@ async function toggleCommentReaction(
     console.error(`[${reactionType}Comment] 처리 중 오류:`, error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : `${reactionType === 'like' ? '좋아요' : '싫어요'} 처리 중 오류가 발생했습니다.`
+      error: error instanceof Error ? error.message : '처리 중 오류가 발생했습니다.'
     };
   }
 }
@@ -178,9 +171,7 @@ async function handleCommentLikeNotification(
     }
 
     const activityTypes = await getActivityTypeValues();
-    // 댓글 작성자에게 추천 받기 보상
     await rewardUserActivity(commentData.user_id, activityTypes.RECEIVED_LIKE, commentId);
-    // 추천한 사람에게 추천하기 보상 (Phase 3)
     await rewardUserActivity(userId, activityTypes.GIVE_LIKE, commentId);
   } catch (error) {
     console.error('댓글 좋아요 알림/보상 처리 오류:', error);

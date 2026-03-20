@@ -142,15 +142,44 @@ export default async function PlayerPage({
       ? await getPlayersKoreanNames(Array.from(rankingsPlayerIds))
       : {};
 
+    // Person JSON-LD 생성
+    const playerInfo = initialData.playerData?.info;
+    const playerStats = initialData.playerData?.statistics;
+    const currentTeam = playerStats?.[0]?.team;
+    const personSchema = playerInfo ? {
+      '@context': 'https://schema.org',
+      '@type': 'Person',
+      name: playerKoreanName || playerInfo.name,
+      ...(playerInfo.nationality ? { nationality: { '@type': 'Country', name: playerInfo.nationality } } : {}),
+      ...(playerInfo.birth?.date ? { birthDate: playerInfo.birth.date } : {}),
+      ...(playerInfo.height ? { height: playerInfo.height } : {}),
+      ...(playerInfo.weight ? { weight: playerInfo.weight } : {}),
+      jobTitle: '축구 선수',
+      ...(currentTeam ? {
+        memberOf: {
+          '@type': 'SportsTeam',
+          name: currentTeam.name,
+        },
+      } : {}),
+    } : null;
+
     // 클라이언트 컴포넌트에 데이터 전달
     return (
-      <PlayerPageClient
-        playerId={playerId}
-        initialTab={initialTab}
-        initialData={initialData}
-        playerKoreanName={playerKoreanName}
-        rankingsKoreanNames={rankingsKoreanNames}
-      />
+      <>
+        {personSchema && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }}
+          />
+        )}
+        <PlayerPageClient
+          playerId={playerId}
+          initialTab={initialTab}
+          initialData={initialData}
+          playerKoreanName={playerKoreanName}
+          rankingsKoreanNames={rankingsKoreanNames}
+        />
+      </>
     );
   } catch (error) {
     console.error('플레이어 페이지 로딩 오류:', error);

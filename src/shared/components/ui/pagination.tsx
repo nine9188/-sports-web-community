@@ -130,6 +130,7 @@ export function Pagination({
 
     return (
       <button
+        type="button"
         onClick={() => onPageChange?.(targetPage)}
         disabled={disabled}
         aria-label={ariaLabel}
@@ -161,6 +162,7 @@ export function Pagination({
     return (
       <button
         key={page}
+        type="button"
         onClick={() => onPageChange?.(page)}
         aria-current={isActive ? "page" : undefined}
         className={className}

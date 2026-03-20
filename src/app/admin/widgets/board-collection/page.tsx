@@ -6,6 +6,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSo
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Trash2 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { getAllBoards, getBoardCollectionSettings, saveBoardCollectionSettings } from '@/domains/widgets/actions/boardCollectionSettings';
 import { NativeSelect } from '@/shared/components/ui';
 import Spinner from '@/shared/components/Spinner';
@@ -123,7 +124,7 @@ export default function BoardCollectionWidgetSettingsPage() {
 
     // 이미 추가된 게시판인지 확인
     if (selectedBoards.some((b) => b.id === boardId)) {
-      alert('이미 추가된 게시판입니다.');
+      toast.warning('이미 추가된 게시판입니다.');
       return;
     }
 
@@ -160,9 +161,9 @@ export default function BoardCollectionWidgetSettingsPage() {
     const result = await saveBoardCollectionSettings(settings);
 
     if (result.success) {
-      alert('저장되었습니다.');
+      toast.success('저장되었습니다.');
     } else {
-      alert(`저장 실패: ${result.error}`);
+      toast.error(`저장 실패: ${result.error}`);
     }
 
     setSaving(false);

@@ -1,12 +1,49 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/shared/components/ui';
-import { likeComment, dislikeComment } from '@/domains/boards/actions/comments/index';
 import { CommentType } from '@/domains/boards/types/post/comment';
 import ReportButton from '@/domains/reports/components/ReportButton';
 import AuthorLink from '@/domains/user/components/AuthorLink';
 import { formatDate } from '@/shared/utils/dateUtils';
+import Image from 'next/image';
+import EmoticonPicker from './EmoticonPicker';
+import { useEmoticonMap } from '@/domains/boards/hooks/useEmoticonMap';
+
+// 이모티콘 코드를 파싱하여 텍스트 + 이미지로 렌더링
+function renderContent(text: string, emoticonMap: Map<string, { code: string; url: string; name: string }>, emoticonRegex: RegExp) {
+  if (!text) return null;
+
+  const parts = text.split(emoticonRegex);
+
+  return parts.map((part, index) => {
+    const matched = emoticonMap.get(part);
+    if (matched) {
+      return (
+        <Image
+          key={index}
+          src={matched.url}
+          alt={matched.name}
+          title={matched.name}
+          width={60}
+          height={60}
+          className="inline-block w-[60px] h-[60px] object-contain align-middle m-1"
+        />
+      );
+    }
+    // 줄바꿈 처리
+    return (
+      <React.Fragment key={index}>
+        {part.split('\n').map((line, i, arr) => (
+          <React.Fragment key={i}>
+            {line}
+            {i !== arr.length - 1 && <br />}
+          </React.Fragment>
+        ))}
+      </React.Fragment>
+    );
+  });
+}
 
 interface CommentProps {
   comment: CommentType & {
@@ -16,8 +53,8 @@ interface CommentProps {
   onUpdate: (id: string, content: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   onReply?: (parentId: string) => void;
-  onLike?: (commentId: string) => Promise<void>;
-  onDislike?: (commentId: string) => Promise<void>;
+  onLike: (commentId: string) => Promise<void>;
+  onDislike: (commentId: string) => Promise<void>;
   isLiking?: boolean;
   isPostOwner?: boolean;
   isReply?: boolean;
@@ -35,97 +72,69 @@ export default function Comment({
   isPostOwner = false,
   isReply = false
 }: CommentProps) {
+  const { emoticonMap, emoticonRegex } = useEmoticonMap();
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(comment.content);
-  const [likes, setLikes] = useState(comment.likes || 0);
-  const [dislikes, setDislikes] = useState(comment.dislikes || 0);
-  const [userAction, setUserAction] = useState<'like' | 'dislike' | null>(comment.userAction || null);
-  const [isLiking, setIsLiking] = useState(false);
-  const [isDisliking, setIsDisliking] = useState(false);
+  const [showEditEmoticonPicker, setShowEditEmoticonPicker] = useState(false);
+  const editTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const isCommentOwner = currentUserId === comment.user_id;
   const isHidden = comment.is_hidden === true;
   const isDeleted = comment.is_deleted === true;
 
   useEffect(() => {
-    setLikes(comment.likes || 0);
-    setDislikes(comment.dislikes || 0);
-    setUserAction(comment.userAction || null);
     setEditContent(comment.content);
-  }, [comment.likes, comment.dislikes, comment.userAction, comment.content]);
+  }, [comment.content]);
 
   const handleEdit = () => setIsEditing(true);
-  const handleCancel = () => setIsEditing(false);
+  const handleCancel = () => {
+    setIsEditing(false);
+    setShowEditEmoticonPicker(false);
+    setEditContent(comment.content);
+  };
 
   const handleSave = async () => {
     if (!editContent.trim()) return;
     try {
       await onUpdate(comment.id, editContent.trim());
       setIsEditing(false);
+      setShowEditEmoticonPicker(false);
     } catch {
       alert('댓글 수정에 실패했습니다.');
     }
   };
 
-  const handleLike = async () => {
-    if (parentIsLiking || isLiking || isDisliking || !currentUserId) return;
-
-    // 부모에서 제공한 핸들러 사용 (React Query)
-    if (onLike) {
-      try {
-        await onLike(comment.id);
-      } catch {
-        alert('좋아요 처리 중 오류가 발생했습니다.');
-      }
-      return;
+  const handleEditEmoticonSelect = useCallback((code: string) => {
+    const textarea = editTextareaRef.current;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const newContent = editContent.substring(0, start) + code + editContent.substring(end);
+      setEditContent(newContent);
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + code.length;
+        textarea.focus();
+      }, 0);
+    } else {
+      setEditContent(prev => prev + code);
     }
+  }, [editContent]);
 
-    // Fallback: 직접 API 호출 (legacy)
-    setIsLiking(true);
+  const handleLike = async () => {
+    if (parentIsLiking || !currentUserId) return;
     try {
-      const result = await likeComment(comment.id);
-      if (!result.success) {
-        alert(result.error || '좋아요 처리 중 오류가 발생했습니다.');
-        return;
-      }
-      setLikes(result.likes || 0);
-      setDislikes(result.dislikes || 0);
-      setUserAction(result.userAction || null);
+      await onLike(comment.id);
     } catch {
       alert('좋아요 처리 중 오류가 발생했습니다.');
-    } finally {
-      setIsLiking(false);
     }
   };
 
   const handleDislike = async () => {
-    if (parentIsLiking || isLiking || isDisliking || !currentUserId) return;
-
-    // 부모에서 제공한 핸들러 사용 (React Query)
-    if (onDislike) {
-      try {
-        await onDislike(comment.id);
-      } catch {
-        alert('싫어요 처리 중 오류가 발생했습니다.');
-      }
-      return;
-    }
-
-    // Fallback: 직접 API 호출 (legacy)
-    setIsDisliking(true);
+    if (parentIsLiking || !currentUserId) return;
     try {
-      const result = await dislikeComment(comment.id);
-      if (!result.success) {
-        alert(result.error || '싫어요 처리 중 오류가 발생했습니다.');
-        return;
-      }
-      setLikes(result.likes || 0);
-      setDislikes(result.dislikes || 0);
-      setUserAction(result.userAction || null);
+      await onDislike(comment.id);
     } catch {
       alert('싫어요 처리 중 오류가 발생했습니다.');
-    } finally {
-      setIsDisliking(false);
     }
   };
 
@@ -135,15 +144,14 @@ export default function Comment({
     const hiddenUntil = (comment as CommentType & { hidden_until?: string }).hidden_until;
     return <HiddenCommentUI hiddenUntil={hiddenUntil} isReply={isReply} />;
   }
-  
+
   return (
     <>
-      <div 
+      <div
         id={`comment-${comment.id}`}
         className={`border-b border-black/5 dark:border-white/10 py-3 px-4 ${isReply ? 'pl-12 bg-[#F5F5F5]/50 dark:bg-[#1A1A1A]' : ''}`}
       >
         <div className="flex space-x-2">
-          {/* 대댓글 표시 아이콘 */}
           {isReply && (
             <div className="flex-shrink-0 pt-0.5">
               <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -157,11 +165,11 @@ export default function Comment({
               <div className="flex items-center space-x-2 min-w-0">
                 <AuthorLink
                   nickname={comment.profiles?.nickname || '알 수 없음'}
-                  oddsUserId={comment.user_id}
-                  publicId={comment.profiles?.public_id}
-                  iconUrl={comment.profiles?.icon_url || null}
+                  oddsUserId={comment.user_id ?? undefined}
+                  publicId={comment.profiles?.public_id ?? undefined}
+                  iconUrl={comment.profiles?.icon_url || undefined}
                   level={comment.profiles?.level || 1}
-                  exp={comment.profiles?.exp}
+                  exp={comment.profiles?.exp ?? undefined}
                   iconSize={20}
                   showIcon={true}
                   priority
@@ -175,27 +183,45 @@ export default function Comment({
             </div>
 
             {!isEditing ? (
-              <div className="text-sm text-gray-800 dark:text-gray-200 mb-2 break-words">{comment.content}</div>
+              <div className="text-sm text-gray-800 dark:text-gray-200 mb-2 break-words leading-relaxed whitespace-pre-wrap">{renderContent(comment.content, emoticonMap, emoticonRegex)}</div>
             ) : (
               <div className="mb-3">
                 <textarea
-                  className="w-full px-3 py-2 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-md text-sm resize-none outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors duration-200"
+                  ref={editTextareaRef}
+                  className="w-full px-3 py-2 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-md text-base sm:text-sm resize-none outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors duration-200"
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
                   rows={3}
                 />
-                <div className="flex justify-end space-x-2 mt-2">
-                  <Button variant="secondary" size="sm" onClick={handleCancel} className="px-3 py-1 text-xs h-auto">취소</Button>
-                  <Button variant="primary" size="sm" onClick={handleSave} className="px-3 py-1 text-xs h-auto" disabled={!editContent.trim()}>저장</Button>
+                <div className="flex items-center justify-between mt-3">
+                  <div className="relative">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowEditEmoticonPicker(!showEditEmoticonPicker)}
+                      className="flex items-center gap-1.5 px-3 h-[36px] text-sm font-medium"
+                    >
+                      이모티콘
+                    </Button>
+                    {showEditEmoticonPicker && (
+                      <EmoticonPicker
+                        onSelect={handleEditEmoticonSelect}
+                        onClose={() => setShowEditEmoticonPicker(false)}
+                      />
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="secondary" onClick={handleCancel} className="px-3 h-[36px] text-sm font-medium">취소</Button>
+                    <Button variant="primary" onClick={handleSave} className="px-3 h-[36px] text-sm font-medium" disabled={!editContent.trim()}>저장</Button>
+                  </div>
                 </div>
               </div>
             )}
 
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <ActionButton action="like" active={userAction === 'like'} count={likes} onClick={handleLike} disabled={parentIsLiking || isLiking || isDisliking || !currentUserId} />
-                <ActionButton action="dislike" active={userAction === 'dislike'} count={dislikes} onClick={handleDislike} disabled={parentIsLiking || isLiking || isDisliking || !currentUserId} />
-                {/* 답글 버튼 - 원댓글에만 표시 (대댓글에는 표시 안 함) */}
+                <ActionButton action="like" active={comment.userAction === 'like'} count={comment.likes || 0} onClick={handleLike} disabled={parentIsLiking || !currentUserId} />
+                <ActionButton action="dislike" active={comment.userAction === 'dislike'} count={comment.dislikes || 0} onClick={handleDislike} disabled={parentIsLiking || !currentUserId} />
                 {!isReply && currentUserId && onReply && (
                   <Button
                     variant="ghost"
@@ -225,7 +251,7 @@ export default function Comment({
           </div>
         </div>
       </div>
-      
+
       {/* 대댓글 렌더링 (1단계만) */}
       {comment.children && comment.children.length > 0 && (
         <>

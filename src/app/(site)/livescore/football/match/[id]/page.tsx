@@ -229,8 +229,48 @@ export default async function MatchPage({
         : Promise.resolve(null),
     ]);
 
+    // SportsEvent JSON-LD 생성
+    const match = matchData.match;
+    const homeTeamMapping = match ? getTeamById(match.teams.home.id) : null;
+    const awayTeamMapping = match ? getTeamById(match.teams.away.id) : null;
+    const leagueMapping = match ? getLeagueById(match.league.id) : null;
+    const homeTeamName = homeTeamMapping?.name_ko || match?.teams.home.name || '';
+    const awayTeamName = awayTeamMapping?.name_ko || match?.teams.away.name || '';
+    const leagueName = leagueMapping?.nameKo || match?.league.name || '';
+
+    const sportsEventSchema = match ? {
+      '@context': 'https://schema.org',
+      '@type': 'SportsEvent',
+      name: `${homeTeamName} vs ${awayTeamName}`,
+      startDate: match.time?.date || match.fixture?.date,
+      description: `${leagueName} - ${homeTeamName} vs ${awayTeamName}`,
+      eventStatus: isFinished ? 'https://schema.org/EventScheduled' : 'https://schema.org/EventScheduled',
+      eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+      homeTeam: {
+        '@type': 'SportsTeam',
+        name: homeTeamName,
+      },
+      awayTeam: {
+        '@type': 'SportsTeam',
+        name: awayTeamName,
+      },
+      organizer: {
+        '@type': 'SportsOrganization',
+        name: leagueName,
+      },
+      ...(isFinished && match.goals ? {
+        result: `${match.goals.home} - ${match.goals.away}`,
+      } : {}),
+    } : null;
+
     return (
       <div className="container">
+        {sportsEventSchema && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(sportsEventSchema) }}
+          />
+        )}
         <MatchPageClient
           matchId={matchId}
           initialTab={initialTab}

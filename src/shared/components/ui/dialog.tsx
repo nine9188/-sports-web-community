@@ -32,12 +32,14 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 interface DialogContentProps
   extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
   variant?: 'default' | 'bottomSheet'
+  /** bottomSheet 데스크탑 크기. 'wide'는 max-w/max-h 제약 없이 className으로 직접 지정 */
+  size?: 'default' | 'wide'
 }
 
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   DialogContentProps
->(({ className, children, variant = 'default', ...props }, ref) => (
+>(({ className, children, variant = 'default', size = 'default', ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
@@ -57,13 +59,16 @@ const DialogContent = React.forwardRef<
         ],
         variant === 'bottomSheet' && [
           // 모바일: 바텀시트
-          "bottom-0 left-0 right-0 rounded-t-2xl max-h-[85vh]",
+          "bottom-0 left-0 right-0 rounded-t-2xl",
+          size !== 'wide' && "max-h-[85vh]",
           "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
-          // 데스크탑: 센터 모달
+          // 데스크탑: 센터 모달 (위치 & 애니메이션)
           "md:bottom-auto md:left-[50%] md:top-[50%] md:right-auto",
           "md:translate-x-[-50%] md:translate-y-[-50%]",
-          "md:max-w-md md:rounded-lg md:max-h-[80vh]",
+          "md:rounded-lg",
           "md:border md:border-black/7 md:dark:border-white/10",
+          // 데스크탑 사이즈: default만 제약, wide는 className으로 직접 지정
+          size !== 'wide' && "md:max-w-md md:max-h-[80vh]",
           "md:data-[state=closed]:slide-out-to-bottom-0 md:data-[state=open]:slide-in-from-bottom-0",
           "md:data-[state=closed]:fade-out-0 md:data-[state=open]:fade-in-0",
           "md:data-[state=closed]:zoom-out-95 md:data-[state=open]:zoom-in-95",

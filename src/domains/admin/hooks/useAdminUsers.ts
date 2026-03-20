@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getAllUsersWithLastAccess } from '../actions/suspension';
 import { getAllUsersEmailStatus, confirmUserEmail } from '../actions/email-verification';
-import { getSupabaseBrowser } from '@/shared/lib/supabase';
+import { toggleAdminStatus } from '@/shared/actions/admin-actions';
 import { adminKeys } from '@/shared/constants/queryKeys';
 
 interface User {
@@ -52,17 +52,13 @@ export function useToggleAdminMutation() {
 
   return useMutation({
     mutationFn: async ({ userId, currentStatus }: { userId: string; currentStatus: boolean }) => {
-      const supabase = getSupabaseBrowser();
-      const { error } = await supabase
-        .from('profiles')
-        .update({ is_admin: !currentStatus })
-        .eq('id', userId);
+      const result = await toggleAdminStatus(userId, currentStatus);
 
-      if (error) {
-        throw new Error(error.message);
+      if (!result.success) {
+        throw new Error(result.error || '관리자 상태 변경에 실패했습니다.');
       }
 
-      return { userId, newStatus: !currentStatus };
+      return { userId, newStatus: result.newStatus ?? !currentStatus };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminKeys.users() });

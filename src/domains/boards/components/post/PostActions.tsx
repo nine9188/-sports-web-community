@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
 import { likePost, dislikePost } from '@/domains/boards/actions/posts/index';
@@ -27,6 +27,13 @@ export default function PostActions({
   const [userAction, setUserAction] = useState<'like' | 'dislike' | null>(initialUserAction);
   
   const router = useRouter();
+
+  // 서버 데이터가 변경되면(router.refresh 등) 로컬 상태 동기화
+  useEffect(() => {
+    setLikes(initialLikes);
+    setDislikes(initialDislikes);
+    setUserAction(initialUserAction);
+  }, [initialLikes, initialDislikes, initialUserAction]);
   
   // 좋아요 처리 함수
   const handleLike = async () => {
@@ -62,7 +69,7 @@ export default function PostActions({
       // 페이지 새로고침으로 서버 컴포넌트 데이터 갱신
       router.refresh();
       
-    } catch (error) {
+    } catch {
       alert('좋아요 처리 중 오류가 발생했습니다.');
     } finally {
       setIsLiking(false);
@@ -103,7 +110,7 @@ export default function PostActions({
       // 페이지 새로고침으로 서버 컴포넌트 데이터 갱신
       router.refresh();
       
-    } catch (error) {
+    } catch {
       alert('싫어요 처리 중 오류가 발생했습니다.');
     } finally {
       setIsDisliking(false);

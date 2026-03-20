@@ -1,6 +1,7 @@
 'use server'
 
 import { getSupabaseAction, getSupabaseAdmin } from '@/shared/lib/supabase/server'
+import { calculateLevelFromExp } from '@/shared/utils/level-icons'
 
 // 관리자 권한 확인 함수
 async function checkAdminPermission() {
@@ -255,6 +256,188 @@ export async function getExpHistory(limit: number = 50) {
     return {
       success: false,
       error: error instanceof Error ? error.message : '경험치 내역 조회 중 오류가 발생했습니다.'
+    }
+  }
+}
+
+// =============================================
+// 경험치 조정 (관리자 전용)
+// =============================================
+
+export async function adminAdjustExp(
+  targetUserId: string,
+  expAmount: number,
+  reason: string
+): Promise<{ success: boolean; updatedExp?: number; updatedLevel?: number; error?: string }> {
+  try {
+    const { supabase } = await checkAdminPermission()
+
+    let updatedExp = 0
+    let updatedLevel = 1
+
+    try {
+      const { error } = await supabase.rpc('admin_adjust_exp', {
+        admin_id: (await supabase.auth.getUser()).data.user?.id || '',
+        target_user_id: targetUserId,
+        exp_amount: expAmount,
+        reason_text: reason,
+      })
+
+      if (error) throw error
+
+      // RPC 성공 시 최신 프로필 조회
+      const { data: updatedUserData, error: fetchError } = await supabase
+        .from('profiles')
+        .select('id, nickname, exp, level')
+        .eq('id', targetUserId)
+        .single()
+
+      if (fetchError) {
+        // 조회 실패 시 계산으로 대체
+        const { data: currentProfile } = await supabase
+          .from('profiles')
+          .select('exp')
+          .eq('id', targetUserId)
+          .single()
+        updatedExp = Math.max(0, (currentProfile?.exp || 0) + expAmount)
+        updatedLevel = calculateLevelFromExp(updatedExp)
+      } else {
+        updatedExp = updatedUserData.exp || 0
+        updatedLevel = updatedUserData.level || 1
+      }
+    } catch {
+      // RPC 실패 시 수동 처리
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('exp')
+        .eq('id', targetUserId)
+        .single()
+
+      updatedExp = Math.max(0, (currentProfile?.exp || 0) + expAmount)
+      updatedLevel = calculateLevelFromExp(updatedExp)
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          exp: updatedExp,
+          level: updatedLevel,
+        })
+        .eq('id', targetUserId)
+
+      if (updateError) throw updateError
+
+      // 경험치 내역 기록
+      try {
+        await supabase.from('exp_history').insert({
+          user_id: targetUserId,
+          exp: expAmount,
+          reason: reason,
+        })
+      } catch {
+        console.error('경험치 기록 예외 발생')
+      }
+    }
+
+    return { success: true, updatedExp, updatedLevel }
+  } catch (error) {
+    console.error('경험치 조정 오류:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '경험치 조정 중 오류가 발생했습니다.',
+    }
+  }
+}
+
+// =============================================
+// 포인트 조정 (관리자 전용)
+// =============================================
+
+export async function adminAdjustPoints(
+  targetUserId: string,
+  pointsAmount: number,
+  reason: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { supabase } = await checkAdminPermission()
+
+    try {
+      const { error } = await supabase.rpc('admin_adjust_points', {
+        admin_id: (await supabase.auth.getUser()).data.user?.id || '',
+        target_user_id: targetUserId,
+        points_amount: pointsAmount,
+        reason_text: reason,
+      })
+
+      if (error) throw error
+    } catch {
+      // RPC 실패 시 수동 처리
+      const { data: userData, error: userError } = await supabase
+        .from('profiles')
+        .select('points')
+        .eq('id', targetUserId)
+        .single()
+
+      if (userError) throw userError
+
+      const currentPoints = userData?.points || 0
+      const newPoints = Math.max(0, currentPoints + pointsAmount)
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ points: newPoints })
+        .eq('id', targetUserId)
+
+      if (updateError) throw updateError
+
+      // 포인트 내역 기록
+      try {
+        await supabase.from('point_history').insert({
+          user_id: targetUserId,
+          points: pointsAmount,
+          reason: reason,
+          admin_id: (await supabase.auth.getUser()).data.user?.id,
+        })
+      } catch {
+        console.error('포인트 내역 추가 중 예외 발생')
+      }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error('포인트 조정 오류:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '포인트 조정 중 오류가 발생했습니다.',
+    }
+  }
+}
+
+// =============================================
+// 관리자 상태 토글 (관리자 전용)
+// =============================================
+
+export async function toggleAdminStatus(
+  userId: string,
+  currentStatus: boolean
+): Promise<{ success: boolean; newStatus?: boolean; error?: string }> {
+  try {
+    const { supabase } = await checkAdminPermission()
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ is_admin: !currentStatus })
+      .eq('id', userId)
+
+    if (error) {
+      throw new Error(`관리자 상태 변경 실패: ${error.message}`)
+    }
+
+    return { success: true, newStatus: !currentStatus }
+  } catch (error) {
+    console.error('관리자 상태 변경 오류:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '관리자 상태 변경 중 오류가 발생했습니다.',
     }
   }
 }

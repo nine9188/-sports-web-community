@@ -45,7 +45,7 @@ export default function ExpManagementPage() {
         
         return {
           id: user.id,
-          nickname: user.nickname || '이름 없음',
+          nickname: user.nickname?.trim() || '이름 없음',
           exp: exp,
           level: calculatedLevel // 계산된 레벨 사용
         };

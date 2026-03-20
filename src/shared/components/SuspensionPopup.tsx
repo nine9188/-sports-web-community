@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { AlertTriangle, X, Clock, ExternalLink } from 'lucide-react'
 import { useAuth } from '@/shared/context/AuthContext'
-import { getSupabaseBrowser } from '@/shared/lib/supabase'
+import { checkSuspensionStatus } from '@/shared/actions/user'
 
 interface SuspensionInfo {
   is_suspended: boolean
@@ -27,27 +27,18 @@ export default function SuspensionPopup() {
     if (!user || hasChecked) return
 
     try {
-      const supabase = getSupabaseBrowser()
-      if (!supabase) return
+      const data = await checkSuspensionStatus()
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('is_suspended, suspended_until, suspended_reason')
-        .eq('id', user.id)
-        .single()
-
-      if (error || !data) return
-
-      const profile = data as SuspensionInfo
+      if (!data) return
 
       // 정지된 경우에만 팝업 표시
-      if (profile.is_suspended) {
+      if (data.is_suspended) {
         // 세션 스토리지에서 이미 본 팝업인지 확인
         const shownKey = `suspension_popup_shown_${user.id}`
         const alreadyShown = sessionStorage.getItem(shownKey)
 
         if (!alreadyShown) {
-          setSuspensionInfo(profile)
+          setSuspensionInfo(data)
           setIsOpen(true)
           sessionStorage.setItem(shownKey, 'true')
         }

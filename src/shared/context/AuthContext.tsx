@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { updateUserData, signOut } from '@/domains/auth/actions';
+import { updateProfileIcon } from '@/shared/actions/user';
 import { toast } from 'react-toastify';
 
 interface AuthContextType {
@@ -60,16 +61,13 @@ export function AuthProvider({
 
   // 아이콘 업데이트 함수
   const updateIcon = useCallback(async (iconId: number): Promise<boolean> => {
-    if (!user || !supabase) return false;
+    if (!user) return false;
 
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ icon_id: iconId })
-        .eq('id', user.id);
+      const result = await updateProfileIcon(iconId);
 
-      if (error) {
-        console.error('아이콘 업데이트 오류:', error);
+      if (!result.success) {
+        console.error('아이콘 업데이트 오류:', result.error);
         return false;
       }
 
@@ -79,7 +77,7 @@ export function AuthProvider({
       console.error('아이콘 업데이트 중 오류:', error);
       return false;
     }
-  }, [user, supabase, refreshUserData]);
+  }, [user, refreshUserData]);
 
   // 로그아웃
   const logoutUser = useCallback(async () => {

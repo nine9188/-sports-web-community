@@ -27,6 +27,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
     { path: '/admin/points', label: '포인트 관리', icon: <Coins className="w-5 h-5 mr-2" /> },
     { path: '/admin/exp', label: '경험치/레벨 관리', icon: <TrendingUp className="w-5 h-5 mr-2" /> },
     { path: '/admin/shop', label: '아이콘 상점', icon: <ShoppingBag className="w-5 h-5 mr-2" /> },
+    { path: '/admin/emoticon-submissions', label: '이모티콘 신청', icon: <ShoppingBag className="w-5 h-5 mr-2" /> },
     { path: '/admin/prediction', label: '예측 분석', icon: <Target className="w-5 h-5 mr-2" /> },
     { path: '/', label: '사이트로 돌아가기', icon: <Home className="w-5 h-5 mr-2" /> },
   ];

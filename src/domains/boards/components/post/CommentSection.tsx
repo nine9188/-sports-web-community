@@ -1,13 +1,15 @@
 "use client";
 
-import React, { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import React, { useState, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { CommentType } from "@/domains/boards/types/post/comment";
 import { useComments } from "@/domains/boards/hooks/post/useComments";
 import Comment from "./Comment";
 import { Button } from "@/shared/components/ui/button";
 import { Container, ContainerHeader, ContainerTitle } from "@/shared/components/ui";
-import { getSupabaseBrowser } from '@/shared/lib/supabase';
+import { useClickOutsideOrEscape } from '@/shared/hooks/useClickOutside';
+import EmoticonPicker from './EmoticonPicker';
+import { likePost, getUserPostAction } from '@/domains/boards/actions/posts/likes';
 
 interface CommentSectionProps {
   postId: string;
@@ -15,27 +17,30 @@ interface CommentSectionProps {
   postNumber?: string;
   postOwnerId?: string;
   currentUserId?: string | null;
-  /** 서버에서 미리 가져온 댓글 데이터 (SSR 하이드레이션용) */
   initialComments?: CommentType[];
 }
 
 export default function CommentSection({
   postId,
   postOwnerId,
-  currentUserId: propCurrentUserId = null,
+  currentUserId = null,
   initialComments
 }: CommentSectionProps) {
   const router = useRouter();
   const [content, setContent] = useState('');
-  const [currentUserId, setCurrentUserId] = useState<string | null>(propCurrentUserId);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [replyToNickname, setReplyToNickname] = useState<string | null>(null);
+  const [showEmoticonPicker, setShowEmoticonPicker] = useState(false);
   const replyFormRef = useRef<HTMLTextAreaElement>(null);
+  const emoticonContainerRef = useRef<HTMLDivElement>(null);
+  const submitTypeRef = useRef<'normal' | 'withLike'>('normal');
 
   const isLoggedIn = currentUserId !== null;
 
-  // React Query 기반 댓글 훅 (서버 데이터로 초기화)
+  // 이모티콘 피커 외부 클릭/ESC 닫기
+  useClickOutsideOrEscape(emoticonContainerRef, () => setShowEmoticonPicker(false), showEmoticonPicker);
+
   const {
     comments,
     treeComments,
@@ -50,54 +55,18 @@ export default function CommentSection({
     isLiking
   } = useComments({ postId, initialComments });
 
-  // Supabase 클라이언트 (SSR 안전)
-  const supabase = useMemo(() => {
-    if (typeof window === 'undefined') return null;
-    return getSupabaseBrowser();
-  }, []);
-
-  // 사용자 정보 가져오기 (props로 받지 않은 경우에만)
-  useEffect(() => {
-    if (!supabase || propCurrentUserId !== null) {
-      return;
-    }
-
-    let isMounted = true;
-
-    const getCurrentUser = async () => {
-      try {
-        const { data, error } = await supabase.auth.getUser();
-        if (!error && data.user && isMounted) {
-          setCurrentUserId(data.user.id);
-        } else {
-          setCurrentUserId(null);
-        }
-      } catch {
-        setCurrentUserId(null);
-      }
-    };
-
-    getCurrentUser();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [supabase, propCurrentUserId]);
-
   // 답글 시작 핸들러
   const handleReply = useCallback((parentId: string) => {
     const parentComment = comments.find(c => c.id === parentId);
     setReplyTo(parentId);
     setReplyToNickname(parentComment?.profiles?.nickname || '알 수 없음');
     setContent('');
-    // 답글 폼으로 스크롤 및 포커스
     setTimeout(() => {
       replyFormRef.current?.focus();
       replyFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 100);
   }, [comments]);
 
-  // 답글 취소 핸들러
   const cancelReply = useCallback(() => {
     setReplyTo(null);
     setReplyToNickname(null);
@@ -105,19 +74,28 @@ export default function CommentSection({
   }, []);
 
   // 댓글 제출 핸들러
-  const handleCommentSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleCommentSubmit = useCallback(async (e?: React.FormEvent | React.MouseEvent<HTMLButtonElement>) => {
+    if (e) e.preventDefault();
     if (!content.trim()) return;
 
     setErrorMessage(null);
 
     try {
       await createComment(content.trim(), replyTo);
+
+      if (submitTypeRef.current === 'withLike') {
+        const actionResult = await getUserPostAction(postId);
+        if (actionResult.userAction !== 'like') {
+          await likePost(postId);
+          router.refresh();
+        }
+      }
+
       setContent('');
       setReplyTo(null);
       setReplyToNickname(null);
       setErrorMessage(null);
+      submitTypeRef.current = 'normal';
     } catch (error) {
       const message = error instanceof Error ? error.message : '댓글 작성 중 오류가 발생했습니다.';
       setErrorMessage(message);
@@ -128,23 +106,14 @@ export default function CommentSection({
         alert(message);
       }
     }
-  }, [content, replyTo, createComment]);
+  }, [content, replyTo, createComment, postId, router]);
 
-  // 댓글 수정 핸들러
   const handleUpdate = useCallback(async (commentId: string, updatedContent: string) => {
-    try {
-      await updateComment(commentId, updatedContent);
-    } catch (error) {
-      throw error;
-    }
+    await updateComment(commentId, updatedContent);
   }, [updateComment]);
 
-  // 댓글 삭제 핸들러
   const handleDelete = useCallback(async (commentId: string) => {
-    if (!confirm('정말 이 댓글을 삭제하시겠습니까?')) {
-      return;
-    }
-
+    if (!confirm('정말 이 댓글을 삭제하시겠습니까?')) return;
     try {
       await deleteComment(commentId);
     } catch (error) {
@@ -152,12 +121,28 @@ export default function CommentSection({
     }
   }, [deleteComment]);
 
-  // 텍스트영역 변경 핸들러
   const handleTextareaChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value);
   }, []);
 
-  // 댓글 목록 메모이제이션 (계층 구조 렌더링)
+  const handleEmoticonSelect = useCallback((code: string) => {
+    const textarea = replyFormRef.current;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const newContent = content.substring(0, start) + code + content.substring(end);
+
+      setContent(newContent);
+
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + code.length;
+        textarea.focus();
+      }, 0);
+    } else {
+      setContent(prev => prev + code);
+    }
+  }, [content]);
+
   const commentsList = useMemo(() => {
     if (isLoading) {
       return (
@@ -190,15 +175,13 @@ export default function CommentSection({
   }, [treeComments, currentUserId, handleUpdate, handleDelete, handleReply, postOwnerId, likeComment, dislikeComment, isLiking, isLoading]);
 
   return (
-    <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
-      {/* 댓글 헤더 */}
+    <Container className="bg-white dark:bg-[#1D1D1D] mb-4 !overflow-visible">
       <ContainerHeader>
         <ContainerTitle>
           댓글 <span className="text-gray-900 dark:text-[#F0F0F0]">{commentCount}</span>개
         </ContainerTitle>
       </ContainerHeader>
 
-      {/* 댓글 목록 */}
       <div className="divide-y divide-gray-100 dark:divide-white/10">
         {commentsList}
       </div>
@@ -212,7 +195,6 @@ export default function CommentSection({
         )}
 
         {!isLoggedIn ? (
-          /* 비로그인 상태 */
           <div
             className="relative cursor-pointer"
             onClick={() => {
@@ -230,7 +212,6 @@ export default function CommentSection({
             />
           </div>
         ) : (
-          /* 로그인 상태 */
           <>
             {/* 답글 대상 표시 */}
             {replyTo && replyToNickname && (
@@ -257,7 +238,7 @@ export default function CommentSection({
             <form className="space-y-3" onSubmit={handleCommentSubmit}>
               <textarea
                 ref={replyFormRef}
-                className="w-full px-3 py-3 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg text-sm placeholder-gray-500 dark:placeholder-gray-500 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors duration-200 resize-none"
+                className="w-full px-3 py-3 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg text-base sm:text-sm placeholder-gray-500 dark:placeholder-gray-500 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors duration-200 resize-none"
                 rows={3}
                 placeholder={replyTo ? "답글을 작성해주세요..." : "댓글을 작성해주세요..."}
                 value={content}
@@ -265,24 +246,63 @@ export default function CommentSection({
                 required
                 disabled={isCreating}
               />
-              <div className="flex justify-end gap-2">
-                {replyTo && (
+              <div className="flex justify-between w-full relative">
+                <div ref={emoticonContainerRef} className="relative">
                   <Button
                     type="button"
-                    variant="ghost"
-                    onClick={cancelReply}
-                    disabled={isCreating}
+                    variant="secondary"
+                    onClick={() => setShowEmoticonPicker(!showEmoticonPicker)}
+                    className="h-[40px] font-medium"
                   >
-                    취소
+                    이모티콘
                   </Button>
-                )}
-                <Button
-                  type="submit"
-                  variant="primary"
-                  disabled={isCreating || !content.trim()}
-                >
-                  {isCreating ? '작성 중...' : (replyTo ? '답글 작성' : '댓글 작성')}
-                </Button>
+
+                  {showEmoticonPicker && (
+                    <EmoticonPicker
+                      onSelect={handleEmoticonSelect}
+                      onClose={() => setShowEmoticonPicker(false)}
+                    />
+                  )}
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  {replyTo && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={cancelReply}
+                      disabled={isCreating}
+                    >
+                      취소
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    variant={replyTo ? 'primary' : 'secondary'}
+                    disabled={isCreating || !content.trim()}
+                    className="h-[40px] font-medium"
+                    onClick={(e) => {
+                      submitTypeRef.current = 'normal';
+                      handleCommentSubmit(e);
+                    }}
+                  >
+                    {isCreating ? '진행 중...' : (replyTo ? '답글 작성' : '등록')}
+                  </Button>
+                  {!replyTo && (
+                    <Button
+                      type="button"
+                      variant="primary"
+                      disabled={isCreating || !content.trim()}
+                      className="h-[40px] font-medium"
+                      onClick={(e) => {
+                        submitTypeRef.current = 'withLike';
+                        handleCommentSubmit(e);
+                      }}
+                    >
+                      {isCreating ? '진행 중...' : '등록+추천'}
+                    </Button>
+                  )}
+                </div>
               </div>
             </form>
           </>

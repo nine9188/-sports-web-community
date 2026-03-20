@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { Ban, Clock, AlertTriangle, CheckCircle } from 'lucide-react'
 import { suspendUser, unsuspendUser, type SuspensionData } from '../actions/suspension'
 import { formatDate } from '@/shared/utils/dateUtils'
+import { toast } from 'react-toastify'
+import { DEFAULT_SUSPENSION_DAYS } from '../constants'
 
 interface SuspensionManagerProps {
   userId: string
@@ -29,12 +31,12 @@ export default function SuspensionManager({
   const [showSuspendForm, setShowSuspendForm] = useState(false)
   const [suspensionData, setSuspensionData] = useState<Omit<SuspensionData, 'userId'>>({
     reason: '',
-    days: 7
+    days: DEFAULT_SUSPENSION_DAYS
   })
 
   const handleSuspend = async () => {
     if (!suspensionData.reason.trim()) {
-      alert('정지 사유를 입력해주세요.')
+      toast.error('정지 사유를 입력해주세요.')
       return
     }
 
@@ -47,16 +49,16 @@ export default function SuspensionManager({
       })
 
       if (result.success) {
-        alert(result.message)
+        toast.success(result.message || '계정이 정지되었습니다.')
         setShowSuspendForm(false)
-        setSuspensionData({ reason: '', days: 7 })
+        setSuspensionData({ reason: '', days: DEFAULT_SUSPENSION_DAYS })
         onUpdate?.()
       } else {
-        alert(result.error)
+        toast.error(result.error || '정지 처리에 실패했습니다.')
       }
     } catch (error) {
       console.error('정지 처리 오류:', error)
-      alert('정지 처리 중 오류가 발생했습니다.')
+      toast.error('정지 처리 중 오류가 발생했습니다.')
     } finally {
       setIsLoading(false)
     }
@@ -72,14 +74,14 @@ export default function SuspensionManager({
       const result = await unsuspendUser(userId)
 
       if (result.success) {
-        alert(result.message)
+        toast.success(result.message || '정지가 해제되었습니다.')
         onUpdate?.()
       } else {
-        alert(result.error)
+        toast.error(result.error || '정지 해제에 실패했습니다.')
       }
     } catch (error) {
       console.error('정지 해제 오류:', error)
-      alert('정지 해제 중 오류가 발생했습니다.')
+      toast.error('정지 해제 중 오류가 발생했습니다.')
     } finally {
       setIsLoading(false)
     }
@@ -214,7 +216,7 @@ export default function SuspensionManager({
                   <button
                     onClick={() => {
                       setShowSuspendForm(false)
-                      setSuspensionData({ reason: '', days: 7 })
+                      setSuspensionData({ reason: '', days: DEFAULT_SUSPENSION_DAYS })
                     }}
                     disabled={isLoading}
                     className="flex-1 bg-gray-500 dark:bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-600 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm transition-colors"

@@ -63,7 +63,7 @@ export default async function TransfersPage({ searchParams }: TransfersPageProps
       <Container>
         <ContainerHeader>
           <div className="flex items-center justify-between w-full">
-            <ContainerTitle>이적시장</ContainerTitle>
+            <h1 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">이적시장</h1>
             <div className="hidden md:flex items-center space-x-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               <span className="text-xs text-gray-700 dark:text-gray-300">실시간 업데이트</span>

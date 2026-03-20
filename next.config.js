@@ -22,6 +22,9 @@ const nextConfig = {
       {
         pathname: '/images/**',
       },
+      {
+        pathname: '/emoticons/**',
+      },
     ],
     remotePatterns: [
       // API-Sports (선수/감독 이미지)

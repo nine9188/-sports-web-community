@@ -50,6 +50,9 @@ export default async function ShopPage({ searchParams }: Props) {
       childrenByParent.set(parentId, arr);
     });
 
+  // 이모티콘 카테고리 식별
+  const emoticonCategory = rootCategoriesRaw.find((c) => c.slug === 'emoticon-packs');
+
   // 필터 탭 데이터: 루트 + (있다면) 하위 카테고리
   const filterCategories = rootCategoriesRaw.map((c) => ({
     id: c.id,
@@ -94,9 +97,9 @@ export default async function ShopPage({ searchParams }: Props) {
       <TrackPageVisit id="shop" slug="shop" name="아이콘샵" />
       <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 md:rounded-lg overflow-hidden mb-4">
         <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center md:rounded-t-lg">
-          <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
+          <h1 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
             포인트 상점
-          </h3>
+          </h1>
           {user && !error && (
             <div className="ml-auto flex items-center gap-2 text-sm">
               <svg
@@ -132,6 +135,7 @@ export default async function ShopPage({ searchParams }: Props) {
         userId={user?.id}
         categories={filterCategories}
         initialActiveCategory={catParam ?? "all"}
+        emoticonCategoryId={emoticonCategory?.id ?? null}
         loginNotice={
           !user || error ? (
             <div className="p-3 sm:p-4 bg-[#F5F5F5] dark:bg-[#262626] rounded-md text-center border border-black/7 dark:border-0">

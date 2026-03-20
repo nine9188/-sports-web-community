@@ -402,3 +402,169 @@ export async function resendConfirmationByUsername(
     return { success: false, error: '인증 이메일 재발송 중 오류가 발생했습니다.' }
   }
 }
+
+/**
+ * 소셜 로그인 사용자 프로필 확인
+ *
+ * @description
+ * 소셜 로그인 사용자가 이미 프로필(닉네임)을 설정했는지 확인합니다.
+ *
+ * @example
+ * ```typescript
+ * const result = await checkSocialProfile()
+ * if (result.hasProfile) {
+ *   // 이미 프로필 설정 완료
+ * }
+ * ```
+ */
+export async function checkSocialProfile(): Promise<{ hasProfile: boolean }> {
+  try {
+    const supabase = await getSupabaseServer()
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return { hasProfile: false }
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('nickname')
+      .eq('id', user.id)
+      .single()
+
+    const hasProfile = !!(profile && profile.nickname && profile.nickname.trim() !== '')
+
+    return { hasProfile }
+
+  } catch (error) {
+    console.error('소셜 프로필 확인 중 오류:', error)
+    return { hasProfile: false }
+  }
+}
+
+/**
+ * 소셜 로그인 회원가입 완료
+ *
+ * @description
+ * 소셜 로그인 사용자의 프로필을 생성/업데이트합니다.
+ * username을 자동 생성하고, 닉네임/생년월일/추천코드를 설정합니다.
+ *
+ * @example
+ * ```typescript
+ * const result = await completeSocialSignup({
+ *   nickname: '닉네임',
+ *   birthDate: '2000.01.01',
+ *   referralCode: 'a1b2c3d4'
+ * })
+ * ```
+ */
+export async function completeSocialSignup({
+  nickname,
+  birthDate,
+  referralCode,
+}: {
+  nickname: string
+  birthDate: string
+  referralCode?: string
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    // 닉네임 검증
+    const nicknameValidation = validateNickname(nickname)
+    if (!nicknameValidation.valid) {
+      return { success: false, error: nicknameValidation.error }
+    }
+
+    const supabase = await getSupabaseServer()
+
+    // 1. 현재 사용자 확인
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return { success: false, error: '로그인 정보를 찾을 수 없습니다.' }
+    }
+
+    // 2. 닉네임 중복 확인
+    const { data: existingNickname } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('nickname', nickname.trim())
+      .neq('id', user.id)
+      .limit(1)
+
+    if (existingNickname && existingNickname.length > 0) {
+      return { success: false, error: '이미 사용 중인 닉네임입니다.' }
+    }
+
+    // 3. username 자동 생성
+    const provider = user.app_metadata?.provider || 'social'
+    const baseUsername = `${provider}_${user.id.slice(0, 8)}`
+    let username = baseUsername
+    let counter = 1
+
+    while (true) {
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', username)
+        .neq('id', user.id)
+        .single()
+
+      if (!existingUser) break
+
+      username = `${baseUsername}_${counter}`
+      counter++
+
+      if (counter > 50) {
+        username = `${baseUsername}_${Date.now()}`
+        break
+      }
+    }
+
+    // 4. 프로필 upsert
+    const { error: upsertError } = await supabase
+      .from('profiles')
+      .upsert({
+        id: user.id,
+        email: user.email,
+        username,
+        nickname: nickname.trim(),
+        full_name: user.user_metadata?.name || user.user_metadata?.full_name || null,
+        birth_date: birthDate ? birthDate.replace(/\./g, '-') : null,
+        ...(referralCode?.trim() ? { referral_code: referralCode.trim() } : {}),
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'id'
+      })
+
+    if (upsertError) {
+      console.error('프로필 생성 오류:', upsertError)
+      return { success: false, error: '회원가입 중 오류가 발생했습니다.' }
+    }
+
+    // 5. 환영 알림 발송
+    try {
+      await createWelcomeNotification({ userId: user.id })
+    } catch (e) {
+      console.error('환영 알림 발송 실패:', e)
+    }
+
+    // 6. 추천 코드 처리
+    if (referralCode?.trim()) {
+      try {
+        const referralResult = await processReferral(user.id, referralCode.trim())
+        if (!referralResult.success) {
+          console.error('추천 처리 실패:', referralResult.error)
+        }
+      } catch (referralError) {
+        console.error('추천 처리 중 오류:', referralError)
+      }
+    }
+
+    return { success: true }
+
+  } catch (error) {
+    console.error('소셜 회원가입 완료 중 오류:', error)
+    return { success: false, error: '회원가입 중 오류가 발생했습니다.' }
+  }
+}

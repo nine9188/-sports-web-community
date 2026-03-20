@@ -228,9 +228,9 @@ export default function BoardDetailLayout({
         <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
           {/* 게시판 헤더 */}
           <div className="h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626]">
-            <h2 className="text-sm font-semibold truncate text-gray-900 dark:text-[#F0F0F0]">
+            <h1 className="text-sm font-semibold truncate text-gray-900 dark:text-[#F0F0F0]">
               {boardData.name}
-            </h2>
+            </h1>
             {isLoggedIn && (slug !== 'notice' || isAdmin) && (
               <Link
                 href={`/boards/${slug}/create`}
@@ -268,7 +268,7 @@ export default function BoardDetailLayout({
       )}
 
       {/* 쇼핑몰 필터 메뉴 - 핫딜 게시판일 때만 표시 */}
-      {isHotdealBoard(slug) && <StoreFilterMenu boardSlug={slug} />}
+      {isHotdealBoard(slug) && <StoreFilterMenu />}
 
       {/* 게시글 목록 - listVariant에 따라 다른 컴포넌트 렌더링 */}
       {/* 공지사항 게시판은 NoticeList 사용 */}

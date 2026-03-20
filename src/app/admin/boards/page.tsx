@@ -192,7 +192,19 @@ export default function BoardsAdminPage() {
     });
   };
 
-  // 게시판 순서 변경
+  /**
+   * Swaps the display order of a board with its adjacent sibling.
+   *
+   * 1. Filters all boards to find siblings (same `parent_id`) and sorts them by `display_order`.
+   * 2. Finds the current board's index within the sorted siblings.
+   * 3. Determines the target index based on direction ('up' = index - 1, 'down' = index + 1).
+   * 4. If the target index is out of bounds, shows an info toast and returns early.
+   * 5. Calls `swapBoardOrder` mutation with both boards' IDs and their current `display_order`
+   *    values, effectively swapping their positions in the ordered list.
+   *
+   * @param board - The board to move
+   * @param direction - 'up' to move earlier in order, 'down' to move later
+   */
   const changeOrder = async (board: Board, direction: 'up' | 'down') => {
     const siblingBoards = boards
       .filter((b) => b.parent_id === board.parent_id)

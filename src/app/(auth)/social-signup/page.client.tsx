@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/shared/context/AuthContext'
 import { getSupabaseBrowser } from '@/shared/lib/supabase'
 import { validateReferralCode } from '@/shared/actions/referral-actions'
-import { createWelcomeNotification } from '@/domains/notifications/actions/create'
+import { checkSocialProfile, completeSocialSignup, checkNicknameAvailability } from '@/domains/auth/actions'
 import { toast } from 'react-toastify'
 import { AlertCircle, Check, ChevronLeft, Calendar as CalendarIcon, Gift, X, PartyPopper, Phone } from 'lucide-react'
 import Spinner from '@/shared/components/Spinner'
@@ -57,11 +57,10 @@ export default function SocialSignupPage() {
     const checkAuthAndProfile = async () => {
       if (isLoading) return
 
-      const supabase = getSupabaseBrowser()
-
       // AuthContext에 user가 없으면 직접 확인
       let currentUser = authUser
       if (!currentUser) {
+        const supabase = getSupabaseBrowser()
         const { data: { user: fetchedUser }, error } = await supabase.auth.getUser()
         if (error || !fetchedUser) {
           toast.error('로그인이 필요합니다.')
@@ -72,14 +71,10 @@ export default function SocialSignupPage() {
         setDirectUser(fetchedUser)
       }
 
-      // 프로필 확인
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', currentUser.id)
-        .single()
+      // 서버 액션으로 프로필 확인
+      const { hasProfile } = await checkSocialProfile()
 
-      if (profile && profile.nickname && profile.nickname.trim() !== '') {
+      if (hasProfile) {
         sessionStorage.setItem('login-success', 'true')
         router.replace('/')
         return
@@ -181,15 +176,10 @@ export default function SocialSignupPage() {
     const timer = setTimeout(async () => {
       setIsCheckingNickname(true)
       try {
-        const supabase = getSupabaseBrowser()
-        const { data: existing } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('nickname', nickname)
-          .single()
+        const result = await checkNicknameAvailability(nickname)
 
-        if (existing) {
-          setNicknameError('이미 사용 중인 닉네임입니다.')
+        if (!result.available) {
+          setNicknameError(result.message || '이미 사용 중인 닉네임입니다.')
           setNicknameValid(false)
         } else {
           setNicknameError('')
@@ -272,57 +262,15 @@ export default function SocialSignupPage() {
     setLoading(true)
 
     try {
-      const supabase = getSupabaseBrowser()
+      const result = await completeSocialSignup({
+        nickname: nickname.trim(),
+        birthDate,
+        referralCode: referralValid && referralCode.trim() ? referralCode.trim() : undefined,
+      })
 
-      const provider = user.app_metadata?.provider || 'social'
-      const baseUsername = `${provider}_${user.id.slice(0, 8)}`
-      let username = baseUsername
-      let counter = 1
-
-      while (true) {
-        const { data: existingUser } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('username', username)
-          .single()
-
-        if (!existingUser) break
-
-        username = `${baseUsername}_${counter}`
-        counter++
-
-        if (counter > 50) {
-          username = `${baseUsername}_${Date.now()}`
-          break
-        }
-      }
-
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
-          id: user.id,
-          email: user.email,
-          username,
-          nickname: nickname.trim(),
-          full_name: user.user_metadata?.name || user.user_metadata?.full_name || null,
-          birth_date: birthDate ? birthDate.replace(/\./g, '-') : null,
-          ...(referralValid && referralCode.trim() ? { referral_code: referralCode.trim() } : {}),
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'id'
-        })
-
-      if (error) {
-        console.error('프로필 생성 오류:', error)
-        toast.error('회원가입 중 오류가 발생했습니다.')
+      if (!result.success) {
+        toast.error(result.error || '회원가입 중 오류가 발생했습니다.')
         return
-      }
-
-      // 환영 알림 발송
-      try {
-        await createWelcomeNotification({ userId: user.id })
-      } catch (e) {
-        console.error('환영 알림 발송 실패:', e)
       }
 
       // 축하 팝업 표시

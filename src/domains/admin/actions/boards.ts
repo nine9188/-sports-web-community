@@ -3,6 +3,22 @@
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
+// 관리자 권한 확인
+async function checkAdmin() {
+  const supabase = await checkAdmin();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) throw new Error('인증되지 않은 사용자입니다.');
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', user.id)
+    .single();
+
+  if (!profile?.is_admin) throw new Error('관리자 권한이 필요합니다.');
+  return supabase;
+}
+
 export interface Board {
   id: string;
   name: string;
@@ -31,7 +47,7 @@ interface BoardFormData {
 
 export async function getAllBoards() {
   try {
-    const supabase = await getSupabaseServer();
+    const supabase = await checkAdmin();
 
     const { data, error } = await supabase
       .from('boards')
@@ -65,7 +81,7 @@ export async function getAllBoards() {
 
 export async function createBoard(formData: BoardFormData) {
   try {
-    const supabase = await getSupabaseServer();
+    const supabase = await checkAdmin();
 
     const boardData = {
       name: formData.name,
@@ -94,7 +110,7 @@ export async function createBoard(formData: BoardFormData) {
 
 export async function updateBoard(id: string, formData: BoardFormData) {
   try {
-    const supabase = await getSupabaseServer();
+    const supabase = await checkAdmin();
 
     const boardData = {
       name: formData.name,
@@ -123,7 +139,7 @@ export async function updateBoard(id: string, formData: BoardFormData) {
 
 export async function deleteBoard(id: string) {
   try {
-    const supabase = await getSupabaseServer();
+    const supabase = await checkAdmin();
 
     // 게시판의 게시글 삭제
     const { error: postsError } = await supabase.from('posts').delete().eq('board_id', id);
@@ -149,7 +165,7 @@ export async function deleteBoard(id: string) {
 
 export async function swapBoardOrder(boardId: string, targetId: string, boardOrder: number, targetOrder: number) {
   try {
-    const supabase = await getSupabaseServer();
+    const supabase = await checkAdmin();
 
     const { error: error1 } = await supabase
       .from('boards')

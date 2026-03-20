@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { toast } from 'react-toastify';
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { createShopItem, updateShopItem, deleteShopItem } from '@/shared/actions/admin-actions';
 import {
@@ -60,11 +61,11 @@ export default function ShopItemManagement({
       const newImage = { url: publicUrl, name: file.name };
       setLocalStorageImages((prev) => [newImage, ...prev]);
       setSelectedImage(newImage);
-      alert('이미지가 성공적으로 업로드되었습니다.');
+      toast.success('이미지가 성공적으로 업로드되었습니다.');
     } catch (error: unknown) {
       console.error('이미지 업로드 오류:', error);
       const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류';
-      alert('이미지 업로드 중 오류가 발생했습니다: ' + errorMessage);
+      toast.error('이미지 업로드 중 오류가 발생했습니다: ' + errorMessage);
     } finally {
       setLoading(false);
     }
@@ -74,17 +75,17 @@ export default function ShopItemManagement({
     e.preventDefault();
 
     if (!selectedImage) {
-      alert('이미지를 선택해주세요.');
+      toast.warning('이미지를 선택해주세요.');
       return;
     }
 
     if (!name.trim()) {
-      alert('아이콘 이름을 입력해주세요.');
+      toast.warning('아이콘 이름을 입력해주세요.');
       return;
     }
 
     if (!selectedCategory) {
-      alert('카테고리를 선택해주세요.');
+      toast.warning('카테고리를 선택해주세요.');
       return;
     }
 
@@ -123,7 +124,7 @@ export default function ShopItemManagement({
         ]);
       }
 
-      alert('아이콘이 등록되었습니다.');
+      toast.success('아이콘이 등록되었습니다.');
 
       // 폼 초기화
       setSelectedImage(null);
@@ -133,7 +134,7 @@ export default function ShopItemManagement({
       setPrice('');
     } catch (error) {
       console.error('아이콘 등록 오류:', error);
-      alert(error instanceof Error ? error.message : '아이콘 등록 중 오류가 발생했습니다.');
+      toast.error(error instanceof Error ? error.message : '아이콘 등록 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }
@@ -181,11 +182,11 @@ export default function ShopItemManagement({
       // 로컬 상태 업데이트
       setShopItems((prev) => prev.map((item) => (item.id === editingItem.id ? { ...item, ...updates } : item)));
 
-      alert('아이콘이 수정되었습니다.');
+      toast.success('아이콘이 수정되었습니다.');
       handleCancelEdit();
     } catch (error) {
       console.error('아이콘 수정 오류:', error);
-      alert(error instanceof Error ? error.message : '아이콘 수정 중 오류가 발생했습니다.');
+      toast.error(error instanceof Error ? error.message : '아이콘 수정 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }
@@ -207,10 +208,10 @@ export default function ShopItemManagement({
       // 로컬 상태 업데이트
       setShopItems((prev) => prev.filter((item) => item.id !== itemId));
 
-      alert('아이콘이 삭제되었습니다.');
+      toast.success('아이콘이 삭제되었습니다.');
     } catch (error) {
       console.error('아이콘 삭제 오류:', error);
-      alert(error instanceof Error ? error.message : '아이콘 삭제 중 오류가 발생했습니다.');
+      toast.error(error instanceof Error ? error.message : '아이콘 삭제 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }

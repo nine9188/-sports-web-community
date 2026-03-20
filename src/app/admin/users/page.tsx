@@ -34,6 +34,9 @@ export default function UsersAdminPage() {
 
   // 관리자 권한 토글
   const toggleAdminStatus = async (userId: string, currentStatus: boolean) => {
+    const action = currentStatus ? '해제' : '부여';
+    if (!confirm(`정말로 이 사용자의 관리자 권한을 ${action}하시겠습니까?`)) return;
+
     toggleAdminMutation.mutate(
       { userId, currentStatus },
       {
@@ -79,6 +82,8 @@ export default function UsersAdminPage() {
 
   // 이메일 인증 처리
   const handleConfirmEmail = async (userId: string) => {
+    if (!confirm('이 사용자의 이메일을 인증 완료 처리하시겠습니까?')) return;
+
     confirmEmailMutation.mutate(userId, {
       onSuccess: () => {
         toast.success('이메일 인증이 완료되었습니다.');
@@ -144,7 +149,7 @@ export default function UsersAdminPage() {
                       {user.email}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {user.nickname || '-'}
+                      {user.nickname?.trim() || '이름 없음'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       {user.created_at ? new Date(user.created_at).toLocaleDateString() : '-'}
@@ -275,7 +280,7 @@ export default function UsersAdminPage() {
               
               <SuspensionManager
                 userId={selectedUser.id}
-                userNickname={selectedUser.nickname || selectedUser.email}
+                userNickname={selectedUser.nickname?.trim() || selectedUser.email}
                 currentSuspension={{
                   is_suspended: selectedUser.is_suspended || false,
                   suspended_until: selectedUser.suspended_until || null,

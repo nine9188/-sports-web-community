@@ -1,6 +1,6 @@
 'use client';
 
-import { getSupabaseBrowser } from '@/shared/lib/supabase';
+import { getUserIconData } from '@/shared/actions/user';
 import { getLevelIconUrl, LEVEL_ICON_BASE_URL } from './level-icons';
 
 // 기본 아이콘 URL (레벨 1 아이콘 사용)
@@ -47,71 +47,23 @@ export async function getOptimizedUserIcon(
   }
 
   try {
-    // Supabase 클라이언트 생성
-    const supabase = getSupabaseBrowser();
-    
-    // 프로필 정보 조회 (icon_id와 level만 필요)
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('icon_id, level')
-      .eq('id', userId)
-      .single();
-    
-    if (error) {
-      // 에러 발생 시 기본 레벨 아이콘 반환
-      const level = userLevel || 1;
-      const levelIcon = getLevelIconUrl(level);
-      
-      // 캐시 업데이트
-      iconCache.set(userId, {
-        url: levelIcon,
-        name: `레벨 ${level} 아이콘`,
-        timestamp: now
-      });
-      
-      return { url: levelIcon, name: `레벨 ${level} 아이콘` };
-    }
-    
-    // 사용자가 아이콘을 선택했는지 확인
-    if (profile?.icon_id) {
-      // 선택한 아이콘 정보 조회
-      const { data: iconData, error: iconError } = await supabase
-        .from('shop_items')
-        .select('image_url, name')
-        .eq('id', profile.icon_id)
-        .single();
-      
-      if (!iconError && iconData?.image_url) {
-        // 캐시 업데이트
-        iconCache.set(userId, {
-          url: iconData.image_url,
-          name: iconData.name || null,
-          timestamp: now
-        });
-        
-        return { url: iconData.image_url, name: iconData.name || null };
-      }
-    }
-    
-    // 선택한 아이콘이 없거나 조회 실패 시 레벨 아이콘 사용
-    const level = profile?.level || userLevel || 1;
-    const levelIcon = getLevelIconUrl(level);
-    
+    const data = await getUserIconData(userId);
+
     // 캐시 업데이트
     iconCache.set(userId, {
-      url: levelIcon,
-      name: `레벨 ${level} 아이콘`,
+      url: data.iconUrl,
+      name: data.iconName,
       timestamp: now
     });
-    
-    return { url: levelIcon, name: `레벨 ${level} 아이콘` };
+
+    return { url: data.iconUrl, name: data.iconName };
   } catch (error) {
     console.error('최적화된 아이콘 조회 오류:', error);
-    
+
     // 오류 발생 시 기본 레벨 아이콘 반환
     const level = userLevel || 1;
     const levelIcon = getLevelIconUrl(level);
-    
+
     return { url: levelIcon, name: `레벨 ${level} 아이콘` };
   }
 }

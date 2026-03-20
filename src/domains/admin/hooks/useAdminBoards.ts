@@ -11,7 +11,22 @@ import {
 } from '../actions/boards';
 import { adminKeys } from '@/shared/constants/queryKeys';
 
-// 계층 구조로 게시판 데이터 변환
+/**
+ * Converts a flat list of boards into a hierarchical tree structure.
+ *
+ * Algorithm:
+ * 1. Copies all boards and initializes each with `level: 0` and an empty `children` array.
+ * 2. Builds a lookup map (boardMap) keyed by board ID for O(1) access.
+ * 3. Iterates through all boards: if a board has a `parent_id` that exists in the map,
+ *    it is appended to the parent's `children` array and its level is set to 1.
+ *    Otherwise (no parent_id), it becomes a root board.
+ * 4. Root boards are sorted by `display_order`.
+ * 5. A final pass recursively assigns correct `level` values to all nested children
+ *    (depth-first), ensuring deeply nested boards have accurate depth indicators.
+ *
+ * @param boardsData - Flat array of Board objects from the database
+ * @returns Array of root-level Board objects with nested `children` representing the hierarchy
+ */
 function createBoardStructure(boardsData: Board[]): Board[] {
   const processedBoards = boardsData.map((board) => ({
     ...board,

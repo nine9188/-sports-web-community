@@ -4,7 +4,7 @@ import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { CommentType } from '../../types/post/comment';
 import { checkSuspensionGuard } from '@/shared/utils/suspension-guard';
 import { logUserAction } from '@/shared/actions/log-actions';
-import { CommentActionResponse } from './utils';
+import { CommentActionResponse, sanitizeEmoticonCodes } from './utils';
 
 /**
  * 댓글 수정
@@ -61,11 +61,18 @@ export async function updateComment(commentId: string, content: string): Promise
       };
     }
     
+    // 이모티콘 코드 검증 (미구매 유료 팩 코드 제거)
+    const sanitizedContent = await sanitizeEmoticonCodes(content, user.id, supabase);
+
+    if (!sanitizedContent) {
+      return { success: false, error: '댓글 내용을 입력해주세요.' };
+    }
+
     // 댓글 수정
     const { data: updatedComment, error: updateError } = await supabase
       .from('comments')
-      .update({ 
-        content: content,
+      .update({
+        content: sanitizedContent,
         updated_at: new Date().toISOString()
       })
       .eq('id', commentId)

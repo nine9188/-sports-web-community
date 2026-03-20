@@ -1,5 +1,4 @@
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
-import { serverAuthGuard } from '@/shared/utils/auth-guard';
 import ShopItemManagement from './components/ShopItemManagement';
 import { notFound } from 'next/navigation';
 
@@ -8,13 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function ShopAdminPage() {
   try {
-    // 관리자 인증 체크 (통합된 방식 사용)
-    await serverAuthGuard({
-      redirectTo: '/signin',
-      requireAdmin: true,
-      logUnauthorizedAccess: true
-    });
-
+    // 관리자 인증은 layout.tsx에서 처리됨
     const supabase = await getSupabaseServer();
 
     // 스토리지의 이미지 목록 가져오기

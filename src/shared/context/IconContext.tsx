@@ -1,8 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
-import { getSupabaseBrowser } from '@/shared/lib/supabase';
-import { getLevelIconUrl } from '@/shared/utils/level-icons';
+import { getCurrentUserIconData } from '@/shared/actions/user';
 
 interface IconContextType {
   iconUrl: string;
@@ -44,62 +43,20 @@ export function IconProvider({
     setTimeout(() => setIsIconLoading(false), 300);
   }, []);
 
-  // 아이콘 새로고침 함수 - Supabase에서 최신 아이콘 정보 로드
+  // 아이콘 새로고침 함수 - 서버 액션으로 최신 아이콘 정보 로드
   const refreshUserIcon = useCallback(async () => {
     try {
       setIsIconLoading(true);
-      
-      const supabase = getSupabaseBrowser();
-      
-      // 현재 로그인한 사용자 정보 가져오기
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+
+      const data = await getCurrentUserIconData();
+      if (!data) {
         setIsIconLoading(false);
         return;
       }
-      
-      // 사용자 기본 레벨 아이콘 (fallback용)
-      const userLevel = user.user_metadata?.level || 1;
-      const defaultLevelIcon = getLevelIconUrl(userLevel);
-      const defaultIconName = `레벨 ${userLevel} 기본 아이콘`;
-      
-      // 프로필 정보에서 아이콘 ID 가져오기
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('icon_id')
-        .eq('id', user.id)
-        .single();
-      
-      // 아이콘 ID가 null이면 기본 레벨 아이콘 사용
-      if (!profile?.icon_id) {
-        updateUserIconState(defaultLevelIcon, defaultIconName);
-        return;
-      }
-      
-      // 선택된 아이콘 정보 가져오기
-      const { data: iconData } = await supabase
-        .from('shop_items')
-        .select('name, image_url')
-        .eq('id', profile.icon_id)
-        .single();
-      
-      if (iconData?.image_url && iconData?.name) {
-        updateUserIconState(iconData.image_url, iconData.name || '사용자 아이콘');
-      } else {
-        // 아이콘 정보가 없으면 기본 아이콘으로 설정
-        updateUserIconState(defaultLevelIcon, defaultIconName);
-      }
+
+      updateUserIconState(data.iconUrl, data.iconName);
     } catch (error) {
       console.error('아이콘 정보 로드 중 오류 발생:', error);
-      // 오류 발생 시 기본값 설정
-      const supabase = getSupabaseBrowser();
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        const userLevel = user.user_metadata?.level || 1;
-        const defaultIcon = getLevelIconUrl(userLevel);
-        updateUserIconState(defaultIcon, `레벨 ${userLevel} 기본 아이콘`);
-      }
     } finally {
       setIsIconLoading(false);
     }

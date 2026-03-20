@@ -74,6 +74,63 @@ export async function addIconUrlToComments(
 }
 
 /**
+ * 이모티콘 코드 검증: 미구매 유료 팩 코드를 제거
+ * - 무료 팩 코드 (shop_item_id = NULL) → 통과
+ * - 유료 팩 코드 + 구매한 팩 → 통과
+ * - 유료 팩 코드 + 미구매 팩 → 제거
+ */
+export async function sanitizeEmoticonCodes(
+  content: string,
+  userId: string,
+  supabase: any // eslint-disable-line @typescript-eslint/no-explicit-any
+): Promise<string> {
+  // 이모티콘 코드 패턴 추출
+  const codePattern = /~[a-z]+\d+/g;
+  const codes = content.match(codePattern);
+  if (!codes || codes.length === 0) return content;
+
+  const uniqueCodes = Array.from(new Set(codes));
+
+  // DB에서 유료 팩 코드만 조회
+  const { data: paidEmoticons } = await supabase
+    .from('emoticon_packs')
+    .select('code, shop_item_id')
+    .in('code', uniqueCodes)
+    .not('shop_item_id', 'is', null);
+
+  if (!paidEmoticons || paidEmoticons.length === 0) return content;
+
+  // 유저 보유 shop_item_id 확인
+  const shopItemIds = Array.from(new Set(
+    paidEmoticons.map((e: { shop_item_id: number }) => e.shop_item_id)
+  ));
+
+  const { data: owned } = await supabase
+    .from('user_items')
+    .select('item_id')
+    .eq('user_id', userId)
+    .in('item_id', shopItemIds);
+
+  const ownedSet = new Set(
+    (owned || []).map((o: { item_id: number }) => o.item_id)
+  );
+
+  // 미보유 유료 코드 목록
+  const blockedCodes = paidEmoticons
+    .filter((e: { shop_item_id: number }) => !ownedSet.has(e.shop_item_id))
+    .map((e: { code: string }) => e.code);
+
+  if (blockedCodes.length === 0) return content;
+
+  // 미보유 코드 제거
+  let sanitized = content;
+  for (const code of blockedCodes) {
+    sanitized = sanitized.split(code).join('');
+  }
+  return sanitized.trim();
+}
+
+/**
  * 댓글 상태를 판단하는 유틸리티 함수
  */
 export function determineCommentStatus(comment: any): { // eslint-disable-line @typescript-eslint/no-explicit-any

@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { serverAuthGuard } from '@/shared/utils/auth-guard';
 import AdminLayoutClient from './components/AdminLayoutClient';
 
 export const metadata: Metadata = {
@@ -16,11 +17,18 @@ export const metadata: Metadata = {
   },
 };
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // 관리자 권한 체크 (비인증/비관리자 → 로그인 페이지로 리다이렉트)
+  await serverAuthGuard({
+    redirectTo: '/signin',
+    requireAdmin: true,
+    logUnauthorizedAccess: true,
+  });
+
   return (
     <AdminLayoutClient>
       {children}

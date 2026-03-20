@@ -1,12 +1,11 @@
 import React, { Suspense } from 'react';
-import Script from 'next/script';
 import { AllPostsWidget, NewsWidget, BoardCollectionWidget, BoardQuickLinksWidget } from '@/domains/widgets/components';
 import AdBanner from '@/shared/components/AdBanner';
 import KakaoAd from '@/shared/components/KakaoAd';
 import { KAKAO } from '@/shared/constants/ad-constants';
 import LiveScoreWidgetV2 from '@/domains/widgets/components/live-score-widget/index';
 import { buildMetadata } from '@/shared/utils/metadataNew';
-import { siteConfig } from '@/shared/config';
+
 
 // above-fold 위젯 데이터 함수 import (LiveScore만 blocking)
 import { fetchMultiDayMatches } from '@/domains/livescore/actions/footballApi';
@@ -31,31 +30,11 @@ export default async function HomePage() {
   // raw 데이터 → 위젯용 League[] 변환 (빅매치 리그 필터링)
   const liveScoreData = transformToWidgetLeagues(multiDayData);
 
-  const websiteSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: siteConfig.name,
-    url: siteConfig.url,
-    description: siteConfig.description,
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: {
-        '@type': 'EntryPoint',
-        urlTemplate: `${siteConfig.url}/search?q={search_term_string}`,
-      },
-      'query-input': 'required name=search_term_string',
-    },
-  };
-
   return (
     <main className="bg-transparent space-y-4 overflow-visible">
+      <h1 className="sr-only">4590 Football - 실시간 축구 스코어, 커뮤니티</h1>
       {/* 서버 데이터를 React Query 캐시에 주입 (헤더/모달이 API 호출 없이 사용) */}
       <LiveScoreCacheSeeder data={multiDayData} />
-      <Script
-        id="website-schema"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
-      />
       {/* 게시판 바로가기 아이콘 - 라이브스코어 상단 */}
       <div className="bg-transparent overflow-visible">
         <BoardQuickLinksWidget />

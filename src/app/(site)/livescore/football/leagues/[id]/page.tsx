@@ -66,8 +66,21 @@ export default async function LeaguePage({ params }: LeaguePageProps) {
     }
   }
 
+  // SportsOrganization JSON-LD 생성
+  const leagueSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'SportsOrganization',
+    name: league.name,
+    sport: 'Football',
+    ...(league.country ? { location: { '@type': 'Country', name: league.country } } : {}),
+  };
+
   return (
     <div className="min-h-screen space-y-4">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(leagueSchema) }}
+      />
       <div className="bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 overflow-hidden">
         <LeagueHeader
           league={league}

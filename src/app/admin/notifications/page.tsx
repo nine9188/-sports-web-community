@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getSupabaseBrowser } from '@/shared/lib/supabase';
+import { useAuth } from '@/shared/context/AuthContext';
 import { Bell, History } from 'lucide-react';
 import {
   createAdminNoticeWithLog,
@@ -10,6 +10,7 @@ import {
   getUsersForAdminNotification,
 } from '@/domains/notifications/actions';
 import { Button } from '@/shared/components/ui';
+import { NOTIFICATION_LOG_LIMIT } from '@/domains/admin/constants';
 import {
   NotificationHistory,
   NotificationForm,
@@ -33,28 +34,18 @@ export default function NotificationSendPage() {
   const [isFetchingUsers, setIsFetchingUsers] = useState(true);
   const [result, setResult] = useState<SendResult | null>(null);
 
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const { user } = useAuth();
+  const currentUserId = user?.id || null;
   const [logs, setLogs] = useState<NotificationLog[]>([]);
   const [isLoadingLogs, setIsLoadingLogs] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
 
-  const supabase = getSupabaseBrowser();
-
-  // 현재 사용자 정보 및 알림 로그 조회
+  // 알림 로그 조회
   useEffect(() => {
-    const fetchCurrentUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        setCurrentUserId(user.id);
-      }
-    };
-
     const fetchLogs = async () => {
       setIsLoadingLogs(true);
       try {
-        const response = await getNotificationLogs(20);
+        const response = await getNotificationLogs(NOTIFICATION_LOG_LIMIT);
         if (response.success && response.logs) {
           setLogs(response.logs);
         }
@@ -65,7 +56,6 @@ export default function NotificationSendPage() {
       }
     };
 
-    fetchCurrentUser();
     fetchLogs();
   }, []);
 
@@ -163,7 +153,7 @@ export default function NotificationSendPage() {
         setSelectedUserIds(new Set());
 
         // 로그 새로고침
-        const logsResponse = await getNotificationLogs(20);
+        const logsResponse = await getNotificationLogs(NOTIFICATION_LOG_LIMIT);
         if (logsResponse.success && logsResponse.logs) {
           setLogs(logsResponse.logs);
         }

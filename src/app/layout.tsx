@@ -66,6 +66,45 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head />
 
       <body className="w-full h-full overflow-x-hidden">
+        {/* Organization + WebSite JSON-LD (사이트 전체 공통) */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@graph': [
+                {
+                  '@type': 'Organization',
+                  '@id': `${siteConfig.url}#organization`,
+                  name: siteConfig.name,
+                  url: siteConfig.url,
+                  logo: {
+                    '@type': 'ImageObject',
+                    url: `${siteConfig.url}/logo/4590football-logo.svg`,
+                  },
+                },
+                {
+                  '@type': 'WebSite',
+                  '@id': `${siteConfig.url}#website`,
+                  name: siteConfig.name,
+                  url: siteConfig.url,
+                  description: siteConfig.description,
+                  publisher: {
+                    '@id': `${siteConfig.url}#organization`,
+                  },
+                  potentialAction: {
+                    '@type': 'SearchAction',
+                    target: {
+                      '@type': 'EntryPoint',
+                      urlTemplate: `${siteConfig.url}/search?q={search_term_string}`,
+                    },
+                    'query-input': 'required name=search_term_string',
+                  },
+                },
+              ],
+            }),
+          }}
+        />
         <RootLayoutProvider>
           {children}
         </RootLayoutProvider>

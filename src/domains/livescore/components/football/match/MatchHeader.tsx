@@ -239,6 +239,7 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {}, teamLogoUrls = 
 
   return (
     <div className="w-full md:max-w-screen-xl md:mx-auto">
+      <h1 className="sr-only">{homeTeam?.name_ko || homeTeam?.name} vs {awayTeam?.name_ko || awayTeam?.name}</h1>
       {/* 통합된 매치 헤더 카드 */}
       <Container className="mb-4 bg-white dark:bg-[#1D1D1D] rounded-none md:rounded-lg">
         {/* 리그 정보 및 경기 상태 */}

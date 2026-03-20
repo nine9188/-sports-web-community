@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
 import { useAuth } from '@/shared/context/AuthContext';
-import { getSupabaseBrowser } from '@/shared/lib/supabase';
-import { signUp, checkEmailAvailability } from '@/domains/auth/actions';
+import { signUp, checkEmailAvailability, checkUsernameAvailability, checkNicknameAvailability } from '@/domains/auth/actions';
 import { validateReferralCode } from '@/shared/actions/referral-actions';
 import { AlertCircle, Check, Eye, EyeOff, Gift, Calendar as CalendarIcon } from 'lucide-react';
 import { signInWithKakao, signInWithGoogle, signInWithDiscord, signInWithNaver } from '@/domains/auth/actions';
@@ -479,7 +478,7 @@ export default function SignupPage() {
       setUsernameMessage('아이디를 입력해주세요.');
       return;
     }
-    
+
     // 유효성 검사 먼저 실행
     const validationError = validateUsername(username);
     if (validationError) {
@@ -487,31 +486,16 @@ export default function SignupPage() {
       setUsernameAvailable(false);
       return;
     }
-    
+
     try {
       setIsCheckingUsername(true);
-      
-      // Supabase 클라이언트 생성
-      const supabase = getSupabaseBrowser();
-      
-      // 프로필 테이블에서 해당 username으로 검색
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('username', username);
-      
-      if (error) {
-        console.error('아이디 조회 오류:', error);
-        throw error;
-      }
-      
-      // 결과 확인 및 상태 업데이트
-      const isAvailable = !data || data.length === 0;
-      
+
+      const result = await checkUsernameAvailability(username);
+
       setUsernameChecked(true);
-      setUsernameAvailable(isAvailable);
-      setUsernameMessage(isAvailable ? '사용 가능한 아이디입니다.' : '이미 사용 중인 아이디입니다.');
-      
+      setUsernameAvailable(result.available);
+      setUsernameMessage(result.message || '');
+
     } catch (error) {
       console.error('아이디 중복 확인 오류:', error);
       setUsernameMessage('아이디 확인 중 오류가 발생했습니다.');
@@ -578,26 +562,11 @@ export default function SignupPage() {
     try {
       setIsCheckingNickname(true);
 
-      // Supabase 클라이언트 생성
-      const supabase = getSupabaseBrowser();
-
-      // 프로필 테이블에서 해당 nickname으로 검색
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('nickname', nickname);
-
-      if (error) {
-        console.error('닉네임 조회 오류:', error);
-        throw error;
-      }
-
-      // 결과 확인 및 상태 업데이트
-      const isAvailable = !data || data.length === 0;
+      const result = await checkNicknameAvailability(nickname);
 
       setNicknameChecked(true);
-      setNicknameAvailable(isAvailable);
-      setNicknameMessage(isAvailable ? '사용 가능한 닉네임입니다.' : '이미 사용 중인 닉네임입니다.');
+      setNicknameAvailable(result.available);
+      setNicknameMessage(result.message || '');
 
     } catch (error) {
       console.error('닉네임 중복 확인 오류:', error);

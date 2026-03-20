@@ -6,7 +6,7 @@ import { rewardUserActivity, getActivityTypeValues } from '@/shared/actions/acti
 import { checkReferralMilestone } from '@/shared/actions/referral-actions';
 import { checkSuspensionGuard } from '@/shared/utils/suspension-guard';
 import { logUserAction } from '@/shared/actions/log-actions';
-import { CommentActionResponse } from './utils';
+import { CommentActionResponse, sanitizeEmoticonCodes } from './utils';
 import { createCommentNotification, createReplyNotification } from '@/domains/notifications/actions';
 
 /**
@@ -61,13 +61,20 @@ export async function createComment({
       parentCommentOwnerId = parentComment.user_id;
     }
     
-    // 4. 댓글 작성
+    // 4. 이모티콘 코드 검증 (미구매 유료 팩 코드 제거)
+    const sanitizedContent = await sanitizeEmoticonCodes(content, user.id, supabase);
+
+    if (!sanitizedContent) {
+      return { success: false, error: '댓글 내용을 입력해주세요.' };
+    }
+
+    // 5. 댓글 작성
     const { data, error } = await supabase
       .from('comments')
       .insert({
         post_id: postId,
         user_id: user.id,
-        content,
+        content: sanitizedContent,
         parent_id: parentId || null
       })
       .select('*, profiles(nickname, icon_id, level, exp, public_id)')

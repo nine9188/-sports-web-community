@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getSupabaseBrowser } from "@/shared/lib/supabase";
 import { toast } from "react-toastify";
 import { Button } from "@/shared/components/ui/button";
 import { Coins } from "lucide-react";
 import { User } from "@supabase/supabase-js";
-import { getPointHistory } from "@/shared/actions/admin-actions";
+import { getPointHistory, adminAdjustPoints } from "@/shared/actions/admin-actions";
 import { formatDate } from "@/shared/utils/dateUtils";
 import Spinner from "@/shared/components/Spinner";
 import { Pagination } from "@/shared/components/ui/pagination";
@@ -119,58 +118,12 @@ export default function PointManager({
 
     try {
       setIsSubmitting(true);
-      const supabase = getSupabaseBrowser();
 
-      try {
-        const { error } = await supabase.rpc("admin_adjust_points", {
-          admin_id: adminUser?.id || "",
-          target_user_id: selectedUser.id,
-          points_amount: pointAmount,
-          reason_text: reason,
-        });
+      const result = await adminAdjustPoints(selectedUser.id, pointAmount, reason);
 
-        if (error) throw error;
-      } catch {
-        // RPC 실패 시 수동으로 처리
-        // 1. 현재 포인트 조회
-        const { data: userData, error: userError } = await supabase
-          .from("profiles")
-          .select("points")
-          .eq("id", selectedUser.id)
-          .single();
-
-        if (userError) throw userError;
-
-        const currentPoints = userData?.points || 0;
-        const newPoints = Math.max(0, currentPoints + pointAmount);
-
-        // 2. 포인트 업데이트
-        const { error: updateError } = await supabase
-          .from("profiles")
-          .update({ points: newPoints })
-          .eq("id", selectedUser.id);
-
-        if (updateError) throw updateError;
-
-        // 3. 내역 테이블 존재 여부 확인 및 추가 시도
-        try {
-          const { error: historyError } = await supabase
-            .from("point_history")
-            .insert([
-              {
-                user_id: selectedUser.id,
-                points: pointAmount,
-                reason: reason,
-                admin_id: adminUser?.id,
-              },
-            ]);
-
-          if (historyError && historyError.code !== "42P01") {
-            console.error("포인트 내역 추가 실패:", historyError);
-          }
-        } catch {
-          console.error("포인트 내역 추가 중 예외 발생");
-        }
+      if (!result.success) {
+        toast.error(`포인트 조정 실패: ${result.error}`);
+        return;
       }
 
       // 성공 메시지 표시

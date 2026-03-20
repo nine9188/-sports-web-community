@@ -17,6 +17,168 @@ import { getAuthenticatedUser } from './auth';
  * - 권한 (is_admin)
  * - 세션 정보
  */
+/**
+ * 프로필 아이콘 업데이트
+ */
+export async function updateProfileIcon(iconId: number): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = await getSupabaseServer();
+    const { data: { user }, error: authError } = await getAuthenticatedUser();
+
+    if (authError || !user) {
+      return { success: false, error: '인증되지 않은 사용자입니다.' };
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ icon_id: iconId })
+      .eq('id', user.id);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('프로필 아이콘 업데이트 오류:', error);
+    return { success: false, error: '아이콘 업데이트 중 오류가 발생했습니다.' };
+  }
+}
+
+/**
+ * 계정 정지 상태 확인
+ */
+export async function checkSuspensionStatus(): Promise<{
+  is_suspended: boolean;
+  suspended_until: string | null;
+  suspended_reason: string | null;
+} | null> {
+  try {
+    const supabase = await getSupabaseServer();
+    const { data: { user }, error: authError } = await getAuthenticatedUser();
+
+    if (authError || !user) {
+      return null;
+    }
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('is_suspended, suspended_until, suspended_reason')
+      .eq('id', user.id)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+
+    return data as {
+      is_suspended: boolean;
+      suspended_until: string | null;
+      suspended_reason: string | null;
+    };
+  } catch (error) {
+    console.error('정지 상태 확인 오류:', error);
+    return null;
+  }
+}
+
+/**
+ * 사용자 아이콘 정보 조회 (userId 지정)
+ * 클라이언트에서 직접 Supabase 쿼리 대신 사용
+ */
+export async function getUserIconData(userId: string): Promise<{
+  iconId: number | null;
+  iconUrl: string;
+  iconName: string;
+  level: number;
+  exp: number;
+  points: number;
+}> {
+  const defaultResult = {
+    iconId: null,
+    iconUrl: getLevelIconUrl(1),
+    iconName: '레벨 1 아이콘',
+    level: 1,
+    exp: 0,
+    points: 0,
+  };
+
+  if (!userId) return defaultResult;
+
+  try {
+    const supabase = await getSupabaseServer();
+
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('icon_id, level, exp, points')
+      .eq('id', userId)
+      .single();
+
+    if (error || !profile) return defaultResult;
+
+    const level = profile.level || 1;
+    const exp = profile.exp || 0;
+    const points = profile.points || 0;
+    const levelIconUrl = getLevelIconUrl(level);
+
+    if (profile.icon_id) {
+      const { data: iconData } = await supabase
+        .from('shop_items')
+        .select('id, name, image_url')
+        .eq('id', profile.icon_id)
+        .single();
+
+      if (iconData?.image_url) {
+        return {
+          iconId: iconData.id,
+          iconUrl: iconData.image_url,
+          iconName: iconData.name || `레벨 ${level} 아이콘`,
+          level,
+          exp,
+          points,
+        };
+      }
+    }
+
+    return {
+      iconId: null,
+      iconUrl: levelIconUrl,
+      iconName: `레벨 ${level} 아이콘`,
+      level,
+      exp,
+      points,
+    };
+  } catch (error) {
+    console.error('사용자 아이콘 정보 조회 오류:', error);
+    return defaultResult;
+  }
+}
+
+/**
+ * 현재 로그인한 사용자의 아이콘 정보 조회
+ */
+export async function getCurrentUserIconData(): Promise<{
+  iconId: number | null;
+  iconUrl: string;
+  iconName: string;
+  level: number;
+} | null> {
+  try {
+    const { data: { user }, error: authError } = await getAuthenticatedUser();
+    if (authError || !user) return null;
+
+    const result = await getUserIconData(user.id);
+    return {
+      iconId: result.iconId,
+      iconUrl: result.iconUrl,
+      iconName: result.iconName,
+      level: result.level,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export const getFullUserData = cache(async (): Promise<FullUserDataWithSession | null> => {
   try {
     const supabase = await getSupabaseServer();

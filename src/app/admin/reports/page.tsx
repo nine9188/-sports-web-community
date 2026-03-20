@@ -172,7 +172,7 @@ export default function ReportsAdminPage() {
         return;
       }
 
-      const authorNickname = report.target_info?.author || '알 수 없는 사용자';
+      const authorNickname = report.target_info?.author?.trim() || '알 수 없는 사용자';
       setSelectedAuthor({
         id: result.authorId!,
         nickname: authorNickname,

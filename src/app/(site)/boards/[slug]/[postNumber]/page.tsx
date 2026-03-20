@@ -250,7 +250,6 @@ export default async function PostDetailPage({
 
     // Article 구조화 데이터 생성
     const seoSettings = await getSeoSettings();
-    const siteName = seoSettings?.site_name || siteConfig.name;
     const siteUrl = seoSettings?.site_url || siteConfig.url;
     const postUrl = siteConfig.getCanonical(`/boards/${slug}/${postNumber}`);
 
@@ -279,12 +278,7 @@ export default async function PostDetailPage({
       datePublished: result.post.created_at,
       dateModified: result.post.updated_at || result.post.created_at,
       publisher: {
-        '@type': 'Organization',
-        name: siteName,
-        logo: {
-          '@type': 'ImageObject',
-          url: `${siteUrl}${siteConfig.logo}`
-        }
+        '@id': `${siteUrl}#organization`,
       },
       mainEntityOfPage: {
         '@type': 'WebPage',

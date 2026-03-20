@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { toast } from 'react-toastify';
 import Link from 'next/link';
 import type { Post, NoticeType } from '@/domains/boards/types/post';
 import { NoticeBadge } from '@/domains/boards/components/notice';
@@ -84,12 +85,12 @@ export default function NoticeManagement() {
 
   const handleSetNotice = async () => {
     if (!selectedPostNumber) {
-      alert('게시글 번호를 입력하세요.');
+      toast.warning('게시글 번호를 입력하세요.');
       return;
     }
 
     if (selectedNoticeType === 'board' && selectedBoardIds.length === 0) {
-      alert('게시판을 하나 이상 선택하세요.');
+      toast.warning('게시판을 하나 이상 선택하세요.');
       return;
     }
 
@@ -102,16 +103,16 @@ export default function NoticeManagement() {
       });
 
       if (result.success) {
-        alert(result.message);
+        toast.success(result.message);
         setSelectedPostNumber('');
         setSelectedBoardIds([]);
         setIsMustRead(false);
       } else {
-        alert(result.message);
+        toast.error(result.message);
       }
     } catch (error) {
       console.error('공지 설정 실패:', error);
-      alert('공지 설정 중 오류가 발생했습니다.');
+      toast.error('공지 설정 중 오류가 발생했습니다.');
     }
   };
 
@@ -123,13 +124,13 @@ export default function NoticeManagement() {
     try {
       const result = await removeNoticeMutation.mutateAsync(postId);
       if (result.success) {
-        alert(result.message);
+        toast.success(result.message);
       } else {
-        alert(result.message);
+        toast.error(result.message);
       }
     } catch (error) {
       console.error('공지 해제 실패:', error);
-      alert('공지 해제 중 오류가 발생했습니다.');
+      toast.error('공지 해제 중 오류가 발생했습니다.');
     }
   };
 
@@ -146,19 +147,19 @@ export default function NoticeManagement() {
         noticeType: newType,
       });
       if (result.success) {
-        alert(result.message);
+        toast.success(result.message);
       } else {
-        alert(result.message);
+        toast.error(result.message);
       }
     } catch (error) {
       console.error('공지 타입 변경 실패:', error);
-      alert('공지 타입 변경 중 오류가 발생했습니다.');
+      toast.error('공지 타입 변경 중 오류가 발생했습니다.');
     }
   };
 
   const handleApplyBoardTypeChange = async (postId: string) => {
     if (boardPickerBoardIds.length === 0) {
-      alert('게시판을 하나 이상 선택하세요.');
+      toast.warning('게시판을 하나 이상 선택하세요.');
       return;
     }
 
@@ -169,14 +170,14 @@ export default function NoticeManagement() {
         boardIds: boardPickerBoardIds,
       });
       if (result.success) {
-        alert(result.message);
+        toast.success(result.message);
         cancelBoardPicker();
       } else {
-        alert(result.message);
+        toast.error(result.message);
       }
     } catch (error) {
       console.error('공지 타입 변경 실패:', error);
-      alert('공지 타입 변경 중 오류가 발생했습니다.');
+      toast.error('공지 타입 변경 중 오류가 발생했습니다.');
     }
   };
 

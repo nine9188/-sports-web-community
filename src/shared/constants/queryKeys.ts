@@ -98,6 +98,9 @@ export const adminKeys = {
   reports: (filters: object) => ['admin', 'reports', filters] as const,
   notices: () => ['admin', 'notices'] as const,
   predictions: () => ['admin', 'predictions'] as const,
+  emoticonSubmissions: () => ['admin', 'dashboard', 'emoticon-submissions'] as const,
+  emoticonSubmissionList: (filter: string) => [...adminKeys.emoticonSubmissions(), 'list', filter] as const,
+  emoticonSubmissionDetail: (id: number) => [...adminKeys.emoticonSubmissions(), 'detail', id] as const,
 };
 
 // ============================================
@@ -114,6 +117,29 @@ export const notificationKeys = {
 export const shopKeys = {
   items: () => ['shop', 'items'] as const,
   userItems: (userId: string) => ['shop', 'userItems', userId] as const,
+};
+
+// ============================================
+// Emoticon (이모티콘)
+// ============================================
+export const emoticonKeys = {
+  all: ['emoticon'] as const,
+  packs: () => [...emoticonKeys.all, 'packs'] as const,
+  shopData: () => [...emoticonKeys.all, 'shopData'] as const,
+  pickerData: () => [...emoticonKeys.all, 'pickerData'] as const,
+  packDetail: (packId: string) => [...emoticonKeys.all, 'detail', packId] as const,
+  allCodes: () => [...emoticonKeys.all, 'codes'] as const,
+};
+
+// ============================================
+// Emoticon Studio (이모티콘 스튜디오)
+// ============================================
+export const emoticonStudioKeys = {
+  all: ['emoticon-studio'] as const,
+  submissions: () => [...emoticonStudioKeys.all, 'submissions'] as const,
+  suspended: () => [...emoticonStudioKeys.all, 'suspended'] as const,
+  detail: (id: number) => [...emoticonStudioKeys.all, 'detail', id] as const,
+  packNameCheck: (name: string) => [...emoticonStudioKeys.all, 'nameCheck', name] as const,
 };
 
 // ============================================

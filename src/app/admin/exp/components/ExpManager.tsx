@@ -1,11 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { toast } from 'react-toastify';
 import { Award } from 'lucide-react';
-import { calculateLevelFromExp } from '@/shared/utils/level-icons';
-import { getExpHistory } from '@/shared/actions/admin-actions';
+import { getExpHistory, adminAdjustExp } from '@/shared/actions/admin-actions';
 import {
   ExpInfoCard,
   ExpAdjustForm,
@@ -89,62 +87,12 @@ export default function ExpManager({ adminUser, selectedUser, onRefreshData, onS
 
     try {
       setIsSubmitting(true);
-      const supabase = getSupabaseBrowser();
 
-      const userExp = selectedUser.exp || 0;
-      let updatedExp = 0;
-      let updatedLevel = 1;
+      const result = await adminAdjustExp(selectedUser.id, expAmount, reason);
 
-      try {
-        const { error } = await supabase.rpc('admin_adjust_exp', {
-          admin_id: adminUser?.id || '',
-          target_user_id: selectedUser.id,
-          exp_amount: expAmount,
-          reason_text: reason,
-        });
-
-        if (error) throw error;
-
-        const { data: updatedUserData, error: fetchError } = await supabase
-          .from('profiles')
-          .select('id, nickname, exp, level')
-          .eq('id', selectedUser.id)
-          .single();
-
-        if (fetchError) {
-          updatedExp = Math.max(0, userExp + expAmount);
-          updatedLevel = calculateLevelFromExp(updatedExp);
-        } else {
-          updatedExp = updatedUserData.exp || 0;
-          updatedLevel = updatedUserData.level || 1;
-        }
-      } catch {
-        updatedExp = Math.max(0, userExp + expAmount);
-        updatedLevel = calculateLevelFromExp(updatedExp);
-
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({
-            exp: updatedExp,
-            level: updatedLevel,
-          })
-          .eq('id', selectedUser.id);
-
-        if (updateError) throw updateError;
-
-        try {
-          const { error: historyError } = await supabase.from('exp_history').insert({
-            user_id: selectedUser.id,
-            exp: expAmount,
-            reason: reason,
-          });
-
-          if (historyError) {
-            console.error('경험치 기록 실패:', historyError);
-          }
-        } catch {
-          console.error('경험치 기록 예외 발생');
-        }
+      if (!result.success) {
+        toast.error(`경험치 조정 실패: ${result.error}`);
+        return;
       }
 
       toast.success(`${selectedUser.nickname}님의 경험치가 ${expAmount > 0 ? '증가' : '차감'}되었습니다.`);
@@ -154,8 +102,8 @@ export default function ExpManager({ adminUser, selectedUser, onRefreshData, onS
 
       const updatedUser = {
         ...selectedUser,
-        exp: updatedExp,
-        level: updatedLevel,
+        exp: result.updatedExp ?? selectedUser.exp,
+        level: result.updatedLevel ?? selectedUser.level,
       };
 
       if (typeof onSelectUser === 'function') {

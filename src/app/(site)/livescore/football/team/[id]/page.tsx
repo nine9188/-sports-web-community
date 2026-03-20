@@ -98,14 +98,43 @@ export default async function TeamPage({ params, searchParams }: TeamPageProps) 
       ? await getPlayersKoreanNames(Array.from(playerIds))
       : {};
 
+    // SportsTeam JSON-LD 생성
+    const team = initialData.teamData?.team?.team;
+    const venue = initialData.teamData?.team?.venue;
+    const sportsTeamSchema = team ? {
+      '@context': 'https://schema.org',
+      '@type': 'SportsTeam',
+      name: team.name,
+      ...(team.country ? { location: { '@type': 'Country', name: team.country } } : {}),
+      ...(team.founded ? { foundingDate: String(team.founded) } : {}),
+      ...(venue ? {
+        homeLocation: {
+          '@type': 'StadiumOrArena',
+          name: venue.name,
+          ...(venue.address ? { address: venue.address } : {}),
+          ...(venue.city ? { addressLocality: venue.city } : {}),
+          ...(venue.capacity ? { maximumAttendeeCapacity: venue.capacity } : {}),
+        },
+      } : {}),
+      sport: 'Football',
+    } : null;
+
     // 클라이언트 컴포넌트에 데이터 전달
     return (
-      <TeamPageClient
-        teamId={id}
-        initialTab={initialTab}
-        initialData={initialData}
-        playerKoreanNames={playerKoreanNames}
-      />
+      <>
+        {sportsTeamSchema && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(sportsTeamSchema) }}
+          />
+        )}
+        <TeamPageClient
+          teamId={id}
+          initialTab={initialTab}
+          initialData={initialData}
+          playerKoreanNames={playerKoreanNames}
+        />
+      </>
     );
   } catch (error) {
     console.error('팀 페이지 로딩 오류:', error);

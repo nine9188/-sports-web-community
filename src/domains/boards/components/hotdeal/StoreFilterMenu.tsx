@@ -4,15 +4,11 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Button, Container } from '@/shared/components/ui';
 import { POPULAR_STORES } from '../../types/hotdeal';
 
-interface StoreFilterMenuProps {
-  boardSlug: string;
-}
-
 /**
  * 핫딜 게시판 쇼핑몰 필터 메뉴 (다중 선택)
  * HoverMenu와 동일한 스타일
  */
-export default function StoreFilterMenu({ boardSlug }: StoreFilterMenuProps) {
+export default function StoreFilterMenu() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
