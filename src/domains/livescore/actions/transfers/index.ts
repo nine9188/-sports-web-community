@@ -5,6 +5,7 @@ import {
   sortTransfersByDate,
 } from '../../utils/transferUtils';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
+import { getCurrentSeasonForLeague } from '@/domains/livescore/constants/league-mappings';
 
 // 이적 데이터 타입 정의
 export interface TransferMarketData {
@@ -249,11 +250,13 @@ function processTeamTransferData(
  */
 async function fetchLeagueTransfersFromAPI(
   leagueId: number,
-  season: number = 2025
+  season?: number
 ): Promise<TransferMarketData[]> {
+  // 시즌이 제공되지 않으면 리그별 현재 시즌 계산
+  const effectiveSeason = season ?? getCurrentSeasonForLeague(leagueId);
   try {
     // 리그 팀 목록 가져오기
-    const teamsData = await fetchFromFootballApi('teams', { league: leagueId, season });
+    const teamsData = await fetchFromFootballApi('teams', { league: leagueId, season: effectiveSeason });
     if (!teamsData.response || teamsData.response.length === 0) return [];
 
     // 상위 12개 팀의 이적 정보 수집
@@ -312,7 +315,7 @@ export const fetchTransfersFullData = cache(async (
 ): Promise<TransfersFullDataResponse> => {
   try {
     const leagueId = filters.league || MAJOR_LEAGUES[0]; // 기본: 프리미어리그
-    const currentSeason = filters.season || 2025;
+    const currentSeason = filters.season || getCurrentSeasonForLeague(leagueId);
 
     let allTransfers: TransferMarketData[] = [];
 

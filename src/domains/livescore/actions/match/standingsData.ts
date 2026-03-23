@@ -43,16 +43,7 @@ export interface StandingsDataResponse {
   error?: string;
 }
 
-// 현재 시즌 구하기
-function getCurrentSeason() {
-  const now = new Date();
-  const month = now.getMonth() + 1; // 0-11이므로 1 더하기
-  const year = now.getFullYear();
-  
-  // 7월 이전이면 (시즌이 끝나가는 중) 현재 년도 - 1을 사용
-  // 7월 이후면 (새 시즌이 시작) 현재 년도를 사용
-  return month < 7 ? year - 1 : year;
-}
+import { getCurrentSeasonForLeague } from '@/domains/livescore/constants/league-mappings';
 
 /**
  * 특정 리그의 순위 데이터를 가져오는 서버 액션
@@ -62,8 +53,8 @@ function getCurrentSeason() {
  */
 export async function fetchLeagueStandings(leagueId: number, season?: number): Promise<StandingsDataResponse> {
   try {
-    // 시즌이 제공되지 않으면 현재 시즌 계산
-    const targetSeason = season || getCurrentSeason();
+    // 시즌이 제공되지 않으면 리그별 현재 시즌 계산
+    const targetSeason = season || getCurrentSeasonForLeague(leagueId);
 
     if (!leagueId) {
       throw new Error('리그 ID가 필요합니다');

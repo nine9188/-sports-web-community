@@ -1,8 +1,9 @@
 'use server';
 
 import { cache } from 'react';
-import { getTeamById } from '@/domains/livescore/constants/teams';
+import { getTeamById, getLeagueIdByTeamId } from '@/domains/livescore/constants/teams';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
+import { getCurrentSeasonForLeague } from '@/domains/livescore/constants/league-mappings';
 
 // API 응답에 나타나는 리그 정보 인터페이스
 interface LeagueInfo {
@@ -89,9 +90,10 @@ export async function fetchTeamStandings(teamId: string): Promise<StandingsRespo
       throw new Error('팀 ID는 필수입니다');
     }
 
-    // 현재 날짜가 7월 이전이면 이전 연도, 이후면 현재 연도를 시즌으로 사용
-    const currentDate = new Date();
-    const season = currentDate.getMonth() < 6 ? currentDate.getFullYear() - 1 : currentDate.getFullYear();
+    // 팀 소속 리그 기반 시즌 계산 (캘린더 시즌 vs 유럽식 시즌)
+    const teamIdNum = typeof teamId === 'string' ? parseInt(teamId, 10) : teamId;
+    const leagueId = getLeagueIdByTeamId(teamIdNum);
+    const season = getCurrentSeasonForLeague(leagueId ?? 0);
 
     // 팀의 리그 정보를 가져옵니다
     const leaguesData = await fetchFromFootballApi('leagues', { team: teamId, season });

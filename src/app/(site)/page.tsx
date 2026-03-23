@@ -3,14 +3,9 @@ import { AllPostsWidget, NewsWidget, BoardCollectionWidget, BoardQuickLinksWidge
 import AdBanner from '@/shared/components/AdBanner';
 import KakaoAd from '@/shared/components/KakaoAd';
 import { KAKAO } from '@/shared/constants/ad-constants';
-import LiveScoreWidgetV2 from '@/domains/widgets/components/live-score-widget/index';
+import { LiveScoreWidgetStreaming } from '@/domains/widgets/components/live-score-widget/index';
+import LiveScoreSkeleton from '@/domains/livescore/components/football/MainView/LiveScoreSkeleton';
 import { buildMetadata } from '@/shared/utils/metadataNew';
-
-
-// above-fold 위젯 데이터 함수 import (LiveScore만 blocking)
-import { fetchMultiDayMatches } from '@/domains/livescore/actions/footballApi';
-import { transformToWidgetLeagues } from '@/domains/widgets/components/live-score-widget/LiveScoreWidgetV2Server';
-import LiveScoreCacheSeeder from '@/shared/components/LiveScoreCacheSeeder';
 
 export async function generateMetadata() {
   return buildMetadata({
@@ -21,30 +16,24 @@ export async function generateMetadata() {
   });
 }
 
-// 메인 페이지 컴포넌트 - LiveScore만 blocking, 나머지는 Suspense 스트리밍
-export default async function HomePage() {
-  // LiveScore만 above-fold blocking (LCP 후보)
-  // BoardCollection은 Suspense로 스트리밍 → LCP 경로에서 제외
-  const multiDayData = await fetchMultiDayMatches();
-
-  // raw 데이터 → 위젯용 League[] 변환 (빅매치 리그 필터링)
-  const liveScoreData = transformToWidgetLeagues(multiDayData);
-
+// 메인 페이지 컴포넌트 - 모든 데이터를 Suspense 스트리밍으로 처리
+// blocking await 없음 → 즉시 HTML 스트리밍 시작 (TTFB 최적화)
+export default function HomePage() {
   return (
     <main className="bg-transparent space-y-4 overflow-visible">
-      <h1 className="sr-only">4590 Football - 실시간 축구 스코어, 커뮤니티</h1>
-      {/* 서버 데이터를 React Query 캐시에 주입 (헤더/모달이 API 호출 없이 사용) */}
-      <LiveScoreCacheSeeder data={multiDayData} />
-      {/* 게시판 바로가기 아이콘 - 라이브스코어 상단 */}
+      {/* 게시판 바로가기 아이콘 - 즉시 렌더 (서버 컴포넌트, 데이터 fetch 없음) */}
       <div className="bg-transparent overflow-visible">
+        <h1 className="sr-only">4590 Football - 실시간 축구 스코어, 커뮤니티</h1>
         <BoardQuickLinksWidget />
       </div>
       {/* 배너 광고 */}
       <AdBanner />
-      {/* LiveScore 위젯 V2 - 새로운 디자인 */}
-      <LiveScoreWidgetV2 initialData={liveScoreData} />
+      {/* LiveScore 위젯 - Suspense 스트리밍 (오늘 경기만 SSR, 어제/내일은 클라이언트) */}
+      <Suspense fallback={<LiveScoreSkeleton />}>
+        <LiveScoreWidgetStreaming />
+      </Suspense>
 
-      {/* 게시판 모음 위젯 - Suspense 스트리밍 (LCP 경로에서 제외) */}
+      {/* 게시판 모음 위젯 - Suspense 스트리밍 */}
       <Suspense>
         <BoardCollectionWidget />
       </Suspense>

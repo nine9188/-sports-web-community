@@ -27,6 +27,12 @@ const teamsCache = new Map<string, LeagueTeam[]>();
 // 주요 리그 ID들
 const MAJOR_LEAGUES = [39, 140, 135, 78, 61]; // 프리미어리그, 라리가, 세리에A, 분데스리가, 리그1
 
+// 유럽식 시즌 기본값 계산 (이적 필터 기본 리그가 유럽 리그이므로)
+const getDefaultSeason = () => {
+  const now = new Date();
+  return now.getMonth() + 1 < 7 ? now.getFullYear() - 1 : now.getFullYear();
+};
+
 // 팀 데이터 미리 로딩 함수
 const preloadTeamsData = async () => {
   if (teamsCache.size > 0) return; // 이미 로딩된 경우 스킵
@@ -258,7 +264,7 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
         </div>
 
         {/* 활성 필터 표시 */}
-        {(currentFilters.league || currentFilters.team || currentFilters.type || currentFilters.season !== 2025) && (
+        {(currentFilters.league || currentFilters.team || currentFilters.type || currentFilters.season !== getDefaultSeason()) && (
           <div className="mt-4 pt-4 border-t border-black/5 dark:border-white/10">
             <div className="flex items-center flex-wrap gap-2">
               <span className="text-sm text-gray-700 dark:text-gray-300">활성 필터:</span>
@@ -302,12 +308,12 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
                   </Button>
                 </span>
               )}
-              {currentFilters.season && currentFilters.season !== 2025 && (
+              {currentFilters.season && currentFilters.season !== getDefaultSeason() && (
                 <span className="inline-flex items-center px-3 py-1 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-sm rounded-full">
                   {currentFilters.season}
                   <Button
                     variant="ghost"
-                    onClick={() => updateFilter('season', '2025')}
+                    onClick={() => updateFilter('season', String(getDefaultSeason()))}
                     className="ml-2 h-auto p-0 text-base"
                   >
                     ×

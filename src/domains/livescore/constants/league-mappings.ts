@@ -245,4 +245,45 @@ const ENGLISH_TO_KOREAN_LEAGUE_MAP: Record<string, string> = {
 export const getLeagueKoreanName = (englishName: string | undefined): string => {
   if (!englishName) return '';
   return ENGLISH_TO_KOREAN_LEAGUE_MAP[englishName] || englishName;
-}; 
+};
+
+// 캘린더 시즌 리그 (시즌 = 해당 연도, 예: 2026년 시즌 → "2026")
+// 유럽 리그와 달리 1월~12월 단일 연도 시즌을 사용하는 리그들
+const CALENDAR_SEASON_LEAGUE_IDS = new Set([
+  MAJOR_LEAGUE_IDS.K_LEAGUE_1,    // 292 - K리그1 (2월~11월)
+  293,                              // K리그2
+  294,                              // K리그3
+  MAJOR_LEAGUE_IDS.J1_LEAGUE,     // 98 - J1 리그 (2월~12월)
+  MAJOR_LEAGUE_IDS.MLS,           // 253 - MLS (2월~12월)
+  MAJOR_LEAGUE_IDS.BRASILEIRAO,   // 71 - 브라질레이로 (4월~12월)
+  MAJOR_LEAGUE_IDS.CSL,           // 169 - 중국 슈퍼리그 (3월~11월)
+  MAJOR_LEAGUE_IDS.SAUDI_PRO_LEAGUE, // 307 - 사우디 프로리그 (8월~5월이지만 API상 캘린더 시즌)
+]);
+
+/**
+ * 리그가 캘린더 시즌(단일 연도)을 사용하는지 확인
+ */
+export const isCalendarSeasonLeague = (leagueId: number | string): boolean => {
+  const id = typeof leagueId === 'string' ? parseInt(leagueId, 10) : leagueId;
+  return CALENDAR_SEASON_LEAGUE_IDS.has(id);
+};
+
+/**
+ * 리그에 맞는 현재 시즌을 계산
+ * - 캘린더 시즌 리그 (MLS, K리그, J리그 등): 현재 연도
+ * - 유럽식 시즌 리그 (EPL, 라리가 등): 7월 기준으로 시즌 결정
+ *   - 7월 이전: 전년도 (예: 2026년 3월 → 2025 = 2025-26 시즌)
+ *   - 7월 이후: 현재 연도 (예: 2025년 9월 → 2025 = 2025-26 시즌)
+ */
+export const getCurrentSeasonForLeague = (leagueId: number | string): number => {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+
+  if (isCalendarSeasonLeague(leagueId)) {
+    return currentYear;
+  }
+
+  // 유럽식 시즌: 7월 기준
+  return currentMonth < 7 ? currentYear - 1 : currentYear;
+};

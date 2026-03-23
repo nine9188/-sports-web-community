@@ -42,11 +42,17 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
           {/* 저작권 및 광고 문의 */}
           <div className="text-sm text-gray-500 dark:text-gray-400">
-            <p>© 2025 4590. All rights reserved.</p>
+            <p>© 2026 4590 Football. All rights reserved.</p>
           </div>
 
           {/* 링크 */}
-          <div className="flex gap-6 text-sm text-gray-700 dark:text-gray-300 items-center">
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-700 dark:text-gray-300 items-center justify-center">
+            <Link href="/about" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">
+              소개
+            </Link>
+            <Link href="/contact" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">
+              제휴/광고
+            </Link>
             <Link href="/terms" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">
               이용약관
             </Link>

@@ -1,6 +1,6 @@
-import LiveScoreWidgetV2Server from './LiveScoreWidgetV2Server';
+import LiveScoreWidgetV2Server, { LiveScoreWidgetStreaming } from './LiveScoreWidgetV2Server';
 
-export { LiveScoreWidgetV2Server as LiveScoreWidgetV2 };
+export { LiveScoreWidgetV2Server as LiveScoreWidgetV2, LiveScoreWidgetStreaming };
 export default LiveScoreWidgetV2Server;
 
 // 타입 re-export

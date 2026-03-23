@@ -178,6 +178,16 @@ export function getTeamByLeagueAndTeamId(leagueId: number, teamId: number): Team
   return leagueTeams.find(team => team.id === teamId);
 }
 
+// 팀 ID로 소속 리그 ID 찾기
+export function getLeagueIdByTeamId(teamId: number): number | undefined {
+  for (const [leagueId, teams] of Object.entries(LEAGUE_TEAM_MAPPINGS)) {
+    if ((teams as TeamMapping[]).some(team => team.id === teamId)) {
+      return parseInt(leagueId, 10);
+    }
+  }
+  return undefined;
+}
+
 // 팀 이름 표시 함수 (국가 포함 여부 옵션)
 export function getTeamDisplayName(id: number, options: {
   language?: 'ko' | 'en',

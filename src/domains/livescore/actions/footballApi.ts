@@ -2,7 +2,7 @@
 
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
-import { getMajorLeagueIds } from '../constants/league-mappings';
+import { getMajorLeagueIds, getCurrentSeasonForLeague, isCalendarSeasonLeague } from '../constants/league-mappings';
 import { getTeamLogoUrls, getLeagueLogoUrls } from './images';
 
 // 매치 데이터 인터페이스
@@ -611,33 +611,23 @@ export async function fetchLeagueDetails(leagueId: string): Promise<LeagueDetail
 // 시즌 완료 여부 확인 함수
 async function isSeasonCompleted(leagueId: string, season: string = '2024'): Promise<boolean> {
   try {
-    // 현재 날짜
     const now = new Date();
     const currentYear = now.getFullYear();
     const seasonYear = parseInt(season);
 
-    // K리그의 경우 특별 처리
-    const kLeagueIds = ['292', '293', '294']; // K리그 1, K리그 2, K리그 3
-    if (kLeagueIds.includes(leagueId)) {
-      // K리그 2025 시즌은 현재 진행 중
-      if (seasonYear === 2025 && currentYear === 2025) {
-        return false;
-      }
-      // K리그 2024 시즌은 완료됨
-      if (seasonYear === 2024 && currentYear >= 2025) {
-        return true;
-      }
+    // 캘린더 시즌 리그 (K리그, MLS, J리그, 브라질레이로 등)
+    if (isCalendarSeasonLeague(leagueId)) {
+      // 현재 연도 시즌은 진행 중, 이전 연도 시즌은 완료
+      return seasonYear < currentYear;
     }
 
-    // 일반적인 경우: 시즌 연도가 현재 연도보다 이전이면 완료된 것으로 간주
+    // 유럽식 시즌: 시즌 연도가 현재 연도보다 이전이면 완료
     if (seasonYear < currentYear) {
       return true;
     }
 
-    // 현재 연도 시즌은 진행 중으로 간주
     return false;
   } catch {
-    // 오류 시 안전하게 진행 중으로 간주
     return false;
   }
 }
@@ -645,8 +635,8 @@ async function isSeasonCompleted(leagueId: string, season: string = '2024'): Pro
 // 리그 소속 팀 목록 가져오기 (우승팀 정보 포함)
 export async function fetchLeagueTeams(leagueId: string): Promise<LeagueTeam[]> {
   try {
-    // 모든 리그 2025 시즌으로 통일 (데이터 일관성 유지)
-    const season = '2025';
+    // 리그별 현재 시즌 동적 계산 (캘린더 시즌 리그 vs 유럽식 시즌 리그)
+    const season = String(getCurrentSeasonForLeague(leagueId));
 
     // 시즌 완료 여부 확인
     const seasonCompleted = await isSeasonCompleted(leagueId, season);

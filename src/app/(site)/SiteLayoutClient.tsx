@@ -9,6 +9,7 @@ import { getFullUserData } from '@/shared/actions/user';
 import { Board } from '@/domains/layout/types/board';
 import { HeaderUserData } from '@/shared/types/user';
 import { scrollToTop } from '@/shared/utils/scroll';
+import Footer from '@/shared/components/Footer';
 
 interface SiteLayoutClientProps {
   children?: React.ReactNode;
@@ -80,7 +81,7 @@ export default function SiteLayoutClient({
     if (!pathname) return false;
 
     // 독립 레이아웃이 필요한 단일 경로들
-    const standaloneRoots = ['/terms', '/privacy'];
+    const standaloneRoots = ['/terms', '/privacy', '/about', '/contact'];
 
     return pathname.startsWith('/admin') ||  // /admin과 /admin/로 시작하는 모든 경로
            pathname.startsWith('/help/') ||
@@ -136,7 +137,10 @@ export default function SiteLayoutClient({
   }, [pathname, isOpen, isProfileOpen]);
 
   return isIndependentLayout ? (
-    children
+    <>
+      {children}
+      <Footer />
+    </>
   ) : (
     <AuthStateManager
       authSection={authSection}

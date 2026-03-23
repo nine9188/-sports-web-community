@@ -1,4 +1,4 @@
-import { MatchData as FootballMatchData, MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
+import { MatchData as FootballMatchData, MultiDayMatchesResult, fetchMultiDayMatches } from '@/domains/livescore/actions/footballApi';
 import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
 import { resolveMatchNames } from '@/domains/livescore/utils/resolveMatchNames';
 import { Container } from '@/shared/components/ui';
@@ -6,6 +6,7 @@ import LeagueToggleClient from './LeagueToggleClient';
 import LeagueHeader from './LeagueHeader';
 import MatchCardServer from './MatchCardServer';
 import WidgetHeader from './WidgetHeader';
+import LiveScoreCacheSeeder from '@/shared/components/LiveScoreCacheSeeder';
 import type { WidgetLeague, WidgetMatch } from './types';
 
 // 경기 시작 시간 추출 (HH:mm 형식, KST 고정)
@@ -147,6 +148,7 @@ export function transformToWidgetLeagues(result: MultiDayMatchesResult): WidgetL
   return leagues;
 }
 
+
 interface LiveScoreWidgetV2ServerProps {
   /** page.tsx에서 transformToWidgetLeagues()로 변환한 데이터 */
   initialData?: WidgetLeague[];
@@ -217,5 +219,25 @@ export default async function LiveScoreWidgetV2Server({ initialData }: LiveScore
         );
       })}
     </div>
+  );
+}
+
+/**
+ * Suspense 스트리밍용 래퍼 서버 컴포넌트
+ *
+ * page.tsx에서 blocking await 없이 <Suspense>로 감싸서 사용.
+ * 이 컴포넌트 내부에서 데이터를 fetch하므로 HTML 스트리밍이 가능:
+ * - 3일치(어제+오늘+내일) 전부 fetch (위젯이 리그별로 통합 표시하기 때문)
+ * - CacheSeeder로 React Query 캐시에 주입 (헤더/모달용)
+ */
+export async function LiveScoreWidgetStreaming() {
+  const multiDayData = await fetchMultiDayMatches();
+  const leagues = transformToWidgetLeagues(multiDayData);
+
+  return (
+    <>
+      <LiveScoreCacheSeeder data={multiDayData} />
+      <LiveScoreWidgetV2Server initialData={leagues} />
+    </>
   );
 }
