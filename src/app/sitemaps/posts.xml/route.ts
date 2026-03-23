@@ -1,5 +1,5 @@
 import { siteConfig } from '@/shared/config';
-import { getSitemapSupabase, buildUrlsetXml, sitemapResponse } from '../utils';
+import { getSitemapSupabase, fetchAll, buildUrlsetXml, sitemapResponse } from '../utils';
 
 export const revalidate = 3600;
 
@@ -8,13 +8,14 @@ export async function GET() {
   const supabase = getSitemapSupabase();
 
   try {
-    const { data: posts } = await supabase
-      .from('posts')
-      .select('post_number, updated_at, board:boards!inner(slug)')
-      .eq('is_deleted', false)
-      .order('created_at', { ascending: false });
-
-    if (!posts) return sitemapResponse(buildUrlsetXml([]));
+    const posts = await fetchAll((from, to) =>
+      supabase
+        .from('posts')
+        .select('post_number, updated_at, board:boards!inner(slug)')
+        .eq('is_deleted', false)
+        .order('created_at', { ascending: false })
+        .range(from, to)
+    );
 
     const urls = posts
       .filter((p) => p.board && typeof p.board === 'object' && 'slug' in p.board)

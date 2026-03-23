@@ -1,5 +1,5 @@
 import { siteConfig } from '@/shared/config';
-import { getSitemapSupabase, buildUrlsetXml, sitemapResponse } from '../utils';
+import { getSitemapSupabase, fetchAll, buildUrlsetXml, sitemapResponse } from '../utils';
 
 export const revalidate = 3600;
 
@@ -8,12 +8,13 @@ export async function GET() {
   const supabase = getSitemapSupabase();
 
   try {
-    const { data: players } = await supabase
-      .from('football_players')
-      .select('id, updated_at')
-      .order('id', { ascending: true });
-
-    if (!players) return sitemapResponse(buildUrlsetXml([]));
+    const players = await fetchAll((from, to) =>
+      supabase
+        .from('football_players')
+        .select('id, updated_at')
+        .order('id', { ascending: true })
+        .range(from, to)
+    );
 
     const urls = players.map((p) => ({
       loc: `${baseUrl}/livescore/football/player/${p.id}`,

@@ -59,3 +59,23 @@ export function sitemapResponse(xml: string): Response {
     },
   });
 }
+
+// Supabase 1,000행 제한 우회: 페이지네이션으로 전체 데이터 조회
+const PAGE_SIZE = 1000;
+
+export async function fetchAll<T>(
+  queryFn: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>
+): Promise<T[]> {
+  const allData: T[] = [];
+  let offset = 0;
+
+  while (true) {
+    const { data, error } = await queryFn(offset, offset + PAGE_SIZE - 1);
+    if (error || !data || data.length === 0) break;
+    allData.push(...data);
+    if (data.length < PAGE_SIZE) break;
+    offset += PAGE_SIZE;
+  }
+
+  return allData;
+}
