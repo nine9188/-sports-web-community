@@ -775,7 +775,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
         <div className="relative px-6 py-20 md:px-12 md:py-32 text-center max-w-3xl mx-auto">
           <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="text-sm md:text-base text-gray-400 mb-6">
-            경기 보면서 스탯 찾으려고 탭 3개 열고,<br />혼자 보면서 할 말은 트위터에 쓰고 있죠?
+            경기 보면서 통계 찾으려고 탭 3개 열고,<br />하고 싶은 말은 단톡방에 쓰고 있죠?
           </motion.p>
           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.5 }} className="text-3xl md:text-[3.2rem] font-extrabold text-white mb-6 leading-[1.15] tracking-tight">
             데이터와 커뮤니티가<br /><span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">하나로 연결된 축구 플랫폼</span>
