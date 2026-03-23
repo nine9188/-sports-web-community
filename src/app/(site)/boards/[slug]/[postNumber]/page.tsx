@@ -17,6 +17,77 @@ import '@/styles/post-content.css';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+// YouTube 동영상 ID 추출 정규식
+const YOUTUBE_REGEX = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+
+interface VideoInfo {
+  name?: string;
+  description?: string;
+  thumbnailUrl: string;
+  contentUrl?: string;
+  embedUrl?: string;
+  uploadDate?: string;
+}
+
+/**
+ * TipTap JSON에서 동영상 정보 추출
+ */
+function extractVideosFromContent(content: unknown): VideoInfo[] {
+  if (!content || typeof content !== 'object') return [];
+  const doc = content as { type?: string; content?: unknown[] };
+  if (!doc.content || !Array.isArray(doc.content)) return [];
+
+  const videos: VideoInfo[] = [];
+
+  function traverse(nodes: unknown[]) {
+    for (const node of nodes) {
+      if (!node || typeof node !== 'object') continue;
+      const n = node as { type?: string; attrs?: Record<string, unknown>; content?: unknown[] };
+
+      // YouTube 노드
+      if (n.type === 'youtube' && n.attrs?.src) {
+        const match = String(n.attrs.src).match(YOUTUBE_REGEX);
+        const videoId = match ? match[1] : (String(n.attrs.src).length === 11 ? String(n.attrs.src) : null);
+        if (videoId) {
+          videos.push({
+            thumbnailUrl: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+            embedUrl: `https://www.youtube.com/embed/${videoId}`,
+            contentUrl: `https://www.youtube.com/watch?v=${videoId}`,
+          });
+        }
+      }
+
+      // 소셜 임베드 중 YouTube
+      if (n.type === 'socialEmbed' && n.attrs?.platform === 'youtube' && n.attrs?.url) {
+        const match = String(n.attrs.url).match(YOUTUBE_REGEX);
+        if (match) {
+          const videoId = match[1];
+          videos.push({
+            thumbnailUrl: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+            embedUrl: `https://www.youtube.com/embed/${videoId}`,
+            contentUrl: `https://www.youtube.com/watch?v=${videoId}`,
+          });
+        }
+      }
+
+      // 로컬 비디오 노드
+      if (n.type === 'video' && n.attrs?.src) {
+        videos.push({
+          contentUrl: String(n.attrs.src),
+          thumbnailUrl: n.attrs.poster ? String(n.attrs.poster) : `${siteConfig.url}/og-image.png`,
+        });
+      }
+
+      if (n.content && Array.isArray(n.content)) {
+        traverse(n.content);
+      }
+    }
+  }
+
+  traverse(doc.content);
+  return videos;
+}
+
 /**
  * 게시글 본문에서 설명 추출 (HTML 태그 제거)
  */
@@ -340,6 +411,19 @@ export default async function PostDetailPage({
       itemListElement: breadcrumbListItems
     };
 
+    // VideoObject 구조화 데이터 생성
+    const videos = extractVideosFromContent(result.post.content);
+    const videoSchemas = videos.map((video) => ({
+      '@context': 'https://schema.org',
+      '@type': 'VideoObject',
+      name: video.name || result.post.title,
+      description: articleDescription || `${result.board.name}의 게시글 동영상입니다.`,
+      thumbnailUrl: video.thumbnailUrl,
+      uploadDate: result.post.created_at,
+      ...(video.contentUrl && { contentUrl: video.contentUrl }),
+      ...(video.embedUrl && { embedUrl: video.embedUrl }),
+    }));
+
     // 레이아웃 컴포넌트에 데이터 전달
     return (
       <>
@@ -359,6 +443,17 @@ export default async function PostDetailPage({
             __html: JSON.stringify(breadcrumbSchema)
           }}
         />
+        {/* VideoObject 구조화 데이터 */}
+        {videoSchemas.map((schema, i) => (
+          <Script
+            key={`video-schema-${i}`}
+            id={`video-schema-${i}`}
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(schema)
+            }}
+          />
+        ))}
         <TrackPageVisit
           id={result.board.id}
           slug={result.board.slug || result.board.id}
