@@ -259,8 +259,8 @@ export default function HeaderClient({
                 <Image
                   src={logoUrl}
                   alt="4590football logo"
-                  width={275}
-                  height={200}
+                  width={124}
+                  height={60}
                   priority
                   fetchPriority="high"
                   className="h-14 w-auto dark:invert"
@@ -304,8 +304,8 @@ export default function HeaderClient({
                   <Image
                     src={logoUrl}
                     alt="SPORTS 로고"
-                    width={275}
-                    height={200}
+                    width={124}
+                    height={60}
                     priority
                     fetchPriority="high"
                     className="h-10 w-auto dark:invert"

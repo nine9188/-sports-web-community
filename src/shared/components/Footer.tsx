@@ -46,7 +46,7 @@ export default function Footer() {
           </div>
 
           {/* 링크 */}
-          <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-700 dark:text-gray-300 items-center justify-center">
+          <div className="flex gap-x-3 sm:gap-x-6 text-xs sm:text-sm text-gray-700 dark:text-gray-300 items-center justify-center">
             <Link href="/about" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">
               소개
             </Link>

@@ -17,7 +17,7 @@ export default function TermsPage() {
       {/* 왼쪽 상단 로고 */}
       <div className="px-4 py-4 sm:px-6 sm:py-5">
         <a href="/" className="inline-block">
-          <Image src={siteConfig.logo} alt="4590 Football" width={124} height={60} className="h-14 w-auto dark:invert" />
+          <Image src={siteConfig.logo} alt="4590 Football" width={124} height={60} className="h-10 sm:h-14 w-auto dark:invert" />
         </a>
       </div>
 

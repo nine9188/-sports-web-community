@@ -1,51 +1,44 @@
 import { MetadataRoute } from 'next';
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import { siteConfig } from '@/shared/config';
 
 export const revalidate = 3600; // 1시간마다 재생성
 
-// 사이트맵 인덱스: 5개의 하위 사이트맵을 가리킴
-// id 0: static (정적 + 게시판 + 리그 + 샵)
-// id 1: posts (게시글 전체)
-// id 2: matches (매치 최근 3개월)
-// id 3: teams (팀 전체)
-// id 4: players (선수 전체)
-export async function generateSitemaps() {
-  return [
-    { id: 0 },
-    { id: 1 },
-    { id: 2 },
-    { id: 3 },
-    { id: 4 },
-  ];
+// 사이트맵 생성 시 쿠키 의존성 없는 Supabase 클라이언트 사용
+function getSitemapSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    }
+  );
 }
 
-export default async function sitemap({ id }: { id: number }): Promise<MetadataRoute.Sitemap> {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteConfig.url;
-  const supabase = await getSupabaseServer();
+  const supabase = getSitemapSupabase();
 
-  switch (id) {
-    case 0:
-      return generateStaticSitemap(baseUrl, supabase);
-    case 1:
-      return generatePostsSitemap(baseUrl, supabase);
-    case 2:
-      return generateMatchesSitemap(baseUrl, supabase);
-    case 3:
-      return generateTeamsSitemap(baseUrl, supabase);
-    case 4:
-      return generatePlayersSitemap(baseUrl, supabase);
-    default:
-      return [];
-  }
+  const [staticPages, postPages, matchPages, teamPages, playerPages] = await Promise.all([
+    generateStaticSitemap(baseUrl, supabase),
+    generatePostsSitemap(baseUrl, supabase),
+    generateMatchesSitemap(baseUrl, supabase),
+    generateTeamsSitemap(baseUrl, supabase),
+    generatePlayersSitemap(baseUrl, supabase),
+  ]);
+
+  return [...staticPages, ...postPages, ...matchPages, ...teamPages, ...playerPages];
 }
 
 // ============================================
-// 0: 정적 페이지 + 게시판 + 리그 + 샵 카테고리
+// 정적 페이지 + 게시판 + 리그 + 샵 카테고리
 // ============================================
 async function generateStaticSitemap(
   baseUrl: string,
-  supabase: Awaited<ReturnType<typeof getSupabaseServer>>
+  supabase: ReturnType<typeof getSitemapSupabase>
 ): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
     { url: baseUrl, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
@@ -63,6 +56,8 @@ async function generateStaticSitemap(
     { url: `${baseUrl}/livescore/football/leagues`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.7 },
     { url: `${baseUrl}/transfers`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.7 },
     { url: `${baseUrl}/shop`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.5 },
+    { url: `${baseUrl}/about`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${baseUrl}/contact`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
     { url: `${baseUrl}/privacy`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.3 },
     { url: `${baseUrl}/terms`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.3 },
   ];
@@ -125,11 +120,11 @@ async function generateStaticSitemap(
 }
 
 // ============================================
-// 1: 게시글 전체
+// 게시글 전체
 // ============================================
 async function generatePostsSitemap(
   baseUrl: string,
-  supabase: Awaited<ReturnType<typeof getSupabaseServer>>
+  supabase: ReturnType<typeof getSitemapSupabase>
 ): Promise<MetadataRoute.Sitemap> {
   try {
     const { data: posts } = await supabase
@@ -155,11 +150,11 @@ async function generatePostsSitemap(
 }
 
 // ============================================
-// 2: 매치 최근 3개월
+// 매치 최근 3개월
 // ============================================
 async function generateMatchesSitemap(
   baseUrl: string,
-  supabase: Awaited<ReturnType<typeof getSupabaseServer>>
+  supabase: ReturnType<typeof getSitemapSupabase>
 ): Promise<MetadataRoute.Sitemap> {
   try {
     const threeMonthsAgo = new Date();
@@ -187,11 +182,11 @@ async function generateMatchesSitemap(
 }
 
 // ============================================
-// 3: 팀 전체
+// 팀 전체
 // ============================================
 async function generateTeamsSitemap(
   baseUrl: string,
-  supabase: Awaited<ReturnType<typeof getSupabaseServer>>
+  supabase: ReturnType<typeof getSitemapSupabase>
 ): Promise<MetadataRoute.Sitemap> {
   try {
     const { data: teams } = await supabase
@@ -215,11 +210,11 @@ async function generateTeamsSitemap(
 }
 
 // ============================================
-// 4: 선수 전체
+// 선수 전체
 // ============================================
 async function generatePlayersSitemap(
   baseUrl: string,
-  supabase: Awaited<ReturnType<typeof getSupabaseServer>>
+  supabase: ReturnType<typeof getSitemapSupabase>
 ): Promise<MetadataRoute.Sitemap> {
   try {
     const { data: players } = await supabase

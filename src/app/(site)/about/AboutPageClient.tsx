@@ -288,7 +288,7 @@ function DataAnalysisDemo({ images }: { images: DemoImages }) {
                 <div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden bg-gray-100 dark:bg-[#333]">
                   {images.playerPhoto && <Image src={images.playerPhoto} alt="M. Salah" width={80} height={80} className="w-full h-full object-cover" />}
                 </div>
-                {t[40] && <div className="absolute -bottom-1 -right-1 w-6 h-6 md:w-8 md:h-8 rounded-full bg-white dark:bg-[#1D1D1D] p-0.5 shadow-sm"><Image src={t[40]} alt="LIV" width={28} height={28} className="w-full h-full object-contain" /></div>}
+                {t[40] && <div className="absolute -bottom-1 -right-1 w-6 h-6 md:w-8 md:h-8 rounded-full bg-white p-0.5 shadow-lg"><Image src={t[40]} alt="LIV" width={28} height={28} className="w-full h-full object-contain" /></div>}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-base md:text-lg font-bold text-gray-900 dark:text-[#F0F0F0]">모하메드 살라</p>
@@ -296,7 +296,7 @@ function DataAnalysisDemo({ images }: { images: DemoImages }) {
                   <span className="text-sm text-gray-600 dark:text-gray-400">Liverpool</span>
                   <span className="px-2 py-0.5 bg-[#F5F5F5] dark:bg-[#333333] text-xs rounded text-gray-700 dark:text-gray-300">공격수</span>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">프리미어리그 · 잉글랜드</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">프리미어리그 · 잉글랜드</p>
               </div>
             </div>
             <div className="flex bg-[#F5F5F5] dark:bg-[#262626] border-t border-black/5 dark:border-white/10">
@@ -762,7 +762,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
       {/* 로고 */}
       <div className="px-4 py-4 sm:px-6 sm:py-5">
         <Link href="/" className="inline-block">
-          <Image src={siteConfig.logo} alt="4590 Football" width={124} height={60} className="h-14 w-auto dark:invert" priority />
+          <Image src={siteConfig.logo} alt="4590 Football" width={124} height={60} className="h-10 sm:h-14 w-auto dark:invert" priority />
         </Link>
       </div>
 
@@ -839,7 +839,8 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
                     <div className="league-header">
                       <div style={{ display: 'flex', alignItems: 'center' }}>
                         <div className="league-logo-box">
-                          <Image src="https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/leagues/md/39.webp" alt="프리미어리그" width={20} height={20} style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
+                          <Image src="https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/leagues/md/39.webp" alt="프리미어리그" width={20} height={20} style={{ width: '20px', height: '20px', objectFit: 'contain' }} className="dark:hidden" />
+                          <Image src="https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/leagues/md/39-1.webp" alt="프리미어리그" width={20} height={20} style={{ width: '20px', height: '20px', objectFit: 'contain' }} className="hidden dark:block" />
                         </div>
                         <span className="league-name">프리미어리그</span>
                       </div>
@@ -910,7 +911,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
                   <span className="px-2.5 py-1 rounded-md bg-[#F5F5F5] dark:bg-white/5 text-xs font-medium text-gray-400">+35개</span>
                 </div>
               </div>
-              <LiveScoreDemo images={demoImages} />
+              <div className="rounded-2xl border border-black/10 dark:border-white/10 overflow-hidden shadow-sm"><LiveScoreDemo images={demoImages} /></div>
             </div>
           </motion.div>
 
@@ -939,7 +940,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
                 <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2 leading-snug tracking-tight">킥오프 전에<br />이미 알고 있는 AI.</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">과거 데이터, 팀 폼, 맞대결 기록을 AI가 분석합니다. 승률, 예상 스코어, 핵심 변수까지. 경기 보기 전에 한 발 앞서 준비하세요.</p>
               </div>
-              <AIPredictionDemo images={demoImages} />
+              <div className="rounded-2xl border border-black/10 dark:border-white/10 overflow-hidden shadow-sm"><AIPredictionDemo images={demoImages} /></div>
             </div>
           </motion.div>
 
