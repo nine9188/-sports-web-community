@@ -784,8 +784,8 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
             게시글에 선수를 태그하면 스탯이 바로 뜹니다.<br />경기를 태그하면 스코어가 실시간으로 업데이트됩니다.<br /><span className="text-white font-medium">그게 4590입니다.</span>
           </motion.p>
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 1.1 }} className="flex flex-col sm:flex-row gap-3 justify-center mb-14">
-            <Link href="/signup" className="group px-8 py-3.5 bg-white text-gray-900 rounded-xl text-sm font-bold hover:shadow-xl hover:shadow-white/10 transition-all flex items-center justify-center gap-2">무료로 시작하기 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></Link>
-            <Link href="/" className="px-8 py-3.5 border border-white/20 text-white rounded-xl text-sm font-medium hover:bg-white/10 transition-all">바로 둘러보기</Link>
+            <Link href="/" className="group px-8 py-3.5 bg-white text-gray-900 rounded-xl text-sm font-bold hover:shadow-xl hover:shadow-white/10 transition-all flex items-center justify-center gap-2">둘러보고 시작하기 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></Link>
+            <Link href="/signup" className="px-8 py-3.5 border border-white/20 text-white rounded-xl text-sm font-medium hover:bg-white/10 transition-all">팬들과 함께하기</Link>
           </motion.div>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }}>
             <ChevronDown className="w-5 h-5 text-gray-500 mx-auto animate-bounce" />
@@ -1124,7 +1124,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
         <div className="max-w-2xl mx-auto space-y-3">
           {[
             { q: '4590이 무슨 뜻인가요?', a: '축구 경기는 전반 45분, 후반 45분으로 이루어집니다. 4590은 그 90분의 모든 순간을 함께한다는 의미입니다.' },
-            { q: '무료인가요?', a: '네. 모든 기능을 무료로 이용할 수 있습니다. 회원가입만 하면 바로 시작할 수 있습니다.' },
+            { q: '무료인가요?', a: '네. 모든 기능을 무료로 이용할 수 있습니다. 가입하면 다른 팬들과 바로 소통할 수 있습니다.' },
             { q: 'AI 예측은 어떻게 작동하나요?', a: '과거 경기 데이터, 팀 폼, 맞대결 기록 등을 AI 모델이 분석하여 승률과 예상 스코어를 제공합니다.' },
             { q: '모바일에서도 사용 가능한가요?', a: '네. 반응형 웹으로 제작되어 모바일, 태블릿, PC 어디서든 최적화된 화면으로 이용할 수 있습니다.' },
             { q: '어떤 리그를 지원하나요?', a: '유럽 5대 리그, 챔피언스리그, K리그, J리그, MLS 등 40개 이상의 리그와 국제 대회를 지원합니다.' },
@@ -1143,11 +1143,11 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-black" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(59,130,246,0.1)_0%,_transparent_60%)]" />
         <div className="relative px-6 py-16 md:px-12 md:py-24 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">축구, 이제 다르게 즐기세요</h2>
-          <p className="text-sm md:text-base text-gray-400 mb-10 max-w-md mx-auto leading-relaxed">가입은 무료, 탈퇴는 자유.<br />한번 써보면 다른 데 못 갑니다.</p>
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">같이 볼 사람, 여기 있습니다</h2>
+          <p className="text-sm md:text-base text-gray-400 mb-10 max-w-md mx-auto leading-relaxed">댓글 하나가 대화가 되고,<br />대화가 커뮤니티가 됩니다.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/signup" className="group px-8 py-3.5 bg-white text-gray-900 rounded-xl text-sm font-bold hover:shadow-xl hover:shadow-white/10 transition-all flex items-center justify-center gap-2">무료로 시작하기 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></Link>
-            <Link href="/" className="px-8 py-3.5 border border-white/20 text-white rounded-xl text-sm font-medium hover:bg-white/10 transition-all">바로 둘러보기</Link>
+            <Link href="/signup" className="group px-8 py-3.5 bg-white text-gray-900 rounded-xl text-sm font-bold hover:shadow-xl hover:shadow-white/10 transition-all flex items-center justify-center gap-2">팬들과 함께하기 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></Link>
+            <Link href="/" className="px-8 py-3.5 border border-white/20 text-white rounded-xl text-sm font-medium hover:bg-white/10 transition-all">조금 더 둘러보기</Link>
           </div>
         </div>
       </Section>
