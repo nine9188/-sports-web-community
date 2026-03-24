@@ -232,6 +232,12 @@ export default async function MatchPage({
 
     // SportsEvent JSON-LD 생성
     const match = matchData.match;
+    // matchData.matchData에 원본 API 데이터가 있음 (fixture.venue 포함)
+    const rawData = matchData.matchData as Record<string, unknown> | undefined;
+    const rawFixture = rawData?.fixture as { venue?: { name?: string; city?: string } } | undefined;
+    const venueName = rawFixture?.venue?.name;
+    const venueCity = rawFixture?.venue?.city;
+
     const homeTeamMapping = match ? getTeamById(match.teams.home.id) : null;
     const awayTeamMapping = match ? getTeamById(match.teams.away.id) : null;
     const leagueMapping = match ? getLeagueById(match.league.id) : null;
@@ -248,7 +254,7 @@ export default async function MatchPage({
           ? 'https://schema.org/EventPostponed'
           : 'https://schema.org/EventScheduled';
 
-    const matchStartDate = match?.time?.date || match?.fixture?.date;
+    const matchStartDate = match?.time?.date;
     // endDate: startDate + 2시간 (축구 경기 평균 소요 시간)
     const matchEndDate = matchStartDate
       ? new Date(new Date(matchStartDate).getTime() + 2 * 60 * 60 * 1000).toISOString()
@@ -268,11 +274,11 @@ export default async function MatchPage({
       eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
       location: {
         '@type': 'Place',
-        name: match.fixture?.venue?.name || '미정',
-        ...(match.fixture?.venue?.city && {
+        name: venueName || homeTeamName + ' 홈구장',
+        ...(venueCity && {
           address: {
             '@type': 'PostalAddress',
-            addressLocality: match.fixture.venue.city,
+            addressLocality: venueCity,
           },
         }),
       },
@@ -291,6 +297,9 @@ export default async function MatchPage({
       organizer: {
         '@type': 'SportsOrganization',
         name: leagueName,
+        ...(match.league?.id && {
+          url: `${siteConfig.url}/livescore/football/leagues/${match.league.id}`,
+        }),
       },
       offers: {
         '@type': 'Offer',
