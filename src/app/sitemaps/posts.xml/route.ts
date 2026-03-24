@@ -22,8 +22,6 @@ export async function GET() {
       .map((p) => ({
         loc: `${baseUrl}/boards/${(p.board as { slug: string }).slug}/${p.post_number}`,
         lastmod: p.updated_at ? new Date(p.updated_at).toISOString() : undefined,
-        changefreq: 'weekly',
-        priority: 0.6,
       }));
 
     return sitemapResponse(buildUrlsetXml(urls));

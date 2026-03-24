@@ -17,18 +17,16 @@ export function getSitemapSupabase() {
 interface SitemapUrl {
   loc: string;
   lastmod?: string;
-  changefreq?: string;
-  priority?: number;
 }
 
 // URL 배열을 사이트맵 XML로 변환
+// 참고: changefreq와 priority는 구글이 무시하므로 출력하지 않음
+// https://developers.google.com/search/blog/2023/06/sitemaps-lastmod-ping
 export function buildUrlsetXml(urls: SitemapUrl[]): string {
   const urlEntries = urls
     .map((u) => {
       let entry = `  <url>\n    <loc>${escapeXml(u.loc)}</loc>`;
       if (u.lastmod) entry += `\n    <lastmod>${u.lastmod}</lastmod>`;
-      if (u.changefreq) entry += `\n    <changefreq>${u.changefreq}</changefreq>`;
-      if (u.priority !== undefined) entry += `\n    <priority>${u.priority}</priority>`;
       entry += `\n  </url>`;
       return entry;
     })

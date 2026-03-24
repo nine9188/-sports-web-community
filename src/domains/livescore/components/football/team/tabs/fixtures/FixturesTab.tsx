@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
@@ -74,11 +75,6 @@ export default function FixturesTab({ matches, teamId, teamLogoUrls = {}, league
   // 페이지네이션 상태
   const [recentPage, setRecentPage] = useState(1);
   const [upcomingPage, setUpcomingPage] = useState(1);
-
-  // 매치 페이지로 이동하는 함수
-  const handleMatchClick = (fixtureId: number) => {
-    router.push(`/livescore/football/match/${fixtureId}`);
-  };
 
   // 종료된 경기 (최신순)
   const recentMatches = useMemo(() => {
@@ -182,10 +178,12 @@ export default function FixturesTab({ matches, teamId, teamLogoUrls = {}, league
                 <tr
                   key={match.fixture.id}
                   className="h-12 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors"
-                  onClick={() => handleMatchClick(match.fixture.id)}
+                  onClick={() => router.push(`/livescore/football/match/${match.fixture.id}`)}
                 >
                   <td className="p-0 md:px-2 text-xs whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
-                    {format(new Date(match.fixture.date), isRecentTab ? 'MM.dd' : 'MM.dd HH:mm', { locale: ko })}
+                    <Link href={`/livescore/football/match/${match.fixture.id}`}>
+                      {format(new Date(match.fixture.date), isRecentTab ? 'MM.dd' : 'MM.dd HH:mm', { locale: ko })}
+                    </Link>
                   </td>
                   <td className="p-0 md:px-2">
                     <div className="flex justify-start items-center gap-1 md:gap-2">
@@ -204,7 +202,7 @@ export default function FixturesTab({ matches, teamId, teamLogoUrls = {}, league
                     </div>
                   </td>
                   <td className="p-0 md:px-2">
-                    <div className="flex items-center justify-between">
+                    <Link href={`/livescore/football/match/${match.fixture.id}`} className="flex items-center justify-between">
                       <div className="flex-1 flex items-center justify-end gap-0 min-w-0">
                         <span className={`truncate max-w-[100px] md:max-w-[180px] text-right mr-1 text-xs md:text-sm text-gray-900 dark:text-[#F0F0F0] ${match.teams.home.id === teamId ? 'font-bold' : ''}`}>
                           {match.teams.home.name}
@@ -234,7 +232,7 @@ export default function FixturesTab({ matches, teamId, teamLogoUrls = {}, league
                           {match.teams.away.name}
                         </span>
                       </div>
-                    </div>
+                    </Link>
                   </td>
                   {isRecentTab && (
                     <td className="px-1 py-1 md:px-2 md:py-2 text-center w-10 md:w-16">

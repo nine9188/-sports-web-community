@@ -2,6 +2,7 @@
 
 import { memo, useCallback, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Standing } from '@/domains/livescore/actions/teams/standings';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
@@ -109,12 +110,10 @@ function Standings({
     return 'bg-transparent';
   }, []);
 
-  // 다른 팀 페이지로 이동 핸들러
-  const handleRowClick = useCallback((clickedTeamId: number) => {
-    if (clickedTeamId !== teamId) {
-      router.push(`/livescore/football/team/${clickedTeamId}`);
-    }
-  }, [router, teamId]);
+  // 팀 링크 URL 생성
+  const getTeamUrl = useCallback((clickedTeamId: number) => {
+    return `/livescore/football/team/${clickedTeamId}`;
+  }, []);
 
   // 리그 우선순위 정의
   const getLeaguePriority = useCallback((leagueId: number): number => {
@@ -288,7 +287,7 @@ function Standings({
                         <tr
                           key={`league-${leagueIndex}-group-${groupIndex}-team-${standing.team?.id}-rank-${standing.rank}`}
                           className={rowClass}
-                          onClick={() => handleRowClick(standing.team?.id)}
+                          onClick={() => { if (standing.team?.id !== teamId) router.push(getTeamUrl(standing.team?.id)); }}
                         >
                           {/* 모바일용 축약된 순위 */}
                           <td className="md:hidden px-1 py-1 text-center text-xs relative w-8">
@@ -304,7 +303,7 @@ function Standings({
                           
                           {/* 팀 정보 - 고정 너비 사용 */}
                           <td className="px-2 py-2 md:px-3 whitespace-nowrap text-sm text-gray-900 dark:text-[#F0F0F0]">
-                            <div className="flex items-center gap-1 md:gap-2">
+                            <Link href={getTeamUrl(standing.team.id)} className="flex items-center gap-1 md:gap-2">
                               <TeamLogo
                                 teamName={standing.team.name}
                                 logoUrl={getTeamLogo(standing.team.id)}
@@ -319,7 +318,7 @@ function Standings({
                                   </span>
                                 )}
                               </div>
-                            </div>
+                            </Link>
                           </td>
                           
                           {/* 경기 수 - 모바일에서는 숨김 */}

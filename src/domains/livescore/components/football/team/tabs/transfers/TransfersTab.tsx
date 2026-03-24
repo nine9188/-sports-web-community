@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 
 // 4590 표준: placeholder URLs
@@ -65,7 +66,6 @@ export default function TransfersTab({ transfers, playerKoreanNames = {}, player
   // 4590 표준: URL 조회 헬퍼
   const getPlayerPhoto = (id: number) => playerPhotoUrls[id] || PLAYER_PLACEHOLDER;
   const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   // URL의 subTab 파라미터에서 초기 탭 가져오기
@@ -260,8 +260,8 @@ export default function TransfersTab({ transfers, playerKoreanNames = {}, player
           )}
 
           {/* 이적센터 버튼 - 데스크톱만 표시 */}
-          <button
-            onClick={() => router.push('/transfers')}
+          <Link
+            href="/transfers"
             className="hidden md:flex p-2 px-3 rounded border border-black/7 dark:border-0 text-sm transition-colors bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] items-center gap-1 flex-shrink-0"
           >
             이적센터
@@ -278,7 +278,7 @@ export default function TransfersTab({ transfers, playerKoreanNames = {}, player
                 d="M9 5l7 7-7 7"
               />
             </svg>
-          </button>
+          </Link>
         </div>
       </div>
     </div>

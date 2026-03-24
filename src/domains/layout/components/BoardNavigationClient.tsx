@@ -180,21 +180,21 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
     }, 150);
   };
 
+  // 게시판 URL 생성
+  const getBoardHref = (board: Board): string => {
+    if (board.id.startsWith('nav-')) {
+      if (BOARD_PATH_NAV_IDS.includes(board.id)) {
+        return `/boards/${board.slug}`;
+      } else {
+        return `/${board.slug}`;
+      }
+    }
+    return `/boards/${board.slug || board.id}`;
+  };
+
   // 게시판 클릭 처리
   const handleBoardClick = (board: Board) => {
-    // 가상 보드인 경우 (nav- 프리픽스)
-    if (board.id.startsWith('nav-')) {
-      // 글 관련 가상 보드는 /boards/ 경로 사용
-      if (BOARD_PATH_NAV_IDS.includes(board.id)) {
-        router.push(`/boards/${board.slug}`);
-      } else {
-        // 축구 관련 가상 보드는 직접 경로 사용
-        router.push(`/${board.slug}`);
-      }
-    } else {
-      // 일반 게시판은 /boards/ 경로 사용
-      router.push(`/boards/${board.slug || board.id}`);
-    }
+    router.push(getBoardHref(board));
   };
 
   // 드롭다운 닫기
@@ -218,6 +218,7 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
             <TopLevelBoard
               key={board.id}
               board={board}
+              href={getBoardHref(board)}
               onHover={handleMouseEnter}
               onLeave={handleMouseLeave}
               onClick={handleBoardClick}

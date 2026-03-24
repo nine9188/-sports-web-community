@@ -8,6 +8,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Container, ContainerHeader, ContainerTitle, TabList, type TabItem } from '@/shared/components/ui';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { StandingsData, League } from '../../types';
@@ -182,7 +183,7 @@ export default function LeagueStandings({
                   >
                     <td className="text-center py-1.5 px-0">{team.rank}</td>
                     <td className="text-left py-1.5 px-1">
-                      <div className="flex items-center gap-1">
+                      <Link href={`/livescore/football/team/${team.team.team_id}?tab=overview`} className="flex items-center gap-1">
                         <div className="w-5 h-5 relative flex-shrink-0">
                           <UnifiedSportsImageClient
                             src={getTeamLogo(team.team.team_id)}
@@ -195,7 +196,7 @@ export default function LeagueStandings({
                         <span className="truncate max-w-[100px] text-sm">
                           {getKoreanTeamName(team.team.team_id, team.team.name)}
                         </span>
-                      </div>
+                      </Link>
                     </td>
                     <td className="text-center py-1 px-0">{team.all.played}</td>
                     <td className="text-center py-1 px-0">{team.all.win}</td>

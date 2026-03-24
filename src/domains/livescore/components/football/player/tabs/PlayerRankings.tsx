@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Medal } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Container, ContainerContent, TabList } from '@/shared/components/ui';
 import { EmptyState } from '@/domains/livescore/components/common';
@@ -29,10 +30,11 @@ export default function PlayerRankings({
   playerPhotoUrls = {},
   teamLogoUrls = {},
 }: PlayerRankingsProps) {
+  const router = useRouter();
+
   // 4590 표준: URL 조회 헬퍼
   const getPlayerPhoto = (id: number) => playerPhotoUrls[id] || PLAYER_PLACEHOLDER;
   const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
-  const router = useRouter();
   const [rankingType, setRankingType] = useState('topScorers');
 
   const rankingTypes = [
@@ -48,13 +50,6 @@ export default function PlayerRankings({
   if (!rankingsData || Object.keys(rankingsData).length === 0) {
     return <EmptyState title="순위 데이터가 없습니다" message="이 선수의 순위 데이터 정보를 찾을 수 없습니다." />;
   }
-
-  // 선수 페이지로 이동하는 함수
-  const navigateToPlayer = (clickedPlayerId: number) => {
-    if (clickedPlayerId) {
-      router.push(`/livescore/football/player/${clickedPlayerId}`);
-    }
-  };
 
   const getMedalColor = (index: number) => {
     switch (index) {
@@ -98,57 +93,66 @@ export default function PlayerRankings({
 
       {/* 상위 3위 메달 디스플레이 - 높이 고정 */}
       <div className="grid grid-cols-3 gap-4">
-        {getRankingData().slice(0, 3).map((player: PlayerRanking, index: number) => (
-          <div 
-            key={player?.player?.id || `empty-${index}`}
-            className={`relative bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 p-3 flex flex-col items-center min-h-[180px] ${
-              player?.player?.id ? 'cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors' : ''
-            }`}
-            onClick={() => player?.player?.id ? navigateToPlayer(player.player.id) : null}
-          >
-            {player ? (
-              <>
-                <Medal
-                  className={`absolute top-2 left-2 h-6 w-6 drop-shadow-md ${getMedalColor(index)}`}
+        {getRankingData().slice(0, 3).map((player: PlayerRanking, index: number) => {
+          const cardContent = player ? (
+            <>
+              <Medal
+                className={`absolute top-2 left-2 h-6 w-6 drop-shadow-md ${getMedalColor(index)}`}
+              />
+              <div className="w-16 h-16 relative mb-2">
+                <UnifiedSportsImageClient
+                  src={getPlayerPhoto(player.player.id)}
+                  alt={player.player.name}
+                  width={64}
+                  height={64}
+                  variant="circle"
+                  className="w-full h-full"
                 />
-                <div className="w-16 h-16 relative mb-2">
-                  <UnifiedSportsImageClient
-                    src={getPlayerPhoto(player.player.id)}
-                    alt={player.player.name}
-                    width={64}
-                    height={64}
-                    variant="circle"
-                    className="w-full h-full"
-                  />
-                </div>
-                <div className="text-center">
-                  <div className="font-bold text-sm text-gray-900 dark:text-[#F0F0F0]">
-                    {playerKoreanNames[player.player.id] || player.player.name}
-                  </div>
-                  <div className="flex items-center justify-center gap-1 mt-1">
-                    <UnifiedSportsImageClient
-                      src={getTeamLogo(player.statistics[0].team.id)}
-                      alt={player.statistics[0].team.name}
-                      width={16}
-                      height={16}
-                      fit="contain"
-                    />
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {getTeamById(player.statistics[0].team.id)?.name_ko || player.statistics[0].team.name}
-                    </span>
-                  </div>
-                  <div className="mt-1 text-base font-semibold text-gray-900 dark:text-[#F0F0F0]">
-                    {getRankingValue(player, rankingType)}
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-                데이터 없음
               </div>
-            )}
-          </div>
-        ))}
+              <div className="text-center">
+                <div className="font-bold text-sm text-gray-900 dark:text-[#F0F0F0]">
+                  {playerKoreanNames[player.player.id] || player.player.name}
+                </div>
+                <div className="flex items-center justify-center gap-1 mt-1">
+                  <UnifiedSportsImageClient
+                    src={getTeamLogo(player.statistics[0].team.id)}
+                    alt={player.statistics[0].team.name}
+                    width={16}
+                    height={16}
+                    fit="contain"
+                  />
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    {getTeamById(player.statistics[0].team.id)?.name_ko || player.statistics[0].team.name}
+                  </span>
+                </div>
+                <div className="mt-1 text-base font-semibold text-gray-900 dark:text-[#F0F0F0]">
+                  {getRankingValue(player, rankingType)}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+              데이터 없음
+            </div>
+          );
+
+          return player?.player?.id ? (
+            <Link
+              key={player.player.id}
+              href={`/livescore/football/player/${player.player.id}`}
+              className="relative bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 p-3 flex flex-col items-center min-h-[180px] cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
+            >
+              {cardContent}
+            </Link>
+          ) : (
+            <div
+              key={`empty-${index}`}
+              className="relative bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 p-3 flex flex-col items-center min-h-[180px]"
+            >
+              {cardContent}
+            </div>
+          );
+        })}
       </div>
 
       {/* 4-10위 테이블 - 최소 높이 고정 */}
@@ -171,13 +175,13 @@ export default function PlayerRankings({
                     className={`hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors border-b border-black/5 dark:border-white/10 ${
                       player.player.id === playerId ? 'bg-[#F5F5F5] dark:bg-[#262626]' : ''
                     }`}
-                    onClick={() => navigateToPlayer(player.player.id)}
+                    onClick={() => router.push(`/livescore/football/player/${player.player.id}`)}
                   >
                     <td className="pl-3 pr-1 py-2 text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
                       {index + 4}
                     </td>
                     <td className="px-1 py-2">
-                      <div className="flex items-center min-w-0 gap-1.5">
+                      <Link href={`/livescore/football/player/${player.player.id}`} className="flex items-center min-w-0 gap-1.5">
                         <div className="flex-shrink-0 w-6 h-6">
                           <UnifiedSportsImageClient
                             src={getPlayerPhoto(player.player.id)}
@@ -191,7 +195,7 @@ export default function PlayerRankings({
                         <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
                           {playerKoreanNames[player.player.id] || player.player.name}
                         </span>
-                      </div>
+                      </Link>
                     </td>
                     <td className="px-1 py-2">
                       <div className="flex items-center min-w-0 gap-1">

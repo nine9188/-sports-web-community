@@ -377,13 +377,13 @@ function TeamRowWithMatches({
             />
             <div className="min-w-0 flex-1">
               <div className="font-medium text-gray-900 dark:text-[#F0F0F0] text-xs sm:text-sm">
-                <Button
-                  variant="ghost"
+                <Link
+                  href={`/livescore/football/team/${team.team_id}`}
                   onClick={handleTeamPageClick}
                   className="truncate hover:underline transition-colors text-left p-0 h-auto font-medium min-w-0"
                 >
                   {team.display_name}
-                </Button>
+                </Link>
               </div>
 
               {/* 모바일에서 추가 정보 표시 */}

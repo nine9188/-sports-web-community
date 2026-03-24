@@ -14,7 +14,6 @@ export async function generateMetadata() {
     title: '전체글',
     description: '모든 게시판의 최신 게시글을 한곳에서 확인하세요.',
     path: '/boards/all',
-    noindex: true,
   });
 }
 

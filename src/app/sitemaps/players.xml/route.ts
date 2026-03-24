@@ -19,8 +19,6 @@ export async function GET() {
     const urls = players.map((p) => ({
       loc: `${baseUrl}/livescore/football/player/${p.id}`,
       lastmod: p.updated_at ? new Date(p.updated_at).toISOString() : undefined,
-      changefreq: 'monthly',
-      priority: 0.5,
     }));
 
     return sitemapResponse(buildUrlsetXml(urls));

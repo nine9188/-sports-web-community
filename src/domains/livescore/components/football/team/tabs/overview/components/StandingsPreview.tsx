@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { StandingDisplay } from '@/domains/livescore/types/standings';
 import { findTeamStanding, getDisplayStandings, getLeagueInfo, getLeagueForStandings } from '../utils/standingUtils';
@@ -73,11 +74,6 @@ export default function StandingsPreview({
   // 표시 중인 스탠딩의 리그 정보 가져오기
   const displayLeagueInfo = getLeagueForStandings(standings, displayStandings);
   
-  // 팀 페이지로 이동하는 함수
-  const handleTeamClick = (teamId: number) => {
-    router.push(`/livescore/football/team/${teamId}`);
-  };
-  
   // 공통 스타일
   const tableHeaderStyle = "px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400";
   const tableCellStyle = "px-3 py-2 text-sm text-gray-900 dark:text-[#F0F0F0]";
@@ -137,14 +133,14 @@ export default function StandingsPreview({
             {displayStandings.map((standing, index) => {
               const isCurrentTeam = standing.team.id === teamId;
               return (
-                <tr 
+                <tr
                   key={`standings-preview-${standing.team.id}-${standing.rank}-${index}`}
                   className={`border-b border-black/5 dark:border-white/10 ${isCurrentTeam ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''} hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors`}
-                  onClick={() => standing.team.id !== teamId && handleTeamClick(standing.team.id)}
+                  onClick={() => { if (standing.team.id !== teamId) router.push(`/livescore/football/team/${standing.team.id}`); }}
                 >
                   <td className={tableCellStyle}>{standing.rank}</td>
                   <td className={tableCellStyle}>
-                    <div className="flex items-center gap-2">
+                    <Link href={`/livescore/football/team/${standing.team.id}`} className="flex items-center gap-2">
                       <div className="w-5 h-5 relative flex-shrink-0">
                         <UnifiedSportsImageClient
                           src={getTeamLogo(standing.team.id)}
@@ -157,7 +153,7 @@ export default function StandingsPreview({
                       <span className={`truncate ${isCurrentTeam ? 'font-semibold' : ''}`}>
                         {standing.team.name}
                       </span>
-                    </div>
+                    </Link>
                   </td>
                   <td className={`hidden md:table-cell ${tableCellStyle}`}>{standing.all.played}</td>
                   <td className={`${tableCellStyle} text-center text-xs md:text-sm`}>{standing.all.win}</td>

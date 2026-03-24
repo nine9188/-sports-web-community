@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent, Pagination } from '@/shared/components/ui';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useMemo, useEffect } from 'react';
 import { FixtureData } from '@/domains/livescore/types/player';
@@ -284,13 +285,15 @@ export default function PlayerFixtures({
                 const resultStyle = getMatchResultStyle(matchResult);
 
                     return (
-                    <tr 
+                    <tr
                       key={fixture.fixture.id}
                       className="hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer border-b border-black/5 dark:border-white/10 transition-colors"
                       onClick={() => router.push(`/livescore/football/match/${fixture.fixture.id}`)}
                     >
                       <td className="px-2 py-3 text-left whitespace-nowrap text-xs text-gray-900 dark:text-[#F0F0F0]">
-                        {format(new Date(fixture.fixture.date), 'yy/MM/dd', { locale: ko })}
+                        <Link href={`/livescore/football/match/${fixture.fixture.id}`}>
+                          {format(new Date(fixture.fixture.date), 'yy/MM/dd', { locale: ko })}
+                        </Link>
                       </td>
                       <td className="py-3 pr-1 text-right">
                         <div className="flex items-center justify-end space-x-1">
@@ -304,7 +307,9 @@ export default function PlayerFixtures({
                         </div>
                       </td>
                       <td className="py-3 px-1 text-center text-xs font-medium text-gray-900 dark:text-[#F0F0F0]">
-                        {fixture.goals.home} - {fixture.goals.away}
+                        <Link href={`/livescore/football/match/${fixture.fixture.id}`}>
+                          {fixture.goals.home} - {fixture.goals.away}
+                        </Link>
                       </td>
                       <td className="py-3 pl-1 text-left">
                         <div className="flex items-center space-x-1">
@@ -362,10 +367,10 @@ export default function PlayerFixtures({
             const resultStyle = getMatchResultStyle(matchResult);
 
                 return (
-                  <div
+                  <Link
                     key={fixture.fixture.id}
-                    className={`hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors${idx > 0 ? ' border-t-4 border-[#E0E0E0] dark:border-[#111111]' : ''}`}
-                    onClick={() => router.push(`/livescore/football/match/${fixture.fixture.id}`)}
+                    href={`/livescore/football/match/${fixture.fixture.id}`}
+                    className={`block hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors${idx > 0 ? ' border-t-4 border-[#E0E0E0] dark:border-[#111111]' : ''}`}
                   >
                     {/* 첫 번째 줄: 날짜, 홈팀, 스코어, 원정팀, 결과 */}
                     <div className="flex items-center py-2 px-2">
@@ -436,7 +441,7 @@ export default function PlayerFixtures({
                         <div>{fixture.statistics?.passes?.key || '-'}</div>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 );
               })}
             </div>

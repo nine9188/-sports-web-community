@@ -2,6 +2,7 @@
 
 import { memo, useCallback, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Standing, StandingsData, Team } from '@/domains/livescore/types/match';
 import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
@@ -399,7 +400,7 @@ const Standings = memo(({ matchData: propsMatchData, teamLogoUrls = {}, leagueLo
 
                       {/* 팀 정보 - 고정 너비 사용 */}
                       <td className="px-2 py-2 md:px-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                        <div className="flex items-center gap-1 md:gap-2">
+                        <Link href={`/livescore/football/team/${standing.team.id}`} className="flex items-center gap-1 md:gap-2">
                           <TeamLogo
                             teamName={standing.team.name || ''}
                             logoUrl={getTeamLogo(standing.team.id)}
@@ -422,7 +423,7 @@ const Standings = memo(({ matchData: propsMatchData, teamLogoUrls = {}, leagueLo
                               </span>
                             )}
                           </div>
-                        </div>
+                        </Link>
                       </td>
 
                       {/* 경기 수 - 모바일에서는 숨김 */}

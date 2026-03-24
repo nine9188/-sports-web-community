@@ -95,10 +95,14 @@ interface MatchCardServerProps {
 export default function MatchCardServer({ match, isLast }: MatchCardServerProps) {
   const statusInfo = getStatusInfo(match.status, match.elapsed, match.kickoffTime, match.dateLabel);
 
+  // SEO: 구글봇이 링크 내용을 파악할 수 있도록 aria-label 추가
+  const ariaLabel = `${match.homeTeam.name} ${match.score.home} - ${match.score.away} ${match.awayTeam.name}, ${statusInfo.label}${statusInfo.subLabel ? ` (${statusInfo.subLabel})` : ''}`;
+
   return (
     <Link
       href={`/livescore/football/match/${match.id}`}
       prefetch={false}
+      aria-label={ariaLabel}
       className={`
         flex items-center h-12 px-4 md:hover:bg-[#EAEAEA] md:dark:hover:bg-[#333333] transition-colors
         ${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''}

@@ -18,7 +18,7 @@ export default function EmoticonStudioClient() {
       <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 md:rounded-lg overflow-hidden">
         <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center justify-between md:rounded-t-lg">
           <div className="flex items-center gap-2">
-            <Link href="/shop?cat=25" className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors">
+            <Link href="/shop?cat=25" aria-label="상점으로 돌아가기" className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors">
               <ArrowLeft className="w-4 h-4" />
             </Link>
             <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">이모티콘 스튜디오</h3>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 
 // 4590 표준: placeholder URL
@@ -28,15 +28,8 @@ interface RankedPlayer {
 }
 
 export default function SeasonHighlights({ playerStats, squad, onTabChange, playerKoreanNames = {}, playerPhotoUrls = {} }: SeasonHighlightsProps) {
-  const router = useRouter();
-
   // 4590 표준: URL 조회 헬퍼
   const getPlayerPhoto = (id: number) => playerPhotoUrls[id] || PLAYER_PLACEHOLDER;
-
-  // 선수 페이지로 이동
-  const handlePlayerClick = (playerId: number) => {
-    router.push(`/livescore/football/player/${playerId}`);
-  };
   const { topScorers, topAssists } = useMemo(() => {
     // squad에서 선수 정보 매핑 (코치 제외)
     const playerMap = new Map<number, { name: string; photo: string }>();
@@ -92,10 +85,10 @@ export default function SeasonHighlights({ playerStats, squad, onTabChange, play
           <div className="divide-y divide-black/5 dark:divide-white/10">
             {topScorers.length > 0 ? (
               topScorers.map((player, index) => (
-                <div
+                <Link
                   key={player.id}
+                  href={`/livescore/football/player/${player.id}`}
                   className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-[#F5F5F5] dark:hover:bg-[#333333] transition-colors"
-                  onClick={() => handlePlayerClick(player.id)}
                 >
                   <span className="text-xs font-bold text-gray-400 dark:text-gray-500 w-4 text-center">
                     {index + 1}
@@ -115,7 +108,7 @@ export default function SeasonHighlights({ playerStats, squad, onTabChange, play
                   <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
                     {player.value}
                   </span>
-                </div>
+                </Link>
               ))
             ) : (
               <div className="px-3 py-4 text-xs text-gray-400 dark:text-gray-500 text-center">
@@ -133,10 +126,10 @@ export default function SeasonHighlights({ playerStats, squad, onTabChange, play
           <div className="divide-y divide-black/5 dark:divide-white/10">
             {topAssists.length > 0 ? (
               topAssists.map((player, index) => (
-                <div
+                <Link
                   key={player.id}
+                  href={`/livescore/football/player/${player.id}`}
                   className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-[#F5F5F5] dark:hover:bg-[#333333] transition-colors"
-                  onClick={() => handlePlayerClick(player.id)}
                 >
                   <span className="text-xs font-bold text-gray-400 dark:text-gray-500 w-4 text-center">
                     {index + 1}
@@ -156,7 +149,7 @@ export default function SeasonHighlights({ playerStats, squad, onTabChange, play
                   <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
                     {player.value}
                   </span>
-                </div>
+                </Link>
               ))
             ) : (
               <div className="px-3 py-4 text-xs text-gray-400 dark:text-gray-500 text-center">

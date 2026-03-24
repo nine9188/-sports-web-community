@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 
 // 4590 표준: placeholder URLs
@@ -53,16 +53,9 @@ function teamName(id: number, fallback: string): string {
 }
 
 export default function RecentTransfers({ transfers, onTabChange, playerKoreanNames = {}, playerPhotoUrls = {}, teamLogoUrls = {} }: RecentTransfersProps) {
-  const router = useRouter();
-
   // 4590 표준: URL 조회 헬퍼
   const getPlayerPhoto = (id: number) => playerPhotoUrls[id] || PLAYER_PLACEHOLDER;
   const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
-
-  // 선수 페이지로 이동
-  const handlePlayerClick = (playerId: number) => {
-    router.push(`/livescore/football/player/${playerId}`);
-  };
   const recentIn = transfers.in.slice(0, 3);
   const recentOut = transfers.out.slice(0, 3);
 
@@ -74,8 +67,8 @@ export default function RecentTransfers({ transfers, onTabChange, playerKoreanNa
     <Container className="bg-white dark:bg-[#1D1D1D]">
       <ContainerHeader>
         <ContainerTitle>최근 이적</ContainerTitle>
-        <button
-          onClick={() => router.push('/transfers')}
+        <Link
+          href="/transfers"
           className="ml-auto text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 flex items-center gap-0.5 transition-colors"
         >
           이적센터
@@ -92,7 +85,7 @@ export default function RecentTransfers({ transfers, onTabChange, playerKoreanNa
               d="M9 5l7 7-7 7"
             />
           </svg>
-        </button>
+        </Link>
       </ContainerHeader>
 
       <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-black/5 dark:divide-white/10">
@@ -104,10 +97,10 @@ export default function RecentTransfers({ transfers, onTabChange, playerKoreanNa
           <div className="divide-y divide-black/5 dark:divide-white/10">
             {recentIn.length > 0 ? (
               recentIn.map((transfer, index) => (
-                <div
+                <Link
                   key={`in-${transfer.player.id}-${index}`}
-                  className="px-3 py-2 cursor-pointer hover:bg-[#F5F5F5] dark:hover:bg-[#333333] transition-colors"
-                  onClick={() => handlePlayerClick(transfer.player.id)}
+                  href={`/livescore/football/player/${transfer.player.id}`}
+                  className="block px-3 py-2 cursor-pointer hover:bg-[#F5F5F5] dark:hover:bg-[#333333] transition-colors"
                 >
                   {/* 데스크톱: 가로 레이아웃 */}
                   <div className="hidden md:flex gap-2">
@@ -180,7 +173,7 @@ export default function RecentTransfers({ transfers, onTabChange, playerKoreanNa
                       </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))
             ) : (
               <div className="px-3 py-4 text-xs text-gray-400 dark:text-gray-500 text-center">
@@ -198,10 +191,10 @@ export default function RecentTransfers({ transfers, onTabChange, playerKoreanNa
           <div className="divide-y divide-black/5 dark:divide-white/10">
             {recentOut.length > 0 ? (
               recentOut.map((transfer, index) => (
-                <div
+                <Link
                   key={`out-${transfer.player.id}-${index}`}
-                  className="px-3 py-2 cursor-pointer hover:bg-[#F5F5F5] dark:hover:bg-[#333333] transition-colors"
-                  onClick={() => handlePlayerClick(transfer.player.id)}
+                  href={`/livescore/football/player/${transfer.player.id}`}
+                  className="block px-3 py-2 cursor-pointer hover:bg-[#F5F5F5] dark:hover:bg-[#333333] transition-colors"
                 >
                   {/* 데스크톱: 가로 레이아웃 */}
                   <div className="hidden md:flex gap-2">
@@ -274,7 +267,7 @@ export default function RecentTransfers({ transfers, onTabChange, playerKoreanNa
                       </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))
             ) : (
               <div className="px-3 py-4 text-xs text-gray-400 dark:text-gray-500 text-center">

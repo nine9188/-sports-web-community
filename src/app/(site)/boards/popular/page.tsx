@@ -14,7 +14,6 @@ export async function generateMetadata() {
     title: '인기글',
     description: '가장 인기 있는 게시글을 확인하세요. 좋아요가 많은 순서로 정렬됩니다.',
     path: '/boards/popular',
-    noindex: true,
   });
 }
 

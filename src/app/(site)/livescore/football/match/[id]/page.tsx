@@ -8,6 +8,7 @@ import { getMatchCacheBulk, setMatchCache } from '@/domains/livescore/actions/ma
 import MatchPageClient, { MatchTabType } from '@/domains/livescore/components/football/match/MatchPageClient';
 import { notFound } from 'next/navigation';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import { siteConfig } from '@/shared/config';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
@@ -238,14 +239,48 @@ export default async function MatchPage({
     const awayTeamName = awayTeamMapping?.name_ko || match?.teams.away.name || '';
     const leagueName = leagueMapping?.nameKo || match?.league.name || '';
 
+    // eventStatus 결정
+    const statusCode = match?.status?.code ?? match?.fixture?.status?.short ?? '';
+    const eventStatus = isFinished
+      ? 'https://schema.org/EventCompleted'
+      : ['CANC', 'ABD'].includes(statusCode)
+        ? 'https://schema.org/EventCancelled'
+        : ['PST', 'SUSP'].includes(statusCode)
+          ? 'https://schema.org/EventPostponed'
+          : 'https://schema.org/EventScheduled';
+
+    const matchStartDate = match?.time?.date || match?.fixture?.date;
+    // endDate: startDate + 2시간 (축구 경기 평균 소요 시간)
+    const matchEndDate = matchStartDate
+      ? new Date(new Date(matchStartDate).getTime() + 2 * 60 * 60 * 1000).toISOString()
+      : undefined;
+    const matchUrl = `${siteConfig.url}/livescore/football/match/${matchId}`;
+
     const sportsEventSchema = match ? {
       '@context': 'https://schema.org',
       '@type': 'SportsEvent',
       name: `${homeTeamName} vs ${awayTeamName}`,
-      startDate: match.time?.date || match.fixture?.date,
+      url: matchUrl,
+      startDate: matchStartDate,
+      ...(matchEndDate && { endDate: matchEndDate }),
       description: `${leagueName} - ${homeTeamName} vs ${awayTeamName}`,
-      eventStatus: isFinished ? 'https://schema.org/EventScheduled' : 'https://schema.org/EventScheduled',
+      image: `${siteConfig.url}/og-image.png`,
+      eventStatus,
       eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+      location: {
+        '@type': 'Place',
+        name: match.fixture?.venue?.name || '미정',
+        ...(match.fixture?.venue?.city && {
+          address: {
+            '@type': 'PostalAddress',
+            addressLocality: match.fixture.venue.city,
+          },
+        }),
+      },
+      performer: [
+        { '@type': 'SportsTeam', name: homeTeamName },
+        { '@type': 'SportsTeam', name: awayTeamName },
+      ],
       homeTeam: {
         '@type': 'SportsTeam',
         name: homeTeamName,
@@ -258,9 +293,14 @@ export default async function MatchPage({
         '@type': 'SportsOrganization',
         name: leagueName,
       },
-      ...(isFinished && match.goals ? {
-        result: `${match.goals.home} - ${match.goals.away}`,
-      } : {}),
+      offers: {
+        '@type': 'Offer',
+        url: matchUrl,
+        price: '0',
+        priceCurrency: 'KRW',
+        availability: 'https://schema.org/InStock',
+        validFrom: matchStartDate,
+      },
     } : null;
 
     return (

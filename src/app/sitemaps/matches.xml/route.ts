@@ -24,8 +24,6 @@ export async function GET() {
     const urls = matches.map((m) => ({
       loc: `${baseUrl}/livescore/football/match/${m.match_id}`,
       lastmod: m.updated_at ? new Date(m.updated_at).toISOString() : undefined,
-      changefreq: 'weekly',
-      priority: 0.5,
     }));
 
     return sitemapResponse(buildUrlsetXml(urls));

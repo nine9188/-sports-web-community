@@ -1,7 +1,8 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import React, { useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { PlayerStats } from '@/domains/livescore/actions/teams/player-stats';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
@@ -187,34 +188,51 @@ export default function Squad({
                       const playerStats = isPlayer ? (member as Player).stats : undefined;
 
                       return (
-                        <tr 
+                        <tr
                           key={member.id}
                           className={`hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors ${isPlayer ? 'cursor-pointer' : ''}`}
-                          onClick={() => {
-                            if (isPlayer) {
-                              router.push(`/livescore/football/player/${member.id}`);
-                            }
-                          }}
+                          onClick={() => { if (isPlayer) router.push(`/livescore/football/player/${member.id}`); }}
                         >
                           <td className="px-2 sm:px-4 md:px-6 py-2 whitespace-nowrap">
-                            <div className="w-8 h-8 md:w-10 md:h-10 bg-[#F5F5F5] dark:bg-[#333333] rounded-full overflow-hidden flex-shrink-0">
-                              <UnifiedSportsImageClient
-                                src={position === 'Coach' ? getCoachPhoto(member.id) : getPlayerPhoto(member.id)}
-                                alt={member.name}
-                                width={40}
-                                height={40}
-                                variant="circle"
-                                className="!w-full !h-full"
-                              />
-                            </div>
+                            {isPlayer ? (
+                              <Link href={`/livescore/football/player/${member.id}`} className="block">
+                                <div className="w-8 h-8 md:w-10 md:h-10 bg-[#F5F5F5] dark:bg-[#333333] rounded-full overflow-hidden flex-shrink-0">
+                                  <UnifiedSportsImageClient
+                                    src={getPlayerPhoto(member.id)}
+                                    alt={member.name}
+                                    width={40}
+                                    height={40}
+                                    variant="circle"
+                                    className="!w-full !h-full"
+                                  />
+                                </div>
+                              </Link>
+                            ) : (
+                              <div className="w-8 h-8 md:w-10 md:h-10 bg-[#F5F5F5] dark:bg-[#333333] rounded-full overflow-hidden flex-shrink-0">
+                                <UnifiedSportsImageClient
+                                  src={getCoachPhoto(member.id)}
+                                  alt={member.name}
+                                  width={40}
+                                  height={40}
+                                  variant="circle"
+                                  className="!w-full !h-full"
+                                />
+                              </div>
+                            )}
                           </td>
                           <td className="px-2 sm:px-4 md:px-6 py-2 text-xs font-medium text-center text-gray-900 dark:text-[#F0F0F0] whitespace-nowrap">
                             {isPlayer ? (member as Player).number : '-'}
                           </td>
                           <td className="px-2 sm:px-4 md:px-6 py-2">
-                            <div className="font-medium text-xs text-gray-900 dark:text-[#F0F0F0] max-w-[115px] md:max-w-none truncate md:whitespace-normal">
-                              {playerKoreanNames[member.id] || member.name}
-                            </div>
+                            {isPlayer ? (
+                              <Link href={`/livescore/football/player/${member.id}`} className="font-medium text-xs text-gray-900 dark:text-[#F0F0F0] max-w-[115px] md:max-w-none truncate md:whitespace-normal block">
+                                {playerKoreanNames[member.id] || member.name}
+                              </Link>
+                            ) : (
+                              <div className="font-medium text-xs text-gray-900 dark:text-[#F0F0F0] max-w-[115px] md:max-w-none truncate md:whitespace-normal">
+                                {playerKoreanNames[member.id] || member.name}
+                              </div>
+                            )}
                           </td>
                           <td className="px-1 sm:px-2 md:px-6 py-2 text-xs text-center whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
                             {member.age}세

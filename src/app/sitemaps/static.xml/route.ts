@@ -3,51 +3,94 @@ import { getSitemapSupabase, buildUrlsetXml, sitemapResponse } from '../utils';
 
 export const revalidate = 3600;
 
+// 게시판 slug 목록 (최신 글 시간 조회용)
+const BOARD_SLUGS = [
+  'all', 'popular',
+  'hotdeal', 'hotdeal-food', 'hotdeal-beauty', 'hotdeal-mobile',
+  'hotdeal-sale', 'hotdeal-appliance', 'hotdeal-apptech', 'hotdeal-living',
+];
+
 export async function GET() {
   const baseUrl = siteConfig.url;
   const supabase = getSitemapSupabase();
-  const now = new Date().toISOString();
 
-  const urls = [
-    { loc: baseUrl, lastmod: now, changefreq: 'daily', priority: 1 },
-    { loc: `${baseUrl}/boards/all`, lastmod: now, changefreq: 'hourly', priority: 0.9 },
-    { loc: `${baseUrl}/boards/popular`, lastmod: now, changefreq: 'hourly', priority: 0.9 },
-    { loc: `${baseUrl}/boards/hotdeal`, lastmod: now, changefreq: 'hourly', priority: 0.85 },
-    { loc: `${baseUrl}/boards/hotdeal-food`, lastmod: now, changefreq: 'hourly', priority: 0.8 },
-    { loc: `${baseUrl}/boards/hotdeal-beauty`, lastmod: now, changefreq: 'hourly', priority: 0.8 },
-    { loc: `${baseUrl}/boards/hotdeal-mobile`, lastmod: now, changefreq: 'hourly', priority: 0.8 },
-    { loc: `${baseUrl}/boards/hotdeal-sale`, lastmod: now, changefreq: 'hourly', priority: 0.8 },
-    { loc: `${baseUrl}/boards/hotdeal-appliance`, lastmod: now, changefreq: 'hourly', priority: 0.8 },
-    { loc: `${baseUrl}/boards/hotdeal-apptech`, lastmod: now, changefreq: 'hourly', priority: 0.8 },
-    { loc: `${baseUrl}/boards/hotdeal-living`, lastmod: now, changefreq: 'hourly', priority: 0.8 },
-    { loc: `${baseUrl}/livescore/football`, lastmod: now, changefreq: 'always', priority: 0.8 },
-    { loc: `${baseUrl}/livescore/football/leagues`, lastmod: now, changefreq: 'daily', priority: 0.7 },
-    { loc: `${baseUrl}/transfers`, lastmod: now, changefreq: 'daily', priority: 0.7 },
-    { loc: `${baseUrl}/shop`, lastmod: now, changefreq: 'weekly', priority: 0.5 },
-    { loc: `${baseUrl}/about`, lastmod: now, changefreq: 'monthly', priority: 0.5 },
-    { loc: `${baseUrl}/contact`, lastmod: now, changefreq: 'monthly', priority: 0.5 },
-    { loc: `${baseUrl}/privacy`, lastmod: now, changefreq: 'monthly', priority: 0.3 },
-    { loc: `${baseUrl}/terms`, lastmod: now, changefreq: 'monthly', priority: 0.3 },
+  // 전체 최신 글 시간 (홈, 전체글, 인기글용)
+  const { data: latestPost } = await supabase
+    .from('posts')
+    .select('created_at')
+    .eq('is_deleted', false)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  const latestPostTime = latestPost?.created_at
+    ? new Date(latestPost.created_at).toISOString()
+    : undefined;
+
+  const urls: { loc: string; lastmod?: string }[] = [
+    { loc: baseUrl, lastmod: latestPostTime },
+    { loc: `${baseUrl}/boards/all`, lastmod: latestPostTime },
+    { loc: `${baseUrl}/boards/popular`, lastmod: latestPostTime },
+    { loc: `${baseUrl}/livescore/football` },
+    { loc: `${baseUrl}/livescore/football/leagues` },
+    { loc: `${baseUrl}/transfers` },
+    { loc: `${baseUrl}/shop` },
+    { loc: `${baseUrl}/about` },
+    { loc: `${baseUrl}/contact` },
+    { loc: `${baseUrl}/privacy` },
+    { loc: `${baseUrl}/terms` },
   ];
 
   try {
-    // 게시판 목록
+    // 게시판 목록 + 각 게시판의 최신 글 시간
     const { data: boards } = await supabase
       .from('boards')
       .select('slug')
       .not('slug', 'is', null);
 
     if (boards) {
-      boards
-        .filter((b) => b.slug)
-        .forEach((b) => {
+      const boardSlugs = boards.filter((b) => b.slug).map((b) => b.slug!);
+
+      // 핫딜 게시판 포함, 전체 게시판의 최신 글 시간을 한번에 조회
+      const allSlugs = [...new Set([...BOARD_SLUGS, ...boardSlugs])];
+
+      // 각 게시판별 최신 글 시간 조회
+      const { data: boardLatestPosts } = await supabase
+        .from('posts')
+        .select('created_at, board:boards!inner(slug)')
+        .eq('is_deleted', false)
+        .order('created_at', { ascending: false });
+
+      // slug → 최신 시간 맵 생성
+      const slugLastmod = new Map<string, string>();
+      if (boardLatestPosts) {
+        for (const p of boardLatestPosts) {
+          const slug = (p.board as { slug: string })?.slug;
+          if (slug && !slugLastmod.has(slug)) {
+            slugLastmod.set(slug, new Date(p.created_at!).toISOString());
+          }
+        }
+      }
+
+      // 핫딜 게시판 URL 추가
+      for (const slug of BOARD_SLUGS) {
+        if (!['all', 'popular'].includes(slug)) {
           urls.push({
-            loc: `${baseUrl}/boards/${b.slug}`,
-            lastmod: now,
-            changefreq: 'hourly',
-            priority: 0.8,
+            loc: `${baseUrl}/boards/${slug}`,
+            lastmod: slugLastmod.get(slug),
           });
-        });
+        }
+      }
+
+      // 나머지 게시판 URL 추가 (핫딜 제외)
+      for (const slug of boardSlugs) {
+        if (!BOARD_SLUGS.includes(slug)) {
+          urls.push({
+            loc: `${baseUrl}/boards/${slug}`,
+            lastmod: slugLastmod.get(slug),
+          });
+        }
+      }
     }
 
     // 리그 상세
@@ -60,9 +103,6 @@ export async function GET() {
       leagues.forEach((l) => {
         urls.push({
           loc: `${baseUrl}/livescore/football/leagues/${l.id}`,
-          lastmod: now,
-          changefreq: 'daily',
-          priority: 0.65,
         });
       });
     }
@@ -77,9 +117,6 @@ export async function GET() {
       shopCategories.forEach((c) => {
         urls.push({
           loc: `${baseUrl}/shop/${c.slug}`,
-          lastmod: now,
-          changefreq: 'weekly',
-          priority: 0.5,
         });
       });
     }
