@@ -96,7 +96,7 @@ export default function LeagueStandings({
   }, []);
 
   const handleTeamClick = (teamId: number) => {
-    router.push(`/livescore/football/team/${teamId}?tab=overview`);
+    router.push(`/livescore/football/team/${teamId}`);
   };
 
   // 현재 선택된 리그 정보
@@ -183,7 +183,7 @@ export default function LeagueStandings({
                   >
                     <td className="text-center py-1.5 px-0">{team.rank}</td>
                     <td className="text-left py-1.5 px-1">
-                      <Link href={`/livescore/football/team/${team.team.team_id}?tab=overview`} className="flex items-center gap-1">
+                      <Link href={`/livescore/football/team/${team.team.team_id}`} className="flex items-center gap-1">
                         <div className="w-5 h-5 relative flex-shrink-0">
                           <UnifiedSportsImageClient
                             src={getTeamLogo(team.team.team_id)}
