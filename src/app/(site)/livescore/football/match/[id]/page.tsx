@@ -240,7 +240,6 @@ export default async function MatchPage({
     const leagueName = leagueMapping?.nameKo || match?.league.name || '';
 
     // eventStatus 결정
-    const statusCode = match?.status?.code ?? match?.fixture?.status?.short ?? '';
     const eventStatus = isFinished
       ? 'https://schema.org/EventCompleted'
       : ['CANC', 'ABD'].includes(statusCode)
