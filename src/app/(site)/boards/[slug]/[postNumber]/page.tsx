@@ -364,37 +364,134 @@ export default async function PostDetailPage({
 
     // 게시글 본문에서 첫 번째 이미지 추출 (없으면 OG 이미지 사용)
     const firstImage = extractFirstImage(result.post.content);
-    const articleImage = firstImage || `${siteUrl}/og-image.png`;
+    const postImage = firstImage || `${siteUrl}/og-image.png`;
+    const contentType = (result.board as { content_type?: string }).content_type || 'community';
 
-    const articleSchema = {
-      '@context': 'https://schema.org',
-      '@type': 'Article',
-      headline: result.post.title,
-      description: articleDescription || `${result.board.name}의 게시글입니다.`,
-      image: articleImage,
-      author: {
-        '@type': 'Person',
-        name: result.post.profiles?.nickname || '익명',
-        ...(result.post.profiles?.public_id && {
-          url: `${siteUrl}/user/${result.post.profiles.public_id}`,
-        }),
-      },
-      datePublished: result.post.created_at,
-      dateModified: result.post.updated_at || result.post.created_at,
-      publisher: {
-        '@id': `${siteUrl}#organization`,
-      },
-      mainEntityOfPage: {
-        '@type': 'WebPage',
-        '@id': postUrl
-      },
-      commentCount: processedComments.length,
-      interactionStatistic: {
-        '@type': 'InteractionCounter',
-        interactionType: 'https://schema.org/LikeAction',
-        userInteractionCount: result.post.likes || 0
-      }
+    // 공통 author 객체
+    const authorSchema = {
+      '@type': 'Person' as const,
+      name: result.post.profiles?.nickname || '익명',
+      ...(result.post.profiles?.public_id && {
+        url: `${siteUrl}/user/${result.post.profiles.public_id}`,
+      }),
     };
+
+    // content_type에 따라 스키마 분기
+    let postSchema: Record<string, unknown>;
+
+    if (contentType === 'news') {
+      // 뉴스: NewsArticle
+      postSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'NewsArticle',
+        headline: result.post.title,
+        description: articleDescription || `${result.board.name}의 게시글입니다.`,
+        image: postImage,
+        author: authorSchema,
+        datePublished: result.post.created_at,
+        dateModified: result.post.updated_at || result.post.created_at,
+        publisher: { '@id': `${siteUrl}#organization` },
+        mainEntityOfPage: { '@type': 'WebPage', '@id': postUrl },
+        commentCount: processedComments.length,
+        interactionStatistic: {
+          '@type': 'InteractionCounter',
+          interactionType: 'https://schema.org/LikeAction',
+          userInteractionCount: result.post.likes || 0,
+        },
+      };
+    } else if (contentType === 'article') {
+      // 분석글/공지: Article
+      postSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: result.post.title,
+        description: articleDescription || `${result.board.name}의 게시글입니다.`,
+        image: postImage,
+        author: authorSchema,
+        datePublished: result.post.created_at,
+        dateModified: result.post.updated_at || result.post.created_at,
+        publisher: { '@id': `${siteUrl}#organization` },
+        mainEntityOfPage: { '@type': 'WebPage', '@id': postUrl },
+        commentCount: processedComments.length,
+        interactionStatistic: {
+          '@type': 'InteractionCounter',
+          interactionType: 'https://schema.org/LikeAction',
+          userInteractionCount: result.post.likes || 0,
+        },
+      };
+    } else if (contentType === 'review') {
+      // 인증/후기: Review
+      postSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'Review',
+        name: result.post.title,
+        reviewBody: articleDescription || `${result.board.name}의 게시글입니다.`,
+        image: postImage,
+        author: authorSchema,
+        datePublished: result.post.created_at,
+        publisher: { '@id': `${siteUrl}#organization` },
+        commentCount: processedComments.length,
+        interactionStatistic: {
+          '@type': 'InteractionCounter',
+          interactionType: 'https://schema.org/LikeAction',
+          userInteractionCount: result.post.likes || 0,
+        },
+      };
+    } else if (contentType === 'deal') {
+      // 핫딜/마켓: Product
+      postSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: result.post.title,
+        description: articleDescription || `${result.board.name}의 게시글입니다.`,
+        image: postImage,
+        offers: {
+          '@type': 'Offer',
+          url: postUrl,
+          availability: 'https://schema.org/InStock',
+          priceCurrency: 'KRW',
+        },
+        review: {
+          '@type': 'Review',
+          author: authorSchema,
+          datePublished: result.post.created_at,
+          reviewBody: articleDescription,
+        },
+      };
+    } else {
+      // community (기본값): DiscussionForumPosting
+      const topComments = processedComments.slice(0, 3).map((comment: { content?: string; profiles?: { nickname?: string }; created_at?: string }) => ({
+        '@type': 'Comment',
+        text: typeof comment.content === 'string'
+          ? comment.content.replace(/<[^>]*>/g, '').slice(0, 200)
+          : '',
+        author: {
+          '@type': 'Person',
+          name: comment.profiles?.nickname || '익명',
+        },
+        datePublished: comment.created_at,
+      }));
+
+      postSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'DiscussionForumPosting',
+        headline: result.post.title,
+        text: articleDescription || `${result.board.name}의 게시글입니다.`,
+        image: postImage,
+        author: authorSchema,
+        datePublished: result.post.created_at,
+        dateModified: result.post.updated_at || result.post.created_at,
+        url: postUrl,
+        discussionUrl: postUrl,
+        commentCount: processedComments.length,
+        interactionStatistic: {
+          '@type': 'InteractionCounter',
+          interactionType: 'https://schema.org/LikeAction',
+          userInteractionCount: result.post.likes || 0,
+        },
+        ...(topComments.length > 0 ? { comment: topComments } : {}),
+      };
+    }
 
     // BreadcrumbList 구조화 데이터 생성
     // Google 가이드: 마지막 항목에서는 item이 선택사항, 나머지는 필수
@@ -460,11 +557,11 @@ export default async function PostDetailPage({
     // 레이아웃 컴포넌트에 데이터 전달
     return (
       <>
-        {/* Article 구조화 데이터 */}
+        {/* 게시판 타입별 구조화 데이터 */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(articleSchema)
+            __html: JSON.stringify(postSchema)
           }}
         />
         {/* BreadcrumbList 구조화 데이터 */}

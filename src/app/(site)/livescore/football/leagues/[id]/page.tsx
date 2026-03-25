@@ -4,6 +4,7 @@ import { fetchLeagueStandings } from '@/domains/livescore/actions/match/standing
 import { LeagueHeader } from '@/domains/livescore/components/football/leagues';
 import { LeagueStandingsTable } from '@/domains/livescore/components/football/leagues';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import { siteConfig } from '@/shared/config';
 import { getTeamLogoUrls, getLeagueLogoUrl } from '@/domains/livescore/actions/images';
 import AdBanner from '@/shared/components/AdBanner';
 
@@ -71,9 +72,27 @@ export default async function LeaguePage({ params }: LeaguePageProps) {
     '@context': 'https://schema.org',
     '@type': 'SportsOrganization',
     name: league.name,
+    url: `${siteConfig.url}/livescore/football/leagues/${leagueId}`,
     sport: 'Football',
     ...(league.country ? { location: { '@type': 'Country', name: league.country } } : {}),
   };
+
+  // ItemList JSON-LD 생성 (순위표 기반 소속팀 목록)
+  const standings = standingsResponse.success && standingsResponse.data?.league?.standings;
+  const teamListSchema = standings && standings[0]?.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: `${league.name} 순위`,
+    itemListElement: standings[0].map((standing: { rank?: number; team?: { id?: number; name?: string } }, index: number) => ({
+      '@type': 'ListItem',
+      position: standing.rank || index + 1,
+      item: {
+        '@type': 'SportsTeam',
+        name: standing.team?.name || '',
+        ...(standing.team?.id ? { url: `${siteConfig.url}/livescore/football/team/${standing.team.id}` } : {}),
+      },
+    })),
+  } : null;
 
   return (
     <div className="min-h-screen space-y-4">
@@ -81,6 +100,12 @@ export default async function LeaguePage({ params }: LeaguePageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(leagueSchema) }}
       />
+      {teamListSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(teamListSchema) }}
+        />
+      )}
       <div className="bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 overflow-hidden">
         <LeagueHeader
           league={league}
