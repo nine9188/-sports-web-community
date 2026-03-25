@@ -100,6 +100,32 @@ function extractDescription(content: unknown): string {
     .slice(0, 160);
 }
 
+/**
+ * TipTap JSON에서 첫 번째 이미지 URL 추출
+ */
+function extractFirstImage(content: unknown): string | null {
+  if (!content || typeof content !== 'object') return null;
+  const doc = content as { content?: unknown[] };
+  if (!doc.content || !Array.isArray(doc.content)) return null;
+
+  function traverse(nodes: unknown[]): string | null {
+    for (const node of nodes) {
+      if (!node || typeof node !== 'object') continue;
+      const n = node as { type?: string; attrs?: Record<string, unknown>; content?: unknown[] };
+      if (n.type === 'image' && n.attrs?.src) {
+        return String(n.attrs.src);
+      }
+      if (n.content && Array.isArray(n.content)) {
+        const found = traverse(n.content);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
+  return traverse(doc.content);
+}
+
 // 게시글 메타데이터 생성
 export async function generateMetadata({
   params
@@ -336,11 +362,16 @@ export default async function PostDetailPage({
         .slice(0, 200);
     }
 
+    // 게시글 본문에서 첫 번째 이미지 추출 (없으면 OG 이미지 사용)
+    const firstImage = extractFirstImage(result.post.content);
+    const articleImage = firstImage || `${siteUrl}/og-image.png`;
+
     const articleSchema = {
       '@context': 'https://schema.org',
       '@type': 'Article',
       headline: result.post.title,
       description: articleDescription || `${result.board.name}의 게시글입니다.`,
+      image: articleImage,
       author: {
         '@type': 'Person',
         name: result.post.profiles?.nickname || '익명'
