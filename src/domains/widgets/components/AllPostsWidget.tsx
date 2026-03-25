@@ -36,7 +36,7 @@ export default async function AllPostsWidget({ initialData }: AllPostsWidgetProp
     // 헤더 컨텐츠 렌더링 - 오른쪽에 > 아이콘 추가
     const headerContent = (
       <div className="w-full h-full flex items-center justify-between">
-        <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">최신 게시글</h3>
+        <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">최신 게시글</h3>
         <Link
           href="/boards/all"
           className="text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"

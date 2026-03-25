@@ -36,7 +36,7 @@ export default function LeagueHeader({ league }: LeagueHeaderProps) {
       ) : league.icon ? (
         <span className="text-lg">{league.icon}</span>
       ) : null}
-      <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
+      <span className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">
         {league.name}
       </span>
     </div>

@@ -36,7 +36,7 @@ export function MainCard({ item }: MainCardProps) {
           />
         </div>
         <div className="p-3 bg-white dark:bg-[#1D1D1D]">
-          <h3 className="text-sm font-semibold line-clamp-2 text-gray-900 dark:text-[#F0F0F0] group-hover:underline transition-colors">
+          <h3 className="text-[13px] font-medium line-clamp-2 text-gray-900 dark:text-[#F0F0F0] group-hover:underline transition-colors">
             {String(item?.title || '제목 없음')}
           </h3>
           <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400 mt-2">
@@ -67,7 +67,7 @@ export function SideCard({ item }: SideCardProps) {
       <div className="flex h-full">
         {/* 텍스트 영역 (왼쪽) */}
         <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
-          <h4 className="text-sm line-clamp-2 text-gray-900 dark:text-[#F0F0F0] group-hover:underline transition-colors leading-snug">
+          <h4 className="text-[13px] line-clamp-2 text-gray-900 dark:text-[#F0F0F0] group-hover:underline transition-colors leading-snug">
             {String(item?.title || '제목 없음')}
           </h4>
           <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">

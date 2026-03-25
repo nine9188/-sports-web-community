@@ -29,7 +29,7 @@ export default function BoardPostItem({ post, isLast }: BoardPostItemProps) {
   return (
     <Link
       href={`/boards/${post.board_slug}/${post.post_number}`}
-      className={`text-sm font-medium text-gray-900 dark:text-[#F0F0F0] md:hover:bg-[#EAEAEA] md:dark:hover:bg-[#333333] transition-colors py-3 md:py-2 px-3 md:px-4 flex items-center min-w-0 ${
+      className={`text-[13px] text-gray-900 dark:text-[#F0F0F0] md:hover:bg-[#EAEAEA] md:dark:hover:bg-[#333333] transition-colors py-3 md:py-2 px-3 md:px-4 flex items-center min-w-0 ${
         isLast ? '' : 'border-b border-black/5 dark:border-white/10'
       }`}
     >

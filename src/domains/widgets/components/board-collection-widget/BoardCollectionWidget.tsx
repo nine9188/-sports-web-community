@@ -104,7 +104,7 @@ interface BoardCollectionWidgetProps {
 function EmptyPostList() {
   return (
     <div className="flex justify-center items-center h-24 text-center">
-      <p className="text-gray-500 dark:text-gray-400 text-sm">아직 게시글이 없습니다.</p>
+      <p className="text-gray-500 dark:text-gray-400 text-[13px]">아직 게시글이 없습니다.</p>
     </div>
   );
 }
@@ -136,7 +136,7 @@ function PostList({ posts }: { posts: BoardPost[] }) {
 function SectionHeader({ title }: { title: string }) {
   return (
     <div className="bg-[#F5F5F5] dark:bg-[#262626] px-4 py-2 border-b border-black/5 dark:border-white/10">
-      <h3 className="text-xs font-medium text-gray-700 dark:text-gray-300">{title}</h3>
+      <h3 className="text-[13px] font-medium text-gray-700 dark:text-gray-300">{title}</h3>
     </div>
   );
 }

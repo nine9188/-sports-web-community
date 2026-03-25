@@ -105,6 +105,7 @@ const BIG_MATCH_LEAGUES = [
   531, // UEFA 슈퍼컵
   45,  // FA컵
   292, // K리그1
+  10,  // 국가대표 친선경기
 ];
 
 // 리그 표시 우선순위 (낮을수록 먼저 표시)
@@ -120,6 +121,7 @@ const LEAGUE_PRIORITY: Record<number, number> = {
   848: 6,  // 컨퍼런스리그
   531: 7,  // UEFA 슈퍼컵
   292: 8,  // K리그1
+  10: 9,   // 국가대표 친선경기
 };
 
 /**
@@ -175,7 +177,7 @@ export default async function LiveScoreWidgetV2Server({ initialData }: LiveScore
       <Container className="bg-white dark:bg-[#1D1D1D]">
         <WidgetHeader />
         <div className="py-4 px-4 text-center">
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-2">
             최근 빅매치가 없습니다
           </p>
           <p className="text-xs text-gray-400 dark:text-gray-500">
