@@ -3,6 +3,9 @@ import { notFound } from 'next/navigation';
 import TeamPageClient, { TeamTabType } from '@/domains/livescore/components/football/team/TeamPageClient';
 import { fetchTeamFullData } from '@/domains/livescore/actions/teams/team';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import { siteConfig } from '@/shared/config';
+import { getTeamById } from '@/domains/livescore/constants/teams';
+import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 
 interface TeamPageProps {
@@ -101,22 +104,55 @@ export default async function TeamPage({ params, searchParams }: TeamPageProps) 
     // SportsTeam JSON-LD 생성
     const team = initialData.teamData?.team?.team;
     const venue = initialData.teamData?.team?.venue;
+    const teamMapping = team ? getTeamById(Number(id)) : null;
+    const leagueMapping = initialData.standings?.standings?.league
+      ? getLeagueById(initialData.standings.standings.league.id)
+      : null;
+
+    // 코치 정보 추출
+    const coach = initialData.squad?.data?.find(
+      (member: { position?: string }) => member.position === 'Coach'
+    ) as { id?: number; name?: string } | undefined;
+
+    const teamUrl = `${siteConfig.url}/livescore/football/team/${id}`;
+
     const sportsTeamSchema = team ? {
       '@context': 'https://schema.org',
       '@type': 'SportsTeam',
       name: team.name,
+      ...(teamMapping?.name_en ? { alternateName: teamMapping.name_en } : {}),
+      url: teamUrl,
+      logo: team.logo || `${siteConfig.url}/og-image.png`,
       ...(team.country ? { location: { '@type': 'Country', name: team.country } } : {}),
       ...(team.founded ? { foundingDate: String(team.founded) } : {}),
-      ...(venue ? {
+      sport: 'Football',
+      ...(leagueMapping ? {
+        memberOf: {
+          '@type': 'SportsOrganization',
+          name: leagueMapping.nameKo || initialData.standings?.standings?.league?.name,
+          url: `${siteConfig.url}/livescore/football/leagues/${initialData.standings?.standings?.league?.id}`,
+        },
+      } : {}),
+      ...(coach?.name ? {
+        coach: {
+          '@type': 'Person',
+          name: coach.name,
+        },
+      } : {}),
+      ...(venue?.name ? {
         homeLocation: {
           '@type': 'StadiumOrArena',
           name: venue.name,
-          ...(venue.address ? { address: venue.address } : {}),
-          ...(venue.city ? { addressLocality: venue.city } : {}),
+          ...((venue.address || venue.city) ? {
+            address: {
+              '@type': 'PostalAddress',
+              ...(venue.address ? { streetAddress: venue.address } : {}),
+              ...(venue.city ? { addressLocality: venue.city } : {}),
+            },
+          } : {}),
           ...(venue.capacity ? { maximumAttendeeCapacity: venue.capacity } : {}),
         },
       } : {}),
-      sport: 'Football',
     } : null;
 
     // 클라이언트 컴포넌트에 데이터 전달
