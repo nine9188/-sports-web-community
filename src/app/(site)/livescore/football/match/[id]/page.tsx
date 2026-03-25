@@ -245,10 +245,8 @@ export default async function MatchPage({
     const awayTeamName = awayTeamMapping?.name_ko || match?.teams.away.name || '';
     const leagueName = leagueMapping?.nameKo || match?.league.name || '';
 
-    // eventStatus 결정
-    const eventStatus = isFinished
-      ? 'https://schema.org/EventCompleted'
-      : ['CANC', 'ABD'].includes(statusCode)
+    // eventStatus 결정 (구글은 EventCompleted를 지원하지 않음)
+    const eventStatus = ['CANC', 'ABD'].includes(statusCode)
         ? 'https://schema.org/EventCancelled'
         : ['PST', 'SUSP'].includes(statusCode)
           ? 'https://schema.org/EventPostponed'
