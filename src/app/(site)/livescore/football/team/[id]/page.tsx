@@ -123,7 +123,6 @@ export default async function TeamPage({ params, searchParams }: TeamPageProps) 
       ...(teamMapping?.name_en ? { alternateName: teamMapping.name_en } : {}),
       url: teamUrl,
       logo: team.logo || `${siteConfig.url}/og-image.png`,
-      ...(team.country ? { location: { '@type': 'Country', name: team.country } } : {}),
       ...(team.founded ? { foundingDate: String(team.founded) } : {}),
       sport: 'Football',
       ...(leagueMapping ? {
@@ -139,22 +138,19 @@ export default async function TeamPage({ params, searchParams }: TeamPageProps) 
           name: coach.name,
         },
       } : {}),
-      ...(venue?.name ? {
-        homeLocation: {
-          '@type': 'StadiumOrArena',
-          name: venue.name,
-          ...(venue.image ? { image: venue.image } : {}),
-          ...((venue.address || venue.city || team.country) ? {
-            address: {
-              '@type': 'PostalAddress',
-              ...(venue.address ? { streetAddress: venue.address } : {}),
-              ...(venue.city ? { addressLocality: venue.city } : {}),
-              ...(team.country ? { addressCountry: team.country } : {}),
-            },
-          } : {}),
-          ...(venue.capacity ? { maximumAttendeeCapacity: venue.capacity } : {}),
-        },
-      } : {}),
+      location: venue?.name ? {
+        '@type': 'StadiumOrArena',
+        name: venue.name,
+        ...(venue.image ? { image: venue.image } : {}),
+        ...((venue.address || venue.city) ? {
+          address: {
+            '@type': 'PostalAddress',
+            ...(venue.address ? { streetAddress: venue.address } : {}),
+            ...(venue.city ? { addressLocality: venue.city } : {}),
+          },
+        } : {}),
+        ...(venue.capacity ? { maximumAttendeeCapacity: venue.capacity } : {}),
+      } : (team.country ? { '@type': 'Country', name: team.country } : undefined),
     } : null;
 
     // 클라이언트 컴포넌트에 데이터 전달
