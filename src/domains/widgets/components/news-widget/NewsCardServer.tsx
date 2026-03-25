@@ -23,7 +23,7 @@ export function MainCard({ item }: MainCardProps) {
   return (
     <Link
       href={item.url}
-      className="block bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 overflow-hidden md:hover:bg-[#EAEAEA] md:dark:hover:bg-[#333333] transition-colors group touch-manipulation h-[304px]"
+      className="block bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 overflow-hidden md:hover:bg-[#EAEAEA] md:dark:hover:bg-[#333333] transition-colors group touch-manipulation h-[320px]"
       style={CARD_STYLES.transform}
     >
       <div className="flex flex-col h-full">

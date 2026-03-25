@@ -48,17 +48,17 @@ export default async function NewsWidget({ boardSlug, initialData }: NewsWidgetS
   }
 
   return (
-    <div>
+    <div className="space-y-4">
       {/* 메인 레이아웃: 큰 배너(왼쪽) + 세로 카드 3개(오른쪽) */}
-      <div className="flex flex-col md:flex-row mb-4 gap-4">
+      <div className="flex flex-col md:flex-row gap-4">
         {/* 큰 배너 (첫 번째) - 왼쪽 */}
         <div className="md:w-1/2">
           <MainCard item={news[0]} />
         </div>
 
-        {/* 세로 카드 3개 (2~4번째) - 오른쪽, gap-2 (8px * 2 = 16px) */}
+        {/* 세로 카드 3개 (2~4번째) - 오른쪽 */}
         {news.length > 1 && (
-          <div className="md:w-1/2 flex flex-col gap-2">
+          <div className="md:w-1/2 flex flex-col gap-4">
             {news.slice(1, 4).map((item) => (
               <SideCard key={item.id} item={item} />
             ))}
@@ -66,9 +66,9 @@ export default async function NewsWidget({ boardSlug, initialData }: NewsWidgetS
         )}
       </div>
 
-      {/* 추가 뉴스 2열 그리드 (5~14번째) - SideCard와 동일 */}
+      {/* 추가 뉴스 2열 그리드 (5~14번째) */}
       {news.length > 4 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {news.slice(4, 14).map((item) => (
             <SideCard key={item.id} item={item} />
           ))}
