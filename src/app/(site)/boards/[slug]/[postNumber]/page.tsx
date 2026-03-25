@@ -374,7 +374,10 @@ export default async function PostDetailPage({
       image: articleImage,
       author: {
         '@type': 'Person',
-        name: result.post.profiles?.nickname || '익명'
+        name: result.post.profiles?.nickname || '익명',
+        ...(result.post.profiles?.public_id && {
+          url: `${siteUrl}/user/${result.post.profiles.public_id}`,
+        }),
       },
       datePublished: result.post.created_at,
       dateModified: result.post.updated_at || result.post.created_at,
