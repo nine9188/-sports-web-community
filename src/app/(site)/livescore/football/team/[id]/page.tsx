@@ -143,11 +143,13 @@ export default async function TeamPage({ params, searchParams }: TeamPageProps) 
         homeLocation: {
           '@type': 'StadiumOrArena',
           name: venue.name,
-          ...((venue.address || venue.city) ? {
+          ...(venue.image ? { image: venue.image } : {}),
+          ...((venue.address || venue.city || team.country) ? {
             address: {
               '@type': 'PostalAddress',
               ...(venue.address ? { streetAddress: venue.address } : {}),
               ...(venue.city ? { addressLocality: venue.city } : {}),
+              ...(team.country ? { addressCountry: team.country } : {}),
             },
           } : {}),
           ...(venue.capacity ? { maximumAttendeeCapacity: venue.capacity } : {}),
