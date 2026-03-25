@@ -1,7 +1,6 @@
 import React from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import Script from 'next/script';
 import Link from 'next/link';
 import { getPostPageData } from '@/domains/boards/actions';
 import PostDetailLayout from '@/domains/boards/components/layout/PostDetailLayout';
@@ -428,16 +427,14 @@ export default async function PostDetailPage({
     return (
       <>
         {/* Article 구조화 데이터 */}
-        <Script
-          id="article-schema"
+        <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(articleSchema)
           }}
         />
         {/* BreadcrumbList 구조화 데이터 */}
-        <Script
-          id="breadcrumb-schema"
+        <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(breadcrumbSchema)
@@ -445,9 +442,8 @@ export default async function PostDetailPage({
         />
         {/* VideoObject 구조화 데이터 */}
         {videoSchemas.map((schema, i) => (
-          <Script
+          <script
             key={`video-schema-${i}`}
-            id={`video-schema-${i}`}
             type="application/ld+json"
             dangerouslySetInnerHTML={{
               __html: JSON.stringify(schema)
