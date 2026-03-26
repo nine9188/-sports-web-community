@@ -82,7 +82,7 @@ export default function UserList({ users, loading, selectedUser, onSelectUser }:
                   </div>
                   <div className="flex items-center gap-1">
                     <Coins className="h-4 w-4 text-yellow-500" />
-                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{user.points || 0} P</span>
+                    <span className="text-[13px] font-semibold text-gray-700 dark:text-gray-300">{user.points || 0} P</span>
                   </div>
                 </div>
               </li>

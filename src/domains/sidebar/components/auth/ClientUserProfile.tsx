@@ -34,7 +34,7 @@ export default function ClientUserProfile({ profileData, showActions = true }: C
   if (!profileData) {
     return (
       <div className="text-center py-4">
-        <p className="text-sm text-gray-500">로딩 중...</p>
+        <p className="text-[13px] text-gray-500">로딩 중...</p>
       </div>
     );
   }
@@ -58,7 +58,7 @@ export default function ClientUserProfile({ profileData, showActions = true }: C
               className="object-cover"
             />
           </div>
-          <p className="font-medium text-sm leading-5 text-gray-900 dark:text-[#F0F0F0]">
+          <p className="font-medium text-[13px] leading-5 text-gray-900 dark:text-[#F0F0F0]">
             {profileData.nickname || '사용자'}
           </p>
         </div>

@@ -113,7 +113,7 @@ export function ChatFormRenderer({
         <label
           htmlFor={field.name}
           className={cn(
-            'block text-sm font-medium',
+            'block text-[13px] font-medium',
             error ? 'text-red-700 dark:text-red-400' : 'text-gray-900 dark:text-[#F0F0F0]'
           )}
         >
@@ -153,7 +153,7 @@ export function ChatFormRenderer({
         )}
         
         {error && (
-          <p className="text-sm text-red-600 dark:text-red-400 animate-in fade-in-0 slide-in-from-top-1">
+          <p className="text-[13px] text-red-600 dark:text-red-400 animate-in fade-in-0 slide-in-from-top-1">
             {error}
           </p>
         )}
@@ -180,7 +180,7 @@ export function ChatFormRenderer({
         {/* Submit Error Display */}
         {submitError && (
           <div className="p-3 rounded-none bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 animate-in fade-in-0 slide-in-from-top-1">
-            <p className="text-sm text-red-700 dark:text-red-300">{submitError}</p>
+            <p className="text-[13px] text-red-700 dark:text-red-300">{submitError}</p>
           </div>
         )}
 

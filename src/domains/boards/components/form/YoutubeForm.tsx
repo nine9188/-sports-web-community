@@ -93,7 +93,7 @@ export default function YoutubeForm({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center">
-          <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">유튜브 추가</h3>
+          <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">유튜브 추가</h3>
         </div>
         <div className="p-4">
           <div className="space-y-4">

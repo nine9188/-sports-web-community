@@ -28,7 +28,7 @@ export function UserSelection({
         {sendMode === 'selected' && (
           <button
             onClick={onToggleAll}
-            className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+            className="text-[13px] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
           >
             {selectedUserIds.size === users.length ? '전체 해제' : '전체 선택'}
           </button>
@@ -39,7 +39,7 @@ export function UserSelection({
         <div className="text-center py-12 text-gray-500 dark:text-gray-400">
           <Users className="w-16 h-16 mx-auto mb-4 opacity-50" />
           <p>전체 사용자에게 발송됩니다</p>
-          <p className="text-sm mt-2">총 {users.length}명의 사용자</p>
+          <p className="text-[13px] mt-2">총 {users.length}명의 사용자</p>
         </div>
       ) : (
         <div className="space-y-2 max-h-[600px] overflow-y-auto">
@@ -68,7 +68,7 @@ export function UserSelection({
                   <p className="font-medium text-gray-900 dark:text-gray-100">
                     {user.nickname || '닉네임 없음'}
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-[13px] text-gray-500 dark:text-gray-400">
                     {user.email} • Lv.{user.level}
                   </p>
                 </div>

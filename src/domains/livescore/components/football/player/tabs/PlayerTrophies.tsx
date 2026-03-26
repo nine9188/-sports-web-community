@@ -110,19 +110,19 @@ export default function PlayerTrophies({
         {/* 트로피 통계 */}
         <div className="grid grid-cols-4 gap-0 border-b border-black/5 dark:border-white/10">
           <div className="py-3 px-2 text-center border-r border-black/5 dark:border-white/10">
-            <span className="text-sm md:text-base font-bold text-gray-900 dark:text-[#F0F0F0] mr-1">{trophySummary.total}</span>
+            <span className="text-[13px] md:text-base font-bold text-gray-900 dark:text-[#F0F0F0] mr-1">{trophySummary.total}</span>
             <span className="text-xs text-gray-500 dark:text-gray-400">총</span>
           </div>
           <div className="py-3 px-2 text-center border-r border-black/5 dark:border-white/10">
-            <span className="text-sm md:text-base font-bold text-yellow-500 dark:text-yellow-400 mr-1">{trophySummary.champion}</span>
+            <span className="text-[13px] md:text-base font-bold text-yellow-500 dark:text-yellow-400 mr-1">{trophySummary.champion}</span>
             <span className="text-xs text-gray-500 dark:text-gray-400">우승</span>
           </div>
           <div className="py-3 px-2 text-center border-r border-black/5 dark:border-white/10">
-            <span className="text-sm md:text-base font-bold text-gray-500 dark:text-gray-400 mr-1">{trophySummary.runnerUp}</span>
+            <span className="text-[13px] md:text-base font-bold text-gray-500 dark:text-gray-400 mr-1">{trophySummary.runnerUp}</span>
             <span className="text-xs text-gray-500 dark:text-gray-400">준우승</span>
           </div>
           <div className="py-3 px-2 text-center">
-            <span className="text-sm md:text-base font-bold text-amber-600 dark:text-amber-500 mr-1">{trophySummary.other}</span>
+            <span className="text-[13px] md:text-base font-bold text-amber-600 dark:text-amber-500 mr-1">{trophySummary.other}</span>
             <span className="text-xs text-gray-500 dark:text-gray-400">기타</span>
           </div>
         </div>
@@ -155,7 +155,7 @@ export default function PlayerTrophies({
                         />
                       ) : null;
                     })()}
-                    <p className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0] truncate">
+                    <p className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0] truncate">
                       {getLeagueKoreanName(trophy.league) || trophy.league}
                     </p>
                     

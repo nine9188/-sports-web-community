@@ -21,7 +21,7 @@ export default function BoardBreadcrumbs({ breadcrumbs }: BoardBreadcrumbsProps)
   return (
     <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
       <div className="px-4 py-2.5 overflow-x-auto">
-        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap min-w-max">
+        <div className="flex items-center text-[13px] text-gray-500 dark:text-gray-400 whitespace-nowrap min-w-max">
           {breadcrumbs.map((bc, index) => (
             <React.Fragment key={bc.id}>
               {index > 0 && <ChevronRight className="h-3.5 w-3.5 mx-1.5 text-gray-500 dark:text-gray-400 flex-shrink-0" />}

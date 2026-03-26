@@ -36,7 +36,7 @@ export default function ExpForm({
       {/* 현재 레벨 및 경험치 정보 */}
       <div className="bg-white dark:bg-[#1D1D1D]">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-          <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-2 md:mb-0">현재 레벨</h3>
+          <h3 className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] mb-2 md:mb-0">현재 레벨</h3>
 
           <div className="flex items-center">
             <div className="text-lg font-bold mr-2 text-gray-900 dark:text-[#F0F0F0]">
@@ -48,8 +48,8 @@ export default function ExpForm({
 
         <div className="border-t border-black/5 dark:border-white/10 pt-4">
           <div className="mb-2 flex justify-between">
-            <span className="text-sm text-gray-700 dark:text-gray-300">경험치</span>
-            <span className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+            <span className="text-[13px] text-gray-700 dark:text-gray-300">경험치</span>
+            <span className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
               {userExp.toLocaleString()} / {nextLevelTotalExp.toLocaleString()} XP
             </span>
           </div>
@@ -62,7 +62,7 @@ export default function ExpForm({
             ></div>
           </div>
 
-          <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
+          <p className="mt-2 text-[13px] text-gray-700 dark:text-gray-300">
             다음 레벨까지 {remainingExp.toLocaleString()} XP 필요
           </p>
         </div>

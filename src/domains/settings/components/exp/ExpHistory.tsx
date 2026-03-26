@@ -104,13 +104,13 @@ function ExpHistoryRow({ item }: ExpHistoryRowProps) {
 
   return (
     <tr className="hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors">
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+      <td className="px-6 py-4 whitespace-nowrap text-[13px] text-gray-500 dark:text-gray-400">
         {formattedDate}
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+      <td className="px-6 py-4 whitespace-nowrap text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
         {item.reason || '경험치 획득'}
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-right text-gray-900 dark:text-[#F0F0F0]">
+      <td className="px-6 py-4 whitespace-nowrap text-[13px] font-bold text-right text-gray-900 dark:text-[#F0F0F0]">
         {prefix}{expAmount.toLocaleString()} XP
       </td>
     </tr>

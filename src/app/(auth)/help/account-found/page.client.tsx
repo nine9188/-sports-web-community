@@ -100,7 +100,7 @@ function AccountFoundContent() {
             <div className="p-6 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg border border-black/7 dark:border-white/10">
               <div className="flex items-center mb-4">
                 <User className="h-5 w-5 text-gray-500 dark:text-gray-400 mr-2" />
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">찾은 아이디</span>
+                <span className="text-[13px] font-medium text-gray-600 dark:text-gray-400">찾은 아이디</span>
               </div>
               <div className="text-xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-4">
                 {accountInfo.nickname}
@@ -110,9 +110,9 @@ function AccountFoundContent() {
                 <div className="pt-4 border-t border-black/5 dark:border-white/10">
                   <div className="flex items-center mb-2">
                     <Clock className="h-4 w-4 text-gray-500 dark:text-gray-400 mr-2" />
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">마지막 로그인</span>
+                    <span className="text-[13px] font-medium text-gray-600 dark:text-gray-400">마지막 로그인</span>
                   </div>
-                  <div className="text-sm text-gray-700 dark:text-gray-300">
+                  <div className="text-[13px] text-gray-700 dark:text-gray-300">
                     {formatLastSignIn(accountInfo.lastSignInAt)}
                   </div>
                 </div>
@@ -139,9 +139,9 @@ function AccountFoundContent() {
             <div className="p-6 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg border border-black/7 dark:border-white/10">
               <div className="flex items-center mb-3">
                 <Mail className="h-5 w-5 text-gray-500 dark:text-gray-400 mr-2" />
-                <span className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">이메일 확인 필요</span>
+                <span className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">이메일 확인 필요</span>
               </div>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
+              <p className="text-[13px] text-gray-700 dark:text-gray-300">
                 이메일을 확인하여 비밀번호를 재설정해주세요.<br/>
                 링크는 30분간 유효합니다.
               </p>
@@ -198,7 +198,7 @@ export default function AccountFoundPage() {
           <AccountFoundContent />
         </Suspense>
       </div>
-      <div className="mt-8 flex space-x-4 text-sm text-gray-500 dark:text-gray-400">
+      <div className="mt-8 flex space-x-4 text-[13px] text-gray-500 dark:text-gray-400">
         <Link href="/terms" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">이용약관</Link>
         <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">개인정보처리방침</Link>
       </div>

@@ -12,7 +12,7 @@ export function StatCard({ title, value, icon, suffix = '' }: StatCardProps) {
     <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-white/10 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</p>
+          <p className="text-[13px] font-medium text-gray-600 dark:text-gray-400">{title}</p>
           <p className="text-3xl font-bold text-gray-900 dark:text-[#F0F0F0] mt-2">
             {typeof value === 'number' ? value.toLocaleString() : value}
             {suffix}

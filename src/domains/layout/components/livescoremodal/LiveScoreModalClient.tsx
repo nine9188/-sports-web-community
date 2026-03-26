@@ -54,7 +54,7 @@ export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModal
           <div className="flex items-center gap-2">
             <Circle className="h-4 w-4 text-green-600 fill-green-600" />
             <div>
-              <h2 className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0]">라이브스코어</h2>
+              <h2 className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">라이브스코어</h2>
               <p className="text-xs text-gray-600 dark:text-gray-400">최근 3일간 주요 경기</p>
             </div>
           </div>
@@ -80,7 +80,7 @@ export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModal
               key={key}
               variant="ghost"
               onClick={() => handleTabChange(key as 'yesterday' | 'today' | 'tomorrow')}
-              className={`flex-1 py-3 text-sm font-medium rounded-none h-auto ${
+              className={`flex-1 py-3 text-[13px] font-medium rounded-none h-auto ${
                 selectedDate === key
                   ? 'bg-white dark:bg-[#1D1D1D] border-b-2 border-[#262626] dark:border-[#F0F0F0] text-gray-900 dark:text-[#F0F0F0]'
                   : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300'
@@ -112,7 +112,7 @@ export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModal
           <Link
             href="/livescore/football"
             onClick={onClose}
-            className="block w-full text-center py-2 px-4 bg-[#262626] dark:bg-[#3F3F3F] text-white hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] text-sm font-medium rounded-lg transition-colors"
+            className="block w-full text-center py-2 px-4 bg-[#262626] dark:bg-[#3F3F3F] text-white hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] text-[13px] font-medium rounded-lg transition-colors"
           >
             전체 라이브스코어 보기
           </Link>

@@ -32,7 +32,7 @@ export default function NoticeAdminSection({
           onChange={(e) => setIsNotice(e.target.checked)}
           className="w-4 h-4 text-blue-600 bg-white dark:bg-[#333333] border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
         />
-        <label htmlFor="isNotice" className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+        <label htmlFor="isNotice" className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
           공지로 등록
         </label>
       </div>
@@ -41,7 +41,7 @@ export default function NoticeAdminSection({
         <div className="space-y-4 pl-6">
           {/* 공지 타입 선택 */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+            <label className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
               공지 타입
             </label>
             <div className="flex gap-4">
@@ -56,7 +56,7 @@ export default function NoticeAdminSection({
                   }}
                   className="mr-2"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">전체 공지</span>
+                <span className="text-[13px] text-gray-700 dark:text-gray-300">전체 공지</span>
               </label>
               <label className="flex items-center">
                 <input
@@ -66,7 +66,7 @@ export default function NoticeAdminSection({
                   onChange={(e) => setNoticeType(e.target.value as 'global' | 'board')}
                   className="mr-2"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">게시판 공지</span>
+                <span className="text-[13px] text-gray-700 dark:text-gray-300">게시판 공지</span>
               </label>
             </div>
           </div>
@@ -74,12 +74,12 @@ export default function NoticeAdminSection({
           {/* 게시판 선택 (게시판 공지인 경우) */}
           {noticeType === 'board' && (
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+              <label className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
                 공지를 표시할 게시판 선택 (다중 선택 가능)
               </label>
               <div className="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-[#262626]">
                 {allBoardsFlat.length === 0 ? (
-                  <p className="text-sm text-gray-500">게시판을 불러오는 중...</p>
+                  <p className="text-[13px] text-gray-500">게시판을 불러오는 중...</p>
                 ) : (
                   <div className="grid grid-cols-2 gap-2">
                     {allBoardsFlat.map((board) => (
@@ -99,7 +99,7 @@ export default function NoticeAdminSection({
                           }}
                           className="mr-2"
                         />
-                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                        <span className="text-[13px] text-gray-700 dark:text-gray-300">
                           {board.name}
                         </span>
                       </label>
@@ -108,7 +108,7 @@ export default function NoticeAdminSection({
                 )}
               </div>
               {noticeBoards.length > 0 && (
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-[13px] text-gray-600 dark:text-gray-400">
                   선택된 게시판: {noticeBoards.length}개
                 </p>
               )}

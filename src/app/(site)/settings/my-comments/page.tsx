@@ -59,7 +59,7 @@ export default async function MyCommentsPage({
         <Container className="mb-4 bg-white dark:bg-[#1D1D1D]">
           <ContainerContent>
             <h2 className="text-xl font-semibold mb-1 text-gray-900 dark:text-[#F0F0F0]">내가 쓴 댓글</h2>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">
+            <p className="text-gray-500 dark:text-gray-400 text-[13px]">
               내가 작성한 댓글 목록을 확인할 수 있습니다.
             </p>
           </ContainerContent>

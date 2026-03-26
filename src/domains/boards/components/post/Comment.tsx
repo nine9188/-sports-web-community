@@ -183,12 +183,12 @@ export default function Comment({
             </div>
 
             {!isEditing ? (
-              <div className="text-sm text-gray-800 dark:text-gray-200 mb-2 break-words leading-relaxed whitespace-pre-wrap">{renderContent(comment.content, emoticonMap, emoticonRegex)}</div>
+              <div className="text-[13px] text-gray-800 dark:text-gray-200 mb-2 break-words leading-relaxed whitespace-pre-wrap">{renderContent(comment.content, emoticonMap, emoticonRegex)}</div>
             ) : (
               <div className="mb-3">
                 <textarea
                   ref={editTextareaRef}
-                  className="w-full px-3 py-2 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-md text-base sm:text-sm resize-none outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors duration-200"
+                  className="w-full px-3 py-2 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-md text-base sm:text-[13px] resize-none outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors duration-200"
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
                   rows={3}
@@ -199,7 +199,7 @@ export default function Comment({
                       type="button"
                       variant="outline"
                       onClick={() => setShowEditEmoticonPicker(!showEditEmoticonPicker)}
-                      className="flex items-center gap-1.5 px-3 h-[36px] text-sm font-medium"
+                      className="flex items-center gap-1.5 px-3 h-[36px] text-[13px] font-medium"
                     >
                       이모티콘
                     </Button>
@@ -211,8 +211,8 @@ export default function Comment({
                     )}
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="secondary" onClick={handleCancel} className="px-3 h-[36px] text-sm font-medium">취소</Button>
-                    <Button variant="primary" onClick={handleSave} className="px-3 h-[36px] text-sm font-medium" disabled={!editContent.trim()}>저장</Button>
+                    <Button variant="secondary" onClick={handleCancel} className="px-3 h-[36px] text-[13px] font-medium">취소</Button>
+                    <Button variant="primary" onClick={handleSave} className="px-3 h-[36px] text-[13px] font-medium" disabled={!editContent.trim()}>저장</Button>
                   </div>
                 </div>
               </div>
@@ -284,7 +284,7 @@ function DeletedCommentUI({ isReply = false }: { isReply?: boolean }) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
           </svg>
         )}
-        <div className="flex items-center text-sm text-red-600 dark:text-red-400">
+        <div className="flex items-center text-[13px] text-red-600 dark:text-red-400">
           <svg className="w-4 h-4 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
           </svg>
@@ -316,7 +316,7 @@ function HiddenCommentUI({ hiddenUntil, isReply = false }: { hiddenUntil?: strin
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
           </svg>
         )}
-        <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+        <div className="flex items-center text-[13px] text-gray-600 dark:text-gray-400">
           <svg className="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
           </svg>

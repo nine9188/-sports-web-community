@@ -50,7 +50,7 @@ interface LeagueStandingsTableProps {
 // 테이블 스타일 정의
 const tableStyles = {
   header: "px-1 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider",
-  cell: "px-1 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center",
+  cell: "px-1 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-gray-100 text-center",
 };
 
 // 4590 표준: 팀 로고 컴포넌트
@@ -151,7 +151,7 @@ const LeagueStandingsTable = memo(({ standings, leagueId, teamLogoUrls = {} }: L
         </ContainerHeader>
         <ContainerContent>
           <div className="text-center py-8">
-            <p className="text-sm text-gray-700 dark:text-gray-300">현재 리그 순위 데이터가 없습니다.</p>
+            <p className="text-[13px] text-gray-700 dark:text-gray-300">현재 리그 순위 데이터가 없습니다.</p>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">시즌이 시작되지 않았거나 종료되었을 수 있습니다.</p>
           </div>
         </ContainerContent>
@@ -224,13 +224,13 @@ const LeagueStandingsTable = memo(({ standings, leagueId, teamLogoUrls = {} }: L
                         </td>
 
                         {/* 데스크톱용 순위 */}
-                        <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 relative">
+                        <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-gray-100 relative">
                           <div className={`absolute inset-y-0 left-0 w-1 ${statusColor}`} />
                           <span className="pl-2">{standing.rank}</span>
                         </td>
 
                         {/* 팀 정보 */}
-                        <td className="px-2 py-2 md:px-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                        <td className="px-2 py-2 md:px-3 whitespace-nowrap text-[13px] text-gray-900 dark:text-gray-100">
                           <Link href={`/livescore/football/team/${standing.team?.id || 0}`} className="flex items-center gap-1 md:gap-2">
                             <TeamLogo
                               teamName={standing.team?.name || ''}
@@ -249,31 +249,31 @@ const LeagueStandingsTable = memo(({ standings, leagueId, teamLogoUrls = {} }: L
                         </td>
 
                         {/* 경기 수 - 모바일 숨김 */}
-                        <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center">
+                        <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-gray-100 text-center">
                           {standing.all?.played || 0}
                         </td>
 
                         {/* 승/무/패 */}
-                        <td className={`${tableStyles.cell} text-xs md:text-sm px-0 md:px-1`}>{standing.all?.win || 0}</td>
-                        <td className={`${tableStyles.cell} text-xs md:text-sm px-0 md:px-1`}>{standing.all?.draw || 0}</td>
-                        <td className={`${tableStyles.cell} text-xs md:text-sm px-0 md:px-1`}>{standing.all?.lose || 0}</td>
+                        <td className={`${tableStyles.cell} text-xs md:text-[13px] px-0 md:px-1`}>{standing.all?.win || 0}</td>
+                        <td className={`${tableStyles.cell} text-xs md:text-[13px] px-0 md:px-1`}>{standing.all?.draw || 0}</td>
+                        <td className={`${tableStyles.cell} text-xs md:text-[13px] px-0 md:px-1`}>{standing.all?.lose || 0}</td>
 
                         {/* 득점, 실점, 득실차 - 모바일 숨김 */}
-                        <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center">
+                        <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-gray-100 text-center">
                           {standing.all?.goals?.for || 0}
                         </td>
-                        <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center">
+                        <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-gray-100 text-center">
                           {standing.all?.goals?.against || 0}
                         </td>
-                        <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center">
+                        <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-gray-100 text-center">
                           {(standing.goalsDiff || 0) > 0 ? `+${standing.goalsDiff}` : standing.goalsDiff || 0}
                         </td>
 
                         {/* 승점 */}
-                        <td className={`${tableStyles.cell} text-xs md:text-sm font-semibold`}>{standing.points || 0}</td>
+                        <td className={`${tableStyles.cell} text-xs md:text-[13px] font-semibold`}>{standing.points || 0}</td>
 
                         {/* 최근 5경기 - 모바일 숨김 */}
-                        <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center">
+                        <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-gray-100 text-center">
                           <div className="flex justify-center gap-1">
                             {standing.form?.split('').map((result, idx) => (
                               <div
@@ -308,7 +308,7 @@ const LeagueStandingsTable = memo(({ standings, leagueId, teamLogoUrls = {} }: L
               return legend.items.map((item, index) => (
                 <div key={index} className="flex items-center gap-2">
                   <div className={`w-4 h-4 ${item.color} rounded-sm`}></div>
-                  <span className="text-sm text-gray-900 dark:text-gray-100">{item.label}</span>
+                  <span className="text-[13px] text-gray-900 dark:text-gray-100">{item.label}</span>
                 </div>
               ));
             })()}

@@ -123,7 +123,7 @@ export default function TransfersPageContent({
             <div className="text-gray-700 dark:text-gray-300 text-lg mb-2">
               이적 정보를 찾을 수 없습니다
             </div>
-            <div className="text-gray-500 dark:text-gray-400 text-sm">
+            <div className="text-gray-500 dark:text-gray-400 text-[13px]">
               필터를 조정하여 다시 시도해보세요
             </div>
           </div>
@@ -175,7 +175,7 @@ export default function TransfersPageContent({
                         <div className="min-w-0">
                           <Link
                             href={`/livescore/football/player/${transfer.player.id}`}
-                            className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] hover:underline transition-colors truncate block"
+                            className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] hover:underline transition-colors truncate block"
                           >
                             {playerKoreanNames[transfer.player.id] || transfer.player.name}
                           </Link>
@@ -194,7 +194,7 @@ export default function TransfersPageContent({
                           />
                           <Link
                             href={`/livescore/football/team/${transfer.transfers[0]?.teams?.out?.id}`}
-                            className="text-sm text-gray-700 dark:text-gray-300 hover:underline transition-colors truncate"
+                            className="text-[13px] text-gray-700 dark:text-gray-300 hover:underline transition-colors truncate"
                           >
                             {(() => {
                               const teamId = transfer.transfers[0]?.teams?.out?.id || 0;
@@ -218,7 +218,7 @@ export default function TransfersPageContent({
                           />
                           <Link
                             href={`/livescore/football/team/${transfer.transfers[0]?.teams?.in?.id}`}
-                            className="text-sm text-gray-900 dark:text-[#F0F0F0] hover:underline transition-colors truncate font-medium"
+                            className="text-[13px] text-gray-900 dark:text-[#F0F0F0] hover:underline transition-colors truncate font-medium"
                           >
                             {(() => {
                               const teamId = transfer.transfers[0]?.teams?.in?.id || 0;
@@ -240,7 +240,7 @@ export default function TransfersPageContent({
                     </td>
 
                     {/* 날짜 */}
-                    <td className="px-3 py-3 text-sm text-gray-700 dark:text-gray-300">
+                    <td className="px-3 py-3 text-[13px] text-gray-700 dark:text-gray-300">
                       {transfer.transfers[0]?.date || 'N/A'}
                     </td>
                   </tr>
@@ -272,7 +272,7 @@ export default function TransfersPageContent({
 
                       <Link
                         href={`/livescore/football/player/${transfer.player.id}`}
-                        className={`${(playerKoreanNames[transfer.player.id] || transfer.player.name).length > 15 ? 'text-xs' : 'text-sm'} font-semibold text-gray-900 dark:text-[#F0F0F0] hover:underline transition-colors truncate`}
+                        className={`${(playerKoreanNames[transfer.player.id] || transfer.player.name).length > 15 ? 'text-xs' : 'text-[13px]'} font-semibold text-gray-900 dark:text-[#F0F0F0] hover:underline transition-colors truncate`}
                       >
                         {playerKoreanNames[transfer.player.id] || transfer.player.name}
                       </Link>

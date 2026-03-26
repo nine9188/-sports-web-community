@@ -112,7 +112,7 @@ const StatItem = memo(({ homeValue, awayValue, koreanLabel, index = 0 }: {
 
       {/* 통계 값 및 바 */}
       <div className="flex items-center">
-        <span className="font-medium text-sm w-8 text-right mr-2 text-gray-900 dark:text-[#F0F0F0]">{homeValue || '0'}</span>
+        <span className="font-medium text-[13px] w-8 text-right mr-2 text-gray-900 dark:text-[#F0F0F0]">{homeValue || '0'}</span>
 
         {/* 그래프 컨테이너 - 회색 배경에 컬러 바 */}
         <div className="w-full bg-[#EAEAEA] dark:bg-[#333333] relative" style={{ height: '4px' }}>
@@ -156,7 +156,7 @@ const StatItem = memo(({ homeValue, awayValue, koreanLabel, index = 0 }: {
           />
         </div>
 
-        <span className="font-medium text-sm w-8 text-left ml-2 text-gray-900 dark:text-[#F0F0F0]">{awayValue || '0'}</span>
+        <span className="font-medium text-[13px] w-8 text-left ml-2 text-gray-900 dark:text-[#F0F0F0]">{awayValue || '0'}</span>
       </div>
     </motion.div>
   );
@@ -265,7 +265,7 @@ const Stats = memo(({ matchData: propsMatchData, initialMatchPlayerStats, player
       <div className="flex justify-center items-center py-8">
         <div className="text-center">
           <Spinner size="xl" className="mx-auto mb-2" />
-          <p className="text-sm text-gray-600">통계 데이터를 불러오는 중...</p>
+          <p className="text-[13px] text-gray-600">통계 데이터를 불러오는 중...</p>
         </div>
       </div>
     );
@@ -280,7 +280,7 @@ const Stats = memo(({ matchData: propsMatchData, initialMatchPlayerStats, player
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <p className="text-sm text-gray-600">통계 데이터를 불러오는 중 오류가 발생했습니다.</p>
+        <p className="text-[13px] text-gray-600">통계 데이터를 불러오는 중 오류가 발생했습니다.</p>
         <p className="text-xs text-gray-500 mt-1">{error}</p>
       </div>
     );
@@ -290,7 +290,7 @@ const Stats = memo(({ matchData: propsMatchData, initialMatchPlayerStats, player
   if (!stats.length) {
     return (
       <div className="text-center py-8">
-        <p className="text-sm text-gray-600">통계 데이터가 없습니다</p>
+        <p className="text-[13px] text-gray-600">통계 데이터가 없습니다</p>
         <p className="text-xs text-gray-500 mt-1">현재 이 경기에 대한 통계 정보를 제공할 수 없습니다.</p>
       </div>
     );
@@ -491,7 +491,7 @@ const Stats = memo(({ matchData: propsMatchData, initialMatchPlayerStats, player
               </ContainerHeader>
               <ContainerContent>
                 <HorizontalScrollContainer>
-                  <table className="min-w-max divide-y divide-gray-200 text-sm">
+                  <table className="min-w-max divide-y divide-gray-200 text-[13px]">
                     <thead className="bg-[#F5F5F5] dark:bg-[#262626] whitespace-nowrap">
                       <tr>
                         <th className="sticky left-0 z-10 bg-[#F5F5F5] dark:bg-[#262626] px-2 py-2 text-left font-medium text-gray-700 dark:text-gray-300 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-32 min-w-[8rem] max-w-[8rem]">선수</th>
@@ -614,7 +614,7 @@ const Stats = memo(({ matchData: propsMatchData, initialMatchPlayerStats, player
                                       {player.playerNumber}
                                     </span>
                                   )}
-                                  <div className="truncate text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">{displayName}</div>
+                                  <div className="truncate text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">{displayName}</div>
                                 </Link>
                               </td>
                               <td className="px-3 py-2 text-center whitespace-nowrap">
@@ -680,7 +680,7 @@ const Stats = memo(({ matchData: propsMatchData, initialMatchPlayerStats, player
               </ContainerHeader>
               <ContainerContent>
                 <HorizontalScrollContainer>
-                  <table className="min-w-max divide-y divide-gray-200 text-sm">
+                  <table className="min-w-max divide-y divide-gray-200 text-[13px]">
                     <thead className="bg-[#F5F5F5] dark:bg-[#262626] whitespace-nowrap">
                       <tr>
                         <th className="sticky left-0 z-10 bg-[#F5F5F5] dark:bg-[#262626] px-2 py-2 text-left font-medium text-gray-700 dark:text-gray-300 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-32 min-w-[8rem] max-w-[8rem]">선수</th>
@@ -803,7 +803,7 @@ const Stats = memo(({ matchData: propsMatchData, initialMatchPlayerStats, player
                                       {player.playerNumber}
                                     </span>
                                   )}
-                                  <div className="truncate text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">{displayName}</div>
+                                  <div className="truncate text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">{displayName}</div>
                                 </Link>
                               </td>
                               <td className="px-3 py-2 text-center whitespace-nowrap">

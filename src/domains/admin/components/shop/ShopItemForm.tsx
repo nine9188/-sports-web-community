@@ -64,7 +64,7 @@ export function ShopItemForm({
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
               카테고리
             </label>
             <select
@@ -78,7 +78,7 @@ export function ShopItemForm({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
               아이콘 이름
             </label>
             <input
@@ -90,7 +90,7 @@ export function ShopItemForm({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
               가격 (포인트)
             </label>
             <input
@@ -105,7 +105,7 @@ export function ShopItemForm({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
             설명
           </label>
           <textarea

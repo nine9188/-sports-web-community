@@ -262,7 +262,7 @@ export default function HoverMenu({
             href={`/boards/${rootBoardSlug || rootBoardId}`}
             prefetch={false}
             data-board="all"
-            className={`px-2 py-1 text-xs sm:text-sm whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 flex-shrink-0 ${
+            className={`px-2 py-1 text-xs sm:text-[13px] whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 flex-shrink-0 ${
               currentBoardId === rootBoardId ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
             }`}
           >
@@ -313,7 +313,7 @@ export default function HoverMenu({
                 <Link
                   href={`/boards/${topBoard.slug || topBoard.id}`}
                   prefetch={false}
-                  className={`px-2 py-1 text-xs sm:text-sm whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 ${
+                  className={`px-2 py-1 text-xs sm:text-[13px] whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 ${
                     topBoard.id === currentBoardId
                       ? 'bg-[#EAEAEA] dark:bg-[#333333]'
                       : ''
@@ -404,7 +404,7 @@ export default function HoverMenu({
                   <Link
                     href={`/boards/${topBoard.slug || topBoard.id}`}
                     prefetch={false}
-                    className={`px-2 py-1 text-xs sm:text-sm whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 ${
+                    className={`px-2 py-1 text-xs sm:text-[13px] whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 ${
                       topBoard.id === currentBoardId
                         ? 'bg-[#EAEAEA] dark:bg-[#333333]'
                         : ''

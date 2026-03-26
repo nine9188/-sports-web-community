@@ -243,7 +243,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
           <table className="min-w-full">
             <thead className="bg-[#F5F5F5] dark:bg-[#262626]">
               <tr>
-                <th scope="col" className="w-1/2 py-3 px-4 text-left text-sm font-medium text-gray-500 dark:text-gray-400 border-r border-black/5 dark:border-white/10">
+                <th scope="col" className="w-1/2 py-3 px-4 text-left text-[13px] font-medium text-gray-500 dark:text-gray-400 border-r border-black/5 dark:border-white/10">
                   <div className="flex items-center gap-2">
                     <UnifiedSportsImageClient
                       src={getTeamLogo(homeTeam.id)}
@@ -257,7 +257,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                     <span className="text-xs text-gray-500 dark:text-gray-400 ml-auto">{homeLineup.formation}</span>
                   </div>
                 </th>
-                <th scope="col" className="w-1/2 py-3 px-4 text-left text-sm font-medium text-gray-500 dark:text-gray-400">
+                <th scope="col" className="w-1/2 py-3 px-4 text-left text-[13px] font-medium text-gray-500 dark:text-gray-400">
                   <div className="flex items-center gap-2">
                     <UnifiedSportsImageClient
                       src={getTeamLogo(awayTeam.id)}
@@ -302,7 +302,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                             priority={index < 5}
                           />
                         ) : (
-                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full">
+                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-[13px] bg-[#F5F5F5] dark:bg-[#262626] rounded-full">
                             {homeLineup.startXI[index].player.number || '-'}
                           </div>
                         )}
@@ -349,7 +349,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                             priority={index < 5}
                           />
                         ) : (
-                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full">
+                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-[13px] bg-[#F5F5F5] dark:bg-[#262626] rounded-full">
                             {awayLineup.startXI[index].player.number || '-'}
                           </div>
                         )}
@@ -417,7 +417,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                             variant="circle"
                           />
                         ) : (
-                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full">
+                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-[13px] bg-[#F5F5F5] dark:bg-[#262626] rounded-full">
                             {homeLineup.substitutes[index].player.number || '-'}
                           </div>
                         )}
@@ -463,7 +463,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                             variant="circle"
                           />
                         ) : (
-                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full">
+                          <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-[13px] bg-[#F5F5F5] dark:bg-[#262626] rounded-full">
                             {awayLineup.substitutes[index].player.number || '-'}
                           </div>
                         )}
@@ -605,7 +605,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                           priority={index < 5}
                         />
                       ) : (
-                        <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full">
+                        <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-[13px] bg-[#F5F5F5] dark:bg-[#262626] rounded-full">
                           {item.player.number || '-'}
                         </div>
                       )}
@@ -655,7 +655,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                           variant="circle"
                         />
                       ) : (
-                        <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full">
+                        <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-[13px] bg-[#F5F5F5] dark:bg-[#262626] rounded-full">
                           {item.player.number || '-'}
                         </div>
                       )}
@@ -760,7 +760,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                           priority={index < 5}
                         />
                       ) : (
-                        <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full">
+                        <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-[13px] bg-[#F5F5F5] dark:bg-[#262626] rounded-full">
                           {item.player.number || '-'}
                         </div>
                       )}
@@ -810,7 +810,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                           variant="circle"
                         />
                       ) : (
-                        <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm bg-[#F5F5F5] dark:bg-[#262626] rounded-full">
+                        <div className="w-10 h-10 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-[13px] bg-[#F5F5F5] dark:bg-[#262626] rounded-full">
                           {item.player.number || '-'}
                         </div>
                       )}

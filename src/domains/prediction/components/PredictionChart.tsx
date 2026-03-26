@@ -255,7 +255,7 @@ function TeamDetailCard({ team, label, predictedGoals }: { team: TeamData; label
             {label === 'HOME' ? '홈' : '원정'}
           </span>
           <div className="flex items-center gap-1.5">
-            <span className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">{teamNameKo}</span>
+            <span className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">{teamNameKo}</span>
             {team.logo && (
               <div className="w-7 h-7 flex-shrink-0 flex items-center justify-center">
                 <img src={team.logo} alt={teamNameKo} className="max-w-full max-h-full object-contain" />
@@ -547,7 +547,7 @@ export default function PredictionChart({
               )}
               <div className="text-center">
                 <div className="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400">{predictions.percent.home}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400 truncate max-w-[90px]">{homeNameKo}</div>
+                <div className="text-[13px] text-gray-600 dark:text-gray-400 truncate max-w-[90px]">{homeNameKo}</div>
               </div>
             </div>
             {/* 무승부 */}
@@ -559,7 +559,7 @@ export default function PredictionChart({
             <div className="flex items-center gap-1.5 md:gap-3">
               <div className="text-center">
                 <div className="text-xl md:text-2xl font-bold text-green-600 dark:text-green-400">{predictions.percent.away}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400 truncate max-w-[90px]">{awayNameKo}</div>
+                <div className="text-[13px] text-gray-600 dark:text-gray-400 truncate max-w-[90px]">{awayNameKo}</div>
               </div>
               {teams.away.logo && (
                 <div className="w-9 h-9 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center">

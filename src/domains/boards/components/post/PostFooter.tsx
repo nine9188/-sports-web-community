@@ -79,7 +79,7 @@ export default function PostFooter({
           variant="ghost"
           size="sm"
           asChild
-          className="text-xs sm:text-sm gap-1"
+          className="text-xs sm:text-[13px] gap-1"
         >
           <Link href={`/boards/${boardSlug}/create`} prefetch={false}>
             <PenLine className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -95,7 +95,7 @@ export default function PostFooter({
           variant="ghost"
           size="sm"
           asChild
-          className="text-xs sm:text-sm gap-1"
+          className="text-xs sm:text-[13px] gap-1"
         >
           <Link href={`/boards/${boardSlug}/${postNumber}/edit`} prefetch={false}>
             <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -112,7 +112,7 @@ export default function PostFooter({
           size="sm"
           onClick={handleDelete}
           disabled={isDeleting}
-          className="text-xs sm:text-sm text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 gap-1"
+          className="text-xs sm:text-[13px] text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 gap-1"
         >
           <Trash className="h-3 w-3 sm:h-4 sm:w-4" />
           <span>{isDeleting ? '삭제 중...' : '삭제'}</span>
@@ -128,7 +128,7 @@ export default function PostFooter({
           variant="ghost"
           size="sm"
           asChild
-          className="text-xs sm:text-sm gap-1"
+          className="text-xs sm:text-[13px] gap-1"
         >
           <Link href={`/boards/${boardSlug}/create`} prefetch={false}>
             <PenLine className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -149,7 +149,7 @@ export default function PostFooter({
           variant="ghost"
           size="sm"
           showText={true}
-          className="inline-flex flex-row items-center justify-center text-xs sm:text-sm text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md transition-colors px-2 py-1 gap-1"
+          className="inline-flex flex-row items-center justify-center text-xs sm:text-[13px] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md transition-colors px-2 py-1 gap-1"
         />
       )
     } : { key: 'placeholder-3', element: <div /> });

@@ -123,7 +123,7 @@ const PlayerHeader = memo(function PlayerHeader({
             </h1>
             <div className="flex items-center gap-2 mt-1">
               {mainTeamStats?.team && (
-                <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                <p className="text-[13px] text-gray-600 dark:text-gray-400 truncate">
                   {(() => {
                     const koreanName = getTeamDisplayName(mainTeamStats.team.id, { language: 'ko' });
                     return koreanName.startsWith('팀 ') ? mainTeamStats.team.name : koreanName;
@@ -152,23 +152,23 @@ const PlayerHeader = memo(function PlayerHeader({
         ))}
       </div>
       <div className="flex items-center py-3">
-        <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+        <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
           {displayData.info.height || '-'}
           <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-[#EAEAEA] dark:bg-[#333333]" />
         </div>
-        <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+        <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
           {displayData.info.weight || '-'}
           <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-[#EAEAEA] dark:bg-[#333333]" />
         </div>
-        <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+        <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
           {formatBirthDate(displayData.info.birth.date)}
           <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-[#EAEAEA] dark:bg-[#333333]" />
         </div>
-        <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+        <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
           {displayData.info.age}세
           <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-[#EAEAEA] dark:bg-[#333333]" />
         </div>
-        <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] truncate px-1">
+        <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] truncate px-1">
           {displayData.info.birth.country || '-'}
         </div>
       </div>

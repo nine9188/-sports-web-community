@@ -107,7 +107,7 @@ export default function LiveScoreContent({ selectedDate, onClose, initialData }:
     return (
       <div className="flex flex-col items-center justify-center h-32 text-gray-600 dark:text-gray-400">
         <Trophy className="h-8 w-8 mb-2" />
-        <p className="text-sm">경기 정보를 불러올 수 없습니다</p>
+        <p className="text-[13px]">경기 정보를 불러올 수 없습니다</p>
       </div>
     );
   }
@@ -117,7 +117,7 @@ export default function LiveScoreContent({ selectedDate, onClose, initialData }:
     return (
       <div className="flex flex-col items-center justify-center h-32 text-gray-600 dark:text-gray-400">
         <Trophy className="h-8 w-8 mb-2" />
-        <p className="text-sm">예정된 경기가 없습니다</p>
+        <p className="text-[13px]">예정된 경기가 없습니다</p>
       </div>
     );
   }

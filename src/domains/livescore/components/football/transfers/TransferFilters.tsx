@@ -224,7 +224,7 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 overflow-visible">
         {/* 리그 선택 */}
         <div>
-          <label className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-2">
+          <label className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] mb-2">
             리그 <span className="text-red-500">*</span>
           </label>
           <NativeSelect
@@ -237,7 +237,7 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
 
         {/* 팀 선택 */}
         <div>
-          <label className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-2">
+          <label className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] mb-2">
             팀
           </label>
           <NativeSelect
@@ -251,7 +251,7 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
 
         {/* 이적 유형 */}
         <div>
-          <label className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-2">
+          <label className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] mb-2">
             이적 유형
           </label>
           <NativeSelect
@@ -267,9 +267,9 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
         {(currentFilters.league || currentFilters.team || currentFilters.type || currentFilters.season !== getDefaultSeason()) && (
           <div className="mt-4 pt-4 border-t border-black/5 dark:border-white/10">
             <div className="flex items-center flex-wrap gap-2">
-              <span className="text-sm text-gray-700 dark:text-gray-300">활성 필터:</span>
+              <span className="text-[13px] text-gray-700 dark:text-gray-300">활성 필터:</span>
               {currentFilters.league && (
-                <span className="inline-flex items-center px-3 py-1 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-sm rounded-full">
+                <span className="inline-flex items-center px-3 py-1 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-[13px] rounded-full">
                   {currentFilters.league?.toString() === '39' ? '프리미어리그' :
                    currentFilters.league?.toString() === '140' ? '라리가' :
                    currentFilters.league?.toString() === '135' ? '세리에A' :
@@ -285,7 +285,7 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
                 </span>
               )}
               {currentFilters.team && (
-                <span className="inline-flex items-center px-3 py-1 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-sm rounded-full">
+                <span className="inline-flex items-center px-3 py-1 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-[13px] rounded-full">
                   {availableTeams.find(t => t.id === parseInt(currentFilters.team?.toString() || '0'))?.name || '선택된 팀'}
                   <Button
                     variant="ghost"
@@ -297,7 +297,7 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
                 </span>
               )}
               {currentFilters.type && currentFilters.league && currentFilters.league !== 'all' && (
-                <span className="inline-flex items-center px-3 py-1 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-sm rounded-full">
+                <span className="inline-flex items-center px-3 py-1 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-[13px] rounded-full">
                   {currentFilters.type === 'in' ? '영입' : '방출'}
                   <Button
                     variant="ghost"
@@ -309,7 +309,7 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
                 </span>
               )}
               {currentFilters.season && currentFilters.season !== getDefaultSeason() && (
-                <span className="inline-flex items-center px-3 py-1 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-sm rounded-full">
+                <span className="inline-flex items-center px-3 py-1 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-[13px] rounded-full">
                   {currentFilters.season}
                   <Button
                     variant="ghost"

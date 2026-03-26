@@ -348,7 +348,7 @@ export default function PredictionAdminPage() {
       <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-[#F0F0F0]">승무패 예측 관리</h1>
 
       <div className="mb-4 p-4 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg border border-black/7 dark:border-white/10">
-        <p className="text-sm text-gray-700 dark:text-gray-300">
+        <p className="text-[13px] text-gray-700 dark:text-gray-300">
           <strong>안내:</strong> 이 기능은 API-Football의 Predictions 데이터를 기반으로 경기 예측 게시글을 자동 생성합니다.<br />
           프리미어리그, 라리가, 분데스리가, 세리에A, 리그앙, K리그1, J1리그, 챔피언스리그 등 주요 리그만 필터링됩니다.
         </p>
@@ -366,7 +366,7 @@ export default function PredictionAdminPage() {
           {/* 날짜 선택 및 액션 버튼 */}
           <div className="flex flex-wrap gap-4 items-end mb-4">
             <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                 날짜 선택
               </label>
               <button
@@ -437,7 +437,7 @@ export default function PredictionAdminPage() {
                 onChange={toggleAllMatches}
                 className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-[#F0F0F0] focus:ring-gray-500"
               />
-              <label htmlFor="select-all-matches" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+              <label htmlFor="select-all-matches" className="text-[13px] font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
                 전체 선택 ({upcomingMatches.length}경기)
               </label>
             </div>
@@ -450,7 +450,7 @@ export default function PredictionAdminPage() {
           ) : leagueGroups.length === 0 ? (
             <div className="text-center p-8 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
               <p className="text-lg text-gray-600 dark:text-gray-400">{format(selectedDate, 'yyyy년 M월 d일', { locale: ko })} 예정된 경기가 없습니다.</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+              <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-2">
                 다른 날짜를 선택해보세요.
               </p>
             </div>
@@ -486,7 +486,7 @@ export default function PredictionAdminPage() {
                         <label htmlFor={`league-${group.league.id}`} className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0] cursor-pointer">
                           {group.league.name}
                         </label>
-                        <span className="ml-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-full text-sm">
+                        <span className="ml-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-full text-[13px]">
                           {group.matches.length}경기
                         </span>
                       </div>
@@ -522,7 +522,7 @@ export default function PredictionAdminPage() {
                               <Eye className="w-3 h-3" />
                               미리보기
                             </button>
-                            <span className="text-sm text-gray-500 dark:text-gray-400">
+                            <span className="text-[13px] text-gray-500 dark:text-gray-400">
                               {new Date(match.date).toLocaleString('ko-KR')}
                             </span>
                           </div>
@@ -543,7 +543,7 @@ export default function PredictionAdminPage() {
           <div className="bg-white dark:bg-[#1D1D1D] p-6 border border-black/7 dark:border-white/10 rounded-lg shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-[#F0F0F0]">예측 분석 자동 생성 상태</h2>
-              <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+              <div className={`px-3 py-1 rounded-full text-[13px] font-medium ${
                 autoGenerateStatus === 'running' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400' :
                 autoGenerateStatus === 'error' ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400' :
                 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
@@ -556,19 +556,19 @@ export default function PredictionAdminPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div className="bg-[#F5F5F5] dark:bg-[#262626] p-4 rounded-lg">
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">자동화 상태</h3>
+                <h3 className="text-[13px] font-medium text-gray-600 dark:text-gray-400 mb-1">자동화 상태</h3>
                 <p className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0]">
                   {autoGenerateEnabled ? '🟢 활성화' : '🔴 비활성화'}
                 </p>
               </div>
 
               <div className="bg-[#F5F5F5] dark:bg-[#262626] p-4 rounded-lg">
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">실행 시간</h3>
+                <h3 className="text-[13px] font-medium text-gray-600 dark:text-gray-400 mb-1">실행 시간</h3>
                 <p className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0]">매일 {autoGenerateTime}</p>
               </div>
 
               <div className="bg-[#F5F5F5] dark:bg-[#262626] p-4 rounded-lg">
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">마지막 실행</h3>
+                <h3 className="text-[13px] font-medium text-gray-600 dark:text-gray-400 mb-1">마지막 실행</h3>
                 <p className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0]">
                   {lastAutoGenerate ? (formatDate(lastAutoGenerate) || '-') : '없음'}
                 </p>
@@ -616,7 +616,7 @@ export default function PredictionAdminPage() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2">
                   매일 실행 시간
                 </label>
                 <select
@@ -632,14 +632,14 @@ export default function PredictionAdminPage() {
                   <option value="21:00">오후 9시</option>
                   <option value="22:00">오후 10시</option>
                 </select>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-1">
                   다음날 경기 예측 분석을 생성할 시간을 설정합니다.
                 </p>
               </div>
 
               <div className="bg-yellow-50 dark:bg-yellow-900/30 p-4 rounded-md">
-                <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-300 mb-2">📋 동작 방식</h3>
-                <ul className="text-sm text-yellow-700 dark:text-yellow-400 space-y-1">
+                <h3 className="text-[13px] font-medium text-yellow-800 dark:text-yellow-300 mb-2">📋 동작 방식</h3>
+                <ul className="text-[13px] text-yellow-700 dark:text-yellow-400 space-y-1">
                   <li>• 매일 설정된 시간에 다음날 경기를 조회합니다</li>
                   <li>• API-Football Predictions API로 각 경기 예측 데이터를 가져옵니다</li>
                   <li>• 승률, 팀 비교, 최근 폼, 상대전적 등 데이터를 게시글로 작성합니다</li>
@@ -653,13 +653,13 @@ export default function PredictionAdminPage() {
           <div className="bg-white dark:bg-[#1D1D1D] p-6 border border-black/7 dark:border-white/10 rounded-lg shadow-sm">
             <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-[#F0F0F0]">자동화 로그</h2>
             <div className="bg-[#F5F5F5] dark:bg-[#262626] p-4 rounded-lg">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">최근 자동화 실행 기록:</p>
+              <p className="text-[13px] text-gray-600 dark:text-gray-400 mb-2">최근 자동화 실행 기록:</p>
               <div className="space-y-2 max-h-40 overflow-y-auto">
                 {automationLogs.length === 0 ? (
-                  <div className="text-sm text-gray-500 dark:text-gray-400">아직 실행 기록이 없습니다.</div>
+                  <div className="text-[13px] text-gray-500 dark:text-gray-400">아직 실행 기록이 없습니다.</div>
                 ) : (
                   automationLogs.map((log, index) => (
-                    <div key={index} className="text-sm">
+                    <div key={index} className="text-[13px]">
                       <span className="text-gray-500 dark:text-gray-400">{formatDate(log.created_at) || '-'}</span>
                       <span className={`ml-2 ${
                         log.status === 'success' ? 'text-green-600 dark:text-green-400' :

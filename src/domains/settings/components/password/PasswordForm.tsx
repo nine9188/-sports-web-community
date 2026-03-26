@@ -129,7 +129,7 @@ export default function PasswordForm({ isOAuthAccount = false }: PasswordFormPro
         {/* 봇 검증 (소셜 로그인 계정은 표시하지 않음) */}
         {!isOAuthAccount && (
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">봇 검증</label>
+            <label className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">봇 검증</label>
             <TurnstileWidget
               siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY as string}
               onToken={setCaptchaToken}
@@ -141,7 +141,7 @@ export default function PasswordForm({ isOAuthAccount = false }: PasswordFormPro
 
         {/* 현재 비밀번호 필드 */}
         <div className="space-y-1">
-          <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+          <label htmlFor="currentPassword" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
             현재 비밀번호
           </label>
           <div className="relative">
@@ -171,7 +171,7 @@ export default function PasswordForm({ isOAuthAccount = false }: PasswordFormPro
 
         {/* 새 비밀번호 필드 */}
         <div className="space-y-1">
-          <label htmlFor="newPassword" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+          <label htmlFor="newPassword" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
             새 비밀번호
           </label>
           <div className="relative">
@@ -203,7 +203,7 @@ export default function PasswordForm({ isOAuthAccount = false }: PasswordFormPro
 
         {/* 비밀번호 확인 필드 */}
         <div className="space-y-1">
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+          <label htmlFor="confirmPassword" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
             비밀번호 확인
           </label>
           <div className="relative">
@@ -240,7 +240,7 @@ export default function PasswordForm({ isOAuthAccount = false }: PasswordFormPro
             className="flex items-center"
           >
             {isLoading && <Spinner size="xs" className="mr-2" />}
-            <span className="text-sm">비밀번호 변경</span>
+            <span className="text-[13px]">비밀번호 변경</span>
           </Button>
         </div>
       </form>

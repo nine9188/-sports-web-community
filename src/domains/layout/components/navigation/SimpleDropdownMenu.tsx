@@ -122,7 +122,7 @@ const SimpleDropdownMenu = React.memo(function SimpleDropdownMenu({
                       }}
                     />
                   </div>
-                  <div className={`px-4 py-2 text-sm text-gray-700 dark:text-gray-300 group-hover:bg-[#EAEAEA] dark:group-hover:bg-[#333333] transition-colors truncate ${arr.length === 1 ? '' : ''}`}>
+                  <div className={`px-4 py-2 text-[13px] text-gray-700 dark:text-gray-300 group-hover:bg-[#EAEAEA] dark:group-hover:bg-[#333333] transition-colors truncate ${arr.length === 1 ? '' : ''}`}>
                     {child.name}
                   </div>
                 </Link>
@@ -130,7 +130,7 @@ const SimpleDropdownMenu = React.memo(function SimpleDropdownMenu({
                 <Link
                   key={child.id}
                   href={getBoardHref(child)}
-                  className={`block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors truncate`}
+                  className={`block px-4 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors truncate`}
                   onClick={onClose}
                 >
                   {child.name}
@@ -138,7 +138,7 @@ const SimpleDropdownMenu = React.memo(function SimpleDropdownMenu({
               )
             ))
         ) : (
-          <div className="px-4 py-4 text-sm text-gray-500 dark:text-gray-400 text-center">
+          <div className="px-4 py-4 text-[13px] text-gray-500 dark:text-gray-400 text-center">
             하위 게시판이 없습니다
           </div>
         )}

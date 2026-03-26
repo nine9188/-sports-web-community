@@ -304,14 +304,14 @@ export default function SocialSignupPage() {
           <h3 className="text-xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">
             회원가입을 축하합니다!
           </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+          <p className="text-[13px] text-gray-600 dark:text-gray-400 mb-6">
             <span className="font-medium text-gray-900 dark:text-gray-200">{nickname}</span>님, 4590 Football에 오신 것을 환영합니다.
           </p>
 
           <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg mb-6 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <Phone className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <p className="text-sm font-medium text-blue-800 dark:text-blue-200">휴대폰 인증을 진행해주세요</p>
+              <p className="text-[13px] font-medium text-blue-800 dark:text-blue-200">휴대폰 인증을 진행해주세요</p>
             </div>
             <p className="text-xs text-blue-700 dark:text-blue-300">
               휴대폰 인증 시 <span className="font-semibold">500P + 100XP</span>를 드립니다!
@@ -334,7 +334,7 @@ export default function SocialSignupPage() {
               onClick={() => {
                 window.location.href = '/'
               }}
-              className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 py-2 transition-colors"
+              className="text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 py-2 transition-colors"
             >
               나중에 할게요
             </button>
@@ -350,7 +350,7 @@ export default function SocialSignupPage() {
         <div className="w-full lg:w-1/2 max-w-md lg:max-w-none md:bg-white md:dark:bg-[#2D2D2D] md:rounded-lg lg:rounded-l-none md:shadow-lg md:border md:border-black/10 md:dark:border-white/10 lg:border-l-0 md:p-8 lg:p-14 flex flex-col justify-center">
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">{providerName} 회원가입</h2>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">
+            <p className="text-gray-600 dark:text-gray-400 text-[13px]">
               {providerName} 로그인이 완료되었습니다. 추가 정보를 입력해주세요.
             </p>
           </div>
@@ -362,7 +362,7 @@ export default function SocialSignupPage() {
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                  className="flex items-center text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4 mr-1" />
                   이전
@@ -370,7 +370,7 @@ export default function SocialSignupPage() {
               ) : (
                 <div />
               )}
-              <span className="text-sm text-gray-500 dark:text-gray-400">
+              <span className="text-[13px] text-gray-500 dark:text-gray-400">
                 {currentStep}/{totalSteps}
               </span>
             </div>
@@ -379,12 +379,12 @@ export default function SocialSignupPage() {
             {(user?.user_metadata?.name || user?.user_metadata?.full_name || user?.email) && (
               <div className="mb-6 p-4 bg-gray-50 dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-lg">
                 {(user.user_metadata?.name || user.user_metadata?.full_name) && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-[13px] text-gray-600 dark:text-gray-400">
                     <span className="font-medium text-gray-900 dark:text-gray-200">이름:</span> {user.user_metadata.name || user.user_metadata.full_name}
                   </p>
                 )}
                 {user.email && !user.email.includes('@naver-oauth.local') && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-[13px] text-gray-600 dark:text-gray-400 mt-1">
                     <span className="font-medium text-gray-900 dark:text-gray-200">이메일:</span> {user.email}
                   </p>
                 )}
@@ -395,7 +395,7 @@ export default function SocialSignupPage() {
               {/* 1단계: 생년월일 */}
               {!showNicknameStep && (
                 <div>
-                  <label className="block text-gray-700 dark:text-gray-300 mb-1.5 text-sm font-medium">
+                  <label className="block text-gray-700 dark:text-gray-300 mb-1.5 text-[13px] font-medium">
                     생년월일 <span className="text-red-500">*</span>
                   </label>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
@@ -457,13 +457,13 @@ export default function SocialSignupPage() {
                     )}
                   </div>
                   {birthError && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center">
+                    <p className="mt-1 text-[13px] text-red-600 flex items-center">
                       <AlertCircle className="h-4 w-4 mr-1" />
                       {birthError}
                     </p>
                   )}
                   {birthValid && (
-                    <p className="mt-1 text-sm text-green-600 flex items-center">
+                    <p className="mt-1 text-[13px] text-green-600 flex items-center">
                       <Check className="h-4 w-4 mr-1" />
                       확인되었습니다
                     </p>
@@ -484,7 +484,7 @@ export default function SocialSignupPage() {
               {/* 2단계: 닉네임 */}
               {showNicknameStep && !showReferralStep && (
                 <div>
-                  <label className="block text-gray-700 dark:text-gray-300 mb-1.5 text-sm font-medium">
+                  <label className="block text-gray-700 dark:text-gray-300 mb-1.5 text-[13px] font-medium">
                     닉네임 <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -516,13 +516,13 @@ export default function SocialSignupPage() {
                     )}
                   </div>
                   {nicknameError && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center">
+                    <p className="mt-1 text-[13px] text-red-600 flex items-center">
                       <AlertCircle className="h-4 w-4 mr-1" />
                       {nicknameError}
                     </p>
                   )}
                   {nicknameValid && !nicknameError && (
-                    <p className="mt-1 text-sm text-green-600 flex items-center">
+                    <p className="mt-1 text-[13px] text-green-600 flex items-center">
                       <Check className="h-4 w-4 mr-1" />
                       사용 가능한 닉네임입니다
                     </p>
@@ -550,7 +550,7 @@ export default function SocialSignupPage() {
                   <div className="p-4 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg border border-black/7 dark:border-white/10">
                     <div className="flex items-center gap-2 mb-2">
                       <Gift className="h-4 w-4 text-green-600 dark:text-green-400" />
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <label className="text-[13px] font-medium text-gray-700 dark:text-gray-300">
                         추천 코드 <span className="text-gray-500 dark:text-gray-400 font-normal">(선택)</span>
                       </label>
                     </div>
@@ -586,7 +586,7 @@ export default function SocialSignupPage() {
                       </Button>
                     </div>
                     {referralMessage && (
-                      <p className={`text-sm mt-2 flex items-center ${
+                      <p className={`text-[13px] mt-2 flex items-center ${
                         referralValid ? 'text-green-600' : 'text-red-600'
                       }`}>
                         {referralValid ?

@@ -28,7 +28,7 @@ export function TeamDetailCard({ team, label, color }: TeamDetailCardProps) {
       </button>
 
       {expanded && (
-        <div className="p-3 bg-white dark:bg-[#1D1D1D] space-y-4 text-sm">
+        <div className="p-3 bg-white dark:bg-[#1D1D1D] space-y-4 text-[13px]">
           {/* 최근 5경기 */}
           <div className="border border-black/7 dark:border-white/10 rounded p-3">
             <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">최근 5경기</h5>

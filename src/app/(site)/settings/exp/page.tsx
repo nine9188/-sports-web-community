@@ -42,7 +42,7 @@ export default async function ExpPage() {
       <Container className="mb-4 bg-white dark:bg-[#1D1D1D]">
         <ContainerContent>
           <h2 className="text-xl font-semibold mb-1 text-gray-900 dark:text-[#F0F0F0]">경험치 및 레벨</h2>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
+          <p className="text-gray-500 dark:text-gray-400 text-[13px] mb-4">
             현재 레벨과 경험치 획득 내역을 확인합니다.
           </p>
           {/* 경험치 정보 컴포넌트 */}
@@ -67,8 +67,8 @@ export default async function ExpPage() {
       {/* 디버깅 정보 (개발 환경에서만 표시) */}
       {process.env.NODE_ENV === 'development' && expHistoryResult.error && (
         <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-md">
-          <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">디버깅 정보</h3>
-          <p className="text-sm mt-1 text-yellow-700 dark:text-yellow-300">{expHistoryResult.error}</p>
+          <h3 className="text-[13px] font-medium text-yellow-800 dark:text-yellow-200">디버깅 정보</h3>
+          <p className="text-[13px] mt-1 text-yellow-700 dark:text-yellow-300">{expHistoryResult.error}</p>
         </div>
       )}
     </div>

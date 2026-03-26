@@ -49,7 +49,7 @@ TeamLogo.displayName = 'TeamLogo';
 // 테이블 스타일 정의 개선
 const tableStyles = {
   header: "px-1 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider",
-  cell: "px-1 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center",
+  cell: "px-1 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-gray-100 text-center",
   smallCol: "w-8",
   mediumCol: "w-10",
   formBadgeWin: "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400",
@@ -253,7 +253,7 @@ const Standings = memo(({ matchData: propsMatchData, teamLogoUrls = {}, leagueLo
       <div className="flex justify-center items-center py-8">
         <div className="text-center">
           <Spinner size="xl" className="mx-auto mb-2" />
-          <p className="text-sm text-gray-700 dark:text-gray-300">순위표 데이터를 불러오는 중...</p>
+          <p className="text-[13px] text-gray-700 dark:text-gray-300">순위표 데이터를 불러오는 중...</p>
         </div>
       </div>
     );
@@ -268,7 +268,7 @@ const Standings = memo(({ matchData: propsMatchData, teamLogoUrls = {}, leagueLo
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <p className="text-sm text-gray-700 dark:text-gray-300">순위표 데이터를 불러오는 중 오류가 발생했습니다.</p>
+        <p className="text-[13px] text-gray-700 dark:text-gray-300">순위표 데이터를 불러오는 중 오류가 발생했습니다.</p>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{error}</p>
       </div>
     );
@@ -279,7 +279,7 @@ const Standings = memo(({ matchData: propsMatchData, teamLogoUrls = {}, leagueLo
       !standings.standings.league.standings || standings.standings.league.standings.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-sm text-gray-700 dark:text-gray-300">현재 리그 순위 데이터가 없습니다.</p>
+        <p className="text-[13px] text-gray-700 dark:text-gray-300">현재 리그 순위 데이터가 없습니다.</p>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">시즌이 시작되지 않았거나 종료되었을 수 있습니다.</p>
       </div>
     );
@@ -393,13 +393,13 @@ const Standings = memo(({ matchData: propsMatchData, teamLogoUrls = {}, leagueLo
                       </td>
 
                       {/* 데스크톱용 순위 */}
-                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 relative">
+                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-gray-100 relative">
                         <div className={`absolute inset-y-0 left-0 w-1 ${statusColor}`} />
                         <span className="pl-2">{standing.rank}</span>
                       </td>
 
                       {/* 팀 정보 - 고정 너비 사용 */}
-                      <td className="px-2 py-2 md:px-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                      <td className="px-2 py-2 md:px-3 whitespace-nowrap text-[13px] text-gray-900 dark:text-gray-100">
                         <Link href={`/livescore/football/team/${standing.team.id}`} className="flex items-center gap-1 md:gap-2">
                           <TeamLogo
                             teamName={standing.team.name || ''}
@@ -427,33 +427,33 @@ const Standings = memo(({ matchData: propsMatchData, teamLogoUrls = {}, leagueLo
                       </td>
 
                       {/* 경기 수 - 모바일에서는 숨김 */}
-                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center">
+                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-gray-100 text-center">
                         {standing.all?.played || 0}
                       </td>
                       
                       {/* 승/무/패 - 고정 너비 사용 */}
-                      <td className={`${tableStyles.cell} text-xs md:text-sm px-0 md:px-1`}>{standing.all?.win || 0}</td>
-                      <td className={`${tableStyles.cell} text-xs md:text-sm px-0 md:px-1`}>{standing.all?.draw || 0}</td>
-                      <td className={`${tableStyles.cell} text-xs md:text-sm px-0 md:px-1`}>{standing.all?.lose || 0}</td>
+                      <td className={`${tableStyles.cell} text-xs md:text-[13px] px-0 md:px-1`}>{standing.all?.win || 0}</td>
+                      <td className={`${tableStyles.cell} text-xs md:text-[13px] px-0 md:px-1`}>{standing.all?.draw || 0}</td>
+                      <td className={`${tableStyles.cell} text-xs md:text-[13px] px-0 md:px-1`}>{standing.all?.lose || 0}</td>
 
 
                       {/* 득점, 실점, 득실차 - 모바일에서는 숨김 */}
-                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center">
+                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-gray-100 text-center">
                         {standing.all?.goals?.for || 0}
                       </td>
-                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center">
+                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-gray-100 text-center">
                         {standing.all?.goals?.against || 0}
                       </td>
-                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center">
+                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-gray-100 text-center">
                         {standing.goalsDiff > 0 ? `+${standing.goalsDiff}` : standing.goalsDiff || 0}
                       </td>
 
                       {/* 승점 - 모바일에서도 표시 */}
-                      <td className={`${tableStyles.cell} text-xs md:text-sm font-semibold`}>{standing.points || 0}</td>
+                      <td className={`${tableStyles.cell} text-xs md:text-[13px] font-semibold`}>{standing.points || 0}</td>
 
 
                       {/* 최근 5경기 - 모바일에서는 숨김 */}
-                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center">
+                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-gray-100 text-center">
                         <div className="flex justify-center gap-1">
                           {standing.form?.split('').map((result, idx) => (
                             <div
@@ -493,7 +493,7 @@ const Standings = memo(({ matchData: propsMatchData, teamLogoUrls = {}, leagueLo
               return legend.items.map((item, index) => (
                 <div key={index} className="flex items-center gap-2">
                   <div className={`w-4 h-4 ${item.color} rounded-sm`}></div>
-                  <span className="text-sm text-gray-900 dark:text-gray-100">{item.label}</span>
+                  <span className="text-[13px] text-gray-900 dark:text-gray-100">{item.label}</span>
                 </div>
               ));
             })()}
@@ -504,11 +504,11 @@ const Standings = memo(({ matchData: propsMatchData, teamLogoUrls = {}, leagueLo
             {/* 팀 하이라이트 범례 */}
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-sm"></div>
-              <span className="text-sm text-gray-900 dark:text-gray-100">홈 팀</span>
+              <span className="text-[13px] text-gray-900 dark:text-gray-100">홈 팀</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-sm"></div>
-              <span className="text-sm text-gray-900 dark:text-gray-100">원정 팀</span>
+              <span className="text-[13px] text-gray-900 dark:text-gray-100">원정 팀</span>
             </div>
           </div>
         </ContainerContent>

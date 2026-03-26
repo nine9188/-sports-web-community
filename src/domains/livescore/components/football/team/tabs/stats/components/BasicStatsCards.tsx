@@ -123,7 +123,7 @@ export default function BasicStatsCards({ stats, leagueLogoUrl, leagueLogoDarkUr
                   >
                     {result}
                   </div>
-                )) || <p className="text-sm text-gray-500 dark:text-gray-400">데이터 없음</p>}
+                )) || <p className="text-[13px] text-gray-500 dark:text-gray-400">데이터 없음</p>}
             </div>
           </div>
         </ContainerContent>
@@ -143,33 +143,33 @@ export default function BasicStatsCards({ stats, leagueLogoUrl, leagueLogoDarkUr
           </div>
           {/* 데이터 */}
           <div className="flex items-center py-3">
-            <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+            <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
               {safeFixtures.played.total}
               <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-[#EAEAEA] dark:bg-[#333333]" />
             </div>
-            <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+            <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
               {safeFixtures.wins.total}
               <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-[#EAEAEA] dark:bg-[#333333]" />
             </div>
-            <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+            <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
               {safeFixtures.draws.total}
               <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-[#EAEAEA] dark:bg-[#333333]" />
             </div>
-            <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+            <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
               {safeFixtures.loses.total}
               <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-[#EAEAEA] dark:bg-[#333333]" />
             </div>
             <div className="flex-1 text-center relative">
-              <div className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">{safeGoals.for.total.total}</div>
+              <div className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">{safeGoals.for.total.total}</div>
               <div className="text-[9px] text-gray-400 dark:text-gray-500">({safeGoals.for.average?.total || '0'})</div>
               <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-[#EAEAEA] dark:bg-[#333333]" />
             </div>
             <div className="flex-1 text-center relative">
-              <div className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">{safeGoals.against.total.total}</div>
+              <div className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">{safeGoals.against.total.total}</div>
               <div className="text-[9px] text-gray-400 dark:text-gray-500">({safeGoals.against.average?.total || '0'})</div>
               <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-[#EAEAEA] dark:bg-[#333333]" />
             </div>
-            <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
+            <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">
               {safeCleanSheet.total}
             </div>
           </div>

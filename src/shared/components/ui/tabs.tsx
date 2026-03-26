@@ -45,7 +45,7 @@ const TabButton = React.forwardRef<
   TabButtonProps
 >(({ className, active = false, variant = 'default', ...props }, ref) => {
   const underlineClasses = cn(
-    "text-sm flex-shrink-0",
+    "text-[13px] flex-shrink-0",
     active
       ? "text-gray-900 dark:text-[#F0F0F0] border-b-2 border-gray-900 dark:border-[#F0F0F0] pb-1"
       : "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] pb-1"
@@ -59,7 +59,7 @@ const TabButton = React.forwardRef<
   );
 
   const defaultClasses = cn(
-    "text-sm flex-shrink-0",
+    "text-[13px] flex-shrink-0",
     active
       ? "bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] px-3 py-1.5 rounded"
       : "bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-3 py-1.5 rounded"

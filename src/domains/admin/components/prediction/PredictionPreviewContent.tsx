@@ -83,11 +83,11 @@ export function PredictionPreviewContent({ data }: PredictionPreviewContentProps
         <h4 className="font-semibold mb-1 text-center text-gray-900 dark:text-[#F0F0F0]">팀 성적 레이더 차트</h4>
         <p className="text-xs text-gray-500 dark:text-gray-400 text-center mb-3">최근 5경기 폼/공격력/수비력 + 시즌 승리/득점/실점</p>
         <div className="flex items-center justify-center gap-6 mb-2">
-          <span className="flex items-center gap-1 text-sm text-gray-700 dark:text-gray-300">
+          <span className="flex items-center gap-1 text-[13px] text-gray-700 dark:text-gray-300">
             <span className="w-3 h-3 bg-gray-700 dark:bg-gray-300 rounded-full"></span>
             {teams.home.name}
           </span>
-          <span className="flex items-center gap-1 text-sm text-gray-700 dark:text-gray-300">
+          <span className="flex items-center gap-1 text-[13px] text-gray-700 dark:text-gray-300">
             <span className="w-3 h-3 bg-gray-400 dark:bg-gray-500 rounded-full"></span>
             {teams.away.name}
           </span>
@@ -125,7 +125,7 @@ export function PredictionPreviewContent({ data }: PredictionPreviewContentProps
               content={({ active, payload, label }) => {
                 if (active && payload && payload.length) {
                   return (
-                    <div className="bg-white dark:bg-[#262626] border border-black/7 dark:border-white/10 rounded-lg p-2 shadow-lg text-sm">
+                    <div className="bg-white dark:bg-[#262626] border border-black/7 dark:border-white/10 rounded-lg p-2 shadow-lg text-[13px]">
                       <p className="font-semibold mb-1 text-gray-900 dark:text-[#F0F0F0]">{label}</p>
                       {payload.map((entry: any, index: number) => (
                         <p key={index} className="text-gray-700 dark:text-gray-300">
@@ -148,19 +148,19 @@ export function PredictionPreviewContent({ data }: PredictionPreviewContentProps
         <div className="flex justify-center gap-8">
           <div className="text-center">
             <p className="text-3xl font-bold text-gray-900 dark:text-[#F0F0F0]">{predictions.percent.home}</p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">{teams.home.name}</p>
+            <p className="text-[13px] text-gray-600 dark:text-gray-400">{teams.home.name}</p>
           </div>
           <div className="text-center">
             <p className="text-3xl font-bold text-gray-500 dark:text-gray-400">{predictions.percent.draw}</p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">무승부</p>
+            <p className="text-[13px] text-gray-600 dark:text-gray-400">무승부</p>
           </div>
           <div className="text-center">
             <p className="text-3xl font-bold text-gray-700 dark:text-gray-300">{predictions.percent.away}</p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">{teams.away.name}</p>
+            <p className="text-[13px] text-gray-600 dark:text-gray-400">{teams.away.name}</p>
           </div>
         </div>
         {predictions.advice && (
-          <p className="mt-4 text-center text-sm bg-white dark:bg-[#1D1D1D] p-2 rounded border border-black/7 dark:border-white/10 text-gray-700 dark:text-gray-300">
+          <p className="mt-4 text-center text-[13px] bg-white dark:bg-[#1D1D1D] p-2 rounded border border-black/7 dark:border-white/10 text-gray-700 dark:text-gray-300">
             {predictions.advice}
           </p>
         )}
@@ -171,7 +171,7 @@ export function PredictionPreviewContent({ data }: PredictionPreviewContentProps
         <h4 className="font-semibold mb-3 text-gray-900 dark:text-[#F0F0F0]">팀 비교 (7개 지표)</h4>
         <div className="space-y-3">
           {comparisonData.map((item, idx) => (
-            <div key={idx} className="flex items-center gap-2 text-sm">
+            <div key={idx} className="flex items-center gap-2 text-[13px]">
               <span className="w-10 text-right font-medium text-gray-900 dark:text-[#F0F0F0]">{item.home}%</span>
               <div className="flex-1 flex h-4 bg-gray-100 dark:bg-gray-700 rounded overflow-hidden">
                 <div className="bg-gray-700 dark:bg-gray-300" style={{ width: `${item.home}%` }} />
@@ -200,7 +200,7 @@ export function PredictionPreviewContent({ data }: PredictionPreviewContentProps
           <h4 className="font-semibold mb-3 text-gray-900 dark:text-[#F0F0F0]">상대전적 (최근 {h2h.length}경기)</h4>
           <div className="space-y-2">
             {h2h.slice(0, 5).map((match, idx) => (
-              <div key={idx} className="flex items-center justify-between p-2 bg-[#F5F5F5] dark:bg-[#262626] rounded text-sm">
+              <div key={idx} className="flex items-center justify-between p-2 bg-[#F5F5F5] dark:bg-[#262626] rounded text-[13px]">
                 <span className="text-gray-500 dark:text-gray-400 text-xs w-24">
                   {new Date(match.fixture.date).toLocaleDateString('ko-KR')}
                 </span>

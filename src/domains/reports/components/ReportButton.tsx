@@ -120,7 +120,7 @@ export default function ReportButton({
         <DialogBody className="space-y-4">
           {/* 신고 사유 */}
           <div>
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+            <label className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2 block">
               신고 사유 <span className="text-red-500">*</span>
             </label>
             <NativeSelect
@@ -133,11 +133,11 @@ export default function ReportButton({
 
           {/* 상세 설명 */}
           <div>
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+            <label className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2 block">
               상세 설명 (선택사항)
             </label>
             <textarea
-              className={cn('w-full min-h-[80px] rounded-md px-3 py-2 text-sm resize-none', inputGrayBgStyles, focusStyles)}
+              className={cn('w-full min-h-[80px] rounded-md px-3 py-2 text-[13px] resize-none', inputGrayBgStyles, focusStyles)}
               value={description}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
               placeholder="신고 사유에 대한 자세한 설명을 입력해주세요..."
@@ -153,7 +153,7 @@ export default function ReportButton({
           <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg p-3">
             <div className="flex items-start gap-2">
               <AlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
-              <div className="text-sm text-yellow-800 dark:text-yellow-400">
+              <div className="text-[13px] text-yellow-800 dark:text-yellow-400">
                 <p className="font-medium mb-1">신고 전 확인사항</p>
                 <ul className="text-xs space-y-1">
                   <li>• 허위 신고 시 제재를 받을 수 있습니다</li>

@@ -285,7 +285,7 @@ export default function PostDetailLayout({
           <p className="text-gray-700 dark:text-gray-300 mb-2">
             이 게시글은 신고 처리로 인해 일시적으로 숨김 처리되었습니다.
           </p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-[13px] text-gray-500 dark:text-gray-400">
             7일 후 다시 검토됩니다.
           </p>
           <div className="mt-6">
@@ -364,12 +364,12 @@ export default function PostDetailLayout({
         {/* 첨부파일 섹션 (있는 경우) */}
         {post.files && post.files.length > 0 && (
           <div className="px-4 sm:px-6 py-4 border-t border-black/5 dark:border-white/10">
-            <h3 className="text-sm font-medium mb-2 text-gray-900 dark:text-[#F0F0F0]">
+            <h3 className="text-[13px] font-medium mb-2 text-gray-900 dark:text-[#F0F0F0]">
               첨부파일
             </h3>
             <ul className="space-y-1">
               {post.files.map((file, index) => (
-                <li key={index} className="text-sm">
+                <li key={index} className="text-[13px]">
                   <a
                     href={file.url}
                     className="text-gray-700 dark:text-gray-300 hover:text-gray-600 dark:hover:text-gray-400 hover:underline flex items-center transition-colors"
@@ -478,7 +478,7 @@ export default function PostDetailLayout({
         {isLoggedIn && (
           <Link
             href={`/boards/${slug}/create`}
-            className="flex items-center justify-center gap-1 px-3 py-2 border border-black/7 dark:border-0 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded text-sm transition-colors whitespace-nowrap min-h-[36px]"
+            className="flex items-center justify-center gap-1 px-3 py-2 border border-black/7 dark:border-0 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded text-[13px] transition-colors whitespace-nowrap min-h-[36px]"
           >
             <span>글쓰기</span>
           </Link>

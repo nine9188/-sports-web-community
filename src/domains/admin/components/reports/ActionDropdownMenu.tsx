@@ -41,7 +41,7 @@ export function ActionDropdownMenu({
             </div>
             <button
               onClick={() => onAction('delete')}
-              className="w-full text-left px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center transition-colors"
+              className="w-full text-left px-4 py-3 text-[13px] text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center transition-colors"
             >
               <Trash2 className="w-4 h-4 mr-3 flex-shrink-0" />
               <div>
@@ -51,7 +51,7 @@ export function ActionDropdownMenu({
             </button>
             <button
               onClick={() => onAction('hide')}
-              className="w-full text-left px-4 py-3 text-sm text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 flex items-center transition-colors"
+              className="w-full text-left px-4 py-3 text-[13px] text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 flex items-center transition-colors"
             >
               <EyeOff className="w-4 h-4 mr-3 flex-shrink-0" />
               <div>
@@ -70,7 +70,7 @@ export function ActionDropdownMenu({
             </div>
             <button
               onClick={() => onAction('suspend_user', 3)}
-              className="w-full text-left px-4 py-3 text-sm text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/30 flex items-center transition-colors"
+              className="w-full text-left px-4 py-3 text-[13px] text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/30 flex items-center transition-colors"
             >
               <UserX className="w-4 h-4 mr-3 flex-shrink-0" />
               <div>
@@ -80,7 +80,7 @@ export function ActionDropdownMenu({
             </button>
             <button
               onClick={() => onAction('suspend_user', 7)}
-              className="w-full text-left px-4 py-3 text-sm text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 flex items-center transition-colors"
+              className="w-full text-left px-4 py-3 text-[13px] text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 flex items-center transition-colors"
             >
               <UserX className="w-4 h-4 mr-3 flex-shrink-0" />
               <div>
@@ -90,7 +90,7 @@ export function ActionDropdownMenu({
             </button>
             <button
               onClick={() => onAction('suspend_user', 30)}
-              className="w-full text-left px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center transition-colors"
+              className="w-full text-left px-4 py-3 text-[13px] text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center transition-colors"
             >
               <UserX className="w-4 h-4 mr-3 flex-shrink-0" />
               <div>
@@ -109,7 +109,7 @@ export function ActionDropdownMenu({
             </div>
             <button
               onClick={onOpenAuthorSuspension}
-              className="w-full text-left px-4 py-3 text-sm text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/30 flex items-center transition-colors"
+              className="w-full text-left px-4 py-3 text-[13px] text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/30 flex items-center transition-colors"
             >
               <UserX className="w-4 h-4 mr-3 flex-shrink-0" />
               <div>

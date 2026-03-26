@@ -141,7 +141,7 @@ export default function LeagueStandings({
       {/* 순위표 */}
       <div className={`min-h-[200px] bg-white dark:bg-[#1D1D1D] ${isFetching ? 'opacity-70' : ''} transition-opacity`}>
         {error ? (
-          <div className="p-4 text-center text-red-500 dark:text-red-400 text-sm">
+          <div className="p-4 text-center text-red-500 dark:text-red-400 text-[13px]">
             {error}
           </div>
         ) : standings && standings.standings && standings.standings.length > 0 ? (
@@ -193,7 +193,7 @@ export default function LeagueStandings({
                             className="object-contain"
                           />
                         </div>
-                        <span className="truncate max-w-[100px] text-sm">
+                        <span className="truncate max-w-[100px] text-[13px]">
                           {getKoreanTeamName(team.team.team_id, team.team.name)}
                         </span>
                       </Link>

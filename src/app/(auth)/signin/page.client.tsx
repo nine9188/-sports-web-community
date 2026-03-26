@@ -239,7 +239,7 @@ function LoginContent() {
       <div>
       <form onSubmit={handleLogin} className="space-y-6">
         <div>
-          <label className="block text-gray-700 dark:text-gray-300 mb-1.5 text-sm font-medium">아이디</label>
+          <label className="block text-gray-700 dark:text-gray-300 mb-1.5 text-[13px] font-medium">아이디</label>
           <div className="relative">
             <input
               id="username"
@@ -265,7 +265,7 @@ function LoginContent() {
             )}
           </div>
           {usernameError && (
-            <p className="mt-1 text-sm text-red-600 flex items-center">
+            <p className="mt-1 text-[13px] text-red-600 flex items-center">
               <AlertCircle className="h-4 w-4 mr-1" />
               {usernameError}
             </p>
@@ -273,7 +273,7 @@ function LoginContent() {
         </div>
 
         <div>
-          <label className="block text-gray-700 dark:text-gray-300 mb-1.5 text-sm font-medium">비밀번호</label>
+          <label className="block text-gray-700 dark:text-gray-300 mb-1.5 text-[13px] font-medium">비밀번호</label>
           <div className="relative">
             <input
               id="password"
@@ -308,7 +308,7 @@ function LoginContent() {
             </Button>
           </div>
           {passwordError && (
-            <p className="mt-1 text-sm text-red-600 flex items-center">
+            <p className="mt-1 text-[13px] text-red-600 flex items-center">
               <AlertCircle className="h-4 w-4 mr-1" />
               {passwordError}
             </p>
@@ -323,7 +323,7 @@ function LoginContent() {
             onChange={() => setRememberUsername(!rememberUsername)}
             className="h-4 w-4 text-gray-600 border-black/7 dark:border-white/10 rounded focus:ring-gray-500"
           />
-          <label htmlFor="remember-username" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+          <label htmlFor="remember-username" className="ml-2 block text-[13px] text-gray-700 dark:text-gray-300">
             아이디 기억하기
           </label>
         </div>
@@ -334,7 +334,7 @@ function LoginContent() {
             <div className="flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                <p className="text-[13px] font-medium text-yellow-800 dark:text-yellow-200">
                   이메일 인증이 필요합니다
                 </p>
                 <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
@@ -365,11 +365,11 @@ function LoginContent() {
 
         {/* 아이디/비밀번호 찾기 */}
         <div className="mt-4 text-center text-gray-600 dark:text-gray-400">
-          <Link href="/help/find-id" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline text-sm transition-colors">
+          <Link href="/help/find-id" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline text-[13px] transition-colors">
             아이디 찾기
           </Link>
           <span className="mx-2">ㅣ</span>
-          <Link href="/help/find-password" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline text-sm transition-colors">
+          <Link href="/help/find-password" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline text-[13px] transition-colors">
             비밀번호 찾기
           </Link>
         </div>
@@ -381,7 +381,7 @@ function LoginContent() {
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-black/7 dark:border-white/10" />
           </div>
-          <div className="relative flex justify-center text-sm">
+          <div className="relative flex justify-center text-[13px]">
             <span className="px-2 bg-white dark:bg-[#1F1F1F] md:dark:bg-[#2D2D2D] text-gray-500 dark:text-gray-400">또는</span>
           </div>
         </div>
@@ -482,7 +482,7 @@ export default function SignInPage() {
           <LoginContent />
         </Suspense>
       </div>
-      <div className="mt-8 flex space-x-4 text-sm text-gray-500 dark:text-gray-400">
+      <div className="mt-8 flex space-x-4 text-[13px] text-gray-500 dark:text-gray-400">
         <Link href="/terms" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">이용약관</Link>
         <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">개인정보처리방침</Link>
       </div>

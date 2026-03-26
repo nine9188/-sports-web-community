@@ -116,7 +116,7 @@ export default function UIThemeSettingsPage() {
                 className="w-full h-16 bg-gradient-to-br from-gray-400 to-gray-600 dark:from-gray-500 dark:to-gray-700 mb-2"
                 style={{ borderRadius: option.preview }}
               ></div>
-              <div className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">{option.label}</div>
+              <div className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">{option.label}</div>
             </button>
           ))}
         </div>
@@ -140,7 +140,7 @@ export default function UIThemeSettingsPage() {
                 className="w-full h-16 bg-gradient-to-br from-gray-500 to-gray-700 dark:from-gray-400 dark:to-gray-600 mb-2"
                 style={{ borderRadius: option.preview }}
               ></div>
-              <div className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">{option.label}</div>
+              <div className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">{option.label}</div>
             </button>
           ))}
         </div>
@@ -151,22 +151,22 @@ export default function UIThemeSettingsPage() {
         <h3 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0] mb-4">미리보기</h3>
         <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">데스크탑</p>
+            <p className="text-[13px] text-gray-600 dark:text-gray-400 mb-2">데스크탑</p>
             <div
               className="border-2 border-black/7 dark:border-white/10 bg-white dark:bg-[#262626] p-4"
               style={{ borderRadius: borderRadiusOptions.find(o => o.value === desktopRadius)?.preview }}
             >
-              <div className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0] mb-2">위젯 예시</div>
+              <div className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0] mb-2">위젯 예시</div>
               <div className="text-xs text-gray-600 dark:text-gray-400">이렇게 표시됩니다</div>
             </div>
           </div>
           <div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">모바일</p>
+            <p className="text-[13px] text-gray-600 dark:text-gray-400 mb-2">모바일</p>
             <div
               className="border-2 border-black/7 dark:border-white/10 bg-white dark:bg-[#262626] p-4"
               style={{ borderRadius: borderRadiusOptions.find(o => o.value === mobileRadius)?.preview }}
             >
-              <div className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0] mb-2">위젯 예시</div>
+              <div className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0] mb-2">위젯 예시</div>
               <div className="text-xs text-gray-600 dark:text-gray-400">이렇게 표시됩니다</div>
             </div>
           </div>
@@ -187,7 +187,7 @@ export default function UIThemeSettingsPage() {
       {/* 안내 */}
       <div className="bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 rounded-lg p-4">
         <h4 className="font-semibold text-gray-900 dark:text-[#F0F0F0] mb-2">사용 안내</h4>
-        <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+        <ul className="space-y-1 text-[13px] text-gray-600 dark:text-gray-400">
           <li>• <strong>데스크탑</strong>: PC/태블릿에서 표시되는 컴포넌트의 테두리 스타일</li>
           <li>• <strong>모바일</strong>: 스마트폰에서 표시되는 컴포넌트의 테두리 스타일</li>
           <li>• 변경사항은 <strong>위젯, 카드, 패널 등 모든 컴포넌트</strong>에 자동 적용됩니다</li>

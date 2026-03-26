@@ -84,7 +84,7 @@ export default function SettingsView({ isMobile, onBack, onSave }: SettingsViewP
 
   const toolbar = (
     <div className="flex items-center justify-between px-4 border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] h-11 flex-shrink-0">
-      <button type="button" onClick={onBack} className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors">
+      <button type="button" onClick={onBack} className="flex items-center gap-1 text-[13px] text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors">
         <ArrowLeft className="w-4 h-4" />
         <span>돌아가기</span>
       </button>
@@ -125,7 +125,7 @@ export default function SettingsView({ isMobile, onBack, onSave }: SettingsViewP
 
       <div className={`flex items-center justify-center px-4 border-t border-black/5 dark:border-white/10 h-[64px] flex-shrink-0 pb-[env(safe-area-inset-bottom,0px)] ${isMobile ? 'mb-10' : ''}`}>
         <button type="button" onClick={handleSave} disabled={saving}
-          className="w-full max-w-xs h-10 rounded-lg text-sm font-medium bg-[#262626] dark:bg-[#3F3F3F] text-white hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] disabled:opacity-50 transition-colors">
+          className="w-full max-w-xs h-10 rounded-lg text-[13px] font-medium bg-[#262626] dark:bg-[#3F3F3F] text-white hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] disabled:opacity-50 transition-colors">
           {saving ? '저장 중...' : '순서 저장'}
         </button>
       </div>
@@ -151,7 +151,7 @@ function SortablePackItem({ pack }: { pack: PickerPackage }) {
       <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
         <Image src={pack.pack_thumbnail} alt={pack.pack_name} width={24} height={24} className="w-6 h-6 object-contain" />
       </div>
-      <span className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] flex-1 min-w-0 truncate">{pack.pack_name}</span>
+      <span className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] flex-1 min-w-0 truncate">{pack.pack_name}</span>
       <span className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0 tabular-nums">{pack.emoticons.length}개</span>
     </div>
   );

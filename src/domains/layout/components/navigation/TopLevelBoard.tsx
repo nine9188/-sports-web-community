@@ -36,7 +36,7 @@ const TopLevelBoard = React.memo(function TopLevelBoard({
           e.preventDefault();
           onClick(board);
         }}
-        className="px-2 py-1 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded flex items-center gap-1 cursor-pointer whitespace-nowrap transition-colors"
+        className="px-2 py-1 text-[13px] font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded flex items-center gap-1 cursor-pointer whitespace-nowrap transition-colors"
       >
         {board.name || '게시판'}
         {hasChildren && (

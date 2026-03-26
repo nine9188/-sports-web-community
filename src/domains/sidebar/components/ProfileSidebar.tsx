@@ -119,7 +119,7 @@ export default function ProfileSidebar({
                   onClick={handleMenuClick}
                 >
                   <PenSquare className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                  <span className="text-sm font-medium">글쓰기</span>
+                  <span className="text-[13px] font-medium">글쓰기</span>
                 </Link>
 
                 {/* 프로필 설정 */}
@@ -129,7 +129,7 @@ export default function ProfileSidebar({
                   onClick={handleMenuClick}
                 >
                   <UserCog className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                  <span className="text-sm font-medium">프로필 설정</span>
+                  <span className="text-[13px] font-medium">프로필 설정</span>
                 </Link>
 
                 {/* 로그아웃 */}
@@ -139,7 +139,7 @@ export default function ProfileSidebar({
                   className="w-full flex items-center gap-3 p-3 h-auto rounded-lg bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors justify-start"
                 >
                   <LogOut className="h-5 w-5 text-red-600 dark:text-red-400" />
-                  <span className="text-sm font-medium text-red-600 dark:text-red-400">로그아웃</span>
+                  <span className="text-[13px] font-medium text-red-600 dark:text-red-400">로그아웃</span>
                 </Button>
 
                 {/* 카카오 광고 - 모달 열릴 때만 렌더링 */}
@@ -158,7 +158,7 @@ export default function ProfileSidebar({
                   <User className="h-8 w-8 text-gray-400 dark:text-gray-500" />
                 </div>
                 <h3 className="text-lg font-medium mb-2 text-gray-900 dark:text-[#F0F0F0]">로그인이 필요합니다</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-6">
                   더 많은 기능을 이용하려면 로그인해주세요
                 </p>
 

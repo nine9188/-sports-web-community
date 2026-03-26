@@ -161,7 +161,7 @@ export function ChatMessageBubble({
             ? 'bg-[#262626] dark:bg-[#3F3F3F] text-white border-black/7 dark:border-white/0'
             : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] border-black/7 dark:border-white/0'
         )}>
-          <p className="text-sm whitespace-pre-wrap break-words">
+          <p className="text-[13px] whitespace-pre-wrap break-words">
             {message.content}
           </p>
           

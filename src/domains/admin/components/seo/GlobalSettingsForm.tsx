@@ -25,7 +25,7 @@ export function GlobalSettingsForm({
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
             사이트명 *
           </label>
           <input
@@ -37,7 +37,7 @@ export function GlobalSettingsForm({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
             사이트 URL *
           </label>
           <input
@@ -50,7 +50,7 @@ export function GlobalSettingsForm({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
             기본 제목 *
           </label>
           <input
@@ -62,7 +62,7 @@ export function GlobalSettingsForm({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
             기본 설명 (150-160자 권장)
           </label>
           <textarea
@@ -78,7 +78,7 @@ export function GlobalSettingsForm({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
             기본 키워드 (쉼표로 구분)
           </label>
           <input
@@ -96,7 +96,7 @@ export function GlobalSettingsForm({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
             Twitter 핸들
           </label>
           <input

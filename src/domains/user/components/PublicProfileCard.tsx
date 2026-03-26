@@ -29,7 +29,7 @@ export default function PublicProfileCard({ profile }: PublicProfileCardProps) {
                 alt=""
               />
             </div>
-            <span className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0]">
+            <span className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">
               {profile.nickname}
             </span>
           </div>
@@ -73,7 +73,7 @@ export default function PublicProfileCard({ profile }: PublicProfileCardProps) {
                 alt=""
               />
             </div>
-            <span className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0]">
+            <span className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">
               {profile.nickname}
             </span>
           </div>

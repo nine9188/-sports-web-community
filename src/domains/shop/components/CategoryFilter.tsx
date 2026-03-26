@@ -156,7 +156,7 @@ export default function CategoryFilter({
       key={category.id}
       onClick={() => handleSelect(category.id.toString())}
       variant="ghost"
-      className={`px-2 py-1 h-auto text-xs sm:text-sm whitespace-nowrap flex items-center gap-1 text-gray-700 dark:text-gray-300 ${
+      className={`px-2 py-1 h-auto text-xs sm:text-[13px] whitespace-nowrap flex items-center gap-1 text-gray-700 dark:text-gray-300 ${
         activeCategory === category.id.toString() || expandedParentId === category.id
           ? 'bg-[#EAEAEA] dark:bg-[#333333]'
           : ''
@@ -177,7 +177,7 @@ export default function CategoryFilter({
             <Button
               onClick={() => handleSelect('all')}
               variant="ghost"
-              className={`px-2 py-1 h-auto text-xs sm:text-sm whitespace-nowrap flex items-center gap-1 text-gray-700 dark:text-gray-300 flex-shrink-0 ${
+              className={`px-2 py-1 h-auto text-xs sm:text-[13px] whitespace-nowrap flex items-center gap-1 text-gray-700 dark:text-gray-300 flex-shrink-0 ${
                 activeCategory === 'all' ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
               }`}
             >
@@ -249,7 +249,7 @@ export default function CategoryFilter({
                 <Button
                   onClick={() => handleSelect(expandedParentId.toString())}
                   variant="ghost"
-                  className={`px-2 py-1 h-auto text-xs sm:text-sm whitespace-nowrap flex items-center gap-1 text-gray-700 dark:text-gray-300 flex-shrink-0 ${
+                  className={`px-2 py-1 h-auto text-xs sm:text-[13px] whitespace-nowrap flex items-center gap-1 text-gray-700 dark:text-gray-300 flex-shrink-0 ${
                     activeCategory === expandedParentId.toString() ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
                   }`}
                 >
@@ -261,7 +261,7 @@ export default function CategoryFilter({
                       key={sub.id}
                       onClick={() => handleSelect(sub.id.toString())}
                       variant="ghost"
-                      className={`px-2 py-1 h-auto text-xs sm:text-sm whitespace-nowrap flex items-center gap-1 text-gray-700 dark:text-gray-300 ${
+                      className={`px-2 py-1 h-auto text-xs sm:text-[13px] whitespace-nowrap flex items-center gap-1 text-gray-700 dark:text-gray-300 ${
                         activeCategory === sub.id.toString() ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
                       }`}
                     >

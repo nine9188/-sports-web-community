@@ -33,7 +33,7 @@ interface LogFiltersProps {
 
 export function LogFilters({ filters, isLoading, onFilterChange, onSearch, onReset }: LogFiltersProps) {
   const inputClassName =
-    'h-10 w-full rounded-md px-3 py-2 text-sm bg-white dark:bg-[#262626] border border-black/7 dark:border-white/10 text-gray-900 dark:text-[#F0F0F0] focus:outline-none focus:ring-2 focus:ring-gray-400';
+    'h-10 w-full rounded-md px-3 py-2 text-[13px] bg-white dark:bg-[#262626] border border-black/7 dark:border-white/10 text-gray-900 dark:text-[#F0F0F0] focus:outline-none focus:ring-2 focus:ring-gray-400';
 
   return (
     <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-white/10">

@@ -21,7 +21,7 @@ export default function PostNavigation({ boardSlug, prevPost, nextPost }: PostNa
           variant="ghost"
           size="sm"
           asChild
-          className="text-xs sm:text-sm gap-1"
+          className="text-xs sm:text-[13px] gap-1"
         >
           <Link href={`/boards/${boardSlug}/${prevPost.post_number}`} prefetch={false}>
             <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -33,7 +33,7 @@ export default function PostNavigation({ boardSlug, prevPost, nextPost }: PostNa
           variant="ghost"
           size="sm"
           disabled
-          className="text-xs sm:text-sm text-gray-400 dark:text-gray-600 gap-1"
+          className="text-xs sm:text-[13px] text-gray-400 dark:text-gray-600 gap-1"
         >
           <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
           <span>이전글</span>
@@ -48,7 +48,7 @@ export default function PostNavigation({ boardSlug, prevPost, nextPost }: PostNa
           variant="ghost"
           size="sm"
           asChild
-          className="text-xs sm:text-sm gap-1"
+          className="text-xs sm:text-[13px] gap-1"
         >
           <Link href={`/boards/${boardSlug}`} prefetch={false}>
             <ListOrdered className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -65,7 +65,7 @@ export default function PostNavigation({ boardSlug, prevPost, nextPost }: PostNa
           variant="ghost"
           size="sm"
           asChild
-          className="text-xs sm:text-sm gap-1"
+          className="text-xs sm:text-[13px] gap-1"
         >
           <Link href={`/boards/${boardSlug}/${nextPost.post_number}`} prefetch={false}>
             <span>다음글</span>
@@ -77,7 +77,7 @@ export default function PostNavigation({ boardSlug, prevPost, nextPost }: PostNa
           variant="ghost"
           size="sm"
           disabled
-          className="text-xs sm:text-sm text-gray-400 dark:text-gray-600 gap-1"
+          className="text-xs sm:text-[13px] text-gray-400 dark:text-gray-600 gap-1"
         >
           <span>다음글</span>
           <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />

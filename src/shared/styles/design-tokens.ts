@@ -65,17 +65,17 @@ export const designTokens = {
 
   // 높이 (균일한 컨테이너 높이)
   height: {
-    containerHeader: '48px',     // py-3 (12px * 2) + text-sm (20px line-height) + 4px
+    containerHeader: '48px',     // py-3 (12px * 2) + text-[13px] (20px line-height) + 4px
     leagueHeader: '52px',        // 리그 헤더 높이 (조금 더 큼)
     matchRow: '56px',            // 경기 행 높이
   },
 
   // 타이포그래피
   typography: {
-    containerHeaderSize: '0.875rem',  // text-sm (14px)
+    containerHeaderSize: '0.875rem',  // text-[13px] (14px)
     containerHeaderWeight: '700',     // font-bold
-    leagueHeaderSize: '0.875rem',     // text-sm (14px)
-    matchTextSize: '0.875rem',        // text-sm (14px)
+    leagueHeaderSize: '0.875rem',     // text-[13px] (14px)
+    matchTextSize: '0.875rem',        // text-[13px] (14px)
   },
 
   // 반경

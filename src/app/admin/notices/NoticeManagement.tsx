@@ -198,7 +198,7 @@ export default function NoticeManagement() {
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2">
               게시글 번호 <span className="text-red-500">*</span>
             </label>
             <input
@@ -209,13 +209,13 @@ export default function NoticeManagement() {
               className={cn('w-full px-4 py-2 rounded-lg', inputBaseStyles, focusStyles)}
               min="1"
             />
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-1">
               URL에서 확인: /boards/게시판/<strong>번호</strong>
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2">
               중요도
             </label>
             <div className="flex gap-4">
@@ -234,7 +234,7 @@ export default function NoticeManagement() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2">
               공지 타입
             </label>
             <div className="flex gap-4">
@@ -266,7 +266,7 @@ export default function NoticeManagement() {
 
           {selectedNoticeType === 'board' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2">
                 공지를 표시할 게시판 선택
               </label>
               <input
@@ -278,9 +278,9 @@ export default function NoticeManagement() {
               />
               <div className="max-h-64 overflow-y-auto border border-black/7 dark:border-white/10 rounded-lg p-3 bg-[#F5F5F5] dark:bg-[#232323]">
                 {boardsLoading ? (
-                  <p className="text-sm text-gray-500">게시판 불러오는 중...</p>
+                  <p className="text-[13px] text-gray-500">게시판 불러오는 중...</p>
                 ) : filteredBoards.length === 0 ? (
-                  <p className="text-sm text-gray-500">검색 결과가 없습니다.</p>
+                  <p className="text-[13px] text-gray-500">검색 결과가 없습니다.</p>
                 ) : (
                   <div className="grid grid-cols-2 gap-2">
                     {filteredBoards.map((board) => (
@@ -291,14 +291,14 @@ export default function NoticeManagement() {
                           onChange={() => toggleBoard(board.id)}
                           className="mr-2"
                         />
-                        <span className="text-sm text-gray-700 dark:text-gray-300">{board.name}</span>
+                        <span className="text-[13px] text-gray-700 dark:text-gray-300">{board.name}</span>
                       </label>
                     ))}
                   </div>
                 )}
               </div>
               {selectedBoardIds.length > 0 && (
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                <p className="text-[13px] text-gray-600 dark:text-gray-400 mt-2">
                   선택된 게시판: {selectedBoardIds.length}개
                 </p>
               )}
@@ -319,7 +319,7 @@ export default function NoticeManagement() {
         <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-[#F0F0F0]">
           현재 공지사항 목록 ({orderedNotices.length}개)
         </h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+        <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-4">
           정렬: 필독(최신순) &gt; 전체공지(최신순) &gt; 게시판공지(최신순)
         </p>
 
@@ -346,7 +346,7 @@ export default function NoticeManagement() {
                         {notice.title}
                       </h3>
                     </Link>
-                    <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    <div className="text-[13px] text-gray-500 dark:text-gray-400 mt-1">
                       {notice.is_must_read && <span className="text-red-600 dark:text-red-400 font-semibold">필독 | </span>}
                       게시판 {notice.board?.name || '알 수 없음'} | ID: {notice.id}
                       {notice.notice_type === 'board' && notice.notice_boards && (
@@ -365,14 +365,14 @@ export default function NoticeManagement() {
                         handleChangeType(notice.id, newType, notice);
                       }}
                       disabled={updateNoticeTypeMutation.isPending}
-                      className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 dark:bg-[#262626] dark:hover:bg-[#333333] text-gray-700 dark:text-gray-300 rounded transition-colors disabled:opacity-50"
+                      className="px-3 py-1 text-[13px] bg-gray-200 hover:bg-gray-300 dark:bg-[#262626] dark:hover:bg-[#333333] text-gray-700 dark:text-gray-300 rounded transition-colors disabled:opacity-50"
                     >
                       타입 변경
                     </button>
                     <button
                       onClick={() => handleRemoveNotice(notice.id)}
                       disabled={removeNoticeMutation.isPending}
-                      className="px-3 py-1 text-sm bg-red-100 hover:bg-red-200 dark:bg-red-900 dark:hover:bg-red-800 text-red-700 dark:text-red-200 rounded transition-colors disabled:opacity-50"
+                      className="px-3 py-1 text-[13px] bg-red-100 hover:bg-red-200 dark:bg-red-900 dark:hover:bg-red-800 text-red-700 dark:text-red-200 rounded transition-colors disabled:opacity-50"
                     >
                       공지 해제
                     </button>
@@ -381,7 +381,7 @@ export default function NoticeManagement() {
 
                 {boardPickerNoticeId === notice.id && (
                   <div className="px-4 pb-4">
-                    <div className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                    <div className="text-[13px] text-gray-700 dark:text-gray-300 mb-2">
                       공지를 표시할 게시판 선택
                     </div>
                     <input
@@ -393,9 +393,9 @@ export default function NoticeManagement() {
                     />
                     <div className="max-h-64 overflow-y-auto border border-black/7 dark:border-white/10 rounded-lg p-3 bg-[#F5F5F5] dark:bg-[#232323]">
                       {boardsLoading ? (
-                        <p className="text-sm text-gray-500">게시판 불러오는 중...</p>
+                        <p className="text-[13px] text-gray-500">게시판 불러오는 중...</p>
                       ) : filteredBoards.length === 0 ? (
-                        <p className="text-sm text-gray-500">검색 결과가 없습니다.</p>
+                        <p className="text-[13px] text-gray-500">검색 결과가 없습니다.</p>
                       ) : (
                         <div className="grid grid-cols-2 gap-2">
                           {filteredBoards.map((board) => (
@@ -406,7 +406,7 @@ export default function NoticeManagement() {
                                 onChange={() => toggleBoardForPicker(board.id)}
                                 className="mr-2"
                               />
-                              <span className="text-sm text-gray-700 dark:text-gray-300">{board.name}</span>
+                              <span className="text-[13px] text-gray-700 dark:text-gray-300">{board.name}</span>
                             </label>
                           ))}
                         </div>
@@ -416,13 +416,13 @@ export default function NoticeManagement() {
                       <button
                         onClick={() => handleApplyBoardTypeChange(notice.id)}
                         disabled={updateNoticeTypeMutation.isPending}
-                        className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 dark:bg-[#262626] dark:hover:bg-[#333333] text-gray-700 dark:text-gray-300 rounded transition-colors disabled:opacity-50"
+                        className="px-3 py-1 text-[13px] bg-gray-200 hover:bg-gray-300 dark:bg-[#262626] dark:hover:bg-[#333333] text-gray-700 dark:text-gray-300 rounded transition-colors disabled:opacity-50"
                       >
                         적용
                       </button>
                       <button
                         onClick={cancelBoardPicker}
-                        className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 dark:bg-[#1F1F1F] dark:hover:bg-[#2A2A2A] text-gray-700 dark:text-gray-300 rounded transition-colors"
+                        className="px-3 py-1 text-[13px] bg-gray-100 hover:bg-gray-200 dark:bg-[#1F1F1F] dark:hover:bg-[#2A2A2A] text-gray-700 dark:text-gray-300 rounded transition-colors"
                       >
                         취소
                       </button>

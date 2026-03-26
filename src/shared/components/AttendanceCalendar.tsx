@@ -322,7 +322,7 @@ function FullCalendar({
   return (
     <div className="border-t border-black/5 dark:border-white/10 pt-4 mt-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">출석 현황</h3>
+        <h3 className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">출석 현황</h3>
         <div className="flex items-center gap-1 text-xs">
           <Gift className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
           <span className="text-gray-700 dark:text-gray-300">
@@ -339,7 +339,7 @@ function FullCalendar({
         >
           <ChevronLeft className="h-4 w-4 text-gray-600 dark:text-gray-400" />
         </button>
-        <span className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+        <span className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
           {year}년 {month}월
         </span>
         <button

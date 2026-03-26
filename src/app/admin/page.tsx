@@ -97,7 +97,7 @@ function FeatureItem({
       <div className="mr-4 mt-1">{icon}</div>
       <div>
         <p className="font-semibold text-gray-900 dark:text-[#F0F0F0]">{title}</p>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{description}</p>
+        <p className="text-[13px] text-gray-600 dark:text-gray-400 mt-1">{description}</p>
       </div>
     </div>
   );

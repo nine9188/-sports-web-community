@@ -17,7 +17,7 @@ export default function BoardInfo({ boardName, boardId, boardSlug, isLoggedIn = 
     <Container className={`bg-white dark:bg-[#1D1D1D] ${className}`}>
       {/* 통합 레이아웃: 게시판 이름 + 글쓰기 아이콘 */}
       <div className="h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626]">
-        <h2 className="text-sm font-semibold truncate text-gray-900 dark:text-[#F0F0F0]">{boardName}</h2>
+        <h2 className="text-[13px] font-semibold truncate text-gray-900 dark:text-[#F0F0F0]">{boardName}</h2>
         {isLoggedIn && (
           <Link
             href={`/boards/${boardSlug || boardId}/create`}

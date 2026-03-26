@@ -156,9 +156,9 @@ function ResetPasswordContent() {
             <div className="p-6 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800/50">
               <div className="flex items-center mb-3">
                 <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mr-2" />
-                <span className="text-sm font-medium text-red-800 dark:text-red-300">링크 만료</span>
+                <span className="text-[13px] font-medium text-red-800 dark:text-red-300">링크 만료</span>
               </div>
-              <p className="text-sm text-red-700 dark:text-red-300">
+              <p className="text-[13px] text-red-700 dark:text-red-300">
                 재설정 링크는 30분간만 유효합니다.<br/>
                 새로운 재설정 링크를 요청해주세요.
               </p>
@@ -221,7 +221,7 @@ function ResetPasswordContent() {
 
         <form onSubmit={handleResetPassword} className="space-y-6">
           <div>
-            <label className="block text-gray-700 dark:text-gray-300 mb-1.5 text-sm font-medium">
+            <label className="block text-gray-700 dark:text-gray-300 mb-1.5 text-[13px] font-medium">
               새 비밀번호
             </label>
             <div className="relative">
@@ -265,7 +265,7 @@ function ResetPasswordContent() {
               </div>
             </div>
             {passwordError && (
-              <p className="mt-1 text-sm text-red-600 flex items-center">
+              <p className="mt-1 text-[13px] text-red-600 flex items-center">
                 <AlertCircle className="h-4 w-4 mr-1" />
                 {passwordError}
               </p>
@@ -273,7 +273,7 @@ function ResetPasswordContent() {
           </div>
 
           <div>
-            <label className="block text-gray-700 dark:text-gray-300 mb-1.5 text-sm font-medium">
+            <label className="block text-gray-700 dark:text-gray-300 mb-1.5 text-[13px] font-medium">
               새 비밀번호 확인
             </label>
             <div className="relative">
@@ -314,7 +314,7 @@ function ResetPasswordContent() {
               </div>
             </div>
             {confirmPasswordError && (
-              <p className="mt-1 text-sm text-red-600 flex items-center">
+              <p className="mt-1 text-[13px] text-red-600 flex items-center">
                 <AlertCircle className="h-4 w-4 mr-1" />
                 {confirmPasswordError}
               </p>
@@ -367,7 +367,7 @@ export default function ResetPasswordPage() {
           <ResetPasswordContent />
         </Suspense>
       </div>
-      <div className="mt-8 flex space-x-4 text-sm text-gray-500 dark:text-gray-400">
+      <div className="mt-8 flex space-x-4 text-[13px] text-gray-500 dark:text-gray-400">
         <Link href="/terms" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">이용약관</Link>
         <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">개인정보처리방침</Link>
       </div>

@@ -21,7 +21,7 @@ function AccordionItem({ title, children, defaultOpen = false }: AccordionItemPr
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-between w-full px-4 py-3 text-left hover:bg-[#F5F5F5] dark:hover:bg-[#262626] transition-colors"
       >
-        <span className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">{title}</span>
+        <span className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">{title}</span>
         <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
       {isOpen && (

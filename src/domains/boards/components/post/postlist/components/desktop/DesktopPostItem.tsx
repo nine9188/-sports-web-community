@@ -78,7 +78,7 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
       >
         {/* 추천 수 */}
         <div className="hidden sm:flex flex-col items-center gap-1 min-w-[40px]">
-          <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
+          <span className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">
             {post.likes || 0}
           </span>
           <ThumbsUp className="w-4 h-4 text-gray-500 dark:text-gray-400" />

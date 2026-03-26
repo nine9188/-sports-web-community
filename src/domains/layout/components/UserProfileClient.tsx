@@ -83,7 +83,7 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
               className="object-cover"
             />
           </div>
-          <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">{userData.nickname || '사용자'}</span>
+          <span className="text-[13px] text-gray-900 dark:text-[#F0F0F0]">{userData.nickname || '사용자'}</span>
           <ChevronDown className="h-3 w-3 text-gray-900 dark:text-[#F0F0F0]" />
         </Button>
 
@@ -103,7 +103,7 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
                     className="object-cover"
                   />
                 </div>
-                <span className="font-semibold text-sm text-gray-900 dark:text-[#F0F0F0]">
+                <span className="font-semibold text-[13px] text-gray-900 dark:text-[#F0F0F0]">
                   {userData.nickname || '사용자'}
                 </span>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -123,7 +123,7 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
                 <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-[#333333] flex items-center justify-center">
                   <SquarePen className="h-4 w-4 text-gray-700 dark:text-gray-300" />
                 </div>
-                <span className="flex-1 ml-3 text-left text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                <span className="flex-1 ml-3 text-left text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
                   글쓰기
                 </span>
                 <ChevronRight className="h-4 w-4 text-gray-400" />
@@ -138,7 +138,7 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
                 <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-[#333333] flex items-center justify-center">
                   <User className="h-4 w-4 text-gray-700 dark:text-gray-300" />
                 </div>
-                <span className="flex-1 ml-3 text-left text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                <span className="flex-1 ml-3 text-left text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
                   프로필 설정
                 </span>
                 <ChevronRight className="h-4 w-4 text-gray-400" />
@@ -152,7 +152,7 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
                 <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-[#333333] flex items-center justify-center">
                   <MessageCircle className="h-4 w-4 text-gray-700 dark:text-gray-300" />
                 </div>
-                <span className="flex-1 ml-3 text-left text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                <span className="flex-1 ml-3 text-left text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
                   문의하기
                 </span>
                 <ChevronRight className="h-4 w-4 text-gray-400" />
@@ -167,7 +167,7 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
                 <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-[#333333] flex items-center justify-center">
                   <LogOut className="h-4 w-4 text-gray-700 dark:text-gray-300" />
                 </div>
-                <span className="flex-1 ml-3 text-left text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                <span className="flex-1 ml-3 text-left text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
                   로그아웃
                 </span>
                 <ChevronRight className="h-4 w-4 text-gray-400" />
@@ -184,13 +184,13 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
     <div className="hidden md:flex space-x-2">
       <Link
         href="/signin"
-        className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors"
+        className="px-3 py-2 text-[13px] font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors"
       >
         로그인
       </Link>
       <Link
         href="/signup"
-        className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors"
+        className="px-3 py-2 text-[13px] font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors"
       >
         회원가입
       </Link>

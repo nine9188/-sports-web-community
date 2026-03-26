@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/shared/context/AuthContext';
-import { Coins, TrendingUp, Users, Home, LayoutDashboard, ShoppingBag, AlertTriangle, Target, FileText, Settings, Grid3x3, Bell, Pin } from 'lucide-react';
+import { Coins, TrendingUp, Users, Home, LayoutDashboard, ShoppingBag, AlertTriangle, Target, FileText, Settings, Grid3x3, Bell, Pin, Database } from 'lucide-react';
 
 interface AdminLayoutClientProps {
   children: React.ReactNode;
@@ -29,6 +29,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
     { path: '/admin/shop', label: '아이콘 상점', icon: <ShoppingBag className="w-5 h-5 mr-2" /> },
     { path: '/admin/emoticon-submissions', label: '이모티콘 신청', icon: <ShoppingBag className="w-5 h-5 mr-2" /> },
     { path: '/admin/prediction', label: '예측 분석', icon: <Target className="w-5 h-5 mr-2" /> },
+    { path: '/admin/cache-management', label: '캐시 관리', icon: <Database className="w-5 h-5 mr-2" /> },
     { path: '/', label: '사이트로 돌아가기', icon: <Home className="w-5 h-5 mr-2" /> },
   ];
 
@@ -40,12 +41,12 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
           <div className="flex justify-between items-center py-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0]">관리자 페이지</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">시스템 관리 및 설정을 위한 관리자 전용 페이지입니다.</p>
+              <p className="text-[13px] text-gray-600 dark:text-gray-400">시스템 관리 및 설정을 위한 관리자 전용 페이지입니다.</p>
             </div>
             <div className="flex items-center space-x-4">
               <Link
                 href="/"
-                className="inline-flex items-center px-3 py-2 border border-black/7 dark:border-white/10 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#262626] hover:bg-[#F5F5F5] dark:hover:bg-[#2D2D2D] transition-colors"
+                className="inline-flex items-center px-3 py-2 border border-black/7 dark:border-white/10 rounded-md text-[13px] font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#262626] hover:bg-[#F5F5F5] dark:hover:bg-[#2D2D2D] transition-colors"
               >
                 <Home className="w-4 h-4 mr-2" />
                 사이트로 돌아가기
@@ -67,7 +68,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
                     <Link
                       key={item.path}
                       href={item.path}
-                      className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      className={`flex items-center px-3 py-2 rounded-md text-[13px] font-medium transition-colors ${
                         pathname === item.path
                           ? 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0]'
                           : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:bg-[#F5F5F5] dark:hover:bg-[#262626]'

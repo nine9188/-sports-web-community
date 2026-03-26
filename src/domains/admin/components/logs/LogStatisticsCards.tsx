@@ -15,20 +15,20 @@ export function LogStatisticsCards({ statistics }: LogStatisticsCardsProps) {
       <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-white/10">
         <div className="p-4">
           <div className="text-2xl font-bold">{statistics.totalLogs.toLocaleString()}</div>
-          <p className="text-sm text-gray-600 dark:text-gray-400">오늘 총 로그</p>
+          <p className="text-[13px] text-gray-600 dark:text-gray-400">오늘 총 로그</p>
         </div>
       </div>
 
       <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-white/10">
         <div className="p-4">
           <div className="text-2xl font-bold text-red-600">{statistics.errorCount.toLocaleString()}</div>
-          <p className="text-sm text-gray-600 dark:text-gray-400">오늘 에러</p>
+          <p className="text-[13px] text-gray-600 dark:text-gray-400">오늘 에러</p>
         </div>
       </div>
 
       <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-white/10">
         <div className="p-4">
-          <div className="text-sm space-y-1">
+          <div className="text-[13px] space-y-1">
             {Object.entries(statistics.levelStats).map(([level, count]) => (
               <div key={level} className="flex justify-between">
                 <span className={cn(badgeBaseStyles, LEVEL_COLORS[level as LogLevel])}>{level}</span>
@@ -41,7 +41,7 @@ export function LogStatisticsCards({ statistics }: LogStatisticsCardsProps) {
 
       <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-white/10">
         <div className="p-4">
-          <div className="text-sm space-y-1">
+          <div className="text-[13px] space-y-1">
             {Object.entries(statistics.categoryStats)
               .slice(0, 4)
               .map(([category, count]) => (

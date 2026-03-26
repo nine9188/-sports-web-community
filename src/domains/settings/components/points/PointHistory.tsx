@@ -40,13 +40,13 @@ export default function PointHistory({ pointHistory = [] }: PointHistoryProps) {
             <tbody className="bg-white dark:bg-[#1D1D1D] divide-y divide-black/5 dark:divide-white/10">
               {pointHistory.map((item) => (
                 <tr key={item.id} className="hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                  <td className="px-6 py-4 whitespace-nowrap text-[13px] text-gray-500 dark:text-gray-400">
                     {formatDate(item.created_at) || '-'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                  <td className="px-6 py-4 whitespace-nowrap text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
                     {item.reason || '포인트 내역'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-right text-gray-900 dark:text-[#F0F0F0]">
+                  <td className="px-6 py-4 whitespace-nowrap text-[13px] font-bold text-right text-gray-900 dark:text-[#F0F0F0]">
                     {item.type === 'earn' ? '+' : '-'}{Math.abs(item.points || 0).toLocaleString()} P
                   </td>
                 </tr>

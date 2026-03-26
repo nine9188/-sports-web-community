@@ -29,7 +29,7 @@ export default function NotFound() {
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-[#F0F0F0]">
                   요청하신 페이지를 찾을 수 없습니다
                 </h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-[13px] text-gray-600 dark:text-gray-400">
                   페이지가 삭제되었거나 주소가 변경되었을 수 있습니다.
                 </p>
               </div>
@@ -38,7 +38,7 @@ export default function NotFound() {
               <div className="flex justify-center pt-4">
                 <Link
                   href="/"
-                  className="inline-flex items-center gap-2 bg-[#262626] dark:bg-[#3F3F3F] text-white hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] px-6 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                  className="inline-flex items-center gap-2 bg-[#262626] dark:bg-[#3F3F3F] text-white hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] px-6 py-2.5 rounded-lg text-[13px] font-medium transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -71,7 +71,7 @@ export default function NotFound() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-medium text-sm text-gray-900 dark:text-[#F0F0F0] mb-1">
+                    <h3 className="font-medium text-[13px] text-gray-900 dark:text-[#F0F0F0] mb-1">
                       HOT 인기게시글
                     </h3>
                     <p className="text-xs text-gray-600 dark:text-gray-400">
@@ -93,7 +93,7 @@ export default function NotFound() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-medium text-sm text-gray-900 dark:text-[#F0F0F0] mb-1">
+                    <h3 className="font-medium text-[13px] text-gray-900 dark:text-[#F0F0F0] mb-1">
                       전체 게시판
                     </h3>
                     <p className="text-xs text-gray-600 dark:text-gray-400">
@@ -116,7 +116,7 @@ export default function NotFound() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-medium text-sm text-gray-900 dark:text-[#F0F0F0] mb-1">
+                    <h3 className="font-medium text-[13px] text-gray-900 dark:text-[#F0F0F0] mb-1">
                       라이브스코어
                     </h3>
                     <p className="text-xs text-gray-600 dark:text-gray-400">

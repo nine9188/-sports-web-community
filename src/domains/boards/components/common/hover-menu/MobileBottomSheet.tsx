@@ -41,7 +41,7 @@ export default function MobileBottomSheet({
       <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#1D1D1D] rounded-t-lg z-50 animate-slide-up">
         {/* 헤더 */}
         <div className="flex justify-between items-center px-4 py-2.5 border-b border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
-          <h3 className="text-xs sm:text-sm text-gray-900 dark:text-[#F0F0F0]">
+          <h3 className="text-xs sm:text-[13px] text-gray-900 dark:text-[#F0F0F0]">
             {boardName || '게시판 이동'}
           </h3>
           <Button
@@ -60,7 +60,7 @@ export default function MobileBottomSheet({
           <Link
             href={`/boards/${boardSlug || hoveredBoard}`}
             prefetch={false}
-            className="w-full text-left px-4 py-2.5 text-xs sm:text-sm bg-white dark:bg-[#1D1D1D] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] block transition-colors border-b border-black/5 dark:border-white/10"
+            className="w-full text-left px-4 py-2.5 text-xs sm:text-[13px] bg-white dark:bg-[#1D1D1D] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] block transition-colors border-b border-black/5 dark:border-white/10"
             onClick={onClose}
           >
             {boardName} 게시판 전체 보기
@@ -70,7 +70,7 @@ export default function MobileBottomSheet({
               href={`/boards/${childBoard.slug || childBoard.id}`}
               prefetch={false}
               key={childBoard.id}
-              className={`w-full text-left px-4 py-2.5 text-xs sm:text-sm text-gray-900 dark:text-[#F0F0F0] block transition-colors ${
+              className={`w-full text-left px-4 py-2.5 text-xs sm:text-[13px] text-gray-900 dark:text-[#F0F0F0] block transition-colors ${
                 index < sortedChildBoards.length - 1 ? 'border-b border-black/5 dark:border-white/10' : ''
               } ${
                 childBoard.id === currentBoardId

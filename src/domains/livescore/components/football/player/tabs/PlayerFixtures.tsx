@@ -260,7 +260,7 @@ export default function PlayerFixtures({
           <ContainerContent className="!p-0">
             {/* 데스크탑 버전 - md 이상 화면에서만 표시 */}
             <div className="hidden md:block overflow-x-auto">
-              <table className="w-full border-collapse text-sm">
+              <table className="w-full border-collapse text-[13px]">
                 <thead>
                   <tr className="bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0]">
                     <th className="px-2 py-2 text-left border-b border-black/5 dark:border-white/10 whitespace-nowrap text-[11px] font-medium text-gray-500 dark:text-gray-400">날짜</th>

@@ -74,7 +74,7 @@ function FindPasswordContent() {
 
         <form onSubmit={handleResetPassword} className="space-y-6">
           <div>
-            <label htmlFor="username" className="block text-gray-700 dark:text-gray-300 mb-1.5 text-sm font-medium">
+            <label htmlFor="username" className="block text-gray-700 dark:text-gray-300 mb-1.5 text-[13px] font-medium">
               아이디
             </label>
             <div className="relative">
@@ -100,7 +100,7 @@ function FindPasswordContent() {
               )}
             </div>
             {usernameError && (
-              <p className="mt-1 text-sm text-red-600 flex items-center">
+              <p className="mt-1 text-[13px] text-red-600 flex items-center">
                 <AlertCircle className="h-4 w-4 mr-1" />{usernameError}
               </p>
             )}
@@ -145,7 +145,7 @@ export default function FindPasswordPage() {
         <BrandingPanel variant="find-password" />
         <FindPasswordContent />
       </div>
-      <div className="mt-8 flex space-x-4 text-sm text-gray-500 dark:text-gray-400">
+      <div className="mt-8 flex space-x-4 text-[13px] text-gray-500 dark:text-gray-400">
         <Link href="/terms" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">이용약관</Link>
         <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">개인정보처리방침</Link>
       </div>

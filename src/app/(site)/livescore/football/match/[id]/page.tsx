@@ -1,10 +1,11 @@
+import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { fetchCachedMatchFullData, MatchFullDataResponse } from '@/domains/livescore/actions/match/matchData';
 import { getCachedSidebarData } from '@/domains/livescore/actions/match/sidebarData';
 import { getCachedPowerData } from '@/domains/livescore/actions/match/headtohead';
 import { fetchAllPlayerStats } from '@/domains/livescore/actions/match/playerStats';
 import type { AllPlayerStatsResponse } from '@/domains/livescore/types/lineup';
-import { getMatchCacheBulk, setMatchCache } from '@/domains/livescore/actions/match/matchCache';
+import { getMatchCache, getMatchCacheBulk, setMatchCache } from '@/domains/livescore/actions/match/matchCache';
 import MatchPageClient, { MatchTabType } from '@/domains/livescore/components/football/match/MatchPageClient';
 import { notFound } from 'next/navigation';
 import { buildMetadata } from '@/shared/utils/metadataNew';
@@ -13,6 +14,7 @@ import { getTeamById } from '@/domains/livescore/constants/teams';
 import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 import { getMatchHighlight } from '@/domains/livescore/actions/highlights/getMatchHighlight';
+import type { HeadToHeadTestData } from '@/domains/livescore/actions/match/headtohead';
 
 // matchData에서 모든 선수 ID 추출
 function extractPlayerIds(matchData: MatchFullDataResponse): number[] {
@@ -103,23 +105,140 @@ export async function generateMetadata({
 
 /**
  * ============================================
- * 서버 컴포넌트 + 클라이언트 탭 전환 패턴
+ * Suspense 스트리밍 패턴 (메인 페이지와 동일)
  * ============================================
  *
- * Player, Team 페이지와 동일한 패턴 적용
- *
- * ## 핵심 원리
- *
- * 1. **서버 컴포넌트 (이 파일)**
- *    - 모든 탭 데이터를 미리 로드
- *    - URL에서 초기 탭 결정
- *    - 클라이언트 컴포넌트에 데이터 전달
- *
- * 2. **클라이언트 래퍼 (MatchPageClient)**
- *    - useState로 현재 탭 상태 관리
- *    - 탭 변경 시 shallow URL 업데이트 (페이지 리로드 없음)
- *    - 초기 데이터로 즉시 렌더링
+ * 1. page.tsx에서 matchData만 await (헤더 + JSON-LD용)
+ * 2. 나머지(sidebar, power, playerStats, 한글명, 하이라이트)는
+ *    별도 async 서버 컴포넌트(MatchContentLoader)에서 병렬 처리
+ * 3. Suspense fallback으로 스켈레톤 즉시 표시
+ * 4. MatchContentLoader 준비되면 스트리밍으로 교체
  */
+
+// 매치 컨텐츠 스켈레톤 (Suspense fallback)
+function MatchContentSkeleton() {
+  return (
+    <div className="flex gap-4">
+      <div className="flex-1 min-w-0">
+        {/* 탭 네비게이션 스켈레톤 */}
+        <div className="bg-white dark:bg-[#1D1D1D] rounded-lg shadow-sm mb-4 animate-pulse">
+          <div className="flex gap-1 p-1">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-9 flex-1 bg-[#F5F5F5] dark:bg-[#262626] rounded" />
+            ))}
+          </div>
+        </div>
+        {/* 콘텐츠 영역 스켈레톤 */}
+        <div className="bg-white dark:bg-[#1D1D1D] rounded-lg shadow-sm p-4 animate-pulse">
+          <div className="space-y-3">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="h-10 bg-[#F5F5F5] dark:bg-[#262626] rounded" />
+            ))}
+          </div>
+        </div>
+      </div>
+      {/* 사이드바 스켈레톤 */}
+      <aside className="hidden xl:block w-[300px] shrink-0 space-y-4">
+        <div className="bg-white dark:bg-[#1D1D1D] rounded-lg shadow-sm p-4 animate-pulse">
+          <div className="space-y-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-4 bg-[#F5F5F5] dark:bg-[#262626] rounded" />
+            ))}
+          </div>
+        </div>
+      </aside>
+    </div>
+  );
+}
+
+/**
+ * 별도 async 서버 컴포넌트 — Suspense 스트리밍용
+ * 무거운 데이터(sidebar, power, playerStats, 한글명, 하이라이트)를 병렬로 로드
+ * page.tsx와 분리되어 있으므로 쿠키 충돌 없음
+ */
+async function MatchContentLoader({
+  matchId,
+  matchData,
+  initialTab,
+}: {
+  matchId: string;
+  matchData: MatchFullDataResponse;
+  initialTab: MatchTabType;
+}) {
+  const homeTeamId = matchData.homeTeam?.id;
+  const awayTeamId = matchData.awayTeam?.id;
+  const numericMatchId = parseInt(matchId, 10);
+  const statusCode = matchData.match?.status?.code ?? '';
+  const finishedCodes = ['FT', 'AET', 'PEN'];
+  const isFinished = finishedCodes.includes(statusCode);
+  const playerIds = extractPlayerIds(matchData);
+  const leagueId = matchData.match?.league?.id;
+
+  // 종료 경기: matchPlayerStats + power DB 캐시 먼저 확인
+  let cachedPlayerStats: AllPlayerStatsResponse | null = null;
+  let cachedPower: HeadToHeadTestData | null = null;
+
+  if (isFinished) {
+    const [cachedExtra, cachedPowerData] = await Promise.all([
+      getMatchCacheBulk(numericMatchId, ['matchPlayerStats']),
+      getMatchCache(numericMatchId, 'power'),
+    ]);
+
+    if (cachedExtra['matchPlayerStats']) {
+      const cached = cachedExtra['matchPlayerStats'] as Record<string, unknown>;
+      if ('allPlayersData' in cached && Array.isArray(cached.allPlayersData)) {
+        cachedPlayerStats = cached as AllPlayerStatsResponse;
+      }
+    }
+
+    if (cachedPowerData) {
+      cachedPower = cachedPowerData as HeadToHeadTestData;
+    }
+  }
+
+  // 나머지 전부 병렬 호출
+  const [sidebarDataResult, powerDataResult, playerStatsResult, playerKoreanNames, highlightData] = await Promise.all([
+    getCachedSidebarData(matchId),
+    cachedPower
+      ? Promise.resolve({ success: true, data: cachedPower })
+      : (homeTeamId && awayTeamId)
+        ? getCachedPowerData(homeTeamId, awayTeamId, 5)
+        : Promise.resolve({ success: false, data: undefined }),
+    cachedPlayerStats
+      ? Promise.resolve(cachedPlayerStats)
+      : fetchAllPlayerStats(matchId, matchData.match?.status?.code).then(r => {
+          if (isFinished) setMatchCache(numericMatchId, 'matchPlayerStats', r, statusCode).catch(() => {});
+          return r;
+        }),
+    getPlayersKoreanNames(playerIds),
+    isFinished && homeTeamId && awayTeamId && leagueId
+      ? getMatchHighlight(numericMatchId, homeTeamId, awayTeamId, leagueId, matchData.match?.fixture?.date).catch(() => null)
+      : Promise.resolve(null),
+  ]);
+
+  const sidebarData = sidebarDataResult.success ? sidebarDataResult.data : null;
+  const powerResult = powerDataResult as { success?: boolean; data?: unknown };
+  const powerData = powerResult.success ? powerResult.data : undefined;
+
+  // 종료 경기: 전력 데이터 캐시 저장 (DB 캐시 미스였을 때만)
+  if (isFinished && !cachedPower && powerResult.success && powerResult.data) {
+    setMatchCache(numericMatchId, 'power', powerResult.data, statusCode).catch(() => {});
+  }
+
+  return (
+    <MatchPageClient
+      matchId={matchId}
+      initialTab={initialTab}
+      playerKoreanNames={playerKoreanNames}
+      initialData={matchData}
+      initialPowerData={powerData}
+      allPlayerStats={playerStatsResult}
+      sidebarData={sidebarData}
+      highlightData={highlightData}
+    />
+  );
+}
+
 export default async function MatchPage({
   params,
   searchParams
@@ -128,16 +247,14 @@ export default async function MatchPage({
   searchParams: Promise<{ tab?: string }>
 }) {
   try {
-    // URL에서 ID 및 탭 가져오기
     const { id: matchId } = await params;
     const { tab } = await searchParams;
 
-    // 탭 유효성 검증 후 초기 탭 결정
     const initialTab: MatchTabType = tab && VALID_TABS.includes(tab as MatchTabType)
       ? (tab as MatchTabType)
       : DEFAULT_TAB;
 
-    // 모든 탭 데이터를 서버에서 프리로드
+    // Stage 1: 경기 기본 데이터만 await (헤더 + JSON-LD 표시용)
     const matchData = await fetchCachedMatchFullData(matchId, {
       fetchEvents: true,
       fetchLineups: true,
@@ -145,98 +262,17 @@ export default async function MatchPage({
       fetchStandings: true,
     });
 
-    // 기본 데이터 로드 실패 시 404 페이지
     if (!matchData.success) {
       return notFound();
     }
 
-    // 사이드바 데이터와 power 데이터를 병렬로 미리 로드
-    const homeTeamId = matchData.homeTeam?.id;
-    const awayTeamId = matchData.awayTeam?.id;
-    const numericMatchId = parseInt(matchId, 10);
-    const statusCode = matchData.match?.status?.code ?? '';
-    const finishedCodes = ['FT', 'AET', 'PEN'];
-    const isFinished = finishedCodes.includes(statusCode);
-
-    // 종료 경기: matchPlayerStats만 DB 캐시, power는 fetch cache에 의존
-    let powerDataResult: { success: boolean; data?: unknown } = { success: false };
-    let allPlayerStatsResult: AllPlayerStatsResponse | null = null;
-    let sidebarDataResult: { success: boolean; data?: unknown } = { success: false };
-
-    if (isFinished) {
-      // matchPlayerStats DB 캐시 조회 + 사이드바 병렬
-      const [cachedExtra, sidebarResult] = await Promise.all([
-        getMatchCacheBulk(numericMatchId, ['matchPlayerStats']),
-        getCachedSidebarData(matchId),
-      ]);
-      sidebarDataResult = sidebarResult;
-
-      const hasPlayerStats = !!cachedExtra['matchPlayerStats'];
-
-      if (hasPlayerStats) {
-        const cached = cachedExtra['matchPlayerStats'] as Record<string, unknown>;
-        if ('allPlayersData' in cached && Array.isArray(cached.allPlayersData)) {
-          allPlayerStatsResult = cached as AllPlayerStatsResponse;
-        }
-      }
-
-      // power(fetch cache) + 캐시 미스 항목 병렬 조회
-      const apiPromises: Promise<void>[] = [];
-
-      if (homeTeamId && awayTeamId) {
-        apiPromises.push(
-          getCachedPowerData(homeTeamId, awayTeamId, 5).then(r => {
-            powerDataResult = r;
-          })
-        );
-      }
-      if (!allPlayerStatsResult) {
-        apiPromises.push(
-          fetchAllPlayerStats(matchId, matchData.match?.status?.code).then(r => {
-            allPlayerStatsResult = r;
-            setMatchCache(numericMatchId, 'matchPlayerStats', r, statusCode).catch(() => {});
-          })
-        );
-      }
-
-      if (apiPromises.length > 0) await Promise.all(apiPromises);
-    } else {
-      // 비종료 경기: 병렬 호출
-      const [sResult, pResult, playerStatsResult] = await Promise.all([
-        getCachedSidebarData(matchId),
-        (homeTeamId && awayTeamId)
-          ? getCachedPowerData(homeTeamId, awayTeamId, 5)
-          : Promise.resolve({ success: false, data: undefined }),
-        fetchAllPlayerStats(matchId, matchData.match?.status?.code)
-      ]);
-      sidebarDataResult = sResult;
-      powerDataResult = pResult;
-      allPlayerStatsResult = playerStatsResult;
-    }
-
-    const sidebarData = sidebarDataResult.success ? sidebarDataResult.data : null;
-    const powerData = (powerDataResult as { success?: boolean; data?: unknown }).success
-      ? (powerDataResult as { data?: unknown }).data
-      : undefined;
-
-    // 선수 한글명 일괄 조회 (DB) + 하이라이트 병렬 조회
-    const playerIds = extractPlayerIds(matchData);
-    const leagueId = matchData.match?.league?.id;
-
-    const [playerKoreanNames, highlightData] = await Promise.all([
-      getPlayersKoreanNames(playerIds),
-      isFinished && homeTeamId && awayTeamId && leagueId
-        ? getMatchHighlight(numericMatchId, homeTeamId, awayTeamId, leagueId, matchData.match?.fixture?.date).catch(() => null)
-        : Promise.resolve(null),
-    ]);
-
-    // SportsEvent JSON-LD 생성
+    // JSON-LD 생성 (SEO)
     const match = matchData.match;
-    // matchData.matchData에 원본 API 데이터가 있음 (fixture.venue 포함)
     const rawData = matchData.matchData as Record<string, unknown> | undefined;
     const rawFixture = rawData?.fixture as { venue?: { name?: string; city?: string } } | undefined;
     const venueName = rawFixture?.venue?.name;
     const venueCity = rawFixture?.venue?.city;
+    const statusCode = match?.status?.code ?? '';
 
     const homeTeamMapping = match ? getTeamById(match.teams.home.id) : null;
     const awayTeamMapping = match ? getTeamById(match.teams.away.id) : null;
@@ -245,7 +281,6 @@ export default async function MatchPage({
     const awayTeamName = awayTeamMapping?.name_ko || match?.teams.away.name || '';
     const leagueName = leagueMapping?.nameKo || match?.league.name || '';
 
-    // eventStatus 결정 (구글은 EventCompleted를 지원하지 않음)
     const eventStatus = ['CANC', 'ABD'].includes(statusCode)
         ? 'https://schema.org/EventCancelled'
         : ['PST', 'SUSP'].includes(statusCode)
@@ -253,7 +288,6 @@ export default async function MatchPage({
           : 'https://schema.org/EventScheduled';
 
     const matchStartDate = match?.time?.date;
-    // endDate: startDate + 2시간 (축구 경기 평균 소요 시간)
     const matchEndDate = matchStartDate
       ? new Date(new Date(matchStartDate).getTime() + 2 * 60 * 60 * 1000).toISOString()
       : undefined;
@@ -284,14 +318,8 @@ export default async function MatchPage({
         { '@type': 'SportsTeam', name: homeTeamName },
         { '@type': 'SportsTeam', name: awayTeamName },
       ],
-      homeTeam: {
-        '@type': 'SportsTeam',
-        name: homeTeamName,
-      },
-      awayTeam: {
-        '@type': 'SportsTeam',
-        name: awayTeamName,
-      },
+      homeTeam: { '@type': 'SportsTeam', name: homeTeamName },
+      awayTeam: { '@type': 'SportsTeam', name: awayTeamName },
       organizer: {
         '@type': 'SportsOrganization',
         name: leagueName,
@@ -317,16 +345,14 @@ export default async function MatchPage({
             dangerouslySetInnerHTML={{ __html: JSON.stringify(sportsEventSchema) }}
           />
         )}
-        <MatchPageClient
-          matchId={matchId}
-          initialTab={initialTab}
-          playerKoreanNames={playerKoreanNames}
-          initialData={matchData}
-          initialPowerData={powerData}
-          allPlayerStats={allPlayerStatsResult}
-          sidebarData={sidebarData}
-          highlightData={highlightData}
-        />
+        {/* Suspense 스트리밍: matchData 즉시 전달, 나머지는 MatchContentLoader에서 병렬 로드 */}
+        <Suspense fallback={<MatchContentSkeleton />}>
+          <MatchContentLoader
+            matchId={matchId}
+            matchData={matchData}
+            initialTab={initialTab}
+          />
+        </Suspense>
       </div>
     );
   } catch (error) {

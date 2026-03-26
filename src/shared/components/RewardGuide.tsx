@@ -21,14 +21,14 @@ export default function RewardGuide({ type }: RewardGuideProps) {
 
   return (
     <div className="mt-4">
-      <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-2">
+      <h3 className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] mb-2">
         {title}
       </h3>
-      <p className="text-gray-700 dark:text-gray-300 text-sm mb-4">
+      <p className="text-gray-700 dark:text-gray-300 text-[13px] mb-4">
         {description}
       </p>
       <div className="bg-[#F5F5F5] dark:bg-[#262626] rounded-lg p-4">
-        <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+        <ul className="space-y-2 text-[13px] text-gray-700 dark:text-gray-300">
           {REWARD_DISPLAY_LIST.map((item) => {
             const value = isExp ? item.exp : item.points;
             const dailyMax = isExp ? item.dailyMaxExp : item.dailyMaxPoints;
@@ -56,7 +56,7 @@ export default function RewardGuide({ type }: RewardGuideProps) {
 
         {/* 연속 출석 마일스톤 */}
         <div className="mt-3 pt-3 border-t border-black/5 dark:border-white/10">
-          <p className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-2">연속 출석 보너스</p>
+          <p className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] mb-2">연속 출석 보너스</p>
           <div className="grid grid-cols-2 gap-2">
             {CONSECUTIVE_LOGIN_BONUSES.map((bonus) => (
               <div key={bonus.days} className="flex justify-between text-xs text-gray-600 dark:text-gray-400">

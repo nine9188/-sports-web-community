@@ -171,7 +171,7 @@ export default function PointManager({
           {selectedUser.nickname || "사용자"}님의 포인트 관리
         </h2>
 
-        <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mb-4">
+        <div className="flex items-center space-x-2 text-[13px] text-gray-500 dark:text-gray-400 mb-4">
           <span>현재 포인트:</span>
           <span className="font-bold text-gray-700 dark:text-gray-300">
             {selectedUser.points || 0} P
@@ -181,7 +181,7 @@ export default function PointManager({
         <form onSubmit={handleAdjustPoints} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                 포인트 금액
               </label>
               <div className="relative">
@@ -206,7 +206,7 @@ export default function PointManager({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                 사유
               </label>
               <input
@@ -269,16 +269,16 @@ export default function PointManager({
                 <tbody className="bg-white dark:bg-[#1D1D1D] divide-y divide-black/7 dark:divide-white/10">
                   {paginatedHistory.map((history) => (
                     <tr key={history.id}>
-                      <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      <td className="px-4 py-2 text-[13px] text-gray-500 dark:text-gray-400">
                         {history.created_at
                           ? formatDate(history.created_at as string) || "-"
                           : "-"}
                       </td>
-                      <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">
+                      <td className="px-4 py-2 text-[13px] text-gray-900 dark:text-gray-100">
                         {history.reason}
                       </td>
                       <td
-                        className={`px-4 py-2 text-sm font-medium text-right ${
+                        className={`px-4 py-2 text-[13px] font-medium text-right ${
                           history.points > 0
                             ? "text-green-600 dark:text-green-400"
                             : "text-red-600 dark:text-red-400"
@@ -288,7 +288,7 @@ export default function PointManager({
                           ? `+${history.points}`
                           : history.points}
                       </td>
-                      <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      <td className="px-4 py-2 text-[13px] text-gray-500 dark:text-gray-400">
                         {history.admin_id ? "관리자" : "시스템"}
                       </td>
                     </tr>

@@ -15,7 +15,7 @@ export const errorIconStyles = 'text-5xl mb-4';
 export const errorTitleStyles = 'text-xl font-semibold mb-3 text-gray-900 dark:text-[#F0F0F0]';
 
 // 설명 스타일
-export const errorDescriptionStyles = 'text-sm text-gray-700 dark:text-gray-300 mb-6';
+export const errorDescriptionStyles = 'text-[13px] text-gray-700 dark:text-gray-300 mb-6';
 
 // 에러 코드 스타일
 export const errorDigestStyles = 'text-xs text-gray-500 dark:text-gray-400 mb-4';
@@ -24,10 +24,10 @@ export const errorDigestStyles = 'text-xs text-gray-500 dark:text-gray-400 mb-4'
 export const errorButtonContainerStyles = 'flex flex-col sm:flex-row gap-3 justify-center';
 
 // Primary 버튼 스타일 (다시 시도)
-export const errorPrimaryButtonStyles = 'inline-block bg-[#262626] dark:bg-[#3F3F3F] text-white hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] px-4 py-2 rounded text-sm transition-colors';
+export const errorPrimaryButtonStyles = 'inline-block bg-[#262626] dark:bg-[#3F3F3F] text-white hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] px-4 py-2 rounded text-[13px] transition-colors';
 
 // Secondary 버튼 스타일 (돌아가기 링크)
-export const errorSecondaryButtonStyles = 'inline-block border border-black/7 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-4 py-2 rounded text-sm transition-colors';
+export const errorSecondaryButtonStyles = 'inline-block border border-black/7 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-4 py-2 rounded text-[13px] transition-colors';
 
 // 도메인별 에러 설정
 export const domainErrorConfig = {

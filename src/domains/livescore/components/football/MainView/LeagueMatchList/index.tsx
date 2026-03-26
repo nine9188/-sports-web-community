@@ -79,7 +79,7 @@ export default function LeagueMatchList({
     return (
       <Container className="bg-white dark:bg-[#1D1D1D]">
         <div className="h-14 flex items-center justify-center px-4 text-center">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-[13px] text-gray-500 dark:text-gray-400">
             경기 일정이 없습니다.
           </p>
         </div>
@@ -115,7 +115,7 @@ export default function LeagueMatchList({
                     className="w-5 h-5 object-contain"
                   />
                 )}
-                <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
+                <span className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">
                   {group.name}
                 </span>
               </div>

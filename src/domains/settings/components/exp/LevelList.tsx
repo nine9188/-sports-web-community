@@ -34,7 +34,7 @@ export default function LevelList({ currentLevel }: LevelListProps) {
 
       {isOpen && (
         <div className="p-4">
-          <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+          <p className="text-[13px] text-gray-700 dark:text-gray-300 mb-4">
             레벨별 필요 경험치와 아이콘을 확인하세요. 현재 레벨: <strong>Lv.{currentLevel}</strong>
           </p>
 
@@ -68,7 +68,7 @@ function AccordionHeader({ isOpen, onClick }: AccordionHeaderProps) {
       onClick={onClick}
       className={`w-full px-4 py-3 h-auto flex items-center justify-between rounded-none border-b ${isOpen ? 'border-black/5 dark:border-white/10' : 'border-transparent'}`}
     >
-      <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">레벨 및 아이콘 목록</h3>
+      <h3 className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">레벨 및 아이콘 목록</h3>
       {isOpen ? (
         <ChevronUp className="h-5 w-5 text-gray-500 dark:text-gray-400" />
       ) : (

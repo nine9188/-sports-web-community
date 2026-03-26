@@ -158,6 +158,7 @@ async function saveTeamToDatabase(
     is_active: true,
     popularity_score: 0,
     last_api_sync: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
     api_data: {
       team: team.team,
       venue: team.venue,
@@ -199,18 +200,10 @@ export async function syncAllFootballTeamsFromApi(): Promise<{
   let successfulLeagues = 0
 
   try {
-    // 기존 데이터 삭제
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: deleteError } = await (supabase as any)
-      .from('football_teams')
-      .delete()
-      .neq('id', 0)
+    // 동기화 시작 시각 기록 (이후 업데이트 안 된 팀 비활성화용)
+    const syncStartedAt = new Date().toISOString()
 
-    if (deleteError) {
-      throw new Error(`기존 데이터 삭제 실패: ${deleteError.message}`)
-    }
-
-    // 각 리그별로 데이터 가져오기 및 저장 (테스트 페이지와 동일한 로직)
+    // 각 리그별로 데이터 가져오기 및 upsert (기존 데이터 유지)
     for (const leagueId of allLeagueIds) {
       try {
         const rawData = await fetchRawLeagueData(leagueId)
@@ -250,17 +243,18 @@ export async function syncAllFootballTeamsFromApi(): Promise<{
       }
     }
 
-    // 검색 벡터 업데이트 (타입 에러 방지를 위해 주석 처리)
-    // const { error: vectorError } = await supabase
-    //   .from('football_teams')
-    //   .update({
-    //     search_vector: supabase.raw(`to_tsvector('simple', name || ' ' || COALESCE(venue_city, '') || ' ' || COALESCE(code, ''))`)
-    //   })
-    //   .neq('id', 0)
+    // 이번 동기화에서 업데이트 안 된 팀 비활성화
+    // (API에서 더 이상 제공하지 않는 팀 = 해체/합병 등)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: deactivateError } = await (supabase as any)
+      .from('football_teams')
+      .update({ is_active: false })
+      .lt('last_api_sync', syncStartedAt)
+      .eq('is_active', true)
 
-    // if (vectorError) {
-    //   console.warn('검색 벡터 업데이트 실패:', vectorError)
-    // }
+    if (deactivateError) {
+      errors.push(`비활성화 처리 실패: ${deactivateError.message}`)
+    }
 
     const summary = `총 ${allLeagueIds.length}개 리그 중 ${successfulLeagues}개 성공, ${totalTeams}개 팀 저장 완료`
 

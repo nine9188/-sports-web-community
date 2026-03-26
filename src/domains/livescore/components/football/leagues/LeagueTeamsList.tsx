@@ -43,7 +43,7 @@ export default function LeagueTeamsList({ teams, isLoading = false, leagueId, te
           <div className="text-gray-500 dark:text-gray-400 text-lg mb-2">
             소속 팀 정보를 찾을 수 없습니다
           </div>
-          <div className="text-gray-500 dark:text-gray-400 text-sm">
+          <div className="text-gray-500 dark:text-gray-400 text-[13px]">
             리그 정보를 다시 확인해주세요
           </div>
         </div>
@@ -93,7 +93,7 @@ export default function LeagueTeamsList({ teams, isLoading = false, leagueId, te
           height={24}
           className="w-6 h-6"
         />
-        <span className="text-sm text-gray-900 dark:text-[#F0F0F0] flex-1">
+        <span className="text-[13px] text-gray-900 dark:text-[#F0F0F0] flex-1">
           {displayName}
         </span>
         {team.isWinner && (

@@ -122,7 +122,7 @@ export default function SuspensionPopup() {
             <div className="flex items-center gap-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
               <Clock className="h-5 w-5 text-red-500 flex-shrink-0" />
               <div>
-                <p className="text-sm text-red-700 dark:text-red-300">
+                <p className="text-[13px] text-red-700 dark:text-red-300">
                   남은 정지 기간: <strong>{daysLeft}일</strong>
                 </p>
                 <p className="text-xs text-red-600 dark:text-red-400">
@@ -134,16 +134,16 @@ export default function SuspensionPopup() {
 
           {/* 정지 사유 */}
           <div className="space-y-2">
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">정지 사유</p>
+            <p className="text-[13px] font-medium text-gray-700 dark:text-gray-300">정지 사유</p>
             <div className="p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
-              <p className="text-sm text-gray-800 dark:text-gray-200">{reason}</p>
+              <p className="text-[13px] text-gray-800 dark:text-gray-200">{reason}</p>
             </div>
           </div>
 
           {/* 제한사항 */}
           <div className="space-y-2">
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">정지 중 제한사항</p>
-            <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1 pl-4">
+            <p className="text-[13px] font-medium text-gray-700 dark:text-gray-300">정지 중 제한사항</p>
+            <ul className="text-[13px] text-gray-600 dark:text-gray-400 space-y-1 pl-4">
               <li className="list-disc">게시글 작성 및 수정 불가</li>
               <li className="list-disc">댓글 작성 불가</li>
               <li className="list-disc">좋아요/싫어요 불가</li>
@@ -161,13 +161,13 @@ export default function SuspensionPopup() {
         <div className="px-6 pb-6 flex gap-3">
           <button
             onClick={handleClose}
-            className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-lg transition-colors"
+            className="flex-1 px-4 py-2.5 text-[13px] font-medium text-gray-700 dark:text-gray-300 bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-lg transition-colors"
           >
             닫기
           </button>
           <button
             onClick={handleGoToProfile}
-            className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-2.5 text-[13px] font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             <span>프로필 확인</span>
             <ExternalLink className="h-4 w-4" />

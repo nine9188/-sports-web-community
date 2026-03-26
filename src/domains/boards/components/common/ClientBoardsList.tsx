@@ -24,7 +24,7 @@ export default function ClientBoardsList({ initialBoardsData }: ClientBoardsList
             <li key={board.id} className="p-2 border rounded">
               <span className="font-medium">{board.name}</span>
               {board.description && (
-                <p className="text-sm text-gray-600">{board.description}</p>
+                <p className="text-[13px] text-gray-600">{board.description}</p>
               )}
             </li>
           ))}

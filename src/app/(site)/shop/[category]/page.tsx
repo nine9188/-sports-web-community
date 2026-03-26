@@ -138,7 +138,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           </ContainerHeader>
           {currentCategory.description && (
             <div className="px-4 py-3">
-              <p className="text-gray-700 dark:text-gray-300 text-sm">
+              <p className="text-gray-700 dark:text-gray-300 text-[13px]">
                 {currentCategory.description}
               </p>
             </div>

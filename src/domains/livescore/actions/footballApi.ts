@@ -4,6 +4,40 @@ import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 import { getMajorLeagueIds, getCurrentSeasonForLeague, isCalendarSeasonLeague } from '../constants/league-mappings';
 import { getTeamLogoUrls, getLeagueLogoUrls } from './images';
+import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
+
+// ── API 사용량 로깅 (fire-and-forget) ──
+
+interface ApiUsageData {
+  endpoint: string;
+  params: Record<string, string | number>;
+  statusCode: number;
+  remainingDaily: number | null;
+  remainingMinute: number | null;
+  responseHasError: boolean;
+  responseResults: number;
+  errorDetails?: Record<string, unknown>;
+  responseTimeMs: number;
+}
+
+async function logApiUsage(data: ApiUsageData): Promise<void> {
+  try {
+    const supabase = getSupabaseAdmin();
+    await supabase.from('api_usage_log').insert({
+      endpoint: data.endpoint,
+      params: data.params,
+      status_code: data.statusCode,
+      remaining_daily: data.remainingDaily,
+      remaining_minute: data.remainingMinute,
+      response_has_error: data.responseHasError,
+      response_results: data.responseResults,
+      error_details: data.errorDetails || null,
+      response_time_ms: data.responseTimeMs,
+    });
+  } catch {
+    // 로깅 실패는 무시 — API 응답에 영향 주면 안 됨
+  }
+}
 
 // 매치 데이터 인터페이스
 export interface MatchData {
@@ -210,24 +244,26 @@ export const fetchFromFootballApi = async (endpoint: string, params: Record<stri
 
   const url = `${API_BASE_URL}/${endpoint}?${queryParams.toString()}`;
 
-  // ⭐ endpoint별 최적 revalidate 시간 (데이터 특성에 맞춤)
+  // ⭐ endpoint별 최적 revalidate 시간 (API-Football 가이드 기준)
   const getRevalidateTime = (ep: string): number => {
     // 실시간성이 중요한 데이터: 짧게
-    if (ep.includes('fixtures')) return 120;          // 경기 정보: 2분 (LCP 안정화)
-    if (ep.includes('events')) return 30;             // 경기 이벤트: 30초
-    if (ep.includes('lineups')) return 300;           // 라인업: 5분 (경기 시작 전 확정)
+    if (ep.includes('events')) return 15;             // 경기 이벤트: 15초 (가이드: 15초)
+    if (ep.includes('fixtures')) return 120;          // 경기 정보: 2분
+    if (ep.includes('lineups')) return 300;           // 라인업: 5분
 
     // 자주 변하지 않는 데이터: 길게
-    if (ep.includes('standings')) return 1800;        // 순위표: 30분 (경기 종료 후 업데이트)
+    if (ep.includes('standings')) return 3600;        // 순위표: 1시간 (가이드: hourly update)
     if (ep.includes('players/')) return 3600;         // 선수 정보: 1시간
     if (ep.includes('teams/')) return 3600;           // 팀 정보: 1시간
     if (ep.includes('transfers')) return 86400;       // 이적 정보: 24시간
     if (ep.includes('trophies')) return 86400;        // 우승 기록: 24시간
-    if (ep.includes('injuries')) return 3600;         // 부상 정보: 1시간
+    if (ep.includes('injuries')) return 14400;        // 부상 정보: 4시간 (가이드: every 4 hours)
 
     // 기본값
     return 300; // 5분
   };
+
+  const startTime = Date.now();
 
   try {
     const response = await fetch(url, {
@@ -235,18 +271,65 @@ export const fetchFromFootballApi = async (endpoint: string, params: Record<stri
         'x-rapidapi-host': 'v3.football.api-sports.io',
         'x-rapidapi-key': API_KEY,
       },
-      // ⭐ endpoint별 최적 캐시 전략
-      // - fixtures: 1분 (실시간)
-      // - standings: 30분 (느린 업데이트)
-      // - 인스턴스 간 캐시 공유 (Vercel Data Cache)
+      // ⭐ endpoint별 최적 캐시 전략 (Vercel Data Cache)
       next: { revalidate: getRevalidateTime(endpoint) }
     });
 
     if (!response.ok) {
+      // HTTP 에러 시 로깅
+      logApiUsage({
+        endpoint,
+        params: finalParams as Record<string, string | number>,
+        statusCode: response.status,
+        remainingDaily: null,
+        remainingMinute: null,
+        responseHasError: true,
+        responseResults: 0,
+        errorDetails: { httpError: response.status, statusText: response.statusText },
+        responseTimeMs: Date.now() - startTime,
+      }).catch(() => {});
       throw new Error(`API 응답 오류: ${response.status}`);
     }
 
-    return await response.json();
+    // Rate limit 헤더 확인
+    const remainingDaily = response.headers.get('x-ratelimit-requests-remaining');
+    const remainingMinute = response.headers.get('X-RateLimit-Remaining');
+
+    if (remainingDaily && parseInt(remainingDaily) < 100) {
+      console.warn(`[API-Football] 일일 할당량 잔여: ${remainingDaily} (endpoint: ${endpoint})`);
+    }
+
+    const data = await response.json();
+
+    // response.errors 확인 (HTTP 200이어도 body에 에러가 있을 수 있음)
+    if (data.errors && typeof data.errors === 'object' && Object.keys(data.errors).length > 0) {
+      logApiUsage({
+        endpoint,
+        params: finalParams as Record<string, string | number>,
+        statusCode: response.status,
+        remainingDaily: remainingDaily ? parseInt(remainingDaily) : null,
+        remainingMinute: remainingMinute ? parseInt(remainingMinute) : null,
+        responseHasError: true,
+        responseResults: 0,
+        errorDetails: data.errors,
+        responseTimeMs: Date.now() - startTime,
+      }).catch(() => {});
+      throw new Error(`API-Football 에러: ${JSON.stringify(data.errors)}`);
+    }
+
+    // 정상 응답 로깅 (fire-and-forget)
+    logApiUsage({
+      endpoint,
+      params: finalParams as Record<string, string | number>,
+      statusCode: response.status,
+      remainingDaily: remainingDaily ? parseInt(remainingDaily) : null,
+      remainingMinute: remainingMinute ? parseInt(remainingMinute) : null,
+      responseHasError: false,
+      responseResults: data.results ?? 0,
+      responseTimeMs: Date.now() - startTime,
+    }).catch(() => {});
+
+    return data;
   } catch (error) {
     throw error;
   }
@@ -343,7 +426,7 @@ function applyImageUrls(
 /** 여러 날짜의 raw 매치 데이터에 배치로 이미지 URL 적용 (Supabase 쿼리 3회) */
 async function resolveMatchImages(
   matchesByDay: { key: string; matches: MatchData[] }[],
-  imageSize: 'sm' | 'md' | 'lg' = 'sm'
+  imageSize: 'sm' | 'md' = 'sm'
 ): Promise<Map<string, MatchData[]>> {
   // 1. 모든 팀/리그 ID 수집
   const teamIds = new Set<number>();

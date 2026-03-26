@@ -197,7 +197,7 @@ export default function SearchResultsContainer({
             <div className="text-gray-500 dark:text-gray-400 text-lg mb-2">
               &lsquo;<span className="font-medium text-gray-700 dark:text-gray-300">{query}</span>&rsquo;에 대한 검색 결과가 없습니다
             </div>
-            <div className="text-gray-400 text-sm">
+            <div className="text-gray-400 text-[13px]">
               다른 검색어를 시도해보세요
             </div>
           </div>
@@ -216,7 +216,7 @@ export default function SearchResultsContainer({
             <div className="text-gray-500 dark:text-gray-400 text-lg mb-2">
               검색어를 입력해주세요
             </div>
-            <div className="text-gray-400 text-sm">
+            <div className="text-gray-400 text-[13px]">
               게시글, 댓글, 팀 정보를 검색할 수 있습니다
             </div>
           </div>

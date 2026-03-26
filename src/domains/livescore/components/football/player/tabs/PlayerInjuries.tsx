@@ -65,7 +65,7 @@ export default function PlayerInjuries({
                       className="w-full h-full object-contain"
                     />
                   </div>
-                  <div className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
+                  <div className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
                     {getTeamById(injury.team.id)?.name_ko || injury.team.name}
                   </div>
                 </Link>

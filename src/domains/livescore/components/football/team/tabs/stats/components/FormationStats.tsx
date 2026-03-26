@@ -32,7 +32,7 @@ export default function FormationStats({ stats }: FormationStatsProps) {
           {visibleFormations.map((formation, index) => (
             <div key={index} className="flex items-center justify-between">
               <div className="flex-1">
-                <h4 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">{formation.formation}</h4>
+                <h4 className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">{formation.formation}</h4>
                 <p className="text-xs text-gray-500 dark:text-gray-400">{formation.played}경기 사용</p>
               </div>
               
@@ -54,7 +54,7 @@ export default function FormationStats({ stats }: FormationStatsProps) {
             <Button
               variant="ghost"
               onClick={toggleFormations}
-              className="mt-2 text-sm h-auto px-3 py-1"
+              className="mt-2 text-[13px] h-auto px-3 py-1"
             >
               {showAllFormations ? '접기' : '더 보기'}
             </Button>

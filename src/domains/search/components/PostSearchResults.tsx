@@ -53,7 +53,7 @@ export default function PostSearchResults({
 
   if (!posts.length && query) {
     return (
-      <div className="text-center py-8 text-gray-500 text-sm">
+      <div className="text-center py-8 text-gray-500 text-[13px]">
         게시글 검색 결과가 없습니다
       </div>
     )
@@ -64,7 +64,7 @@ export default function PostSearchResults({
       <div className="overflow-hidden">
       {/* 헤더 */}
       <div className="px-4 py-3 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10">
-        <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+        <h3 className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
           게시글 ({pagination?.totalItems || posts.length}개)
         </h3>
       </div>
@@ -79,7 +79,7 @@ export default function PostSearchResults({
               onClick={() => handlePostClick(post)}
             >
               {/* 제목 */}
-              <div className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-2 transition-colors">
+              <div className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] mb-2 transition-colors">
                 {highlightQuery(post.title, query)}
               </div>
 
@@ -126,7 +126,7 @@ export default function PostSearchResults({
         {/* 요약 문구 */}
         {pagination && currentType === 'posts' && (
           <div className="px-4 sm:px-6 py-3 border-t border-black/7 dark:border-white/10">
-            <p className="text-sm text-gray-700 dark:text-gray-300">
+            <p className="text-[13px] text-gray-700 dark:text-gray-300">
               총 <span className="font-medium">{pagination.totalItems}</span>개 중{' '}
               <span className="font-medium">{(pagination.currentPage - 1) * pagination.itemsPerPage + 1}</span>-
               <span className="font-medium">{Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)}</span>개 표시
@@ -139,7 +139,7 @@ export default function PostSearchResults({
         <div className="px-4 py-3 border-t border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
           <Link
             href={`/search?q=${encodeURIComponent(query)}&type=posts`}
-            className="text-sm text-gray-900 dark:text-[#F0F0F0] hover:underline font-medium transition-colors"
+            className="text-[13px] text-gray-900 dark:text-[#F0F0F0] hover:underline font-medium transition-colors"
           >
             더 많은 게시글 보기 ({pagination?.totalItems || 0}개) →
           </Link>

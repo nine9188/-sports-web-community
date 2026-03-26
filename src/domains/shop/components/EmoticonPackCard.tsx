@@ -31,7 +31,7 @@ export default function EmoticonPackCard({ pack, isOwned, onClick }: EmoticonPac
       </div>
 
       {/* 팩 이름 */}
-      <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate w-full text-center leading-tight">
+      <p className="text-xs sm:text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] truncate w-full text-center leading-tight">
         {pack.pack_name}
       </p>
 
@@ -52,7 +52,7 @@ export default function EmoticonPackCard({ pack, isOwned, onClick }: EmoticonPac
             무료
           </span>
         ) : (
-          <span className="text-xs sm:text-sm tabular-nums font-semibold text-gray-900 dark:text-[#F0F0F0]">
+          <span className="text-xs sm:text-[13px] tabular-nums font-semibold text-gray-900 dark:text-[#F0F0F0]">
             {pack.price?.toLocaleString()} P
           </span>
         )}

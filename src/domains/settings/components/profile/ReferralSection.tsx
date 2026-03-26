@@ -38,7 +38,7 @@ export default function ReferralSection({ userId, initialStats }: ReferralSectio
   if (loading) {
     return (
       <div className="space-y-3 border-t border-black/5 dark:border-white/10 pt-4">
-        <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">친구 추천</h3>
+        <h3 className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">친구 추천</h3>
         <div className="animate-pulse space-y-3">
           <div className="h-16 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg"></div>
           <div className="h-20 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg"></div>
@@ -51,12 +51,12 @@ export default function ReferralSection({ userId, initialStats }: ReferralSectio
 
   return (
     <div className="space-y-3 border-t border-black/5 dark:border-white/10 pt-4">
-      <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">친구 추천</h3>
+      <h3 className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">친구 추천</h3>
 
       {/* 내 추천 코드 */}
       <div className="p-4 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-gray-700 dark:text-gray-300">내 추천 코드</span>
+          <span className="text-[13px] text-gray-700 dark:text-gray-300">내 추천 코드</span>
           <Button
             variant="primary"
             size="sm"
@@ -86,7 +86,7 @@ export default function ReferralSection({ userId, initialStats }: ReferralSectio
 
       {/* 보상 안내 */}
       <div className="p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
-        <div className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-2">
+        <div className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] mb-2">
           추천 보상 안내
         </div>
         <ul className="text-xs text-gray-700 dark:text-gray-300 space-y-1">
@@ -101,7 +101,7 @@ export default function ReferralSection({ userId, initialStats }: ReferralSectio
 
       {/* 나를 추천한 사람 */}
       {stats.referredBy && (
-        <div className="text-sm text-gray-600 dark:text-gray-400">
+        <div className="text-[13px] text-gray-600 dark:text-gray-400">
           <span className="font-medium">{stats.referredBy.nickname}</span>님의 추천으로 가입
         </div>
       )}
@@ -121,7 +121,7 @@ export default function ReferralSection({ userId, initialStats }: ReferralSectio
             {stats.recentReferrals.slice(0, 5).map((referral, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between py-2 px-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg text-sm"
+                className="flex items-center justify-between py-2 px-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg text-[13px]"
               >
                 <span className="text-gray-900 dark:text-[#F0F0F0]">{referral.nickname}</span>
                 <span className="text-xs text-gray-500 dark:text-gray-400">

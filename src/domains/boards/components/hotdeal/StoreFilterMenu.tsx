@@ -56,7 +56,7 @@ export default function StoreFilterMenu() {
           <Button
             variant="ghost"
             onClick={selectAll}
-            className={`px-2 py-1 h-auto text-xs sm:text-sm whitespace-nowrap flex items-center gap-1 text-gray-700 dark:text-gray-300 flex-shrink-0 ${
+            className={`px-2 py-1 h-auto text-xs sm:text-[13px] whitespace-nowrap flex items-center gap-1 text-gray-700 dark:text-gray-300 flex-shrink-0 ${
               selectedStores.length === 0 ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
             }`}
           >
@@ -87,7 +87,7 @@ export default function StoreFilterMenu() {
                   key={store}
                   variant="ghost"
                   onClick={() => toggleStore(store)}
-                  className={`px-2 py-1 h-auto text-xs sm:text-sm whitespace-nowrap flex items-center gap-1 text-gray-700 dark:text-gray-300 ${
+                  className={`px-2 py-1 h-auto text-xs sm:text-[13px] whitespace-nowrap flex items-center gap-1 text-gray-700 dark:text-gray-300 ${
                     isSelected ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
                   }`}
                 >

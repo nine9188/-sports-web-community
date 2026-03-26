@@ -35,7 +35,7 @@ export default function NotificationDropdown({
     <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-[#1D1D1D] rounded-lg shadow-lg border border-black/7 dark:border-white/10 overflow-hidden z-50">
       {/* 헤더 */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
-        <h3 className="font-bold text-sm text-gray-900 dark:text-[#F0F0F0]">
+        <h3 className="font-bold text-[13px] text-gray-900 dark:text-[#F0F0F0]">
           알림 {unreadCount > 0 && <span className="text-gray-500 dark:text-gray-400">({unreadCount})</span>}
         </h3>
         {unreadCount > 0 && (
@@ -70,7 +70,7 @@ export default function NotificationDropdown({
             <svg className="w-12 h-12 mb-3 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
-            <p className="text-sm">새로운 알림이 없습니다</p>
+            <p className="text-[13px]">새로운 알림이 없습니다</p>
           </div>
         )}
       </div>
@@ -80,7 +80,7 @@ export default function NotificationDropdown({
         <Link
           href="/notifications"
           onClick={onClose}
-          className="block px-4 py-3 text-center text-sm text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
+          className="block px-4 py-3 text-center text-[13px] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
         >
           전체 알림 보기
         </Link>

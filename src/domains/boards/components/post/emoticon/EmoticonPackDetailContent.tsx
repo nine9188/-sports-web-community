@@ -49,13 +49,13 @@ export default function EmoticonPackDetailContent({
                   <Image src={detail.pack_thumbnail} alt={detail.pack_name} width={48} height={48} className="w-[48px] h-[48px] object-contain" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm text-gray-900 dark:text-[#F0F0F0] truncate">{detail.pack_name}</p>
+                  <p className="font-semibold text-[13px] text-gray-900 dark:text-[#F0F0F0] truncate">{detail.pack_name}</p>
                   {detail.pack_creator && (
                     <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 truncate">제작: {detail.pack_creator}</p>
                   )}
                   <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">{detail.emoticon_count}개 이모티콘</p>
                 </div>
-                <span className="text-sm tabular-nums font-bold text-gray-900 dark:text-[#F0F0F0] flex-shrink-0">
+                <span className="text-[13px] tabular-nums font-bold text-gray-900 dark:text-[#F0F0F0] flex-shrink-0">
                   {detail.isFree ? '무료' : `${(detail.price ?? 0).toLocaleString()} P`}
                 </span>
               </div>
@@ -71,7 +71,7 @@ export default function EmoticonPackDetailContent({
                 <Image src={detail.pack_thumbnail} alt={detail.pack_name} width={60} height={60} className="w-[60px] h-[60px] object-contain" />
               </div>
               <div className="flex flex-col min-w-0 w-[20%] flex-shrink-0">
-                <p className="font-semibold text-sm text-gray-900 dark:text-[#F0F0F0]">{detail.pack_name}</p>
+                <p className="font-semibold text-[13px] text-gray-900 dark:text-[#F0F0F0]">{detail.pack_name}</p>
                 {detail.pack_creator && (
                   <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">제작: {detail.pack_creator}</p>
                 )}
@@ -127,12 +127,12 @@ export default function EmoticonPackDetailContent({
           </div>
           <div className="flex-shrink-0">
             {detail.isOwned ? (
-              <span className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 font-medium">
+              <span className="flex items-center gap-1 text-[13px] text-gray-500 dark:text-gray-400 font-medium">
                 <Check className="w-4 h-4" />보유중
               </span>
             ) : (
               <button type="button" onClick={handlePurchaseClick}
-                className="px-4 h-9 rounded-lg text-sm font-medium bg-[#262626] dark:bg-[#3F3F3F] text-white hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] transition-colors">
+                className="px-4 h-9 rounded-lg text-[13px] font-medium bg-[#262626] dark:bg-[#3F3F3F] text-white hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] transition-colors">
                 {detail.isFree ? '무료 받기' : '구매하기'}
               </button>
             )}

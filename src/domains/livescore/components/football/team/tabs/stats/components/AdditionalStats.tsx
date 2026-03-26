@@ -14,11 +14,11 @@ export default function AdditionalStats({ stats }: AdditionalStatsProps) {
       <Container className="bg-white dark:bg-[#1D1D1D]">
         {/* 메인 헤더 - 반으로 나눔 */}
         <div className="flex h-12 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
-          <div className="flex-1 px-4 flex items-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+          <div className="flex-1 px-4 flex items-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
             페널티 통계
             <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-5 bg-gray-300 dark:bg-gray-500" />
           </div>
-          <div className="flex-1 px-4 flex items-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
+          <div className="flex-1 px-4 flex items-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">
             무득점 경기
           </div>
         </div>
@@ -40,29 +40,29 @@ export default function AdditionalStats({ stats }: AdditionalStatsProps) {
           {/* 데이터 */}
           <div className="flex items-center py-3">
             <div className="flex-1 flex">
-              <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
                 {stats.penalty?.total || 0}
                 <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
               </div>
-              <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
                 {stats.penalty?.scored?.total || 0}
                 <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
               </div>
-              <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
                 {stats.penalty?.missed?.total || 0}
                 <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-300 dark:bg-gray-500" />
               </div>
             </div>
             <div className="flex-1 flex">
-              <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
                 {stats.failed_to_score?.home || 0}
                 <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
               </div>
-              <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
                 {stats.failed_to_score?.away || 0}
                 <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
               </div>
-              <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
+              <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">
                 {stats.failed_to_score?.total || 0}
               </div>
             </div>
@@ -74,11 +74,11 @@ export default function AdditionalStats({ stats }: AdditionalStatsProps) {
       <Container className="bg-white dark:bg-[#1D1D1D]">
         {/* 메인 헤더 - 반으로 나눔 */}
         <div className="flex h-12 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
-          <div className="flex-1 px-4 flex items-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+          <div className="flex-1 px-4 flex items-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
             연속 기록
             <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-5 bg-gray-300 dark:bg-gray-500" />
           </div>
-          <div className="flex-1 px-4 flex items-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
+          <div className="flex-1 px-4 flex items-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">
             최다 득실점
           </div>
         </div>
@@ -100,33 +100,33 @@ export default function AdditionalStats({ stats }: AdditionalStatsProps) {
           {/* 데이터 */}
           <div className="flex items-center py-3">
             <div className="flex-1 flex">
-              <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
                 {stats.biggest?.streak?.wins || 0}
                 <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
               </div>
-              <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
                 {stats.biggest?.streak?.draws || 0}
                 <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
               </div>
-              <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
                 {stats.biggest?.streak?.loses || 0}
                 <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-300 dark:bg-gray-500" />
               </div>
             </div>
             <div className="flex-1 flex">
-              <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
                 {stats.biggest?.wins?.home || '-'}
                 <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
               </div>
-              <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
                 {stats.biggest?.wins?.away || '-'}
                 <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
               </div>
-              <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
                 {stats.biggest?.loses?.home || '-'}
                 <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
               </div>
-              <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
+              <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">
                 {stats.biggest?.loses?.away || '-'}
               </div>
             </div>

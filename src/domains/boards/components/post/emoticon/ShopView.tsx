@@ -121,7 +121,7 @@ export default function ShopView({ isMobile, onBack, onPackClick }: ShopViewProp
 
   const toolbar = (
     <div className="flex items-center justify-between px-4 border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] h-11 flex-shrink-0">
-      <button type="button" onClick={onBack} className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors">
+      <button type="button" onClick={onBack} className="flex items-center gap-1 text-[13px] text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors">
         <ArrowLeft className="w-4 h-4" />
         <span>돌아가기</span>
       </button>
@@ -135,7 +135,7 @@ export default function ShopView({ isMobile, onBack, onPackClick }: ShopViewProp
 
   const footer = (
     <div className={`flex items-center justify-center border-t border-black/5 dark:border-white/10 h-[64px] flex-shrink-0 ${isMobile ? 'mb-10' : ''}`}>
-      <Link href="/shop?category=emoticon-packs" className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors">
+      <Link href="/shop?category=emoticon-packs" className="text-[13px] text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors">
         이모티콘 상점 바로가기 →
       </Link>
     </div>
@@ -156,7 +156,7 @@ export default function ShopView({ isMobile, onBack, onPackClick }: ShopViewProp
       <div className={"flex flex-col flex-1 min-h-0 overflow-hidden"}>
         {toolbar}
         <div className={`flex flex-col items-center justify-center gap-2 ${isMobile ? 'flex-1 min-h-0' : DESKTOP_CONTENT_HEIGHT}`}>
-          <p className="text-sm text-gray-500 dark:text-gray-400">불러오기 실패</p>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400">불러오기 실패</p>
           <button type="button" onClick={() => refetch()} className="text-xs text-gray-500 hover:underline">다시 시도</button>
         </div>
         {footer}
@@ -180,7 +180,7 @@ export default function ShopView({ isMobile, onBack, onPackClick }: ShopViewProp
                     type="button"
                     variant="ghost"
                     onClick={() => setFilter(tab.key)}
-                    className={`px-2 py-1 h-auto text-xs sm:text-sm whitespace-nowrap flex items-center gap-1 text-gray-700 dark:text-gray-300 ${
+                    className={`px-2 py-1 h-auto text-xs sm:text-[13px] whitespace-nowrap flex items-center gap-1 text-gray-700 dark:text-gray-300 ${
                       filter === tab.key ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
                     }`}
                   >
@@ -197,7 +197,7 @@ export default function ShopView({ isMobile, onBack, onPackClick }: ShopViewProp
                   value={query}
                   onChange={e => setQuery(e.target.value)}
                   placeholder="이모티콘 팩 검색..."
-                  className="w-full pl-9 pr-8 py-1 text-sm bg-transparent text-gray-900 dark:text-[#F0F0F0] rounded-lg placeholder-gray-500 outline-none focus:outline-none hover:bg-[#F5F5F5] dark:hover:bg-[#262626] focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors"
+                  className="w-full pl-9 pr-8 py-1 text-[13px] bg-transparent text-gray-900 dark:text-[#F0F0F0] rounded-lg placeholder-gray-500 outline-none focus:outline-none hover:bg-[#F5F5F5] dark:hover:bg-[#262626] focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors"
                 />
                 {query && (
                   <button type="button" onClick={() => { setQuery(''); inputRef.current?.focus() }} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">

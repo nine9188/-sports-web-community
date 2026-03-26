@@ -44,7 +44,7 @@ export function NotificationForm({
       <div className="space-y-4">
         {/* 발송 모드 선택 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2">
             발송 대상
           </label>
           <div className="flex gap-2">
@@ -68,7 +68,7 @@ export function NotificationForm({
 
         {/* 제목 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2">
             제목 *
           </label>
           <input
@@ -83,7 +83,7 @@ export function NotificationForm({
 
         {/* 내용 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2">
             내용 *
           </label>
           <textarea
@@ -99,7 +99,7 @@ export function NotificationForm({
 
         {/* 링크 (선택) */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2">
             링크 (선택)
           </label>
           <input
@@ -143,7 +143,7 @@ export function NotificationForm({
             }`}
           >
             {result.success ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
-            <p className="text-sm">{result.message}</p>
+            <p className="text-[13px]">{result.message}</p>
           </div>
         )}
       </div>

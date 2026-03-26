@@ -37,7 +37,7 @@ export default function BoardTeamInfo({ teamData, boardId, boardSlug, isLoggedIn
   if (!teamData || !teamData.team || !teamData.venue) {
     return (
       <div className={`h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] ${className}`}>
-        <p className="text-sm text-gray-900 dark:text-[#F0F0F0]">팀 정보를 불러올 수 없습니다.</p>
+        <p className="text-[13px] text-gray-900 dark:text-[#F0F0F0]">팀 정보를 불러올 수 없습니다.</p>
         {isLoggedIn && (
           <Link
             href={`/boards/${boardSlug || boardId}/create`}
@@ -67,7 +67,7 @@ export default function BoardTeamInfo({ teamData, boardId, boardSlug, isLoggedIn
             className="object-contain w-6 h-6"
           />
         </div>
-        <span className="text-sm font-semibold truncate text-gray-900 dark:text-[#F0F0F0]">{team.name}</span>
+        <span className="text-[13px] font-semibold truncate text-gray-900 dark:text-[#F0F0F0]">{team.name}</span>
       </div>
       {isLoggedIn && (
         <Link

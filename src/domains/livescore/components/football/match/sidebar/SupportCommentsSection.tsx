@@ -73,7 +73,7 @@ function CommentItem({
               <svg className="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
-              <span className="text-sm text-red-600 dark:text-red-400 font-medium">신고에 의해 삭제되었습니다</span>
+              <span className="text-[13px] text-red-600 dark:text-red-400 font-medium">신고에 의해 삭제되었습니다</span>
             </div>
           </div>
         </div>
@@ -91,7 +91,7 @@ function CommentItem({
               <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
               </svg>
-              <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">신고에 의해 일시 숨김처리 되었습니다</span>
+              <span className="text-[13px] text-gray-700 dark:text-gray-300 font-medium">신고에 의해 일시 숨김처리 되었습니다</span>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400">7일 후 다시 검토됩니다</p>
           </div>
@@ -119,7 +119,7 @@ function CommentItem({
       </div>
 
       {/* 댓글 내용 */}
-      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+      <p className="text-[13px] text-gray-700 dark:text-gray-300 leading-relaxed">
         {comment.content}
       </p>
     </div>
@@ -263,7 +263,7 @@ export default function SupportCommentsSection({
             }}
           >
             <textarea
-              className="w-full px-3 py-3 border border-black/7 dark:border-white/10 bg-gray-50 dark:bg-[#262626] text-gray-400 dark:text-gray-500 rounded-lg text-sm placeholder-gray-400 dark:placeholder-gray-500 resize-none pointer-events-none"
+              className="w-full px-3 py-3 border border-black/7 dark:border-white/10 bg-gray-50 dark:bg-[#262626] text-gray-400 dark:text-gray-500 rounded-lg text-[13px] placeholder-gray-400 dark:placeholder-gray-500 resize-none pointer-events-none"
               rows={2}
               placeholder="댓글을 작성하려면 로그인해주세요."
               disabled
@@ -314,7 +314,7 @@ export default function SupportCommentsSection({
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 placeholder="응원 댓글을 남겨보세요..."
-                className="w-full px-3 py-3 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg text-sm resize-none outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] placeholder-gray-400 dark:placeholder-gray-500 transition-colors"
+                className="w-full px-3 py-3 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg text-[13px] resize-none outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] placeholder-gray-400 dark:placeholder-gray-500 transition-colors"
                 rows={2}
                 maxLength={300}
                 disabled={isSubmitting}
@@ -377,7 +377,7 @@ export default function SupportCommentsSection({
       {/* 댓글 목록 */}
       <div className="max-h-[32rem] overflow-y-auto">
         {filteredComments.length === 0 ? (
-          <div className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+          <div className="p-4 text-center text-[13px] text-gray-500 dark:text-gray-400">
             <p>아직 댓글이 없습니다.</p>
             <p className="text-xs mt-1">첫 번째 응원 댓글을 남겨보세요!</p>
           </div>

@@ -32,7 +32,7 @@ export default function TermsPage() {
         </div>
 
         {/* 본문 */}
-        <div className="prose prose-slate dark:prose-invert max-w-none text-sm leading-7 space-y-6
+        <div className="prose prose-slate dark:prose-invert max-w-none text-[13px] leading-7 space-y-6
           prose-headings:text-gray-900 dark:prose-headings:text-[#F0F0F0]
           prose-p:text-gray-700 dark:prose-p:text-gray-300
           prose-li:text-gray-700 dark:prose-li:text-gray-300

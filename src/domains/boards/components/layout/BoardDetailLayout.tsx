@@ -228,7 +228,7 @@ export default function BoardDetailLayout({
         <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
           {/* 게시판 헤더 */}
           <div className="h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626]">
-            <h1 className="text-sm font-semibold truncate text-gray-900 dark:text-[#F0F0F0]">
+            <h1 className="text-[13px] font-semibold truncate text-gray-900 dark:text-[#F0F0F0]">
               {boardData.name}
             </h1>
             {isLoggedIn && (slug !== 'notice' || isAdmin) && (
@@ -304,7 +304,7 @@ export default function BoardDetailLayout({
         {isLoggedIn && (slug !== 'notice' || isAdmin) && (
           <Link
             href={`/boards/${slug}/create`}
-            className="flex items-center justify-center gap-1 px-3 py-2 border border-black/7 dark:border-0 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded text-sm transition-colors whitespace-nowrap min-h-[36px]"
+            className="flex items-center justify-center gap-1 px-3 py-2 border border-black/7 dark:border-0 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded text-[13px] transition-colors whitespace-nowrap min-h-[36px]"
           >
             <PenLine className="h-4 w-4" />
             <span className="hidden sm:inline">글쓰기</span>
@@ -314,7 +314,7 @@ export default function BoardDetailLayout({
 
       {/* 검색 결과 표시 */}
       {searchQuery && (
-        <div className="mt-2 px-4 sm:px-0 text-sm text-gray-600 dark:text-gray-400">
+        <div className="mt-2 px-4 sm:px-0 text-[13px] text-gray-600 dark:text-gray-400">
           <span className="font-medium">&apos;{searchQuery}&apos;</span> 검색
           결과: {pagination?.totalItems || 0}건
         </div>

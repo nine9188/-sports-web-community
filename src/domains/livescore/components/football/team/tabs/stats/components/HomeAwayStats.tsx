@@ -45,33 +45,33 @@ export default function HomeAwayStats({ stats }: HomeAwayStatsProps) {
               ))}
             </div>
             <div className="flex items-center py-3">
-              <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
                 {safeFixtures.played.home}
                 <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
               </div>
-              <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
                 {safeFixtures.wins.home}
                 <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
               </div>
-              <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
                 {safeFixtures.draws.home}
                 <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
               </div>
-              <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
                 {safeFixtures.loses.home}
                 <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
               </div>
               <div className="flex-1 text-center relative">
-                <div className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">{safeGoals.for.total.home}</div>
+                <div className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">{safeGoals.for.total.home}</div>
                 <div className="text-[9px] text-gray-400 dark:text-gray-500">({safeGoals.for.average?.home || '0'})</div>
                 <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
               </div>
               <div className="flex-1 text-center relative">
-                <div className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">{safeGoals.against.total.home}</div>
+                <div className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">{safeGoals.against.total.home}</div>
                 <div className="text-[9px] text-gray-400 dark:text-gray-500">({safeGoals.against.average?.home || '0'})</div>
                 <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
               </div>
-              <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
+              <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">
                 {safeCleanSheet.home}
               </div>
             </div>
@@ -90,33 +90,33 @@ export default function HomeAwayStats({ stats }: HomeAwayStatsProps) {
               ))}
             </div>
             <div className="flex items-center py-3">
-              <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
                 {safeFixtures.played.away}
                 <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
               </div>
-              <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
                 {safeFixtures.wins.away}
                 <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
               </div>
-              <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
                 {safeFixtures.draws.away}
                 <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
               </div>
-              <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+              <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
                 {safeFixtures.loses.away}
                 <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
               </div>
               <div className="flex-1 text-center relative">
-                <div className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">{safeGoals.for.total.away}</div>
+                <div className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">{safeGoals.for.total.away}</div>
                 <div className="text-[9px] text-gray-400 dark:text-gray-500">({safeGoals.for.average?.away || '0'})</div>
                 <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
               </div>
               <div className="flex-1 text-center relative">
-                <div className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">{safeGoals.against.total.away}</div>
+                <div className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">{safeGoals.against.total.away}</div>
                 <div className="text-[9px] text-gray-400 dark:text-gray-500">({safeGoals.against.average?.away || '0'})</div>
                 <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
               </div>
-              <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
+              <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">
                 {safeCleanSheet.away}
               </div>
             </div>
@@ -128,11 +128,11 @@ export default function HomeAwayStats({ stats }: HomeAwayStatsProps) {
       <Container className="hidden md:block bg-white dark:bg-[#1D1D1D]">
         {/* 홈 | 원정 헤더 */}
         <div className="flex h-12 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
-          <div className="flex-1 px-4 flex items-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+          <div className="flex-1 px-4 flex items-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
             홈 경기 통계
             <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-5 bg-gray-300 dark:bg-gray-500" />
           </div>
-          <div className="flex-1 px-4 flex items-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
+          <div className="flex-1 px-4 flex items-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">
             원정 경기 통계
           </div>
         </div>
@@ -154,66 +154,66 @@ export default function HomeAwayStats({ stats }: HomeAwayStatsProps) {
         <div className="flex items-center py-3">
           {/* 홈 데이터 */}
           <div className="flex-1 flex">
-            <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+            <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
               {safeFixtures.played.home}
               <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
             </div>
-            <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+            <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
               {safeFixtures.wins.home}
               <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
             </div>
-            <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+            <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
               {safeFixtures.draws.home}
               <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
             </div>
-            <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+            <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
               {safeFixtures.loses.home}
               <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
             </div>
             <div className="flex-1 text-center relative">
-              <div className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">{safeGoals.for.total.home}</div>
+              <div className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">{safeGoals.for.total.home}</div>
               <div className="text-[9px] text-gray-400 dark:text-gray-500">({safeGoals.for.average?.home || '0'})</div>
               <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
             </div>
             <div className="flex-1 text-center relative">
-              <div className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">{safeGoals.against.total.home}</div>
+              <div className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">{safeGoals.against.total.home}</div>
               <div className="text-[9px] text-gray-400 dark:text-gray-500">({safeGoals.against.average?.home || '0'})</div>
               <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
             </div>
-            <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+            <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
               {safeCleanSheet.home}
               <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-300 dark:bg-gray-500" />
             </div>
           </div>
           {/* 원정 데이터 */}
           <div className="flex-1 flex">
-            <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+            <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
               {safeFixtures.played.away}
               <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
             </div>
-            <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+            <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
               {safeFixtures.wins.away}
               <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
             </div>
-            <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+            <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
               {safeFixtures.draws.away}
               <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
             </div>
-            <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+            <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
               {safeFixtures.loses.away}
               <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
             </div>
             <div className="flex-1 text-center relative">
-              <div className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">{safeGoals.for.total.away}</div>
+              <div className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">{safeGoals.for.total.away}</div>
               <div className="text-[9px] text-gray-400 dark:text-gray-500">({safeGoals.for.average?.away || '0'})</div>
               <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
             </div>
             <div className="flex-1 text-center relative">
-              <div className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">{safeGoals.against.total.away}</div>
+              <div className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">{safeGoals.against.total.away}</div>
               <div className="text-[9px] text-gray-400 dark:text-gray-500">({safeGoals.against.average?.away || '0'})</div>
               <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-gray-200 dark:bg-gray-600" />
             </div>
-            <div className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
+            <div className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">
               {safeCleanSheet.away}
             </div>
           </div>

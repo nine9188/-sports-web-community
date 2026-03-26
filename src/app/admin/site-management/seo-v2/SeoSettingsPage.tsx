@@ -158,7 +158,7 @@ export default function SeoSettingsPage({ initialSettings, boards }: Props) {
     <div className="space-y-6 p-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0]">SEO 설정</h1>
-        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+        <p className="mt-1 text-[13px] text-gray-600 dark:text-gray-400">
           사이트 전체 및 페이지별 메타데이터를 관리합니다
         </p>
       </div>
@@ -178,7 +178,7 @@ export default function SeoSettingsPage({ initialSettings, boards }: Props) {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0]">
               페이지별 SEO 설정
             </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-1">
               각 페이지의 메타 제목과 설명을 커스터마이징할 수 있습니다.
             </p>
           </div>
@@ -207,7 +207,7 @@ export default function SeoSettingsPage({ initialSettings, boards }: Props) {
         {/* 게시판 목록 */}
         {boards.length > 0 && (
           <div className="border-t border-black/7 dark:border-white/10 mt-6 pt-4">
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">게시판</h3>
+            <h3 className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-3">게시판</h3>
             <div className="space-y-2">
               {boards
                 .filter((board) => !board.parent_id)
@@ -271,7 +271,7 @@ export default function SeoSettingsPage({ initialSettings, boards }: Props) {
         {/* 커스텀 페이지 목록 */}
         {customPages.length > 0 && (
           <div className="border-t border-black/7 dark:border-white/10 mt-6 pt-4">
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+            <h3 className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-3">
               직접 추가한 페이지
             </h3>
             <div className="space-y-2">

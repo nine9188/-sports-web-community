@@ -58,7 +58,7 @@ export default async function IconSettingsPage() {
       <Container className="bg-white dark:bg-[#1D1D1D]">
         <ContainerContent>
           <h2 className="text-xl font-semibold mb-1 text-gray-900 dark:text-[#F0F0F0]">아이콘 설정</h2>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
+          <p className="text-gray-500 dark:text-gray-400 text-[13px]">
             프로필에 표시될 아이콘을 선택하고 관리합니다.
           </p>
         </ContainerContent>

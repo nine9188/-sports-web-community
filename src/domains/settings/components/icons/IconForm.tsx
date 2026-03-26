@@ -120,7 +120,7 @@ export default function IconForm({
             </div>
 
             <div>
-              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{displayIconName}</div>
+              <div className="text-[13px] font-medium text-gray-700 dark:text-gray-300">{displayIconName}</div>
             </div>
           </div>
         </ContainerContent>
@@ -209,7 +209,7 @@ export default function IconForm({
           <div className="mt-4 flex items-center justify-between">
             <Link
               href="/shop"
-              className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+              className="text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
             >
               더 많은 아이콘 보기 →
             </Link>
@@ -220,7 +220,7 @@ export default function IconForm({
               className="gap-2"
             >
               {isLoading && <Spinner size="xs" />}
-              <span className="text-sm">아이콘 저장</span>
+              <span className="text-[13px]">아이콘 저장</span>
             </Button>
           </div>
         </ContainerContent>

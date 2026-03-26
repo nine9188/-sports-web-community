@@ -208,7 +208,7 @@ export function EntityPickerForm({
                 <ChevronLeft className="w-4 h-4 text-gray-600 dark:text-gray-400" />
               </Button>
             )}
-            <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
+            <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">
               {activeTab === 'team' ? '팀 선택' : '선수 선택'}
             </h3>
           </div>

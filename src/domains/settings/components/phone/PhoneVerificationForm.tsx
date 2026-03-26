@@ -141,7 +141,7 @@ export default function PhoneVerificationForm({ userId, initialStatus }: PhoneVe
     return (
       <div className="space-y-4">
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+          <label className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
             휴대폰번호
           </label>
           <div className="flex items-center gap-2">
@@ -159,11 +159,11 @@ export default function PhoneVerificationForm({ userId, initialStatus }: PhoneVe
               인증완료
             </Button>
           </div>
-          <p className="text-sm text-gray-700 dark:text-gray-300">
+          <p className="text-[13px] text-gray-700 dark:text-gray-300">
             인증이 완료되었습니다.
           </p>
           {reward && (
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-[13px] text-gray-500 dark:text-gray-400">
               보상 지급: 포인트 +{reward.points}P / 경험치 +{reward.exp}EXP
             </p>
           )}
@@ -176,7 +176,7 @@ export default function PhoneVerificationForm({ userId, initialStatus }: PhoneVe
     <div className="space-y-4">
       {/* 휴대폰번호 입력 */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+        <label className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
           휴대폰번호
         </label>
         <div className="flex items-center gap-2">
@@ -250,7 +250,7 @@ export default function PhoneVerificationForm({ userId, initialStatus }: PhoneVe
 
         {/* 메시지 */}
         {message && (
-          <p className={`text-sm ${
+          <p className={`text-[13px] ${
             message.type === 'error'
               ? 'text-red-500 dark:text-red-400'
               : 'text-gray-700 dark:text-gray-300'
@@ -264,7 +264,7 @@ export default function PhoneVerificationForm({ userId, initialStatus }: PhoneVe
 
         {/* 유효시간만 표시 (메시지 없을 때) */}
         {step === 'verify' && expiryTime > 0 && !message && (
-          <p className="text-sm text-gray-700 dark:text-gray-300">
+          <p className="text-[13px] text-gray-700 dark:text-gray-300">
             인증번호가 발송되었습니다. 유효시간 {formatTime(expiryTime)}
           </p>
         )}

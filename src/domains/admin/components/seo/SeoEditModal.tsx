@@ -51,7 +51,7 @@ export function SeoEditModal({
 
         <DialogBody className="space-y-4">
           {!isAddMode && (
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-[13px] text-gray-500 dark:text-gray-400">
               <code className="bg-gray-200 dark:bg-[#363636] px-2 py-0.5 rounded text-gray-600 dark:text-gray-400">
                 {path}
               </code>
@@ -60,7 +60,7 @@ export function SeoEditModal({
 
           {isAddMode && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                 페이지 경로 *
               </label>
               <input
@@ -74,7 +74,7 @@ export function SeoEditModal({
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
               제목 *
             </label>
             <input
@@ -87,7 +87,7 @@ export function SeoEditModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
               설명 (150-160자 권장)
             </label>
             <textarea

@@ -46,7 +46,7 @@ export default function LeagueHeader({ league, leagueLogoUrl, leagueLogoUrlDark 
         {/* 상단 네비게이션 */}
         <Link
           href="/livescore/football/leagues"
-          className="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors group px-2 py-1 rounded outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+          className="flex items-center space-x-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors group px-2 py-1 rounded outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
         >
           <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -73,7 +73,7 @@ export default function LeagueHeader({ league, leagueLogoUrl, leagueLogoUrlDark 
           <div className="flex-1">
             <div className="flex items-center flex-wrap gap-x-3 gap-y-1">
               <div className="flex items-center space-x-2">
-                <h1 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
+                <h1 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">
                   {displayName}
                 </h1>
                 {/* 국가 플래그 */}

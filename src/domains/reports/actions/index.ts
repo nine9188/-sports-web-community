@@ -223,6 +223,7 @@ export async function processReport(request: ProcessReportRequest): Promise<Repo
         status: request.status,
         reviewed_by: user.id,
         reviewed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       })
       .eq('id', request.reportId)
       .select()
@@ -354,6 +355,7 @@ export async function executeReportAction(
         status: 'resolved',
         reviewed_by: user.id,
         reviewed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       })
       .eq('id', reportId);
 

@@ -204,7 +204,7 @@ export default function FixturesTab({ matches, teamId, teamLogoUrls = {}, league
                   <td className="p-0 md:px-2">
                     <Link href={`/livescore/football/match/${match.fixture.id}`} className="flex items-center justify-between">
                       <div className="flex-1 flex items-center justify-end gap-0 min-w-0">
-                        <span className={`truncate max-w-[100px] md:max-w-[180px] text-right mr-1 text-xs md:text-sm text-gray-900 dark:text-[#F0F0F0] ${match.teams.home.id === teamId ? 'font-bold' : ''}`}>
+                        <span className={`truncate max-w-[100px] md:max-w-[180px] text-right mr-1 text-xs md:text-[13px] text-gray-900 dark:text-[#F0F0F0] ${match.teams.home.id === teamId ? 'font-bold' : ''}`}>
                           {match.teams.home.name}
                         </span>
                         <UnifiedSportsImageClient
@@ -228,7 +228,7 @@ export default function FixturesTab({ matches, teamId, teamLogoUrls = {}, league
                           height={20}
                           className="object-contain w-5 h-5 flex-shrink-0"
                         />
-                        <span className={`truncate max-w-[100px] md:max-w-[180px] text-left ml-1 text-xs md:text-sm text-gray-900 dark:text-[#F0F0F0] ${match.teams.away.id === teamId ? 'font-bold' : ''}`}>
+                        <span className={`truncate max-w-[100px] md:max-w-[180px] text-left ml-1 text-xs md:text-[13px] text-gray-900 dark:text-[#F0F0F0] ${match.teams.away.id === teamId ? 'font-bold' : ''}`}>
                           {match.teams.away.name}
                         </span>
                       </div>

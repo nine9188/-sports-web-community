@@ -75,7 +75,7 @@ export function BoardForm({
 
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label htmlFor="name" className="block text-[13px] font-medium text-gray-700 dark:text-gray-300">
             게시판 이름
           </label>
           <input
@@ -97,7 +97,7 @@ export function BoardForm({
         </div>
 
         <div>
-          <label htmlFor="slug" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label htmlFor="slug" className="block text-[13px] font-medium text-gray-700 dark:text-gray-300">
             슬러그 (URL)
           </label>
           <div className="mt-1 flex rounded-md shadow-sm">
@@ -121,7 +121,7 @@ export function BoardForm({
         </div>
 
         <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label htmlFor="description" className="block text-[13px] font-medium text-gray-700 dark:text-gray-300">
             설명
           </label>
           <textarea
@@ -134,7 +134,7 @@ export function BoardForm({
         </div>
 
         <div>
-          <label htmlFor="access_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor="access_level" className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
             접근 권한
           </label>
           <NativeSelect
@@ -146,7 +146,7 @@ export function BoardForm({
         </div>
 
         <div>
-          <label htmlFor="view_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor="view_type" className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
             게시판 유형
           </label>
           <NativeSelect
@@ -163,7 +163,7 @@ export function BoardForm({
         </div>
 
         <div>
-          <label htmlFor="parent_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor="parent_id" className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
             상위 게시판 (선택사항)
           </label>
           <NativeSelect
@@ -177,7 +177,7 @@ export function BoardForm({
         </div>
 
         <div>
-          <label htmlFor="team_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label htmlFor="team_id" className="block text-[13px] font-medium text-gray-700 dark:text-gray-300">
             팀 ID (선택사항)
           </label>
           <input

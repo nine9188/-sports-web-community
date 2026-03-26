@@ -26,7 +26,7 @@ export function ExpAdjustForm({
     <form onSubmit={onSubmit} className="mb-6">
       <div className="grid md:grid-cols-2 gap-4 mb-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">경험치 조정</label>
+          <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">경험치 조정</label>
           <div className="mt-1 relative rounded-md">
             <input
               type="number"
@@ -36,14 +36,14 @@ export function ExpAdjustForm({
               placeholder="0"
             />
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-              <span className="text-gray-500 dark:text-gray-400 sm:text-sm">EXP</span>
+              <span className="text-gray-500 dark:text-gray-400 sm:text-[13px]">EXP</span>
             </div>
           </div>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">양수(+)는 증가, 음수(-)는 차감입니다</p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">사유</label>
+          <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">사유</label>
           <input
             type="text"
             value={reason}

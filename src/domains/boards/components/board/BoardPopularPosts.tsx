@@ -138,7 +138,7 @@ export default function BoardPopularPosts({
         <div className="flex items-center justify-between px-4 py-3 border-b border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
           <div className="flex items-center">
             <TrendingUp className="w-4 h-4 text-gray-900 dark:text-[#F0F0F0] mr-2" />
-            <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">{tabLabel}</h3>
+            <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">{tabLabel}</h3>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <span className="text-xs text-gray-600 dark:text-gray-400">
@@ -173,7 +173,7 @@ export default function BoardPopularPosts({
           <div className="border-r border-black/5 dark:border-white/10">
             <div className="h-12 bg-[#F5F5F5] dark:bg-[#262626] px-4 flex items-center border-b border-black/5 dark:border-white/10">
               <TrendingUp className="w-4 h-4 text-gray-900 dark:text-[#F0F0F0] mr-2" />
-              <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">이번주 BEST</h3>
+              <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">이번주 BEST</h3>
             </div>
             <table className="w-full border-collapse">
               <tbody>
@@ -186,7 +186,7 @@ export default function BoardPopularPosts({
           <div>
             <div className="h-12 bg-[#F5F5F5] dark:bg-[#262626] px-4 flex items-center border-b border-black/5 dark:border-white/10">
               <TrendingUp className="w-4 h-4 text-gray-900 dark:text-[#F0F0F0] mr-2" />
-              <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">이번달 BEST</h3>
+              <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">이번달 BEST</h3>
             </div>
             <table className="w-full border-collapse">
               <tbody>

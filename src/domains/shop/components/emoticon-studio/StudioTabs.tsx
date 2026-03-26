@@ -39,7 +39,7 @@ export default function StudioTabs() {
               type="button"
               variant="ghost"
               onClick={() => handleTabChange(tab.key)}
-              className={`px-2 py-1 h-auto text-xs sm:text-sm whitespace-nowrap flex items-center gap-1 text-gray-700 dark:text-gray-300 ${
+              className={`px-2 py-1 h-auto text-xs sm:text-[13px] whitespace-nowrap flex items-center gap-1 text-gray-700 dark:text-gray-300 ${
                 currentTab === tab.key ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
               }`}
             >

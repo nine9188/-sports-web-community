@@ -120,7 +120,7 @@ const BoardCategoryItem = ({
     return (
       <div key={board.id}>
         <div
-          className="flex items-center text-sm py-2 px-4 text-gray-500 dark:text-gray-400 cursor-pointer"
+          className="flex items-center text-[13px] py-2 px-4 text-gray-500 dark:text-gray-400 cursor-pointer"
           style={{ paddingLeft: `${depth * 12 + 16}px` }}
           onClick={() => toggleCategory(board.id)}
         >
@@ -165,7 +165,7 @@ const BoardCategoryItem = ({
         <Link
           href={`/boards/${boardSlug}`}
           onClick={onNavigate}
-          className={`flex items-center text-sm py-2 px-4 transition-colors ${
+          className={`flex items-center text-[13px] py-2 px-4 transition-colors ${
             isActive
               ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] font-medium'
               : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]'
@@ -235,7 +235,7 @@ export default function ClientBoardNavigation({
       <Link
         href="/boards/all"
         onClick={onNavigate}
-        className={`flex items-center justify-between text-sm py-2 px-4 transition-colors ${
+        className={`flex items-center justify-between text-[13px] py-2 px-4 transition-colors ${
           isAllPostsActive
             ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] font-medium'
             : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]'
@@ -260,7 +260,7 @@ export default function ClientBoardNavigation({
             key={item.href}
             href={item.href}
             onClick={onNavigate}
-            className={`flex items-center gap-3 text-sm py-2 px-4 transition-colors ${
+            className={`flex items-center gap-3 text-[13px] py-2 px-4 transition-colors ${
               isActive
                 ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] font-medium'
                 : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]'
@@ -275,7 +275,7 @@ export default function ClientBoardNavigation({
         <Link
           href="/admin"
           onClick={onNavigate}
-          className={`flex items-center gap-3 text-sm py-2 px-4 transition-colors ${
+          className={`flex items-center gap-3 text-[13px] py-2 px-4 transition-colors ${
             pathname.startsWith('/admin')
               ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] font-medium'
               : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]'

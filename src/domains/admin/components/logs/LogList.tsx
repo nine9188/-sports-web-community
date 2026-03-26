@@ -64,7 +64,7 @@ export function LogList({
               이전
             </Button>
 
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-[13px] text-gray-600 dark:text-gray-400">
               {page} / {totalPages}
             </span>
 

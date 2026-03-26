@@ -165,7 +165,7 @@ export default function SubmitForm() {
       <ContainerContent className="px-4 py-4 space-y-4">
         {/* 팩 이름 */}
         <div>
-          <label className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-1">팩 이름</label>
+          <label className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] mb-1">팩 이름</label>
           <div className="flex gap-2">
             <input
               type="text"
@@ -173,7 +173,7 @@ export default function SubmitForm() {
               onChange={e => setPackName(e.target.value)}
               maxLength={SUBMISSION_LIMITS.PACK_NAME_MAX}
               placeholder={`${SUBMISSION_LIMITS.PACK_NAME_MIN}~${SUBMISSION_LIMITS.PACK_NAME_MAX}자`}
-              className="flex-1 px-3 py-2 text-sm border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg outline-none focus:outline-none hover:bg-[#F5F5F5] dark:hover:bg-[#262626] focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors"
+              className="flex-1 px-3 py-2 text-[13px] border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg outline-none focus:outline-none hover:bg-[#F5F5F5] dark:hover:bg-[#262626] focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors"
             />
           </div>
           {packName.trim().length >= 2 && (
@@ -185,11 +185,11 @@ export default function SubmitForm() {
 
         {/* 카테고리 */}
         <div>
-          <label className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-1">카테고리</label>
+          <label className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] mb-1">카테고리</label>
           <select
             value={category}
             onChange={e => setCategory(e.target.value as EmoticonCategory)}
-            className="w-full px-3 py-2 text-sm border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg outline-none"
+            className="w-full px-3 py-2 text-[13px] border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg outline-none"
           >
             {EMOTICON_CATEGORIES.map(c => (
               <option key={c.value} value={c.value}>{c.label}</option>
@@ -199,7 +199,7 @@ export default function SubmitForm() {
 
         {/* 대표 이미지 */}
         <div>
-          <label className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-1">대표 이미지</label>
+          <label className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] mb-1">대표 이미지</label>
           <div className="flex items-center gap-3">
             {thumbnailPreview ? (
               <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-black/7 dark:border-white/10">
@@ -222,21 +222,21 @@ export default function SubmitForm() {
 
         {/* 설명 */}
         <div>
-          <label className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-1">설명</label>
+          <label className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] mb-1">설명</label>
           <textarea
             value={description}
             onChange={e => setDescription(e.target.value)}
             maxLength={SUBMISSION_LIMITS.DESCRIPTION_MAX}
             rows={3}
             placeholder={`${SUBMISSION_LIMITS.DESCRIPTION_MIN}~${SUBMISSION_LIMITS.DESCRIPTION_MAX}자`}
-            className="w-full px-3 py-2 text-sm border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg outline-none resize-none hover:bg-[#F5F5F5] dark:hover:bg-[#262626] focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors"
+            className="w-full px-3 py-2 text-[13px] border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg outline-none resize-none hover:bg-[#F5F5F5] dark:hover:bg-[#262626] focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors"
           />
           <p className="text-xs text-gray-400 mt-0.5 text-right">{description.length}/{SUBMISSION_LIMITS.DESCRIPTION_MAX}</p>
         </div>
 
         {/* 희망 가격 */}
         <div>
-          <label className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-1">희망 가격</label>
+          <label className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] mb-1">희망 가격</label>
           <div className="flex items-center gap-1 p-2 rounded-lg border border-black/7 dark:border-white/10">
             {PRICE_OPTIONS.map(opt => (
               <Button
@@ -244,7 +244,7 @@ export default function SubmitForm() {
                 type="button"
                 variant="ghost"
                 onClick={() => setPrice(opt.value)}
-                className={`px-3 py-1.5 h-auto text-xs sm:text-sm font-medium ${
+                className={`px-3 py-1.5 h-auto text-xs sm:text-[13px] font-medium ${
                   price === opt.value ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
                 }`}
               >
@@ -257,7 +257,7 @@ export default function SubmitForm() {
         {/* 이모티콘 등록 */}
         <div>
           <div className="flex items-center justify-between mb-1">
-            <label className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+            <label className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
               이모티콘 ({emoticonFiles.length}/{SUBMISSION_LIMITS.EMOTICON_MAX})
             </label>
             <p className="text-xs text-gray-400">최소 {SUBMISSION_LIMITS.EMOTICON_MIN}개</p>
@@ -284,13 +284,13 @@ export default function SubmitForm() {
 
         {/* 태그 */}
         <div>
-          <label className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-1">태그</label>
+          <label className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] mb-1">태그</label>
           <input
             type="text"
             value={tags}
             onChange={e => setTags(e.target.value)}
             placeholder="쉼표로 구분, 최대 5개 (예: 페페, 개구리, 밈)"
-            className="w-full px-3 py-2 text-sm border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg outline-none hover:bg-[#F5F5F5] dark:hover:bg-[#262626] focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors"
+            className="w-full px-3 py-2 text-[13px] border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg outline-none hover:bg-[#F5F5F5] dark:hover:bg-[#262626] focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors"
           />
         </div>
 

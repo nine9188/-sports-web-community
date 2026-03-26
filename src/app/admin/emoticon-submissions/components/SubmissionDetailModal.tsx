@@ -42,7 +42,7 @@ export default function SubmissionDetailModal({ id, onClose, onApprove, onReject
       <div className="relative bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-white/10 w-full max-w-lg max-h-[85vh] overflow-y-auto">
         {/* 헤더 */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] sticky top-0">
-          <h2 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">신청 상세</h2>
+          <h2 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">신청 상세</h2>
           <button type="button" onClick={onClose} className="p-1 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md transition-colors">
             <X className="w-4 h-4 text-gray-500" />
           </button>
@@ -56,7 +56,7 @@ export default function SubmissionDetailModal({ id, onClose, onApprove, onReject
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <p className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0]">{detail.pack_name}</p>
+                <p className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">{detail.pack_name}</p>
                 <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium ${statusConfig.className}`}>
                   {statusConfig.label}
                 </span>
@@ -121,17 +121,17 @@ export default function SubmissionDetailModal({ id, onClose, onApprove, onReject
               <div>
                 <label className="text-xs text-gray-600 dark:text-gray-300 mb-1 block">거절/중지 사유</label>
                 <input type="text" value={reason} onChange={e => setReason(e.target.value)} placeholder="사유 입력"
-                  className="w-full px-3 py-2 text-sm border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg outline-none" />
+                  className="w-full px-3 py-2 text-[13px] border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg outline-none" />
               </div>
 
               {/* 버튼 */}
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="ghost" onClick={() => { if (reason) onReject(id, reason); else toast.warning('거절 사유를 입력하세요.') }}
-                  className="text-red-500 dark:text-red-400 h-9 px-4 text-sm">
+                  className="text-red-500 dark:text-red-400 h-9 px-4 text-[13px]">
                   거절
                 </Button>
                 <Button type="button" variant="primary" onClick={() => onApprove(id, price)}
-                  className="h-9 px-4 text-sm">
+                  className="h-9 px-4 text-[13px]">
                   승인
                 </Button>
               </div>
@@ -143,11 +143,11 @@ export default function SubmissionDetailModal({ id, onClose, onApprove, onReject
               <div>
                 <label className="text-xs text-gray-600 dark:text-gray-300 mb-1 block">판매중지 사유</label>
                 <input type="text" value={reason} onChange={e => setReason(e.target.value)} placeholder="사유 입력"
-                  className="w-full px-3 py-2 text-sm border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg outline-none" />
+                  className="w-full px-3 py-2 text-[13px] border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg outline-none" />
               </div>
               <div className="flex justify-end">
                 <Button type="button" variant="ghost" onClick={() => { if (reason) onSuspend(id, reason); else toast.warning('중지 사유를 입력하세요.') }}
-                  className="text-gray-500 dark:text-gray-400 h-9 px-4 text-sm">
+                  className="text-gray-500 dark:text-gray-400 h-9 px-4 text-[13px]">
                   판매중지
                 </Button>
               </div>

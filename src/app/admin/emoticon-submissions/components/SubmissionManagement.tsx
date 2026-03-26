@@ -74,7 +74,7 @@ export default function SubmissionManagement() {
             type="button"
             variant="ghost"
             onClick={() => setFilter(tab.key)}
-            className={`px-3 py-1.5 h-auto text-sm ${
+            className={`px-3 py-1.5 h-auto text-[13px] ${
               filter === tab.key ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
             }`}
           >
@@ -90,7 +90,7 @@ export default function SubmissionManagement() {
         </div>
       ) : !submissions || submissions.length === 0 ? (
         <div className="text-center py-10 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
-          <p className="text-sm text-gray-500 dark:text-gray-400">신청 내역이 없습니다.</p>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400">신청 내역이 없습니다.</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -109,7 +109,7 @@ export default function SubmissionManagement() {
                 {/* 정보 */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate">{sub.pack_name}</p>
+                    <p className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] truncate">{sub.pack_name}</p>
                     <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium ${statusConfig.className}`}>
                       {statusConfig.label}
                     </span>

@@ -85,7 +85,7 @@ export function NativeSelect({
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
         className={cn(
-          "flex h-10 w-full items-center justify-between rounded-md px-3 py-2 text-sm",
+          "flex h-10 w-full items-center justify-between rounded-md px-3 py-2 text-[13px]",
           inputGrayBgStyles,
           "focus:outline-none",
           disabled && "opacity-50 cursor-not-allowed",
@@ -116,7 +116,7 @@ export function NativeSelect({
                 key={option.value}
                 onClick={() => handleSelect(option.value)}
                 className={cn(
-                  "relative flex w-full cursor-pointer select-none items-center py-2 pl-8 pr-2 text-sm outline-none",
+                  "relative flex w-full cursor-pointer select-none items-center py-2 pl-8 pr-2 text-[13px] outline-none",
                   "hover:bg-[#F5F5F5] dark:hover:bg-[#262626]",
                   "transition-colors",
                   value === option.value && "bg-[#F5F5F5] dark:bg-[#262626]",

@@ -77,7 +77,7 @@ export default function AccountDeleteForm({ email, nickname }: AccountDeleteForm
     <div>
       {/* 계정 정보 확인 */}
       <div className="space-y-1">
-        <div className="flex items-center text-sm">
+        <div className="flex items-center text-[13px]">
           <User className="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
           <span className="font-medium text-gray-900 dark:text-[#F0F0F0]">계정 정보:</span>
           <span className="ml-1 text-gray-900 dark:text-[#F0F0F0]">{nickname} ({email})</span>
@@ -87,7 +87,7 @@ export default function AccountDeleteForm({ email, nickname }: AccountDeleteForm
       {/* 비밀번호 확인 폼 */}
       <form onSubmit={handleOpenConfirm} className="mt-6">
         <div className="space-y-1">
-          <label htmlFor="password" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+          <label htmlFor="password" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
             비밀번호 확인
           </label>
           <input
@@ -104,7 +104,7 @@ export default function AccountDeleteForm({ email, nickname }: AccountDeleteForm
             계정 삭제를 진행하려면 현재 비밀번호를 입력해주세요.
           </p>
           {errorMessage && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
+            <p className="mt-1 text-[13px] text-red-600 dark:text-red-400">{errorMessage}</p>
           )}
         </div>
 
@@ -130,7 +130,7 @@ export default function AccountDeleteForm({ email, nickname }: AccountDeleteForm
           <DialogBody>
             <div className="flex gap-3">
               <AlertTriangle className="h-5 w-5 text-red-500 dark:text-red-400 flex-shrink-0 mt-0.5" />
-              <div className="text-sm text-gray-700 dark:text-gray-300">
+              <div className="text-[13px] text-gray-700 dark:text-gray-300">
                 <p className="mb-2">정말로 계정을 삭제하시겠습니까?</p>
                 <p className="mb-2">계정 삭제 시 모든 데이터가 영구적으로 삭제되며, 복구할 수 없습니다.</p>
                 <p className="font-medium text-red-600 dark:text-red-400">이 작업은 되돌릴 수 없습니다.</p>

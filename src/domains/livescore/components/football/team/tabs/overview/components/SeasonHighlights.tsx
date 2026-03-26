@@ -102,10 +102,10 @@ export default function SeasonHighlights({ playerStats, squad, onTabChange, play
                       className="object-cover w-full h-full"
                     />
                   </div>
-                  <span className="text-xs md:text-sm text-gray-900 dark:text-[#F0F0F0] truncate flex-1">
+                  <span className="text-xs md:text-[13px] text-gray-900 dark:text-[#F0F0F0] truncate flex-1">
                     {player.name}
                   </span>
-                  <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
+                  <span className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">
                     {player.value}
                   </span>
                 </Link>
@@ -143,10 +143,10 @@ export default function SeasonHighlights({ playerStats, squad, onTabChange, play
                       className="object-cover w-full h-full"
                     />
                   </div>
-                  <span className="text-xs md:text-sm text-gray-900 dark:text-[#F0F0F0] truncate flex-1">
+                  <span className="text-xs md:text-[13px] text-gray-900 dark:text-[#F0F0F0] truncate flex-1">
                     {player.name}
                   </span>
-                  <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
+                  <span className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">
                     {player.value}
                   </span>
                 </Link>
@@ -168,7 +168,7 @@ export default function SeasonHighlights({ playerStats, squad, onTabChange, play
           className="w-full rounded-none md:rounded-b-lg border-t border-black/5 dark:border-white/10"
         >
           <div className="flex items-center justify-center gap-1">
-            <span className="text-sm font-medium">선수단 보기</span>
+            <span className="text-[13px] font-medium">선수단 보기</span>
             <svg
               className="w-4 h-4"
               fill="none"

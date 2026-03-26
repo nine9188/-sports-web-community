@@ -93,14 +93,14 @@ export function NoticeList({
       </colgroup>
       <thead>
         <tr className="border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
-          <th className="py-2 px-3 text-center text-sm font-medium text-gray-500 dark:text-gray-400">
+          <th className="py-2 px-3 text-center text-[13px] font-medium text-gray-500 dark:text-gray-400">
             {showBoardName ? '게시판' : '구분'}
           </th>
-          <th className="py-2 px-4 text-center text-sm font-medium text-gray-500 dark:text-gray-400">제목</th>
-          <th className="py-2 px-3 text-center text-sm font-medium text-gray-500 dark:text-gray-400">글쓴이</th>
-          <th className="py-2 px-1 text-center text-sm font-medium text-gray-500 dark:text-gray-400">날짜</th>
-          <th className="py-2 px-1 text-center text-sm font-medium text-gray-500 dark:text-gray-400">조회</th>
-          <th className="py-2 px-1 text-center text-sm font-medium text-gray-500 dark:text-gray-400">추천</th>
+          <th className="py-2 px-4 text-center text-[13px] font-medium text-gray-500 dark:text-gray-400">제목</th>
+          <th className="py-2 px-3 text-center text-[13px] font-medium text-gray-500 dark:text-gray-400">글쓴이</th>
+          <th className="py-2 px-1 text-center text-[13px] font-medium text-gray-500 dark:text-gray-400">날짜</th>
+          <th className="py-2 px-1 text-center text-[13px] font-medium text-gray-500 dark:text-gray-400">조회</th>
+          <th className="py-2 px-1 text-center text-[13px] font-medium text-gray-500 dark:text-gray-400">추천</th>
         </tr>
       </thead>
       <tbody>

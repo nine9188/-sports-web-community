@@ -36,7 +36,7 @@ export default function MyPostsContent({
 
       {/* 로딩 상태 표시 */}
       {isLoading && (
-        <div className="text-center py-2 text-gray-500 dark:text-gray-400 text-sm">
+        <div className="text-center py-2 text-gray-500 dark:text-gray-400 text-[13px]">
           게시글을 불러오는 중...
         </div>
       )}

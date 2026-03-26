@@ -208,7 +208,7 @@ export default function AuthorLink({
             <Link
               href={`/user/${publicId}`}
               onClick={() => setIsOpen(false)}
-              className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] flex items-center gap-2 transition-colors"
+              className="w-full px-3 py-2 text-left text-[13px] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] flex items-center gap-2 transition-colors"
             >
               <User className="w-4 h-4" />
               프로필 보기
@@ -218,7 +218,7 @@ export default function AuthorLink({
                 type="button"
                 variant="ghost"
                 onClick={handleReportClick}
-                className="w-full px-3 py-2 h-auto justify-start text-sm text-gray-700 dark:text-gray-300 rounded-none"
+                className="w-full px-3 py-2 h-auto justify-start text-[13px] text-gray-700 dark:text-gray-300 rounded-none"
               >
                 <Flag className="w-4 h-4 mr-2" />
                 신고하기
@@ -242,7 +242,7 @@ export default function AuthorLink({
 
             <DialogBody className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <label className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                   신고 사유 <span className="text-red-500">*</span>
                 </label>
                 <NativeSelect
@@ -254,11 +254,11 @@ export default function AuthorLink({
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                <label className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                   상세 설명 (선택사항)
                 </label>
                 <textarea
-                  className={cn('w-full min-h-[80px] rounded-md px-3 py-2 text-sm resize-none', inputGrayBgStyles, focusStyles)}
+                  className={cn('w-full min-h-[80px] rounded-md px-3 py-2 text-[13px] resize-none', inputGrayBgStyles, focusStyles)}
                   value={description}
                   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
                   placeholder="신고 사유에 대한 자세한 설명을 입력해주세요..."
@@ -273,7 +273,7 @@ export default function AuthorLink({
               <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg p-3">
                 <div className="flex items-start gap-2">
                   <AlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
-                  <div className="text-sm text-yellow-800 dark:text-yellow-400">
+                  <div className="text-[13px] text-yellow-800 dark:text-yellow-400">
                     <p className="font-medium mb-1">신고 전 확인사항</p>
                     <ul className="text-xs space-y-1">
                       <li>• 허위 신고 시 제재를 받을 수 있습니다</li>

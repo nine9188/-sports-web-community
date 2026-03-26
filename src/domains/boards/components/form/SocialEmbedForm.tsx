@@ -100,7 +100,7 @@ export default function SocialEmbedForm({ onCancel, onSocialEmbedAdd, isOpen }: 
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center">
-          <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">소셜 미디어 추가</h3>
+          <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">소셜 미디어 추가</h3>
         </div>
         <div className="p-4">
           <div className="space-y-3">
@@ -118,7 +118,7 @@ export default function SocialEmbedForm({ onCancel, onSocialEmbedAdd, isOpen }: 
                   }
                 }}
                 placeholder="https://twitter.com/..."
-                className="w-full px-3 py-2 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors text-sm"
+                className="w-full px-3 py-2 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors text-[13px]"
               />
               {detectedPlatform && (
                 <p className="mt-1 text-xs text-green-600 dark:text-green-400">
@@ -150,7 +150,7 @@ export default function SocialEmbedForm({ onCancel, onSocialEmbedAdd, isOpen }: 
                 variant="outline"
                 size="sm"
                 onClick={handleCancel}
-                className="text-sm"
+                className="text-[13px]"
               >
                 취소
               </Button>
@@ -160,7 +160,7 @@ export default function SocialEmbedForm({ onCancel, onSocialEmbedAdd, isOpen }: 
                 size="sm"
                 onClick={() => handleSubmit()}
                 disabled={!detectedPlatform}
-                className="text-sm"
+                className="text-[13px]"
               >
                 추가
               </Button>

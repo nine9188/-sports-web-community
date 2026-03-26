@@ -99,6 +99,17 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(`${origin}/signin?message=회원가입+처리+중+오류가+발생했습니다`)
       }
 
+      // 프로필 직접 생성 (네이버는 이메일 인증 완료 상태)
+      await supabaseAdmin
+        .from('profiles')
+        .upsert({
+          id: newUser.user.id,
+          email,
+          full_name: naverUser.name || naverUser.nickname || null,
+          email_confirmed: true,
+          email_confirmed_at: new Date().toISOString(),
+        }, { onConflict: 'id' })
+
       userEmail = email
     }
 

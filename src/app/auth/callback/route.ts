@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseRouteHandler } from '@/shared/lib/supabase/server'
+import { getSupabaseRouteHandler, getSupabaseAdmin } from '@/shared/lib/supabase/server'
 
 /**
  * OAuth 콜백 처리 라우트 핸들러
@@ -45,7 +45,19 @@ export async function GET(request: NextRequest) {
           // 완전한 기존 사용자 - 메인 페이지로 리다이렉트
           return NextResponse.redirect(`${origin}${next}`)
         } else {
-          // 신규 사용자 - 소셜 회원가입 페이지로 리다이렉트
+          // 신규 사용자 - 프로필 직접 생성
+          const supabaseAdmin = getSupabaseAdmin()
+          await supabaseAdmin
+            .from('profiles')
+            .upsert({
+              id: data.user.id,
+              email: data.user.email,
+              full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || null,
+              email_confirmed: true,
+              email_confirmed_at: new Date().toISOString(),
+            }, { onConflict: 'id' })
+
+          // 소셜 회원가입 페이지로 리다이렉트
           return NextResponse.redirect(`${origin}/social-signup`)
         }
       }

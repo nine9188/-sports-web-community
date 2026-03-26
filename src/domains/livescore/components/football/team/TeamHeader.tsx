@@ -83,7 +83,7 @@ export default function TeamHeader({
           <div className="flex flex-col justify-center">
             <h1 className="text-lg md:text-xl font-bold text-gray-900 dark:text-[#F0F0F0]">{teamInfo.name || '팀명 없음'}</h1>
             {teamInfo.country && (
-              <p className="text-gray-700 dark:text-gray-300 text-sm">{teamInfo.country}</p>
+              <p className="text-gray-700 dark:text-gray-300 text-[13px]">{teamInfo.country}</p>
             )}
             <div className="flex items-center flex-wrap gap-2 mt-1">
               {teamInfo.founded && teamInfo.founded > 0 && (

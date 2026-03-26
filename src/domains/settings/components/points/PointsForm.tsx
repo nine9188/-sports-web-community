@@ -15,7 +15,7 @@ export default function PointsForm({
       {/* 현재 포인트 정보 */}
       <div className="bg-white dark:bg-[#1D1D1D]">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-          <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-2 md:mb-0">보유 포인트</h3>
+          <h3 className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] mb-2 md:mb-0">보유 포인트</h3>
 
           <div className="flex items-center">
             <span className="text-lg font-bold mr-2 text-gray-900 dark:text-[#F0F0F0]">{userPoints.toLocaleString()}</span>

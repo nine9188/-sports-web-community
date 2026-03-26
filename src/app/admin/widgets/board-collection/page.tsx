@@ -41,7 +41,7 @@ function SortableItem({ board, onRemove }: { board: SelectedBoard; onRemove: (id
       </button>
       <div className="flex-1">
         <span className="font-medium text-gray-900 dark:text-[#F0F0F0]">{board.name}</span>
-        <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">({board.slug})</span>
+        <span className="text-[13px] text-gray-500 dark:text-gray-400 ml-2">({board.slug})</span>
       </div>
       <button
         onClick={() => onRemove(board.id)}

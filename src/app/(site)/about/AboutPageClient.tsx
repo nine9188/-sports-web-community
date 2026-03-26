@@ -96,7 +96,7 @@ function DemoMatchRow({ home, away, homeLogo, awayLogo, homeScore, awayScore, st
         )}
       </div>
       <div className="flex items-center justify-end gap-2 flex-1 min-w-0">
-        <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate text-right">{home}</span>
+        <span className="text-xs sm:text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] truncate text-right">{home}</span>
         {homeLogo ? (
           <Image src={homeLogo} alt={home} width={24} height={24} className="w-6 h-6 object-contain shrink-0" />
         ) : (
@@ -104,7 +104,7 @@ function DemoMatchRow({ home, away, homeLogo, awayLogo, homeScore, awayScore, st
         )}
       </div>
       <div className="px-2 shrink-0">
-        <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
+        <span className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">
           {status.type === 'ns' ? '-' : homeScore} - {status.type === 'ns' ? '-' : awayScore}
         </span>
       </div>
@@ -114,7 +114,7 @@ function DemoMatchRow({ home, away, homeLogo, awayLogo, homeScore, awayScore, st
         ) : (
           <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0" />
         )}
-        <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate">{away}</span>
+        <span className="text-xs sm:text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] truncate">{away}</span>
       </div>
     </motion.div>
   );
@@ -150,7 +150,7 @@ function LiveScoreDemo({ images }: { images: DemoImages }) {
         ) : (
           <div className="w-5 h-5 rounded-full bg-gray-400 shrink-0" />
         )}
-        <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">{name}</span>
+        <span className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">{name}</span>
       </div>
       <div className="flex items-center gap-3">
         <span className="bg-white dark:bg-[#1D1D1D] text-gray-700 dark:text-[#F0F0F0] text-xs font-medium px-2.5 py-1 rounded-full min-w-[28px] text-center">{count}</span>
@@ -205,7 +205,7 @@ function AIPredictionDemo({ images }: { images: DemoImages }) {
             {t[50] && <Image src={t[50]} alt="맨시티" width={36} height={36} className="w-9 h-9 md:w-12 md:h-12 object-contain" />}
             <div className="text-center">
               <motion.div initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ delay: 0.3, duration: 0.5 }} className="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400">56%</motion.div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">맨시티</div>
+              <div className="text-[13px] text-gray-600 dark:text-gray-400">맨시티</div>
             </div>
           </div>
           <div className="text-center">
@@ -215,7 +215,7 @@ function AIPredictionDemo({ images }: { images: DemoImages }) {
           <div className="flex items-center gap-1.5 md:gap-3">
             <div className="text-center">
               <motion.div initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ delay: 0.7, duration: 0.5 }} className="text-xl md:text-2xl font-bold text-green-600 dark:text-green-400">22%</motion.div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">아스널</div>
+              <div className="text-[13px] text-gray-600 dark:text-gray-400">아스널</div>
             </div>
             {t[42] && <Image src={t[42]} alt="아스널" width={36} height={36} className="w-9 h-9 md:w-12 md:h-12 object-contain" />}
           </div>
@@ -293,7 +293,7 @@ function DataAnalysisDemo({ images }: { images: DemoImages }) {
               <div className="flex-1 min-w-0">
                 <p className="text-base md:text-lg font-bold text-gray-900 dark:text-[#F0F0F0]">모하메드 살라</p>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Liverpool</span>
+                  <span className="text-[13px] text-gray-600 dark:text-gray-400">Liverpool</span>
                   <span className="px-2 py-0.5 bg-[#F5F5F5] dark:bg-[#333333] text-xs rounded text-gray-700 dark:text-gray-300">공격수</span>
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">프리미어리그 · 잉글랜드</p>
@@ -306,14 +306,14 @@ function DataAnalysisDemo({ images }: { images: DemoImages }) {
             </div>
             <div className="flex items-center py-3">
               {[{ v: '175cm' }, { v: '71kg' }, { v: '92/06/15' }, { v: '33세' }, { v: 'Egypt' }].map((stat, i, arr) => (
-                <div key={i} className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative truncate px-1">
+                <div key={i} className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative truncate px-1">
                   {stat.v}
                   {i < arr.length - 1 && <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-[#EAEAEA] dark:bg-[#333333]" />}
                 </div>
               ))}
             </div>
             <div className="h-12 px-4 flex items-center bg-[#F5F5F5] dark:bg-[#262626] border-y border-black/5 dark:border-white/10">
-              <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">시즌 통계</span>
+              <span className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">시즌 통계</span>
             </div>
             <div className="flex bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
               {['경기', '골', '어시스트', '평점', '슈팅'].map((h) => (
@@ -322,7 +322,7 @@ function DataAnalysisDemo({ images }: { images: DemoImages }) {
             </div>
             <div className="flex items-center py-3">
               {['30', '19', '13', '7.8', '85'].map((v, i, arr) => (
-                <div key={i} className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+                <div key={i} className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
                   {v}
                   {i < arr.length - 1 && <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-[#EAEAEA] dark:bg-[#333333]" />}
                 </div>
@@ -330,7 +330,7 @@ function DataAnalysisDemo({ images }: { images: DemoImages }) {
             </div>
             {/* 상세 스탯 */}
             <div className="h-12 px-4 flex items-center bg-[#F5F5F5] dark:bg-[#262626] border-y border-black/5 dark:border-white/10">
-              <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">상세 스탯</span>
+              <span className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">상세 스탯</span>
             </div>
             <div className="flex bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
               {['슈팅 정확도', '패스 성공률', '드리블 성공', '듀얼 승률', '키패스'].map((h) => (
@@ -339,7 +339,7 @@ function DataAnalysisDemo({ images }: { images: DemoImages }) {
             </div>
             <div className="flex items-center py-3">
               {['68%', '82%', '3.2', '54%', '2.1'].map((v, i, arr) => (
-                <div key={i} className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-[#F0F0F0] relative">
+                <div key={i} className="flex-1 text-center text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] relative">
                   {v}
                   {i < arr.length - 1 && <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-[#EAEAEA] dark:bg-[#333333]" />}
                 </div>
@@ -355,7 +355,7 @@ function DataAnalysisDemo({ images }: { images: DemoImages }) {
               </div>
               <div className="flex flex-col justify-center">
                 <p className="text-lg md:text-xl font-bold text-gray-900 dark:text-[#F0F0F0]">FC Barcelona</p>
-                <p className="text-sm text-gray-700 dark:text-gray-300">Spain</p>
+                <p className="text-[13px] text-gray-700 dark:text-gray-300">Spain</p>
                 <div className="flex items-center flex-wrap gap-2 mt-1">
                   <p className="text-gray-500 dark:text-gray-400 text-xs">창단: 1899년</p>
                   <span className="inline-block px-1 py-0.5 bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 text-xs font-medium rounded">BAR</span>
@@ -363,7 +363,7 @@ function DataAnalysisDemo({ images }: { images: DemoImages }) {
               </div>
             </div>
             <div className="h-12 px-4 flex items-center bg-[#F5F5F5] dark:bg-[#262626] border-y border-black/5 dark:border-white/10">
-              <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">기본 정보</span>
+              <span className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">기본 정보</span>
             </div>
             <div className="flex bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
               <div className="flex-1 py-2 text-center text-[10px] font-medium text-gray-500 dark:text-gray-400">리그 정보</div>
@@ -388,7 +388,7 @@ function DataAnalysisDemo({ images }: { images: DemoImages }) {
               </div>
             </div>
             <div className="h-12 px-4 flex items-center bg-[#F5F5F5] dark:bg-[#262626] border-y border-black/5 dark:border-white/10">
-              <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">시즌 통계</span>
+              <span className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">시즌 통계</span>
             </div>
             <div className="flex bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
               {['경기', '승', '무', '패', '득점', '실점', '클린시트'].map((label) => (
@@ -398,7 +398,7 @@ function DataAnalysisDemo({ images }: { images: DemoImages }) {
             <div className="flex items-center py-3">
               {[{ v: '28', avg: null }, { v: '22', avg: null }, { v: '4', avg: null }, { v: '2', avg: null }, { v: '68', avg: '2.4' }, { v: '18', avg: '0.6' }, { v: '12', avg: null }].map((stat, i, arr) => (
                 <div key={i} className="flex-1 text-center relative">
-                  <div className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">{stat.v}</div>
+                  <div className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">{stat.v}</div>
                   {stat.avg && <div className="text-[9px] text-gray-400 dark:text-gray-500">({stat.avg})</div>}
                   {i < arr.length - 1 && <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-4 bg-[#EAEAEA] dark:bg-[#333333]" />}
                 </div>
@@ -437,7 +437,7 @@ function DataAnalysisDemo({ images }: { images: DemoImages }) {
             </div>
             {/* 이벤트 */}
             <div className="h-12 px-4 flex items-center bg-[#F5F5F5] dark:bg-[#262626] border-y border-black/5 dark:border-white/10">
-              <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">경기 이벤트</span>
+              <span className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">경기 이벤트</span>
             </div>
             <div className="px-4 py-2">
               <div className="space-y-0">
@@ -448,13 +448,13 @@ function DataAnalysisDemo({ images }: { images: DemoImages }) {
                 ].map((e, i) => (
                   <div key={i} className="py-2 border-b border-black/5 dark:border-white/10 last:border-b-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="w-8 text-right text-sm text-gray-500 dark:text-gray-400 shrink-0 tabular-nums">{e.time}&apos;</span>
+                      <span className="w-8 text-right text-[13px] text-gray-500 dark:text-gray-400 shrink-0 tabular-nums">{e.time}&apos;</span>
                       <span className="text-base shrink-0">{e.icon}</span>
                       {t[e.teamId] && <Image src={t[e.teamId]} alt={e.team} width={20} height={20} className="w-5 h-5 object-contain shrink-0" />}
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{e.team}</span>
+                      <span className="text-[13px] font-medium text-gray-700 dark:text-gray-300 truncate">{e.team}</span>
                     </div>
                     <div className="mt-0.5 pl-2">
-                      <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">{e.text}</span>
+                      <span className="text-[13px] text-gray-900 dark:text-[#F0F0F0]">{e.text}</span>
                     </div>
                   </div>
                 ))}
@@ -466,7 +466,7 @@ function DataAnalysisDemo({ images }: { images: DemoImages }) {
           {activeSlide === 3 && (
           <div>
             <div className="h-12 px-4 flex items-center bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
-              <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">라인업</span>
+              <span className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">라인업</span>
             </div>
             <div className="overflow-hidden">
               <svg viewBox="0 0 56 50" preserveAspectRatio="xMidYMid meet" width="100%" height="100%">
@@ -619,7 +619,7 @@ function CommunityDemo() {
         {activeSlide === 0 && (
           <div>
             <div className="h-12 px-4 flex items-center bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
-              <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">응원 댓글</span>
+              <span className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">응원 댓글</span>
             </div>
             {/* 댓글 작성 폼 */}
             <div className="p-4 border-b border-black/5 dark:border-white/10">
@@ -629,7 +629,7 @@ function CommunityDemo() {
                 <span className="flex-1 px-2 py-1 text-xs text-center rounded-lg hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-700 dark:text-gray-300">중립</span>
               </div>
               <div className="relative">
-                <div className="w-full px-3 py-3 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-400 dark:text-gray-500 rounded-lg text-sm h-[52px]">응원 댓글을 남겨보세요...</div>
+                <div className="w-full px-3 py-3 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-400 dark:text-gray-500 rounded-lg text-[13px] h-[52px]">응원 댓글을 남겨보세요...</div>
                 <div className="absolute bottom-2 right-3 text-xs text-gray-500 dark:text-gray-400">0/300</div>
               </div>
             </div>
@@ -655,7 +655,7 @@ function CommunityDemo() {
                     <span className="text-xs">{c.team}</span>
                     <span className="text-xs text-gray-500 dark:text-gray-400">{c.time}</span>
                   </div>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{c.text}</p>
+                  <p className="text-[13px] text-gray-700 dark:text-gray-300 leading-relaxed">{c.text}</p>
                 </div>
               ))}
             </div>
@@ -667,7 +667,7 @@ function CommunityDemo() {
           <div>
             {/* ContainerHeader */}
             <div className="h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
-              <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">인기글</span>
+              <span className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">인기글</span>
             </div>
             {/* TabList variant="contained" — lucide 아이콘 */}
             <div className="flex border-b border-black/5 dark:border-white/10">
@@ -774,7 +774,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
         <div className="relative px-6 py-20 md:px-12 md:py-32 text-center max-w-3xl mx-auto">
-          <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="text-sm md:text-base text-gray-400 mb-6">
+          <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="text-[13px] md:text-base text-gray-400 mb-6">
             경기 보면서 통계 찾으려고 탭 3개 열고,<br />하고 싶은 말은 단톡방에 쓰고 있죠?
           </motion.p>
           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.5 }} className="text-3xl md:text-[3.2rem] font-extrabold text-white mb-6 leading-[1.15] tracking-tight">
@@ -784,8 +784,8 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
             게시글에 선수를 태그하면 스탯이 바로 뜹니다.<br />경기를 태그하면 스코어가 실시간으로 업데이트됩니다.<br /><span className="text-white font-medium">그게 4590입니다.</span>
           </motion.p>
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 1.1 }} className="flex flex-col sm:flex-row gap-3 justify-center mb-14">
-            <Link href="/" className="group px-8 py-3.5 bg-white text-gray-900 rounded-xl text-sm font-bold hover:shadow-xl hover:shadow-white/10 transition-all flex items-center justify-center gap-2">둘러보고 시작하기 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></Link>
-            <Link href="/signup" className="px-8 py-3.5 border border-white/20 text-white rounded-xl text-sm font-medium hover:bg-white/10 transition-all">팬들과 함께하기</Link>
+            <Link href="/" className="group px-8 py-3.5 bg-white text-gray-900 rounded-xl text-[13px] font-bold hover:shadow-xl hover:shadow-white/10 transition-all flex items-center justify-center gap-2">둘러보고 시작하기 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></Link>
+            <Link href="/signup" className="px-8 py-3.5 border border-white/20 text-white rounded-xl text-[13px] font-medium hover:bg-white/10 transition-all">팬들과 함께하기</Link>
           </motion.div>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }}>
             <ChevronDown className="w-5 h-5 text-gray-500 mx-auto animate-bounce" />
@@ -798,7 +798,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
         <div className="max-w-3xl mx-auto">
           <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-[0.2em] text-center mb-3">Core Feature</p>
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-[#F0F0F0] text-center mb-3 tracking-tight leading-snug">글을 쓰면서 데이터를 공유한다</h2>
-          <p className="text-sm md:text-base text-gray-500 dark:text-gray-400 text-center mb-12 max-w-lg mx-auto leading-relaxed">
+          <p className="text-[13px] md:text-base text-gray-500 dark:text-gray-400 text-center mb-12 max-w-lg mx-auto leading-relaxed">
             다른 사이트에서는 데이터를 캡처해서 붙여넣습니다.<br />4590에서는 선수, 팀, 경기를 <span className="text-gray-900 dark:text-white font-medium">태그 한 번</span>이면 끝.
           </p>
           {/* 데모 목업 */}
@@ -809,7 +809,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
             </div>
             <div className="p-5 md:p-8 space-y-5">
               <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }} className="space-y-4">
-                <motion.p variants={fadeUp} className="text-sm md:text-base text-gray-700 dark:text-gray-300 leading-relaxed">어제 경기 살라 진짜 미쳤다 ㅋㅋ 이번 시즌 폼이 역대급인 듯</motion.p>
+                <motion.p variants={fadeUp} className="text-[13px] md:text-base text-gray-700 dark:text-gray-300 leading-relaxed">어제 경기 살라 진짜 미쳤다 ㅋㅋ 이번 시즌 폼이 역대급인 듯</motion.p>
                 {/* 선수 카드 — 실제 PlayerCard CSS 클래스 (post-content.css 적용) */}
                 <motion.div variants={fadeUp}>
                   <div className="player-card">
@@ -832,7 +832,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
                     </div>
                   </div>
                 </motion.div>
-                <motion.p variants={fadeUp} className="text-sm md:text-base text-gray-700 dark:text-gray-300 leading-relaxed">이 경기 후반 30분부터 완전 원맨쇼였음. 맞대결 봐봐</motion.p>
+                <motion.p variants={fadeUp} className="text-[13px] md:text-base text-gray-700 dark:text-gray-300 leading-relaxed">이 경기 후반 30분부터 완전 원맨쇼였음. 맞대결 봐봐</motion.p>
                 {/* 매치 카드 — 실제 MatchCard CSS 클래스 (post-content.css 적용) */}
                 <motion.div variants={fadeUp}>
                   <div className="match-card">
@@ -883,7 +883,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
             ].map((item) => (
               <motion.div key={item.title} variants={fadeUp} className="text-center p-4">
                 <item.icon className="w-5 h-5 text-gray-400 dark:text-gray-500 mx-auto mb-2" />
-                <p className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0] mb-1">{item.title}</p>
+                <p className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0] mb-1">{item.title}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{item.desc}</p>
               </motion.div>
             ))}
@@ -905,7 +905,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
               <div>
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-100 dark:bg-yellow-900/20 mb-4"><Zap className="w-3.5 h-3.5 text-yellow-600 dark:text-yellow-400" /><span className="text-xs font-semibold text-yellow-700 dark:text-yellow-400">LIVE SCORE</span></div>
                 <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2 leading-snug tracking-tight">40개 리그의 경기를<br />실시간으로.</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-4">프리미어리그, 라리가, 챔피언스리그부터 K리그까지. 스코어, 타임라인, 라인업, 통계를 실시간으로 확인하세요.</p>
+                <p className="text-[13px] text-gray-500 dark:text-gray-400 leading-relaxed mb-4">프리미어리그, 라리가, 챔피언스리그부터 K리그까지. 스코어, 타임라인, 라인업, 통계를 실시간으로 확인하세요.</p>
                 <div className="flex flex-wrap gap-2">
                   {['EPL', '라리가', 'UCL', 'K리그', '세리에A'].map((l) => (<span key={l} className="px-2.5 py-1 rounded-md bg-[#F5F5F5] dark:bg-white/5 text-xs font-medium text-gray-600 dark:text-gray-400">{l}</span>))}
                   <span className="px-2.5 py-1 rounded-md bg-[#F5F5F5] dark:bg-white/5 text-xs font-medium text-gray-400">+35개</span>
@@ -921,7 +921,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
               <div className="md:order-2">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/20 mb-4"><BarChart3 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" /><span className="text-xs font-semibold text-blue-700 dark:text-blue-400">DATA ANALYSIS</span></div>
                 <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2 leading-snug tracking-tight">감이 아니라,<br />데이터로 보는 축구.</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-4">7,700명 이상의 선수 통계, 1,200개 팀의 시즌 기록, 맞대결 비교 분석, 포메이션, 순위표.</p>
+                <p className="text-[13px] text-gray-500 dark:text-gray-400 leading-relaxed mb-4">7,700명 이상의 선수 통계, 1,200개 팀의 시즌 기록, 맞대결 비교 분석, 포메이션, 순위표.</p>
                 <div className="grid grid-cols-3 gap-3">
                   {[{ n: '1,200+', l: '팀 데이터' }, { n: '7,700+', l: '선수 프로필' }, { n: '15,000+', l: '경기 기록' }].map((s) => (
                     <div key={s.l} className="text-center p-2.5 rounded-xl bg-[#F5F5F5] dark:bg-white/5"><div className="text-base font-bold text-gray-900 dark:text-white">{s.n}</div><div className="text-[10px] text-gray-500 dark:text-gray-400">{s.l}</div></div>
@@ -938,7 +938,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
               <div>
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-100 dark:bg-purple-900/20 mb-4"><TrendingUp className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" /><span className="text-xs font-semibold text-purple-700 dark:text-purple-400">AI PREDICTION</span></div>
                 <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2 leading-snug tracking-tight">킥오프 전에<br />이미 알고 있는 AI.</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">과거 데이터, 팀 폼, 맞대결 기록을 AI가 분석합니다. 승률, 예상 스코어, 핵심 변수까지. 경기 보기 전에 한 발 앞서 준비하세요.</p>
+                <p className="text-[13px] text-gray-500 dark:text-gray-400 leading-relaxed">과거 데이터, 팀 폼, 맞대결 기록을 AI가 분석합니다. 승률, 예상 스코어, 핵심 변수까지. 경기 보기 전에 한 발 앞서 준비하세요.</p>
               </div>
               <div className="rounded-2xl border border-black/10 dark:border-white/10 overflow-hidden shadow-sm"><AIPredictionDemo images={demoImages} /></div>
             </div>
@@ -950,7 +950,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
               <div className="md:order-2">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/20 mb-4"><Users className="w-3.5 h-3.5 text-green-600 dark:text-green-400" /><span className="text-xs font-semibold text-green-700 dark:text-green-400">COMMUNITY</span></div>
                 <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-2 leading-snug tracking-tight">혼자 보는 축구는<br />이제 끝.</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">경기 실황 채팅, 분석 토론, 핫딜 공유. 게시글에 선수·팀 데이터를 카드로 태그하고, 실시간 응원 댓글로 함께 뜨거워지세요.</p>
+                <p className="text-[13px] text-gray-500 dark:text-gray-400 leading-relaxed">경기 실황 채팅, 분석 토론, 핫딜 공유. 게시글에 선수·팀 데이터를 카드로 태그하고, 실시간 응원 댓글로 함께 뜨거워지세요.</p>
               </div>
               <div className="md:order-1"><CommunityDemo /></div>
             </div>
@@ -1000,7 +1000,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
         <div className="absolute inset-0 bg-black/85" />
         <div className="relative px-6 py-20 md:px-12 md:py-28">
           <h2 className="text-xl md:text-2xl font-bold text-white text-center mb-3">다른 축구 사이트와 뭐가 다른가?</h2>
-          <p className="text-sm text-gray-300 text-center mb-10 max-w-md mx-auto">스코어만 보여주는 사이트는 이미 많습니다.<br />4590은 <span className="text-white font-medium">데이터와 커뮤니티를 연결</span>했습니다.</p>
+          <p className="text-[13px] text-gray-300 text-center mb-10 max-w-md mx-auto">스코어만 보여주는 사이트는 이미 많습니다.<br />4590은 <span className="text-white font-medium">데이터와 커뮤니티를 연결</span>했습니다.</p>
           <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }} className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
             {[
               { icon: <Zap className="w-5 h-5" />, color: 'text-yellow-400', bg: 'bg-yellow-400/10', title: '올인원', desc: '스코어, 분석, 예측, 커뮤니티를 탭 하나로. 여러 앱 왔다갔다할 필요 없습니다.' },
@@ -1010,7 +1010,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
               <motion.div key={item.title} variants={fadeUp} className="p-6 rounded-xl bg-white/10 border border-white/15 backdrop-blur-md hover:bg-white/15 transition-colors">
                 <div className={`inline-flex items-center justify-center w-10 h-10 rounded-xl ${item.bg} ${item.color} mb-4`}>{item.icon}</div>
                 <h3 className="text-base font-bold text-white mb-2">{item.title}</h3>
-                <p className="text-sm text-gray-300 leading-relaxed">{item.desc}</p>
+                <p className="text-[13px] text-gray-300 leading-relaxed">{item.desc}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -1020,7 +1020,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
       {/* 더 특별한 기능들 — 벤토 그리드 */}
       <Section className="bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 mt-4 px-6 py-14 md:px-12 md:py-20">
         <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] text-center mb-3">더 특별한 기능들</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-10">다른 곳에서는 경험할 수 없습니다</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400 text-center mb-10">다른 곳에서는 경험할 수 없습니다</p>
         <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }} className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 max-w-4xl mx-auto">
           {[
             { icon: Tag, title: '데이터 카드 태그', desc: '게시글에 선수·팀·경기 데이터를 카드로 삽입', color: 'text-blue-500', bgIcon: 'text-blue-500/10' },
@@ -1037,7 +1037,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
               <f.icon className={`absolute -top-2 -right-2 w-16 h-16 ${f.bgIcon} pointer-events-none`} />
               <div className="relative">
                 <f.icon className={`w-6 h-6 ${f.color} mb-3`} />
-                <h3 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0] mb-1.5">{f.title}</h3>
+                <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] mb-1.5">{f.title}</h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{f.desc}</p>
               </div>
             </motion.div>
@@ -1053,7 +1053,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
         <div className="relative px-6 py-14 md:px-12 md:py-20">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-xl md:text-2xl font-bold text-white mb-3">활동하면 보상이 따라옵니다</h2>
-            <p className="text-sm text-gray-300 mb-2">게임처럼 성장하는 축구 커뮤니티</p>
+            <p className="text-[13px] text-gray-300 mb-2">게임처럼 성장하는 축구 커뮤니티</p>
             <p className="text-xs text-gray-500 mb-12">포인트로 교환할 수 있는 아이템과 레벨업 보상은 꾸준히 추가될 예정입니다.</p>
             <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }} className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-0">
               {[
@@ -1081,7 +1081,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
       <Section className="bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 mt-4 px-6 py-14 md:px-12 md:py-20">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] text-center mb-3">이런 분들에게 추천합니다</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-10">하나라도 해당되면, 4590이 딱입니다</p>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 text-center mb-10">하나라도 해당되면, 4590이 딱입니다</p>
           <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }} className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {[
               { icon: Search, text: '경기 보면서 스탯 찾으려고 앱 3개 왔다갔다하는 분' },
@@ -1095,7 +1095,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
                 <div className="w-8 h-8 rounded-lg bg-green-50 dark:bg-green-900/20 flex items-center justify-center shrink-0">
                   <item.icon className="w-4 h-4 text-green-600 dark:text-green-400" />
                 </div>
-                <span className="text-sm text-gray-700 dark:text-gray-300">{item.text}</span>
+                <span className="text-[13px] text-gray-700 dark:text-gray-300">{item.text}</span>
               </motion.div>
             ))}
           </motion.div>
@@ -1112,7 +1112,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
         <div className="relative px-6 py-28 md:px-12 md:py-40 text-center max-w-2xl mx-auto">
           <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-[0.2em] mb-3">PC · 태블릿 · 모바일</p>
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4 tracking-tight">어디서든, 같은 경험</h2>
-          <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
+          <p className="text-[13px] md:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
             반응형 디자인으로 어떤 기기에서든<br />동일한 데이터와 기능을 사용할 수 있습니다.
           </p>
         </div>
@@ -1131,8 +1131,8 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
             { q: '포인트는 어떻게 사용하나요?', a: '게시글 작성, 댓글, 좋아요 등 활동으로 획득한 포인트로 프로필 아이콘, 이모티콘 등 아이템을 구매할 수 있습니다. 포인트로 교환할 수 있는 아이템과 보상은 꾸준히 추가될 예정입니다.' },
           ].map((item) => (
             <details key={item.q} className="group rounded-2xl border border-black/5 dark:border-white/5 bg-white dark:bg-[#1D1D1D] overflow-hidden">
-              <summary className="flex items-center gap-3 px-5 py-4 cursor-pointer list-none select-none"><HelpCircle className="w-4 h-4 text-gray-400 shrink-0" /><span className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0] flex-1">{item.q}</span><ChevronRight className="w-4 h-4 text-gray-400 transition-transform group-open:rotate-90" /></summary>
-              <div className="px-5 pb-5 pl-12"><p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{item.a}</p></div>
+              <summary className="flex items-center gap-3 px-5 py-4 cursor-pointer list-none select-none"><HelpCircle className="w-4 h-4 text-gray-400 shrink-0" /><span className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0] flex-1">{item.q}</span><ChevronRight className="w-4 h-4 text-gray-400 transition-transform group-open:rotate-90" /></summary>
+              <div className="px-5 pb-5 pl-12"><p className="text-[13px] text-gray-500 dark:text-gray-400 leading-relaxed">{item.a}</p></div>
             </details>
           ))}
         </div>
@@ -1144,10 +1144,10 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(59,130,246,0.1)_0%,_transparent_60%)]" />
         <div className="relative px-6 py-16 md:px-12 md:py-24 text-center">
           <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">같이 볼 사람, 여기 있습니다</h2>
-          <p className="text-sm md:text-base text-gray-400 mb-10 max-w-md mx-auto leading-relaxed">댓글 하나가 대화가 되고,<br />대화가 커뮤니티가 됩니다.</p>
+          <p className="text-[13px] md:text-base text-gray-400 mb-10 max-w-md mx-auto leading-relaxed">댓글 하나가 대화가 되고,<br />대화가 커뮤니티가 됩니다.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/signup" className="group px-8 py-3.5 bg-white text-gray-900 rounded-xl text-sm font-bold hover:shadow-xl hover:shadow-white/10 transition-all flex items-center justify-center gap-2">팬들과 함께하기 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></Link>
-            <Link href="/" className="px-8 py-3.5 border border-white/20 text-white rounded-xl text-sm font-medium hover:bg-white/10 transition-all">조금 더 둘러보기</Link>
+            <Link href="/signup" className="group px-8 py-3.5 bg-white text-gray-900 rounded-xl text-[13px] font-bold hover:shadow-xl hover:shadow-white/10 transition-all flex items-center justify-center gap-2">팬들과 함께하기 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></Link>
+            <Link href="/" className="px-8 py-3.5 border border-white/20 text-white rounded-xl text-[13px] font-medium hover:bg-white/10 transition-all">조금 더 둘러보기</Link>
           </div>
         </div>
       </Section>

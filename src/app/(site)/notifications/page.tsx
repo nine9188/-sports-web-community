@@ -171,7 +171,7 @@ export default function NotificationsPage() {
         <div className="h-12 px-4 bg-[#F5F5F5] dark:bg-[#262626] md:rounded-t-lg border-b border-black/5 dark:border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Bell className="w-4 h-4 text-gray-900 dark:text-[#F0F0F0]" />
-            <h1 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
+            <h1 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">
               알림
             </h1>
             {unreadCount > 0 && (
@@ -232,7 +232,7 @@ export default function NotificationsPage() {
           <Button
             variant="ghost"
             onClick={() => setFilter("all")}
-            className={`flex-1 h-12 px-4 text-sm font-medium rounded-none ${
+            className={`flex-1 h-12 px-4 text-[13px] font-medium rounded-none ${
               filter === "all"
                 ? "bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] border-b-2 border-[#262626] dark:border-[#F0F0F0]"
                 : "bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]"
@@ -246,7 +246,7 @@ export default function NotificationsPage() {
           <Button
             variant="ghost"
             onClick={() => setFilter("unread")}
-            className={`flex-1 h-12 px-4 text-sm font-medium rounded-none ${
+            className={`flex-1 h-12 px-4 text-[13px] font-medium rounded-none ${
               filter === "unread"
                 ? "bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] border-b-2 border-[#262626] dark:border-[#F0F0F0]"
                 : "bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]"
@@ -309,7 +309,7 @@ export default function NotificationsPage() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-12">
             <Spinner size="lg" className="mb-3" />
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-[13px] text-gray-500 dark:text-gray-400">
               알림을 불러오는 중...
             </p>
           </div>
@@ -328,7 +328,7 @@ export default function NotificationsPage() {
         ) : (
           <div className="flex flex-col items-center justify-center py-12 text-gray-500 dark:text-gray-400">
             <Bell className="w-12 h-12 mb-3 text-gray-300 dark:text-gray-600" />
-            <p className="text-sm font-medium">
+            <p className="text-[13px] font-medium">
               {filter === "unread"
                 ? "읽지 않은 알림이 없습니다"
                 : "알림이 없습니다"}

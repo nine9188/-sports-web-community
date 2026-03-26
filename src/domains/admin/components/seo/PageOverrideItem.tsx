@@ -39,7 +39,7 @@ export function PageOverrideItem({
       <div className="flex justify-between items-start">
         <div className="flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className={`font-medium text-gray-900 dark:text-[#F0F0F0] ${isSmall ? 'text-sm' : ''}`}>
+            <span className={`font-medium text-gray-900 dark:text-[#F0F0F0] ${isSmall ? 'text-[13px]' : ''}`}>
               {name}
             </span>
             <code className={`bg-gray-200 dark:bg-[#363636] px-2 py-0.5 rounded text-gray-600 dark:text-gray-400 ${isSmall ? 'text-xs' : 'text-xs'}`}>
@@ -53,7 +53,7 @@ export function PageOverrideItem({
           </div>
 
           {!isSmall && (
-            <div className="text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-1">
+            <div className="text-[13px] text-gray-600 dark:text-gray-400 mt-2 space-y-1">
               <div>
                 <span className="text-gray-500 dark:text-gray-500">제목:</span>{' '}
                 {override?.title || (

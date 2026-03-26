@@ -166,9 +166,10 @@ export async function incrementViewCount(fixtureId: number) {
 
       const { error } = await (supabaseService as any)
         .from('match_ai_predictions')
-        .update({ 
+        .update({
           view_count: newViewCount,
-          popularity_score: newPopularityScore
+          popularity_score: newPopularityScore,
+          updated_at: new Date().toISOString()
         })
         .eq('fixture_id', fixtureId)
 

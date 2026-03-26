@@ -12,7 +12,7 @@ export const cardHeaderStyles = 'flex flex-col space-y-1.5 px-6 py-4 bg-[#F5F5F5
 export const cardTitleStyles = 'text-2xl font-semibold leading-none tracking-tight';
 
 // 카드 설명
-export const cardDescriptionStyles = 'text-sm text-gray-500 dark:text-gray-400';
+export const cardDescriptionStyles = 'text-[13px] text-gray-500 dark:text-gray-400';
 
 // 카드 콘텐츠
 export const cardContentStyles = 'p-6 pt-0';

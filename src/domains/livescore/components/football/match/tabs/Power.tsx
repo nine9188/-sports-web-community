@@ -148,7 +148,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
 
         {/* 2) 평균득점행 (최근 양팀 맞대결 UI와 동일 처리) */}
         <div className="mt-4">
-          <div className="grid grid-cols-[3fr_1fr_3fr] items-center gap-1 text-sm">
+          <div className="grid grid-cols-[3fr_1fr_3fr] items-center gap-1 text-[13px]">
             <div className="flex items-center justify-end px-1 gap-2">
               <div className="h-2 flex-1 bg-[#EAEAEA] dark:bg-[#333333] rounded relative">
                 {avgForA > 0 && (
@@ -177,7 +177,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
 
         {/* 4) 평균실점행 (최근 양팀 맞대결 UI와 동일 처리) */}
         <div className="mt-3">
-          <div className="grid grid-cols-[3fr_1fr_3fr] items-center gap-1 text-sm">
+          <div className="grid grid-cols-[3fr_1fr_3fr] items-center gap-1 text-[13px]">
             <div className="flex items-center justify-end px-1 gap-2">
               <div className="h-2 flex-1 bg-[#EAEAEA] dark:bg-[#333333] rounded relative">
                 {avgAgainstA > 0 && (
@@ -448,10 +448,10 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
               <Link
                 key={m.fixtureId}
                 href={`/livescore/football/match/${m.fixtureId}`}
-                className="grid grid-cols-[3fr_1fr_3fr] gap-1 items-center p-2 border-b border-black/5 dark:border-white/10 last:border-b-0 text-sm rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
+                className="grid grid-cols-[3fr_1fr_3fr] gap-1 items-center p-2 border-b border-black/5 dark:border-white/10 last:border-b-0 text-[13px] rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
               >
                 <div className="flex items-center justify-end px-1 gap-2">
-                  <span className="text-sm">{teamAMeta.name}</span>
+                  <span className="text-[13px]">{teamAMeta.name}</span>
                   <UnifiedSportsImageClient
                     src={getTeamLogo(data.teamA)}
                     alt={teamAMeta.name}
@@ -476,7 +476,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                     fit="contain"
                     className="w-5 h-5"
                   />
-                  <span className="text-sm">{teamBMeta.name}</span>
+                  <span className="text-[13px]">{teamBMeta.name}</span>
                 </div>
               </Link>
             )
@@ -486,7 +486,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
         {/* 요약 통계 */}
         <div className="mt-4 pt-3 border-t space-y-3">
           {/* 승무패 통계 */}
-          <div className="grid grid-cols-[3fr_1fr_3fr] gap-1 text-sm">
+          <div className="grid grid-cols-[3fr_1fr_3fr] gap-1 text-[13px]">
             <div className="flex items-center justify-end px-1">
               <div className="flex items-center gap-2">
                 <div className="flex gap-1">
@@ -509,7 +509,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
           </div>
           
           {/* 평균 득실점 통계 */}
-          <div className="grid grid-cols-[3fr_1fr_3fr] gap-1 text-sm">
+          <div className="grid grid-cols-[3fr_1fr_3fr] gap-1 text-[13px]">
             <div className="flex items-center justify-end px-1 gap-2">
               <div className="h-2 flex-1 bg-[#EAEAEA] dark:bg-[#333333] rounded relative">
                 {data.h2h.last > 0 && data.h2h.resultSummary.teamA.goalsFor > 0 && (
@@ -533,7 +533,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
             </div>
           </div>
           
-          <div className="grid grid-cols-[3fr_1fr_3fr] gap-1 text-sm">
+          <div className="grid grid-cols-[3fr_1fr_3fr] gap-1 text-[13px]">
             <div className="flex items-center justify-end px-1 gap-2">
               <div className="h-2 flex-1 bg-[#EAEAEA] dark:bg-[#333333] rounded relative">
                 {data.h2h.last > 0 && data.h2h.resultSummary.teamA.goalsAgainst > 0 && (
@@ -593,7 +593,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                     <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
                       <Image src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                     </div>
-                    <span className="text-sm leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerADisplayName}</span>
+                    <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerADisplayName}</span>
                   </div>
                   <span className="text-gray-900 dark:text-white font-semibold flex-shrink-0 text-base">{playerA.goals}</span>
                 </Link>
@@ -622,7 +622,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                     <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
                       <Image src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                     </div>
-                    <span className="text-sm leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerADisplayName}</span>
+                    <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerADisplayName}</span>
                   </div>
                   <span className="text-gray-900 dark:text-white font-semibold flex-shrink-0 text-base">{playerA.assists}</span>
                 </Link>
@@ -669,7 +669,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                     <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
                       <Image src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                     </div>
-                    <span className="text-sm leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerBDisplayName}</span>
+                    <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerBDisplayName}</span>
                   </div>
                   <span className="text-gray-900 dark:text-white font-semibold flex-shrink-0 text-base">{playerB.goals}</span>
                 </Link>
@@ -698,7 +698,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                     <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
                       <Image src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                     </div>
-                    <span className="text-sm leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerBDisplayName}</span>
+                    <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerBDisplayName}</span>
                   </div>
                   <span className="text-gray-900 dark:text-white font-semibold flex-shrink-0 text-base">{playerB.assists}</span>
                 </Link>
@@ -718,7 +718,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
             {/* Team A 섹션 */}
             <div>
               <Link href={`/livescore/football/team/${data.teamA}`} className="flex items-center justify-end gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors mb-3">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{teamAMeta.name}</span>
+                <span className="text-[13px] font-medium text-gray-700 dark:text-gray-300">{teamAMeta.name}</span>
                 <UnifiedSportsImageClient
                   src={getTeamLogo(data.teamA)}
                   alt={teamAMeta.name}
@@ -750,7 +750,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                         <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
                           <Image src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                         </div>
-                        <span className="text-sm leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerADisplayName}</span>
+                        <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerADisplayName}</span>
                       </div>
                       <span className="text-gray-900 dark:text-white font-semibold flex-shrink-0 text-base">{playerA.goals}</span>
                     </Link>
@@ -779,7 +779,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                         <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
                           <Image src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                         </div>
-                        <span className="text-sm leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerADisplayName}</span>
+                        <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerADisplayName}</span>
                       </div>
                       <span className="text-gray-900 dark:text-white font-semibold flex-shrink-0 text-base">{playerA.assists}</span>
                     </Link>
@@ -802,7 +802,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                   fit="contain"
                   className="w-5 h-5"
                 />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{teamBMeta.name}</span>
+                <span className="text-[13px] font-medium text-gray-700 dark:text-gray-300">{teamBMeta.name}</span>
               </Link>
 
               {/* 득점 헤더 */}
@@ -824,7 +824,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                     >
                       <span className="text-gray-900 dark:text-white font-semibold flex-shrink-0 text-base">{playerB.goals}</span>
                       <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
-                        <span className="text-sm leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerBDisplayName}</span>
+                        <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerBDisplayName}</span>
                         <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
                           <Image src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                         </div>
@@ -853,7 +853,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                     >
                       <span className="text-gray-900 dark:text-white font-semibold flex-shrink-0 text-base">{playerB.assists}</span>
                       <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
-                        <span className="text-sm leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerBDisplayName}</span>
+                        <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerBDisplayName}</span>
                         <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
                           <Image src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                         </div>

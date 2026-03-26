@@ -70,7 +70,7 @@ function BoardSearchBarInner({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={placeholder}
-          className="w-full pl-9 pr-8 py-2 text-sm border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg placeholder-gray-500 outline-none focus:outline-none hover:bg-[#F5F5F5] dark:hover:bg-[#262626] focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors"
+          className="w-full pl-9 pr-8 py-2 text-[13px] border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg placeholder-gray-500 outline-none focus:outline-none hover:bg-[#F5F5F5] dark:hover:bg-[#262626] focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors"
         />
         {query && (
           <button
@@ -86,7 +86,7 @@ function BoardSearchBarInner({
       {/* 검색 버튼 */}
       <button
         type="submit"
-        className="px-3 py-2 text-sm border border-black/7 dark:border-0 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-lg transition-colors whitespace-nowrap"
+        className="px-3 py-2 text-[13px] border border-black/7 dark:border-0 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-lg transition-colors whitespace-nowrap"
       >
         검색
       </button>

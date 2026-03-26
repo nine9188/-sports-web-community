@@ -108,7 +108,7 @@ export default function UsersAdminPage() {
           <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-[#F0F0F0]">
             사용자 목록
           </h3>
-          <p className="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-1 max-w-2xl text-[13px] text-gray-500 dark:text-gray-400">
             관리자 권한을 부여하거나 해제하고, 계정 정지를 관리할 수 있습니다.
           </p>
         </div>
@@ -145,16 +145,16 @@ export default function UsersAdminPage() {
               <tbody className="bg-white dark:bg-[#1D1D1D] divide-y divide-black/7 dark:divide-white/10">
                 {users.map((user) => (
                   <tr key={user.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                    <td className="px-6 py-4 whitespace-nowrap text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
                       {user.email}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    <td className="px-6 py-4 whitespace-nowrap text-[13px] text-gray-500 dark:text-gray-400">
                       {user.nickname?.trim() || '이름 없음'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    <td className="px-6 py-4 whitespace-nowrap text-[13px] text-gray-500 dark:text-gray-400">
                       {user.created_at ? new Date(user.created_at).toLocaleDateString() : '-'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    <td className="px-6 py-4 whitespace-nowrap text-[13px] text-gray-500 dark:text-gray-400">
                       {user.last_sign_in_at ?
                         new Date(user.last_sign_in_at).toLocaleString('ko-KR', {
                           year: 'numeric',
@@ -166,7 +166,7 @@ export default function UsersAdminPage() {
                         '정보 없음'
                       }
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    <td className="px-6 py-4 whitespace-nowrap text-[13px] text-gray-500 dark:text-gray-400">
                       <div className="space-y-1">
                         {user.is_admin ? (
                           <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">
@@ -199,7 +199,7 @@ export default function UsersAdminPage() {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-[13px] font-medium">
                       <div className="space-y-2">
                         <Button
                           variant="link"

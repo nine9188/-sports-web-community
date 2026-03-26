@@ -454,7 +454,7 @@ export default function PostEditForm({
       <ContainerContent className="pt-4">
         <form id="post-edit-form" onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-md text-sm">
+            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-md text-[13px]">
               {error}
             </div>
           )}
@@ -462,7 +462,7 @@ export default function PostEditForm({
           {/* 게시판 선택 필드 (생성 모드에서만 표시) */}
           {isCreateMode && (
             <div className="space-y-2">
-              <label htmlFor="categoryId" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+              <label htmlFor="categoryId" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
                 게시판 선택 <span className="text-red-500 dark:text-red-400">*</span>
               </label>
               <BoardSelector
@@ -478,7 +478,7 @@ export default function PostEditForm({
           {/* 제목 필드 - 핫딜 게시판이 아닐 때만 표시 (핫딜은 제목 자동 생성) */}
           {!isHotdeal && (
             <div className="space-y-2">
-              <label htmlFor="title" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">제목</label>
+              <label htmlFor="title" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">제목</label>
               <input
                 type="text"
                 id="title"
@@ -504,7 +504,7 @@ export default function PostEditForm({
 
               {/* 상품 링크 */}
               <div className="space-y-2">
-                <label htmlFor="deal_url" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                <label htmlFor="deal_url" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
                   상품 링크 <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -519,7 +519,7 @@ export default function PostEditForm({
 
               {/* 쇼핑몰 */}
               <div className="space-y-2">
-                <label htmlFor="store" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                <label htmlFor="store" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
                   쇼핑몰 <span className="text-red-500">*</span>
                 </label>
                 <NativeSelect
@@ -532,7 +532,7 @@ export default function PostEditForm({
 
               {/* 상품명 */}
               <div className="space-y-2">
-                <label htmlFor="product_name" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                <label htmlFor="product_name" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
                   상품명 <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -548,7 +548,7 @@ export default function PostEditForm({
               {/* 가격 */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label htmlFor="price" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                  <label htmlFor="price" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
                     판매가 <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -561,14 +561,14 @@ export default function PostEditForm({
                       placeholder="11160"
                       min="0"
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-gray-500">
                       원
                     </span>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="original_price" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                  <label htmlFor="original_price" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
                     정가 <span className="text-gray-400 text-xs">(선택)</span>
                   </label>
                   <div className="relative">
@@ -581,7 +581,7 @@ export default function PostEditForm({
                       placeholder="15000"
                       min="0"
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-gray-500">
                       원
                     </span>
                   </div>
@@ -591,7 +591,7 @@ export default function PostEditForm({
 
               {/* 배송비 */}
               <div className="space-y-2">
-                <label htmlFor="shipping" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                <label htmlFor="shipping" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
                   배송비 <span className="text-red-500">*</span>
                 </label>
                 <NativeSelect
@@ -603,7 +603,7 @@ export default function PostEditForm({
               </div>
 
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                <p className="text-sm text-blue-800 dark:text-blue-300">
+                <p className="text-[13px] text-blue-800 dark:text-blue-300">
                   💡 <strong>팁:</strong> 상품 링크를 입력하면 쇼핑몰이 자동으로 선택됩니다.
                 </p>
               </div>
@@ -611,7 +611,7 @@ export default function PostEditForm({
           )}
 
           <div className="space-y-2">
-            <label htmlFor="content" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">내용</label>
+            <label htmlFor="content" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">내용</label>
             
             {/* 에디터 툴바 컴포넌트 (버튼만) */}
             <EditorToolbar

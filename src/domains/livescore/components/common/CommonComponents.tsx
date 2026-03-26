@@ -10,7 +10,7 @@ export const LoadingState = memo(({ message = '데이터를 불러오는 중...'
       <ContainerContent className="flex justify-center items-center py-8">
         <div className="text-center">
           <Spinner size="xl" className="mx-auto mb-2" />
-          <p className="text-sm text-gray-700 dark:text-gray-300">{message}</p>
+          <p className="text-[13px] text-gray-700 dark:text-gray-300">{message}</p>
         </div>
       </ContainerContent>
     </Container>
@@ -30,7 +30,7 @@ export const ErrorState = memo(({ message = '오류가 발생했습니다.' }: {
           </svg>
         </div>
         <h3 className="text-lg font-medium text-gray-900 dark:text-[#F0F0F0] mb-1">오류 발생</h3>
-        <p className="text-sm text-gray-700 dark:text-gray-300">{message}</p>
+        <p className="text-[13px] text-gray-700 dark:text-gray-300">{message}</p>
       </ContainerContent>
     </Container>
   );
@@ -49,7 +49,7 @@ export const EmptyState = memo(({ title = '데이터가 없습니다', message =
           </svg>
         </div>
         <h3 className="text-lg font-medium text-gray-900 dark:text-[#F0F0F0] mb-1">{title}</h3>
-        <p className="text-sm text-gray-700 dark:text-gray-300">{message}</p>
+        <p className="text-[13px] text-gray-700 dark:text-gray-300">{message}</p>
       </ContainerContent>
     </Container>
   );
@@ -115,7 +115,7 @@ export function ConfirmAction({
           </svg>
         </div>
         <h3 className="text-lg font-medium text-gray-900 dark:text-[#F0F0F0] mb-1">{title}</h3>
-        <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">{message}</p>
+        <p className="text-[13px] text-gray-700 dark:text-gray-300 mb-4">{message}</p>
 
         <div className="flex justify-center space-x-3">
           <Button

@@ -57,7 +57,7 @@ export default function Calendar({ selectedDate, onDateSelect, onClose, minDate,
             if (viewMode === 'day') setViewMode('month');
             else if (viewMode === 'month') setViewMode('year');
           }}
-          className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-3 py-2 rounded transition-colors outline-none focus:outline-none"
+          className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-3 py-2 rounded transition-colors outline-none focus:outline-none"
         >
           {viewMode === 'day' && format(visibleDate, 'yyyy. M.', { locale: ko })}
           {viewMode === 'month' && format(visibleDate, 'yyyy', { locale: ko })}
@@ -125,7 +125,7 @@ export default function Calendar({ selectedDate, onDateSelect, onClose, minDate,
         <button
           type="button"
           onClick={handleToday}
-          className="px-3 py-2 text-sm font-medium text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors outline-none focus:outline-none"
+          className="px-3 py-2 text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors outline-none focus:outline-none"
         >
           오늘
         </button>
@@ -133,14 +133,14 @@ export default function Calendar({ selectedDate, onDateSelect, onClose, minDate,
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors outline-none focus:outline-none"
+            className="px-3 py-2 text-[13px] font-medium text-gray-600 dark:text-gray-400 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors outline-none focus:outline-none"
           >
             취소
           </button>
           <button
             type="button"
             onClick={handleConfirm}
-            className="px-3 py-2 text-sm font-semibold bg-[#262626] dark:bg-[#3F3F3F] text-white hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] rounded transition-colors outline-none focus:outline-none"
+            className="px-3 py-2 text-[13px] font-semibold bg-[#262626] dark:bg-[#3F3F3F] text-white hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] rounded transition-colors outline-none focus:outline-none"
           >
             확인
           </button>
@@ -202,7 +202,7 @@ function DayGrid({
             onClick={() => !isDisabled && onDateSelect(day)}
             disabled={isDisabled}
             className={`
-              h-8 flex items-center justify-center rounded text-sm transition-colors outline-none focus:outline-none
+              h-8 flex items-center justify-center rounded text-[13px] transition-colors outline-none focus:outline-none
               ${isSelected ? 'bg-[#262626] dark:bg-[#3F3F3F] text-white font-semibold' : ''}
               ${!isSelected && isToday_ ? 'ring-1 ring-[#262626] dark:ring-[#3F3F3F]' : ''}
               ${!isCurrentMonth ? 'text-gray-400 dark:text-gray-600' : 'text-gray-900 dark:text-[#F0F0F0]'}
@@ -249,7 +249,7 @@ function MonthGrid({
             onClick={() => !isDisabled && onMonthSelect(month)}
             disabled={isDisabled}
             className={`
-              h-12 flex items-center justify-center rounded-lg text-sm font-medium transition-colors outline-none focus:outline-none
+              h-12 flex items-center justify-center rounded-lg text-[13px] font-medium transition-colors outline-none focus:outline-none
               ${isSelected ? 'bg-[#262626] dark:bg-[#3F3F3F] text-white' : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'}
               ${isDisabled ? 'opacity-40 cursor-not-allowed' : ''}
             `}
@@ -295,7 +295,7 @@ function YearGrid({
             onClick={() => !isDisabled && onYearSelect(year)}
             disabled={isDisabled}
             className={`
-              h-12 flex items-center justify-center rounded-lg text-sm font-medium transition-colors outline-none focus:outline-none
+              h-12 flex items-center justify-center rounded-lg text-[13px] font-medium transition-colors outline-none focus:outline-none
               ${isSelected ? 'bg-[#262626] dark:bg-[#3F3F3F] text-white' : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'}
               ${isDisabled ? 'opacity-40 cursor-not-allowed' : ''}
             `}

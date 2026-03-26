@@ -60,7 +60,7 @@ const ContainerTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "text-sm font-bold",
+      "text-[13px] font-bold",
       "text-gray-900 dark:text-[#F0F0F0]",
       className
     )}

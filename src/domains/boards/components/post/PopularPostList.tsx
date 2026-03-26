@@ -86,7 +86,7 @@ export default function PopularPostList({
           >
             {/* 추천 수 - 데스크톱에서만 표시 */}
             <div className="hidden sm:flex flex-col items-center gap-1 min-w-[40px]">
-              <span className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
+              <span className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">
                 {post.likes}
               </span>
               <ThumbsUp className="w-4 h-4 text-gray-500 dark:text-gray-400" />
@@ -120,7 +120,7 @@ export default function PopularPostList({
               {/* 제목 + 아이콘 + 댓글 수 */}
               <Link href={postUrl} prefetch={false} className="block overflow-hidden">
                 <div className="flex items-center gap-1 mb-2">
-                  <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
+                  <h3 className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
                     {post.title}
                   </h3>
                   {renderContentTypeIcons(post)}
@@ -135,7 +135,7 @@ export default function PopularPostList({
               {/* 핫딜 가격 정보 */}
               {dealInfo && (
                 <div className="flex items-center gap-1.5 mb-2">
-                  <span className="text-sm font-bold text-red-600 dark:text-red-400">
+                  <span className="text-[13px] font-bold text-red-600 dark:text-red-400">
                     {formatPrice(dealInfo.price)}
                   </span>
                   {discountRate && (

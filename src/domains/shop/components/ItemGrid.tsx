@@ -52,7 +52,7 @@ export default function ItemGrid({
 
   const renderTable = () => (
     <div className="border border-black/7 dark:border-0 rounded-lg overflow-hidden">
-      <table className="w-full text-sm">
+      <table className="w-full text-[13px]">
         <thead className="bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300">
           <tr>
             <th className="px-3 py-2 text-left w-10">아이콘</th>

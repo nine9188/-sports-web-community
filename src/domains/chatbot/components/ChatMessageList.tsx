@@ -106,7 +106,7 @@ export function ChatMessageList({
       {messages.length === 0 && !isTyping ? (
         <div className="flex items-center justify-center h-full">
           <div className="text-center text-gray-700 dark:text-gray-300">
-            <p className="text-sm">메시지가 없습니다</p>
+            <p className="text-[13px]">메시지가 없습니다</p>
           </div>
         </div>
       ) : (

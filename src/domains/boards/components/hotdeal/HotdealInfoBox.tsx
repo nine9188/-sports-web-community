@@ -25,10 +25,10 @@ export function HotdealInfoBox({ dealInfo, postId, isAuthor }: HotdealInfoBoxPro
       {isEnded ? (
         <div className="bg-[#F5F5F5] dark:bg-[#262626] px-4 py-3 border-b border-black/5 dark:border-white/10">
           <div className="flex items-center gap-3">
-            <span className="text-sm px-3 py-1 rounded bg-[#EAEAEA] dark:bg-[#333333] text-gray-700 dark:text-gray-300 font-medium">
+            <span className="text-[13px] px-3 py-1 rounded bg-[#EAEAEA] dark:bg-[#333333] text-gray-700 dark:text-gray-300 font-medium">
               🔴 종료됨
             </span>
-            <span className="text-sm text-gray-500 dark:text-gray-400">
+            <span className="text-[13px] text-gray-500 dark:text-gray-400">
               사유: {dealInfo.ended_reason || '알 수 없음'}
             </span>
             {dealInfo.ended_at && (
@@ -41,7 +41,7 @@ export function HotdealInfoBox({ dealInfo, postId, isAuthor }: HotdealInfoBoxPro
       ) : (
         isAuthor && (
           <div className="bg-[#F5F5F5] dark:bg-[#262626] px-4 py-3 border-b border-black/5 dark:border-white/10 flex items-center justify-between">
-            <span className="text-sm text-gray-700 dark:text-gray-300">
+            <span className="text-[13px] text-gray-700 dark:text-gray-300">
               품절, 마감 등의 사유로 핫딜이 종료되었나요?
             </span>
             <HotdealEndButton postId={postId} />
@@ -52,7 +52,7 @@ export function HotdealInfoBox({ dealInfo, postId, isAuthor }: HotdealInfoBoxPro
       <div className="divide-y divide-black/5 dark:divide-white/10">
         {/* 링크 */}
         <div className="flex">
-          <div className="w-24 flex-shrink-0 bg-[#F5F5F5] dark:bg-[#262626] px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">
+          <div className="w-24 flex-shrink-0 bg-[#F5F5F5] dark:bg-[#262626] px-4 py-3 text-[13px] font-medium text-gray-500 dark:text-gray-400">
             링크
           </div>
           <div className="flex-1 px-4 py-3">
@@ -60,7 +60,7 @@ export function HotdealInfoBox({ dealInfo, postId, isAuthor }: HotdealInfoBoxPro
               href={dealInfo.deal_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline break-all text-sm transition-colors"
+              className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline break-all text-[13px] transition-colors"
             >
               {dealInfo.deal_url}
             </Link>
@@ -69,27 +69,27 @@ export function HotdealInfoBox({ dealInfo, postId, isAuthor }: HotdealInfoBoxPro
 
         {/* 쇼핑몰 */}
         <div className="flex">
-          <div className="w-24 flex-shrink-0 bg-[#F5F5F5] dark:bg-[#262626] px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">
+          <div className="w-24 flex-shrink-0 bg-[#F5F5F5] dark:bg-[#262626] px-4 py-3 text-[13px] font-medium text-gray-500 dark:text-gray-400">
             쇼핑몰
           </div>
-          <div className="flex-1 px-4 py-3 text-sm text-gray-900 dark:text-[#F0F0F0]">
+          <div className="flex-1 px-4 py-3 text-[13px] text-gray-900 dark:text-[#F0F0F0]">
             {dealInfo.store}
           </div>
         </div>
 
         {/* 상품명 */}
         <div className="flex">
-          <div className="w-24 flex-shrink-0 bg-[#F5F5F5] dark:bg-[#262626] px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">
+          <div className="w-24 flex-shrink-0 bg-[#F5F5F5] dark:bg-[#262626] px-4 py-3 text-[13px] font-medium text-gray-500 dark:text-gray-400">
             상품명
           </div>
-          <div className="flex-1 px-4 py-3 text-sm text-gray-900 dark:text-[#F0F0F0]">
+          <div className="flex-1 px-4 py-3 text-[13px] text-gray-900 dark:text-[#F0F0F0]">
             {dealInfo.product_name}
           </div>
         </div>
 
         {/* 가격 */}
         <div className="flex">
-          <div className="w-24 flex-shrink-0 bg-[#F5F5F5] dark:bg-[#262626] px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">
+          <div className="w-24 flex-shrink-0 bg-[#F5F5F5] dark:bg-[#262626] px-4 py-3 text-[13px] font-medium text-gray-500 dark:text-gray-400">
             가격
           </div>
           <div className="flex-1 px-4 py-3">
@@ -97,15 +97,15 @@ export function HotdealInfoBox({ dealInfo, postId, isAuthor }: HotdealInfoBoxPro
               {/* 정가가 있으면 할인 표시 */}
               {dealInfo.original_price && discountRate && (
                 <>
-                  <span className="text-sm text-gray-400 dark:text-gray-500 line-through">
+                  <span className="text-[13px] text-gray-400 dark:text-gray-500 line-through">
                     {formatPrice(dealInfo.original_price)}
                   </span>
-                  <span className="text-sm font-bold text-orange-600 dark:text-orange-400">
+                  <span className="text-[13px] font-bold text-orange-600 dark:text-orange-400">
                     {discountRate}%↓
                   </span>
                 </>
               )}
-              <span className="text-sm font-bold text-red-600 dark:text-red-400">
+              <span className="text-[13px] font-bold text-red-600 dark:text-red-400">
                 {formatPrice(dealInfo.price)}
               </span>
             </div>
@@ -114,12 +114,12 @@ export function HotdealInfoBox({ dealInfo, postId, isAuthor }: HotdealInfoBoxPro
 
         {/* 배송 */}
         <div className="flex">
-          <div className="w-24 flex-shrink-0 bg-[#F5F5F5] dark:bg-[#262626] px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">
+          <div className="w-24 flex-shrink-0 bg-[#F5F5F5] dark:bg-[#262626] px-4 py-3 text-[13px] font-medium text-gray-500 dark:text-gray-400">
             배송
           </div>
           <div className="flex-1 px-4 py-3">
             <span
-              className={`text-sm ${
+              className={`text-[13px] ${
                 dealInfo.shipping === '무료' || dealInfo.shipping === '무배'
                   ? 'text-green-600 dark:text-green-400 font-medium'
                   : 'text-gray-900 dark:text-[#F0F0F0]'

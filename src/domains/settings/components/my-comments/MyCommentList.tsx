@@ -19,7 +19,7 @@ export default function MyCommentList({
     <Container className="bg-white dark:bg-[#1D1D1D]">
       <ContainerHeader className="h-auto py-3 justify-between">
         <ContainerTitle>댓글 목록</ContainerTitle>
-        <span className="text-sm text-gray-500 dark:text-gray-400">총 {totalCount}개</span>
+        <span className="text-[13px] text-gray-500 dark:text-gray-400">총 {totalCount}개</span>
       </ContainerHeader>
 
       {comments.length === 0 ? (
@@ -48,7 +48,7 @@ export default function MyCommentList({
             <tbody className="bg-white dark:bg-[#1D1D1D] divide-y divide-black/5 dark:divide-white/10">
               {comments.map((comment) => (
                 <tr key={comment.id} className="hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors">
-                  <td className="px-4 py-4 text-sm max-w-0">
+                  <td className="px-4 py-4 text-[13px] max-w-0">
                     <Link
                       href={`/boards/${comment.board_id}/posts/${comment.post_id}#comment-${comment.id}`}
                       className="text-gray-900 dark:text-[#F0F0F0] hover:text-gray-700 dark:hover:text-gray-300 transition-colors block truncate"
@@ -57,7 +57,7 @@ export default function MyCommentList({
                       {comment.content}
                     </Link>
                   </td>
-                  <td className="px-4 py-4 text-sm text-gray-500 dark:text-gray-400 text-left hidden md:table-cell max-w-0">
+                  <td className="px-4 py-4 text-[13px] text-gray-500 dark:text-gray-400 text-left hidden md:table-cell max-w-0">
                     <Link
                       href={`/boards/${comment.board_id}/posts/${comment.post_id}`}
                       className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors block truncate"
@@ -66,10 +66,10 @@ export default function MyCommentList({
                       {comment.post_title || '(제목 없음)'}
                     </Link>
                   </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 text-left hidden sm:table-cell">
+                  <td className="px-4 py-4 whitespace-nowrap text-[13px] text-gray-500 dark:text-gray-400 text-left hidden sm:table-cell">
                     {comment.board_name || '게시판 없음'}
                   </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 text-center">
+                  <td className="px-4 py-4 whitespace-nowrap text-[13px] text-gray-500 dark:text-gray-400 text-center">
                     {formatDate(comment.created_at) || '-'}
                   </td>
                 </tr>

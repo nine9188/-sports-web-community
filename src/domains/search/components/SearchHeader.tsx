@@ -24,7 +24,7 @@ export default function SearchHeader({
         <div>
           <h1 className="text-lg font-medium text-gray-900 dark:text-[#F0F0F0]">{heading}</h1>
           {!trimmedQuery && (
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{description}</p>
+            <p className="mt-1 text-[13px] text-gray-500 dark:text-gray-400">{description}</p>
           )}
         </div>
       </div>

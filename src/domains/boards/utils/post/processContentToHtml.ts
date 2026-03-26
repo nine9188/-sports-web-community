@@ -124,7 +124,7 @@ function processObjectContentUnsafe(content: TipTapDoc | RssPost | Record<string
     } else {
       // 다른 형태의 JSON - 읽기 가능한 형태로 출력
       htmlContent += `
-        <div class="bg-[#F5F5F5] dark:bg-[#262626] p-4 rounded-md overflow-auto text-sm font-mono">
+        <div class="bg-[#F5F5F5] dark:bg-[#262626] p-4 rounded-md overflow-auto text-[13px] font-mono">
           <pre class="text-gray-900 dark:text-[#F0F0F0]">${escapeHtml(JSON.stringify(content, null, 2))}</pre>
         </div>
       `;

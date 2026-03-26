@@ -58,7 +58,7 @@ export function ExpHistoryTable({
           <tbody className="bg-white dark:bg-[#1D1D1D] divide-y divide-black/7 dark:divide-white/10">
             {history.map((item) => (
               <tr key={item.id}>
-                <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                <td className="px-4 py-2 text-[13px] text-gray-500 dark:text-gray-400">
                   {new Date(item.created_at || "").toLocaleString("ko-KR", {
                     year: "numeric",
                     month: "2-digit",
@@ -68,11 +68,11 @@ export function ExpHistoryTable({
                   })}
                 </td>
                 <td
-                  className={`px-4 py-2 text-sm font-medium text-right ${item.exp > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+                  className={`px-4 py-2 text-[13px] font-medium text-right ${item.exp > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
                 >
                   {item.exp > 0 ? `+${item.exp}` : item.exp}
                 </td>
-                <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">
+                <td className="px-4 py-2 text-[13px] text-gray-900 dark:text-gray-100">
                   {item.reason}
                 </td>
               </tr>

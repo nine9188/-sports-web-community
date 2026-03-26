@@ -32,7 +32,7 @@ export default function PrivacyPage() {
         </div>
 
         {/* 본문 */}
-        <div className="prose prose-slate dark:prose-invert max-w-none text-sm leading-7 space-y-6
+        <div className="prose prose-slate dark:prose-invert max-w-none text-[13px] leading-7 space-y-6
           prose-headings:text-gray-900 dark:prose-headings:text-[#F0F0F0]
           prose-p:text-gray-700 dark:prose-p:text-gray-300
           prose-li:text-gray-700 dark:prose-li:text-gray-300
@@ -113,7 +113,7 @@ export default function PrivacyPage() {
             <p>서비스는 원활한 서비스 제공을 위해 다음과 같이 개인정보 처리 업무를 위탁하고 있습니다.</p>
 
             <div className="overflow-x-auto mt-4">
-              <table className="min-w-full border border-black/10 dark:border-white/10 text-sm">
+              <table className="min-w-full border border-black/10 dark:border-white/10 text-[13px]">
                 <thead>
                   <tr className="bg-gray-100 dark:bg-[#2D2D2D]">
                     <th className="border border-black/10 dark:border-white/10 px-4 py-2 text-left text-gray-900 dark:text-[#F0F0F0]">수탁업체</th>

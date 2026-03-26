@@ -74,7 +74,12 @@ export const liveScoreKeys = {
   all: ['liveScore'] as const,
   matches: (date: string) => [...liveScoreKeys.all, 'matches', date] as const,
   liveCount: () => [...liveScoreKeys.all, 'liveCount'] as const,
-  multiDay: () => [...liveScoreKeys.all, 'multiDay'] as const,
+  multiDay: () => {
+    // KST 기준 오늘 날짜를 키에 포함 → 자정 넘으면 새 캐시
+    const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+    const today = kst.toISOString().split('T')[0];
+    return [...liveScoreKeys.all, 'multiDay', today] as const;
+  },
 };
 
 // ============================================

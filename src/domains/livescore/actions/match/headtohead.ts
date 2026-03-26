@@ -4,8 +4,24 @@ import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi'
 import { fetchTeamPlayerStats } from '@/domains/livescore/actions/teams/player-stats'
 import { fetchTeamSquad } from '@/domains/livescore/actions/teams/squad'
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName'
-import { getPlayerPhotoUrls, getTeamLogoUrls } from '@/domains/livescore/actions/images'
+import { getPlayerPhotoUrls, getTeamLogoUrls, getLeagueLogoUrls } from '@/domains/livescore/actions/images'
 import { cache } from 'react'
+
+// ── 유틸리티 ──
+
+const FINISHED_STATUSES = ['FT', 'AET', 'PEN']
+
+async function fetchWithRetry<T>(fn: () => Promise<T>, maxRetries: number = 1): Promise<T> {
+	for (let i = 0; i <= maxRetries; i++) {
+		try {
+			return await fn()
+		} catch (error) {
+			if (i === maxRetries) throw error
+			await new Promise(r => setTimeout(r, 300))
+		}
+	}
+	throw new Error('fetchWithRetry: unreachable')
+}
 
 type TeamId = number
 
@@ -73,7 +89,7 @@ interface TopPlayerItem {
 }
 
 interface ApiFixtureResponse {
-	fixture?: { id?: number; date?: string }
+	fixture?: { id?: number; date?: string; status?: { short?: string } }
 	league?: { id?: number; name?: string; country?: string; logo?: string }
 	teams?: {
 		home?: { id?: number; name?: string; logo?: string }
@@ -114,6 +130,10 @@ export interface HeadToHeadTestData {
 	playerPhotoUrls?: Record<number, string>
 	// 4590 표준: 팀 로고 Storage URL (teamId -> URL)
 	teamLogoUrls?: Record<number, string>
+	// 4590 표준: 리그 로고 Storage URL (leagueId -> URL)
+	leagueLogoUrls?: Record<number, string>
+	// 데이터 완전성 (allSettled에서 일부 실패 시 false)
+	isComplete?: boolean
 }
 
 function buildResultSummary(items: FixtureSummaryItem[], teamA: TeamId, teamB: TeamId) {
@@ -167,13 +187,18 @@ export async function fetchHeadToHead(teamA: TeamId, teamB: TeamId, last: number
 		throw new Error('두 팀 ID가 모두 필요합니다')
 	}
 
+	// AET(연장전), PEN(승부차기) 종료 경기도 포함하기 위해 status 파라미터 제거
+	// API에서 전체를 가져온 후 코드에서 종료 상태만 필터
 	const data = await fetchFromFootballApi('fixtures/headtohead', {
 		h2h: `${teamA}-${teamB}`,
-		last,
-		status: 'FT'
+		last: last * 2,
 	})
 
-	const items: FixtureSummaryItem[] = (data?.response || []).slice(0, last).map((m: ApiFixtureResponse) => {
+	const finishedMatches = (data?.response || []).filter(
+		(m: ApiFixtureResponse) => FINISHED_STATUSES.includes(m?.fixture?.status?.short ?? '')
+	)
+
+	const items: FixtureSummaryItem[] = finishedMatches.slice(0, last).map((m: ApiFixtureResponse) => {
 		const gh = typeof m?.goals?.home === 'number' ? m.goals.home : 0
 		const ga = typeof m?.goals?.away === 'number' ? m.goals.away : 0
 		let winner: number | null = null
@@ -208,14 +233,16 @@ export async function fetchHeadToHead(teamA: TeamId, teamB: TeamId, last: number
 }
 
 export async function fetchTeamRecentForm(teamId: TeamId, last: number = 5): Promise<TeamRecentFormSummary> {
-	// 모든 리그, 모든 시즌에서 완료된 경기만 조회
+	// AET/PEN 포함을 위해 status 파라미터 제거, 코드에서 필터
 	const fixturesData = await fetchFromFootballApi('fixtures', {
 		team: teamId,
-		last: last * 2,  // 넉넉하게 가져오기
-		status: 'FT'
+		last: last * 3,
 	})
 
-	const fixtures: ApiFixtureResponse[] = Array.isArray(fixturesData?.response) ? fixturesData.response : []
+	const allFixtures: ApiFixtureResponse[] = Array.isArray(fixturesData?.response) ? fixturesData.response : []
+	const fixtures = allFixtures.filter(
+		m => FINISHED_STATUSES.includes(m?.fixture?.status?.short ?? '')
+	)
 
 	// 날짜 내림차순 정렬 후 상위 n개 추출
 	fixtures.sort((a, b) => {
@@ -311,22 +338,34 @@ export async function fetchTeamTopPlayers(teamId: TeamId): Promise<TeamTopPlayer
 }
 
 export async function getHeadToHeadTestData(teamA: TeamId, teamB: TeamId, last: number = 5): Promise<HeadToHeadTestData> {
-	const [h2h, recentA, recentB, topA, topB] = await Promise.all([
-		fetchHeadToHead(teamA, teamB, last),
-		fetchTeamRecentForm(teamA, last),
-		fetchTeamRecentForm(teamB, last),
-		fetchTeamTopPlayers(teamA),
-		fetchTeamTopPlayers(teamB)
+	// Promise.allSettled + fetchWithRetry: 부분 실패해도 나머지 데이터 제공
+	const emptyH2H: HeadToHeadSummary = { teamA, teamB, last, items: [], resultSummary: { teamA: { win: 0, draw: 0, loss: 0, goalsFor: 0, goalsAgainst: 0, goalDiff: 0 }, teamB: { win: 0, draw: 0, loss: 0, goalsFor: 0, goalsAgainst: 0, goalDiff: 0 } } }
+	const emptyRecent = (id: TeamId): TeamRecentFormSummary => ({ teamId: id, last: 0, items: [], summary: { win: 0, draw: 0, loss: 0, goalsFor: 0, goalsAgainst: 0, goalDiff: 0 } })
+	const emptyTop = (id: TeamId): TeamTopPlayersSummary => ({ teamId: id, topScorers: [], topAssist: [] })
+
+	const results = await Promise.allSettled([
+		fetchWithRetry(() => fetchHeadToHead(teamA, teamB, last)),
+		fetchWithRetry(() => fetchTeamRecentForm(teamA, last)),
+		fetchWithRetry(() => fetchTeamRecentForm(teamB, last)),
+		fetchWithRetry(() => fetchTeamTopPlayers(teamA)),
+		fetchWithRetry(() => fetchTeamTopPlayers(teamB))
 	])
 
-	// 4590 표준: 모든 선수 ID 수집하여 Storage URL 배치 조회
+	const h2h = results[0].status === 'fulfilled' ? results[0].value : emptyH2H
+	const recentA = results[1].status === 'fulfilled' ? results[1].value : emptyRecent(teamA)
+	const recentB = results[2].status === 'fulfilled' ? results[2].value : emptyRecent(teamB)
+	const topA = results[3].status === 'fulfilled' ? results[3].value : emptyTop(teamA)
+	const topB = results[4].status === 'fulfilled' ? results[4].value : emptyTop(teamB)
+
+	const isComplete = results.every(r => r.status === 'fulfilled')
+
+	// 4590 표준: 선수/팀/리그 ID 수집
 	const allPlayerIds = new Set<number>()
 	for (const p of topA.topScorers) allPlayerIds.add(p.playerId)
 	for (const p of topA.topAssist) allPlayerIds.add(p.playerId)
 	for (const p of topB.topScorers) allPlayerIds.add(p.playerId)
 	for (const p of topB.topAssist) allPlayerIds.add(p.playerId)
 
-	// 4590 표준: 모든 팀 ID 수집 (메인 팀 + 최근 경기 상대팀)
 	const allTeamIds = new Set<number>([teamA, teamB])
 	for (const item of recentA.items) {
 		if (item.opponent.id) allTeamIds.add(item.opponent.id)
@@ -335,9 +374,15 @@ export async function getHeadToHeadTestData(teamA: TeamId, teamB: TeamId, last: 
 		if (item.opponent.id) allTeamIds.add(item.opponent.id)
 	}
 
-	const [playerPhotoUrls, teamLogoUrls] = await Promise.all([
-		getPlayerPhotoUrls([...allPlayerIds]),
-		getTeamLogoUrls([...allTeamIds])
+	const allLeagueIds = new Set<number>()
+	for (const item of h2h.items) {
+		if (item.league.id) allLeagueIds.add(item.league.id)
+	}
+
+	const [playerPhotoUrls, teamLogoUrls, leagueLogoUrls] = await Promise.all([
+		allPlayerIds.size > 0 ? getPlayerPhotoUrls([...allPlayerIds]) : Promise.resolve({}),
+		getTeamLogoUrls([...allTeamIds]),
+		allLeagueIds.size > 0 ? getLeagueLogoUrls([...allLeagueIds]) : Promise.resolve({})
 	])
 
 	return {
@@ -347,7 +392,9 @@ export async function getHeadToHeadTestData(teamA: TeamId, teamB: TeamId, last: 
 		recent: { teamA: recentA, teamB: recentB },
 		topPlayers: { teamA: topA, teamB: topB },
 		playerPhotoUrls,
-		teamLogoUrls
+		teamLogoUrls,
+		leagueLogoUrls,
+		isComplete
 	}
 }
 

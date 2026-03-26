@@ -85,7 +85,7 @@ export function HotdealEndButton({ postId }: HotdealEndButtonProps) {
         </DialogHeader>
 
         <DialogBody>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-4">
             종료 사유를 선택해주세요. 종료 후에는 게시글 목록에서 "종료" 배지가 표시됩니다.
           </p>
 
@@ -105,7 +105,7 @@ export function HotdealEndButton({ postId }: HotdealEndButtonProps) {
                   className="w-4 h-4 text-red-600 dark:text-red-400"
                   disabled={isSubmitting}
                 />
-                <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">
+                <span className="text-[13px] text-gray-900 dark:text-[#F0F0F0]">
                   {reason.label}
                 </span>
               </label>

@@ -54,23 +54,23 @@ export default function SuspensionNotice({ suspensionInfo, className = '' }: Sus
             </p>
             
             <div className="bg-red-100 rounded-md p-3">
-              <p className="text-sm text-red-800">
+              <p className="text-[13px] text-red-800">
                 <span className="font-medium">정지 사유:</span> {reason}
               </p>
             </div>
             
             {daysLeft !== null && daysLeft > 0 && (
-              <div className="flex items-center gap-2 text-sm text-red-700">
+              <div className="flex items-center gap-2 text-[13px] text-red-700">
                 <Clock className="h-4 w-4" />
                 <span>남은 기간: <strong>{daysLeft}일</strong></span>
               </div>
             )}
             
             <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-              <p className="text-sm text-yellow-800">
+              <p className="text-[13px] text-yellow-800">
                 <strong>정지 중 제한사항:</strong>
               </p>
-              <ul className="text-sm text-yellow-700 mt-1 space-y-1">
+              <ul className="text-[13px] text-yellow-700 mt-1 space-y-1">
                 <li>• 게시글 작성 및 수정 불가</li>
                 <li>• 댓글 작성 불가</li>
                 <li>• 좋아요/싫어요 불가</li>

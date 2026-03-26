@@ -1,6 +1,6 @@
 'use server'
 
-import { getSupabaseServer, getSupabaseAction } from '@/shared/lib/supabase/server'
+import { getSupabaseServer, getSupabaseAction, getSupabaseAdmin } from '@/shared/lib/supabase/server'
 import { logAuthEvent } from '@/shared/actions/log-actions'
 import { headers } from 'next/headers'
 import { validateEmail, validatePassword, validateUsername, validateNickname } from './utils/validation'
@@ -99,24 +99,21 @@ export async function signUp(
       return { success: false, error: '회원가입 처리 중 오류가 발생했습니다.' }
     }
 
-    // 4. 프로필 생성 대기
-    const waitForProfile = async (userId: string, maxRetries = 10): Promise<boolean> => {
-      for (let i = 0; i < maxRetries; i++) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', userId)
-          .maybeSingle()
+    // 4. 프로필 직접 생성 (admin 클라이언트로 RLS 우회)
+    const supabaseAdmin = getSupabaseAdmin()
+    const { error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .upsert({
+        id: data.user.id,
+        email: data.user.email,
+        username: (metadata?.username as string) || null,
+        full_name: (metadata?.full_name as string) || null,
+        nickname: (metadata?.nickname as string) || null,
+      }, { onConflict: 'id' })
 
-        if (profile) return true
-        await new Promise(resolve => setTimeout(resolve, 200)) // 200ms 대기
-      }
-      return false
-    }
-
-    const profileExists = await waitForProfile(data.user.id)
-    if (!profileExists) {
-      console.error('프로필 생성 대기 시간 초과')
+    const profileExists = !profileError
+    if (profileError) {
+      console.error('프로필 생성 실패:', profileError)
     }
 
     // 5. 성공 로그 기록

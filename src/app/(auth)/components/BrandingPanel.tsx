@@ -60,7 +60,7 @@ const SIGNUP_STEPS: Record<number, BrandingContent> = {
   1: {
     title: <>함께해주셔서 감사합니다!</>,
     description: (
-      <p className="text-white/80 text-sm mb-5 leading-relaxed">
+      <p className="text-white/80 text-[13px] mb-5 leading-relaxed">
         약관을 읽고 동의해주세요.<br />
         봇 검증도 함께 완료해주세요.
       </p>
@@ -74,7 +74,7 @@ const SIGNUP_STEPS: Record<number, BrandingContent> = {
   2: {
     title: <>이메일과 이름을 알려주세요</>,
     description: (
-      <p className="text-white/80 text-sm mb-5 leading-relaxed">
+      <p className="text-white/80 text-[13px] mb-5 leading-relaxed">
         가입에 사용할 이메일 주소와<br />
         실명을 입력해주세요.
       </p>
@@ -88,7 +88,7 @@ const SIGNUP_STEPS: Record<number, BrandingContent> = {
   3: {
     title: <>생년월일을 입력해주세요</>,
     description: (
-      <p className="text-white/80 text-sm mb-5 leading-relaxed">
+      <p className="text-white/80 text-[13px] mb-5 leading-relaxed">
         생년월일 정보는 계정 보호와<br />
         맞춤 서비스 제공에 사용됩니다.
       </p>
@@ -102,7 +102,7 @@ const SIGNUP_STEPS: Record<number, BrandingContent> = {
   4: {
     title: <>아이디를 만들어주세요</>,
     description: (
-      <p className="text-white/80 text-sm mb-5 leading-relaxed">
+      <p className="text-white/80 text-[13px] mb-5 leading-relaxed">
         로그인에 사용할 아이디를 설정해주세요.<br />
         한번 설정하면 변경할 수 없습니다.
       </p>
@@ -116,7 +116,7 @@ const SIGNUP_STEPS: Record<number, BrandingContent> = {
   5: {
     title: <>닉네임을 정해주세요</>,
     description: (
-      <p className="text-white/80 text-sm mb-5 leading-relaxed">
+      <p className="text-white/80 text-[13px] mb-5 leading-relaxed">
         커뮤니티에서 사용할 닉네임을 정해주세요.<br />
         다른 회원들에게 보이는 이름입니다.
       </p>
@@ -130,7 +130,7 @@ const SIGNUP_STEPS: Record<number, BrandingContent> = {
   6: {
     title: <>비밀번호를 설정해주세요</>,
     description: (
-      <p className="text-white/80 text-sm mb-5 leading-relaxed">
+      <p className="text-white/80 text-[13px] mb-5 leading-relaxed">
         안전한 비밀번호를 설정해주세요.<br />
         최소 10자 이상, 특수문자를 포함해야 합니다.
       </p>
@@ -144,7 +144,7 @@ const SIGNUP_STEPS: Record<number, BrandingContent> = {
   7: {
     title: <>거의 다 됐어요!</>,
     description: (
-      <p className="text-white/80 text-sm mb-5 leading-relaxed">
+      <p className="text-white/80 text-[13px] mb-5 leading-relaxed">
         추천 코드가 있다면 입력해주세요.<br />
         없어도 가입이 가능합니다.
       </p>
@@ -163,11 +163,11 @@ const VARIANT_CONTENT: Record<BrandingVariant, BrandingContent> = {
     mobileTitle: <>4590 Football 로그인</>,
     description: (
       <>
-        <p className="text-white text-sm mb-4 leading-relaxed">
+        <p className="text-white text-[13px] mb-4 leading-relaxed">
           실시간 스코어부터 전술 토론까지,<br />
           축구의 모든 것을 한 곳에서.
         </p>
-        <p className="text-white/70 text-sm mb-8 leading-relaxed">
+        <p className="text-white/70 text-[13px] mb-8 leading-relaxed">
           모든 축구팬을 위한<br />
           4590 Football 커뮤니티에 오신 것을 환영합니다.
         </p>
@@ -184,11 +184,11 @@ const VARIANT_CONTENT: Record<BrandingVariant, BrandingContent> = {
     title: <>거의 다 됐어요!</>,
     description: (
       <>
-        <p className="text-white text-sm mb-4 leading-relaxed">
+        <p className="text-white text-[13px] mb-4 leading-relaxed">
           소셜 계정으로 간편하게 가입하세요.<br />
           아이디와 닉네임만 설정하면 완료됩니다.
         </p>
-        <p className="text-white/70 text-sm mb-8 leading-relaxed">
+        <p className="text-white/70 text-[13px] mb-8 leading-relaxed">
           이미 인증된 소셜 계정을 사용하므로<br />
           별도의 이메일 인증이 필요 없습니다.
         </p>
@@ -204,11 +204,11 @@ const VARIANT_CONTENT: Record<BrandingVariant, BrandingContent> = {
     title: <>아이디가 기억나지 않으세요?</>,
     description: (
       <>
-        <p className="text-white text-sm mb-4 leading-relaxed">
+        <p className="text-white text-[13px] mb-4 leading-relaxed">
           가입할 때 사용한 이름과 이메일을<br />
           입력하면 아이디를 찾을 수 있습니다.
         </p>
-        <p className="text-white/70 text-sm mb-8 leading-relaxed">
+        <p className="text-white/70 text-[13px] mb-8 leading-relaxed">
           이메일로 발송된 인증코드를 입력하면<br />
           아이디를 바로 확인하실 수 있습니다.
         </p>
@@ -224,11 +224,11 @@ const VARIANT_CONTENT: Record<BrandingVariant, BrandingContent> = {
     title: <>비밀번호를 잊으셨나요?</>,
     description: (
       <>
-        <p className="text-white text-sm mb-4 leading-relaxed">
+        <p className="text-white text-[13px] mb-4 leading-relaxed">
           아이디를 입력하면 가입 시 등록한<br />
           이메일로 재설정 링크를 보내드립니다.
         </p>
-        <p className="text-white/70 text-sm mb-8 leading-relaxed">
+        <p className="text-white/70 text-[13px] mb-8 leading-relaxed">
           링크는 30분간 유효하며,<br />
           새로운 비밀번호를 설정하실 수 있습니다.
         </p>
@@ -244,11 +244,11 @@ const VARIANT_CONTENT: Record<BrandingVariant, BrandingContent> = {
     title: <>새 비밀번호를 설정하세요</>,
     description: (
       <>
-        <p className="text-white text-sm mb-4 leading-relaxed">
+        <p className="text-white text-[13px] mb-4 leading-relaxed">
           안전한 비밀번호를 설정해주세요.<br />
           최소 6자 이상의 비밀번호를 권장합니다.
         </p>
-        <p className="text-white/70 text-sm mb-8 leading-relaxed">
+        <p className="text-white/70 text-[13px] mb-8 leading-relaxed">
           비밀번호 변경 후<br />
           새 비밀번호로 로그인해주세요.
         </p>
@@ -264,11 +264,11 @@ const VARIANT_CONTENT: Record<BrandingVariant, BrandingContent> = {
     title: <>계정을 찾았습니다!</>,
     description: (
       <>
-        <p className="text-white text-sm mb-4 leading-relaxed">
+        <p className="text-white text-[13px] mb-4 leading-relaxed">
           회원님의 계정 정보를 확인하세요.<br />
           바로 로그인하거나 비밀번호를 재설정할 수 있습니다.
         </p>
-        <p className="text-white/70 text-sm mb-8 leading-relaxed">
+        <p className="text-white/70 text-[13px] mb-8 leading-relaxed">
           4590 Football 커뮤니티가<br />
           다시 만나뵙게 되어 반갑습니다.
         </p>
@@ -305,7 +305,7 @@ export default function BrandingPanel({ variant = 'signin', step }: { variant?: 
           <h2 className="text-xl font-bold text-white leading-tight mb-1">
             {mobileTitle}
           </h2>
-          <p className="text-white/70 text-sm">
+          <p className="text-white/70 text-[13px]">
             {variant === 'signin' && '모든 축구팬을 위한 커뮤니티'}
             {variant === 'signup' && step === 1 && '약관을 읽고 동의해주세요'}
             {variant === 'signup' && step === 2 && '이메일과 이름을 입력해주세요'}
@@ -364,7 +364,7 @@ export default function BrandingPanel({ variant = 'signin', step }: { variant?: 
                 <div className="w-9 h-9 rounded-lg bg-white/15 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
                   {FEATURE_ICONS[feature.icon]}
                 </div>
-                <p className="text-white text-sm">{feature.label}</p>
+                <p className="text-white text-[13px]">{feature.label}</p>
               </div>
             ))}
           </div>

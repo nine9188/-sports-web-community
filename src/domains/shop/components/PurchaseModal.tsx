@@ -85,7 +85,7 @@ export default function PurchaseModal({
             </div>
 
             <div>
-              <p className="font-medium text-sm text-gray-900 dark:text-[#F0F0F0]">{item.name}</p>
+              <p className="font-medium text-[13px] text-gray-900 dark:text-[#F0F0F0]">{item.name}</p>
               <p className="text-xs tabular-nums text-gray-700 dark:text-gray-300">{item.price} 포인트</p>
             </div>
           </div>
@@ -95,14 +95,14 @@ export default function PurchaseModal({
             <div className="space-y-4 mb-4 mt-4 md:mb-2 md:mt-2">
               <div className="bg-[#F5F5F5] dark:bg-[#262626] p-4 rounded-lg space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-700 dark:text-gray-300">보유한 내 포인트</span>
+                  <span className="text-[13px] text-gray-700 dark:text-gray-300">보유한 내 포인트</span>
                   <span className="text-base font-semibold tabular-nums text-gray-900 dark:text-[#F0F0F0]">
                     {userPoints.toLocaleString()} P
                   </span>
                 </div>
                 
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-700 dark:text-gray-300">상품 가격</span>
+                  <span className="text-[13px] text-gray-700 dark:text-gray-300">상품 가격</span>
                   <span className="text-base font-semibold tabular-nums text-gray-900 dark:text-[#F0F0F0]">
                     - {item.price.toLocaleString()} P
                   </span>
@@ -110,7 +110,7 @@ export default function PurchaseModal({
                 
                 <div className="border-t border-black/5 dark:border-white/10 pt-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{canAfford ? '남는 포인트' : '부족한 포인트'}</span>
+                    <span className="text-[13px] font-medium text-gray-700 dark:text-gray-300">{canAfford ? '남는 포인트' : '부족한 포인트'}</span>
                     <div className="flex items-center gap-2">
                       <span className={`text-lg font-bold tabular-nums ${canAfford ? 'text-gray-900 dark:text-[#F0F0F0]' : 'text-red-600 dark:text-red-400'}`}>
                         {(canAfford ? remainingPoints : lackingPoints).toLocaleString()} P
@@ -133,7 +133,7 @@ export default function PurchaseModal({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
-              <p className="text-sm font-medium mb-1 text-gray-900 dark:text-[#F0F0F0]">회원을 위한 구매 화면입니다</p>
+              <p className="text-[13px] font-medium mb-1 text-gray-900 dark:text-[#F0F0F0]">회원을 위한 구매 화면입니다</p>
               <p className="text-xs text-gray-700 dark:text-gray-300">로그인, 회원가입 후 이용해주세요</p>
             </div>
           )}
@@ -142,12 +142,12 @@ export default function PurchaseModal({
 
         <DialogFooter className="flex-col gap-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
           {isLoggedIn ? (
-            <div className="text-sm text-gray-700 dark:text-gray-300 mb-3 w-full">
+            <div className="text-[13px] text-gray-700 dark:text-gray-300 mb-3 w-full">
               <p className="font-medium text-gray-900 dark:text-[#F0F0F0]">이 아이템을 구매하시겠습니까?</p>
               <p className="mt-1">구매 후에는 환불이 불가능합니다.</p>
             </div>
           ) : (
-            <div className="text-sm text-gray-700 dark:text-gray-300 mb-3 text-center w-full">
+            <div className="text-[13px] text-gray-700 dark:text-gray-300 mb-3 text-center w-full">
               <p className="font-medium text-gray-900 dark:text-[#F0F0F0]">회원만 구매가 가능합니다</p>
               <p className="mt-1">로그인 후 이용해주세요</p>
             </div>

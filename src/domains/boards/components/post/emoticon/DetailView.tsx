@@ -20,7 +20,7 @@ export default function DetailView({ packId, isMobile, onBack, onPurchase }: Det
         <button
           type="button"
           onClick={onBack}
-          className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors"
+          className="flex items-center gap-1 text-[13px] text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>돌아가기</span>

@@ -105,7 +105,7 @@ export function MatchInfoSection({
           <ContainerTitle className="text-red-700 dark:text-red-400">오류 발생</ContainerTitle>
         </ContainerHeader>
         <div className="p-4">
-          <div className="text-center text-sm text-red-500 dark:text-red-400 py-4">
+          <div className="text-center text-[13px] text-red-500 dark:text-red-400 py-4">
             {error}
           </div>
         </div>
@@ -121,7 +121,7 @@ export function MatchInfoSection({
           <ContainerTitle>경기 상세정보</ContainerTitle>
         </ContainerHeader>
         <div className="px-4 py-4">
-          <div className="text-center text-sm text-gray-500 dark:text-gray-400 py-4">
+          <div className="text-center text-[13px] text-gray-500 dark:text-gray-400 py-4">
             경기 정보를 찾을 수 없습니다.
           </div>
         </div>
@@ -161,7 +161,7 @@ export function MatchInfoSection({
 
         {/* 경기 상세 정보 */}
         <div className="px-4 py-3">
-          <div className="space-y-2.5 text-sm">
+          <div className="space-y-2.5 text-[13px]">
             {/* 리그 정보 */}
             <div className="flex justify-between items-center">
               <span className="text-gray-500 dark:text-gray-400">리그</span>

@@ -406,7 +406,7 @@ export default function MatchPredictionClient({
               ? 'bg-green-100 dark:bg-green-900/30'
               : 'bg-red-100 dark:bg-red-900/30'
           }`}>
-            <div className={`text-sm font-medium mb-1 ${
+            <div className={`text-[13px] font-medium mb-1 ${
               isPredictionCorrect
                 ? 'text-green-800 dark:text-green-400'
                 : 'text-red-800 dark:text-red-400'

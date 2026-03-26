@@ -63,7 +63,7 @@ export default function ContactPage() {
       <section className="container mx-auto px-4 py-10">
         <div className="max-w-xl mx-auto text-center p-6 rounded-xl border border-black/7 dark:border-white/10 bg-[#F9FAFB] dark:bg-[#262626]">
           <Mail className="w-8 h-8 text-gray-900 dark:text-[#F0F0F0] mx-auto mb-3" />
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">대표 이메일</p>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-1">대표 이메일</p>
           <a
             href="mailto:support@4590football.com"
             className="text-xl font-semibold text-gray-900 dark:text-[#F0F0F0] hover:underline"
@@ -88,7 +88,7 @@ export default function ContactPage() {
               <h3 className="font-semibold text-gray-900 dark:text-[#F0F0F0] mb-1">
                 {category.title}
               </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+              <p className="text-[13px] text-gray-500 dark:text-gray-400 leading-relaxed">
                 {category.description}
               </p>
             </a>

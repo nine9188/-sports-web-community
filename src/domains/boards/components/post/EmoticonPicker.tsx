@@ -196,7 +196,7 @@ export default function EmoticonPicker({ onSelect, onClose }: EmoticonPickerProp
           <div className="flex flex-col items-center pt-2 pb-1 border-b border-black/5 dark:border-white/10 flex-shrink-0">
             <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mb-2" />
             <div className="flex items-center justify-between w-full px-4 pb-1">
-              <span className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0]">{headerTitle}</span>
+              <span className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">{headerTitle}</span>
               <button type="button" onClick={onClose} className="p-1.5 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors">
                 <X className="w-5 h-5 text-gray-500" />
               </button>
@@ -212,7 +212,7 @@ export default function EmoticonPicker({ onSelect, onClose }: EmoticonPickerProp
   return (
     <div className="absolute z-50 bottom-full mb-2 left-0 w-[min(692px,calc(100vw-2rem))] shadow-xl flex flex-col bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/5 dark:border-white/10 overflow-hidden h-[610px]">
       <div className="flex items-center justify-between px-4 h-11 flex-shrink-0 border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
-        <span className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0]">{headerTitle}</span>
+        <span className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">{headerTitle}</span>
         <button type="button" onClick={onClose} className="h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors">
           <X className="h-4 w-4 text-gray-500 dark:text-gray-400" />
         </button>

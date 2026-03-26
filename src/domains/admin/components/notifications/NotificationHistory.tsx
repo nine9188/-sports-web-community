@@ -34,22 +34,22 @@ export function NotificationHistory({ logs, isLoading }: NotificationHistoryProp
           <table className="w-full">
             <thead>
               <tr className="border-b border-black/7 dark:border-white/10">
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                <th className="text-left py-3 px-4 text-[13px] font-semibold text-gray-900 dark:text-gray-100">
                   발송 일시
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                <th className="text-left py-3 px-4 text-[13px] font-semibold text-gray-900 dark:text-gray-100">
                   관리자
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                <th className="text-left py-3 px-4 text-[13px] font-semibold text-gray-900 dark:text-gray-100">
                   모드
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                <th className="text-left py-3 px-4 text-[13px] font-semibold text-gray-900 dark:text-gray-100">
                   제목
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                <th className="text-left py-3 px-4 text-[13px] font-semibold text-gray-900 dark:text-gray-100">
                   내용
                 </th>
-                <th className="text-right py-3 px-4 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                <th className="text-right py-3 px-4 text-[13px] font-semibold text-gray-900 dark:text-gray-100">
                   성공/실패
                 </th>
               </tr>
@@ -60,7 +60,7 @@ export function NotificationHistory({ logs, isLoading }: NotificationHistoryProp
                   key={log.id}
                   className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-[#2D2D2D]"
                 >
-                  <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
+                  <td className="py-3 px-4 text-[13px] text-gray-600 dark:text-gray-400">
                     {new Date(log.created_at).toLocaleString('ko-KR', {
                       year: 'numeric',
                       month: '2-digit',
@@ -69,7 +69,7 @@ export function NotificationHistory({ logs, isLoading }: NotificationHistoryProp
                       minute: '2-digit',
                     })}
                   </td>
-                  <td className="py-3 px-4 text-sm text-gray-900 dark:text-gray-100">
+                  <td className="py-3 px-4 text-[13px] text-gray-900 dark:text-gray-100">
                     <div>
                       <p className="font-medium">{log.admin.nickname}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">{log.admin.email}</p>
@@ -86,16 +86,16 @@ export function NotificationHistory({ logs, isLoading }: NotificationHistoryProp
                       {log.send_mode === 'all' ? '전체' : '선택'}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-sm text-gray-900 dark:text-gray-100">
+                  <td className="py-3 px-4 text-[13px] text-gray-900 dark:text-gray-100">
                     <p className="font-medium truncate max-w-xs">{log.title}</p>
                     {log.link && (
                       <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{log.link}</p>
                     )}
                   </td>
-                  <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
+                  <td className="py-3 px-4 text-[13px] text-gray-600 dark:text-gray-400">
                     <p className="truncate max-w-xs">{log.message}</p>
                   </td>
-                  <td className="py-3 px-4 text-right text-sm">
+                  <td className="py-3 px-4 text-right text-[13px]">
                     <div className="flex items-center justify-end gap-2">
                       <span className="text-green-600 dark:text-green-400 font-medium">
                         {log.total_sent}

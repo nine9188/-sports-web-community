@@ -52,7 +52,7 @@ export default function ProfileForm({
     <div className="space-y-4">
       {/* 이메일 필드 */}
       <div className="space-y-1">
-        <label htmlFor="email" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+        <label htmlFor="email" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
           이메일
         </label>
         <input
@@ -69,7 +69,7 @@ export default function ProfileForm({
 
       {/* 실명 필드 */}
       <div className="space-y-1">
-        <label htmlFor="full_name" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+        <label htmlFor="full_name" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
           이름
         </label>
         <input
@@ -86,7 +86,7 @@ export default function ProfileForm({
 
       {/* 닉네임 필드 */}
       <div className="space-y-1">
-        <label htmlFor="nickname" className="block text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+        <label htmlFor="nickname" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
           닉네임
         </label>
         <div className="flex items-center gap-2">
@@ -129,21 +129,21 @@ export default function ProfileForm({
 
       {/* 전화번호 인증 */}
       <div className="space-y-1 border-t border-black/5 dark:border-white/10 pt-4">
-        <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] mb-3">전화번호 인증</h3>
+        <h3 className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] mb-3">전화번호 인증</h3>
         <PhoneVerificationForm userId={initialData.id} initialStatus={initialPhoneStatus} />
       </div>
 
       {/* 계정 정보 */}
       <div className="space-y-3 border-t border-black/5 dark:border-white/10 pt-4">
-        <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">계정 정보</h3>
+        <h3 className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">계정 정보</h3>
 
-        <div className="flex items-center text-sm text-gray-700 dark:text-gray-300">
+        <div className="flex items-center text-[13px] text-gray-700 dark:text-gray-300">
           <Calendar className="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
           <span className="mr-1 font-medium">가입일:</span>
           {formatDate(initialData.created_at) || '-'}
         </div>
 
-        <div className="flex items-center text-sm text-gray-700 dark:text-gray-300">
+        <div className="flex items-center text-[13px] text-gray-700 dark:text-gray-300">
           <Clock className="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
           <span className="mr-1 font-medium">마지막 로그인:</span>
           {formatDate(initialData.last_sign_in_at) || '-'}

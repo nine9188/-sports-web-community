@@ -21,7 +21,7 @@ export const LinkedInEmbed: React.FC<LinkedInEmbedProps> = ({ url }) => {
           <div className="font-semibold text-gray-900 dark:text-[#F0F0F0]">
             LinkedIn 게시물 보기
           </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
+          <div className="text-[13px] text-gray-500 dark:text-gray-400 truncate">
             {url}
           </div>
         </div>

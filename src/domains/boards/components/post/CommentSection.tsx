@@ -146,7 +146,7 @@ export default function CommentSection({
   const commentsList = useMemo(() => {
     if (isLoading) {
       return (
-        <div className="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+        <div className="px-4 py-8 text-center text-[13px] text-gray-500 dark:text-gray-400">
           댓글을 불러오는 중...
         </div>
       );
@@ -168,7 +168,7 @@ export default function CommentSection({
         />
       ))
     ) : (
-      <div className="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+      <div className="px-4 py-8 text-center text-[13px] text-gray-500 dark:text-gray-400">
         아직 댓글이 없습니다. 첫 댓글을 남겨보세요!
       </div>
     );
@@ -189,7 +189,7 @@ export default function CommentSection({
       {/* 댓글 작성 폼 */}
       <div className="px-4 py-4 border-t border-black/7 dark:border-white/10">
         {errorMessage && (
-          <div className="mb-3 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-md text-sm">
+          <div className="mb-3 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-md text-[13px]">
             {errorMessage}
           </div>
         )}
@@ -204,7 +204,7 @@ export default function CommentSection({
             }}
           >
             <textarea
-              className="w-full px-3 py-3 border border-black/7 dark:border-white/10 bg-gray-50 dark:bg-[#262626] text-gray-400 dark:text-gray-500 rounded-lg text-sm placeholder-gray-400 dark:placeholder-gray-500 resize-none pointer-events-none"
+              className="w-full px-3 py-3 border border-black/7 dark:border-white/10 bg-gray-50 dark:bg-[#262626] text-gray-400 dark:text-gray-500 rounded-lg text-[13px] placeholder-gray-400 dark:placeholder-gray-500 resize-none pointer-events-none"
               rows={3}
               placeholder="댓글을 작성하려면 로그인해주세요."
               disabled
@@ -216,7 +216,7 @@ export default function CommentSection({
             {/* 답글 대상 표시 */}
             {replyTo && replyToNickname && (
               <div className="mb-3 p-3 bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 rounded-md flex items-center justify-between">
-                <div className="flex items-center text-sm text-gray-900 dark:text-[#F0F0F0]">
+                <div className="flex items-center text-[13px] text-gray-900 dark:text-[#F0F0F0]">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                   </svg>
@@ -238,7 +238,7 @@ export default function CommentSection({
             <form className="space-y-3" onSubmit={handleCommentSubmit}>
               <textarea
                 ref={replyFormRef}
-                className="w-full px-3 py-3 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg text-base sm:text-sm placeholder-gray-500 dark:placeholder-gray-500 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors duration-200 resize-none"
+                className="w-full px-3 py-3 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg text-base sm:text-[13px] placeholder-gray-500 dark:placeholder-gray-500 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors duration-200 resize-none"
                 rows={3}
                 placeholder={replyTo ? "답글을 작성해주세요..." : "댓글을 작성해주세요..."}
                 value={content}

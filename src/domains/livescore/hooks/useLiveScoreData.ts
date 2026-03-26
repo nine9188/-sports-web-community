@@ -16,9 +16,9 @@ export function useMultiDayMatches(initialData?: MultiDayMatchesResult) {
     queryKey: liveScoreKeys.multiDay(),
     queryFn: () => fetchMultiDayMatches(),
     initialData,
-    staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 10,
-    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60, // 1분
+    gcTime: 1000 * 60 * 5, // 5분
+    refetchOnWindowFocus: true, // 탭 복귀 시 갱신
   });
 }
 

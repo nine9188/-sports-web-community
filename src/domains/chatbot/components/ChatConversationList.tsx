@@ -52,7 +52,7 @@ export function ChatConversationList({
             <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
               대화 내역이 없습니다
             </h3>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">
+            <p className="text-gray-500 dark:text-gray-400 text-[13px]">
               새 대화를 시작해보세요
             </p>
           </div>
@@ -117,7 +117,7 @@ export function ChatConversationList({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between mb-1">
                       <h4 className={cn(
-                        'text-sm truncate',
+                        'text-[13px] truncate',
                         unreadCount > 0 ? 'font-bold text-gray-900 dark:text-[#F0F0F0]' : 'font-medium text-gray-900 dark:text-[#F0F0F0]'
                       )}>
                         {conversation.title}

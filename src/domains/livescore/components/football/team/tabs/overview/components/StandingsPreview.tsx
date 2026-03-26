@@ -76,7 +76,7 @@ export default function StandingsPreview({
   
   // 공통 스타일
   const tableHeaderStyle = "px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400";
-  const tableCellStyle = "px-3 py-2 text-sm text-gray-900 dark:text-[#F0F0F0]";
+  const tableCellStyle = "px-3 py-2 text-[13px] text-gray-900 dark:text-[#F0F0F0]";
   
   // 순위 데이터가 없으면 렌더링하지 않음
   if (displayStandings.length === 0 || !leagueInfo) {
@@ -156,9 +156,9 @@ export default function StandingsPreview({
                     </Link>
                   </td>
                   <td className={`hidden md:table-cell ${tableCellStyle}`}>{standing.all.played}</td>
-                  <td className={`${tableCellStyle} text-center text-xs md:text-sm`}>{standing.all.win}</td>
-                  <td className={`${tableCellStyle} text-center text-xs md:text-sm`}>{standing.all.draw}</td>
-                  <td className={`${tableCellStyle} text-center text-xs md:text-sm`}>{standing.all.lose}</td>
+                  <td className={`${tableCellStyle} text-center text-xs md:text-[13px]`}>{standing.all.win}</td>
+                  <td className={`${tableCellStyle} text-center text-xs md:text-[13px]`}>{standing.all.draw}</td>
+                  <td className={`${tableCellStyle} text-center text-xs md:text-[13px]`}>{standing.all.lose}</td>
                   <td className={`hidden md:table-cell ${tableCellStyle}`}>{standing.all.goals.for}</td>
                   <td className={`hidden md:table-cell ${tableCellStyle}`}>{standing.all.goals.against}</td>
                   <td className={`hidden md:table-cell ${tableCellStyle}`}>{standing.goalsDiff}</td>
@@ -180,7 +180,7 @@ export default function StandingsPreview({
         className="w-full rounded-none md:rounded-b-lg border-t border-black/5 dark:border-white/10"
       >
         <div className="flex items-center justify-center gap-1">
-          <span className="text-sm font-medium">전체 순위 보기</span>
+          <span className="text-[13px] font-medium">전체 순위 보기</span>
           <svg
             className="w-4 h-4"
             fill="none"

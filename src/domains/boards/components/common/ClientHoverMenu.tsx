@@ -55,7 +55,7 @@ export default function ClientHoverMenu({
   
   if (error || !data) {
     console.error('게시판 데이터 로딩 오류:', error);
-    return <div className="p-4 text-sm text-red-500">메뉴를 불러오는 중 오류가 발생했습니다.</div>;
+    return <div className="p-4 text-[13px] text-red-500">메뉴를 불러오는 중 오류가 발생했습니다.</div>;
   }
   
   // 최상위 게시판 추출 (예: 해외축구)

@@ -47,7 +47,7 @@ TeamLogo.displayName = 'TeamLogo';
 // 테이블 스타일 정의 개선
 const tableStyles = {
   header: "px-1 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider",
-  cell: "px-1 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-[#F0F0F0] text-center",
+  cell: "px-1 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-[#F0F0F0] text-center",
   smallCol: "w-8", // 너비 감소
   mediumCol: "w-10", // 너비 감소
 };
@@ -296,13 +296,13 @@ function Standings({
                           </td>
                           
                           {/* 데스크톱용 순위 */}
-                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-[#F0F0F0] relative">
+                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-[#F0F0F0] relative">
                             <div className={`absolute inset-y-0 left-0 w-1 ${getStatusColor(standing.description)}`} />
                             <span className="pl-2">{standing.rank}</span>
                           </td>
                           
                           {/* 팀 정보 - 고정 너비 사용 */}
-                          <td className="px-2 py-2 md:px-3 whitespace-nowrap text-sm text-gray-900 dark:text-[#F0F0F0]">
+                          <td className="px-2 py-2 md:px-3 whitespace-nowrap text-[13px] text-gray-900 dark:text-[#F0F0F0]">
                             <Link href={getTeamUrl(standing.team.id)} className="flex items-center gap-1 md:gap-2">
                               <TeamLogo
                                 teamName={standing.team.name}
@@ -322,31 +322,31 @@ function Standings({
                           </td>
                           
                           {/* 경기 수 - 모바일에서는 숨김 */}
-                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-[#F0F0F0] text-center">
+                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-[#F0F0F0] text-center">
                             {standing.all?.played || 0}
                           </td>
                           
                           {/* 승/무/패 - 고정 너비 사용 */}
-                          <td className={`${tableStyles.cell} text-xs md:text-sm px-0 md:px-1`}>{standing.all?.win || 0}</td>
-                          <td className={`${tableStyles.cell} text-xs md:text-sm px-0 md:px-1`}>{standing.all?.draw || 0}</td>
-                          <td className={`${tableStyles.cell} text-xs md:text-sm px-0 md:px-1`}>{standing.all?.lose || 0}</td>
+                          <td className={`${tableStyles.cell} text-xs md:text-[13px] px-0 md:px-1`}>{standing.all?.win || 0}</td>
+                          <td className={`${tableStyles.cell} text-xs md:text-[13px] px-0 md:px-1`}>{standing.all?.draw || 0}</td>
+                          <td className={`${tableStyles.cell} text-xs md:text-[13px] px-0 md:px-1`}>{standing.all?.lose || 0}</td>
                           
                           {/* 득점, 실점, 득실차 - 모바일에서는 숨김 */}
-                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-[#F0F0F0] text-center">
+                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-[#F0F0F0] text-center">
                             {standing.all?.goals?.for || 0}
                           </td>
-                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-[#F0F0F0] text-center">
+                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-[#F0F0F0] text-center">
                             {standing.all?.goals?.against || 0}
                           </td>
-                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-[#F0F0F0] text-center">
+                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-[#F0F0F0] text-center">
                             {standing.goalsDiff || 0}
                           </td>
                           
                           {/* 승점 - 모바일에서도 표시 */}
-                          <td className={`${tableStyles.cell} text-xs md:text-sm font-semibold`}>{standing.points || 0}</td>
+                          <td className={`${tableStyles.cell} text-xs md:text-[13px] font-semibold`}>{standing.points || 0}</td>
                           
                           {/* 최근 5경기 - 모바일에서는 숨김 */}
-                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-[#F0F0F0] text-center">
+                          <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-[#F0F0F0] text-center">
                             <div className="flex justify-center gap-1">
                               {standing.form?.split('').map((result, idx) => (
                                 <div 
@@ -380,15 +380,15 @@ function Standings({
           <div className="flex flex-col space-y-2">
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-green-400 rounded-sm"></div>
-              <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">챔피언스리그 진출</span>
+              <span className="text-[13px] text-gray-900 dark:text-[#F0F0F0]">챔피언스리그 진출</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-blue-400 rounded-sm"></div>
-              <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">유로파리그 진출</span>
+              <span className="text-[13px] text-gray-900 dark:text-[#F0F0F0]">유로파리그 진출</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-red-400 rounded-sm"></div>
-              <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">강등권</span>
+              <span className="text-[13px] text-gray-900 dark:text-[#F0F0F0]">강등권</span>
             </div>
             
             {/* 구분선 */}
@@ -396,7 +396,7 @@ function Standings({
             
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-[#EAEAEA] dark:bg-[#333333] border border-black/10 dark:border-white/20 rounded-sm"></div>
-              <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">현재 팀</span>
+              <span className="text-[13px] text-gray-900 dark:text-[#F0F0F0]">현재 팀</span>
             </div>
           </div>
         </ContainerContent>

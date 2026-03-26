@@ -111,7 +111,7 @@ export default function NotificationItem({ notification, onRead, isSelected, onT
 
       {/* 알림 내용 */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-gray-900 dark:text-[#F0F0F0] line-clamp-2">
+        <p className="text-[13px] text-gray-900 dark:text-[#F0F0F0] line-clamp-2">
           {notification.title}
         </p>
         {notification.message && (

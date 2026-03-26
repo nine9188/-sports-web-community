@@ -155,7 +155,7 @@ export default function HighlightBanner({ highlight, mode = 'modal' }: Highlight
 
             {highlight.video_title && (
               <div className="mt-3">
-                <p className="text-white text-sm">{highlight.video_title}</p>
+                <p className="text-white text-[13px]">{highlight.video_title}</p>
                 {highlight.channel_name && (
                   <p className="text-gray-400 text-xs mt-1">
                     {highlight.channel_name}

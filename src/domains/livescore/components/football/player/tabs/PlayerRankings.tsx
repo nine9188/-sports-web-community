@@ -110,7 +110,7 @@ export default function PlayerRankings({
                 />
               </div>
               <div className="text-center">
-                <div className="font-bold text-sm text-gray-900 dark:text-[#F0F0F0]">
+                <div className="font-bold text-[13px] text-gray-900 dark:text-[#F0F0F0]">
                   {playerKoreanNames[player.player.id] || player.player.name}
                 </div>
                 <div className="flex items-center justify-center gap-1 mt-1">
@@ -177,7 +177,7 @@ export default function PlayerRankings({
                     }`}
                     onClick={() => router.push(`/livescore/football/player/${player.player.id}`)}
                   >
-                    <td className="pl-3 pr-1 py-2 text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                    <td className="pl-3 pr-1 py-2 text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
                       {index + 4}
                     </td>
                     <td className="px-1 py-2">
@@ -192,7 +192,7 @@ export default function PlayerRankings({
                             className="w-full h-full"
                           />
                         </div>
-                        <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
+                        <span className="text-xs sm:text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
                           {playerKoreanNames[player.player.id] || player.player.name}
                         </span>
                       </Link>
@@ -209,12 +209,12 @@ export default function PlayerRankings({
                             className="w-full h-full"
                           />
                         </div>
-                        <span className="text-xs sm:text-sm text-gray-900 dark:text-[#F0F0F0] truncate">
+                        <span className="text-xs sm:text-[13px] text-gray-900 dark:text-[#F0F0F0] truncate">
                           {getTeamById(player.statistics[0].team.id)?.name_ko || player.statistics[0].team.name}
                         </span>
                       </div>
                     </td>
-                    <td className="pl-1 pr-3 py-2 text-right text-xs sm:text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    <td className="pl-1 pr-3 py-2 text-right text-xs sm:text-[13px] text-gray-500 dark:text-gray-400 whitespace-nowrap">
                       {getRankingValue(player, rankingType)}
                     </td>
                   </tr>

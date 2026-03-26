@@ -115,7 +115,7 @@ export default function RecentTransfers({ transfers, onTabChange, playerKoreanNa
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
+                        <p className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
                           {playerKoreanNames[transfer.player.id] || transfer.player.name}
                         </p>
                         <div className="flex items-center gap-1 flex-shrink-0">
@@ -129,7 +129,7 @@ export default function RecentTransfers({ transfers, onTabChange, playerKoreanNa
                               className="w-full h-full"
                             />
                           </div>
-                          <span className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-[100px]">
+                          <span className="text-[13px] text-gray-500 dark:text-gray-400 truncate max-w-[100px]">
                             {teamName(transfer.fromTeam.id, transfer.fromTeam.name)}
                           </span>
                         </div>
@@ -209,7 +209,7 @@ export default function RecentTransfers({ transfers, onTabChange, playerKoreanNa
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
+                        <p className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
                           {playerKoreanNames[transfer.player.id] || transfer.player.name}
                         </p>
                         <div className="flex items-center gap-1 flex-shrink-0">
@@ -223,7 +223,7 @@ export default function RecentTransfers({ transfers, onTabChange, playerKoreanNa
                               className="w-full h-full"
                             />
                           </div>
-                          <span className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-[100px]">
+                          <span className="text-[13px] text-gray-500 dark:text-gray-400 truncate max-w-[100px]">
                             {teamName(transfer.toTeam.id, transfer.toTeam.name)}
                           </span>
                         </div>
@@ -286,7 +286,7 @@ export default function RecentTransfers({ transfers, onTabChange, playerKoreanNa
           className="w-full rounded-none md:rounded-b-lg border-t border-black/5 dark:border-white/10"
         >
           <div className="flex items-center justify-center gap-1">
-            <span className="text-sm font-medium">전체 이적 보기</span>
+            <span className="text-[13px] font-medium">전체 이적 보기</span>
             <svg
               className="w-4 h-4"
               fill="none"

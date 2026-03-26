@@ -221,7 +221,7 @@ const BoardSelector = React.memo(({
   const renderTopOptions = useCallback(() => {
     if (isLoading || !topLevelBoards || topLevelBoards.length === 0) {
       return (
-        <div className="px-4 py-2.5 text-sm text-gray-500 dark:text-gray-400">
+        <div className="px-4 py-2.5 text-[13px] text-gray-500 dark:text-gray-400">
           {isLoading ? "게시판 데이터를 불러오는 중입니다..." : "게시판이 없습니다."}
         </div>
       );
@@ -234,7 +234,7 @@ const BoardSelector = React.memo(({
       return (
         <div
           key={board.id}
-          className={`px-4 py-2.5 text-sm transition-colors cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333] ${
+          className={`px-4 py-2.5 text-[13px] transition-colors cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333] ${
             !isLast ? 'border-b border-black/5 dark:border-white/10' : ''
           } ${
             board.id === selectedTop?.id ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
@@ -273,7 +273,7 @@ const BoardSelector = React.memo(({
       return (
         <div
           key={board.id}
-          className={`px-4 py-2.5 text-sm transition-colors cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] ${
+          className={`px-4 py-2.5 text-[13px] transition-colors cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] ${
             !isLast ? 'border-b border-black/5 dark:border-white/10' : ''
           } ${
             board.id === selectedMid?.id ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
@@ -311,7 +311,7 @@ const BoardSelector = React.memo(({
       return (
         <div
           key={board.id}
-          className={`px-4 py-2.5 text-sm hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors text-gray-900 dark:text-[#F0F0F0] ${
+          className={`px-4 py-2.5 text-[13px] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors text-gray-900 dark:text-[#F0F0F0] ${
             !isLast ? 'border-b border-black/5 dark:border-white/10' : ''
           } ${
             board.id === selectedBottom?.id ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
@@ -366,7 +366,7 @@ const BoardSelector = React.memo(({
             }`}
             onClick={toggleTopDropdown}
           >
-            <span className="text-sm truncate">
+            <span className="text-[13px] truncate">
               {isLoading
                 ? "게시판 데이터를 불러오는 중..."
                 : selectedTop
@@ -393,7 +393,7 @@ const BoardSelector = React.memo(({
             }`}
             onClick={selectedTop && hasMidBoards ? toggleMidDropdown : undefined}
           >
-            <span className="text-sm truncate">
+            <span className="text-[13px] truncate">
               {!selectedTop
                 ? "중간 게시판 선택 (선택)"
                 : !hasMidBoards
@@ -424,7 +424,7 @@ const BoardSelector = React.memo(({
             }`}
             onClick={selectedMid && hasBottomBoards ? toggleBottomDropdown : undefined}
           >
-            <span className="text-sm truncate">
+            <span className="text-[13px] truncate">
               {!selectedMid
                 ? "하위 게시판 선택 (선택)"
                 : !hasBottomBoards
@@ -449,13 +449,13 @@ const BoardSelector = React.memo(({
       {/* 선택된 게시판 표시 */}
       {selectedBoardName ? (
         <div className="px-3 py-2 bg-[#F5F5F5] dark:bg-[#262626] rounded-md border border-black/7 dark:border-white/10">
-          <span className="text-sm text-gray-700 dark:text-gray-300">
+          <span className="text-[13px] text-gray-700 dark:text-gray-300">
             선택된 게시판: <span className="font-medium">{selectedBoardName}</span>
           </span>
         </div>
       ) : selectedTop ? (
         <div className="px-3 py-2 bg-[#F5F5F5] dark:bg-[#262626] rounded-md border border-black/7 dark:border-white/10">
-          <span className="text-sm text-gray-500 dark:text-gray-400">
+          <span className="text-[13px] text-gray-500 dark:text-gray-400">
             하위 게시판을 선택해주세요
           </span>
         </div>

@@ -34,7 +34,7 @@ export default function MyEmoticonList() {
     return (
       <Container className="bg-white dark:bg-[#1D1D1D]">
         <ContainerContent className="px-4 py-10">
-          <p className="text-sm text-gray-500 dark:text-gray-400 text-center">신청 내역이 없습니다.</p>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 text-center">신청 내역이 없습니다.</p>
         </ContainerContent>
       </Container>
     )
@@ -56,7 +56,7 @@ export default function MyEmoticonList() {
                 {/* 정보 */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0] truncate">{sub.pack_name}</p>
+                    <p className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] truncate">{sub.pack_name}</p>
                     <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium ${statusConfig.className}`}>
                       {statusConfig.label}
                     </span>

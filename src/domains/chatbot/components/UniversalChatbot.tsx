@@ -124,7 +124,7 @@ export function UniversalChatbot() {
             )}
             {activeConversation?.status === 'completed' && (
               <div className="p-4 border-t border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] text-center">
-                <p className="text-sm text-gray-500 dark:text-gray-400">대화가 종료되었습니다</p>
+                <p className="text-[13px] text-gray-500 dark:text-gray-400">대화가 종료되었습니다</p>
               </div>
             )}
           </div>
@@ -132,7 +132,7 @@ export function UniversalChatbot() {
 
         {chatbot.error && (
           <div className="p-4 bg-red-50 dark:bg-red-900/20 border-t border-red-300 dark:border-red-700">
-            <div className="text-sm text-red-700 dark:text-red-300">{chatbot.error}</div>
+            <div className="text-[13px] text-red-700 dark:text-red-300">{chatbot.error}</div>
           </div>
         )}
       </ChatModal>

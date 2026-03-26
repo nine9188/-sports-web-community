@@ -73,7 +73,7 @@ export default function BrandingSettingsForm({ initialSettings }: BrandingSettin
         <div className="px-6 py-4 space-y-6">
           {/* 테마 색상 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
               테마 색상
             </label>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
@@ -95,13 +95,13 @@ export default function BrandingSettingsForm({ initialSettings }: BrandingSettin
               />
             </div>
             <div className="mt-2 p-3 rounded" style={{ backgroundColor: formData.theme_color || '#1a73e8' }}>
-              <p className="text-white text-sm font-medium">미리보기</p>
+              <p className="text-white text-[13px] font-medium">미리보기</p>
             </div>
           </div>
 
           {/* 로고 텍스트 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
               로고 텍스트
             </label>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
@@ -122,13 +122,13 @@ export default function BrandingSettingsForm({ initialSettings }: BrandingSettin
       <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-lg">
         <div className="px-6 py-4 border-b border-black/7 dark:border-white/10">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0]">이미지 파일 (URL)</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">현재는 URL만 지원합니다. 추후 업로드 기능이 추가됩니다.</p>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400">현재는 URL만 지원합니다. 추후 업로드 기능이 추가됩니다.</p>
         </div>
 
         <div className="px-6 py-4 space-y-6">
           {/* 메인 로고 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
               메인 로고 URL
             </label>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
@@ -150,7 +150,7 @@ export default function BrandingSettingsForm({ initialSettings }: BrandingSettin
 
           {/* 다크 모드 로고 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
               다크 모드 로고 URL
             </label>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
@@ -167,7 +167,7 @@ export default function BrandingSettingsForm({ initialSettings }: BrandingSettin
 
           {/* 파비콘 안내 */}
           <div className="bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 rounded-lg p-4">
-            <h4 className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0] mb-2">파비콘 관리</h4>
+            <h4 className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0] mb-2">파비콘 관리</h4>
             <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
               파비콘은 <code className="px-1 bg-gray-200 dark:bg-[#363636] rounded">/public</code> 폴더에서 직접 관리됩니다.
             </p>

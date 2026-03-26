@@ -56,7 +56,7 @@ export function BoardTable({
       <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
         <div>
           <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-[#F0F0F0]">게시판 목록</h3>
-          <p className="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-1 max-w-2xl text-[13px] text-gray-500 dark:text-gray-400">
             현재 생성된 모든 게시판 목록입니다. 화살표를 클릭하여 순서를 변경할 수 있습니다.
           </p>
         </div>
@@ -108,7 +108,7 @@ export function BoardTable({
                     key={board.id}
                     className={board.level && board.level > 0 ? 'bg-[#FAFAFA] dark:bg-[#232323]' : ''}
                   >
-                    <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                    <td className="px-4 py-3 text-[13px] text-gray-500 dark:text-gray-400">
                       <div className="flex items-center gap-1">
                         <span>{board.display_order}</span>
                         <div className="flex flex-col">
@@ -139,7 +139,7 @@ export function BoardTable({
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                    <td className="px-4 py-3 text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
                       <div className="flex items-center">
                         <Indentation level={board.level || 0} />
                         <span
@@ -154,15 +154,15 @@ export function BoardTable({
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{board.slug || '-'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                    <td className="px-4 py-3 text-[13px] text-gray-500 dark:text-gray-400">{board.slug || '-'}</td>
+                    <td className="px-4 py-3 text-[13px] text-gray-500 dark:text-gray-400">
                       {getAccessLevelText(board.access_level || 'public')}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                    <td className="px-4 py-3 text-[13px] text-gray-500 dark:text-gray-400">
                       {parentBoard ? parentBoard.name : '-'}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{board.team_id || '-'}</td>
-                    <td className="px-4 py-3 text-right text-sm font-medium">
+                    <td className="px-4 py-3 text-[13px] text-gray-500 dark:text-gray-400">{board.team_id || '-'}</td>
+                    <td className="px-4 py-3 text-right text-[13px] font-medium">
                       <button
                         onClick={() => onEdit(board)}
                         className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 mr-4"

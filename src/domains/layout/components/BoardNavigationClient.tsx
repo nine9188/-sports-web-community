@@ -228,7 +228,7 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
           {/* 상점 링크 */}
           <Link
             href="/shop"
-            className="px-2 py-1 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded shrink-0 whitespace-nowrap snap-center transition-colors"
+            className="px-2 py-1 text-[13px] font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded shrink-0 whitespace-nowrap snap-center transition-colors"
           >
             상점
           </Link>
@@ -237,7 +237,7 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
           {isAdmin && (
             <Link
               href="/admin"
-              className="px-2 py-1 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded flex items-center gap-1 shrink-0 whitespace-nowrap snap-center transition-colors"
+              className="px-2 py-1 text-[13px] font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded flex items-center gap-1 shrink-0 whitespace-nowrap snap-center transition-colors"
             >
               관리자
             </Link>

@@ -63,7 +63,7 @@ export default async function TransfersPage({ searchParams }: TransfersPageProps
       <Container>
         <ContainerHeader>
           <div className="flex items-center justify-between w-full">
-            <h1 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">이적시장</h1>
+            <h1 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">이적시장</h1>
             <div className="hidden md:flex items-center space-x-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               <span className="text-xs text-gray-700 dark:text-gray-300">실시간 업데이트</span>
@@ -73,7 +73,7 @@ export default async function TransfersPage({ searchParams }: TransfersPageProps
 
         {/* 설명 섹션 */}
         <div className="px-4 py-3 bg-white dark:bg-[#1D1D1D]">
-          <p className="text-sm text-gray-700 dark:text-gray-300">
+          <p className="text-[13px] text-gray-700 dark:text-gray-300">
             최신 축구 이적 소식과 선수 영입 정보를 확인하세요
           </p>
         </div>

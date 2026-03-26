@@ -97,11 +97,11 @@ export default async function ShopPage({ searchParams }: Props) {
       <TrackPageVisit id="shop" slug="shop" name="아이콘샵" />
       <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 md:rounded-lg overflow-hidden mb-4">
         <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center md:rounded-t-lg">
-          <h1 className="text-sm font-bold text-gray-900 dark:text-[#F0F0F0]">
+          <h1 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">
             포인트 상점
           </h1>
           {user && !error && (
-            <div className="ml-auto flex items-center gap-2 text-sm">
+            <div className="ml-auto flex items-center gap-2 text-[13px]">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -139,12 +139,12 @@ export default async function ShopPage({ searchParams }: Props) {
         loginNotice={
           !user || error ? (
             <div className="p-3 sm:p-4 bg-[#F5F5F5] dark:bg-[#262626] rounded-md text-center border border-black/7 dark:border-0">
-              <p className="text-gray-900 dark:text-[#F0F0F0] text-sm sm:text-base">
+              <p className="text-gray-900 dark:text-[#F0F0F0] text-[13px] sm:text-base">
                 아이템을 구매하고 사용하려면 로그인이 필요합니다.
               </p>
               <a
                 href="/signin"
-                className="mt-2 inline-block px-3 py-2 sm:px-4 sm:py-2 bg-[#262626] dark:bg-[#3F3F3F] text-white rounded-md hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] transition-colors text-sm outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="mt-2 inline-block px-3 py-2 sm:px-4 sm:py-2 bg-[#262626] dark:bg-[#3F3F3F] text-white rounded-md hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] transition-colors text-[13px] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
               >
                 로그인하기
               </a>

@@ -69,7 +69,7 @@ export const LoadingState = memo(({
     <div className={`flex flex-col items-center justify-center py-8 ${className}`}>
       <Spinner size={size} className="mb-3" />
       {message && (
-        <p className="text-sm text-gray-500 dark:text-gray-400">{message}</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">{message}</p>
       )}
     </div>
   );
@@ -132,9 +132,9 @@ export const ErrorState = memo(({
       <h3 className="text-base font-medium text-gray-900 dark:text-[#F0F0F0] mb-1">
         {title}
       </h3>
-      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{message}</p>
+      <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-4">{message}</p>
       {onRetry && (
-        <Button variant="secondary" onClick={onRetry} className="text-sm">
+        <Button variant="secondary" onClick={onRetry} className="text-[13px]">
           {retryText}
         </Button>
       )}
@@ -205,7 +205,7 @@ export const EmptyState = memo(({
         {title}
       </h3>
       {message && (
-        <p className="text-sm text-gray-500 dark:text-gray-400">{message}</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">{message}</p>
       )}
       {action && <div className="mt-4">{action}</div>}
     </div>
@@ -264,7 +264,7 @@ export const InlineError = memo(({
   message?: string;
   height?: string;
 }) => (
-  <div className={`flex items-center justify-center ${height} text-red-500 dark:text-red-400 text-sm`}>
+  <div className={`flex items-center justify-center ${height} text-red-500 dark:text-red-400 text-[13px]`}>
     {message}
   </div>
 ));
@@ -288,7 +288,7 @@ export const InlineEmpty = memo(({
   message?: string;
   height?: string;
 }) => (
-  <div className={`flex items-center justify-center ${height} text-gray-500 dark:text-gray-400 text-sm`}>
+  <div className={`flex items-center justify-center ${height} text-gray-500 dark:text-gray-400 text-[13px]`}>
     {message}
   </div>
 ));

@@ -80,7 +80,7 @@ export default function EmoticonShopSection({
         <ContainerContent className="px-4 py-3">
           <Link
             href="/shop/emoticon-studio"
-            className="flex items-center justify-center text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors"
+            className="flex items-center justify-center text-[13px] text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors"
           >
             이모티콘 스튜디오 →
           </Link>
@@ -97,7 +97,7 @@ export default function EmoticonShopSection({
                   key={tab.key}
                   variant="ghost"
                   onClick={() => setSubFilter(tab.key)}
-                  className={`px-2 py-1 h-auto text-xs sm:text-sm whitespace-nowrap flex items-center gap-1 text-gray-700 dark:text-gray-300 ${
+                  className={`px-2 py-1 h-auto text-xs sm:text-[13px] whitespace-nowrap flex items-center gap-1 text-gray-700 dark:text-gray-300 ${
                     subFilter === tab.key ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
                   }`}
                 >
@@ -114,7 +114,7 @@ export default function EmoticonShopSection({
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 placeholder="이모티콘 팩 검색..."
-                className="w-full pl-9 pr-8 py-1 text-sm bg-transparent text-gray-900 dark:text-[#F0F0F0] rounded-lg placeholder-gray-500 outline-none focus:outline-none hover:bg-[#F5F5F5] dark:hover:bg-[#262626] focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors"
+                className="w-full pl-9 pr-8 py-1 text-[13px] bg-transparent text-gray-900 dark:text-[#F0F0F0] rounded-lg placeholder-gray-500 outline-none focus:outline-none hover:bg-[#F5F5F5] dark:hover:bg-[#262626] focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors"
               />
               {query && (
                 <button
@@ -139,7 +139,7 @@ export default function EmoticonShopSection({
 
       {paginatedPacks.length === 0 ? (
         <div className="text-center py-10 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-[13px] text-gray-500 dark:text-gray-400">
             {query.trim() ? `'${query}' 검색 결과가 없습니다.` : subFilter === 'free' ? '무료 팩이 없습니다.' : subFilter === 'paid' ? '유료 팩이 없습니다.' : '이모티콘 팩이 없습니다.'}
           </p>
         </div>

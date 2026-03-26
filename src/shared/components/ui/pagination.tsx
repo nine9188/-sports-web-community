@@ -99,7 +99,7 @@ export function Pagination({
 
   // 스타일 클래스
   const buttonBase =
-    "p-2 rounded border border-black/7 dark:border-0 text-sm transition-colors";
+    "p-2 rounded border border-black/7 dark:border-0 text-[13px] transition-colors";
   const buttonDefault =
     "bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]";
   const buttonDisabled = "opacity-40 pointer-events-none";

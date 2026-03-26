@@ -22,19 +22,19 @@ export function ExpInfoCard({ user, previewExpAmount }: ExpInfoCardProps) {
   return (
     <div className="bg-[#F5F5F5] dark:bg-[#262626] p-4 rounded-md mb-4">
       <div className="flex justify-between items-center mb-2">
-        <div className="text-sm font-medium text-gray-700 dark:text-gray-300">레벨:</div>
+        <div className="text-[13px] font-medium text-gray-700 dark:text-gray-300">레벨:</div>
         <div className="font-semibold text-gray-700 dark:text-gray-300">Lv. {safeLevel}</div>
       </div>
 
       <div className="flex justify-between items-center mb-2">
-        <div className="text-sm font-medium text-gray-700 dark:text-gray-300">현재 경험치:</div>
+        <div className="text-[13px] font-medium text-gray-700 dark:text-gray-300">현재 경험치:</div>
         <div className="font-semibold text-gray-700 dark:text-gray-300">{user.exp || 0} EXP</div>
       </div>
 
       {/* 경험치 조정 미리보기 */}
       {previewExpAmount !== undefined && !isNaN(previewExpAmount) && previewExpAmount !== 0 && (
         <div className="mt-3 pt-3 border-t border-black/7 dark:border-white/10">
-          <div className="flex justify-between items-center text-sm">
+          <div className="flex justify-between items-center text-[13px]">
             <span className="font-medium text-gray-700 dark:text-gray-300">조정 후:</span>
             <span
               className={`font-medium ${previewExpAmount > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}

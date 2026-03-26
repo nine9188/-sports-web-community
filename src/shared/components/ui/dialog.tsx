@@ -129,7 +129,7 @@ const DialogTitle = React.forwardRef<
   <DialogPrimitive.Title
     ref={ref}
     className={cn(
-      "text-sm font-bold text-gray-900 dark:text-[#F0F0F0] flex-1",
+      "text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] flex-1",
       className
     )}
     {...props}
@@ -143,7 +143,7 @@ const DialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn("text-sm text-gray-500 dark:text-gray-400", className)}
+    className={cn("text-[13px] text-gray-500 dark:text-gray-400", className)}
     {...props}
   />
 ))

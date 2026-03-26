@@ -363,3 +363,42 @@ export async function checkAndRefreshIfStale(
     // 무시
   }
 }
+
+/**
+ * 에셋 강제 재다운로드 (관리자용)
+ *
+ * 기존 캐시를 삭제하고 ensureAssetCached를 호출하면
+ * "레코드 없음" 경로를 타서 새로 다운로드됩니다.
+ */
+export async function forceRefreshAsset(
+  type: AssetType,
+  entityId: number,
+  size: ImageSize = 'md'
+): Promise<{ success: boolean; url: string; error?: string }> {
+  try {
+    const supabase = getSupabaseAdmin();
+
+    // 기존 캐시 삭제
+    await supabase
+      .from('asset_cache')
+      .delete()
+      .eq('type', type)
+      .eq('entity_id', entityId);
+
+    // 새로 다운로드 (ensureAssetCached가 "레코드 없음" → cacheAsset 실행)
+    const url = await ensureAssetCached(type, entityId, size);
+    const isPlaceholder = url.startsWith('/images/placeholder');
+
+    return {
+      success: !isPlaceholder,
+      url,
+      error: isPlaceholder ? '이미지 다운로드 실패' : undefined,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      url: PLACEHOLDER_URLS[type],
+      error: error instanceof Error ? error.message : '알 수 없는 오류',
+    };
+  }
+}

@@ -20,13 +20,13 @@ export function LogEntryCard({ log, isExpanded, onToggleExpand }: LogEntryCardPr
           <div className="flex items-center gap-2 mb-2">
             <span className={cn(badgeBaseStyles, LEVEL_COLORS[log.level as LogLevel])}>{log.level}</span>
             <span className={cn(badgeBaseStyles, CATEGORY_COLORS[log.category as LogCategory])}>{log.category}</span>
-            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{log.action}</span>
+            <span className="text-[13px] font-medium text-gray-900 dark:text-gray-100">{log.action}</span>
             <span className="text-xs text-gray-500 dark:text-gray-400">
               {new Date(log.created_at).toLocaleString()}
             </span>
           </div>
 
-          <p className="text-sm text-gray-800 dark:text-gray-200 mb-2">{log.message}</p>
+          <p className="text-[13px] text-gray-800 dark:text-gray-200 mb-2">{log.message}</p>
 
           <div className="flex gap-4 text-xs text-gray-500 dark:text-gray-400">
             {log.user_id && <span>사용자: {log.profiles?.nickname || log.user_id}</span>}
@@ -48,7 +48,7 @@ export function LogEntryCard({ log, isExpanded, onToggleExpand }: LogEntryCardPr
 
       {isExpanded && (
         <div className="mt-4 pt-4 border-t border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] rounded p-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[13px]">
             <div>
               <h4 className="font-medium mb-2">기본 정보</h4>
               <div className="space-y-1">

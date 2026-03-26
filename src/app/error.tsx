@@ -20,7 +20,7 @@ export default function Error({
         <h1 className="text-xl font-semibold mb-3 text-gray-900 dark:text-[#F0F0F0]">
           문제가 발생했습니다
         </h1>
-        <p className="text-sm text-gray-700 dark:text-gray-300 mb-6">
+        <p className="text-[13px] text-gray-700 dark:text-gray-300 mb-6">
           일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.
         </p>
         {error.digest && (
@@ -31,13 +31,13 @@ export default function Error({
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={reset}
-            className="inline-block bg-[#262626] dark:bg-[#3F3F3F] text-white hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] px-4 py-2 rounded text-sm transition-colors"
+            className="inline-block bg-[#262626] dark:bg-[#3F3F3F] text-white hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] px-4 py-2 rounded text-[13px] transition-colors"
           >
             다시 시도
           </button>
           <a
             href="/"
-            className="inline-block border border-black/7 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-4 py-2 rounded text-sm transition-colors"
+            className="inline-block border border-black/7 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] px-4 py-2 rounded text-[13px] transition-colors"
           >
             메인페이지로 이동
           </a>

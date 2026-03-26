@@ -722,7 +722,7 @@ export default function SignupPage() {
             <button
               type="button"
               onClick={handleBack}
-              className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+              className="flex items-center gap-1 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -730,7 +730,7 @@ export default function SignupPage() {
               이전
             </button>
           ) : <div />}
-          <span className="text-sm text-gray-400 dark:text-gray-500 font-medium">{currentStep} / {totalSteps}</span>
+          <span className="text-[13px] text-gray-400 dark:text-gray-500 font-medium">{currentStep} / {totalSteps}</span>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -739,7 +739,7 @@ export default function SignupPage() {
             <div className="space-y-3">
               {/* 봇 검증 */}
               <div className="space-y-2">
-                <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">봇 검증</label>
+                <label className="block text-gray-700 dark:text-gray-300 mb-1 text-[13px] font-medium">봇 검증</label>
                 <TurnstileWidget
                   siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY as string}
                   onToken={setCaptchaToken}
@@ -773,14 +773,14 @@ export default function SignupPage() {
                       onChange={(e) => setAgreeTerms(e.target.checked)}
                       className="h-4 w-4 text-gray-600 border-black/7 dark:border-white/10 rounded focus:ring-gray-500"
                     />
-                    <span className="ml-3 text-sm text-gray-900 dark:text-[#F0F0F0]">
+                    <span className="ml-3 text-[13px] text-gray-900 dark:text-[#F0F0F0]">
                       <span className="text-violet-500 dark:text-violet-400 font-medium">(필수)</span> 이용약관 동의
                     </span>
                   </label>
                   <button
                     type="button"
                     onClick={() => setLegalModal('terms')}
-                    className="text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    className="text-[13px] text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                   >
                     보기
                   </button>
@@ -795,14 +795,14 @@ export default function SignupPage() {
                       onChange={(e) => setAgreePrivacy(e.target.checked)}
                       className="h-4 w-4 text-gray-600 border-black/7 dark:border-white/10 rounded focus:ring-gray-500"
                     />
-                    <span className="ml-3 text-sm text-gray-900 dark:text-[#F0F0F0]">
+                    <span className="ml-3 text-[13px] text-gray-900 dark:text-[#F0F0F0]">
                       <span className="text-violet-500 dark:text-violet-400 font-medium">(필수)</span> 개인정보처리방침 동의
                     </span>
                   </label>
                   <button
                     type="button"
                     onClick={() => setLegalModal('privacy')}
-                    className="text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    className="text-[13px] text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                   >
                     보기
                   </button>
@@ -826,7 +826,7 @@ export default function SignupPage() {
           {showEmailStep && !showBirthStep && (
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">이메일 주소</label>
+                <label className="block text-gray-700 dark:text-gray-300 mb-1 text-[13px] font-medium">이메일 주소</label>
                 <div className="flex space-x-2">
                   <input
                     type="email"
@@ -859,13 +859,13 @@ export default function SignupPage() {
                   </Button>
                 </div>
                 {emailError && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                  <p className="mt-1 text-[13px] text-red-600 flex items-center">
                     <AlertCircle className="h-4 w-4 mr-1" />
                     {emailError}
                   </p>
                 )}
                 {emailMessage && !emailError && (
-                  <p className={`text-sm mt-1 flex items-center ${
+                  <p className={`text-[13px] mt-1 flex items-center ${
                     emailAvailable ? 'text-green-600' : 'text-red-600'
                   }`}>
                     {emailAvailable ?
@@ -878,7 +878,7 @@ export default function SignupPage() {
               </div>
 
               <div>
-                <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">이름</label>
+                <label className="block text-gray-700 dark:text-gray-300 mb-1 text-[13px] font-medium">이름</label>
                 <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
                   *2-20자, 한글·영문만 사용 가능
                 </p>
@@ -914,7 +914,7 @@ export default function SignupPage() {
                   )}
                 </div>
                 {fullNameError && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                  <p className="mt-1 text-[13px] text-red-600 flex items-center">
                     <AlertCircle className="h-4 w-4 mr-1" />
                     {fullNameError}
                   </p>
@@ -943,7 +943,7 @@ export default function SignupPage() {
           {showBirthStep && !showIdStep && (
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">생년월일</label>
+                <label className="block text-gray-700 dark:text-gray-300 mb-1 text-[13px] font-medium">생년월일</label>
                 <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
                   *만 14세 이상만 가입 가능합니다
                 </p>
@@ -1030,13 +1030,13 @@ export default function SignupPage() {
                   )}
                 </div>
                 {birthError && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                  <p className="mt-1 text-[13px] text-red-600 flex items-center">
                     <AlertCircle className="h-4 w-4 mr-1" />
                     {birthError}
                   </p>
                 )}
                 {birthValid && !birthError && (
-                  <p className="mt-1 text-sm text-green-600 flex items-center">
+                  <p className="mt-1 text-[13px] text-green-600 flex items-center">
                     <Check className="h-4 w-4 mr-1" />
                     확인되었습니다.
                   </p>
@@ -1060,7 +1060,7 @@ export default function SignupPage() {
           {showIdStep && !showNicknameStep && (
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">아이디</label>
+                <label className="block text-gray-700 dark:text-gray-300 mb-1 text-[13px] font-medium">아이디</label>
                 <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
                   *4-20자, 영문 소문자·숫자·밑줄(_)·마침표(.) 사용 가능
                 </p>
@@ -1100,7 +1100,7 @@ export default function SignupPage() {
                   </Button>
                 </div>
                 {usernameMessage && (
-                  <p className={`text-sm mt-1 flex items-center ${
+                  <p className={`text-[13px] mt-1 flex items-center ${
                     usernameAvailable ? 'text-green-600' : 'text-red-600'
                   }`}>
                     {usernameAvailable ?
@@ -1129,7 +1129,7 @@ export default function SignupPage() {
           {showNicknameStep && !showPasswordStep && (
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">닉네임</label>
+                <label className="block text-gray-700 dark:text-gray-300 mb-1 text-[13px] font-medium">닉네임</label>
                 <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
                   *2-16자, 한글·영문·숫자·밑줄(_)·하이픈(-) 사용 가능
                 </p>
@@ -1169,7 +1169,7 @@ export default function SignupPage() {
                   </Button>
                 </div>
                 {nicknameMessage && (
-                  <p className={`text-sm mt-1 flex items-center ${
+                  <p className={`text-[13px] mt-1 flex items-center ${
                     nicknameAvailable ? 'text-green-600' : 'text-red-600'
                   }`}>
                     {nicknameAvailable ?
@@ -1199,7 +1199,7 @@ export default function SignupPage() {
           {showPasswordStep && !showReferralStep && (
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">비밀번호</label>
+                <label className="block text-gray-700 dark:text-gray-300 mb-1 text-[13px] font-medium">비밀번호</label>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
@@ -1264,7 +1264,7 @@ export default function SignupPage() {
                 )}
 
                 {passwordError && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                  <p className="mt-1 text-[13px] text-red-600 flex items-center">
                     <AlertCircle className="h-4 w-4 mr-1" />
                     {passwordError}
                   </p>
@@ -1272,7 +1272,7 @@ export default function SignupPage() {
               </div>
 
               <div>
-                <label className="block text-gray-700 dark:text-gray-300 mb-1 text-sm font-medium">비밀번호 확인</label>
+                <label className="block text-gray-700 dark:text-gray-300 mb-1 text-[13px] font-medium">비밀번호 확인</label>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
@@ -1292,7 +1292,7 @@ export default function SignupPage() {
                   />
                 </div>
                 {confirmPasswordError && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                  <p className="mt-1 text-[13px] text-red-600 flex items-center">
                     <AlertCircle className="h-4 w-4 mr-1" />
                     {confirmPasswordError}
                   </p>
@@ -1321,7 +1321,7 @@ export default function SignupPage() {
               <div className="p-4 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg border border-black/7 dark:border-white/10">
                 <div className="flex items-center gap-2 mb-2">
                   <Gift className="h-4 w-4 text-green-600 dark:text-green-400" />
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label className="text-[13px] font-medium text-gray-700 dark:text-gray-300">
                     추천 코드 <span className="text-gray-500 dark:text-gray-400 font-normal">(선택)</span>
                   </label>
                 </div>
@@ -1357,7 +1357,7 @@ export default function SignupPage() {
                   </Button>
                 </div>
                 {referralMessage && (
-                  <p className={`text-sm mt-2 flex items-center ${
+                  <p className={`text-[13px] mt-2 flex items-center ${
                     referralValid ? 'text-green-600' : 'text-red-600'
                   }`}>
                     {referralValid ?
@@ -1388,7 +1388,7 @@ export default function SignupPage() {
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-black/7 dark:border-white/10" />
             </div>
-            <div className="relative flex justify-center text-sm">
+            <div className="relative flex justify-center text-[13px]">
               <span className="px-2 bg-white dark:bg-[#1F1F1F] md:dark:bg-[#2D2D2D] text-gray-500 dark:text-gray-400">또는</span>
             </div>
           </div>
@@ -1422,7 +1422,7 @@ export default function SignupPage() {
       </div>
       </div>
 
-      <div className="mt-8 flex space-x-4 text-sm text-gray-500 dark:text-gray-400">
+      <div className="mt-8 flex space-x-4 text-[13px] text-gray-500 dark:text-gray-400">
         <Link href="/terms" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">이용약관</Link>
         <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">개인정보처리방침</Link>
       </div>
@@ -1446,7 +1446,7 @@ export default function SignupPage() {
                 </svg>
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+            <div className="flex-1 overflow-y-auto p-4 text-[13px] text-gray-600 dark:text-gray-400 leading-relaxed">
               {legalModal === 'terms' ? <TermsContent /> : <PrivacyContent />}
             </div>
             <div className="p-4 border-t border-black/7 dark:border-white/10">

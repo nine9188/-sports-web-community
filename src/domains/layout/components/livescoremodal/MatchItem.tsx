@@ -182,7 +182,7 @@ const MatchItem = React.memo(function MatchItem({
               <Users className="w-3 h-3 text-gray-400" />
             </div>
           )}
-          <span className="text-sm font-medium truncate text-gray-900 dark:text-[#F0F0F0]">
+          <span className="text-[13px] font-medium truncate text-gray-900 dark:text-[#F0F0F0]">
             {homeTeamName}
           </span>
         </div>
@@ -200,7 +200,7 @@ const MatchItem = React.memo(function MatchItem({
             </div>
           ) : (
             <div className="text-center">
-              <div className="text-sm text-gray-700 dark:text-gray-300 mb-1">
+              <div className="text-[13px] text-gray-700 dark:text-gray-300 mb-1">
                 {match.time?.date ? new Date(match.time.date).toLocaleTimeString('ko-KR', {
                   hour: '2-digit',
                   minute: '2-digit',
@@ -216,7 +216,7 @@ const MatchItem = React.memo(function MatchItem({
 
         {/* 원정팀 */}
         <div className="flex items-center gap-2 flex-1 justify-end min-w-0">
-          <span className="text-sm font-medium truncate text-gray-900 dark:text-[#F0F0F0]">
+          <span className="text-[13px] font-medium truncate text-gray-900 dark:text-[#F0F0F0]">
             {awayTeamName}
           </span>
           {match.teams?.away?.id ? (

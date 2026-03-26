@@ -194,7 +194,7 @@ function Events({ events: propsEvents, playerKoreanNames = {}, teamLogoUrls = {}
     if (!teamId) {
       return (
         <div className="w-5 h-5 rounded bg-[#EAEAEA] dark:bg-[#333333] flex items-center justify-center flex-shrink-0">
-          <span className="text-gray-400 dark:text-gray-500 text-[8px]">N/A</span>
+          <span className="text-gray-400 dark:text-gray-500 text-[9px]">N/A</span>
         </div>
       );
     }
@@ -254,7 +254,7 @@ function Events({ events: propsEvents, playerKoreanNames = {}, teamLogoUrls = {}
               >
                 {/* 1줄: 분 + 이벤트아이콘 + 팀로고 + 팀명 */}
                 <div className="flex items-center gap-1.5">
-                  <span className="w-8 text-right text-sm text-gray-500 dark:text-gray-400 flex-shrink-0 tabular-nums">
+                  <span className="w-8 text-right text-[13px] text-gray-500 dark:text-gray-400 flex-shrink-0 tabular-nums">
                     {event.time?.elapsed || 0}
                     {event.time?.extra && event.time.extra > 0 && `+${event.time.extra}`}
                   </span>
@@ -266,7 +266,7 @@ function Events({ events: propsEvents, playerKoreanNames = {}, teamLogoUrls = {}
                       name={event.team?.name || ''}
                       teamId={event.team?.id}
                     />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:underline truncate">
+                    <span className="text-[13px] font-medium text-gray-700 dark:text-gray-300 group-hover:underline truncate">
                       {event.team?.id && teamCache[event.team.id]?.name_ko ?
                         teamCache[event.team.id].name_ko :
                         event.team?.name || 'Unknown Team'
@@ -277,7 +277,7 @@ function Events({ events: propsEvents, playerKoreanNames = {}, teamLogoUrls = {}
 
                 {/* 2줄: 이벤트 텍스트 — 최소 들여쓰기로 풀 너비 활용 */}
                 <div className="mt-1 pl-2">
-                  <span className="text-sm text-gray-900 dark:text-[#F0F0F0]">
+                  <span className="text-[13px] text-gray-900 dark:text-[#F0F0F0]">
                     {renderEventTextWithPlayerLinks(event)}
                   </span>
                 </div>

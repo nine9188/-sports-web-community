@@ -44,7 +44,7 @@ const SearchBar = React.memo(function SearchBar() {
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           onKeyDown={handleKeyDown}
-          className={`w-full pl-10 pr-4 py-2 text-sm bg-[#F5F5F5] dark:bg-[#262626] border border-black/5 dark:border-white/10 rounded-full
+          className={`w-full pl-10 pr-4 py-2 text-[13px] bg-[#F5F5F5] dark:bg-[#262626] border border-black/5 dark:border-white/10 rounded-full
             outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0
             focus:bg-[#EAEAEA] dark:focus:bg-[#333333] transition-colors duration-200 placeholder-gray-500 dark:placeholder-gray-400
             text-gray-900 dark:text-[#F0F0F0]

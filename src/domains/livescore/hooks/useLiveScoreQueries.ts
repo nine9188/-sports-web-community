@@ -44,7 +44,7 @@ export function useMatches(date: Date, options: UseMatchesOptions = {}) {
     staleTime: 1000 * 60 * 5, // 5분
     gcTime: 1000 * 60 * 30, // 30분
     refetchInterval,
-    refetchIntervalInBackground: false, // 탭이 비활성화되면 폴링 중지
+    refetchIntervalInBackground: true, // 탭 비활성화돼도 폴링 유지
   });
 
   // 라이브 경기 수 계산
@@ -78,7 +78,7 @@ export function useTodayLiveCount(enabled: boolean = true) {
     staleTime: 1000 * 60, // 1분
     gcTime: 1000 * 60 * 10, // 10분
     refetchInterval: 60000, // 60초마다 갱신
-    refetchIntervalInBackground: false,
+    refetchIntervalInBackground: true, // 탭 비활성화돼도 폴링 유지
   });
 
   return {

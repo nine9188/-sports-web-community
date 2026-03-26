@@ -200,7 +200,7 @@ export default function TeamSearchResults({
     return (
       <div className="text-center py-12">
         <p className="text-gray-500 text-lg">검색 결과가 없습니다</p>
-        <p className="text-gray-400 text-sm mt-1">다른 키워드로 검색해보세요</p>
+        <p className="text-gray-400 text-[13px] mt-1">다른 키워드로 검색해보세요</p>
       </div>
     )
   }
@@ -211,7 +211,7 @@ export default function TeamSearchResults({
       <div className="overflow-hidden">
         {/* 헤더 */}
         <div className="px-4 py-3 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10">
-          <h3 className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+          <h3 className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
             팀 ({pagination?.totalItems || totalCount || teams.length}개)
           </h3>
         </div>
@@ -252,14 +252,14 @@ export default function TeamSearchResults({
             <tfoot>
               <tr>
                 <td colSpan={1} className="px-4 py-3 border-t border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] sm:hidden">
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                  <p className="text-[13px] text-gray-700 dark:text-gray-300">
                     총 <span className="font-medium">{pagination.totalItems}</span>개 중{' '}
                     <span className="font-medium">{(pagination.currentPage - 1) * pagination.itemsPerPage + 1}</span>-
                     <span className="font-medium">{Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)}</span>개 표시
                   </p>
                 </td>
                 <td colSpan={4} className="hidden sm:table-cell px-6 py-3 border-t border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                  <p className="text-[13px] text-gray-700 dark:text-gray-300">
                     총 <span className="font-medium">{pagination.totalItems}</span>개 중{' '}
                     <span className="font-medium">{(pagination.currentPage - 1) * pagination.itemsPerPage + 1}</span>-
                     <span className="font-medium">{Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)}</span>개 표시
@@ -275,7 +275,7 @@ export default function TeamSearchResults({
                   <td colSpan={1} className="px-4 py-3 border-t border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] sm:hidden">
                     <Link
                       href={`/search?q=${encodeURIComponent(query)}&type=teams`}
-                      className="text-sm text-gray-900 dark:text-[#F0F0F0] hover:underline font-medium transition-colors"
+                      className="text-[13px] text-gray-900 dark:text-[#F0F0F0] hover:underline font-medium transition-colors"
                     >
                       더 많은 팀 보기 ({totalCount}개) →
                     </Link>
@@ -283,7 +283,7 @@ export default function TeamSearchResults({
                   <td colSpan={4} className="hidden sm:table-cell px-6 py-3 border-t border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
                     <Link
                       href={`/search?q=${encodeURIComponent(query)}&type=teams`}
-                      className="text-sm text-gray-900 dark:text-[#F0F0F0] hover:underline font-medium transition-colors"
+                      className="text-[13px] text-gray-900 dark:text-[#F0F0F0] hover:underline font-medium transition-colors"
                     >
                       더 많은 팀 보기 ({totalCount}개) →
                     </Link>
@@ -376,7 +376,7 @@ function TeamRowWithMatches({
               className="w-6 h-6 sm:w-7 sm:h-7 object-contain flex-shrink-0"
             />
             <div className="min-w-0 flex-1">
-              <div className="font-medium text-gray-900 dark:text-[#F0F0F0] text-xs sm:text-sm">
+              <div className="font-medium text-gray-900 dark:text-[#F0F0F0] text-xs sm:text-[13px]">
                 <Link
                   href={`/livescore/football/team/${team.team_id}`}
                   onClick={handleTeamPageClick}
@@ -405,19 +405,19 @@ function TeamRowWithMatches({
         </td>
 
         {/* 리그 */}
-        <td className="hidden sm:table-cell px-4 py-4 text-sm text-gray-900 dark:text-[#F0F0F0] w-28 md:w-36">
+        <td className="hidden sm:table-cell px-4 py-4 text-[13px] text-gray-900 dark:text-[#F0F0F0] w-28 md:w-36">
           <div className="truncate" title={team.league_name_ko}>
             {team.league_name_ko}
           </div>
         </td>
 
         {/* 국가 */}
-        <td className="hidden md:table-cell px-4 py-4 text-sm text-gray-900 dark:text-[#F0F0F0] w-24 whitespace-nowrap">
+        <td className="hidden md:table-cell px-4 py-4 text-[13px] text-gray-900 dark:text-[#F0F0F0] w-24 whitespace-nowrap">
           {team.country_ko ?? team.country}
         </td>
 
         {/* 홈구장 */}
-        <td className="hidden lg:table-cell px-4 py-4 text-sm text-gray-900 dark:text-[#F0F0F0] text-right">
+        <td className="hidden lg:table-cell px-4 py-4 text-[13px] text-gray-900 dark:text-[#F0F0F0] text-right">
           <div>
             {team.venue_name && (
               <div className="font-medium truncate" title={team.venue_name}>

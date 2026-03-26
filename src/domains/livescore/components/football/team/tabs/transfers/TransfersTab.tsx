@@ -262,7 +262,7 @@ export default function TransfersTab({ transfers, playerKoreanNames = {}, player
           {/* 이적센터 버튼 - 데스크톱만 표시 */}
           <Link
             href="/transfers"
-            className="hidden md:flex p-2 px-3 rounded border border-black/7 dark:border-0 text-sm transition-colors bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] items-center gap-1 flex-shrink-0"
+            className="hidden md:flex p-2 px-3 rounded border border-black/7 dark:border-0 text-[13px] transition-colors bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] items-center gap-1 flex-shrink-0"
           >
             이적센터
             <svg

@@ -16,7 +16,7 @@ export default function RelatedPosts({
       </ContainerHeader>
 
       {!posts || posts.length === 0 ? (
-        <div className="p-4 text-center text-gray-500 dark:text-gray-400 text-sm">
+        <div className="p-4 text-center text-gray-500 dark:text-gray-400 text-[13px]">
           관련 글이 없습니다.
         </div>
       ) : (
@@ -27,7 +27,7 @@ export default function RelatedPosts({
                 href={`/boards/${post.board_slug}/${post.post_number}`}
                 className="block px-3 py-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]"
               >
-                <span className="text-sm truncate block">{post.title}</span>
+                <span className="text-[13px] truncate block">{post.title}</span>
               </Link>
             </li>
           ))}

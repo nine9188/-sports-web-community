@@ -26,5 +26,5 @@ export const alertInfo = `${alertBgInfo} ${alertTextInfo}`;
 // 에러 메시지 박스 스타일 (페이지 레벨 에러)
 export const errorBoxStyles = 'bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 p-6 text-center';
 export const errorTitleStyles = 'text-xl font-semibold mb-3 text-gray-900 dark:text-[#F0F0F0]';
-export const errorMessageStyles = 'text-sm text-gray-700 dark:text-gray-300 mb-4';
-export const errorLinkStyles = 'inline-block bg-[#262626] dark:bg-[#3F3F3F] text-white hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] px-4 py-2 rounded text-sm transition-colors';
+export const errorMessageStyles = 'text-[13px] text-gray-700 dark:text-gray-300 mb-4';
+export const errorLinkStyles = 'inline-block bg-[#262626] dark:bg-[#3F3F3F] text-white hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] px-4 py-2 rounded text-[13px] transition-colors';

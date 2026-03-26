@@ -81,11 +81,11 @@ export function ReportTable({
               <tr key={report.id} className="hover:bg-[#F5F5F5] dark:hover:bg-[#2D2D2D]">
                 <td className="px-4 py-4">
                   <div>
-                    <div className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">
+                    <div className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
                       {report.reason}
                     </div>
                     {report.description && (
-                      <div className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-xs truncate">
+                      <div className="text-[13px] text-gray-500 dark:text-gray-400 mt-1 max-w-xs truncate">
                         {report.description}
                       </div>
                     )}
@@ -99,7 +99,7 @@ export function ReportTable({
                       </span>
                     </div>
                     {report.target_info && (
-                      <div className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-xs">
+                      <div className="text-[13px] text-gray-500 dark:text-gray-400 mt-1 max-w-xs">
                         <div className="truncate">
                           {report.target_info.title || report.target_info.content}
                         </div>
@@ -111,14 +111,14 @@ export function ReportTable({
                   </div>
                 </td>
                 <td className="px-4 py-4">
-                  <div className="text-sm text-gray-900 dark:text-[#F0F0F0]">
+                  <div className="text-[13px] text-gray-900 dark:text-[#F0F0F0]">
                     {report.reporter?.nickname || report.reporter?.email || '알 수 없음'}
                   </div>
                 </td>
                 <td className="px-4 py-4">
                   <StatusBadge status={report.status} />
                 </td>
-                <td className="px-4 py-4 text-sm text-gray-500 dark:text-gray-400">
+                <td className="px-4 py-4 text-[13px] text-gray-500 dark:text-gray-400">
                   {formatDate(report.created_at) || '-'}
                 </td>
                 <td className="px-4 py-4 text-right">

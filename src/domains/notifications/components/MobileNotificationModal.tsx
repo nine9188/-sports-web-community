@@ -80,7 +80,7 @@ export default function MobileNotificationModal({
       } flex flex-col`}>
         {/* 헤더 - 고정 */}
         <div className="flex items-center justify-between p-4 border-b border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0]">
+          <h2 className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">
             알림 {unreadCount > 0 && <span className="text-gray-500 dark:text-gray-400">({unreadCount})</span>}
           </h2>
           <div className="flex items-center gap-2">
@@ -125,7 +125,7 @@ export default function MobileNotificationModal({
               <svg className="w-16 h-16 mb-4 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
-              <p className="text-sm font-medium">새로운 알림이 없습니다</p>
+              <p className="text-[13px] font-medium">새로운 알림이 없습니다</p>
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                 새로운 소식이 있으면 알려드릴게요
               </p>
@@ -138,7 +138,7 @@ export default function MobileNotificationModal({
           <Link
             href="/notifications"
             onClick={onClose}
-            className="block w-full py-3 text-center text-sm font-medium text-gray-900 dark:text-[#F0F0F0] bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-lg transition-colors outline-none focus:outline-none"
+            className="block w-full py-3 text-center text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-lg transition-colors outline-none focus:outline-none"
           >
             전체 알림 보기
           </Link>

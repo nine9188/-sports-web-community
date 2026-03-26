@@ -19,7 +19,7 @@ export default function MyPostList({
     <Container className="bg-white dark:bg-[#1D1D1D]">
       <ContainerHeader className="h-auto py-3 justify-between">
         <ContainerTitle>게시글 목록</ContainerTitle>
-        <span className="text-sm text-gray-500 dark:text-gray-400">총 {totalCount}개</span>
+        <span className="text-[13px] text-gray-500 dark:text-gray-400">총 {totalCount}개</span>
       </ContainerHeader>
 
       {posts.length === 0 ? (
@@ -48,7 +48,7 @@ export default function MyPostList({
             <tbody className="bg-white dark:bg-[#1D1D1D] divide-y divide-black/5 dark:divide-white/10">
               {posts.map((post) => (
                 <tr key={post.id} className="hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors">
-                  <td className="px-4 py-4 text-sm max-w-[220px] overflow-hidden">
+                  <td className="px-4 py-4 text-[13px] max-w-[220px] overflow-hidden">
                     <Link href={`/boards/${post.board_slug}/${post.post_number}`} className={`font-medium truncate block ${
                       post.title === '[신고에 의해 삭제됨]' || post.title.includes('[삭제된 게시글]')
                         ? 'text-red-500 dark:text-red-400'
@@ -58,17 +58,17 @@ export default function MyPostList({
                     }`} title={post.title}>
                       {post.title}
                       {post.tags && post.tags.length > 0 && (
-                        <span className="text-gray-700 dark:text-gray-300 ml-2 text-sm">[{post.tags.length}]</span>
+                        <span className="text-gray-700 dark:text-gray-300 ml-2 text-[13px]">[{post.tags.length}]</span>
                       )}
                     </Link>
                   </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 text-left hidden md:table-cell">
+                  <td className="px-4 py-4 whitespace-nowrap text-[13px] text-gray-500 dark:text-gray-400 text-left hidden md:table-cell">
                     {post.board_name}
                   </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 text-center hidden sm:table-cell">
+                  <td className="px-4 py-4 whitespace-nowrap text-[13px] text-gray-500 dark:text-gray-400 text-center hidden sm:table-cell">
                     {post.views.toLocaleString()}
                   </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 text-center">
+                  <td className="px-4 py-4 whitespace-nowrap text-[13px] text-gray-500 dark:text-gray-400 text-center">
                     {formatDate(post.created_at)}
                   </td>
                 </tr>

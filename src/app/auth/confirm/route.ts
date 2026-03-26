@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseRouteHandler } from '@/shared/lib/supabase/server'
+import { getSupabaseRouteHandler, getSupabaseAdmin } from '@/shared/lib/supabase/server'
 
 /**
  * 이메일 인증 확인 라우트 핸들러
@@ -28,6 +28,21 @@ export async function GET(request: NextRequest) {
       if (error) {
         console.error('이메일 인증 실패:', error)
         return NextResponse.redirect(`${origin}/signin?message=이메일+인증에+실패했습니다`)
+      }
+
+      // 이메일 인증 성공 시 profiles 업데이트
+      if (type === 'signup' || type === 'email') {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const supabaseAdmin = getSupabaseAdmin()
+          await supabaseAdmin
+            .from('profiles')
+            .update({
+              email_confirmed: true,
+              email_confirmed_at: new Date().toISOString(),
+            })
+            .eq('id', user.id)
+        }
       }
 
       // 인증 성공 - redirect_to로 리다이렉트

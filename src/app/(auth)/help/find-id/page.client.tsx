@@ -147,7 +147,7 @@ function FindIdContent() {
 
         <form onSubmit={handleFindId} className="space-y-6">
           <div>
-            <label htmlFor="fullName" className="block text-gray-700 dark:text-gray-300 mb-1.5 text-sm font-medium">
+            <label htmlFor="fullName" className="block text-gray-700 dark:text-gray-300 mb-1.5 text-[13px] font-medium">
               이름
             </label>
             <div className="relative">
@@ -173,14 +173,14 @@ function FindIdContent() {
               )}
             </div>
             {fullNameError && (
-              <p className="mt-1 text-sm text-red-600 flex items-center">
+              <p className="mt-1 text-[13px] text-red-600 flex items-center">
                 <AlertCircle className="h-4 w-4 mr-1" />{fullNameError}
               </p>
             )}
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-gray-700 dark:text-gray-300 mb-1.5 text-sm font-medium">
+            <label htmlFor="email" className="block text-gray-700 dark:text-gray-300 mb-1.5 text-[13px] font-medium">
               이메일 주소
             </label>
             <div className="relative">
@@ -211,7 +211,7 @@ function FindIdContent() {
               )}
             </div>
             {emailError && (
-              <p className="mt-1 text-sm text-red-600 flex items-center">
+              <p className="mt-1 text-[13px] text-red-600 flex items-center">
                 <AlertCircle className="h-4 w-4 mr-1" />{emailError}
               </p>
             )}
@@ -232,7 +232,7 @@ function FindIdContent() {
           {verificationSent && (
             <>
               <div>
-                <label htmlFor="verification-code" className="block text-gray-700 dark:text-gray-300 mb-1.5 text-sm font-medium">
+                <label htmlFor="verification-code" className="block text-gray-700 dark:text-gray-300 mb-1.5 text-[13px] font-medium">
                   인증 코드
                 </label>
                 <div className="relative">
@@ -258,7 +258,7 @@ function FindIdContent() {
                   )}
                 </div>
                 {codeError && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                  <p className="mt-1 text-[13px] text-red-600 flex items-center">
                     <AlertCircle className="h-4 w-4 mr-1" />{codeError}
                   </p>
                 )}
@@ -328,7 +328,7 @@ export default function FindIdPage() {
           <FindIdContent />
         </Suspense>
       </div>
-      <div className="mt-8 flex space-x-4 text-sm text-gray-500 dark:text-gray-400">
+      <div className="mt-8 flex space-x-4 text-[13px] text-gray-500 dark:text-gray-400">
         <Link href="/terms" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">이용약관</Link>
         <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">개인정보처리방침</Link>
       </div>

@@ -53,7 +53,7 @@ export default function LeagueInfo({ leagueData, boardId, boardSlug, isLoggedIn 
   if (!leagueData) {
     return (
       <div className={`h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] ${className}`}>
-        <p className="text-sm text-gray-500 dark:text-gray-400">리그 정보를 불러올 수 없습니다.</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">리그 정보를 불러올 수 없습니다.</p>
         {isLoggedIn && (
           <Link
             href={`/boards/${boardSlug || boardId}/create`}
@@ -81,7 +81,7 @@ export default function LeagueInfo({ leagueData, boardId, boardSlug, isLoggedIn 
             className="object-contain w-6 h-6"
           />
         </div>
-        <span className="text-sm font-semibold truncate text-gray-900 dark:text-[#F0F0F0]">{leagueData.name}</span>
+        <span className="text-[13px] font-semibold truncate text-gray-900 dark:text-[#F0F0F0]">{leagueData.name}</span>
       </div>
       {isLoggedIn && (
         <Link

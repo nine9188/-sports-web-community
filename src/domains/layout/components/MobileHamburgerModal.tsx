@@ -72,7 +72,7 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
       >
         {/* 헤더 - 고정 */}
         <div className="flex items-center justify-between p-4 border-b border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-[#F0F0F0]">게시판 선택</h2>
+          <h2 className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">게시판 선택</h2>
           <Button
             variant="ghost"
             size="icon"
@@ -88,7 +88,7 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
         <div className="flex-1 overflow-y-auto">
           {/* 테마 토글 */}
           <div className="p-4 border-b border-black/7 dark:border-white/10 flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-900 dark:text-[#F0F0F0]">테마 설정</span>
+            <span className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">테마 설정</span>
             <ThemeToggle />
           </div>
 
@@ -101,7 +101,7 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
                 placeholder="게시판 검색..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-black/7 dark:border-white/10 rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] transition-colors duration-200 text-sm bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] placeholder-gray-500 dark:placeholder-gray-400"
+                className="w-full pl-10 pr-4 py-2 border border-black/7 dark:border-white/10 rounded-lg outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] transition-colors duration-200 text-[13px] bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] placeholder-gray-500 dark:placeholder-gray-400"
               />
             </div>
           </div>
@@ -121,13 +121,13 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
                     key={board.id}
                     href={`/boards/${board.slug || board.id}`}
                     onClick={onClose}
-                    className="block px-4 py-3 text-sm text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
+                    className="block px-4 py-3 text-[13px] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                   >
                     {board.name}
                   </Link>
                 ))
               ) : (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm">
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-[13px]">
                   검색 결과가 없습니다
                 </div>
               )}

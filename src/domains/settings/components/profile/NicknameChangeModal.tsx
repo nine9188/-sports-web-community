@@ -97,7 +97,7 @@ export default function NicknameChangeModal({
         <DialogBody>
           {/* 보유 티켓 안내 */}
           <div className="mb-4 p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
-            <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+            <div className="flex items-center gap-2 text-[13px] text-gray-700 dark:text-gray-300">
               <Image
                 src={siteConfig.logo}
                 alt="변경권"
@@ -148,7 +148,7 @@ export default function NicknameChangeModal({
 
             {/* 에러 메시지 */}
             {error && (
-              <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center gap-2 text-sm text-red-800 dark:text-red-400">
+              <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center gap-2 text-[13px] text-red-800 dark:text-red-400">
                 <AlertCircle className="h-4 w-4 flex-shrink-0" />
                 {error}
               </div>

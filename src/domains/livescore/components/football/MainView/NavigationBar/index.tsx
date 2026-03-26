@@ -105,7 +105,7 @@ export default function NavigationBar({
           <Button
             variant="ghost"
             onClick={handleToday}
-            className="text-sm font-semibold h-auto px-2 py-1"
+            className="text-[13px] font-semibold h-auto px-2 py-1"
           >
             {formatDate(selectedDate)}
           </Button>
@@ -151,7 +151,7 @@ export default function NavigationBar({
           <Button
             variant={showLiveOnly ? 'primary' : 'secondary'}
             onClick={handleLiveClick}
-            className="h-10 px-3 md:px-4 font-medium text-sm md:text-base"
+            className="h-10 px-3 md:px-4 font-medium text-[13px] md:text-base"
           >
             <div className="flex items-center gap-2">
               <div className={`w-2 h-2 rounded-full ${
@@ -159,7 +159,7 @@ export default function NavigationBar({
               }`} />
               LIVE
               {liveMatchCount > 0 && (
-                <span className={`text-sm ${showLiveOnly ? 'text-red-400' : 'text-red-500'}`}>
+                <span className={`text-[13px] ${showLiveOnly ? 'text-red-400' : 'text-red-500'}`}>
                   ({liveMatchCount})
                 </span>
               )}
@@ -170,7 +170,7 @@ export default function NavigationBar({
             <input
               type="text"
               placeholder="경기 찾기"
-              className="w-full h-10 px-3 md:px-4 rounded-lg bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] focus:bg-[#EAEAEA] dark:focus:bg-[#333333] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors text-sm md:text-base"
+              className="w-full h-10 px-3 md:px-4 rounded-lg bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] focus:bg-[#EAEAEA] dark:focus:bg-[#333333] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors text-[13px] md:text-base"
               value={searchKeyword}
               onChange={(e) => onSearchChange(e.target.value)}
             />
