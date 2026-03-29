@@ -73,5 +73,5 @@ export async function GET(request: NextRequest) {
   });
 }
 
-// 각 리그별 요청은 ~60초, 전체 호출은 ~15분
-export const maxDuration = 300;
+// hobby 플랜 최대 60초
+export const maxDuration = 60;
